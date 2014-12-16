@@ -1,0 +1,49 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="13" operation="monitor" operation_key="rhel7-auto4_monitor_60000" on_node="rhel7-auto3" on_node_uuid="3">
+        <primitive id="rhel7-auto4" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_timeout="30000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="12" operation="start" operation_key="rhel7-auto4_start_0" on_node="rhel7-auto3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="12" operation="start" operation_key="rhel7-auto4_start_0" on_node="rhel7-auto3" on_node_uuid="3">
+        <primitive id="rhel7-auto4" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="60000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="2" operation="stop" operation_key="rhel7-auto4_stop_0" on_node="rhel7-auto2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="2" operation="stop" operation_key="rhel7-auto4_stop_0" on_node="rhel7-auto2" on_node_uuid="2">
+        <primitive id="rhel7-auto4" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_name="stop" CRM_meta_timeout="60000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <pseudo_event id="3" operation="all_stopped" operation_key="all_stopped">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="2" operation="stop" operation_key="rhel7-auto4_stop_0" on_node="rhel7-auto2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>

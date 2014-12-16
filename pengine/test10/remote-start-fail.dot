@@ -1,0 +1,9 @@
+ digraph "g" {
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+"rhel7-auto4_monitor_60000 rhel7-auto3" [ style=bold color="green" fontcolor="black"]
+"rhel7-auto4_start_0 rhel7-auto3" -> "rhel7-auto4_monitor_60000 rhel7-auto3" [ style = bold]
+"rhel7-auto4_start_0 rhel7-auto3" [ style=bold color="green" fontcolor="black"]
+"rhel7-auto4_stop_0 rhel7-auto2" -> "all_stopped" [ style = bold]
+"rhel7-auto4_stop_0 rhel7-auto2" -> "rhel7-auto4_start_0 rhel7-auto3" [ style = bold]
+"rhel7-auto4_stop_0 rhel7-auto2" [ style=bold color="green" fontcolor="black"]
+}

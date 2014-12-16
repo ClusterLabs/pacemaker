@@ -1191,7 +1191,10 @@ allocate_resources(pe_working_set_t * data_set)
                 continue;
             }
             pe_rsc_trace(rsc, "Allocating: %s", rsc->id);
-            rsc->cmds->allocate(rsc, NULL, data_set);
+            /* for remote node connection resources, always prefer the partial migration
+             * target during resource allocation if the rsc is in the middle of a
+             * migration */ 
+            rsc->cmds->allocate(rsc, rsc->partial_migration_target, data_set);
         }
     }
 
@@ -1716,9 +1719,18 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
                 node_t *cluster_node = remote_rsc->running_on ? remote_rsc->running_on->data : NULL;
 
                 /* if the current cluster node a baremetal connection resource
-                 * is residing on is unclean, we can't process any operations on that
-                 * remote node until after it starts somewhere else. */
-                if (cluster_node && cluster_node->details->unclean == TRUE) {
+                 * is residing on is unclean or went offline we can't process any
+                 * operations on that remote node until after it starts somewhere else. */
+                if (cluster_node == NULL ||
+                    cluster_node->details->unclean == TRUE ||
+                    cluster_node->details->online == FALSE) {
+                    after_start = TRUE;
+                } else if (g_list_length(remote_rsc->running_on) > 1 &&
+                           remote_rsc->partial_migration_source &&
+                            remote_rsc->partial_migration_target) {
+                    /* if we're caught in the middle of migrating a connection resource,
+                     * then we have to wait until after the resource migrates before performing
+                     * any actions. */
                     after_start = TRUE;
                 }
             }

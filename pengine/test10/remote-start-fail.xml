@@ -1,0 +1,107 @@
+<cib crm_feature_set="3.0.9" validate-with="pacemaker-2.2" epoch="9" num_updates="10" admin_epoch="0" cib-last-written="Wed Dec 10 13:47:05 2014" have-quorum="1" dc-uuid="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.12-6b19349"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="phd"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="rhel7-auto1"/>
+      <node id="2" uname="rhel7-auto2"/>
+      <node id="3" uname="rhel7-auto3"/>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="shooter" type="fence_xvm">
+        <instance_attributes id="shooter-instance_attributes"/>
+        <operations>
+          <op id="shooter-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="rhel7-auto4" provider="pacemaker" type="remote">
+        <instance_attributes id="rhel7-auto4-instance_attributes"/>
+        <operations>
+          <op id="rhel7-auto4-start-timeout-60" interval="0s" name="start" timeout="60"/>
+          <op id="rhel7-auto4-stop-timeout-60" interval="0s" name="stop" timeout="60"/>
+          <op id="rhel7-auto4-monitor-timeout-30" interval="60s" name="monitor" timeout="30"/>
+        </operations>
+        <meta_attributes id="rhel7-auto4-meta_attributes"/>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="3" uname="rhel7-auto3" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="3">
+        <lrm_resources>
+          <lrm_resource id="shooter" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="8:3:7:d38b5504-008d-47e7-b5e6-d85f9c599954" transition-magic="0:7;8:3:7:d38b5504-008d-47e7-b5e6-d85f9c599954" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1418235622" last-rc-change="1418235622" exec-time="989" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto3"/>
+          </lrm_resource>
+          <lrm_resource id="rhel7-auto4" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="rhel7-auto4_last_0" operation_key="rhel7-auto4_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="10:5:7:d38b5504-008d-47e7-b5e6-d85f9c599954" transition-magic="0:7;10:5:7:d38b5504-008d-47e7-b5e6-d85f9c599954" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1418237103" last-rc-change="1418237103" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto3"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="3">
+        <instance_attributes id="status-3">
+          <nvpair id="status-3-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-3-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="1" uname="rhel7-auto1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="shooter" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="11:15:0:d38b5504-008d-47e7-b5e6-d85f9c599954" transition-magic="0:0;11:15:0:d38b5504-008d-47e7-b5e6-d85f9c599954" call-id="11" rc-code="0" op-status="0" interval="0" last-run="1418237282" last-rc-change="1418237282" exec-time="13" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto1"/>
+            <lrm_rsc_op id="shooter_monitor_60000" operation_key="shooter_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="12:15:0:d38b5504-008d-47e7-b5e6-d85f9c599954" transition-magic="0:0;12:15:0:d38b5504-008d-47e7-b5e6-d85f9c599954" call-id="12" rc-code="0" op-status="0" interval="60000" last-rc-change="1418237283" exec-time="9" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhel7-auto1"/>
+          </lrm_resource>
+          <lrm_resource id="rhel7-auto4" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="rhel7-auto4_last_0" operation_key="rhel7-auto4_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="1:15:0:d38b5504-008d-47e7-b5e6-d85f9c599954" transition-magic="0:0;1:15:0:d38b5504-008d-47e7-b5e6-d85f9c599954" call-id="9" rc-code="0" op-status="0" interval="0" last-run="1418237282" last-rc-change="1418237282" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto1"/>
+            <lrm_rsc_op id="rhel7-auto4_monitor_60000" operation_key="rhel7-auto4_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="13:10:0:d38b5504-008d-47e7-b5e6-d85f9c599954" transition-magic="0:0;13:10:0:d38b5504-008d-47e7-b5e6-d85f9c599954" call-id="6" rc-code="0" op-status="0" interval="60000" last-rc-change="1418237175" exec-time="0" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a" on_node="rhel7-auto1"/>
+            <lrm_rsc_op id="rhel7-auto4_last_failure_0" operation_key="rhel7-auto4_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="11:13:0:d38b5504-008d-47e7-b5e6-d85f9c599954" transition-magic="2:1;11:13:0:d38b5504-008d-47e7-b5e6-d85f9c599954" call-id="8" rc-code="1" op-status="2" interval="0" last-rc-change="1418237225" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto1" last-run="1418237225"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-1-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-1-fail-count-rhel7-auto4" name="fail-count-rhel7-auto4" value="INFINITY"/>
+          <nvpair id="status-1-last-failure-rhel7-auto4" name="last-failure-rhel7-auto4" value="1418237282"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="2" uname="rhel7-auto2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="shooter" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="10:15:0:d38b5504-008d-47e7-b5e6-d85f9c599954" transition-magic="0:0;10:15:0:d38b5504-008d-47e7-b5e6-d85f9c599954" call-id="10" rc-code="0" op-status="0" interval="0" last-run="1418237281" last-rc-change="1418237281" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto2"/>
+            <lrm_rsc_op id="shooter_monitor_60000" operation_key="shooter_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="10:6:0:d38b5504-008d-47e7-b5e6-d85f9c599954" transition-magic="0:0;10:6:0:d38b5504-008d-47e7-b5e6-d85f9c599954" call-id="8" rc-code="0" op-status="0" interval="60000" last-rc-change="1418237103" exec-time="12" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhel7-auto2"/>
+          </lrm_resource>
+          <lrm_resource id="rhel7-auto4" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="rhel7-auto4_last_0" operation_key="rhel7-auto4_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="13:15:0:d38b5504-008d-47e7-b5e6-d85f9c599954" transition-magic="2:1;13:15:0:d38b5504-008d-47e7-b5e6-d85f9c599954" call-id="2" rc-code="1" op-status="2" interval="0" last-run="1418237281" last-rc-change="1418237281" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto2"/>
+            <lrm_rsc_op id="rhel7-auto4_last_failure_0" operation_key="rhel7-auto4_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="13:15:0:d38b5504-008d-47e7-b5e6-d85f9c599954" transition-magic="2:1;13:15:0:d38b5504-008d-47e7-b5e6-d85f9c599954" call-id="2" rc-code="1" op-status="2" interval="0" last-run="1418237281" last-rc-change="1418237281" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-2-fail-count-rhel7-auto4" name="fail-count-rhel7-auto4" value="INFINITY"/>
+          <nvpair id="status-2-last-failure-rhel7-auto4" name="last-failure-rhel7-auto4" value="1418237340"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="rhel7-auto4" remote_node="true" uname="rhel7-auto4" crm-debug-origin="remote_node_init_status">
+      <transient_attributes id="rhel7-auto4">
+        <instance_attributes id="status-rhel7-auto4">
+          <nvpair id="status-rhel7-auto4-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>

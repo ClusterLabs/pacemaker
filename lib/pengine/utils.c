@@ -35,6 +35,7 @@ void unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * contain
                       pe_working_set_t * data_set);
 static xmlNode *find_rsc_op_entry_helper(resource_t * rsc, const char *key,
                                          gboolean include_disabled);
+static gboolean is_rsc_baremetal_remote_node(resource_t *rsc, pe_working_set_t * data_set);
 
 bool pe_can_fence(pe_working_set_t * data_set, node_t *node)
 {
@@ -686,6 +687,19 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
                                NULL, action->meta, NULL, FALSE, data_set->now);
     g_hash_table_remove(action->meta, "id");
 
+    field = XML_LRM_ATTR_INTERVAL;
+    value = g_hash_table_lookup(action->meta, field);
+    if (value != NULL) {
+        interval = crm_get_interval(value);
+        if (interval > 0) {
+            value_ms = crm_itoa(interval);
+            g_hash_table_replace(action->meta, strdup(field), value_ms);
+
+        } else {
+            g_hash_table_remove(action->meta, field);
+        }
+    }
+
     /* Begin compatability code */
     value = g_hash_table_lookup(action->meta, "requires");
 
@@ -789,6 +803,22 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
         action->on_fail = action_fail_restart_container;
         value = "restart container (and possibly migrate) (default)";
 
+    /* for baremetal remote nodes, ensure that a recurring monitor operation failure
+     * defaults to either fencing the remote-node for recovery, or at least
+     * attempting to recover the the connection when fencing is disabled. */
+    } else if (value == NULL &&
+               is_rsc_baremetal_remote_node(action->rsc, data_set) &&
+               safe_str_eq(action->task, CRMD_ACTION_STATUS) &&
+               interval > 0) {
+
+        if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            action->on_fail = action_fail_reset_remote;
+            value = "fence baremetal remote node (default)";
+        } else {
+            action->on_fail = action_fail_recover;
+            value = "recover baremetal remote node connection (default)";
+        }
+
     } else if (value == NULL && safe_str_eq(action->task, CRMD_ACTION_STOP)) {
         if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
             action->on_fail = action_fail_fence;
@@ -823,19 +853,6 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
     }
     pe_rsc_trace(action->rsc, "\t%s failure results in: %s", action->task,
                  role2text(action->fail_role));
-
-    field = XML_LRM_ATTR_INTERVAL;
-    value = g_hash_table_lookup(action->meta, field);
-    if (value != NULL) {
-        interval = crm_get_interval(value);
-        if (interval > 0) {
-            value_ms = crm_itoa(interval);
-            g_hash_table_replace(action->meta, strdup(field), value_ms);
-
-        } else {
-            g_hash_table_remove(action->meta, field);
-        }
-    }
 
     field = XML_OP_ATTR_START_DELAY;
     value = g_hash_table_lookup(action->meta, field);
@@ -1936,6 +1953,25 @@ const char *rsc_printable_id(resource_t *rsc)
         return ID(rsc->xml);
     }
     return rsc->id;
+}
+
+gboolean
+is_rsc_baremetal_remote_node(resource_t *rsc, pe_working_set_t * data_set)
+{
+    node_t *node;
+
+    if (rsc == NULL) {
+        return FALSE;
+    } else if (rsc->is_remote_node == FALSE) {
+        return FALSE;
+    }
+
+    node = pe_find_node(data_set->nodes, rsc->id);
+    if (node == NULL) {
+        return FALSE;
+    }
+
+    return is_baremetal_remote_node(node);
 }
 
 gboolean

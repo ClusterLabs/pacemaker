@@ -1,0 +1,553 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="65" operation="migrate_from" operation_key="pcmk_remote3_migrate_from_0" on_node="pcmk2" on_node_uuid="2">
+        <primitive id="pcmk_remote3" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_migrate_source="pcmk1" CRM_meta_migrate_target="pcmk2" CRM_meta_timeout="20000"  server="172.17.201.3"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="64" operation="monitor" operation_key="pcmk_remote3_monitor_60000" on_node="pcmk2" on_node_uuid="2">
+        <primitive id="pcmk_remote3" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_timeout="30000"  server="172.17.201.3"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="63" operation="start" operation_key="pcmk_remote3_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <pseudo_event id="63" operation="start" operation_key="pcmk_remote3_start_0">
+        <attributes CRM_meta_name="start" CRM_meta_timeout="10000"  server="172.17.201.3"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="62" operation="stop" operation_key="pcmk_remote3_stop_0" on_node="pcmk1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="65" operation="migrate_from" operation_key="pcmk_remote3_migrate_from_0" on_node="pcmk2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <rsc_op id="62" operation="stop" operation_key="pcmk_remote3_stop_0" on_node="pcmk1" on_node_uuid="1">
+        <primitive id="pcmk_remote3" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_name="stop" CRM_meta_timeout="60000"  server="172.17.201.3"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="65" operation="migrate_from" operation_key="pcmk_remote3_migrate_from_0" on_node="pcmk2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <rsc_op id="75" operation="monitor" operation_key="FAKE4_monitor_10000" on_node="pcmk_remote3" on_node_uuid="pcmk_remote3" router_node="pcmk2">
+        <primitive id="FAKE4" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="63" operation="start" operation_key="pcmk_remote3_start_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="74" operation="start" operation_key="FAKE4_start_0" on_node="pcmk_remote3" on_node_uuid="pcmk_remote3" router_node="pcmk2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <rsc_op id="74" operation="start" operation_key="FAKE4_start_0" on_node="pcmk_remote3" on_node_uuid="pcmk_remote3" router_node="pcmk2">
+        <primitive id="FAKE4" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="63" operation="start" operation_key="pcmk_remote3_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <rsc_op id="86" operation="monitor" operation_key="FAKE9_monitor_10000" on_node="pcmk1" on_node_uuid="1">
+        <primitive id="FAKE9" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="85" operation="start" operation_key="FAKE9_start_0" on_node="pcmk1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <rsc_op id="85" operation="start" operation_key="FAKE9_start_0" on_node="pcmk1" on_node_uuid="1">
+        <primitive id="FAKE9" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="84" operation="stop" operation_key="FAKE9_stop_0" on_node="pcmk_remote3" on_node_uuid="pcmk_remote3" router_node="pcmk2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="8">
+    <action_set>
+      <rsc_op id="84" operation="stop" operation_key="FAKE9_stop_0" on_node="pcmk_remote3" on_node_uuid="pcmk_remote3" router_node="pcmk2">
+        <primitive id="FAKE9" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="63" operation="start" operation_key="pcmk_remote3_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="9">
+    <action_set>
+      <rsc_op id="88" operation="monitor" operation_key="FAKE10_monitor_10000" on_node="pcmk1" on_node_uuid="1">
+        <primitive id="FAKE10" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="87" operation="start" operation_key="FAKE10_start_0" on_node="pcmk1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="10">
+    <action_set>
+      <rsc_op id="87" operation="start" operation_key="FAKE10_start_0" on_node="pcmk1" on_node_uuid="1">
+        <primitive id="FAKE10" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="11">
+    <action_set>
+      <rsc_op id="94" operation="monitor" operation_key="FAKE13_monitor_10000" on_node="pcmk2" on_node_uuid="2">
+        <primitive id="FAKE13" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="93" operation="start" operation_key="FAKE13_start_0" on_node="pcmk2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="12">
+    <action_set>
+      <rsc_op id="93" operation="start" operation_key="FAKE13_start_0" on_node="pcmk2" on_node_uuid="2">
+        <primitive id="FAKE13" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="13">
+    <action_set>
+      <rsc_op id="98" operation="monitor" operation_key="FAKE15_monitor_10000" on_node="pcmk3" on_node_uuid="3">
+        <primitive id="FAKE15" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="97" operation="start" operation_key="FAKE15_start_0" on_node="pcmk3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="14">
+    <action_set>
+      <rsc_op id="97" operation="start" operation_key="FAKE15_start_0" on_node="pcmk3" on_node_uuid="3">
+        <primitive id="FAKE15" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="15">
+    <action_set>
+      <rsc_op id="101" operation="monitor" operation_key="FAKE16_monitor_10000" on_node="pcmk_remote3" on_node_uuid="pcmk_remote3" router_node="pcmk2">
+        <primitive id="FAKE16" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="63" operation="start" operation_key="pcmk_remote3_start_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="100" operation="start" operation_key="FAKE16_start_0" on_node="pcmk_remote3" on_node_uuid="pcmk_remote3" router_node="pcmk2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="16">
+    <action_set>
+      <rsc_op id="100" operation="start" operation_key="FAKE16_start_0" on_node="pcmk_remote3" on_node_uuid="pcmk_remote3" router_node="pcmk2">
+        <primitive id="FAKE16" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="63" operation="start" operation_key="pcmk_remote3_start_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="99" operation="stop" operation_key="FAKE16_stop_0" on_node="pcmk1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="17">
+    <action_set>
+      <rsc_op id="99" operation="stop" operation_key="FAKE16_stop_0" on_node="pcmk1" on_node_uuid="1">
+        <primitive id="FAKE16" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="18">
+    <action_set>
+      <rsc_op id="113" operation="monitor" operation_key="FAKE22_monitor_10000" on_node="pcmk1" on_node_uuid="1">
+        <primitive id="FAKE22" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="112" operation="start" operation_key="FAKE22_start_0" on_node="pcmk1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="19">
+    <action_set>
+      <rsc_op id="112" operation="start" operation_key="FAKE22_start_0" on_node="pcmk1" on_node_uuid="1">
+        <primitive id="FAKE22" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="20">
+    <action_set>
+      <rsc_op id="116" operation="monitor" operation_key="FAKE23_monitor_10000" on_node="pcmk_remote1" on_node_uuid="pcmk_remote1" router_node="pcmk1">
+        <primitive id="FAKE23" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="115" operation="start" operation_key="FAKE23_start_0" on_node="pcmk_remote1" on_node_uuid="pcmk_remote1" router_node="pcmk1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="21">
+    <action_set>
+      <rsc_op id="115" operation="start" operation_key="FAKE23_start_0" on_node="pcmk_remote1" on_node_uuid="pcmk_remote1" router_node="pcmk1">
+        <primitive id="FAKE23" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="114" operation="stop" operation_key="FAKE23_stop_0" on_node="pcmk1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="22">
+    <action_set>
+      <rsc_op id="114" operation="stop" operation_key="FAKE23_stop_0" on_node="pcmk1" on_node_uuid="1">
+        <primitive id="FAKE23" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="23">
+    <action_set>
+      <rsc_op id="122" operation="monitor" operation_key="FAKE26_monitor_10000" on_node="pcmk1" on_node_uuid="1">
+        <primitive id="FAKE26" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="121" operation="start" operation_key="FAKE26_start_0" on_node="pcmk1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="24">
+    <action_set>
+      <rsc_op id="121" operation="start" operation_key="FAKE26_start_0" on_node="pcmk1" on_node_uuid="1">
+        <primitive id="FAKE26" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="25">
+    <action_set>
+      <rsc_op id="128" operation="monitor" operation_key="FAKE29_monitor_10000" on_node="pcmk2" on_node_uuid="2">
+        <primitive id="FAKE29" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="127" operation="start" operation_key="FAKE29_start_0" on_node="pcmk2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="26">
+    <action_set>
+      <rsc_op id="127" operation="start" operation_key="FAKE29_start_0" on_node="pcmk2" on_node_uuid="2">
+        <primitive id="FAKE29" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="27">
+    <action_set>
+      <rsc_op id="131" operation="monitor" operation_key="FAKE30_monitor_10000" on_node="pcmk_remote2" on_node_uuid="pcmk_remote2" router_node="pcmk3">
+        <primitive id="FAKE30" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="130" operation="start" operation_key="FAKE30_start_0" on_node="pcmk_remote2" on_node_uuid="pcmk_remote2" router_node="pcmk3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="28">
+    <action_set>
+      <rsc_op id="130" operation="start" operation_key="FAKE30_start_0" on_node="pcmk_remote2" on_node_uuid="pcmk_remote2" router_node="pcmk3">
+        <primitive id="FAKE30" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="129" operation="stop" operation_key="FAKE30_stop_0" on_node="pcmk1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="29">
+    <action_set>
+      <rsc_op id="129" operation="stop" operation_key="FAKE30_stop_0" on_node="pcmk1" on_node_uuid="1">
+        <primitive id="FAKE30" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="30">
+    <action_set>
+      <rsc_op id="143" operation="monitor" operation_key="FAKE36_monitor_10000" on_node="pcmk1" on_node_uuid="1">
+        <primitive id="FAKE36" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="142" operation="start" operation_key="FAKE36_start_0" on_node="pcmk1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="31">
+    <action_set>
+      <rsc_op id="142" operation="start" operation_key="FAKE36_start_0" on_node="pcmk1" on_node_uuid="1">
+        <primitive id="FAKE36" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="32">
+    <action_set>
+      <rsc_op id="146" operation="monitor" operation_key="FAKE37_monitor_10000" on_node="pcmk2" on_node_uuid="2">
+        <primitive id="FAKE37" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="145" operation="start" operation_key="FAKE37_start_0" on_node="pcmk2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="33">
+    <action_set>
+      <rsc_op id="145" operation="start" operation_key="FAKE37_start_0" on_node="pcmk2" on_node_uuid="2">
+        <primitive id="FAKE37" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="144" operation="stop" operation_key="FAKE37_stop_0" on_node="pcmk1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="34">
+    <action_set>
+      <rsc_op id="144" operation="stop" operation_key="FAKE37_stop_0" on_node="pcmk1" on_node_uuid="1">
+        <primitive id="FAKE37" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="35">
+    <action_set>
+      <rsc_op id="158" operation="monitor" operation_key="FAKE43_monitor_10000" on_node="pcmk1" on_node_uuid="1">
+        <primitive id="FAKE43" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="157" operation="start" operation_key="FAKE43_start_0" on_node="pcmk1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="36">
+    <action_set>
+      <rsc_op id="157" operation="start" operation_key="FAKE43_start_0" on_node="pcmk1" on_node_uuid="1">
+        <primitive id="FAKE43" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="37">
+    <action_set>
+      <rsc_op id="161" operation="monitor" operation_key="FAKE44_monitor_10000" on_node="pcmk2" on_node_uuid="2">
+        <primitive id="FAKE44" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="160" operation="start" operation_key="FAKE44_start_0" on_node="pcmk2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="38">
+    <action_set>
+      <rsc_op id="160" operation="start" operation_key="FAKE44_start_0" on_node="pcmk2" on_node_uuid="2">
+        <primitive id="FAKE44" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="159" operation="stop" operation_key="FAKE44_stop_0" on_node="pcmk1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="39">
+    <action_set>
+      <rsc_op id="159" operation="stop" operation_key="FAKE44_stop_0" on_node="pcmk1" on_node_uuid="1">
+        <primitive id="FAKE44" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="40">
+    <action_set>
+      <rsc_op id="173" operation="monitor" operation_key="FAKE50_monitor_10000" on_node="pcmk1" on_node_uuid="1">
+        <primitive id="FAKE50" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="172" operation="start" operation_key="FAKE50_start_0" on_node="pcmk1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="41">
+    <action_set>
+      <rsc_op id="172" operation="start" operation_key="FAKE50_start_0" on_node="pcmk1" on_node_uuid="1">
+        <primitive id="FAKE50" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="42" priority="1000000">
+    <action_set>
+      <rsc_op id="55" operation="probe_complete" operation_key="probe_complete-pcmk_remote4" on_node="pcmk_remote4" on_node_uuid="pcmk_remote4" router_node="pcmk3">
+        <attributes CRM_meta_op_no_wait="true" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="43" priority="1000000">
+    <action_set>
+      <rsc_op id="53" operation="probe_complete" operation_key="probe_complete-pcmk_remote2" on_node="pcmk_remote2" on_node_uuid="pcmk_remote2" router_node="pcmk3">
+        <attributes CRM_meta_op_no_wait="true" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="44" priority="1000000">
+    <action_set>
+      <rsc_op id="52" operation="probe_complete" operation_key="probe_complete-pcmk_remote1" on_node="pcmk_remote1" on_node_uuid="pcmk_remote1" router_node="pcmk1">
+        <attributes CRM_meta_op_no_wait="true" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="45">
+    <action_set>
+      <pseudo_event id="46" operation="all_stopped" operation_key="all_stopped">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="62" operation="stop" operation_key="pcmk_remote3_stop_0" on_node="pcmk1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="84" operation="stop" operation_key="FAKE9_stop_0" on_node="pcmk_remote3" on_node_uuid="pcmk_remote3" router_node="pcmk2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="99" operation="stop" operation_key="FAKE16_stop_0" on_node="pcmk1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="114" operation="stop" operation_key="FAKE23_stop_0" on_node="pcmk1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="129" operation="stop" operation_key="FAKE30_stop_0" on_node="pcmk1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="144" operation="stop" operation_key="FAKE37_stop_0" on_node="pcmk1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="159" operation="stop" operation_key="FAKE44_stop_0" on_node="pcmk1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>

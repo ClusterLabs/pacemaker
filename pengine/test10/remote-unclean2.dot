@@ -1,0 +1,14 @@
+ digraph "g" {
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+"rhel7-auto4_monitor_60000 rhel7-auto1" [ style=bold color="green" fontcolor="black"]
+"rhel7-auto4_start_0 rhel7-auto1" -> "rhel7-auto4_monitor_60000 rhel7-auto1" [ style = bold]
+"rhel7-auto4_start_0 rhel7-auto1" [ style=bold color="green" fontcolor="black"]
+"rhel7-auto4_stop_0 rhel7-auto1" -> "all_stopped" [ style = bold]
+"rhel7-auto4_stop_0 rhel7-auto1" -> "rhel7-auto4_start_0 rhel7-auto1" [ style = bold]
+"rhel7-auto4_stop_0 rhel7-auto1" [ style=bold color="green" fontcolor="black"]
+"stonith 'reboot' rhel7-auto4" -> "stonith_complete" [ style = bold]
+"stonith 'reboot' rhel7-auto4" [ style=bold color="green" fontcolor="black"]
+"stonith_complete" -> "all_stopped" [ style = bold]
+"stonith_complete" -> "rhel7-auto4_start_0 rhel7-auto1" [ style = bold]
+"stonith_complete" [ style=bold color="green" fontcolor="orange"]
+}

@@ -51,7 +51,7 @@
     <action_set>
       <rsc_op id="20" operation="migrate_to" operation_key="remote1_migrate_to_0" on_node="18builder" on_node_uuid="5">
         <primitive id="remote1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_migrate_source="18builder" CRM_meta_migrate_target="18node1" CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_migrate_source="18builder" CRM_meta_migrate_target="18node1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>

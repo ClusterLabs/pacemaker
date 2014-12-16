@@ -71,6 +71,12 @@ struct pending_deletion_op_s {
 xmlNode *do_lrm_query_internal(lrm_state_t * lrm_state, gboolean is_replace);
 
 /*!
+ * \brief Is this the local ipc connection to the lrmd
+ */
+gboolean
+lrm_state_is_local(lrm_state_t *lrm_state);
+
+/*!
  * \brief Clear all state information from a single state entry.
  * \note This does not close the lrmd connection
  */

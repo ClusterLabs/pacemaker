@@ -152,7 +152,7 @@
     <action_set>
       <rsc_op id="42" operation="migrate_to" operation_key="rhel7-node1_migrate_to_0" on_node="rhel7-node2" on_node_uuid="2">
         <primitive id="rhel7-node1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="remote-rsc" CRM_meta_migrate_source="rhel7-node2" CRM_meta_migrate_target="rhel7-node3" CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_container="remote-rsc" CRM_meta_migrate_source="rhel7-node2" CRM_meta_migrate_target="rhel7-node3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>

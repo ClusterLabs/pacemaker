@@ -1144,7 +1144,7 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
 
     id++;
     CRM_LOG_ASSERT(id != 0); /* Crude wrap-around detection */
-    rc = crm_ipc_prepare(id, message, &iov, ipc_buffer_max);
+    rc = crm_ipc_prepare(id, message, &iov, client->max_buf_size);
     if(rc < 0) {
         return rc;
     }
@@ -1158,10 +1158,10 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
     }
 
     if(header->size_compressed) {
-        if(factor < 10 && (ipc_buffer_max / 10) < (rc / factor)) {
+        if(factor < 10 && (client->max_buf_size / 10) < (rc / factor)) {
             crm_notice("Compressed message exceeds %d0%% of the configured ipc limit (%d bytes), "
                        "consider setting PCMK_ipc_buffer to %d or higher",
-                       factor, ipc_buffer_max, 2*ipc_buffer_max);
+                       factor, client->max_buf_size, 2*client->max_buf_size);
             factor++;
         }
     }
