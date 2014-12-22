@@ -13,8 +13,8 @@
 	<xi:include href="Ch-Active-Passive.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 	<xi:include href="Ch-Apache.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 	<xi:include href="Ch-Shared-Storage.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-	<xi:include href="Ch-Active-Active.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 	<xi:include href="Ch-Stonith.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	<xi:include href="Ch-Active-Active.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 	<xi:include href="Ap-Configuration.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 	<xi:include href="Ap-Corosync-Conf.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 	<xi:include href="Ap-Reading.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />

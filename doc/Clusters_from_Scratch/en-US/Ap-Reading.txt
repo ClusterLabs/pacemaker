@@ -2,11 +2,11 @@
 == Further Reading ==
 
 - Project Website
-http://www.clusterlabs.org
+http://www.clusterlabs.org/
 
-- Cluster Commands
-A comprehensive guide to cluster commands has been written by SuSE and can be found at:
+- SuSE has a comprehensive guide to cluster commands (though using the `crmsh` command-line
+  shell rather than `pcs`) at:
   http://www.suse.com/documentation/sle_ha/book_sleha/?page=/documentation/sle_ha/book_sleha/data/book_sleha.html
 
 - Corosync
- http://www.corosync.org
+ http://www.corosync.org/

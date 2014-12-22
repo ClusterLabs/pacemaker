@@ -1,6 +1,6 @@
 = Pacemaker Tools =
 
-== Using Pacemaker Tools ==
+== Simplify administration using a cluster shell ==
 
 In the dark past, configuring Pacemaker required the administrator to
 read and write XML.  In true UNIX style, there were also a number of
@@ -12,16 +12,14 @@ command-line shells (and GUIs) that hide all the messy XML
 scaffolding.
 
 These shells take all the individual aspects required for managing and
-configuring a cluster, and packs them into one simple to use command
+configuring a cluster, and packs them into one simple-to-use command
 line tool.
 
 They even allow you to queue up several changes at once and commit
 them atomically.
 
 There are currently two command-line shells that people use, `pcs` and
-`crmsh`.  This edition of Clusters from Scratch is based on
-+{cli_name}+.  Start by taking some time to familiarize yourself with
-what it can do.
+`crmsh`.  This edition of Clusters from Scratch is based on `pcs`.
 
 [NOTE]
 ===========
@@ -30,19 +28,21 @@ does differ, so make sure you read the version of this guide that
 corresponds to the software installed on your system.
 ===========
 
-ifdef::pcs[]
-
 [IMPORTANT]
 ===========
 Since `pcs` has the ability to manage all aspects of the cluster (both
 corosync and pacemaker), it requires a specific cluster stack to be in
-use, (corosync 2.0 with votequorum + Pacemaker version >= 1.1.8).
+use: corosync 2.0 or later with votequorum plus Pacemaker 1.1.8 or later.
 ===========
 
-[source,C]
-# pcs
+== Explore pcs ==
 
-.....
+Start by taking some time to familiarize yourself with
+what `pcs` can do.
+
+----
+[root@pcmk-1 ~]# pcs
+Usage: pcs [-f file] [-h] [commands]...
 Control and configure pacemaker and corosync.
 
 Options:
@@ -59,18 +59,16 @@ Commands:
     property    Set pacemaker properties
     status      View cluster status
     config      Print full cluster configuration
-.....
+----
 
-As you can see, the different aspects of cluster management are broken
-up into categories: resource, cluster, stonith, property, constraint,
+As you can see, the different aspects of cluster management are separated
+into categories: resource, cluster, stonith, property, constraint,
 and status. To discover the functionality available in each of these
-categories, one can issue the command 'pcs <category> help'.  Below
+categories, one can issue the command +pcs pass:[<replaceable>category</replaceable>] help+.  Below
 is an example of all the options available under the status category.
 
-[source,C]
-# pcs status help
-
-.....
+----
+[root@pcmk-1 ~]# pcs status help
 Usage: pcs status [commands]...
 View current cluster and resource status
 Commands:
@@ -100,64 +98,22 @@ Commands:
 
     xml
         View xml version of status (output from crm_mon -r -1 -X)
+----
 
-.....
+Additionally, if you are interested in the version and
+supported cluster stack(s) available with your Pacemaker
+installation, run:
 
-Additionally, if you are interested in the Pacemaker version and
-supported cluster stack(s) available with your current Pacemaker
-installation, the pacemakerd --features option is available to you.
-
-
-[source,C]
-# pacemakerd --features
-
-------------------
-sys::[pacemakerd --features]
-------------------
+----
+[root@pcmk-1 ~]# pacemakerd --features
+Pacemaker 1.1.12 (Build: a9c8177)
+ Supporting v3.0.9:  generated-manpages agent-manpages ascii-docs publican-docs ncurses libqb-logging libqb-ipc upstart systemd nagios  corosync-native atomic-attrd acls
+----
 
 [NOTE]
 ======
 If the SNMP and/or email options are not listed, then Pacemaker was not
-built to support them. This may be by the choice of your distribution or
+built to support them. This may be by the choice of your distribution, or
 the required libraries may not have been available. Please contact
 whoever supplied you with the packages for more details.
 ======
-
-endif::[]
-
-ifdef::crmsh[]
-pass:[# <command>crm --help</command>]
-
-The primary tool for monitoring the status of the cluster is crm_mon
-(also available as crm status). It can be run in a variety of modes
-and has a number of output options. To find out about any of the tools
-that come with Pacemaker, simply invoke them with the --help option or
-consult the included man pages. Both sets of output are created from
-the tool, and so will always be in sync with each other and the tool
-itself.
-
-Additionally, the Pacemaker version and supported cluster stack(s) are
-available via the --feature option to pacemakerd.
-
-[source,C]
-# pacemakerd --features
-
-------------------
-sys::[pacemakerd --features]
-------------------
-
-[source,C]
-# crm_mon --help
-
-------------------
-sys::[crm_mon --help]
-------------------
-
-[NOTE]
-======
-If the SNMP and/or email options are not listed, then Pacemaker was not
-built to support them. This may be by the choice of your distribution or
-the required libraries may not have been available. Please contact
-whoever supplied you with the packages for more details.
-======
-endif::[]

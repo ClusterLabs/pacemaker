@@ -1,46 +1,46 @@
 = Installation =
 
-== OS Installation ==
+== Install the OS ==
 
 Detailed instructions for installing Fedora are available at
-http://docs.fedoraproject.org/en-US/Fedora/20/html/Installation_Guide/ in a number of
-languages. The abbreviated version is as follows...
+http://docs.fedoraproject.org/en-US/Fedora/21/html/Installation_Guide/ in a number of
+languages. The abbreviated version is as follows:
 
-Point your browser to http://fedoraproject.org/en/get-fedora-all,
-locate the +Install Media+ section and download the install DVD that
-matches your hardware.
+Point your browser to https://getfedora.org/,
+choose a flavor (Server is an appropriate choice),
+and download the installation image appropriate to your hardware.
 
-Burn the disk image to a DVD
-footnote:[http://docs.fedoraproject.org/en-US/Fedora/20/html/Burning_ISO_images_to_disc/index.html]
+Burn the installation image to a DVD or USB drive
+footnote:[http://docs.fedoraproject.org/en-US/Fedora/21/html/Installation_Guide/sect-preparing-boot-media.html]
 and boot from it, or use the image to boot a virtual machine.
 
-After clicking through the welcome screen, select your language,
-keyboard layout
-footnote:[http://docs.fedoraproject.org/en-US/Fedora/20/html/Installation_Guide/language-selection-x86.html]
+After starting the installation, select your language and keyboard layout at
+the welcome screen.
+footnote:[http://docs.fedoraproject.org/en-US/Fedora/21/html/Installation_Guide/sect-installation-graphical-mode.html]
 
-At this point you get a chance to tweak the default installation options.
+At this point, you get a chance to tweak the default installation options.
 
-In the +Network Configuration+ section you'll want to:
+In the *NETWORK & HOSTNAME* section you'll want to:
 
-- Assign your machine a host name
+- Assign your machine a host name.
   I happen to control the clusterlabs.org domain name, so I will use
-  that here.
-- Assign a fixed IP address
+  pcmk-1.clusterlabs.org here.
+- Assign a fixed IPv4 address. In this example, I'll use 192.168.122.101.
 
 [IMPORTANT]
 ===========
 Do not accept the default network settings.
-Cluster machines should never obtain an IP address via DHCP.
+Cluster machines should never obtain an IP address via DHCP, because
+DHCP's periodic address renewal will interfere with corosync.
 
-If you miss this step, this can easily be configured after installation. You will have
-to navigate to +system settings+ and select +network+.  From there you can select
+If you miss this step during installation, it can easily be fixed later. You will have
+to navigate to *system settings* and select *network*.  From there, you can select
 what device to configure.
 ===========
 
-In the +Software Selection+ section (try saying that 10 times
-quickly), choose +Minimal Install+ so that we see everything that gets
-installed. Don't enable updates yet, we'll do that (and install any
-extra software we need) later.
+In the *Software Selection* section (try saying that 10 times
+quickly), leave all *Add-Ons* unchecked so that we see everything that gets
+installed. We'll install any extra software we need later.
 
 [IMPORTANT]
 ===========
@@ -49,95 +49,96 @@ By default Fedora uses LVM for partitioning which allows us to
 dynamically change the amount of space allocated to a given partition.
 
 However, by default it also allocates all free space to the +/+
-(aka. +root+) partition which cannot be dynamically _reduced_ in size
-(dynamic increases are fine by-the-way).
+(aka. *root*) partition, which cannot be dynamically _reduced_ in size
+(dynamic increases are fine, by the way).
 
 So if you plan on following the DRBD or GFS2 portions of this guide,
-you should reserve at least 1Gb of space on each machine from which to
-create a shared volume.  To do so, enter the +Installation
-Destination+ section where you are be given an opportunity to reduce
-the size of the +root+ partition (after chosing which hard drive you
-wish to install to).
+you should reserve at least 1GiB of space on each machine from which to
+create a shared volume.  To do so, enter the *Installation
+Destination* section where you are be given an opportunity to reduce
+the size of the *root* partition (after choosing which hard drive you
+wish to install to). If you want the reserved space to be available
+within an LVM volume group, be sure to select *Modify...* next to
+the volume group name and change the *Size policy:* to *Fixed*
+or *As large as possible*.
 
 ===========
 
 It is highly recommended to enable NTP on your cluster nodes. Doing so
 ensures all nodes agree on the current time and makes reading log files
-significantly easier. You can do this in the +Date & Time+ section. 
-footnote:[http://docs.fedoraproject.org/en-US/Fedora/20/html/Installation_Guide/s1-timezone-x86.html]
+significantly easier. You can do this in the *DATE & TIME* section. 
+footnote:[http://docs.fedoraproject.org/en-US/Fedora/21/html/Installation_Guide/sect-installation-gui-date-and-time.html]
 
-
-
-Once the node reboots, you'll see a (possibly mangled) login prompt on
-the console.  Login using +root+ and the password you created earlier.
+Once you've completed the installation, set a root password as instructed.
+For the purposes of this document, it is not necessary to create any additional
+users. After the node reboots, you'll see a (possibly mangled) login prompt on
+the console. Login using *root* and the password you created earlier.
 
 image::images/Console.png["Initial Console",align="center",scaledwidth="65%"]
 
 [NOTE]
 ======
 
-From here on in we're going to be working exclusively from the terminal.
+From here on, we're going to be working exclusively from the terminal.
 
 ======
 
-== Post Installation Tasks ==
+== Configure the OS ==
 
-=== Networking ===
+=== Verify Networking ===
 
-Check the machine has the static IP address you configured earlier
+Ensure that the machine has the static IP address you configured earlier.
 
-[source,C]
 -----
-# ip addr
-1: lo: <LOOPBACK,UP,LOWER_UP> mtu 16436 qdisc noqueue state UNKNOWN
+[root@pcmk-1 ~]# ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default
     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
     inet 127.0.0.1/8 scope host lo
     inet6 ::1/128 scope host
        valid_lft forever preferred_lft forever
-2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP qlen 1000
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
     link/ether 52:54:00:d7:d6:08 brd ff:ff:ff:ff:ff:ff
     inet 192.168.122.101/24 brd 192.168.122.255 scope global eth0
+       valid_lft forever preferred_lft forever
     inet6 fe80::5054:ff:fed7:d608/64 scope link
        valid_lft forever preferred_lft forever
 -----
 
 [NOTE]
 =====
-If you ever need to change the node's IP address from the command line follow these instructions:
+If you ever need to change the node's IP address from the command line, follow these instructions:
 
 ....
-# manually edit /etc/sysconfig/network-scripts/ifcfg-${device}
-# nmcli dev disconnect ${device}
-# nmcli con reload ${device}
-# nmcli con up ${device}
+[root@pcmk-1 ~]# vim /etc/sysconfig/network-scripts/ifcfg-${device} # manually edit as desired
+[root@pcmk-1 ~]# nmcli dev disconnect ${device}
+[root@pcmk-1 ~]# nmcli con reload ${device}
+[root@pcmk-1 ~]# nmcli con up ${device}
 ....
 
-This makes +NetworkManager+ aware that a change was made on the config file.
+This makes *NetworkManager* aware that a change was made on the config file.
 
 =====
 
-Next, check the routes are ok:
+Next, ensure that the routes are as expected:
 
-[source,C]
 -----
 [root@pcmk-1 ~]# ip route
-default via 192.168.122.1 dev eth0
+default via 192.168.122.1 dev eth0  proto static  metric 1024
 192.168.122.0/24 dev eth0  proto kernel  scope link  src 192.168.122.101
 -----
 
-If there is no line beginning with +default via+, then you may need to add a line such as
+If there is no line beginning with *default via*, then you may need to add a line such as
 
 [source,Bash]
 GATEWAY=192.168.122.1
 
-to '/etc/sysconfig/network' and restart the network.
+to +/etc/sysconfig/network+ and restart the network.
 
-Now check for connectivity to the outside world.  Start small by
-testing if we can read the gateway we configured.
+Now, check for connectivity to the outside world. Start small by
+testing whether we can reach the gateway we configured.
 
-[source,C]
 -----
-# ping -c 1 192.168.122.1
+[root@pcmk-1 ~]# ping -c 1 192.168.122.1
 PING 192.168.122.1 (192.168.122.1) 56(84) bytes of data.
 64 bytes from 192.168.122.1: icmp_req=1 ttl=64 time=0.249 ms
 
@@ -146,11 +147,10 @@ PING 192.168.122.1 (192.168.122.1) 56(84) bytes of data.
 rtt min/avg/max/mdev = 0.249/0.249/0.249/0.000 ms
 -----
 
-Now try something external, choose a location you know will be available.
+Now try something external; choose a location you know should be available.
 
-[source,C]
 -----
-# ping -c 1 www.google.com
+[root@pcmk-1 ~]# ping -c 1 www.google.com
 PING www.l.google.com (173.194.72.106) 56(84) bytes of data.
 64 bytes from tf-in-f106.1e100.net (173.194.72.106): icmp_req=1 ttl=41 time=167 ms
 
@@ -159,15 +159,14 @@ PING www.l.google.com (173.194.72.106) 56(84) bytes of data.
 rtt min/avg/max/mdev = 167.618/167.618/167.618/0.000 ms
 -----
 
-=== Leaving the Console ===
+=== Login Remotely ===
 
-The console isn't a very friendly place to work from, we will now
+The console isn't a very friendly place to work from, so we will now
 switch to accessing the machine remotely via SSH where we can
-use copy&paste etc.
+use copy and paste, etc.
 
-First we check we can see the newly installed at all:
+From another host, check whether we can see the new host at all:
 
-[source,C]
 -----
 beekhof@f16 ~ # ping -c 1 192.168.122.101
 PING 192.168.122.101 (192.168.122.101) 56(84) bytes of data.
@@ -178,9 +177,8 @@ PING 192.168.122.101 (192.168.122.101) 56(84) bytes of data.
 rtt min/avg/max/mdev = 1.012/1.012/1.012/0.000 ms
 -----
 
-Next we login via SSH
+Next, login as root via SSH.
 
-[source,C]
 -----
 beekhof@f16 ~ # ssh -l root 192.168.122.11
 root@192.168.122.11's password:
@@ -188,7 +186,14 @@ Last login: Fri Mar 30 19:41:19 2012 from 192.168.122.1
 [root@pcmk-1 ~]#
 -----
 
-=== Security Shortcuts ===
+=== Apply Updates ===
+
+Apply any package updates released since your installation image was created:
+----
+[root@pcmk-1 ~]# yum update
+----
+
+=== Disable Security During Testing ===
 
 To simplify this guide and focus on the aspects directly connected to
 clustering, we will now disable the machine's firewall and SELinux
@@ -196,76 +201,74 @@ installation.
 
 [WARNING]
 ===========
-Both of these actions create significant security issues
-and should not be performed on machines that will be exposed to the
-outside world.
+These actions create significant security issues and should not be performed on
+machines that will be exposed to the outside world.
 ===========
 
-[IMPORTANT]
-===========
+////
  TODO: Create an Appendix that deals with (at least) re-enabling the firewall.
+////
+
+----
+[root@pcmk-1 ~]# setenforce 0
+[root@pcmk-1 ~]# sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/selinux/config
+[root@pcmk-1 ~]# systemctl disable firewalld.service
+[root@pcmk-1 ~]# systemctl stop firewalld.service
+[root@pcmk-1 ~]# iptables --flush
+----
+
+[NOTE]
+===========
+If you are using Fedora 17 or earlier or are using the iptables
+service for your firewall, the commands would be:
+
+----
+[root@pcmk-1 ~]# setenforce 0
+[root@pcmk-1 ~]# sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/selinux/config
+[root@pcmk-1 ~]# systemctl disable iptables.service
+[root@pcmk-1 ~]# rm -f /etc/systemd/system/basic.target.wants/iptables.service
+[root@pcmk-1 ~]# systemctl stop iptables.service
+[root@pcmk-1 ~]# iptables --flush
+----
 ===========
 
-[source,C]
-----
-# setenforce 0
-# sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/selinux/config
-# systemctl disable firewalld.service
-# systemctl stop firewalld.service
-----
 
-or (on older Fedora)
-
-[source,C]
-----
-# setenforce 0
-# sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/selinux/config
-# systemctl disable iptables.service
-# rm '/etc/systemd/system/basic.target.wants/iptables.service'
-# systemctl stop iptables.service
-----
-
-
-
-=== Short Node Names ===
+=== Use Short Node Names ===
 
 During installation, we filled in the machine's fully qualified domain
-name (FQDN) which can be rather long when it appears in cluster logs and
+name (FQDN), which can be rather long when it appears in cluster logs and
 status output. See for yourself how the machine identifies itself:
 (((Nodes, short name)))
 
-[source,C]
 ----
-# uname -n
+[root@pcmk-1 ~]# uname -n
 pcmk-1.clusterlabs.org
-# dnsdomainname
+[root@pcmk-1 ~]# dnsdomainname
 clusterlabs.org
 ----
 (((Nodes, Domain name (Query))))
 
 The output from the second command is fine, but we really don't need the
 domain name included in the basic host details. To address this, we need
-to use the +hostnamectl+ tool to strip off the domain name.
-[source,C]
+to use the `hostnamectl` tool to strip off the domain name.
 ----
-# hostnamectl set-hostname $(uname -n | sed s/\\..*//)'
+[root@pcmk-1 ~]# hostnamectl set-hostname $(uname -n | sed s/\\..*//)
 ----
 (((Nodes, Domain name (Remove from host name))))
 
 Now check the machine is using the correct names
 
-[source,C]
 ----
-# uname -n
+[root@pcmk-1 ~]# uname -n
 pcmk-1
-# dnsdomainname
+[root@pcmk-1 ~]# dnsdomainname
 clusterlabs.org
 ----
 
 If it concerns you that the shell prompt has not been updated, simply
 log out and back in again.
 
-== Before You Continue ==
+== Repeat for Second Node ==
 
 Repeat the Installation steps so far, so that you have two Fedora
 nodes ready to have the cluster software installed.
@@ -273,13 +276,14 @@ nodes ready to have the cluster software installed.
 For the purposes of this document, the additional node is called
 pcmk-2 with address 192.168.122.102.
 
-=== Finalize Networking ===
+== Configure Communication Between Nodes ==
+
+=== Configure Host Name Resolution ===
 
 Confirm that you can communicate between the two new nodes:
 
-[source,C]
 ----
-# ping -c 3 192.168.122.102
+[root@pcmk-1 ~]# ping -c 3 192.168.122.102
 PING 192.168.122.102 (192.168.122.102) 56(84) bytes of data.
 64 bytes from 192.168.122.102: icmp_seq=1 ttl=64 time=0.343 ms
 64 bytes from 192.168.122.102: icmp_seq=2 ttl=64 time=0.402 ms
@@ -292,21 +296,19 @@ rtt min/avg/max/mdev = 0.343/0.434/0.558/0.092 ms
 
 Now we need to make sure we can communicate with the machines by their
 name. If you have a DNS server, add additional entries for the two
-machines. Otherwise, you'll need to add the machines to '/etc/hosts' .
-Below are the entries for my cluster nodes:
+machines. Otherwise, you'll need to add the machines to +/etc/hosts+
+on both nodes. Below are the entries for my cluster nodes:
 
-[source,C]
 ----
-# grep pcmk /etc/hosts
+[root@pcmk-1 ~]# grep pcmk /etc/hosts
 192.168.122.101 pcmk-1.clusterlabs.org pcmk-1
 192.168.122.102 pcmk-2.clusterlabs.org pcmk-2
 ----
 
 We can now verify the setup by again using ping:
 
-[source,C]
 ----
-# ping -c 3 pcmk-2
+[root@pcmk-1 ~]# ping -c 3 pcmk-2
 PING pcmk-2.clusterlabs.org (192.168.122.101) 56(84) bytes of data.
 64 bytes from pcmk-1.clusterlabs.org (192.168.122.101): icmp_seq=1 ttl=64 time=0.164 ms
 64 bytes from pcmk-1.clusterlabs.org (192.168.122.101): icmp_seq=2 ttl=64 time=0.475 ms
@@ -328,16 +330,15 @@ without being prompted.
 
 [WARNING]
 =========
-Unprotected SSH keys, those without a password, are not recommended for servers exposed to the outside world.
+Unprotected SSH keys (those without a password) are not recommended for servers exposed to the outside world.
 We use them here only to simplify the demo.
 =========
 
 Create a new key and allow anyone with that key to log in:
 
 .Creating and Activating a new SSH Key
-[source,C]
 ----
-# ssh-keygen -t dsa -f ~/.ssh/id_dsa -N ""
+[root@pcmk-1 ~]# ssh-keygen -t dsa -f ~/.ssh/id_dsa -N ""
 Generating public/private dsa key pair.
 Your identification has been saved in /root/.ssh/id_dsa.
 Your public key has been saved in /root/.ssh/id_dsa.pub.
@@ -357,17 +358,16 @@ The key's randomart image is:
 |                 |
 +-----------------+
 
-# cp .ssh/id_dsa.pub .ssh/authorized_keys
+[root@pcmk-1 ~]# cp ~/.ssh/id_dsa.pub ~/.ssh/authorized_keys
 ----
 (((Creating and Activating a new SSH Key)))
 
-Install the key on the other nodes and test that you can now run commands
-remotely, without being prompted
+Install the key on the other node and test that you can now run commands
+remotely, without being prompted.
 
 .Installing the SSH Key on Another Host
-[source,C]
 ----
-# scp -r .ssh pcmk-2:
+[root@pcmk-1 ~]# scp -r ~/.ssh pcmk-2:
 The authenticity of host 'pcmk-2 (192.168.122.102)' can't be established.
 RSA key fingerprint is b1:2b:55:93:f1:d9:52:2b:0f:f2:8a:4e:ae:c6:7c:9a.
 Are you sure you want to continue connecting (yes/no)? yes
@@ -376,276 +376,152 @@ id_dsa.pub                           100%  616     0.6KB/s   00:00
 id_dsa                               100%  672     0.7KB/s   00:00
 known_hosts                          100%  400     0.4KB/s   00:00
 authorized_keys                      100%  616     0.6KB/s   00:00
-# ssh pcmk-2 -- uname -n
+[root@pcmk-1 ~]# ssh pcmk-2 -- uname -n
 pcmk-2
-#
 ----
 
-== Cluster Software Installation ==
+== Install the Cluster Software ==
 
-=== Install the Cluster Software ===
+Fedora 17 and later comes with everything you need, so simply fire up a shell
+on both nodes and run the following to install pacemaker and command-line
+cluster management software:
 
-Since version 12, Fedora comes with recent versions of everything you
-need, so simply fire up a shell on all your nodes and run:
-
-[source,C]
 ----
-[ALL] # yum install -y pacemaker pcs
+# yum install -y pacemaker pcs
 ----
 
-Now install the cluster software on the second node.
+[IMPORTANT]
+===========
+This document will show commands that need to be executed on both nodes
+with a simple `#` prompt. Be sure to run them on each node individually.
+===========
 
-ifdef::pcs[]
-=== Install the Cluster Management Software ===
-The pcs cli command coupled with the pcs daemon creates a cluster
-management system capable of managing all aspects of the cluster stack
-across all nodes from a single location.
+[NOTE]
+===========
+This document uses pcs for cluster management. Other alternatives,
+such as crmsh, are available, but their syntax
+will differ from the examples used here.
+===========
 
-[source,C]
-----
-[ALL] # yum install -y pcs
-----
+== Configure the Cluster Software ==
 
-Make sure to install the pcs packages on both nodes.
-endif::[]
-
-== Setup ==
-
-ifdef::pcs[]
 === Enable pcs Daemon ===
 
 Before the cluster can be configured, the pcs daemon must be started and enabled
-to boot on startup on each node.  This daemon works with the pcs cli command to manage
-syncing the corosync configuration across all the nodes in the cluster.
+to start at boot time on each node. This daemon works with the pcs command-line interface
+to manage synchronizing the corosync configuration across all nodes in the cluster.
 
-Start and enable the daemon by issuing the following commands on each node.
+Start and enable the daemon by issuing the following commands on each node:
 
-[source,C]
 ----
 # systemctl start pcsd.service
 # systemctl enable pcsd.service
 ----
 
-Now we need a way for `pcs` to talk to itself on other nodes in the
-cluster.  This is necessary in order to perform tasks such as syncing
-the corosync config, or starting/stopping the cluster on remote nodes
+The installed packages will create a *hacluster* user with a disabled password.
+While this is fine for running `pcs` commands locally,
+the account needs a login password in order to perform such tasks as syncing
+the corosync configuration, or starting and stopping the cluster on other nodes.
 
-While `pcs` can be used locally without setting up these user
-accounts, this tutorial will make use of these remote access commands,
-so we will set a password for the 'hacluster' user.  Its probably best
-if password is consistent across all the nodes.
+This tutorial will make use of such commands,
+so now we will set a password for the *hacluster* user, using the same password
+on both nodes:
 
-As 'root', run:
-
-[source,C]
 ----
 # passwd hacluster
 password:
 ----
 
+[NOTE]
+===========
 Alternatively, to script this process or set the password on a
-different machine to the one you're logged into, you can use 
+different machine from the one you're logged into, you can use 
 the `--stdin` option for `passwd`:
 
-[source,C]
 ----
-# ssh pcmk-2 -- 'echo redhat1 | passwd --stdin hacluster'
+[root@pcmk-1 ~]# ssh pcmk-2 -- 'echo redhat1 | passwd --stdin hacluster'
 ----
+===========
 
-endif::[]
+=== Configure Corosync ===
 
-ifdef::crmsh[]
+On either node, use `pcs cluster auth` to authenticate as the *hacluster* user:
 
-=== Preparation - Multicast ===
-
-Choose a port number and 
-http://en.wikipedia.org/wiki/Multicast[multi-cast] address.
-http://en.wikipedia.org/wiki/Multicast_address[]
-
-Be sure that the values you chose do not conflict with any existing
-clusters you might have.  For this document, I have chosen port '4000'
-and used '239.255.1.1' as the multi-cast address.
-
-endif::[]
-
-=== Notes on Multicast Address Assignment ===
-
-There are several subtle points that often deserve consideration when
-choosing/assigning multicast addresses for corosync.
-footnote:[This information is borrowed from, the now defunct, http://web.archive.org/web/20101211210054/http://29west.com/docs/THPM/multicast-address-assignment.html]
-
-. Avoid '224.0.0.x'
-+
-Traffic to addresses of the form '224.0.0.x' is often flooded to all
-switch ports. This address range is reserved for link-local uses. Many
-routing protocols assume that all traffic within this range will be
-received by all routers on the network. Hence (at least all Cisco)
-switches flood traffic within this range. The flooding behavior
-overrides the normal selective forwarding behavior of a
-multicast-aware switch (e.g. IGMP snooping, CGMP, etc.).
-
-. Watch for '32:1' overlap
-+
-32 non-contiguous IP multicast addresses are mapped onto each Ethernet
-multicast address. A receiver that joins a single IP multicast group
-implicitly joins 31 others due to this overlap. Of course, filtering
-in the operating system discards undesired multicast traffic from
-applications, but NIC bandwidth and CPU resources are nonetheless
-consumed discarding it. The overlap occurs in the 5 high-order bits,
-so it's best to use the 23 low-order bits to make distinct multicast
-streams unique. For example, IP multicast addresses in the range
-'239.0.0.0' to '239.127.255.255' all map to unique Ethernet multicast
-addresses. However, IP multicast address '239.128.0.0' maps to the
-same Ethernet multicast address as '239.0.0.0', '239.128.0.1' maps to
-the same Ethernet multicast address as '239.0.0.1', etc.
-
-. Avoid 'x.0.0.y' and 'x.128.0.y'
-+
-Combining the above two considerations, it's best to avoid using IP
-multicast addresses of the form 'x.0.0.y' and 'x.128.0.y' since they
-all map onto the range of Ethernet multicast addresses that are
-flooded to all switch ports.
-
-. Watch for address assignment conflicts
-+
-http://www.iana.org/[IANA] administers
-http://www.iana.org/assignments/multicast-addresses[Internet multicast
-addresses]. Potential conflicts with Internet multicast address
-assignments can be avoided by using
-http://www.ietf.org/rfc/rfc3180.txt[GLOP addressing]
-(http://en.wikipedia.org/wiki/Autonomous_system_%28Internet%29[AS]
-required) or http://www.ietf.org/rfc/rfc2365.txt[administratively
-scoped] addresses. Such addresses can be safely used on a network
-connected to the Internet without fear of conflict with multicast
-sources originating on the Internet. Administratively scoped addresses
-are roughly analogous to the unicast address space for
-http://www.ietf.org/rfc/rfc1918.txt[private internets]. Site-local
-multicast addresses are of the form '239.255.x.y', but can grow down
-to '239.252.x.y' if needed. Organization-local multicast addresses are
-of the form '239.192-251.x.y', but can grow down to '239.x.y.z' if
-needed.
-
-For a more detailed treatment (57 pages!), see
-http://www.cisco.com/en/US/tech/tk828/technologies_white_paper09186a00802d4643.shtml[Cisco's
-Guidelines for Enterprise IP Multicast Address Allocation] paper.
-
-=== Configuring Corosync ===
-
-ifdef::pcs[]
-
-In the past, at this point in the tutorial an explanation of how to
-configure and propagate corosync's /etc/corosync.conf file would be
-necessary. Using pcs with the pcs daemon greatly simplifies this
-process by generating 'corosync.conf' across all the nodes in the
-cluster with a single command.  The only thing required to achieve
-this is to authenticate as the pcs user 'hacluster' on one of the
-nodes in the cluster, and then issue the 'pcs cluster setup' command
-with a list of all the node names in the cluster.
-
-[source,C]
 ----
-# pcs cluster auth pcmk-1 pcmk-2
+[root@pcmk-1 ~]# pcs cluster auth pcmk-1 pcmk-2
 Username: hacluster
 Password: 
 pcmk-1: Authorized
 pcmk-2: Authorized
+----
 
-# pcs cluster setup mycluster pcmk-1 pcmk-2
+[IMPORTANT]
+===========
+The version of pcs shipped with Fedora 21 will bind only to
+the host's IPv6 address in some circumstances. If you get errors
+with `pcs cluster auth`, add this line before the first *server.run* line in
++/usr/lib/pcsd/ssl.rb+ to bind to IPv4 only:
+
+----
+webrick_options[:BindAddress] = '0.0.0.0'
+----
+
+And restart pcsd:
+----
+[root@pcmk-1 ~]# systemctl restart pcsd
+----
+
+This is a temporary workaround that will get removed if the pcsd
+package is later updated.
+===========
+
+Next, use `pcs cluster setup` to generate and synchronize the corosync
+configuration:
+----
+[root@pcmk-1 ~]# pcs cluster setup --name mycluster pcmk-1 pcmk-2
+Shutting down pacemaker/corosync services...
+Redirecting to /bin/systemctl stop  pacemaker.service
+Redirecting to /bin/systemctl stop  corosync.service
+Killing any remaining services...
+Removing all cluster configuration files...
 pcmk-1: Succeeded
 pcmk-2: Succeeded
 ----
 
-That's it.  Corosync is configured across the cluster.  If you
-received an authorization error for either of those commands, make
-sure you setup the 'hacluster' user account and password on every node
-in the cluster with the same password.
+If you received an authorization error for either of those commands, make
+sure you configured the *hacluster* user account on each node
+with the same password.
 
-endif::[]
+[NOTE]
+======
+Early versions of pcs, such as the one shipped with Fedora 20 and earlier,
+require that `--name` be omitted from the above command.
 
-ifdef::crmsh[]
+If using a different cluster shell such as crmsh rather than pcs, you must
+manually create a corosync.conf and copy it to all nodes.
 
-[IMPORTANT]
-===========
-The instructions below only apply for a machine with a single NIC. If you
-have a more complicated setup, you should edit the configuration
-manually.
-===========
-
-[source,C]
-----
-# export ais_port=4000
-# export ais_mcast=239.255.1.1
-----
-
-Next we automatically determine the hosts address. By not using the full
-address, we make the configuration suitable to be copied to other nodes.
-
-[source,Bash]
-----
-export ais_addr=`ip addr | grep "inet " | tail -n 1 | awk '{print $4}' | sed s/255/0/g`
-----
-
-Display and verify the configuration options
-
-[source,Bash]
-----
-# env | grep ais_
-ais_mcast=239.255.1.1
-ais_port=4000
-ais_addr=192.168.122.0
-----
-
-Once you're happy with the chosen values, update the Corosync
-configuration
-
-[source,C]
-----
-# cp /etc/corosync/corosync.conf.example /etc/corosync/corosync.conf
-# sed -i.bak "s/.*mcastaddr:.*/mcastaddr:\ $ais_mcast/g" /etc/corosync/corosync.conf
-# sed -i.bak "s/.*mcastport:.*/mcastport:\ $ais_port/g" /etc/corosync/corosync.conf
-# sed -i.bak "s/.*\tbindnetaddr:.*/bindnetaddr:\ $ais_addr/g" /etc/corosync/corosync.conf
-----
-
-Lastly, you'll need to enable quorum
-
-[source,Bash]
------
-cat << END >> /etc/corosync/corosync.conf
-quorum {
-           provider: corosync_votequorum
-           expected_votes: 2
-}
-END
------
-
-endif::[]
+The pcs command will configure corosync to use UDP unicast transport; if you
+choose to use multicast instead, choose a multicast address carefully.
+footnote:[For some subtle issues, see the now-defunct http://web.archive.org/web/20101211210054/http://29west.com/docs/THPM/multicast-address-assignment.html or the more detailed treatment in
+http://www.cisco.com/c/dam/en/us/support/docs/ip/ip-multicast/ipmlt_wp.pdf[Cisco's
+Guidelines for Enterprise IP Multicast Address Allocation] paper.]
+======
 
 The final /etc/corosync.conf configuration on each node should look
 something like the sample in Appendix B, Sample Corosync Configuration.
 
+[NOTE]
+======
+With versions of Corosync before 2.0, Pacemaker could obtain membership and
+quorum from a custom Corosync plugin. This plugin also had the capability to
+start Pacemaker automatically when Corosync was started.
+Neither behavior is possible with Corosync 2.0 and later, as support for
+plugins was removed.
 
-[IMPORTANT]
-===========
-Pacemaker used to obtain membership and quorum from a custom Corosync plugin.
-This plugin also had the capability to start Pacemaker automatically when Corosync was started.
-
-Neither behavior is possible with Corosync 2.0 and beyond as support for plugins was removed.
-Instead, Pacemaker must be started as a separate service.
-
-Also, since Pacemaker made use of the plugin for message routing, a node using the plugin (Corosync prior to 2.0) cannot talk to one that isn't (Corosync 2.0+).
-Rolling upgrades between these versions are therefor not possible and an alternate strategy footnote:[http://www.clusterlabs.org/doc/en-US/Pacemaker/1.1/html/Pacemaker_Explained/ap-upgrade.html] must be used.
-===========
-
-ifdef::crmsh[]
-=== Propagate the Configuration ===
-
-Now we need to copy the changes so far to the other node:
-
-[source,C]
-----
-# for f in /etc/corosync/corosync.conf /etc/hosts; do scp $f pcmk-2:$f ; done
-corosync.conf                            100% 1528     1.5KB/s   00:00
-hosts                                    100%  281     0.3KB/s   00:00
-#
-----
-endif::[]
+Because Pacemaker made use of the plugin for message routing, a cluster node
+using an older Corosync cannot talk to one using Corosync 2.0 or later.
+Rolling upgrades between these versions are therefore not possible, and an
+alternate strategy
+footnote:[http://www.clusterlabs.org/doc/en-US/Pacemaker/1.1/html/Pacemaker_Explained/ap-upgrade.html]
+must be used.
+======
