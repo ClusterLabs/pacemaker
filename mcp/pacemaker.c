@@ -828,6 +828,10 @@ mcp_cpg_deliver(cpg_handle_t handle,
         name = crm_element_value(xml, XML_ATTR_UNAME);
         reap_crm_member(id, name);
     }
+
+    if (xml != NULL) {
+        free_xml(xml);
+    }
 }
 
 static void
