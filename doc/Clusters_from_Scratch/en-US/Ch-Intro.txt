@@ -7,7 +7,7 @@ resources. The redundancy of multiple machines is used to guard
 against failures of many types.
       
 This document will walk through the installation and setup of simple
-clusters using the Fedora distribution, version 20.
+clusters using the &DISTRO; distribution, version &DISTRO_VERSION;.
       
 The clusters described here will use Pacemaker and Corosync to provide
 resource management and messaging. Required packages and modifications
@@ -28,7 +28,7 @@ please refer to the http://www.clusterlabs.org/doc/[Pacemaker Explained] manual.
 Pacemaker is a cluster resource manager.
 
 It achieves maximum availability for your cluster services
-(aka. resources) by detecting and recovering from node and
+(aka. resources) by detecting and recovering from node- and
 resource-level failures by making use of the messaging and membership
 capabilities provided by your preferred cluster infrastructure (either
 http://www.corosync.org/[Corosync] or
@@ -39,9 +39,9 @@ Pacemaker's key features include:
  * Detection and recovery of node and service-level failures
  * Storage agnostic, no requirement for shared storage
  * Resource agnostic, anything that can be scripted can be clustered
- * Supports STONITH for ensuring data integrity
+ * Supports fencing (aka. STONITH) for ensuring data integrity
  * Supports large and small clusters
- * Supports both quorate and resource driven clusters
+ * Supports both quorate and resource-driven clusters
  * Supports practically any redundancy configuration
  * Automatically replicated configuration that can be updated from any node
  * Ability to specify cluster-wide service ordering, colocation and anti-colocation
@@ -54,38 +54,34 @@ Pacemaker's key features include:
 
 At the highest level, the cluster is made up of three pieces:
 
- * Non-cluster aware components. These pieces
-   include the resources themselves, scripts that start, stop and
-   monitor them, and also a local daemon that masks the differences
+ * Non-cluster-aware components. These pieces
+   include the resources themselves; scripts that start, stop and
+   monitor them; and a local daemon that masks the differences
    between the different standards these scripts implement.
 
  * Resource management. Pacemaker provides the brain that processes
    and reacts to events regarding the cluster.  These events include
    nodes joining or leaving the cluster; resource events caused by
-   failures, maintenance, scheduled activities; and other
+   failures, maintenance and scheduled activities; and other
    administrative actions. Pacemaker will compute the ideal state of
    the cluster and plot a path to achieve it after any of these
    events. This may include moving resources, stopping nodes and even
    forcing them offline with remote power switches.
 
- * Low level infrastructure. Projects like Corosync, CMAN and
+ * Low-level infrastructure. Projects like Corosync, CMAN and
    Heartbeat provide reliable messaging, membership and quorum
    information about the cluster.
 
 When combined with Corosync, Pacemaker also supports popular open
 source cluster filesystems.
-footnote:[
-Even though Pacemaker also supports Heartbeat, the filesystems need to
-use the stack for messaging and membership and Corosync seems to be
-what they're standardizing on.
-
-Technically it would be possible for them to support Heartbeat as
-well, however there seems little interest in this.
-]
+footnote:[Even though Pacemaker also supports Heartbeat, the filesystems need
+to use the stack for messaging and membership, and Corosync seems to be
+what they're standardizing on. Technically, it would be possible for them to
+support Heartbeat as well, but there seems little interest in this.]
 
 Due to past standardization within the cluster filesystem community,
-they make use of a common distributed lock manager which makes use of
-Corosync for its messaging and membership capabilities (which nodes
+cluster filesystems make use of a common distributed lock manager, which makes
+use of Corosync for its messaging and membership capabilities (which nodes
 are up/down) and Pacemaker for fencing services.
 
 .The Pacemaker Stack
@@ -95,11 +91,11 @@ image::images/pcmk-stack.png["The Pacemaker stack",width="10cm",height="7.5cm",a
 
 Pacemaker itself is composed of five key components:
 
- * CIB (aka. Cluster Information Base)
- * CRMd (aka. Cluster Resource Management daemon)
- * LRMd (aka. Local Resource Management daemon)
- * PEngine (aka. PE or Policy Engine)
- * STONITHd
+ * Cluster Information Base (CIB)
+ * Cluster Resource Management daemon (CRMd)
+ * Local Resource Management daemon (LRMd)
+ * Policy Engine (PEngine or PE)
+ * Fencing daemon (STONITHd)
 
 .Internal Components
 image::images/pcmk-internals.png["Subsystems of a Pacemaker cluster",align="center",scaledwidth="65%"]
@@ -110,14 +106,14 @@ are automatically kept in sync across the entire cluster and are used
 by the PEngine to compute the ideal state of the cluster and how it
 should be achieved.
 
-This list of instructions is then fed to the DC (Designated
-Controller).  Pacemaker centralizes all cluster decision making by
+This list of instructions is then fed to the Designated
+Controller (DC).  Pacemaker centralizes all cluster decision making by
 electing one of the CRMd instances to act as a master. Should the
-elected CRMd process, or the node it is on, fail... a new one is
+elected CRMd process (or the node it is on) fail, a new one is
 quickly established.
 
 The DC carries out the PEngine's instructions in the required order by
-passing them to either the LRMd (Local Resource Management daemon) or
+passing them to either the Local Resource Management daemon (LRMd) or
 CRMd peers on other nodes via the cluster messaging infrastructure
 (which in turn passes them on to their LRMd process).
 
@@ -128,7 +124,7 @@ abort processing and ask the PEngine to recalculate the ideal cluster
 state based on the unexpected results.
 
 In some cases, it may be necessary to power off nodes in order to
-protect shared data or complete resource recovery. For this Pacemaker
+protect shared data or complete resource recovery. For this, Pacemaker
 comes with STONITHd. 
 
 STONITH is an acronym for Shoot-The-Other-Node-In-The-Head and is
@@ -137,11 +133,11 @@ usually implemented with a remote power switch.
 In Pacemaker, STONITH devices are modeled as resources (and configured
 in the CIB) to enable them to be easily monitored for failure, however
 STONITHd takes care of understanding the STONITH topology such that
-its clients simply request a node be fenced and it does the rest.
+its clients simply request a node be fenced, and it does the rest.
 
 == Types of Pacemaker Clusters ==
 
-Pacemaker makes no assumptions about your environment, this allows it
+Pacemaker makes no assumptions about your environment. This allows it
 to support practically any
 http://en.wikipedia.org/wiki/High-availability_cluster#Node_configurations[redundancy
 configuration] including Active/Active, Active/Passive, N+1, N+M,

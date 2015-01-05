@@ -1,6 +1,6 @@
 <!ENTITY PRODUCT "Pacemaker">
 <!ENTITY BOOKID "Clusters_from_Scratch">
-<!ENTITY YEAR "2012">
+<!ENTITY YEAR "2014">
 <!ENTITY HOLDER "Andrew Beekhof">
 <!ENTITY DISTRO "Fedora">
-<!ENTITY DISTRO_VERSION "17">
+<!ENTITY DISTRO_VERSION "21">
