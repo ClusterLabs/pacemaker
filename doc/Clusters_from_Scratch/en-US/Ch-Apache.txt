@@ -183,7 +183,7 @@ location of *ClusterIP* before choosing a location for *WebSite*.
 ===========
 
 -----
-[root@pcmk-1 ~]# pcs constraint colocation add WebSite ClusterIP INFINITY
+[root@pcmk-1 ~]# pcs constraint colocation add WebSite with ClusterIP INFINITY
 [root@pcmk-1 ~]# pcs constraint
 Location Constraints:
 Ordering Constraints:

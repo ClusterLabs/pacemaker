@@ -342,7 +342,7 @@ new configuration to the cluster as the final step.
 [root@pcmk-1 ~]# pcs -f fs_cfg resource create WebFS Filesystem \
          device="/dev/drbd1" directory="/var/www/html" \
          fstype="ext4"
-[root@pcmk-1 ~]# pcs -f fs_cfg constraint colocation add WebFS WebDataClone INFINITY with-rsc-role=Master
+[root@pcmk-1 ~]# pcs -f fs_cfg constraint colocation add WebFS with WebDataClone INFINITY with-rsc-role=Master
 [root@pcmk-1 ~]# pcs -f fs_cfg constraint order promote WebDataClone then start WebFS
 Adding WebDataClone WebFS (kind: Mandatory) (Options: first-action=promote then-action=start)
 ----
@@ -352,7 +352,7 @@ machine as the filesystem and that it must be active before Apache can
 start.
 
 ----
-[root@pcmk-1 ~]# pcs -f fs_cfg constraint colocation add WebSite WebFS INFINITY
+[root@pcmk-1 ~]# pcs -f fs_cfg constraint colocation add WebSite with WebFS INFINITY
 [root@pcmk-1 ~]# pcs -f fs_cfg constraint order WebFS then WebSite
 Adding WebFS WebSite (kind: Mandatory) (Options: first-action=start then-action=start)
 ----

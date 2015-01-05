@@ -4,6 +4,7 @@
 %BOOK_ENTITIES;
 ]>
 <appendix id="appe-Clusters_from_Scratch-Revision_History">
+	<!-- see comment in Book_Info.xml for revision numbering -->
 	<title>Revision History</title>
 	<simpara>
 		<revhistory>
@@ -51,7 +52,7 @@
 			</revision>
 			<revision>
 			  <revnumber>8-0</revnumber>
-			  <date>Fri Dec 19 2014</date>
+			  <date>Mon Jan 05 2015</date>
 			  <author><firstname>Ken</firstname><surname>Gaillot</surname><email>kgaillot@redhat.com</email></author>
 			  <revdescription><simplelist><member>Updated for Fedora 21</member></simplelist></revdescription>
 			</revision>

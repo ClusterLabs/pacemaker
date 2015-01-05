@@ -15,7 +15,7 @@ and GFS2 are supported; here, we will use GFS2.
 On both nodes, install the GFS2 command-line utilities and the
 Distributed Lock Manager (DLM) required by cluster filesystems:
 ----
-# yum install -y gfs2-utils dlm kernel-modules-extra
+# yum install -y gfs2-utils dlm
 ----
 
 == Configure the Cluster for the DLM ==
@@ -194,7 +194,7 @@ The fstype option needs to be updated to *gfs2* instead of *ext4*.
 GFS2 requires that DLM be running, so we also need to set up new colocation
 and ordering constraints for it:
 ----
-[root@pcmk-1 ~]# pcs constraint colocation add WebFS dlm-clone INFINITY
+[root@pcmk-1 ~]# pcs constraint colocation add WebFS with dlm-clone INFINITY
 [root@pcmk-1 ~]# pcs constraint order dlm-clone then WebFS
 ----
 
@@ -217,15 +217,17 @@ Let's start a new config, and clone our IP:
      clone-max=2 clone-node-max=2 globally-unique=true
 ----
 
-* `clone-max=2` says packets will be split this many ways. This should
-equal the number of nodes that can host the IP.
+* `clone-max=2` tells the resource agent to split packets this many ways. This
+should equal the number of nodes that can host the IP.
 * `clone-node-max=2` says that one node can run up to 2 instances
 of the clone. This should also equal the number of nodes that can
 host the IP, so that if any node goes down, another node can take over
 the failed node's "request bucket". Otherwise, requests intended for
 the failed node would be discarded.
 * `globally-unique=true` tells the cluster that one clone isn't identical
-to another (each handles a different "request bucket").
+to another (each handles a different "bucket"). This also tells the resource
+agent to insert *iptables* rules so each host only processes packets in its
+bucket(s).
 
 Notice that when the ClusterIP becomes a clone, the constraints
 referencing ClusterIP now reference the clone.  This is
@@ -357,8 +359,22 @@ After all the processes are started, the status should look similar to this.
      Started: [ pcmk-1 pcmk-2 ]
 -----
 
+== Test Failover ==
+
 Testing failover is left as an exercise for the reader.
 For example, you can put one node into standby mode,
 use `pcs status` to confirm that its ClusterIP clone was
 moved to the other node, and use `arping` to verify that
 packets are not being lost from any source host.
+
+[NOTE]
+====
+You may find that when a failed node rejoins the cluster,
+both ClusterIP clones stay on one node, due to the
+resource stickiness. While this works fine, it effectively eliminates
+load-balancing and returns the cluster to an active-passive setup again.
+You can avoid this by disabling stickiness for the IP address resource:
+----
+[root@pcmk-1 ~]# pcs resource meta ClusterIP resource-stickiness=0
+----
+====
