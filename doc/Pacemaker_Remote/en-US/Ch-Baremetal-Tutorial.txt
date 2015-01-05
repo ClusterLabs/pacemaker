@@ -42,7 +42,7 @@ Now install and start the pacemaker_remote daemon on the baremetal remote-node.
 
 [source,C]
 ----
-# yum install -y paceamaker-remote resource-agents pcs
+# yum install -y pacemaker-remote resource-agents pcs
 # systemctl enable pacemaker_remote.service
 # systemctl start pacemaker_remote.service
 ----
