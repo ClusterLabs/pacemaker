@@ -255,6 +255,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     resource_t *rsc_then = NULL;
     resource_t *rsc_first = NULL;
     gboolean invert_bool = TRUE;
+    gboolean require_all = TRUE;
     enum pe_order_kind kind = pe_order_kind_mandatory;
     enum pe_ordering cons_weight = pe_order_optional;
 
@@ -264,6 +265,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     const char *action_first = NULL;
     const char *instance_then = NULL;
     const char *instance_first = NULL;
+    const char *require_all_s = NULL;
 
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
     const char *invert = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
@@ -343,6 +345,14 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         }
     }
 
+    require_all_s = crm_element_value(xml_obj, "require-all");
+    if (require_all_s
+        && crm_is_true(require_all_s) == FALSE
+        && rsc_first->variant >= pe_clone) {
+
+        require_all = FALSE;
+    }
+
     cons_weight = pe_order_optional;
     kind = get_ordering_type(xml_obj);
 
@@ -356,7 +366,29 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     } else {
         cons_weight |= get_flags(id, kind, action_first, action_then, FALSE);
     }
-    order_id = new_rsc_order(rsc_first, action_first, rsc_then, action_then, cons_weight, data_set);
+
+    if (require_all == FALSE) {
+        GListPtr rIter = NULL;
+        char *task = crm_concat(CRM_OP_RELAXED_CLONE, id, ':');
+        action_t *unordered_action = get_pseudo_op(task, data_set);
+        free(task);
+
+        update_action_flags(unordered_action, pe_action_requires_any);
+
+        for (rIter = rsc_first->children; id && rIter; rIter = rIter->next) {
+            resource_t *child = rIter->data;
+
+            custom_action_order(child, generate_op_key(child->id, action_first, 0), NULL,
+                                NULL, NULL, unordered_action,
+                                pe_order_one_or_more | pe_order_implies_then_printed, data_set);
+        }
+
+        order_id = custom_action_order(NULL, NULL, unordered_action,
+                       rsc_then, generate_op_key(rsc_then->id, action_then, 0), NULL,
+                       cons_weight | pe_order_runnable_left, data_set);
+    } else {
+        order_id = new_rsc_order(rsc_first, action_first, rsc_then, action_then, cons_weight, data_set);
+    }
 
     pe_rsc_trace(rsc_first, "order-%d (%s): %s_%s before %s_%s flags=0x%.6x",
                  order_id, id, rsc_first->id, action_first, rsc_then->id, action_then, cons_weight);
@@ -387,6 +419,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     }
 
     cons_weight |= get_flags(id, kind, action_first, action_then, TRUE);
+
     order_id = new_rsc_order(rsc_then, action_then, rsc_first, action_first, cons_weight, data_set);
 
     pe_rsc_trace(rsc_then, "order-%d (%s): %s_%s before %s_%s flags=0x%.6x",
