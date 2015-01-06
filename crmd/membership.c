@@ -378,17 +378,13 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
 
         g_hash_table_iter_init(&iter, crm_peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-            xmlNode *update = NULL;
-            update = do_update_node_cib(node, flags, node_list, source);
-        	free_xml(update);
+            do_update_node_cib(node, flags, node_list, source);
         }
 
         if (crm_remote_peer_cache) {
             g_hash_table_iter_init(&iter, crm_remote_peer_cache);
             while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-                xmlNode *update = NULL;
-                update = do_update_node_cib(node, flags, node_list, source);
-            	free_xml(update);
+                do_update_node_cib(node, flags, node_list, source);
             }
         }
 
