@@ -277,6 +277,7 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
 
         free(attr_id);
     }
+    freeXpathObject(xpathObj);
 }
 
 void

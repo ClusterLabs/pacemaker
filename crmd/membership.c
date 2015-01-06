@@ -215,9 +215,11 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
             crm_notice("Searching conflicting nodes for %s failed: %s (%d)",
                        new_node_uuid, pcmk_strerror(rc), rc);
         }
+        free(new_node_uuid);
         return;
 
     } else if (output == NULL) {
+        free(new_node_uuid);
         return;
     }
 
@@ -376,13 +378,17 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
 
         g_hash_table_iter_init(&iter, crm_peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-            do_update_node_cib(node, flags, node_list, source);
+            xmlNode *update = NULL;
+            update = do_update_node_cib(node, flags, node_list, source);
+        	free_xml(update);
         }
 
         if (crm_remote_peer_cache) {
             g_hash_table_iter_init(&iter, crm_remote_peer_cache);
             while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-                do_update_node_cib(node, flags, node_list, source);
+                xmlNode *update = NULL;
+                update = do_update_node_cib(node, flags, node_list, source);
+            	free_xml(update);
             }
         }
 
