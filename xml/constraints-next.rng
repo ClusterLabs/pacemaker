@@ -154,6 +154,9 @@
 	<attribute name="symmetrical"><data type="boolean"/></attribute>
       </optional>
       <optional>
+	<attribute name="require-all"><data type="boolean"/></attribute>
+      </optional>
+      <optional>
 	<choice>
 	  <externalRef href="score.rng"/>
 	  <attribute name="kind">
