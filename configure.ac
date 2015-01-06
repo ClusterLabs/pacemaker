@@ -899,14 +899,16 @@ dnl Although n-library is preferred, only look for it if the n-header was found.
 CURSESLIBS=''
 if test "$ac_cv_header_ncurses_h" = "yes"; then
   AC_CHECK_LIB(ncurses, printw,
-    [CURSESLIBS='-lncurses'; AC_DEFINE(HAVE_LIBNCURSES,1, have ncurses library)]
+    [AC_DEFINE(HAVE_LIBNCURSES,1, have ncurses library)]
   )
+  CURSESLIBS=`$PKGCONFIG --libs ncurses`;
 fi
 
 if test "$ac_cv_header_ncurses_ncurses_h" = "yes"; then
   AC_CHECK_LIB(ncurses, printw,
-    [CURSESLIBS='-lncurses'; AC_DEFINE(HAVE_LIBNCURSES,1, have ncurses library)]
+    [AC_DEFINE(HAVE_LIBNCURSES,1, have ncurses library)]
   )
+  CURSESLIBS=`$PKGCONFIG --libs ncurses`;
 fi
 
 dnl Only look for non-n-library if there was no n-library.
