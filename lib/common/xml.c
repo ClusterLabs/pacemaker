@@ -4848,8 +4848,13 @@ replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean 
 
             xml_accept_changes(tmp);
             old = xmlReplaceNode(child, tmp);
-            xml_calculate_changes(old, tmp);
 
+            if(xml_tracking_changes(tmp)) {
+                /* Replaced sections may have included relevant ACLs */
+                __xml_acl_apply(tmp);
+            }
+
+            xml_calculate_changes(old, tmp);
             xmlDocSetRootElement(doc, old);
             free_xml(old);
         }
