@@ -310,6 +310,12 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
     }
     crm_trace("Performing %s operation as %s", op, user_name);
 #endif
+
+    /* Mirror the logic in cib_prepare_common() */
+    if (section != NULL && data != NULL && crm_str_eq(crm_element_name(data), XML_TAG_CIB, TRUE)) {
+        data = get_object_root(section, data);
+    }
+
     rc = cib_perform_op(op, call_options, fn, query,
                         section, request, data, TRUE, &changed, in_mem_cib, &result_cib, &cib_diff,
                         &output);
