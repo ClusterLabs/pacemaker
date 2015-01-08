@@ -1621,6 +1621,7 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
 {
 
     xmlNode *xml_rsc = NULL;
+    xmlNode *xml_rsc_2 = NULL;
 
     resource_t *rsc_1 = NULL;
     resource_t *rsc_2 = NULL;
@@ -1672,8 +1673,6 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
         update_action_flags(unordered_action, pe_action_requires_any);
 
         for (xml_rsc = __xml_first_child(set1); xml_rsc != NULL; xml_rsc = __xml_next(xml_rsc)) {
-            xmlNode *xml_rsc_2 = NULL;
-
             if (!crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
                 continue;
             }
@@ -1685,21 +1684,19 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
             custom_action_order(rsc_1, generate_op_key(rsc_1->id, action_1, 0), NULL,
                                 NULL, NULL, unordered_action,
                                 pe_order_one_or_more | pe_order_implies_then_printed, data_set);
-
-            for (xml_rsc_2 = __xml_first_child(set2); xml_rsc_2 != NULL;
-                 xml_rsc_2 = __xml_next(xml_rsc_2)) {
-                if (!crm_str_eq((const char *)xml_rsc_2->name, XML_TAG_RESOURCE_REF, TRUE)) {
-                    continue;
-                }
-
-                EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc_2));
-
-                /* Add an ordering constraint between the pseudo action and every element in set2.
-                 * If the pseudo action is runnable, every action in set2 will be runnable */
-                custom_action_order(NULL, NULL, unordered_action,
-                                    rsc_2, generate_op_key(rsc_2->id, action_2, 0), NULL,
-                                    flags | pe_order_runnable_left, data_set);
+        }
+        for (xml_rsc_2 = __xml_first_child(set2); xml_rsc_2 != NULL; xml_rsc_2 = __xml_next(xml_rsc_2)) {
+            if (!crm_str_eq((const char *)xml_rsc_2->name, XML_TAG_RESOURCE_REF, TRUE)) {
+                continue;
             }
+
+            EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc_2));
+
+            /* Add an ordering constraint between the pseudo action and every element in set2.
+             * If the pseudo action is runnable, every action in set2 will be runnable */
+            custom_action_order(NULL, NULL, unordered_action,
+                                rsc_2, generate_op_key(rsc_2->id, action_2, 0), NULL,
+                                flags | pe_order_runnable_left, data_set);
         }
 
         return TRUE;
