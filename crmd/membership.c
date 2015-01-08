@@ -215,9 +215,11 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
             crm_notice("Searching conflicting nodes for %s failed: %s (%d)",
                        new_node_uuid, pcmk_strerror(rc), rc);
         }
+        free(new_node_uuid);
         return;
 
     } else if (output == NULL) {
+        free(new_node_uuid);
         return;
     }
 

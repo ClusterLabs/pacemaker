@@ -3,159 +3,127 @@
 
 === Final Cluster Configuration ===
 
-ifdef::pcs[]
-
-[source,C]
 ----
-# pcs resource
+[root@pcmk-1 ~]# pcs resource
  Master/Slave Set: WebDataClone [WebData]
-     Masters: [ pcmk-2 pcmk-1 ]
+     Masters: [ pcmk-1 pcmk-2 ]
  Clone Set: dlm-clone [dlm]
-     Started: [ pcmk-2 pcmk-1 ]
+     Started: [ pcmk-1 pcmk-2 ]
  Clone Set: ClusterIP-clone [ClusterIP] (unique)
-     ClusterIP:0	(ocf::heartbeat:IPaddr2) Started 
-     ClusterIP:1	(ocf::heartbeat:IPaddr2) Started 
+     ClusterIP:0	(ocf::heartbeat:IPaddr2):	Started 
+     ClusterIP:1	(ocf::heartbeat:IPaddr2):	Started 
  Clone Set: WebFS-clone [WebFS]
      Started: [ pcmk-1 pcmk-2 ]
  Clone Set: WebSite-clone [WebSite]
      Started: [ pcmk-1 pcmk-2 ]
-# pcs resource rsc defaults
+----
+
+----
+[root@pcmk-1 ~]# pcs resource defaults
 resource-stickiness: 100
-# pcs resource op defaults
+----
+
+----
+[root@pcmk-1 ~]# pcs resource op defaults
 timeout: 240s
-# pcs stonith
+----
+
+----
+[root@pcmk-1 ~]# pcs stonith
  impi-fencing	(stonith:fence_ipmilan) Started
-# pcs property
-dc-version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0
-cluster-infrastructure: corosync
-no-quorum-policy: ignore
-stonith-enabled: true
-# pcs constraint
+----
+
+----
+[root@pcmk-1 ~]# pcs property
+Cluster Properties:
+ cluster-infrastructure: corosync
+ cluster-name: mycluster
+ dc-version: 1.1.12-a9c8177
+ have-watchdog: false
+ last-lrm-refresh: 1419129162
+ stonith-enabled: true
+----
+
+----
+[root@pcmk-1 ~]# pcs constraint
 Location Constraints:
 Ordering Constraints:
-  ClusterIP-clone then WebSite-clone
-  WebDataClone then WebSite-clone
-  WebFS-clone then WebSite-clone
+  start ClusterIP-clone then start WebSite-clone (kind:Mandatory)
+  promote WebDataClone then start WebFS-clone (kind:Mandatory)
+  start WebFS-clone then start WebSite-clone (kind:Mandatory)
+  start dlm-clone then start WebFS-clone (kind:Mandatory)
 Colocation Constraints:
-  WebSite-clone with ClusterIP-clone
-  WebFS-clone with WebDataClone (with-rsc-role:Master)
-  WebSite-clone with WebFS-clone
-#
-# pcs status
+  WebSite-clone with ClusterIP-clone (score:INFINITY)
+  WebFS-clone with WebDataClone (score:INFINITY) (with-rsc-role:Master)
+  WebSite-clone with WebFS-clone (score:INFINITY)
+  WebFS-clone with dlm-clone (score:INFINITY)
+----
 
-Last updated: Fri Sep 14 13:45:34 2012
-Last change: Fri Sep 14 13:43:13 2012 via cibadmin on pcmk-1
+----
+[root@pcmk-1 ~]# pcs status
+Cluster name: mycluster
+Last updated: Mon Dec 22 11:19:17 2014
+Last change: Mon Dec 22 11:03:52 2014
 Stack: corosync
-Current DC: pcmk-1 (1) - partition with quorum
-Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0
-2 Nodes configured, unknown expected votes
-11 Resources configured.
+Current DC: pcmk-2 (2) - partition with quorum
+Version: 1.1.12-a9c8177
+2 Nodes configured
+11 Resources configured
+
 
 Online: [ pcmk-1 pcmk-2 ]
 
 Full list of resources:
 
+ impi-fencing	(stonith:fence_ipmilan):	Started pcmk-1
  Master/Slave Set: WebDataClone [WebData]
-     Masters: [ pcmk-2 pcmk-1 ]
+     Masters: [ pcmk-1 pcmk-2 ]
  Clone Set: dlm-clone [dlm]
      Started: [ pcmk-1 pcmk-2 ]
  Clone Set: ClusterIP-clone [ClusterIP] (unique)
-     ClusterIP:0	(ocf::heartbeat:IPaddr2):	Started pcmk-1
-     ClusterIP:1	(ocf::heartbeat:IPaddr2):	Started pcmk-2
+     ClusterIP:0	(ocf::heartbeat:IPaddr2):	Started pcmk-2 
+     ClusterIP:1	(ocf::heartbeat:IPaddr2):	Started pcmk-1 
  Clone Set: WebFS-clone [WebFS]
      Started: [ pcmk-1 pcmk-2 ]
  Clone Set: WebSite-clone [WebSite]
      Started: [ pcmk-1 pcmk-2 ]
- impi-fencing	(stonith:fence_ipmilan):	Started
+
+PCSD Status:
+  pcmk-1: Online
+  pcmk-2: Online
+
+Daemon Status:
+  corosync: active/disabled
+  pacemaker: active/disabled
+  pcsd: active/enabled
 ----
 
-In xml it should look similar to this.
+----
+[root@pcmk-1 ~]# pcs cluster cib
+----
 [source,XML]
 ----
-<cib admin_epoch="0" cib-last-written="Fri Sep 14 13:43:13 2012" crm_feature_set="3.0.6" dc-uuid="1" epoch="47" have-quorum="1" num_updates="50" update-client="cibadmin" update-origin="pcmk-1" validate-with="pacemaker-1.2">
+<cib admin_epoch="0" cib-last-written="Mon Dec 22 11:03:52 2014" crm_feature_set="3.0.9" epoch="121" have-quorum="1" num_updates="49" validate-with="pacemaker-2.2" dc-uuid="2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0"/>
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.12-a9c8177"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
-        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="mycluster"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1419129162"/>
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="1" type="normal" uname="pcmk-1"/>
-      <node id="2" type="normal" uname="pcmk-2"/>
+      <node id="1" uname="pcmk-1">
+        <instance_attributes id="nodes-1"/>
+      </node>
+      <node id="2" uname="pcmk-2">
+        <instance_attributes id="nodes-2"/>
+      </node>
     </nodes>
     <resources>
-      <master id="WebDataClone">
-        <primitive class="ocf" id="WebData" provider="linbit" type="drbd">
-          <instance_attributes id="WebData-instance_attributes">
-            <nvpair id="WebData-instance_attributes-drbd_resource" name="drbd_resource" value="wwwdata"/>
-          </instance_attributes>
-          <operations>
-            <op id="WebData-interval-60s" interval="60s" name="monitor"/>
-          </operations>
-        </primitive>
-        <meta_attributes id="WebDataClone-meta_attributes">
-          <nvpair id="WebDataClone-meta_attributes-master-node-max" name="master-node-max" value="1"/>
-          <nvpair id="WebDataClone-meta_attributes-clone-max" name="clone-max" value="2"/>
-          <nvpair id="WebDataClone-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
-          <nvpair id="WebDataClone-meta_attributes-notify" name="notify" value="true"/>
-          <nvpair id="WebDataClone-meta_attributes-master-max" name="master-max" value="2"/>
-        </meta_attributes>
-      </master>
-      <clone id="dlm-clone">
-        <primitive class="ocf" id="dlm" provider="pacemaker" type="controld">
-          <instance_attributes id="dlm-instance_attributes"/>
-          <operations>
-            <op id="dlm-interval-60s" interval="60s" name="monitor"/>
-          </operations>
-        </primitive>
-        <meta_attributes id="dlm-clone-meta">
-          <nvpair id="dlm-clone-max" name="clone-max" value="2"/>
-          <nvpair id="dlm-clone-node-max" name="clone-node-max" value="1"/>
-        </meta_attributes>
-      </clone>
-      <clone id="ClusterIP-clone">
-        <primitive class="ocf" id="ClusterIP" provider="heartbeat" type="IPaddr2">
-          <instance_attributes id="ClusterIP-instance_attributes">
-            <nvpair id="ClusterIP-instance_attributes-ip" name="ip" value="192.168.0.120"/>
-            <nvpair id="ClusterIP-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
-            <nvpair id="ClusterIP-instance_attributes-clusterip_hash" name="clusterip_hash" value="sourceip"/>
-          </instance_attributes>
-          <operations>
-            <op id="ClusterIP-interval-30s" interval="30s" name="monitor"/>
-          </operations>
-        </primitive>
-        <meta_attributes id="ClusterIP-clone-meta">
-          <nvpair id="ClusterIP-globally-unique" name="globally-unique" value="true"/>
-          <nvpair id="ClusterIP-clone-max" name="clone-max" value="2"/>
-          <nvpair id="ClusterIP-clone-node-max" name="clone-node-max" value="2"/>
-        </meta_attributes>
-      </clone>
-      <clone id="WebFS-clone">
-        <primitive class="ocf" id="WebFS" provider="heartbeat" type="Filesystem">
-          <instance_attributes id="WebFS-instance_attributes">
-            <nvpair id="WebFS-instance_attributes-device" name="device" value="/dev/drbd/by-res/wwwdata"/>
-            <nvpair id="WebFS-instance_attributes-directory" name="directory" value="/var/www/html"/>
-            <nvpair id="WebFS-instance_attributes-fstype" name="fstype" value="gfs2"/>
-          </instance_attributes>
-          <meta_attributes id="WebFS-meta_attributes"/>
-        </primitive>
-        <meta_attributes id="WebFS-clone-meta"/>
-      </clone>
-      <clone id="WebSite-clone">
-        <primitive class="ocf" id="WebSite" provider="heartbeat" type="apache">
-          <instance_attributes id="WebSite-instance_attributes">
-            <nvpair id="WebSite-instance_attributes-configfile" name="configfile" value="/etc/httpd/conf/httpd.conf"/>
-            <nvpair id="WebSite-instance_attributes-statusurl" name="statusurl" value="http://localhost/server-status"/>
-          </instance_attributes>
-          <operations>
-            <op id="WebSite-interval-1min" interval="1min" name="monitor"/>
-          </operations>
-        </primitive>
-        <meta_attributes id="WebSite-clone-meta"/>
-      </clone>
       <primitive class="stonith" id="impi-fencing" type="fence_ipmilan">
         <instance_attributes id="impi-fencing-instance_attributes">
           <nvpair id="impi-fencing-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="pcmk-1 pcmk-2"/>
@@ -167,14 +135,101 @@ In xml it should look similar to this.
           <op id="impi-fencing-interval-60s" interval="60s" name="monitor"/>
         </operations>
       </primitive>
+      <master id="WebDataClone">
+        <primitive class="ocf" id="WebData" provider="linbit" type="drbd">
+          <instance_attributes id="WebData-instance_attributes">
+            <nvpair id="WebData-instance_attributes-drbd_resource" name="drbd_resource" value="wwwdata"/>
+          </instance_attributes>
+          <operations>
+            <op id="WebData-start-timeout-240" interval="0s" name="start" timeout="240"/>
+            <op id="WebData-promote-timeout-90" interval="0s" name="promote" timeout="90"/>
+            <op id="WebData-demote-timeout-90" interval="0s" name="demote" timeout="90"/>
+            <op id="WebData-stop-timeout-100" interval="0s" name="stop" timeout="100"/>
+            <op id="WebData-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="WebDataClone-meta_attributes">
+          <nvpair id="WebDataClone-meta_attributes-master-max" name="master-max" value="2"/>
+          <nvpair id="WebDataClone-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="WebDataClone-meta_attributes-clone-max" name="clone-max" value="2"/>
+          <nvpair id="WebDataClone-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
+          <nvpair id="WebDataClone-meta_attributes-notify" name="notify" value="true"/>
+        </meta_attributes>
+      </master>
+      <clone id="dlm-clone">
+        <primitive class="ocf" id="dlm" provider="pacemaker" type="controld">
+          <instance_attributes id="dlm-instance_attributes"/>
+          <operations>
+            <op id="dlm-start-timeout-90" interval="0s" name="start" timeout="90"/>
+            <op id="dlm-stop-timeout-100" interval="0s" name="stop" timeout="100"/>
+            <op id="dlm-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="dlm-clone-meta">
+          <nvpair id="dlm-clone-max" name="clone-max" value="2"/>
+          <nvpair id="dlm-clone-node-max" name="clone-node-max" value="1"/>
+        </meta_attributes>
+      </clone>
+      <clone id="ClusterIP-clone">
+        <primitive class="ocf" id="ClusterIP" provider="heartbeat" type="IPaddr2">
+          <instance_attributes id="ClusterIP-instance_attributes">
+            <nvpair id="ClusterIP-instance_attributes-ip" name="ip" value="192.168.122.120"/>
+            <nvpair id="ClusterIP-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+            <nvpair id="ClusterIP-instance_attributes-clusterip_hash" name="clusterip_hash" value="sourceip"/>
+          </instance_attributes>
+          <operations>
+            <op id="ClusterIP-start-timeout-20s" interval="0s" name="start" timeout="20s"/>
+            <op id="ClusterIP-stop-timeout-20s" interval="0s" name="stop" timeout="20s"/>
+            <op id="ClusterIP-monitor-interval-30s" interval="30s" name="monitor"/>
+          </operations>
+          <meta_attributes id="ClusterIP-meta_attributes"/>
+        </primitive>
+        <meta_attributes id="ClusterIP-clone-meta">
+          <nvpair id="ClusterIP-clone-max" name="clone-max" value="2"/>
+          <nvpair id="ClusterIP-clone-node-max" name="clone-node-max" value="2"/>
+          <nvpair id="ClusterIP-globally-unique" name="globally-unique" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="WebFS-clone">
+        <primitive class="ocf" id="WebFS" provider="heartbeat" type="Filesystem">
+          <instance_attributes id="WebFS-instance_attributes">
+            <nvpair id="WebFS-instance_attributes-device" name="device" value="/dev/drbd1"/>
+            <nvpair id="WebFS-instance_attributes-directory" name="directory" value="/var/www/html"/>
+            <nvpair id="WebFS-instance_attributes-fstype" name="fstype" value="gfs2"/>
+          </instance_attributes>
+          <operations>
+            <op id="WebFS-start-timeout-60" interval="0s" name="start" timeout="60"/>
+            <op id="WebFS-stop-timeout-60" interval="0s" name="stop" timeout="60"/>
+            <op id="WebFS-monitor-interval-20" interval="20" name="monitor" timeout="40"/>
+          </operations>
+          <meta_attributes id="WebFS-meta_attributes"/>
+        </primitive>
+        <meta_attributes id="WebFS-clone-meta"/>
+      </clone>
+      <clone id="WebSite-clone">
+        <primitive class="ocf" id="WebSite" provider="heartbeat" type="apache">
+          <instance_attributes id="WebSite-instance_attributes">
+            <nvpair id="WebSite-instance_attributes-configfile" name="configfile" value="/etc/httpd/conf/httpd.conf"/>
+            <nvpair id="WebSite-instance_attributes-statusurl" name="statusurl" value="http://localhost/server-status"/>
+          </instance_attributes>
+          <operations>
+            <op id="WebSite-start-timeout-40s" interval="0s" name="start" timeout="40s"/>
+            <op id="WebSite-stop-timeout-60s" interval="0s" name="stop" timeout="60s"/>
+            <op id="WebSite-monitor-interval-1min" interval="1min" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="WebSite-clone-meta"/>
+      </clone>
     </resources>
     <constraints>
       <rsc_colocation id="colocation-WebSite-ClusterIP-INFINITY" rsc="WebSite-clone" score="INFINITY" with-rsc="ClusterIP-clone"/>
       <rsc_order first="ClusterIP-clone" first-action="start" id="order-ClusterIP-WebSite-mandatory" then="WebSite-clone" then-action="start"/>
       <rsc_colocation id="colocation-WebFS-WebDataClone-INFINITY" rsc="WebFS-clone" score="INFINITY" with-rsc="WebDataClone" with-rsc-role="Master"/>
-      <rsc_colocation id="colocation-WebSite-WebFS-INFINITY" rsc="WebSite-clone" score="INFINITY" with-rsc="WebFS-clone"/>
-      <rsc_order first="WebFS-clone" id="order-WebFS-WebSite-mandatory" then="WebSite-clone"/>
       <rsc_order first="WebDataClone" first-action="promote" id="order-WebDataClone-WebFS-mandatory" then="WebFS-clone" then-action="start"/>
+      <rsc_colocation id="colocation-WebSite-WebFS-INFINITY" rsc="WebSite-clone" score="INFINITY" with-rsc="WebFS-clone"/>
+      <rsc_order first="WebFS-clone" first-action="start" id="order-WebFS-WebSite-mandatory" then="WebSite-clone" then-action="start"/>
+      <rsc_colocation id="colocation-WebFS-clone-dlm-clone-INFINITY" rsc="WebFS-clone" score="INFINITY" with-rsc="dlm-clone"/>
+      <rsc_order first="dlm-clone" first-action="start" id="order-dlm-clone-WebFS-clone-mandatory" then="WebFS-clone" then-action="start"/>
     </constraints>
     <rsc_defaults>
       <meta_attributes id="rsc_defaults-options">
@@ -187,159 +242,135 @@ In xml it should look similar to this.
       </meta_attributes>
     </op_defaults>
   </configuration>
+  <status>
+    <node_state id="1" uname="pcmk-1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="WebData" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="WebData_last_0" operation_key="WebData_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="13:4:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;13:4:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="44" rc-code="0" op-status="0" interval="0" last-run="1419264508" last-rc-change="1419264508" exec-time="26" queue-time="0" op-digest="bc5c2e08730036ec602d79a958821da4" on_node="pcmk-1"/>
+          </lrm_resource>
+          <lrm_resource id="dlm" type="controld" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="37:2:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;37:2:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="37" rc-code="0" op-status="0" interval="0" last-run="1419264506" last-rc-change="1419264506" exec-time="1041" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="pcmk-1"/>
+            <lrm_rsc_op id="dlm_monitor_60000" operation_key="dlm_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="39:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;39:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="38" rc-code="0" op-status="0" interval="60000" last-rc-change="1419264507" exec-time="11" queue-time="0" op-digest="968cc450c09e98fdac3043cb6a194d3d" on_node="pcmk-1"/>
+          </lrm_resource>
+          <lrm_resource id="ClusterIP:0" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ClusterIP:0_last_0" operation_key="ClusterIP:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="7:0:7:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:7;7:0:7:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="19" rc-code="7" op-status="0" interval="0" last-run="1419264506" last-rc-change="1419264506" exec-time="28" queue-time="0" op-digest="ac61ecc765070218997f6d876fa1d76c" on_node="pcmk-1"/>
+          </lrm_resource>
+          <lrm_resource id="ClusterIP:1" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ClusterIP:1_last_0" operation_key="ClusterIP:1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="49:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;49:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="40" rc-code="0" op-status="0" interval="0" last-run="1419264507" last-rc-change="1419264507" exec-time="190" queue-time="0" op-digest="ac61ecc765070218997f6d876fa1d76c" on_node="pcmk-1"/>
+            <lrm_rsc_op id="ClusterIP:1_monitor_30000" operation_key="ClusterIP:1_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="50:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;50:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="41" rc-code="0" op-status="0" interval="30000" last-rc-change="1419264507" exec-time="27" queue-time="0" op-digest="8ce33853c31576b708595f1d8a4a215c" on_node="pcmk-1"/>
+          </lrm_resource>
+          <lrm_resource id="WebFS" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="WebFS_last_0" operation_key="WebFS_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="62:5:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;62:5:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="46" rc-code="0" op-status="0" interval="0" last-run="1419264508" last-rc-change="1419264508" exec-time="585" queue-time="0" op-digest="9d797b0e3b7f9729195992c0dafb5a9e" on_node="pcmk-1"/>
+            <lrm_rsc_op id="WebFS_monitor_20000" operation_key="WebFS_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="62:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;62:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="47" rc-code="0" op-status="0" interval="20000" last-rc-change="1419264508" exec-time="21" queue-time="1" op-digest="099af723b175851f09e5391e0c13854e" on_node="pcmk-1"/>
+          </lrm_resource>
+          <lrm_resource id="WebSite" type="apache" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="WebSite_last_0" operation_key="WebSite_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="72:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;72:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="48" rc-code="0" op-status="0" interval="0" last-run="1419264508" last-rc-change="1419264508" exec-time="65" queue-time="0" op-digest="49ba395a3f2c142631c2ef2c431a29d9" on_node="pcmk-1"/>
+            <lrm_rsc_op id="WebSite_monitor_60000" operation_key="WebSite_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="73:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;73:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="49" rc-code="0" op-status="0" interval="60000" last-rc-change="1419264508" exec-time="26" queue-time="0" op-digest="eddc33bef3f1592ad847638ee485316f" on_node="pcmk-1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-1-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-1-master-WebData" name="master-WebData" value="10000"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="2" uname="pcmk-2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-2-master-WebData" name="master-WebData" value="10000"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="WebData" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="WebData_last_0" operation_key="WebData_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="16:4:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;16:4:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="41" rc-code="0" op-status="0" interval="0" last-run="1419264508" last-rc-change="1419264508" exec-time="26" queue-time="0" op-digest="bc5c2e08730036ec602d79a958821da4" on_node="pcmk-2"/>
+          </lrm_resource>
+          <lrm_resource id="dlm" type="controld" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="35:2:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;35:2:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="34" rc-code="0" op-status="0" interval="0" last-run="1419264506" last-rc-change="1419264506" exec-time="1053" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="pcmk-2"/>
+            <lrm_rsc_op id="dlm_monitor_60000" operation_key="dlm_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="42:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;42:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="35" rc-code="0" op-status="0" interval="60000" last-rc-change="1419264507" exec-time="19" queue-time="0" op-digest="968cc450c09e98fdac3043cb6a194d3d" on_node="pcmk-2"/>
+          </lrm_resource>
+          <lrm_resource id="ClusterIP:0" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ClusterIP:0_last_0" operation_key="ClusterIP:0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="47:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;47:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="36" rc-code="0" op-status="0" interval="0" last-run="1419264507" last-rc-change="1419264507" exec-time="237" queue-time="0" op-digest="ac61ecc765070218997f6d876fa1d76c" on_node="pcmk-2"/>
+            <lrm_rsc_op id="ClusterIP:0_monitor_30000" operation_key="ClusterIP:0_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="51:4:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;51:4:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="39" rc-code="0" op-status="0" interval="30000" last-rc-change="1419264507" exec-time="34" queue-time="0" op-digest="8ce33853c31576b708595f1d8a4a215c" on_node="pcmk-2"/>
+          </lrm_resource>
+          <lrm_resource id="ClusterIP:1" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ClusterIP:1_last_0" operation_key="ClusterIP:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="16:0:7:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:7;16:0:7:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="23" rc-code="7" op-status="0" interval="0" last-run="1419264506" last-rc-change="1419264506" exec-time="28" queue-time="0" op-digest="ac61ecc765070218997f6d876fa1d76c" on_node="pcmk-2"/>
+          </lrm_resource>
+          <lrm_resource id="WebFS" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="WebFS_last_0" operation_key="WebFS_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="60:5:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;60:5:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="43" rc-code="0" op-status="0" interval="0" last-run="1419264508" last-rc-change="1419264508" exec-time="662" queue-time="0" op-digest="9d797b0e3b7f9729195992c0dafb5a9e" on_node="pcmk-2"/>
+            <lrm_rsc_op id="WebFS_monitor_20000" operation_key="WebFS_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="65:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;65:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="44" rc-code="0" op-status="0" interval="20000" last-rc-change="1419264508" exec-time="29" queue-time="0" op-digest="099af723b175851f09e5391e0c13854e" on_node="pcmk-2"/>
+          </lrm_resource>
+          <lrm_resource id="WebSite" type="apache" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="WebSite_last_0" operation_key="WebSite_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="70:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;70:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="45" rc-code="0" op-status="0" interval="0" last-run="1419264508" last-rc-change="1419264508" exec-time="64" queue-time="0" op-digest="49ba395a3f2c142631c2ef2c431a29d9" on_node="pcmk-2"/>
+            <lrm_rsc_op id="WebSite_monitor_60000" operation_key="WebSite_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="71:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;71:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="46" rc-code="0" op-status="0" interval="60000" last-rc-change="1419264508" exec-time="28" queue-time="0" op-digest="eddc33bef3f1592ad847638ee485316f" on_node="pcmk-2"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
 </cib>
 ----
-endif::[]
-
-ifdef::crmsh[]
-.....
-# crm configure show
-node pcmk-1
-node pcmk-2
-primitive WebData ocf:linbit:drbd \
-    params drbd_resource="wwwdata" \
-    op monitor interval="60s"
-primitive WebFS ocf:heartbeat:Filesystem \
-    params device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" fstype="gfs2"
-primitive WebSite ocf:heartbeat:apache \
-    params configfile="/etc/httpd/conf/httpd.conf" \
-    op monitor interval="1min"
-primitive ClusterIP ocf:heartbeat:IPaddr2 \
-    params ip="192.168.122.101" cidr_netmask="32" clusterip_hash="sourceip" \
-    op monitor interval="30s"
-primitive ipmi-fencing stonith::fence_ipmilan \
-    params pcmk_host_list="pcmk-1 pcmk-2" ipaddr=10.0.0.1 login=testuser passwd=abc123 \
-    op monitor interval="60s"
-ms WebDataClone WebData \
-    meta master-max="2" master-node-max="1" clone-max="2" clone-node-max="1" notify="true"
-clone WebFSClone WebFS
-clone WebIP ClusterIP \
-    meta globally-unique="true" clone-max="2" clone-node-max="2"
-clone WebSiteClone WebSite
-colocation WebSite-with-WebFS inf: WebSiteClone WebFSClone
-colocation fs_on_drbd inf: WebFSClone WebDataClone:Master
-colocation website-with-ip inf: WebSiteClone WebIP
-order WebFS-after-WebData inf: WebDataClone:promote WebFSClone:start
-order WebSite-after-WebFS inf: WebFSClone WebSiteClone
-order apache-after-ip inf: WebIP WebSiteClone
-property $id="cib-bootstrap-options" \
-    dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
-    cluster-infrastructure="openais" \
-    expected-quorum-votes="2" \
-    stonith-enabled="true" \
-    no-quorum-policy="ignore"
-rsc_defaults $id="rsc-options" \
-    resource-stickiness="100"
-.....
-endif::[]
-
 
 === Node List ===
 
-The list of cluster nodes is automatically populated by the cluster.
-
-ifdef::pcs[]
-.....
+----
+[root@pcmk-1 ~]# pcs status nodes
 Pacemaker Nodes:
- Online: [ pcmk-1 pcmk-2  ]
-.....
-endif::[]
-
-ifdef::crmsh[]
-.....
-node pcmk-1
-node pcmk-2
-.....
-endif::[]
+ Online: pcmk-1 pcmk-2 
+ Standby: 
+ Offline: 
+----
 
 === Cluster Options ===
 
-This is where the cluster automatically stores some information about
-the cluster
-
-* dc-version - the version (including upstream source-code hash) of Pacemaker used on the DC
-
-* cluster-infrastructure - the cluster infrastructure being used (heartbeat or openais)
-
-* expected-quorum-votes - the maximum number of nodes expected to be part of the cluster
-
-and where the admin can set options that control the way the cluster
-operates
-
-* stonith-enabled=true - Make use of STONITH
-
-* no-quorum-policy=ignore - Ignore loss of quorum and continue to host resources.
-
-ifdef::pcs[]
-[source,C]
 ----
-# pcs property
-dc-version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0
-cluster-infrastructure: corosync
-no-quorum-policy: ignore
-stonith-enabled: true
+[root@pcmk-1 ~]# pcs property
+Cluster Properties:
+ cluster-infrastructure: corosync
+ cluster-name: mycluster
+ dc-version: 1.1.12-a9c8177
+ have-watchdog: false
+ last-lrm-refresh: 1419129162
+ stonith-enabled: true
 ----
-endif::[]
 
-ifdef::crmsh[]
-.....
-property $id="cib-bootstrap-options" \
-    dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
-    cluster-infrastructure="openais" \
-    expected-quorum-votes="2" \
-    stonith-enabled="true" \
-    no-quorum-policy="ignore"
-.....
-endif::[]
+The output shows state information automatically obtained about the cluster, including:
+* *cluster-infrastructure* - the cluster communications layer in use (heartbeat or corosync)
+* *cluster-name* - the cluster name chosen by the administrator when the cluster was created
+* *dc-version* - the version (including upstream source-code hash) of Pacemaker used on the Designated Controller
+
+The output also shows options set by the administrator that control the way the cluster operates, including:
+* *stonith-enabled=true* - whether the cluster is allowed to use STONITH resources
 
 === Resources ===
 
-
 ==== Default Options ====
 
-Here we configure cluster options that apply to every resource.
-
-ifdef::pcs[]
-* resource-stickiness - Specify the aversion to moving resources to other machines
-[source,C]
 ----
-# pcs resource rsc defaults
+[root@pcmk-1 ~]# pcs resource defaults
 resource-stickiness: 100
 ----
-endif::[]
 
-ifdef::crmsh[]
-* resource-stickiness - Specify the aversion to moving resources to other machines
-.....
-rsc_defaults $id="rsc-options" \
-    resource-stickiness="100"
-.....
-endif::[]
+This shows cluster option defaults that apply to every resource that does not
+explicitly set the option itself. Above:
+* *resource-stickiness* - Specify the aversion to moving healthy resources to other machines
 
 ==== Fencing ====
 
-ifdef::pcs[]
-[source,C]
 ----
-# pcs stonith show
- impi-fencing	(stonith:fence_ipmilan) Started
-# pcs stonith show impi-fencing
-Resource: impi-fencing
-  pcmk_host_list: pcmk-1 pcmk-2
-  ipaddr: 10.0.0.1
-  login: testuser
-  passwd: acd123
+[root@pcmk-1 ~]# pcs stonith show
+ ipmi-fencing	(stonith:fence_ipmilan) Started
+[root@pcmk-1 ~]# pcs stonith show ipmi-fencing
+ Resource: ipmi-fencing (class=stonith type=fence_ipmilan)
+  Attributes: ipaddr="10.0.0.1" login="testuser" passwd="acd123" pcmk_host_list="pcmk-1 pcmk-2" 
+  Operations: monitor interval=60s (fence-monitor-interval-60s)
 ----
-endif::[]
-
-ifdef::crmsh[]
-.....
-primitive ipmi-fencing stonith::fence_ipmilan \
-    params pcmk_host_list="pcmk-1 pcmk-2" ipaddr=10.0.0.1 login=testuser passwd=abc123 \
-    op monitor interval="60s"
-clone Fencing rsa-fencing
-.....
-endif::[]
 
 ==== Service Address ====
 
@@ -352,147 +383,86 @@ that we want two instances of the clone (one "request bucket" for each
 node) and that if one node fails, then the remaining node should hold
 both.
 
-ifdef::pcs[]
-[source,C]
 ----
-# pcs resource show ClusterIP-clone
-Resource: ClusterIP-clone
-  ip: 192.168.0.120
-  cidr_netmask: 32
-  clusterip_hash: sourceip
-  globally-unique: true
-  clone-max: 2
-  clone-node-max: 2
-  op monitor interval=30s
+[root@pcmk-1 ~]# pcs resource show ClusterIP-clone
+ Clone: ClusterIP-clone
+  Meta Attrs: clone-max=2 clone-node-max=2 globally-unique=true 
+  Resource: ClusterIP (class=ocf provider=heartbeat type=IPaddr2)
+   Attributes: ip=192.168.122.120 cidr_netmask=32 clusterip_hash=sourceip
+   Operations: start interval=0s timeout=20s (ClusterIP-start-timeout-20s)
+               stop interval=0s timeout=20s (ClusterIP-stop-timeout-20s)
+               monitor interval=30s (ClusterIP-monitor-interval-30s)
 ----
-endif::[]
-
-ifdef::crmsh[]
-.....
-primitive ClusterIP ocf:heartbeat:IPaddr2 \
-    params ip="192.168.122.101" cidr_netmask="32" clusterip_hash="sourceip" \
-    op monitor interval="30s"
-clone WebIP ClusterIP
-    meta globally-unique="true" clone-max="2" clone-node-max="2"
-.....
-endif::[]
-
-[NOTE]
-=======
-TODO: The RA should check for globally-unique=true when cloned
-=======
 
 ==== DRBD - Shared Storage ====
 
-Here we define the DRBD service and specify which DRBD resource (from
-drbd.conf) it should manage. We make it a master/slave resource and, in
-order to have an active/active setup, allow both instances to be promoted
-by specifying master-max=2. We also set the notify option so that the
-cluster will tell DRBD agent when it's peer changes state.
+Here, we define the DRBD service and specify which DRBD resource (from
+/etc/drbd.d/*.res) it should manage. We make it a master/slave resource and, in
+order to have an active/active setup, allow both instances to be promoted to master
+at the same time. We also set the notify option so that the
+cluster will tell DRBD agent when its peer changes state.
 
-ifdef::pcs[]
-[source,C]
 ----
-# pcs resource show WebDataClone
-Resource: WebDataClone
-  drbd_resource: wwwdata
-  master-node-max: 1
-  clone-max: 2
-  clone-node-max: 1
-  notify: true
-  master-max: 2
-  op monitor interval=60s
-# pcs constraint ref WebDataClone
+[root@pcmk-1 ~]# pcs resource show WebDataClone
+ Master: WebDataClone
+  Meta Attrs: master-max=2 master-node-max=1 clone-max=2 clone-node-max=1 notify=true 
+  Resource: WebData (class=ocf provider=linbit type=drbd)
+   Attributes: drbd_resource=wwwdata 
+   Operations: start interval=0s timeout=240 (WebData-start-timeout-240)
+               promote interval=0s timeout=90 (WebData-promote-timeout-90)
+               demote interval=0s timeout=90 (WebData-demote-timeout-90)
+               stop interval=0s timeout=100 (WebData-stop-timeout-100)
+               monitor interval=60s (WebData-monitor-interval-60s)
+[root@pcmk-1 ~]# pcs constraint ref WebDataClone
 Resource: WebDataClone
   colocation-WebFS-WebDataClone-INFINITY
   order-WebDataClone-WebFS-mandatory
 ----
-endif::[]
-
-ifdef::crmsh[]
-.....
-primitive WebData ocf:linbit:drbd \
-    params drbd_resource="wwwdata" \
-    op monitor interval="60s"
-ms WebDataClone WebData \
-    meta master-max="2" master-node-max="1" clone-max="2" clone-node-max="1" notify="true"
-.....
-endif::[]
-
 
 ==== Cluster Filesystem ====
 
 The cluster filesystem ensures that files are read and written correctly.
 We need to specify the block device (provided by DRBD), where we want it
-mounted and that we are using GFS2. Again it is a clone because it is
+mounted and that we are using GFS2. Again, it is a clone because it is
 intended to be active on both nodes. The additional constraints ensure
-that it can only be started on nodes with active gfs-control and drbd
-instances.
+that it can only be started on nodes with active DLM and DRBD instances.
 
-ifdef::pcs[]
-[source,C]
 ----
-# pcs resource show WebFS-clone
-Resource: WebFS-clone
-  device: /dev/drbd/by-res/wwwdata
-  directory: /var/www/html
-  fstype: gfs2
-# pcs constraint ref WebFS-clone
+[root@pcmk-1 ~]# pcs resource show WebFS-clone
+ Clone: WebFS-clone
+  Resource: WebFS (class=ocf provider=heartbeat type=Filesystem)
+   Attributes: device=/dev/drbd1 directory=/var/www/html fstype=gfs2 
+   Operations: start interval=0s timeout=60 (WebFS-start-timeout-60)
+               stop interval=0s timeout=60 (WebFS-stop-timeout-60)
+               monitor interval=20 timeout=40 (WebFS-monitor-interval-20)
+[root@pcmk-1 ~]# pcs constraint ref WebFS-clone
 Resource: WebFS-clone
   colocation-WebFS-WebDataClone-INFINITY
   colocation-WebSite-WebFS-INFINITY
-  order-WebFS-WebSite-mandatory
+  colocation-WebFS-clone-dlm-clone-INFINITY
   order-WebDataClone-WebFS-mandatory
+  order-WebFS-WebSite-mandatory
+  order-dlm-clone-WebFS-clone-mandatory
 ----
-endif::[]
-
-ifdef::crmsh[]
-.....
-primitive WebFS ocf:heartbeat:Filesystem \
-    params device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" fstype="gfs2"
-clone WebFSClone WebFS
-colocation WebFS-with-gfs-control inf: WebFSClone gfs-clone
-colocation fs_on_drbd inf: WebFSClone WebDataClone:Master
-order WebFS-after-WebData inf: WebDataClone:promote WebFSClone:start
-order start-WebFS-after-gfs-control inf: gfs-clone WebFSClone
-.....
-endif::[]
 
 ==== Apache ====
 
-Lastly we have the actual service, Apache. We need only tell the cluster
-where to find it's main configuration file and restrict it to running on
-nodes that have the required filesystem mounted and the IP address
-active.
+Lastly, we have the actual service, Apache. We need only tell the cluster
+where to find its main configuration file and restrict it to running on
+nodes that have the required filesystem mounted and the IP address active.
 
-ifdef::pcs[]
-[source,C]
 ----
-# pcs resource show WebSite-clone
-Resource: WebSite-clone
-  configfile: /etc/httpd/conf/httpd.conf
-  statusurl: http://localhost/server-status
-  master-max: 2
-  op monitor interval=1min
-# pcs constraint ref WebSite-clone
+[root@pcmk-1 ~]# pcs resource show WebSite-clone
+ Clone: WebSite-clone
+  Resource: WebSite (class=ocf provider=heartbeat type=apache)
+   Attributes: configfile=/etc/httpd/conf/httpd.conf statusurl=http://localhost/server-status 
+   Operations: start interval=0s timeout=40s (WebSite-start-timeout-40s)
+               stop interval=0s timeout=60s (WebSite-stop-timeout-60s)
+               monitor interval=1min (WebSite-monitor-interval-1min)
+[root@pcmk-1 ~]# pcs constraint ref WebSite-clone
 Resource: WebSite-clone
   colocation-WebSite-ClusterIP-INFINITY
   colocation-WebSite-WebFS-INFINITY
   order-ClusterIP-WebSite-mandatory
   order-WebFS-WebSite-mandatory
 ----
-endif::[]
-
-ifdef::crmsh[]
-.....
-primitive WebSite ocf:heartbeat:apache \
-    params configfile="/etc/httpd/conf/httpd.conf" \
-    op monitor interval="1min"
-clone WebSiteClone WebSite
-colocation WebSite-with-WebFS inf: WebSiteClone WebFSClone
-colocation website-with-ip inf: WebSiteClone WebIP
-order apache-after-ip inf: WebIP WebSiteClone
-order WebSite-after-WebFS inf: WebFSClone WebSiteClone
-.....
-endif::[]
-

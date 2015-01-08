@@ -604,12 +604,18 @@ lrmd_tls_recv_reply(lrmd_t * lrmd, int total_timeout, int expected_reply_id, int
                 remaining_timeout = total_timeout;
             }
             if (remaining_timeout <= 0) {
+                crm_err("Never received the expected reply during the timeout period, disconnecting.");
+                *disconnected = TRUE;
                 return NULL;
             }
 
             crm_remote_recv(native->remote, remaining_timeout, disconnected);
             xml = crm_remote_parse_buffer(native->remote);
-            if (!xml || *disconnected) {
+            if (!xml) {
+                crm_err("Unable to receive expected reply, disconnecting.");
+                *disconnected = TRUE;
+                return NULL;
+            } else if (*disconnected) {
                 return NULL;
             }
         }

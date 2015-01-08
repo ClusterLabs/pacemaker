@@ -82,7 +82,11 @@
         <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="9" operation="start" operation_key="rhel7-alt4_start_0" on_node="rhel7-alt1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="7">
     <action_set>

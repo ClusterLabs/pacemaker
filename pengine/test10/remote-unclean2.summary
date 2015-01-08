@@ -1,0 +1,26 @@
+
+Current cluster status:
+RemoteNode rhel7-auto4: UNCLEAN (offline)
+Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
+
+ shooter	(stonith:fence_xvm):	Started rhel7-auto2 
+ rhel7-auto4	(ocf::pacemaker:remote):	FAILED rhel7-auto1 
+
+Transition Summary:
+ * Recover rhel7-auto4	(Started rhel7-auto1)
+
+Executing cluster transition:
+ * Resource action: rhel7-auto4     stop on rhel7-auto1
+ * Fencing rhel7-auto4 (reboot)
+ * Pseudo action:   stonith_complete
+ * Pseudo action:   all_stopped
+ * Resource action: rhel7-auto4     start on rhel7-auto1
+ * Resource action: rhel7-auto4     monitor=60000 on rhel7-auto1
+
+Revised cluster status:
+Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
+RemoteOnline: [ rhel7-auto4 ]
+
+ shooter	(stonith:fence_xvm):	Started rhel7-auto2 
+ rhel7-auto4	(ocf::pacemaker:remote):	Started rhel7-auto1 
+

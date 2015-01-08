@@ -48,7 +48,7 @@ In the past, users desiring this deployment had to make a decision. They would e
 
 With the pacemaker_remote service we have a new option.
 
-* The baremetal cluster-nodes run the cluster stack (paceamaker+corosync).
+* The baremetal cluster-nodes run the cluster stack (pacemaker+corosync).
 * The virtual remote-nodes run the pacemaker_remote service (nearly zero configuration required on the virtual machine side)
 * The cluster stack on the cluster-nodes launch the virtual machines and immediately connect to the pacemaker_remote service, allowing the virtual machines to integrate into the cluster just as if they were a real cluster-node.
 

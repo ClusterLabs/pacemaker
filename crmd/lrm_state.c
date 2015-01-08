@@ -90,6 +90,21 @@ free_recurring_op(gpointer value)
     free(op);
 }
 
+gboolean
+lrm_state_is_local(lrm_state_t *lrm_state)
+{
+    if (lrm_state == NULL || fsa_our_uname == NULL) {
+        return FALSE;
+    }
+    
+    if (strcmp(lrm_state->node_name, fsa_our_uname) != 0) {
+        return FALSE;
+    }
+
+    return TRUE;
+
+}
+
 lrm_state_t *
 lrm_state_create(const char *node_name)
 {

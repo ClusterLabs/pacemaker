@@ -80,6 +80,15 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
                   node->details->uname, reason);
         set_bit(node->details->remote_rsc->flags, pe_rsc_failed);
 
+    } else if (is_baremetal_remote_node(node)) {
+        if(pe_can_fence(data_set, node)) {
+            crm_warn("Node %s will be fenced %s", node->details->uname, reason);
+        } else {
+            crm_warn("Node %s is unclean %s", node->details->uname, reason);
+        }
+        node->details->unclean = TRUE;
+        node->details->remote_requires_reset = TRUE;
+
     } else if (node->details->unclean == FALSE) {
         if(pe_can_fence(data_set, node)) {
             crm_warn("Node %s will be fenced %s", node->details->uname, reason);
@@ -1143,8 +1152,10 @@ unpack_remote_status(xmlNode * status, pe_working_set_t * data_set)
         }
         crm_trace("Processing remote node id=%s, uname=%s", id, uname);
 
-        this_node->details->unclean = FALSE;
-        this_node->details->unseen = FALSE;
+        if (this_node->details->remote_requires_reset == FALSE) {
+            this_node->details->unclean = FALSE;
+            this_node->details->unseen = FALSE;
+        }
         attrs = find_xml_node(state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
         add_node_attrs(attrs, this_node, TRUE, data_set);
 
@@ -1777,6 +1788,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
                   enum action_fail_response on_fail,
                   xmlNode * migrate_op, pe_working_set_t * data_set)
 {
+    node_t *tmpnode = NULL;
     CRM_ASSERT(rsc);
     pe_rsc_trace(rsc, "Resource %s is %s on %s: on_fail=%s",
                  rsc->id, role2text(rsc->role), node->details->uname, fail2text(on_fail));
@@ -1817,7 +1829,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
             should_fence = TRUE;
         } else if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
             if (is_baremetal_remote_node(node) && is_not_set(node->details->remote_rsc->flags, pe_rsc_failed)) {
-                /* setting unceen = true means that fencing of the remote node will
+                /* setting unseen = true means that fencing of the remote node will
                  * only occur if the connection resource is not going to start somewhere.
                  * This allows connection resources on a failed cluster-node to move to
                  * another node without requiring the baremetal remote nodes to be fenced
@@ -1892,7 +1904,20 @@ process_rsc_state(resource_t * rsc, node_t * node,
 
             if (rsc->container) {
                 stop_action(rsc->container, node, FALSE);
-
+            } else if (rsc->role != RSC_ROLE_STOPPED && rsc->role != RSC_ROLE_UNKNOWN) {
+                stop_action(rsc, node, FALSE);
+            }
+            break;
+        case action_fail_reset_remote:
+            set_bit(rsc->flags, pe_rsc_failed);
+            tmpnode = NULL;
+            if (rsc->is_remote_node) {
+                tmpnode = pe_find_node(data_set->nodes, rsc->id);
+            }
+            if (tmpnode && is_baremetal_remote_node(tmpnode)) {
+                /* connection resource to baremetal resource failed in a way that
+                 * should result in fencing the remote-node. */
+                pe_fence_node(data_set, tmpnode, "because of connection failure(s)");
             } else if (rsc->role != RSC_ROLE_STOPPED && rsc->role != RSC_ROLE_UNKNOWN) {
                 stop_action(rsc, node, FALSE);
             }
@@ -1904,7 +1929,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
      * result in a fencing operation regardless if we're going to attempt to 
      * reconnect to the remote-node in this transition or not. */
     if (is_set(rsc->flags, pe_rsc_failed) && rsc->is_remote_node) {
-        node_t *tmpnode = pe_find_node(data_set->nodes, rsc->id);
+        tmpnode = pe_find_node(data_set->nodes, rsc->id);
         if (tmpnode && tmpnode->details->unclean) {
             tmpnode->details->unseen = FALSE;
         }
@@ -2510,10 +2535,9 @@ unpack_rsc_op_failure(resource_t *rsc, node_t *node, int rc, xmlNode *xml_op, en
 
     action = custom_action(rsc, strdup(key), task, NULL, TRUE, FALSE, data_set);
     if ((action->on_fail <= action_fail_fence && *on_fail < action->on_fail) ||
-        (action->on_fail == action_fail_restart_container
-         && *on_fail <= action_fail_recover) || (*on_fail == action_fail_restart_container
-                                                 && action->on_fail >=
-                                                 action_fail_migrate)) {
+        (action->on_fail == action_fail_reset_remote && *on_fail <= action_fail_recover) ||
+        (action->on_fail == action_fail_restart_container && *on_fail <= action_fail_recover) ||
+        (*on_fail == action_fail_restart_container && action->on_fail >= action_fail_migrate)) {
         pe_rsc_trace(rsc, "on-fail %s -> %s for %s (%s)", fail2text(*on_fail),
                      fail2text(action->on_fail), action->uuid, key);
         *on_fail = action->on_fail;
@@ -2881,13 +2905,11 @@ update_resource_state(resource_t *rsc, node_t * node, xmlNode * xml_op, const ch
             case action_fail_block:
             case action_fail_ignore:
             case action_fail_recover:
+            case action_fail_restart_container:
+            case action_fail_reset_remote:
                 *on_fail = action_fail_ignore;
                 rsc->next_role = RSC_ROLE_UNKNOWN;
                 break;
-
-            case action_fail_restart_container:
-                *on_fail = action_fail_ignore;
-                rsc->next_role = RSC_ROLE_UNKNOWN;
         }
     }
 }

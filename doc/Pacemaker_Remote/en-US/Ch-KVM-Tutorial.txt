@@ -192,7 +192,7 @@ Now on the +GUEST+ install pacemaker-remote package and enable the daemon to run
 
 [source,C]
 ----
-# yum install -y pacemaker paceamaker-remote resource-agents
+# yum install -y pacemaker pacemaker-remote resource-agents
 # systemctl enable pacemaker_remote.service
 ----
 

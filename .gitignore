@@ -48,24 +48,37 @@ m4/ltoptions.m4
 m4/ltsugar.m4
 m4/ltversion.m4
 m4/lt~obsolete.m4
+test-driver
+ylwrap
 
 # Configure targets
+Doxyfile
+coverage.sh
 cts/CTSvars.py
 cts/LSBDummy
 cts/benchmark/clubench
+cts/lxc_autogen.sh
+extra/logrotate/pacemaker
 include/config.h
 include/config.h.in
 include/crm_config.h
+lrmd/pacemaker_remote
+lrmd/pacemaker_remote.service
 mcp/pacemaker
+mcp/pacemaker.combined.upstart
 mcp/pacemaker.service
+mcp/pacemaker.upstart
 pengine/regression.core.sh
 publican.cfg
 shell/modules/help.py
 shell/modules/ra.py
 shell/modules/ui.py
 shell/modules/vars.py
+tools/cibsecret
 tools/coverage.sh
+tools/crm_mon.upstart
 tools/crm_report
+tools/report.common
 lrmd/regression.py
 fencing/regression.py
 
@@ -121,10 +134,14 @@ xml/pacemaker.rng
 extra/rgmanager/ccs2cib
 extra/rgmanager/ccs_flatten
 extra/rgmanager/disable_rgmanager
+doc/Clusters_from_Scratch.build
 doc/Clusters_from_Scratch/en-US/Ap-*.xml
 doc/Clusters_from_Scratch/en-US/Ch-*.xml
+doc/Pacemaker_Explained.build
 doc/Pacemaker_Explained/en-US/Ch-*.xml
 doc/Pacemaker_Explained/en-US/Ap-*.xml
+doc/Pacemaker_Remote.build
+doc/Pacemaker_Remote/en-US/Ch-*.xml
 lib/gnu/libgnu.a
 lib/gnu/stdalign.h
 *.coverity

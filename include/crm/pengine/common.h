@@ -34,7 +34,18 @@ enum action_fail_response {
     action_fail_stop,
     action_fail_standby,
     action_fail_fence,
-    action_fail_restart_container
+    action_fail_restart_container,
+    /* This is reserved for internal use for baremetal remote node connection
+     * resources. This fail action means
+     * 1. If stonith is enabled, fence the baremetal remote node
+     * 2. stonith not enabled, attempt to recover the connection resources
+     *
+     * This response value gives us control of saying types of
+     * connection resource failures result in fencing the remote node.
+     * Example: recurring monitors failure should result in fencing.
+     */
+    action_fail_reset_remote,
+
 };
 
 /* the "done" action must be the "pre" action +1 */

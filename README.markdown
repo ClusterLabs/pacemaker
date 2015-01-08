@@ -35,6 +35,7 @@ This is not meant to be an exhaustive list:
 * automake
 * autoconf
 * libtool-ltdl-devel
+* libuuid-devel
 * pkgconfig
 * python
 * glib2-devel
