@@ -71,13 +71,17 @@ status()
 # rpm based distros
 if [ -d @sysconfdir@/sysconfig ]; then
 	[ -f @INITDIR@/functions ] && . @INITDIR@/functions
+set -a
 	[ -f @sysconfdir@/sysconfig/pacemaker ] && . @sysconfdir@/sysconfig/pacemaker
+set +a
 	[ -z "$LOCK_FILE" ] && LOCK_FILE="@localstatedir@/lock/subsys/pacemaker"
 fi
 
 # deb based distros
 if [ -d @sysconfdir@/default ]; then
+set -a
 	[ -f @sysconfdir@/default/pacemaker ] && . @sysconfdir@/default/pacemaker
+set +a
 	[ -z "$LOCK_FILE" ] && LOCK_FILE="@localstatedir@/lock/pacemaker"
 fi
 
