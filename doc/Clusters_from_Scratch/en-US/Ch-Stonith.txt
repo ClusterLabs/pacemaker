@@ -1,5 +1,6 @@
-[[_what_is_stonith]]
 = Configure STONITH =
+
+== What is STONITH? ==
 
 STONITH (Shoot The Other Node In The Head aka. fencing) protects your data from
 being corrupted by rogue nodes or unintended concurrent access.
