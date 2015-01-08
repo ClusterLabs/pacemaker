@@ -323,7 +323,7 @@ cppcheck:
 
 clang:
 	test -e $(CLANG_analyzer)
-	scan-build $(CLANG_checkers:%=-enable-checker %) make
+	scan-build $(CLANG_checkers:%=-enable-checker %) make clean all
 
 # V3	= scandir unsetenv alphasort xalloc
 # V2	= setenv strerror strchrnul strndup
