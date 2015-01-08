@@ -487,7 +487,7 @@ function test_acl_loop() {
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" crm_attribute -n enable-acl -v false
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
 
-    desc="$CIB_user: Replace - modify attribute"
+    desc="$CIB_user: Replace - modify attribute (deny)"
     cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml"
     test_assert 13 0
 
@@ -495,7 +495,7 @@ function test_acl_loop() {
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin --replace --xml-text '<nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl"/>'
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
 
-    desc="$CIB_user: Replace - delete attribute"
+    desc="$CIB_user: Replace - delete attribute (deny)"
     cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml"
     test_assert 13 0
 
@@ -503,10 +503,36 @@ function test_acl_loop() {
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="nothing interesting"/>'
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
 
-    desc="$CIB_user: Replace - create attribute"
+    desc="$CIB_user: Replace - create attribute (deny)"
     cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml"
     test_assert 13 0
     rm -rf /tmp/$$.haxor.xml
+
+
+    CIB_user=bob
+    CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
+    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="nothing interesting"/>'
+    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - create attribute (allow)"
+    cmd="cibadmin --replace -o resources --xml-file /tmp/$$.haxor.xml"
+    test_assert 0 0
+
+    CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
+    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="something interesting"/>'
+    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - modify attribute (allow)"
+    cmd="cibadmin --replace -o resources --xml-file /tmp/$$.haxor.xml"
+    test_assert 0 0
+
+    CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
+    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin --replace -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'
+    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - delete attribute (allow)"
+    cmd="cibadmin --replace -o resources --xml-file /tmp/$$.haxor.xml"
+    test_assert 0 0
 }
 
 function test_acls() {
@@ -522,10 +548,17 @@ function test_acls() {
       <acl_user id="niceguy">
         <role_ref id="observer"/>
       </acl_user>
+      <acl_user id="bob">
+        <role_ref id="admin"/>
+      </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
         <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <read id="admin-read-1" xpath="/cib"/>
+        <write id="admin-write-1" xpath="//resources"/>
       </acl_role>
     </acls>
 EOF

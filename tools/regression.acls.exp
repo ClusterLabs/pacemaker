@@ -17,10 +17,17 @@ A new shadow instance was created.  To begin using it paste the following into y
       <acl_user id="niceguy">
         <role_ref id="observer"/>
       </acl_user>
+      <acl_user id="bob">
+        <role_ref id="admin"/>
+      </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
         <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <read id="admin-read-1" xpath="/cib"/>
+        <write id="admin-write-1" xpath="//resources"/>
       </acl_role>
     </acls>
   </configuration>
@@ -47,10 +54,17 @@ A new shadow instance was created.  To begin using it paste the following into y
       <acl_user id="niceguy">
         <role_ref id="observer"/>
       </acl_user>
+      <acl_user id="bob">
+        <role_ref id="admin"/>
+      </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
         <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <read id="admin-read-1" xpath="/cib"/>
+        <write id="admin-write-1" xpath="//resources"/>
       </acl_role>
     </acls>
   </configuration>
@@ -78,10 +92,17 @@ A new shadow instance was created.  To begin using it paste the following into y
       <acl_user id="niceguy">
         <role_ref id="observer"/>
       </acl_user>
+      <acl_user id="bob">
+        <role_ref id="admin"/>
+      </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
         <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <read id="admin-read-1" xpath="/cib"/>
+        <write id="admin-write-1" xpath="//resources"/>
       </acl_role>
     </acls>
   </configuration>
@@ -109,10 +130,17 @@ A new shadow instance was created.  To begin using it paste the following into y
       <acl_user id="niceguy">
         <role_ref id="observer"/>
       </acl_user>
+      <acl_user id="bob">
+        <role_ref id="admin"/>
+      </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
         <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <read id="admin-read-1" xpath="/cib"/>
+        <write id="admin-write-1" xpath="//resources"/>
       </acl_role>
       <acl_user id="badidea">
         <read id="badidea-resources" xpath="//meta_attributes"/>
@@ -143,10 +171,17 @@ A new shadow instance was created.  To begin using it paste the following into y
       <acl_user id="niceguy">
         <role_ref id="observer"/>
       </acl_user>
+      <acl_user id="bob">
+        <role_ref id="admin"/>
+      </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
         <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <read id="admin-read-1" xpath="/cib"/>
+        <write id="admin-write-1" xpath="//resources"/>
       </acl_role>
       <acl_user id="badidea">
         <read id="badidea-resources" xpath="//meta_attributes"/>
@@ -180,10 +215,17 @@ A new shadow instance was created.  To begin using it paste the following into y
       <acl_user id="niceguy">
         <role_ref id="observer"/>
       </acl_user>
+      <acl_user id="bob">
+        <role_ref id="admin"/>
+      </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
         <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <read id="admin-read-1" xpath="/cib"/>
+        <write id="admin-write-1" xpath="//resources"/>
       </acl_role>
       <acl_user id="badidea">
         <read id="badidea-resources" xpath="//meta_attributes"/>
@@ -255,10 +297,17 @@ Call failed: Permission denied
       <acl_user id="niceguy">
         <role_ref id="observer"/>
       </acl_user>
+      <acl_user id="bob">
+        <role_ref id="admin"/>
+      </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
         <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <read id="admin-read-1" xpath="/cib"/>
+        <write id="admin-write-1" xpath="//resources"/>
       </acl_role>
       <acl_user id="badidea">
         <read id="badidea-resources" xpath="//meta_attributes"/>
@@ -301,10 +350,17 @@ __xml_acl_post_process: 	Creation of nvpair=cib-bootstrap-options-stonith-enable
       <acl_user id="niceguy">
         <role_ref id="observer"/>
       </acl_user>
+      <acl_user id="bob">
+        <role_ref id="admin"/>
+      </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
         <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <read id="admin-read-1" xpath="/cib"/>
+        <write id="admin-write-1" xpath="//resources"/>
       </acl_role>
       <acl_user id="badidea">
         <read id="badidea-resources" xpath="//meta_attributes"/>
@@ -345,10 +401,17 @@ Call failed: Permission denied
       <acl_user id="niceguy">
         <role_ref id="observer"/>
       </acl_user>
+      <acl_user id="bob">
+        <role_ref id="admin"/>
+      </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
         <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <read id="admin-read-1" xpath="/cib"/>
+        <write id="admin-write-1" xpath="//resources"/>
       </acl_role>
       <acl_user id="badidea">
         <read id="badidea-resources" xpath="//meta_attributes"/>
@@ -384,10 +447,17 @@ Call failed: Permission denied
       <acl_user id="niceguy">
         <role_ref id="observer"/>
       </acl_user>
+      <acl_user id="bob">
+        <role_ref id="admin"/>
+      </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
         <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <read id="admin-read-1" xpath="/cib"/>
+        <write id="admin-write-1" xpath="//resources"/>
       </acl_role>
       <acl_user id="badidea">
         <read id="badidea-resources" xpath="//meta_attributes"/>
@@ -425,10 +495,17 @@ Call failed: Permission denied
       <acl_user id="niceguy">
         <role_ref id="observer"/>
       </acl_user>
+      <acl_user id="bob">
+        <role_ref id="admin"/>
+      </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
         <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <read id="admin-read-1" xpath="/cib"/>
+        <write id="admin-write-1" xpath="//resources"/>
       </acl_role>
       <acl_user id="badidea">
         <read id="badidea-resources" xpath="//meta_attributes"/>
@@ -486,10 +563,17 @@ __xml_acl_post_process: 	Creation of nvpair=dummy-meta_attributes-target-role is
       <acl_user id="niceguy">
         <role_ref id="observer"/>
       </acl_user>
+      <acl_user id="bob">
+        <role_ref id="admin"/>
+      </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
         <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <read id="admin-read-1" xpath="/cib"/>
+        <write id="admin-write-1" xpath="//resources"/>
       </acl_role>
       <acl_user id="badidea">
         <read id="badidea-resources" xpath="//meta_attributes"/>
@@ -535,10 +619,17 @@ Stopped
       <acl_user id="niceguy">
         <role_ref id="observer"/>
       </acl_user>
+      <acl_user id="bob">
+        <role_ref id="admin"/>
+      </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
         <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <read id="admin-read-1" xpath="/cib"/>
+        <write id="admin-write-1" xpath="//resources"/>
       </acl_role>
       <acl_user id="badidea">
         <read id="badidea-resources" xpath="//meta_attributes"/>
@@ -582,10 +673,17 @@ Deleted dummy option: id=dummy-meta_attributes-target-role name=target-role
       <acl_user id="niceguy">
         <role_ref id="observer"/>
       </acl_user>
+      <acl_user id="bob">
+        <role_ref id="admin"/>
+      </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
         <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <read id="admin-read-1" xpath="/cib"/>
+        <write id="admin-write-1" xpath="//resources"/>
       </acl_role>
       <acl_user id="badidea">
         <read id="badidea-resources" xpath="//meta_attributes"/>
@@ -631,10 +729,17 @@ __xml_acl_post_process: 	Creation of nvpair=dummy-meta_attributes-target-role is
       <acl_user id="niceguy">
         <role_ref id="observer"/>
       </acl_user>
+      <acl_user id="bob">
+        <role_ref id="admin"/>
+      </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
         <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <read id="admin-read-1" xpath="/cib"/>
+        <write id="admin-write-1" xpath="//resources"/>
       </acl_role>
       <acl_user id="badidea">
         <read id="badidea-resources" xpath="//meta_attributes"/>
@@ -730,10 +835,17 @@ Call failed: Permission denied
       <acl_user id="niceguy">
         <role_ref id="observer"/>
       </acl_user>
+      <acl_user id="bob">
+        <role_ref id="admin"/>
+      </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
         <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <read id="admin-read-1" xpath="/cib"/>
+        <write id="admin-write-1" xpath="//resources"/>
       </acl_role>
       <acl_user id="badidea">
         <read id="badidea-resources" xpath="//meta_attributes"/>
@@ -778,10 +890,17 @@ Call failed: Permission denied
       <acl_user id="niceguy">
         <role_ref id="observer"/>
       </acl_user>
+      <acl_user id="bob">
+        <role_ref id="admin"/>
+      </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
         <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <read id="admin-read-1" xpath="/cib"/>
+        <write id="admin-write-1" xpath="//resources"/>
       </acl_role>
       <acl_user id="badidea">
         <read id="badidea-resources" xpath="//meta_attributes"/>
@@ -794,12 +913,12 @@ Call failed: Permission denied
   </configuration>
   <status/>
 </cib>
-=#=#=#= Begin test: niceguy: Replace - modify attribute =#=#=#=
+=#=#=#= Begin test: niceguy: Replace - modify attribute (deny) =#=#=#=
 __xml_acl_check: 	400 access denied to /cib[@epoch]: default
 __xml_acl_check: 	400 access denied to /cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-enable-acl'][@value]: default
 Call failed: Permission denied
-=#=#=#= End test: niceguy: Replace - modify attribute - Permission denied (13) =#=#=#=
-* Passed: cibadmin       - niceguy: Replace - modify attribute
+=#=#=#= End test: niceguy: Replace - modify attribute (deny) - Permission denied (13) =#=#=#=
+* Passed: cibadmin       - niceguy: Replace - modify attribute (deny)
 <cib epoch="13" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
@@ -825,10 +944,17 @@ Call failed: Permission denied
       <acl_user id="niceguy">
         <role_ref id="observer"/>
       </acl_user>
+      <acl_user id="bob">
+        <role_ref id="admin"/>
+      </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
         <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <read id="admin-read-1" xpath="/cib"/>
+        <write id="admin-write-1" xpath="//resources"/>
       </acl_role>
       <acl_user id="badidea">
         <read id="badidea-resources" xpath="//meta_attributes"/>
@@ -841,12 +967,12 @@ Call failed: Permission denied
   </configuration>
   <status/>
 </cib>
-=#=#=#= Begin test: niceguy: Replace - delete attribute =#=#=#=
+=#=#=#= Begin test: niceguy: Replace - delete attribute (deny) =#=#=#=
 __xml_acl_check: 	400 access denied to /cib[@epoch]: default
 __xml_acl_check: 	400 access denied to /cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-enable-acl']: default
 Call failed: Permission denied
-=#=#=#= End test: niceguy: Replace - delete attribute - Permission denied (13) =#=#=#=
-* Passed: cibadmin       - niceguy: Replace - delete attribute
+=#=#=#= End test: niceguy: Replace - delete attribute (deny) - Permission denied (13) =#=#=#=
+* Passed: cibadmin       - niceguy: Replace - delete attribute (deny)
 <cib epoch="13" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
@@ -872,10 +998,17 @@ Call failed: Permission denied
       <acl_user id="niceguy">
         <role_ref id="observer"/>
       </acl_user>
+      <acl_user id="bob">
+        <role_ref id="admin"/>
+      </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
         <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <read id="admin-read-1" xpath="/cib"/>
+        <write id="admin-write-1" xpath="//resources"/>
       </acl_role>
       <acl_user id="badidea">
         <read id="badidea-resources" xpath="//meta_attributes"/>
@@ -888,12 +1021,161 @@ Call failed: Permission denied
   </configuration>
   <status/>
 </cib>
-=#=#=#= Begin test: niceguy: Replace - create attribute =#=#=#=
+=#=#=#= Begin test: niceguy: Replace - create attribute (deny) =#=#=#=
 __xml_acl_check: 	400 access denied to /cib[@epoch]: default
 __xml_acl_check: 	400 access denied to /cib/configuration/resources/primitive[@id='dummy'][@description]: default
 Call failed: Permission denied
-=#=#=#= End test: niceguy: Replace - create attribute - Permission denied (13) =#=#=#=
-* Passed: cibadmin       - niceguy: Replace - create attribute
+=#=#=#= End test: niceguy: Replace - create attribute (deny) - Permission denied (13) =#=#=#=
+* Passed: cibadmin       - niceguy: Replace - create attribute (deny)
+<cib epoch="13" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy" description="nothing interesting">
+        <meta_attributes id="dummy-meta_attributes">
+          <nvpair id="dummy-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+    <acls>
+      <acl_user id="l33t-haxor">
+        <deny id="crook-nothing" xpath="/cib"/>
+      </acl_user>
+      <acl_user id="niceguy">
+        <role_ref id="observer"/>
+      </acl_user>
+      <acl_user id="bob">
+        <role_ref id="admin"/>
+      </acl_user>
+      <acl_role id="observer">
+        <read id="observer-read-1" xpath="/cib"/>
+        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
+        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <read id="admin-read-1" xpath="/cib"/>
+        <write id="admin-write-1" xpath="//resources"/>
+      </acl_role>
+      <acl_user id="badidea">
+        <read id="badidea-resources" xpath="//meta_attributes"/>
+      </acl_user>
+      <acl_user id="betteridea">
+        <deny id="betteridea-nothing" xpath="/cib"/>
+        <read id="betteridea-resources" xpath="//meta_attributes"/>
+      </acl_user>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= Begin test: bob: Replace - create attribute (allow) =#=#=#=
+=#=#=#= End test: bob: Replace - create attribute (allow) - OK (0) =#=#=#=
+* Passed: cibadmin       - bob: Replace - create attribute (allow)
+<cib epoch="14" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy" description="something interesting">
+        <meta_attributes id="dummy-meta_attributes">
+          <nvpair id="dummy-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+    <acls>
+      <acl_user id="l33t-haxor">
+        <deny id="crook-nothing" xpath="/cib"/>
+      </acl_user>
+      <acl_user id="niceguy">
+        <role_ref id="observer"/>
+      </acl_user>
+      <acl_user id="bob">
+        <role_ref id="admin"/>
+      </acl_user>
+      <acl_role id="observer">
+        <read id="observer-read-1" xpath="/cib"/>
+        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
+        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <read id="admin-read-1" xpath="/cib"/>
+        <write id="admin-write-1" xpath="//resources"/>
+      </acl_role>
+      <acl_user id="badidea">
+        <read id="badidea-resources" xpath="//meta_attributes"/>
+      </acl_user>
+      <acl_user id="betteridea">
+        <deny id="betteridea-nothing" xpath="/cib"/>
+        <read id="betteridea-resources" xpath="//meta_attributes"/>
+      </acl_user>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= Begin test: bob: Replace - modify attribute (allow) =#=#=#=
+=#=#=#= End test: bob: Replace - modify attribute (allow) - OK (0) =#=#=#=
+* Passed: cibadmin       - bob: Replace - modify attribute (allow)
+<cib epoch="15" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>
+    </resources>
+    <constraints/>
+    <acls>
+      <acl_user id="l33t-haxor">
+        <deny id="crook-nothing" xpath="/cib"/>
+      </acl_user>
+      <acl_user id="niceguy">
+        <role_ref id="observer"/>
+      </acl_user>
+      <acl_user id="bob">
+        <role_ref id="admin"/>
+      </acl_user>
+      <acl_role id="observer">
+        <read id="observer-read-1" xpath="/cib"/>
+        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
+        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <read id="admin-read-1" xpath="/cib"/>
+        <write id="admin-write-1" xpath="//resources"/>
+      </acl_role>
+      <acl_user id="badidea">
+        <read id="badidea-resources" xpath="//meta_attributes"/>
+      </acl_user>
+      <acl_user id="betteridea">
+        <deny id="betteridea-nothing" xpath="/cib"/>
+        <read id="betteridea-resources" xpath="//meta_attributes"/>
+      </acl_user>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= Begin test: bob: Replace - delete attribute (allow) =#=#=#=
+=#=#=#= End test: bob: Replace - delete attribute (allow) - OK (0) =#=#=#=
+* Passed: cibadmin       - bob: Replace - delete attribute (allow)
 
 
     !#!#!#!#! Upgrading to pacemaker-2.0 and retesting !#!#!#!#!
@@ -901,6 +1183,8 @@ Call failed: Permission denied
 __xml_acl_post_process: 	Creation of acl_permission=observer-read-1 is allowed
 __xml_acl_post_process: 	Creation of acl_permission=observer-write-1 is allowed
 __xml_acl_post_process: 	Creation of acl_permission=observer-write-2 is allowed
+__xml_acl_post_process: 	Creation of acl_permission=admin-read-1 is allowed
+__xml_acl_post_process: 	Creation of acl_permission=admin-write-1 is allowed
 __xml_acl_post_process: 	Creation of acl_permission=crook-nothing is allowed
 __xml_acl_post_process: 	Creation of acl_permission=badidea-resources is allowed
 __xml_acl_post_process: 	Creation of acl_permission=betteridea-nothing is allowed
@@ -917,11 +1201,7 @@ __xml_acl_post_process: 	Creation of acl_permission=betteridea-resources is allo
     </crm_config>
     <nodes/>
     <resources>
-      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-        <meta_attributes id="dummy-meta_attributes">
-          <nvpair id="dummy-meta_attributes-target-role" name="target-role" value="Started"/>
-        </meta_attributes>
-      </primitive>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>
     </resources>
     <constraints/>
     <acls>
@@ -934,10 +1214,17 @@ __xml_acl_post_process: 	Creation of acl_permission=betteridea-resources is allo
       <acl_target id="niceguy">
         <role id="observer"/>
       </acl_target>
+      <acl_target id="bob">
+        <role id="admin"/>
+      </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
         <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="admin-write-1" kind="write" xpath="//resources"/>
       </acl_role>
       <acl_target id="badidea">
         <role id="auto-badidea"/>
@@ -1019,10 +1306,17 @@ Call failed: Permission denied
       <acl_target id="niceguy">
         <role id="observer"/>
       </acl_target>
+      <acl_target id="bob">
+        <role id="admin"/>
+      </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
         <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="admin-write-1" kind="write" xpath="//resources"/>
       </acl_role>
       <acl_target id="badidea">
         <role id="auto-badidea"/>
@@ -1073,10 +1367,17 @@ Error setting enable-acl=false (section=crm_config, set=<null>): Permission deni
       <acl_target id="niceguy">
         <role id="observer"/>
       </acl_target>
+      <acl_target id="bob">
+        <role id="admin"/>
+      </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
         <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="admin-write-1" kind="write" xpath="//resources"/>
       </acl_role>
       <acl_target id="badidea">
         <role id="auto-badidea"/>
@@ -1126,10 +1427,17 @@ Call failed: Permission denied
       <acl_target id="niceguy">
         <role id="observer"/>
       </acl_target>
+      <acl_target id="bob">
+        <role id="admin"/>
+      </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
         <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="admin-write-1" kind="write" xpath="//resources"/>
       </acl_role>
       <acl_target id="badidea">
         <role id="auto-badidea"/>
@@ -1174,10 +1482,17 @@ Call failed: Permission denied
       <acl_target id="niceguy">
         <role id="observer"/>
       </acl_target>
+      <acl_target id="bob">
+        <role id="admin"/>
+      </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
         <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="admin-write-1" kind="write" xpath="//resources"/>
       </acl_role>
       <acl_target id="badidea">
         <role id="auto-badidea"/>
@@ -1224,10 +1539,17 @@ Call failed: Permission denied
       <acl_target id="niceguy">
         <role id="observer"/>
       </acl_target>
+      <acl_target id="bob">
+        <role id="admin"/>
+      </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
         <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="admin-write-1" kind="write" xpath="//resources"/>
       </acl_role>
       <acl_target id="badidea">
         <role id="auto-badidea"/>
@@ -1294,10 +1616,17 @@ __xml_acl_post_process: 	Creation of nvpair=dummy-meta_attributes-target-role is
       <acl_target id="niceguy">
         <role id="observer"/>
       </acl_target>
+      <acl_target id="bob">
+        <role id="admin"/>
+      </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
         <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="admin-write-1" kind="write" xpath="//resources"/>
       </acl_role>
       <acl_target id="badidea">
         <role id="auto-badidea"/>
@@ -1352,10 +1681,17 @@ Stopped
       <acl_target id="niceguy">
         <role id="observer"/>
       </acl_target>
+      <acl_target id="bob">
+        <role id="admin"/>
+      </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
         <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="admin-write-1" kind="write" xpath="//resources"/>
       </acl_role>
       <acl_target id="badidea">
         <role id="auto-badidea"/>
@@ -1408,10 +1744,17 @@ Deleted dummy option: id=dummy-meta_attributes-target-role name=target-role
       <acl_target id="niceguy">
         <role id="observer"/>
       </acl_target>
+      <acl_target id="bob">
+        <role id="admin"/>
+      </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
         <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="admin-write-1" kind="write" xpath="//resources"/>
       </acl_role>
       <acl_target id="badidea">
         <role id="auto-badidea"/>
@@ -1466,10 +1809,17 @@ __xml_acl_post_process: 	Creation of nvpair=dummy-meta_attributes-target-role is
       <acl_target id="niceguy">
         <role id="observer"/>
       </acl_target>
+      <acl_target id="bob">
+        <role id="admin"/>
+      </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
         <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="admin-write-1" kind="write" xpath="//resources"/>
       </acl_role>
       <acl_target id="badidea">
         <role id="auto-badidea"/>
@@ -1574,10 +1924,17 @@ Call failed: Permission denied
       <acl_target id="niceguy">
         <role id="observer"/>
       </acl_target>
+      <acl_target id="bob">
+        <role id="admin"/>
+      </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
         <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="admin-write-1" kind="write" xpath="//resources"/>
       </acl_role>
       <acl_target id="badidea">
         <role id="auto-badidea"/>
@@ -1631,10 +1988,17 @@ Call failed: Permission denied
       <acl_target id="niceguy">
         <role id="observer"/>
       </acl_target>
+      <acl_target id="bob">
+        <role id="admin"/>
+      </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
         <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="admin-write-1" kind="write" xpath="//resources"/>
       </acl_role>
       <acl_target id="badidea">
         <role id="auto-badidea"/>
@@ -1653,12 +2017,12 @@ Call failed: Permission denied
   </configuration>
   <status/>
 </cib>
-=#=#=#= Begin test: niceguy: Replace - modify attribute =#=#=#=
+=#=#=#= Begin test: niceguy: Replace - modify attribute (deny) =#=#=#=
 __xml_acl_check: 	400 access denied to /cib[@epoch]: default
 __xml_acl_check: 	400 access denied to /cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-enable-acl'][@value]: default
 Call failed: Permission denied
-=#=#=#= End test: niceguy: Replace - modify attribute - Permission denied (13) =#=#=#=
-* Passed: cibadmin       - niceguy: Replace - modify attribute
+=#=#=#= End test: niceguy: Replace - modify attribute (deny) - Permission denied (13) =#=#=#=
+* Passed: cibadmin       - niceguy: Replace - modify attribute (deny)
 <cib epoch="14" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
@@ -1687,10 +2051,17 @@ Call failed: Permission denied
       <acl_target id="niceguy">
         <role id="observer"/>
       </acl_target>
+      <acl_target id="bob">
+        <role id="admin"/>
+      </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
         <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="admin-write-1" kind="write" xpath="//resources"/>
       </acl_role>
       <acl_target id="badidea">
         <role id="auto-badidea"/>
@@ -1709,12 +2080,12 @@ Call failed: Permission denied
   </configuration>
   <status/>
 </cib>
-=#=#=#= Begin test: niceguy: Replace - delete attribute =#=#=#=
+=#=#=#= Begin test: niceguy: Replace - delete attribute (deny) =#=#=#=
 __xml_acl_check: 	400 access denied to /cib[@epoch]: default
 __xml_acl_check: 	400 access denied to /cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-enable-acl']: default
 Call failed: Permission denied
-=#=#=#= End test: niceguy: Replace - delete attribute - Permission denied (13) =#=#=#=
-* Passed: cibadmin       - niceguy: Replace - delete attribute
+=#=#=#= End test: niceguy: Replace - delete attribute (deny) - Permission denied (13) =#=#=#=
+* Passed: cibadmin       - niceguy: Replace - delete attribute (deny)
 <cib epoch="14" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
@@ -1743,10 +2114,17 @@ Call failed: Permission denied
       <acl_target id="niceguy">
         <role id="observer"/>
       </acl_target>
+      <acl_target id="bob">
+        <role id="admin"/>
+      </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
         <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="admin-write-1" kind="write" xpath="//resources"/>
       </acl_role>
       <acl_target id="badidea">
         <role id="auto-badidea"/>
@@ -1765,9 +2143,185 @@ Call failed: Permission denied
   </configuration>
   <status/>
 </cib>
-=#=#=#= Begin test: niceguy: Replace - create attribute =#=#=#=
+=#=#=#= Begin test: niceguy: Replace - create attribute (deny) =#=#=#=
 __xml_acl_check: 	400 access denied to /cib[@epoch]: default
 __xml_acl_check: 	400 access denied to /cib/configuration/resources/primitive[@id='dummy'][@description]: default
 Call failed: Permission denied
-=#=#=#= End test: niceguy: Replace - create attribute - Permission denied (13) =#=#=#=
-* Passed: cibadmin       - niceguy: Replace - create attribute
+=#=#=#= End test: niceguy: Replace - create attribute (deny) - Permission denied (13) =#=#=#=
+* Passed: cibadmin       - niceguy: Replace - create attribute (deny)
+<cib epoch="14" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy" description="nothing interesting">
+        <meta_attributes id="dummy-meta_attributes">
+          <nvpair id="dummy-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+    <acls>
+      <acl_target id="l33t-haxor">
+        <role id="auto-l33t-haxor"/>
+      </acl_target>
+      <acl_role id="auto-l33t-haxor">
+        <acl_permission id="crook-nothing" kind="deny" xpath="/cib"/>
+      </acl_role>
+      <acl_target id="niceguy">
+        <role id="observer"/>
+      </acl_target>
+      <acl_target id="bob">
+        <role id="admin"/>
+      </acl_target>
+      <acl_role id="observer">
+        <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
+        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="admin-write-1" kind="write" xpath="//resources"/>
+      </acl_role>
+      <acl_target id="badidea">
+        <role id="auto-badidea"/>
+      </acl_target>
+      <acl_role id="auto-badidea">
+        <acl_permission id="badidea-resources" kind="read" xpath="//meta_attributes"/>
+      </acl_role>
+      <acl_target id="betteridea">
+        <role id="auto-betteridea"/>
+      </acl_target>
+      <acl_role id="auto-betteridea">
+        <acl_permission id="betteridea-nothing" kind="deny" xpath="/cib"/>
+        <acl_permission id="betteridea-resources" kind="read" xpath="//meta_attributes"/>
+      </acl_role>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= Begin test: bob: Replace - create attribute (allow) =#=#=#=
+=#=#=#= End test: bob: Replace - create attribute (allow) - OK (0) =#=#=#=
+* Passed: cibadmin       - bob: Replace - create attribute (allow)
+<cib epoch="15" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy" description="something interesting">
+        <meta_attributes id="dummy-meta_attributes">
+          <nvpair id="dummy-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+    <acls>
+      <acl_target id="l33t-haxor">
+        <role id="auto-l33t-haxor"/>
+      </acl_target>
+      <acl_role id="auto-l33t-haxor">
+        <acl_permission id="crook-nothing" kind="deny" xpath="/cib"/>
+      </acl_role>
+      <acl_target id="niceguy">
+        <role id="observer"/>
+      </acl_target>
+      <acl_target id="bob">
+        <role id="admin"/>
+      </acl_target>
+      <acl_role id="observer">
+        <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
+        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="admin-write-1" kind="write" xpath="//resources"/>
+      </acl_role>
+      <acl_target id="badidea">
+        <role id="auto-badidea"/>
+      </acl_target>
+      <acl_role id="auto-badidea">
+        <acl_permission id="badidea-resources" kind="read" xpath="//meta_attributes"/>
+      </acl_role>
+      <acl_target id="betteridea">
+        <role id="auto-betteridea"/>
+      </acl_target>
+      <acl_role id="auto-betteridea">
+        <acl_permission id="betteridea-nothing" kind="deny" xpath="/cib"/>
+        <acl_permission id="betteridea-resources" kind="read" xpath="//meta_attributes"/>
+      </acl_role>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= Begin test: bob: Replace - modify attribute (allow) =#=#=#=
+=#=#=#= End test: bob: Replace - modify attribute (allow) - OK (0) =#=#=#=
+* Passed: cibadmin       - bob: Replace - modify attribute (allow)
+<cib epoch="16" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>
+    </resources>
+    <constraints/>
+    <acls>
+      <acl_target id="l33t-haxor">
+        <role id="auto-l33t-haxor"/>
+      </acl_target>
+      <acl_role id="auto-l33t-haxor">
+        <acl_permission id="crook-nothing" kind="deny" xpath="/cib"/>
+      </acl_role>
+      <acl_target id="niceguy">
+        <role id="observer"/>
+      </acl_target>
+      <acl_target id="bob">
+        <role id="admin"/>
+      </acl_target>
+      <acl_role id="observer">
+        <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
+        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="admin-write-1" kind="write" xpath="//resources"/>
+      </acl_role>
+      <acl_target id="badidea">
+        <role id="auto-badidea"/>
+      </acl_target>
+      <acl_role id="auto-badidea">
+        <acl_permission id="badidea-resources" kind="read" xpath="//meta_attributes"/>
+      </acl_role>
+      <acl_target id="betteridea">
+        <role id="auto-betteridea"/>
+      </acl_target>
+      <acl_role id="auto-betteridea">
+        <acl_permission id="betteridea-nothing" kind="deny" xpath="/cib"/>
+        <acl_permission id="betteridea-resources" kind="read" xpath="//meta_attributes"/>
+      </acl_role>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= Begin test: bob: Replace - delete attribute (allow) =#=#=#=
+=#=#=#= End test: bob: Replace - delete attribute (allow) - OK (0) =#=#=#=
+* Passed: cibadmin       - bob: Replace - delete attribute (allow)
