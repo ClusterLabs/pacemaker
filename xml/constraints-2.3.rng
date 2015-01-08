@@ -23,10 +23,7 @@
       <attribute name="id"><data type="ID"/></attribute>
       <choice>
 	<group>
-	  <choice>
-	    <attribute name="rsc"><data type="IDREF"/></attribute>
-	    <attribute name="rsc-pattern"><text/></attribute>
-	  </choice>
+	  <attribute name="rsc"><data type="IDREF"/></attribute>
 	  <optional>
 	    <attribute name="role">
 	      <ref name="attribute-roles"/>
@@ -133,12 +130,6 @@
 	      <ref name="attribute-roles"/>
 	    </attribute>
 	  </optional>
-	  <optional>
-	    <attribute name="rsc-instance"><data type="integer"/></attribute>
-	  </optional>
-	  <optional>
-	    <attribute name="with-rsc-instance"><data type="integer"/></attribute>
-	  </optional>
 	</group>
       </choice>
     </element>
@@ -180,12 +171,6 @@
 	    <attribute name="then-action">
 	      <ref name="attribute-actions"/>
 	    </attribute>
-	  </optional>
-	  <optional>
-	    <attribute name="first-instance"><data type="integer"/></attribute>
-	  </optional>
-	  <optional>
-	    <attribute name="then-instance"><data type="integer"/></attribute>
 	  </optional>
 	</group>
       </choice>

@@ -1,0 +1,40 @@
+
+Current cluster status:
+Node rhel7-auto1 (1): standby
+Online: [ rhel7-auto2 rhel7-auto3 rhel7-auto4 ]
+
+ shooter	(stonith:fence_xvm):	Started rhel7-auto1 
+ Clone Set: A-clone [A]
+     Started: [ rhel7-auto1 rhel7-auto2 ]
+     Stopped: [ rhel7-auto3 rhel7-auto4 ]
+ Clone Set: B-clone [B]
+     Started: [ rhel7-auto3 rhel7-auto4 ]
+     Stopped: [ rhel7-auto1 rhel7-auto2 ]
+
+Transition Summary:
+ * Move    shooter	(Started rhel7-auto1 -> rhel7-auto2)
+ * Stop    A:0	(rhel7-auto1)
+
+Executing cluster transition:
+ * Resource action: shooter         stop on rhel7-auto1
+ * Pseudo action:   A-clone_stop_0
+ * Resource action: shooter         start on rhel7-auto2
+ * Resource action: A               stop on rhel7-auto1
+ * Pseudo action:   A-clone_stopped_0
+ * Pseudo action:   A-clone_start_0
+ * Pseudo action:   all_stopped
+ * Resource action: shooter         monitor=60000 on rhel7-auto2
+ * Pseudo action:   A-clone_running_0
+
+Revised cluster status:
+Node rhel7-auto1 (1): standby
+Online: [ rhel7-auto2 rhel7-auto3 rhel7-auto4 ]
+
+ shooter	(stonith:fence_xvm):	Started rhel7-auto2 
+ Clone Set: A-clone [A]
+     Started: [ rhel7-auto2 ]
+     Stopped: [ rhel7-auto1 rhel7-auto3 rhel7-auto4 ]
+ Clone Set: B-clone [B]
+     Started: [ rhel7-auto3 rhel7-auto4 ]
+     Stopped: [ rhel7-auto1 rhel7-auto2 ]
+

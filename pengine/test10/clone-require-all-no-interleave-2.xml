@@ -1,0 +1,179 @@
+<cib crm_feature_set="3.0.9" validate-with="pacemaker-2.3" epoch="23" num_updates="0" admin_epoch="0" cib-last-written="Wed Jan  7 20:24:31 2015" have-quorum="1" dc-uuid="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.12-eea796a"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="phd"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="rhel7-auto1"/>
+      <node id="2" uname="rhel7-auto2"/>
+      <node id="3" uname="rhel7-auto3">
+        <instance_attributes id="nodes-3">
+          <nvpair id="nodes-3-standby" name="standby" value="on"/>
+        </instance_attributes>
+      </node>
+      <node id="4" uname="rhel7-auto4">
+        <instance_attributes id="nodes-4"/>
+      </node>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="shooter" type="fence_xvm">
+        <instance_attributes id="shooter-instance_attributes"/>
+        <operations>
+          <op id="shooter-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <clone id="A-clone">
+        <primitive class="ocf" id="A" provider="heartbeat" type="Dummy">
+          <instance_attributes id="A-instance_attributes"/>
+          <operations>
+            <op id="A-start-timeout-20" interval="0s" name="start" timeout="20"/>
+            <op id="A-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
+            <op id="A-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="A-clone-meta"/>
+      </clone>
+      <clone id="B-clone">
+        <primitive class="ocf" id="B" provider="heartbeat" type="Dummy">
+          <instance_attributes id="B-instance_attributes"/>
+          <operations>
+            <op id="B-start-timeout-20" interval="0s" name="start" timeout="20"/>
+            <op id="B-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
+            <op id="B-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="B-clone-meta"/>
+      </clone>
+      <clone id="C-clone">
+        <primitive class="ocf" id="C" provider="heartbeat" type="Dummy">
+          <instance_attributes id="C-instance_attributes"/>
+          <operations>
+            <op id="C-start-timeout-20" interval="0s" name="start" timeout="20"/>
+            <op id="C-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
+            <op id="C-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="C-clone-meta"/>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_order first="A-clone" first-action="start" id="order-A-clone-B-clone-mandatory" then="B-clone" then-action="start"/>
+      <rsc_colocation id="colocation-B-clone-A-clone-INFINITY" rsc="B-clone" score="INFINITY" with-rsc="A-clone"/>
+      <rsc_order first="B-clone" first-action="start" id="order-B-clone-C-clone-mandatory" require-all="false" then="C-clone" then-action="start"/>
+      <rsc_location id="location-A-clone-rhel7-auto1--INFINITY" node="rhel7-auto1" rsc="A-clone" score="-INFINITY"/>
+      <rsc_location id="location-A-clone-rhel7-auto2--INFINITY" node="rhel7-auto2" rsc="A-clone" score="-INFINITY"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="4" uname="rhel7-auto4" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="4">
+        <instance_attributes id="status-4">
+          <nvpair id="status-4-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-4-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="4">
+        <lrm_resources>
+          <lrm_resource id="shooter" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="10:3:7:0abc4e71-eceb-4fae-bc05-3c9935bff1de" transition-magic="0:7;10:3:7:0abc4e71-eceb-4fae-bc05-3c9935bff1de" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1420679798" last-rc-change="1420679798" exec-time="1071" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto4"/>
+          </lrm_resource>
+          <lrm_resource id="A" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="A_last_0" operation_key="A_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="17:16:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" transition-magic="0:0;17:16:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" call-id="29" rc-code="0" op-status="0" interval="0" last-run="1420680270" last-rc-change="1420680270" exec-time="21" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto4" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="A_monitor_10000" operation_key="A_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="16:5:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" transition-magic="0:0;16:5:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" call-id="11" rc-code="0" op-status="0" interval="10000" last-rc-change="1420680105" exec-time="21" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhel7-auto4"/>
+          </lrm_resource>
+          <lrm_resource id="B" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="B_last_0" operation_key="B_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="22:16:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" transition-magic="0:0;22:16:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" call-id="27" rc-code="0" op-status="0" interval="0" last-run="1420680270" last-rc-change="1420680270" exec-time="22" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto4" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="B_monitor_10000" operation_key="B_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="32:7:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" transition-magic="0:0;32:7:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" call-id="17" rc-code="0" op-status="0" interval="10000" last-rc-change="1420680111" exec-time="23" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhel7-auto4"/>
+          </lrm_resource>
+          <lrm_resource id="C" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="C_last_0" operation_key="C_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="27:16:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" transition-magic="0:0;27:16:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" call-id="25" rc-code="0" op-status="0" interval="0" last-run="1420680270" last-rc-change="1420680270" exec-time="21" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto4" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="C_monitor_10000" operation_key="C_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="48:9:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" transition-magic="0:0;48:9:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" call-id="23" rc-code="0" op-status="0" interval="10000" last-rc-change="1420680120" exec-time="22" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhel7-auto4"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="3" uname="rhel7-auto3" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="3">
+        <instance_attributes id="status-3">
+          <nvpair id="status-3-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-3-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="3">
+        <lrm_resources>
+          <lrm_resource id="shooter" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="8:3:7:0abc4e71-eceb-4fae-bc05-3c9935bff1de" transition-magic="0:7;8:3:7:0abc4e71-eceb-4fae-bc05-3c9935bff1de" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1420679799" last-rc-change="1420679799" exec-time="1070" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto3"/>
+          </lrm_resource>
+          <lrm_resource id="A" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="A_last_0" operation_key="A_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="21:15:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" transition-magic="0:0;21:15:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" call-id="27" rc-code="0" op-status="0" interval="0" last-run="1420680244" last-rc-change="1420680244" exec-time="22" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto3" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="A_monitor_10000" operation_key="A_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="14:5:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" transition-magic="0:0;14:5:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" call-id="11" rc-code="0" op-status="0" interval="10000" last-rc-change="1420680105" exec-time="21" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhel7-auto3"/>
+          </lrm_resource>
+          <lrm_resource id="B" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="B_last_0" operation_key="B_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="28:15:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" transition-magic="0:0;28:15:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" call-id="25" rc-code="0" op-status="0" interval="0" last-run="1420680244" last-rc-change="1420680244" exec-time="23" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto3" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="B_monitor_10000" operation_key="B_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="30:7:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" transition-magic="0:0;30:7:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" call-id="17" rc-code="0" op-status="0" interval="10000" last-rc-change="1420680112" exec-time="23" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhel7-auto3"/>
+          </lrm_resource>
+          <lrm_resource id="C" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="C_last_0" operation_key="C_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="28:16:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" transition-magic="0:0;28:16:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" call-id="29" rc-code="0" op-status="0" interval="0" last-run="1420680271" last-rc-change="1420680271" exec-time="21" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto3" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="C_monitor_10000" operation_key="C_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="46:9:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" transition-magic="0:0;46:9:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" call-id="23" rc-code="0" op-status="0" interval="10000" last-rc-change="1420680121" exec-time="8" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhel7-auto3"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="1" uname="rhel7-auto1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-1-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="shooter" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="11:3:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" transition-magic="0:0;11:3:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" call-id="6" rc-code="0" op-status="0" interval="0" last-run="1420679801" last-rc-change="1420679801" exec-time="88" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto1"/>
+            <lrm_rsc_op id="shooter_monitor_60000" operation_key="shooter_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="12:3:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" transition-magic="0:0;12:3:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" call-id="7" rc-code="0" op-status="0" interval="60000" last-rc-change="1420679801" exec-time="64" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhel7-auto1"/>
+          </lrm_resource>
+          <lrm_resource id="A" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="A_last_0" operation_key="A_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="27:13:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" transition-magic="0:0;27:13:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" call-id="29" rc-code="0" op-status="0" interval="0" last-run="1420680232" last-rc-change="1420680232" exec-time="33" queue-time="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto1"/>
+          </lrm_resource>
+          <lrm_resource id="B" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="B_last_0" operation_key="B_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="38:13:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" transition-magic="0:0;38:13:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" call-id="27" rc-code="0" op-status="0" interval="0" last-run="1420680232" last-rc-change="1420680232" exec-time="23" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto1"/>
+          </lrm_resource>
+          <lrm_resource id="C" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="C_last_0" operation_key="C_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="30:16:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" transition-magic="0:0;30:16:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" call-id="31" rc-code="0" op-status="0" interval="0" last-run="1420680271" last-rc-change="1420680271" exec-time="24" queue-time="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto1" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="C_monitor_10000" operation_key="C_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="50:9:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" transition-magic="0:0;50:9:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" call-id="25" rc-code="0" op-status="0" interval="10000" last-rc-change="1420680121" exec-time="23" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhel7-auto1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="2" uname="rhel7-auto2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="shooter" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="6:3:7:0abc4e71-eceb-4fae-bc05-3c9935bff1de" transition-magic="0:7;6:3:7:0abc4e71-eceb-4fae-bc05-3c9935bff1de" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1420679798" last-rc-change="1420679798" exec-time="1070" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto2"/>
+          </lrm_resource>
+          <lrm_resource id="A" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="A_last_0" operation_key="A_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="25:14:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" transition-magic="0:0;25:14:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" call-id="27" rc-code="0" op-status="0" interval="0" last-run="1420680238" last-rc-change="1420680238" exec-time="9" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto2"/>
+          </lrm_resource>
+          <lrm_resource id="B" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="B_last_0" operation_key="B_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="34:14:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" transition-magic="0:0;34:14:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" call-id="25" rc-code="0" op-status="0" interval="0" last-run="1420680238" last-rc-change="1420680238" exec-time="37" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto2"/>
+          </lrm_resource>
+          <lrm_resource id="C" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="C_last_0" operation_key="C_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="32:16:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" transition-magic="0:0;32:16:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" call-id="29" rc-code="0" op-status="0" interval="0" last-run="1420680270" last-rc-change="1420680270" exec-time="31" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto2" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="C_monitor_10000" operation_key="C_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="47:8:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" transition-magic="0:0;47:8:0:0abc4e71-eceb-4fae-bc05-3c9935bff1de" call-id="23" rc-code="0" op-status="0" interval="10000" last-rc-change="1420680120" exec-time="19" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhel7-auto2"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>
