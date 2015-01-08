@@ -1831,10 +1831,11 @@ __subtract_xml_object(xmlNode * target, xmlNode * patch)
     for (xIter = crm_first_attr(patch); xIter != NULL; xIter = xIter->next) {
         const char *p_name = (const char *)xIter->name;
 
-        xml_remove_prop(target, p_name);
+        /* Removing and then restoring the id field would change the ordering of properties */
+        if (safe_str_neq(p_name, XML_ATTR_ID)) {
+            xml_remove_prop(target, p_name);
+        }
     }
-    /* Restore the id field, it is never allowed to change */
-    crm_xml_add(target, XML_ATTR_ID, id);
 
     /* changes to child objects */
     cIter = __xml_first_child(target);
