@@ -1,0 +1,347 @@
+<cib admin_epoch="0" cib-last-written="Fri Dec 19 18:49:12 2014" crm_feature_set="3.0.9" dc-uuid="2" epoch="51" have-quorum="1" num_updates="78" validate-with="pacemaker-2.2">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.12-a14efad"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="STSRHTS29816"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="freeze"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="kiff-01"/>
+      <node id="2" uname="kiff-02"/>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="fence-kiff-01" type="fence_ipmilan">
+        <instance_attributes id="fence-kiff-01-instance_attributes">
+          <nvpair id="fence-kiff-01-instance_attributes-action" name="action" value="reboot"/>
+          <nvpair id="fence-kiff-01-instance_attributes-ipaddr" name="ipaddr" value="kiff-01-ilo"/>
+          <nvpair id="fence-kiff-01-instance_attributes-login" name="login" value="admin"/>
+          <nvpair id="fence-kiff-01-instance_attributes-passwd" name="passwd" value="admin"/>
+          <nvpair id="fence-kiff-01-instance_attributes-pcmk_host_check" name="pcmk_host_check" value="static-list"/>
+          <nvpair id="fence-kiff-01-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="kiff-01"/>
+        </instance_attributes>
+        <operations>
+          <op id="fence-kiff-01-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="stonith" id="fence-kiff-02" type="fence_ipmilan">
+        <instance_attributes id="fence-kiff-02-instance_attributes">
+          <nvpair id="fence-kiff-02-instance_attributes-action" name="action" value="reboot"/>
+          <nvpair id="fence-kiff-02-instance_attributes-ipaddr" name="ipaddr" value="kiff-02-ilo"/>
+          <nvpair id="fence-kiff-02-instance_attributes-login" name="login" value="admin"/>
+          <nvpair id="fence-kiff-02-instance_attributes-passwd" name="passwd" value="admin"/>
+          <nvpair id="fence-kiff-02-instance_attributes-pcmk_host_check" name="pcmk_host_check" value="static-list"/>
+          <nvpair id="fence-kiff-02-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="kiff-02"/>
+        </instance_attributes>
+        <operations>
+          <op id="fence-kiff-02-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <clone id="dlm-clone">
+        <primitive class="ocf" id="dlm" provider="pacemaker" type="controld">
+          <instance_attributes id="dlm-instance_attributes"/>
+          <operations>
+            <op id="dlm-start-timeout-90" interval="0s" name="start" timeout="90"/>
+            <op id="dlm-stop-timeout-100" interval="0s" name="stop" timeout="100"/>
+            <op id="dlm-monitor-interval-30s" interval="30s" name="monitor" on-fail="fence"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="dlm-clone-meta">
+          <nvpair id="dlm-interleave" name="interleave" value="true"/>
+          <nvpair id="dlm-ordered" name="ordered" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="clvmd-clone">
+        <primitive class="ocf" id="clvmd" provider="heartbeat" type="clvm">
+          <instance_attributes id="clvmd-instance_attributes">
+            <nvpair id="clvmd-instance_attributes-with_cmirrord" name="with_cmirrord" value="1"/>
+          </instance_attributes>
+          <operations>
+            <op id="clvmd-start-timeout-90" interval="0s" name="start" timeout="90"/>
+            <op id="clvmd-stop-timeout-90" interval="0s" name="stop" timeout="90"/>
+            <op id="clvmd-monitor-interval-30s" interval="30s" name="monitor" on-fail="fence"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="clvmd-clone-meta">
+          <nvpair id="clvmd-interleave" name="interleave" value="true"/>
+          <nvpair id="clvmd-ordered" name="ordered" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="shared0-clone">
+        <primitive class="ocf" id="shared0" provider="heartbeat" type="Filesystem">
+          <instance_attributes id="shared0-instance_attributes">
+            <nvpair id="shared0-instance_attributes-device" name="device" value="/dev/shared/shared0"/>
+            <nvpair id="shared0-instance_attributes-directory" name="directory" value="/mnt/shared0"/>
+            <nvpair id="shared0-instance_attributes-fstype" name="fstype" value="gfs2"/>
+            <nvpair id="shared0-instance_attributes-options" name="options" value="errors=panic"/>
+          </instance_attributes>
+          <operations>
+            <op id="shared0-start-timeout-60" interval="0s" name="start" timeout="60"/>
+            <op id="shared0-stop-timeout-60" interval="0s" name="stop" timeout="60"/>
+            <op id="shared0-monitor-interval-10s" interval="10s" name="monitor" on-fail="fence"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="shared0-clone-meta">
+          <nvpair id="shared0-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <primitive class="ocf" id="R-lxc-01_kiff-01" provider="heartbeat" type="VirtualDomain">
+        <instance_attributes id="R-lxc-01_kiff-01-instance_attributes">
+          <nvpair id="R-lxc-01_kiff-01-instance_attributes-hypervisor" name="hypervisor" value="lxc:///"/>
+          <nvpair id="R-lxc-01_kiff-01-instance_attributes-config" name="config" value="/mnt/shared0/test-virtual-domain/lxc/lxc-01_kiff-01.xml"/>
+          <nvpair id="R-lxc-01_kiff-01-instance_attributes-force_stop" name="force_stop" value="true"/>
+        </instance_attributes>
+        <operations>
+          <op id="R-lxc-01_kiff-01-start-timeout-90" interval="0s" name="start" timeout="90"/>
+          <op id="R-lxc-01_kiff-01-stop-timeout-90" interval="0s" name="stop" timeout="90"/>
+          <op id="R-lxc-01_kiff-01-monitor-interval-10" interval="10" name="monitor" timeout="30"/>
+        </operations>
+        <meta_attributes id="R-lxc-01_kiff-01-meta_attributes">
+          <nvpair id="R-lxc-01_kiff-01-meta_attributes-remote-node" name="remote-node" value="lxc-01_kiff-01"/>
+        </meta_attributes>
+        <utilization id="R-lxc-01_kiff-01-utilization">
+          <nvpair id="R-lxc-01_kiff-01-utilization-cpu" name="cpu" value="1"/>
+          <nvpair id="R-lxc-01_kiff-01-utilization-hv_memory" name="hv_memory" value="100"/>
+        </utilization>
+      </primitive>
+      <primitive class="ocf" id="R-lxc-02_kiff-01" provider="heartbeat" type="VirtualDomain">
+        <instance_attributes id="R-lxc-02_kiff-01-instance_attributes">
+          <nvpair id="R-lxc-02_kiff-01-instance_attributes-hypervisor" name="hypervisor" value="lxc:///"/>
+          <nvpair id="R-lxc-02_kiff-01-instance_attributes-config" name="config" value="/mnt/shared0/test-virtual-domain/lxc/lxc-02_kiff-01.xml"/>
+          <nvpair id="R-lxc-02_kiff-01-instance_attributes-force_stop" name="force_stop" value="true"/>
+        </instance_attributes>
+        <operations>
+          <op id="R-lxc-02_kiff-01-start-timeout-90" interval="0s" name="start" timeout="90"/>
+          <op id="R-lxc-02_kiff-01-stop-timeout-90" interval="0s" name="stop" timeout="90"/>
+          <op id="R-lxc-02_kiff-01-monitor-interval-10" interval="10" name="monitor" timeout="30"/>
+        </operations>
+        <meta_attributes id="R-lxc-02_kiff-01-meta_attributes">
+          <nvpair id="R-lxc-02_kiff-01-meta_attributes-remote-node" name="remote-node" value="lxc-02_kiff-01"/>
+        </meta_attributes>
+        <utilization id="R-lxc-02_kiff-01-utilization">
+          <nvpair id="R-lxc-02_kiff-01-utilization-cpu" name="cpu" value="1"/>
+          <nvpair id="R-lxc-02_kiff-01-utilization-hv_memory" name="hv_memory" value="100"/>
+        </utilization>
+      </primitive>
+      <primitive class="ocf" id="R-lxc-01_kiff-02" provider="heartbeat" type="VirtualDomain">
+        <instance_attributes id="R-lxc-01_kiff-02-instance_attributes">
+          <nvpair id="R-lxc-01_kiff-02-instance_attributes-hypervisor" name="hypervisor" value="lxc:///"/>
+          <nvpair id="R-lxc-01_kiff-02-instance_attributes-config" name="config" value="/mnt/shared0/test-virtual-domain/lxc/lxc-01_kiff-02.xml"/>
+          <nvpair id="R-lxc-01_kiff-02-instance_attributes-force_stop" name="force_stop" value="true"/>
+        </instance_attributes>
+        <operations>
+          <op id="R-lxc-01_kiff-02-start-timeout-90" interval="0s" name="start" timeout="90"/>
+          <op id="R-lxc-01_kiff-02-stop-timeout-90" interval="0s" name="stop" timeout="90"/>
+          <op id="R-lxc-01_kiff-02-monitor-interval-10" interval="10" name="monitor" timeout="30"/>
+        </operations>
+        <meta_attributes id="R-lxc-01_kiff-02-meta_attributes">
+          <nvpair id="R-lxc-01_kiff-02-meta_attributes-remote-node" name="remote-node" value="lxc-01_kiff-02"/>
+        </meta_attributes>
+        <utilization id="R-lxc-01_kiff-02-utilization">
+          <nvpair id="R-lxc-01_kiff-02-utilization-cpu" name="cpu" value="1"/>
+          <nvpair id="R-lxc-01_kiff-02-utilization-hv_memory" name="hv_memory" value="100"/>
+        </utilization>
+      </primitive>
+      <primitive class="ocf" id="R-lxc-02_kiff-02" provider="heartbeat" type="VirtualDomain">
+        <instance_attributes id="R-lxc-02_kiff-02-instance_attributes">
+          <nvpair id="R-lxc-02_kiff-02-instance_attributes-hypervisor" name="hypervisor" value="lxc:///"/>
+          <nvpair id="R-lxc-02_kiff-02-instance_attributes-config" name="config" value="/mnt/shared0/test-virtual-domain/lxc/lxc-02_kiff-02.xml"/>
+          <nvpair id="R-lxc-02_kiff-02-instance_attributes-force_stop" name="force_stop" value="true"/>
+        </instance_attributes>
+        <operations>
+          <op id="R-lxc-02_kiff-02-start-timeout-90" interval="0s" name="start" timeout="90"/>
+          <op id="R-lxc-02_kiff-02-stop-timeout-90" interval="0s" name="stop" timeout="90"/>
+          <op id="R-lxc-02_kiff-02-monitor-interval-10" interval="10" name="monitor" timeout="30"/>
+        </operations>
+        <meta_attributes id="R-lxc-02_kiff-02-meta_attributes">
+          <nvpair id="R-lxc-02_kiff-02-meta_attributes-remote-node" name="remote-node" value="lxc-02_kiff-02"/>
+        </meta_attributes>
+        <utilization id="R-lxc-02_kiff-02-utilization">
+          <nvpair id="R-lxc-02_kiff-02-utilization-cpu" name="cpu" value="1"/>
+          <nvpair id="R-lxc-02_kiff-02-utilization-hv_memory" name="hv_memory" value="100"/>
+        </utilization>
+      </primitive>
+      <primitive class="ocf" id="vm-fs" provider="heartbeat" type="Filesystem">
+        <instance_attributes id="vm-fs-instance_attributes">
+          <nvpair id="vm-fs-instance_attributes-device" name="device" value="/root"/>
+          <nvpair id="vm-fs-instance_attributes-directory" name="directory" value="/mnt/vm-fs"/>
+          <nvpair id="vm-fs-instance_attributes-fstype" name="fstype" value="none"/>
+          <nvpair id="vm-fs-instance_attributes-options" name="options" value="bind"/>
+        </instance_attributes>
+        <operations>
+          <op id="vm-fs-start-timeout-60" interval="0s" name="start" timeout="60"/>
+          <op id="vm-fs-stop-timeout-60" interval="0s" name="stop" timeout="60"/>
+          <op id="vm-fs-monitor-interval-20" interval="20" name="monitor" timeout="40"/>
+        </operations>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_order first="dlm-clone" first-action="start" id="order-dlm-clone-clvmd-clone-mandatory" then="clvmd-clone" then-action="start"/>
+      <rsc_colocation id="colocation-clvmd-clone-dlm-clone-INFINITY" rsc="clvmd-clone" score="INFINITY" with-rsc="dlm-clone"/>
+      <rsc_order first="clvmd-clone" first-action="start" id="order-clvmd-clone-shared0-clone-mandatory" then="shared0-clone" then-action="start"/>
+      <rsc_colocation id="colocation-shared0-clone-clvmd-clone-INFINITY" rsc="shared0-clone" score="INFINITY" with-rsc="clvmd-clone"/>
+      <rsc_location id="location-dlm-clone-lxc-01_kiff-01--INFINITY" node="lxc-01_kiff-01" rsc="dlm-clone" score="-INFINITY"/>
+      <rsc_order first="shared0-clone" first-action="start" id="order-shared0-clone-R-lxc-01_kiff-01-mandatory" then="R-lxc-01_kiff-01" then-action="start"/>
+      <rsc_location id="location-R-lxc-01_kiff-01-kiff-01-100" node="kiff-01" rsc="R-lxc-01_kiff-01" score="100"/>
+      <rsc_location id="location-dlm-clone-lxc-02_kiff-01--INFINITY" node="lxc-02_kiff-01" rsc="dlm-clone" score="-INFINITY"/>
+      <rsc_order first="shared0-clone" first-action="start" id="order-shared0-clone-R-lxc-02_kiff-01-mandatory" then="R-lxc-02_kiff-01" then-action="start"/>
+      <rsc_location id="location-R-lxc-02_kiff-01-kiff-01-100" node="kiff-01" rsc="R-lxc-02_kiff-01" score="100"/>
+      <rsc_location id="location-dlm-clone-lxc-01_kiff-02--INFINITY" node="lxc-01_kiff-02" rsc="dlm-clone" score="-INFINITY"/>
+      <rsc_order first="shared0-clone" first-action="start" id="order-shared0-clone-R-lxc-01_kiff-02-mandatory" then="R-lxc-01_kiff-02" then-action="start"/>
+      <rsc_location id="location-R-lxc-01_kiff-02-kiff-02-100" node="kiff-02" rsc="R-lxc-01_kiff-02" score="100"/>
+      <rsc_location id="location-dlm-clone-lxc-02_kiff-02--INFINITY" node="lxc-02_kiff-02" rsc="dlm-clone" score="-INFINITY"/>
+      <rsc_order first="shared0-clone" first-action="start" id="order-shared0-clone-R-lxc-02_kiff-02-mandatory" then="R-lxc-02_kiff-02" then-action="start"/>
+      <rsc_location id="location-R-lxc-02_kiff-02-kiff-02-100" node="kiff-02" rsc="R-lxc-02_kiff-02" score="100"/>
+      <rsc_location id="location-vm-fs-lxc-01_reno-01-100" node="lxc-01_reno-01" rsc="vm-fs" score="100"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state crm-debug-origin="post_cache_update" crmd="offline" expected="member" id="1" in_ccm="false" join="member" uname="kiff-01">
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-1-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="fence-kiff-01" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="fence-kiff-01_last_0" operation_key="fence-kiff-01_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="19:2:7:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:7;19:2:7:ed834806-99be-45de-9c12-c980ee8706a6" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1419011896" last-rc-change="1419011896" exec-time="2" queue-time="0" op-digest="4daeb50c5b907ee60049bf819d52bf47" on_node="kiff-01"/>
+          </lrm_resource>
+          <lrm_resource id="fence-kiff-02" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="fence-kiff-02_last_0" operation_key="fence-kiff-02_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="33:2:0:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:0;33:2:0:ed834806-99be-45de-9c12-c980ee8706a6" call-id="46" rc-code="0" op-status="0" interval="0" last-run="1419011897" last-rc-change="1419011897" exec-time="105" queue-time="0" op-digest="721cfc00d183a798aab10fb147ff0518" on_node="kiff-01"/>
+            <lrm_rsc_op id="fence-kiff-02_monitor_60000" operation_key="fence-kiff-02_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="34:2:0:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:0;34:2:0:ed834806-99be-45de-9c12-c980ee8706a6" call-id="47" rc-code="0" op-status="0" interval="60000" last-rc-change="1419011897" exec-time="95" queue-time="0" op-digest="3edb9bb87d2e2ef5d171c831a712b481" on_node="kiff-01"/>
+          </lrm_resource>
+          <lrm_resource id="R-lxc-01_kiff-01" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="R-lxc-01_kiff-01_last_0" operation_key="R-lxc-01_kiff-01_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="44:3:0:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:0;44:3:0:ed834806-99be-45de-9c12-c980ee8706a6" call-id="53" rc-code="0" op-status="0" interval="0" last-run="1419011901" last-rc-change="1419011901" exec-time="907" queue-time="0" op-digest="1120ab98948626507460f24405da6147" on_node="kiff-01"/>
+            <lrm_rsc_op id="R-lxc-01_kiff-01_monitor_10000" operation_key="R-lxc-01_kiff-01_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="48:4:0:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:0;48:4:0:ed834806-99be-45de-9c12-c980ee8706a6" call-id="55" rc-code="0" op-status="0" interval="10000" last-rc-change="1419011902" exec-time="211" queue-time="0" op-digest="45b6ccfbfd5dd7fe94f80ec3d8d6d78d" on_node="kiff-01"/>
+          </lrm_resource>
+          <lrm_resource id="R-lxc-02_kiff-01" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="R-lxc-02_kiff-01_last_0" operation_key="R-lxc-02_kiff-01_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="46:3:0:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:0;46:3:0:ed834806-99be-45de-9c12-c980ee8706a6" call-id="54" rc-code="0" op-status="0" interval="0" last-run="1419011901" last-rc-change="1419011901" exec-time="895" queue-time="0" op-digest="6d28982e9d5ab858dea79f0a4bc07ba6" on_node="kiff-01"/>
+            <lrm_rsc_op id="R-lxc-02_kiff-01_monitor_10000" operation_key="R-lxc-02_kiff-01_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="51:4:0:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:0;51:4:0:ed834806-99be-45de-9c12-c980ee8706a6" call-id="56" rc-code="0" op-status="0" interval="10000" last-rc-change="1419011902" exec-time="208" queue-time="0" op-digest="5aa25dd0c846987518afaba029b0a0a8" on_node="kiff-01"/>
+          </lrm_resource>
+          <lrm_resource id="R-lxc-01_kiff-02" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="R-lxc-01_kiff-02_last_0" operation_key="R-lxc-01_kiff-02_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="26:2:7:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:7;26:2:7:ed834806-99be-45de-9c12-c980ee8706a6" call-id="36" rc-code="7" op-status="0" interval="0" last-run="1419011897" last-rc-change="1419011897" exec-time="66" queue-time="0" op-digest="6ac2457c88e8834990f95e871a51d1fc" on_node="kiff-01"/>
+          </lrm_resource>
+          <lrm_resource id="R-lxc-02_kiff-02" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="R-lxc-02_kiff-02_last_0" operation_key="R-lxc-02_kiff-02_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="27:2:7:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:7;27:2:7:ed834806-99be-45de-9c12-c980ee8706a6" call-id="40" rc-code="7" op-status="0" interval="0" last-run="1419011897" last-rc-change="1419011897" exec-time="65" queue-time="0" op-digest="749edaca3e37d0e4526f44849ed63d4b" on_node="kiff-01"/>
+          </lrm_resource>
+          <lrm_resource id="dlm" type="controld" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="37:2:0:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:0;37:2:0:ed834806-99be-45de-9c12-c980ee8706a6" call-id="45" rc-code="0" op-status="0" interval="0" last-run="1419011897" last-rc-change="1419011897" exec-time="1150" queue-time="71" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="kiff-01"/>
+            <lrm_rsc_op id="dlm_monitor_30000" operation_key="dlm_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="21:3:0:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:0;21:3:0:ed834806-99be-45de-9c12-c980ee8706a6" call-id="48" rc-code="0" op-status="0" interval="30000" last-rc-change="1419011898" exec-time="42" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="kiff-01"/>
+          </lrm_resource>
+          <lrm_resource id="vm-fs" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vm-fs_last_0" operation_key="vm-fs_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="28:2:7:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:7;28:2:7:ed834806-99be-45de-9c12-c980ee8706a6" call-id="44" rc-code="7" op-status="0" interval="0" last-run="1419011897" last-rc-change="1419011897" exec-time="81" queue-time="0" op-digest="4e01fcdd304402f9cf3416cee0dc30d2" on_node="kiff-01"/>
+          </lrm_resource>
+          <lrm_resource id="shared0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="shared0_last_0" operation_key="shared0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="38:3:0:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:0;38:3:0:ed834806-99be-45de-9c12-c980ee8706a6" call-id="51" rc-code="0" op-status="0" interval="0" last-run="1419011900" last-rc-change="1419011900" exec-time="917" queue-time="0" op-digest="1684b65207e6da00ef41166b1d2e7147" on_node="kiff-01"/>
+            <lrm_rsc_op id="shared0_monitor_10000" operation_key="shared0_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="39:3:0:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:0;39:3:0:ed834806-99be-45de-9c12-c980ee8706a6" call-id="52" rc-code="0" op-status="0" interval="10000" last-rc-change="1419011901" exec-time="63" queue-time="0" op-digest="a976d846b49206dece2f5eecf97fc980" on_node="kiff-01"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvm" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="30:3:0:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:0;30:3:0:ed834806-99be-45de-9c12-c980ee8706a6" call-id="49" rc-code="0" op-status="0" interval="0" last-run="1419011898" last-rc-change="1419011898" exec-time="1787" queue-time="0" op-digest="8c0920550ecae28ee15ea3371898e446" on_node="kiff-01"/>
+            <lrm_rsc_op id="clvmd_monitor_30000" operation_key="clvmd_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="31:3:0:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:0;31:3:0:ed834806-99be-45de-9c12-c980ee8706a6" call-id="50" rc-code="0" op-status="0" interval="30000" last-rc-change="1419011900" exec-time="40" queue-time="0" op-digest="93512119a9313fd62f16acd7cc587734" on_node="kiff-01"/>
+          </lrm_resource>
+          <lrm_resource id="lxc-01_kiff-01" type="remote" class="ocf" provider="pacemaker" container="R-lxc-01_kiff-01">
+            <lrm_rsc_op id="lxc-01_kiff-01_last_0" operation_key="lxc-01_kiff-01_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="58:4:0:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:0;58:4:0:ed834806-99be-45de-9c12-c980ee8706a6" call-id="1" rc-code="0" op-status="0" interval="0" last-run="1419011902" last-rc-change="1419011902" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="kiff-01"/>
+            <lrm_rsc_op id="lxc-01_kiff-01_monitor_30000" operation_key="lxc-01_kiff-01_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="59:4:0:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:0;59:4:0:ed834806-99be-45de-9c12-c980ee8706a6" call-id="3" rc-code="0" op-status="0" interval="30000" last-rc-change="1419011907" exec-time="0" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a" on_node="kiff-01"/>
+          </lrm_resource>
+          <lrm_resource id="lxc-02_kiff-01" type="remote" class="ocf" provider="pacemaker" container="R-lxc-02_kiff-01">
+            <lrm_rsc_op id="lxc-02_kiff-01_last_0" operation_key="lxc-02_kiff-01_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="60:4:0:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:0;60:4:0:ed834806-99be-45de-9c12-c980ee8706a6" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1419011902" last-rc-change="1419011902" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="kiff-01"/>
+            <lrm_rsc_op id="lxc-02_kiff-01_monitor_30000" operation_key="lxc-02_kiff-01_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="61:4:0:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:0;61:4:0:ed834806-99be-45de-9c12-c980ee8706a6" call-id="4" rc-code="0" op-status="0" interval="30000" last-rc-change="1419011907" exec-time="0" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a" on_node="kiff-01"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state crm-debug-origin="post_cache_update" crmd="online" expected="member" id="2" in_ccm="true" join="member" uname="kiff-02">
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="fence-kiff-01" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="fence-kiff-01_last_0" operation_key="fence-kiff-01_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="15:18:0:1c60b862-2217-42e1-857f-645cedc2afd9" transition-magic="0:0;15:18:0:1c60b862-2217-42e1-857f-645cedc2afd9" call-id="67" rc-code="0" op-status="0" interval="0" last-run="1419011236" last-rc-change="1419011236" exec-time="102" queue-time="0" op-digest="4daeb50c5b907ee60049bf819d52bf47" on_node="kiff-02"/>
+            <lrm_rsc_op id="fence-kiff-01_monitor_60000" operation_key="fence-kiff-01_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="16:18:0:1c60b862-2217-42e1-857f-645cedc2afd9" transition-magic="0:0;16:18:0:1c60b862-2217-42e1-857f-645cedc2afd9" call-id="68" rc-code="0" op-status="0" interval="60000" last-rc-change="1419011236" exec-time="93" queue-time="0" op-digest="5a67a2af25e4748196ea722d1770543a" on_node="kiff-02"/>
+          </lrm_resource>
+          <lrm_resource id="fence-kiff-02" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="fence-kiff-02_last_0" operation_key="fence-kiff-02_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="32:2:0:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:0;32:2:0:ed834806-99be-45de-9c12-c980ee8706a6" call-id="88" rc-code="0" op-status="0" interval="0" last-run="1419011896" last-rc-change="1419011896" exec-time="0" queue-time="0" op-digest="721cfc00d183a798aab10fb147ff0518" on_node="kiff-02"/>
+            <lrm_rsc_op id="fence-kiff-02_monitor_60000" operation_key="fence-kiff-02_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="16:0:0:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:0;16:0:0:ed834806-99be-45de-9c12-c980ee8706a6" call-id="82" rc-code="0" op-status="0" interval="60000" last-rc-change="1419011480" exec-time="93" queue-time="0" op-digest="3edb9bb87d2e2ef5d171c831a712b481" on_node="kiff-02"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvm" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="25:5:0:1c60b862-2217-42e1-857f-645cedc2afd9" transition-magic="0:0;25:5:0:1c60b862-2217-42e1-857f-645cedc2afd9" call-id="24" rc-code="0" op-status="0" interval="0" last-run="1419011029" last-rc-change="1419011029" exec-time="1557" queue-time="0" op-digest="8c0920550ecae28ee15ea3371898e446" on_node="kiff-02"/>
+            <lrm_rsc_op id="clvmd_monitor_30000" operation_key="clvmd_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="26:5:0:1c60b862-2217-42e1-857f-645cedc2afd9" transition-magic="0:0;26:5:0:1c60b862-2217-42e1-857f-645cedc2afd9" call-id="25" rc-code="0" op-status="0" interval="30000" last-rc-change="1419011030" exec-time="39" queue-time="0" op-digest="93512119a9313fd62f16acd7cc587734" on_node="kiff-02"/>
+          </lrm_resource>
+          <lrm_resource id="shared0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="shared0_last_0" operation_key="shared0_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="35:6:0:1c60b862-2217-42e1-857f-645cedc2afd9" transition-magic="0:0;35:6:0:1c60b862-2217-42e1-857f-645cedc2afd9" call-id="31" rc-code="0" op-status="0" interval="0" last-run="1419011061" last-rc-change="1419011061" exec-time="1397" queue-time="0" op-digest="1684b65207e6da00ef41166b1d2e7147" on_node="kiff-02"/>
+            <lrm_rsc_op id="shared0_monitor_10000" operation_key="shared0_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="36:6:0:1c60b862-2217-42e1-857f-645cedc2afd9" transition-magic="0:0;36:6:0:1c60b862-2217-42e1-857f-645cedc2afd9" call-id="32" rc-code="0" op-status="0" interval="10000" last-rc-change="1419011062" exec-time="62" queue-time="0" op-digest="a976d846b49206dece2f5eecf97fc980" on_node="kiff-02"/>
+          </lrm_resource>
+          <lrm_resource id="lxc-01_kiff-01" type="remote" class="ocf" provider="pacemaker" container="R-lxc-01_kiff-01">
+            <lrm_rsc_op id="lxc-01_kiff-01_last_0" operation_key="lxc-01_kiff-01_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="71:2:0:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:0;71:2:0:ed834806-99be-45de-9c12-c980ee8706a6" call-id="15" rc-code="0" op-status="0" interval="0" last-run="1419011897" last-rc-change="1419011897" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="kiff-02"/>
+            <lrm_rsc_op id="lxc-01_kiff-01_monitor_30000" operation_key="lxc-01_kiff-01_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="49:1:0:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:0;49:1:0:ed834806-99be-45de-9c12-c980ee8706a6" call-id="13" rc-code="0" op-status="0" interval="30000" last-rc-change="1419011486" exec-time="0" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a" on_node="kiff-02"/>
+          </lrm_resource>
+          <lrm_resource id="dlm" type="controld" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="17:5:0:1c60b862-2217-42e1-857f-645cedc2afd9" transition-magic="0:0;17:5:0:1c60b862-2217-42e1-857f-645cedc2afd9" call-id="22" rc-code="0" op-status="0" interval="0" last-run="1419011026" last-rc-change="1419011026" exec-time="1100" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="kiff-02"/>
+            <lrm_rsc_op id="dlm_monitor_30000" operation_key="dlm_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="18:5:0:1c60b862-2217-42e1-857f-645cedc2afd9" transition-magic="0:0;18:5:0:1c60b862-2217-42e1-857f-645cedc2afd9" call-id="23" rc-code="0" op-status="0" interval="30000" last-rc-change="1419011027" exec-time="39" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="kiff-02"/>
+          </lrm_resource>
+          <lrm_resource id="R-lxc-01_kiff-01" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="R-lxc-01_kiff-01_last_0" operation_key="R-lxc-01_kiff-01_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="59:2:0:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:0;59:2:0:ed834806-99be-45de-9c12-c980ee8706a6" call-id="90" rc-code="0" op-status="0" interval="0" last-run="1419011897" last-rc-change="1419011897" exec-time="401" queue-time="0" op-digest="1120ab98948626507460f24405da6147" on_node="kiff-02"/>
+            <lrm_rsc_op id="R-lxc-01_kiff-01_monitor_10000" operation_key="R-lxc-01_kiff-01_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="38:1:0:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:0;38:1:0:ed834806-99be-45de-9c12-c980ee8706a6" call-id="83" rc-code="0" op-status="0" interval="10000" last-rc-change="1419011481" exec-time="208" queue-time="0" op-digest="45b6ccfbfd5dd7fe94f80ec3d8d6d78d" on_node="kiff-02"/>
+          </lrm_resource>
+          <lrm_resource id="R-lxc-01_kiff-02" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="R-lxc-01_kiff-02_last_0" operation_key="R-lxc-01_kiff-02_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="50:20:0:1c60b862-2217-42e1-857f-645cedc2afd9" transition-magic="0:0;50:20:0:1c60b862-2217-42e1-857f-645cedc2afd9" call-id="69" rc-code="0" op-status="0" interval="0" last-run="1419011248" last-rc-change="1419011248" exec-time="533" queue-time="0" op-digest="6ac2457c88e8834990f95e871a51d1fc" on_node="kiff-02"/>
+            <lrm_rsc_op id="R-lxc-01_kiff-02_monitor_10000" operation_key="R-lxc-01_kiff-02_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="51:20:0:1c60b862-2217-42e1-857f-645cedc2afd9" transition-magic="0:0;51:20:0:1c60b862-2217-42e1-857f-645cedc2afd9" call-id="70" rc-code="0" op-status="0" interval="10000" last-rc-change="1419011249" exec-time="200" queue-time="0" op-digest="7d8f2504ce062c9a895982856e699610" on_node="kiff-02"/>
+          </lrm_resource>
+          <lrm_resource id="lxc-01_kiff-02" type="remote" class="ocf" provider="pacemaker" container="R-lxc-01_kiff-02">
+            <lrm_rsc_op id="lxc-01_kiff-02_last_0" operation_key="lxc-01_kiff-02_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="56:20:0:1c60b862-2217-42e1-857f-645cedc2afd9" transition-magic="0:0;56:20:0:1c60b862-2217-42e1-857f-645cedc2afd9" call-id="7" rc-code="0" op-status="0" interval="0" last-run="1419011249" last-rc-change="1419011249" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="kiff-02"/>
+            <lrm_rsc_op id="lxc-01_kiff-02_monitor_30000" operation_key="lxc-01_kiff-02_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="57:20:0:1c60b862-2217-42e1-857f-645cedc2afd9" transition-magic="0:0;57:20:0:1c60b862-2217-42e1-857f-645cedc2afd9" call-id="8" rc-code="0" op-status="0" interval="30000" last-rc-change="1419011254" exec-time="0" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a" on_node="kiff-02"/>
+          </lrm_resource>
+          <lrm_resource id="vm-fs" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vm-fs_last_0" operation_key="vm-fs_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="23:22:7:1c60b862-2217-42e1-857f-645cedc2afd9" transition-magic="0:7;23:22:7:1c60b862-2217-42e1-857f-645cedc2afd9" call-id="78" rc-code="7" op-status="0" interval="0" last-run="1419011347" last-rc-change="1419011347" exec-time="58" queue-time="0" op-digest="4e01fcdd304402f9cf3416cee0dc30d2" on_node="kiff-02"/>
+          </lrm_resource>
+          <lrm_resource id="lxc-02_kiff-01" type="remote" class="ocf" provider="pacemaker" container="R-lxc-02_kiff-01">
+            <lrm_rsc_op id="lxc-02_kiff-01_last_0" operation_key="lxc-02_kiff-01_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="74:2:0:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:0;74:2:0:ed834806-99be-45de-9c12-c980ee8706a6" call-id="16" rc-code="0" op-status="0" interval="0" last-run="1419011897" last-rc-change="1419011897" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="kiff-02"/>
+            <lrm_rsc_op id="lxc-02_kiff-01_monitor_30000" operation_key="lxc-02_kiff-01_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="51:1:0:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:0;51:1:0:ed834806-99be-45de-9c12-c980ee8706a6" call-id="14" rc-code="0" op-status="0" interval="30000" last-rc-change="1419011486" exec-time="0" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a" on_node="kiff-02"/>
+          </lrm_resource>
+          <lrm_resource id="lxc-02_kiff-02" type="remote" class="ocf" provider="pacemaker" container="R-lxc-02_kiff-02">
+            <lrm_rsc_op id="lxc-02_kiff-02_last_0" operation_key="lxc-02_kiff-02_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="63:21:0:1c60b862-2217-42e1-857f-645cedc2afd9" transition-magic="0:0;63:21:0:1c60b862-2217-42e1-857f-645cedc2afd9" call-id="9" rc-code="0" op-status="0" interval="0" last-run="1419011256" last-rc-change="1419011256" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="kiff-02"/>
+            <lrm_rsc_op id="lxc-02_kiff-02_monitor_30000" operation_key="lxc-02_kiff-02_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="64:21:0:1c60b862-2217-42e1-857f-645cedc2afd9" transition-magic="0:0;64:21:0:1c60b862-2217-42e1-857f-645cedc2afd9" call-id="10" rc-code="0" op-status="0" interval="30000" last-rc-change="1419011261" exec-time="0" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a" on_node="kiff-02"/>
+          </lrm_resource>
+          <lrm_resource id="R-lxc-02_kiff-01" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="R-lxc-02_kiff-01_last_0" operation_key="R-lxc-02_kiff-01_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="62:2:0:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:0;62:2:0:ed834806-99be-45de-9c12-c980ee8706a6" call-id="92" rc-code="0" op-status="0" interval="0" last-run="1419011897" last-rc-change="1419011897" exec-time="376" queue-time="0" op-digest="6d28982e9d5ab858dea79f0a4bc07ba6" on_node="kiff-02"/>
+            <lrm_rsc_op id="R-lxc-02_kiff-01_monitor_10000" operation_key="R-lxc-02_kiff-01_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="41:1:0:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:0;41:1:0:ed834806-99be-45de-9c12-c980ee8706a6" call-id="84" rc-code="0" op-status="0" interval="10000" last-rc-change="1419011481" exec-time="205" queue-time="0" op-digest="5aa25dd0c846987518afaba029b0a0a8" on_node="kiff-02"/>
+          </lrm_resource>
+          <lrm_resource id="R-lxc-02_kiff-02" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="R-lxc-02_kiff-02_last_0" operation_key="R-lxc-02_kiff-02_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="55:21:0:1c60b862-2217-42e1-857f-645cedc2afd9" transition-magic="0:0;55:21:0:1c60b862-2217-42e1-857f-645cedc2afd9" call-id="73" rc-code="0" op-status="0" interval="0" last-run="1419011255" last-rc-change="1419011255" exec-time="558" queue-time="0" op-digest="749edaca3e37d0e4526f44849ed63d4b" on_node="kiff-02"/>
+            <lrm_rsc_op id="R-lxc-02_kiff-02_monitor_10000" operation_key="R-lxc-02_kiff-02_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="56:21:0:1c60b862-2217-42e1-857f-645cedc2afd9" transition-magic="0:0;56:21:0:1c60b862-2217-42e1-857f-645cedc2afd9" call-id="74" rc-code="0" op-status="0" interval="10000" last-rc-change="1419011256" exec-time="200" queue-time="0" op-digest="160233456c9f63f111238ddb49d9cc0d" on_node="kiff-02"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="lxc-01_kiff-01" uname="lxc-01_kiff-01" crm-debug-origin="post_cache_update">
+      <lrm id="lxc-01_kiff-01">
+        <lrm_resources>
+          <lrm_resource id="vm-fs" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vm-fs_last_0" operation_key="vm-fs_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="56:4:0:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:0;56:4:0:ed834806-99be-45de-9c12-c980ee8706a6" call-id="5" rc-code="0" op-status="0" interval="0" last-run="1419011907" last-rc-change="1419011907" exec-time="82" queue-time="0" op-digest="4e01fcdd304402f9cf3416cee0dc30d2" on_node="kiff-01"/>
+            <lrm_rsc_op id="vm-fs_monitor_20000" operation_key="vm-fs_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="57:4:0:ed834806-99be-45de-9c12-c980ee8706a6" transition-magic="0:0;57:4:0:ed834806-99be-45de-9c12-c980ee8706a6" call-id="7" rc-code="0" op-status="0" interval="20000" last-rc-change="1419011907" exec-time="57" queue-time="0" op-digest="47b8f50d415ca40cdf0d0044c4b63685" on_node="kiff-01"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="lxc-02_kiff-01" uname="lxc-02_kiff-01" crm-debug-origin="post_cache_update"/>
+    <node_state remote_node="true" id="lxc-01_kiff-02" uname="lxc-01_kiff-02" crm-debug-origin="post_cache_update">
+      <transient_attributes id="lxc-01_kiff-02">
+        <instance_attributes id="status-lxc-01_kiff-02"/>
+      </transient_attributes>
+    </node_state>
+    <node_state remote_node="true" id="lxc-02_kiff-02" uname="lxc-02_kiff-02" crm-debug-origin="post_cache_update">
+      <transient_attributes id="lxc-02_kiff-02">
+        <instance_attributes id="status-lxc-02_kiff-02"/>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>

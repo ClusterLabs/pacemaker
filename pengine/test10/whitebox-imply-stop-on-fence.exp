@@ -1,0 +1,466 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="18" operation="monitor" operation_key="fence-kiff-02_monitor_60000" on_node="kiff-02" on_node_uuid="2">
+        <primitive id="fence-kiff-02" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_timeout="20000" action="reboot"  ipaddr="kiff-02-ilo" login="admin" passwd="admin" pcmk_host_check="static-list" pcmk_host_list="kiff-02"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="17" operation="start" operation_key="fence-kiff-02_start_0" on_node="kiff-02" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="17" operation="start" operation_key="fence-kiff-02_start_0" on_node="kiff-02" on_node_uuid="2">
+        <primitive id="fence-kiff-02" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_timeout="20000" action="reboot"  ipaddr="kiff-02-ilo" login="admin" passwd="admin" pcmk_host_check="static-list" pcmk_host_list="kiff-02"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="16" operation="stop" operation_key="fence-kiff-02_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <pseudo_event id="16" operation="stop" operation_key="fence-kiff-02_stop_0">
+        <attributes CRM_meta_timeout="20000" action="reboot"  ipaddr="kiff-02-ilo" login="admin" passwd="admin" pcmk_host_check="static-list" pcmk_host_list="kiff-02"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="63" operation="stonith" operation_key="stonith-kiff-01-reboot" on_node="kiff-01" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <pseudo_event id="19" operation="stop" operation_key="dlm_stop_0" internal_operation_key="dlm:0_stop_0">
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="100000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="24" operation="stop" operation_key="dlm-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="26" operation="stop" operation_key="clvmd_stop_0" internal_operation_key="clvmd:0_stop_0"/>
+      </trigger>
+      <trigger>
+        <crm_event id="63" operation="stonith" operation_key="stonith-kiff-01-reboot" on_node="kiff-01" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="4" priority="1000000">
+    <action_set>
+      <pseudo_event id="25" operation="stopped" operation_key="dlm-clone_stopped_0">
+        <attributes CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="19" operation="stop" operation_key="dlm_stop_0" internal_operation_key="dlm:0_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="24" operation="stop" operation_key="dlm-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <pseudo_event id="24" operation="stop" operation_key="dlm-clone_stop_0">
+        <attributes CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="32" operation="stopped" operation_key="clvmd-clone_stopped_0"/>
+      </trigger>
+      <trigger>
+        <crm_event id="63" operation="stonith" operation_key="stonith-kiff-01-reboot" on_node="kiff-01" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <pseudo_event id="26" operation="stop" operation_key="clvmd_stop_0" internal_operation_key="clvmd:0_stop_0">
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="90000"  with_cmirrord="1"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="31" operation="stop" operation_key="clvmd-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="33" operation="stop" operation_key="shared0_stop_0" internal_operation_key="shared0:0_stop_0"/>
+      </trigger>
+      <trigger>
+        <crm_event id="63" operation="stonith" operation_key="stonith-kiff-01-reboot" on_node="kiff-01" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7" priority="1000000">
+    <action_set>
+      <pseudo_event id="32" operation="stopped" operation_key="clvmd-clone_stopped_0">
+        <attributes CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="26" operation="stop" operation_key="clvmd_stop_0" internal_operation_key="clvmd:0_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="31" operation="stop" operation_key="clvmd-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="8">
+    <action_set>
+      <pseudo_event id="31" operation="stop" operation_key="clvmd-clone_stop_0">
+        <attributes CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="39" operation="stopped" operation_key="shared0-clone_stopped_0"/>
+      </trigger>
+      <trigger>
+        <crm_event id="63" operation="stonith" operation_key="stonith-kiff-01-reboot" on_node="kiff-01" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="9">
+    <action_set>
+      <pseudo_event id="33" operation="stop" operation_key="shared0_stop_0" internal_operation_key="shared0:0_stop_0">
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="60000"  device="/dev/shared/shared0" directory="/mnt/shared0" fstype="gfs2" options="errors=panic"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="38" operation="stop" operation_key="shared0-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <crm_event id="63" operation="stonith" operation_key="stonith-kiff-01-reboot" on_node="kiff-01" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="10" priority="1000000">
+    <action_set>
+      <pseudo_event id="39" operation="stopped" operation_key="shared0-clone_stopped_0">
+        <attributes CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="33" operation="stop" operation_key="shared0_stop_0" internal_operation_key="shared0:0_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="38" operation="stop" operation_key="shared0-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="11">
+    <action_set>
+      <pseudo_event id="38" operation="stop" operation_key="shared0-clone_stop_0">
+        <attributes CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="40" operation="stop" operation_key="R-lxc-01_kiff-01_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="43" operation="stop" operation_key="R-lxc-02_kiff-01_stop_0"/>
+      </trigger>
+      <trigger>
+        <crm_event id="63" operation="stonith" operation_key="stonith-kiff-01-reboot" on_node="kiff-01" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="12">
+    <action_set>
+      <rsc_op id="42" operation="monitor" operation_key="R-lxc-01_kiff-01_monitor_10000" on_node="kiff-02" on_node_uuid="2">
+        <primitive id="R-lxc-01_kiff-01" class="ocf" provider="heartbeat" type="VirtualDomain"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_remote_node="lxc-01_kiff-01" CRM_meta_timeout="30000" config="/mnt/shared0/test-virtual-domain/lxc/lxc-01_kiff-01.xml"  force_stop="true" hypervisor="lxc:///"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="41" operation="start" operation_key="R-lxc-01_kiff-01_start_0" on_node="kiff-02" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="13">
+    <action_set>
+      <rsc_op id="41" operation="start" operation_key="R-lxc-01_kiff-01_start_0" on_node="kiff-02" on_node_uuid="2">
+        <primitive id="R-lxc-01_kiff-01" class="ocf" provider="heartbeat" type="VirtualDomain"/>
+        <attributes CRM_meta_name="start" CRM_meta_remote_node="lxc-01_kiff-01" CRM_meta_timeout="90000" config="/mnt/shared0/test-virtual-domain/lxc/lxc-01_kiff-01.xml"  force_stop="true" hypervisor="lxc:///"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="40" operation="stop" operation_key="R-lxc-01_kiff-01_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="62" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="14">
+    <action_set>
+      <pseudo_event id="40" operation="stop" operation_key="R-lxc-01_kiff-01_stop_0">
+        <attributes CRM_meta_name="stop" CRM_meta_remote_node="lxc-01_kiff-01" CRM_meta_timeout="90000" config="/mnt/shared0/test-virtual-domain/lxc/lxc-01_kiff-01.xml"  force_stop="true" hypervisor="lxc:///"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="52" operation="stop" operation_key="lxc-01_kiff-01_stop_0"/>
+      </trigger>
+      <trigger>
+        <crm_event id="63" operation="stonith" operation_key="stonith-kiff-01-reboot" on_node="kiff-01" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="15">
+    <action_set>
+      <rsc_op id="45" operation="monitor" operation_key="R-lxc-02_kiff-01_monitor_10000" on_node="kiff-02" on_node_uuid="2">
+        <primitive id="R-lxc-02_kiff-01" class="ocf" provider="heartbeat" type="VirtualDomain"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_remote_node="lxc-02_kiff-01" CRM_meta_timeout="30000" config="/mnt/shared0/test-virtual-domain/lxc/lxc-02_kiff-01.xml"  force_stop="true" hypervisor="lxc:///"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="44" operation="start" operation_key="R-lxc-02_kiff-01_start_0" on_node="kiff-02" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="16">
+    <action_set>
+      <rsc_op id="44" operation="start" operation_key="R-lxc-02_kiff-01_start_0" on_node="kiff-02" on_node_uuid="2">
+        <primitive id="R-lxc-02_kiff-01" class="ocf" provider="heartbeat" type="VirtualDomain"/>
+        <attributes CRM_meta_name="start" CRM_meta_remote_node="lxc-02_kiff-01" CRM_meta_timeout="90000" config="/mnt/shared0/test-virtual-domain/lxc/lxc-02_kiff-01.xml"  force_stop="true" hypervisor="lxc:///"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="43" operation="stop" operation_key="R-lxc-02_kiff-01_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="62" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="17">
+    <action_set>
+      <pseudo_event id="43" operation="stop" operation_key="R-lxc-02_kiff-01_stop_0">
+        <attributes CRM_meta_name="stop" CRM_meta_remote_node="lxc-02_kiff-01" CRM_meta_timeout="90000" config="/mnt/shared0/test-virtual-domain/lxc/lxc-02_kiff-01.xml"  force_stop="true" hypervisor="lxc:///"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="55" operation="stop" operation_key="lxc-02_kiff-01_stop_0"/>
+      </trigger>
+      <trigger>
+        <crm_event id="63" operation="stonith" operation_key="stonith-kiff-01-reboot" on_node="kiff-01" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="18">
+    <action_set>
+      <rsc_op id="51" operation="start" operation_key="vm-fs_start_0" on_node="lxc-01_kiff-01" on_node_uuid="lxc-01_kiff-01" router_node="kiff-02">
+        <primitive id="vm-fs" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="60000"  device="/root" directory="/mnt/vm-fs" fstype="none" options="bind"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="50" operation="stop" operation_key="vm-fs_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="53" operation="start" operation_key="lxc-01_kiff-01_start_0" on_node="kiff-02" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="62" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="19">
+    <action_set>
+      <pseudo_event id="50" operation="stop" operation_key="vm-fs_stop_0">
+        <attributes CRM_meta_name="stop" CRM_meta_timeout="60000"  device="/root" directory="/mnt/vm-fs" fstype="none" options="bind"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="63" operation="stonith" operation_key="stonith-kiff-01-reboot" on_node="kiff-01" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="20">
+    <action_set>
+      <rsc_op id="9" operation="monitor" operation_key="vm-fs_monitor_20000" on_node="lxc-01_kiff-01" on_node_uuid="lxc-01_kiff-01" router_node="kiff-02">
+        <primitive id="vm-fs" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_interval="20000" CRM_meta_name="monitor" CRM_meta_timeout="40000"  device="/root" directory="/mnt/vm-fs" fstype="none" options="bind"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="51" operation="start" operation_key="vm-fs_start_0" on_node="lxc-01_kiff-01" on_node_uuid="lxc-01_kiff-01" router_node="kiff-02"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="53" operation="start" operation_key="lxc-01_kiff-01_start_0" on_node="kiff-02" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="21">
+    <action_set>
+      <rsc_op id="54" operation="monitor" operation_key="lxc-01_kiff-01_monitor_30000" on_node="kiff-02" on_node_uuid="2">
+        <primitive id="lxc-01_kiff-01" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="R-lxc-01_kiff-01" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="53" operation="start" operation_key="lxc-01_kiff-01_start_0" on_node="kiff-02" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="22">
+    <action_set>
+      <rsc_op id="53" operation="start" operation_key="lxc-01_kiff-01_start_0" on_node="kiff-02" on_node_uuid="2">
+        <primitive id="lxc-01_kiff-01" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="R-lxc-01_kiff-01" CRM_meta_name="start" CRM_meta_timeout="60000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="41" operation="start" operation_key="R-lxc-01_kiff-01_start_0" on_node="kiff-02" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="52" operation="stop" operation_key="lxc-01_kiff-01_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="62" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="23">
+    <action_set>
+      <pseudo_event id="52" operation="stop" operation_key="lxc-01_kiff-01_stop_0">
+        <attributes CRM_meta_container="R-lxc-01_kiff-01" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="63" operation="stonith" operation_key="stonith-kiff-01-reboot" on_node="kiff-01" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="24">
+    <action_set>
+      <rsc_op id="57" operation="monitor" operation_key="lxc-02_kiff-01_monitor_30000" on_node="kiff-02" on_node_uuid="2">
+        <primitive id="lxc-02_kiff-01" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="R-lxc-02_kiff-01" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="56" operation="start" operation_key="lxc-02_kiff-01_start_0" on_node="kiff-02" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="25">
+    <action_set>
+      <rsc_op id="56" operation="start" operation_key="lxc-02_kiff-01_start_0" on_node="kiff-02" on_node_uuid="2">
+        <primitive id="lxc-02_kiff-01" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="R-lxc-02_kiff-01" CRM_meta_name="start" CRM_meta_timeout="60000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="44" operation="start" operation_key="R-lxc-02_kiff-01_start_0" on_node="kiff-02" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="55" operation="stop" operation_key="lxc-02_kiff-01_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="62" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="26">
+    <action_set>
+      <pseudo_event id="55" operation="stop" operation_key="lxc-02_kiff-01_stop_0">
+        <attributes CRM_meta_container="R-lxc-02_kiff-01" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="63" operation="stonith" operation_key="stonith-kiff-01-reboot" on_node="kiff-01" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="27">
+    <action_set>
+      <crm_event id="63" operation="stonith" operation_key="stonith-kiff-01-reboot" on_node="kiff-01" on_node_uuid="1">
+        <attributes CRM_meta_on_node="kiff-01" CRM_meta_on_node_uuid="1" CRM_meta_probe_complete="true" CRM_meta_shutdown="0" CRM_meta_stonith_action="reboot" />
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="28">
+    <action_set>
+      <pseudo_event id="62" operation="stonith_complete" operation_key="stonith_complete">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="63" operation="stonith" operation_key="stonith-kiff-01-reboot" on_node="kiff-01" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="29">
+    <action_set>
+      <pseudo_event id="10" operation="all_stopped" operation_key="all_stopped">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="16" operation="stop" operation_key="fence-kiff-02_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="19" operation="stop" operation_key="dlm_stop_0" internal_operation_key="dlm:0_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="26" operation="stop" operation_key="clvmd_stop_0" internal_operation_key="clvmd:0_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="33" operation="stop" operation_key="shared0_stop_0" internal_operation_key="shared0:0_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="40" operation="stop" operation_key="R-lxc-01_kiff-01_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="43" operation="stop" operation_key="R-lxc-02_kiff-01_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="50" operation="stop" operation_key="vm-fs_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="52" operation="stop" operation_key="lxc-01_kiff-01_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="55" operation="stop" operation_key="lxc-02_kiff-01_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="62" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>
