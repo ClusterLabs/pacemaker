@@ -2913,6 +2913,39 @@ native_start_constraints(resource_t * rsc, action_t * stonith_op, gboolean is_st
     }
 }
 
+static GListPtr
+find_fence_target_node_actions(GListPtr search_list, const char *key, node_t *fence_target, pe_working_set_t *data_set)
+{
+    GListPtr gIter = NULL;
+    GListPtr result_list = find_actions(search_list, key, fence_target);
+
+    /* find stop actions for this rsc on any container nodes running on
+     * the fencing target node */
+    for (gIter = fence_target->details->running_rsc; gIter != NULL; gIter = gIter->next) { 
+        GListPtr iter = NULL;
+        GListPtr tmp_list = NULL;
+        resource_t *tmp_rsc = (resource_t *) gIter->data;
+        node_t *container_node = NULL;
+
+        /* found a container node that lives on the host node
+         * that is getting fenced. Find stop for our rsc that live on
+         * the container node as well. These stop operations are also
+         * implied by fencing of the host cluster node. */
+        if (tmp_rsc->is_remote_node && tmp_rsc->container != NULL) {
+            container_node = pe_find_node(data_set->nodes, tmp_rsc->id);
+        }
+        if (container_node) {
+            tmp_list = find_actions(search_list, key, container_node);
+        }
+        for (iter = tmp_list; iter != NULL; iter = iter->next) { 
+            result_list = g_list_prepend(result_list, (action_t *) iter->data);
+        }
+        g_list_free(tmp_list);
+    }
+
+    return result_list;
+}
+
 static void
 native_stop_constraints(resource_t * rsc, action_t * stonith_op, gboolean is_stonith,
                         pe_working_set_t * data_set)
@@ -2923,7 +2956,7 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, gboolean is_sto
     resource_t *top = uber_parent(rsc);
 
     key = stop_key(rsc);
-    action_list = find_actions(rsc->actions, key, stonith_op->node);
+    action_list = find_fence_target_node_actions(rsc->actions, key, stonith_op->node, data_set);
     free(key);
 
     /* add the stonith OP as a stop pre-req and the mark the stop
@@ -3032,7 +3065,7 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, gboolean is_sto
     g_list_free(action_list);
 
     key = demote_key(rsc);
-    action_list = find_actions(rsc->actions, key, stonith_op->node);
+    action_list = find_fence_target_node_actions(rsc->actions, key, stonith_op->node, data_set);
     free(key);
 
     for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
