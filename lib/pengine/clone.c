@@ -438,6 +438,10 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
             /* Unique, unmanaged or failed clone */
             print_full = TRUE;
 
+        } else if (is_set(options, pe_print_pending) && child_rsc->pending_task != NULL) {
+            /* In a pending state */
+            print_full = TRUE;
+
         } else if (child_rsc->fns->active(child_rsc, TRUE)) {
             /* Fully active anonymous clone */
             node_t *location = child_rsc->fns->location(child_rsc, NULL, TRUE);
