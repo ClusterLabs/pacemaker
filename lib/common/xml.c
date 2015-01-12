@@ -1439,9 +1439,9 @@ xml_repair_v1_diff(xmlNode * last, xmlNode * next, xmlNode * local_diff, gboolea
 }
 
 static xmlNode *
-xml_create_patchset_v1(xmlNode *source, xmlNode *target, bool config)
+xml_create_patchset_v1(xmlNode *source, xmlNode *target, bool config, bool with_digest)
 {
-    xmlNode *patchset = diff_xml_object(source, target, TRUE);
+    xmlNode *patchset = diff_xml_object(source, target, !with_digest);
 
     if(patchset) {
         CRM_LOG_ASSERT(xml_document_dirty(target));
@@ -1573,8 +1573,8 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target, bool *config_c
 
     switch(format) {
         case 1:
-            patch = xml_create_patchset_v1(source, target, config);
             with_digest = TRUE;
+            patch = xml_create_patchset_v1(source, target, config, with_digest);
             break;
         case 2:
             patch = xml_create_patchset_v2(source, target);
