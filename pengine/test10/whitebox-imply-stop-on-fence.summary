@@ -1,0 +1,88 @@
+
+Current cluster status:
+Node kiff-01 (1): UNCLEAN (offline)
+Online: [ kiff-02 ]
+Containers: [ lxc-01_kiff-01:R-lxc-01_kiff-01 lxc-01_kiff-02:R-lxc-01_kiff-02 lxc-02_kiff-01:R-lxc-02_kiff-01 lxc-02_kiff-02:R-lxc-02_kiff-02 ]
+
+ fence-kiff-01	(stonith:fence_ipmilan):	Started kiff-02 
+ fence-kiff-02	(stonith:fence_ipmilan):	Started kiff-01 
+ Clone Set: dlm-clone [dlm]
+     Started: [ kiff-01 kiff-02 ]
+     Stopped: [ lxc-01_kiff-01 lxc-01_kiff-02 lxc-02_kiff-01 lxc-02_kiff-02 ]
+ Clone Set: clvmd-clone [clvmd]
+     Started: [ kiff-01 kiff-02 ]
+     Stopped: [ lxc-01_kiff-01 lxc-01_kiff-02 lxc-02_kiff-01 lxc-02_kiff-02 ]
+ Clone Set: shared0-clone [shared0]
+     Started: [ kiff-01 kiff-02 ]
+     Stopped: [ lxc-01_kiff-01 lxc-01_kiff-02 lxc-02_kiff-01 lxc-02_kiff-02 ]
+ R-lxc-01_kiff-01	(ocf::heartbeat:VirtualDomain):	Started kiff-01 
+ R-lxc-02_kiff-01	(ocf::heartbeat:VirtualDomain):	Started kiff-01 
+ R-lxc-01_kiff-02	(ocf::heartbeat:VirtualDomain):	Started kiff-02 
+ R-lxc-02_kiff-02	(ocf::heartbeat:VirtualDomain):	Started kiff-02 
+ vm-fs	(ocf::heartbeat:Filesystem):	Started lxc-01_kiff-01 
+
+Transition Summary:
+ * Move    fence-kiff-02	(Started kiff-01 -> kiff-02)
+ * Stop    dlm:0	(kiff-01)
+ * Stop    clvmd:0	(kiff-01)
+ * Stop    shared0:0	(kiff-01)
+ * Move    R-lxc-01_kiff-01	(Started kiff-01 -> kiff-02)
+ * Move    R-lxc-02_kiff-01	(Started kiff-01 -> kiff-02)
+ * Restart vm-fs	(Started lxc-01_kiff-01)
+ * Move    lxc-01_kiff-01	(Started kiff-01 -> kiff-02)
+ * Move    lxc-02_kiff-01	(Started kiff-01 -> kiff-02)
+
+Executing cluster transition:
+ * Fencing kiff-01 (reboot)
+ * Pseudo action:   stonith_complete
+ * Pseudo action:   fence-kiff-02_stop_0
+ * Pseudo action:   vm-fs_stop_0
+ * Pseudo action:   lxc-01_kiff-01_stop_0
+ * Pseudo action:   lxc-02_kiff-01_stop_0
+ * Resource action: fence-kiff-02   start on kiff-02
+ * Pseudo action:   R-lxc-01_kiff-01_stop_0
+ * Pseudo action:   R-lxc-02_kiff-01_stop_0
+ * Resource action: fence-kiff-02   monitor=60000 on kiff-02
+ * Pseudo action:   shared0-clone_stop_0
+ * Resource action: R-lxc-01_kiff-01 start on kiff-02
+ * Resource action: R-lxc-02_kiff-01 start on kiff-02
+ * Resource action: lxc-01_kiff-01  start on kiff-02
+ * Resource action: lxc-02_kiff-01  start on kiff-02
+ * Pseudo action:   shared0_stop_0
+ * Pseudo action:   shared0-clone_stopped_0
+ * Resource action: R-lxc-01_kiff-01 monitor=10000 on kiff-02
+ * Resource action: R-lxc-02_kiff-01 monitor=10000 on kiff-02
+ * Resource action: vm-fs           start on lxc-01_kiff-01
+ * Resource action: vm-fs           monitor=20000 on lxc-01_kiff-01
+ * Resource action: lxc-01_kiff-01  monitor=30000 on kiff-02
+ * Resource action: lxc-02_kiff-01  monitor=30000 on kiff-02
+ * Pseudo action:   clvmd-clone_stop_0
+ * Pseudo action:   clvmd_stop_0
+ * Pseudo action:   clvmd-clone_stopped_0
+ * Pseudo action:   dlm-clone_stop_0
+ * Pseudo action:   dlm_stop_0
+ * Pseudo action:   dlm-clone_stopped_0
+ * Pseudo action:   all_stopped
+
+Revised cluster status:
+Online: [ kiff-02 ]
+OFFLINE: [ kiff-01 ]
+Containers: [ lxc-01_kiff-01:R-lxc-01_kiff-01 lxc-01_kiff-02:R-lxc-01_kiff-02 lxc-02_kiff-01:R-lxc-02_kiff-01 lxc-02_kiff-02:R-lxc-02_kiff-02 ]
+
+ fence-kiff-01	(stonith:fence_ipmilan):	Started kiff-02 
+ fence-kiff-02	(stonith:fence_ipmilan):	Started kiff-02 
+ Clone Set: dlm-clone [dlm]
+     Started: [ kiff-02 ]
+     Stopped: [ kiff-01 lxc-01_kiff-01 lxc-01_kiff-02 lxc-02_kiff-01 lxc-02_kiff-02 ]
+ Clone Set: clvmd-clone [clvmd]
+     Started: [ kiff-02 ]
+     Stopped: [ kiff-01 lxc-01_kiff-01 lxc-01_kiff-02 lxc-02_kiff-01 lxc-02_kiff-02 ]
+ Clone Set: shared0-clone [shared0]
+     Started: [ kiff-02 ]
+     Stopped: [ kiff-01 lxc-01_kiff-01 lxc-01_kiff-02 lxc-02_kiff-01 lxc-02_kiff-02 ]
+ R-lxc-01_kiff-01	(ocf::heartbeat:VirtualDomain):	Started kiff-02 
+ R-lxc-02_kiff-01	(ocf::heartbeat:VirtualDomain):	Started kiff-02 
+ R-lxc-01_kiff-02	(ocf::heartbeat:VirtualDomain):	Started kiff-02 
+ R-lxc-02_kiff-02	(ocf::heartbeat:VirtualDomain):	Started kiff-02 
+ vm-fs	(ocf::heartbeat:Filesystem):	Started lxc-01_kiff-01 
+

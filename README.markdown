@@ -57,6 +57,8 @@ This is not meant to be an exhaustive list:
 * ncurses-devel
 * openssl-devel
 * libselinux-devel
+* systemd-devel
+* dbus-devel
 * cluster-glue-libs-devel (LHA style fencing agents)
 * libesmtp-devel (Email alerts)
 * lm_sensors-devel (SNMP alerts)

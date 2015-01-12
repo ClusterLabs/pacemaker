@@ -63,6 +63,7 @@ include/config.h
 include/config.h.in
 include/crm_config.h
 lrmd/pacemaker_remote
+lrmd/pacemaker_remoted
 lrmd/pacemaker_remote.service
 mcp/pacemaker
 mcp/pacemaker.combined.upstart
@@ -76,6 +77,7 @@ shell/modules/ui.py
 shell/modules/vars.py
 tools/cibsecret
 tools/coverage.sh
+tools/crm_error
 tools/crm_mon.upstart
 tools/crm_report
 tools/report.common
@@ -89,6 +91,7 @@ fencing/regression.py
 *.8
 *.8.xml
 *.8.html
+attrd/attrd
 doc/*/en-US/images/*.png
 doc/*/tmp/**
 doc/*/publish
@@ -113,7 +116,6 @@ pengine/pengine.xml
 pengine/ptest
 shell/regression/testcases/confbasic-xml.filter
 scratch
-tools/attrd
 tools/attrd_updater
 tools/cibadmin
 tools/crm_attribute
@@ -130,7 +132,8 @@ tools/iso8601
 tools/crm_ticket
 tools/report.collector.1
 xml/crm.dtd
-xml/pacemaker.rng
+xml/pacemaker*.rng
+xml/versions.rng
 extra/rgmanager/ccs2cib
 extra/rgmanager/ccs_flatten
 extra/rgmanager/disable_rgmanager
@@ -149,7 +152,7 @@ lib/gnu/stdalign.h
 #Other 
 mock
 HTML
-pacemaker.spec
+pacemaker*.spec
 pengine/.regression.failed.diff
 ClusterLabs-pacemaker-*.tar.gz
 coverity-*
