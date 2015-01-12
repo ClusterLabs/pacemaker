@@ -653,8 +653,7 @@ __xml_acl_create(xmlNode * xml, xmlNode *target, enum xml_private_flags mode)
             if(tag) {
                 offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "//%s", tag);
             } else {
-                /* Is this even legal xpath syntax? */
-                offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "*");
+                offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "//*");
             }
 
             if(ref || attr) {
