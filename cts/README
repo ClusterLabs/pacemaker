@@ -1,24 +1,51 @@
-BASIC REQUIREMENTS BEFORE STARTING:
 
-Three or more machines:  one test exerciser and two or more test cluster machines.
+                        PACEMAKER
+                 CLUSTER TEST SUITE (CTS)
 
-	The two test cluster machines need to be on the same subnet
-		and they should have journalling filesystems for
-		all of their filesystems other than /boot
-	You also need a number of free IP addresses on that subnet to test
-		mutual IP address takeover
 
-	The test exerciser machine doesn't need to be on the same subnet
-	as the test cluster machines.  Minimal demands are made on the 
-	exerciser machine - it just has to stay up during the tests.
-	However, it does need to have a current copy of the cts test
-	scripts.  It is worth noting that these scripts are coordinated
-	with particular versions of Pacemaker, so that in general you
-	have to have the same version of test scripts as the rest of 
-	Pacemaker.
+Purpose
+-------
+
+CTS thoroughly exercises a pacemaker test cluster by running a randomized
+series of predefined tests on the cluster. CTS can be run against a
+pre-existing cluster configuration or (more typically) overwrite the existing
+configuration with a test configuration.
+
+
+Requirements
+------------
+
+* Three or more machines (one test exerciser and two or more test cluster
+  machines).
+
+* The test cluster machines should be on the same subnet and have journalling
+  filesystems (ext3, ext4, xfs, etc.) for all of their filesystems other than
+  /boot. You also need a number of free IP addresses on that subnet if you
+  intend to test mutual IP address takeover.
+
+* The test exerciser machine doesn't need to be on the same subnet as the test
+  cluster machines.  Minimal demands are made on the exerciser machine - it
+  just has to stay up during the tests.
+
+* It helps a lot in tracking problems if all machines' clocks are closely
+  synchronized. NTP does this automatically, but you can do it by hand if you
+  want.
+
+* The exerciser needs to be able to ssh over to the cluster nodes as root
+  without a password challenge. Configure ssh accordingly (see the Mini-HOWTO
+  at the end of this document for more details).
+
+* The exerciser needs to be able to resolve the machine names of the
+  test cluster - either by DNS or by /etc/hosts.
+
 	
+Preparation
+-----------
 
-Install Pacemaker on all machines.  
+Install Pacemaker (including CTS) on all machines. These scripts are
+coordinated with particular versions of Pacemaker, so you need the same version
+of CTS as the rest of Pacemaker, and you need the same version of
+pacemaker and CTS on both the test exerciser and the test cluster machines.
 
 Configure cluster communications (Corosync, CMAN or Heartbeat) on the
 cluster machines and verify everything works.
@@ -30,41 +57,31 @@ they must match the machines' `uname -n` name.  This may or may not match
 the machines' FQDN (fully qualified domain name) - it depends on how
 you (and your OS) have named the machines. 
 
-It helps a lot in tracking problems if the three machines' clocks are
-closely synchronized.  xntpd does this, but you can do it by hand if
-you want.
 
-Make sure all your filesystems are journalling filesystems (/boot can be
-ext2 if you want).  This means filesystems like ext3.
+Run CTS
+-------
 
-
-Here's what you need to do to run CTS:
-
-The exerciser needs to be able to ssh over to the cluster nodes as root
-without a password challenge.  Configure ssh accordingly.
-	(see the Mini-HOWTOs at the end for more details)
-
-The exerciser needs to be able to resolve the machine names of the
-test cluster - either by DNS or by /etc/hosts.
-
-
-Now assuming you did all this, what you need to do is run CTSlab.py
+Now assuming you did all this, what you need to do is run CTSlab.py:
 
     python ./CTSlab.py [options] number-of-tests-to-run
 
-You must specify which nodes are part of the cluster:
-   --nodes, eg. --node "pcmk-1 pcmk-2 pcmk-3"
+You must specify which nodes are part of the cluster with --nodes, e.g.:
 
-Most people will want to save the output:
-   --outputfile, eg. --outputfile ~/cts.log
+   --node "pcmk-1 pcmk-2 pcmk-3"
 
-Unless you want to test your own cluster configuration, you will also want:
+Most people will want to save the output with --outputfile, e.g.:
+
+   --outputfile ~/cts.log
+
+Unless you want to test your pre-existing cluster configuration, you also want:
+
    --clobber-cib
    --populate-resources
-   --test-ip-base, eg. --test-ip-base 192.168.9.100
+   --test-ip-base $IP    # e.g. --test-ip-base 192.168.9.100
 
-   and configure some sort of fencing:
-   --stonith, eg. --stonith rhcs to use fence_xvm or --stonith lha to use external/ssh
+and configure some sort of fencing:
+
+   --stonith $TYPE  # e.g. "--stonith rhcs" to use fence_xvm or "--stonith lha" to use external/ssh
 
 A complete command line might look like:
   
@@ -72,121 +89,50 @@ A complete command line might look like:
 	 --clobber-cib --populate-resources --test-ip-base 192.168.9.100   \
 	 --stonith rhcs 50
 
+For more options, use the --help option.
 
-For other options, use the --help option and see the Mini-HOWTOs at the end for more details on setting up external/ssh.
+To extract the result of a particular test, run:
 
-HINT: To extract the result of a particular test, run:
   crm_report -T $test
 
 
+Mini-HOWTO: Allow passwordless remote SSH connections
+-----------------------------------------------------
 
+The CTS scripts run "ssh -l root" so you don't have to do any of your testing
+logged in as root on the test machine. Here is how to allow such connections
+without requiring a password to be entered each time:
 
-==============
-Mini-HOWTOs:
-==============
+* On your test exerciser, create an SSH key if you do not already have one.
+  Most commonly, SSH keys will be in your ~/.ssh directory, with the
+  private key file not having an extension, and the public key file
+  named the same with the extension ".pub" (for example, ~/.ssh/id_dsa.pub).
 
---------------------------------------------------------------------------------
-How to make OpenSSH allow you to login as root across the network without
-a password.
---------------------------------------------------------------------------------
-
-All our scripts run ssh -l root, so you don't have to do any of your testing
-logged in as root on the test machine
-
-1)	Grab your key from the exerciser machine:
-
-	take the single line out of ~/.ssh/identity.pub
-	and put it into root's authorized_keys file.
-	[This has changed to: copying the line from ~/.ssh/id_dsa.pub into
-		root's authorized_keys file ]
-
-	NOTE: If you don't have an id_dsa.pub file, create it by running:
+  If you don't already have a key, you can create one with:
 
 		ssh-keygen -t dsa
 
-2)	Run this command on each of the cluster machines as root:
+* From your test exerciser, authorize your SSH public key for root on all test
+  machines (both the exerciser and the cluster test machines):
 
-ssh -v -l myid ererciser-machine cat /home/myid/.ssh/identity.pub \
-	>> ~root/.ssh/authorized_keys
+	ssh-copy-id -i ~/.ssh/id_dsa.pub root@$MACHINE 
 
-[For most people, this has changed to:
-  ssh -v -l myid exerciser-machine cat /home/myid/.ssh/id_dsa.pub \
-	>> ~root/.ssh/authorized_keys
-]
+  You will probably have to provide your password, and possibly say
+  "yes" to some questions about accepting the identity of the test machines.
 
-	You will probably have to provide your password, and possibly say
-	"yes" to some questions about accepting the identity of the
-	test machines
+  The above assumes you have a DSA SSH key in the specified location;
+  if you have some other type of key (RSA, ECDSA, etc.), use its file name
+  in the -i option above.
 
-3)	You must also do the corresponding update for the exerciser 
-	machine itself as root:
+  If you have an old version of SSH that doesn't have ssh-copy-id,
+  you can take the single line out of your public key file
+  (e.g. ~/.ssh/identity.pub or ~/.ssh/id_dsa.pub) and manually add it to
+  root's ~/.ssh/authorized_keys file on each test machine.
 
-	cat /home/myid/.ssh/identity.pub >> ~root/.ssh/authorized_keys
+* To test, try this command from the exerciser machine for each
+  of your cluster machines, and for the exerciser machine itself.
 
-	To test this, try this command from the exerciser machine for each
-	of your cluster machines, and for the exerciser machine itself.
+	ssh -l root $MACHINE
 
-ssh -l root cluster-machine
-
-If this works without prompting for a password, you're in business...
-If not, you need to look at the ssh/openssh documentation and the output from
-the -v options above...
-
---------------------------------------------------------------------------------
-How to configure OpenSSH for StonithdTest
---------------------------------------------------------------------------------
-
-This configure enables cluster machines to ssh over to each other without a
-password challenge.
-
-1)	On each of the cluster machines, grab your key:
-
-	take the single line out of ~/.ssh/identity.pub
-	and put it into root's authorized_keys file.
-	[This has changed to: copying the line from ~/.ssh/id_dsa.pub into
-		root's authorized_keys file ]
-
-	NOTE: If you don't have an id_dsa.pub file, create it by running:
-
-		ssh-keygen -t dsa
-
-2)	Run this command on each of the cluster machines as root:
-
-ssh -v -l myid cluster_machine_1 cat /home/myid/.ssh/identity.pub \
-	>> ~root/.ssh/authorized_keys
-
-ssh -v -l myid cluster_machine_2 cat /home/myid/.ssh/identity.pub \
-	>> ~root/.ssh/authorized_keys
-
-......
-
-ssh -v -l myid cluster_machine_n cat /home/myid/.ssh/identity.pub \
-	>> ~root/.ssh/authorized_keys
-
-[For most people, this has changed to:
-  ssh -v -l myid cluster_machine cat /home/myid/.ssh/id_dsa.pub \
-	>> ~root/.ssh/authorized_keys
-]
-
-	You will probably have to provide your password, and possibly say
-	"yes" to some questions about accepting the identity of the
-	test machines
-
-To test this, try this command from any machine for each
-of other cluster machines, and for the machine itself.
-
-    ssh -l root cluster-machine
-
-This should work without prompting for a password,
-If not, you need to look at the ssh/openssh documentation and the output from
-the -v options above...
-
-3)  Make sure the 'at' daemon is enabled on the test cluster machines 
-
-This is normally the 'atd' service started by /etc/init.d/atd).  This
-doesn't mean just start it, it means enable it to start on every boot
-into your default init state (probably either 3 or 5). 
-
-Usually this can be achieved with:
-   chkconfig --add atd
-   chkconfig atd on
+  If this works without prompting for a password, you're in business.
+  If not, look at the documentation for your version of ssh.
