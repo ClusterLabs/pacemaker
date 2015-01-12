@@ -30,7 +30,6 @@ from cts.remote import *
 class Environment:
 
     def __init__(self, args):
-        print repr(self)
         self.data = {}
         self.Nodes = []
 
@@ -606,6 +605,9 @@ class Environment:
                 self[name] = value
                 print "Setting %s = %s" % (name, value)
                 
+            elif args[i] == "--help":
+                self.usage(args[i], 0)
+
             elif args[i] == "--":
                 break
 
@@ -616,8 +618,9 @@ class Environment:
                 except ValueError:
                     self.usage(args[i])
 
-    def usage(arg, status=1):
-        print "Illegal argument %s" % (arg)
+    def usage(self, arg, status=1):
+        if status:
+            print "Illegal argument %s" % arg
         print "usage: " + sys.argv[0] +" [options] number-of-iterations"
         print "\nCommon options: "
         print "\t [--nodes 'node list']        list of cluster nodes separated by whitespace"
