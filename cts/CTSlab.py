@@ -30,39 +30,32 @@ pdir = os.path.dirname(sys.path[0])
 sys.path.insert(0, pdir) # So that things work from the source directory
 
 try:
-    from cts.CTSvars    import *
-    from cts.CM_ais     import *
-    from cts.CM_lha     import crm_lha
-    from cts.CTSaudits  import AuditList
-    from cts.CTStests   import TestList
+    from cts.CTSvars      import *
+    from cts.CM_ais       import *
+    from cts.CM_lha       import crm_lha
+    from cts.CTSaudits    import AuditList
+    from cts.CTStests     import TestList
     from cts.CTSscenarios import *
     from cts.logging      import LogFactory
-
-except ImportError:
-    sys.stderr.write("abort: couldn't find cts libraries in [%s]\n" %
+except ImportError as e:
+    sys.stderr.write("abort: %s\n" % e)
+    sys.stderr.write("check your install and PYTHONPATH; couldn't find cts libraries in:\n%s\n" %
                      ' '.join(sys.path))
-    sys.stderr.write("(check your install and PYTHONPATH)\n")
+    sys.exit(1)
 
-    # Now do it again to get more details
-    from cts.CTSvars    import *
-    from cts.CM_ais     import *
-    from cts.CM_lha     import crm_lha
-    from cts.CTSaudits  import AuditList
-    from cts.CTStests   import TestList
-    from cts.CTSscenarios import *
-    from cts.logging      import LogFactory
-    sys.exit(-1)
-
+# These are globals so they can be used by the signal handler.
 cm = None
 scenario = None
-
 LogFactory().add_stderr()
+
+
 def sig_handler(signum, frame) :
     LogFactory().log("Interrupted by signal %d"%signum)
     if scenario: scenario.summarize()
     if signum == 15 :
         if scenario: scenario.TearDown()
         sys.exit(1)
+
 
 if __name__ == '__main__':
 
@@ -97,11 +90,12 @@ if __name__ == '__main__':
         sys.exit(1)
 
     if Environment["TruncateLog"] == 1:
-        Environment.log("Truncating %s" % LogFile)
-        lf = open(LogFile, "w");
-        if lf != None:
-            lf.truncate(0)
-            lf.close()
+        if Environment["OutputFile"] is None:
+            LogFactory().log("Ignoring truncate request because no output file specified")
+        else:
+            LogFactory().log("Truncating %s" % Environment["OutputFile"])
+            with open(Environment["OutputFile"], "w") as outputfile:
+                outputfile.truncate(0)
 
     Audits = AuditList(cm)
 
@@ -155,7 +149,6 @@ if __name__ == '__main__':
     LogFactory().log("Random Seed:            %s" % Environment["RandSeed"])
     LogFactory().log("Syslog variant:         %s" % Environment["syslogd"].strip())
     LogFactory().log("System log files:       %s" % Environment["LogFileName"])
-#    Environment.log(" ")
     if Environment.has_key("IPBase"):
         LogFactory().log("Base IP for resources:  %s" % Environment["IPBase"])
     LogFactory().log("Cluster starts at boot: %d" % Environment["at-boot"])

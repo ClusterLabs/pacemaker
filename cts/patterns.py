@@ -169,6 +169,9 @@ class crm_cs_v0(BasePatterns):
             "Pat:ChildExit"    : "Child process .* exited",
             "Pat:ChildKilled"  : "%s\W.*corosync.*Child process %s terminated with signal 9",
             "Pat:ChildRespawn" : "%s\W.*corosync.*Respawning failed child process: %s",
+
+            "Pat:InfraUp"      : "%s\W.*corosync.*Initializing transport",
+            "Pat:PacemakerUp"  : "%s\W.*pacemakerd.*Starting Pacemaker",
         })
 
         self.ignore = [
@@ -399,7 +402,7 @@ class crm_mcp(crm_cs_v0):
 
         self.search.update({
             # Close enough... "Corosync Cluster Engine exiting normally" isn't printed
-            #   reliably and there's little interest in doing anything it
+            #   reliably and there's little interest in doing anything about it
             "Pat:We_stopped"   : "%s\W.*Unloading all Corosync service engines",
             "Pat:They_stopped" : "%s\W.*crmd.*Node %s\[.*state is now lost",
             "Pat:They_dead"    : "crmd.*Node %s\[.*state is now lost",
@@ -407,9 +410,6 @@ class crm_mcp(crm_cs_v0):
             "Pat:ChildExit"    : "The .* process exited",
             "Pat:ChildKilled"  : "%s\W.*pacemakerd.*The %s process .* terminated with signal 9",
             "Pat:ChildRespawn" : "%s\W.*pacemakerd.*Respawning failed child process: %s",
-
-            "Pat:InfraUp"      : "%s\W.*corosync.*Initializing transport",
-            "Pat:PacemakerUp"  : "%s\W.*pacemakerd.*Starting Pacemaker",
         })
 
 #        if self.Env["have_systemd"]:
