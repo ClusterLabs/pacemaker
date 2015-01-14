@@ -978,7 +978,10 @@ update_dc(xmlNode * msg)
         /* do nothing */
 
     } else if (fsa_our_dc != NULL) {
+        crm_node_t *dc_node = crm_get_peer(0, fsa_our_dc);
+
         crm_info("Set DC to %s (%s)", crm_str(fsa_our_dc), crm_str(fsa_our_dc_version));
+        crm_update_peer_expected(__FUNCTION__, dc_node, CRMD_JOINSTATE_MEMBER);
 
     } else if (last_dc != NULL) {
         crm_info("Unset DC. Was %s", crm_str(last_dc));
