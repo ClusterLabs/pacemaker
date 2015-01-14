@@ -32,6 +32,7 @@
 
 #include <crm/attrd.h>
 
+const char *attr_node = NULL;
 const char *attr_name = NULL;
 const char *attr_value = NULL;
 const char *attr_set = NULL;
@@ -59,6 +60,7 @@ static struct crm_option long_options[] = {
     {"lifetime",1, 0, 'l', "Lifetime of the node attribute.  Allowed values: forever, reboot"},
     {"delay",   1, 0, 'd', "The time to wait (dampening) in seconds further changes occur"},
     {"set",     1, 0, 's', "(Advanced) The attribute set in which to place the value"},
+    {"node",    1, 0, 'N', "Set the attribute for the named node (instead of the local one)"},
 
     /* Legacy options */
     {"update",  1, 0, 'v', NULL, 1},
@@ -108,6 +110,9 @@ main(int argc, char **argv)
             case 'S':
                 attr_section = strdup(optarg);
                 break;
+            case 'N':
+                attr_node = strdup(optarg);
+                break;
             case 'q':
                 break;
             case 'Q':
@@ -141,7 +146,7 @@ main(int argc, char **argv)
         crm_help('?', EX_USAGE);
 
     } else {
-        int rc = attrd_update_delegate(NULL, command, NULL, attr_name, attr_value, attr_section,
+        int rc = attrd_update_delegate(NULL, command, attr_node, attr_name, attr_value, attr_section,
                                        attr_set, attr_dampen, NULL, FALSE);
         if (rc != pcmk_ok) {
             fprintf(stderr, "Could not update %s=%s: %s (%d)\n", attr_name, attr_value, pcmk_strerror(rc), rc);
