@@ -37,12 +37,12 @@ desc="Dummy LSB service"
 
 success()
 {
-	echo -ne "[  OK  ]\r"
+	printf "[  OK  ]\r"
 }
 
 failure()
 {
-	echo -ne "[FAILED]\r"
+	printf "[FAILED]\r"
 }
 
 # rpm based distros
