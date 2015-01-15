@@ -1,56 +1,59 @@
 #!/bin/bash
 
+HELPTEXT="crm_standby - convenience wrapper for crm_attribute
+
+Check, enable or disable standby mode for a cluster node.
+Nodes in standby mode may not host cluster resources.
+
+Usage: crm_standby <command> [options]
+
+Commands:
+ --help                 Display this text and exit
+ --version              Display version information and exit
+ -G, --query            Display the current value of standby mode (on/off)
+ -v, --update=<value>   Update the value of standby mode (on/off)
+ -D, --delete           Let standby mode use default value
+
+Options:
+ -V, --verbose          Increase debug output (may be specified multiple times)
+ -q, --quiet            Print nothing on stdout except the standby status
+ -N, --node=<value>     Operate on the named node instead of the current one
+ -l, --lifetime=<value> Until when the setting should take effect (reboot/forever)
+ -i, --id=<value>       (Advanced) ID used to identify the XML attribute"
+
 op=""
 options=""
 lifetime=0
-target=`crm_node -n`
+target=$(crm_node -n)
 
-TEMP=`getopt -o qDGQVN:U:v:i:l: --long version,help,node:,uname:,id:,attr-value:,delete-attr,get-value,attr-id:,lifetime:,quiet \
-     -n 'crm_standby' -- "$@"`
+BACKWARD_COMPATIBLE="get-value,attr-value:,delete-attr,uname:,attr-id:"
+TEMP=$(getopt -o qDGQVN:U:v:i:l: \
+    --long help,version,query,update:,delete,verbose,quiet,node:,lifetime:,id:,$BACKWARD_COMPATIBLE \
+    -n 'crm_standby' -- "$@")
 
-if [ $? != 0 ] ; then echo "crm_standby - A convenience wrapper for crm_attribute"; echo ""; crm_attribute -?; exit 1 ; fi
+if [ $? -ne 0 ]; then
+    echo
+    echo "$HELPTEXT"
+    exit 1
+fi
 
-# Note the quotes around `$TEMP': they are essential!
+# The quotes around $TEMP are essential!
 eval set -- "$TEMP"
 
 while true ; do
-	case "$1" in
-	    -N|--node)  target="$2"; shift; shift;;
-	    -U|--uname) target="$2"; shift; shift;;
-	    -v|--attr-value)  options="$options $1 $2"; op=u; shift; shift;;
-	    -D|--delete-attr) options="$options $1"; op=d; shift;;
-	    -G|--get-value)   options="$options $1"; op=g; shift;;
-	    -l|--lifetime)    options="$options $1 $2"; lifetime=1; shift; shift;;
-	    -i|--id|--attr-id)     options="$options $1 $2"; shift; shift;;
-	    -Q|-q|--quiet|-V)    options="$options $1"; shift;;
-	    --version) crm_attribute --version; exit 0;;
-	    --help)
-		echo "crm_standby - A convenience wrapper for crm_attribute";
-		echo "";
-		echo "";
-		echo "Put the name node into and out of standby. Nodes in standby mode may not host cluster resources";
-		echo "";
-		echo "Usage: crm_standby crm_standby command [options]";
-		echo "Options:"
-		echo " --help 		This text"
-		echo " --version 		Version information"
-		echo " -V, --verbose 		Increase debug output"
-		echo " -q, --quiet 		Print only the value on stdout"
-		echo ""
-		echo "Commands:"
-		echo " -G, --query 		Query the current value of the attribute/option"
-		echo " -v, --update=value	Update the value of the attribute/option"
-		echo " -D, --delete 		Delete the attribute/option"
-		echo ""
-		echo "Additional Options:"
-		echo " -N, --node=value	Set an attribute for the named node (instead of the current one)."
-		echo " -l, --lifetime=value	Until when should the setting take affect."
-		echo "	       		Valid values: reboot, forever"
-		echo " -i, --id=value		(Advanced) The ID used to identify the attribute"
-		exit 0;;
-	    --) shift ; break ;;
-	    *) echo "Unknown option: $1. See --help for details." exit 1;;
-	esac
+    case "$1" in
+        -N|--node|-U|--uname)       target="$2"; shift 2;;
+        -G|--query|--get-value)     options="$options --query"; op=g; shift;;
+        -v|--update|--attr-value)   options="$options --update $2"; op=u; shift 2;;
+        -D|--delete|--delete-attr)  options="$options --delete"; op=d; shift;;
+        -l|--lifetime)              options="$options --lifetime $2"; lifetime=1; shift 2;;
+        -i|--id|--attr-id)          options="$options --id $2"; shift 2;;
+        -q|-Q|--quiet|-V|--verbose) options="$options $1"; shift;;
+        --version)                  crm_attribute --version; exit 0;;
+        --help)                     echo "$HELPTEXT"; exit 0;;
+        --)                         shift ; break ;;
+        *) echo "crm_standby: unrecognized option '$1'"; echo; echo "$HELPTEXT"; exit 1;;
+    esac
 done
 
 options="-N $target -n standby $options"
@@ -58,26 +61,30 @@ if [ x$op = x ]; then
     options="$options -G"; op=g
 fi
 
-if [ $lifetime = 0 ]; then
+# If the user didn't explicitly specify a lifetime ...
+if [ $lifetime -eq 0 ]; then
     case $op in
-	g)
-	    crm_attribute $options -l forever 2>&1 > /dev/null
-	    if [ $? = 0 ]; then
-		options="$options -l forever"
-	    else
-		options="$options -l reboot -d off"
-	    fi
-	    ;;
-	u)
-	    options="$options -l forever"
-	    ;;
-	d)
-	    crm_attribute $options -l forever
-	    crm_attribute $options -l reboot
-	    exit 0
-	    ;;
+        g)
+            # For query, report the forever entry if one exists, otherwise
+            # report the reboot entry if one exists, otherwise report off.
+            crm_attribute $options -l forever 2>&1 > /dev/null
+            if [ $? -eq 0 ]; then
+                options="$options -l forever"
+            else
+                options="$options -l reboot -d off"
+            fi
+            ;;
+        u)
+            # For update, default to updating the forever entry.
+            options="$options -l forever"
+            ;;
+        d)
+            # For delete, default to deleting both forever and reboot entries.
+            crm_attribute $options -l forever
+            crm_attribute $options -l reboot
+            exit 0
+            ;;
     esac
 fi
 
-#echo crm_attribute $options
 crm_attribute $options
