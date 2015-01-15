@@ -8,7 +8,12 @@ target=`crm_node -n`
 TEMP=`getopt -o qDGQVN:U:v:i:l: --long version,help,node:,uname:,id:,attr-value:,delete-attr,get-value,attr-id:,lifetime:,quiet \
      -n 'crm_standby' -- "$@"`
 
-if [ $? != 0 ] ; then echo "crm_standby - A convenience wrapper for crm_attribute"; echo ""; crm_attribute -?; exit 1 ; fi
+if [ $? -ne 0 ]; then
+    echo "crm_standby - A convenience wrapper for crm_attribute"
+    echo ""
+    crm_attribute -?
+    exit 1
+fi
 
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP"
@@ -58,11 +63,11 @@ if [ x$op = x ]; then
     options="$options -G"; op=g
 fi
 
-if [ $lifetime = 0 ]; then
+if [ $lifetime -eq 0 ]; then
     case $op in
         g)
             crm_attribute $options -l forever 2>&1 > /dev/null
-            if [ $? = 0 ]; then
+            if [ $? -eq 0 ]; then
                 options="$options -l forever"
             else
                 options="$options -l reboot -d off"
