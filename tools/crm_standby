@@ -14,43 +14,43 @@ if [ $? != 0 ] ; then echo "crm_standby - A convenience wrapper for crm_attribut
 eval set -- "$TEMP"
 
 while true ; do
-	case "$1" in
-	    -N|--node)  target="$2"; shift; shift;;
-	    -U|--uname) target="$2"; shift; shift;;
-	    -v|--attr-value)  options="$options $1 $2"; op=u; shift; shift;;
-	    -D|--delete-attr) options="$options $1"; op=d; shift;;
-	    -G|--get-value)   options="$options $1"; op=g; shift;;
-	    -l|--lifetime)    options="$options $1 $2"; lifetime=1; shift; shift;;
-	    -i|--id|--attr-id)     options="$options $1 $2"; shift; shift;;
-	    -Q|-q|--quiet|-V)    options="$options $1"; shift;;
-	    --version) crm_attribute --version; exit 0;;
-	    --help)
-		echo "crm_standby - A convenience wrapper for crm_attribute";
-		echo "";
-		echo "";
-		echo "Put the name node into and out of standby. Nodes in standby mode may not host cluster resources";
-		echo "";
-		echo "Usage: crm_standby crm_standby command [options]";
-		echo "Options:"
-		echo " --help 		This text"
-		echo " --version 		Version information"
-		echo " -V, --verbose 		Increase debug output"
-		echo " -q, --quiet 		Print only the value on stdout"
-		echo ""
-		echo "Commands:"
-		echo " -G, --query 		Query the current value of the attribute/option"
-		echo " -v, --update=value	Update the value of the attribute/option"
-		echo " -D, --delete 		Delete the attribute/option"
-		echo ""
-		echo "Additional Options:"
-		echo " -N, --node=value	Set an attribute for the named node (instead of the current one)."
-		echo " -l, --lifetime=value	Until when should the setting take affect."
-		echo "	       		Valid values: reboot, forever"
-		echo " -i, --id=value		(Advanced) The ID used to identify the attribute"
-		exit 0;;
-	    --) shift ; break ;;
-	    *) echo "Unknown option: $1. See --help for details." exit 1;;
-	esac
+    case "$1" in
+        -N|--node)  target="$2"; shift; shift;;
+        -U|--uname) target="$2"; shift; shift;;
+        -v|--attr-value)  options="$options $1 $2"; op=u; shift; shift;;
+        -D|--delete-attr) options="$options $1"; op=d; shift;;
+        -G|--get-value)   options="$options $1"; op=g; shift;;
+        -l|--lifetime)    options="$options $1 $2"; lifetime=1; shift; shift;;
+        -i|--id|--attr-id)     options="$options $1 $2"; shift; shift;;
+        -Q|-q|--quiet|-V)    options="$options $1"; shift;;
+        --version) crm_attribute --version; exit 0;;
+        --help)
+            echo "crm_standby - A convenience wrapper for crm_attribute";
+            echo "";
+            echo "";
+            echo "Put the name node into and out of standby. Nodes in standby mode may not host cluster resources";
+            echo "";
+            echo "Usage: crm_standby crm_standby command [options]";
+            echo "Options:"
+            echo " --help               This text"
+            echo " --version            Version information"
+            echo " -V, --verbose        Increase debug output"
+            echo " -q, --quiet          Print only the value on stdout"
+            echo ""
+            echo "Commands:"
+            echo " -G, --query          Query the current value of the attribute/option"
+            echo " -v, --update=value   Update the value of the attribute/option"
+            echo " -D, --delete         Delete the attribute/option"
+            echo ""
+            echo "Additional Options:"
+            echo " -N, --node=value     Set an attribute for the named node (instead of the current one)."
+            echo " -l, --lifetime=value Until when should the setting take affect."
+            echo "                      Valid values: reboot, forever"
+            echo " -i, --id=value       (Advanced) The ID used to identify the attribute"
+            exit 0;;
+        --) shift ; break ;;
+        *) echo "Unknown option: $1. See --help for details." exit 1;;
+    esac
 done
 
 options="-N $target -n standby $options"
@@ -60,22 +60,22 @@ fi
 
 if [ $lifetime = 0 ]; then
     case $op in
-	g)
-	    crm_attribute $options -l forever 2>&1 > /dev/null
-	    if [ $? = 0 ]; then
-		options="$options -l forever"
-	    else
-		options="$options -l reboot -d off"
-	    fi
-	    ;;
-	u)
-	    options="$options -l forever"
-	    ;;
-	d)
-	    crm_attribute $options -l forever
-	    crm_attribute $options -l reboot
-	    exit 0
-	    ;;
+        g)
+            crm_attribute $options -l forever 2>&1 > /dev/null
+            if [ $? = 0 ]; then
+                options="$options -l forever"
+            else
+                options="$options -l reboot -d off"
+            fi
+            ;;
+        u)
+            options="$options -l forever"
+            ;;
+        d)
+            crm_attribute $options -l forever
+            crm_attribute $options -l reboot
+            exit 0
+            ;;
     esac
 fi
 
