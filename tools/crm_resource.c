@@ -1415,6 +1415,9 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
         goto cleanup;
     }
 
+    if(data_set->input) {
+        free_xml(data_set->input);
+    }
     set_working_set_defaults(data_set);
     data_set->input = cib_xml_copy;
     data_set->now = crm_time_new(NULL);
@@ -1452,8 +1455,8 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
     }
 
   cleanup:
+    /* Do not free 'cib_xml_copy' here, we need rsc->xml to be valid later on */
     cib_delete(shadow_cib);
-    free_xml(cib_xml_copy);
     free(pid);
 
     if(shadow_file) {
@@ -1782,7 +1785,7 @@ static struct crm_option long_options[] = {
     {"-spacer-",   1, 0, '-', "\nAdvanced Commands:"},
     {"delete",     0, 0, 'D', "\t\t(Advanced) Delete a resource from the CIB"},
     {"fail",       0, 0, 'F', "\t\t(Advanced) Tell the cluster this resource has failed"},
-    {"restart",    0, 0,  0,  NULL, 1},
+    {"restart",    0, 0,  0,  "\t\t(Advanced) Tell the cluster to restart this resource and anything that depends on it"},
     {"force-stop", 0, 0,  0,  "\t(Advanced) Bypass the cluster and stop a resource on the local node. Additional detail with -V"},
     {"force-start",0, 0,  0,  "\t(Advanced) Bypass the cluster and start a resource on the local node. Additional detail with -V"},
     {"force-check",0, 0,  0,  "\t(Advanced) Bypass the cluster and check the state of a resource on the local node. Additional detail with -V\n"},
