@@ -1802,6 +1802,7 @@ crm_get_option_long(int argc, char **argv, int *index, const char **longname)
         long_opts = crm_create_long_opts(crm_long_options);
     }
 
+    *index = 0;
     if (long_opts) {
         int flag = getopt_long(argc, argv, crm_short_options, long_opts, index);
 
