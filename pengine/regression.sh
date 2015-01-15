@@ -778,6 +778,7 @@ do_test remote-fence-unclean2  "Fence baremetal remote-node after cluster node f
 do_test remote-move            "Move remote-node connection resource"
 do_test remote-disable         "Disable a baremetal remote-node"
 do_test remote-orphaned        "Properly shutdown orphaned connection resource"
+do_test remote-orphaned2       "verify we can handle orphaned remote connections with active resources on the remote"
 do_test remote-recover         "Recover connection resource after cluster-node fails."
 do_test remote-stale-node-entry "Make sure we properly handle leftover remote-node entries in the node section"
 do_test remote-partial-migrate  "Make sure partial migrations are handled before ops on the remote node."

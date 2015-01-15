@@ -1,0 +1,718 @@
+<cib crm_feature_set="3.0.9" validate-with="pacemaker-2.2" epoch="483" num_updates="615" admin_epoch="0" cib-last-written="Thu Jan 15 04:46:11 2015" have-quorum="1" dc-uuid="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.12-a14efad"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="STSRHTS26837"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1419001724"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="host-026">
+        <instance_attributes id="nodes-1">
+          <nvpair id="nodes-1-osprole" name="osprole" value="controller"/>
+        </instance_attributes>
+      </node>
+      <node id="2" uname="host-027">
+        <instance_attributes id="nodes-2">
+          <nvpair id="nodes-2-osprole" name="osprole" value="controller"/>
+        </instance_attributes>
+      </node>
+      <node id="3" uname="host-028">
+        <instance_attributes id="nodes-3">
+          <nvpair id="nodes-3-osprole" name="osprole" value="controller"/>
+        </instance_attributes>
+      </node>
+      <node id="mrg-02" type="remote" uname="mrg-02">
+        <instance_attributes id="nodes-mrg-02">
+          <nvpair id="nodes-mrg-02-osprole" name="osprole" value="compute"/>
+        </instance_attributes>
+      </node>
+      <node id="mrg-03" type="remote" uname="mrg-03">
+        <instance_attributes id="nodes-mrg-03">
+          <nvpair id="nodes-mrg-03-osprole" name="osprole" value="compute"/>
+        </instance_attributes>
+      </node>
+      <node id="mrg-04" type="remote" uname="mrg-04">
+        <instance_attributes id="nodes-mrg-04">
+          <nvpair id="nodes-mrg-04-osprole" name="osprole" value="compute"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="2" uname="host-027" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <lrm id="2">
+        <lrm_resources/>
+      </lrm>
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-fail-count-qpidd" name="fail-count-qpidd" value="INFINITY"/>
+          <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-2-fail-count-node1-fence" name="fail-count-node1-fence" value="INFINITY"/>
+          <nvpair id="status-2-fail-count-lb-haproxy" name="fail-count-lb-haproxy" value="INFINITY"/>
+          <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-2-last-failure-lb-haproxy" name="last-failure-lb-haproxy" value="1421318629"/>
+          <nvpair id="status-2-fail-count-node2-fence" name="fail-count-node2-fence" value="INFINITY"/>
+          <nvpair id="status-2-last-failure-node1-fence" name="last-failure-node1-fence" value="1421318696"/>
+          <nvpair id="status-2-fail-count-node3-fence" name="fail-count-node3-fence" value="INFINITY"/>
+          <nvpair id="status-2-fail-count-galera" name="fail-count-galera" value="INFINITY"/>
+          <nvpair id="status-2-last-failure-node3-fence" name="last-failure-node3-fence" value="1421318719"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="3" uname="host-028" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="3">
+        <instance_attributes id="status-3">
+          <nvpair id="status-3-last-failure-node3-fence" name="last-failure-node3-fence" value="1421318650"/>
+          <nvpair id="status-3-last-failure-rabbitmq-server" name="last-failure-rabbitmq-server" value="1421318676"/>
+          <nvpair id="status-3-last-failure-node1-fence" name="last-failure-node1-fence" value="1421318742"/>
+          <nvpair id="status-3-fail-count-node3-fence" name="fail-count-node3-fence" value="INFINITY"/>
+          <nvpair id="status-3-fail-count-galera" name="fail-count-galera" value="INFINITY"/>
+          <nvpair id="status-3-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-3-fail-count-node1-fence" name="fail-count-node1-fence" value="INFINITY"/>
+          <nvpair id="status-3-fail-count-rabbitmq-server" name="fail-count-rabbitmq-server" value="INFINITY"/>
+          <nvpair id="status-3-fail-count-lb-haproxy" name="fail-count-lb-haproxy" value="INFINITY"/>
+          <nvpair id="status-3-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-3-last-failure-lb-haproxy" name="last-failure-lb-haproxy" value="1421318698"/>
+          <nvpair id="status-3-fail-count-node2-fence" name="fail-count-node2-fence" value="INFINITY"/>
+          <nvpair id="status-3-last-failure-galera" name="last-failure-galera" value="1421318698"/>
+          <nvpair id="status-3-last-failure-node2-fence" name="last-failure-node2-fence" value="1421318764"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="3">
+        <lrm_resources/>
+      </lrm>
+    </node_state>
+    <node_state id="1" uname="host-026" crmd="online" crm-debug-origin="do_state_transition" in_ccm="true" join="member" expected="member">
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-last-failure-node3-fence" name="last-failure-node3-fence" value="1421318673"/>
+          <nvpair id="status-1-last-failure-node1-fence" name="last-failure-node1-fence" value="1421318650"/>
+          <nvpair id="status-1-fail-count-node3-fence" name="fail-count-node3-fence" value="INFINITY"/>
+          <nvpair id="status-1-fail-count-galera" name="fail-count-galera" value="INFINITY"/>
+          <nvpair id="status-1-last-failure-memcached" name="last-failure-memcached" value="1421318744"/>
+          <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-1-fail-count-node1-fence" name="fail-count-node1-fence" value="INFINITY"/>
+          <nvpair id="status-1-fail-count-lb-haproxy" name="fail-count-lb-haproxy" value="INFINITY"/>
+          <nvpair id="status-1-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-1-last-failure-lb-haproxy" name="last-failure-lb-haproxy" value="1421318629"/>
+          <nvpair id="status-1-fail-count-node2-fence" name="fail-count-node2-fence" value="INFINITY"/>
+          <nvpair id="status-1-fail-count-memcached" name="fail-count-memcached" value="INFINITY"/>
+          <nvpair id="status-1-last-failure-galera" name="last-failure-galera" value="1421318721"/>
+          <nvpair id="status-1-last-failure-node2-fence" name="last-failure-node2-fence" value="1421318696"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="1">
+        <lrm_resources/>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="mrg-03" uname="mrg-03" crm-debug-origin="do_update_resource">
+      <lrm id="mrg-03">
+        <lrm_resources>
+          <lrm_resource id="lb-haproxy" type="haproxy" class="systemd">
+            <lrm_rsc_op id="lb-haproxy_last_0" operation_key="lb-haproxy_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="154:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;154:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="6" rc-code="7" op-status="0" interval="0" last-run="1419001059" last-rc-change="1419001059" exec-time="3" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="vip-db" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-db_last_0" operation_key="vip-db_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="155:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;155:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1419001059" last-rc-change="1419001059" exec-time="95" queue-time="0" op-digest="bd83dcd57107f6c3acbb6e2d40e1d756" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="vip-rabbitmq" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-rabbitmq_last_0" operation_key="vip-rabbitmq_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="156:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;156:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="14" rc-code="7" op-status="0" interval="0" last-run="1419001060" last-rc-change="1419001060" exec-time="36" queue-time="0" op-digest="7ba719a59a5c688a8b7fd956bf87a1fa" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="vip-qpid" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-qpid_last_0" operation_key="vip-qpid_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="157:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;157:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="18" rc-code="7" op-status="0" interval="0" last-run="1419001060" last-rc-change="1419001060" exec-time="36" queue-time="0" op-digest="d62959354aa6b47c3f36285361c2d082" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="vip-keystone" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-keystone_last_0" operation_key="vip-keystone_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="158:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;158:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="22" rc-code="7" op-status="0" interval="0" last-run="1419001060" last-rc-change="1419001060" exec-time="36" queue-time="0" op-digest="d69192df0e0d0c91b76e20111eba774e" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="vip-glance" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-glance_last_0" operation_key="vip-glance_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="159:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;159:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="26" rc-code="7" op-status="0" interval="0" last-run="1419001061" last-rc-change="1419001061" exec-time="36" queue-time="0" op-digest="2da6630244d6f2d1f8f44c36b67518a3" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="vip-cinder" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-cinder_last_0" operation_key="vip-cinder_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="160:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;160:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="30" rc-code="7" op-status="0" interval="0" last-run="1419001061" last-rc-change="1419001061" exec-time="36" queue-time="0" op-digest="23848d72333024af7f572044e074b601" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="vip-swift" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-swift_last_0" operation_key="vip-swift_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="161:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;161:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="34" rc-code="7" op-status="0" interval="0" last-run="1419001061" last-rc-change="1419001061" exec-time="36" queue-time="0" op-digest="9ff141249defb61f70df05c7bd9977b3" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="vip-neutron" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-neutron_last_0" operation_key="vip-neutron_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="162:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;162:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="38" rc-code="7" op-status="0" interval="0" last-run="1419001062" last-rc-change="1419001062" exec-time="36" queue-time="0" op-digest="4b17de0bf3cdba285ef2deb5055bb247" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="vip-nova" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-nova_last_0" operation_key="vip-nova_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="163:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;163:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="42" rc-code="7" op-status="0" interval="0" last-run="1419001062" last-rc-change="1419001062" exec-time="36" queue-time="0" op-digest="16dfd9890935251651bd9eae18d4cabb" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="vip-horizon" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-horizon_last_0" operation_key="vip-horizon_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="164:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;164:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="46" rc-code="7" op-status="0" interval="0" last-run="1419001062" last-rc-change="1419001062" exec-time="36" queue-time="0" op-digest="5f7ba67ff81462367b72255342234aff" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="vip-heat" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-heat_last_0" operation_key="vip-heat_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="165:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;165:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="50" rc-code="7" op-status="0" interval="0" last-run="1419001062" last-rc-change="1419001062" exec-time="36" queue-time="0" op-digest="a7e14d3428848000cee2f17c6f6e0d4b" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="vip-ceilometer" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-ceilometer_last_0" operation_key="vip-ceilometer_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="166:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;166:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="54" rc-code="7" op-status="0" interval="0" last-run="1419001063" last-rc-change="1419001063" exec-time="36" queue-time="0" op-digest="e0621f478d714995b7c7207aa3b66f14" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-server" type="rabbitmq-server" class="systemd">
+            <lrm_rsc_op id="rabbitmq-server_last_0" operation_key="rabbitmq-server_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="168:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;168:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="64" rc-code="7" op-status="0" interval="0" last-run="1419001064" last-rc-change="1419001064" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="qpidd" type="qpidd" class="systemd">
+            <lrm_rsc_op id="qpidd_last_0" operation_key="qpidd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="169:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;169:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="69" rc-code="7" op-status="0" interval="0" last-run="1419001064" last-rc-change="1419001064" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="memcached" type="memcached" class="systemd">
+            <lrm_rsc_op id="memcached_last_0" operation_key="memcached_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="170:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;170:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="74" rc-code="7" op-status="0" interval="0" last-run="1419001064" last-rc-change="1419001064" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="mongodb" type="mongod" class="systemd">
+            <lrm_rsc_op id="mongodb_last_0" operation_key="mongodb_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="171:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;171:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="79" rc-code="7" op-status="0" interval="0" last-run="1419001065" last-rc-change="1419001065" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="keystone" type="openstack-keystone" class="systemd">
+            <lrm_rsc_op id="keystone_last_0" operation_key="keystone_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="172:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;172:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="84" rc-code="7" op-status="0" interval="0" last-run="1419001065" last-rc-change="1419001065" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="glance-fs" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="glance-fs_last_0" operation_key="glance-fs_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="173:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;173:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="89" rc-code="7" op-status="0" interval="0" last-run="1419001066" last-rc-change="1419001066" exec-time="80" queue-time="0" op-digest="4ff0fcceab38a3d5886d54ffe7acfc44" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="glance-registry" type="openstack-glance-registry" class="systemd">
+            <lrm_rsc_op id="glance-registry_last_0" operation_key="glance-registry_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="174:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;174:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="94" rc-code="7" op-status="0" interval="0" last-run="1419001066" last-rc-change="1419001066" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="glance-api" type="openstack-glance-api" class="systemd">
+            <lrm_rsc_op id="glance-api_last_0" operation_key="glance-api_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="175:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;175:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="99" rc-code="7" op-status="0" interval="0" last-run="1419001066" last-rc-change="1419001066" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="cinder-api" type="openstack-cinder-api" class="systemd">
+            <lrm_rsc_op id="cinder-api_last_0" operation_key="cinder-api_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="176:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;176:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="104" rc-code="7" op-status="0" interval="0" last-run="1419001067" last-rc-change="1419001067" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="cinder-scheduler" type="openstack-cinder-scheduler" class="systemd">
+            <lrm_rsc_op id="cinder-scheduler_last_0" operation_key="cinder-scheduler_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="177:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;177:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="109" rc-code="7" op-status="0" interval="0" last-run="1419001067" last-rc-change="1419001067" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="cinder-volume" type="openstack-cinder-volume" class="systemd">
+            <lrm_rsc_op id="cinder-volume_last_0" operation_key="cinder-volume_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="178:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;178:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="114" rc-code="7" op-status="0" interval="0" last-run="1419001068" last-rc-change="1419001068" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="swift-fs" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="swift-fs_last_0" operation_key="swift-fs_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="179:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;179:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="119" rc-code="7" op-status="0" interval="0" last-run="1419001068" last-rc-change="1419001068" exec-time="36" queue-time="0" op-digest="56a72ba33ffa927a833adeb9c5bba0d8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="swift-account" type="openstack-swift-account" class="systemd">
+            <lrm_rsc_op id="swift-account_last_0" operation_key="swift-account_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="180:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;180:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="124" rc-code="7" op-status="0" interval="0" last-run="1419001068" last-rc-change="1419001068" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="swift-container" type="openstack-swift-container" class="systemd">
+            <lrm_rsc_op id="swift-container_last_0" operation_key="swift-container_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="181:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;181:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="129" rc-code="7" op-status="0" interval="0" last-run="1419001069" last-rc-change="1419001069" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="swift-object" type="openstack-swift-object" class="systemd">
+            <lrm_rsc_op id="swift-object_last_0" operation_key="swift-object_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="182:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;182:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="134" rc-code="7" op-status="0" interval="0" last-run="1419001069" last-rc-change="1419001069" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="swift-proxy" type="openstack-swift-proxy" class="systemd">
+            <lrm_rsc_op id="swift-proxy_last_0" operation_key="swift-proxy_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="183:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;183:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="139" rc-code="7" op-status="0" interval="0" last-run="1419001070" last-rc-change="1419001070" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="swift-object-expirer" type="openstack-swift-object-expirer" class="systemd">
+            <lrm_rsc_op id="swift-object-expirer_last_0" operation_key="swift-object-expirer_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="184:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;184:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="143" rc-code="7" op-status="0" interval="0" last-run="1419001070" last-rc-change="1419001070" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-server" type="neutron-server" class="systemd">
+            <lrm_rsc_op id="neutron-server_last_0" operation_key="neutron-server_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="185:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;185:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="148" rc-code="7" op-status="0" interval="0" last-run="1419001070" last-rc-change="1419001070" exec-time="26" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-scale:0" type="NeutronScale" class="ocf" provider="neutron">
+            <lrm_rsc_op id="neutron-scale:0_last_0" operation_key="neutron-scale:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="186:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;186:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="152" rc-code="7" op-status="0" interval="0" last-run="1419001071" last-rc-change="1419001071" exec-time="25" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1" op-force-restart=" hostbasename " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-scale:1" type="NeutronScale" class="ocf" provider="neutron">
+            <lrm_rsc_op id="neutron-scale:1_last_0" operation_key="neutron-scale:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="187:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;187:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="156" rc-code="7" op-status="0" interval="0" last-run="1419001071" last-rc-change="1419001071" exec-time="12" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1" op-force-restart=" hostbasename " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-scale:2" type="NeutronScale" class="ocf" provider="neutron">
+            <lrm_rsc_op id="neutron-scale:2_last_0" operation_key="neutron-scale:2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="188:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;188:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="160" rc-code="7" op-status="0" interval="0" last-run="1419001071" last-rc-change="1419001071" exec-time="12" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1" op-force-restart=" hostbasename " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-ovs-cleanup" type="OVSCleanup" class="ocf" provider="neutron">
+            <lrm_rsc_op id="neutron-ovs-cleanup_last_0" operation_key="neutron-ovs-cleanup_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="189:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;189:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="165" rc-code="7" op-status="0" interval="0" last-run="1419001072" last-rc-change="1419001072" exec-time="34" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-netns-cleanup" type="NetnsCleanup" class="ocf" provider="neutron">
+            <lrm_rsc_op id="neutron-netns-cleanup_last_0" operation_key="neutron-netns-cleanup_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="190:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;190:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="170" rc-code="7" op-status="0" interval="0" last-run="1419001072" last-rc-change="1419001072" exec-time="32" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-openvswitch-agent" type="neutron-openvswitch-agent" class="systemd">
+            <lrm_rsc_op id="neutron-openvswitch-agent_last_0" operation_key="neutron-openvswitch-agent_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="191:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;191:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="175" rc-code="7" op-status="0" interval="0" last-run="1419001073" last-rc-change="1419001073" exec-time="10" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-dhcp-agent" type="neutron-dhcp-agent" class="systemd">
+            <lrm_rsc_op id="neutron-dhcp-agent_last_0" operation_key="neutron-dhcp-agent_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="192:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;192:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="180" rc-code="7" op-status="0" interval="0" last-run="1419001073" last-rc-change="1419001073" exec-time="11" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-l3-agent" type="neutron-l3-agent" class="systemd">
+            <lrm_rsc_op id="neutron-l3-agent_last_0" operation_key="neutron-l3-agent_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="193:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;193:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="185" rc-code="7" op-status="0" interval="0" last-run="1419001073" last-rc-change="1419001073" exec-time="9" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-metadata-agent" type="neutron-metadata-agent" class="systemd">
+            <lrm_rsc_op id="neutron-metadata-agent_last_0" operation_key="neutron-metadata-agent_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="194:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;194:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="190" rc-code="7" op-status="0" interval="0" last-run="1419001074" last-rc-change="1419001074" exec-time="7" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="nova-consoleauth" type="openstack-nova-consoleauth" class="systemd">
+            <lrm_rsc_op id="nova-consoleauth_last_0" operation_key="nova-consoleauth_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="195:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;195:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="195" rc-code="7" op-status="0" interval="0" last-run="1419001074" last-rc-change="1419001074" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="nova-novncproxy" type="openstack-nova-novncproxy" class="systemd">
+            <lrm_rsc_op id="nova-novncproxy_last_0" operation_key="nova-novncproxy_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="196:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;196:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="200" rc-code="7" op-status="0" interval="0" last-run="1419001075" last-rc-change="1419001075" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="nova-api" type="openstack-nova-api" class="systemd">
+            <lrm_rsc_op id="nova-api_last_0" operation_key="nova-api_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="197:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;197:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="205" rc-code="7" op-status="0" interval="0" last-run="1419001075" last-rc-change="1419001075" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="nova-scheduler" type="openstack-nova-scheduler" class="systemd">
+            <lrm_rsc_op id="nova-scheduler_last_0" operation_key="nova-scheduler_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="198:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;198:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="210" rc-code="7" op-status="0" interval="0" last-run="1419001075" last-rc-change="1419001075" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="nova-conductor" type="openstack-nova-conductor" class="systemd">
+            <lrm_rsc_op id="nova-conductor_last_0" operation_key="nova-conductor_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="199:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;199:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="215" rc-code="7" op-status="0" interval="0" last-run="1419001076" last-rc-change="1419001076" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="ceilometer-central" type="openstack-ceilometer-central" class="systemd">
+            <lrm_rsc_op id="ceilometer-central_last_0" operation_key="ceilometer-central_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="200:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;200:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="219" rc-code="7" op-status="0" interval="0" last-run="1419001076" last-rc-change="1419001076" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="ceilometer-collector" type="openstack-ceilometer-collector" class="systemd">
+            <lrm_rsc_op id="ceilometer-collector_last_0" operation_key="ceilometer-collector_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="201:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;201:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="224" rc-code="7" op-status="0" interval="0" last-run="1419001076" last-rc-change="1419001076" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="ceilometer-api" type="openstack-ceilometer-api" class="systemd">
+            <lrm_rsc_op id="ceilometer-api_last_0" operation_key="ceilometer-api_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="202:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;202:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="229" rc-code="7" op-status="0" interval="0" last-run="1419001077" last-rc-change="1419001077" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="ceilometer-alarm-evaluator" type="openstack-ceilometer-alarm-evaluator" class="systemd">
+            <lrm_rsc_op id="ceilometer-alarm-evaluator_last_0" operation_key="ceilometer-alarm-evaluator_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="204:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;204:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="239" rc-code="7" op-status="0" interval="0" last-run="1419001078" last-rc-change="1419001078" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="ceilometer-alarm-notifier" type="openstack-ceilometer-alarm-notifier" class="systemd">
+            <lrm_rsc_op id="ceilometer-alarm-notifier_last_0" operation_key="ceilometer-alarm-notifier_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="205:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;205:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="244" rc-code="7" op-status="0" interval="0" last-run="1419001078" last-rc-change="1419001078" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="ceilometer-notification" type="openstack-ceilometer-notification" class="systemd">
+            <lrm_rsc_op id="ceilometer-notification_last_0" operation_key="ceilometer-notification_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="206:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;206:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="249" rc-code="7" op-status="0" interval="0" last-run="1419001078" last-rc-change="1419001078" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="heat-api" type="openstack-heat-api" class="systemd">
+            <lrm_rsc_op id="heat-api_last_0" operation_key="heat-api_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="207:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;207:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="254" rc-code="7" op-status="0" interval="0" last-run="1419001079" last-rc-change="1419001079" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="heat-api-cfn" type="openstack-heat-api-cfn" class="systemd">
+            <lrm_rsc_op id="heat-api-cfn_last_0" operation_key="heat-api-cfn_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="208:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;208:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="259" rc-code="7" op-status="0" interval="0" last-run="1419001079" last-rc-change="1419001079" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="heat-api-cloudwatch" type="openstack-heat-api-cloudwatch" class="systemd">
+            <lrm_rsc_op id="heat-api-cloudwatch_last_0" operation_key="heat-api-cloudwatch_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="209:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;209:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="264" rc-code="7" op-status="0" interval="0" last-run="1419001080" last-rc-change="1419001080" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="heat-engine" type="openstack-heat-engine" class="systemd">
+            <lrm_rsc_op id="heat-engine_last_0" operation_key="heat-engine_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="210:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;210:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="268" rc-code="7" op-status="0" interval="0" last-run="1419001080" last-rc-change="1419001080" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="horizon" type="apache" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="horizon_last_0" operation_key="horizon_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="211:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;211:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="273" rc-code="7" op-status="0" interval="0" last-run="1419001080" last-rc-change="1419001080" exec-time="34" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-openvswitch-agent-compute" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="neutron-openvswitch-agent-compute_last_0" operation_key="neutron-openvswitch-agent-compute_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="695:30:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:0;695:30:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="295" rc-code="0" op-status="0" interval="0" last-run="1419001087" last-rc-change="1419001087" exec-time="12" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="neutron-openvswitch-agent-compute_monitor_10000" operation_key="neutron-openvswitch-agent-compute_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="620:31:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:0;620:31:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="296" rc-code="0" op-status="0" interval="10000" last-rc-change="1419001090" exec-time="41" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="libvirtd-compute" type="libvirtd" class="systemd">
+            <lrm_rsc_op id="libvirtd-compute_last_0" operation_key="libvirtd-compute_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="629:31:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:0;629:31:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="297" rc-code="0" op-status="0" interval="0" last-run="1419001092" last-rc-change="1419001092" exec-time="1" queue-time="2001" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+            <lrm_rsc_op id="libvirtd-compute_monitor_60000" operation_key="libvirtd-compute_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="630:31:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:0;630:31:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="298" rc-code="0" op-status="0" interval="60000" last-rc-change="1419001092" exec-time="1" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="ceilometer-compute" type="openstack-ceilometer-compute" class="systemd">
+            <lrm_rsc_op id="ceilometer-compute_last_0" operation_key="ceilometer-compute_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="637:31:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:0;637:31:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="299" rc-code="0" op-status="0" interval="0" last-run="1419001094" last-rc-change="1419001094" exec-time="2" queue-time="2001" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+            <lrm_rsc_op id="ceilometer-compute_monitor_60000" operation_key="ceilometer-compute_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="638:31:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:0;638:31:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="300" rc-code="0" op-status="0" interval="60000" last-rc-change="1419001094" exec-time="2" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="nova-compute" type="openstack-nova-compute" class="systemd">
+            <lrm_rsc_op id="nova-compute_last_0" operation_key="nova-compute_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="666:55:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:0;666:55:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="429" rc-code="0" op-status="0" interval="0" last-run="1419007680" last-rc-change="1419007680" exec-time="1" queue-time="2002" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node2"/>
+            <lrm_rsc_op id="nova-compute_monitor_60000" operation_key="nova-compute_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="667:55:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:0;667:55:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="430" rc-code="0" op-status="0" interval="60000" last-rc-change="1419007681" exec-time="2" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhos6-node2"/>
+          </lrm_resource>
+          <lrm_resource id="ceilometer-delay" type="Delay" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ceilometer-delay_last_0" operation_key="ceilometer-delay_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="203:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;203:30:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="234" rc-code="7" op-status="0" interval="0" last-run="1419001077" last-rc-change="1419001077" exec-time="10023" queue-time="0" op-digest="ad19c7364a8662d5d94488a98ccc4fda" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="galera" type="galera" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera_last_0" operation_key="galera_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="114:44:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;114:44:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="327" rc-code="7" op-status="0" interval="0" last-run="1419001727" last-rc-change="1419001727" exec-time="54" queue-time="0" op-digest="a357a4e08e165ea819421e864e21c1cf" on_node="rhos6-node2"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="mrg-03">
+        <instance_attributes id="status-mrg-03">
+          <nvpair id="status-mrg-03-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state remote_node="true" id="mrg-02" uname="mrg-02" crm-debug-origin="do_update_resource">
+      <lrm id="mrg-02">
+        <lrm_resources>
+          <lrm_resource id="lb-haproxy" type="haproxy" class="systemd">
+            <lrm_rsc_op id="lb-haproxy_last_0" operation_key="lb-haproxy_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="157:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;157:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="6" rc-code="7" op-status="0" interval="0" last-run="1419001328" last-rc-change="1419001328" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="vip-db" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-db_last_0" operation_key="vip-db_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="158:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;158:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1419001328" last-rc-change="1419001328" exec-time="91" queue-time="0" op-digest="bd83dcd57107f6c3acbb6e2d40e1d756" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="vip-rabbitmq" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-rabbitmq_last_0" operation_key="vip-rabbitmq_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="159:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;159:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="14" rc-code="7" op-status="0" interval="0" last-run="1419001328" last-rc-change="1419001328" exec-time="35" queue-time="0" op-digest="7ba719a59a5c688a8b7fd956bf87a1fa" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="vip-qpid" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-qpid_last_0" operation_key="vip-qpid_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="160:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;160:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="18" rc-code="7" op-status="0" interval="0" last-run="1419001329" last-rc-change="1419001329" exec-time="34" queue-time="0" op-digest="d62959354aa6b47c3f36285361c2d082" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="vip-keystone" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-keystone_last_0" operation_key="vip-keystone_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="161:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;161:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="22" rc-code="7" op-status="0" interval="0" last-run="1419001329" last-rc-change="1419001329" exec-time="34" queue-time="0" op-digest="d69192df0e0d0c91b76e20111eba774e" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="vip-glance" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-glance_last_0" operation_key="vip-glance_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="162:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;162:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="26" rc-code="7" op-status="0" interval="0" last-run="1419001329" last-rc-change="1419001329" exec-time="35" queue-time="0" op-digest="2da6630244d6f2d1f8f44c36b67518a3" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="vip-cinder" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-cinder_last_0" operation_key="vip-cinder_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="163:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;163:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="30" rc-code="7" op-status="0" interval="0" last-run="1419001329" last-rc-change="1419001329" exec-time="35" queue-time="0" op-digest="23848d72333024af7f572044e074b601" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="vip-swift" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-swift_last_0" operation_key="vip-swift_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="164:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;164:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="34" rc-code="7" op-status="0" interval="0" last-run="1419001330" last-rc-change="1419001330" exec-time="35" queue-time="0" op-digest="9ff141249defb61f70df05c7bd9977b3" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="vip-neutron" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-neutron_last_0" operation_key="vip-neutron_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="165:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;165:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="38" rc-code="7" op-status="0" interval="0" last-run="1419001330" last-rc-change="1419001330" exec-time="35" queue-time="0" op-digest="4b17de0bf3cdba285ef2deb5055bb247" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="vip-nova" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-nova_last_0" operation_key="vip-nova_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="166:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;166:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="42" rc-code="7" op-status="0" interval="0" last-run="1419001330" last-rc-change="1419001330" exec-time="35" queue-time="0" op-digest="16dfd9890935251651bd9eae18d4cabb" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="vip-horizon" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-horizon_last_0" operation_key="vip-horizon_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="167:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;167:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="46" rc-code="7" op-status="0" interval="0" last-run="1419001331" last-rc-change="1419001331" exec-time="35" queue-time="0" op-digest="5f7ba67ff81462367b72255342234aff" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="vip-heat" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-heat_last_0" operation_key="vip-heat_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="168:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;168:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="50" rc-code="7" op-status="0" interval="0" last-run="1419001331" last-rc-change="1419001331" exec-time="35" queue-time="0" op-digest="a7e14d3428848000cee2f17c6f6e0d4b" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="vip-ceilometer" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-ceilometer_last_0" operation_key="vip-ceilometer_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="169:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;169:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="54" rc-code="7" op-status="0" interval="0" last-run="1419001331" last-rc-change="1419001331" exec-time="35" queue-time="0" op-digest="e0621f478d714995b7c7207aa3b66f14" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-server" type="rabbitmq-server" class="systemd">
+            <lrm_rsc_op id="rabbitmq-server_last_0" operation_key="rabbitmq-server_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="171:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;171:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="64" rc-code="7" op-status="0" interval="0" last-run="1419001332" last-rc-change="1419001332" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="qpidd" type="qpidd" class="systemd">
+            <lrm_rsc_op id="qpidd_last_0" operation_key="qpidd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="172:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;172:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="69" rc-code="7" op-status="0" interval="0" last-run="1419001333" last-rc-change="1419001333" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="memcached" type="memcached" class="systemd">
+            <lrm_rsc_op id="memcached_last_0" operation_key="memcached_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="173:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;173:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="74" rc-code="7" op-status="0" interval="0" last-run="1419001333" last-rc-change="1419001333" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="mongodb" type="mongod" class="systemd">
+            <lrm_rsc_op id="mongodb_last_0" operation_key="mongodb_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="174:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;174:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="79" rc-code="7" op-status="0" interval="0" last-run="1419001333" last-rc-change="1419001333" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="keystone" type="openstack-keystone" class="systemd">
+            <lrm_rsc_op id="keystone_last_0" operation_key="keystone_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="175:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;175:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="84" rc-code="7" op-status="0" interval="0" last-run="1419001334" last-rc-change="1419001334" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="glance-fs" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="glance-fs_last_0" operation_key="glance-fs_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="176:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;176:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="89" rc-code="7" op-status="0" interval="0" last-run="1419001334" last-rc-change="1419001334" exec-time="81" queue-time="0" op-digest="4ff0fcceab38a3d5886d54ffe7acfc44" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="glance-registry" type="openstack-glance-registry" class="systemd">
+            <lrm_rsc_op id="glance-registry_last_0" operation_key="glance-registry_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="177:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;177:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="94" rc-code="7" op-status="0" interval="0" last-run="1419001335" last-rc-change="1419001335" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="glance-api" type="openstack-glance-api" class="systemd">
+            <lrm_rsc_op id="glance-api_last_0" operation_key="glance-api_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="178:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;178:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="99" rc-code="7" op-status="0" interval="0" last-run="1419001335" last-rc-change="1419001335" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="cinder-api" type="openstack-cinder-api" class="systemd">
+            <lrm_rsc_op id="cinder-api_last_0" operation_key="cinder-api_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="179:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;179:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="104" rc-code="7" op-status="0" interval="0" last-run="1419001335" last-rc-change="1419001335" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="cinder-scheduler" type="openstack-cinder-scheduler" class="systemd">
+            <lrm_rsc_op id="cinder-scheduler_last_0" operation_key="cinder-scheduler_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="180:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;180:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="109" rc-code="7" op-status="0" interval="0" last-run="1419001336" last-rc-change="1419001336" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="cinder-volume" type="openstack-cinder-volume" class="systemd">
+            <lrm_rsc_op id="cinder-volume_last_0" operation_key="cinder-volume_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="181:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;181:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="114" rc-code="7" op-status="0" interval="0" last-run="1419001336" last-rc-change="1419001336" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="swift-fs" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="swift-fs_last_0" operation_key="swift-fs_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="182:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;182:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="119" rc-code="7" op-status="0" interval="0" last-run="1419001337" last-rc-change="1419001337" exec-time="39" queue-time="0" op-digest="56a72ba33ffa927a833adeb9c5bba0d8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="swift-account" type="openstack-swift-account" class="systemd">
+            <lrm_rsc_op id="swift-account_last_0" operation_key="swift-account_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="183:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;183:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="124" rc-code="7" op-status="0" interval="0" last-run="1419001337" last-rc-change="1419001337" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="swift-container" type="openstack-swift-container" class="systemd">
+            <lrm_rsc_op id="swift-container_last_0" operation_key="swift-container_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="184:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;184:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="129" rc-code="7" op-status="0" interval="0" last-run="1419001337" last-rc-change="1419001337" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="swift-object" type="openstack-swift-object" class="systemd">
+            <lrm_rsc_op id="swift-object_last_0" operation_key="swift-object_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="185:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;185:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="134" rc-code="7" op-status="0" interval="0" last-run="1419001338" last-rc-change="1419001338" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="swift-proxy" type="openstack-swift-proxy" class="systemd">
+            <lrm_rsc_op id="swift-proxy_last_0" operation_key="swift-proxy_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="186:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;186:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="139" rc-code="7" op-status="0" interval="0" last-run="1419001338" last-rc-change="1419001338" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="swift-object-expirer" type="openstack-swift-object-expirer" class="systemd">
+            <lrm_rsc_op id="swift-object-expirer_last_0" operation_key="swift-object-expirer_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="187:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;187:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="143" rc-code="7" op-status="0" interval="0" last-run="1419001339" last-rc-change="1419001339" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-server" type="neutron-server" class="systemd">
+            <lrm_rsc_op id="neutron-server_last_0" operation_key="neutron-server_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="188:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;188:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="148" rc-code="7" op-status="0" interval="0" last-run="1419001339" last-rc-change="1419001339" exec-time="25" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-scale:0" type="NeutronScale" class="ocf" provider="neutron">
+            <lrm_rsc_op id="neutron-scale:0_last_0" operation_key="neutron-scale:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="189:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;189:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="152" rc-code="7" op-status="0" interval="0" last-run="1419001339" last-rc-change="1419001339" exec-time="22" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1" op-force-restart=" hostbasename " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-scale:1" type="NeutronScale" class="ocf" provider="neutron">
+            <lrm_rsc_op id="neutron-scale:1_last_0" operation_key="neutron-scale:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="190:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;190:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="156" rc-code="7" op-status="0" interval="0" last-run="1419001340" last-rc-change="1419001340" exec-time="11" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1" op-force-restart=" hostbasename " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-scale:2" type="NeutronScale" class="ocf" provider="neutron">
+            <lrm_rsc_op id="neutron-scale:2_last_0" operation_key="neutron-scale:2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="191:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;191:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="160" rc-code="7" op-status="0" interval="0" last-run="1419001340" last-rc-change="1419001340" exec-time="11" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1" op-force-restart=" hostbasename " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-ovs-cleanup" type="OVSCleanup" class="ocf" provider="neutron">
+            <lrm_rsc_op id="neutron-ovs-cleanup_last_0" operation_key="neutron-ovs-cleanup_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="192:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;192:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="165" rc-code="7" op-status="0" interval="0" last-run="1419001340" last-rc-change="1419001340" exec-time="31" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-netns-cleanup" type="NetnsCleanup" class="ocf" provider="neutron">
+            <lrm_rsc_op id="neutron-netns-cleanup_last_0" operation_key="neutron-netns-cleanup_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="193:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;193:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="170" rc-code="7" op-status="0" interval="0" last-run="1419001341" last-rc-change="1419001341" exec-time="27" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-openvswitch-agent" type="neutron-openvswitch-agent" class="systemd">
+            <lrm_rsc_op id="neutron-openvswitch-agent_last_0" operation_key="neutron-openvswitch-agent_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="194:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;194:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="175" rc-code="7" op-status="0" interval="0" last-run="1419001341" last-rc-change="1419001341" exec-time="9" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-dhcp-agent" type="neutron-dhcp-agent" class="systemd">
+            <lrm_rsc_op id="neutron-dhcp-agent_last_0" operation_key="neutron-dhcp-agent_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="195:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;195:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="180" rc-code="7" op-status="0" interval="0" last-run="1419001342" last-rc-change="1419001342" exec-time="9" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-l3-agent" type="neutron-l3-agent" class="systemd">
+            <lrm_rsc_op id="neutron-l3-agent_last_0" operation_key="neutron-l3-agent_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="196:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;196:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="185" rc-code="7" op-status="0" interval="0" last-run="1419001342" last-rc-change="1419001342" exec-time="7" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-metadata-agent" type="neutron-metadata-agent" class="systemd">
+            <lrm_rsc_op id="neutron-metadata-agent_last_0" operation_key="neutron-metadata-agent_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="197:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;197:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="190" rc-code="7" op-status="0" interval="0" last-run="1419001342" last-rc-change="1419001342" exec-time="8" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="nova-consoleauth" type="openstack-nova-consoleauth" class="systemd">
+            <lrm_rsc_op id="nova-consoleauth_last_0" operation_key="nova-consoleauth_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="198:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;198:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="195" rc-code="7" op-status="0" interval="0" last-run="1419001343" last-rc-change="1419001343" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="nova-novncproxy" type="openstack-nova-novncproxy" class="systemd">
+            <lrm_rsc_op id="nova-novncproxy_last_0" operation_key="nova-novncproxy_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="199:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;199:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="200" rc-code="7" op-status="0" interval="0" last-run="1419001343" last-rc-change="1419001343" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="nova-api" type="openstack-nova-api" class="systemd">
+            <lrm_rsc_op id="nova-api_last_0" operation_key="nova-api_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="200:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;200:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="205" rc-code="7" op-status="0" interval="0" last-run="1419001344" last-rc-change="1419001344" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="nova-scheduler" type="openstack-nova-scheduler" class="systemd">
+            <lrm_rsc_op id="nova-scheduler_last_0" operation_key="nova-scheduler_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="201:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;201:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="210" rc-code="7" op-status="0" interval="0" last-run="1419001344" last-rc-change="1419001344" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="nova-conductor" type="openstack-nova-conductor" class="systemd">
+            <lrm_rsc_op id="nova-conductor_last_0" operation_key="nova-conductor_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="202:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;202:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="215" rc-code="7" op-status="0" interval="0" last-run="1419001344" last-rc-change="1419001344" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="ceilometer-central" type="openstack-ceilometer-central" class="systemd">
+            <lrm_rsc_op id="ceilometer-central_last_0" operation_key="ceilometer-central_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="203:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;203:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="219" rc-code="7" op-status="0" interval="0" last-run="1419001345" last-rc-change="1419001345" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="ceilometer-collector" type="openstack-ceilometer-collector" class="systemd">
+            <lrm_rsc_op id="ceilometer-collector_last_0" operation_key="ceilometer-collector_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="204:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;204:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="224" rc-code="7" op-status="0" interval="0" last-run="1419001345" last-rc-change="1419001345" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="ceilometer-api" type="openstack-ceilometer-api" class="systemd">
+            <lrm_rsc_op id="ceilometer-api_last_0" operation_key="ceilometer-api_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="205:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;205:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="229" rc-code="7" op-status="0" interval="0" last-run="1419001346" last-rc-change="1419001346" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="ceilometer-alarm-evaluator" type="openstack-ceilometer-alarm-evaluator" class="systemd">
+            <lrm_rsc_op id="ceilometer-alarm-evaluator_last_0" operation_key="ceilometer-alarm-evaluator_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="207:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;207:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="239" rc-code="7" op-status="0" interval="0" last-run="1419001346" last-rc-change="1419001346" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="ceilometer-alarm-notifier" type="openstack-ceilometer-alarm-notifier" class="systemd">
+            <lrm_rsc_op id="ceilometer-alarm-notifier_last_0" operation_key="ceilometer-alarm-notifier_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="208:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;208:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="244" rc-code="7" op-status="0" interval="0" last-run="1419001347" last-rc-change="1419001347" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="ceilometer-notification" type="openstack-ceilometer-notification" class="systemd">
+            <lrm_rsc_op id="ceilometer-notification_last_0" operation_key="ceilometer-notification_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="209:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;209:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="249" rc-code="7" op-status="0" interval="0" last-run="1419001347" last-rc-change="1419001347" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="heat-api" type="openstack-heat-api" class="systemd">
+            <lrm_rsc_op id="heat-api_last_0" operation_key="heat-api_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="210:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;210:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="254" rc-code="7" op-status="0" interval="0" last-run="1419001348" last-rc-change="1419001348" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="heat-api-cfn" type="openstack-heat-api-cfn" class="systemd">
+            <lrm_rsc_op id="heat-api-cfn_last_0" operation_key="heat-api-cfn_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="211:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;211:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="259" rc-code="7" op-status="0" interval="0" last-run="1419001348" last-rc-change="1419001348" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="heat-api-cloudwatch" type="openstack-heat-api-cloudwatch" class="systemd">
+            <lrm_rsc_op id="heat-api-cloudwatch_last_0" operation_key="heat-api-cloudwatch_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="212:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;212:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="264" rc-code="7" op-status="0" interval="0" last-run="1419001348" last-rc-change="1419001348" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="heat-engine" type="openstack-heat-engine" class="systemd">
+            <lrm_rsc_op id="heat-engine_last_0" operation_key="heat-engine_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="213:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;213:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="268" rc-code="7" op-status="0" interval="0" last-run="1419001349" last-rc-change="1419001349" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="horizon" type="apache" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="horizon_last_0" operation_key="horizon_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="214:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;214:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="273" rc-code="7" op-status="0" interval="0" last-run="1419001349" last-rc-change="1419001349" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-openvswitch-agent-compute" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="neutron-openvswitch-agent-compute_last_0" operation_key="neutron-openvswitch-agent-compute_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="699:33:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:0;699:33:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="295" rc-code="0" op-status="0" interval="0" last-run="1419001356" last-rc-change="1419001356" exec-time="13" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="neutron-openvswitch-agent-compute_monitor_10000" operation_key="neutron-openvswitch-agent-compute_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="637:34:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:0;637:34:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="296" rc-code="0" op-status="0" interval="10000" last-rc-change="1419001357" exec-time="42" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="libvirtd-compute" type="libvirtd" class="systemd">
+            <lrm_rsc_op id="libvirtd-compute_last_0" operation_key="libvirtd-compute_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="648:34:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:0;648:34:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="297" rc-code="0" op-status="0" interval="0" last-run="1419001359" last-rc-change="1419001359" exec-time="2" queue-time="2001" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+            <lrm_rsc_op id="libvirtd-compute_monitor_60000" operation_key="libvirtd-compute_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="649:34:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:0;649:34:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="298" rc-code="0" op-status="0" interval="60000" last-rc-change="1419001359" exec-time="1" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="ceilometer-compute" type="openstack-ceilometer-compute" class="systemd">
+            <lrm_rsc_op id="ceilometer-compute_last_0" operation_key="ceilometer-compute_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="658:34:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:0;658:34:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="299" rc-code="0" op-status="0" interval="0" last-run="1419001361" last-rc-change="1419001361" exec-time="2" queue-time="2002" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+            <lrm_rsc_op id="ceilometer-compute_monitor_60000" operation_key="ceilometer-compute_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="659:34:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:0;659:34:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="300" rc-code="0" op-status="0" interval="60000" last-rc-change="1419001361" exec-time="1" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="nova-compute" type="openstack-nova-compute" class="systemd">
+            <lrm_rsc_op id="nova-compute_last_0" operation_key="nova-compute_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="664:55:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:0;664:55:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="428" rc-code="0" op-status="0" interval="0" last-run="1419007680" last-rc-change="1419007680" exec-time="2" queue-time="2001" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node1"/>
+            <lrm_rsc_op id="nova-compute_monitor_60000" operation_key="nova-compute_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="665:55:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:0;665:55:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="429" rc-code="0" op-status="0" interval="60000" last-rc-change="1419007681" exec-time="1" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="ceilometer-delay" type="Delay" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ceilometer-delay_last_0" operation_key="ceilometer-delay_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="206:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;206:33:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="234" rc-code="7" op-status="0" interval="0" last-run="1419001346" last-rc-change="1419001346" exec-time="10024" queue-time="0" op-digest="ad19c7364a8662d5d94488a98ccc4fda" on_node="rhos6-node1"/>
+          </lrm_resource>
+          <lrm_resource id="galera" type="galera" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera_last_0" operation_key="galera_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="112:44:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;112:44:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="320" rc-code="7" op-status="0" interval="0" last-run="1419001727" last-rc-change="1419001727" exec-time="52" queue-time="0" op-digest="a357a4e08e165ea819421e864e21c1cf" on_node="rhos6-node1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="mrg-02">
+        <instance_attributes id="status-mrg-02">
+          <nvpair id="status-mrg-02-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state remote_node="true" id="mrg-04" uname="mrg-04" crm-debug-origin="do_update_resource">
+      <lrm id="mrg-04">
+        <lrm_resources>
+          <lrm_resource id="lb-haproxy" type="haproxy" class="systemd">
+            <lrm_rsc_op id="lb-haproxy_last_0" operation_key="lb-haproxy_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="161:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;161:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="6" rc-code="7" op-status="0" interval="0" last-run="1418999957" last-rc-change="1418999957" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="vip-db" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-db_last_0" operation_key="vip-db_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="162:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;162:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1418999958" last-rc-change="1418999958" exec-time="95" queue-time="0" op-digest="bd83dcd57107f6c3acbb6e2d40e1d756" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="vip-rabbitmq" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-rabbitmq_last_0" operation_key="vip-rabbitmq_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="163:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;163:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="14" rc-code="7" op-status="0" interval="0" last-run="1418999958" last-rc-change="1418999958" exec-time="35" queue-time="0" op-digest="7ba719a59a5c688a8b7fd956bf87a1fa" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="vip-qpid" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-qpid_last_0" operation_key="vip-qpid_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="164:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;164:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="18" rc-code="7" op-status="0" interval="0" last-run="1418999958" last-rc-change="1418999958" exec-time="36" queue-time="0" op-digest="d62959354aa6b47c3f36285361c2d082" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="vip-keystone" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-keystone_last_0" operation_key="vip-keystone_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="165:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;165:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="22" rc-code="7" op-status="0" interval="0" last-run="1418999959" last-rc-change="1418999959" exec-time="36" queue-time="0" op-digest="d69192df0e0d0c91b76e20111eba774e" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="vip-glance" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-glance_last_0" operation_key="vip-glance_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="166:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;166:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="26" rc-code="7" op-status="0" interval="0" last-run="1418999959" last-rc-change="1418999959" exec-time="36" queue-time="0" op-digest="2da6630244d6f2d1f8f44c36b67518a3" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="vip-cinder" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-cinder_last_0" operation_key="vip-cinder_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="167:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;167:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="30" rc-code="7" op-status="0" interval="0" last-run="1418999959" last-rc-change="1418999959" exec-time="35" queue-time="0" op-digest="23848d72333024af7f572044e074b601" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="vip-swift" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-swift_last_0" operation_key="vip-swift_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="168:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;168:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="34" rc-code="7" op-status="0" interval="0" last-run="1418999960" last-rc-change="1418999960" exec-time="35" queue-time="0" op-digest="9ff141249defb61f70df05c7bd9977b3" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="vip-neutron" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-neutron_last_0" operation_key="vip-neutron_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="169:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;169:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="38" rc-code="7" op-status="0" interval="0" last-run="1418999960" last-rc-change="1418999960" exec-time="35" queue-time="0" op-digest="4b17de0bf3cdba285ef2deb5055bb247" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="vip-nova" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-nova_last_0" operation_key="vip-nova_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="170:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;170:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="42" rc-code="7" op-status="0" interval="0" last-run="1418999960" last-rc-change="1418999960" exec-time="36" queue-time="0" op-digest="16dfd9890935251651bd9eae18d4cabb" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="vip-horizon" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-horizon_last_0" operation_key="vip-horizon_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="171:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;171:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="46" rc-code="7" op-status="0" interval="0" last-run="1418999960" last-rc-change="1418999960" exec-time="35" queue-time="0" op-digest="5f7ba67ff81462367b72255342234aff" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="vip-heat" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-heat_last_0" operation_key="vip-heat_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="172:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;172:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="50" rc-code="7" op-status="0" interval="0" last-run="1418999961" last-rc-change="1418999961" exec-time="36" queue-time="0" op-digest="a7e14d3428848000cee2f17c6f6e0d4b" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="vip-ceilometer" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-ceilometer_last_0" operation_key="vip-ceilometer_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="173:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;173:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="54" rc-code="7" op-status="0" interval="0" last-run="1418999961" last-rc-change="1418999961" exec-time="35" queue-time="0" op-digest="e0621f478d714995b7c7207aa3b66f14" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-server" type="rabbitmq-server" class="systemd">
+            <lrm_rsc_op id="rabbitmq-server_last_0" operation_key="rabbitmq-server_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="175:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;175:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="64" rc-code="7" op-status="0" interval="0" last-run="1418999962" last-rc-change="1418999962" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="qpidd" type="qpidd" class="systemd">
+            <lrm_rsc_op id="qpidd_last_0" operation_key="qpidd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="176:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;176:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="69" rc-code="7" op-status="0" interval="0" last-run="1418999962" last-rc-change="1418999962" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="memcached" type="memcached" class="systemd">
+            <lrm_rsc_op id="memcached_last_0" operation_key="memcached_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="177:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;177:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="74" rc-code="7" op-status="0" interval="0" last-run="1418999963" last-rc-change="1418999963" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="mongodb" type="mongod" class="systemd">
+            <lrm_rsc_op id="mongodb_last_0" operation_key="mongodb_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="178:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;178:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="79" rc-code="7" op-status="0" interval="0" last-run="1418999963" last-rc-change="1418999963" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="keystone" type="openstack-keystone" class="systemd">
+            <lrm_rsc_op id="keystone_last_0" operation_key="keystone_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="179:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;179:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="84" rc-code="7" op-status="0" interval="0" last-run="1418999964" last-rc-change="1418999964" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="glance-fs" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="glance-fs_last_0" operation_key="glance-fs_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="180:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;180:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="89" rc-code="7" op-status="0" interval="0" last-run="1418999964" last-rc-change="1418999964" exec-time="80" queue-time="0" op-digest="4ff0fcceab38a3d5886d54ffe7acfc44" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="glance-registry" type="openstack-glance-registry" class="systemd">
+            <lrm_rsc_op id="glance-registry_last_0" operation_key="glance-registry_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="181:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;181:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="94" rc-code="7" op-status="0" interval="0" last-run="1418999964" last-rc-change="1418999964" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="glance-api" type="openstack-glance-api" class="systemd">
+            <lrm_rsc_op id="glance-api_last_0" operation_key="glance-api_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="182:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;182:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="99" rc-code="7" op-status="0" interval="0" last-run="1418999965" last-rc-change="1418999965" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="cinder-api" type="openstack-cinder-api" class="systemd">
+            <lrm_rsc_op id="cinder-api_last_0" operation_key="cinder-api_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="183:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;183:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="104" rc-code="7" op-status="0" interval="0" last-run="1418999965" last-rc-change="1418999965" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="cinder-scheduler" type="openstack-cinder-scheduler" class="systemd">
+            <lrm_rsc_op id="cinder-scheduler_last_0" operation_key="cinder-scheduler_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="184:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;184:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="109" rc-code="7" op-status="0" interval="0" last-run="1418999966" last-rc-change="1418999966" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="cinder-volume" type="openstack-cinder-volume" class="systemd">
+            <lrm_rsc_op id="cinder-volume_last_0" operation_key="cinder-volume_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="185:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;185:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="114" rc-code="7" op-status="0" interval="0" last-run="1418999966" last-rc-change="1418999966" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="swift-fs" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="swift-fs_last_0" operation_key="swift-fs_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="186:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;186:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="119" rc-code="7" op-status="0" interval="0" last-run="1418999966" last-rc-change="1418999966" exec-time="39" queue-time="0" op-digest="56a72ba33ffa927a833adeb9c5bba0d8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="swift-account" type="openstack-swift-account" class="systemd">
+            <lrm_rsc_op id="swift-account_last_0" operation_key="swift-account_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="187:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;187:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="124" rc-code="7" op-status="0" interval="0" last-run="1418999967" last-rc-change="1418999967" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="swift-container" type="openstack-swift-container" class="systemd">
+            <lrm_rsc_op id="swift-container_last_0" operation_key="swift-container_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="188:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;188:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="129" rc-code="7" op-status="0" interval="0" last-run="1418999967" last-rc-change="1418999967" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="swift-object" type="openstack-swift-object" class="systemd">
+            <lrm_rsc_op id="swift-object_last_0" operation_key="swift-object_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="189:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;189:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="134" rc-code="7" op-status="0" interval="0" last-run="1418999968" last-rc-change="1418999968" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="swift-proxy" type="openstack-swift-proxy" class="systemd">
+            <lrm_rsc_op id="swift-proxy_last_0" operation_key="swift-proxy_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="190:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;190:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="139" rc-code="7" op-status="0" interval="0" last-run="1418999968" last-rc-change="1418999968" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="swift-object-expirer" type="openstack-swift-object-expirer" class="systemd">
+            <lrm_rsc_op id="swift-object-expirer_last_0" operation_key="swift-object-expirer_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="191:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;191:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="143" rc-code="7" op-status="0" interval="0" last-run="1418999968" last-rc-change="1418999968" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-server" type="neutron-server" class="systemd">
+            <lrm_rsc_op id="neutron-server_last_0" operation_key="neutron-server_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="192:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;192:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="148" rc-code="7" op-status="0" interval="0" last-run="1418999969" last-rc-change="1418999969" exec-time="19" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-scale:0" type="NeutronScale" class="ocf" provider="neutron">
+            <lrm_rsc_op id="neutron-scale:0_last_0" operation_key="neutron-scale:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="193:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;193:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="152" rc-code="7" op-status="0" interval="0" last-run="1418999969" last-rc-change="1418999969" exec-time="21" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3" op-force-restart=" hostbasename " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-scale:1" type="NeutronScale" class="ocf" provider="neutron">
+            <lrm_rsc_op id="neutron-scale:1_last_0" operation_key="neutron-scale:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="194:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;194:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="156" rc-code="7" op-status="0" interval="0" last-run="1418999969" last-rc-change="1418999969" exec-time="12" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3" op-force-restart=" hostbasename " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-scale:2" type="NeutronScale" class="ocf" provider="neutron">
+            <lrm_rsc_op id="neutron-scale:2_last_0" operation_key="neutron-scale:2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="195:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;195:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="160" rc-code="7" op-status="0" interval="0" last-run="1418999970" last-rc-change="1418999970" exec-time="12" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3" op-force-restart=" hostbasename " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-ovs-cleanup" type="OVSCleanup" class="ocf" provider="neutron">
+            <lrm_rsc_op id="neutron-ovs-cleanup_last_0" operation_key="neutron-ovs-cleanup_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="196:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;196:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="165" rc-code="7" op-status="0" interval="0" last-run="1418999970" last-rc-change="1418999970" exec-time="28" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-netns-cleanup" type="NetnsCleanup" class="ocf" provider="neutron">
+            <lrm_rsc_op id="neutron-netns-cleanup_last_0" operation_key="neutron-netns-cleanup_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="197:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;197:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="170" rc-code="7" op-status="0" interval="0" last-run="1418999970" last-rc-change="1418999970" exec-time="29" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-openvswitch-agent" type="neutron-openvswitch-agent" class="systemd">
+            <lrm_rsc_op id="neutron-openvswitch-agent_last_0" operation_key="neutron-openvswitch-agent_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="198:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;198:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="175" rc-code="7" op-status="0" interval="0" last-run="1418999971" last-rc-change="1418999971" exec-time="15" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-dhcp-agent" type="neutron-dhcp-agent" class="systemd">
+            <lrm_rsc_op id="neutron-dhcp-agent_last_0" operation_key="neutron-dhcp-agent_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="199:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;199:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="180" rc-code="7" op-status="0" interval="0" last-run="1418999971" last-rc-change="1418999971" exec-time="8" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-l3-agent" type="neutron-l3-agent" class="systemd">
+            <lrm_rsc_op id="neutron-l3-agent_last_0" operation_key="neutron-l3-agent_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="200:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;200:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="185" rc-code="7" op-status="0" interval="0" last-run="1418999972" last-rc-change="1418999972" exec-time="8" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-metadata-agent" type="neutron-metadata-agent" class="systemd">
+            <lrm_rsc_op id="neutron-metadata-agent_last_0" operation_key="neutron-metadata-agent_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="201:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;201:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="190" rc-code="7" op-status="0" interval="0" last-run="1418999972" last-rc-change="1418999972" exec-time="10" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="nova-consoleauth" type="openstack-nova-consoleauth" class="systemd">
+            <lrm_rsc_op id="nova-consoleauth_last_0" operation_key="nova-consoleauth_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="202:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;202:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="195" rc-code="7" op-status="0" interval="0" last-run="1418999972" last-rc-change="1418999972" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="nova-novncproxy" type="openstack-nova-novncproxy" class="systemd">
+            <lrm_rsc_op id="nova-novncproxy_last_0" operation_key="nova-novncproxy_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="203:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;203:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="200" rc-code="7" op-status="0" interval="0" last-run="1418999973" last-rc-change="1418999973" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="nova-api" type="openstack-nova-api" class="systemd">
+            <lrm_rsc_op id="nova-api_last_0" operation_key="nova-api_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="204:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;204:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="205" rc-code="7" op-status="0" interval="0" last-run="1418999973" last-rc-change="1418999973" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="nova-scheduler" type="openstack-nova-scheduler" class="systemd">
+            <lrm_rsc_op id="nova-scheduler_last_0" operation_key="nova-scheduler_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="205:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;205:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="210" rc-code="7" op-status="0" interval="0" last-run="1418999974" last-rc-change="1418999974" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="nova-conductor" type="openstack-nova-conductor" class="systemd">
+            <lrm_rsc_op id="nova-conductor_last_0" operation_key="nova-conductor_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="206:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;206:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="215" rc-code="7" op-status="0" interval="0" last-run="1418999974" last-rc-change="1418999974" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="ceilometer-central" type="openstack-ceilometer-central" class="systemd">
+            <lrm_rsc_op id="ceilometer-central_last_0" operation_key="ceilometer-central_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="207:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;207:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="219" rc-code="7" op-status="0" interval="0" last-run="1418999974" last-rc-change="1418999974" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="ceilometer-collector" type="openstack-ceilometer-collector" class="systemd">
+            <lrm_rsc_op id="ceilometer-collector_last_0" operation_key="ceilometer-collector_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="208:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;208:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="224" rc-code="7" op-status="0" interval="0" last-run="1418999975" last-rc-change="1418999975" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="ceilometer-api" type="openstack-ceilometer-api" class="systemd">
+            <lrm_rsc_op id="ceilometer-api_last_0" operation_key="ceilometer-api_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="209:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;209:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="229" rc-code="7" op-status="0" interval="0" last-run="1418999975" last-rc-change="1418999975" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="ceilometer-alarm-evaluator" type="openstack-ceilometer-alarm-evaluator" class="systemd">
+            <lrm_rsc_op id="ceilometer-alarm-evaluator_last_0" operation_key="ceilometer-alarm-evaluator_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="211:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;211:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="239" rc-code="7" op-status="0" interval="0" last-run="1418999976" last-rc-change="1418999976" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="ceilometer-alarm-notifier" type="openstack-ceilometer-alarm-notifier" class="systemd">
+            <lrm_rsc_op id="ceilometer-alarm-notifier_last_0" operation_key="ceilometer-alarm-notifier_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="212:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;212:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="244" rc-code="7" op-status="0" interval="0" last-run="1418999976" last-rc-change="1418999976" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="ceilometer-notification" type="openstack-ceilometer-notification" class="systemd">
+            <lrm_rsc_op id="ceilometer-notification_last_0" operation_key="ceilometer-notification_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="213:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;213:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="249" rc-code="7" op-status="0" interval="0" last-run="1418999977" last-rc-change="1418999977" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="heat-api" type="openstack-heat-api" class="systemd">
+            <lrm_rsc_op id="heat-api_last_0" operation_key="heat-api_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="214:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;214:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="254" rc-code="7" op-status="0" interval="0" last-run="1418999977" last-rc-change="1418999977" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="heat-api-cfn" type="openstack-heat-api-cfn" class="systemd">
+            <lrm_rsc_op id="heat-api-cfn_last_0" operation_key="heat-api-cfn_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="215:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;215:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="259" rc-code="7" op-status="0" interval="0" last-run="1418999978" last-rc-change="1418999978" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="heat-api-cloudwatch" type="openstack-heat-api-cloudwatch" class="systemd">
+            <lrm_rsc_op id="heat-api-cloudwatch_last_0" operation_key="heat-api-cloudwatch_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="216:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;216:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="264" rc-code="7" op-status="0" interval="0" last-run="1418999978" last-rc-change="1418999978" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="heat-engine" type="openstack-heat-engine" class="systemd">
+            <lrm_rsc_op id="heat-engine_last_0" operation_key="heat-engine_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="217:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;217:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="268" rc-code="7" op-status="0" interval="0" last-run="1418999978" last-rc-change="1418999978" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="horizon" type="apache" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="horizon_last_0" operation_key="horizon_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="218:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;218:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="273" rc-code="7" op-status="0" interval="0" last-run="1418999979" last-rc-change="1418999979" exec-time="34" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-openvswitch-agent-compute" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="neutron-openvswitch-agent-compute_last_0" operation_key="neutron-openvswitch-agent-compute_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="699:21:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:0;699:21:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="295" rc-code="0" op-status="0" interval="0" last-run="1418999986" last-rc-change="1418999986" exec-time="13" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="neutron-openvswitch-agent-compute_monitor_10000" operation_key="neutron-openvswitch-agent-compute_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="639:22:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:0;639:22:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="296" rc-code="0" op-status="0" interval="10000" last-rc-change="1418999986" exec-time="41" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="libvirtd-compute" type="libvirtd" class="systemd">
+            <lrm_rsc_op id="libvirtd-compute_last_0" operation_key="libvirtd-compute_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="648:22:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:0;648:22:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="297" rc-code="0" op-status="0" interval="0" last-run="1418999988" last-rc-change="1418999988" exec-time="2" queue-time="2001" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+            <lrm_rsc_op id="libvirtd-compute_monitor_60000" operation_key="libvirtd-compute_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="649:22:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:0;649:22:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="298" rc-code="0" op-status="0" interval="60000" last-rc-change="1418999988" exec-time="2" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="ceilometer-compute" type="openstack-ceilometer-compute" class="systemd">
+            <lrm_rsc_op id="ceilometer-compute_last_0" operation_key="ceilometer-compute_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="658:22:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:0;658:22:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="299" rc-code="0" op-status="0" interval="0" last-run="1418999990" last-rc-change="1418999990" exec-time="2" queue-time="2001" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+            <lrm_rsc_op id="ceilometer-compute_monitor_60000" operation_key="ceilometer-compute_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="659:22:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:0;659:22:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="300" rc-code="0" op-status="0" interval="60000" last-rc-change="1418999990" exec-time="2" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="nova-compute" type="openstack-nova-compute" class="systemd">
+            <lrm_rsc_op id="nova-compute_last_0" operation_key="nova-compute_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="668:55:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:0;668:55:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="445" rc-code="0" op-status="0" interval="0" last-run="1419007680" last-rc-change="1419007680" exec-time="1" queue-time="2002" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhos6-node3"/>
+            <lrm_rsc_op id="nova-compute_monitor_60000" operation_key="nova-compute_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="669:55:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:0;669:55:0:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="446" rc-code="0" op-status="0" interval="60000" last-rc-change="1419007681" exec-time="2" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="ceilometer-delay" type="Delay" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ceilometer-delay_last_0" operation_key="ceilometer-delay_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="210:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;210:21:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="234" rc-code="7" op-status="0" interval="0" last-run="1418999976" last-rc-change="1418999976" exec-time="10024" queue-time="0" op-digest="ad19c7364a8662d5d94488a98ccc4fda" on_node="rhos6-node3"/>
+          </lrm_resource>
+          <lrm_resource id="galera" type="galera" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera_last_0" operation_key="galera_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="116:44:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" transition-magic="0:7;116:44:7:1f9a2e6c-6163-4380-a2e0-b47bd7a56a3a" call-id="343" rc-code="7" op-status="0" interval="0" last-run="1419001727" last-rc-change="1419001727" exec-time="54" queue-time="0" op-digest="a357a4e08e165ea819421e864e21c1cf" on_node="rhos6-node3"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="mrg-04">
+        <instance_attributes id="status-mrg-04">
+          <nvpair id="status-mrg-04-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
