@@ -301,6 +301,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 {
     int sent;
     xmlNode *cmd = NULL;
+    const char *watchdog = NULL;
 
     if (rc != pcmk_ok) {
         crm_err("Cant retrieve the CIB: %s (call %d)", pcmk_strerror(rc), call_id);
@@ -338,7 +339,11 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     crm_xml_add(output, XML_ATTR_DC_UUID, fsa_our_uuid);
     crm_xml_add_int(output, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
-    force_local_option(output, XML_ATTR_HAVE_WATCHDOG, daemon_option("watchdog"));
+
+    watchdog = daemon_option("watchdog");
+    if (watchdog) {
+        force_local_option(output, XML_ATTR_HAVE_WATCHDOG, watchdog);
+    }
 
     if (ever_had_quorum && crm_have_quorum == FALSE) {
         crm_xml_add_int(output, XML_ATTR_QUORUM_PANIC, 1);
