@@ -1636,6 +1636,7 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
 
         if (action->node == NULL ||
             is_remote_node(action->node) == FALSE ||
+            action->node->details->remote_rsc == NULL ||
             action->rsc == NULL ||
             is_set(action->flags, pe_action_pseudo)) {
             continue;
