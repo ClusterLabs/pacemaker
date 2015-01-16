@@ -116,8 +116,9 @@ most cases the cluster will overwrite any values specified by the
 admin with the "correct" ones.  To change the +admin_epoch+, for
 example, one would use:
 
-[source,C]
+----
 # cibadmin --modify --crm_xml '<cib admin_epoch="42"/>'
+----
 
 A complete set of fields will look something like this:
 
@@ -334,36 +335,42 @@ Cluster options can be queried and modified using the
 `crm_attribute` tool.  To get the current
 value of +cluster-delay+, simply use:
 
-[source,C]
+----
 # crm_attribute --attr-name cluster-delay --get-value
+----
 
 which is more simply written as
 
-[source,C]
+----
 # crm_attribute --get-value -n cluster-delay
+----
 
 If a value is found, you'll see a result like this:
 
-[source,C]
+----
 # crm_attribute --get-value -n cluster-delay
  name=cluster-delay value=60s
+----
 
 However, if no value is found, the tool will display an error:
 
-[source,C]
+----
 # crm_attribute --get-value -n clusta-deway`
 name=clusta-deway value=(null)
 Error performing operation: The object/attribute does not exist
+----
 
 To use a different value, eg. +30+, simply run:
 
-[source,C]
+----
 # crm_attribute --attr-name cluster-delay --attr-value 30s
+----
 
 To go back to the cluster's default value you can delete the value, for example with this command:
 
-[source,C]
+----
 # crm_attribute --attr-name cluster-delay --delete-attr
+----
 
 == When Options are Listed More Than Once ==
 
@@ -371,7 +378,6 @@ If you ever see something like the following, it means that the option you're mo
 
 .Deleting an option that is listed twice
 =======
-[source,C]
 ------
 # crm_attribute --attr-name batch-limit --delete-attr
 

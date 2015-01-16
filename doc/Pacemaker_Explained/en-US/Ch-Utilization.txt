@@ -118,8 +118,9 @@ on the remaining nodes.
 
 
 Set `placement-strategy` with `crm_attribute`:
-[source,C]
+----
 # crm_attribute --attr-name placement-strategy --attr-value balanced
+----
 
 Now Pacemaker will ensure the load from your resources will be distributed
 evenly throughout the cluster - without the need for convoluted sets of
