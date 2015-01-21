@@ -105,8 +105,9 @@ indexterm:[Cluster Type,Asymmetrical Opt-In]
 To create an opt-in cluster, start by preventing resources from
 running anywhere by default:
 
-[source,C]
+----
 # crm_attribute --attr-name symmetric-cluster --attr-value false
+----
 
 Then start enabling nodes.  The following fragment says that the web
 server prefers +sles-1+, the database prefers +sles-2+ and both can
@@ -132,8 +133,9 @@ indexterm:[Cluster Type,Symmetrical Opt-Out]
 To create an opt-out cluster, start by allowing resources to run
 anywhere by default:
 
-[source,C]
+----
 # crm_attribute --attr-name symmetric-cluster --attr-value true
+----
 
 Then start disabling nodes.  The following fragment is the equivalent
 of the above opt-in configuration.

@@ -79,7 +79,6 @@ environment. Simply configure +bindnetaddr+ and +mcastaddr+ with their
 IPv6 equivalents, eg.
 
 .Example options for an IPv6 environment
-[source,Bash]
 -------
   bindnetaddr: fec0::1:a800:4ff:fe00:20
   mcastaddr: ff05::1
@@ -115,5 +114,6 @@ run Pacemaker.
 Add the following to a functional _ha.cf_ configuration file and restart Heartbeat:
 
 .Configuration fragment for enabling Pacemaker under Heartbeat
-[source,Bash]
+----
 crm respawn
+----

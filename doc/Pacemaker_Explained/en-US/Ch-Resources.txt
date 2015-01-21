@@ -242,8 +242,9 @@ where to find that script and what standards it conforms to.
 
 Resource definitions can be queried with the `crm_resource` tool. For example
 
-[source,C]
+----
 # crm_resource --resource Email --query-xml
+----
 
 might produce:
 
@@ -394,7 +395,6 @@ indexterm:[Resource,Option,multiple-active]
 
 If you performed the following commands on the previous LSB Email resource
 
-[source,C]
 -------
 # crm_resource --meta --resource Email --set-parameter priority --property-value 100
 # crm_resource --meta --resource Email --set-parameter multiple-active --property-value block
@@ -421,8 +421,9 @@ the resulting resource definition would be
 To set a default value for a resource option, simply add it to the
 +rsc_defaults+ section with `crm_attribute`. Thus,
 
-[source,C]
+----
 # crm_attribute --type rsc_defaults --attr-name is-managed --attr-value false
+----
 
 would prevent the cluster from starting or stopping any of the
 resources in the configuration (unless of course the individual
@@ -438,8 +439,9 @@ of a service they control.
 If your resource agent supports parameters, you can add them with the
 `crm_resource` command. For instance
 
-[source,C]
+----
 # crm_resource --resource Public-IP --set-parameter ip --property-value 1.2.3.4
+----
 
 would create an entry in the resource like this:
 
@@ -465,7 +467,6 @@ attributes, their purpose and default values.
 
 .Displaying the metadata for the Dummy resource agent template
 =====
-[source,C]
 -------
 # export OCF_ROOT=/usr/lib/ocf
 # $OCF_ROOT/resource.d/pacemaker/Dummy meta-data
@@ -612,8 +613,9 @@ enabled and +block+ otherwise. All other operations default to +restart+.
 To set a default value for a operation option, simply add it to the
 +op_defaults+ section with `crm_attribute`. Thus,
 
-[source,C]
+----
 # crm_attribute --type op_defaults --attr-name timeout --attr-value 20s
+----
 
 would default each operation's +timeout+ to 20 seconds.  If an
 operation's definition also includes a value for +timeout+, then that
@@ -709,7 +711,8 @@ operation's definition.
 
 This can be achieved from the command-line by executing
 
-[source,C]
+----
 # cibadmin -M -X '<op id="public-ip-check" enabled="false"/>'
+----
 
 Once you've done whatever you needed to do, you can then re-enable it with

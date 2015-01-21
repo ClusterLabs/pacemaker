@@ -205,13 +205,11 @@ grant the ticket to another desired site.
 Use the `crm_ticket` command line tool to grant and revoke tickets. 
 
 To grant a ticket to this site:
-[source,C]
 -------
 # crm_ticket --ticket ticketA --grant
 -------
 
 To revoke a ticket from this site:
-[source,C]
 -------
 # crm_ticket --ticket ticketA --revoke
 -------
@@ -313,19 +311,16 @@ time synchronization is not required between the individual cluster sites.
 === General Management of Tickets ===
 
 Display the information of tickets:
-[source,C]
 -------
 # crm_ticket --info
 -------
 
 Or you can monitor them with:
-[source,C]
 -------
 # crm_mon --tickets
 -------
 
 Display the rsc_ticket constraints that apply to a ticket:
-[source,C]
 -------
 # crm_ticket --ticket ticketA --constraints
 -------
@@ -337,7 +332,6 @@ resources could not be gracefully stopped/demoted, and even, other
 unrelated resources could be impacted. 
 
 The proper way is making the ticket `standby` first with:
-[source,C]
 -------
 # crm_ticket --ticket ticketA --standby
 -------
@@ -347,7 +341,6 @@ triggering the loss-policies.
 
 If you have finished the maintenance and want to activate the ticket again,
 you can run:
-[source,C]
 -------
 # crm_ticket --ticket ticketA --activate
 -------

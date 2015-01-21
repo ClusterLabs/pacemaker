@@ -46,9 +46,10 @@ for connections, and +someguy+ is a member of the +hacluster+ group,
 then the following would prompt for +someguy+'s password and return
 the cluster's current configuration:
 
-[source,C]
+----
 # export CIB_port=1234; export CIB_server=c001n01; export CIB_user=someguy;
 # cibadmin -Q
+----
 
 For security reasons, the cluster does not listen for remote
 connections by default.  If you wish to allow remote access, you need
@@ -128,8 +129,9 @@ Instead one can set a special node attribute which tells the cluster
 query and set it, called `crm_standby`.  To check the standby status
 of the current machine, simply run:
 
-[source,C]
+----
 # crm_standby --get-value
+----
 
 A value of +true+ indicates that the node is _NOT_ able to host any
 resources, while a value of +false+ says that it _CAN_.
@@ -137,14 +139,16 @@ resources, while a value of +false+ says that it _CAN_.
 You can also check the status of other nodes in the cluster by
 specifying the `--node-uname` option:
 
-[source,C]
+----
 # crm_standby --get-value --node-uname sles-2
+----
 
 To change the current node's standby status, use `--attr-value`
 instead of `--get-value`.
 
-[source,C]
+----
 # crm_standby --attr-value
+----
 
 Again, you can change another host's value by supplying a host name with `--node-uname`.
 
@@ -155,8 +159,9 @@ modifies the extra constraints for you.  If +Email+ was running on
 +sles-1+ and you wanted it moved to a specific location, the command
 would look something like:
         
-[source,C]
+----
 # crm_resource -M -r Email -H sles-2
+----
 
 Behind the scenes, the tool will create the following location constraint:
 
@@ -166,31 +171,35 @@ Behind the scenes, the tool will create the following location constraint:
 It is important to note that subsequent invocations of `crm_resource
 -M` are not cumulative. So, if you ran these commands
 
-[source,C]
+----
 # crm_resource -M -r Email -H sles-2
 # crm_resource -M -r Email -H sles-3
+----
 
 then it is as if you had never performed the first command.
 
 To allow the resource to move back again, use:
 
-[source,C]
+----
 # crm_resource -U -r Email
+----
 
 Note the use of the word _allow_.  The resource can move back to its
 original location but, depending on +resource-stickiness+, it might
 stay where it is.  To be absolutely certain that it moves back to
 +sles-1+, move it there before issuing the call to `crm_resource -U`:
         
-[source,C]
+----
 # crm_resource -M -r Email -H sles-1
 # crm_resource -U -r Email
+----
 
 Alternatively, if you only care that the resource should be moved from
 its current location, try
 
-[source,C]
+----
 # crm_resource -M -r Email`
+----
 
 Which will instead create a negative constraint, like
 
