@@ -1,117 +1,79 @@
 = Cluster Options =
 
-== Special Options ==
+== CIB Properties ==
 
-The reason for these fields to be placed at the top level instead of
-with the rest of cluster options is simply a matter of parsing.  These
-options are used by the configuration database which is, by design,
-mostly ignorant of the content it holds.  So the decision was made to
-place them in an easy to find location.
+Certain settings are defined by CIB properties (that is, attributes of the
++cib+ tag) rather than with the rest of the cluster configuration in the
++configuration+ section.
 
-== Configuration Version ==
+The reason is simply a matter of parsing. These options are used by the
+configuration database which is, by design, mostly ignorant of the content it
+holds.  So the decision was made to place them in an easy-to-find location.
 
-indexterm:[Configuration Version,Cluster]
-indexterm:[Cluster,Option,Configuration Version]
-
-When a node joins the cluster, the cluster will perform a check to see
-who has the best configuration based on the fields below.  It then
-asks the node with the highest (+admin_epoch+, +epoch+, +num_updates+)
-tuple to replace the configuration on all the nodes - which makes
-setting them, and setting them correctly, very important.
-
-.Configuration Version Properties
+.CIB Properties
 [width="95%",cols="2m,5<",options="header",align="center"]
 |=========================================================
 |Field |Description
 
 | admin_epoch |
+indexterm:[Configuration Version,Cluster]
+indexterm:[Cluster,Option,Configuration Version]
 indexterm:[admin_epoch,Cluster Option]
 indexterm:[Cluster,Option,admin_epoch]
-Never modified by the cluster. Use this to make the configurations on
-any inactive nodes obsolete.
-
-_Never set this value to zero_, in such cases the cluster cannot tell
-the difference between your configuration and the "empty" one used
-when nothing is found on disk.
+When a node joins the cluster, the cluster performs a check to see
+which node has the best configuration. It asks the node with the highest
+(+admin_epoch+, +epoch+, +num_updates+) tuple to replace the configuration on
+all the nodes -- which makes setting them, and setting them correctly, very
+important. +admin_epoch+ is never modified by the cluster; you can use this
+to make the configurations on any inactive nodes obsolete. _Never set this
+value to zero_. In such cases, the cluster cannot tell the difference between
+your configuration and the "empty" one used when nothing is found on disk.
 
 | epoch |
 indexterm:[epoch,Cluster Option]
 indexterm:[Cluster,Option,epoch]
-Incremented every time the configuration is updated (usually by the admin)
+The cluster increments this every time the configuration is updated (usually by
+the administrator).
 
 | num_updates |
 indexterm:[num_updates,Cluster Option]
 indexterm:[Cluster,Option,num_updates]
-Incremented every time the configuration or status is updated (usually by the cluster)
-
-|=========================================================
-
-== Other Fields ==
-.Properties Controlling Validation
-[width="95%",cols="2m,5<",options="header",align="center"]
-|=========================================================
-|Field |Description
+The cluster increments this every time the configuration or status is updated
+(usually by the cluster) and resets it to 0 when epoch changes.
 
 | validate-with |
 indexterm:[validate-with,Cluster Option]
 indexterm:[Cluster,Option,validate-with]
-Determines the type of validation being done on the configuration.  If
-set to "none", the cluster will not verify that updates conform to the
+Determines the type of XML validation that will be done on the configuration.
+If set to +none+, the cluster will not verify that updates conform to the
 DTD (nor reject ones that don't). This option can be useful when
-operating a mixed version cluster during an upgrade.
-
-|=========================================================
-
-== Fields Maintained by the Cluster ==
-
-.Properties Maintained by the Cluster
-[width="95%",cols="2m,5<",options="header",align="center"]
-|=========================================================
-|Field |Description
+operating a mixed-version cluster during an upgrade.
 
 |cib-last-written |
 indexterm:[cib-last-written,Cluster Property]
 indexterm:[Cluster,Property,cib-last-written]
-Indicates when the configuration was last written to disk. Informational purposes only.
+Indicates when the configuration was last written to disk. Maintained by the
+cluster; for informational purposes only.
+
+|have-quorum |
+indexterm:[have-quorum,Cluster Property]
+indexterm:[Cluster,Property,have-quorum]
+Indicates if the cluster has quorum. If false, this may mean that the
+cluster cannot start resources or fence other nodes (see
++no-quorum-policy+ below). Maintained by the cluster.
 
 |dc-uuid |
 indexterm:[dc-uuid,Cluster Property]
 indexterm:[Cluster,Property,dc-uuid]
 Indicates which cluster node is the current leader. Used by the
 cluster when placing resources and determining the order of some
-events.
-
-|have-quorum |
-indexterm:[have-quorum,Cluster Property]
-indexterm:[Cluster,Property,have-quorum]
-Indicates if the cluster has quorum. If false, this may mean that the
-cluster cannot start resources or fence other nodes. See
-+no-quorum-policy+ below.
-
-| dc-version |
-indexterm:[dc-version,Cluster Property]
-indexterm:[Cluster,Property,dc-version]
-Version of Pacemaker on the cluster's DC.
-
-Often includes the hash which identifies the exact Git changeset it
-was built from.  Used for diagnostic purposes.
-
-| cluster-infrastructure |
-indexterm:[cluster-infrastructure,Cluster Property]
-indexterm:[Cluster,Property,cluster-infrastructure]
-The messaging stack on which Pacemaker is currently running.
-Used for informational and diagnostic purposes.
-
-| expected-quorum-votes |
-indexterm:[expected-quorum-votes,Cluster Property]
-indexterm:[Cluster,Property,expected-quorum-votes]
-The number of nodes expected to be in the cluster
-
-Used to calculate quorum in Corosync 1.x (not CMAN) based clusters.
+events. Maintained by the cluster.
 
 |=========================================================
 
-Note that although these fields can be written to by the admin, in
+=== Working with CIB Properties ===
+
+Although these fields can be written to by the user, in
 most cases the cluster will overwrite any values specified by the
 admin with the "correct" ones.  To change the +admin_epoch+, for
 example, one would use:
@@ -120,15 +82,16 @@ example, one would use:
 # cibadmin --modify --crm_xml '<cib admin_epoch="42"/>'
 ----
 
-A complete set of fields will look something like this:
+A complete set of CIB properties will look something like this:
 
-.An example of the fields set for a cib object
+.Attributes set for a cib object
 ======
 [source,XML]
 -------
-<cib have-quorum="true" validate-with="pacemaker-1.0"
-  admin_epoch="1" epoch="12" num_updates="65"
-  dc-uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee">
+<cib crm_feature_set="3.0.7" validate-with="pacemaker-1.2" 
+   admin_epoch="42" epoch="116" num_updates="1"
+   cib-last-written="Mon Jan 12 15:46:39 2015" update-origin="rhel7-1"
+   update-client="crm_attribute" have-quorum="1" dc-uuid="1">
 -------
 ======
 
@@ -137,82 +100,78 @@ A complete set of fields will look something like this:
 Cluster options, as you might expect, control how the cluster behaves
 when confronted with certain situations.
 
-They are grouped into sets and, in advanced configurations, there may
-be more than one.
-footnote:[This will be described later in the section on
-<<ch-rules>> where we will show how to have the cluster use
-different sets of options during working hours (when downtime is
-usually to be avoided at all costs) than it does during the weekends
-(when resources can be moved to the their preferred hosts without
-bothering end users)]
-For now we will describe the simple case where each option is present at most once.
+They are grouped into sets within the +crm_config+ section, and, in advanced
+configurations, there may be more than one set. (This will be described later
+in the section on <<ch-rules>> where we will show how to have the cluster use
+different sets of options during working hours than during weekends.) For now,
+we will describe the simple case where each option is present at most once.
 
-== Available Cluster Options ==
+You can obtain an up-to-date list of cluster options, including
+their default values, by running the `man pengine` and `man crmd` commands.
+
 .Cluster Options
-[width="95%",cols="5m,2,11<",options="header",align="center"]
+[width="95%",cols="5m,2,11<a",options="header",align="center"]
 |=========================================================
 |Option |Default |Description
 
-| batch-limit | 30 |
-indexterm:[batch-limit,Cluster Option]
-indexterm:[Cluster,Option,batch-limit]
-The number of jobs that the TE is allowed to execute in parallel. The
-"correct" value will depend on the speed and load of your network and
-cluster nodes.
+| dc-version | |
+indexterm:[dc-version,Cluster Property]
+indexterm:[Cluster,Property,dc-version]
+Version of Pacemaker on the cluster's DC.
+Determined automatically by the cluster.
+Often includes the hash which identifies the exact Git changeset it was built
+from.  Used for diagnostic purposes.
 
-| migration-limit | -1 (unlimited) |
-indexterm:[migration-limit,Cluster Option]
-indexterm:[Cluster,Option,migration-limit]
-The number of migration jobs that the TE is allowed to execute in
-parallel on a node.
+| cluster-infrastructure | |
+indexterm:[cluster-infrastructure,Cluster Property]
+indexterm:[Cluster,Property,cluster-infrastructure]
+The messaging stack on which Pacemaker is currently running.
+Determined automatically by the cluster.
+Used for informational and diagnostic purposes.
+
+| expected-quorum-votes | |
+indexterm:[expected-quorum-votes,Cluster Property]
+indexterm:[Cluster,Property,expected-quorum-votes]
+The number of nodes expected to be in the cluster.
+Determined automatically by the cluster.
+Used to calculate quorum in clusters that use Corosync 1.x without CMAN
+as the messaging layer.
 
 | no-quorum-policy | stop |
 indexterm:[no-quorum-policy,Cluster Option]
 indexterm:[Cluster,Option,no-quorum-policy]
 What to do when the cluster does not have quorum.  Allowed values:
 
- * ignore - continue all resource management
+* +ignore:+ continue all resource management
+* +freeze:+ continue resource management, but don't recover resources from nodes not in the affected partition
+* +stop:+ stop all resources in the affected cluster partition
+* +suicide:+ fence all nodes in the affected cluster partition
 
- * freeze - continue resource management, but don't recover resources from nodes not in the affected partition
+| batch-limit | 30 |
+indexterm:[batch-limit,Cluster Option]
+indexterm:[Cluster,Option,batch-limit]
+The number of jobs that the Transition Engine (TE) is allowed to execute in
+parallel. The TE is the logic in pacemaker's CRMd that executes the actions
+determined by the Policy Engine (PE). The "correct" value will depend on the
+speed and load of your network and cluster nodes.
 
- * stop - stop all resources in the affected cluster partition
-
- * suicide - fence all nodes in the affected cluster partition
+| migration-limit | -1 |
+indexterm:[migration-limit,Cluster Option]
+indexterm:[Cluster,Option,migration-limit]
+The number of migration jobs that the TE is allowed to execute in
+parallel on a node. A value of -1 means unlimited.
 
 | symmetric-cluster | TRUE |
 indexterm:[symmetric-cluster,Cluster Option]
 indexterm:[Cluster,Option,symmetric-cluster]
 Can all resources run on any node by default?
 
-| stonith-enabled | TRUE |
-indexterm:[stonith-enabled,Cluster Option]
-indexterm:[Cluster,Option,stonith-enabled]
-Should failed nodes and nodes with resources that can't be stopped be
-shot? If you value your data, set up a STONITH device and enable this.
-
-If true, or unset, the cluster will refuse to start resources unless
-one or more STONITH resources have been configured also.
-
-| stonith-action | reboot |
-indexterm:[stonith-action,Cluster Option]
-indexterm:[Cluster,Option,stonith-action]
-Action to send to STONITH device. Allowed values: reboot, off.
-The value 'poweroff' is also allowed, but is only used for
-legacy devices.
-
-| cluster-delay | 60s |
-indexterm:[cluster-delay,Cluster Option]
-indexterm:[Cluster,Option,cluster-delay]
-Round trip delay over the network (excluding action execution). The
-"correct" value will depend on the speed and load of your network and
-cluster nodes.
-
 | stop-all-resources | FALSE |
 indexterm:[stop-all-resources,Cluster Option]
 indexterm:[Cluster,Option,stop-all-resources]
-Should the cluster stop all resources
+Should the cluster stop all resources?
 
-| resources-orphan-resources | TRUE |
+| stop-orphan-resources | TRUE |
 indexterm:[stop-orphan-resources,Cluster Option]
 indexterm:[Cluster,Option,stop-orphan-resources]
 Should deleted resources be stopped?
@@ -225,48 +184,50 @@ Should deleted actions be cancelled?
 | start-failure-is-fatal | TRUE |
 indexterm:[start-failure-is-fatal,Cluster Option]
 indexterm:[Cluster,Option,start-failure-is-fatal]
-When set to FALSE, the cluster will instead use the resource's
-+failcount+ and value for +resource-failure-stickiness+.
+Should a failure to start be treated as fatal for a resource?
+If FALSE, the cluster will instead use the resource's
++failcount+ and value for +migration-threshold+ (see <<s-failure-migration>>).
 
-| pe-error-series-max | -1 (all) |
-indexterm:[pe-error-series-max,Cluster Option]
-indexterm:[Cluster,Option,pe-error-series-max]
-The number of PE inputs resulting in ERRORs to save. Used when reporting problems.
-
-| pe-warn-series-max | -1 (all) |
-indexterm:[pe-warn-series-max,Cluster Option]
-indexterm:[Cluster,Option,pe-warn-series-max]
-The number of PE inputs resulting in WARNINGs to save. Used when reporting problems.
-
-| pe-input-series-max | -1 (all) |
-indexterm:[pe-input-series-max,Cluster Option]
-indexterm:[Cluster,Option,pe-input-series-max]
-The number of "normal" PE inputs to save. Used when reporting problems.
-
-|default-resource-stickiness  | 0 |
-indexterm:[default-resource-stickiness,Cluster Option]
-indexterm:[Cluster,Option,default-resource-stickiness]
-+Deprecated:+ See <<s-resource-defaults>> instead
-
-| is-managed-default | TRUE |
-indexterm:[is-managed-default,Cluster Option]
-indexterm:[Cluster,Option,is-managed-default]
-+Deprecated:+ See <<s-resource-defaults>> instead
+| enable-startup-probes | TRUE |
+indexterm:[enable-startup-probes,Cluster Option]
+indexterm:[Cluster,Option,enable-startup-probes]
+Should the cluster check for active resources during startup?
 
 | maintenance-mode | FALSE |
 indexterm:[maintenance-mode,Cluster Option]
 indexterm:[Cluster,Option,maintenance-mode]
-Should the cluster monitor resources and start/stop them as required
+Should the cluster refrain from monitoring, starting and stopping resources?
+
+| stonith-enabled | TRUE |
+indexterm:[stonith-enabled,Cluster Option]
+indexterm:[Cluster,Option,stonith-enabled]
+Should failed nodes and nodes with resources that can't be stopped be
+shot? If you value your data, set up a STONITH device and enable this.
+
+If true, or unset, the cluster will refuse to start resources unless
+one or more STONITH resources have been configured.
+
+| stonith-action | reboot |
+indexterm:[stonith-action,Cluster Option]
+indexterm:[Cluster,Option,stonith-action]
+Action to send to STONITH device. Allowed values are +reboot+ and +off+.
+The value +poweroff+ is also allowed, but is only used for
+legacy devices.
 
 | stonith-timeout | 60s |
 indexterm:[stonith-timeout,Cluster Option]
 indexterm:[Cluster,Option,stonith-timeout]
-How long to wait for the STONITH action to complete
+How long to wait for STONITH actions to complete
 
-| default-action-timeout | 20s |
-indexterm:[default-action-timeout,Cluster Option]
-indexterm:[Cluster,Option,default-action-timeout]
-+Deprecated:+ See <<s-operation-defaults>> instead
+| cluster-delay | 60s |
+indexterm:[cluster-delay,Cluster Option]
+indexterm:[Cluster,Option,cluster-delay]
+Estimated maximum round-trip delay over the network (excluding action
+execution). If the TE requires an action to be executed on another node,
+it will consider the action failed if it does not get a response
+from the other node in this time (after considering the action's
+own timeout). The "correct" value will depend on the speed and load of your
+network and cluster nodes.
 
 | dc-deadtime | 20s |
 indexterm:[dc-deadtime,Cluster Option]
@@ -278,51 +239,94 @@ The "correct" value will depend on the speed/load of your network and the type o
 | cluster-recheck-interval | 15min |
 indexterm:[cluster-recheck-interval,Cluster Option]
 indexterm:[Cluster,Option,cluster-recheck-interval]
-Polling interval for time based changes to options, resource parameters and constraints.
+Polling interval for time-based changes to options, resource parameters and constraints.
 
-The Cluster is primarily event driven, however the configuration can have elements that change based on time. To ensure these changes take effect, we can optionally poll the cluster's status for changes.
+The Cluster is primarily event-driven, but your configuration can have
+elements that take effect based on the time of day. To ensure these changes
+take effect, we can optionally poll the cluster's status for changes. A value
+of 0 disables polling. Positive values are an interval (in seconds unless other
+SI units are specified, e.g. 5min).
 
-Allowed values: Zero disables polling. Positive values are an interval in seconds (unless other SI units are specified. eg. 5min)
+| pe-error-series-max | -1 |
+indexterm:[pe-error-series-max,Cluster Option]
+indexterm:[Cluster,Option,pe-error-series-max]
+The number of PE inputs resulting in ERRORs to save. Used when reporting problems.
+A value of -1 means unlimited (report all).
+
+| pe-warn-series-max | -1 |
+indexterm:[pe-warn-series-max,Cluster Option]
+indexterm:[Cluster,Option,pe-warn-series-max]
+The number of PE inputs resulting in WARNINGs to save. Used when reporting problems.
+A value of -1 means unlimited (report all).
+
+| pe-input-series-max | -1 |
+indexterm:[pe-input-series-max,Cluster Option]
+indexterm:[Cluster,Option,pe-input-series-max]
+The number of "normal" PE inputs to save. Used when reporting problems.
+A value of -1 means unlimited (report all).
+
+| remove-after-stop | FALSE |
+indexterm:[remove-after-stop,Cluster Option]
+indexterm:[Cluster,Option,remove-after-stop]
+_Advanced Use Only:_ Should the cluster remove resources from the LRM after
+they are stopped? Values other than the default are, at best, poorly tested and
+potentially dangerous.
+
+| startup-fencing | TRUE |
+indexterm:[startup-fencing,Cluster Option]
+indexterm:[Cluster,Option,startup-fencing]
+_Advanced Use Only:_ Should the cluster shoot unseen nodes?
+Not using the default is very unsafe!
 
 | election-timeout | 2min |
 indexterm:[election-timeout,Cluster Option]
 indexterm:[Cluster,Option,election-timeout]
-+Advanced Use Only+
-
-If need to adjust this value, it probably indicates the presence of a bug.
+_Advanced Use Only:_ If you need to adjust this value, it probably indicates
+the presence of a bug.
 
 | shutdown-escalation | 20min |
 indexterm:[shutdown-escalation,Cluster Option]
 indexterm:[Cluster,Option,shutdown-escalation]
-+Advanced Use Only+
-
-If need to adjust this value, it probably indicates the presence of a bug.
+_Advanced Use Only:_ If you need to adjust this value, it probably indicates
+the presence of a bug.
 
 | crmd-integration-timeout | 3min |
 indexterm:[crmd-integration-timeout,Cluster Option]
 indexterm:[Cluster,Option,crmd-integration-timeout]
-+Advanced Use Only+
-
-If need to adjust this value, it probably indicates the presence of a bug.
+_Advanced Use Only:_ If you need to adjust this value, it probably indicates
+the presence of a bug.
 
 | crmd-finalization-timeout | 30min |
 indexterm:[crmd-finalization-timeout,Cluster Option]
 indexterm:[Cluster,Option,crmd-finalization-timeout]
-+Advanced Use Only+
+_Advanced Use Only:_ If you need to adjust this value, it probably indicates
+the presence of a bug.
 
-If need to adjust this value, it probably indicates the presence of a bug.
-
-| crmd-transition-delay |  |
+| crmd-transition-delay | 0s |
 indexterm:[crmd-transition-delay,Cluster Option]
 indexterm:[Cluster,Option,crmd-transition-delay]
-+Advanced Use Only+ Enabling this option will slow down cluster recovery under all conditions.
+_Advanced Use Only:_ Delay cluster recovery for the configured interval to
+allow for additional/related events to occur. Useful if your configuration is
+sensitive to the order in which ping updates arrive.
+Enabling this option will slow down cluster recovery under
+all conditions.
 
-Delay cluster recovery for the configured interval to allow for additional/related events to occur. Useful if your configuration is sensitive to the order in which ping updates arrive.
+|default-resource-stickiness  | 0 |
+indexterm:[default-resource-stickiness,Cluster Option]
+indexterm:[Cluster,Option,default-resource-stickiness]
+_Deprecated:_ See <<s-resource-defaults>> instead
+
+| is-managed-default | TRUE |
+indexterm:[is-managed-default,Cluster Option]
+indexterm:[Cluster,Option,is-managed-default]
+_Deprecated:_ See <<s-resource-defaults>> instead
+
+| default-action-timeout | 20s |
+indexterm:[default-action-timeout,Cluster Option]
+indexterm:[Cluster,Option,default-action-timeout]
+_Deprecated:_ See <<s-operation-defaults>> instead
 
 |=========================================================
-
-You can always obtain an up-to-date list of cluster options, including
-their default values, by running the `man pengine` and `man crmd` commands.
 
 == Querying and Setting Cluster Options ==
 

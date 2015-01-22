@@ -76,8 +76,8 @@ can be revisited if it becomes a significant limitation for people.
 
 ===========
 
-.Properties of Fencing Devices
-[width="95%",cols="1m,1m,1m,5<",options="header",align="center"]
+.Properties of Fencing Resources
+[width="95%",cols="5m,2,3,10<a",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -88,166 +88,206 @@ can be revisited if it becomes a significant limitation for people.
 |stonith-timeout
 |time
 |60s
-|How long to wait for the STONITH action to complete per a stonith device.
- Overrides the stonith-timeout cluster property
+|How long to wait for a STONITH action using this device to complete.
+ Overrides the +stonith-timeout+ cluster property.
  indexterm:[stonith-timeout,Fencing]
  indexterm:[Fencing,Property,stonith-timeout]
 
 |priority
 |integer
 |0
-|The priority of the stonith resource. Devices are tried in order of highest priority to lowest.
+|The priority of the STONITH resource. Devices are tried in order of highest priority to lowest.
  indexterm:[priority,Fencing]
  indexterm:[Fencing,Property,priority]
-
-|pcmk_host_argument
-|string
-|port
-|Advanced use only: An alternate parameter to supply instead of 'port'
- Some devices do not support the standard 'port' parameter or may provide additional ones. Use this to specify an alternate, device-specific, parameter that should indicate the machine to be fenced. A value of 'none' can be used to tell the cluster not to supply any additional parameters.
- indexterm:[pcmk_host_argument,Fencing]
- indexterm:[Fencing,Property,pcmk_host_argument]
 
 |pcmk_host_map
 |string
 |
 |A mapping of host names to ports numbers for devices that do not support host names.
- Eg. node1:1;node2:2,3 would tell the cluster to use port 1 for node1 and ports 2 and 3 for node2
+ Example: +node1:1;node2:2,3+ tells the cluster to use port 1 for
+ *node1* and ports 2 and 3 for *node2*.
  indexterm:[pcmk_host_map,Fencing]
  indexterm:[Fencing,Property,pcmk_host_map]
 
 |pcmk_host_list
 |string
 |
-|A list of machines controlled by this device (Optional unless pcmk_host_check=static-list).
+|A list of machines controlled by this device (optional unless
++pcmk_host_check+ is +static-list+).
  indexterm:[pcmk_host_list,Fencing]
  indexterm:[Fencing,Property,pcmk_host_list]
 
 |pcmk_host_check
 |string
 |dynamic-list
-|How to determin which machines are controlled by the device.
- Allowed values: dynamic-list (query the device), static-list (check the pcmk_host_list attribute), none (assume every device can fence every machine)
- indexterm:[pcmk_host_check,Fencing]
- indexterm:[Fencing,Property,pcmk_host_check]
+|How to determine which machines are controlled by the device.
+ Allowed values:
+
+* +dynamic-list:+ query the device
+* +static-list:+ check the +pcmk_host_list+ attribute
+* +none:+ assume every device can fence every machine
+
+indexterm:[pcmk_host_check,Fencing]
+indexterm:[Fencing,Property,pcmk_host_check]
+
+|pcmk_host_argument
+|string
+|port
+|'Advanced use only.' Which parameter should be supplied to the resource agent
+to identify the node to be fenced. Some devices do not support the standard
++port+ parameter or may provide additional ones. Use this to specify an
+alternate, device-specific parameter. A value of +none+ tells the
+cluster not to supply any additional parameters.
+ indexterm:[pcmk_host_argument,Fencing]
+ indexterm:[Fencing,Property,pcmk_host_argument]
 
 |pcmk_reboot_action
 |string
 |reboot
-|Advanced use only: An alternate command to run instead of 'reboot'
- Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the 'reboot' action.
+|'Advanced use only.' The command to send to the resource agent in order to
+reboot a node. Some devices do not support the standard commands or may provide
+additional ones. Use this to specify an alternate, device-specific command.
  indexterm:[pcmk_reboot_action,Fencing]
  indexterm:[Fencing,Property,pcmk_reboot_action]
 
 |pcmk_reboot_timeout
 |time
 |60s
-|Advanced use only: Specify an alternate timeout to use for reboot actions instead of stonith-timeout
- Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'reboot' actions.
+|'Advanced use only.' Specify an alternate timeout to use for `reboot` actions
+instead of the value of +stonith-timeout+. Some devices need much more or less
+time to complete than normal. Use this to specify an alternate, device-specific
+timeout.
  indexterm:[pcmk_reboot_timeout,Fencing]
  indexterm:[Fencing,Property,pcmk_reboot_timeout]
 
 |pcmk_reboot_retries
 |integer
 |2
-|Advanced use only: The maximum number of times to retry the 'reboot' command within the timeout period
- Some devices do not support multiple connections. Operations may 'fail' if the device is busy with another task so Pacemaker will automatically retry the operation, if there is time remaining. Use this option to alter the number of times Pacemaker retries 'reboot' actions before giving up.
+|'Advanced use only.' The maximum number of times to retry the `reboot` command
+within the timeout period. Some devices do not support multiple connections, and
+operations may fail if the device is busy with another task, so Pacemaker will
+automatically retry the operation, if there is time remaining. Use this option
+to alter the number of times Pacemaker retries before giving up.
  indexterm:[pcmk_reboot_retries,Fencing]
  indexterm:[Fencing,Property,pcmk_reboot_retries]
 
 |pcmk_off_action
 |string
 |off
-|Advanced use only: An alternate command to run instead of 'off'
- Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the 'off' action.
+|'Advanced use only.' The command to send to the resource agent in order to
+shut down a node. Some devices do not support the standard commands or may provide
+additional ones. Use this to specify an alternate, device-specific command.
  indexterm:[pcmk_off_action,Fencing]
  indexterm:[Fencing,Property,pcmk_off_action]
 
 |pcmk_off_timeout
 |time
 |60s
-|Advanced use only: Specify an alternate timeout to use for off actions instead of stonith-timeout
- Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'off' actions.
+|'Advanced use only.' Specify an alternate timeout to use for `off` actions
+instead of the value of +stonith-timeout+. Some devices need much more or less
+time to complete than normal. Use this to specify an alternate, device-specific
+timeout.
  indexterm:[pcmk_off_timeout,Fencing]
  indexterm:[Fencing,Property,pcmk_off_timeout]
 
 |pcmk_off_retries
 |integer
 |2
-|Advanced use only: The maximum number of times to retry the 'off' command within the timeout period
- Some devices do not support multiple connections. Operations may 'fail' if the device is busy with another task so Pacemaker will automatically retry the operation, if there is time remaining. Use this option to alter the number of times Pacemaker retries 'off' actions before giving up.
+|'Advanced use only.' The maximum number of times to retry the `off` command
+within the timeout period. Some devices do not support multiple connections, and
+operations may fail if the device is busy with another task, so Pacemaker will
+automatically retry the operation, if there is time remaining. Use this option
+to alter the number of times Pacemaker retries before giving up.
  indexterm:[pcmk_off_retries,Fencing]
  indexterm:[Fencing,Property,pcmk_off_retries]
 
 |pcmk_list_action
 |string
 |list
-|Advanced use only: An alternate command to run instead of 'list'
- Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the 'list' action.
+|'Advanced use only.' The command to send to the resource agent in order to
+list nodes. Some devices do not support the standard commands or may provide
+additional ones. Use this to specify an alternate, device-specific command.
  indexterm:[pcmk_list_action,Fencing]
  indexterm:[Fencing,Property,pcmk_list_action]
 
 |pcmk_list_timeout
 |time
 |60s
-|Advanced use only: Specify an alternate timeout to use for list actions instead of stonith-timeout
- Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'list' actions.
+|'Advanced use only.' Specify an alternate timeout to use for `list` actions
+instead of the value of +stonith-timeout+. Some devices need much more or less
+time to complete than normal. Use this to specify an alternate, device-specific
+timeout.
  indexterm:[pcmk_list_timeout,Fencing]
  indexterm:[Fencing,Property,pcmk_list_timeout]
 
 |pcmk_list_retries
 |integer
 |2
-|Advanced use only: The maximum number of times to retry the 'list' command within the timeout period
- Some devices do not support multiple connections. Operations may 'fail' if the device is busy with another task so Pacemaker will automatically retry the operation, if there is time remaining. Use this option to alter the number of times Pacemaker retries 'list' actions before giving up.
+|'Advanced use only.' The maximum number of times to retry the `list` command
+within the timeout period. Some devices do not support multiple connections, and
+operations may fail if the device is busy with another task, so Pacemaker will
+automatically retry the operation, if there is time remaining. Use this option
+to alter the number of times Pacemaker retries before giving up.
  indexterm:[pcmk_list_retries,Fencing]
  indexterm:[Fencing,Property,pcmk_list_retries]
 
 |pcmk_monitor_action
 |string
 |monitor
-|Advanced use only: An alternate command to run instead of 'monitor'
- Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the 'monitor' action.
+|'Advanced use only.' The command to send to the resource agent in order to
+report extended status. Some devices do not support the standard commands or may provide
+additional ones. Use this to specify an alternate, device-specific command.
  indexterm:[pcmk_monitor_action,Fencing]
  indexterm:[Fencing,Property,pcmk_monitor_action]
 
 |pcmk_monitor_timeout
 |time
 |60s
-|Advanced use only: Specify an alternate timeout to use for monitor actions instead of stonith-timeout
- Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'monitor' actions.
+|'Advanced use only.' Specify an alternate timeout to use for `monitor` actions
+instead of the value of +stonith-timeout+. Some devices need much more or less
+time to complete than normal. Use this to specify an alternate, device-specific
+timeout.
  indexterm:[pcmk_monitor_timeout,Fencing]
  indexterm:[Fencing,Property,pcmk_monitor_timeout]
 
 |pcmk_monitor_retries
 |integer
 |2
-|Advanced use only: The maximum number of times to retry the 'monitor' command within the timeout period
- Some devices do not support multiple connections. Operations may 'fail' if the device is busy with another task so Pacemaker will automatically retry the operation, if there is time remaining. Use this option to alter the number of times Pacemaker retries 'monitor' actions before giving up.
+|'Advanced use only.' The maximum number of times to retry the `monitor` command
+within the timeout period. Some devices do not support multiple connections, and
+operations may fail if the device is busy with another task, so Pacemaker will
+automatically retry the operation, if there is time remaining. Use this option
+to alter the number of times Pacemaker retries before giving up.
  indexterm:[pcmk_monitor_retries,Fencing]
  indexterm:[Fencing,Property,pcmk_monitor_retries]
 
 |pcmk_status_action
 |string
 |status
-|Advanced use only: An alternate command to run instead of 'status'
- Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the 'status' action.
+|'Advanced use only.' The command to send to the resource agent in order to
+report status. Some devices do not support the standard commands or may provide
+additional ones. Use this to specify an alternate, device-specific command.
  indexterm:[pcmk_status_action,Fencing]
  indexterm:[Fencing,Property,pcmk_status_action]
 
 |pcmk_status_timeout
 |time
 |60s
-|Advanced use only: Specify an alternate timeout to use for status actions instead of stonith-timeout
- Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'status' actions.
+|'Advanced use only.' Specify an alternate timeout to use for `status` actions
+instead of the value of +stonith-timeout+. Some devices need much more or less
+time to complete than normal. Use this to specify an alternate, device-specific
+timeout.
  indexterm:[pcmk_status_timeout,Fencing]
  indexterm:[Fencing,Property,pcmk_status_timeout]
 
 |pcmk_status_retries
 |integer
 |2
-|Advanced use only: The maximum number of times to retry the 'status' command within the timeout period
- Some devices do not support multiple connections. Operations may 'fail' if the device is busy with another task so Pacemaker will automatically retry the operation, if there is time remaining. Use this option to alter the number of times Pacemaker retries 'status' actions before giving up.
+|'Advanced use only.' The maximum number of times to retry the `status` command
+within the timeout period. Some devices do not support multiple connections, and
+operations may fail if the device is busy with another task, so Pacemaker will
+automatically retry the operation, if there is time remaining. Use this option
+to alter the number of times Pacemaker retries before giving up.
  indexterm:[pcmk_status_retries,Fencing]
  indexterm:[Fencing,Property,pcmk_status_retries]
 

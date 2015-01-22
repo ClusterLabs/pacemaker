@@ -32,11 +32,11 @@ resources can run on.  One way is to say that by default they can run
 anywhere and then create location constraints for nodes that are not
 allowed.  The other option is to have nodes "opt-in"...  to start with
 nothing able to run anywhere and selectively enable allowed nodes.
-      
-=== Options ===
 
-.Options for Simple Location Constraints
-[width="95%",cols="2m,1,5<",options="header",align="center"]
+=== Location Properties ===
+
+.Properties for Simple Location Constraints
+[width="95%",cols="2m,1,5<a",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -64,34 +64,31 @@ indexterm:[Constraints,Location,node]
 |score
 |
 |Positive values indicate the resource should run on this
- node. Negative values indicate the resource should not run on this
- node.
+ node. Negative values indicate the resource should not run on this node.
 
- Values of \+/- +INFINITY+ change "should"/"should not" to
- "must"/"must not".
+Values of \+/- +INFINITY+ change "should"/"should not" to "must"/"must not".
 indexterm:[score,Location Constraints]
 indexterm:[Constraints,Location,score]
 
 |resource-discovery
-|+always+
-|Indicates whether or not Pacemaker should perform resource discovery
+|always
+|Whether Pacemaker should perform resource discovery
 on this node for the specified resource. Limiting resource discovery to
 a subset of nodes the resource is physically capable of running on
-can significantly boost performance when a large set of nodes are preset.
-When pacemaker_remote is in use to expand the node count into the 100s of
+can significantly boost performance when a large set of nodes are present.
+When pacemaker_remote is in use to expand the node count into the hundreds of
 nodes range, this option should be considered.
 
-* 'always' - Always perform resource discovery for the specified resource on this node.
-
-* 'never' - Never perform resource discovery for the specified resource on this node.
-  This option should generally be used with a -INFINITY score. Although that is not strictly
+* +always:+ Always perform resource discovery for the specified resource on this node.
+* +never:+ Never perform resource discovery for the specified resource on this node.
+  This option should generally be used with a -INFINITY score, although that is not strictly
   required.
-
-* 'exclusive' - Only perform resource discovery for the specified resource on this node. Multiple
-  location constraints using 'exclusive' discovery for the same resource across different nodes
-  creates a subset of nodes resource-discovery is exclusive to. If a resource is marked
-  for 'exclusive' discovery on one or more nodes, that resource is only allowed to be placed
-  within that subset of nodes.
+* +exclusive:+ Perform resource discovery for the specified resource only on
+  this node (and other nodes similarly marked as exclusive). Multiple location
+  constraints using 'exclusive' discovery for the same resource across
+  different nodes creates a subset of nodes resource-discovery is exclusive to.
+  If a resource is marked for 'exclusive' discovery on one or more nodes, that
+  resource is only allowed to be placed within that subset of nodes.
 
 indexterm:[Resource Discovery,Location Constraints]
 indexterm:[Constraints,Location,Resource Discovery]
@@ -197,47 +194,56 @@ indexterm:[Ordering Constraints]
 The way to specify the order in which resources should start is by
 creating +rsc_order+ constraints.
 
+=== Ordering Properties ===
+
 .Properties of an Ordering Constraint
-[width="95%",cols="2m,5<",options="header",align="center"]
+[width="95%",cols="1m,1,4<a",options="header",align="center"]
 |=========================================================
-            
+
 |Field
+|Default
 |Description
 
 |id
+|
 |A unique name for the constraint
 indexterm:[id,Ordering Constraints]
 indexterm:[Constraints,Ordering,id]
 
 |first
+|
 |The name of a resource that must be started before the +then+
  resource is allowed to.
 indexterm:[first,Ordering Constraints]
 indexterm:[Constraints,Ordering,first]
 
 |then
+|
 |The name of a resource. This resource will start after the +first+ resource.
 indexterm:[then,Ordering Constraints]
 indexterm:[Constraints,Ordering,then]
 
 |kind
-|How to enforce the constraint. ('Since 1.1.2')
+|
+|How to enforce the constraint. Allowed values:
 
-* Optional - Just a suggestion.  Only applies if both resources are
-  starting/stopping.
-
-* Mandatory - Always.  If 'first' is stopping or cannot be started,
-  'then' must be stopped.
-
-* Serialize - Ensure that no two stop/start actions occur concurrently
-  for a set of resources.
+* +optional:+ Just a suggestion. Only applies if both resources are
+  starting/stopping. Any change in state by the +first+ resource will have no
+  effect on the +then+ resource.
+* +mandatory:+ Always. If 'first' is stopping or cannot be started,
+  'then' must be stopped. If 'first' is restarted, 'then' (if running)
+  will be stopped beforehand and started afterward.
+* +serialize:+ Ensure that no two stop/start actions occur concurrently
+  for the resources. 'First' and 'then' can start in either order,
+  but one must complete starting before the other can be started. A typical use
+  case is when resource start-up puts a high load on the host.
 
 indexterm:[kind,Ordering Constraints]
 indexterm:[Constraints,Ordering,kind]
 
 |symmetrical
-|If true, which is the default, stop the resources in the reverse
- order. Default value: _true_
+|TRUE
+|If true, stop the resources in the reverse order.
 indexterm:[symmetrical,Ordering Constraints]
 indexterm:[Ordering Constraints,symmetrical]
 
@@ -293,7 +299,7 @@ deciding which node to choose for B.
 For a detailed look at exactly how this occurs, see
 http://clusterlabs.org/doc/Colocation_Explained.pdf[Colocation Explained].
 
-=== Options ===
+=== Colocation Properties ===
 
 .Properties of a Colocation Constraint
 [width="95%",cols="2m,5<",options="header",align="center"]
@@ -308,22 +314,20 @@ indexterm:[id,Colocation Constraints]
 indexterm:[Constraints,Colocation,id]
 
 |rsc
-|The colocation source. If the constraint cannot be satisfied, the
- cluster may decide not to allow the resource to run at all.
+|The name of a resource that should be located relative to +with-rsc+.
 indexterm:[rsc,Colocation Constraints]
 indexterm:[Constraints,Colocation,rsc]
 
 |with-rsc
-|The colocation target. The cluster will decide where to put this
- resource first and then decide where to put the resource in the +rsc+
- field.
+|The name of the resource used as the colocation target. The cluster will
+decide where to put this resource first and then decide where to put +rsc+.
  indexterm:[with-rsc,Colocation Constraints]
  indexterm:[Constraints,Colocation,with-rsc]
 
 |score
-|Positive values indicate the resource should run on the same
- node. Negative values indicate the resources should not run on the
- same node. Values of \+/- +INFINITY+ change "should" to "must".
+|Positive values indicate the resources should run on the same
+ node. Negative values indicate the resources should run on
+ different nodes. Values of \+/- +INFINITY+ change "should" to "must".
  indexterm:[score,Colocation Constraints]
  indexterm:[Constraints,Colocation,score]
 

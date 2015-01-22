@@ -12,31 +12,37 @@ variables and runs the same commands as when working on a cluster
 node.
 
 .Environment Variables Used to Connect to Remote Instances of the CIB
-[width="95%",cols="1m,2<",options="header",align="center"]
+[width="95%",cols="1m,1,3<",options="header",align="center"]
 |=========================================================
 
 |Environment Variable
+|Default
 |Description
 
 |CIB_user
+|$USER
 |The user to connect as. Needs to be part of the +hacluster+ group on
- the target host. Defaults to _$USER_.
+ the target host.
  indexterm:[Environment Variable,CIB_user]
 
 |CIB_passwd
+|
 |The user's password. Read from the command line if unset.
  indexterm:[Environment Variable,CIB_passwd]
 
 |CIB_server
-|The host to contact. Defaults to _localhost_.
+|localhost
+|The host to contact
  indexterm:[Environment Variable,CIB_server]
 
 |CIB_port
+|
 |The port on which to contact the server; required.
  indexterm:[Environment Variable,CIB_port]
 
 |CIB_encrypted
-|Encrypt network traffic; defaults to _true_.
+|TRUE
+|Whether to encrypt network traffic
  indexterm:[Environment Variable,CIB_encrypted]
 
 |=========================================================
@@ -57,20 +63,23 @@ to set the +remote-tls-port+ (encrypted) or +remote-clear-port+
 (unencrypted) top-level options (ie., those kept in the cib tag, like
 +num_updates+ and +epoch+).
 
-.Extra top-level CIB options for remote access
-[width="95%",cols="1m,2<",options="header",align="center"]
+.Extra top-level CIB properties for remote access
+[width="95%",cols="1m,1,3<",options="header",align="center"]
 |=========================================================
 
 |Field
+|Default
 |Description
 
 |remote-tls-port
-|Listen for encrypted remote connections on this port. Default: _none_
+|_none_
+|Listen for encrypted remote connections on this port.
  indexterm:[remote-tls-port,Remote Connection Option]
  indexterm:[Remote Connection,Option,remote-tls-port]
 
 |remote-clear-port
-|Listen for plaintext remote connections on this port. Default: _none_
+|_none_
+|Listen for plaintext remote connections on this port.
  indexterm:[remote-clear-port,Remote Connection Option]
  indexterm:[Remote Connection,Option,remote-clear-port]
 
