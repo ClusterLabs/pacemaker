@@ -296,115 +296,141 @@ Scratch+ for those details.
 
 === Example ===
 
-Assuming we have an chassis containing four nodes and an IPMI device
-active on 10.0.0.1, then we would chose the fence_ipmilan driver in step
-2 and obtain the following list of parameters
+Assume we have an chassis containing four nodes and an IPMI device
+active on 192.0.2.1. We would choose the `fence_ipmilan` driver,
+and obtain the following list of parameters:
 
 .Obtaining a list of STONITH Parameters
-
+====
 ----
 # stonith_admin --metadata -a fence_ipmilan
 ----
 
 [source,XML]
 ----
-<?xml version="1.0" ?>
 <resource-agent name="fence_ipmilan" shortdesc="Fence agent for IPMI over LAN">
-<longdesc>
-fence_ipmilan is an I/O Fencing agent which can be used with machines controlled by IPMI. This agent calls support software using ipmitool (http://ipmitool.sf.net/).
-
-To use fence_ipmilan with HP iLO 3 you have to enable lanplus option (lanplus / -P) and increase wait after operation to 4 seconds (power_wait=4 / -T 4)</longdesc>
-<parameters>
-        <parameter name="auth" unique="1">
-                <getopt mixed="-A" />
-                <content type="string" />
-                <shortdesc lang="en">IPMI Lan Auth type (md5, password, or none)</shortdesc>
-        </parameter>
-        <parameter name="ipaddr" unique="1">
-                <getopt mixed="-a" />
-                <content type="string" />
-                <shortdesc lang="en">IPMI Lan IP to talk to</shortdesc>
-        </parameter>
-        <parameter name="passwd" unique="1">
-                <getopt mixed="-p" />
-                <content type="string" />
-                <shortdesc lang="en">Password (if required) to control power on IPMI device</shortdesc>
-        </parameter>
-        <parameter name="passwd_script" unique="1">
-                <getopt mixed="-S" />
-                <content type="string" />
-                <shortdesc lang="en">Script to retrieve password (if required)</shortdesc>
-        </parameter>
-        <parameter name="lanplus" unique="1">
-                <getopt mixed="-P" />
-                <content type="boolean" />
-                <shortdesc lang="en">Use Lanplus</shortdesc>
-        </parameter>
-        <parameter name="login" unique="1">
-                <getopt mixed="-l" />
-                <content type="string" />
-                <shortdesc lang="en">Username/Login (if required) to control power on IPMI device</shortdesc>
-        </parameter>
-        <parameter name="action" unique="1">
-                <getopt mixed="-o" />
-                <content type="string" default="reboot"/>
-                <shortdesc lang="en">Operation to perform. Valid operations: on, off, reboot, status, list, diag, monitor or metadata</shortdesc>
-        </parameter>
-        <parameter name="timeout" unique="1">
-                <getopt mixed="-t" />
-                <content type="string" />
-                <shortdesc lang="en">Timeout (sec) for IPMI operation</shortdesc>
-        </parameter>
-        <parameter name="cipher" unique="1">
-                <getopt mixed="-C" />
-                <content type="string" />
-                <shortdesc lang="en">Ciphersuite to use (same as ipmitool -C parameter)</shortdesc>
-        </parameter>
-        <parameter name="method" unique="1">
-                <getopt mixed="-M" />
-                <content type="string" default="onoff"/>
-                <shortdesc lang="en">Method to fence (onoff or cycle)</shortdesc>
-        </parameter>
-        <parameter name="power_wait" unique="1">
-                <getopt mixed="-T" />
-                <content type="string" default="2"/>
-                <shortdesc lang="en">Wait X seconds after on/off operation</shortdesc>
-        </parameter>
-        <parameter name="delay" unique="1">
-                <getopt mixed="-f" />
-                <content type="string" />
-                <shortdesc lang="en">Wait X seconds before fencing is started</shortdesc>
-        </parameter>
-        <parameter name="verbose" unique="1">
-                <getopt mixed="-v" />
-                <content type="boolean" />
-                <shortdesc lang="en">Verbose mode</shortdesc>
-        </parameter>
-</parameters>
-<actions>
-        <action name="on" />
-        <action name="off" />
-        <action name="reboot" />
-        <action name="status" />
-        <action name="diag" />
-        <action name="list" />
-        <action name="monitor" />
-        <action name="metadata" />
-</actions>
+  <symlink name="fence_ilo3" shortdesc="Fence agent for HP iLO3"/>
+  <symlink name="fence_ilo4" shortdesc="Fence agent for HP iLO4"/>
+  <symlink name="fence_idrac" shortdesc="Fence agent for Dell iDRAC"/>
+  <symlink name="fence_imm" shortdesc="Fence agent for IBM Integrated Management Module"/>
+  <longdesc>
+  </longdesc>
+  <vendor-url>
+  </vendor-url>
+  <parameters>
+    <parameter name="auth" unique="0" required="0">
+      <getopt mixed="-A"/>
+      <content type="string"/>
+      <shortdesc lang="en">
+      </shortdesc>
+    </parameter>
+    <parameter name="ipaddr" unique="0" required="1">
+      <getopt mixed="-a"/>
+      <content type="string"/>
+      <shortdesc lang="en">
+      </shortdesc>
+    </parameter>
+    <parameter name="passwd" unique="0" required="0">
+      <getopt mixed="-p"/>
+      <content type="string"/>
+      <shortdesc lang="en">
+      </shortdesc>
+    </parameter>
+    <parameter name="passwd_script" unique="0" required="0">
+      <getopt mixed="-S"/>
+      <content type="string"/>
+      <shortdesc lang="en">
+      </shortdesc>
+    </parameter>
+    <parameter name="lanplus" unique="0" required="0">
+      <getopt mixed="-P"/>
+      <content type="boolean"/>
+      <shortdesc lang="en">
+      </shortdesc>
+    </parameter>
+    <parameter name="login" unique="0" required="0">
+      <getopt mixed="-l"/>
+      <content type="string"/>
+      <shortdesc lang="en">
+      </shortdesc>
+    </parameter>
+    <parameter name="action" unique="0" required="0">
+      <getopt mixed="-o"/>
+      <content type="string" default="reboot"/>
+      <shortdesc lang="en">
+      </shortdesc>
+    </parameter>
+    <parameter name="timeout" unique="0" required="0">
+      <getopt mixed="-t"/>
+      <content type="string"/>
+      <shortdesc lang="en">
+      </shortdesc>
+    </parameter>
+    <parameter name="cipher" unique="0" required="0">
+      <getopt mixed="-C"/>
+      <content type="string"/>
+      <shortdesc lang="en">
+      </shortdesc>
+    </parameter>
+    <parameter name="method" unique="0" required="0">
+      <getopt mixed="-M"/>
+      <content type="string" default="onoff"/>
+      <shortdesc lang="en">
+      </shortdesc>
+    </parameter>
+    <parameter name="power_wait" unique="0" required="0">
+      <getopt mixed="-T"/>
+      <content type="string" default="2"/>
+      <shortdesc lang="en">
+      </shortdesc>
+    </parameter>
+    <parameter name="delay" unique="0" required="0">
+      <getopt mixed="-f"/>
+      <content type="string"/>
+      <shortdesc lang="en">
+      </shortdesc>
+    </parameter>
+    <parameter name="privlvl" unique="0" required="0">
+      <getopt mixed="-L"/>
+      <content type="string"/>
+      <shortdesc lang="en">
+      </shortdesc>
+    </parameter>
+    <parameter name="verbose" unique="0" required="0">
+      <getopt mixed="-v"/>
+      <content type="boolean"/>
+      <shortdesc lang="en">
+      </shortdesc>
+    </parameter>
+  </parameters>
+  <actions>
+    <action name="on"/>
+    <action name="off"/>
+    <action name="reboot"/>
+    <action name="status"/>
+    <action name="diag"/>
+    <action name="list"/>
+    <action name="monitor"/>
+    <action name="metadata"/>
+    <action name="stop" timeout="20s"/>
+    <action name="start" timeout="20s"/>
+  </actions>
 </resource-agent>
 ----
+====
 
 from which we would create a STONITH resource fragment that might look
 like this:
 
 .Sample STONITH Resource
+====
 [source,XML]
 ----
 <primitive id="Fencing" class="stonith" type="fence_ipmilan" >
   <instance_attributes id="Fencing-params" >
     <nvpair id="Fencing-passwd" name="passwd" value="testuser" />
     <nvpair id="Fencing-login" name="login" value="abc123" />
-    <nvpair id="Fencing-ipaddr" name="ipaddr" value="10.0.0.1" />
+    <nvpair id="Fencing-ipaddr" name="ipaddr" value="192.0.2.1" />
     <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="pcmk-1 pcmk-2" />
   </instance_attributes>
   <operations >
@@ -412,6 +438,7 @@ like this:
   </operations>
 </primitive>
 ----
+====
 
 And finally, since we disabled it earlier, we need to re-enable STONITH.
 
@@ -502,10 +529,12 @@ Some possible uses of topologies include:
 The following example illustrates an advanced use of +fencing-topology+ in a cluster with the following properties:
 
 * 3 nodes (2 active prod-mysql nodes, 1 prod_mysql-rep in standby for quorum purposes)
-* the active nodes have an IPMI-controlled power board reached at 10.10.10.1 and 10.10.10.2
-* the active nodes also have two independant PSUs (Power Supplu Units) connected to two independant PDUs (Power Distribution Unit) reached at 10.20.1.1 (port 10 and port 11) and 10.20.2.1 (port 10 and port 11)
-* the first fencing method uses the +fence_ipmi+ agent
-* the second fencing method uses the +fence_apc_snmp+ agent targetting 2 fencing devices (one per PSU, either port 10 or 11)
+* the active nodes have an IPMI-controlled power board reached at 192.0.2.1 and 192.0.2.2
+* the active nodes also have two independent PSUs (Power Supply Units)
+  connected to two independent PDUs (Power Distribution Units) reached at
+  198.51.100.1 (port 10 and port 11) and 203.0.113.1 (port 10 and port 11)
+* the first fencing method uses the `fence_ipmi` agent
+* the second fencing method uses the `fence_apc_snmp` agent targetting 2 fencing devices (one per PSU, either port 10 or 11)
 * fencing is only implemented for the active nodes and has location constraints
 * fencing topology is set to try IPMI fencing first then default to a "sure-kill" dual PDU fencing
 
@@ -522,28 +551,28 @@ The fence action is considered successful only if both PDUs report the required 
 Each cluster node has it own dedicated IPMI channel that can be called for fencing using the following primitives:
 [source,XML]
 ----
-      <primitive class="stonith" id="fence_prod-mysql1_ipmi" type="fence_ipmilan">
-        <instance_attributes id="fence_prod-mysql1_ipmi-instance_attributes">
-          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-ipaddr" name="ipaddr" value="10.10.10.1"/>
-          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-action" name="action" value="off"/>
-          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-login" name="login" value="fencing"/>
-          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-passwd" name="passwd" value="finishme"/>
-          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-verbose" name="verbose" value="true"/>
-          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql1"/>
-          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-lanplus" name="lanplus" value="true"/>
-        </instance_attributes>
-      </primitive>
-      <primitive class="stonith" id="fence_prod-mysql2_ipmi" type="fence_ipmilan">
-        <instance_attributes id="fence_prod-mysql2_ipmi-instance_attributes">
-          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-ipaddr" name="ipaddr" value="10.10.10.2"/>
-          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-action" name="action" value="off"/>
-          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-login" name="login" value="fencing"/>
-          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-passwd" name="passwd" value="finishme"/>
-          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-verbose" name="verbose" value="true"/>
-          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql2"/>
-          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-lanplus" name="lanplus" value="true"/>
-        </instance_attributes>
-      </primitive>
+<primitive class="stonith" id="fence_prod-mysql1_ipmi" type="fence_ipmilan">
+  <instance_attributes id="fence_prod-mysql1_ipmi-instance_attributes">
+    <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-ipaddr" name="ipaddr" value="192.0.2.1"/>
+    <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-action" name="action" value="off"/>
+    <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-login" name="login" value="fencing"/>
+    <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-passwd" name="passwd" value="finishme"/>
+    <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-verbose" name="verbose" value="true"/>
+    <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql1"/>
+    <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-lanplus" name="lanplus" value="true"/>
+  </instance_attributes>
+</primitive>
+<primitive class="stonith" id="fence_prod-mysql2_ipmi" type="fence_ipmilan">
+  <instance_attributes id="fence_prod-mysql2_ipmi-instance_attributes">
+    <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-ipaddr" name="ipaddr" value="192.0.2.2"/>
+    <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-action" name="action" value="off"/>
+    <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-login" name="login" value="fencing"/>
+    <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-passwd" name="passwd" value="finishme"/>
+    <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-verbose" name="verbose" value="true"/>
+    <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql2"/>
+    <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-lanplus" name="lanplus" value="true"/>
+  </instance_attributes>
+</primitive>
 ----
 
 .Second fencing method: dual PDU devices
@@ -558,47 +587,46 @@ Each cluster node also has two distinct power channels controlled by two distinc
 The matching fencing agents are configured as follows:
 [source,XML]
 ----
-      <primitive class="stonith" id="fence_prod-mysql1_apc1" type="fence_apc_snmp">
-        <instance_attributes id="fence_prod-mysql1_apc1-instance_attributes">
-          <nvpair id="fence_prod-mysql1_apc1-instance_attributes-ipaddr" name="ipaddr" value="10.20.1.1"/>
-          <nvpair id="fence_prod-mysql1_apc1-instance_attributes-action" name="action" value="off"/>
-          <nvpair id="fence_prod-mysql1_apc1-instance_attributes-port" name="port" value="10"/>
-          <nvpair id="fence_prod-mysql1_apc1-instance_attributes-login" name="login" value="fencing"/>
-          <nvpair id="fence_prod-mysql1_apc1-instance_attributes-passwd" name="passwd" value="fencing"/>
-          <nvpair id="fence_prod-mysql1_apc1-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql1"/>
-        </instance_attributes>
-      </primitive>
-      <primitive class="stonith" id="fence_prod-mysql1_apc2" type="fence_apc_snmp">
-        <instance_attributes id="fence_prod-mysql1_apc2-instance_attributes">
-          <nvpair id="fence_prod-mysql1_apc2-instance_attributes-ipaddr" name="ipaddr" value="10.20.2.1"/>
-          <nvpair id="fence_prod-mysql1_apc2-instance_attributes-action" name="action" value="off"/>
-          <nvpair id="fence_prod-mysql1_apc2-instance_attributes-port" name="port" value="10"/>
-          <nvpair id="fence_prod-mysql1_apc2-instance_attributes-login" name="login" value="fencing"/>
-          <nvpair id="fence_prod-mysql1_apc2-instance_attributes-passwd" name="passwd" value="fencing"/>
-          <nvpair id="fence_prod-mysql1_apc2-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql1"/>
-        </instance_attributes>
-      </primitive>
-      <primitive class="stonith" id="fence_prod-mysql2_apc1" type="fence_apc_snmp">
-        <instance_attributes id="fence_prod-mysql2_apc1-instance_attributes">
-          <nvpair id="fence_prod-mysql2_apc1-instance_attributes-ipaddr" name="ipaddr" value="10.20.1.1"/>
-          <nvpair id="fence_prod-mysql2_apc1-instance_attributes-action" name="action" value="off"/>
-          <nvpair id="fence_prod-mysql2_apc1-instance_attributes-port" name="port" value="11"/>
-          <nvpair id="fence_prod-mysql2_apc1-instance_attributes-login" name="login" value="fencing"/>
-          <nvpair id="fence_prod-mysql2_apc1-instance_attributes-passwd" name="passwd" value="fencing"/>
-          <nvpair id="fence_prod-mysql2_apc1-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql2"/>
-        </instance_attributes>
-      </primitive>
-      <primitive class="stonith" id="fence_prod-mysql2_apc2" type="fence_apc_snmp">
-        <instance_attributes id="fence_prod-mysql2_apc2-instance_attributes">
-          <nvpair id="fence_prod-mysql2_apc2-instance_attributes-ipaddr" name="ipaddr" value="10.20.2.1"/>
-          <nvpair id="fence_prod-mysql2_apc2-instance_attributes-action" name="action" value="off"/>
-          <nvpair id="fence_prod-mysql2_apc2-instance_attributes-port" name="port" value="11"/>
-          <nvpair id="fence_prod-mysql2_apc2-instance_attributes-login" name="login" value="fencing"/>
-          <nvpair id="fence_prod-mysql2_apc2-instance_attributes-passwd" name="passwd" value="fencing"/>
-          <nvpair id="fence_prod-mysql2_apc2-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql2"/>
-        </instance_attributes>
-      </primitive>
-
+<primitive class="stonith" id="fence_prod-mysql1_apc1" type="fence_apc_snmp">
+  <instance_attributes id="fence_prod-mysql1_apc1-instance_attributes">
+    <nvpair id="fence_prod-mysql1_apc1-instance_attributes-ipaddr" name="ipaddr" value="198.51.100.1"/>
+    <nvpair id="fence_prod-mysql1_apc1-instance_attributes-action" name="action" value="off"/>
+    <nvpair id="fence_prod-mysql1_apc1-instance_attributes-port" name="port" value="10"/>
+    <nvpair id="fence_prod-mysql1_apc1-instance_attributes-login" name="login" value="fencing"/>
+    <nvpair id="fence_prod-mysql1_apc1-instance_attributes-passwd" name="passwd" value="fencing"/>
+    <nvpair id="fence_prod-mysql1_apc1-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql1"/>
+  </instance_attributes>
+</primitive>
+<primitive class="stonith" id="fence_prod-mysql1_apc2" type="fence_apc_snmp">
+  <instance_attributes id="fence_prod-mysql1_apc2-instance_attributes">
+    <nvpair id="fence_prod-mysql1_apc2-instance_attributes-ipaddr" name="ipaddr" value="203.0.113.1"/>
+    <nvpair id="fence_prod-mysql1_apc2-instance_attributes-action" name="action" value="off"/>
+    <nvpair id="fence_prod-mysql1_apc2-instance_attributes-port" name="port" value="10"/>
+    <nvpair id="fence_prod-mysql1_apc2-instance_attributes-login" name="login" value="fencing"/>
+    <nvpair id="fence_prod-mysql1_apc2-instance_attributes-passwd" name="passwd" value="fencing"/>
+    <nvpair id="fence_prod-mysql1_apc2-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql1"/>
+  </instance_attributes>
+</primitive>
+<primitive class="stonith" id="fence_prod-mysql2_apc1" type="fence_apc_snmp">
+  <instance_attributes id="fence_prod-mysql2_apc1-instance_attributes">
+    <nvpair id="fence_prod-mysql2_apc1-instance_attributes-ipaddr" name="ipaddr" value="198.51.100.1"/>
+    <nvpair id="fence_prod-mysql2_apc1-instance_attributes-action" name="action" value="off"/>
+    <nvpair id="fence_prod-mysql2_apc1-instance_attributes-port" name="port" value="11"/>
+    <nvpair id="fence_prod-mysql2_apc1-instance_attributes-login" name="login" value="fencing"/>
+    <nvpair id="fence_prod-mysql2_apc1-instance_attributes-passwd" name="passwd" value="fencing"/>
+    <nvpair id="fence_prod-mysql2_apc1-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql2"/>
+  </instance_attributes>
+</primitive>
+<primitive class="stonith" id="fence_prod-mysql2_apc2" type="fence_apc_snmp">
+  <instance_attributes id="fence_prod-mysql2_apc2-instance_attributes">
+    <nvpair id="fence_prod-mysql2_apc2-instance_attributes-ipaddr" name="ipaddr" value="203.0.113.1"/>
+    <nvpair id="fence_prod-mysql2_apc2-instance_attributes-action" name="action" value="off"/>
+    <nvpair id="fence_prod-mysql2_apc2-instance_attributes-port" name="port" value="11"/>
+    <nvpair id="fence_prod-mysql2_apc2-instance_attributes-login" name="login" value="fencing"/>
+    <nvpair id="fence_prod-mysql2_apc2-instance_attributes-passwd" name="passwd" value="fencing"/>
+    <nvpair id="fence_prod-mysql2_apc2-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql2"/>
+  </instance_attributes>
+</primitive>
 ----
 
 .Location Constraints 
@@ -658,7 +686,7 @@ Put together, the configuration looks like this:
     <resources>
       <primitive class="stonith" id="fence_prod-mysql1_ipmi" type="fence_ipmilan">
         <instance_attributes id="fence_prod-mysql1_ipmi-instance_attributes">
-          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-ipaddr" name="ipaddr" value="10.10.10.1"/>
+          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-ipaddr" name="ipaddr" value="192.0.2.1"/>
           <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-action" name="action" value="off"/>
           <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-login" name="login" value="fencing"/>
           <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-passwd" name="passwd" value="finishme"/>
@@ -669,7 +697,7 @@ Put together, the configuration looks like this:
       </primitive>
       <primitive class="stonith" id="fence_prod-mysql2_ipmi" type="fence_ipmilan">
         <instance_attributes id="fence_prod-mysql2_ipmi-instance_attributes">
-          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-ipaddr" name="ipaddr" value="10.10.10.2"/>
+          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-ipaddr" name="ipaddr" value="192.0.2.2"/>
           <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-action" name="action" value="off"/>
           <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-login" name="login" value="fencing"/>
           <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-passwd" name="passwd" value="finishme"/>
@@ -680,7 +708,7 @@ Put together, the configuration looks like this:
       </primitive>
       <primitive class="stonith" id="fence_prod-mysql1_apc1" type="fence_apc_snmp">
         <instance_attributes id="fence_prod-mysql1_apc1-instance_attributes">
-          <nvpair id="fence_prod-mysql1_apc1-instance_attributes-ipaddr" name="ipaddr" value="10.20.1.1"/>
+          <nvpair id="fence_prod-mysql1_apc1-instance_attributes-ipaddr" name="ipaddr" value="198.51.100.1"/>
           <nvpair id="fence_prod-mysql1_apc1-instance_attributes-action" name="action" value="off"/>
           <nvpair id="fence_prod-mysql1_apc1-instance_attributes-port" name="port" value="10"/>
           <nvpair id="fence_prod-mysql1_apc1-instance_attributes-login" name="login" value="fencing"/>
@@ -690,7 +718,7 @@ Put together, the configuration looks like this:
       </primitive>
       <primitive class="stonith" id="fence_prod-mysql1_apc2" type="fence_apc_snmp">
         <instance_attributes id="fence_prod-mysql1_apc2-instance_attributes">
-          <nvpair id="fence_prod-mysql1_apc2-instance_attributes-ipaddr" name="ipaddr" value="10.20.2.1"/>
+          <nvpair id="fence_prod-mysql1_apc2-instance_attributes-ipaddr" name="ipaddr" value="203.0.113.1"/>
           <nvpair id="fence_prod-mysql1_apc2-instance_attributes-action" name="action" value="off"/>
           <nvpair id="fence_prod-mysql1_apc2-instance_attributes-port" name="port" value="10"/>
           <nvpair id="fence_prod-mysql1_apc2-instance_attributes-login" name="login" value="fencing"/>
@@ -700,7 +728,7 @@ Put together, the configuration looks like this:
       </primitive>
       <primitive class="stonith" id="fence_prod-mysql2_apc1" type="fence_apc_snmp">
         <instance_attributes id="fence_prod-mysql2_apc1-instance_attributes">
-          <nvpair id="fence_prod-mysql2_apc1-instance_attributes-ipaddr" name="ipaddr" value="10.20.1.1"/>
+          <nvpair id="fence_prod-mysql2_apc1-instance_attributes-ipaddr" name="ipaddr" value="198.51.100.1"/>
           <nvpair id="fence_prod-mysql2_apc1-instance_attributes-action" name="action" value="off"/>
           <nvpair id="fence_prod-mysql2_apc1-instance_attributes-port" name="port" value="11"/>
           <nvpair id="fence_prod-mysql2_apc1-instance_attributes-login" name="login" value="fencing"/>
@@ -710,7 +738,7 @@ Put together, the configuration looks like this:
       </primitive>
       <primitive class="stonith" id="fence_prod-mysql2_apc2" type="fence_apc_snmp">
         <instance_attributes id="fence_prod-mysql2_apc2-instance_attributes">
-          <nvpair id="fence_prod-mysql2_apc2-instance_attributes-ipaddr" name="ipaddr" value="10.20.2.1"/>
+          <nvpair id="fence_prod-mysql2_apc2-instance_attributes-ipaddr" name="ipaddr" value="203.0.113.1"/>
           <nvpair id="fence_prod-mysql2_apc2-instance_attributes-action" name="action" value="off"/>
           <nvpair id="fence_prod-mysql2_apc2-instance_attributes-port" name="port" value="11"/>
           <nvpair id="fence_prod-mysql2_apc2-instance_attributes-login" name="login" value="fencing"/>

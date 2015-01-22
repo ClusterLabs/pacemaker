@@ -18,11 +18,11 @@ of groups.
 <group id="shortcut">
    <primitive id="Public-IP" class="ocf" type="IPaddr" provider="heartbeat">
     <instance_attributes id="params-public-ip">
-       <nvpair id="public-ip-addr" name="ip" value="1.2.3.4"/>
+       <nvpair id="public-ip-addr" name="ip" value="192.0.2.2"/>
     </instance_attributes>
    </primitive>
    <primitive id="Email" class="lsb" type="exim"/>
-  </group> 
+</group> 
 -------
 ======
 
@@ -53,7 +53,7 @@ The group above is logically equivalent to writing:
    <resources>
     <primitive id="Public-IP" class="ocf" type="IPaddr" provider="heartbeat">
      <instance_attributes id="params-public-ip">
-        <nvpair id="public-ip-addr" name="ip" value="1.2.3.4"/>
+        <nvpair id="public-ip-addr" name="ip" value="192.0.2.2"/>
      </instance_attributes>
     </primitive>
     <primitive id="Email" class="lsb" type="exim"/>

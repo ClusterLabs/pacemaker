@@ -336,40 +336,41 @@ Cluster options can be queried and modified using the
 value of +cluster-delay+, simply use:
 
 ----
-# crm_attribute --attr-name cluster-delay --get-value
+# crm_attribute --query --name cluster-delay
 ----
 
 which is more simply written as
 
 ----
-# crm_attribute --get-value -n cluster-delay
+# crm_attribute -G -n cluster-delay
 ----
 
 If a value is found, you'll see a result like this:
 
 ----
-# crm_attribute --get-value -n cluster-delay
- name=cluster-delay value=60s
+# crm_attribute -G -n cluster-delay
+scope=crm_config name=cluster-delay value=60s
 ----
 
 However, if no value is found, the tool will display an error:
 
 ----
-# crm_attribute --get-value -n clusta-deway`
-name=clusta-deway value=(null)
-Error performing operation: The object/attribute does not exist
+# crm_attribute -G -n clusta-deway
+scope=crm_config name=clusta-deway value=(null)
+Error performing operation: No such device or address
 ----
 
 To use a different value, eg. +30+, simply run:
 
 ----
-# crm_attribute --attr-name cluster-delay --attr-value 30s
+# crm_attribute --name cluster-delay --update 30s
 ----
 
 To go back to the cluster's default value you can delete the value, for example with this command:
 
 ----
-# crm_attribute --attr-name cluster-delay --delete-attr
+# crm_attribute --name cluster-delay --delete
+Deleted crm_config option: id=cib-bootstrap-options-cluster-delay name=cluster-delay
 ----
 
 == When Options are Listed More Than Once ==
@@ -379,12 +380,12 @@ If you ever see something like the following, it means that the option you're mo
 .Deleting an option that is listed twice
 =======
 ------
-# crm_attribute --attr-name batch-limit --delete-attr
+# crm_attribute --name batch-limit --delete
 
 Multiple attributes match name=batch-limit in crm_config:
 Value: 50          (set=cib-bootstrap-options, id=cib-bootstrap-options-batch-limit)
 Value: 100         (set=custom, id=custom-batch-limit)
-Please choose from one of the matches above and supply the 'id' with --attr-id
+Please choose from one of the matches above and supply the 'id' with --id
 -------
 =======
 

@@ -106,7 +106,7 @@ To create an opt-in cluster, start by preventing resources from
 running anywhere by default:
 
 ----
-# crm_attribute --attr-name symmetric-cluster --attr-value false
+# crm_attribute --name symmetric-cluster --update false
 ----
 
 Then start enabling nodes.  The following fragment says that the web
@@ -134,7 +134,7 @@ To create an opt-out cluster, start by allowing resources to run
 anywhere by default:
 
 ----
-# crm_attribute --attr-name symmetric-cluster --attr-value true
+# crm_attribute --name symmetric-cluster --update true
 ----
 
 Then start disabling nodes.  The following fragment is the equivalent
@@ -243,40 +243,27 @@ indexterm:[Ordering Constraints,symmetrical]
 
 |=========================================================
 
-=== Mandatory Ordering ===
+=== Optional and mandatory ordering ===
 
-When the +then+ resource cannot run without the +first+ resource being
-active, one should use mandatory constraints.  To specify a constraint
-is mandatory, use scores greater than zero.  This will ensure that the
-then resource will react when the first resource changes state.
+Here is an example of ordering constraints where +Database+ 'must' start before
++Webserver+, and +IP+ 'should' start before +Webserver+ if they both need to be
+started:
 
-* If the +first+ resource was running and is stopped, the +then+
-  resource will also be stopped (if it is running).
-* If the +first+ resource was not running and cannot be started, the
-  +then+ resource will be stopped (if it is running).
-* If the +first+ resource is (re)started while the +then+ resource is
-  running, the +then+ resource will be stopped and restarted.
-
-=== Advisory Ordering ===
-
-On the other hand, when +score="0"+ is specified for a constraint, the
-constraint is considered optional and only has an effect when both
-resources are stopping and/or starting.  Any change in state by the
-+first+ resource will have no effect on the +then+ resource.
-
-.Example of an optional and mandatory ordering constraint     
+.Optional and mandatory ordering constraints
 ======
 [source,XML]
 -------
 <constraints>
-    <rsc_order id="order-1" first="Database" then="Webserver" />
-    <rsc_order id="order-2" first="IP" then="Webserver" score="0"/>
+<rsc_order id="order-1" first="IP" then="Webserver" kind="optional"/>
+<rsc_order id="order-2" first="Database" then="Webserver" kind="mandatory" />
 </constraints>
 -------
 ======
 
-Some additional information on ordering constraints can be found in
-the document http://clusterlabs.org/doc/Ordering_Explained.pdf[Ordering Explained].
+Because the above example lets +symmetrical+ default to TRUE, 
++Webserver+ must be stopped before +Database+ can be stopped,
+and +Webserver+ should be stopped before +IP+
+if they both need to be stopped.
 
 [[s-resource-colocation]]
 == Placing Resources Relative to other Resources ==

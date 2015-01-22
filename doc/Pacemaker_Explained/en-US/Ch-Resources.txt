@@ -248,13 +248,17 @@ One of the main drawbacks to system services (such as LSB, Systemd and
 Upstart) resources is that they do not allow any parameters!
 =====
 
-.An example OCF resource
+////
+See https://tools.ietf.org/html/rfc5737 for choice of example IP address
+////
+
+.An OCF resource definition
 =====
 [source,XML]
 -------
 <primitive id="Public-IP" class="ocf" type="IPaddr" provider="heartbeat">
-   <instance_attributes id="params-public-ip">
-      <nvpair id="public-ip-addr" name="ip" value="1.2.3.4"/>
+   <instance_attributes id="Public-IP-params">
+      <nvpair id="Public-IP-ip" name="ip" value="192.0.2.2"/>
    </instance_attributes>
 </primitive>
 -------
@@ -381,24 +385,31 @@ indexterm:[Resource,Option,multiple-active]
 
 |=========================================================
 
-If you performed the following commands on the previous LSB Email resource
+[NOTE]
+====
+Support for remote nodes was added in pacemaker 1.1.10. If you are using an
+earlier version, options related to remote nodes will not be available.
+====
+
+As an example of setting resource options, if you performed the following
+commands on an LSB Email resource:
 
 -------
-# crm_resource --meta --resource Email --set-parameter priority --property-value 100
-# crm_resource --meta --resource Email --set-parameter multiple-active --property-value block
+# crm_resource --meta --resource Email --set-parameter priority --parameter-value 100
+# crm_resource -m -r Email -p multiple-active -v block
 -------
 
-the resulting resource definition would be
+the resulting resource definition might be:
 
 .An LSB resource with cluster options
 =====
 [source,XML]
 -------
 <primitive id="Email" class="lsb" type="exim">
-   <meta_attributes id="meta-email">
-      <nvpair id="email-priority" name="priority" value="100"/>
-      <nvpair id="email-active" name="multiple-active" value="block"/>
-   </meta_attributes>
+  <meta_attributes id="Email-meta_attributes">
+    <nvpair id="Email-meta_attributes-priority" name="priority" value="100"/>
+    <nvpair id="Email-meta_attributes-multiple-active" name="multiple-active" value="block"/>
+  </meta_attributes>
 </primitive>
 -------
 =====
@@ -410,7 +421,7 @@ To set a default value for a resource option, simply add it to the
 +rsc_defaults+ section with `crm_attribute`. Thus,
 
 ----
-# crm_attribute --type rsc_defaults --attr-name is-managed --attr-value false
+# crm_attribute --type rsc_defaults --name is-managed --update false
 ----
 
 would prevent the cluster from starting or stopping any of the
@@ -428,7 +439,7 @@ If your resource agent supports parameters, you can add them with the
 `crm_resource` command. For instance
 
 ----
-# crm_resource --resource Public-IP --set-parameter ip --property-value 1.2.3.4
+# crm_resource --resource Public-IP --set-parameter ip --parameter-value 192.0.2.2
 ----
 
 would create an entry in the resource like this:
@@ -439,14 +450,14 @@ would create an entry in the resource like this:
 -------
 <primitive id="Public-IP" class="ocf" type="IPaddr" provider="heartbeat">
    <instance_attributes id="params-public-ip">
-      <nvpair id="public-ip-addr" name="ip" value="1.2.3.4"/>
+      <nvpair id="public-ip-addr" name="ip" value="192.0.2.2"/>
    </instance_attributes>
 </primitive>
 -------
 =====
 
 For an OCF resource, the result would be an environment variable
-called +OCF_RESKEY_ip+ with a value of +1.2.3.4+.
+called +OCF_RESKEY_ip+ with a value of +192.0.2.2+.
 
 The list of instance attributes supported by an OCF script can be
 found by calling the resource script with the `meta-data` command.
@@ -462,46 +473,63 @@ attributes, their purpose and default values.
 [source,XML]
 -------
 <?xml version="1.0"?>
-  <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
-  <resource-agent name="Dummy" version="0.9">
-    <version>1.0</version>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="Dummy" version="1.0">
+<version>1.0</version>
 
-    <longdesc lang="en-US">
-      This is a Dummy Resource Agent. It does absolutely nothing except
-      keep track of whether its running or not.
-      Its purpose in life is for testing and to serve as a template for RA writers.
-    </longdesc>
-    <shortdesc lang="en-US">Dummy resource agent</shortdesc>
+<longdesc lang="en">
+This is a Dummy Resource Agent. It does absolutely nothing except 
+keep track of whether its running or not.
+Its purpose in life is for testing and to serve as a template for RA writers.
 
-    <parameters>
-      <parameter name="state" unique="1">
-        <longdesc lang="en-US">
-          Location to store the resource state in.
-        </longdesc>
-        <shortdesc lang="en-US">State file</shortdesc>
-        <content type="string" default="/var/run/Dummy-{OCF_RESOURCE_INSTANCE}.state" />
-      </parameter>
+NB: Please pay attention to the timeouts specified in the actions
+section below. They should be meaningful for the kind of resource
+the agent manages. They should be the minimum advised timeouts,
+but they shouldn't/cannot cover _all_ possible resource
+instances. So, try to be neither overly generous nor too stingy,
+but moderate. The minimum timeouts should never be below 10 seconds.
+</longdesc>
+<shortdesc lang="en">Example stateless resource agent</shortdesc>
 
-      <parameter name="dummy" unique="0">
-        <longdesc lang="en-US">
-          Dummy attribute that can be changed to cause a reload
-        </longdesc>
-        <shortdesc lang="en-US">Dummy attribute that can be changed to cause a reload</shortdesc>
-        <content type="string" default="blah" />
-      </parameter>
-    </parameters>
+<parameters>
+<parameter name="state" unique="1">
+<longdesc lang="en">
+Location to store the resource state in.
+</longdesc>
+<shortdesc lang="en">State file</shortdesc>
+<content type="string" default="/var/run//Dummy-{OCF_RESOURCE_INSTANCE}.state" />
+</parameter>
 
-    <actions>
-      <action name="start"        timeout="90" />
-      <action name="stop"         timeout="100" />
-      <action name="monitor"      timeout="20" interval="10",height="0" start-delay="0" />
-      <action name="reload"       timeout="90" />
-      <action name="migrate_to"   timeout="100" />
-      <action name="migrate_from" timeout="90" />
-      <action name="meta-data"    timeout="5" />
-      <action name="validate-all" timeout="30" />
-    </actions>
-  </resource-agent>
+<parameter name="fake" unique="0">
+<longdesc lang="en">
+Fake attribute that can be changed to cause a reload
+</longdesc>
+<shortdesc lang="en">Fake attribute that can be changed to cause a reload</shortdesc>
+<content type="string" default="dummy" />
+</parameter>
+
+<parameter name="op_sleep" unique="1">
+<longdesc lang="en">
+Number of seconds to sleep during operations.  This can be used to test how
+the cluster reacts to operation timeouts.
+</longdesc>
+<shortdesc lang="en">Operation sleep duration in seconds.</shortdesc>
+<content type="string" default="0" />
+</parameter>
+
+</parameters>
+
+<actions>
+<action name="start"        timeout="20" />
+<action name="stop"         timeout="20" />
+<action name="monitor"      timeout="20" interval="10" depth="0"/>
+<action name="reload"       timeout="20" />
+<action name="migrate_to"   timeout="20" />
+<action name="migrate_from" timeout="20" />
+<action name="validate-all" timeout="20" />
+<action name="meta-data"    timeout="5" />
+</actions>
+</resource-agent>
 -------
 =====
 
@@ -524,7 +552,7 @@ healthy.  To instruct the cluster to do this, you need to add a
      <op id="public-ip-check" name="monitor" interval="60s"/>
   </operations>
   <instance_attributes id="params-public-ip">
-     <nvpair id="public-ip-addr" name="ip" value="1.2.3.4"/>
+     <nvpair id="public-ip-addr" name="ip" value="192.0.2.2"/>
   </instance_attributes>
 </primitive>
 -------
@@ -602,7 +630,7 @@ To set a default value for a operation option, simply add it to the
 +op_defaults+ section with `crm_attribute`. Thus,
 
 ----
-# crm_attribute --type op_defaults --attr-name timeout --attr-value 20s
+# crm_attribute --type op_defaults --name timeout --update 20s
 ----
 
 would default each operation's +timeout+ to 20 seconds.  If an
@@ -628,7 +656,7 @@ simply specify a new value.
      <op id="public-ip-stop" name="stop" interval="0" timeout="15min"/>
   </operations>
   <instance_attributes id="params-public-ip">
-     <nvpair id="public-ip-addr" name="ip" value="1.2.3.4"/>
+     <nvpair id="public-ip-addr" name="ip" value="192.0.2.2"/>
   </instance_attributes>
 </primitive>
 -------
@@ -669,7 +697,7 @@ resource agent to look for the parameter and decide how to use it.
      </op>
    </operations>
    <instance_attributes id="params-public-ip">
-       <nvpair id="public-ip-level" name="ip" value="1.2.3.4"/>
+       <nvpair id="public-ip-level" name="ip" value="192.0.2.2"/>
    </instance_attributes>
 </primitive>
 -------
@@ -691,16 +719,19 @@ operation's definition.
       <op id="public-ip-check" name="monitor" interval="60s" enabled="false"/>
    </operations>
    <instance_attributes id="params-public-ip">
-      <nvpair id="public-ip-addr" name="ip" value="1.2.3.4"/>
+      <nvpair id="public-ip-addr" name="ip" value="192.0.2.2"/>
    </instance_attributes>
 </primitive>
 -------
 =====
 
-This can be achieved from the command-line by executing
+This can be achieved from the command line by executing:
 
 ----
-# cibadmin -M -X '<op id="public-ip-check" enabled="false"/>'
+# cibadmin --modify --xml-text '<op id="public-ip-check" enabled="false"/>'
 ----
 
 Once you've done whatever you needed to do, you can then re-enable it with
+----
+# cibadmin --modify --xml-text '<op id="public-ip-check" enabled="true"/>'
+----

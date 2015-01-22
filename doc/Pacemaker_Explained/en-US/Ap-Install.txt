@@ -1,43 +1,118 @@
 [appendix]
 
-[[ap-install]]
-== Installation == 
+== Installing == 
 
-[WARNING]
-The following text may no longer be accurate in some places.
+=== Installing the Software ===
 
-=== Choosing a Cluster Stack ===
-indexterm:[Cluster,Choosing Between Heartbeat and Corosync]
-indexterm:[Cluster Stack,Corosync] indexterm:[Corosync]
-indexterm:[Cluster Stack,Heartbeat] indexterm:[Heartbeat]
+Most major Linux distributions have pacemaker packages in their standard
+package repositories, or the software can be built from source code.
+See the http://clusterlabs.org/wiki/Install[Install wiki page] for details.
 
-Ultimately the choice of cluster stack is a personal decision that
-must be made in the context of you or your company's needs and
-strategic direction. Pacemaker currently functions equally well with
-both stacks.
+See <<q-messaging-layer,Which Messaging Layer Should I Choose?>>
+for information about choosing a messaging layer.
 
-Here are some factors that may influence the decision:
-
-* SUSE/Novell, Red Hat and Oracle are all putting their collective
-  weight behind the Corosync cluster stack.
-* Using Corosync gives your applications access to the following
-  additional cluster services
-** distributed locking service
-** extended virtual synchronization service
-** cluster closed process group service
-* It is likely that Pacemaker, at some point in the future, will make
-  use of some of these additional services not provided by Heartbeat
-        
 === Enabling Pacemaker ===
 
-==== For Corosync ====
+==== Enabling Pacemaker For Corosync 2._x_ ====
 
-The Corosync configuration is normally located in
-'/etc/corosync/corosync.conf' and an example for a machine with an
-address of +1.2.3.4+ in a cluster communicating on port 1234 (without
-peer authentication and message encryption) is shown below.
+High-level cluster management tools are available that can configure
+corosync for you. This document focuses on the lower-level details
+if you want to configure corosync yourself.
 
-.An example Corosync configuration file
+Corosync configuration is normally located in
++/etc/corosync/corosync.conf+.
+
+.Corosync 2._x_ configuration file for two nodes *myhost1* and *myhost2*
+====
+----
+totem {
+version: 2
+secauth: off
+cluster_name: mycluster
+transport: udpu
+}
+
+nodelist {
+  node {
+        ring0_addr: myhost1
+        nodeid: 1
+       }
+  node {
+        ring0_addr: myhost2
+        nodeid: 2
+       }
+}
+
+quorum {
+provider: corosync_votequorum
+two_node: 1
+}
+
+logging {
+to_syslog: yes
+}
+----
+====
+
+.Corosync 2._x_ configuration file for three nodes *myhost1*, *myhost2* and *myhost3*
+====
+----
+totem {
+version: 2
+secauth: off
+cluster_name: mycluster
+transport: udpu
+}
+
+nodelist {
+  node {
+        ring0_addr: myhost1
+        nodeid: 1
+       }
+  node {
+        ring0_addr: myhost2
+        nodeid: 2
+       }
+  node {
+        ring0_addr: myhost3
+        nodeid: 3
+       }
+}
+
+quorum {
+provider: corosync_votequorum
+
+}
+
+logging {
+to_syslog: yes
+}
+----
+====
+
+In the above examples, the +totem+ section defines what protocol version and
+options (including encryption) to use,
+footnote:[
+Please consult the Corosync website (http://www.corosync.org/) and
+documentation for details on enabling encryption and peer authentication for
+the cluster.
+]
+and gives the cluster a unique name (+mycluster+ in these examples).
+
+The +node+ section lists the nodes in this cluser. (See <<s-node-name>>
+for how this affects pacemaker.)
+
+The +quorum+ section defines how the cluster uses quorum.
+The important thing is that two-node clusters must be handled specially,
+so +two_node: 1+ must be defined for two-node clusters (and only for two-node
+clusters).
+
+The +logging+ section should be self-explanatory.
+
+==== Enabling Pacemaker For Corosync 1._x_ ====
+
+.Corosync 1._x_ configuration file for a cluster with all nodes on the +192.0.2.0/24+ network
+====
 [source,XML]
 -------
   totem {
@@ -46,7 +121,7 @@ peer authentication and message encryption) is shown below.
       threads: 0
       interface {
           ringnumber: 0
-          bindnetaddr: 1.2.3.4
+          bindnetaddr: 192.0.2.0
           mcastaddr: 239.255.1.1
           mcastport: 1234
       }
@@ -59,36 +134,33 @@ peer authentication and message encryption) is shown below.
   amf {
       mode: disabled
   }
-        
 -------
+====
 
-The logging should be mostly obvious and the amf section refers to the
-Availability Management Framework and is not covered in this document.
+With corosync 1._x_, the +totem+ section contains the protocol version and
+options as with 2._x_. However, nodes are also listed here,
+in the +interface+ section. The +bindnetaddr+ option is usually the _network_
+address, thus allowing the same configuration file to be used on all nodes.
+IPv4 or IPv6 addresses can be used with corosync.
 
-The interesting part of the configuration is the totem section. This
-is where we define how the node can communicate with the rest of the
-cluster and what protocol version and options (including encryption
-footnote:[
-Please consult the Corosync website (http://www.corosync.org/) and documentation for details on enabling encryption and peer authentication for the cluster.
-]
-) it should use. Beginners are encouraged to use the values shown and
-modify the interface section based on their network.
+The +amf+ section refers to the Availability Management Framework and
+is not covered in this document.
 
-It is also possible to configure Corosync for an IPv6 based
-environment. Simply configure +bindnetaddr+ and +mcastaddr+ with their
-IPv6 equivalents, eg.
+The above corosync configuration is enough for corosync to operate by itself,
+but corosync 1._x_ additionally needs to be told when it is being
+used in conjunction with Pacemaker. This can be accomplished
+in one of two ways:
 
-.Example options for an IPv6 environment
--------
-  bindnetaddr: fec0::1:a800:4ff:fe00:20
-  mcastaddr: ff05::1
--------
+* Via the CMAN software provided with Red Hat Enterprise Linux 6 and its derivatives
+* Via the pacemaker corosync plugin
 
-To tell Corosync to use the Pacemaker cluster manager, add the
-following fragment to a functional Corosync configuration and restart
-the cluster.
+To use CMAN, consult its documentation.
 
-.Configuration fragment for enabling Pacemaker under Corosync
+To use the pacemaker corosync plugin, add the following fragment to the
+corosync configuration and restart the cluster.
+
+.Corosync 1._x_configuration fragment to enable Pacemaker plugin
+====
 [source,XML]
 -------
 aisexec {
@@ -100,6 +172,7 @@ service {
     ver: 0
 }
 -------
+====
 
 The cluster needs to be run as root so that its child processes (the
 +lrmd+ in particular) have sufficient privileges to perform the
@@ -109,11 +182,16 @@ an IP address or start apache is of little use.
 The second directive is the one that actually instructs the cluster to
 run Pacemaker.
 
-==== For Heartbeat ====
+==== Enabling Pacemaker For Heartbeat ====
 
-Add the following to a functional _ha.cf_ configuration file and restart Heartbeat:
+See the heartbeat documentation for how to set up a +ha.cf+ configuration file.
 
-.Configuration fragment for enabling Pacemaker under Heartbeat
+To enable the use of pacemaker with heartbeat, add the following to a
+functional +ha.cf+ configuration file and restart Heartbeat:
+
+.Heartbeat configuration fragment to enable Pacemaker
+====
 ----
 crm respawn
 ----
+====

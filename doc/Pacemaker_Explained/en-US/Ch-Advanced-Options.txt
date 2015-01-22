@@ -130,27 +130,28 @@ query and set it, called `crm_standby`.  To check the standby status
 of the current machine, simply run:
 
 ----
-# crm_standby --get-value
+# crm_standby -G
 ----
 
-A value of +true+ indicates that the node is _NOT_ able to host any
-resources, while a value of +false+ says that it _CAN_.
+A value of +on+ indicates that the node is _not_ able to host any
+resources, while a value of +off+ says that it _can_.
 
 You can also check the status of other nodes in the cluster by
-specifying the `--node-uname` option:
+specifying the `--node` option:
 
 ----
-# crm_standby --get-value --node-uname sles-2
+# crm_standby -G --node sles-2
 ----
 
-To change the current node's standby status, use `--attr-value`
-instead of `--get-value`.
+To change the current node's standby status, use `-v` instead of `-G`:
 
 ----
-# crm_standby --attr-value
+# crm_standby -v on
 ----
 
-Again, you can change another host's value by supplying a host name with `--node-uname`.
+Again, you can change another host's value by supplying a hostname with `--node`.
+
+==== Moving One Resource ====
 
 When only one resource is required to move, we do this by creating
 location constraints.  However, once again we provide a user friendly
@@ -195,10 +196,10 @@ stay where it is.  To be absolutely certain that it moves back to
 ----
 
 Alternatively, if you only care that the resource should be moved from
-its current location, try
+its current location, try:
 
 ----
-# crm_resource -M -r Email`
+# crm_resource -B -r Email
 ----
 
 Which will instead create a negative constraint, like

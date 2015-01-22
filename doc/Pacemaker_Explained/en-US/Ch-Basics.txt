@@ -29,15 +29,15 @@ The configuration section itself is divided into four parts:
 ======
 [source,XML]
 -------
-  <cib admin_epoch="0" epoch="0" num_updates="0" have-quorum="false">
-     <configuration>
-        <crm_config/>
-        <nodes/>
-        <resources/>
-        <constraints/>
-     </configuration>
-     <status/>
-  </cib>
+<cib crm_feature_set="3.0.7" validate-with="pacemaker-1.2" admin_epoch="1" epoch="0" num_updates="0">
+  <configuration>
+    <crm_config/>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
 -------
 ======
 
@@ -151,9 +151,10 @@ text or XML editor and then upload the revised configuration.
 
 Some of the better XML editors can make use of a Relax NG schema to
 help make sure any changes you make are valid.  The schema describing
-the configuration can normally be found in
-'/usr/lib/heartbeat/pacemaker.rng' on most systems.
-      
+the configuration can be found in +pacemaker.rng+, which may be
+deployed in a location such as +/usr/share/pacemaker+ or
++/usr/lib/heartbeat+ depending on your operating system and how you
+installed the software.
 
 If you only wanted to modify the resources section, you could instead
 do
@@ -208,13 +209,13 @@ tools that avoid the need to read or edit XML.
 To enable stonith for example, one could run:
 
 ----
-# crm_attribute --attr-name stonith-enabled --attr-value true
+# crm_attribute --name stonith-enabled --update 1
 ----
 
 Or, to see if +somenode+ is allowed to run resources, there is:
 
 ----
-# crm_standby --get-value --node-uname somenode
+# crm_standby --get-value --node somenode
 ----
 
 Or, to find the current location of +my-test-rsc+, one can use:
@@ -222,6 +223,16 @@ Or, to find the current location of +my-test-rsc+, one can use:
 ----
 # crm_resource --locate --resource my-test-rsc
 ----
+
+Examples of using these tools for specific cases will be given throughout this
+document where appropriate.
+
+[NOTE]
+====
+Old versions of pacemaker (1.0.3 and earlier) had different
+command-line tool syntax. If you are using an older version,
+check your installed manual pages for the proper syntax to use.
+====
 
 [[s-config-sandboxes]]
 == Making Configuration Changes in a Sandbox ==
@@ -259,17 +270,16 @@ Once you have finished experimenting, you can either commit the
 changes, or discard them as shown below.  Again, be sure to follow the
 on-screen instructions carefully.
       
-
 For a full list of `crm_shadow` options and
-commands, invoke it with the <parameter>--help</parameter> option.
+commands, invoke it with the `--help` option.
 
 .Using a sandbox to make multiple changes atomically
 ======
 ----
  shadow[test] # crm_failcount -G -r rsc_c001n01
   name=fail-count-rsc_c001n01 value=0
- shadow[test] # crm_standby -v on -n c001n02
- shadow[test] # crm_standby -G -n c001n02
+ shadow[test] # crm_standby -v on -N c001n02
+ shadow[test] # crm_standby -G -N c001n02
  name=c001n02 scope=nodes value=on
  shadow[test] # cibadmin --erase --force
  shadow[test] # cibadmin --query
@@ -287,7 +297,7 @@ commands, invoke it with the <parameter>--help</parameter> option.
   Now type Ctrl-D to exit the crm_shadow shell
   shadow[test] # exit
   # crm_shadow --which
-  No shadow instance provided
+  No active shadow configuration defined
   # cibadmin -Q
  <cib cib_feature_revision="1" validate-with="pacemaker-1.0" admin_epoch="0" crm_feature_set="3.0" have-quorum="1" epoch="110"
        dc-uuid="c001n01" num_updates="551">

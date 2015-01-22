@@ -45,24 +45,17 @@ Can I Have a Mixed Heartbeat-Corosync Cluster?::
 
  No.
 
-Which Messaging Layer Should I Choose?::
+[[q-messaging-layer]] Which Messaging Layer Should I Choose?::
  indexterm:[Cluster,Choosing Between Heartbeat and Corosync]
  indexterm:[Cluster Stack,Corosync] indexterm:[Corosync]
  indexterm:[Cluster Stack,Heartbeat] indexterm:[Heartbeat]
- Ultimately the choice of cluster stack is a personal decision that
- must be made in the context of you or your company's needs and
- strategic direction. Pacemaker functions equally well with
- heartbeat or corosync. Here are some factors that may influence the decision:
-
- * SUSE, Red Hat and Oracle are all putting their collective
-   weight behind the Corosync cluster stack.
- * Using Corosync gives your applications access to the following
-   additional cluster services:
- ** distributed locking service
- ** extended virtual synchronization service
- ** cluster closed process group service
- * It is likely that Pacemaker, at some point in the future, will make
-   use of some of these additional services not provided by Heartbeat.
+ You can choose from multiple messaging layers, including
+ heartbeat, corosync 1 (with or without CMAN), and corosync 2.
+ Corosync 2 is the current state of the art due to its
+ more advanced features and better support for pacemaker,
+ but often the best choice is to use whatever comes with
+ your Linux distribution, and follow the distribution's
+ setup instructions.
 
 Where Can I Get Pre-built Packages?::
 
