@@ -1,7 +1,7 @@
 = Configure STONITH =
 
 ////
-We prefer [[ch-stonith]], but older versions of asciidoc dont deal well
+We prefer [[ch-stonith]], but older versions of asciidoc don't deal well
 with that construct for chapter headings
 ////
 anchor:ch-stonith[Chapter 13, STONITH]
@@ -30,7 +30,7 @@ It is crucial that the STONITH device can allow the cluster to
 differentiate between a node failure and a network one.
 
 The biggest mistake people make in choosing a STONITH device is to
-use remote power switch (such as many on-board IMPI controllers) that
+use a remote power switch (such as many on-board IPMI controllers) that
 shares power with the node it controls. In such cases, the cluster
 cannot be sure if the node is really offline, or active and suffering
 from a network fault.
@@ -70,7 +70,7 @@ To prevent a specific node from using a fencing device, location constraints wil
 [IMPORTANT]
 ===========
 
-Currently there is a limitation that fencing resources may only have a
+Currently there is a limitation that fencing resources may only have
 one set of meta-attributes and one set of instance-attributes.  This
 can be revisited if it becomes a significant limitation for people.
 
@@ -470,7 +470,7 @@ Some possible uses of topologies include:
  indexterm:[Fencing,fencing-level,index]
 
 |devices
-|A comma separated list of devices for which the
+|A comma-separated list of devices that must all be tried for this level
  indexterm:[devices,fencing-level]
  indexterm:[Fencing,fencing-level,devices]
 
@@ -499,7 +499,7 @@ Some possible uses of topologies include:
 
 === Example use of advanced Fencing Topologies: dual layer and dual devices ===
 
-The following example illustrates an advanced use of +fencing_topology+ in a cluster with the following properties:
+The following example illustrates an advanced use of +fencing-topology+ in a cluster with the following properties:
 
 * 3 nodes (2 active prod-mysql nodes, 1 prod_mysql-rep in standby for quorum purposes)
 * the active nodes have an IPMI-controlled power board reached at 10.10.10.1 and 10.10.10.2
@@ -510,7 +510,7 @@ The following example illustrates an advanced use of +fencing_topology+ in a clu
 * fencing topology is set to try IPMI fencing first then default to a "sure-kill" dual PDU fencing
 
 In a normal failure scenario, STONITH will first select +fence_ipmi+ to try and kill the faulty node.
-Using a +fencing_topology+, if that first method fails, STONITH will then move on to selecting +fence_apc_snmp+ twice:
+Using a fencing topology, if that first method fails, STONITH will then move on to selecting +fence_apc_snmp+ twice:
 
 * once for the first PDU 
 * again for the second PDU 
@@ -629,7 +629,7 @@ We want to first fence using IPMI and if that does not work, fence both PDUs to 
       <fencing-level devices="fence_prod-mysql2_apc1,fence_prod-mysql2_apc2" id="fencing-1" index="2" target="prod-mysql2"/>
     </fencing-topology>
 ----
-Please note, in +fencing_topology+, the lower index value determines the priority of the first fencing method. 
+Please note, in +fencing-topology+, the lowest +index+ value determines the priority of the first fencing method.
 
 .Final configuration
 

@@ -116,7 +116,7 @@ indexterm:[Resource,Moving]
 === Manual Intervention ===
 
 There are primarily two occasions when you would want to move a
-resource from it's current location: when the whole node is under
+resource from its current location: when the whole node is under
 maintenance, and when a single resource needs to be moved.
 
 Since everything eventually comes down to a score, you could create
@@ -155,7 +155,7 @@ Again, you can change another host's value by supplying a host name with `--node
 When only one resource is required to move, we do this by creating
 location constraints.  However, once again we provide a user friendly
 shortcut as part of the `crm_resource` command, which creates and
-modifies the extra constraints for you.  If +Email+ was running on
+modifies the extra constraints for you.  If +Email+ were running on
 +sles-1+ and you wanted it moved to a specific location, the command
 would look something like:
         
@@ -666,7 +666,7 @@ Any parameter with the +unique+ set to 0 is eligible to be used in this way.
 
 Once these requirements are satisfied, the cluster will automatically
 know to reload the resource (instead of restarting) when a non-unique
-fields changes.
+field changes.
       
 [NOTE]
 ======

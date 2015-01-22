@@ -310,10 +310,10 @@ do so depends on your resource and its resource agent.
 
 Globally unique clones do require some additional support in the
 resource agent.  In particular, it must only respond with
-+${OCF_SUCCESS}+ if the node has that exact instance active.  All
++$\{OCF_SUCCESS}+ if the node has that exact instance active.  All
 other probes for instances of the clone should result in
-+${OCF_NOT_RUNNING}+.  Unless of course they are failed, in which case
-they should return one of the other OCF error codes.
++$\{OCF_NOT_RUNNING}+ (or one of the other OCF error codes if
+they are failed).
 
 Copies of a clone are identified by appending a colon and a numerical
 offset, eg. +apache:2+.
@@ -555,7 +555,7 @@ codes, and therefore unnecessary complications.
 
 === Multi-state Constraints ===
 
-In most cases, a multi-state resources will have a single copy on each
+In most cases, multi-state resources will have a single copy on each
 active cluster node.  If this is not the case, you can indicate which
 nodes the cluster should preferentially assign copies to with resource
 location constraints.  These constraints are written no differently to
@@ -665,19 +665,17 @@ Allocation is then performed as-per-normal.
 In the following example +B+'s master must be located on the same node as +A+'s master.
 Additionally resources +C+ and +D+ must be located on the same node as +B+'s master.
 
-.Colocate C and C with A and B's master instances
+.Colocate C and D with A's and B's master instances
 ======
 [source,XML]
 -------
 <constraints>
     <rsc_colocation id="coloc-1" score="INFINITY" >
-      <resource_set id="collocated-set-example" sequential="true" role="Master">
+      <resource_set id="colocated-set-example-1" sequential="true" role="Master">
         <resource_ref id="A"/>
         <resource_ref id="B"/>
       </resource_set>
-    </rsc_colocation>
-    <rsc_colocation id="coloc-1" score="INFINITY" >
-      <resource_set id="collocated-set-example" sequential="true">
+      <resource_set id="colocated-set-example-2" sequential="true">
         <resource_ref id="C"/>
         <resource_ref id="D"/>
       </resource_set>
@@ -706,21 +704,21 @@ Additionally resources +C+ and +D+ must be located on the same node as +B+'s mas
 In the following example +B+ cannot be promoted until +A+'s has been promoted.
 Additionally resources +C+ and +D+ must wait until +A+ and +B+ have been promoted before they can start.
 
-.Start C and C after first promoting A and B
+.Start C and D after first promoting A and B
 ======
 [source,XML]
 -------
 <constraints>
-    <rsc_colocation id="coloc-1" score="INFINITY" >
-      <resource_set id="collocated-set-1" sequential="true" action="promote">
+    <rsc_order id="order-1" score="INFINITY" >
+      <resource_set id="ordered-set-1" sequential="true" action="promote">
         <resource_ref id="A"/>
         <resource_ref id="B"/>
       </resource_set>
-      <resource_set id="collocated-set-2" sequential="true" action="start">
+      <resource_set id="ordered-set-2" sequential="true" action="start">
         <resource_ref id="C"/>
         <resource_ref id="D"/>
       </resource_set>
-    </rsc_colocation>
+    </rsc_order>
 </constraints>
 -------
 ======

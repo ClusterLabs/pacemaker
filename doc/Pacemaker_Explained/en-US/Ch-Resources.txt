@@ -33,18 +33,6 @@ There are six classes of agents supported by Pacemaker:
 * Service
 * Nagios
 
-indexterm:[Resource,Heartbeat]
-indexterm:[Heartbeat,Resources]
-
-Version 1 of Heartbeat came with its own style of resource agents and
-it is highly likely that many people have written their own agents
-based on its conventions.  footnote:[ See
-http://wiki.linux-ha.org/HeartbeatResourceAgent for more information ]
-
-Although deprecated with the release of Heartbeat v2, they were
-supported by Pacemaker up until the release of 1.1.8 to enable
-administrators to continue to use these agents.
-
 === Open Cluster Framework ===
 
 indexterm:[Resource,OCF]
@@ -194,10 +182,10 @@ http://nagiosplugins.org[Nagios Plugins].
 Pacemaker is able to do remote monitoring with the plugins _if they are
 present_.
 
-An use case is to configure them as resources belonging to a resource
-container, which usually is a VM, and the container will be restarted
-if any of them has failed. While they can also be configured as ordinary
-resources to be just used for monitoring hosts or services via network.
+A common use case is to configure them as resources belonging to a resource
+container (usually a virtual machine), and the container will be restarted
+if any of them has failed. Another use is to configure them as ordinary
+resources to be used for monitoring hosts or services via the network.
 
 The supported parameters are same as the long options of a nagios plugin.
 
@@ -621,7 +609,7 @@ would default each operation's +timeout+ to 20 seconds.  If an
 operation's definition also includes a value for +timeout+, then that
 value would be used instead (for that operation only).
 
-==== When Resources Take a Long Time to Start/Stop ====
+=== When Resources Take a Long Time to Start/Stop ===
 
 There are a number of implicit operations that the cluster will always
 perform - +start+, +stop+ and a non-recurring +monitor+ operation
@@ -646,7 +634,7 @@ simply specify a new value.
 -------
 =====
 
-==== Multiple Monitor Operations ====
+=== Multiple Monitor Operations ===
 
 Provided no two operations (for a single resource) have the same name
 and interval you can have as many monitor operations as you like.  In
@@ -687,7 +675,7 @@ resource agent to look for the parameter and decide how to use it.
 -------
 =====
 
-==== Disabling a Monitor Operation ====
+=== Disabling a Monitor Operation ===
 
 The easiest way to stop a recurring monitor is to just delete it.
 However, there can be times when you only want to disable it

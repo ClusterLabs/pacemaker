@@ -299,17 +299,16 @@ the cluster is not quite so smart. Yet.
 So when you are creating colocation constraints, it is important to
 consider whether you should colocate A with B or B with A.
 
-Another thing to keep in mind is that, assuming A is collocated with
-B, the cluster will also take into account A's preferences when
+Another thing to keep in mind is that, assuming A is colocated with
+B, the cluster will take into account A's preferences when
 deciding which node to choose for B.
 
-For a detailed look at exactly how this occurs, see the
-http://www.clusterlabs.org/mediawiki/images/6/61/Colocation_Explained.pdf[Colocation
-Explained] document.
+For a detailed look at exactly how this occurs, see
+http://clusterlabs.org/doc/Colocation_Explained.pdf[Colocation Explained].
 
 === Options ===
 
-.Properties of a Collocation Constraint
+.Properties of a Colocation Constraint
 [width="95%",cols="2m,5<",options="header",align="center"]
 |=========================================================
 
@@ -505,10 +504,10 @@ image::images/three-sets.png["Three ordered sets",width="16cm",height="7.5cm",al
 
 The unordered set logic discussed so far has all been "AND" logic.
 To illustrate this take the 3 resource set figure in the previous section.
-Those sets can be expressed, +(A and B) then (C) then (D) then (E and F)+
+Those sets can be expressed, +(A and B) then \(C) then (D) then (E and F)+.
 
-Say for example we want change the first set, (A and B), to use "OR" logic
-so the sets look like this, +(A or B) then (C) then (D) then (E and F)+.
+Say for example we want to change the first set, +(A and B)+, to use "OR" logic
+so the sets look like this: +(A or B) then \(C) then (D) then (E and F)+.
 This functionality can be achieved through the use of the +require-all+
 option.  By default this option is 'require-all=true' which is why the
 "AND" logic is used by default.  Changing +require-all=false+ means only one
@@ -544,41 +543,45 @@ modifies the set to be an unordered set that uses "AND" logic by default, by add
 
 
 [[s-resource-sets-colocation]]
-== Collocating Sets of Resources ==
+== Colocating Sets of Resources ==
 
 Another common situation is for an administrator to create a set of
-collocated resources.  Previously this was possible either by defining
-a resource group (See <<group-resources>>) which could not always
-accurately express the design; or by defining each relationship as an
-individual constraint, causing a constraint explosion as the number of
-resources and combinations grew.
+colocated resources.
 
-.A chain of collocated resources
+One way to do this would be to define a resource group (see
+<<group-resources>>), but that cannot always accurately express the desired
+state.
+
+Another way would be to define each relationship as an individual constraint,
+but that causes a constraint explosion as the number of resources and
+combinations grow. An example of this approach:
+
+.Chain of colocated resources
 ======
 [source,XML]
 -------
 <constraints>
-    <rsc_colocation id="coloc-1" rsc="B" with-rsc="A" score="INFINITY"/>
-    <rsc_colocation id="coloc-2" rsc="C" with-rsc="B" score="INFINITY"/>
-    <rsc_colocation id="coloc-3" rsc="D" with-rsc="C" score="INFINITY"/>
+    <rsc_colocation id="coloc-1" rsc="A" with-rsc="B" score="INFINITY"/>
+    <rsc_colocation id="coloc-2" rsc="B" with-rsc="C" score="INFINITY"/>
+    <rsc_colocation id="coloc-3" rsc="C" with-rsc="D" score="INFINITY"/>
 </constraints>
 -------
 ======
 
 To make things easier, we allow an alternate form of colocation
-constraints using +resource_sets+.  Just like the expanded version, a
-resource that can't be active also prevents any resource that must be
-collocated with it from being active.  For example, if +B+ was not
-able to run, then both +C+ (and by inference +D+) must also remain
-stopped.
+constraints using +resource_set+. As with the chained version, a
+resource that can't be active prevents any resource that must be
+colocated with it from being active.  For example, if +C+ is not
+able to run, then both +B+ and by inference +A+ must also remain
+stopped. Here is an example +resource_set+:
 
-.The equivalent colocation chain expressed using +resource_sets+   
+.Equivalent colocation chain expressed using +resource_set+
 ======
 [source,XML]
 -------
 <constraints>
     <rsc_colocation id="coloc-1" score="INFINITY" >
-      <resource_set id="collocated-set-example" sequential="true">
+      <resource_set id="colocated-set-example" sequential="true">
         <resource_ref id="A"/>
         <resource_ref id="B"/>
         <resource_ref id="C"/>
@@ -618,12 +621,12 @@ both) were inactive.
 -------
 <constraints>
     <rsc_colocation id="coloc-1" score="INFINITY" >
-      <resource_set id="collocated-set-1" sequential="false">
+      <resource_set id="colocated-set-1" sequential="false">
         <resource_ref id="A"/>
         <resource_ref id="B"/>
         <resource_ref id="C"/>
       </resource_set>
-      <resource_set id="collocated-set-2" sequential="true">
+      <resource_set id="colocated-set-2" sequential="true">
         <resource_ref id="D"/>
       </resource_set>
     </rsc_colocation>
@@ -645,16 +648,16 @@ must be in using the set's role attribute.
 -------
 <constraints>
     <rsc_colocation id="coloc-1" score="INFINITY" >
-      <resource_set id="collocated-set-1" sequential="true">
+      <resource_set id="colocated-set-1" sequential="true">
         <resource_ref id="A"/>
         <resource_ref id="B"/>
       </resource_set>
-      <resource_set id="collocated-set-2" sequential="false">
+      <resource_set id="colocated-set-2" sequential="false">
         <resource_ref id="C"/>
         <resource_ref id="D"/>
         <resource_ref id="E"/>
       </resource_set>
-      <resource_set id="collocated-set-2" sequential="true" role="Master">
+      <resource_set id="colocated-set-3" sequential="true" role="Master">
         <resource_ref id="F"/>
         <resource_ref id="G"/>
       </resource_set>

@@ -1,7 +1,7 @@
 = Rules =
 
 //// 
-We prefer [[ch-rules]], but older versions of asciidoc dont deal well
+We prefer [[ch-rules]], but older versions of asciidoc don't deal well
 with that construct for chapter headings
 ////
 
@@ -198,7 +198,7 @@ demand, this may be implemented in a future release.
  indexterm:[Constraint,Date Specification,hours]
 
 |monthdays
-|Allowed values: 0-31 (depending on month and year)
+|Allowed values: 1-31 (depending on month and year)
  indexterm:[monthdays,Date Specification]
  indexterm:[Constraint,Date Specification,monthdays]
 
@@ -257,7 +257,7 @@ ignored.
 A small sample of how time based expressions can be used.
 
 ////
-On older versions of asciidoc, the [source] directive makes the title dissappear
+On older versions of asciidoc, the [source] directive makes the title disappear
 ////
 
 .True if now is any time in the year 2005
@@ -377,7 +377,7 @@ treats the constraint as if it was not there.  When the rule evaluates
 to +true+, the node's preference for running the resource is updated
 with the score associated with the rule.
 
-If this sounds familiar, its because you have been using a simplified
+If this sounds familiar, it is because you have been using a simplified
 syntax for location constraint rules already.  Consider the following
 location constraint:
       
@@ -439,7 +439,7 @@ then we could prevent resources from running on underpowered machines with the r
 [source,XML]
 -------
 <rule id="need-more-power-rule" score="-INFINITY">
-   <expression id=" need-more-power-expr" attribute="cpu_mips"
+   <expression id="need-more-power-expr" attribute="cpu_mips"
                operation="lt" value="3000"/>
 </rule>
 -------
