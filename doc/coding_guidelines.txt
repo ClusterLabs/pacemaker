@@ -89,8 +89,7 @@ code that will be a part of the Pacemaker project.
   is indented by one level. Opening brace is on the same line as switch.
 
 ```
-    switch (expression)
-    {
+    switch (expression) {
         case 0:
             command0;
             break;
