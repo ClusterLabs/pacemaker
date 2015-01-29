@@ -1340,6 +1340,36 @@ handle_migration_ordering(order_constraint_t *order, pe_working_set_t *data_set)
                                 order->rh_rsc, generate_op_key(order->rh_rsc->id, RSC_MIGRATED, 0), NULL,
                                 flags, data_set);
         }
+
+    } else if (safe_str_eq(lh_task, RSC_PROMOTE) && safe_str_eq(rh_task, RSC_START)) {
+        int flags = pe_order_optional;
+
+        if (rh_migratable) {
+            /* A promote then B start
+             * A promote then B migrate_to */
+            custom_action_order(order->lh_rsc, generate_op_key(order->lh_rsc->id, RSC_PROMOTE, 0), NULL,
+                                order->rh_rsc, generate_op_key(order->rh_rsc->id, RSC_MIGRATE, 0), NULL,
+                                flags, data_set);
+        }
+
+    } else if (safe_str_eq(lh_task, RSC_DEMOTE) && safe_str_eq(rh_task, RSC_STOP)) {
+        int flags = pe_order_optional;
+
+        if (rh_migratable) {
+            /* A demote then B stop
+             * A demote then B migrate_to */
+            custom_action_order(order->lh_rsc, generate_op_key(order->lh_rsc->id, RSC_DEMOTE, 0), NULL,
+                                order->rh_rsc, generate_op_key(order->rh_rsc->id, RSC_MIGRATE, 0), NULL,
+                                flags, data_set);
+
+            /* We need to build the demote constraint against migrate_from as well
+             * to account for partial migrations. */
+            if (order->rh_rsc->partial_migration_target) {
+                custom_action_order(order->lh_rsc, generate_op_key(order->lh_rsc->id, RSC_DEMOTE, 0), NULL,
+                                    order->rh_rsc, generate_op_key(order->rh_rsc->id, RSC_MIGRATED, 0), NULL,
+                                    flags, data_set);
+            }
+        }
     }
 
 cleanup_order:
