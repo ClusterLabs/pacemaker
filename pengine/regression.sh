@@ -303,6 +303,9 @@ do_test 9-am-then-bm-b-migrating-a-stopping "Advanced migrate logic, A then B, B
 do_test 10-a-then-bm-b-move-a-clone "Advanced migrate logic, A clone then B, migrate B while stopping A"
 do_test 11-a-then-bm-b-move-a-clone-starting "Advanced migrate logic, A clone then B, B moving while A is start/stopping"
 
+do_test a-promote-then-b-migrate "A promote then B start. migrate B"
+do_test a-demote-then-b-migrate "A demote then B stop. migrate B"
+
 #echo ""
 #do_test complex1 "Complex	"
 
