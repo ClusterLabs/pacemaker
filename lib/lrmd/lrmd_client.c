@@ -1760,6 +1760,97 @@ nagios_get_metadata(const char *type, char **output)
 }
 #endif
 
+#if SUPPORT_HEARTBEAT
+/* strictly speaking, support for class=heartbeat style scripts
+ * does not require "heartbeat support" to be enabled.
+ * But since those scripts are part of the "heartbeat" package usually,
+ * and are very unlikely to be present in any other deployment,
+ * I leave it inside this ifdef.
+ *
+ * Yes, I know, these are legacy and should die,
+ * or at least be rewritten to be a proper OCF style agent.
+ * But they exist, and custom scripts following these rules do, too.
+ *
+ * Taken from the old "glue" lrmd, see
+ * http://hg.linux-ha.org/glue/file/0a7add1d9996/lib/plugins/lrm/raexechb.c#l49
+ * http://hg.linux-ha.org/glue/file/0a7add1d9996/lib/plugins/lrm/raexechb.c#l393
+ */
+
+static const char meta_data_template[] =
+"<?xml version=\"1.0\"?>\n"
+"<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
+"<resource-agent name=\"%s\">\n"
+"<version>1.0</version>\n"
+"<longdesc lang=\"en\">\n"
+"%s"
+"</longdesc>\n"
+"<shortdesc lang=\"en\">%s</shortdesc>\n"
+"<parameters>\n"
+"<parameter name=\"1\" unique=\"1\" required=\"0\">\n"
+"<longdesc lang=\"en\">\n"
+"This argument will be passed as the first argument to the "
+"heartbeat resource agent (assuming it supports one)\n"
+"</longdesc>\n"
+"<shortdesc lang=\"en\">argv[1]</shortdesc>\n"
+"<content type=\"string\" default=\" \" />\n"
+"</parameter>\n"
+"<parameter name=\"2\" unique=\"1\" required=\"0\">\n"
+"<longdesc lang=\"en\">\n"
+"This argument will be passed as the second argument to the "
+"heartbeat resource agent (assuming it supports one)\n"
+"</longdesc>\n"
+"<shortdesc lang=\"en\">argv[2]</shortdesc>\n"
+"<content type=\"string\" default=\" \" />\n"
+"</parameter>\n"
+"<parameter name=\"3\" unique=\"1\" required=\"0\">\n"
+"<longdesc lang=\"en\">\n"
+"This argument will be passed as the third argument to the "
+"heartbeat resource agent (assuming it supports one)\n"
+"</longdesc>\n"
+"<shortdesc lang=\"en\">argv[3]</shortdesc>\n"
+"<content type=\"string\" default=\" \" />\n"
+"</parameter>\n"
+"<parameter name=\"4\" unique=\"1\" required=\"0\">\n"
+"<longdesc lang=\"en\">\n"
+"This argument will be passed as the fourth argument to the "
+"heartbeat resource agent (assuming it supports one)\n"
+"</longdesc>\n"
+"<shortdesc lang=\"en\">argv[4]</shortdesc>\n"
+"<content type=\"string\" default=\" \" />\n"
+"</parameter>\n"
+"<parameter name=\"5\" unique=\"1\" required=\"0\">\n"
+"<longdesc lang=\"en\">\n"
+"This argument will be passed as the fifth argument to the "
+"heartbeat resource agent (assuming it supports one)\n"
+"</longdesc>\n"
+"<shortdesc lang=\"en\">argv[5]</shortdesc>\n"
+"<content type=\"string\" default=\" \" />\n"
+"</parameter>\n"
+"</parameters>\n"
+"<actions>\n"
+"<action name=\"start\"   timeout=\"15\" />\n"
+"<action name=\"stop\"    timeout=\"15\" />\n"
+"<action name=\"status\"  timeout=\"15\" />\n"
+"<action name=\"monitor\" timeout=\"15\" interval=\"15\" start-delay=\"15\" />\n"
+"<action name=\"meta-data\"  timeout=\"5\" />\n"
+"</actions>\n"
+"<special tag=\"heartbeart\">\n"
+"</special>\n"
+"</resource-agent>\n";
+
+static int
+heartbeat_get_metadata(const char *type, char **output)
+{
+	GString * meta_data;
+	meta_data = g_string_new("");
+	g_string_sprintf(meta_data, meta_data_template, type, type, type);
+	*output = strdup(meta_data->str);
+	g_string_free(meta_data, TRUE);
+	crm_trace("Created fake metadata: %d", strlen(*output));
+	return pcmk_ok;
+}
+#endif
+
 static int
 generic_get_metadata(const char *standard, const char *provider, const char *type, char **output)
 {
@@ -1811,6 +1902,10 @@ lrmd_api_get_metadata(lrmd_t * lrmd,
 #if SUPPORT_NAGIOS
     } else if (safe_str_eq(class, "nagios")) {
         return nagios_get_metadata(type, output);
+#endif
+#if SUPPORT_HEARTBEAT
+    } else if (safe_str_eq(class, "heartbeat")) {
+	return heartbeat_get_metadata(type, output);
 #endif
     }
     return generic_get_metadata(class, provider, type, output);
