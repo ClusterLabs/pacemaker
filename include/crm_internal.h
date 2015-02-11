@@ -31,6 +31,7 @@
 
 #  include <crm/lrmd.h>
 #  include <crm/common/logging.h>
+#  include <crm/common/io.h>
 #  include <crm/common/ipcs.h>
 
 /* Dynamic loading of libraries */
@@ -151,15 +152,9 @@ crm_strlen_zero(const char *s)
 }
 
 char *add_list_element(char *list, const char *value);
-char *generate_series_filename(const char *directory, const char *series, int sequence,
-                               gboolean bzip);
-int get_last_sequence(const char *directory, const char *series);
-void write_last_sequence(const char *directory, const char *series, int sequence, int max);
 
 int crm_pid_active(long pid);
 void crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile);
-gboolean crm_is_writable(const char *dir, const char *file, const char *user, const char *group,
-                         gboolean need_both);
 
 char *generate_op_key(const char *rsc_id, const char *op_type, int interval);
 char *generate_notify_key(const char *rsc_id, const char *notify_type, const char *op_type);

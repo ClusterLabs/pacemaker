@@ -32,7 +32,7 @@ lib_LTLIBRARIES	= libcrmcommon.la
 
 CFLAGS		= $(CFLAGS_COPY:-Wcast-qual=) -fPIC
 
-libcrmcommon_la_SOURCES	= ipc.c utils.c xml.c iso8601.c remote.c mainloop.c logging.c watchdog.c
+libcrmcommon_la_SOURCES	= ipc.c io.c utils.c xml.c iso8601.c remote.c mainloop.c logging.c watchdog.c
 if BUILD_CIBSECRETS
 libcrmcommon_la_SOURCES	+= cib_secrets.c
 endif
