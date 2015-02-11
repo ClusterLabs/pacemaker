@@ -299,7 +299,7 @@ te_connect_stonith(gpointer user_data)
                 crm_err("Sign-in failed: triggered a retry");
                 mainloop_set_trigger(stonith_reconnect);
             } else {
-                crm_debug("Sign-in failed, but no longer required");
+                crm_info("Sign-in failed, but no longer required");
             }
             return TRUE;
         }
