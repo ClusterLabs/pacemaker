@@ -37,6 +37,14 @@
 #include <crm/crm.h>
 #include <crm/common/util.h>
 
+/*!
+ * \brief Create a directory, including any parent directories needed
+ *
+ * \param[in] path_c Pathname of the directory to create
+ * \param[in] mode Permissions to be used (with current umask) when creating
+ *
+ * \note This logs errors but does not return them to the caller.
+ */
 void
 crm_build_path(const char *path_c, mode_t mode)
 {
@@ -61,6 +69,18 @@ crm_build_path(const char *path_c, mode_t mode)
     free(path);
 }
 
+/*!
+ * \internal
+ * \brief Allocate and create a file path using a sequence number
+ *
+ * \param[in] directory Directory that contains the file series
+ * \param[in] series Start of file name
+ * \param[in] sequence Sequence number (MUST be less than 33 digits)
+ * \param[in] bzip Whether to use ".bz2" instead of ".raw" as extension
+ *
+ * \return Newly allocated file path, or NULL on error
+ * \note Caller is responsible for freeing the returned memory
+ */
 char *
 generate_series_filename(const char *directory, const char *series, int sequence, gboolean bzip)
 {
@@ -88,6 +108,15 @@ generate_series_filename(const char *directory, const char *series, int sequence
     return filename;
 }
 
+/*!
+ * \internal
+ * \brief Read and return sequence number stored in a file series' .last file
+ *
+ * \param[in] directory Directory that contains the file series
+ * \param[in] series Start of file name
+ *
+ * \return The last sequence number, or 0 on error
+ */
 int
 get_last_sequence(const char *directory, const char *series)
 {
@@ -149,6 +178,17 @@ get_last_sequence(const char *directory, const char *series)
     return seq;
 }
 
+/*!
+ * \internal
+ * \brief Write sequence number to a file series' .last file
+ *
+ * \param[in] directory Directory that contains the file series
+ * \param[in] series Start of file name
+ * \param[in] sequence Sequence number to write
+ * \param[in] max Maximum sequence value, after which sequence is reset to 0
+ *
+ * \note This function logs some errors but does not return any to the caller
+ */
 void
 write_last_sequence(const char *directory, const char *series, int sequence, int max)
 {
@@ -171,7 +211,7 @@ write_last_sequence(const char *directory, const char *series, int sequence, int
     len += strlen(series);
     series_file = malloc(len);
 
-    if(series_file) {
+    if (series_file) {
         sprintf(series_file, "%s/%s.last", directory, series);
         file_strm = fopen(series_file, "w");
     }
@@ -195,6 +235,18 @@ write_last_sequence(const char *directory, const char *series, int sequence, int
     free(series_file);
 }
 
+/*!
+ * \internal
+ * \brief Return whether a directory or file is writable by a user/group
+ *
+ * \param[in] dir Directory to check or that contains file
+ * \param[in] file File name to check (or NULL to check directory)
+ * \param[in] user Name of user that should have write permission
+ * \param[in] group Name of group that should have write permission
+ * \param[in] need_both Whether both user and group must be able to write
+ *
+ * \return TRUE if permissions match, FALSE if they don't or on error
+ */
 gboolean
 crm_is_writable(const char *dir, const char *file,
                 const char *user, const char *group, gboolean need_both)
@@ -267,6 +319,13 @@ crm_is_writable(const char *dir, const char *file,
     return pass;
 }
 
+/*!
+ * \internal
+ * \brief Flush and sync a directory to disk
+ *
+ * \param[in] name Directory to flush and sync
+ * \note This function logs errors but does not return them to the caller
+ */
 void
 crm_sync_directory(const char *name)
 {
@@ -293,6 +352,17 @@ crm_sync_directory(const char *name)
     }
 }
 
+/*!
+ * \internal
+ * \brief Allocate, read and return the contents of a file
+ *
+ * \param[in] filename Name of file to read
+ *
+ * \return Newly allocated memory with contents of file, or NULL on error
+ * \note On success, the caller is responsible for freeing the returned memory;
+ *       on error, errno will be 0 (indicating file was nonexistent or empty)
+ *       or one of the errno values set by fopen, ftell, or calloc
+ */
 char *
 crm_read_contents(const char *filename)
 {
@@ -330,6 +400,15 @@ crm_read_contents(const char *filename)
     return contents;
 }
 
+/*!
+ * \internal
+ * \brief Write text to a file, flush and sync it to disk, then close the file
+ *
+ * \param[in] fd File descriptor opened for writing
+ * \param[in] contents String to write to file
+ *
+ * \return 0 on success, -1 on error (in which case errno will be set)
+ */
 int
 crm_write_sync(int fd, const char *contents)
 {
