@@ -85,7 +85,6 @@ static gboolean
 validate_cib_digest(xmlNode * local_cib, const char *sigfile)
 {
     gboolean passed = FALSE;
-    char *digest = NULL;
     char *expected = crm_read_contents(sigfile);
 
     if (expected == NULL) {
@@ -101,25 +100,7 @@ validate_cib_digest(xmlNode * local_cib, const char *sigfile)
                 return FALSE;
         }
     }
-
-    if (local_cib != NULL) {
-        digest = calculate_on_disk_digest(local_cib);
-        if (digest == NULL) {
-            crm_perror(LOG_ERR, "Could not calculate digest for comparison");
-            free(expected);
-            return FALSE;
-        }
-    }
-
-    if (safe_str_eq(expected, digest)) {
-        crm_trace("Digest comparision passed: %s", digest);
-        passed = TRUE;
-    } else {
-        crm_err("Digest comparision failed: expected %s (%s), calculated %s",
-                expected, sigfile, digest);
-    }
-
-    free(digest);
+    passed = crm_digest_verify(local_cib, expected);
     free(expected);
     return passed;
 }

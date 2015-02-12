@@ -159,3 +159,27 @@ calculate_xml_versioned_digest(xmlNode * input, gboolean sort, gboolean do_filte
     crm_trace("Using v2 digest algorithm for %s", crm_str(version));
     return calculate_xml_digest_v2(input, do_filter);
 }
+
+gboolean
+crm_digest_verify(xmlNode *input, const char *expected)
+{
+    char *calculated = NULL;
+    gboolean passed;
+
+    if (input != NULL) {
+        calculated = calculate_on_disk_digest(input);
+        if (calculated == NULL) {
+            crm_perror(LOG_ERR, "Could not calculate digest for comparison");
+            return FALSE;
+        }
+    }
+    passed = safe_str_eq(expected, calculated);
+    if (passed) {
+        crm_trace("Digest comparison passed: %s", calculated);
+    } else {
+        crm_err("Digest comparison failed: expected %s, calculated %s",
+                expected, calculated);
+    }
+    free(calculated);
+    return passed;
+}

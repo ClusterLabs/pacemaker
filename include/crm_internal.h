@@ -350,4 +350,6 @@ static inline void *realloc_safe(void *ptr, size_t size)
 void crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, int depth);
 void crm_buffer_add_char(char **buffer, int *offset, int *max, char c);
 
+gboolean crm_digest_verify(xmlNode *input, const char *expected);
+
 #endif                          /* CRM_INTERNAL__H */
