@@ -583,31 +583,6 @@ initializeCib(xmlNode * new_cib)
     return TRUE;
 }
 
-static void
-sync_directory(const char *name)
-{
-    int fd = 0;
-    DIR *directory = NULL;
-
-    directory = opendir(name);
-    if (directory == NULL) {
-        crm_perror(LOG_ERR, "Could not open %s for syncing", name);
-        return;
-    }
-
-    fd = dirfd(directory);
-    if (fd < 0) {
-        crm_perror(LOG_ERR, "Could not obtain file descriptor for %s", name);
-
-    } else if (fsync(fd) < 0) {
-        crm_perror(LOG_ERR, "Could not sync %s", name);
-    }
-
-    if (closedir(directory) < 0) {
-        crm_perror(LOG_ERR, "Could not close %s after fsync", name);
-    }
-}
-
 /*
  * This method will free the old CIB pointer on success and the new one
  * on failure.
@@ -779,7 +754,7 @@ write_cib_contents(gpointer p)
             goto cleanup;
         }
         write_last_sequence(cib_root, CIB_SERIES, seq + 1, CIB_SERIES_MAX);
-        sync_directory(cib_root);
+        crm_sync_directory(cib_root);
 
         crm_info("Archived previous version as %s", backup_file);
     }
@@ -827,12 +802,12 @@ write_cib_contents(gpointer p)
     crm_debug("Wrote digest %s to disk", digest);
     cib_tmp = retrieveCib(tmp_cib, tmp_digest, FALSE);
     CRM_ASSERT(cib_tmp != NULL);
-    sync_directory(cib_root);
+    crm_sync_directory(cib_root);
 
     crm_debug("Activating %s", tmp_cib);
     cib_rename(tmp_cib, primary_file);
     cib_rename(tmp_digest, digest_file);
-    sync_directory(cib_root);
+    crm_sync_directory(cib_root);
 
   cleanup:
     free(backup_digest);

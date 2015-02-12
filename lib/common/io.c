@@ -30,6 +30,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
+#include <dirent.h>
 #include <pwd.h>
 #include <grp.h>
 
@@ -264,4 +265,30 @@ crm_is_writable(const char *dir, const char *file,
   out:
     free(full_file);
     return pass;
+}
+
+void
+crm_sync_directory(const char *name)
+{
+    int fd;
+    DIR *directory;
+
+    directory = opendir(name);
+    if (directory == NULL) {
+        crm_perror(LOG_ERR, "Could not open %s for syncing", name);
+        return;
+    }
+
+    fd = dirfd(directory);
+    if (fd < 0) {
+        crm_perror(LOG_ERR, "Could not obtain file descriptor for %s", name);
+        return;
+    }
+
+    if (fsync(fd) < 0) {
+        crm_perror(LOG_ERR, "Could not sync %s", name);
+    }
+    if (closedir(directory) < 0) {
+        crm_perror(LOG_ERR, "Could not close %s after fsync", name);
+    }
 }

@@ -38,4 +38,6 @@ void write_last_sequence(const char *directory, const char *series, int sequence
 gboolean crm_is_writable(const char *dir, const char *file, const char *user, const char *group,
                          gboolean need_both);
 
+void crm_sync_directory(const char *name);
+
 #endif /* CRM_COMMON_IO__H */
