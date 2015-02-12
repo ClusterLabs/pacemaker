@@ -41,5 +41,6 @@ gboolean crm_is_writable(const char *dir, const char *file, const char *user, co
 void crm_sync_directory(const char *name);
 
 char *crm_read_contents(const char *filename);
+int crm_write_sync(int fd, const char *contents);
 
 #endif /* CRM_COMMON_IO__H */

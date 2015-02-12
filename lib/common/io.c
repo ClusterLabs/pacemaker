@@ -329,3 +329,25 @@ crm_read_contents(const char *filename)
     fclose(fp);
     return contents;
 }
+
+int
+crm_write_sync(int fd, const char *contents)
+{
+    int rc = 0;
+    FILE *fp = fdopen(fd, "w");
+
+    if (fp == NULL) {
+        return -1;
+    }
+    if ((contents != NULL) && (fprintf(fp, "%s", contents) < 0)) {
+        rc = -1;
+    }
+    if (fflush(fp) != 0) {
+        rc = -1;
+    }
+    if (fsync(fileno(fp)) < 0) {
+        rc = -1;
+    }
+    fclose(fp);
+    return rc;
+}

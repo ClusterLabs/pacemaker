@@ -124,45 +124,6 @@ validate_cib_digest(xmlNode * local_cib, const char *sigfile)
     return passed;
 }
 
-static int
-write_cib_digest(xmlNode * local_cib, const char *digest_file, int fd, char *digest)
-{
-    int rc = 0;
-    char *local_digest = NULL;
-    FILE *digest_strm = fdopen(fd, "w");
-
-    if (digest_strm == NULL) {
-        crm_perror(LOG_ERR, "Cannot open signature file %s for writing", digest_file);
-        return -1;
-    }
-
-    if (digest == NULL) {
-        local_digest = calculate_on_disk_digest(local_cib);
-        CRM_ASSERT(digest != NULL);
-        digest = local_digest;
-    }
-
-    rc = fprintf(digest_strm, "%s", digest);
-    if (rc < 0) {
-        crm_perror(LOG_ERR, "Cannot write to signature file %s", digest_file);
-    }
-
-    CRM_ASSERT(digest_strm != NULL);
-    if (fflush(digest_strm) != 0) {
-        crm_perror(LOG_ERR, "Couldnt flush the contents of %s", digest_file);
-        rc = -1;
-    }
-
-    if (fsync(fileno(digest_strm)) < 0) {
-        crm_perror(LOG_ERR, "Couldnt sync the contents of %s", digest_file);
-        rc = -1;
-    }
-
-    fclose(digest_strm);
-    free(local_digest);
-    return rc;
-}
-
 static gboolean
 validate_on_disk_cib(const char *filename, xmlNode ** on_disk_cib)
 {
@@ -774,12 +735,13 @@ write_cib_contents(gpointer p)
 
     /* Must calculate the digest after writing as write_xml_file() updates the last-written field */
     digest = calculate_on_disk_digest(cib_local);
+    CRM_ASSERT(digest != NULL);
     crm_info("Wrote version %s.%s.0 of the CIB to disk (digest: %s)",
              admin_epoch ? admin_epoch : "0", epoch ? epoch : "0", digest);
 
     tmp_digest_fd = mkstemp(tmp_digest);
-    if (tmp_digest_fd < 0 || write_cib_digest(cib_local, tmp_digest, tmp_digest_fd, digest) <= 0) {
-        crm_err("Digest couldn't be written to %s", tmp_digest);
+    if ((tmp_digest_fd < 0) || (crm_write_sync(tmp_digest_fd, digest) < 0)) {
+        crm_perror(LOG_ERR, "Could not write digest to file %s", tmp_digest);
         exit_rc = pcmk_err_cib_save;
         goto cleanup;
     }
