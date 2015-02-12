@@ -29,6 +29,13 @@
 
 #define BEST_EFFORT_STATUS 0
 
+/*!
+ * \brief Dump XML in a format used with v1 digests
+ *
+ * \param[in] an_xml_node Root of XML to dump
+ *
+ * \return Newly allocated buffer containing dumped XML
+ */
 static char *
 dump_xml_for_digest(xmlNode * an_xml_node)
 {
@@ -43,7 +50,16 @@ dump_xml_for_digest(xmlNode * an_xml_node)
     return buffer;
 }
 
-/* "c048eae664dba840e1d2060f00299e9d" */
+/*!
+ * \brief Calculate and return v1 digest of XML tree
+ *
+ * \param[in] input Root of XML to digest
+ * \param[in] sort Whether to sort the XML before calculating digest
+ * \param[in] ignored Not used
+ *
+ * \return Newly allocated string containing digest
+ * \note Example return value: "c048eae664dba840e1d2060f00299e9d"
+ */
 static char *
 calculate_xml_digest_v1(xmlNode * input, gboolean sort, gboolean ignored)
 {
@@ -71,6 +87,14 @@ calculate_xml_digest_v1(xmlNode * input, gboolean sort, gboolean ignored)
     return digest;
 }
 
+/*!
+ * \brief Calculate and return v2 digest of XML tree
+ *
+ * \param[in] source Root of XML to digest
+ * \param[in] do_filter Whether to filter certain XML attributes
+ *
+ * \return Newly allocated string containing digest
+ */
 static char *
 calculate_xml_digest_v2(xmlNode * source, gboolean do_filter)
 {
@@ -121,6 +145,13 @@ calculate_xml_digest_v2(xmlNode * source, gboolean do_filter)
     return digest;
 }
 
+/*!
+ * \brief Calculate and return digest of XML tree, suitable for storing on disk
+ *
+ * \param[in] input Root of XML to digest
+ *
+ * \return Newly allocated string containing digest
+ */
 char *
 calculate_on_disk_digest(xmlNode * input)
 {
@@ -132,13 +163,31 @@ calculate_on_disk_digest(xmlNode * input)
     return calculate_xml_digest_v1(input, FALSE, FALSE);
 }
 
+/*!
+ * \brief Calculate and return digest of XML operation
+ *
+ * \param[in] input Root of XML to digest
+ * \param[in] version Not used
+ *
+ * \return Newly allocated string containing digest
+ */
 char *
-calculate_operation_digest(xmlNode * input, const char *version)
+calculate_operation_digest(xmlNode *input, const char *version)
 {
-    /* We still need the sorting for parameter digests */
+    /* We still need the sorting for operation digests */
     return calculate_xml_digest_v1(input, TRUE, FALSE);
 }
 
+/*!
+ * \brief Calculate and return digest of XML tree
+ *
+ * \param[in] input Root of XML to digest
+ * \param[in] sort Whether to sort XML before calculating digest
+ * \param[in] do_filter Whether to filter certain XML attributes
+ * \param[in] version CRM feature set version (used to select v1/v2 digest)
+ *
+ * \return Newly allocated string containing digest
+ */
 char *
 calculate_xml_versioned_digest(xmlNode * input, gboolean sort, gboolean do_filter,
                                const char *version)
@@ -160,6 +209,14 @@ calculate_xml_versioned_digest(xmlNode * input, gboolean sort, gboolean do_filte
     return calculate_xml_digest_v2(input, do_filter);
 }
 
+/*!
+ * \brief Return whether calculated digest of XML tree matches expected digest
+ *
+ * \param[in] input Root of XML to digest
+ * \param[in] expected Expected digest in on-disk format
+ *
+ * \return TRUE if digests match, FALSE otherwise or on error
+ */
 gboolean
 crm_digest_verify(xmlNode *input, const char *expected)
 {
