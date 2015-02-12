@@ -292,3 +292,40 @@ crm_sync_directory(const char *name)
         crm_perror(LOG_ERR, "Could not close %s after fsync", name);
     }
 }
+
+char *
+crm_read_contents(const char *filename)
+{
+    char *contents = NULL;
+    FILE *fp;
+    int length, read_len;
+
+    errno = 0; /* enable caller to distinguish error from empty file */
+
+    fp = fopen(filename, "r");
+    if (fp == NULL) {
+        return NULL;
+    }
+
+    fseek(fp, 0L, SEEK_END);
+    length = ftell(fp);
+
+    if (length > 0) {
+        contents = calloc(length + 1, sizeof(char));
+        if (contents == NULL) {
+            fclose(fp);
+            return NULL;
+        }
+
+        crm_trace("Reading %d bytes from %s", length, filename);
+        rewind(fp);
+        read_len = fread(contents, 1, length, fp);   /* Coverity: False positive */
+        if (read_len != length) {
+            free(contents);
+            contents = NULL;
+        }
+    }
+
+    fclose(fp);
+    return contents;
+}

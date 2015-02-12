@@ -84,52 +84,36 @@ extern void cib_cleanup(void);
 static gboolean
 validate_cib_digest(xmlNode * local_cib, const char *sigfile)
 {
-    char *digest = NULL;
-    char *expected = NULL;
     gboolean passed = FALSE;
-    FILE *expected_strm = NULL;
-    int start = 0, length = 0, read_len = 0;
+    char *digest = NULL;
+    char *expected = crm_read_contents(sigfile);
 
-    CRM_ASSERT(sigfile != NULL);
-
-    expected_strm = fopen(sigfile, "r");
-    if (expected_strm == NULL && errno == ENOENT) {
-        crm_warn("No on-disk digest present");
-        return TRUE;
-
-    } else if (expected_strm == NULL) {
-        crm_perror(LOG_ERR, "Could not open signature file %s for reading", sigfile);
-        goto bail;
+    if (expected == NULL) {
+        switch (errno) {
+            case 0:
+                crm_err("On-disk digest is empty");
+                return FALSE;
+            case ENOENT:
+                crm_warn("No on-disk digest present");
+                return TRUE;
+            default:
+                crm_perror(LOG_ERR, "Could not read on-disk digest from %s", sigfile);
+                return FALSE;
+        }
     }
 
     if (local_cib != NULL) {
         digest = calculate_on_disk_digest(local_cib);
+        if (digest == NULL) {
+            crm_perror(LOG_ERR, "Could not calculate digest for comparison");
+            free(expected);
+            return FALSE;
+        }
     }
 
-    start = ftell(expected_strm);
-    fseek(expected_strm, 0L, SEEK_END);
-    length = ftell(expected_strm);
-    fseek(expected_strm, 0L, start);
-
-    CRM_ASSERT(length >= 0);
-    CRM_ASSERT(start == ftell(expected_strm));
-
-    if (length > 0) {
-        crm_trace("Reading %d bytes from file", length);
-        expected = calloc(1, (length + 1));
-        read_len = fread(expected, 1, length, expected_strm);   /* Coverity: False positive */
-        CRM_ASSERT(read_len == length);
-    }
-    fclose(expected_strm);
-
-  bail:
-    if (expected == NULL) {
-        crm_err("On-disk digest is empty");
-
-    } else if (safe_str_eq(expected, digest)) {
+    if (safe_str_eq(expected, digest)) {
         crm_trace("Digest comparision passed: %s", digest);
         passed = TRUE;
-
     } else {
         crm_err("Digest comparision failed: expected %s (%s), calculated %s",
                 expected, sigfile, digest);
