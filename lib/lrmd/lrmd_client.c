@@ -1931,7 +1931,7 @@ lrmd_api_exec(lrmd_t * lrmd, const char *rsc_id, const char *action, const char 
     crm_xml_add_int(data, F_LRMD_RSC_START_DELAY, start_delay);
 
     for (tmp = params; tmp; tmp = tmp->next) {
-        hash2field((gpointer) tmp->key, (gpointer) tmp->value, args);
+        hash2smartfield((gpointer) tmp->key, (gpointer) tmp->value, args);
     }
 
     rc = lrmd_send_command(lrmd, LRMD_OP_RSC_EXEC, data, NULL, timeout, options, TRUE);
