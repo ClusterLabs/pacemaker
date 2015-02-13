@@ -653,11 +653,7 @@ resources_list_standards(void)
 #endif
 
 #if SUPPORT_HEARTBEAT
-    agents = resources_os_list_hb_agents();
-    if (agents) {
-        standards = g_list_append(standards, strdup("heartbeat"));
-        g_list_free_full(agents, free);
-    }
+    standards = g_list_append(standards, strdup("heartbeat"));
 #endif
 
     return standards;

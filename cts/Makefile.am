@@ -19,7 +19,7 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-CLEANFILES      = LSBDummy
+CLEANFILES      = LSBDummy HBDummy
 
 EXTRA_DIST      = $(cts_SCRIPTS) $(cts_DATA)
 
@@ -48,6 +48,7 @@ cts_SCRIPTS	=	cts		\
 			CTSlab.py		\
 			lxc_autogen.sh	\
 			LSBDummy		\
+			HBDummy		\
 			$(top_srcdir)/fencing/fence_dummy
 
 SUBDIRS	= benchmark

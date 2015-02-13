@@ -1,0 +1,127 @@
+#!/bin/sh
+#
+#
+#	Dummy Heartbeat RA. Does nothing but touch and remove a state file
+#
+# Copyright (c) 2015 Lars Ellenberg
+#
+# Based on LSBDummy,
+# Copyright (c) 2010 Andrew Beekhof
+#                    All Rights Reserved.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of version 2 of the GNU General Public License as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it would be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# Further, this software is distributed without any warranty that it is
+# free of the rightful claim of any third person regarding infringement
+# or the like.  Any license provided herein, whether implied or
+# otherwise, applies only to this software file.  Patent licenses, if
+# any, provided herein do not apply to combinations of this program with
+# other software, or any other product whatsoever.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write the Free Software Foundation,
+# Inc., 59 Temple Place - Suite 330, Boston MA 02111-1307, USA.
+#
+
+#######################################################################
+# Initialization:
+
+desc="Dummy Heartbeat service"
+. @OCF_ROOT_DIR@/resource.d/heartbeat/.ocf-directories
+: ${HA_VARRUN=/tmp} # Backup in case .ocf-directories doesn't exist
+
+#######################################################################
+
+success()
+{
+	echo -ne "[  OK  ]\r"
+}
+
+failure()
+{
+	echo -ne "[FAILED]\r"
+}
+
+# rpm based distros
+if [ -d @sysconfdir@/sysconfig ]; then
+	[ -f @INITDIR@/functions ] && . @INITDIR@/functions
+	[ -f @sysconfdir@/sysconfig/pacemaker ] && . @sysconfdir@/sysconfig/pacemaker
+	[ -z "$LOCK_FILE" ] && LOCK_FILE="@localstatedir@/lock/subsys/pacemaker"
+fi
+
+# deb based distros
+if [ -d @sysconfdir@/default ]; then
+	[ -f @sysconfdir@/default/pacemaker ] && . @sysconfdir@/default/pacemaker
+	[ -z "$LOCK_FILE" ] && LOCK_FILE="@localstatedir@/lock/pacemaker"
+fi
+
+dummy_usage() {
+	cat <<END
+usage: $0 dummyarg1 dummyarg2 {start|stop|status}
+
+Dummy Heartbeat resource
+END
+}
+
+dummy_start() {
+    echo -n "Starting $desc: "
+    touch ${state}
+    if [ -f ${state} ]; then
+	success
+	return 0
+    fi
+
+    failure
+    return 1
+}
+
+dummy_stop() {
+    echo -n "Stopping $desc: "
+    rm -f ${state}
+    if [ ! -f ${state} ]; then
+	success
+	return 0
+    fi
+
+    failure
+    return 1
+}
+
+dummy_monitor() {
+    if [ -f ${state} ]; then
+	echo "Running OK"
+	return 0
+    fi
+    echo "$desc is stopped"
+    return 3
+}
+
+# Positional arguments. Action is last. D'oh.
+
+case $# in
+3)	dummy_arg_1=$1 dummy_arg_2=$2 action=$3 ;;
+*)
+	dummy_usage
+	exit 1
+	;;
+esac
+
+state="${HA_VARRUN}/Dummy-`basename $0`-"$dummy_arg_1"-"$dummy_arg_2".state"
+
+case $action in
+start)		dummy_start;;
+stop)		dummy_stop;;
+status)		dummy_monitor;;
+*)		dummy_usage
+		exit 1
+		;;
+esac
+rc=$?
+echo "`basename $0` $1 : $rc"
+exit $rc

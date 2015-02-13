@@ -106,8 +106,9 @@ EOF
 	    chmod +x $cts_root/crm_report
 
 	    cp $cts_root/LSBDummy.in $cts_root/LSBDummy
+	    cp $cts_root/HBDummy.in $cts_root/HBDummy
 	    chmod +x $local_root/fencing/fence_*
-	    sed -i.sed s:@OCF_ROOT_DIR@:/usr/lib/ocf: $cts_root/LSBDummy
+	    sed -i.sed s:@OCF_ROOT_DIR@:/usr/lib/ocf: $cts_root/LSBDummy $cts_root/HBDummy
 	    
 	    echo "Make sure you add $cts_root to your PATH and set a value for \$cluster_name in .bashrc"
 	    exit 0
