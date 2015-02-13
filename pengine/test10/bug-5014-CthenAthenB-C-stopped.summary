@@ -4,7 +4,7 @@ Online: [ fc16-builder ]
 
  ClusterIP	(ocf::heartbeat:IPaddr2):	Stopped 
  ClusterIP2	(ocf::heartbeat:IPaddr2):	Stopped 
- ClusterIP3	(ocf::heartbeat:IPaddr2):	Stopped 
+ ClusterIP3	(ocf::heartbeat:IPaddr2):	(target-role:Stopped) Stopped 
 
 Transition Summary:
  * Start   ClusterIP	(fc16-builder - blocked)
@@ -21,5 +21,5 @@ Online: [ fc16-builder ]
 
  ClusterIP	(ocf::heartbeat:IPaddr2):	Stopped 
  ClusterIP2	(ocf::heartbeat:IPaddr2):	Stopped 
- ClusterIP3	(ocf::heartbeat:IPaddr2):	Stopped 
+ ClusterIP3	(ocf::heartbeat:IPaddr2):	(target-role:Stopped) Stopped 
 

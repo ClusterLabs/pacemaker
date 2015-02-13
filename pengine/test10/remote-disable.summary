@@ -4,7 +4,7 @@ Online: [ 18builder 18node1 18node2 ]
 RemoteOnline: [ remote1 ]
 
  shooter	(stonith:fence_xvm):	Started 18node1 
- remote1	(ocf::pacemaker:remote):	Started 18builder 
+ remote1	(ocf::pacemaker:remote):	(target-role:Stopped) Started 18builder 
  FAKE1	(ocf::heartbeat:Dummy):	Started 18node2 
  FAKE2	(ocf::heartbeat:Dummy):	Started remote1 
  FAKE3	(ocf::heartbeat:Dummy):	Started 18builder 
@@ -24,7 +24,7 @@ Online: [ 18builder 18node1 18node2 ]
 RemoteOFFLINE: [ remote1 ]
 
  shooter	(stonith:fence_xvm):	Started 18node1 
- remote1	(ocf::pacemaker:remote):	Stopped 
+ remote1	(ocf::pacemaker:remote):	(target-role:Stopped) Stopped 
  FAKE1	(ocf::heartbeat:Dummy):	Started 18node2 
  FAKE2	(ocf::heartbeat:Dummy):	Stopped 
  FAKE3	(ocf::heartbeat:Dummy):	Started 18builder 

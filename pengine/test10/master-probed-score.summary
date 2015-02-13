@@ -11,7 +11,7 @@ Online: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.ed
      SymlinkDhcpdConf	(ocf::heartbeat:symlink):	Stopped 
      SymlinkSysconfigDhcpd	(ocf::heartbeat:symlink):	Stopped 
      SymlinkDhcpdLeases	(ocf::heartbeat:symlink):	Stopped 
-     Dhcpd	(lsb:dhcpd):	Stopped 
+     Dhcpd	(lsb:dhcpd):	(target-role:stopped) Stopped 
      DhcpIP	(ocf::heartbeat:IPaddr2):	Stopped 
  Clone Set: CupsClone [CupsGroup]
      Stopped: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
@@ -302,7 +302,7 @@ Online: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.ed
      SymlinkDhcpdConf	(ocf::heartbeat:symlink):	Started orestes-corosync.nevis.columbia.edu
      SymlinkSysconfigDhcpd	(ocf::heartbeat:symlink):	Started orestes-corosync.nevis.columbia.edu
      SymlinkDhcpdLeases	(ocf::heartbeat:symlink):	Started orestes-corosync.nevis.columbia.edu
-     Dhcpd	(lsb:dhcpd):	Stopped 
+     Dhcpd	(lsb:dhcpd):	(target-role:stopped) Stopped 
      DhcpIP	(ocf::heartbeat:IPaddr2):	Stopped 
  Clone Set: CupsClone [CupsGroup]
      Started: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
