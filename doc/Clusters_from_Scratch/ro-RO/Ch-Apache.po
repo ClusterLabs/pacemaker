@@ -205,7 +205,7 @@ msgstr "Actualizarea Configurației"
 #. Tag: para
 #, fuzzy, no-c-format
 msgid "At this point, Apache is ready to go, all that needs to be done is to add it to the cluster. Lets call the resource WebSite. We need to use an OCF script called apache in the heartbeat namespace <footnote><para>Compare the key used here ocf:heartbeat:apache with the one we used earlier for the IP address: ocf:heartbeat:IPaddr2</para></footnote> , the only required parameter is the path to the main Apache configuration file and we’ll tell the cluster to check once a minute that apache is still running."
-msgstr "La acest punct, Apache este gata de pornire, tot ce trebuie făcut este să îl adăugăm la cluster. Să denumim resursa WebSite. Avem nevoie să folosim un script OCF numit apache din namespace-ul  <footnote> <para> Comparați cheia folosită aici, ocf:heartbeart:apache, cu cea folosită anterior pentru adresa IP: ocf:heartbeat:IPaddr2 </para> </footnote> heartbeat, singurul parametru necesar este calea către fișierul principal de configurare al Apache și vom spune clusterului să verifice o dată pe minut că apache încă funcționează."
+msgstr "La acest punct, Apache este gata de pornire, tot ce trebuie făcut este să îl adăugăm la cluster. Să denumim resursa WebSite. Avem nevoie să folosim un script OCF numit apache din namespace-ul  <footnote> <para> Comparați cheia folosită aici, ocf:heartbeat:apache, cu cea folosită anterior pentru adresa IP: ocf:heartbeat:IPaddr2 </para> </footnote> heartbeat, singurul parametru necesar este calea către fișierul principal de configurare al Apache și vom spune clusterului să verifice o dată pe minut că apache încă funcționează."
 
 #. Tag: screen
 #, no-c-format
