@@ -82,59 +82,33 @@ validate_cib_digest(xmlNode *local_cib, const char *sigfile)
 }
 
 static gboolean
-validate_on_disk_cib(const char *filename, xmlNode ** on_disk_cib)
+validate_on_disk_cib(const char *filename)
 {
     int s_res = -1;
     struct stat buf;
     gboolean passed = TRUE;
+    char *sigfile = NULL;
     xmlNode *root = NULL;
 
     CRM_ASSERT(filename != NULL);
 
     s_res = stat(filename, &buf);
-    if (s_res == 0) {
-        char *sigfile = NULL;
-        size_t fnsize;
-
+    if (s_res < 0) {
+        crm_perror(LOG_WARNING, "Could not validate cluster configuration file %s", filename);
+    } else if (buf.st_size == 0) {
+        crm_warn("Cluster configuration file %s is corrupt: size is zero", filename);
+        return FALSE;
+    } else {
         crm_trace("Reading cluster configuration from: %s", filename);
         root = filename2xml(filename);
-
-        fnsize = strlen(filename) + 5;
-        sigfile = calloc(1, fnsize);
-        snprintf(sigfile, fnsize, "%s.sig", filename);
+        sigfile = crm_concat(filename, "sig", '.');
         if (validate_cib_digest(root, sigfile) == FALSE) {
             passed = FALSE;
         }
         free(sigfile);
-    }
-
-    if (on_disk_cib != NULL) {
-        *on_disk_cib = root;
-    } else {
         free_xml(root);
     }
-
     return passed;
-}
-
-static gboolean
-on_disk_cib_corrupt(const char *filename)
-{
-    int s_res = -1;
-    struct stat buf;
-    gboolean corrupt = FALSE;
-
-    CRM_ASSERT(filename != NULL);
-
-    s_res = stat(filename, &buf);
-    if (s_res == 0) {
-        if (buf.st_size == 0) {
-            crm_warn("Cluster configuration file %s is corrupt: size is zero", filename);
-            corrupt = TRUE;
-        }
-    }
-
-    return corrupt;
 }
 
 static int
@@ -613,9 +587,8 @@ write_cib_contents(gpointer p)
     /* Always write out with num_updates=0 */
     crm_xml_add(cib_local, XML_ATTR_NUMUPDATES, "0");
 
-    /* check the admin didnt modify it underneath us */
-    if (on_disk_cib_corrupt(primary_file) == FALSE
-        && validate_on_disk_cib(primary_file, NULL) == FALSE) {
+    /* check the admin didn't modify it underneath us */
+    if (validate_on_disk_cib(primary_file) == FALSE) {
         crm_err("%s was manually modified while the cluster was active!", primary_file);
         exit_rc = pcmk_err_cib_modified;
         goto cleanup;
