@@ -50,39 +50,15 @@
 
 extern const char *cib_root;
 
-#define CIB_WRITE_PARANOIA	0
-
-const char *local_resource_path[] = {
-    XML_CIB_TAG_STATUS,
-};
-
-const char *resource_path[] = {
-    XML_CIB_TAG_RESOURCES,
-};
-
-const char *node_path[] = {
-    XML_CIB_TAG_NODES,
-};
-
-const char *constraint_path[] = {
-    XML_CIB_TAG_CONSTRAINTS,
-};
-
 crm_trigger_t *cib_writer = NULL;
 gboolean initialized = FALSE;
-xmlNode *node_search = NULL;
-xmlNode *resource_search = NULL;
-xmlNode *constraint_search = NULL;
-xmlNode *status_search = NULL;
 
 extern int cib_status;
 
-int set_connected_peers(xmlNode * xml_obj);
 int write_cib_contents(gpointer p);
-extern void cib_cleanup(void);
 
 static gboolean
-validate_cib_digest(xmlNode * local_cib, const char *sigfile)
+validate_cib_digest(xmlNode *local_cib, const char *sigfile)
 {
     gboolean passed = FALSE;
     char *expected = crm_read_contents(sigfile);
@@ -478,10 +454,6 @@ uninitializeCib(void)
 
     initialized = FALSE;
     the_cib = NULL;
-    node_search = NULL;
-    resource_search = NULL;
-    constraint_search = NULL;
-    status_search = NULL;
 
     crm_debug("Deallocating the CIB.");
 
