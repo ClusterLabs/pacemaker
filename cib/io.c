@@ -84,99 +84,25 @@ extern void cib_cleanup(void);
 static gboolean
 validate_cib_digest(xmlNode * local_cib, const char *sigfile)
 {
-    char *digest = NULL;
-    char *expected = NULL;
     gboolean passed = FALSE;
-    FILE *expected_strm = NULL;
-    int start = 0, length = 0, read_len = 0;
+    char *expected = crm_read_contents(sigfile);
 
-    CRM_ASSERT(sigfile != NULL);
-
-    expected_strm = fopen(sigfile, "r");
-    if (expected_strm == NULL && errno == ENOENT) {
-        crm_warn("No on-disk digest present");
-        return TRUE;
-
-    } else if (expected_strm == NULL) {
-        crm_perror(LOG_ERR, "Could not open signature file %s for reading", sigfile);
-        goto bail;
-    }
-
-    if (local_cib != NULL) {
-        digest = calculate_on_disk_digest(local_cib);
-    }
-
-    start = ftell(expected_strm);
-    fseek(expected_strm, 0L, SEEK_END);
-    length = ftell(expected_strm);
-    fseek(expected_strm, 0L, start);
-
-    CRM_ASSERT(length >= 0);
-    CRM_ASSERT(start == ftell(expected_strm));
-
-    if (length > 0) {
-        crm_trace("Reading %d bytes from file", length);
-        expected = calloc(1, (length + 1));
-        read_len = fread(expected, 1, length, expected_strm);   /* Coverity: False positive */
-        CRM_ASSERT(read_len == length);
-    }
-    fclose(expected_strm);
-
-  bail:
     if (expected == NULL) {
-        crm_err("On-disk digest is empty");
-
-    } else if (safe_str_eq(expected, digest)) {
-        crm_trace("Digest comparision passed: %s", digest);
-        passed = TRUE;
-
-    } else {
-        crm_err("Digest comparision failed: expected %s (%s), calculated %s",
-                expected, sigfile, digest);
+        switch (errno) {
+            case 0:
+                crm_err("On-disk digest is empty");
+                return FALSE;
+            case ENOENT:
+                crm_warn("No on-disk digest present");
+                return TRUE;
+            default:
+                crm_perror(LOG_ERR, "Could not read on-disk digest from %s", sigfile);
+                return FALSE;
+        }
     }
-
-    free(digest);
+    passed = crm_digest_verify(local_cib, expected);
     free(expected);
     return passed;
-}
-
-static int
-write_cib_digest(xmlNode * local_cib, const char *digest_file, int fd, char *digest)
-{
-    int rc = 0;
-    char *local_digest = NULL;
-    FILE *digest_strm = fdopen(fd, "w");
-
-    if (digest_strm == NULL) {
-        crm_perror(LOG_ERR, "Cannot open signature file %s for writing", digest_file);
-        return -1;
-    }
-
-    if (digest == NULL) {
-        local_digest = calculate_on_disk_digest(local_cib);
-        CRM_ASSERT(digest != NULL);
-        digest = local_digest;
-    }
-
-    rc = fprintf(digest_strm, "%s", digest);
-    if (rc < 0) {
-        crm_perror(LOG_ERR, "Cannot write to signature file %s", digest_file);
-    }
-
-    CRM_ASSERT(digest_strm != NULL);
-    if (fflush(digest_strm) != 0) {
-        crm_perror(LOG_ERR, "Couldnt flush the contents of %s", digest_file);
-        rc = -1;
-    }
-
-    if (fsync(fileno(digest_strm)) < 0) {
-        crm_perror(LOG_ERR, "Couldnt sync the contents of %s", digest_file);
-        rc = -1;
-    }
-
-    fclose(digest_strm);
-    free(local_digest);
-    return rc;
 }
 
 static gboolean
@@ -583,31 +509,6 @@ initializeCib(xmlNode * new_cib)
     return TRUE;
 }
 
-static void
-sync_directory(const char *name)
-{
-    int fd = 0;
-    DIR *directory = NULL;
-
-    directory = opendir(name);
-    if (directory == NULL) {
-        crm_perror(LOG_ERR, "Could not open %s for syncing", name);
-        return;
-    }
-
-    fd = dirfd(directory);
-    if (fd < 0) {
-        crm_perror(LOG_ERR, "Could not obtain file descriptor for %s", name);
-
-    } else if (fsync(fd) < 0) {
-        crm_perror(LOG_ERR, "Could not sync %s", name);
-    }
-
-    if (closedir(directory) < 0) {
-        crm_perror(LOG_ERR, "Could not close %s after fsync", name);
-    }
-}
-
 /*
  * This method will free the old CIB pointer on success and the new one
  * on failure.
@@ -779,7 +680,7 @@ write_cib_contents(gpointer p)
             goto cleanup;
         }
         write_last_sequence(cib_root, CIB_SERIES, seq + 1, CIB_SERIES_MAX);
-        sync_directory(cib_root);
+        crm_sync_directory(cib_root);
 
         crm_info("Archived previous version as %s", backup_file);
     }
@@ -815,24 +716,25 @@ write_cib_contents(gpointer p)
 
     /* Must calculate the digest after writing as write_xml_file() updates the last-written field */
     digest = calculate_on_disk_digest(cib_local);
+    CRM_ASSERT(digest != NULL);
     crm_info("Wrote version %s.%s.0 of the CIB to disk (digest: %s)",
              admin_epoch ? admin_epoch : "0", epoch ? epoch : "0", digest);
 
     tmp_digest_fd = mkstemp(tmp_digest);
-    if (tmp_digest_fd < 0 || write_cib_digest(cib_local, tmp_digest, tmp_digest_fd, digest) <= 0) {
-        crm_err("Digest couldn't be written to %s", tmp_digest);
+    if ((tmp_digest_fd < 0) || (crm_write_sync(tmp_digest_fd, digest) < 0)) {
+        crm_perror(LOG_ERR, "Could not write digest to file %s", tmp_digest);
         exit_rc = pcmk_err_cib_save;
         goto cleanup;
     }
     crm_debug("Wrote digest %s to disk", digest);
     cib_tmp = retrieveCib(tmp_cib, tmp_digest, FALSE);
     CRM_ASSERT(cib_tmp != NULL);
-    sync_directory(cib_root);
+    crm_sync_directory(cib_root);
 
     crm_debug("Activating %s", tmp_cib);
     cib_rename(tmp_cib, primary_file);
     cib_rename(tmp_digest, digest_file);
-    sync_directory(cib_root);
+    crm_sync_directory(cib_root);
 
   cleanup:
     free(backup_digest);

@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  *
@@ -55,7 +54,6 @@
 
 #define XML_BUFFER_SIZE	4096
 #define XML_PARSER_DEBUG 0
-#define BEST_EFFORT_STATUS 0
 
 void
 xml_log(int priority, const char *fmt, ...)
@@ -3691,9 +3689,6 @@ dump_filtered_xml(xmlNode * data, int options, char **buffer, int *offset, int *
 }
 
 static void
-dump_xml(xmlNode * data, int options, char **buffer, int *offset, int *max, int depth);
-
-static void
 dump_xml_element(xmlNode * data, int options, char **buffer, int *offset, int *max, int depth)
 {
     const char *name = NULL;
@@ -3744,7 +3739,7 @@ dump_xml_element(xmlNode * data, int options, char **buffer, int *offset, int *m
         xmlNode *xChild = NULL;
 
         for (xChild = __xml_first_child(data); xChild != NULL; xChild = __xml_next(xChild)) {
-            dump_xml(xChild, options, buffer, offset, max, depth + 1);
+            crm_xml_dump(xChild, options, buffer, offset, max, depth + 1);
         }
 
         insert_prefix(options, buffer, offset, max, depth);
@@ -3784,8 +3779,8 @@ dump_xml_comment(xmlNode * data, int options, char **buffer, int *offset, int *m
     }
 }
 
-static void
-dump_xml(xmlNode * data, int options, char **buffer, int *offset, int *max, int depth)
+void
+crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, int depth)
 {
 #if 0
     if (is_not_set(options, xml_log_option_filtered)) {
@@ -3879,24 +3874,10 @@ dump_xml(xmlNode * data, int options, char **buffer, int *offset, int *max, int 
 
 }
 
-static void
-fix_digest_buffer(char **buffer, int *offset, int *max, char c)
+void
+crm_buffer_add_char(char **buffer, int *offset, int *max, char c)
 {
     buffer_print(*buffer, *max, *offset, "%c", c);
-}
-
-static char *
-dump_xml_for_digest(xmlNode * an_xml_node)
-{
-    char *buffer = NULL;
-    int offset = 0, max = 0;
-
-    /* for compatability with the old result which is used for v1 digests */
-    fix_digest_buffer(&buffer, &offset, &max, ' ');
-    dump_xml(an_xml_node, 0, &buffer, &offset, &max, 0);
-    fix_digest_buffer(&buffer, &offset, &max, '\n');
-
-    return buffer;
 }
 
 char *
@@ -3905,7 +3886,7 @@ dump_xml_formatted(xmlNode * an_xml_node)
     char *buffer = NULL;
     int offset = 0, max = 0;
 
-    dump_xml(an_xml_node, xml_log_option_formatted, &buffer, &offset, &max, 0);
+    crm_xml_dump(an_xml_node, xml_log_option_formatted, &buffer, &offset, &max, 0);
     return buffer;
 }
 
@@ -3915,7 +3896,7 @@ dump_xml_unformatted(xmlNode * an_xml_node)
     char *buffer = NULL;
     int offset = 0, max = 0;
 
-    dump_xml(an_xml_node, 0, &buffer, &offset, &max, 0);
+    crm_xml_dump(an_xml_node, 0, &buffer, &offset, &max, 0);
     return buffer;
 }
 
@@ -5077,123 +5058,6 @@ sorted_xml(xmlNode * input, xmlNode * parent, gboolean recursive)
     }
 
     return result;
-}
-
-/* "c048eae664dba840e1d2060f00299e9d" */
-static char *
-calculate_xml_digest_v1(xmlNode * input, gboolean sort, gboolean ignored)
-{
-    char *digest = NULL;
-    char *buffer = NULL;
-    xmlNode *copy = NULL;
-
-    if (sort) {
-        crm_trace("Sorting xml...");
-        copy = sorted_xml(input, NULL, TRUE);
-        crm_trace("Done");
-        input = copy;
-    }
-
-    buffer = dump_xml_for_digest(input);
-    CRM_CHECK(buffer != NULL && strlen(buffer) > 0, free_xml(copy);
-              free(buffer);
-              return NULL);
-
-    digest = crm_md5sum(buffer);
-    crm_log_xml_trace(input, "digest:source");
-
-    free(buffer);
-    free_xml(copy);
-    return digest;
-}
-
-static char *
-calculate_xml_digest_v2(xmlNode * source, gboolean do_filter)
-{
-    char *digest = NULL;
-    char *buffer = NULL;
-    int offset, max;
-
-    static struct qb_log_callsite *digest_cs = NULL;
-
-    crm_trace("Begin digest %s", do_filter?"filtered":"");
-    if (do_filter && BEST_EFFORT_STATUS) {
-        /* Exclude the status calculation from the digest
-         *
-         * This doesn't mean it wont be sync'd, we just wont be paranoid
-         * about it being an _exact_ copy
-         *
-         * We don't need it to be exact, since we throw it away and regenerate
-         * from our peers whenever a new DC is elected anyway
-         *
-         * Importantly, this reduces the amount of XML to copy+export as
-         * well as the amount of data for MD5 needs to operate on
-         */
-
-    } else {
-        dump_xml(source, do_filter ? xml_log_option_filtered : 0, &buffer, &offset, &max, 0);
-    }
-
-    CRM_ASSERT(buffer != NULL);
-    digest = crm_md5sum(buffer);
-
-    if (digest_cs == NULL) {
-        digest_cs = qb_log_callsite_get(__func__, __FILE__, "cib-digest", LOG_TRACE, __LINE__,
-                                        crm_trace_nonlog);
-    }
-    if (digest_cs && digest_cs->targets) {
-        char *trace_file = crm_concat("/tmp/digest", digest, '-');
-
-        crm_trace("Saving %s.%s.%s to %s",
-                  crm_element_value(source, XML_ATTR_GENERATION_ADMIN),
-                  crm_element_value(source, XML_ATTR_GENERATION),
-                  crm_element_value(source, XML_ATTR_NUMUPDATES), trace_file);
-        save_xml_to_file(source, "digest input", trace_file);
-        free(trace_file);
-    }
-
-    free(buffer);
-    crm_trace("End digest");
-    return digest;
-}
-
-char *
-calculate_on_disk_digest(xmlNode * input)
-{
-    /* Always use the v1 format for on-disk digests
-     * a) its a compatability nightmare
-     * b) we only use this once at startup, all other
-     *    invocations are in a separate child process
-     */
-    return calculate_xml_digest_v1(input, FALSE, FALSE);
-}
-
-char *
-calculate_operation_digest(xmlNode * input, const char *version)
-{
-    /* We still need the sorting for parameter digests */
-    return calculate_xml_digest_v1(input, TRUE, FALSE);
-}
-
-char *
-calculate_xml_versioned_digest(xmlNode * input, gboolean sort, gboolean do_filter,
-                               const char *version)
-{
-    /*
-     * The sorting associated with v1 digest creation accounted for 23% of
-     * the CIB's CPU usage on the server. v2 drops this.
-     *
-     * The filtering accounts for an additional 2.5% and we may want to
-     * remove it in future.
-     *
-     * v2 also uses the xmlBuffer contents directly to avoid additional copying
-     */
-    if (version == NULL || compare_version("3.0.5", version) > 0) {
-        crm_trace("Using v1 digest algorithm for %s", crm_str(version));
-        return calculate_xml_digest_v1(input, sort, do_filter);
-    }
-    crm_trace("Using v2 digest algorithm for %s", crm_str(version));
-    return calculate_xml_digest_v2(input, do_filter);
 }
 
 static gboolean
