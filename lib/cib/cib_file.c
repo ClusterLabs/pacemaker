@@ -5,12 +5,12 @@
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -30,6 +30,7 @@
 #include <crm/cib/internal.h>
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
+#include <crm/common/xml.h>
 
 #define cib_flag_dirty 0x00001
 
@@ -66,6 +67,107 @@ static int
 cib_file_register_notification(cib_t * cib, const char *callback, int enabled)
 {
     return -EPROTONOSUPPORT;
+}
+
+/*!
+ * \internal
+ * \brief Compare the calculated digest of an XML tree against a signature file
+ *
+ * \param[in] root Root of XML tree to compare
+ * \param[in] sigfile Name of signature file containing digest to compare
+ *
+ * \return TRUE if digests match or signature file does not exist, else FALSE
+ */
+static gboolean
+cib_file_verify_digest(xmlNode *root, const char *sigfile)
+{
+    gboolean passed = FALSE;
+    char *expected = crm_read_contents(sigfile);
+
+    if (expected == NULL) {
+        switch (errno) {
+            case 0:
+                crm_err("On-disk digest is empty");
+                return FALSE;
+            case ENOENT:
+                crm_warn("No on-disk digest present");
+                return TRUE;
+            default:
+                crm_perror(LOG_ERR, "Could not read on-disk digest from %s", sigfile);
+                return FALSE;
+        }
+    }
+    passed = crm_digest_verify(root, expected);
+    free(expected);
+    return passed;
+}
+
+/*!
+ * \internal
+ * \brief Read an XML tree from a file and verify its digest
+ *
+ * \param[in] filename Name of XML file to read
+ * \param[in] sigfile Name of signature file containing digest to compare
+ * \param[in] root If non-NULL, will be set to pointer to parsed XML tree
+ *
+ * \return 0 if file was successfully read, parsed and verified, otherwise:
+ *         -errno on stat() failure,
+ *         -pcmk_err_cib_corrupt if file size is 0 or XML is not parseable, or
+ *         -pcmk_err_cib_modified if digests do not match
+ * \note If root is non-NULL, it is the caller's responsibility to free *root on
+ *       successful return.
+ */
+int
+cib_file_read_and_verify(const char *filename, const char *sigfile, xmlNode **root)
+{
+    int s_res;
+    struct stat buf;
+    char *local_sigfile = NULL;
+    xmlNode *local_root = NULL;
+
+    CRM_ASSERT(filename != NULL);
+    if (root) {
+        *root = NULL;
+    }
+
+    /* Verify that file exists and its size is nonzero */
+    s_res = stat(filename, &buf);
+    if (s_res < 0) {
+        crm_perror(LOG_WARNING, "Could not verify cluster configuration file %s", filename);
+        return -errno;
+    } else if (buf.st_size == 0) {
+        crm_warn("Cluster configuration file %s is corrupt (size is zero)", filename);
+        return -pcmk_err_cib_corrupt;
+    }
+
+    /* Parse XML */
+    crm_info("Reading cluster configuration file %s", filename);
+    local_root = filename2xml(filename);
+    if (local_root == NULL) {
+        crm_warn("Cluster configuration file %s is corrupt (unparseable as XML)", filename);
+        return -pcmk_err_cib_corrupt;
+    }
+
+    /* If sigfile is not specified, use original file name plus .sig */
+    if (sigfile == NULL) {
+        sigfile = local_sigfile = crm_concat(filename, "sig", '.');
+    }
+
+    /* Verify that digests match */
+    crm_info("Verifying cluster configuration signature from %s", sigfile);
+    if (cib_file_verify_digest(local_root, sigfile) == FALSE) {
+        free(local_sigfile);
+        free_xml(local_root);
+        return -pcmk_err_cib_modified;
+    }
+
+    free(local_sigfile);
+    if (root) {
+        *root = local_root;
+    } else {
+        free_xml(local_root);
+    }
+    return pcmk_ok;
 }
 
 cib_t *

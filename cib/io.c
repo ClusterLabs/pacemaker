@@ -38,7 +38,7 @@
 #include <crm/common/util.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
-#include <crm/common/util.h>
+#include <crm/cib/internal.h>
 #include <crm/cluster.h>
 
 #define CIB_SERIES "cib"
@@ -58,57 +58,14 @@ extern int cib_status;
 int write_cib_contents(gpointer p);
 
 static gboolean
-validate_cib_digest(xmlNode *local_cib, const char *sigfile)
-{
-    gboolean passed = FALSE;
-    char *expected = crm_read_contents(sigfile);
-
-    if (expected == NULL) {
-        switch (errno) {
-            case 0:
-                crm_err("On-disk digest is empty");
-                return FALSE;
-            case ENOENT:
-                crm_warn("No on-disk digest present");
-                return TRUE;
-            default:
-                crm_perror(LOG_ERR, "Could not read on-disk digest from %s", sigfile);
-                return FALSE;
-        }
-    }
-    passed = crm_digest_verify(local_cib, expected);
-    free(expected);
-    return passed;
-}
-
-static gboolean
 validate_on_disk_cib(const char *filename)
 {
-    int s_res = -1;
-    struct stat buf;
-    gboolean passed = TRUE;
-    char *sigfile = NULL;
-    xmlNode *root = NULL;
-
-    CRM_ASSERT(filename != NULL);
-
-    s_res = stat(filename, &buf);
-    if (s_res < 0) {
-        crm_perror(LOG_WARNING, "Could not validate cluster configuration file %s", filename);
-    } else if (buf.st_size == 0) {
-        crm_warn("Cluster configuration file %s is corrupt: size is zero", filename);
-        return FALSE;
-    } else {
-        crm_trace("Reading cluster configuration from: %s", filename);
-        root = filename2xml(filename);
-        sigfile = crm_concat(filename, "sig", '.');
-        if (validate_cib_digest(root, sigfile) == FALSE) {
-            passed = FALSE;
-        }
-        free(sigfile);
-        free_xml(root);
+    switch (cib_file_read_and_verify(filename, NULL, NULL)) {
+        case pcmk_ok:
+        case -ENOENT:
+            return TRUE; /* real CIB matches digest or doesn't exist yet */
     }
-    return passed;
+    return FALSE; /* stat() failure, CIB corrupt, or digests don't match */
 }
 
 static int
@@ -148,36 +105,26 @@ cib_rename(const char *old, const char *new)
 static xmlNode *
 retrieveCib(const char *filename, const char *sigfile, gboolean archive_invalid)
 {
-    struct stat buf;
     xmlNode *root = NULL;
 
-    crm_info("Reading cluster configuration from: %s (digest: %s)", filename, sigfile);
+    switch (cib_file_read_and_verify(filename, sigfile, &root)) {
+        case pcmk_ok:
+            return root;
 
-    if (stat(filename, &buf) != 0) {
-        crm_warn("Cluster configuration not found: %s", filename);
-        return NULL;
+        case -pcmk_err_cib_corrupt:
+            crm_warn("Continuing but %s will NOT be used.", filename);
+            return NULL;
+
+        case -pcmk_err_cib_modified:
+            crm_warn("Continuing but %s will NOT be used.", filename);
+            if (archive_invalid) {
+                /* Archive the original files so the contents are not lost */
+                cib_rename(filename, NULL);
+                cib_rename(sigfile, NULL);
+            }
+            return NULL;
     }
-
-    root = filename2xml(filename);
-    if (root == NULL) {
-        crm_err("%s exists but does NOT contain valid XML. ", filename);
-        crm_warn("Continuing but %s will NOT used.", filename);
-
-    } else if (validate_cib_digest(root, sigfile) == FALSE) {
-        crm_err("Checksum of %s failed!  Configuration contents ignored!", filename);
-        crm_err("Usually this is caused by manual changes, "
-                "please refer to http://clusterlabs.org/wiki/FAQ#cib_changes_detected");
-        crm_warn("Continuing but %s will NOT used.", filename);
-        free_xml(root);
-        root = NULL;
-
-        if (archive_invalid) {
-            /* Archive the original files so the contents are not lost */
-            cib_rename(filename, NULL);
-            cib_rename(sigfile, NULL);
-        }
-    }
-    return root;
+    return NULL; /* stat() failure */
 }
 
 /*

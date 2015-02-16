@@ -53,6 +53,7 @@
 #  define pcmk_err_cib_backup           209
 #  define pcmk_err_cib_save             210
 #  define pcmk_err_schema_unchanged     211
+#  define pcmk_err_cib_corrupt          212
 #  define pcmk_err_panic                255
 
 const char *pcmk_strerror(int rc);
