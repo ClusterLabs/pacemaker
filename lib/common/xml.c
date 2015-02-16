@@ -3162,13 +3162,30 @@ filename2xml(const char *filename)
     return xml;
 }
 
+/*!
+ * \internal
+ * \brief Add a "last written" attribute to an XML node, set to current time
+ *
+ * \param[in] xml_node XML node to get attribute
+ *
+ * \return Value that was set, or NULL on error
+ */
+const char *
+crm_xml_add_last_written(xmlNode *xml_node)
+{
+    time_t now = time(NULL);
+    char *now_str = ctime(&now);
+
+    now_str[24] = EOS; /* replace the newline */
+    return crm_xml_add(xml_node, XML_CIB_ATTR_WRITTEN, now_str);
+}
+
 static int
 write_xml_stream(xmlNode * xml_node, const char *filename, FILE * stream, gboolean compress)
 {
     int res = 0;
     char *buffer = NULL;
     unsigned int out = 0;
-    static mode_t cib_mode = S_IRUSR | S_IWUSR;
 
     CRM_CHECK(stream != NULL, return -1);
 
@@ -3181,18 +3198,6 @@ write_xml_stream(xmlNode * xml_node, const char *filename, FILE * stream, gboole
 
 
     crm_log_xml_trace(xml_node, "Writing out");
-
-    if(strstr(filename, "cib") != NULL) {
-        /* Only CIB's need this field written */
-        time_t now = time(NULL);
-        char *now_str = ctime(&now);
-
-        now_str[24] = EOS;          /* replace the newline */
-        crm_xml_add(xml_node, XML_CIB_ATTR_WRITTEN, now_str);
-
-        /* establish the correct permissions */
-        fchmod(fileno(stream), cib_mode);
-    }
 
     buffer = dump_xml_formatted(xml_node);
     CRM_CHECK(buffer != NULL && strlen(buffer) > 0, crm_log_xml_warn(xml_node, "dump:failed");
