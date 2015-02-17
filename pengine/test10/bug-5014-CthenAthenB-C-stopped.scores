@@ -1,4 +1,4 @@
 Allocation scores:
-native_color: ClusterIP allocation score on fc16-builder: 0
+native_color: ClusterIP allocation score on fc16-builder: -INFINITY
 native_color: ClusterIP2 allocation score on fc16-builder: 0
 native_color: ClusterIP3 allocation score on fc16-builder: -INFINITY

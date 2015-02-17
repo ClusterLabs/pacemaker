@@ -7,8 +7,6 @@ digraph "g" {
 "rsc2_stop_0 node1" -> "all_stopped" [ style = bold]
 "rsc2_stop_0 node1" -> "rsc2_start_0 node1" [ style = bold]
 "rsc2_stop_0 node1" [ style=bold color="green" fontcolor="black" ]
-"rsc4_start_0 node1" [ style=dashed color="red" fontcolor="black" ]
 "rsc4_stop_0 node1" -> "all_stopped" [ style = bold]
-"rsc4_stop_0 node1" -> "rsc4_start_0 node1" [ style = dashed]
 "rsc4_stop_0 node1" [ style=bold color="green" fontcolor="black" ]
 }
