@@ -41,13 +41,6 @@
 #include <crm/cib/internal.h>
 #include <crm/cluster.h>
 
-#define CIB_SERIES "cib"
-#define CIB_SERIES_MAX 100
-#define CIB_SERIES_BZIP FALSE /* Must be false due to the way archived
-                               * copies are created - ie. with calls to
-                               * link()
-                               */
-
 extern const char *cib_root;
 
 crm_trigger_t *cib_writer = NULL;
@@ -437,26 +430,7 @@ int
 write_cib_contents(gpointer p)
 {
     int exit_rc = pcmk_ok;
-    int rc;
-    int seq;
-    char *digest = NULL;
-    xmlNode *cib_status_root = NULL;
-
     xmlNode *cib_local = NULL;
-
-    int tmp_cib_fd = 0;
-    int tmp_digest_fd = 0;
-    char *tmp_cib = NULL;
-    char *tmp_digest = NULL;
-
-    char *digest_file = NULL;
-    char *primary_file = NULL;
-
-    char *backup_file = NULL;
-    char *backup_digest = NULL;
-
-    const char *epoch = NULL;
-    const char *admin_epoch = NULL;
 
     /* Make a copy of the CIB to write (possibly in a forked child) */
     if (p) {
@@ -501,130 +475,11 @@ write_cib_contents(gpointer p)
         cib_local = copy_xml(the_cib);
     }
 
-    primary_file = crm_concat(cib_root, "cib.xml", '/');
-    digest_file = crm_concat(primary_file, "sig", '.');
+    /* Write the CIB */
+    exit_rc = cib_file_write_with_digest(cib_local, cib_root, "cib.xml");
 
-    /* Ensure the admin didn't modify the existing CIB underneath us */
-    rc = cib_file_read_and_verify(primary_file, NULL, NULL);
-    if ((rc != pcmk_ok) && (rc != -ENOENT)) {
-        crm_err("%s was manually modified while the cluster was active!",
-                primary_file);
-        exit_rc = pcmk_err_cib_modified;
-        goto cleanup;
-    }
-
-    /* Figure out what backup file sequence number to use */
-    seq = get_last_sequence(cib_root, CIB_SERIES);
-    backup_file = generate_series_filename(cib_root, CIB_SERIES, seq,
-                                           CIB_SERIES_BZIP);
-    backup_digest = crm_concat(backup_file, "sig", '.');
-
-    /* Remove the old backups at that sequence number */
-    unlink(backup_file);
-    unlink(backup_digest);
-
-    /* Back up the CIB and its signature */
-    if (link(primary_file, backup_file) < 0) {
-        switch (errno) {
-            case ENOENT: /* No file to back up */
-                goto writeout;
-                break;
-            default:
-                exit_rc = pcmk_err_cib_backup;
-                crm_err("Cannot link %s to %s: %s (%d)", primary_file,
-                        backup_file, pcmk_strerror(errno), errno);
-        }
-        goto cleanup;
-    }
-    if ((link(digest_file, backup_digest) < 0) && (errno != ENOENT)) {
-        exit_rc = pcmk_err_cib_backup;
-        crm_perror(LOG_ERR, "Cannot link %s to %s", digest_file, backup_digest);
-        goto cleanup;
-    }
-    write_last_sequence(cib_root, CIB_SERIES, seq + 1, CIB_SERIES_MAX);
-    crm_sync_directory(cib_root);
-    crm_info("Archived previous version as %s", backup_file);
-
-  writeout:
-    crm_debug("Writing CIB to disk");
-
-    /* Always write out with num_updates=0 */
-    crm_xml_add(cib_local, XML_ATTR_NUMUPDATES, "0");
-
-    /* Delete status section before writing, because
-     * we discard it on startup anyway, and users get confused by it */
-    if (p == NULL) {
-        cib_status_root = find_xml_node(cib_local, XML_CIB_TAG_STATUS, TRUE);
-        CRM_LOG_ASSERT(cib_status_root != NULL);
-        if (cib_status_root != NULL) {
-            free_xml(cib_status_root);
-        }
-    }
-
-    tmp_cib = g_strdup_printf("%s/cib.XXXXXX", cib_root);
-    tmp_digest = g_strdup_printf("%s/cib.XXXXXX", cib_root);
-
-    umask(S_IWGRP | S_IWOTH | S_IROTH);
-
-    tmp_cib_fd = mkstemp(tmp_cib);
-    if (tmp_cib_fd < 0) {
-        crm_perror(LOG_ERR, "Couldn't open temporary file %s for writing CIB",
-                   tmp_cib);
-        exit_rc = pcmk_err_cib_save;
-        goto cleanup;
-    }
-
-    fchmod(tmp_cib_fd, S_IRUSR | S_IWUSR); /* establish the correct permissions */
-    crm_xml_add_last_written(cib_local);
-    if (write_xml_fd(cib_local, tmp_cib, tmp_cib_fd, FALSE) <= 0) {
-        crm_err("Changes couldn't be written to %s", tmp_cib);
-        exit_rc = pcmk_err_cib_save;
-        goto cleanup;
-    }
-
-    /* Calculate the digest after writing, because we updated the last-written field */
-    digest = calculate_on_disk_digest(cib_local);
-    CRM_ASSERT(digest != NULL);
-    epoch = crm_element_value(cib_local, XML_ATTR_GENERATION);
-    admin_epoch = crm_element_value(cib_local, XML_ATTR_GENERATION_ADMIN);
-    crm_info("Wrote version %s.%s.0 of the CIB to disk (digest: %s)",
-             (admin_epoch ? admin_epoch : "0"), (epoch ? epoch : "0"), digest);
-
-    tmp_digest_fd = mkstemp(tmp_digest);
-    if ((tmp_digest_fd < 0) || (crm_write_sync(tmp_digest_fd, digest) < 0)) {
-        crm_perror(LOG_ERR, "Could not write digest to file %s", tmp_digest);
-        exit_rc = pcmk_err_cib_save;
-        goto cleanup;
-    }
-    crm_debug("Wrote digest %s to disk", digest);
-
-    /* Verify that what we wrote is sane */
-    CRM_ASSERT(cib_file_read_and_verify(tmp_cib, tmp_digest, NULL) == 0);
-
-    /* Rename temporary files to live, and ensure they are sync'd to media */
-    crm_debug("Activating %s", tmp_cib);
-    if (rename(tmp_cib, primary_file) < 0) {
-        crm_perror(LOG_ERR, "Couldn't rename %s as %s", tmp_cib, primary_file);
-        exit_rc = pcmk_err_cib_save;
-    }
-    if (rename(tmp_digest, digest_file) < 0) {
-        crm_perror(LOG_ERR, "Couldn't rename %s as %s", tmp_digest,
-                   digest_file);
-        exit_rc = pcmk_err_cib_save;
-    }
-    crm_sync_directory(cib_root);
-
-  cleanup:
-    free(backup_digest);
-    free(primary_file);
-    free(backup_file);
-    free(digest_file);
-    free(digest);
-    free(tmp_digest);
-    free(tmp_cib);
-
+    /* A nonzero exit code will cause further writes to be disabled */
     free_xml(cib_local);
-
     if (p == NULL) {
         /* Use _exit() because exit() could affect the parent adversely */
         _exit(exit_rc);

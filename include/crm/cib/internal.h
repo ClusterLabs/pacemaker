@@ -187,6 +187,9 @@ int cib_internal_op(cib_t * cib, const char *op, const char *host,
                     xmlNode ** output_data, int call_options, const char *user_name);
 
 
-int cib_file_read_and_verify(const char *filename, const char *sigfile, xmlNode **root);
+int cib_file_read_and_verify(const char *filename, const char *sigfile,
+                             xmlNode **root);
+int cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
+                               const char *cib_filename);
 
 #endif
