@@ -57,45 +57,23 @@ extern int cib_status;
 
 int write_cib_contents(gpointer p);
 
-static gboolean
-validate_on_disk_cib(const char *filename)
+static void
+cib_rename(const char *old)
 {
-    switch (cib_file_read_and_verify(filename, NULL, NULL)) {
-        case pcmk_ok:
-        case -ENOENT:
-            return TRUE; /* real CIB matches digest or doesn't exist yet */
-    }
-    return FALSE; /* stat() failure, CIB corrupt, or digests don't match */
-}
+    int new_fd;
+    char *new = g_strdup_printf("%s/cib.auto.XXXXXX", cib_root);
 
-static int
-cib_rename(const char *old, const char *new)
-{
-    int rc = 0;
-    int automatic_fd = 0;
-    char *automatic = NULL;
-
-    if (new == NULL) {
-        umask(S_IWGRP | S_IWOTH | S_IROTH);
-
-        automatic = g_strdup_printf("%s/cib.auto.XXXXXX", cib_root);
-        automatic_fd = mkstemp(automatic);
-        new = automatic;
-
-        crm_err("Archiving corrupt or unusable file %s as %s", old, automatic);
-    }
-
-    rc = rename(old, new);
-    if (rc < 0) {
-        crm_perror(LOG_ERR, "Couldn't rename %s as %s - Disabling disk writes and continuing", old,
-                   new);
+    crm_err("Archiving unusable file %s as %s", old, new);
+    umask(S_IWGRP | S_IWOTH | S_IROTH);
+    if ((new_fd = mkstemp(new) < 0) || (rename(old, new) < 0)) {
+        crm_perror(LOG_ERR, "Couldn't rename %s as %s", old, new);
+        crm_err("Disabling disk writes and continuing");
         cib_writes_enabled = FALSE;
     }
-    if (automatic_fd > 0) {
-        close(automatic_fd);
+    if (new_fd > 0) {
+        close(new_fd);
     }
-    free(automatic);
-    return rc;
+    free(new);
 }
 
 /*
@@ -103,28 +81,23 @@ cib_rename(const char *old, const char *new)
  */
 
 static xmlNode *
-retrieveCib(const char *filename, const char *sigfile, gboolean archive_invalid)
+retrieveCib(const char *filename, const char *sigfile)
 {
     xmlNode *root = NULL;
 
     switch (cib_file_read_and_verify(filename, sigfile, &root)) {
-        case pcmk_ok:
-            return root;
-
         case -pcmk_err_cib_corrupt:
             crm_warn("Continuing but %s will NOT be used.", filename);
-            return NULL;
+            break;
 
         case -pcmk_err_cib_modified:
+            /* Archive the original files so the contents are not lost */
             crm_warn("Continuing but %s will NOT be used.", filename);
-            if (archive_invalid) {
-                /* Archive the original files so the contents are not lost */
-                cib_rename(filename, NULL);
-                cib_rename(sigfile, NULL);
-            }
-            return NULL;
+            cib_rename(filename);
+            cib_rename(sigfile);
+            break;
     }
-    return NULL; /* stat() failure */
+    return root;
 }
 
 /*
@@ -244,7 +217,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     sigfile = crm_concat(filename, "sig", '.');
 
     cib_status = pcmk_ok;
-    root = retrieveCib(filename, sigfile, TRUE);
+    root = retrieveCib(filename, sigfile);
     free(filename);
     free(sigfile);
 
@@ -264,8 +237,9 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         filename = g_strdup_printf("%s/%s", cib_root, namelist[lpc]->d_name);
         sigfile = crm_concat(filename, "sig", '.');
 
-        root = retrieveCib(filename, sigfile, FALSE);
-        if(root) {
+        if (cib_file_read_and_verify(filename, sigfile, &root) < 0) {
+            crm_warn("Continuing but %s will NOT be used.", filename);
+        } else {
             crm_notice("Continuing with last valid configuration archive: %s", filename);
         }
 
@@ -463,11 +437,12 @@ int
 write_cib_contents(gpointer p)
 {
     int exit_rc = pcmk_ok;
+    int rc;
+    int seq;
     char *digest = NULL;
     xmlNode *cib_status_root = NULL;
 
     xmlNode *cib_local = NULL;
-    xmlNode *cib_tmp = NULL;
 
     int tmp_cib_fd = 0;
     int tmp_digest_fd = 0;
@@ -483,6 +458,7 @@ write_cib_contents(gpointer p)
     const char *epoch = NULL;
     const char *admin_epoch = NULL;
 
+    /* Make a copy of the CIB to write (possibly in a forked child) */
     if (p) {
         /* Synchronous write out */
         cib_local = copy_xml(p);
@@ -525,70 +501,61 @@ write_cib_contents(gpointer p)
         cib_local = copy_xml(the_cib);
     }
 
-    epoch = crm_element_value(cib_local, XML_ATTR_GENERATION);
-    admin_epoch = crm_element_value(cib_local, XML_ATTR_GENERATION_ADMIN);
-
     primary_file = crm_concat(cib_root, "cib.xml", '/');
     digest_file = crm_concat(primary_file, "sig", '.');
+
+    /* Ensure the admin didn't modify the existing CIB underneath us */
+    rc = cib_file_read_and_verify(primary_file, NULL, NULL);
+    if ((rc != pcmk_ok) && (rc != -ENOENT)) {
+        crm_err("%s was manually modified while the cluster was active!",
+                primary_file);
+        exit_rc = pcmk_err_cib_modified;
+        goto cleanup;
+    }
+
+    /* Figure out what backup file sequence number to use */
+    seq = get_last_sequence(cib_root, CIB_SERIES);
+    backup_file = generate_series_filename(cib_root, CIB_SERIES, seq,
+                                           CIB_SERIES_BZIP);
+    backup_digest = crm_concat(backup_file, "sig", '.');
+
+    /* Remove the old backups at that sequence number */
+    unlink(backup_file);
+    unlink(backup_digest);
+
+    /* Back up the CIB and its signature */
+    if (link(primary_file, backup_file) < 0) {
+        switch (errno) {
+            case ENOENT: /* No file to back up */
+                goto writeout;
+                break;
+            default:
+                exit_rc = pcmk_err_cib_backup;
+                crm_err("Cannot link %s to %s: %s (%d)", primary_file,
+                        backup_file, pcmk_strerror(errno), errno);
+        }
+        goto cleanup;
+    }
+    if ((link(digest_file, backup_digest) < 0) && (errno != ENOENT)) {
+        exit_rc = pcmk_err_cib_backup;
+        crm_perror(LOG_ERR, "Cannot link %s to %s", digest_file, backup_digest);
+        goto cleanup;
+    }
+    write_last_sequence(cib_root, CIB_SERIES, seq + 1, CIB_SERIES_MAX);
+    crm_sync_directory(cib_root);
+    crm_info("Archived previous version as %s", backup_file);
+
+  writeout:
+    crm_debug("Writing CIB to disk");
 
     /* Always write out with num_updates=0 */
     crm_xml_add(cib_local, XML_ATTR_NUMUPDATES, "0");
 
-    /* check the admin didn't modify it underneath us */
-    if (validate_on_disk_cib(primary_file) == FALSE) {
-        crm_err("%s was manually modified while the cluster was active!", primary_file);
-        exit_rc = pcmk_err_cib_modified;
-        goto cleanup;
-
-    } else {
-        int rc = 0;
-        int seq = get_last_sequence(cib_root, CIB_SERIES);
-
-        backup_file = generate_series_filename(cib_root, CIB_SERIES, seq, CIB_SERIES_BZIP);
-        backup_digest = crm_concat(backup_file, "sig", '.');
-
-        unlink(backup_file);
-        unlink(backup_digest);
-
-        rc = link(primary_file, backup_file);
-        if (rc < 0) {
-            rc = errno;
-            switch(rc) {
-                case ENOENT:
-                    /* No file to back up */
-                    goto writeout;
-                    break;
-                default:
-                    exit_rc = pcmk_err_cib_backup;
-                    crm_err("Cannot link %s to %s: %s (%d)", primary_file, backup_file, pcmk_strerror(rc), rc);
-            }
-            goto cleanup;
-        }
-
-        rc = link(digest_file, backup_digest);
-        if (rc < 0 && errno != ENOENT) {
-            exit_rc = pcmk_err_cib_backup;
-            crm_perror(LOG_ERR, "Cannot link %s to %s", digest_file, backup_digest);
-            goto cleanup;
-        }
-        write_last_sequence(cib_root, CIB_SERIES, seq + 1, CIB_SERIES_MAX);
-        crm_sync_directory(cib_root);
-
-        crm_info("Archived previous version as %s", backup_file);
-    }
-
-  writeout:
-    /* Given that we discard the status section on startup
-     *   there is no point writing it out in the first place
-     *   since users just get confused by it
-     *
-     * So delete the status section before we write it out
-     */
-    crm_debug("Writing CIB to disk");
+    /* Delete status section before writing, because
+     * we discard it on startup anyway, and users get confused by it */
     if (p == NULL) {
         cib_status_root = find_xml_node(cib_local, XML_CIB_TAG_STATUS, TRUE);
         CRM_LOG_ASSERT(cib_status_root != NULL);
-
         if (cib_status_root != NULL) {
             free_xml(cib_status_root);
         }
@@ -601,7 +568,8 @@ write_cib_contents(gpointer p)
 
     tmp_cib_fd = mkstemp(tmp_cib);
     if (tmp_cib_fd < 0) {
-        crm_perror(LOG_ERR, "Couldn't open temporary file %s for writing CIB", tmp_cib);
+        crm_perror(LOG_ERR, "Couldn't open temporary file %s for writing CIB",
+                   tmp_cib);
         exit_rc = pcmk_err_cib_save;
         goto cleanup;
     }
@@ -617,8 +585,10 @@ write_cib_contents(gpointer p)
     /* Calculate the digest after writing, because we updated the last-written field */
     digest = calculate_on_disk_digest(cib_local);
     CRM_ASSERT(digest != NULL);
+    epoch = crm_element_value(cib_local, XML_ATTR_GENERATION);
+    admin_epoch = crm_element_value(cib_local, XML_ATTR_GENERATION_ADMIN);
     crm_info("Wrote version %s.%s.0 of the CIB to disk (digest: %s)",
-             admin_epoch ? admin_epoch : "0", epoch ? epoch : "0", digest);
+             (admin_epoch ? admin_epoch : "0"), (epoch ? epoch : "0"), digest);
 
     tmp_digest_fd = mkstemp(tmp_digest);
     if ((tmp_digest_fd < 0) || (crm_write_sync(tmp_digest_fd, digest) < 0)) {
@@ -627,13 +597,21 @@ write_cib_contents(gpointer p)
         goto cleanup;
     }
     crm_debug("Wrote digest %s to disk", digest);
-    cib_tmp = retrieveCib(tmp_cib, tmp_digest, FALSE);
-    CRM_ASSERT(cib_tmp != NULL);
-    crm_sync_directory(cib_root);
 
+    /* Verify that what we wrote is sane */
+    CRM_ASSERT(cib_file_read_and_verify(tmp_cib, tmp_digest, NULL) == 0);
+
+    /* Rename temporary files to live, and ensure they are sync'd to media */
     crm_debug("Activating %s", tmp_cib);
-    cib_rename(tmp_cib, primary_file);
-    cib_rename(tmp_digest, digest_file);
+    if (rename(tmp_cib, primary_file) < 0) {
+        crm_perror(LOG_ERR, "Couldn't rename %s as %s", tmp_cib, primary_file);
+        exit_rc = pcmk_err_cib_save;
+    }
+    if (rename(tmp_digest, digest_file) < 0) {
+        crm_perror(LOG_ERR, "Couldn't rename %s as %s", tmp_digest,
+                   digest_file);
+        exit_rc = pcmk_err_cib_save;
+    }
     crm_sync_directory(cib_root);
 
   cleanup:
@@ -645,13 +623,10 @@ write_cib_contents(gpointer p)
     free(tmp_digest);
     free(tmp_cib);
 
-    free_xml(cib_tmp);
     free_xml(cib_local);
 
     if (p == NULL) {
-        /* exit() could potentially affect the parent by closing things it shouldn't
-         * Use _exit instead
-         */
+        /* Use _exit() because exit() could affect the parent adversely */
         _exit(exit_rc);
     }
     return exit_rc;
