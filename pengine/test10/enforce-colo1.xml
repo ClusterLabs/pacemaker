@@ -1,0 +1,150 @@
+<cib crm_feature_set="3.0.9" validate-with="pacemaker-2.3" epoch="156" num_updates="0" admin_epoch="0" cib-last-written="Mon Feb 16 17:19:58 2015" have-quorum="1" dc-uuid="3">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.12-a14efad"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="phd"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1423777376"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="rhel7-auto1">
+        <instance_attributes id="nodes-1"/>
+      </node>
+      <node id="2" uname="rhel7-auto2"/>
+      <node id="3" uname="rhel7-auto3">
+        <instance_attributes id="nodes-3"/>
+      </node>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="shooter" type="fence_xvm">
+        <instance_attributes id="shooter-instance_attributes"/>
+        <operations>
+          <op id="shooter-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="engine" provider="heartbeat" type="Dummy">
+        <instance_attributes id="engine-instance_attributes"/>
+        <operations>
+          <op id="engine-start-timeout-20" interval="0s" name="start" timeout="20"/>
+          <op id="engine-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
+          <op id="engine-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+        </operations>
+      </primitive>
+      <clone id="keystone-clone">
+        <primitive class="ocf" id="keystone" provider="heartbeat" type="Dummy">
+          <instance_attributes id="keystone-instance_attributes"/>
+          <operations>
+            <op id="keystone-start-timeout-20" interval="0s" name="start" timeout="20"/>
+            <op id="keystone-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
+            <op id="keystone-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="keystone-clone-meta">
+          <nvpair id="keystone-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+        <meta_attributes id="keystone-clone-meta_attributes">
+          <nvpair id="keystone-clone-meta_attributes-target-role" name="target-role" value="Stopped"/>
+        </meta_attributes>
+      </clone>
+      <primitive class="ocf" id="central" provider="heartbeat" type="Dummy">
+        <instance_attributes id="central-instance_attributes"/>
+        <operations>
+          <op id="central-start-timeout-20" interval="0s" name="start" timeout="20"/>
+          <op id="central-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
+          <op id="central-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+        </operations>
+        <meta_attributes id="central-meta_attributes"/>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_order first="keystone-clone" first-action="start" id="order-keystone-clone-central-mandatory" then="central" then-action="start"/>
+      <rsc_colocation id="colocation-engine-central-INFINITY" rsc="engine" score="INFINITY" with-rsc="central"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="2" uname="rhel7-auto2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-2-last-failure-gluster-daemon" name="last-failure-gluster-daemon" value="1422649122"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="shooter" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="12:1294:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" transition-magic="0:0;12:1294:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" call-id="53" rc-code="0" op-status="0" interval="0" last-run="1423780281" last-rc-change="1423780281" exec-time="111" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto2"/>
+            <lrm_rsc_op id="shooter_monitor_60000" operation_key="shooter_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="13:1294:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" transition-magic="0:0;13:1294:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" call-id="57" rc-code="0" op-status="0" interval="60000" last-rc-change="1423780282" exec-time="110" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhel7-auto2"/>
+          </lrm_resource>
+          <lrm_resource id="central" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="central_last_0" operation_key="central_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="17:1779:7:a13fb368-d7d5-462f-9754-cd134bb1aaeb" transition-magic="0:7;17:1779:7:a13fb368-d7d5-462f-9754-cd134bb1aaeb" call-id="219" rc-code="7" op-status="0" interval="0" last-run="1424119585" last-rc-change="1424119585" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto2" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="engine" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="engine_last_0" operation_key="engine_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="13:1716:7:a13fb368-d7d5-462f-9754-cd134bb1aaeb" transition-magic="0:7;13:1716:7:a13fb368-d7d5-462f-9754-cd134bb1aaeb" call-id="124" rc-code="7" op-status="0" interval="0" last-run="1424108568" last-rc-change="1424108568" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto2" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="keystone" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="keystone_last_0" operation_key="keystone_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="19:1776:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" transition-magic="0:0;19:1776:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" call-id="200" rc-code="0" op-status="0" interval="0" last-run="1424119555" last-rc-change="1424119555" exec-time="21" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto2" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="keystone_monitor_10000" operation_key="keystone_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="20:1776:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" transition-magic="0:0;20:1776:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" call-id="201" rc-code="0" op-status="0" interval="10000" last-rc-change="1424119555" exec-time="19" queue-time="1" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhel7-auto2"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="3" uname="rhel7-auto3" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="3">
+        <instance_attributes id="status-3">
+          <nvpair id="status-3-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-3-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="3">
+        <lrm_resources>
+          <lrm_resource id="shooter" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="8:4:7:a13fb368-d7d5-462f-9754-cd134bb1aaeb" transition-magic="0:7;8:4:7:a13fb368-d7d5-462f-9754-cd134bb1aaeb" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1422649104" last-rc-change="1422649104" exec-time="1002" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto3"/>
+          </lrm_resource>
+          <lrm_resource id="central" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="central_last_0" operation_key="central_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="54:1779:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" transition-magic="0:0;54:1779:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" call-id="248" rc-code="0" op-status="0" interval="0" last-run="1424119584" last-rc-change="1424119584" exec-time="24" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto3" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="central_monitor_10000" operation_key="central_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="55:1779:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" transition-magic="0:0;55:1779:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" call-id="249" rc-code="0" op-status="0" interval="10000" last-rc-change="1424119584" exec-time="22" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhel7-auto3"/>
+          </lrm_resource>
+          <lrm_resource id="engine" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="engine_last_0" operation_key="engine_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="15:1808:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" transition-magic="0:0;15:1808:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" call-id="266" rc-code="0" op-status="0" interval="0" last-run="1424125197" last-rc-change="1424125197" exec-time="23" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto3" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="engine_monitor_10000" operation_key="engine_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="16:1808:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" transition-magic="0:0;16:1808:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" call-id="267" rc-code="0" op-status="0" interval="10000" last-rc-change="1424125197" exec-time="21" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhel7-auto3"/>
+          </lrm_resource>
+          <lrm_resource id="keystone" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="keystone_last_0" operation_key="keystone_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="15:1776:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" transition-magic="0:0;15:1776:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" call-id="228" rc-code="0" op-status="0" interval="0" last-run="1424119555" last-rc-change="1424119555" exec-time="26" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto3" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="keystone_monitor_10000" operation_key="keystone_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="16:1776:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" transition-magic="0:0;16:1776:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" call-id="229" rc-code="0" op-status="0" interval="10000" last-rc-change="1424119555" exec-time="29" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhel7-auto3"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="1" uname="rhel7-auto1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-1-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-1-last-failure-gluster-daemon" name="last-failure-gluster-daemon" value="1422649122"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="shooter" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="11:1294:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" transition-magic="0:0;11:1294:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" call-id="55" rc-code="0" op-status="0" interval="0" last-run="1423780281" last-rc-change="1423780281" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto1"/>
+          </lrm_resource>
+          <lrm_resource id="central" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="central_last_0" operation_key="central_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="15:1779:7:a13fb368-d7d5-462f-9754-cd134bb1aaeb" transition-magic="0:7;15:1779:7:a13fb368-d7d5-462f-9754-cd134bb1aaeb" call-id="262" rc-code="7" op-status="0" interval="0" last-run="1424119585" last-rc-change="1424119585" exec-time="21" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto1" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="engine" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="engine_last_0" operation_key="engine_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="14:1808:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" transition-magic="0:0;14:1808:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" call-id="280" rc-code="0" op-status="0" interval="0" last-run="1424125198" last-rc-change="1424125198" exec-time="24" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto1" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="engine_monitor_10000" operation_key="engine_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="14:1774:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" transition-magic="0:0;14:1774:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" call-id="236" rc-code="0" op-status="0" interval="10000" last-rc-change="1424119430" exec-time="42" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhel7-auto1"/>
+          </lrm_resource>
+          <lrm_resource id="keystone" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="keystone_last_0" operation_key="keystone_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="17:1776:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" transition-magic="0:0;17:1776:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" call-id="243" rc-code="0" op-status="0" interval="0" last-run="1424119555" last-rc-change="1424119555" exec-time="23" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto1" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="keystone_monitor_10000" operation_key="keystone_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="18:1776:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" transition-magic="0:0;18:1776:0:a13fb368-d7d5-462f-9754-cd134bb1aaeb" call-id="244" rc-code="0" op-status="0" interval="10000" last-rc-change="1424119555" exec-time="20" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhel7-auto1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

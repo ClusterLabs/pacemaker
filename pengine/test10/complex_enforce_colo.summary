@@ -1,0 +1,452 @@
+
+Current cluster status:
+Online: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+
+ node1-fence	(stonith:fence_xvm):	Started rhos6-node1 
+ node2-fence	(stonith:fence_xvm):	Started rhos6-node2 
+ node3-fence	(stonith:fence_xvm):	Started rhos6-node3 
+ Clone Set: lb-haproxy-clone [lb-haproxy]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ vip-db	(ocf::heartbeat:IPaddr2):	Started rhos6-node1 
+ vip-rabbitmq	(ocf::heartbeat:IPaddr2):	Started rhos6-node2 
+ vip-qpid	(ocf::heartbeat:IPaddr2):	Started rhos6-node3 
+ vip-keystone	(ocf::heartbeat:IPaddr2):	Started rhos6-node1 
+ vip-glance	(ocf::heartbeat:IPaddr2):	Started rhos6-node2 
+ vip-cinder	(ocf::heartbeat:IPaddr2):	Started rhos6-node3 
+ vip-swift	(ocf::heartbeat:IPaddr2):	Started rhos6-node1 
+ vip-neutron	(ocf::heartbeat:IPaddr2):	Started rhos6-node2 
+ vip-nova	(ocf::heartbeat:IPaddr2):	Started rhos6-node3 
+ vip-horizon	(ocf::heartbeat:IPaddr2):	Started rhos6-node1 
+ vip-heat	(ocf::heartbeat:IPaddr2):	Started rhos6-node2 
+ vip-ceilometer	(ocf::heartbeat:IPaddr2):	Started rhos6-node3 
+ Master/Slave Set: galera-master [galera]
+     Masters: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: rabbitmq-server-clone [rabbitmq-server]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: memcached-clone [memcached]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: mongodb-clone [mongodb]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: keystone-clone [keystone]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: glance-fs-clone [glance-fs]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: glance-registry-clone [glance-registry]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: glance-api-clone [glance-api]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ cinder-api	(systemd:openstack-cinder-api):	Started rhos6-node1 
+ cinder-scheduler	(systemd:openstack-cinder-scheduler):	Started rhos6-node1 
+ cinder-volume	(systemd:openstack-cinder-volume):	Started rhos6-node1 
+ Clone Set: swift-fs-clone [swift-fs]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: swift-account-clone [swift-account]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: swift-container-clone [swift-container]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: swift-object-clone [swift-object]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: swift-proxy-clone [swift-proxy]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ swift-object-expirer	(systemd:openstack-swift-object-expirer):	Started rhos6-node2 
+ Clone Set: neutron-server-clone [neutron-server]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: neutron-scale-clone [neutron-scale] (unique)
+     neutron-scale:0	(ocf::neutron:NeutronScale):	Started rhos6-node3 
+     neutron-scale:1	(ocf::neutron:NeutronScale):	Started rhos6-node2 
+     neutron-scale:2	(ocf::neutron:NeutronScale):	Started rhos6-node1 
+ Clone Set: neutron-ovs-cleanup-clone [neutron-ovs-cleanup]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: neutron-netns-cleanup-clone [neutron-netns-cleanup]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: neutron-openvswitch-agent-clone [neutron-openvswitch-agent]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: neutron-dhcp-agent-clone [neutron-dhcp-agent]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: neutron-l3-agent-clone [neutron-l3-agent]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: neutron-metadata-agent-clone [neutron-metadata-agent]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: nova-consoleauth-clone [nova-consoleauth]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: nova-novncproxy-clone [nova-novncproxy]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: nova-api-clone [nova-api]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: nova-scheduler-clone [nova-scheduler]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: nova-conductor-clone [nova-conductor]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ ceilometer-central	(systemd:openstack-ceilometer-central):	Started rhos6-node3 
+ Clone Set: ceilometer-collector-clone [ceilometer-collector]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: ceilometer-api-clone [ceilometer-api]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: ceilometer-delay-clone [ceilometer-delay]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: ceilometer-alarm-evaluator-clone [ceilometer-alarm-evaluator]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: ceilometer-alarm-notifier-clone [ceilometer-alarm-notifier]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: ceilometer-notification-clone [ceilometer-notification]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: heat-api-clone [heat-api]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: heat-api-cfn-clone [heat-api-cfn]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: heat-api-cloudwatch-clone [heat-api-cloudwatch]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ heat-engine	(systemd:openstack-heat-engine):	Started rhos6-node2 
+ Clone Set: horizon-clone [horizon]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+
+Transition Summary:
+ * Stop    keystone:0	(rhos6-node1)
+ * Stop    keystone:1	(rhos6-node2)
+ * Stop    keystone:2	(rhos6-node3)
+ * Stop    glance-registry:0	(rhos6-node1)
+ * Stop    glance-registry:1	(rhos6-node2)
+ * Stop    glance-registry:2	(rhos6-node3)
+ * Stop    glance-api:0	(rhos6-node1)
+ * Stop    glance-api:1	(rhos6-node2)
+ * Stop    glance-api:2	(rhos6-node3)
+ * Stop    cinder-api	(Started rhos6-node1)
+ * Stop    cinder-scheduler	(Started rhos6-node1)
+ * Stop    cinder-volume	(Started rhos6-node1)
+ * Stop    swift-account:0	(rhos6-node1)
+ * Stop    swift-account:1	(rhos6-node2)
+ * Stop    swift-account:2	(rhos6-node3)
+ * Stop    swift-container:0	(rhos6-node1)
+ * Stop    swift-container:1	(rhos6-node2)
+ * Stop    swift-container:2	(rhos6-node3)
+ * Stop    swift-object:0	(rhos6-node1)
+ * Stop    swift-object:1	(rhos6-node2)
+ * Stop    swift-object:2	(rhos6-node3)
+ * Stop    swift-proxy:0	(rhos6-node1)
+ * Stop    swift-proxy:1	(rhos6-node2)
+ * Stop    swift-proxy:2	(rhos6-node3)
+ * Stop    swift-object-expirer	(Started rhos6-node2)
+ * Stop    neutron-server:0	(rhos6-node1)
+ * Stop    neutron-server:1	(rhos6-node2)
+ * Stop    neutron-server:2	(rhos6-node3)
+ * Stop    neutron-scale:0	(rhos6-node3)
+ * Stop    neutron-scale:1	(rhos6-node2)
+ * Stop    neutron-scale:2	(rhos6-node1)
+ * Stop    neutron-ovs-cleanup:0	(rhos6-node1)
+ * Stop    neutron-ovs-cleanup:1	(rhos6-node2)
+ * Stop    neutron-ovs-cleanup:2	(rhos6-node3)
+ * Stop    neutron-netns-cleanup:0	(rhos6-node1)
+ * Stop    neutron-netns-cleanup:1	(rhos6-node2)
+ * Stop    neutron-netns-cleanup:2	(rhos6-node3)
+ * Stop    neutron-openvswitch-agent:0	(rhos6-node1)
+ * Stop    neutron-openvswitch-agent:1	(rhos6-node2)
+ * Stop    neutron-openvswitch-agent:2	(rhos6-node3)
+ * Stop    neutron-dhcp-agent:0	(rhos6-node1)
+ * Stop    neutron-dhcp-agent:1	(rhos6-node2)
+ * Stop    neutron-dhcp-agent:2	(rhos6-node3)
+ * Stop    neutron-l3-agent:0	(rhos6-node1)
+ * Stop    neutron-l3-agent:1	(rhos6-node2)
+ * Stop    neutron-l3-agent:2	(rhos6-node3)
+ * Stop    neutron-metadata-agent:0	(rhos6-node1)
+ * Stop    neutron-metadata-agent:1	(rhos6-node2)
+ * Stop    neutron-metadata-agent:2	(rhos6-node3)
+ * Stop    nova-consoleauth:0	(rhos6-node1)
+ * Stop    nova-consoleauth:1	(rhos6-node2)
+ * Stop    nova-consoleauth:2	(rhos6-node3)
+ * Stop    nova-novncproxy:0	(rhos6-node1)
+ * Stop    nova-novncproxy:1	(rhos6-node2)
+ * Stop    nova-novncproxy:2	(rhos6-node3)
+ * Stop    nova-api:0	(rhos6-node1)
+ * Stop    nova-api:1	(rhos6-node2)
+ * Stop    nova-api:2	(rhos6-node3)
+ * Stop    nova-scheduler:0	(rhos6-node1)
+ * Stop    nova-scheduler:1	(rhos6-node2)
+ * Stop    nova-scheduler:2	(rhos6-node3)
+ * Stop    nova-conductor:0	(rhos6-node1)
+ * Stop    nova-conductor:1	(rhos6-node2)
+ * Stop    nova-conductor:2	(rhos6-node3)
+ * Stop    ceilometer-central	(Started rhos6-node3)
+ * Stop    ceilometer-collector:0	(Started rhos6-node1)
+ * Stop    ceilometer-collector:1	(Started rhos6-node2)
+ * Stop    ceilometer-collector:2	(Started rhos6-node3)
+ * Stop    ceilometer-api:0	(Started rhos6-node1)
+ * Stop    ceilometer-api:1	(Started rhos6-node2)
+ * Stop    ceilometer-api:2	(Started rhos6-node3)
+ * Stop    ceilometer-delay:0	(Started rhos6-node1)
+ * Stop    ceilometer-delay:1	(Started rhos6-node2)
+ * Stop    ceilometer-delay:2	(Started rhos6-node3)
+ * Stop    ceilometer-alarm-evaluator:0	(Started rhos6-node1)
+ * Stop    ceilometer-alarm-evaluator:1	(Started rhos6-node2)
+ * Stop    ceilometer-alarm-evaluator:2	(Started rhos6-node3)
+ * Stop    ceilometer-alarm-notifier:0	(Started rhos6-node1)
+ * Stop    ceilometer-alarm-notifier:1	(Started rhos6-node2)
+ * Stop    ceilometer-alarm-notifier:2	(Started rhos6-node3)
+ * Stop    ceilometer-notification:0	(Started rhos6-node1)
+ * Stop    ceilometer-notification:1	(Started rhos6-node2)
+ * Stop    ceilometer-notification:2	(Started rhos6-node3)
+ * Stop    heat-api:0	(Started rhos6-node1)
+ * Stop    heat-api:1	(Started rhos6-node2)
+ * Stop    heat-api:2	(Started rhos6-node3)
+ * Stop    heat-api-cfn:0	(Started rhos6-node1)
+ * Stop    heat-api-cfn:1	(Started rhos6-node2)
+ * Stop    heat-api-cfn:2	(Started rhos6-node3)
+ * Stop    heat-api-cloudwatch:0	(Started rhos6-node1)
+ * Stop    heat-api-cloudwatch:1	(Started rhos6-node2)
+ * Stop    heat-api-cloudwatch:2	(Started rhos6-node3)
+ * Stop    heat-engine	(Started rhos6-node2)
+
+Executing cluster transition:
+ * Pseudo action:   glance-api-clone_stop_0
+ * Resource action: cinder-volume   stop on rhos6-node1
+ * Pseudo action:   swift-object-clone_stop_0
+ * Resource action: swift-object-expirer stop on rhos6-node2
+ * Pseudo action:   neutron-metadata-agent-clone_stop_0
+ * Pseudo action:   nova-conductor-clone_stop_0
+ * Resource action: heat-engine     stop on rhos6-node2
+ * Resource action: glance-api      stop on rhos6-node1
+ * Resource action: glance-api      stop on rhos6-node2
+ * Resource action: glance-api      stop on rhos6-node3
+ * Pseudo action:   glance-api-clone_stopped_0
+ * Resource action: cinder-scheduler stop on rhos6-node1
+ * Resource action: swift-object    stop on rhos6-node1
+ * Resource action: swift-object    stop on rhos6-node2
+ * Resource action: swift-object    stop on rhos6-node3
+ * Pseudo action:   swift-object-clone_stopped_0
+ * Pseudo action:   swift-proxy-clone_stop_0
+ * Resource action: neutron-metadata-agent stop on rhos6-node1
+ * Resource action: neutron-metadata-agent stop on rhos6-node2
+ * Resource action: neutron-metadata-agent stop on rhos6-node3
+ * Pseudo action:   neutron-metadata-agent-clone_stopped_0
+ * Resource action: nova-conductor  stop on rhos6-node1
+ * Resource action: nova-conductor  stop on rhos6-node2
+ * Resource action: nova-conductor  stop on rhos6-node3
+ * Pseudo action:   nova-conductor-clone_stopped_0
+ * Pseudo action:   heat-api-cloudwatch-clone_stop_0
+ * Pseudo action:   glance-registry-clone_stop_0
+ * Resource action: cinder-api      stop on rhos6-node1
+ * Pseudo action:   swift-container-clone_stop_0
+ * Resource action: swift-proxy     stop on rhos6-node1
+ * Resource action: swift-proxy     stop on rhos6-node2
+ * Resource action: swift-proxy     stop on rhos6-node3
+ * Pseudo action:   swift-proxy-clone_stopped_0
+ * Pseudo action:   neutron-l3-agent-clone_stop_0
+ * Pseudo action:   nova-scheduler-clone_stop_0
+ * Resource action: heat-api-cloudwatch stop on rhos6-node1
+ * Resource action: heat-api-cloudwatch stop on rhos6-node2
+ * Resource action: heat-api-cloudwatch stop on rhos6-node3
+ * Pseudo action:   heat-api-cloudwatch-clone_stopped_0
+ * Resource action: glance-registry stop on rhos6-node1
+ * Resource action: glance-registry stop on rhos6-node2
+ * Resource action: glance-registry stop on rhos6-node3
+ * Pseudo action:   glance-registry-clone_stopped_0
+ * Resource action: swift-container stop on rhos6-node1
+ * Resource action: swift-container stop on rhos6-node2
+ * Resource action: swift-container stop on rhos6-node3
+ * Pseudo action:   swift-container-clone_stopped_0
+ * Resource action: neutron-l3-agent stop on rhos6-node1
+ * Resource action: neutron-l3-agent stop on rhos6-node2
+ * Resource action: neutron-l3-agent stop on rhos6-node3
+ * Pseudo action:   neutron-l3-agent-clone_stopped_0
+ * Resource action: nova-scheduler  stop on rhos6-node1
+ * Resource action: nova-scheduler  stop on rhos6-node2
+ * Resource action: nova-scheduler  stop on rhos6-node3
+ * Pseudo action:   nova-scheduler-clone_stopped_0
+ * Pseudo action:   heat-api-cfn-clone_stop_0
+ * Pseudo action:   swift-account-clone_stop_0
+ * Pseudo action:   neutron-dhcp-agent-clone_stop_0
+ * Pseudo action:   nova-api-clone_stop_0
+ * Resource action: heat-api-cfn    stop on rhos6-node1
+ * Resource action: heat-api-cfn    stop on rhos6-node2
+ * Resource action: heat-api-cfn    stop on rhos6-node3
+ * Pseudo action:   heat-api-cfn-clone_stopped_0
+ * Resource action: swift-account   stop on rhos6-node1
+ * Resource action: swift-account   stop on rhos6-node2
+ * Resource action: swift-account   stop on rhos6-node3
+ * Pseudo action:   swift-account-clone_stopped_0
+ * Resource action: neutron-dhcp-agent stop on rhos6-node1
+ * Resource action: neutron-dhcp-agent stop on rhos6-node2
+ * Resource action: neutron-dhcp-agent stop on rhos6-node3
+ * Pseudo action:   neutron-dhcp-agent-clone_stopped_0
+ * Resource action: nova-api        stop on rhos6-node1
+ * Resource action: nova-api        stop on rhos6-node2
+ * Resource action: nova-api        stop on rhos6-node3
+ * Pseudo action:   nova-api-clone_stopped_0
+ * Pseudo action:   heat-api-clone_stop_0
+ * Pseudo action:   neutron-openvswitch-agent-clone_stop_0
+ * Pseudo action:   nova-novncproxy-clone_stop_0
+ * Resource action: heat-api        stop on rhos6-node1
+ * Resource action: heat-api        stop on rhos6-node2
+ * Resource action: heat-api        stop on rhos6-node3
+ * Pseudo action:   heat-api-clone_stopped_0
+ * Resource action: neutron-openvswitch-agent stop on rhos6-node1
+ * Resource action: neutron-openvswitch-agent stop on rhos6-node2
+ * Resource action: neutron-openvswitch-agent stop on rhos6-node3
+ * Pseudo action:   neutron-openvswitch-agent-clone_stopped_0
+ * Resource action: nova-novncproxy stop on rhos6-node1
+ * Resource action: nova-novncproxy stop on rhos6-node2
+ * Resource action: nova-novncproxy stop on rhos6-node3
+ * Pseudo action:   nova-novncproxy-clone_stopped_0
+ * Pseudo action:   ceilometer-notification-clone_stop_0
+ * Pseudo action:   neutron-netns-cleanup-clone_stop_0
+ * Pseudo action:   nova-consoleauth-clone_stop_0
+ * Resource action: ceilometer-notification stop on rhos6-node1
+ * Resource action: ceilometer-notification stop on rhos6-node2
+ * Resource action: ceilometer-notification stop on rhos6-node3
+ * Pseudo action:   ceilometer-notification-clone_stopped_0
+ * Resource action: neutron-netns-cleanup stop on rhos6-node1
+ * Resource action: neutron-netns-cleanup stop on rhos6-node2
+ * Resource action: neutron-netns-cleanup stop on rhos6-node3
+ * Pseudo action:   neutron-netns-cleanup-clone_stopped_0
+ * Resource action: nova-consoleauth stop on rhos6-node1
+ * Resource action: nova-consoleauth stop on rhos6-node2
+ * Resource action: nova-consoleauth stop on rhos6-node3
+ * Pseudo action:   nova-consoleauth-clone_stopped_0
+ * Pseudo action:   ceilometer-alarm-notifier-clone_stop_0
+ * Pseudo action:   neutron-ovs-cleanup-clone_stop_0
+ * Resource action: ceilometer-alarm-notifier stop on rhos6-node1
+ * Resource action: ceilometer-alarm-notifier stop on rhos6-node2
+ * Resource action: ceilometer-alarm-notifier stop on rhos6-node3
+ * Pseudo action:   ceilometer-alarm-notifier-clone_stopped_0
+ * Resource action: neutron-ovs-cleanup stop on rhos6-node1
+ * Resource action: neutron-ovs-cleanup stop on rhos6-node2
+ * Resource action: neutron-ovs-cleanup stop on rhos6-node3
+ * Pseudo action:   neutron-ovs-cleanup-clone_stopped_0
+ * Pseudo action:   ceilometer-alarm-evaluator-clone_stop_0
+ * Pseudo action:   neutron-scale-clone_stop_0
+ * Resource action: ceilometer-alarm-evaluator stop on rhos6-node1
+ * Resource action: ceilometer-alarm-evaluator stop on rhos6-node2
+ * Resource action: ceilometer-alarm-evaluator stop on rhos6-node3
+ * Pseudo action:   ceilometer-alarm-evaluator-clone_stopped_0
+ * Resource action: neutron-scale:0 stop on rhos6-node3
+ * Resource action: neutron-scale:1 stop on rhos6-node2
+ * Resource action: neutron-scale:2 stop on rhos6-node1
+ * Pseudo action:   neutron-scale-clone_stopped_0
+ * Pseudo action:   ceilometer-delay-clone_stop_0
+ * Pseudo action:   neutron-server-clone_stop_0
+ * Resource action: ceilometer-delay stop on rhos6-node1
+ * Resource action: ceilometer-delay stop on rhos6-node2
+ * Resource action: ceilometer-delay stop on rhos6-node3
+ * Pseudo action:   ceilometer-delay-clone_stopped_0
+ * Resource action: neutron-server  stop on rhos6-node1
+ * Resource action: neutron-server  stop on rhos6-node2
+ * Resource action: neutron-server  stop on rhos6-node3
+ * Pseudo action:   neutron-server-clone_stopped_0
+ * Pseudo action:   ceilometer-api-clone_stop_0
+ * Resource action: ceilometer-api  stop on rhos6-node1
+ * Resource action: ceilometer-api  stop on rhos6-node2
+ * Resource action: ceilometer-api  stop on rhos6-node3
+ * Pseudo action:   ceilometer-api-clone_stopped_0
+ * Pseudo action:   ceilometer-collector-clone_stop_0
+ * Resource action: ceilometer-collector stop on rhos6-node1
+ * Resource action: ceilometer-collector stop on rhos6-node2
+ * Resource action: ceilometer-collector stop on rhos6-node3
+ * Pseudo action:   ceilometer-collector-clone_stopped_0
+ * Resource action: ceilometer-central stop on rhos6-node3
+ * Pseudo action:   keystone-clone_stop_0
+ * Resource action: keystone        stop on rhos6-node1
+ * Resource action: keystone        stop on rhos6-node2
+ * Resource action: keystone        stop on rhos6-node3
+ * Pseudo action:   keystone-clone_stopped_0
+ * Pseudo action:   all_stopped
+
+Revised cluster status:
+Online: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+
+ node1-fence	(stonith:fence_xvm):	Started rhos6-node1 
+ node2-fence	(stonith:fence_xvm):	Started rhos6-node2 
+ node3-fence	(stonith:fence_xvm):	Started rhos6-node3 
+ Clone Set: lb-haproxy-clone [lb-haproxy]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ vip-db	(ocf::heartbeat:IPaddr2):	Started rhos6-node1 
+ vip-rabbitmq	(ocf::heartbeat:IPaddr2):	Started rhos6-node2 
+ vip-qpid	(ocf::heartbeat:IPaddr2):	Started rhos6-node3 
+ vip-keystone	(ocf::heartbeat:IPaddr2):	Started rhos6-node1 
+ vip-glance	(ocf::heartbeat:IPaddr2):	Started rhos6-node2 
+ vip-cinder	(ocf::heartbeat:IPaddr2):	Started rhos6-node3 
+ vip-swift	(ocf::heartbeat:IPaddr2):	Started rhos6-node1 
+ vip-neutron	(ocf::heartbeat:IPaddr2):	Started rhos6-node2 
+ vip-nova	(ocf::heartbeat:IPaddr2):	Started rhos6-node3 
+ vip-horizon	(ocf::heartbeat:IPaddr2):	Started rhos6-node1 
+ vip-heat	(ocf::heartbeat:IPaddr2):	Started rhos6-node2 
+ vip-ceilometer	(ocf::heartbeat:IPaddr2):	Started rhos6-node3 
+ Master/Slave Set: galera-master [galera]
+     Masters: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: rabbitmq-server-clone [rabbitmq-server]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: memcached-clone [memcached]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: mongodb-clone [mongodb]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: keystone-clone [keystone]
+     Stopped: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: glance-fs-clone [glance-fs]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: glance-registry-clone [glance-registry]
+     Stopped: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: glance-api-clone [glance-api]
+     Stopped: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ cinder-api	(systemd:openstack-cinder-api):	Stopped 
+ cinder-scheduler	(systemd:openstack-cinder-scheduler):	Stopped 
+ cinder-volume	(systemd:openstack-cinder-volume):	Stopped 
+ Clone Set: swift-fs-clone [swift-fs]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: swift-account-clone [swift-account]
+     Stopped: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: swift-container-clone [swift-container]
+     Stopped: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: swift-object-clone [swift-object]
+     Stopped: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: swift-proxy-clone [swift-proxy]
+     Stopped: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ swift-object-expirer	(systemd:openstack-swift-object-expirer):	Stopped 
+ Clone Set: neutron-server-clone [neutron-server]
+     Stopped: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: neutron-scale-clone [neutron-scale] (unique)
+     neutron-scale:0	(ocf::neutron:NeutronScale):	Stopped 
+     neutron-scale:1	(ocf::neutron:NeutronScale):	Stopped 
+     neutron-scale:2	(ocf::neutron:NeutronScale):	Stopped 
+ Clone Set: neutron-ovs-cleanup-clone [neutron-ovs-cleanup]
+     Stopped: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: neutron-netns-cleanup-clone [neutron-netns-cleanup]
+     Stopped: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: neutron-openvswitch-agent-clone [neutron-openvswitch-agent]
+     Stopped: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: neutron-dhcp-agent-clone [neutron-dhcp-agent]
+     Stopped: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: neutron-l3-agent-clone [neutron-l3-agent]
+     Stopped: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: neutron-metadata-agent-clone [neutron-metadata-agent]
+     Stopped: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: nova-consoleauth-clone [nova-consoleauth]
+     Stopped: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: nova-novncproxy-clone [nova-novncproxy]
+     Stopped: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: nova-api-clone [nova-api]
+     Stopped: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: nova-scheduler-clone [nova-scheduler]
+     Stopped: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: nova-conductor-clone [nova-conductor]
+     Stopped: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ ceilometer-central	(systemd:openstack-ceilometer-central):	Stopped 
+ Clone Set: ceilometer-collector-clone [ceilometer-collector]
+     Stopped: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: ceilometer-api-clone [ceilometer-api]
+     Stopped: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: ceilometer-delay-clone [ceilometer-delay]
+     Stopped: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: ceilometer-alarm-evaluator-clone [ceilometer-alarm-evaluator]
+     Stopped: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: ceilometer-alarm-notifier-clone [ceilometer-alarm-notifier]
+     Stopped: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: ceilometer-notification-clone [ceilometer-notification]
+     Stopped: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: heat-api-clone [heat-api]
+     Stopped: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: heat-api-cfn-clone [heat-api-cfn]
+     Stopped: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ Clone Set: heat-api-cloudwatch-clone [heat-api-cloudwatch]
+     Stopped: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+ heat-engine	(systemd:openstack-heat-engine):	Stopped 
+ Clone Set: horizon-clone [horizon]
+     Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+
