@@ -458,6 +458,26 @@ rsc_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const c
     return work;
 }
 
+static gboolean
+is_allocated(resource_t *rsc)
+{
+    if (rsc->allocated_to != FALSE) {
+        return TRUE;
+    }
+
+    if (rsc->children) {
+        GListPtr gIter = NULL;
+        for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+            resource_t *child_rsc = (resource_t *) gIter->data;
+            if (is_allocated(child_rsc)) {
+                return TRUE;
+            }
+        }
+    }
+
+    return FALSE;
+}
+
 node_t *
 native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 {
@@ -507,6 +527,23 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         }
         if (archive) {
             g_hash_table_destroy(archive);
+        }
+    }
+
+    
+    for (gIter = rsc->allocate_first; gIter != NULL; gIter = gIter->next) {
+        resource_t *rsc_rh = (resource_t *) gIter->data;
+
+        /* items in the allocate_first list must be allocated somewhere
+         * for this resource to be allowed to run at all. */
+        rsc_rh->cmds->allocate(rsc_rh, NULL, data_set);
+        if (rsc_rh->next_role == RSC_ROLE_STOPPED || is_allocated(rsc_rh) == FALSE) {
+            /* by explicitly setting role to stopped, we are ensuring
+             * that all nodes in the allowed node list have a weight of
+             * -INFINITY. This will in turn ensure that any colocation constraints
+             *  built on this resource are calculated correctly */
+            rsc->next_role = RSC_ROLE_STOPPED;
+            break;
         }
     }
 

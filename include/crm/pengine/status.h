@@ -266,6 +266,7 @@ struct resource_s {
     GListPtr rsc_location;      /* rsc_to_node_t*    */
     GListPtr actions;           /* action_t*         */
     GListPtr rsc_tickets;       /* rsc_ticket*       */
+    GListPtr allocate_first;    /* resource_t*       */
 
     node_t *allocated_to;
     GListPtr running_on;        /* node_t*   */
@@ -375,6 +376,7 @@ enum pe_ordering {
     pe_order_anti_colocation       = 0x800000,
 
     pe_order_preserve              = 0x1000000, /* Hack for breaking user ordering constraints with container resources */
+    pe_order_implies_first_allocated = 0x2000000, /* Hack. then must be allocated for first to be allocated. */
     pe_order_trace                 = 0x4000000, /* test marker */
 };
 /* *INDENT-ON* */

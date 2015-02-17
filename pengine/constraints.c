@@ -52,6 +52,7 @@ enum pe_order_kind {
 enum pe_ordering get_flags(const char *id, enum pe_order_kind kind,
                            const char *action_first, const char *action_then, gboolean invert);
 enum pe_ordering get_asymmetrical_flags(enum pe_order_kind kind);
+enum pe_ordering get_allocate_flags(enum pe_order_kind kind, const char *action_first, const char *action_then);
 static rsc_to_node_t *generate_location_rule(resource_t * rsc, xmlNode * rule_xml,
                                              const char *discovery, pe_working_set_t * data_set);
 
@@ -366,6 +367,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     } else {
         cons_weight |= get_flags(id, kind, action_first, action_then, FALSE);
     }
+    cons_weight |= get_allocate_flags(kind, action_first, action_then);
 
     if (require_all == FALSE) {
         GListPtr rIter = NULL;
@@ -419,6 +421,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     }
 
     cons_weight |= get_flags(id, kind, action_first, action_then, TRUE);
+    cons_weight |= get_allocate_flags(kind, action_first, action_then);
 
     order_id = new_rsc_order(rsc_then, action_then, rsc_first, action_first, cons_weight, data_set);
 
@@ -1397,10 +1400,31 @@ custom_action_order(resource_t * lh_rsc, char *lh_action_task, action_t * lh_act
         order->rh_rsc = rh_action->rsc;
     }
 
+    if (type & pe_order_implies_first_allocated) {
+        /* add then to list of resources that must be allocated before first.
+        * first can only run if all of the resources in this list are allocated somewhere. */
+        order->lh_rsc->allocate_first = g_list_append(order->lh_rsc->allocate_first, order->rh_rsc);
+    }
+
     data_set->ordering_constraints = g_list_prepend(data_set->ordering_constraints, order);
     handle_migration_ordering(order, data_set);
 
     return order->id;
+}
+
+enum pe_ordering
+get_allocate_flags(enum pe_order_kind kind, const char *action_first, const char *action_then)
+{
+    if (kind == pe_order_kind_mandatory &&
+            safe_str_eq(action_first, RSC_STOP) &&
+            safe_str_eq(action_then, RSC_STOP)) {
+
+        /* This is cross talk between colocation and ordering constraints. 
+         * When Stop A then Stop B. Don't even let A be allocated
+         * anywhere if B isn't allocated anywhere. */
+        return pe_order_implies_first_allocated;
+    }
+    return 0;
 }
 
 enum pe_ordering

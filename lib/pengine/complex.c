@@ -785,6 +785,7 @@ common_free(resource_t * rsc)
         rsc->allowed_nodes = NULL;
     }
     g_list_free(rsc->fillers);
+    g_list_free(rsc->allocate_first);
     g_list_free(rsc->rsc_location);
     pe_rsc_trace(rsc, "Resource freed");
     free(rsc->id);
