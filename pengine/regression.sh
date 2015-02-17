@@ -176,6 +176,7 @@ do_test coloc_fp_logic "Verify floating point calculations in colocation are wor
 do_test colo_master_w_native "cl#5070 - Verify promotion order is affected when colocating master to native rsc."
 do_test colo_slave_w_native  "cl#5070 - Verify promotion order is affected when colocating slave to native rsc."
 do_test anti-colocation-order "cl#5187 - Prevent resources in an anti-colocation from even temporarily running on a same node"
+do_test enforce-colo1 "Always enforce B with A INFINITY."
 
 echo ""
 do_test rsc-sets-seq-true "Resource Sets - sequential=false"
