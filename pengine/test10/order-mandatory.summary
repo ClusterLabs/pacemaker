@@ -10,7 +10,7 @@ Online: [ node1 ]
 Transition Summary:
  * Start   rsc1	(node1)
  * Restart rsc2	(Started node1)
- * Stop    rsc4	(Started node1)
+ * Stop    rsc4	(node1)
 
 Executing cluster transition:
  * Resource action: rsc1            start on node1

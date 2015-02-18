@@ -7,7 +7,6 @@ Online: [ fc16-builder ]
  ClusterIP3	(ocf::heartbeat:IPaddr2):	Stopped 
 
 Transition Summary:
- * Start   ClusterIP	(fc16-builder - blocked)
  * Start   ClusterIP2	(fc16-builder - blocked)
 
 Executing cluster transition:

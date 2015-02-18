@@ -2,6 +2,6 @@ Allocation scores:
 native_color: A allocation score on 18node1: -INFINITY
 native_color: A allocation score on 18node2: -INFINITY
 native_color: A allocation score on 18node3: -INFINITY
-native_color: B allocation score on 18node1: INFINITY
-native_color: B allocation score on 18node2: 0
-native_color: B allocation score on 18node3: 0
+native_color: B allocation score on 18node1: -INFINITY
+native_color: B allocation score on 18node2: -INFINITY
+native_color: B allocation score on 18node3: -INFINITY

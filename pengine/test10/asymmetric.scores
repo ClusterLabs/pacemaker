@@ -7,6 +7,8 @@ clone_color: ms_drbd_poolA allocation score on puma1: 0
 clone_color: ms_drbd_poolA allocation score on puma3: 0
 ebe3fb6e-7778-426e-be58-190ab1ff3dd3:0 promotion score on puma1: 5
 ebe3fb6e-7778-426e-be58-190ab1ff3dd3:1 promotion score on puma3: 100
+native_color: drbd_target_poolA allocation score on puma1: -INFINITY
+native_color: drbd_target_poolA allocation score on puma3: -INFINITY
 native_color: ebe3fb6e-7778-426e-be58-190ab1ff3dd3:0 allocation score on puma1: 6
 native_color: ebe3fb6e-7778-426e-be58-190ab1ff3dd3:0 allocation score on puma3: 0
 native_color: ebe3fb6e-7778-426e-be58-190ab1ff3dd3:1 allocation score on puma1: -INFINITY
