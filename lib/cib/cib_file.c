@@ -18,6 +18,7 @@
  */
 #include <crm_internal.h>
 #include <unistd.h>
+#include <limits.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -33,6 +34,7 @@
 #include <crm/common/xml.h>
 
 #define cib_flag_dirty 0x00001
+#define cib_flag_live  0x00002
 
 typedef struct cib_file_opaque_s {
     int flags;
@@ -175,6 +177,46 @@ cib_file_read_and_verify(const char *filename, const char *sigfile, xmlNode **ro
 #define CIB_SERIES_BZIP FALSE /* Must be false because archived copies are
                                  created with hard links
                                */
+
+#define CIB_LIVE_NAME CIB_SERIES ".xml"
+
+/*!
+ * \internal
+ * \brief Check whether a file is the live CIB
+ *
+ * \param[in] filename Name of file to check
+ *
+ * \return TRUE if file exists and has one of the possible live CIB filenames
+ */
+static gboolean
+cib_file_is_live(const char *filename)
+{
+    if (filename != NULL) {
+        /* Canonicalize all file names for true comparison */
+        char *real_filename = crm_compat_realpath(filename);
+
+        if (real_filename != NULL) {
+            const char *livenames[] = {
+                CRM_CONFIG_DIR "/" CIB_LIVE_NAME,
+                CRM_LEGACY_CONFIG_DIR "/" CIB_LIVE_NAME
+            };
+            char *real_livename;
+            int i;
+
+            /* Compare against each possible live CIB name */
+            for (i = 0; i < sizeof(livenames)/sizeof(const char*); ++i) {
+                real_livename = crm_compat_realpath(livenames[i]);
+                if (real_livename && !strcmp(real_filename, real_livename)) {
+                    free(real_livename);
+                    return TRUE;
+                }
+                free(real_livename);
+            }
+            free(real_filename);
+        }
+    }
+    return FALSE;
+}
 
 static int
 cib_file_backup(const char *cib_dirname, const char *cib_filename)
@@ -344,6 +386,7 @@ cib_file_new(const char *cib_location)
     cib_t *cib = cib_new_variant();
 
     private = calloc(1, sizeof(cib_file_opaque_t));
+    CRM_ASSERT((cib != NULL) && (private != NULL));
 
     cib->variant = cib_file;
     cib->variant_opaque = private;
@@ -352,6 +395,9 @@ cib_file_new(const char *cib_location)
         cib_location = getenv("CIB_file");
     }
     private->flags = 0;
+    if (cib_file_is_live(cib_location)) {
+        set_bit(private->flags, cib_flag_live);
+    }
     private->filename = strdup(cib_location);
 
     /* assign variant specific ops */
@@ -419,7 +465,6 @@ cib_file_signon(cib_t * cib, const char *name, enum cib_conn_type type)
     int rc = pcmk_ok;
     cib_file_opaque_t *private = cib->variant_opaque;
 
-    private->flags = 0;
     if (private->filename == FALSE) {
         rc = -EINVAL;
     } else {
@@ -450,7 +495,7 @@ cib_file_signoff(cib_t * cib)
     cib->state = cib_disconnected;
     cib->type = cib_no_connection;
 
-    if(is_not_set(private->flags, cib_flag_dirty)) {
+    if (is_not_set(private->flags, cib_flag_dirty)) {
         /* No changes to write out */
         free_xml(in_mem_cib);
         return pcmk_ok;
@@ -464,6 +509,7 @@ cib_file_signoff(cib_t * cib)
 
     if (rc > 0) {
         crm_info("Wrote CIB to %s", private->filename);
+        clear_bit(private->flags, cib_flag_dirty);
         rc = pcmk_ok;
 
     } else {
@@ -601,7 +647,7 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
         xml_log_patchset(LOG_DEBUG, "cib:diff", cib_diff);
         free_xml(in_mem_cib);
         in_mem_cib = result_cib;
-        private->flags |= cib_flag_dirty;
+        set_bit(private->flags, cib_flag_dirty);
     }
 
     free_xml(cib_diff);
