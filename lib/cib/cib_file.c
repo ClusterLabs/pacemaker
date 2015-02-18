@@ -89,10 +89,10 @@ cib_file_verify_digest(xmlNode *root, const char *sigfile)
     if (expected == NULL) {
         switch (errno) {
             case 0:
-                crm_err("On-disk digest is empty");
+                crm_err("On-disk digest at %s is empty", sigfile);
                 return FALSE;
             case ENOENT:
-                crm_warn("No on-disk digest present");
+                crm_warn("No on-disk digest present at %s", sigfile);
                 return TRUE;
             default:
                 crm_perror(LOG_ERR, "Could not read on-disk digest from %s", sigfile);
@@ -218,6 +218,15 @@ cib_file_is_live(const char *filename)
     return FALSE;
 }
 
+/*!
+ * \internal
+ * \brief Back up a CIB
+ *
+ * \param[in] cib_dirname Directory containing CIB file and backups
+ * \param[in] cib_filename Name (relative to cib_dirname) of CIB file to back up
+ *
+ * \return 0 on success, -1 on error
+ */
 static int
 cib_file_backup(const char *cib_dirname, const char *cib_filename)
 {
@@ -262,6 +271,17 @@ cib_file_backup(const char *cib_dirname, const char *cib_filename)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Prepare CIB XML to be written to disk
+ *
+ * Set num_updates to 0, set cib-last-written to the current timestamp,
+ * and strip out the status section.
+ *
+ * \param[in] root Root of CIB XML tree
+ *
+ * \return void
+ */
 static void
 cib_file_prepare_xml(xmlNode *root)
 {
@@ -280,6 +300,19 @@ cib_file_prepare_xml(xmlNode *root)
     }
 }
 
+/*!
+ * \internal
+ * \brief Write CIB to disk, along with a signature file containing its digest
+ *
+ * \param[in] cib_root Root of XML tree to write
+ * \param[in] cib_dirname Directory containing CIB and signature files
+ * \param[in] cib_filename Name (relative to cib_dirname) of file to write
+ *
+ * \return pcmk_ok on success,
+ *         pcmk_err_cib_modified if existing cib_filename doesn't match digest,
+ *         pcmk_err_cib_backup if existing cib_filename couldn't be backed up,
+ *         or pcmk_err_cib_save if new cib_filename couldn't be saved
+ */
 int
 cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
                            const char *cib_filename)
