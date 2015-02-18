@@ -1114,6 +1114,7 @@ pcmk_errorname(int rc)
         case pcmk_err_cib_modified: return "pcmk_err_cib_modified";
         case pcmk_err_cib_backup: return "pcmk_err_cib_backup";
         case pcmk_err_cib_save: return "pcmk_err_cib_save";
+        case pcmk_err_cib_corrupt: return "pcmk_err_cib_corrupt";
     }
     return "Unknown";
 }
@@ -1151,6 +1152,8 @@ pcmk_strerror(int rc)
             return "Could not archive the previous configuration";
         case pcmk_err_cib_save:
             return "Could not save the new configuration to disk";
+        case pcmk_err_cib_corrupt:
+            return "Could not parse on-disk configuration";
 
         case pcmk_err_schema_unchanged:
             return "Schema is already the latest available";

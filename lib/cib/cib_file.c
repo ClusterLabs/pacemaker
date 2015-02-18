@@ -5,12 +5,12 @@
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -30,6 +30,7 @@
 #include <crm/cib/internal.h>
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
+#include <crm/common/xml.h>
 
 #define cib_flag_dirty 0x00001
 
@@ -66,6 +67,274 @@ static int
 cib_file_register_notification(cib_t * cib, const char *callback, int enabled)
 {
     return -EPROTONOSUPPORT;
+}
+
+/*!
+ * \internal
+ * \brief Compare the calculated digest of an XML tree against a signature file
+ *
+ * \param[in] root Root of XML tree to compare
+ * \param[in] sigfile Name of signature file containing digest to compare
+ *
+ * \return TRUE if digests match or signature file does not exist, else FALSE
+ */
+static gboolean
+cib_file_verify_digest(xmlNode *root, const char *sigfile)
+{
+    gboolean passed = FALSE;
+    char *expected = crm_read_contents(sigfile);
+
+    if (expected == NULL) {
+        switch (errno) {
+            case 0:
+                crm_err("On-disk digest is empty");
+                return FALSE;
+            case ENOENT:
+                crm_warn("No on-disk digest present");
+                return TRUE;
+            default:
+                crm_perror(LOG_ERR, "Could not read on-disk digest from %s", sigfile);
+                return FALSE;
+        }
+    }
+    passed = crm_digest_verify(root, expected);
+    free(expected);
+    return passed;
+}
+
+/*!
+ * \internal
+ * \brief Read an XML tree from a file and verify its digest
+ *
+ * \param[in] filename Name of XML file to read
+ * \param[in] sigfile Name of signature file containing digest to compare
+ * \param[in] root If non-NULL, will be set to pointer to parsed XML tree
+ *
+ * \return 0 if file was successfully read, parsed and verified, otherwise:
+ *         -errno on stat() failure,
+ *         -pcmk_err_cib_corrupt if file size is 0 or XML is not parseable, or
+ *         -pcmk_err_cib_modified if digests do not match
+ * \note If root is non-NULL, it is the caller's responsibility to free *root on
+ *       successful return.
+ */
+int
+cib_file_read_and_verify(const char *filename, const char *sigfile, xmlNode **root)
+{
+    int s_res;
+    struct stat buf;
+    char *local_sigfile = NULL;
+    xmlNode *local_root = NULL;
+
+    CRM_ASSERT(filename != NULL);
+    if (root) {
+        *root = NULL;
+    }
+
+    /* Verify that file exists and its size is nonzero */
+    s_res = stat(filename, &buf);
+    if (s_res < 0) {
+        crm_perror(LOG_WARNING, "Could not verify cluster configuration file %s", filename);
+        return -errno;
+    } else if (buf.st_size == 0) {
+        crm_warn("Cluster configuration file %s is corrupt (size is zero)", filename);
+        return -pcmk_err_cib_corrupt;
+    }
+
+    /* Parse XML */
+    crm_info("Reading cluster configuration file %s", filename);
+    local_root = filename2xml(filename);
+    if (local_root == NULL) {
+        crm_warn("Cluster configuration file %s is corrupt (unparseable as XML)", filename);
+        return -pcmk_err_cib_corrupt;
+    }
+
+    /* If sigfile is not specified, use original file name plus .sig */
+    if (sigfile == NULL) {
+        sigfile = local_sigfile = crm_concat(filename, "sig", '.');
+    }
+
+    /* Verify that digests match */
+    crm_info("Verifying cluster configuration signature from %s", sigfile);
+    if (cib_file_verify_digest(local_root, sigfile) == FALSE) {
+        free(local_sigfile);
+        free_xml(local_root);
+        return -pcmk_err_cib_modified;
+    }
+
+    free(local_sigfile);
+    if (root) {
+        *root = local_root;
+    } else {
+        free_xml(local_root);
+    }
+    return pcmk_ok;
+}
+
+#define CIB_SERIES "cib"
+#define CIB_SERIES_MAX 100
+#define CIB_SERIES_BZIP FALSE /* Must be false because archived copies are
+                                 created with hard links
+                               */
+
+static int
+cib_file_backup(const char *cib_dirname, const char *cib_filename)
+{
+    int rc = 0;
+    char *cib_path = crm_concat(cib_dirname, cib_filename, '/');
+    char *cib_digest = crm_concat(cib_path, "sig", '.');
+
+    /* Figure out what backup file sequence number to use */
+    int seq = get_last_sequence(cib_dirname, CIB_SERIES);
+    char *backup_path = generate_series_filename(cib_dirname, CIB_SERIES, seq,
+                                                 CIB_SERIES_BZIP);
+    char *backup_digest = crm_concat(backup_path, "sig", '.');
+
+    CRM_ASSERT((cib_path != NULL) && (cib_digest != NULL)
+               && (backup_path != NULL) && (backup_digest != NULL));
+
+    /* Remove the old backups if they exist */
+    unlink(backup_path);
+    unlink(backup_digest);
+
+    /* Back up the CIB, by hard-linking it to the backup name */
+    if ((link(cib_path, backup_path) < 0) && (errno != ENOENT)) {
+        crm_perror(LOG_ERR, "Could not archive %s by linking to %s", cib_path, backup_path);
+        rc = -1;
+
+    /* Back up the CIB signature similarly */
+    } else if ((link(cib_digest, backup_digest) < 0) && (errno != ENOENT)) {
+        crm_perror(LOG_ERR, "Could not archive %s by linking to %s", cib_digest, backup_digest);
+        rc = -1;
+
+    /* Update the last counter and ensure everything is sync'd to media */
+    } else {
+        write_last_sequence(cib_dirname, CIB_SERIES, seq + 1, CIB_SERIES_MAX);
+        crm_sync_directory(cib_dirname);
+        crm_info("Archived previous version as %s", backup_path);
+    }
+
+    free(cib_path);
+    free(cib_digest);
+    free(backup_path);
+    free(backup_digest);
+    return rc;
+}
+
+static void
+cib_file_prepare_xml(xmlNode *root)
+{
+    xmlNode *cib_status_root = NULL;
+
+    /* Always write out with num_updates=0 and current last-written timestamp */
+    crm_xml_add(root, XML_ATTR_NUMUPDATES, "0");
+    crm_xml_add_last_written(root);
+
+    /* Delete status section before writing to file, because
+     * we discard it on startup anyway, and users get confused by it */
+    cib_status_root = find_xml_node(root, XML_CIB_TAG_STATUS, TRUE);
+    CRM_LOG_ASSERT(cib_status_root != NULL);
+    if (cib_status_root != NULL) {
+        free_xml(cib_status_root);
+    }
+}
+
+int
+cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
+                           const char *cib_filename)
+{
+    int exit_rc = pcmk_ok;
+    int rc, fd;
+    char *digest = NULL;
+
+    /* Detect CIB version for diagnostic purposes */
+    const char *epoch = crm_element_value(cib_root, XML_ATTR_GENERATION);
+    const char *admin_epoch = crm_element_value(cib_root,
+                                                XML_ATTR_GENERATION_ADMIN);
+
+    /* Determine full CIB and signature pathnames */
+    char *cib_path = crm_concat(cib_dirname, cib_filename, '/');
+    char *digest_path = crm_concat(cib_path, "sig", '.');
+
+    /* Create temporary file name patterns for writing out CIB and signature */
+    char *tmp_cib = g_strdup_printf("%s/cib.XXXXXX", cib_dirname);
+    char *tmp_digest = g_strdup_printf("%s/cib.XXXXXX", cib_dirname);
+
+    CRM_ASSERT((cib_path != NULL) && (digest_path != NULL)
+               && (tmp_cib != NULL) && (tmp_digest != NULL));
+
+    /* Ensure the admin didn't modify the existing CIB underneath us */
+    rc = cib_file_read_and_verify(cib_path, NULL, NULL);
+    if ((rc != pcmk_ok) && (rc != -ENOENT)) {
+        crm_err("%s was manually modified while the cluster was active!",
+                cib_path);
+        exit_rc = pcmk_err_cib_modified;
+        goto cleanup;
+    }
+
+    /* Back up the existing CIB */
+    if (cib_file_backup(cib_dirname, cib_filename) < 0) {
+        exit_rc = pcmk_err_cib_backup;
+        goto cleanup;
+    }
+
+    crm_debug("Writing CIB to disk");
+    umask(S_IWGRP | S_IWOTH | S_IROTH);
+    cib_file_prepare_xml(cib_root);
+
+    /* Write the CIB to a temporary file, so we can deploy (near) atomically */
+    fd = mkstemp(tmp_cib);
+    if (fd < 0) {
+        crm_perror(LOG_ERR, "Couldn't open temporary file %s for writing CIB",
+                   tmp_cib);
+        exit_rc = pcmk_err_cib_save;
+        goto cleanup;
+    }
+    fchmod(fd, S_IRUSR | S_IWUSR); /* establish the correct permissions */
+    if (write_xml_fd(cib_root, tmp_cib, fd, FALSE) <= 0) {
+        crm_err("Changes couldn't be written to %s", tmp_cib);
+        exit_rc = pcmk_err_cib_save;
+        goto cleanup;
+    }
+
+    /* Calculate CIB digest */
+    digest = calculate_on_disk_digest(cib_root);
+    CRM_ASSERT(digest != NULL);
+    crm_info("Wrote version %s.%s.0 of the CIB to disk (digest: %s)",
+             (admin_epoch ? admin_epoch : "0"), (epoch ? epoch : "0"), digest);
+
+    /* Write the CIB digest to a temporary file */
+    fd = mkstemp(tmp_digest);
+    if ((fd < 0) || (crm_write_sync(fd, digest) < 0)) {
+        crm_perror(LOG_ERR, "Could not write digest to file %s", tmp_digest);
+        exit_rc = pcmk_err_cib_save;
+        goto cleanup;
+    }
+    crm_debug("Wrote digest %s to disk", digest);
+
+    /* Verify that what we wrote is sane */
+    rc = cib_file_read_and_verify(tmp_cib, tmp_digest, NULL);
+    CRM_ASSERT(rc == 0);
+
+    /* Rename temporary files to live, and sync directory changes to media */
+    crm_debug("Activating %s", tmp_cib);
+    if (rename(tmp_cib, cib_path) < 0) {
+        crm_perror(LOG_ERR, "Couldn't rename %s as %s", tmp_cib, cib_path);
+        exit_rc = pcmk_err_cib_save;
+    }
+    if (rename(tmp_digest, digest_path) < 0) {
+        crm_perror(LOG_ERR, "Couldn't rename %s as %s", tmp_digest,
+                   digest_path);
+        exit_rc = pcmk_err_cib_save;
+    }
+    crm_sync_directory(cib_dirname);
+
+  cleanup:
+    free(cib_path);
+    free(digest_path);
+    free(digest);
+    free(tmp_digest);
+    free(tmp_cib);
+    return exit_rc;
 }
 
 cib_t *

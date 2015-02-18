@@ -347,6 +347,7 @@ static inline void *realloc_safe(void *ptr, size_t size)
     return ret;
 }
 
+const char *crm_xml_add_last_written(xmlNode *xml_node);
 void crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, int depth);
 void crm_buffer_add_char(char **buffer, int *offset, int *max, char c);
 
