@@ -3,14 +3,14 @@ Current cluster status:
 Online: [ hex-0 hex-9 ]
 OFFLINE: [ hex-7 hex-8 ]
 
- vm-00	(ocf::heartbeat:Xen):	Stopped 
+ vm-00	(ocf::heartbeat:Xen):	(target-role:Stopped) Stopped 
  Clone Set: base-clone [base-group]
      Resource Group: base-group:0
          dlm	(ocf::pacemaker:controld):	Started hex-0 
          o2cb	(ocf::ocfs2:o2cb):	Stopped 
          clvm	(ocf::lvm2:clvmd):	Stopped 
          cmirrord	(ocf::lvm2:cmirrord):	Stopped 
-         vg1	(ocf::heartbeat:LVM):	Stopped 
+         vg1	(ocf::heartbeat:LVM):	(target-role:Stopped) Stopped 
          ocfs2-1	(ocf::heartbeat:Filesystem):	Stopped 
      Stopped: [ hex-7 hex-8 hex-9 ]
  vm-01	(ocf::heartbeat:Xen):	Stopped 
@@ -49,21 +49,21 @@ Revised cluster status:
 Online: [ hex-0 hex-9 ]
 OFFLINE: [ hex-7 hex-8 ]
 
- vm-00	(ocf::heartbeat:Xen):	Stopped 
+ vm-00	(ocf::heartbeat:Xen):	(target-role:Stopped) Stopped 
  Clone Set: base-clone [base-group]
      Resource Group: base-group:0
          dlm	(ocf::pacemaker:controld):	Started hex-0 
          o2cb	(ocf::ocfs2:o2cb):	Started hex-0 
          clvm	(ocf::lvm2:clvmd):	Started hex-0 
          cmirrord	(ocf::lvm2:cmirrord):	Started hex-0 
-         vg1	(ocf::heartbeat:LVM):	Stopped 
+         vg1	(ocf::heartbeat:LVM):	(target-role:Stopped) Stopped 
          ocfs2-1	(ocf::heartbeat:Filesystem):	Stopped 
      Resource Group: base-group:1
          dlm	(ocf::pacemaker:controld):	Started hex-9 
          o2cb	(ocf::ocfs2:o2cb):	Started hex-9 
          clvm	(ocf::lvm2:clvmd):	Started hex-9 
          cmirrord	(ocf::lvm2:cmirrord):	Started hex-9 
-         vg1	(ocf::heartbeat:LVM):	Stopped 
+         vg1	(ocf::heartbeat:LVM):	(target-role:Stopped) Stopped 
          ocfs2-1	(ocf::heartbeat:Filesystem):	Stopped 
      Stopped: [ hex-7 hex-8 ]
  vm-01	(ocf::heartbeat:Xen):	Stopped 

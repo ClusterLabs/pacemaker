@@ -364,6 +364,7 @@ crm_is_heartbeat_peer_active(const crm_node_t * node)
 crm_node_t *
 crm_update_ccm_node(const oc_ev_membership_t * oc, int offset, const char *state, uint64_t seq)
 {
+    enum crm_proc_flag this_proc = text2proc(crm_system_name);
     crm_node_t *peer = NULL;
     const char *uuid = NULL;
 
@@ -376,12 +377,23 @@ crm_update_ccm_node(const oc_ev_membership_t * oc, int offset, const char *state
                            oc->m_array[offset].node_born_on, seq, -1, 0,
                            uuid, oc->m_array[offset].node_uname, NULL, state);
 
-    if (safe_str_eq(CRM_NODE_ACTIVE, state)) {
-        /* Heartbeat doesn't send status notifications for nodes that were already part of the cluster */
-        crm_update_peer_proc(__FUNCTION__, peer, crm_proc_heartbeat, ONLINESTATUS);
-
-        /* Nor does it send status notifications for processes that were already active */
-        crm_update_peer_proc(__FUNCTION__, peer, crm_proc_crmd, ONLINESTATUS);
+    if (safe_str_eq(CRM_NODE_MEMBER, state)) {
+        /* Heartbeat doesn't send status notifications for nodes that were already part of the cluster.
+         * Nor does it send status notifications for processes that were already active.
+         * Do not optimistically assume the peer client process to be online as well.
+         * We ask for cluster wide updated client status for crm_system_name
+         * directly in the ccm status callback, which will then tell us.
+         * For ourselves, we know. */
+        enum crm_proc_flag flags = crm_proc_heartbeat;
+        const char *const_uname = heartbeat_cluster->llc_ops->get_mynodeid(heartbeat_cluster);
+        if (safe_str_eq(const_uname, peer->uname)) {
+            flags |= this_proc;
+        }
+        crm_update_peer_proc(__FUNCTION__, peer, flags, ONLINESTATUS);
+    } else {
+        /* crm_update_peer_proc(__FUNCTION__, peer, crm_proc_heartbeat, OFFLINESTATUS); */
+        /* heartbeat may well be still alive. peer client process apparently vanished, though ... */
+        crm_update_peer_proc(__FUNCTION__, peer, this_proc, OFFLINESTATUS);
     }
     return peer;
 }
@@ -470,11 +482,31 @@ ha_msg_dispatch(ll_cluster_t * cluster_conn, gpointer user_data)
     CRM_CHECK(channel != NULL, return FALSE);
 
     if (channel != NULL && IPC_ISRCONN(channel)) {
+        struct ha_msg *msg;
         if (cluster_conn->llc_ops->msgready(cluster_conn) == 0) {
             crm_trace("no message ready yet");
         }
-        /* invoke the callbacks but dont block */
-        cluster_conn->llc_ops->rcvmsg(cluster_conn, 0);
+        /* invoke the callbacks but dont block.
+         * cluster_conn->llc_ops->rcvmsg(cluster_conn, 0); */
+        msg = cluster_conn->llc_ops->readmsg(cluster_conn, 0);
+        if (msg) {
+            /* Message core refuses to pass on messages with F_TYPE not set.
+             * Messages with no specific F_TOID are notifications delivered to all.
+             */
+            const char *msg_type = ha_msg_value(msg, F_TYPE) ?: "[type not set]";
+            const char *msg_to_id = ha_msg_value(msg, F_TOID);
+            if (safe_str_eq(msg_to_id, crm_system_name)) {
+                crm_err("Ignored incoming message. Please set_msg_callback on %s", msg_type);
+            } else if (msg_to_id) {
+                /* Message core will not deliver messages addressed to someone else to us.
+                 * Are we not registered as crm_system_name? */
+                crm_notice("Ignored incoming message %s=%s %s=%s, please set_msg_callback",
+                        F_TOID, msg_to_id, F_TYPE, msg_type);
+            } else {
+                crm_debug("Ignored incoming message %s=%s", F_TYPE, msg_type);
+            }
+            ha_msg_del(msg);
+        }
     }
 
     if (channel == NULL || channel->ch_status != IPC_CONNECT) {

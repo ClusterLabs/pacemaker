@@ -3,9 +3,9 @@ Current cluster status:
 Online: [ sys2 sys3 ]
 
  vm1	(ocf::heartbeat:Xen):	Started sys2
- vm2	(ocf::heartbeat:Xen):	Stopped 
- vm3	(ocf::heartbeat:Xen):	Stopped 
- vm4	(ocf::heartbeat:Xen):	Stopped 
+ vm2	(ocf::heartbeat:Xen):	(target-role:stopped) Stopped 
+ vm3	(ocf::heartbeat:Xen):	(target-role:stopped) Stopped 
+ vm4	(ocf::heartbeat:Xen):	(target-role:stopped) Stopped 
  stonithsys2	(stonith:external/ipmi):	Stopped 
  stonithsys3	(stonith:external/ipmi):	Started sys2
  Clone Set: baseclone [basegrp]
@@ -72,9 +72,9 @@ Revised cluster status:
 Online: [ sys2 sys3 ]
 
  vm1	(ocf::heartbeat:Xen):	Started sys2
- vm2	(ocf::heartbeat:Xen):	Stopped 
- vm3	(ocf::heartbeat:Xen):	Stopped 
- vm4	(ocf::heartbeat:Xen):	Stopped 
+ vm2	(ocf::heartbeat:Xen):	(target-role:stopped) Stopped 
+ vm3	(ocf::heartbeat:Xen):	(target-role:stopped) Stopped 
+ vm4	(ocf::heartbeat:Xen):	(target-role:stopped) Stopped 
  stonithsys2	(stonith:external/ipmi):	Started sys3
  stonithsys3	(stonith:external/ipmi):	Started sys2
  Clone Set: baseclone [basegrp]

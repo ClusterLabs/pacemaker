@@ -4,7 +4,7 @@ Online: [ node1 ]
 
  Resource Group: group1
      rsc1	(heartbeat:apache):	Started node1
-     rsc2	(heartbeat:apache):	Started node1
+     rsc2	(heartbeat:apache):	(target-role:Stopped) Started node1 
      rsc3	(heartbeat:apache):	Started node1
 
 Transition Summary:
@@ -24,6 +24,6 @@ Online: [ node1 ]
 
  Resource Group: group1
      rsc1	(heartbeat:apache):	Started node1
-     rsc2	(heartbeat:apache):	Stopped 
+     rsc2	(heartbeat:apache):	(target-role:Stopped) Stopped 
      rsc3	(heartbeat:apache):	Stopped 
 

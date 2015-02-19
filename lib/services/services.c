@@ -129,8 +129,11 @@ resources_action_create(const char *name, const char *standard, const char *prov
         goto return_error;
     }
 
-    if (safe_str_eq(action, "monitor")
-        && (safe_str_eq(standard, "lsb") || safe_str_eq(standard, "service"))) {
+    if (safe_str_eq(action, "monitor") && (
+#if SUPPORT_HEARTBEAT
+        safe_str_eq(standard, "heartbeat") ||
+#endif
+        safe_str_eq(standard, "lsb") || safe_str_eq(standard, "service"))) {
         action = "status";
     }
 
@@ -191,7 +194,42 @@ resources_action_create(const char *name, const char *standard, const char *prov
         op->opaque->args[0] = strdup(op->opaque->exec);
         op->opaque->args[1] = strdup(op->action);
         op->opaque->args[2] = NULL;
+#if SUPPORT_HEARTBEAT
+    } else if (strcasecmp(op->standard, "heartbeat") == 0) {
+        int index;
+        int param_num;
+        char buf_tmp[20];
+        void *value_tmp;
 
+        if (op->agent[0] == '/') {
+            /* if given an absolute path, use that instead
+             * of tacking on the HB_RA_DIR path to the front */
+            op->opaque->exec = strdup(op->agent);
+        } else if (asprintf(&op->opaque->exec, "%s/%s", HB_RA_DIR, op->agent) == -1) {
+            crm_err("Internal error: cannot create agent path");
+            goto return_error;
+        }
+        op->opaque->args[0] = strdup(op->opaque->exec);
+
+        /* The "heartbeat" agent class only has positional arguments,
+         * which we keyed by their decimal position number. */
+        param_num = 1;
+	for (index = 1; index <= MAX_ARGC - 3; index++ ) {
+            snprintf(buf_tmp, sizeof(buf_tmp), "%d", index);
+            value_tmp = g_hash_table_lookup(params, buf_tmp);
+            if (value_tmp == NULL) {
+                /* maybe: strdup("") ??
+                 * But the old lrmd did simply continue as well. */
+                continue;
+            }
+            op->opaque->args[param_num++] = strdup(value_tmp);
+        }
+
+	/* Add operation code as the last argument, */
+	/* and the teminating NULL pointer */
+        op->opaque->args[param_num++] = strdup(op->action);
+        op->opaque->args[param_num] = NULL;
+#endif
 #if SUPPORT_SYSTEMD
     } else if (strcasecmp(op->standard, "systemd") == 0) {
         op->opaque->exec = strdup("systemd-dbus");
@@ -570,6 +608,12 @@ services_list(void)
     return resources_list_agents("lsb", NULL);
 }
 
+static GList *
+resources_os_list_hb_agents(void)
+{
+    return services_os_get_directory_list(HB_RA_DIR, TRUE, TRUE);
+}
+
 GList *
 resources_list_standards(void)
 {
@@ -606,6 +650,10 @@ resources_list_standards(void)
         standards = g_list_append(standards, strdup("nagios"));
         g_list_free_full(agents, free);
     }
+#endif
+
+#if SUPPORT_HEARTBEAT
+    standards = g_list_append(standards, strdup("heartbeat"));
 #endif
 
     return standards;
@@ -658,6 +706,10 @@ resources_list_agents(const char *standard, const char *provider)
         return resources_os_list_ocf_agents(provider);
     } else if (strcasecmp(standard, "lsb") == 0) {
         return resources_os_list_lsb_agents();
+#if SUPPORT_HEARTBEAT
+    } else if (strcasecmp(standard, "heartbeat") == 0) {
+        return resources_os_list_hb_agents();
+#endif
 #if SUPPORT_SYSTEMD
     } else if (strcasecmp(standard, "systemd") == 0) {
         return systemd_unit_listall();
