@@ -605,7 +605,7 @@ cib_file_write_live(char *path)
      * if we're daemon, anything we create will be OK;
      * otherwise, block access so we don't create wrong owner
      */
-    if ((uid != 0) && (uid == daemon_pwent->pw_uid)) {
+    if ((uid != 0) && (uid != daemon_pwent->pw_uid)) {
         crm_perror(LOG_ERR, "Must be root or %s to modify live CIB",
                    CRM_DAEMON_USER);
         return 0;
