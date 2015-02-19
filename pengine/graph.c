@@ -30,6 +30,7 @@
 #include <utils.h>
 
 gboolean update_action(action_t * action);
+void update_colo_start_chain(action_t * action);
 gboolean rsc_update_action(action_t * first, action_t * then, enum pe_ordering type);
 
 static enum pe_action_flags
@@ -389,6 +390,57 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
     return changed;
 }
 
+static void
+mark_start_blocked(resource_t *rsc)
+{
+    GListPtr gIter = rsc->actions;
+
+    for (; gIter != NULL; gIter = gIter->next) {
+        action_t *action = (action_t *) gIter->data;
+
+        if (safe_str_neq(action->task, RSC_START)) {
+            continue;
+        }
+        if (is_set(action->flags, pe_action_runnable)) {
+            clear_bit(action->flags, pe_action_runnable);
+            update_colo_start_chain(action);
+            update_action(action);
+        }
+    }
+}
+
+void
+update_colo_start_chain(action_t *action)
+{
+    GListPtr gIter = NULL;
+    resource_t *rsc = NULL;
+
+    if (is_not_set(action->flags, pe_action_runnable) && safe_str_eq(action->task, RSC_START)) {
+        rsc = uber_parent(action->rsc);
+    }
+
+    if (rsc == NULL || rsc->rsc_cons_lhs == NULL) {
+        return;
+    }
+
+    /* if rsc has children, all the children need to have start set to
+     * unrunnable before we follow the colo chain for the parent. */
+    for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+        resource_t *child = (resource_t *)gIter->data;
+        action_t *start = find_first_action(child->actions, NULL, RSC_START, NULL);
+        if (start == NULL || is_set(start->flags, pe_action_runnable)) {
+            return;
+        }
+    }
+
+    for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
+        rsc_colocation_t *colocate_with = (rsc_colocation_t *)gIter->data;
+        if (colocate_with->score == INFINITY) {
+            mark_start_blocked(colocate_with->rsc_lh);
+        }
+    }
+}
+
 gboolean
 update_action(action_t * then)
 {
@@ -547,6 +599,9 @@ update_action(action_t * then)
                          pe_action_pseudo) ? "pseudo" : then->node ? then->node->details->
                   uname : "");
 
+        if (is_set(last_flags, pe_action_runnable) && is_not_set(then->flags, pe_action_runnable)) {
+            update_colo_start_chain(then);
+        }
         update_action(then);
         for (lpc = then->actions_after; lpc != NULL; lpc = lpc->next) {
             action_wrapper_t *other = (action_wrapper_t *) lpc->data;
