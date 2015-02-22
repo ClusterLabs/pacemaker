@@ -282,6 +282,16 @@ attrd_client_message(crm_client_t *client, xmlNode *xml)
         free(host);
 
     } else if(safe_str_eq(op, "refresh")) {
+        GHashTableIter iter;
+        attribute_t *a = NULL;
+
+        /* 'refresh' forces a write of the current value of all attributes
+         * Cancel any existing timers, we're writing it NOW
+         */
+        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & a)) {
+            mainloop_timer_stop(a->timer);
+        }
+
         crm_info("Updating all attributes");
         write_attributes(TRUE, FALSE);
     }
