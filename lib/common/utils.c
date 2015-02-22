@@ -1926,8 +1926,8 @@ did_rsc_op_fail(lrmd_event_data_t * op, int target_rc)
 }
 
 xmlNode *
-create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char *caller_version,
-                        int target_rc, const char *origin, int level)
+create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char * caller_version,
+                        int target_rc, const char * node, const char * origin, int level)
 {
     char *key = NULL;
     char *magic = NULL;
@@ -2030,6 +2030,7 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char *ca
     crm_xml_add(xml_op, XML_ATTR_TRANSITION_KEY, op->user_data);
     crm_xml_add(xml_op, XML_ATTR_TRANSITION_MAGIC, magic);
     crm_xml_add(xml_op, XML_LRM_ATTR_EXIT_REASON, exit_reason);
+    crm_xml_add(xml_op, XML_LRM_ATTR_TARGET, node); /* For context during triage */
 
     crm_xml_add_int(xml_op, XML_LRM_ATTR_CALLID, op->call_id);
     crm_xml_add_int(xml_op, XML_LRM_ATTR_RC, op->rc);
