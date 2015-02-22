@@ -353,4 +353,7 @@ void crm_buffer_add_char(char **buffer, int *offset, int *max, char c);
 
 gboolean crm_digest_verify(xmlNode *input, const char *expected);
 
+/* cross-platform compatibility functions */
+char *crm_compat_realpath(const char *path);
+
 #endif                          /* CRM_INTERNAL__H */

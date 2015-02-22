@@ -34,6 +34,7 @@ char *generate_series_filename(const char *directory, const char *series, int se
                                gboolean bzip);
 int get_last_sequence(const char *directory, const char *series);
 void write_last_sequence(const char *directory, const char *series, int sequence, int max);
+int crm_chown_last_sequence(const char *directory, const char *series, uid_t uid, gid_t gid);
 
 gboolean crm_is_writable(const char *dir, const char *file, const char *user, const char *group,
                          gboolean need_both);

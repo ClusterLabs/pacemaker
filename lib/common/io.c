@@ -237,6 +237,33 @@ write_last_sequence(const char *directory, const char *series, int sequence, int
 
 /*!
  * \internal
+ * \brief Change the owner and group of a file series' .last file
+ *
+ * \param[in] dir Directory that contains series
+ * \param[in] uid Uid of desired file owner
+ * \param[in] gid Gid of desired file group
+ *
+ * \return 0 on success, -1 on error (in which case errno will be set)
+ * \note The caller must have the appropriate privileges.
+ */
+int
+crm_chown_last_sequence(const char *directory, const char *series, uid_t uid, gid_t gid)
+{
+    char *series_file = NULL;
+    int rc;
+
+    CRM_CHECK((directory != NULL) && (series != NULL), errno = EINVAL; return -1);
+
+    series_file = g_strdup_printf("%s/%s.last", directory, series);
+    CRM_CHECK(series_file != NULL, return -1);
+
+    rc = chown(series_file, uid, gid);
+    free(series_file);
+    return rc;
+}
+
+/*!
+ * \internal
  * \brief Return whether a directory or file is writable by a user/group
  *
  * \param[in] dir Directory to check or that contains file
