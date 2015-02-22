@@ -10,9 +10,9 @@ OFFLINE: [ vbox3 ]
  Clone Set: clvmd_clone [clvmd]
      Stopped: [ vbox3 vbox4 ]
  vmnci36	(ocf::heartbeat:vm):	Stopped 
- vmnci37	(ocf::heartbeat:vm):	Stopped 
- vmnci38	(ocf::heartbeat:vm):	Stopped 
- vmnci55	(ocf::heartbeat:vm):	Stopped 
+ vmnci37	(ocf::heartbeat:vm):	(target-role:stopped) Stopped 
+ vmnci38	(ocf::heartbeat:vm):	(target-role:stopped) Stopped 
+ vmnci55	(ocf::heartbeat:vm):	(target-role:stopped) Stopped 
 
 Transition Summary:
  * Start   drbd0:0	(vbox4)
@@ -53,7 +53,7 @@ OFFLINE: [ vbox3 ]
  Clone Set: clvmd_clone [clvmd]
      Stopped: [ vbox3 vbox4 ]
  vmnci36	(ocf::heartbeat:vm):	Stopped 
- vmnci37	(ocf::heartbeat:vm):	Stopped 
- vmnci38	(ocf::heartbeat:vm):	Stopped 
- vmnci55	(ocf::heartbeat:vm):	Stopped 
+ vmnci37	(ocf::heartbeat:vm):	(target-role:stopped) Stopped 
+ vmnci38	(ocf::heartbeat:vm):	(target-role:stopped) Stopped 
+ vmnci55	(ocf::heartbeat:vm):	(target-role:stopped) Stopped 
 

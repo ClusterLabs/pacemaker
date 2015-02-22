@@ -419,6 +419,7 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
     node_t *node = NULL;
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *kind = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+    const char *target_role = NULL;
 
     int offset = 0;
     char buffer[LINE_MAX];
@@ -432,6 +433,7 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
             crm_trace("skipping print of internal resource %s", rsc->id);
             return;
         }
+        target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
     }
 
     if (pre_text == NULL && (options & pe_print_printf)) {
@@ -496,6 +498,21 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
         }
         if (rsc_state == NULL) {
             rsc_state = role2text(rsc->role);
+        }
+        if (target_role) {
+            enum rsc_role_e target_role_e = text2role(target_role);
+
+	    /* Ignore target role Started, as it is the default anyways
+             * (and would also allow a Master to be Master).
+             * Show if current role differs from target role,
+             * or if target role limits our abilities. */
+            if (target_role_e != RSC_ROLE_STARTED && (
+                target_role_e == RSC_ROLE_SLAVE ||
+		target_role_e == RSC_ROLE_STOPPED ||
+                safe_str_neq(target_role, rsc_state)))
+            {
+                offset += snprintf(buffer + offset, LINE_MAX - offset, "(target-role:%s) ", target_role);
+            }
         }
         offset += snprintf(buffer + offset, LINE_MAX - offset, "%s ", rsc_state);
     }

@@ -5,8 +5,8 @@ OFFLINE: [ fc16-builder2 ]
 
  A	(ocf::pacemaker:Dummy):	Stopped 
  B	(ocf::pacemaker:Dummy):	Stopped 
- C	(ocf::pacemaker:Dummy):	Stopped 
- D	(ocf::pacemaker:Dummy):	Stopped 
+ C	(ocf::pacemaker:Dummy):	(target-role:Stopped) Stopped 
+ D	(ocf::pacemaker:Dummy):	(target-role:Stopped) Stopped 
  E	(ocf::pacemaker:Dummy):	Stopped 
  F	(ocf::pacemaker:Dummy):	Stopped 
 
@@ -37,8 +37,8 @@ OFFLINE: [ fc16-builder2 ]
 
  A	(ocf::pacemaker:Dummy):	Started fc16-builder
  B	(ocf::pacemaker:Dummy):	Started fc16-builder
- C	(ocf::pacemaker:Dummy):	Stopped 
- D	(ocf::pacemaker:Dummy):	Stopped 
+ C	(ocf::pacemaker:Dummy):	(target-role:Stopped) Stopped 
+ D	(ocf::pacemaker:Dummy):	(target-role:Stopped) Stopped 
  E	(ocf::pacemaker:Dummy):	Started fc16-builder
  F	(ocf::pacemaker:Dummy):	Started fc16-builder
 

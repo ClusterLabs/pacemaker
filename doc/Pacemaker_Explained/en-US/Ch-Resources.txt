@@ -33,18 +33,6 @@ There are six classes of agents supported by Pacemaker:
 * Service
 * Nagios
 
-indexterm:[Resource,Heartbeat]
-indexterm:[Heartbeat,Resources]
-
-Version 1 of Heartbeat came with its own style of resource agents and
-it is highly likely that many people have written their own agents
-based on its conventions.  footnote:[ See
-http://wiki.linux-ha.org/HeartbeatResourceAgent for more information ]
-
-Although deprecated with the release of Heartbeat v2, they were
-supported by Pacemaker up until the release of 1.1.8 to enable
-administrators to continue to use these agents.
-
 === Open Cluster Framework ===
 
 indexterm:[Resource,OCF]
@@ -194,10 +182,10 @@ http://nagiosplugins.org[Nagios Plugins].
 Pacemaker is able to do remote monitoring with the plugins _if they are
 present_.
 
-An use case is to configure them as resources belonging to a resource
-container, which usually is a VM, and the container will be restarted
-if any of them has failed. While they can also be configured as ordinary
-resources to be just used for monitoring hosts or services via network.
+A common use case is to configure them as resources belonging to a resource
+container (usually a virtual machine), and the container will be restarted
+if any of them has failed. Another use is to configure them as ordinary
+resources to be used for monitoring hosts or services via the network.
 
 The supported parameters are same as the long options of a nagios plugin.
 
@@ -221,20 +209,20 @@ where to find that script and what standards it conforms to.
 
 |class
 
-|The standard the script conforms to. Allowed values: +ocf+,
- +service+, +upstart+, +systemd+, +lsb+, +stonith+
+|The standard the resource agent conforms to. Allowed values:
++lsb+, +nagios+, +ocf+, +service+, +stonith+, +systemd+, +upstart+
  indexterm:[class,Resource]
  indexterm:[Resource,Property,class]
 
 |type
-|The name of the Resource Agent you wish to use. Eg. _IPaddr_ or _Filesystem_
+|The name of the Resource Agent you wish to use. Eg. +IPaddr+ or +Filesystem+
  indexterm:[type,Resource]
  indexterm:[Resource,Property,type]
 
 |provider
 |The OCF spec allows multiple vendors to supply the same
- ResourceAgent. To use the OCF resource agents supplied with
- Heartbeat, you should specify +heartbeat+ here.
+ resource agent. To use the OCF resource agents supplied by
+ the Heartbeat project, you would specify +heartbeat+ here.
  indexterm:[provider,Resource]
  indexterm:[Resource,Property,provider]
 
@@ -242,8 +230,9 @@ where to find that script and what standards it conforms to.
 
 Resource definitions can be queried with the `crm_resource` tool. For example
 
-[source,C]
+----
 # crm_resource --resource Email --query-xml
+----
 
 might produce:
 
@@ -259,13 +248,17 @@ One of the main drawbacks to system services (such as LSB, Systemd and
 Upstart) resources is that they do not allow any parameters!
 =====
 
-.An example OCF resource
+////
+See https://tools.ietf.org/html/rfc5737 for choice of example IP address
+////
+
+.An OCF resource definition
 =====
 [source,XML]
 -------
 <primitive id="Public-IP" class="ocf" type="IPaddr" provider="heartbeat">
-   <instance_attributes id="params-public-ip">
-      <nvpair id="public-ip-addr" name="ip" value="1.2.3.4"/>
+   <instance_attributes id="Public-IP-params">
+      <nvpair id="Public-IP-ip" name="ip" value="192.0.2.2"/>
    </instance_attributes>
 </primitive>
 -------
@@ -274,12 +267,18 @@ Upstart) resources is that they do not allow any parameters!
 [[s-resource-options]]
 == Resource Options ==
 
-Options are used by the cluster to decide how your resource should
+Resources have two types of options: 'meta-attributes' and 'instance attributes'.
+Meta-attributes apply to any type of resource, while instance attributes
+are specific to each resource agent.
+
+=== Resource Meta-Attributes ===
+
+Meta-attributes are used by the cluster to decide how a resource should
 behave and can be easily set using the `--meta` option of the
 `crm_resource` command.
 
-.Options for a Primitive Resource
-[width="95%",cols="1m,1,4<",options="header",align="center"]
+.Meta-attributes of a Primitive Resource
+[width="95%",cols="2m,2,5<a",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -287,142 +286,147 @@ behave and can be easily set using the `--meta` option of the
 |Description
 
 |priority
-|+0+
+|0
 |If not all resources can be active, the cluster will stop lower
 priority resources in order to keep higher priority ones active.
 indexterm:[priority,Resource Option]
 indexterm:[Resource,Option,priority]
 
 |target-role
-|+Started+
+|started
 |What state should the cluster attempt to keep this resource in? Allowed values:
 
-* 'Stopped' - Force the resource to be stopped
-
-* 'Started' - Allow the resource to be started (In the case of
+* +stopped:+ Force the resource to be stopped
+* +started:+ Allow the resource to be started (In the case of
   <<s-resource-multistate,multi-state>> resources, they will not promoted to
   master)
-
-* 'Master' - Allow the resource to be started and, if appropriate, promoted
+* +master:+ Allow the resource to be started and, if appropriate, promoted
 indexterm:[target-role,Resource Option]
 indexterm:[Resource,Option,target-role]
 
 |is-managed
-|+TRUE+
+|TRUE
 |Is the cluster allowed to start and stop the resource?  Allowed
  values: +true+, +false+
  indexterm:[is-managed,Resource Option]
  indexterm:[Resource,Option,is-managed]
 
 |resource-stickiness
-|Calculated
-|How much does the resource prefer to stay where it is?  Defaults to
- the value of +resource-stickiness+ in the +rsc_defaults+ section
+|value of +resource-stickiness+ in the +rsc_defaults+ section
+|How much does the resource prefer to stay where it is?
  indexterm:[resource-stickiness,Resource Option]
  indexterm:[Resource,Option,resource-stickiness]
 
 |requires
-|Calculated
-|Under what conditions can the resource be started. ('Since 1.1.8')
+|fencing (unless +stonith-enabled+ is +false+ or +class+ is
++stonith+, in which case it defaults to quorum)
+|Conditions under which the resource can be started ('Since 1.1.8')
+Allowed values:
 
- Defaults to +fencing+ unless +stonith-enabled+ is 'false' or +class+
- is 'stonith' - under those conditions the default is +quorum+.
- Possible values:
+* +nothing:+ can always be started
+* +quorum:+ The cluster can only start this resource if a majority of
+  the configured nodes are active
+* +fencing:+ The cluster can only start this resource if a majority
+  of the configured nodes are active _and_ any failed or unknown nodes
+  have been powered off
+* +unfencing:+ The cluster can only start this resource if a majority
+  of the configured nodes are active _and_ any failed or unknown nodes
+  have been powered off _and_ only on nodes that have been 'unfenced'
 
- * 'nothing' - can always be started
-
- * 'quorum' - The cluster can only start this resource if a majority of
-   the configured nodes are active
-
- * 'fencing' - The cluster can only start this resource if a majority
-   of the configured nodes are active _and_ any failed or unknown nodes
-   have been powered off.
-
- * 'unfencing' - The cluster can only start this resource if a majority
-   of the configured nodes are active _and_ any failed or unknown nodes
-   have been powered off _and_ only on nodes that have been 'unfenced'
- indexterm: Option[requires,Resource]
- indexterm:[Resource,Option,requires]
+indexterm:[requires,Resource Option]
+indexterm:[Resource,Option,requires]
 
 |migration-threshold
-|+INFINITY+ (disabled)
+|INFINITY
 |How many failures may occur for this resource on a node, before this
- node is marked ineligible to host this resource.
+ node is marked ineligible to host this resource. A value of INFINITY
+ indicates that this feature is disabled.
  indexterm:[migration-threshold,Resource Option]
  indexterm:[Resource,Option,migration-threshold]
 
 |failure-timeout
-|+0+ (disabled)
+|0
 |How many seconds to wait before acting as if the failure had not
  occurred, and potentially allowing the resource back to the node on
- which it failed.
+ which it failed. A value of 0 indicates that this feature is disabled.
  indexterm:[failure-timeout,Resource Option]
  indexterm:[Resource,Option,failure-timeout]
 
 |multiple-active
-|+stop_start+
+|stop_start
 |What should the cluster do if it ever finds the resource active on
- more than one node. Allowed values:
+ more than one node? Allowed values:
 
-* 'block' - mark the resource as unmanaged
-
-* 'stop_only' - stop all active instances and leave them that way
-
-* 'stop_start' - stop all active instances and start the resource in
+* +block:+ mark the resource as unmanaged
+* +stop_only:+ stop all active instances and leave them that way
+* +stop_start:+ stop all active instances and start the resource in
   one location only
 
 indexterm:[multiple-active,Resource Option]
 indexterm:[Resource,Option,multiple-active]
 
 |remote-node
-|+<none>+ (disabled)
-|The name of the remote-node this resource defines.  This both enables the resource as a remote-node and defines the unique name used to identify the remote-node. If no other parameters are set, this value will also be assumed as the hostname to connect to at port 3121. +WARNING+ This value cannot overlap with any resource or node IDs.
+|
+|The name of the remote-node this resource defines.  This both enables the
+resource as a remote-node and defines the unique name used to identify the
+remote-node. If no other parameters are set, this value will also be assumed as
+the hostname to connect to at the port specified by +remote-port+. +WARNING:+
+This value cannot overlap with any resource or node IDs. If not specified,
+this feature is disabled.
 
 |remote-port
-|+3121+
-|Configure a custom port to use for the guest connection to pacemaker_remote.
+|3121
+|Port to use for the guest connection to pacemaker_remote
 
 |remote-addr
-|+remote-node+ value used as hostname
-|The ip address or hostname to connect to if remote-node's name is not the hostname of the guest.
+|value of +remote-node+
+|The IP address or hostname to connect to if remote-node's name is not the
+hostname of the guest.
 
 |+remote-connect-timeout+
-|+60s+
+|60s
 |How long before a pending guest connection will time out.
 
 |=========================================================
 
-If you performed the following commands on the previous LSB Email resource
+[NOTE]
+====
+Support for remote nodes was added in pacemaker 1.1.10. If you are using an
+earlier version, options related to remote nodes will not be available.
+====
 
-[source,C]
+As an example of setting resource options, if you performed the following
+commands on an LSB Email resource:
+
 -------
-# crm_resource --meta --resource Email --set-parameter priority --property-value 100
-# crm_resource --meta --resource Email --set-parameter multiple-active --property-value block
+# crm_resource --meta --resource Email --set-parameter priority --parameter-value 100
+# crm_resource -m -r Email -p multiple-active -v block
 -------
 
-the resulting resource definition would be
+the resulting resource definition might be:
 
 .An LSB resource with cluster options
 =====
 [source,XML]
 -------
 <primitive id="Email" class="lsb" type="exim">
-   <meta_attributes id="meta-email">
-      <nvpair id="email-priority" name="priority" value="100"/>
-      <nvpair id="email-active" name="multiple-active" value="block"/>
-   </meta_attributes>
+  <meta_attributes id="Email-meta_attributes">
+    <nvpair id="Email-meta_attributes-priority" name="priority" value="100"/>
+    <nvpair id="Email-meta_attributes-multiple-active" name="multiple-active" value="block"/>
+  </meta_attributes>
 </primitive>
 -------
 =====
 
 [[s-resource-defaults]]
-== Setting Global Defaults for Resource Options ==
+=== Setting Global Defaults for Resource Meta-Attributes ===
 
 To set a default value for a resource option, simply add it to the
 +rsc_defaults+ section with `crm_attribute`. Thus,
 
-[source,C]
-# crm_attribute --type rsc_defaults --attr-name is-managed --attr-value false
+----
+# crm_attribute --type rsc_defaults --name is-managed --update false
+----
 
 would prevent the cluster from starting or stopping any of the
 resources in the configuration (unless of course the individual
@@ -438,8 +442,9 @@ of a service they control.
 If your resource agent supports parameters, you can add them with the
 `crm_resource` command. For instance
 
-[source,C]
-# crm_resource --resource Public-IP --set-parameter ip --property-value 1.2.3.4
+----
+# crm_resource --resource Public-IP --set-parameter ip --parameter-value 192.0.2.2
+----
 
 would create an entry in the resource like this:
 
@@ -449,14 +454,14 @@ would create an entry in the resource like this:
 -------
 <primitive id="Public-IP" class="ocf" type="IPaddr" provider="heartbeat">
    <instance_attributes id="params-public-ip">
-      <nvpair id="public-ip-addr" name="ip" value="1.2.3.4"/>
+      <nvpair id="public-ip-addr" name="ip" value="192.0.2.2"/>
    </instance_attributes>
 </primitive>
 -------
 =====
 
 For an OCF resource, the result would be an environment variable
-called +OCF_RESKEY_ip+ with a value of +1.2.3.4+.
+called +OCF_RESKEY_ip+ with a value of +192.0.2.2+.
 
 The list of instance attributes supported by an OCF script can be
 found by calling the resource script with the `meta-data` command.
@@ -465,7 +470,6 @@ attributes, their purpose and default values.
 
 .Displaying the metadata for the Dummy resource agent template
 =====
-[source,C]
 -------
 # export OCF_ROOT=/usr/lib/ocf
 # $OCF_ROOT/resource.d/pacemaker/Dummy meta-data
@@ -473,46 +477,63 @@ attributes, their purpose and default values.
 [source,XML]
 -------
 <?xml version="1.0"?>
-  <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
-  <resource-agent name="Dummy" version="0.9">
-    <version>1.0</version>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="Dummy" version="1.0">
+<version>1.0</version>
 
-    <longdesc lang="en-US">
-      This is a Dummy Resource Agent. It does absolutely nothing except
-      keep track of whether its running or not.
-      Its purpose in life is for testing and to serve as a template for RA writers.
-    </longdesc>
-    <shortdesc lang="en-US">Dummy resource agent</shortdesc>
+<longdesc lang="en">
+This is a Dummy Resource Agent. It does absolutely nothing except 
+keep track of whether its running or not.
+Its purpose in life is for testing and to serve as a template for RA writers.
 
-    <parameters>
-      <parameter name="state" unique="1">
-        <longdesc lang="en-US">
-          Location to store the resource state in.
-        </longdesc>
-        <shortdesc lang="en-US">State file</shortdesc>
-        <content type="string" default="/var/run/Dummy-{OCF_RESOURCE_INSTANCE}.state" />
-      </parameter>
+NB: Please pay attention to the timeouts specified in the actions
+section below. They should be meaningful for the kind of resource
+the agent manages. They should be the minimum advised timeouts,
+but they shouldn't/cannot cover _all_ possible resource
+instances. So, try to be neither overly generous nor too stingy,
+but moderate. The minimum timeouts should never be below 10 seconds.
+</longdesc>
+<shortdesc lang="en">Example stateless resource agent</shortdesc>
 
-      <parameter name="dummy" unique="0">
-        <longdesc lang="en-US">
-          Dummy attribute that can be changed to cause a reload
-        </longdesc>
-        <shortdesc lang="en-US">Dummy attribute that can be changed to cause a reload</shortdesc>
-        <content type="string" default="blah" />
-      </parameter>
-    </parameters>
+<parameters>
+<parameter name="state" unique="1">
+<longdesc lang="en">
+Location to store the resource state in.
+</longdesc>
+<shortdesc lang="en">State file</shortdesc>
+<content type="string" default="/var/run//Dummy-{OCF_RESOURCE_INSTANCE}.state" />
+</parameter>
 
-    <actions>
-      <action name="start"        timeout="90" />
-      <action name="stop"         timeout="100" />
-      <action name="monitor"      timeout="20" interval="10",height="0" start-delay="0" />
-      <action name="reload"       timeout="90" />
-      <action name="migrate_to"   timeout="100" />
-      <action name="migrate_from" timeout="90" />
-      <action name="meta-data"    timeout="5" />
-      <action name="validate-all" timeout="30" />
-    </actions>
-  </resource-agent>
+<parameter name="fake" unique="0">
+<longdesc lang="en">
+Fake attribute that can be changed to cause a reload
+</longdesc>
+<shortdesc lang="en">Fake attribute that can be changed to cause a reload</shortdesc>
+<content type="string" default="dummy" />
+</parameter>
+
+<parameter name="op_sleep" unique="1">
+<longdesc lang="en">
+Number of seconds to sleep during operations.  This can be used to test how
+the cluster reacts to operation timeouts.
+</longdesc>
+<shortdesc lang="en">Operation sleep duration in seconds.</shortdesc>
+<content type="string" default="0" />
+</parameter>
+
+</parameters>
+
+<actions>
+<action name="start"        timeout="20" />
+<action name="stop"         timeout="20" />
+<action name="monitor"      timeout="20" interval="10" depth="0"/>
+<action name="reload"       timeout="20" />
+<action name="migrate_to"   timeout="20" />
+<action name="migrate_from" timeout="20" />
+<action name="validate-all" timeout="20" />
+<action name="meta-data"    timeout="5" />
+</actions>
+</resource-agent>
 -------
 =====
 
@@ -535,68 +556,67 @@ healthy.  To instruct the cluster to do this, you need to add a
      <op id="public-ip-check" name="monitor" interval="60s"/>
   </operations>
   <instance_attributes id="params-public-ip">
-     <nvpair id="public-ip-addr" name="ip" value="1.2.3.4"/>
+     <nvpair id="public-ip-addr" name="ip" value="192.0.2.2"/>
   </instance_attributes>
 </primitive>
 -------
 =====
 
 .Properties of an Operation
-[width="95%",cols="1m,6<",options="header",align="center"]
+[width="95%",cols="2m,3,6<a",options="header",align="center"]
 |=========================================================
 
 |Field
+|Default
 |Description
 
 |id
-|Your name for the action. Must be unique.
+|
+|A unique name for the operation.
  indexterm:[id,Action Property]
  indexterm:[Action,Property,id]
 
 |name
+|
 |The action to perform. Common values: +monitor+, +start+, +stop+
  indexterm:[name,Action Property]
  indexterm:[Action,Property,name]
 
 |interval
-|How frequently (in seconds) to perform the operation. Default value:
- +0+, meaning never.
+|0
+|How frequently (in seconds) to perform the operation. A value of 0 means never.
  indexterm:[interval,Action Property]
  indexterm:[Action,Property,interval]
 
 |timeout
-|How long to wait before declaring the action has failed.
+|
+|How long to wait before declaring the action has failed
  indexterm:[timeout,Action Property]
  indexterm:[Action,Property,timeout]
 
 |on-fail
+|restart (except for +stop+ operations, which default to fence when STONITH is enabled and block otherwise)
 |The action to take if this action ever fails. Allowed values:
 
-* 'ignore' - Pretend the resource did not fail
+* +ignore:+ Pretend the resource did not fail.
+* +block:+ Don't perform any further operations on the resource.
+* +stop:+ Stop the resource and do not start it elsewhere.
+* +restart:+ Stop the resource and start it again (possibly on a different node).
+* +fence:+ STONITH the node on which the resource failed.
+* +standby:+ Move _all_ resources away from the node on which the resource failed.
 
-* 'block' - Don't perform any further operations on the resource
-
-* 'stop' - Stop the resource and do not start it elsewhere
-
-* 'restart' - Stop the resource and start it again (possibly on a different node)
-
-* 'fence' - STONITH the node on which the resource failed
-
-* 'standby' - Move _all_ resources away from the node on which the resource failed
-
-The default for the +stop+ operation is +fence+ when STONITH is
-enabled and +block+ otherwise. All other operations default to +restart+.
- indexterm:[on-fail,Action Property]
- indexterm:[Action,Property,on-fail]
+indexterm:[on-fail,Action Property]
+indexterm:[Action,Property,on-fail]
 
 |enabled
+|TRUE
 |If +false+, the operation is treated as if it does not exist. Allowed
  values: +true+, +false+
  indexterm:[enabled,Action Property]
  indexterm:[Action,Property,enabled]
 
 |record-pending
-
+|
 |If +true+, the intention to perform the operation is recorded so that
  GUIs and CLI tools can indicate that an operation is in progress.
  This is best set as an 'operation default' (see next section).
@@ -612,14 +632,15 @@ enabled and +block+ otherwise. All other operations default to +restart+.
 To set a default value for a operation option, simply add it to the
 +op_defaults+ section with `crm_attribute`. Thus,
 
-[source,C]
-# crm_attribute --type op_defaults --attr-name timeout --attr-value 20s
+----
+# crm_attribute --type op_defaults --name timeout --update 20s
+----
 
 would default each operation's +timeout+ to 20 seconds.  If an
 operation's definition also includes a value for +timeout+, then that
 value would be used instead (for that operation only).
 
-==== When Resources Take a Long Time to Start/Stop ====
+=== When Resources Take a Long Time to Start/Stop ===
 
 There are a number of implicit operations that the cluster will always
 perform - +start+, +stop+ and a non-recurring +monitor+ operation
@@ -638,13 +659,13 @@ simply specify a new value.
      <op id="public-ip-stop" name="stop" interval="0" timeout="15min"/>
   </operations>
   <instance_attributes id="params-public-ip">
-     <nvpair id="public-ip-addr" name="ip" value="1.2.3.4"/>
+     <nvpair id="public-ip-addr" name="ip" value="192.0.2.2"/>
   </instance_attributes>
 </primitive>
 -------
 =====
 
-==== Multiple Monitor Operations ====
+=== Multiple Monitor Operations ===
 
 Provided no two operations (for a single resource) have the same name
 and interval you can have as many monitor operations as you like.  In
@@ -679,13 +700,13 @@ resource agent to look for the parameter and decide how to use it.
      </op>
    </operations>
    <instance_attributes id="params-public-ip">
-       <nvpair id="public-ip-level" name="ip" value="1.2.3.4"/>
+       <nvpair id="public-ip-level" name="ip" value="192.0.2.2"/>
    </instance_attributes>
 </primitive>
 -------
 =====
 
-==== Disabling a Monitor Operation ====
+=== Disabling a Monitor Operation ===
 
 The easiest way to stop a recurring monitor is to just delete it.
 However, there can be times when you only want to disable it
@@ -701,15 +722,19 @@ operation's definition.
       <op id="public-ip-check" name="monitor" interval="60s" enabled="false"/>
    </operations>
    <instance_attributes id="params-public-ip">
-      <nvpair id="public-ip-addr" name="ip" value="1.2.3.4"/>
+      <nvpair id="public-ip-addr" name="ip" value="192.0.2.2"/>
    </instance_attributes>
 </primitive>
 -------
 =====
 
-This can be achieved from the command-line by executing
+This can be achieved from the command line by executing:
 
-[source,C]
-# cibadmin -M -X '<op id="public-ip-check" enabled="false"/>'
+----
+# cibadmin --modify --xml-text '<op id="public-ip-check" enabled="false"/>'
+----
 
 Once you've done whatever you needed to do, you can then re-enable it with
+----
+# cibadmin --modify --xml-text '<op id="public-ip-check" enabled="true"/>'
+----

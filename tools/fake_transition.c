@@ -179,7 +179,7 @@ create_op(xmlNode * cib_resource, const char *task, int interval, int outcome)
 static xmlNode *
 inject_op(xmlNode * cib_resource, lrmd_event_data_t * op, int target_rc)
 {
-    return create_operation_update(cib_resource, op, CRM_FEATURE_SET, target_rc, crm_system_name,
+    return create_operation_update(cib_resource, op, CRM_FEATURE_SET, target_rc, NULL, crm_system_name,
                                    LOG_DEBUG_2);
 }
 

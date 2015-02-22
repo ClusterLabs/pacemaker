@@ -62,23 +62,24 @@ Below is what the node's definition would look like if the admin ran the command
       
 .The result of using crm_attribute to specify which kernel pcmk-1 is running
 ======
-[source,C]
 -------
-# crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --attr-value `uname -r`
+# crm_attribute --type nodes --node pcmk-1 --name kernel --update $(uname -r)
 -------
 [source,XML]
 -------
 <node uname="pcmk-1" type="normal" id="101">
    <instance_attributes id="nodes-101">
-     <nvpair id="kernel-101" name="kernel" value="2.6.16.46-0.4-default"/>
+     <nvpair id="nodes-101-kernel" name="kernel" value="3.10.0-123.13.2.el7.x86_64"/>
    </instance_attributes>
 </node>
 -------
 ======
 A simpler way to determine the current value of an attribute is to use `crm_attribute` command again:
 
-[source,C]
-# crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --get-value
+----
+# crm_attribute --type nodes --node pcmk-1 --name kernel --query
+scope=nodes  name=kernel value=3.10.0-123.13.2.el7.x86_64
+----
 
 By specifying `--type nodes` the admin tells the cluster that this
 attribute is persistent.  There are also transient attributes which
@@ -120,8 +121,9 @@ Next, from one of the remaining active cluster nodes:
 
 . Tell Pacemaker to forget about the removed host:
 +
-[source,C]
+----
 # crm_node -R pcmk-1
+----
 +
 This includes deleting the node from the CIB
 
@@ -192,13 +194,15 @@ Next, from one of the remaining active cluster nodes:
 
 . Tell Heartbeat the node should be removed
 
-[source,C]
+----
 # hb_delnode pcmk-1
+----
 
 . Tell Pacemaker to forget about the removed host:
 
-[source,C]
+----
 # crm_node -R pcmk-1
+----
 
 [NOTE]
 ======

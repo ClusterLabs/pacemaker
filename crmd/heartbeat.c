@@ -246,8 +246,9 @@ do_ccm_update_cache(enum crmd_fsa_cause cause, enum crmd_fsa_state cur_state,
 
             /*--*-- All Member Nodes --*--*/
         for (lpc = 0; lpc < oc->m_n_member; lpc++) {
-            crm_update_ccm_node(oc, lpc + oc->m_memb_idx, CRM_NODE_ACTIVE, instance);
+            crm_update_ccm_node(oc, lpc + oc->m_memb_idx, CRM_NODE_MEMBER, instance);
         }
+        heartbeat_cluster->llc_ops->client_status(heartbeat_cluster, NULL, crm_system_name, 0);
     }
 
     if (event == OC_EV_MS_EVICTED) {
@@ -393,7 +394,7 @@ crmd_ha_status_callback(const char *node, const char *status, void *private)
 
     if (safe_str_eq(status, DEADSTATUS)) {
         /* this node is toast */
-        crm_update_peer_proc(__FUNCTION__, peer, crm_proc_heartbeat, OFFLINESTATUS);
+        crm_update_peer_proc(__FUNCTION__, peer, crm_proc_crmd|crm_proc_heartbeat, OFFLINESTATUS);
 
     } else {
         crm_update_peer_proc(__FUNCTION__, peer, crm_proc_heartbeat, ONLINESTATUS);
@@ -419,12 +420,28 @@ crmd_client_status_callback(const char *node, const char *client, const char *st
         return;
     }
 
+    peer = crm_get_peer(0, node);
+
+    if (safe_str_neq(peer->state, CRM_NODE_MEMBER)) {
+        crm_warn("This peer is not a ccm member (yet). "
+            "Status ignored: Client %s/%s announced status [%s] (DC=%s)",
+            node, client, status, AM_I_DC ? "true" : "false");
+        return;
+    }
+
     set_bit(fsa_input_register, R_PEER_DATA);
 
     crm_notice("Status update: Client %s/%s now has status [%s] (DC=%s)",
                node, client, status, AM_I_DC ? "true" : "false");
 
-    peer = crm_get_peer(0, node);
+    /* rest of the code, especially crm_update_peer_proc,
+     * does not know about JOINSTATUS, but expects ONLINESTATUS.
+     * See also cib/callbacks.c */
+    if (safe_str_eq(status, JOINSTATUS)) {
+        status = ONLINESTATUS;
+    }  else if (safe_str_eq(status, LEAVESTATUS)) {
+        status = OFFLINESTATUS;
+    }
 
     if (safe_str_eq(status, ONLINESTATUS)) {
         /* remove the cached value in case it changed */

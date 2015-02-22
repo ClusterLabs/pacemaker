@@ -1,28 +1,30 @@
 [appendix]
 
 [[ap-lsb]]
-== init-Script LSB Compliance ==
+== Init Script LSB Compliance ==
 
-The relevant part of
-http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html[LSB spec]
+The relevant part of the
+http://refspecs.linuxfoundation.org/lsb.shtml[LSB specifications]
 includes a description of all the return codes listed here.
     
-Assuming +some_service+ is configured correctly and currently not
-active, the following sequence will help you determine if it is LSB
-compatible:
+Assuming `some_service` is configured correctly and currently
+inactive, the following sequence will help you determine if it is
+LSB-compatible:
 
 . Start (stopped):
 +
-[source,C]
+----
 # /etc/init.d/some_service start ; echo "result: $?"
+----
 +
   .. Did the service start?
   .. Did the command print result: 0 (in addition to the regular output)?
 +
 . Status (running):
 +
-[source,C]
+----
 # /etc/init.d/some_service status ; echo "result: $?"
+----
 +
   .. Did the script accept the command?
   .. Did the script indicate the service was running?
@@ -30,24 +32,27 @@ compatible:
 +
 . Start (running):
 +
-[source,C]
+----
 # /etc/init.d/some_service start ; echo "result: $?"
+----
 +
   .. Is the service still running?
   .. Did the command print result: 0 (in addition to the regular output)?
 +
 . Stop (running):
 +
-[source,C]
+----
 # /etc/init.d/some_service stop ; echo "result: $?"
+----
 +
   .. Was the service stopped?
   .. Did the command print result: 0 (in addition to the regular output)?
 +
 . Status (stopped):
 +
-[source,C]
+----
 # /etc/init.d/some_service status ; echo "result: $?"
+----
 +
   .. Did the script accept the command?
   .. Did the script indicate the service was not running?
@@ -55,8 +60,9 @@ compatible:
 +
 . Stop (stopped):
 +
-[source,C]
+----
 # /etc/init.d/some_service stop ; echo "result: $?"
+----
 +
   .. Is the service still stopped?
   .. Did the command print result: 0 (in addition to the regular output)?

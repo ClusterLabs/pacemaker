@@ -4,7 +4,7 @@ Online: [ fc16-builder ]
 OFFLINE: [ fc16-builder2 ]
 
  A	(ocf::pacemaker:Dummy):	Stopped 
- B	(ocf::pacemaker:Dummy):	Stopped 
+ B	(ocf::pacemaker:Dummy):	(target-role:Stopped) Stopped 
  C	(ocf::pacemaker:Dummy):	Stopped 
  D	(ocf::pacemaker:Dummy):	Stopped 
 
@@ -29,7 +29,7 @@ Online: [ fc16-builder ]
 OFFLINE: [ fc16-builder2 ]
 
  A	(ocf::pacemaker:Dummy):	Started fc16-builder
- B	(ocf::pacemaker:Dummy):	Stopped 
+ B	(ocf::pacemaker:Dummy):	(target-role:Stopped) Stopped 
  C	(ocf::pacemaker:Dummy):	Started fc16-builder
  D	(ocf::pacemaker:Dummy):	Started fc16-builder
 

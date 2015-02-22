@@ -18,11 +18,11 @@ of groups.
 <group id="shortcut">
    <primitive id="Public-IP" class="ocf" type="IPaddr" provider="heartbeat">
     <instance_attributes id="params-public-ip">
-       <nvpair id="public-ip-addr" name="ip" value="1.2.3.4"/>
+       <nvpair id="public-ip-addr" name="ip" value="192.0.2.2"/>
     </instance_attributes>
    </primitive>
    <primitive id="Email" class="lsb" type="exim"/>
-  </group> 
+</group> 
 -------
 ======
 
@@ -53,7 +53,7 @@ The group above is logically equivalent to writing:
    <resources>
     <primitive id="Public-IP" class="ocf" type="IPaddr" provider="heartbeat">
      <instance_attributes id="params-public-ip">
-        <nvpair id="public-ip-addr" name="ip" value="1.2.3.4"/>
+        <nvpair id="public-ip-addr" name="ip" value="192.0.2.2"/>
      </instance_attributes>
     </primitive>
     <primitive id="Email" class="lsb" type="exim"/>
@@ -195,49 +195,54 @@ Stateful clones are covered later in <<s-resource-multistate>>.
 Options inherited from <<s-resource-options,primitive>> resources:
 +priority, target-role, is-managed+
 
-.Clone specific configuration options
-[width="95%",cols="3m,5<",options="header",align="center"]
+.Clone-specific configuration options
+[width="95%",cols="1m,1,3<",options="header",align="center"]
 |=========================================================
 
 |Field
+|Default
 |Description
 
 |clone-max
-|How many copies of the resource to start. Defaults to the number of
- nodes in the cluster.
+|number of nodes in cluster
+|How many copies of the resource to start
  indexterm:[clone-max,Clone Option]
  indexterm:[Clone,Option,clone-max]
 
 |clone-node-max
-|How many copies of the resource can be started on a single node;
- default _1_.
+|1
+|How many copies of the resource can be started on a single node
  indexterm:[clone-node-max,Clone Option]
  indexterm:[Clone,Option,clone-node-max]
   
 |notify
+|true
 |When stopping or starting a copy of the clone, tell all the other
- copies beforehand and when the action was successful. Allowed values:
- _false_, +true+
+ copies beforehand and again when the action was successful. Allowed values:
+ +false+, +true+
  indexterm:[notify,Clone Option]
  indexterm:[Clone,Option,notify]
 
 |globally-unique
+|false
 |Does each copy of the clone perform a different function? Allowed
- values: _false_, +true+
+ values: +false+, +true+
  indexterm:[globally-unique,Clone Option]
  indexterm:[Clone,Option,globally-unique]
   
 |ordered
+|false
 |Should the copies be started in series (instead of in
- parallel). Allowed values: _false_, +true+
+ parallel)? Allowed values: +false+, +true+
  indexterm:[ordered,Clone Option]
  indexterm:[Clone,Option,ordered]
 
 |interleave
-|Changes the behavior of ordering constraints (between clones/masters)
- so that instances can start/stop as soon as their peer instance has
- (rather than waiting for every instance of the other clone
- has). Allowed values: _false_, +true+
+|false
+|If this clone depends on another clone via an ordering constraint,
+is it allowed to start after the local instance of the other clone
+starts, rather than wait for all instances of the other clone to start?
+Allowed values: +false+, +true+
  indexterm:[interleave,Clone Option]
  indexterm:[Clone,Option,interleave]
 
@@ -310,10 +315,10 @@ do so depends on your resource and its resource agent.
 
 Globally unique clones do require some additional support in the
 resource agent.  In particular, it must only respond with
-+${OCF_SUCCESS}+ if the node has that exact instance active.  All
++$\{OCF_SUCCESS}+ if the node has that exact instance active.  All
 other probes for instances of the clone should result in
-+${OCF_NOT_RUNNING}+.  Unless of course they are failed, in which case
-they should return one of the other OCF error codes.
++$\{OCF_NOT_RUNNING}+ (or one of the other OCF error codes if
+they are failed).
 
 Copies of a clone are identified by appending a colon and a numerical
 offset, eg. +apache:2+.
@@ -485,22 +490,24 @@ Options inherited from <<s-resource-clone,clone>> resources:
 +clone-max+, +clone-node-max+, +notify+, +globally-unique+, +ordered+,
 +interleave+
 
-.Multi-state specific resource configuration options
-[width="95%",cols="3m,5<",options="header",align="center"]
+.Multi-state-specific resource configuration options
+[width="95%",cols="1m,1,3<",options="header",align="center"]
 |=========================================================
 
 |Field
+|Default
 |Description
 
 |master-max
-|How many copies of the resource can be promoted to +master+ status;
- default 1.
+|1
+|How many copies of the resource can be promoted to the +master+ role
  indexterm:[master-max,Multi-State Option]
  indexterm:[Multi-State,Option,master-max]
 
 |master-node-max
-|How many copies of the resource can be promoted to +master+ status on
- a single node; default 1.
+|1
+|How many copies of the resource can be promoted to the +master+ role on
+ a single node
  indexterm:[master-node-max,Multi-State Option]
  indexterm:[Multi-State,Option,master-node-max]
 
@@ -555,7 +562,7 @@ codes, and therefore unnecessary complications.
 
 === Multi-state Constraints ===
 
-In most cases, a multi-state resources will have a single copy on each
+In most cases, multi-state resources will have a single copy on each
 active cluster node.  If this is not the case, you can indicate which
 nodes the cluster should preferentially assign copies to with resource
 location constraints.  These constraints are written no differently to
@@ -568,40 +575,44 @@ constraints) and +first-action+ and/or +then-action+ fields (for
 ordering constraints) are used.
           
 .Additional constraint options relevant to multi-state resources
-[width="95%",cols="3m,5<",options="header",align="center"]
+[width="95%",cols="1m,1,3<",options="header",align="center"]
 |=========================================================
 
 |Field
+|Default
 |Description
 
 |rsc-role
+|started
 |An additional attribute of colocation constraints that specifies the
- role that +rsc+ must be in.  Allowed values: _Started_, +Master+,
- +Slave+.
+ role that +rsc+ must be in.  Allowed values: +started+, +master+,
+ +slave+.
  indexterm:[rsc-role,Ordering Constraints]
  indexterm:[Constraints,Ordering,rsc-role]
 
 |with-rsc-role
+|started
 |An additional attribute of colocation constraints that specifies the
- role that +with-rsc+ must be in.  Allowed values: _Started_,
- +Master+, +Slave+.
+ role that +with-rsc+ must be in.  Allowed values: +started+,
+ +master+, +slave+.
  indexterm:[with-rsc-role,Ordering Constraints]
  indexterm:[Constraints,Ordering,with-rsc-role]
 
 |first-action
+|start
 |An additional attribute of ordering constraints that specifies the
  action that the +first+ resource must complete before executing the
- specified action for the +then+ resource.  Allowed values: _start_,
+ specified action for the +then+ resource.  Allowed values: +start+,
  +stop+, +promote+, +demote+.
  indexterm:[first-action,Ordering Constraints]
  indexterm:[Constraints,Ordering,first-action]
 
 |then-action
+|value of +first-action+
 |An additional attribute of ordering constraints that specifies the
  action that the +then+ resource can only execute after the
  +first-action+ on the +first+ resource has completed.  Allowed
- values: +start+, +stop+, +promote+, +demote+. Defaults to the value
- (specified or implied) of +first-action+.
+ values: +start+, +stop+, +promote+, +demote+.
  indexterm:[then-action,Ordering Constraints]
  indexterm:[Constraints,Ordering,then-action]
 
@@ -647,16 +658,17 @@ Allocation is then performed as-per-normal.
 ==== Using Multi-state Resources in Colocation/Ordering Sets ====
 
 .Additional colocation set options relevant to multi-state resources
-[width="95%",cols="3m,5<",options="header",align="center"]
+[width="95%",cols="1m,1,6<",options="header",align="center"]
 |=========================================================
 
 |Field
+|Default
 |Description
 
 |role
-|An additional attribute of colocation constraint sets that specifies the
- role that *all members of the set* must be in.  Allowed values: _Started_, +Master+,
- +Slave+.
+|started
+|The role that 'all members' of the set must be in.  Allowed values: +started+, +master+,
+ +slave+.
  indexterm:[role,Ordering Constraints]
  indexterm:[Constraints,Ordering,role]
 
@@ -665,19 +677,17 @@ Allocation is then performed as-per-normal.
 In the following example +B+'s master must be located on the same node as +A+'s master.
 Additionally resources +C+ and +D+ must be located on the same node as +B+'s master.
 
-.Colocate C and C with A and B's master instances
+.Colocate C and D with A's and B's master instances
 ======
 [source,XML]
 -------
 <constraints>
     <rsc_colocation id="coloc-1" score="INFINITY" >
-      <resource_set id="collocated-set-example" sequential="true" role="Master">
+      <resource_set id="colocated-set-example-1" sequential="true" role="Master">
         <resource_ref id="A"/>
         <resource_ref id="B"/>
       </resource_set>
-    </rsc_colocation>
-    <rsc_colocation id="coloc-1" score="INFINITY" >
-      <resource_set id="collocated-set-example" sequential="true">
+      <resource_set id="colocated-set-example-2" sequential="true">
         <resource_ref id="C"/>
         <resource_ref id="D"/>
       </resource_set>
@@ -687,17 +697,18 @@ Additionally resources +C+ and +D+ must be located on the same node as +B+'s mas
 ======
 
 .Additional ordered set options relevant to multi-state resources
-[width="95%",cols="3m,5<",options="header",align="center"]
+[width="95%",cols="1m,1,3<",options="header",align="center"]
 |=========================================================
 
 |Field
+|Default
 |Description
 
 |action
-|An additional attribute of ordering constraint set that specifies the
- action that applies to *all members of the set*.  Allowed
- values: +start+, +stop+, +promote+, +demote+. Defaults to the value
- (specified or implied) of +first-action+.
+|value of +first-action+
+|An additional attribute of ordering constraint sets that specifies the
+ action that applies to 'all members' of the set.  Allowed
+ values: +start+, +stop+, +promote+, +demote+.
  indexterm:[action,Ordering Constraints]
  indexterm:[Constraints,Ordering,action]
 
@@ -706,21 +717,21 @@ Additionally resources +C+ and +D+ must be located on the same node as +B+'s mas
 In the following example +B+ cannot be promoted until +A+'s has been promoted.
 Additionally resources +C+ and +D+ must wait until +A+ and +B+ have been promoted before they can start.
 
-.Start C and C after first promoting A and B
+.Start C and D after first promoting A and B
 ======
 [source,XML]
 -------
 <constraints>
-    <rsc_colocation id="coloc-1" score="INFINITY" >
-      <resource_set id="collocated-set-1" sequential="true" action="promote">
+    <rsc_order id="order-1" score="INFINITY" >
+      <resource_set id="ordered-set-1" sequential="true" action="promote">
         <resource_ref id="A"/>
         <resource_ref id="B"/>
       </resource_set>
-      <resource_set id="collocated-set-2" sequential="true" action="start">
+      <resource_set id="ordered-set-2" sequential="true" action="start">
         <resource_ref id="C"/>
         <resource_ref id="D"/>
       </resource_set>
-    </rsc_colocation>
+    </rsc_order>
 </constraints>
 -------
 ======

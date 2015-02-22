@@ -1,0 +1,2689 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="228" operation="stop" operation_key="keystone_stop_0" internal_operation_key="keystone:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="keystone" long-id="keystone:0" class="systemd" type="openstack-keystone"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="233" operation="stop" operation_key="keystone-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="245" operation="stop" operation_key="glance-registry_stop_0" internal_operation_key="glance-registry:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="281" operation="stop" operation_key="swift-account_stop_0" internal_operation_key="swift-account:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="323" operation="stop" operation_key="neutron-server_stop_0" internal_operation_key="neutron-server:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="403" operation="stop" operation_key="nova-consoleauth_stop_0" internal_operation_key="nova-consoleauth:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="229" operation="stop" operation_key="keystone_stop_0" internal_operation_key="keystone:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="keystone" long-id="keystone:1" class="systemd" type="openstack-keystone"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="233" operation="stop" operation_key="keystone-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="247" operation="stop" operation_key="glance-registry_stop_0" internal_operation_key="glance-registry:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="283" operation="stop" operation_key="swift-account_stop_0" internal_operation_key="swift-account:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="325" operation="stop" operation_key="neutron-server_stop_0" internal_operation_key="neutron-server:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="405" operation="stop" operation_key="nova-consoleauth_stop_0" internal_operation_key="nova-consoleauth:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="230" operation="stop" operation_key="keystone_stop_0" internal_operation_key="keystone:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="keystone" long-id="keystone:2" class="systemd" type="openstack-keystone"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="233" operation="stop" operation_key="keystone-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="249" operation="stop" operation_key="glance-registry_stop_0" internal_operation_key="glance-registry:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="285" operation="stop" operation_key="swift-account_stop_0" internal_operation_key="swift-account:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="327" operation="stop" operation_key="neutron-server_stop_0" internal_operation_key="neutron-server:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="407" operation="stop" operation_key="nova-consoleauth_stop_0" internal_operation_key="nova-consoleauth:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3" priority="1000000">
+    <action_set>
+      <pseudo_event id="234" operation="stopped" operation_key="keystone-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="228" operation="stop" operation_key="keystone_stop_0" internal_operation_key="keystone:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="229" operation="stop" operation_key="keystone_stop_0" internal_operation_key="keystone:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="230" operation="stop" operation_key="keystone_stop_0" internal_operation_key="keystone:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="233" operation="stop" operation_key="keystone-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <pseudo_event id="233" operation="stop" operation_key="keystone-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="254" operation="stopped" operation_key="glance-registry-clone_stopped_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="265" operation="stop" operation_key="cinder-api_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="290" operation="stopped" operation_key="swift-account-clone_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="332" operation="stopped" operation_key="neutron-server-clone_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="412" operation="stopped" operation_key="nova-consoleauth-clone_stopped_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="453" operation="stop" operation_key="ceilometer-central_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <rsc_op id="245" operation="stop" operation_key="glance-registry_stop_0" internal_operation_key="glance-registry:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="glance-registry" long-id="glance-registry:0" class="systemd" type="openstack-glance-registry"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="253" operation="stop" operation_key="glance-registry-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="255" operation="stop" operation_key="glance-api_stop_0" internal_operation_key="glance-api:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <rsc_op id="247" operation="stop" operation_key="glance-registry_stop_0" internal_operation_key="glance-registry:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="glance-registry" long-id="glance-registry:1" class="systemd" type="openstack-glance-registry"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="253" operation="stop" operation_key="glance-registry-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="257" operation="stop" operation_key="glance-api_stop_0" internal_operation_key="glance-api:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <rsc_op id="249" operation="stop" operation_key="glance-registry_stop_0" internal_operation_key="glance-registry:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="glance-registry" long-id="glance-registry:2" class="systemd" type="openstack-glance-registry"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="253" operation="stop" operation_key="glance-registry-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="259" operation="stop" operation_key="glance-api_stop_0" internal_operation_key="glance-api:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="8" priority="1000000">
+    <action_set>
+      <pseudo_event id="254" operation="stopped" operation_key="glance-registry-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="245" operation="stop" operation_key="glance-registry_stop_0" internal_operation_key="glance-registry:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="247" operation="stop" operation_key="glance-registry_stop_0" internal_operation_key="glance-registry:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="249" operation="stop" operation_key="glance-registry_stop_0" internal_operation_key="glance-registry:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="253" operation="stop" operation_key="glance-registry-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="9">
+    <action_set>
+      <pseudo_event id="253" operation="stop" operation_key="glance-registry-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="264" operation="stopped" operation_key="glance-api-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="10">
+    <action_set>
+      <rsc_op id="255" operation="stop" operation_key="glance-api_stop_0" internal_operation_key="glance-api:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="glance-api" long-id="glance-api:0" class="systemd" type="openstack-glance-api"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="263" operation="stop" operation_key="glance-api-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="11">
+    <action_set>
+      <rsc_op id="257" operation="stop" operation_key="glance-api_stop_0" internal_operation_key="glance-api:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="glance-api" long-id="glance-api:1" class="systemd" type="openstack-glance-api"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="263" operation="stop" operation_key="glance-api-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="12">
+    <action_set>
+      <rsc_op id="259" operation="stop" operation_key="glance-api_stop_0" internal_operation_key="glance-api:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="glance-api" long-id="glance-api:2" class="systemd" type="openstack-glance-api"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="263" operation="stop" operation_key="glance-api-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="13" priority="1000000">
+    <action_set>
+      <pseudo_event id="264" operation="stopped" operation_key="glance-api-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="255" operation="stop" operation_key="glance-api_stop_0" internal_operation_key="glance-api:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="257" operation="stop" operation_key="glance-api_stop_0" internal_operation_key="glance-api:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="259" operation="stop" operation_key="glance-api_stop_0" internal_operation_key="glance-api:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="263" operation="stop" operation_key="glance-api-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="14">
+    <action_set>
+      <pseudo_event id="263" operation="stop" operation_key="glance-api-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="15">
+    <action_set>
+      <rsc_op id="265" operation="stop" operation_key="cinder-api_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="cinder-api" class="systemd" type="openstack-cinder-api"/>
+        <attributes CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="267" operation="stop" operation_key="cinder-scheduler_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="16">
+    <action_set>
+      <rsc_op id="267" operation="stop" operation_key="cinder-scheduler_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="cinder-scheduler" class="systemd" type="openstack-cinder-scheduler"/>
+        <attributes CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="269" operation="stop" operation_key="cinder-volume_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="17">
+    <action_set>
+      <rsc_op id="269" operation="stop" operation_key="cinder-volume_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="cinder-volume" class="systemd" type="openstack-cinder-volume"/>
+        <attributes CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="18">
+    <action_set>
+      <rsc_op id="281" operation="stop" operation_key="swift-account_stop_0" internal_operation_key="swift-account:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="swift-account" long-id="swift-account:0" class="systemd" type="openstack-swift-account"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="289" operation="stop" operation_key="swift-account-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="291" operation="stop" operation_key="swift-container_stop_0" internal_operation_key="swift-container:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="311" operation="stop" operation_key="swift-proxy_stop_0" internal_operation_key="swift-proxy:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="19">
+    <action_set>
+      <rsc_op id="283" operation="stop" operation_key="swift-account_stop_0" internal_operation_key="swift-account:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="swift-account" long-id="swift-account:1" class="systemd" type="openstack-swift-account"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="289" operation="stop" operation_key="swift-account-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="293" operation="stop" operation_key="swift-container_stop_0" internal_operation_key="swift-container:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="313" operation="stop" operation_key="swift-proxy_stop_0" internal_operation_key="swift-proxy:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="20">
+    <action_set>
+      <rsc_op id="285" operation="stop" operation_key="swift-account_stop_0" internal_operation_key="swift-account:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="swift-account" long-id="swift-account:2" class="systemd" type="openstack-swift-account"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="289" operation="stop" operation_key="swift-account-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="295" operation="stop" operation_key="swift-container_stop_0" internal_operation_key="swift-container:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="315" operation="stop" operation_key="swift-proxy_stop_0" internal_operation_key="swift-proxy:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="21" priority="1000000">
+    <action_set>
+      <pseudo_event id="290" operation="stopped" operation_key="swift-account-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="281" operation="stop" operation_key="swift-account_stop_0" internal_operation_key="swift-account:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="283" operation="stop" operation_key="swift-account_stop_0" internal_operation_key="swift-account:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="285" operation="stop" operation_key="swift-account_stop_0" internal_operation_key="swift-account:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="289" operation="stop" operation_key="swift-account-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="22">
+    <action_set>
+      <pseudo_event id="289" operation="stop" operation_key="swift-account-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="300" operation="stopped" operation_key="swift-container-clone_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="320" operation="stopped" operation_key="swift-proxy-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="23">
+    <action_set>
+      <rsc_op id="291" operation="stop" operation_key="swift-container_stop_0" internal_operation_key="swift-container:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="swift-container" long-id="swift-container:0" class="systemd" type="openstack-swift-container"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="299" operation="stop" operation_key="swift-container-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="301" operation="stop" operation_key="swift-object_stop_0" internal_operation_key="swift-object:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="24">
+    <action_set>
+      <rsc_op id="293" operation="stop" operation_key="swift-container_stop_0" internal_operation_key="swift-container:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="swift-container" long-id="swift-container:1" class="systemd" type="openstack-swift-container"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="299" operation="stop" operation_key="swift-container-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="303" operation="stop" operation_key="swift-object_stop_0" internal_operation_key="swift-object:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="25">
+    <action_set>
+      <rsc_op id="295" operation="stop" operation_key="swift-container_stop_0" internal_operation_key="swift-container:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="swift-container" long-id="swift-container:2" class="systemd" type="openstack-swift-container"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="299" operation="stop" operation_key="swift-container-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="305" operation="stop" operation_key="swift-object_stop_0" internal_operation_key="swift-object:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="26" priority="1000000">
+    <action_set>
+      <pseudo_event id="300" operation="stopped" operation_key="swift-container-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="291" operation="stop" operation_key="swift-container_stop_0" internal_operation_key="swift-container:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="293" operation="stop" operation_key="swift-container_stop_0" internal_operation_key="swift-container:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="295" operation="stop" operation_key="swift-container_stop_0" internal_operation_key="swift-container:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="299" operation="stop" operation_key="swift-container-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="27">
+    <action_set>
+      <pseudo_event id="299" operation="stop" operation_key="swift-container-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="310" operation="stopped" operation_key="swift-object-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="28">
+    <action_set>
+      <rsc_op id="301" operation="stop" operation_key="swift-object_stop_0" internal_operation_key="swift-object:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="swift-object" long-id="swift-object:0" class="systemd" type="openstack-swift-object"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="309" operation="stop" operation_key="swift-object-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="29">
+    <action_set>
+      <rsc_op id="303" operation="stop" operation_key="swift-object_stop_0" internal_operation_key="swift-object:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="swift-object" long-id="swift-object:1" class="systemd" type="openstack-swift-object"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="309" operation="stop" operation_key="swift-object-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="30">
+    <action_set>
+      <rsc_op id="305" operation="stop" operation_key="swift-object_stop_0" internal_operation_key="swift-object:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="swift-object" long-id="swift-object:2" class="systemd" type="openstack-swift-object"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="309" operation="stop" operation_key="swift-object-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="31" priority="1000000">
+    <action_set>
+      <pseudo_event id="310" operation="stopped" operation_key="swift-object-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="301" operation="stop" operation_key="swift-object_stop_0" internal_operation_key="swift-object:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="303" operation="stop" operation_key="swift-object_stop_0" internal_operation_key="swift-object:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="305" operation="stop" operation_key="swift-object_stop_0" internal_operation_key="swift-object:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="309" operation="stop" operation_key="swift-object-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="32">
+    <action_set>
+      <pseudo_event id="309" operation="stop" operation_key="swift-object-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="33">
+    <action_set>
+      <rsc_op id="311" operation="stop" operation_key="swift-proxy_stop_0" internal_operation_key="swift-proxy:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="swift-proxy" long-id="swift-proxy:0" class="systemd" type="openstack-swift-proxy"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="319" operation="stop" operation_key="swift-proxy-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="34">
+    <action_set>
+      <rsc_op id="313" operation="stop" operation_key="swift-proxy_stop_0" internal_operation_key="swift-proxy:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="swift-proxy" long-id="swift-proxy:1" class="systemd" type="openstack-swift-proxy"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="319" operation="stop" operation_key="swift-proxy-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="35">
+    <action_set>
+      <rsc_op id="315" operation="stop" operation_key="swift-proxy_stop_0" internal_operation_key="swift-proxy:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="swift-proxy" long-id="swift-proxy:2" class="systemd" type="openstack-swift-proxy"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="319" operation="stop" operation_key="swift-proxy-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="36" priority="1000000">
+    <action_set>
+      <pseudo_event id="320" operation="stopped" operation_key="swift-proxy-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="311" operation="stop" operation_key="swift-proxy_stop_0" internal_operation_key="swift-proxy:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="313" operation="stop" operation_key="swift-proxy_stop_0" internal_operation_key="swift-proxy:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="315" operation="stop" operation_key="swift-proxy_stop_0" internal_operation_key="swift-proxy:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="319" operation="stop" operation_key="swift-proxy-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="37">
+    <action_set>
+      <pseudo_event id="319" operation="stop" operation_key="swift-proxy-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="321" operation="stop" operation_key="swift-object-expirer_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="38">
+    <action_set>
+      <rsc_op id="321" operation="stop" operation_key="swift-object-expirer_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="swift-object-expirer" class="systemd" type="openstack-swift-object-expirer"/>
+        <attributes CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="39">
+    <action_set>
+      <rsc_op id="323" operation="stop" operation_key="neutron-server_stop_0" internal_operation_key="neutron-server:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="neutron-server" long-id="neutron-server:0" class="systemd" type="neutron-server"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="331" operation="stop" operation_key="neutron-server-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="337" operation="stop" operation_key="neutron-scale:2_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="40">
+    <action_set>
+      <rsc_op id="325" operation="stop" operation_key="neutron-server_stop_0" internal_operation_key="neutron-server:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="neutron-server" long-id="neutron-server:1" class="systemd" type="neutron-server"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="331" operation="stop" operation_key="neutron-server-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="335" operation="stop" operation_key="neutron-scale:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="41">
+    <action_set>
+      <rsc_op id="327" operation="stop" operation_key="neutron-server_stop_0" internal_operation_key="neutron-server:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="neutron-server" long-id="neutron-server:2" class="systemd" type="neutron-server"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="331" operation="stop" operation_key="neutron-server-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="333" operation="stop" operation_key="neutron-scale:0_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="42" priority="1000000">
+    <action_set>
+      <pseudo_event id="332" operation="stopped" operation_key="neutron-server-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="323" operation="stop" operation_key="neutron-server_stop_0" internal_operation_key="neutron-server:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="325" operation="stop" operation_key="neutron-server_stop_0" internal_operation_key="neutron-server:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="327" operation="stop" operation_key="neutron-server_stop_0" internal_operation_key="neutron-server:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="331" operation="stop" operation_key="neutron-server-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="43">
+    <action_set>
+      <pseudo_event id="331" operation="stop" operation_key="neutron-server-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="342" operation="stopped" operation_key="neutron-scale-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="44">
+    <action_set>
+      <rsc_op id="333" operation="stop" operation_key="neutron-scale:0_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="neutron-scale:0" class="ocf" provider="neutron" type="NeutronScale"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="300000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="341" operation="stop" operation_key="neutron-scale-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="347" operation="stop" operation_key="neutron-ovs-cleanup_stop_0" internal_operation_key="neutron-ovs-cleanup:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="45">
+    <action_set>
+      <rsc_op id="335" operation="stop" operation_key="neutron-scale:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="neutron-scale:1" class="ocf" provider="neutron" type="NeutronScale"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="300000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="341" operation="stop" operation_key="neutron-scale-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="345" operation="stop" operation_key="neutron-ovs-cleanup_stop_0" internal_operation_key="neutron-ovs-cleanup:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="46">
+    <action_set>
+      <rsc_op id="337" operation="stop" operation_key="neutron-scale:2_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="neutron-scale:2" class="ocf" provider="neutron" type="NeutronScale"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="300000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="341" operation="stop" operation_key="neutron-scale-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="343" operation="stop" operation_key="neutron-ovs-cleanup_stop_0" internal_operation_key="neutron-ovs-cleanup:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="47" priority="1000000">
+    <action_set>
+      <pseudo_event id="342" operation="stopped" operation_key="neutron-scale-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="333" operation="stop" operation_key="neutron-scale:0_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="335" operation="stop" operation_key="neutron-scale:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="337" operation="stop" operation_key="neutron-scale:2_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="341" operation="stop" operation_key="neutron-scale-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="48">
+    <action_set>
+      <pseudo_event id="341" operation="stop" operation_key="neutron-scale-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="352" operation="stopped" operation_key="neutron-ovs-cleanup-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="49">
+    <action_set>
+      <rsc_op id="343" operation="stop" operation_key="neutron-ovs-cleanup_stop_0" internal_operation_key="neutron-ovs-cleanup:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="neutron-ovs-cleanup" long-id="neutron-ovs-cleanup:0" class="ocf" provider="neutron" type="OVSCleanup"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="300000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="351" operation="stop" operation_key="neutron-ovs-cleanup-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="353" operation="stop" operation_key="neutron-netns-cleanup_stop_0" internal_operation_key="neutron-netns-cleanup:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="50">
+    <action_set>
+      <rsc_op id="345" operation="stop" operation_key="neutron-ovs-cleanup_stop_0" internal_operation_key="neutron-ovs-cleanup:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="neutron-ovs-cleanup" long-id="neutron-ovs-cleanup:1" class="ocf" provider="neutron" type="OVSCleanup"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="300000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="351" operation="stop" operation_key="neutron-ovs-cleanup-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="355" operation="stop" operation_key="neutron-netns-cleanup_stop_0" internal_operation_key="neutron-netns-cleanup:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="51">
+    <action_set>
+      <rsc_op id="347" operation="stop" operation_key="neutron-ovs-cleanup_stop_0" internal_operation_key="neutron-ovs-cleanup:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="neutron-ovs-cleanup" long-id="neutron-ovs-cleanup:2" class="ocf" provider="neutron" type="OVSCleanup"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="300000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="351" operation="stop" operation_key="neutron-ovs-cleanup-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="357" operation="stop" operation_key="neutron-netns-cleanup_stop_0" internal_operation_key="neutron-netns-cleanup:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="52" priority="1000000">
+    <action_set>
+      <pseudo_event id="352" operation="stopped" operation_key="neutron-ovs-cleanup-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="343" operation="stop" operation_key="neutron-ovs-cleanup_stop_0" internal_operation_key="neutron-ovs-cleanup:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="345" operation="stop" operation_key="neutron-ovs-cleanup_stop_0" internal_operation_key="neutron-ovs-cleanup:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="347" operation="stop" operation_key="neutron-ovs-cleanup_stop_0" internal_operation_key="neutron-ovs-cleanup:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="351" operation="stop" operation_key="neutron-ovs-cleanup-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="53">
+    <action_set>
+      <pseudo_event id="351" operation="stop" operation_key="neutron-ovs-cleanup-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="362" operation="stopped" operation_key="neutron-netns-cleanup-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="54">
+    <action_set>
+      <rsc_op id="353" operation="stop" operation_key="neutron-netns-cleanup_stop_0" internal_operation_key="neutron-netns-cleanup:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="neutron-netns-cleanup" long-id="neutron-netns-cleanup:0" class="ocf" provider="neutron" type="NetnsCleanup"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="300000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="361" operation="stop" operation_key="neutron-netns-cleanup-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="363" operation="stop" operation_key="neutron-openvswitch-agent_stop_0" internal_operation_key="neutron-openvswitch-agent:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="55">
+    <action_set>
+      <rsc_op id="355" operation="stop" operation_key="neutron-netns-cleanup_stop_0" internal_operation_key="neutron-netns-cleanup:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="neutron-netns-cleanup" long-id="neutron-netns-cleanup:1" class="ocf" provider="neutron" type="NetnsCleanup"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="300000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="361" operation="stop" operation_key="neutron-netns-cleanup-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="365" operation="stop" operation_key="neutron-openvswitch-agent_stop_0" internal_operation_key="neutron-openvswitch-agent:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="56">
+    <action_set>
+      <rsc_op id="357" operation="stop" operation_key="neutron-netns-cleanup_stop_0" internal_operation_key="neutron-netns-cleanup:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="neutron-netns-cleanup" long-id="neutron-netns-cleanup:2" class="ocf" provider="neutron" type="NetnsCleanup"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="300000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="361" operation="stop" operation_key="neutron-netns-cleanup-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="367" operation="stop" operation_key="neutron-openvswitch-agent_stop_0" internal_operation_key="neutron-openvswitch-agent:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="57" priority="1000000">
+    <action_set>
+      <pseudo_event id="362" operation="stopped" operation_key="neutron-netns-cleanup-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="353" operation="stop" operation_key="neutron-netns-cleanup_stop_0" internal_operation_key="neutron-netns-cleanup:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="355" operation="stop" operation_key="neutron-netns-cleanup_stop_0" internal_operation_key="neutron-netns-cleanup:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="357" operation="stop" operation_key="neutron-netns-cleanup_stop_0" internal_operation_key="neutron-netns-cleanup:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="361" operation="stop" operation_key="neutron-netns-cleanup-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="58">
+    <action_set>
+      <pseudo_event id="361" operation="stop" operation_key="neutron-netns-cleanup-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="372" operation="stopped" operation_key="neutron-openvswitch-agent-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="59">
+    <action_set>
+      <rsc_op id="363" operation="stop" operation_key="neutron-openvswitch-agent_stop_0" internal_operation_key="neutron-openvswitch-agent:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="neutron-openvswitch-agent" long-id="neutron-openvswitch-agent:0" class="systemd" type="neutron-openvswitch-agent"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="371" operation="stop" operation_key="neutron-openvswitch-agent-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="373" operation="stop" operation_key="neutron-dhcp-agent_stop_0" internal_operation_key="neutron-dhcp-agent:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="60">
+    <action_set>
+      <rsc_op id="365" operation="stop" operation_key="neutron-openvswitch-agent_stop_0" internal_operation_key="neutron-openvswitch-agent:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="neutron-openvswitch-agent" long-id="neutron-openvswitch-agent:1" class="systemd" type="neutron-openvswitch-agent"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="371" operation="stop" operation_key="neutron-openvswitch-agent-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="375" operation="stop" operation_key="neutron-dhcp-agent_stop_0" internal_operation_key="neutron-dhcp-agent:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="61">
+    <action_set>
+      <rsc_op id="367" operation="stop" operation_key="neutron-openvswitch-agent_stop_0" internal_operation_key="neutron-openvswitch-agent:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="neutron-openvswitch-agent" long-id="neutron-openvswitch-agent:2" class="systemd" type="neutron-openvswitch-agent"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="371" operation="stop" operation_key="neutron-openvswitch-agent-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="377" operation="stop" operation_key="neutron-dhcp-agent_stop_0" internal_operation_key="neutron-dhcp-agent:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="62" priority="1000000">
+    <action_set>
+      <pseudo_event id="372" operation="stopped" operation_key="neutron-openvswitch-agent-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="363" operation="stop" operation_key="neutron-openvswitch-agent_stop_0" internal_operation_key="neutron-openvswitch-agent:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="365" operation="stop" operation_key="neutron-openvswitch-agent_stop_0" internal_operation_key="neutron-openvswitch-agent:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="367" operation="stop" operation_key="neutron-openvswitch-agent_stop_0" internal_operation_key="neutron-openvswitch-agent:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="371" operation="stop" operation_key="neutron-openvswitch-agent-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="63">
+    <action_set>
+      <pseudo_event id="371" operation="stop" operation_key="neutron-openvswitch-agent-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="382" operation="stopped" operation_key="neutron-dhcp-agent-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="64">
+    <action_set>
+      <rsc_op id="373" operation="stop" operation_key="neutron-dhcp-agent_stop_0" internal_operation_key="neutron-dhcp-agent:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="neutron-dhcp-agent" long-id="neutron-dhcp-agent:0" class="systemd" type="neutron-dhcp-agent"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="381" operation="stop" operation_key="neutron-dhcp-agent-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="383" operation="stop" operation_key="neutron-l3-agent_stop_0" internal_operation_key="neutron-l3-agent:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="65">
+    <action_set>
+      <rsc_op id="375" operation="stop" operation_key="neutron-dhcp-agent_stop_0" internal_operation_key="neutron-dhcp-agent:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="neutron-dhcp-agent" long-id="neutron-dhcp-agent:1" class="systemd" type="neutron-dhcp-agent"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="381" operation="stop" operation_key="neutron-dhcp-agent-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="385" operation="stop" operation_key="neutron-l3-agent_stop_0" internal_operation_key="neutron-l3-agent:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="66">
+    <action_set>
+      <rsc_op id="377" operation="stop" operation_key="neutron-dhcp-agent_stop_0" internal_operation_key="neutron-dhcp-agent:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="neutron-dhcp-agent" long-id="neutron-dhcp-agent:2" class="systemd" type="neutron-dhcp-agent"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="381" operation="stop" operation_key="neutron-dhcp-agent-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="387" operation="stop" operation_key="neutron-l3-agent_stop_0" internal_operation_key="neutron-l3-agent:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="67" priority="1000000">
+    <action_set>
+      <pseudo_event id="382" operation="stopped" operation_key="neutron-dhcp-agent-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="373" operation="stop" operation_key="neutron-dhcp-agent_stop_0" internal_operation_key="neutron-dhcp-agent:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="375" operation="stop" operation_key="neutron-dhcp-agent_stop_0" internal_operation_key="neutron-dhcp-agent:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="377" operation="stop" operation_key="neutron-dhcp-agent_stop_0" internal_operation_key="neutron-dhcp-agent:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="381" operation="stop" operation_key="neutron-dhcp-agent-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="68">
+    <action_set>
+      <pseudo_event id="381" operation="stop" operation_key="neutron-dhcp-agent-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="392" operation="stopped" operation_key="neutron-l3-agent-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="69">
+    <action_set>
+      <rsc_op id="383" operation="stop" operation_key="neutron-l3-agent_stop_0" internal_operation_key="neutron-l3-agent:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="neutron-l3-agent" long-id="neutron-l3-agent:0" class="systemd" type="neutron-l3-agent"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="391" operation="stop" operation_key="neutron-l3-agent-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="393" operation="stop" operation_key="neutron-metadata-agent_stop_0" internal_operation_key="neutron-metadata-agent:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="70">
+    <action_set>
+      <rsc_op id="385" operation="stop" operation_key="neutron-l3-agent_stop_0" internal_operation_key="neutron-l3-agent:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="neutron-l3-agent" long-id="neutron-l3-agent:1" class="systemd" type="neutron-l3-agent"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="391" operation="stop" operation_key="neutron-l3-agent-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="395" operation="stop" operation_key="neutron-metadata-agent_stop_0" internal_operation_key="neutron-metadata-agent:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="71">
+    <action_set>
+      <rsc_op id="387" operation="stop" operation_key="neutron-l3-agent_stop_0" internal_operation_key="neutron-l3-agent:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="neutron-l3-agent" long-id="neutron-l3-agent:2" class="systemd" type="neutron-l3-agent"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="391" operation="stop" operation_key="neutron-l3-agent-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="397" operation="stop" operation_key="neutron-metadata-agent_stop_0" internal_operation_key="neutron-metadata-agent:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="72" priority="1000000">
+    <action_set>
+      <pseudo_event id="392" operation="stopped" operation_key="neutron-l3-agent-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="383" operation="stop" operation_key="neutron-l3-agent_stop_0" internal_operation_key="neutron-l3-agent:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="385" operation="stop" operation_key="neutron-l3-agent_stop_0" internal_operation_key="neutron-l3-agent:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="387" operation="stop" operation_key="neutron-l3-agent_stop_0" internal_operation_key="neutron-l3-agent:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="391" operation="stop" operation_key="neutron-l3-agent-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="73">
+    <action_set>
+      <pseudo_event id="391" operation="stop" operation_key="neutron-l3-agent-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="402" operation="stopped" operation_key="neutron-metadata-agent-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="74">
+    <action_set>
+      <rsc_op id="393" operation="stop" operation_key="neutron-metadata-agent_stop_0" internal_operation_key="neutron-metadata-agent:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="neutron-metadata-agent" long-id="neutron-metadata-agent:0" class="systemd" type="neutron-metadata-agent"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="401" operation="stop" operation_key="neutron-metadata-agent-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="75">
+    <action_set>
+      <rsc_op id="395" operation="stop" operation_key="neutron-metadata-agent_stop_0" internal_operation_key="neutron-metadata-agent:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="neutron-metadata-agent" long-id="neutron-metadata-agent:1" class="systemd" type="neutron-metadata-agent"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="401" operation="stop" operation_key="neutron-metadata-agent-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="76">
+    <action_set>
+      <rsc_op id="397" operation="stop" operation_key="neutron-metadata-agent_stop_0" internal_operation_key="neutron-metadata-agent:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="neutron-metadata-agent" long-id="neutron-metadata-agent:2" class="systemd" type="neutron-metadata-agent"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="401" operation="stop" operation_key="neutron-metadata-agent-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="77" priority="1000000">
+    <action_set>
+      <pseudo_event id="402" operation="stopped" operation_key="neutron-metadata-agent-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="393" operation="stop" operation_key="neutron-metadata-agent_stop_0" internal_operation_key="neutron-metadata-agent:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="395" operation="stop" operation_key="neutron-metadata-agent_stop_0" internal_operation_key="neutron-metadata-agent:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="397" operation="stop" operation_key="neutron-metadata-agent_stop_0" internal_operation_key="neutron-metadata-agent:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="401" operation="stop" operation_key="neutron-metadata-agent-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="78">
+    <action_set>
+      <pseudo_event id="401" operation="stop" operation_key="neutron-metadata-agent-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="79">
+    <action_set>
+      <rsc_op id="403" operation="stop" operation_key="nova-consoleauth_stop_0" internal_operation_key="nova-consoleauth:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="nova-consoleauth" long-id="nova-consoleauth:0" class="systemd" type="openstack-nova-consoleauth"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="411" operation="stop" operation_key="nova-consoleauth-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="413" operation="stop" operation_key="nova-novncproxy_stop_0" internal_operation_key="nova-novncproxy:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="80">
+    <action_set>
+      <rsc_op id="405" operation="stop" operation_key="nova-consoleauth_stop_0" internal_operation_key="nova-consoleauth:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="nova-consoleauth" long-id="nova-consoleauth:1" class="systemd" type="openstack-nova-consoleauth"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="411" operation="stop" operation_key="nova-consoleauth-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="415" operation="stop" operation_key="nova-novncproxy_stop_0" internal_operation_key="nova-novncproxy:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="81">
+    <action_set>
+      <rsc_op id="407" operation="stop" operation_key="nova-consoleauth_stop_0" internal_operation_key="nova-consoleauth:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="nova-consoleauth" long-id="nova-consoleauth:2" class="systemd" type="openstack-nova-consoleauth"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="411" operation="stop" operation_key="nova-consoleauth-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="417" operation="stop" operation_key="nova-novncproxy_stop_0" internal_operation_key="nova-novncproxy:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="82" priority="1000000">
+    <action_set>
+      <pseudo_event id="412" operation="stopped" operation_key="nova-consoleauth-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="403" operation="stop" operation_key="nova-consoleauth_stop_0" internal_operation_key="nova-consoleauth:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="405" operation="stop" operation_key="nova-consoleauth_stop_0" internal_operation_key="nova-consoleauth:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="407" operation="stop" operation_key="nova-consoleauth_stop_0" internal_operation_key="nova-consoleauth:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="411" operation="stop" operation_key="nova-consoleauth-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="83">
+    <action_set>
+      <pseudo_event id="411" operation="stop" operation_key="nova-consoleauth-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="422" operation="stopped" operation_key="nova-novncproxy-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="84">
+    <action_set>
+      <rsc_op id="413" operation="stop" operation_key="nova-novncproxy_stop_0" internal_operation_key="nova-novncproxy:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="nova-novncproxy" long-id="nova-novncproxy:0" class="systemd" type="openstack-nova-novncproxy"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="421" operation="stop" operation_key="nova-novncproxy-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="423" operation="stop" operation_key="nova-api_stop_0" internal_operation_key="nova-api:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="85">
+    <action_set>
+      <rsc_op id="415" operation="stop" operation_key="nova-novncproxy_stop_0" internal_operation_key="nova-novncproxy:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="nova-novncproxy" long-id="nova-novncproxy:1" class="systemd" type="openstack-nova-novncproxy"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="421" operation="stop" operation_key="nova-novncproxy-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="425" operation="stop" operation_key="nova-api_stop_0" internal_operation_key="nova-api:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="86">
+    <action_set>
+      <rsc_op id="417" operation="stop" operation_key="nova-novncproxy_stop_0" internal_operation_key="nova-novncproxy:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="nova-novncproxy" long-id="nova-novncproxy:2" class="systemd" type="openstack-nova-novncproxy"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="421" operation="stop" operation_key="nova-novncproxy-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="427" operation="stop" operation_key="nova-api_stop_0" internal_operation_key="nova-api:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="87" priority="1000000">
+    <action_set>
+      <pseudo_event id="422" operation="stopped" operation_key="nova-novncproxy-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="413" operation="stop" operation_key="nova-novncproxy_stop_0" internal_operation_key="nova-novncproxy:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="415" operation="stop" operation_key="nova-novncproxy_stop_0" internal_operation_key="nova-novncproxy:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="417" operation="stop" operation_key="nova-novncproxy_stop_0" internal_operation_key="nova-novncproxy:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="421" operation="stop" operation_key="nova-novncproxy-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="88">
+    <action_set>
+      <pseudo_event id="421" operation="stop" operation_key="nova-novncproxy-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="432" operation="stopped" operation_key="nova-api-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="89">
+    <action_set>
+      <rsc_op id="423" operation="stop" operation_key="nova-api_stop_0" internal_operation_key="nova-api:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="nova-api" long-id="nova-api:0" class="systemd" type="openstack-nova-api"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="431" operation="stop" operation_key="nova-api-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="433" operation="stop" operation_key="nova-scheduler_stop_0" internal_operation_key="nova-scheduler:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="90">
+    <action_set>
+      <rsc_op id="425" operation="stop" operation_key="nova-api_stop_0" internal_operation_key="nova-api:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="nova-api" long-id="nova-api:1" class="systemd" type="openstack-nova-api"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="431" operation="stop" operation_key="nova-api-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="435" operation="stop" operation_key="nova-scheduler_stop_0" internal_operation_key="nova-scheduler:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="91">
+    <action_set>
+      <rsc_op id="427" operation="stop" operation_key="nova-api_stop_0" internal_operation_key="nova-api:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="nova-api" long-id="nova-api:2" class="systemd" type="openstack-nova-api"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="431" operation="stop" operation_key="nova-api-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="437" operation="stop" operation_key="nova-scheduler_stop_0" internal_operation_key="nova-scheduler:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="92" priority="1000000">
+    <action_set>
+      <pseudo_event id="432" operation="stopped" operation_key="nova-api-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="423" operation="stop" operation_key="nova-api_stop_0" internal_operation_key="nova-api:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="425" operation="stop" operation_key="nova-api_stop_0" internal_operation_key="nova-api:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="427" operation="stop" operation_key="nova-api_stop_0" internal_operation_key="nova-api:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="431" operation="stop" operation_key="nova-api-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="93">
+    <action_set>
+      <pseudo_event id="431" operation="stop" operation_key="nova-api-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="442" operation="stopped" operation_key="nova-scheduler-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="94">
+    <action_set>
+      <rsc_op id="433" operation="stop" operation_key="nova-scheduler_stop_0" internal_operation_key="nova-scheduler:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="nova-scheduler" long-id="nova-scheduler:0" class="systemd" type="openstack-nova-scheduler"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="441" operation="stop" operation_key="nova-scheduler-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="443" operation="stop" operation_key="nova-conductor_stop_0" internal_operation_key="nova-conductor:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="95">
+    <action_set>
+      <rsc_op id="435" operation="stop" operation_key="nova-scheduler_stop_0" internal_operation_key="nova-scheduler:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="nova-scheduler" long-id="nova-scheduler:1" class="systemd" type="openstack-nova-scheduler"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="441" operation="stop" operation_key="nova-scheduler-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="445" operation="stop" operation_key="nova-conductor_stop_0" internal_operation_key="nova-conductor:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="96">
+    <action_set>
+      <rsc_op id="437" operation="stop" operation_key="nova-scheduler_stop_0" internal_operation_key="nova-scheduler:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="nova-scheduler" long-id="nova-scheduler:2" class="systemd" type="openstack-nova-scheduler"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="441" operation="stop" operation_key="nova-scheduler-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="447" operation="stop" operation_key="nova-conductor_stop_0" internal_operation_key="nova-conductor:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="97" priority="1000000">
+    <action_set>
+      <pseudo_event id="442" operation="stopped" operation_key="nova-scheduler-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="433" operation="stop" operation_key="nova-scheduler_stop_0" internal_operation_key="nova-scheduler:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="435" operation="stop" operation_key="nova-scheduler_stop_0" internal_operation_key="nova-scheduler:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="437" operation="stop" operation_key="nova-scheduler_stop_0" internal_operation_key="nova-scheduler:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="441" operation="stop" operation_key="nova-scheduler-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="98">
+    <action_set>
+      <pseudo_event id="441" operation="stop" operation_key="nova-scheduler-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="452" operation="stopped" operation_key="nova-conductor-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="99">
+    <action_set>
+      <rsc_op id="443" operation="stop" operation_key="nova-conductor_stop_0" internal_operation_key="nova-conductor:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="nova-conductor" long-id="nova-conductor:0" class="systemd" type="openstack-nova-conductor"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="451" operation="stop" operation_key="nova-conductor-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="100">
+    <action_set>
+      <rsc_op id="445" operation="stop" operation_key="nova-conductor_stop_0" internal_operation_key="nova-conductor:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="nova-conductor" long-id="nova-conductor:1" class="systemd" type="openstack-nova-conductor"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="451" operation="stop" operation_key="nova-conductor-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="101">
+    <action_set>
+      <rsc_op id="447" operation="stop" operation_key="nova-conductor_stop_0" internal_operation_key="nova-conductor:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="nova-conductor" long-id="nova-conductor:2" class="systemd" type="openstack-nova-conductor"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="451" operation="stop" operation_key="nova-conductor-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="102" priority="1000000">
+    <action_set>
+      <pseudo_event id="452" operation="stopped" operation_key="nova-conductor-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="443" operation="stop" operation_key="nova-conductor_stop_0" internal_operation_key="nova-conductor:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="445" operation="stop" operation_key="nova-conductor_stop_0" internal_operation_key="nova-conductor:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="447" operation="stop" operation_key="nova-conductor_stop_0" internal_operation_key="nova-conductor:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="451" operation="stop" operation_key="nova-conductor-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="103">
+    <action_set>
+      <pseudo_event id="451" operation="stop" operation_key="nova-conductor-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="104">
+    <action_set>
+      <rsc_op id="453" operation="stop" operation_key="ceilometer-central_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="ceilometer-central" class="systemd" type="openstack-ceilometer-central"/>
+        <attributes CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="464" operation="stopped" operation_key="ceilometer-collector-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="105">
+    <action_set>
+      <rsc_op id="455" operation="stop" operation_key="ceilometer-collector_stop_0" internal_operation_key="ceilometer-collector:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="ceilometer-collector" long-id="ceilometer-collector:0" class="systemd" type="openstack-ceilometer-collector"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="463" operation="stop" operation_key="ceilometer-collector-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="465" operation="stop" operation_key="ceilometer-api_stop_0" internal_operation_key="ceilometer-api:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="106">
+    <action_set>
+      <rsc_op id="457" operation="stop" operation_key="ceilometer-collector_stop_0" internal_operation_key="ceilometer-collector:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="ceilometer-collector" long-id="ceilometer-collector:1" class="systemd" type="openstack-ceilometer-collector"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="463" operation="stop" operation_key="ceilometer-collector-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="467" operation="stop" operation_key="ceilometer-api_stop_0" internal_operation_key="ceilometer-api:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="107">
+    <action_set>
+      <rsc_op id="459" operation="stop" operation_key="ceilometer-collector_stop_0" internal_operation_key="ceilometer-collector:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="ceilometer-collector" long-id="ceilometer-collector:2" class="systemd" type="openstack-ceilometer-collector"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="463" operation="stop" operation_key="ceilometer-collector-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="469" operation="stop" operation_key="ceilometer-api_stop_0" internal_operation_key="ceilometer-api:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="108" priority="1000000">
+    <action_set>
+      <pseudo_event id="464" operation="stopped" operation_key="ceilometer-collector-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="455" operation="stop" operation_key="ceilometer-collector_stop_0" internal_operation_key="ceilometer-collector:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="457" operation="stop" operation_key="ceilometer-collector_stop_0" internal_operation_key="ceilometer-collector:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="459" operation="stop" operation_key="ceilometer-collector_stop_0" internal_operation_key="ceilometer-collector:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="463" operation="stop" operation_key="ceilometer-collector-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="109">
+    <action_set>
+      <pseudo_event id="463" operation="stop" operation_key="ceilometer-collector-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="474" operation="stopped" operation_key="ceilometer-api-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="110">
+    <action_set>
+      <rsc_op id="465" operation="stop" operation_key="ceilometer-api_stop_0" internal_operation_key="ceilometer-api:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="ceilometer-api" long-id="ceilometer-api:0" class="systemd" type="openstack-ceilometer-api"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="473" operation="stop" operation_key="ceilometer-api-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="475" operation="stop" operation_key="ceilometer-delay_stop_0" internal_operation_key="ceilometer-delay:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="111">
+    <action_set>
+      <rsc_op id="467" operation="stop" operation_key="ceilometer-api_stop_0" internal_operation_key="ceilometer-api:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="ceilometer-api" long-id="ceilometer-api:1" class="systemd" type="openstack-ceilometer-api"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="473" operation="stop" operation_key="ceilometer-api-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="477" operation="stop" operation_key="ceilometer-delay_stop_0" internal_operation_key="ceilometer-delay:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="112">
+    <action_set>
+      <rsc_op id="469" operation="stop" operation_key="ceilometer-api_stop_0" internal_operation_key="ceilometer-api:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="ceilometer-api" long-id="ceilometer-api:2" class="systemd" type="openstack-ceilometer-api"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="473" operation="stop" operation_key="ceilometer-api-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="479" operation="stop" operation_key="ceilometer-delay_stop_0" internal_operation_key="ceilometer-delay:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="113" priority="1000000">
+    <action_set>
+      <pseudo_event id="474" operation="stopped" operation_key="ceilometer-api-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="465" operation="stop" operation_key="ceilometer-api_stop_0" internal_operation_key="ceilometer-api:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="467" operation="stop" operation_key="ceilometer-api_stop_0" internal_operation_key="ceilometer-api:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="469" operation="stop" operation_key="ceilometer-api_stop_0" internal_operation_key="ceilometer-api:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="473" operation="stop" operation_key="ceilometer-api-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="114">
+    <action_set>
+      <pseudo_event id="473" operation="stop" operation_key="ceilometer-api-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="484" operation="stopped" operation_key="ceilometer-delay-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="115">
+    <action_set>
+      <rsc_op id="475" operation="stop" operation_key="ceilometer-delay_stop_0" internal_operation_key="ceilometer-delay:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="ceilometer-delay" long-id="ceilometer-delay:0" class="ocf" provider="heartbeat" type="Delay"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="30000"  startdelay="10"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="483" operation="stop" operation_key="ceilometer-delay-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="485" operation="stop" operation_key="ceilometer-alarm-evaluator_stop_0" internal_operation_key="ceilometer-alarm-evaluator:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="116">
+    <action_set>
+      <rsc_op id="477" operation="stop" operation_key="ceilometer-delay_stop_0" internal_operation_key="ceilometer-delay:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="ceilometer-delay" long-id="ceilometer-delay:1" class="ocf" provider="heartbeat" type="Delay"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="30000"  startdelay="10"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="483" operation="stop" operation_key="ceilometer-delay-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="487" operation="stop" operation_key="ceilometer-alarm-evaluator_stop_0" internal_operation_key="ceilometer-alarm-evaluator:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="117">
+    <action_set>
+      <rsc_op id="479" operation="stop" operation_key="ceilometer-delay_stop_0" internal_operation_key="ceilometer-delay:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="ceilometer-delay" long-id="ceilometer-delay:2" class="ocf" provider="heartbeat" type="Delay"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="30000"  startdelay="10"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="483" operation="stop" operation_key="ceilometer-delay-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="489" operation="stop" operation_key="ceilometer-alarm-evaluator_stop_0" internal_operation_key="ceilometer-alarm-evaluator:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="118" priority="1000000">
+    <action_set>
+      <pseudo_event id="484" operation="stopped" operation_key="ceilometer-delay-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="475" operation="stop" operation_key="ceilometer-delay_stop_0" internal_operation_key="ceilometer-delay:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="477" operation="stop" operation_key="ceilometer-delay_stop_0" internal_operation_key="ceilometer-delay:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="479" operation="stop" operation_key="ceilometer-delay_stop_0" internal_operation_key="ceilometer-delay:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="483" operation="stop" operation_key="ceilometer-delay-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="119">
+    <action_set>
+      <pseudo_event id="483" operation="stop" operation_key="ceilometer-delay-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="494" operation="stopped" operation_key="ceilometer-alarm-evaluator-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="120">
+    <action_set>
+      <rsc_op id="485" operation="stop" operation_key="ceilometer-alarm-evaluator_stop_0" internal_operation_key="ceilometer-alarm-evaluator:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="ceilometer-alarm-evaluator" long-id="ceilometer-alarm-evaluator:0" class="systemd" type="openstack-ceilometer-alarm-evaluator"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="493" operation="stop" operation_key="ceilometer-alarm-evaluator-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="495" operation="stop" operation_key="ceilometer-alarm-notifier_stop_0" internal_operation_key="ceilometer-alarm-notifier:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="121">
+    <action_set>
+      <rsc_op id="487" operation="stop" operation_key="ceilometer-alarm-evaluator_stop_0" internal_operation_key="ceilometer-alarm-evaluator:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="ceilometer-alarm-evaluator" long-id="ceilometer-alarm-evaluator:1" class="systemd" type="openstack-ceilometer-alarm-evaluator"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="493" operation="stop" operation_key="ceilometer-alarm-evaluator-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="497" operation="stop" operation_key="ceilometer-alarm-notifier_stop_0" internal_operation_key="ceilometer-alarm-notifier:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="122">
+    <action_set>
+      <rsc_op id="489" operation="stop" operation_key="ceilometer-alarm-evaluator_stop_0" internal_operation_key="ceilometer-alarm-evaluator:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="ceilometer-alarm-evaluator" long-id="ceilometer-alarm-evaluator:2" class="systemd" type="openstack-ceilometer-alarm-evaluator"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="493" operation="stop" operation_key="ceilometer-alarm-evaluator-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="499" operation="stop" operation_key="ceilometer-alarm-notifier_stop_0" internal_operation_key="ceilometer-alarm-notifier:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="123" priority="1000000">
+    <action_set>
+      <pseudo_event id="494" operation="stopped" operation_key="ceilometer-alarm-evaluator-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="485" operation="stop" operation_key="ceilometer-alarm-evaluator_stop_0" internal_operation_key="ceilometer-alarm-evaluator:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="487" operation="stop" operation_key="ceilometer-alarm-evaluator_stop_0" internal_operation_key="ceilometer-alarm-evaluator:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="489" operation="stop" operation_key="ceilometer-alarm-evaluator_stop_0" internal_operation_key="ceilometer-alarm-evaluator:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="493" operation="stop" operation_key="ceilometer-alarm-evaluator-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="124">
+    <action_set>
+      <pseudo_event id="493" operation="stop" operation_key="ceilometer-alarm-evaluator-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="504" operation="stopped" operation_key="ceilometer-alarm-notifier-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="125">
+    <action_set>
+      <rsc_op id="495" operation="stop" operation_key="ceilometer-alarm-notifier_stop_0" internal_operation_key="ceilometer-alarm-notifier:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="ceilometer-alarm-notifier" long-id="ceilometer-alarm-notifier:0" class="systemd" type="openstack-ceilometer-alarm-notifier"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="503" operation="stop" operation_key="ceilometer-alarm-notifier-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="505" operation="stop" operation_key="ceilometer-notification_stop_0" internal_operation_key="ceilometer-notification:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="126">
+    <action_set>
+      <rsc_op id="497" operation="stop" operation_key="ceilometer-alarm-notifier_stop_0" internal_operation_key="ceilometer-alarm-notifier:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="ceilometer-alarm-notifier" long-id="ceilometer-alarm-notifier:1" class="systemd" type="openstack-ceilometer-alarm-notifier"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="503" operation="stop" operation_key="ceilometer-alarm-notifier-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="507" operation="stop" operation_key="ceilometer-notification_stop_0" internal_operation_key="ceilometer-notification:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="127">
+    <action_set>
+      <rsc_op id="499" operation="stop" operation_key="ceilometer-alarm-notifier_stop_0" internal_operation_key="ceilometer-alarm-notifier:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="ceilometer-alarm-notifier" long-id="ceilometer-alarm-notifier:2" class="systemd" type="openstack-ceilometer-alarm-notifier"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="503" operation="stop" operation_key="ceilometer-alarm-notifier-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="509" operation="stop" operation_key="ceilometer-notification_stop_0" internal_operation_key="ceilometer-notification:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="128" priority="1000000">
+    <action_set>
+      <pseudo_event id="504" operation="stopped" operation_key="ceilometer-alarm-notifier-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="495" operation="stop" operation_key="ceilometer-alarm-notifier_stop_0" internal_operation_key="ceilometer-alarm-notifier:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="497" operation="stop" operation_key="ceilometer-alarm-notifier_stop_0" internal_operation_key="ceilometer-alarm-notifier:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="499" operation="stop" operation_key="ceilometer-alarm-notifier_stop_0" internal_operation_key="ceilometer-alarm-notifier:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="503" operation="stop" operation_key="ceilometer-alarm-notifier-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="129">
+    <action_set>
+      <pseudo_event id="503" operation="stop" operation_key="ceilometer-alarm-notifier-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="514" operation="stopped" operation_key="ceilometer-notification-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="130">
+    <action_set>
+      <rsc_op id="505" operation="stop" operation_key="ceilometer-notification_stop_0" internal_operation_key="ceilometer-notification:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="ceilometer-notification" long-id="ceilometer-notification:0" class="systemd" type="openstack-ceilometer-notification"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="513" operation="stop" operation_key="ceilometer-notification-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="515" operation="stop" operation_key="heat-api_stop_0" internal_operation_key="heat-api:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="131">
+    <action_set>
+      <rsc_op id="507" operation="stop" operation_key="ceilometer-notification_stop_0" internal_operation_key="ceilometer-notification:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="ceilometer-notification" long-id="ceilometer-notification:1" class="systemd" type="openstack-ceilometer-notification"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="513" operation="stop" operation_key="ceilometer-notification-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="517" operation="stop" operation_key="heat-api_stop_0" internal_operation_key="heat-api:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="132">
+    <action_set>
+      <rsc_op id="509" operation="stop" operation_key="ceilometer-notification_stop_0" internal_operation_key="ceilometer-notification:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="ceilometer-notification" long-id="ceilometer-notification:2" class="systemd" type="openstack-ceilometer-notification"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="513" operation="stop" operation_key="ceilometer-notification-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="519" operation="stop" operation_key="heat-api_stop_0" internal_operation_key="heat-api:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="133" priority="1000000">
+    <action_set>
+      <pseudo_event id="514" operation="stopped" operation_key="ceilometer-notification-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="505" operation="stop" operation_key="ceilometer-notification_stop_0" internal_operation_key="ceilometer-notification:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="507" operation="stop" operation_key="ceilometer-notification_stop_0" internal_operation_key="ceilometer-notification:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="509" operation="stop" operation_key="ceilometer-notification_stop_0" internal_operation_key="ceilometer-notification:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="513" operation="stop" operation_key="ceilometer-notification-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="134">
+    <action_set>
+      <pseudo_event id="513" operation="stop" operation_key="ceilometer-notification-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="524" operation="stopped" operation_key="heat-api-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="135">
+    <action_set>
+      <rsc_op id="515" operation="stop" operation_key="heat-api_stop_0" internal_operation_key="heat-api:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="heat-api" long-id="heat-api:0" class="systemd" type="openstack-heat-api"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="523" operation="stop" operation_key="heat-api-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="525" operation="stop" operation_key="heat-api-cfn_stop_0" internal_operation_key="heat-api-cfn:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="136">
+    <action_set>
+      <rsc_op id="517" operation="stop" operation_key="heat-api_stop_0" internal_operation_key="heat-api:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="heat-api" long-id="heat-api:1" class="systemd" type="openstack-heat-api"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="523" operation="stop" operation_key="heat-api-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="527" operation="stop" operation_key="heat-api-cfn_stop_0" internal_operation_key="heat-api-cfn:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="137">
+    <action_set>
+      <rsc_op id="519" operation="stop" operation_key="heat-api_stop_0" internal_operation_key="heat-api:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="heat-api" long-id="heat-api:2" class="systemd" type="openstack-heat-api"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="523" operation="stop" operation_key="heat-api-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="529" operation="stop" operation_key="heat-api-cfn_stop_0" internal_operation_key="heat-api-cfn:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="138" priority="1000000">
+    <action_set>
+      <pseudo_event id="524" operation="stopped" operation_key="heat-api-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="515" operation="stop" operation_key="heat-api_stop_0" internal_operation_key="heat-api:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="517" operation="stop" operation_key="heat-api_stop_0" internal_operation_key="heat-api:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="519" operation="stop" operation_key="heat-api_stop_0" internal_operation_key="heat-api:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="523" operation="stop" operation_key="heat-api-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="139">
+    <action_set>
+      <pseudo_event id="523" operation="stop" operation_key="heat-api-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="534" operation="stopped" operation_key="heat-api-cfn-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="140">
+    <action_set>
+      <rsc_op id="525" operation="stop" operation_key="heat-api-cfn_stop_0" internal_operation_key="heat-api-cfn:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="heat-api-cfn" long-id="heat-api-cfn:0" class="systemd" type="openstack-heat-api-cfn"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="533" operation="stop" operation_key="heat-api-cfn-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="535" operation="stop" operation_key="heat-api-cloudwatch_stop_0" internal_operation_key="heat-api-cloudwatch:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="141">
+    <action_set>
+      <rsc_op id="527" operation="stop" operation_key="heat-api-cfn_stop_0" internal_operation_key="heat-api-cfn:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="heat-api-cfn" long-id="heat-api-cfn:1" class="systemd" type="openstack-heat-api-cfn"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="533" operation="stop" operation_key="heat-api-cfn-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="537" operation="stop" operation_key="heat-api-cloudwatch_stop_0" internal_operation_key="heat-api-cloudwatch:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="142">
+    <action_set>
+      <rsc_op id="529" operation="stop" operation_key="heat-api-cfn_stop_0" internal_operation_key="heat-api-cfn:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="heat-api-cfn" long-id="heat-api-cfn:2" class="systemd" type="openstack-heat-api-cfn"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="533" operation="stop" operation_key="heat-api-cfn-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="539" operation="stop" operation_key="heat-api-cloudwatch_stop_0" internal_operation_key="heat-api-cloudwatch:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="143" priority="1000000">
+    <action_set>
+      <pseudo_event id="534" operation="stopped" operation_key="heat-api-cfn-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="525" operation="stop" operation_key="heat-api-cfn_stop_0" internal_operation_key="heat-api-cfn:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="527" operation="stop" operation_key="heat-api-cfn_stop_0" internal_operation_key="heat-api-cfn:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="529" operation="stop" operation_key="heat-api-cfn_stop_0" internal_operation_key="heat-api-cfn:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="533" operation="stop" operation_key="heat-api-cfn-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="144">
+    <action_set>
+      <pseudo_event id="533" operation="stop" operation_key="heat-api-cfn-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="544" operation="stopped" operation_key="heat-api-cloudwatch-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="145">
+    <action_set>
+      <rsc_op id="535" operation="stop" operation_key="heat-api-cloudwatch_stop_0" internal_operation_key="heat-api-cloudwatch:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
+        <primitive id="heat-api-cloudwatch" long-id="heat-api-cloudwatch:0" class="systemd" type="openstack-heat-api-cloudwatch"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="543" operation="stop" operation_key="heat-api-cloudwatch-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="146">
+    <action_set>
+      <rsc_op id="537" operation="stop" operation_key="heat-api-cloudwatch_stop_0" internal_operation_key="heat-api-cloudwatch:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="heat-api-cloudwatch" long-id="heat-api-cloudwatch:1" class="systemd" type="openstack-heat-api-cloudwatch"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="543" operation="stop" operation_key="heat-api-cloudwatch-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="147">
+    <action_set>
+      <rsc_op id="539" operation="stop" operation_key="heat-api-cloudwatch_stop_0" internal_operation_key="heat-api-cloudwatch:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
+        <primitive id="heat-api-cloudwatch" long-id="heat-api-cloudwatch:2" class="systemd" type="openstack-heat-api-cloudwatch"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="543" operation="stop" operation_key="heat-api-cloudwatch-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="148" priority="1000000">
+    <action_set>
+      <pseudo_event id="544" operation="stopped" operation_key="heat-api-cloudwatch-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="535" operation="stop" operation_key="heat-api-cloudwatch_stop_0" internal_operation_key="heat-api-cloudwatch:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="537" operation="stop" operation_key="heat-api-cloudwatch_stop_0" internal_operation_key="heat-api-cloudwatch:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="539" operation="stop" operation_key="heat-api-cloudwatch_stop_0" internal_operation_key="heat-api-cloudwatch:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="543" operation="stop" operation_key="heat-api-cloudwatch-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="149">
+    <action_set>
+      <pseudo_event id="543" operation="stop" operation_key="heat-api-cloudwatch-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="545" operation="stop" operation_key="heat-engine_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="150">
+    <action_set>
+      <rsc_op id="545" operation="stop" operation_key="heat-engine_stop_0" on_node="rhos6-node2" on_node_uuid="2">
+        <primitive id="heat-engine" class="systemd" type="openstack-heat-engine"/>
+        <attributes CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="151">
+    <action_set>
+      <pseudo_event id="133" operation="all_stopped" operation_key="all_stopped">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="228" operation="stop" operation_key="keystone_stop_0" internal_operation_key="keystone:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="229" operation="stop" operation_key="keystone_stop_0" internal_operation_key="keystone:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="230" operation="stop" operation_key="keystone_stop_0" internal_operation_key="keystone:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="245" operation="stop" operation_key="glance-registry_stop_0" internal_operation_key="glance-registry:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="247" operation="stop" operation_key="glance-registry_stop_0" internal_operation_key="glance-registry:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="249" operation="stop" operation_key="glance-registry_stop_0" internal_operation_key="glance-registry:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="255" operation="stop" operation_key="glance-api_stop_0" internal_operation_key="glance-api:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="257" operation="stop" operation_key="glance-api_stop_0" internal_operation_key="glance-api:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="259" operation="stop" operation_key="glance-api_stop_0" internal_operation_key="glance-api:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="265" operation="stop" operation_key="cinder-api_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="267" operation="stop" operation_key="cinder-scheduler_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="269" operation="stop" operation_key="cinder-volume_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="281" operation="stop" operation_key="swift-account_stop_0" internal_operation_key="swift-account:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="283" operation="stop" operation_key="swift-account_stop_0" internal_operation_key="swift-account:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="285" operation="stop" operation_key="swift-account_stop_0" internal_operation_key="swift-account:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="291" operation="stop" operation_key="swift-container_stop_0" internal_operation_key="swift-container:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="293" operation="stop" operation_key="swift-container_stop_0" internal_operation_key="swift-container:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="295" operation="stop" operation_key="swift-container_stop_0" internal_operation_key="swift-container:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="301" operation="stop" operation_key="swift-object_stop_0" internal_operation_key="swift-object:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="303" operation="stop" operation_key="swift-object_stop_0" internal_operation_key="swift-object:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="305" operation="stop" operation_key="swift-object_stop_0" internal_operation_key="swift-object:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="311" operation="stop" operation_key="swift-proxy_stop_0" internal_operation_key="swift-proxy:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="313" operation="stop" operation_key="swift-proxy_stop_0" internal_operation_key="swift-proxy:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="315" operation="stop" operation_key="swift-proxy_stop_0" internal_operation_key="swift-proxy:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="321" operation="stop" operation_key="swift-object-expirer_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="323" operation="stop" operation_key="neutron-server_stop_0" internal_operation_key="neutron-server:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="325" operation="stop" operation_key="neutron-server_stop_0" internal_operation_key="neutron-server:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="327" operation="stop" operation_key="neutron-server_stop_0" internal_operation_key="neutron-server:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="333" operation="stop" operation_key="neutron-scale:0_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="335" operation="stop" operation_key="neutron-scale:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="337" operation="stop" operation_key="neutron-scale:2_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="343" operation="stop" operation_key="neutron-ovs-cleanup_stop_0" internal_operation_key="neutron-ovs-cleanup:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="345" operation="stop" operation_key="neutron-ovs-cleanup_stop_0" internal_operation_key="neutron-ovs-cleanup:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="347" operation="stop" operation_key="neutron-ovs-cleanup_stop_0" internal_operation_key="neutron-ovs-cleanup:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="353" operation="stop" operation_key="neutron-netns-cleanup_stop_0" internal_operation_key="neutron-netns-cleanup:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="355" operation="stop" operation_key="neutron-netns-cleanup_stop_0" internal_operation_key="neutron-netns-cleanup:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="357" operation="stop" operation_key="neutron-netns-cleanup_stop_0" internal_operation_key="neutron-netns-cleanup:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="363" operation="stop" operation_key="neutron-openvswitch-agent_stop_0" internal_operation_key="neutron-openvswitch-agent:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="365" operation="stop" operation_key="neutron-openvswitch-agent_stop_0" internal_operation_key="neutron-openvswitch-agent:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="367" operation="stop" operation_key="neutron-openvswitch-agent_stop_0" internal_operation_key="neutron-openvswitch-agent:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="373" operation="stop" operation_key="neutron-dhcp-agent_stop_0" internal_operation_key="neutron-dhcp-agent:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="375" operation="stop" operation_key="neutron-dhcp-agent_stop_0" internal_operation_key="neutron-dhcp-agent:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="377" operation="stop" operation_key="neutron-dhcp-agent_stop_0" internal_operation_key="neutron-dhcp-agent:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="383" operation="stop" operation_key="neutron-l3-agent_stop_0" internal_operation_key="neutron-l3-agent:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="385" operation="stop" operation_key="neutron-l3-agent_stop_0" internal_operation_key="neutron-l3-agent:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="387" operation="stop" operation_key="neutron-l3-agent_stop_0" internal_operation_key="neutron-l3-agent:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="393" operation="stop" operation_key="neutron-metadata-agent_stop_0" internal_operation_key="neutron-metadata-agent:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="395" operation="stop" operation_key="neutron-metadata-agent_stop_0" internal_operation_key="neutron-metadata-agent:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="397" operation="stop" operation_key="neutron-metadata-agent_stop_0" internal_operation_key="neutron-metadata-agent:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="403" operation="stop" operation_key="nova-consoleauth_stop_0" internal_operation_key="nova-consoleauth:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="405" operation="stop" operation_key="nova-consoleauth_stop_0" internal_operation_key="nova-consoleauth:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="407" operation="stop" operation_key="nova-consoleauth_stop_0" internal_operation_key="nova-consoleauth:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="413" operation="stop" operation_key="nova-novncproxy_stop_0" internal_operation_key="nova-novncproxy:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="415" operation="stop" operation_key="nova-novncproxy_stop_0" internal_operation_key="nova-novncproxy:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="417" operation="stop" operation_key="nova-novncproxy_stop_0" internal_operation_key="nova-novncproxy:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="423" operation="stop" operation_key="nova-api_stop_0" internal_operation_key="nova-api:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="425" operation="stop" operation_key="nova-api_stop_0" internal_operation_key="nova-api:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="427" operation="stop" operation_key="nova-api_stop_0" internal_operation_key="nova-api:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="433" operation="stop" operation_key="nova-scheduler_stop_0" internal_operation_key="nova-scheduler:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="435" operation="stop" operation_key="nova-scheduler_stop_0" internal_operation_key="nova-scheduler:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="437" operation="stop" operation_key="nova-scheduler_stop_0" internal_operation_key="nova-scheduler:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="443" operation="stop" operation_key="nova-conductor_stop_0" internal_operation_key="nova-conductor:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="445" operation="stop" operation_key="nova-conductor_stop_0" internal_operation_key="nova-conductor:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="447" operation="stop" operation_key="nova-conductor_stop_0" internal_operation_key="nova-conductor:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="453" operation="stop" operation_key="ceilometer-central_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="455" operation="stop" operation_key="ceilometer-collector_stop_0" internal_operation_key="ceilometer-collector:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="457" operation="stop" operation_key="ceilometer-collector_stop_0" internal_operation_key="ceilometer-collector:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="459" operation="stop" operation_key="ceilometer-collector_stop_0" internal_operation_key="ceilometer-collector:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="465" operation="stop" operation_key="ceilometer-api_stop_0" internal_operation_key="ceilometer-api:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="467" operation="stop" operation_key="ceilometer-api_stop_0" internal_operation_key="ceilometer-api:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="469" operation="stop" operation_key="ceilometer-api_stop_0" internal_operation_key="ceilometer-api:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="475" operation="stop" operation_key="ceilometer-delay_stop_0" internal_operation_key="ceilometer-delay:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="477" operation="stop" operation_key="ceilometer-delay_stop_0" internal_operation_key="ceilometer-delay:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="479" operation="stop" operation_key="ceilometer-delay_stop_0" internal_operation_key="ceilometer-delay:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="485" operation="stop" operation_key="ceilometer-alarm-evaluator_stop_0" internal_operation_key="ceilometer-alarm-evaluator:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="487" operation="stop" operation_key="ceilometer-alarm-evaluator_stop_0" internal_operation_key="ceilometer-alarm-evaluator:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="489" operation="stop" operation_key="ceilometer-alarm-evaluator_stop_0" internal_operation_key="ceilometer-alarm-evaluator:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="495" operation="stop" operation_key="ceilometer-alarm-notifier_stop_0" internal_operation_key="ceilometer-alarm-notifier:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="497" operation="stop" operation_key="ceilometer-alarm-notifier_stop_0" internal_operation_key="ceilometer-alarm-notifier:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="499" operation="stop" operation_key="ceilometer-alarm-notifier_stop_0" internal_operation_key="ceilometer-alarm-notifier:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="505" operation="stop" operation_key="ceilometer-notification_stop_0" internal_operation_key="ceilometer-notification:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="507" operation="stop" operation_key="ceilometer-notification_stop_0" internal_operation_key="ceilometer-notification:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="509" operation="stop" operation_key="ceilometer-notification_stop_0" internal_operation_key="ceilometer-notification:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="515" operation="stop" operation_key="heat-api_stop_0" internal_operation_key="heat-api:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="517" operation="stop" operation_key="heat-api_stop_0" internal_operation_key="heat-api:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="519" operation="stop" operation_key="heat-api_stop_0" internal_operation_key="heat-api:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="525" operation="stop" operation_key="heat-api-cfn_stop_0" internal_operation_key="heat-api-cfn:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="527" operation="stop" operation_key="heat-api-cfn_stop_0" internal_operation_key="heat-api-cfn:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="529" operation="stop" operation_key="heat-api-cfn_stop_0" internal_operation_key="heat-api-cfn:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="535" operation="stop" operation_key="heat-api-cloudwatch_stop_0" internal_operation_key="heat-api-cloudwatch:0_stop_0" on_node="rhos6-node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="537" operation="stop" operation_key="heat-api-cloudwatch_stop_0" internal_operation_key="heat-api-cloudwatch:1_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="539" operation="stop" operation_key="heat-api-cloudwatch_stop_0" internal_operation_key="heat-api-cloudwatch:2_stop_0" on_node="rhos6-node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="545" operation="stop" operation_key="heat-engine_stop_0" on_node="rhos6-node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>

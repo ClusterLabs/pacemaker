@@ -8,7 +8,7 @@
 =======
 [source,XML]
 -------
-<cib admin_epoch="0" epoch="0" num_updates="0" have-quorum="false">
+<cib crm_feature_set="3.0.7" validate-with="pacemaker-1.2" admin_epoch="1" epoch="0" num_updates="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -22,24 +22,19 @@
 
 === Simple ===
 
-.Simple Configuration - 2 nodes, some cluster options and a resource
+.A simple configuration with two nodes, some cluster options and a resource
 =======
 [source,XML]
 -------
-<cib admin_epoch="0" epoch="1" num_updates="0" have-quorum="false"
-    validate-with="pacemaker-1.0">
+<cib crm_feature_set="3.0.7" validate-with="pacemaker-1.2" admin_epoch="1" epoch="0" num_updates="0">
   <configuration>
     <crm_config>
-      <nvpair id="option-1" name="symmetric-cluster" value="true"/>
-      <nvpair id="option-2" name="no-quorum-policy" value="stop"/>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="option-1" name="symmetric-cluster" value="true"/>
+        <nvpair id="option-2" name="no-quorum-policy" value="stop"/>
+        <nvpair id="option-3" name="stonith-enabled" value="0"/>
+      </cluster_property_set>
     </crm_config>
-    <op_defaults>
-      <nvpair id="op-default-1" name="timeout" value="30s"/>
-    </op_defaults>
-    <rsc_defaults>
-      <nvpair id="rsc-default-1" name="resource-stickiness" value="100"/>
-      <nvpair id="rsc-default-2" name="migration-threshold" value="10"/>
-    </rsc_defaults>
     <nodes>
       <node id="xxx" uname="c001n01" type="normal"/>
       <node id="yyy" uname="c001n02" type="normal"/>
@@ -49,46 +44,50 @@
         <operations>
           <op id="myAddr-monitor" name="monitor" interval="300s"/>
         </operations>
-        <instance_attributes>
-          <nvpair name="ip" value="10.0.200.30"/>
+        <instance_attributes id="myAddr-params">
+          <nvpair id="myAddr-ip" name="ip" value="192.0.2.10"/>
         </instance_attributes>
       </primitive>
     </resources>
     <constraints>
       <rsc_location id="myAddr-prefer" rsc="myAddr" node="c001n01" score="INFINITY"/>
     </constraints>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-options">
+        <nvpair id="rsc-default-1" name="resource-stickiness" value="100"/>
+        <nvpair id="rsc-default-2" name="migration-threshold" value="10"/>
+      </meta_attributes>
+    </rsc_defaults>
+    <op_defaults>
+      <meta_attributes id="op_defaults-options">
+        <nvpair id="op-default-1" name="timeout" value="30s"/>
+      </meta_attributes>
+    </op_defaults>
   </configuration>
   <status/>
 </cib>
 -------
 =======
 
-In this example, we have one resource (an IP address) that we check
+In the above example, we have one resource (an IP address) that we check
 every five minutes and will run on host +c001n01+ until either the
 resource fails 10 times or the host shuts down.
 
-
 === Advanced Configuration ===
 
-.Advanced configuration - groups and clones with stonith
+.An advanced configuration with groups, clones and STONITH
 =======
 [source,XML]
 -------
-<cib admin_epoch="0" epoch="1" num_updates="0" have-quorum="false"
-    validate-with="pacemaker-1.0">
+<cib crm_feature_set="3.0.7" validate-with="pacemaker-1.2" admin_epoch="1" epoch="0" num_updates="0">
   <configuration>
     <crm_config>
-      <nvpair id="option-1" name="symmetric-cluster" value="true"/>
-      <nvpair id="option-2" name="no-quorum-policy" value="stop"/>
-      <nvpair id="option-3" name="stonith-enabled" value="true"/>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="option-1" name="symmetric-cluster" value="true"/>
+        <nvpair id="option-2" name="no-quorum-policy" value="stop"/>
+        <nvpair id="option-3" name="stonith-enabled" value="true"/>
+      </cluster_property_set>
     </crm_config>
-    <op_defaults>
-      <nvpair id="op-default-1" name="timeout" value="30s"/>
-    </op_defaults>
-    <rsc_defaults>
-      <nvpair id="rsc-default-1" name="resource-stickiness" value="100"/>
-      <nvpair id="rsc-default-2" name="migration-threshold" value="10"/>
-    </rsc_defaults>
     <nodes>
       <node id="xxx" uname="c001n01" type="normal"/>
       <node id="yyy" uname="c001n02" type="normal"/>
@@ -99,8 +98,8 @@ resource fails 10 times or the host shuts down.
         <operations>
           <op id="myAddr-monitor" name="monitor" interval="300s"/>
         </operations>
-        <instance_attributes>
-          <nvpair name="ip" value="10.0.200.30"/>
+        <instance_attributes id="myAddr-attrs">
+          <nvpair id="myAddr-attr-1" name="ip" value="192.0.2.10"/>
         </instance_attributes>
       </primitive>
       <group id="myGroup">
@@ -135,6 +134,17 @@ resource fails 10 times or the host shuts down.
       <rsc_colocation id="group-with-ip" rsc="myGroup" with-rsc="myAddr"
         score="INFINITY"/>
     </constraints>
+    <op_defaults>
+      <meta_attributes id="op_defaults-options">
+        <nvpair id="op-default-1" name="timeout" value="30s"/>
+      </meta_attributes>
+    </op_defaults>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-options">
+        <nvpair id="rsc-default-1" name="resource-stickiness" value="100"/>
+        <nvpair id="rsc-default-2" name="migration-threshold" value="10"/>
+      </meta_attributes>
+    </rsc_defaults>
   </configuration>
   <status/>
 </cib>

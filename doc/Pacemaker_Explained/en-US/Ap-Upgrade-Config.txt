@@ -2,16 +2,8 @@
 
 == Upgrading the Configuration from 0.6 ==
 
-=== Preparation ===
 indexterm:[Upgrading the Configuration]
 indexterm:[Configuration,Upgrading]
-
-indexterm:[Download,DTD]
-indexterm:[DTD,Download]
-
-Download the latest
-http://hg.clusterlabs.org/pacemaker/stable-1.0/file-raw/tip/xml/crm.dtd[DTD]
-and ensure your configuration validates.
 
 === Perform the upgrade ===
 
@@ -42,20 +34,17 @@ internally).
 
 . Create a shadow copy to work with
 +
-[source,C]
 -----
 # crm_shadow --create upgrade06
 -----
 . Verify the configuration is valid indexterm:[Configuration,Verify]indexterm:[Verify,Configuration]
 +
-[source,C]
 -----
 # crm_verify --live-check
 -----
 . Fix any errors or warnings
 . Perform the upgrade:
 +
-[source,C]
 -----
 # cibadmin --upgrade
 -----
@@ -70,14 +59,12 @@ If the result of the transformation is invalid, you may see a number of errors f
 +        
 . Check the changes
 +
-[source,C]
 -----
 # crm_shadow --diff
 -----
 +
 If at this point there is anything about the upgrade that you wish to fine-tune (for example, to change some of the automatic IDs) now is the time to do so. Since the shadow configuration is not in use by the cluster, it is safe to edit the file manually:
 +
-[source,C]
 -----
 # crm_shadow --edit
 -----
@@ -88,7 +75,6 @@ This will open the configuration in your favorite editor (whichever is specified
 +
 Test what the cluster will do when you upload the new configuration
 +
-[source,C]
 ------
 # crm_simulate --live-check --save-dotfile upgrade06.dot -S
 # graphviz upgrade06.dot
@@ -103,7 +89,6 @@ the output of `crm_simulate`
 +
 . Upload the changes
 +
-[source,C]
 -----
 # crm_shadow --commit upgrade06 --force
 -----
@@ -121,7 +106,6 @@ https://github.com/ClusterLabs/pacemaker/tree/master/xml/upgrade06.xsl[Git]
           
 . Convert the XML blob: indexterm:[XML,Convert]
 +
-[source,C]
 -----
 # xsltproc /path/to/upgrade06.xsl config06.xml > config10.xml
 -----
@@ -129,8 +113,9 @@ https://github.com/ClusterLabs/pacemaker/tree/master/xml/upgrade06.xsl[Git]
 . Locate the 'pacemaker.rng' script.
 . Check the XML validity: indexterm:[Validate Configuration]indexterm:[Configuration,Validate XML]
 +
-[source,C]
+----
 # xmllint --relaxng /path/to/pacemaker.rng config10.xml
+----
 
 The advantage of this method is that it can be performed without the
 cluster running and any validation errors should be more informative

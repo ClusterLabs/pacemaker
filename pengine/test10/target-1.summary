@@ -3,8 +3,8 @@ Current cluster status:
 Online: [ c001n01 c001n02 c001n03 c001n08 ]
 
  DcIPaddr	(ocf::heartbeat:IPaddr):	Started c001n02
- rsc_c001n08	(ocf::heartbeat:IPaddr):	Started c001n08
- rsc_c001n02	(ocf::heartbeat:IPaddr):	Started c001n02
+ rsc_c001n08	(ocf::heartbeat:IPaddr):	(target-role:Stopped) Started c001n08 
+ rsc_c001n02	(ocf::heartbeat:IPaddr):	(target-role:Slave) Started c001n02 
  Master/Slave Set: promoteme [rsc_c001n03]
      Slaves: [ c001n03 ]
  rsc_c001n01	(ocf::heartbeat:IPaddr):	Started c001n01
@@ -33,8 +33,8 @@ Revised cluster status:
 Online: [ c001n01 c001n02 c001n03 c001n08 ]
 
  DcIPaddr	(ocf::heartbeat:IPaddr):	Started c001n02
- rsc_c001n08	(ocf::heartbeat:IPaddr):	Stopped 
- rsc_c001n02	(ocf::heartbeat:IPaddr):	Started c001n02
+ rsc_c001n08	(ocf::heartbeat:IPaddr):	(target-role:Stopped) Stopped 
+ rsc_c001n02	(ocf::heartbeat:IPaddr):	(target-role:Slave) Started c001n02 
  Master/Slave Set: promoteme [rsc_c001n03]
      Slaves: [ c001n03 ]
  rsc_c001n01	(ocf::heartbeat:IPaddr):	Started c001n01

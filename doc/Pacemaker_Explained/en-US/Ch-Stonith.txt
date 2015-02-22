@@ -1,7 +1,7 @@
 = Configure STONITH =
 
 ////
-We prefer [[ch-stonith]], but older versions of asciidoc dont deal well
+We prefer [[ch-stonith]], but older versions of asciidoc don't deal well
 with that construct for chapter headings
 ////
 anchor:ch-stonith[Chapter 13, STONITH]
@@ -30,7 +30,7 @@ It is crucial that the STONITH device can allow the cluster to
 differentiate between a node failure and a network one.
 
 The biggest mistake people make in choosing a STONITH device is to
-use remote power switch (such as many on-board IMPI controllers) that
+use a remote power switch (such as many on-board IPMI controllers) that
 shares power with the node it controls. In such cases, the cluster
 cannot be sure if the node is really offline, or active and suffering
 from a network fault.
@@ -70,14 +70,14 @@ To prevent a specific node from using a fencing device, location constraints wil
 [IMPORTANT]
 ===========
 
-Currently there is a limitation that fencing resources may only have a
+Currently there is a limitation that fencing resources may only have
 one set of meta-attributes and one set of instance-attributes.  This
 can be revisited if it becomes a significant limitation for people.
 
 ===========
 
-.Properties of Fencing Devices
-[width="95%",cols="1m,1m,1m,5<",options="header",align="center"]
+.Properties of Fencing Resources
+[width="95%",cols="5m,2,3,10<a",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -88,166 +88,206 @@ can be revisited if it becomes a significant limitation for people.
 |stonith-timeout
 |time
 |60s
-|How long to wait for the STONITH action to complete per a stonith device.
- Overrides the stonith-timeout cluster property
+|How long to wait for a STONITH action using this device to complete.
+ Overrides the +stonith-timeout+ cluster property.
  indexterm:[stonith-timeout,Fencing]
  indexterm:[Fencing,Property,stonith-timeout]
 
 |priority
 |integer
 |0
-|The priority of the stonith resource. Devices are tried in order of highest priority to lowest.
+|The priority of the STONITH resource. Devices are tried in order of highest priority to lowest.
  indexterm:[priority,Fencing]
  indexterm:[Fencing,Property,priority]
-
-|pcmk_host_argument
-|string
-|port
-|Advanced use only: An alternate parameter to supply instead of 'port'
- Some devices do not support the standard 'port' parameter or may provide additional ones. Use this to specify an alternate, device-specific, parameter that should indicate the machine to be fenced. A value of 'none' can be used to tell the cluster not to supply any additional parameters.
- indexterm:[pcmk_host_argument,Fencing]
- indexterm:[Fencing,Property,pcmk_host_argument]
 
 |pcmk_host_map
 |string
 |
 |A mapping of host names to ports numbers for devices that do not support host names.
- Eg. node1:1;node2:2,3 would tell the cluster to use port 1 for node1 and ports 2 and 3 for node2
+ Example: +node1:1;node2:2,3+ tells the cluster to use port 1 for
+ *node1* and ports 2 and 3 for *node2*.
  indexterm:[pcmk_host_map,Fencing]
  indexterm:[Fencing,Property,pcmk_host_map]
 
 |pcmk_host_list
 |string
 |
-|A list of machines controlled by this device (Optional unless pcmk_host_check=static-list).
+|A list of machines controlled by this device (optional unless
++pcmk_host_check+ is +static-list+).
  indexterm:[pcmk_host_list,Fencing]
  indexterm:[Fencing,Property,pcmk_host_list]
 
 |pcmk_host_check
 |string
 |dynamic-list
-|How to determin which machines are controlled by the device.
- Allowed values: dynamic-list (query the device), static-list (check the pcmk_host_list attribute), none (assume every device can fence every machine)
- indexterm:[pcmk_host_check,Fencing]
- indexterm:[Fencing,Property,pcmk_host_check]
+|How to determine which machines are controlled by the device.
+ Allowed values:
+
+* +dynamic-list:+ query the device
+* +static-list:+ check the +pcmk_host_list+ attribute
+* +none:+ assume every device can fence every machine
+
+indexterm:[pcmk_host_check,Fencing]
+indexterm:[Fencing,Property,pcmk_host_check]
+
+|pcmk_host_argument
+|string
+|port
+|'Advanced use only.' Which parameter should be supplied to the resource agent
+to identify the node to be fenced. Some devices do not support the standard
++port+ parameter or may provide additional ones. Use this to specify an
+alternate, device-specific parameter. A value of +none+ tells the
+cluster not to supply any additional parameters.
+ indexterm:[pcmk_host_argument,Fencing]
+ indexterm:[Fencing,Property,pcmk_host_argument]
 
 |pcmk_reboot_action
 |string
 |reboot
-|Advanced use only: An alternate command to run instead of 'reboot'
- Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the 'reboot' action.
+|'Advanced use only.' The command to send to the resource agent in order to
+reboot a node. Some devices do not support the standard commands or may provide
+additional ones. Use this to specify an alternate, device-specific command.
  indexterm:[pcmk_reboot_action,Fencing]
  indexterm:[Fencing,Property,pcmk_reboot_action]
 
 |pcmk_reboot_timeout
 |time
 |60s
-|Advanced use only: Specify an alternate timeout to use for reboot actions instead of stonith-timeout
- Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'reboot' actions.
+|'Advanced use only.' Specify an alternate timeout to use for `reboot` actions
+instead of the value of +stonith-timeout+. Some devices need much more or less
+time to complete than normal. Use this to specify an alternate, device-specific
+timeout.
  indexterm:[pcmk_reboot_timeout,Fencing]
  indexterm:[Fencing,Property,pcmk_reboot_timeout]
 
 |pcmk_reboot_retries
 |integer
 |2
-|Advanced use only: The maximum number of times to retry the 'reboot' command within the timeout period
- Some devices do not support multiple connections. Operations may 'fail' if the device is busy with another task so Pacemaker will automatically retry the operation, if there is time remaining. Use this option to alter the number of times Pacemaker retries 'reboot' actions before giving up.
+|'Advanced use only.' The maximum number of times to retry the `reboot` command
+within the timeout period. Some devices do not support multiple connections, and
+operations may fail if the device is busy with another task, so Pacemaker will
+automatically retry the operation, if there is time remaining. Use this option
+to alter the number of times Pacemaker retries before giving up.
  indexterm:[pcmk_reboot_retries,Fencing]
  indexterm:[Fencing,Property,pcmk_reboot_retries]
 
 |pcmk_off_action
 |string
 |off
-|Advanced use only: An alternate command to run instead of 'off'
- Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the 'off' action.
+|'Advanced use only.' The command to send to the resource agent in order to
+shut down a node. Some devices do not support the standard commands or may provide
+additional ones. Use this to specify an alternate, device-specific command.
  indexterm:[pcmk_off_action,Fencing]
  indexterm:[Fencing,Property,pcmk_off_action]
 
 |pcmk_off_timeout
 |time
 |60s
-|Advanced use only: Specify an alternate timeout to use for off actions instead of stonith-timeout
- Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'off' actions.
+|'Advanced use only.' Specify an alternate timeout to use for `off` actions
+instead of the value of +stonith-timeout+. Some devices need much more or less
+time to complete than normal. Use this to specify an alternate, device-specific
+timeout.
  indexterm:[pcmk_off_timeout,Fencing]
  indexterm:[Fencing,Property,pcmk_off_timeout]
 
 |pcmk_off_retries
 |integer
 |2
-|Advanced use only: The maximum number of times to retry the 'off' command within the timeout period
- Some devices do not support multiple connections. Operations may 'fail' if the device is busy with another task so Pacemaker will automatically retry the operation, if there is time remaining. Use this option to alter the number of times Pacemaker retries 'off' actions before giving up.
+|'Advanced use only.' The maximum number of times to retry the `off` command
+within the timeout period. Some devices do not support multiple connections, and
+operations may fail if the device is busy with another task, so Pacemaker will
+automatically retry the operation, if there is time remaining. Use this option
+to alter the number of times Pacemaker retries before giving up.
  indexterm:[pcmk_off_retries,Fencing]
  indexterm:[Fencing,Property,pcmk_off_retries]
 
 |pcmk_list_action
 |string
 |list
-|Advanced use only: An alternate command to run instead of 'list'
- Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the 'list' action.
+|'Advanced use only.' The command to send to the resource agent in order to
+list nodes. Some devices do not support the standard commands or may provide
+additional ones. Use this to specify an alternate, device-specific command.
  indexterm:[pcmk_list_action,Fencing]
  indexterm:[Fencing,Property,pcmk_list_action]
 
 |pcmk_list_timeout
 |time
 |60s
-|Advanced use only: Specify an alternate timeout to use for list actions instead of stonith-timeout
- Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'list' actions.
+|'Advanced use only.' Specify an alternate timeout to use for `list` actions
+instead of the value of +stonith-timeout+. Some devices need much more or less
+time to complete than normal. Use this to specify an alternate, device-specific
+timeout.
  indexterm:[pcmk_list_timeout,Fencing]
  indexterm:[Fencing,Property,pcmk_list_timeout]
 
 |pcmk_list_retries
 |integer
 |2
-|Advanced use only: The maximum number of times to retry the 'list' command within the timeout period
- Some devices do not support multiple connections. Operations may 'fail' if the device is busy with another task so Pacemaker will automatically retry the operation, if there is time remaining. Use this option to alter the number of times Pacemaker retries 'list' actions before giving up.
+|'Advanced use only.' The maximum number of times to retry the `list` command
+within the timeout period. Some devices do not support multiple connections, and
+operations may fail if the device is busy with another task, so Pacemaker will
+automatically retry the operation, if there is time remaining. Use this option
+to alter the number of times Pacemaker retries before giving up.
  indexterm:[pcmk_list_retries,Fencing]
  indexterm:[Fencing,Property,pcmk_list_retries]
 
 |pcmk_monitor_action
 |string
 |monitor
-|Advanced use only: An alternate command to run instead of 'monitor'
- Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the 'monitor' action.
+|'Advanced use only.' The command to send to the resource agent in order to
+report extended status. Some devices do not support the standard commands or may provide
+additional ones. Use this to specify an alternate, device-specific command.
  indexterm:[pcmk_monitor_action,Fencing]
  indexterm:[Fencing,Property,pcmk_monitor_action]
 
 |pcmk_monitor_timeout
 |time
 |60s
-|Advanced use only: Specify an alternate timeout to use for monitor actions instead of stonith-timeout
- Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'monitor' actions.
+|'Advanced use only.' Specify an alternate timeout to use for `monitor` actions
+instead of the value of +stonith-timeout+. Some devices need much more or less
+time to complete than normal. Use this to specify an alternate, device-specific
+timeout.
  indexterm:[pcmk_monitor_timeout,Fencing]
  indexterm:[Fencing,Property,pcmk_monitor_timeout]
 
 |pcmk_monitor_retries
 |integer
 |2
-|Advanced use only: The maximum number of times to retry the 'monitor' command within the timeout period
- Some devices do not support multiple connections. Operations may 'fail' if the device is busy with another task so Pacemaker will automatically retry the operation, if there is time remaining. Use this option to alter the number of times Pacemaker retries 'monitor' actions before giving up.
+|'Advanced use only.' The maximum number of times to retry the `monitor` command
+within the timeout period. Some devices do not support multiple connections, and
+operations may fail if the device is busy with another task, so Pacemaker will
+automatically retry the operation, if there is time remaining. Use this option
+to alter the number of times Pacemaker retries before giving up.
  indexterm:[pcmk_monitor_retries,Fencing]
  indexterm:[Fencing,Property,pcmk_monitor_retries]
 
 |pcmk_status_action
 |string
 |status
-|Advanced use only: An alternate command to run instead of 'status'
- Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the 'status' action.
+|'Advanced use only.' The command to send to the resource agent in order to
+report status. Some devices do not support the standard commands or may provide
+additional ones. Use this to specify an alternate, device-specific command.
  indexterm:[pcmk_status_action,Fencing]
  indexterm:[Fencing,Property,pcmk_status_action]
 
 |pcmk_status_timeout
 |time
 |60s
-|Advanced use only: Specify an alternate timeout to use for status actions instead of stonith-timeout
- Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'status' actions.
+|'Advanced use only.' Specify an alternate timeout to use for `status` actions
+instead of the value of +stonith-timeout+. Some devices need much more or less
+time to complete than normal. Use this to specify an alternate, device-specific
+timeout.
  indexterm:[pcmk_status_timeout,Fencing]
  indexterm:[Fencing,Property,pcmk_status_timeout]
 
 |pcmk_status_retries
 |integer
 |2
-|Advanced use only: The maximum number of times to retry the 'status' command within the timeout period
- Some devices do not support multiple connections. Operations may 'fail' if the device is busy with another task so Pacemaker will automatically retry the operation, if there is time remaining. Use this option to alter the number of times Pacemaker retries 'status' actions before giving up.
+|'Advanced use only.' The maximum number of times to retry the `status` command
+within the timeout period. Some devices do not support multiple connections, and
+operations may fail if the device is busy with another task, so Pacemaker will
+automatically retry the operation, if there is time remaining. Use this option
+to alter the number of times Pacemaker retries before giving up.
  indexterm:[pcmk_status_retries,Fencing]
  indexterm:[Fencing,Property,pcmk_status_retries]
 
@@ -296,116 +336,141 @@ Scratch+ for those details.
 
 === Example ===
 
-Assuming we have an chassis containing four nodes and an IPMI device
-active on 10.0.0.1, then we would chose the fence_ipmilan driver in step
-2 and obtain the following list of parameters
+Assume we have an chassis containing four nodes and an IPMI device
+active on 192.0.2.1. We would choose the `fence_ipmilan` driver,
+and obtain the following list of parameters:
 
 .Obtaining a list of STONITH Parameters
-
-[source,C]
+====
 ----
 # stonith_admin --metadata -a fence_ipmilan
 ----
 
 [source,XML]
 ----
-<?xml version="1.0" ?>
 <resource-agent name="fence_ipmilan" shortdesc="Fence agent for IPMI over LAN">
-<longdesc>
-fence_ipmilan is an I/O Fencing agent which can be used with machines controlled by IPMI. This agent calls support software using ipmitool (http://ipmitool.sf.net/).
-
-To use fence_ipmilan with HP iLO 3 you have to enable lanplus option (lanplus / -P) and increase wait after operation to 4 seconds (power_wait=4 / -T 4)</longdesc>
-<parameters>
-        <parameter name="auth" unique="1">
-                <getopt mixed="-A" />
-                <content type="string" />
-                <shortdesc lang="en">IPMI Lan Auth type (md5, password, or none)</shortdesc>
-        </parameter>
-        <parameter name="ipaddr" unique="1">
-                <getopt mixed="-a" />
-                <content type="string" />
-                <shortdesc lang="en">IPMI Lan IP to talk to</shortdesc>
-        </parameter>
-        <parameter name="passwd" unique="1">
-                <getopt mixed="-p" />
-                <content type="string" />
-                <shortdesc lang="en">Password (if required) to control power on IPMI device</shortdesc>
-        </parameter>
-        <parameter name="passwd_script" unique="1">
-                <getopt mixed="-S" />
-                <content type="string" />
-                <shortdesc lang="en">Script to retrieve password (if required)</shortdesc>
-        </parameter>
-        <parameter name="lanplus" unique="1">
-                <getopt mixed="-P" />
-                <content type="boolean" />
-                <shortdesc lang="en">Use Lanplus</shortdesc>
-        </parameter>
-        <parameter name="login" unique="1">
-                <getopt mixed="-l" />
-                <content type="string" />
-                <shortdesc lang="en">Username/Login (if required) to control power on IPMI device</shortdesc>
-        </parameter>
-        <parameter name="action" unique="1">
-                <getopt mixed="-o" />
-                <content type="string" default="reboot"/>
-                <shortdesc lang="en">Operation to perform. Valid operations: on, off, reboot, status, list, diag, monitor or metadata</shortdesc>
-        </parameter>
-        <parameter name="timeout" unique="1">
-                <getopt mixed="-t" />
-                <content type="string" />
-                <shortdesc lang="en">Timeout (sec) for IPMI operation</shortdesc>
-        </parameter>
-        <parameter name="cipher" unique="1">
-                <getopt mixed="-C" />
-                <content type="string" />
-                <shortdesc lang="en">Ciphersuite to use (same as ipmitool -C parameter)</shortdesc>
-        </parameter>
-        <parameter name="method" unique="1">
-                <getopt mixed="-M" />
-                <content type="string" default="onoff"/>
-                <shortdesc lang="en">Method to fence (onoff or cycle)</shortdesc>
-        </parameter>
-        <parameter name="power_wait" unique="1">
-                <getopt mixed="-T" />
-                <content type="string" default="2"/>
-                <shortdesc lang="en">Wait X seconds after on/off operation</shortdesc>
-        </parameter>
-        <parameter name="delay" unique="1">
-                <getopt mixed="-f" />
-                <content type="string" />
-                <shortdesc lang="en">Wait X seconds before fencing is started</shortdesc>
-        </parameter>
-        <parameter name="verbose" unique="1">
-                <getopt mixed="-v" />
-                <content type="boolean" />
-                <shortdesc lang="en">Verbose mode</shortdesc>
-        </parameter>
-</parameters>
-<actions>
-        <action name="on" />
-        <action name="off" />
-        <action name="reboot" />
-        <action name="status" />
-        <action name="diag" />
-        <action name="list" />
-        <action name="monitor" />
-        <action name="metadata" />
-</actions>
+  <symlink name="fence_ilo3" shortdesc="Fence agent for HP iLO3"/>
+  <symlink name="fence_ilo4" shortdesc="Fence agent for HP iLO4"/>
+  <symlink name="fence_idrac" shortdesc="Fence agent for Dell iDRAC"/>
+  <symlink name="fence_imm" shortdesc="Fence agent for IBM Integrated Management Module"/>
+  <longdesc>
+  </longdesc>
+  <vendor-url>
+  </vendor-url>
+  <parameters>
+    <parameter name="auth" unique="0" required="0">
+      <getopt mixed="-A"/>
+      <content type="string"/>
+      <shortdesc lang="en">
+      </shortdesc>
+    </parameter>
+    <parameter name="ipaddr" unique="0" required="1">
+      <getopt mixed="-a"/>
+      <content type="string"/>
+      <shortdesc lang="en">
+      </shortdesc>
+    </parameter>
+    <parameter name="passwd" unique="0" required="0">
+      <getopt mixed="-p"/>
+      <content type="string"/>
+      <shortdesc lang="en">
+      </shortdesc>
+    </parameter>
+    <parameter name="passwd_script" unique="0" required="0">
+      <getopt mixed="-S"/>
+      <content type="string"/>
+      <shortdesc lang="en">
+      </shortdesc>
+    </parameter>
+    <parameter name="lanplus" unique="0" required="0">
+      <getopt mixed="-P"/>
+      <content type="boolean"/>
+      <shortdesc lang="en">
+      </shortdesc>
+    </parameter>
+    <parameter name="login" unique="0" required="0">
+      <getopt mixed="-l"/>
+      <content type="string"/>
+      <shortdesc lang="en">
+      </shortdesc>
+    </parameter>
+    <parameter name="action" unique="0" required="0">
+      <getopt mixed="-o"/>
+      <content type="string" default="reboot"/>
+      <shortdesc lang="en">
+      </shortdesc>
+    </parameter>
+    <parameter name="timeout" unique="0" required="0">
+      <getopt mixed="-t"/>
+      <content type="string"/>
+      <shortdesc lang="en">
+      </shortdesc>
+    </parameter>
+    <parameter name="cipher" unique="0" required="0">
+      <getopt mixed="-C"/>
+      <content type="string"/>
+      <shortdesc lang="en">
+      </shortdesc>
+    </parameter>
+    <parameter name="method" unique="0" required="0">
+      <getopt mixed="-M"/>
+      <content type="string" default="onoff"/>
+      <shortdesc lang="en">
+      </shortdesc>
+    </parameter>
+    <parameter name="power_wait" unique="0" required="0">
+      <getopt mixed="-T"/>
+      <content type="string" default="2"/>
+      <shortdesc lang="en">
+      </shortdesc>
+    </parameter>
+    <parameter name="delay" unique="0" required="0">
+      <getopt mixed="-f"/>
+      <content type="string"/>
+      <shortdesc lang="en">
+      </shortdesc>
+    </parameter>
+    <parameter name="privlvl" unique="0" required="0">
+      <getopt mixed="-L"/>
+      <content type="string"/>
+      <shortdesc lang="en">
+      </shortdesc>
+    </parameter>
+    <parameter name="verbose" unique="0" required="0">
+      <getopt mixed="-v"/>
+      <content type="boolean"/>
+      <shortdesc lang="en">
+      </shortdesc>
+    </parameter>
+  </parameters>
+  <actions>
+    <action name="on"/>
+    <action name="off"/>
+    <action name="reboot"/>
+    <action name="status"/>
+    <action name="diag"/>
+    <action name="list"/>
+    <action name="monitor"/>
+    <action name="metadata"/>
+    <action name="stop" timeout="20s"/>
+    <action name="start" timeout="20s"/>
+  </actions>
 </resource-agent>
 ----
+====
 
 from which we would create a STONITH resource fragment that might look
 like this:
 
 .Sample STONITH Resource
+====
 [source,XML]
 ----
 <primitive id="Fencing" class="stonith" type="fence_ipmilan" >
   <instance_attributes id="Fencing-params" >
     <nvpair id="Fencing-passwd" name="passwd" value="testuser" />
     <nvpair id="Fencing-login" name="login" value="abc123" />
-    <nvpair id="Fencing-ipaddr" name="ipaddr" value="10.0.0.1" />
+    <nvpair id="Fencing-ipaddr" name="ipaddr" value="192.0.2.1" />
     <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="pcmk-1 pcmk-2" />
   </instance_attributes>
   <operations >
@@ -413,10 +478,10 @@ like this:
   </operations>
 </primitive>
 ----
+====
 
 And finally, since we disabled it earlier, we need to re-enable STONITH.
 
-[source,Bash]
 ----
 # crm_attribute -t crm_config -n stonith-enabled -v true
 ----
@@ -472,7 +537,7 @@ Some possible uses of topologies include:
  indexterm:[Fencing,fencing-level,index]
 
 |devices
-|A comma separated list of devices for which the
+|A comma-separated list of devices that must all be tried for this level
  indexterm:[devices,fencing-level]
  indexterm:[Fencing,fencing-level,devices]
 
@@ -501,18 +566,20 @@ Some possible uses of topologies include:
 
 === Example use of advanced Fencing Topologies: dual layer and dual devices ===
 
-The following example illustrates an advanced use of +fencing_topology+ in a cluster with the following properties:
+The following example illustrates an advanced use of +fencing-topology+ in a cluster with the following properties:
 
 * 3 nodes (2 active prod-mysql nodes, 1 prod_mysql-rep in standby for quorum purposes)
-* the active nodes have an IPMI-controlled power board reached at 10.10.10.1 and 10.10.10.2
-* the active nodes also have two independant PSUs (Power Supplu Units) connected to two independant PDUs (Power Distribution Unit) reached at 10.20.1.1 (port 10 and port 11) and 10.20.2.1 (port 10 and port 11)
-* the first fencing method uses the +fence_ipmi+ agent
-* the second fencing method uses the +fence_apc_snmp+ agent targetting 2 fencing devices (one per PSU, either port 10 or 11)
+* the active nodes have an IPMI-controlled power board reached at 192.0.2.1 and 192.0.2.2
+* the active nodes also have two independent PSUs (Power Supply Units)
+  connected to two independent PDUs (Power Distribution Units) reached at
+  198.51.100.1 (port 10 and port 11) and 203.0.113.1 (port 10 and port 11)
+* the first fencing method uses the `fence_ipmi` agent
+* the second fencing method uses the `fence_apc_snmp` agent targetting 2 fencing devices (one per PSU, either port 10 or 11)
 * fencing is only implemented for the active nodes and has location constraints
 * fencing topology is set to try IPMI fencing first then default to a "sure-kill" dual PDU fencing
 
 In a normal failure scenario, STONITH will first select +fence_ipmi+ to try and kill the faulty node.
-Using a +fencing_topology+, if that first method fails, STONITH will then move on to selecting +fence_apc_snmp+ twice:
+Using a fencing topology, if that first method fails, STONITH will then move on to selecting +fence_apc_snmp+ twice:
 
 * once for the first PDU 
 * again for the second PDU 
@@ -524,28 +591,28 @@ The fence action is considered successful only if both PDUs report the required 
 Each cluster node has it own dedicated IPMI channel that can be called for fencing using the following primitives:
 [source,XML]
 ----
-      <primitive class="stonith" id="fence_prod-mysql1_ipmi" type="fence_ipmilan">
-        <instance_attributes id="fence_prod-mysql1_ipmi-instance_attributes">
-          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-ipaddr" name="ipaddr" value="10.10.10.1"/>
-          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-action" name="action" value="off"/>
-          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-login" name="login" value="fencing"/>
-          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-passwd" name="passwd" value="finishme"/>
-          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-verbose" name="verbose" value="true"/>
-          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql1"/>
-          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-lanplus" name="lanplus" value="true"/>
-        </instance_attributes>
-      </primitive>
-      <primitive class="stonith" id="fence_prod-mysql2_ipmi" type="fence_ipmilan">
-        <instance_attributes id="fence_prod-mysql2_ipmi-instance_attributes">
-          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-ipaddr" name="ipaddr" value="10.10.10.2"/>
-          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-action" name="action" value="off"/>
-          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-login" name="login" value="fencing"/>
-          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-passwd" name="passwd" value="finishme"/>
-          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-verbose" name="verbose" value="true"/>
-          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql2"/>
-          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-lanplus" name="lanplus" value="true"/>
-        </instance_attributes>
-      </primitive>
+<primitive class="stonith" id="fence_prod-mysql1_ipmi" type="fence_ipmilan">
+  <instance_attributes id="fence_prod-mysql1_ipmi-instance_attributes">
+    <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-ipaddr" name="ipaddr" value="192.0.2.1"/>
+    <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-action" name="action" value="off"/>
+    <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-login" name="login" value="fencing"/>
+    <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-passwd" name="passwd" value="finishme"/>
+    <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-verbose" name="verbose" value="true"/>
+    <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql1"/>
+    <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-lanplus" name="lanplus" value="true"/>
+  </instance_attributes>
+</primitive>
+<primitive class="stonith" id="fence_prod-mysql2_ipmi" type="fence_ipmilan">
+  <instance_attributes id="fence_prod-mysql2_ipmi-instance_attributes">
+    <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-ipaddr" name="ipaddr" value="192.0.2.2"/>
+    <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-action" name="action" value="off"/>
+    <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-login" name="login" value="fencing"/>
+    <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-passwd" name="passwd" value="finishme"/>
+    <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-verbose" name="verbose" value="true"/>
+    <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql2"/>
+    <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-lanplus" name="lanplus" value="true"/>
+  </instance_attributes>
+</primitive>
 ----
 
 .Second fencing method: dual PDU devices
@@ -560,47 +627,46 @@ Each cluster node also has two distinct power channels controlled by two distinc
 The matching fencing agents are configured as follows:
 [source,XML]
 ----
-      <primitive class="stonith" id="fence_prod-mysql1_apc1" type="fence_apc_snmp">
-        <instance_attributes id="fence_prod-mysql1_apc1-instance_attributes">
-          <nvpair id="fence_prod-mysql1_apc1-instance_attributes-ipaddr" name="ipaddr" value="10.20.1.1"/>
-          <nvpair id="fence_prod-mysql1_apc1-instance_attributes-action" name="action" value="off"/>
-          <nvpair id="fence_prod-mysql1_apc1-instance_attributes-port" name="port" value="10"/>
-          <nvpair id="fence_prod-mysql1_apc1-instance_attributes-login" name="login" value="fencing"/>
-          <nvpair id="fence_prod-mysql1_apc1-instance_attributes-passwd" name="passwd" value="fencing"/>
-          <nvpair id="fence_prod-mysql1_apc1-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql1"/>
-        </instance_attributes>
-      </primitive>
-      <primitive class="stonith" id="fence_prod-mysql1_apc2" type="fence_apc_snmp">
-        <instance_attributes id="fence_prod-mysql1_apc2-instance_attributes">
-          <nvpair id="fence_prod-mysql1_apc2-instance_attributes-ipaddr" name="ipaddr" value="10.20.2.1"/>
-          <nvpair id="fence_prod-mysql1_apc2-instance_attributes-action" name="action" value="off"/>
-          <nvpair id="fence_prod-mysql1_apc2-instance_attributes-port" name="port" value="10"/>
-          <nvpair id="fence_prod-mysql1_apc2-instance_attributes-login" name="login" value="fencing"/>
-          <nvpair id="fence_prod-mysql1_apc2-instance_attributes-passwd" name="passwd" value="fencing"/>
-          <nvpair id="fence_prod-mysql1_apc2-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql1"/>
-        </instance_attributes>
-      </primitive>
-      <primitive class="stonith" id="fence_prod-mysql2_apc1" type="fence_apc_snmp">
-        <instance_attributes id="fence_prod-mysql2_apc1-instance_attributes">
-          <nvpair id="fence_prod-mysql2_apc1-instance_attributes-ipaddr" name="ipaddr" value="10.20.1.1"/>
-          <nvpair id="fence_prod-mysql2_apc1-instance_attributes-action" name="action" value="off"/>
-          <nvpair id="fence_prod-mysql2_apc1-instance_attributes-port" name="port" value="11"/>
-          <nvpair id="fence_prod-mysql2_apc1-instance_attributes-login" name="login" value="fencing"/>
-          <nvpair id="fence_prod-mysql2_apc1-instance_attributes-passwd" name="passwd" value="fencing"/>
-          <nvpair id="fence_prod-mysql2_apc1-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql2"/>
-        </instance_attributes>
-      </primitive>
-      <primitive class="stonith" id="fence_prod-mysql2_apc2" type="fence_apc_snmp">
-        <instance_attributes id="fence_prod-mysql2_apc2-instance_attributes">
-          <nvpair id="fence_prod-mysql2_apc2-instance_attributes-ipaddr" name="ipaddr" value="10.20.2.1"/>
-          <nvpair id="fence_prod-mysql2_apc2-instance_attributes-action" name="action" value="off"/>
-          <nvpair id="fence_prod-mysql2_apc2-instance_attributes-port" name="port" value="11"/>
-          <nvpair id="fence_prod-mysql2_apc2-instance_attributes-login" name="login" value="fencing"/>
-          <nvpair id="fence_prod-mysql2_apc2-instance_attributes-passwd" name="passwd" value="fencing"/>
-          <nvpair id="fence_prod-mysql2_apc2-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql2"/>
-        </instance_attributes>
-      </primitive>
-
+<primitive class="stonith" id="fence_prod-mysql1_apc1" type="fence_apc_snmp">
+  <instance_attributes id="fence_prod-mysql1_apc1-instance_attributes">
+    <nvpair id="fence_prod-mysql1_apc1-instance_attributes-ipaddr" name="ipaddr" value="198.51.100.1"/>
+    <nvpair id="fence_prod-mysql1_apc1-instance_attributes-action" name="action" value="off"/>
+    <nvpair id="fence_prod-mysql1_apc1-instance_attributes-port" name="port" value="10"/>
+    <nvpair id="fence_prod-mysql1_apc1-instance_attributes-login" name="login" value="fencing"/>
+    <nvpair id="fence_prod-mysql1_apc1-instance_attributes-passwd" name="passwd" value="fencing"/>
+    <nvpair id="fence_prod-mysql1_apc1-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql1"/>
+  </instance_attributes>
+</primitive>
+<primitive class="stonith" id="fence_prod-mysql1_apc2" type="fence_apc_snmp">
+  <instance_attributes id="fence_prod-mysql1_apc2-instance_attributes">
+    <nvpair id="fence_prod-mysql1_apc2-instance_attributes-ipaddr" name="ipaddr" value="203.0.113.1"/>
+    <nvpair id="fence_prod-mysql1_apc2-instance_attributes-action" name="action" value="off"/>
+    <nvpair id="fence_prod-mysql1_apc2-instance_attributes-port" name="port" value="10"/>
+    <nvpair id="fence_prod-mysql1_apc2-instance_attributes-login" name="login" value="fencing"/>
+    <nvpair id="fence_prod-mysql1_apc2-instance_attributes-passwd" name="passwd" value="fencing"/>
+    <nvpair id="fence_prod-mysql1_apc2-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql1"/>
+  </instance_attributes>
+</primitive>
+<primitive class="stonith" id="fence_prod-mysql2_apc1" type="fence_apc_snmp">
+  <instance_attributes id="fence_prod-mysql2_apc1-instance_attributes">
+    <nvpair id="fence_prod-mysql2_apc1-instance_attributes-ipaddr" name="ipaddr" value="198.51.100.1"/>
+    <nvpair id="fence_prod-mysql2_apc1-instance_attributes-action" name="action" value="off"/>
+    <nvpair id="fence_prod-mysql2_apc1-instance_attributes-port" name="port" value="11"/>
+    <nvpair id="fence_prod-mysql2_apc1-instance_attributes-login" name="login" value="fencing"/>
+    <nvpair id="fence_prod-mysql2_apc1-instance_attributes-passwd" name="passwd" value="fencing"/>
+    <nvpair id="fence_prod-mysql2_apc1-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql2"/>
+  </instance_attributes>
+</primitive>
+<primitive class="stonith" id="fence_prod-mysql2_apc2" type="fence_apc_snmp">
+  <instance_attributes id="fence_prod-mysql2_apc2-instance_attributes">
+    <nvpair id="fence_prod-mysql2_apc2-instance_attributes-ipaddr" name="ipaddr" value="203.0.113.1"/>
+    <nvpair id="fence_prod-mysql2_apc2-instance_attributes-action" name="action" value="off"/>
+    <nvpair id="fence_prod-mysql2_apc2-instance_attributes-port" name="port" value="11"/>
+    <nvpair id="fence_prod-mysql2_apc2-instance_attributes-login" name="login" value="fencing"/>
+    <nvpair id="fence_prod-mysql2_apc2-instance_attributes-passwd" name="passwd" value="fencing"/>
+    <nvpair id="fence_prod-mysql2_apc2-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql2"/>
+  </instance_attributes>
+</primitive>
 ----
 
 .Location Constraints 
@@ -631,7 +697,7 @@ We want to first fence using IPMI and if that does not work, fence both PDUs to 
       <fencing-level devices="fence_prod-mysql2_apc1,fence_prod-mysql2_apc2" id="fencing-1" index="2" target="prod-mysql2"/>
     </fencing-topology>
 ----
-Please note, in +fencing_topology+, the lower index value determines the priority of the first fencing method. 
+Please note, in +fencing-topology+, the lowest +index+ value determines the priority of the first fencing method.
 
 .Final configuration
 
@@ -660,7 +726,7 @@ Put together, the configuration looks like this:
     <resources>
       <primitive class="stonith" id="fence_prod-mysql1_ipmi" type="fence_ipmilan">
         <instance_attributes id="fence_prod-mysql1_ipmi-instance_attributes">
-          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-ipaddr" name="ipaddr" value="10.10.10.1"/>
+          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-ipaddr" name="ipaddr" value="192.0.2.1"/>
           <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-action" name="action" value="off"/>
           <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-login" name="login" value="fencing"/>
           <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-passwd" name="passwd" value="finishme"/>
@@ -671,7 +737,7 @@ Put together, the configuration looks like this:
       </primitive>
       <primitive class="stonith" id="fence_prod-mysql2_ipmi" type="fence_ipmilan">
         <instance_attributes id="fence_prod-mysql2_ipmi-instance_attributes">
-          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-ipaddr" name="ipaddr" value="10.10.10.2"/>
+          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-ipaddr" name="ipaddr" value="192.0.2.2"/>
           <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-action" name="action" value="off"/>
           <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-login" name="login" value="fencing"/>
           <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-passwd" name="passwd" value="finishme"/>
@@ -682,7 +748,7 @@ Put together, the configuration looks like this:
       </primitive>
       <primitive class="stonith" id="fence_prod-mysql1_apc1" type="fence_apc_snmp">
         <instance_attributes id="fence_prod-mysql1_apc1-instance_attributes">
-          <nvpair id="fence_prod-mysql1_apc1-instance_attributes-ipaddr" name="ipaddr" value="10.20.1.1"/>
+          <nvpair id="fence_prod-mysql1_apc1-instance_attributes-ipaddr" name="ipaddr" value="198.51.100.1"/>
           <nvpair id="fence_prod-mysql1_apc1-instance_attributes-action" name="action" value="off"/>
           <nvpair id="fence_prod-mysql1_apc1-instance_attributes-port" name="port" value="10"/>
           <nvpair id="fence_prod-mysql1_apc1-instance_attributes-login" name="login" value="fencing"/>
@@ -692,7 +758,7 @@ Put together, the configuration looks like this:
       </primitive>
       <primitive class="stonith" id="fence_prod-mysql1_apc2" type="fence_apc_snmp">
         <instance_attributes id="fence_prod-mysql1_apc2-instance_attributes">
-          <nvpair id="fence_prod-mysql1_apc2-instance_attributes-ipaddr" name="ipaddr" value="10.20.2.1"/>
+          <nvpair id="fence_prod-mysql1_apc2-instance_attributes-ipaddr" name="ipaddr" value="203.0.113.1"/>
           <nvpair id="fence_prod-mysql1_apc2-instance_attributes-action" name="action" value="off"/>
           <nvpair id="fence_prod-mysql1_apc2-instance_attributes-port" name="port" value="10"/>
           <nvpair id="fence_prod-mysql1_apc2-instance_attributes-login" name="login" value="fencing"/>
@@ -702,7 +768,7 @@ Put together, the configuration looks like this:
       </primitive>
       <primitive class="stonith" id="fence_prod-mysql2_apc1" type="fence_apc_snmp">
         <instance_attributes id="fence_prod-mysql2_apc1-instance_attributes">
-          <nvpair id="fence_prod-mysql2_apc1-instance_attributes-ipaddr" name="ipaddr" value="10.20.1.1"/>
+          <nvpair id="fence_prod-mysql2_apc1-instance_attributes-ipaddr" name="ipaddr" value="198.51.100.1"/>
           <nvpair id="fence_prod-mysql2_apc1-instance_attributes-action" name="action" value="off"/>
           <nvpair id="fence_prod-mysql2_apc1-instance_attributes-port" name="port" value="11"/>
           <nvpair id="fence_prod-mysql2_apc1-instance_attributes-login" name="login" value="fencing"/>
@@ -712,7 +778,7 @@ Put together, the configuration looks like this:
       </primitive>
       <primitive class="stonith" id="fence_prod-mysql2_apc2" type="fence_apc_snmp">
         <instance_attributes id="fence_prod-mysql2_apc2-instance_attributes">
-          <nvpair id="fence_prod-mysql2_apc2-instance_attributes-ipaddr" name="ipaddr" value="10.20.2.1"/>
+          <nvpair id="fence_prod-mysql2_apc2-instance_attributes-ipaddr" name="ipaddr" value="203.0.113.1"/>
           <nvpair id="fence_prod-mysql2_apc2-instance_attributes-action" name="action" value="off"/>
           <nvpair id="fence_prod-mysql2_apc2-instance_attributes-port" name="port" value="11"/>
           <nvpair id="fence_prod-mysql2_apc2-instance_attributes-login" name="login" value="fencing"/>

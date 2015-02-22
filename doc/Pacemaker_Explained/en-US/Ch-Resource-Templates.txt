@@ -103,13 +103,15 @@ the primitive has an additional `stop` operation.
     
 The following command shows the resulting definition of a resource:
     
-[source,C]
+----
 # crm_resource --query-xml --resource vm2
+----
     
 The following command shows its raw definition in cib:
     
-[source,C]
+----
 # crm_resource --query-xml-raw --resource vm2
+----
 
 == Referencing Templates in Constraints ==
    

@@ -2,7 +2,7 @@
 Current cluster status:
 Online: [ node1 node2 ]
 
- rsc1	(ocf::pacemaker:Dummy):	Stopped  (unmanaged)
+ rsc1	(ocf::pacemaker:Dummy):	(target-role:Stopped) Stopped (unmanaged) 
 
 Transition Summary:
 
@@ -11,5 +11,5 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ node1 node2 ]
 
- rsc1	(ocf::pacemaker:Dummy):	Stopped  (unmanaged)
+ rsc1	(ocf::pacemaker:Dummy):	(target-role:Stopped) Stopped (unmanaged) 
 

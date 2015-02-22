@@ -29,15 +29,15 @@ The configuration section itself is divided into four parts:
 ======
 [source,XML]
 -------
-  <cib admin_epoch="0" epoch="0" num_updates="0" have-quorum="false">
-     <configuration>
-        <crm_config/>
-        <nodes/>
-        <resources/>
-        <constraints/>
-     </configuration>
-     <status/>
-  </cib>
+<cib crm_feature_set="3.0.7" validate-with="pacemaker-1.2" admin_epoch="1" epoch="0" num_updates="0">
+  <configuration>
+    <crm_config/>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
 -------
 ======
 
@@ -142,7 +142,6 @@ text or XML editor and then upload the revised configuration.
       
 .Safely using an editor to modify the cluster configuration
 ======
-[source,C]
 --------
 # cibadmin --query > tmp.xml
 # vi tmp.xml
@@ -152,16 +151,16 @@ text or XML editor and then upload the revised configuration.
 
 Some of the better XML editors can make use of a Relax NG schema to
 help make sure any changes you make are valid.  The schema describing
-the configuration can normally be found in
-'/usr/lib/heartbeat/pacemaker.rng' on most systems.
-      
+the configuration can be found in +pacemaker.rng+, which may be
+deployed in a location such as +/usr/share/pacemaker+ or
++/usr/lib/heartbeat+ depending on your operating system and how you
+installed the software.
 
 If you only wanted to modify the resources section, you could instead
 do
       
 .Safely using an editor to modify a subsection of the cluster configuration
 ======
-[source,C]
 --------
 # cibadmin --query --obj_type resources > tmp.xml
 # vi tmp.xml
@@ -177,8 +176,9 @@ Identify the object you wish to delete. Eg. run
       
 .Searching for STONITH related configuration items
 ======
-[source,C]
+--------
 # cibadmin -Q | grep stonith
+--------
 [source,XML]
 --------
  <nvpair id="cib-bootstrap-options-stonith-action" name="stonith-action" value="reboot"/>
@@ -197,8 +197,9 @@ Identify the object you wish to delete. Eg. run
 Next identify the resource's tag name and id (in this case we'll
 choose +primitive+ and +child_DoFencing+).  Then simply execute:
 
-[source,C]
+----
 # cibadmin --delete --crm_xml '<primitive id="child_DoFencing"/>'
+----
 
 == Updating the Configuration Without Using XML ==
 
@@ -207,18 +208,31 @@ tools that avoid the need to read or edit XML.
 
 To enable stonith for example, one could run:
 
-[source,C]
-# crm_attribute --attr-name stonith-enabled --attr-value true
+----
+# crm_attribute --name stonith-enabled --update 1
+----
 
 Or, to see if +somenode+ is allowed to run resources, there is:
 
-[source,C]
-# crm_standby --get-value --node-uname somenode
+----
+# crm_standby --get-value --node somenode
+----
 
 Or, to find the current location of +my-test-rsc+, one can use:
 
-[source,C]
+----
 # crm_resource --locate --resource my-test-rsc
+----
+
+Examples of using these tools for specific cases will be given throughout this
+document where appropriate.
+
+[NOTE]
+====
+Old versions of pacemaker (1.0.3 and earlier) had different
+command-line tool syntax. If you are using an older version,
+check your installed manual pages for the proper syntax to use.
+====
 
 [[s-config-sandboxes]]
 == Making Configuration Changes in a Sandbox ==
@@ -240,15 +254,14 @@ destroying the cluster's active configuration!
       
 .Creating and displaying the active sandbox
 ======
-[source,Bash]
---------
+----
  # crm_shadow --create test
  Setting up shadow instance
  Type Ctrl-D to exit the crm_shadow shell
  shadow[test]: 
  shadow[test] # crm_shadow --which
  test
---------
+----
 ======
 
 From this point on, all cluster commands will automatically use the
@@ -257,18 +270,16 @@ Once you have finished experimenting, you can either commit the
 changes, or discard them as shown below.  Again, be sure to follow the
 on-screen instructions carefully.
       
-
 For a full list of `crm_shadow` options and
-commands, invoke it with the <parameter>--help</parameter> option.
+commands, invoke it with the `--help` option.
 
 .Using a sandbox to make multiple changes atomically
 ======
-[source,Bash]
---------
+----
  shadow[test] # crm_failcount -G -r rsc_c001n01
   name=fail-count-rsc_c001n01 value=0
- shadow[test] # crm_standby -v on -n c001n02
- shadow[test] # crm_standby -G -n c001n02
+ shadow[test] # crm_standby -v on -N c001n02
+ shadow[test] # crm_standby -G -N c001n02
  name=c001n02 scope=nodes value=on
  shadow[test] # cibadmin --erase --force
  shadow[test] # cibadmin --query
@@ -286,7 +297,7 @@ commands, invoke it with the <parameter>--help</parameter> option.
   Now type Ctrl-D to exit the crm_shadow shell
   shadow[test] # exit
   # crm_shadow --which
-  No shadow instance provided
+  No active shadow configuration defined
   # cibadmin -Q
  <cib cib_feature_revision="1" validate-with="pacemaker-1.0" admin_epoch="0" crm_feature_set="3.0" have-quorum="1" epoch="110"
        dc-uuid="c001n01" num_updates="551">
@@ -295,7 +306,7 @@ commands, invoke it with the <parameter>--help</parameter> option.
           <cluster_property_set id="cib-bootstrap-options">
              <nvpair id="cib-bootstrap-1" name="stonith-enabled" value="1"/>
              <nvpair id="cib-bootstrap-2" name="pe-input-series-max" value="30000"/>
---------
+----
 ======
 
 Making changes in a sandbox and verifying the real configuration is untouched
@@ -309,8 +320,9 @@ cluster (eg. `crm_shadow --commit mytest --force`), it is often
 advisable to simulate the effect of the changes with +crm_simulate+,
 eg.
       
-[source,C]
+----
 # crm_simulate --live-check -VVVVV --save-graph tmp.graph --save-dotfile tmp.dot
+----
 
 
 The tool uses the same library as the live cluster to show what it

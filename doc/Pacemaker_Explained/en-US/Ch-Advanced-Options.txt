@@ -12,31 +12,37 @@ variables and runs the same commands as when working on a cluster
 node.
 
 .Environment Variables Used to Connect to Remote Instances of the CIB
-[width="95%",cols="1m,2<",options="header",align="center"]
+[width="95%",cols="1m,1,3<",options="header",align="center"]
 |=========================================================
 
 |Environment Variable
+|Default
 |Description
 
 |CIB_user
+|$USER
 |The user to connect as. Needs to be part of the +hacluster+ group on
- the target host. Defaults to _$USER_.
+ the target host.
  indexterm:[Environment Variable,CIB_user]
 
 |CIB_passwd
+|
 |The user's password. Read from the command line if unset.
  indexterm:[Environment Variable,CIB_passwd]
 
 |CIB_server
-|The host to contact. Defaults to _localhost_.
+|localhost
+|The host to contact
  indexterm:[Environment Variable,CIB_server]
 
 |CIB_port
+|
 |The port on which to contact the server; required.
  indexterm:[Environment Variable,CIB_port]
 
 |CIB_encrypted
-|Encrypt network traffic; defaults to _true_.
+|TRUE
+|Whether to encrypt network traffic
  indexterm:[Environment Variable,CIB_encrypted]
 
 |=========================================================
@@ -46,9 +52,10 @@ for connections, and +someguy+ is a member of the +hacluster+ group,
 then the following would prompt for +someguy+'s password and return
 the cluster's current configuration:
 
-[source,C]
+----
 # export CIB_port=1234; export CIB_server=c001n01; export CIB_user=someguy;
 # cibadmin -Q
+----
 
 For security reasons, the cluster does not listen for remote
 connections by default.  If you wish to allow remote access, you need
@@ -56,20 +63,23 @@ to set the +remote-tls-port+ (encrypted) or +remote-clear-port+
 (unencrypted) top-level options (ie., those kept in the cib tag, like
 +num_updates+ and +epoch+).
 
-.Extra top-level CIB options for remote access
-[width="95%",cols="1m,2<",options="header",align="center"]
+.Extra top-level CIB properties for remote access
+[width="95%",cols="1m,1,3<",options="header",align="center"]
 |=========================================================
 
 |Field
+|Default
 |Description
 
 |remote-tls-port
-|Listen for encrypted remote connections on this port. Default: _none_
+|_none_
+|Listen for encrypted remote connections on this port.
  indexterm:[remote-tls-port,Remote Connection Option]
  indexterm:[Remote Connection,Option,remote-tls-port]
 
 |remote-clear-port
-|Listen for plaintext remote connections on this port. Default: _none_
+|_none_
+|Listen for plaintext remote connections on this port.
  indexterm:[remote-clear-port,Remote Connection Option]
  indexterm:[Remote Connection,Option,remote-clear-port]
 
@@ -115,7 +125,7 @@ indexterm:[Resource,Moving]
 === Manual Intervention ===
 
 There are primarily two occasions when you would want to move a
-resource from it's current location: when the whole node is under
+resource from its current location: when the whole node is under
 maintenance, and when a single resource needs to be moved.
 
 Since everything eventually comes down to a score, you could create
@@ -128,35 +138,40 @@ Instead one can set a special node attribute which tells the cluster
 query and set it, called `crm_standby`.  To check the standby status
 of the current machine, simply run:
 
-[source,C]
-# crm_standby --get-value
+----
+# crm_standby -G
+----
 
-A value of +true+ indicates that the node is _NOT_ able to host any
-resources, while a value of +false+ says that it _CAN_.
+A value of +on+ indicates that the node is _not_ able to host any
+resources, while a value of +off+ says that it _can_.
 
 You can also check the status of other nodes in the cluster by
-specifying the `--node-uname` option:
+specifying the `--node` option:
 
-[source,C]
-# crm_standby --get-value --node-uname sles-2
+----
+# crm_standby -G --node sles-2
+----
 
-To change the current node's standby status, use `--attr-value`
-instead of `--get-value`.
+To change the current node's standby status, use `-v` instead of `-G`:
 
-[source,C]
-# crm_standby --attr-value
+----
+# crm_standby -v on
+----
 
-Again, you can change another host's value by supplying a host name with `--node-uname`.
+Again, you can change another host's value by supplying a hostname with `--node`.
+
+==== Moving One Resource ====
 
 When only one resource is required to move, we do this by creating
 location constraints.  However, once again we provide a user friendly
 shortcut as part of the `crm_resource` command, which creates and
-modifies the extra constraints for you.  If +Email+ was running on
+modifies the extra constraints for you.  If +Email+ were running on
 +sles-1+ and you wanted it moved to a specific location, the command
 would look something like:
         
-[source,C]
+----
 # crm_resource -M -r Email -H sles-2
+----
 
 Behind the scenes, the tool will create the following location constraint:
 
@@ -166,31 +181,35 @@ Behind the scenes, the tool will create the following location constraint:
 It is important to note that subsequent invocations of `crm_resource
 -M` are not cumulative. So, if you ran these commands
 
-[source,C]
+----
 # crm_resource -M -r Email -H sles-2
 # crm_resource -M -r Email -H sles-3
+----
 
 then it is as if you had never performed the first command.
 
 To allow the resource to move back again, use:
 
-[source,C]
+----
 # crm_resource -U -r Email
+----
 
 Note the use of the word _allow_.  The resource can move back to its
 original location but, depending on +resource-stickiness+, it might
 stay where it is.  To be absolutely certain that it moves back to
 +sles-1+, move it there before issuing the call to `crm_resource -U`:
         
-[source,C]
+----
 # crm_resource -M -r Email -H sles-1
 # crm_resource -U -r Email
+----
 
 Alternatively, if you only care that the resource should be moved from
-its current location, try
+its current location, try:
 
-[source,C]
-# crm_resource -M -r Email`
+----
+# crm_resource -B -r Email
+----
 
 Which will instead create a negative constraint, like
 
@@ -657,7 +676,7 @@ Any parameter with the +unique+ set to 0 is eligible to be used in this way.
 
 Once these requirements are satisfied, the cluster will automatically
 know to reload the resource (instead of restarting) when a non-unique
-fields changes.
+field changes.
       
 [NOTE]
 ======

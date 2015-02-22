@@ -1,0 +1,74 @@
+[appendix]
+
+[[ap-faq]]
+== FAQ ==
+
+
+[qanda]
+Why is the Project Called Pacemaker?::
+ indexterm:[Pacemaker]
+ First of all, the reason it's not called the CRM is because of the abundance
+ of terms footnote:[http://en.wikipedia.org/wiki/CRM] that are commonly
+ abbreviated to those three letters. The Pacemaker name came from Kham,
+ footnote:[http://khamsouk.souvanlasy.com/] a good friend of Pacemaker
+ developer Andrew Beekhof's, and was originally used by a Java GUI that Beekhof
+ was prototyping in early 2007. Alas, other commitments prevented the GUI from
+ progressing much and, when it came time to choose a name for this project,
+ Lars Marowsky-Bree suggested it was an even better fit for an independent CRM.
+ The idea stems from the analogy between the role of this software and that of
+ the little device that keeps the human heart pumping.  Pacemaker monitors the
+ cluster and intervenes when necessary to ensure the smooth operation of the
+ services it provides.
+ There were a number of other names (and acronyms) tossed around, but suffice to
+ say "Pacemaker" was the best.
+
+Why was the Pacemaker Project Created?::
+
+ The decision was made to spin-off the CRM into its own project after the 2.1.3
+ Heartbeat release in order to:
+
+ * support both the Corosync and Heartbeat cluster stacks equally
+ * decouple the release cycles of two projects at very different stages of their life-cycles
+ * foster clearer package boundaries, thus leading to better and more stable interfaces
+
+What Messaging Layers are Supported?::
+ indexterm:[Messaging Layers]
+
+ * http://www.corosync.org/[Corosync]
+ * http://linux-ha.org/[Heartbeat]
+
+Can I Choose Which Messaging Layer to Use at Run Time?::
+
+ Yes. The CRM will automatically detect which started it and behave accordingly.
+
+Can I Have a Mixed Heartbeat-Corosync Cluster?::
+
+ No.
+
+[[q-messaging-layer]] Which Messaging Layer Should I Choose?::
+ indexterm:[Cluster,Choosing Between Heartbeat and Corosync]
+ indexterm:[Cluster Stack,Corosync] indexterm:[Corosync]
+ indexterm:[Cluster Stack,Heartbeat] indexterm:[Heartbeat]
+ You can choose from multiple messaging layers, including
+ heartbeat, corosync 1 (with or without CMAN), and corosync 2.
+ Corosync 2 is the current state of the art due to its
+ more advanced features and better support for pacemaker,
+ but often the best choice is to use whatever comes with
+ your Linux distribution, and follow the distribution's
+ setup instructions.
+
+Where Can I Get Pre-built Packages?::
+
+ Most major Linux distributions have pacemaker packages in their standard
+ package repositories. See the http://clusterlabs.org/wiki/Install[Install wiki
+ page] for details.
+
+What Versions of Pacemaker Are Supported?::
+
+ Some Linux distributions (such as Red Hat Enterprise Linux and SUSE Linux
+ Enterprise) offer technical support for their customers; contact them
+ for details of such support.
+ For help within the community (mailing lists, IRC, etc.) from Pacemaker developers
+ and users, refer to the http://clusterlabs.org/wiki/Releases[Releases wiki page]
+ for an up-to-date list of versions considered to be supported by the project.
+ When seeking assistance, please try to ensure you have one of these versions.

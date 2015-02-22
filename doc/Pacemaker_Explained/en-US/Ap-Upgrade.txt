@@ -170,14 +170,16 @@ active and get re-detected when the cluster is restarted.
 This is required to allow the services to remain active after the
 cluster shuts down.
 +
-[source,C]
+----
 # crm_attribute -t crm_config -n is-managed-default -v false
+----
 +
 . For any resource that has a value for +is-managed+, make sure it is
 set to +false+ (so that the cluster will not stop it)
 +
-[source,C]
+----
 # crm_resource -t primitive -r $rsc_id -p is-managed -v false
+----
 +
 . On each node:
 .. Shutdown the cluster stack (Heartbeat or Corosync)
@@ -193,15 +195,17 @@ same as the previous cluster stack.
 . Verify that the cluster re-detected all resources correctly.
 . Allow the cluster to resume managing resources again:
 +
-[source,C]
+----
 # crm_attribute -t crm_config -n is-managed-default -v true
+----
 +
 . For any resource that has a value for +is-managed+ reset it to
   +true+ (so the cluster can recover the service if it fails) if
   desired:
 +
-[source,C]
+----
 # crm_resource -t primitive -r $rsc_id -p is-managed -v true
+----
 
 
 ==== Notes ====

@@ -316,6 +316,19 @@ class Tests:
 			"lsb_cancel_line"   : "-c cancel -r \"lsb_test_rsc\" -a \"status\" -i \"2000\" -t \"3000\" ",
 			"lsb_cancel_event"  : "-l \"NEW_EVENT event_type:exec_complete rsc_id:lsb_test_rsc action:status rc:ok op_status:Cancelled\" ",
 
+			"heartbeat_reg_line"      : "-c register_rsc -r hb_test_rsc "+self.action_timeout+" -C heartbeat -T HBDummy",
+			"heartbeat_reg_event"     : "-l \"NEW_EVENT event_type:register rsc_id:hb_test_rsc action:none rc:ok op_status:complete\" ",
+			"heartbeat_unreg_line"    : "-c unregister_rsc -r \"hb_test_rsc\" "+self.action_timeout,
+			"heartbeat_unreg_event"   : "-l \"NEW_EVENT event_type:unregister rsc_id:hb_test_rsc action:none rc:ok op_status:complete\"",
+			"heartbeat_start_line"    : "-c exec -r \"hb_test_rsc\" -a \"start\" -k 1 -v a -k 2 -v b "+self.action_timeout,
+			"heartbeat_start_event"   : "-l \"NEW_EVENT event_type:exec_complete rsc_id:hb_test_rsc action:start rc:ok op_status:complete\" ",
+			"heartbeat_stop_line"     : "-c exec -r \"hb_test_rsc\" -a \"stop\" -k 1 -v a -k 2 -v b "+self.action_timeout,
+			"heartbeat_stop_event"    : "-l \"NEW_EVENT event_type:exec_complete rsc_id:hb_test_rsc action:stop rc:ok op_status:complete\" ",
+			"heartbeat_monitor_line"  : "-c exec -r \"hb_test_rsc\" -a status -k 1 -v a -k 2 -v b -i \"2000\" "+self.action_timeout,
+			"heartbeat_monitor_event" : "-l \"NEW_EVENT event_type:exec_complete rsc_id:hb_test_rsc action:status rc:ok op_status:complete\" "+self.action_timeout,
+			"heartbeat_cancel_line"   : "-c cancel -r \"hb_test_rsc\" -a \"status\" -k 1 -v a -k 2 -v b -i \"2000\" -t \"3000\" ",
+			"heartbeat_cancel_event"  : "-l \"NEW_EVENT event_type:exec_complete rsc_id:hb_test_rsc action:status rc:ok op_status:Cancelled\" ",
+
 			"stonith_reg_line"      : "-c register_rsc -r stonith_test_rsc "+self.action_timeout+" -C stonith -P pacemaker -T fence_dummy_monitor",
 			"stonith_reg_event"     : "-l \"NEW_EVENT event_type:register rsc_id:stonith_test_rsc action:none rc:ok op_status:complete\" ",
 			"stonith_unreg_line"    : "-c unregister_rsc -r \"stonith_test_rsc\" "+self.action_timeout,
@@ -444,6 +457,18 @@ if __name__ == "__main__":
 		os.system("ls -al /etc/init.d/LSBDummy")
 		os.system("mkdir -p @CRM_CORE_DIR@/root")
 
+		os.system("mkdir -p /etc/ha.d/resource.d")
+		if os.path.exists("%s/cts/HBDummy" % build_dir):
+			print "Using %s/cts/HBDummy" % build_dir
+			os.system("cp %s/cts/HBDummy /etc/ha.d/resource.d/HBDummy" % build_dir)
+		else:
+			# Assume it's installed
+			print "Using @datadir@/@PACKAGE@/tests/cts/HBDummy"
+			os.system("cp @datadir@/@PACKAGE@/tests/cts/HBDummy /etc/ha.d/resource.d/HBDummy")
+
+		os.system("chmod a+x /etc/ha.d/resource.d/HBDummy")
+		os.system("ls -al /etc/ha.d/resource.d/HBDummy")
+
 		if os.path.exists("/bin/systemctl"):
 			os.system("systemctl daemon-reload")
 
@@ -452,6 +477,7 @@ if __name__ == "__main__":
 		    os.system("rm -f /etc/pacemaker/authkey")
 
 		os.system("rm -f /etc/init.d/LSBDummy")
+		os.system("rm -f /etc/ha.d/resource.d/HBDummy")
 		os.system("rm -f /lib/systemd/system/lrmd_dummy_daemon.service")
 		os.system("rm -f /usr/sbin/lrmd_dummy_daemon")
 		os.system("rm -f /usr/sbin/fence_dummy_monitor")
@@ -890,6 +916,11 @@ if __name__ == "__main__":
 			test.add_cmd_check_stdout("-c metadata -C \"upstart\" -T \"lrmd_dummy_daemon\""
 				,"resource-agent name=\"lrmd_dummy_daemon\"")
 
+		if "heartbeat" in self.rsc_classes:
+			test = self.new_test("get_heartbeat_metadata", "Retrieve metadata for a resource")
+			test.add_cmd_check_stdout("-c metadata -C \"heartbeat\" -T \"HBDummy\""
+				,"resource-agent name='HBDummy'")
+
 		### get ocf providers  ###
 		test = self.new_test("list_ocf_providers", "Retrieve list of available resource providers, verifies pacemaker is a provider.")
 		test.add_cmd_check_stdout("-c list_ocf_providers ", "pacemaker")
@@ -930,6 +961,11 @@ if __name__ == "__main__":
 			test.add_cmd_check_stdout("-c list_agents -C stonith", "", "lrmd_dummy_daemon")   ### should not exist
 			test.add_cmd_check_stdout("-c list_agents -C stonith", "", "Stateful")            ### should not exist
 			test.add_cmd_check_stdout("-c list_agents ", "fence_dummy_monitor")
+
+		if "heartbeat" in self.rsc_classes:
+			test.add_cmd_check_stdout("-c list_agents -C heartbeat", "HBDummy")
+			test.add_cmd_check_stdout("-c list_agents -C heartbeat", "", "LSBDummy")            ### should not exist
+			test.add_cmd_check_stdout("-c list_agents -C service", "", "HBDummy")            ### should not exist
 
 	def print_list(self):
 		print "\n==== %d TESTS FOUND ====" % (len(self.tests))

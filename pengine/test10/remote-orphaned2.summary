@@ -1,0 +1,27 @@
+
+Current cluster status:
+RemoteNode mrg-02: UNCLEAN (offline)
+RemoteNode mrg-03: UNCLEAN (offline)
+RemoteNode mrg-04: UNCLEAN (offline)
+Online: [ host-026 host-027 host-028 ]
+
+ neutron-openvswitch-agent-compute	(ocf::heartbeat:Dummy):	 ORPHANED Started [ mrg-03 mrg-02 mrg-04 ]
+ libvirtd-compute	(systemd:libvirtd):	 ORPHANED Started [ mrg-03 mrg-02 mrg-04 ]
+ ceilometer-compute	(systemd:openstack-ceilometer-compute):	 ORPHANED Started [ mrg-03 mrg-02 mrg-04 ]
+ nova-compute	(systemd:openstack-nova-compute):	 ORPHANED Started [ mrg-03 mrg-02 mrg-04 ]
+
+Transition Summary:
+
+Executing cluster transition:
+
+Revised cluster status:
+RemoteNode mrg-02: UNCLEAN (offline)
+RemoteNode mrg-03: UNCLEAN (offline)
+RemoteNode mrg-04: UNCLEAN (offline)
+Online: [ host-026 host-027 host-028 ]
+
+ neutron-openvswitch-agent-compute	(ocf::heartbeat:Dummy):	 ORPHANED Started [ mrg-03 mrg-02 mrg-04 ]
+ libvirtd-compute	(systemd:libvirtd):	 ORPHANED Started [ mrg-03 mrg-02 mrg-04 ]
+ ceilometer-compute	(systemd:openstack-ceilometer-compute):	 ORPHANED Started [ mrg-03 mrg-02 mrg-04 ]
+ nova-compute	(systemd:openstack-nova-compute):	 ORPHANED Started [ mrg-03 mrg-02 mrg-04 ]
+

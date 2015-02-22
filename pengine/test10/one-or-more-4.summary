@@ -6,7 +6,7 @@ OFFLINE: [ fc16-builder2 ]
  A	(ocf::pacemaker:Dummy):	Stopped 
  B	(ocf::pacemaker:Dummy):	Stopped 
  C	(ocf::pacemaker:Dummy):	Stopped 
- D	(ocf::pacemaker:Dummy):	Stopped 
+ D	(ocf::pacemaker:Dummy):	(target-role:Stopped) Stopped 
 
 Transition Summary:
  * Start   A	(fc16-builder)
@@ -31,5 +31,5 @@ OFFLINE: [ fc16-builder2 ]
  A	(ocf::pacemaker:Dummy):	Started fc16-builder
  B	(ocf::pacemaker:Dummy):	Started fc16-builder
  C	(ocf::pacemaker:Dummy):	Started fc16-builder
- D	(ocf::pacemaker:Dummy):	Stopped 
+ D	(ocf::pacemaker:Dummy):	(target-role:Stopped) Stopped 
 

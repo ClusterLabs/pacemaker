@@ -32,11 +32,11 @@ resources can run on.  One way is to say that by default they can run
 anywhere and then create location constraints for nodes that are not
 allowed.  The other option is to have nodes "opt-in"...  to start with
 nothing able to run anywhere and selectively enable allowed nodes.
-      
-=== Options ===
 
-.Options for Simple Location Constraints
-[width="95%",cols="2m,1,5<",options="header",align="center"]
+=== Location Properties ===
+
+.Properties for Simple Location Constraints
+[width="95%",cols="2m,1,5<a",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -64,34 +64,31 @@ indexterm:[Constraints,Location,node]
 |score
 |
 |Positive values indicate the resource should run on this
- node. Negative values indicate the resource should not run on this
- node.
+ node. Negative values indicate the resource should not run on this node.
 
- Values of \+/- +INFINITY+ change "should"/"should not" to
- "must"/"must not".
+Values of \+/- +INFINITY+ change "should"/"should not" to "must"/"must not".
 indexterm:[score,Location Constraints]
 indexterm:[Constraints,Location,score]
 
 |resource-discovery
-|+always+
-|Indicates whether or not Pacemaker should perform resource discovery
+|always
+|Whether Pacemaker should perform resource discovery
 on this node for the specified resource. Limiting resource discovery to
 a subset of nodes the resource is physically capable of running on
-can significantly boost performance when a large set of nodes are preset.
-When pacemaker_remote is in use to expand the node count into the 100s of
+can significantly boost performance when a large set of nodes are present.
+When pacemaker_remote is in use to expand the node count into the hundreds of
 nodes range, this option should be considered.
 
-* 'always' - Always perform resource discovery for the specified resource on this node.
-
-* 'never' - Never perform resource discovery for the specified resource on this node.
-  This option should generally be used with a -INFINITY score. Although that is not strictly
+* +always:+ Always perform resource discovery for the specified resource on this node.
+* +never:+ Never perform resource discovery for the specified resource on this node.
+  This option should generally be used with a -INFINITY score, although that is not strictly
   required.
-
-* 'exclusive' - Only perform resource discovery for the specified resource on this node. Multiple
-  location constraints using 'exclusive' discovery for the same resource across different nodes
-  creates a subset of nodes resource-discovery is exclusive to. If a resource is marked
-  for 'exclusive' discovery on one or more nodes, that resource is only allowed to be placed
-  within that subset of nodes.
+* +exclusive:+ Perform resource discovery for the specified resource only on
+  this node (and other nodes similarly marked as exclusive). Multiple location
+  constraints using 'exclusive' discovery for the same resource across
+  different nodes creates a subset of nodes resource-discovery is exclusive to.
+  If a resource is marked for 'exclusive' discovery on one or more nodes, that
+  resource is only allowed to be placed within that subset of nodes.
 
 indexterm:[Resource Discovery,Location Constraints]
 indexterm:[Constraints,Location,Resource Discovery]
@@ -105,8 +102,9 @@ indexterm:[Cluster Type,Asymmetrical Opt-In]
 To create an opt-in cluster, start by preventing resources from
 running anywhere by default:
 
-[source,C]
-# crm_attribute --attr-name symmetric-cluster --attr-value false
+----
+# crm_attribute --name symmetric-cluster --update false
+----
 
 Then start enabling nodes.  The following fragment says that the web
 server prefers +sles-1+, the database prefers +sles-2+ and both can
@@ -132,8 +130,9 @@ indexterm:[Cluster Type,Symmetrical Opt-Out]
 To create an opt-out cluster, start by allowing resources to run
 anywhere by default:
 
-[source,C]
-# crm_attribute --attr-name symmetric-cluster --attr-value true
+----
+# crm_attribute --name symmetric-cluster --update true
+----
 
 Then start disabling nodes.  The following fragment is the equivalent
 of the above opt-in configuration.
@@ -195,86 +194,82 @@ indexterm:[Ordering Constraints]
 The way to specify the order in which resources should start is by
 creating +rsc_order+ constraints.
 
+=== Ordering Properties ===
+
 .Properties of an Ordering Constraint
-[width="95%",cols="2m,5<",options="header",align="center"]
+[width="95%",cols="1m,1,4<a",options="header",align="center"]
 |=========================================================
-            
+
 |Field
+|Default
 |Description
 
 |id
+|
 |A unique name for the constraint
 indexterm:[id,Ordering Constraints]
 indexterm:[Constraints,Ordering,id]
 
 |first
+|
 |The name of a resource that must be started before the +then+
  resource is allowed to.
 indexterm:[first,Ordering Constraints]
 indexterm:[Constraints,Ordering,first]
 
 |then
+|
 |The name of a resource. This resource will start after the +first+ resource.
 indexterm:[then,Ordering Constraints]
 indexterm:[Constraints,Ordering,then]
 
 |kind
-|How to enforce the constraint. ('Since 1.1.2')
+|
+|How to enforce the constraint. Allowed values:
 
-* Optional - Just a suggestion.  Only applies if both resources are
-  starting/stopping.
-
-* Mandatory - Always.  If 'first' is stopping or cannot be started,
-  'then' must be stopped.
-
-* Serialize - Ensure that no two stop/start actions occur concurrently
-  for a set of resources.
+* +optional:+ Just a suggestion. Only applies if both resources are
+  starting/stopping. Any change in state by the +first+ resource will have no
+  effect on the +then+ resource.
+* +mandatory:+ Always. If 'first' is stopping or cannot be started,
+  'then' must be stopped. If 'first' is restarted, 'then' (if running)
+  will be stopped beforehand and started afterward.
+* +serialize:+ Ensure that no two stop/start actions occur concurrently
+  for the resources. 'First' and 'then' can start in either order,
+  but one must complete starting before the other can be started. A typical use
+  case is when resource start-up puts a high load on the host.
 
 indexterm:[kind,Ordering Constraints]
 indexterm:[Constraints,Ordering,kind]
 
 |symmetrical
-|If true, which is the default, stop the resources in the reverse
- order. Default value: _true_
+|TRUE
+|If true, stop the resources in the reverse order.
 indexterm:[symmetrical,Ordering Constraints]
 indexterm:[Ordering Constraints,symmetrical]
 
 |=========================================================
 
-=== Mandatory Ordering ===
+=== Optional and mandatory ordering ===
 
-When the +then+ resource cannot run without the +first+ resource being
-active, one should use mandatory constraints.  To specify a constraint
-is mandatory, use scores greater than zero.  This will ensure that the
-then resource will react when the first resource changes state.
+Here is an example of ordering constraints where +Database+ 'must' start before
++Webserver+, and +IP+ 'should' start before +Webserver+ if they both need to be
+started:
 
-* If the +first+ resource was running and is stopped, the +then+
-  resource will also be stopped (if it is running).
-* If the +first+ resource was not running and cannot be started, the
-  +then+ resource will be stopped (if it is running).
-* If the +first+ resource is (re)started while the +then+ resource is
-  running, the +then+ resource will be stopped and restarted.
-
-=== Advisory Ordering ===
-
-On the other hand, when +score="0"+ is specified for a constraint, the
-constraint is considered optional and only has an effect when both
-resources are stopping and/or starting.  Any change in state by the
-+first+ resource will have no effect on the +then+ resource.
-
-.Example of an optional and mandatory ordering constraint     
+.Optional and mandatory ordering constraints
 ======
 [source,XML]
 -------
 <constraints>
-    <rsc_order id="order-1" first="Database" then="Webserver" />
-    <rsc_order id="order-2" first="IP" then="Webserver" score="0"/>
+<rsc_order id="order-1" first="IP" then="Webserver" kind="optional"/>
+<rsc_order id="order-2" first="Database" then="Webserver" kind="mandatory" />
 </constraints>
 -------
 ======
 
-Some additional information on ordering constraints can be found in
-the document http://clusterlabs.org/doc/Ordering_Explained.pdf[Ordering Explained].
+Because the above example lets +symmetrical+ default to TRUE, 
++Webserver+ must be stopped before +Database+ can be stopped,
+and +Webserver+ should be stopped before +IP+
+if they both need to be stopped.
 
 [[s-resource-colocation]]
 == Placing Resources Relative to other Resources ==
@@ -297,17 +292,16 @@ the cluster is not quite so smart. Yet.
 So when you are creating colocation constraints, it is important to
 consider whether you should colocate A with B or B with A.
 
-Another thing to keep in mind is that, assuming A is collocated with
-B, the cluster will also take into account A's preferences when
+Another thing to keep in mind is that, assuming A is colocated with
+B, the cluster will take into account A's preferences when
 deciding which node to choose for B.
 
-For a detailed look at exactly how this occurs, see the
-http://www.clusterlabs.org/mediawiki/images/6/61/Colocation_Explained.pdf[Colocation
-Explained] document.
+For a detailed look at exactly how this occurs, see
+http://clusterlabs.org/doc/Colocation_Explained.pdf[Colocation Explained].
 
-=== Options ===
+=== Colocation Properties ===
 
-.Properties of a Collocation Constraint
+.Properties of a Colocation Constraint
 [width="95%",cols="2m,5<",options="header",align="center"]
 |=========================================================
 
@@ -320,22 +314,20 @@ indexterm:[id,Colocation Constraints]
 indexterm:[Constraints,Colocation,id]
 
 |rsc
-|The colocation source. If the constraint cannot be satisfied, the
- cluster may decide not to allow the resource to run at all.
+|The name of a resource that should be located relative to +with-rsc+.
 indexterm:[rsc,Colocation Constraints]
 indexterm:[Constraints,Colocation,rsc]
 
 |with-rsc
-|The colocation target. The cluster will decide where to put this
- resource first and then decide where to put the resource in the +rsc+
- field.
+|The name of the resource used as the colocation target. The cluster will
+decide where to put this resource first and then decide where to put +rsc+.
  indexterm:[with-rsc,Colocation Constraints]
  indexterm:[Constraints,Colocation,with-rsc]
 
 |score
-|Positive values indicate the resource should run on the same
- node. Negative values indicate the resources should not run on the
- same node. Values of \+/- +INFINITY+ change "should" to "must".
+|Positive values indicate the resources should run on the same
+ node. Negative values indicate the resources should run on
+ different nodes. Values of \+/- +INFINITY+ change "should" to "must".
  indexterm:[score,Colocation Constraints]
  indexterm:[Constraints,Colocation,score]
 
@@ -503,10 +495,10 @@ image::images/three-sets.png["Three ordered sets",width="16cm",height="7.5cm",al
 
 The unordered set logic discussed so far has all been "AND" logic.
 To illustrate this take the 3 resource set figure in the previous section.
-Those sets can be expressed, +(A and B) then (C) then (D) then (E and F)+
+Those sets can be expressed, +(A and B) then \(C) then (D) then (E and F)+.
 
-Say for example we want change the first set, (A and B), to use "OR" logic
-so the sets look like this, +(A or B) then (C) then (D) then (E and F)+.
+Say for example we want to change the first set, +(A and B)+, to use "OR" logic
+so the sets look like this: +(A or B) then \(C) then (D) then (E and F)+.
 This functionality can be achieved through the use of the +require-all+
 option.  By default this option is 'require-all=true' which is why the
 "AND" logic is used by default.  Changing +require-all=false+ means only one
@@ -542,41 +534,45 @@ modifies the set to be an unordered set that uses "AND" logic by default, by add
 
 
 [[s-resource-sets-colocation]]
-== Collocating Sets of Resources ==
+== Colocating Sets of Resources ==
 
 Another common situation is for an administrator to create a set of
-collocated resources.  Previously this was possible either by defining
-a resource group (See <<group-resources>>) which could not always
-accurately express the design; or by defining each relationship as an
-individual constraint, causing a constraint explosion as the number of
-resources and combinations grew.
+colocated resources.
 
-.A chain of collocated resources
+One way to do this would be to define a resource group (see
+<<group-resources>>), but that cannot always accurately express the desired
+state.
+
+Another way would be to define each relationship as an individual constraint,
+but that causes a constraint explosion as the number of resources and
+combinations grow. An example of this approach:
+
+.Chain of colocated resources
 ======
 [source,XML]
 -------
 <constraints>
-    <rsc_colocation id="coloc-1" rsc="B" with-rsc="A" score="INFINITY"/>
-    <rsc_colocation id="coloc-2" rsc="C" with-rsc="B" score="INFINITY"/>
-    <rsc_colocation id="coloc-3" rsc="D" with-rsc="C" score="INFINITY"/>
+    <rsc_colocation id="coloc-1" rsc="A" with-rsc="B" score="INFINITY"/>
+    <rsc_colocation id="coloc-2" rsc="B" with-rsc="C" score="INFINITY"/>
+    <rsc_colocation id="coloc-3" rsc="C" with-rsc="D" score="INFINITY"/>
 </constraints>
 -------
 ======
 
 To make things easier, we allow an alternate form of colocation
-constraints using +resource_sets+.  Just like the expanded version, a
-resource that can't be active also prevents any resource that must be
-collocated with it from being active.  For example, if +B+ was not
-able to run, then both +C+ (and by inference +D+) must also remain
-stopped.
+constraints using +resource_set+. As with the chained version, a
+resource that can't be active prevents any resource that must be
+colocated with it from being active.  For example, if +C+ is not
+able to run, then both +B+ and by inference +A+ must also remain
+stopped. Here is an example +resource_set+:
 
-.The equivalent colocation chain expressed using +resource_sets+   
+.Equivalent colocation chain expressed using +resource_set+
 ======
 [source,XML]
 -------
 <constraints>
     <rsc_colocation id="coloc-1" score="INFINITY" >
-      <resource_set id="collocated-set-example" sequential="true">
+      <resource_set id="colocated-set-example" sequential="true">
         <resource_ref id="A"/>
         <resource_ref id="B"/>
         <resource_ref id="C"/>
@@ -616,12 +612,12 @@ both) were inactive.
 -------
 <constraints>
     <rsc_colocation id="coloc-1" score="INFINITY" >
-      <resource_set id="collocated-set-1" sequential="false">
+      <resource_set id="colocated-set-1" sequential="false">
         <resource_ref id="A"/>
         <resource_ref id="B"/>
         <resource_ref id="C"/>
       </resource_set>
-      <resource_set id="collocated-set-2" sequential="true">
+      <resource_set id="colocated-set-2" sequential="true">
         <resource_ref id="D"/>
       </resource_set>
     </rsc_colocation>
@@ -643,16 +639,16 @@ must be in using the set's role attribute.
 -------
 <constraints>
     <rsc_colocation id="coloc-1" score="INFINITY" >
-      <resource_set id="collocated-set-1" sequential="true">
+      <resource_set id="colocated-set-1" sequential="true">
         <resource_ref id="A"/>
         <resource_ref id="B"/>
       </resource_set>
-      <resource_set id="collocated-set-2" sequential="false">
+      <resource_set id="colocated-set-2" sequential="false">
         <resource_ref id="C"/>
         <resource_ref id="D"/>
         <resource_ref id="E"/>
       </resource_set>
-      <resource_set id="collocated-set-2" sequential="true" role="Master">
+      <resource_set id="colocated-set-3" sequential="true" role="Master">
         <resource_ref id="F"/>
         <resource_ref id="G"/>
       </resource_set>

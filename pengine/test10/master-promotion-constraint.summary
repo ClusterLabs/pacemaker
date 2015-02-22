@@ -4,8 +4,8 @@ Online: [ hex-13 hex-14 ]
 
  fencing-sbd	(stonith:external/sbd):	Started hex-13
  Resource Group: g0
-     d0	(ocf::pacemaker:Dummy):	Stopped 
-     d1	(ocf::pacemaker:Dummy):	Stopped 
+     d0	(ocf::pacemaker:Dummy):	(target-role:Stopped) Stopped 
+     d1	(ocf::pacemaker:Dummy):	(target-role:Stopped) Stopped 
  Master/Slave Set: ms0 [s0]
      Masters: [ hex-14 ]
      Slaves: [ hex-13 ]
@@ -25,8 +25,8 @@ Online: [ hex-13 hex-14 ]
 
  fencing-sbd	(stonith:external/sbd):	Started hex-13
  Resource Group: g0
-     d0	(ocf::pacemaker:Dummy):	Stopped 
-     d1	(ocf::pacemaker:Dummy):	Stopped 
+     d0	(ocf::pacemaker:Dummy):	(target-role:Stopped) Stopped 
+     d1	(ocf::pacemaker:Dummy):	(target-role:Stopped) Stopped 
  Master/Slave Set: ms0 [s0]
      Slaves: [ hex-13 hex-14 ]
 

@@ -3,7 +3,7 @@ Current cluster status:
 Online: [ 18node1 18node2 18node3 ]
 
  A	(ocf::heartbeat:Dummy):	Started 18node1 
- B	(ocf::heartbeat:Dummy):	Started 18node2 
+ B	(ocf::heartbeat:Dummy):	(target-role:Stopped) Started 18node2 
 
 Transition Summary:
  * Migrate A	(Started 18node1 -> 18node2)
@@ -22,5 +22,5 @@ Revised cluster status:
 Online: [ 18node1 18node2 18node3 ]
 
  A	(ocf::heartbeat:Dummy):	Started 18node2 
- B	(ocf::heartbeat:Dummy):	Stopped 
+ B	(ocf::heartbeat:Dummy):	(target-role:Stopped) Stopped 
 

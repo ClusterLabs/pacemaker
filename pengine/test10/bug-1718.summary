@@ -5,7 +5,7 @@ OFFLINE: [ defiant.ds9 warbird.ds9 ]
 
  Resource Group: Web_Group
      Apache_IP	(ocf::heartbeat:IPaddr):	Started heartbeat.ds9
-     resource_IP2	(ocf::heartbeat:IPaddr):	Stopped 
+     resource_IP2	(ocf::heartbeat:IPaddr):	(target-role:stopped) Stopped 
      resource_dummyweb	(ocf::heartbeat:Dummy):	Stopped 
  Resource Group: group_fUN
      resource_IP3	(ocf::heartbeat:IPaddr):	Started ops.ds9
@@ -33,7 +33,7 @@ OFFLINE: [ defiant.ds9 warbird.ds9 ]
 
  Resource Group: Web_Group
      Apache_IP	(ocf::heartbeat:IPaddr):	Started heartbeat.ds9
-     resource_IP2	(ocf::heartbeat:IPaddr):	Stopped 
+     resource_IP2	(ocf::heartbeat:IPaddr):	(target-role:stopped) Stopped 
      resource_dummyweb	(ocf::heartbeat:Dummy):	Stopped 
  Resource Group: group_fUN
      resource_IP3	(ocf::heartbeat:IPaddr):	Stopped 

@@ -2422,7 +2422,7 @@ send_smtp_trap(const char *node, const char *rsc, const char *task, int target_r
 }
 
 static void
-handle_rsc_op(xmlNode * xml, const char *node)
+handle_rsc_op(xmlNode * xml, const char *node_id)
 {
     int rc = -1;
     int status = -1;
@@ -2438,6 +2438,7 @@ handle_rsc_op(xmlNode * xml, const char *node)
     const char *magic = NULL;
     const char *id = NULL;
     char *update_te_uuid = NULL;
+    const char *node = NULL;
 
     xmlNode *n = xml;
     xmlNode * rsc_op = xml;
@@ -2446,7 +2447,7 @@ handle_rsc_op(xmlNode * xml, const char *node)
         xmlNode *cIter;
 
         for(cIter = xml->children; cIter; cIter = cIter->next) {
-            handle_rsc_op(cIter, node);
+            handle_rsc_op(cIter, node_id);
         }
 
         return;
@@ -2475,16 +2476,22 @@ handle_rsc_op(xmlNode * xml, const char *node)
         goto bail;
     }
 
+    node = crm_element_value(rsc_op, XML_LRM_ATTR_TARGET);
+
     while (n != NULL && safe_str_neq(XML_CIB_TAG_STATE, TYPE(n))) {
         n = n->parent;
     }
 
-    if(node == NULL) {
+    if(node == NULL && n) {
         node = crm_element_value(n, XML_ATTR_UNAME);
     }
 
-    if (node == NULL) {
+    if (node == NULL && n) {
         node = ID(n);
+    }
+
+    if (node == NULL) {
+        node = node_id;
     }
 
     if (node == NULL) {
@@ -2597,7 +2604,10 @@ static void crm_diff_update_v2(const char *event, xmlNode * msg)
             xmlNode *status = first_named_child(match, XML_CIB_TAG_STATUS);
 
             for (state = __xml_first_child(status); state != NULL; state = __xml_next(state)) {
-                node = ID(state);
+                node = crm_element_value(state, XML_ATTR_UNAME);
+                if (node == NULL) {
+                    node = ID(state);
+                }
                 handle_rsc_op(state, node);
             }
 
@@ -2605,12 +2615,18 @@ static void crm_diff_update_v2(const char *event, xmlNode * msg)
             xmlNode *state = NULL;
 
             for (state = __xml_first_child(match); state != NULL; state = __xml_next(state)) {
-                node = ID(state);
+                node = crm_element_value(state, XML_ATTR_UNAME);
+                if (node == NULL) {
+                    node = ID(state);
+                }
                 handle_rsc_op(state, node);
             }
 
         } else if(strcmp(name, XML_CIB_TAG_STATE) == 0) {
-            node = ID(match);
+            node = crm_element_value(match, XML_ATTR_UNAME);
+            if (node == NULL) {
+                node = ID(match);
+            }
             handle_rsc_op(match, node);
 
         } else if(strcmp(name, XML_CIB_TAG_LRM) == 0) {

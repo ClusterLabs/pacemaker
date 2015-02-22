@@ -23,9 +23,10 @@
 #  include <dbus/dbus.h>
 #endif
 
+#define MAX_ARGC        255
 struct svc_action_private_s {
     char *exec;
-    char *args[255];
+    char *args[MAX_ARGC];
 
     guint repeat_timer;
     void (*callback) (svc_action_t * op);

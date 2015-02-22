@@ -1,0 +1,79 @@
+<cib epoch="1" num_updates="37" admin_epoch="0" validate-with="pacemaker-1.2" cib-last-written="Fri Jul 13 13:51:19 2012" have-quorum="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" type="normal" uname="node1"/>
+      <node id="node2" type="normal" uname="node2"/>
+    </nodes>
+    <resources>
+      <master id="ms1">
+        <meta_attributes id="ms1-meta_attributes">
+          <nvpair id="ms1-meta_attributes-master-max" name="master-max" value="2"/>
+          <nvpair id="ms1-notify" name="notify" value="true"/>
+          <nvpair id="ms1-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+        <primitive id="rsc1" class="ocf" provider="pacemaker" type="Stateful">
+          <operations id="rsc1-operations">
+            <op id="rsc1-monitor-master-5" name="monitor" interval="5" role="Master"/>
+            <op id="rsc1-monitor-slave-10" name="monitor" interval="10" role="Slave"/>
+          </operations>
+        </primitive>
+      </master>
+      <primitive id="rsc2" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="rsc2-meta_attributes">
+          <nvpair id="rsc2-meta_attributes-allow-migrate" name="allow-migrate" value="true"/>
+        </meta_attributes>
+        <operations id="rsc2-operations">
+          <op id="rsc2-monitor-5" name="monitor" interval="5"/>
+        </operations>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_order id="ms1-promote-then-rsc2" first="ms1" first-action="promote" then="rsc2" then-action="start" kind="Mandatory"/>
+      <rsc_colocation id="rsc2-with-ms1-master" rsc="rsc2" with-rsc="ms1" with-rsc-role="Master" score="INFINITY"/>
+      <rsc_location id="loc-ms1-node1" rsc="ms1" role="Master" node="node1" score="100"/>
+      <rsc_location id="loc-ms1-node2" rsc="ms1" role="Master" node="node2" score="100"/>
+      <rsc_location id="loc-rsc2" rsc="rsc2" node="node1" score="-INFINITY"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="node1" uname="node1" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="node1">
+        <lrm_resources>
+          <lrm_resource id="rsc1:0" class="ocf" provider="pacemaker" type="Stateful">
+            <lrm_rsc_op id="rsc1_last_0" operation_key="rsc1_promote_0" operation="promote" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="5:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;5:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="5" rc-code="0" op-status="0" interval="0" last-run="1422545797" last-rc-change="1422545797" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rsc1_post_notify_start_0" operation_key="rsc1_notify_0" operation="notify" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="0" last-run="1422545797" last-rc-change="1422545797" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rsc1_pre_notify_promote_0" operation_key="rsc1_notify_0" operation="notify" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="4:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;4:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="4" rc-code="0" op-status="0" interval="0" last-run="1422545797" last-rc-change="1422545797" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rsc1_post_notify_promote_0" operation_key="rsc1_notify_0" operation="notify" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="6:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;6:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="6" rc-code="0" op-status="0" interval="0" last-run="1422545797" last-rc-change="1422545797" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rsc1_monitor_5000" operation_key="rsc1_monitor_5000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="7:-1:8:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:8;7:-1:8:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="7" rc-code="8" op-status="0" interval="5000" last-rc-change="1422545797" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="rsc2" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="rsc2_last_0" operation_key="rsc2_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1422545797" last-rc-change="1422545797" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rsc2_monitor_5000" operation_key="rsc2_monitor_5000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="5000" last-rc-change="1422545797" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="node2" uname="node2" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="node2">
+        <lrm_resources>
+          <lrm_resource id="rsc1:1" class="ocf" provider="pacemaker" type="Stateful">
+            <lrm_rsc_op id="rsc1_last_0" operation_key="rsc1_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1422545797" last-rc-change="1422545797" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rsc1_post_notify_start_0" operation_key="rsc1_notify_0" operation="notify" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="0" last-run="1422545797" last-rc-change="1422545797" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rsc1_pre_notify_promote_0" operation_key="rsc1_notify_0" operation="notify" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="4:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;4:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="4" rc-code="0" op-status="0" interval="0" last-run="1422545797" last-rc-change="1422545797" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rsc1_post_notify_promote_0" operation_key="rsc1_notify_0" operation="notify" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="5:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;5:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="5" rc-code="0" op-status="0" interval="0" last-run="1422545797" last-rc-change="1422545797" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rsc1_monitor_10000" operation_key="rsc1_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="6:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;6:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="6" rc-code="0" op-status="0" interval="10000" last-rc-change="1422545797" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="rsc2" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="rsc2_last_0" operation_key="rsc2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1422545797" last-rc-change="1422545797" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

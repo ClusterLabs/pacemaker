@@ -1620,6 +1620,7 @@ rsc_order_first(resource_t * lh_rsc, order_constraint_t * order, pe_working_set_
 }
 
 extern gboolean update_action(action_t * action);
+extern void update_colo_start_chain(action_t * action);
 
 static void
 apply_remote_node_ordering(pe_working_set_t *data_set)
@@ -1636,6 +1637,7 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
 
         if (action->node == NULL ||
             is_remote_node(action->node) == FALSE ||
+            action->node->details->remote_rsc == NULL ||
             action->rsc == NULL ||
             is_set(action->flags, pe_action_pseudo)) {
             continue;
@@ -1804,6 +1806,7 @@ stage7(pe_working_set_t * data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
 
+        update_colo_start_chain(action);
         update_action(action);
     }
 

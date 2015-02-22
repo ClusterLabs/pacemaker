@@ -176,6 +176,8 @@ do_test coloc_fp_logic "Verify floating point calculations in colocation are wor
 do_test colo_master_w_native "cl#5070 - Verify promotion order is affected when colocating master to native rsc."
 do_test colo_slave_w_native  "cl#5070 - Verify promotion order is affected when colocating slave to native rsc."
 do_test anti-colocation-order "cl#5187 - Prevent resources in an anti-colocation from even temporarily running on a same node"
+do_test enforce-colo1 "Always enforce B with A INFINITY."
+do_test complex_enforce_colo "Always enforce B with A INFINITY. (make sure heat-engine stops)"
 
 echo ""
 do_test rsc-sets-seq-true "Resource Sets - sequential=false"
@@ -302,6 +304,9 @@ do_test 8-am-then-bm-a-migrating-b-stopping "Advanced migrate logic, A then B, A
 do_test 9-am-then-bm-b-migrating-a-stopping "Advanced migrate logic, A then B, B migrate, A stopping"
 do_test 10-a-then-bm-b-move-a-clone "Advanced migrate logic, A clone then B, migrate B while stopping A"
 do_test 11-a-then-bm-b-move-a-clone-starting "Advanced migrate logic, A clone then B, B moving while A is start/stopping"
+
+do_test a-promote-then-b-migrate "A promote then B start. migrate B"
+do_test a-demote-then-b-migrate "A demote then B stop. migrate B"
 
 #echo ""
 #do_test complex1 "Complex	"
@@ -778,6 +783,7 @@ do_test remote-fence-unclean2  "Fence baremetal remote-node after cluster node f
 do_test remote-move            "Move remote-node connection resource"
 do_test remote-disable         "Disable a baremetal remote-node"
 do_test remote-orphaned        "Properly shutdown orphaned connection resource"
+do_test remote-orphaned2       "verify we can handle orphaned remote connections with active resources on the remote"
 do_test remote-recover         "Recover connection resource after cluster-node fails."
 do_test remote-stale-node-entry "Make sure we properly handle leftover remote-node entries in the node section"
 do_test remote-partial-migrate  "Make sure partial migrations are handled before ops on the remote node."

@@ -1828,7 +1828,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
 
             should_fence = TRUE;
         } else if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            if (is_baremetal_remote_node(node) && is_not_set(node->details->remote_rsc->flags, pe_rsc_failed)) {
+            if (is_baremetal_remote_node(node) && node->details->remote_rsc && is_not_set(node->details->remote_rsc->flags, pe_rsc_failed)) {
                 /* setting unseen = true means that fencing of the remote node will
                  * only occur if the connection resource is not going to start somewhere.
                  * This allows connection resources on a failed cluster-node to move to
