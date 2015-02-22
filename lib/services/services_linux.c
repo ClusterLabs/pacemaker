@@ -256,7 +256,7 @@ operation_finalize(svc_action_t * op)
 
     op->pid = 0;
 
-    if (!recurring) {
+    if (!recurring && op->synchronous == FALSE) {
         /*
          * If this is a recurring action, do not free explicitly.
          * It will get freed whenever the action gets cancelled.
