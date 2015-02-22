@@ -306,6 +306,10 @@ void
 services_action_cleanup(svc_action_t * op)
 {
 #if SUPPORT_DBUS
+    if(op->opaque == NULL) {
+        return;
+    }
+
     if(op->opaque->timerid != 0) {
         crm_trace("Removing timer for call %s to %s", op->action, op->rsc);
         g_source_remove(op->opaque->timerid);
