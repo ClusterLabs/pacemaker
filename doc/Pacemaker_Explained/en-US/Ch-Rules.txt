@@ -1,7 +1,7 @@
 = Rules =
 
 //// 
-We prefer [[ch-rules]], but older versions of asciidoc dont deal well
+We prefer [[ch-rules]], but older versions of asciidoc don't deal well
 with that construct for chapter headings
 ////
 
@@ -24,29 +24,35 @@ on the rule's +boolean-op+ field to determine if the rule ultimately
 evaluates to +true+ or +false+.  What happens next depends on the
 context in which the rule is being used.
     
+== Rule Properties ==
+
 .Properties of a Rule
-[width="95%",cols="2m,5<",options="header",align="center"]
+[width="95%",cols="2m,1,5<",options="header",align="center"]
 |=========================================================
 
 |Field
+|Default
 |Description
 
 |role
-|Limits the rule to apply only when the resource is in that
- role. Allowed values: _Started_, +Slave,+ and +Master+. NOTE: A rule
- with +role="Master"+ can not determine the initial location of a
- clone instance. It will only affect which of the active instances
+|+started+
+|Limits the rule to apply only when the resource is in the specified
+ role. Allowed values are +started+, +slave+, and +master+. A rule
+ with +role="master"+ cannot determine the initial location of a
+ clone instance and will only affect which of the active instances
  will be promoted.
  indexterm:[role,Constraint Rule]
  indexterm:[Constraint,Rule,role]
 
 |score
+|
 |The score to apply if the rule evaluates to +true+. Limited to use in
  rules that are part of location constraints.
  indexterm:[score,Constraint Rule]
  indexterm:[Constraint,Rule,score]
 
 |score-attribute
+|
 |The node attribute to look up and use as a score if the rule
  evaluates to +true+. Limited to use in rules that are part of
  location constraints.
@@ -54,8 +60,9 @@ context in which the rule is being used.
  indexterm:[Constraint,Rule,score-attribute]
 
 |boolean-op 
+|+and+
 |How to combine the result of multiple expression objects. Allowed
- values: _and_ and +or+.
+ values are +and+ and +or+.
  indexterm:[boolean-op,Constraint Rule]
  indexterm:[Constraint,Rule,boolean-op]
 
@@ -71,46 +78,44 @@ added by the administrator, each node has a built-in node attribute
 called +#uname+ that can also be used.
 
 .Properties of an Expression
-[width="95%",cols="2m,5<",options="header",align="center"]
+[width="95%",cols="1m,1,5<a",options="header",align="center"]
 |=========================================================
 
 |Field
+|Default
 |Description
 
 |value
-|User supplied value for comparison
+|
+|User-supplied value for comparison
  indexterm:[value,Constraint Expression]
  indexterm:[Constraint,Attribute Expression,value]
 
 |attribute
+|
 |The node attribute to test
  indexterm:[attribute,Constraint Expression]
  indexterm:[Constraint,Attribute Expression,attribute]
 
 |type
-|Determines how the value(s) should be tested. Allowed values:
- _string_, +integer+, +version+
+|+string+
+|Determines how the value(s) should be tested. Allowed values are
+ +string+, +integer+, and +version+.
  indexterm:[type,Constraint Expression]
  indexterm:[Constraint,Attribute Expression,type]
 
 |operation
+|
 |The comparison to perform. Allowed values:
 
-* 'lt' - True if the node attribute's value is less than +value+
-
-* 'gt' - True if the node attribute's value is greater than +value+
-
-* 'lte' - True if the node attribute's value is less than or equal to +value+
-
-* 'gte' - True if the node attribute's value is greater than or equal to +value+
-
-* 'eq' - True if the node attribute's value is equal to +value+
-
-* 'ne' - True if the node attribute's value is not equal to +value+
-
-* 'defined' - True if the node has the named attribute
-
-* 'not_defined' - True if the node does not have the named attribute
+* +lt:+ True if the value of the node's +attribute+ is less than +value+
+* +gt:+ True if the value of the node's +attribute+ is greater than +value+
+* +lte:+ True if the value of the node's +attribute+ is less than or equal to +value+
+* +gte:+ True if the value of the node's +attribute+ is greater than or equal to +value+
+* +eq:+ True if the value of the node's +attribute+ is equal to +value+
+* +ne:+ True if the value of the node's +attribute+ is not equal to +value+
+* +defined:+ True if the node has the named attribute
+* +not_defined:+ True if the node does not have the named attribute
  indexterm:[operation,Constraint Expression]
  indexterm:[Constraint,Attribute Expression,operation]
 
@@ -127,19 +132,21 @@ contain an optional +date_spec+ and/or +duration+ object depending on
 the context.
       
 .Properties of a Date Expression
-[width="95%",cols="2m,5<",options="header",align="center"]
+[width="95%",cols="2m,5<a",options="header",align="center"]
 |=========================================================
 |Field
 |Description
 
 |start
-|A date/time conforming to the ISO8601 specification.
+|A date/time conforming to the http://en.wikipedia.org/wiki/ISO_8601[ISO8601]
+ specification.
  indexterm:[start,Constraint Expression]
  indexterm:[Constraint,Date/Time Expression,start]
 
 |end
-|A date/time conforming to the ISO8601 specification. Can be inferred
- by supplying a value for +start+ and a +duration+.
+|A date/time conforming to the http://en.wikipedia.org/wiki/ISO_8601[ISO8601]
+ specification. Can be inferred by supplying a value for +start+ and a
+ +duration+.
  indexterm:[end,Constraint Expression]
  indexterm:[Constraint,Date/Time Expression,end]
 
@@ -147,13 +154,11 @@ the context.
 |Compares the current date/time with the start and/or end date,
  depending on the context. Allowed values:
 
-* 'gt' - True if the current date/time is after +start+
-
-* 'lt' - True if the current date/time is before +end+
-
-* 'in-range' - True if the current date/time is after +start+ and before +end+
-
-* 'date-spec' - performs a cron-like comparison to the current date/time
+* +gt:+ True if the current date/time is after +start+
+* +lt:+ True if the current date/time is before +end+
+* +in-range:+ True if the current date/time is after +start+ and before +end+
+* +date-spec:+ True if the current date/time matches a +date_spec+ object
+  (described below)
  indexterm:[operation,Constraint Expression]
  indexterm:[Constraint,Date/Time Expression,operation]
 
@@ -198,7 +203,7 @@ demand, this may be implemented in a future release.
  indexterm:[Constraint,Date Specification,hours]
 
 |monthdays
-|Allowed values: 0-31 (depending on month and year)
+|Allowed values: 1-31 (depending on month and year)
  indexterm:[monthdays,Date Specification]
  indexterm:[Constraint,Date Specification,monthdays]
 
@@ -257,7 +262,7 @@ ignored.
 A small sample of how time based expressions can be used.
 
 ////
-On older versions of asciidoc, the [source] directive makes the title dissappear
+On older versions of asciidoc, the [source] directive makes the title disappear
 ////
 
 .True if now is any time in the year 2005
@@ -377,7 +382,7 @@ treats the constraint as if it was not there.  When the rule evaluates
 to +true+, the node's preference for running the resource is updated
 with the score associated with the rule.
 
-If this sounds familiar, its because you have been using a simplified
+If this sounds familiar, it is because you have been using a simplified
 syntax for location constraint rules already.  Consider the following
 location constraint:
       
@@ -439,7 +444,7 @@ then we could prevent resources from running on underpowered machines with the r
 [source,XML]
 -------
 <rule id="need-more-power-rule" score="-INFINITY">
-   <expression id=" need-more-power-expr" attribute="cpu_mips"
+   <expression id="need-more-power-expr" attribute="cpu_mips"
                operation="lt" value="3000"/>
 </rule>
 -------

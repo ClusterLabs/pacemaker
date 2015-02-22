@@ -2,16 +2,8 @@
 
 == Upgrading the Configuration from 0.6 ==
 
-=== Preparation ===
 indexterm:[Upgrading the Configuration]
 indexterm:[Configuration,Upgrading]
-
-indexterm:[Download,DTD]
-indexterm:[DTD,Download]
-
-Download the latest
-http://hg.clusterlabs.org/pacemaker/stable-1.0/file-raw/tip/xml/crm.dtd[DTD]
-and ensure your configuration validates.
 
 === Perform the upgrade ===
 

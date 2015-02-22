@@ -1,7 +1,7 @@
 = Receiving Notification for Cluster Events =
 
 //// 
-We prefer [[ch-notifications]], but older versions of asciidoc dont deal well
+We prefer [[ch-notifications]], but older versions of asciidoc don't deal well
 with that construct for chapter headings
 ////
 anchor:ch-notifications[Chapter 7, Receiving Notification for Cluster Events]

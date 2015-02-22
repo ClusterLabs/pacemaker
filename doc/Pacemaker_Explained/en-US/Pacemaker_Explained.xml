@@ -32,10 +32,10 @@
   <appendix id="ap-further-reading">
     <title>Further Reading</title>
     <itemizedlist spacing="compact">
-      <listitem><para>Project Website <ulink url="http://www.clusterlabs.org/"/></para></listitem>
-      <listitem><para>Project Documentation <ulink url="http://www.clusterlabs.org/wiki/Documentation"/></para></listitem>
+      <listitem><para>Project Website: <ulink url="http://www.clusterlabs.org/"/></para></listitem>
+      <listitem><para>Project Documentation: <ulink url="http://www.clusterlabs.org/wiki/Documentation"/></para></listitem>
       <listitem>
-        <para>A comprehensive guide to cluster commands has been written by Novell<footnote><para><ulink url="http://www.suse.com/documentation/sle_ha/book_sleha/data/book_sleha.html"/></para></footnote></para>
+        <para>SUSE High Availibility Guide: <ulink url="http://www.suse.com/documentation/sle_ha/book_sleha/data/book_sleha.html"/></para>
       </listitem>
       <listitem><para>Heartbeat configuration: <ulink url="http://www.linux-ha.org/"/></para></listitem>
       <listitem><para>Corosync Configuration: <ulink url="http://www.corosync.org/"/></para></listitem>

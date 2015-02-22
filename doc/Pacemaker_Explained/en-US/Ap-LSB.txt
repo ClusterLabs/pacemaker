@@ -1,15 +1,15 @@
 [appendix]
 
 [[ap-lsb]]
-== init-Script LSB Compliance ==
+== Init Script LSB Compliance ==
 
-The relevant part of
-http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html[LSB spec]
+The relevant part of the
+http://refspecs.linuxfoundation.org/lsb.shtml[LSB specifications]
 includes a description of all the return codes listed here.
     
-Assuming +some_service+ is configured correctly and currently not
-active, the following sequence will help you determine if it is LSB
-compatible:
+Assuming `some_service` is configured correctly and currently
+inactive, the following sequence will help you determine if it is
+LSB-compatible:
 
 . Start (stopped):
 +
