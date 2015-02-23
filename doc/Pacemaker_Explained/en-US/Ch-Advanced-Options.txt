@@ -128,6 +128,8 @@ There are primarily two occasions when you would want to move a
 resource from its current location: when the whole node is under
 maintenance, and when a single resource needs to be moved.
 
+==== Standby Mode ====
+
 Since everything eventually comes down to a score, you could create
 constraints for every resource to prevent them from running on one
 node.  While pacemaker configuration can seem convoluted at times, not even
@@ -237,8 +239,13 @@ which has the same long-term consequences as discussed earlier.
 [[s-failure-migration]]
 === Moving Resources Due to Repeated Failure ===
 
+Normally, if a running resource fails, pacemaker will try to start
+it again on the same node. However if a resource fails repeatedly,
+it is possible that there is an underlying problem on that node, and you
+might desire trying a different node in such a case.
 
-New in 1.0 is the concept of a migration threshold.
+Pacemaker allows you to set your preference via the +migration-threshold+
+resource option.
 footnote:[
 The naming of this option was perhaps unfortunate as it is easily
 confused with live migration, the process of moving a resource from
@@ -296,15 +303,13 @@ The attribute name is customizable, in order to allow multiple ping groups to be
 ]
 
 [NOTE]
-Older versions of Heartbeat required users to add ping nodes to _ha.cf_ - this is no longer required.
-
-[IMPORTANT]
 ===========
-Older versions of Pacemaker used a custom binary called 'pingd' for
-this functionality; this is now deprecated in favor of 'ping'.
+Older versions of Heartbeat required users to add ping nodes to +ha.cf+, but
+this is no longer required.
 
-If your version of Pacemaker does not contain the ping agent, you can
-download the latest version from
+Older versions of Pacemaker used a different agent *ocf:pacemaker:pingd* which
+is now deprecated in favor of *ping*. If your version of Pacemaker does not
+contain the *ping* resource agent, download the latest version from
 https://github.com/ClusterLabs/pacemaker/tree/master/extra/resources/ping
 ===========
 
@@ -470,12 +475,17 @@ three (again assuming that +multiplier+ is set to 1000).
 -------
 =====
 
-=== Resource Migration ===
+=== Migrating Resources ===
 
-Some resources, such as Xen virtual guests, are able to move to
-another location without loss of state.  We call this resource
-migration; this is different from the normal practice of stopping the
-resource on the first machine and starting it elsewhere.
+Normally, when the cluster needs to move a resource, it fully restarts
+the resource (i.e. stops the resource on the current node
+and starts it on the new node).
+
+However, some types of resources, such as Xen virtual guests, are able to move to
+another location without loss of state (often referred to as live migration
+or hot migration). In pacemaker, this is called resource migration.
+Pacemaker can be configured to migrate a resource when moving it,
+rather than restarting it.
 
 Not all resources are able to migrate; see the Migration Checklist
 below, and those that can, won't do so in all situations.
@@ -500,30 +510,34 @@ Conversely for pull, the +migrate_to+ action is practically empty and
 +migrate_from+ does most of the work, extracting the relevant resource
 state from the old location and activating it.
 
-There is no wrong or right way to implement migration for your
-service, as long as it works.
+There is no wrong or right way for a resource agent to implement migration,
+as long as it works.
 
-==== Migration Checklist ====
-
+.Migration Checklist
 * The resource may not be a clone.
 * The resource must use an OCF style agent.
 * The resource must not be in a failed or degraded state.
-* The resource must not, directly or indirectly, depend on any
-  primitive or group resources.
-* The resource must support two new actions: +migrate_to+ and
-  +migrate_from+, and advertise them in its metadata.
+* The resource agent must support +migrate_to+ and
+  +migrate_from+ actions, and advertise them in its metadata.
 * The resource must have the +allow-migrate+ meta-attribute set to
   +true+ (which is not the default).
 
-////
-TODO: how can a KVM with DRBD migrate?
-////
+If an otherwise migratable resource depends on another resource
+via an ordering constraint, there are special situations in which it will be
+restarted rather than migrated.
 
-If the resource depends on a clone, and at the time the resource needs
-to be move, the clone has instances that are stopping and instances
-that are starting, then the resource will be moved in the traditional
-manner.  The Policy Engine is not yet able to model this situation
-correctly and so takes the safe (yet less optimal) path.
+For example, if the resource depends on a clone, and at the time the resource
+needs to be moved, the clone has instances that are stopping and instances
+that are starting, then the resource will be restarted.
+The Policy Engine is not yet able to model this
+situation correctly and so takes the safer (if less optimal) path.
+
+In pacemaker 1.1.11 and earlier, a migratable resource will be restarted
+when moving if it directly or indirectly depends on 'any' primitive or group
+resources.
+
+Even in newer versions, if a migratable resource depends on a non-migratable
+resource, and both need to be moved, the migratable resource will be restarted.
 
 [[s-reusing-config-elements]]
 == Reusing Rules, Options and Sets of Operations ==
