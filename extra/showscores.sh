@@ -21,7 +21,7 @@
 
 if [ "$1" = "--help" -o "$1" = "-h" ]
 then
-	echo "showscores.sh - basically parsing ptest -Ls."
+	echo "showscores.sh - basically parsing crm_simulate -Ls."
 	echo "Usage: "
 	echo "$0 (to display score information for all resources on all nodes sorted by resource name)"
 	echo "$0 node (to display score information for all resources on all nodes sorted by nodename)"
@@ -47,7 +47,7 @@ then
 	sortby=3
 fi
 
-export default_stickiness=`crm_attribute -G -n default-resource-stickiness -Q 2>/dev/null`
+export default_stickiness=`crm_attribute -G -n default-resource-stickiness -t rsc_defaults -Q 2>/dev/null`
 if [ -z "$default_stickiness" ]; then default_stickiness=0; fi
 export default_migrationthreshold=`crm_attribute -G -n migration-threshold -t rsc_defaults -Q 2>/dev/null`
 
@@ -60,7 +60,7 @@ then
       nodename=$2
 fi
 
-2>&1 ptest -Ls | grep -E "$resource" | grep -E "$nodename" > $tmpfile
+2>&1 crm_simulate -Ls | grep -E "$resource" | grep -E "$nodename" > $tmpfile
 
 parseline() { 
 	if ! echo $*|grep -q "promotion score"; then
