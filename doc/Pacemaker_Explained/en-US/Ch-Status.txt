@@ -27,29 +27,27 @@ up-to-date representation of each cluster node in the +status+ section.
 
 Users are highly recommended _not_ to modify any part of a node's
 state _directly_.  The cluster will periodically regenerate the entire
-section from authoritative sources.  So any changes should be done
-with the tools for those subsystems.
+section from authoritative sources, so any changes should be done
+with the tools appropriate to those sources.
       
 .Authoritative Sources for State Information
 [width="95%",cols="1m,1<",options="header",align="center"]
 |=========================================================
 
-|Dataset  |Authoritative Source
+| CIB Object | Authoritative Source
 
-|node_state fields |crmd
+|node_state|crmd
 
-|transient_attributes tag |attrd
+|transient_attributes|attrd
 
-|lrm tag |lrmd
+|lrm|lrmd
 
 |=========================================================
 
 The fields used in the +node_state+ objects are named as they are
 largely for historical reasons and are rooted in Pacemaker's origins
-as the Heartbeat resource manager.
-
-They have remained unchanged to preserve compatibility with older
-versions.
+as the Heartbeat resource manager. They have remained unchanged to preserve
+compatibility with older versions.
       
 .Node Status Fields
 [width="95%",cols="1m,4<",options="header",align="center"]
@@ -61,9 +59,8 @@ versions.
 | id |
 indexterm:[id,Node Status]
 indexterm:[Node,Status,id]
-Unique identifier for the node. Corosync based clusters use the uname
-of the machine, Heartbeat clusters use a human-readable (but annoying)
-UUID.
+Unique identifier for the node. Corosync-based clusters use a numeric
+counter, while Heartbeat clusters use a (barely) human-readable UUID.
 
 | uname |
 indexterm:[uname,Node Status]
@@ -73,24 +70,23 @@ The node's machine name (output from `uname -n`).
 | ha | 
 indexterm:[ha,Node Status]
 indexterm:[Node,Status,ha]
-Flag specifying whether the cluster software is active on the
-node. Allowed values: +active+, +dead+.
+Is the cluster software active on this node? Allowed values: +active+, +dead+.
 
 | in_ccm |            
 indexterm:[in_ccm,Node Status]
 indexterm:[Node,Status,in_ccm]
-Flag for cluster membership; allowed values: +true+, +false+.
+Is the node a member of the cluster? Allowed values: +true+, +false+.
 
 | crmd |
 indexterm:[crmd,Node Status]
 indexterm:[Node,Status,crmd]
-Flag: is the crmd process active on the node? One of +online+, +offline+.
+Is the crmd process active on the node? Allowed values: +online+, +offline+.
 
 | join |
 indexterm:[join,Node Status]
 indexterm:[Node,Status,join]
-Flag saying whether the node participates in hosting
-resources. Possible values: +down+, +pending+, +member+, +banned+.
+Does the node participate in hosting resources? Allowed values: +down+,
++pending+, +member+, +banned+.
             
 | expected |
 indexterm:[expected,Node Status]
@@ -100,45 +96,44 @@ Expected value for +join+.
 | crm-debug-origin |
 indexterm:[crm-debug-origin,Node Status]
 indexterm:[Node,Status,crm-debug-origin]
-Diagnostic indicator: the origin of the most recent change(s).
+The origin of the most recent change(s). For diagnostic purposes.
 
 |=========================================================
 
-The cluster uses these fields to determine if, at the node level, the
+The cluster uses these fields to determine whether, at the node level, the
 node is healthy or is in a failed state and needs to be fenced.
 
 == Transient Node Attributes ==
 
 Like regular <<s-node-attributes,node attributes>>, the name/value
-pairs listed here also help to describe the node.  However they are
-forgotten by the cluster when the node goes offline.  This can be
-useful, for instance, when you want a node to be in standby mode (not
-able to run resources) until the next reboot.
+pairs listed in the +transient_attributes+ section help to describe the
+node.  However they are forgotten by the cluster when the node goes offline.
+This can be useful, for instance, when you want a node to be in standby mode
+(not able to run resources) just until the next reboot.
       
 In addition to any values the administrator sets, the cluster will
 also store information about failed resources here.
       
-.Example set of transient node attributes for node "cl-virt-1"
+.A set of transient node attributes for node *cl-virt-1*
 ======
 [source,XML]
 -----
-  <transient_attributes id="cl-virt-1">
-    <instance_attributes id="status-cl-virt-1">
-       <nvpair id="status-cl-virt-1-pingd" name="pingd" value="3"/>
-       <nvpair id="status-cl-virt-1-probe_complete" name="probe_complete" value="true"/>
-       <nvpair id="status-cl-virt-1-fail-count-pingd:0" name="fail-count-pingd:0" value="1"/>
-       <nvpair id="status-cl-virt-1-last-failure-pingd:0" name="last-failure-pingd:0" value="1239009742"/>
-    </instance_attributes>
-  </transient_attributes>
+<transient_attributes id="cl-virt-1">
+  <instance_attributes id="status-cl-virt-1">
+     <nvpair id="status-cl-virt-1-pingd" name="pingd" value="3"/>
+     <nvpair id="status-cl-virt-1-probe_complete" name="probe_complete" value="true"/>
+     <nvpair id="status-cl-virt-1-fail-count-pingd:0" name="fail-count-pingd:0" value="1"/>
+     <nvpair id="status-cl-virt-1-last-failure-pingd:0" name="last-failure-pingd:0" value="1239009742"/>
+  </instance_attributes>
+</transient_attributes>
 -----
 ======
 
 In the above example, we can see that the +pingd:0+ resource has
-failed once, at +Mon Apr 6 11:22:22 2009+.
+failed once, at 09:22:22 UTC 6 April 2009.
 footnote:[
-You can use the standard +date+ command to print a human readable of
-any seconds-since-epoch value:
-            # `date -d @<parameter>number</parameter>`
+You can use the standard `date` command to print a human-readable version of
+any seconds-since-epoch value, for example `date -d @1239009742`.
 ]
 We also see that the node is connected to three *pingd* peers and that
 all known resources have been checked for on this machine (+probe_complete+).
@@ -214,27 +209,30 @@ details on what the values here mean and how they are interpreted.
 indexterm:[last-run,Action Status]
 indexterm:[Action,Status,last-run]
 
-Diagnostic indicator. Machine local date/time, in seconds since epoch,
-at which the job was executed.
+Machine-local date/time, in seconds since epoch,
+at which the job was executed. For diagnostic purposes.
 
 | last-rc-change |
 indexterm:[last-rc-change,Action Status]
 indexterm:[Action,Status,last-rc-change]
 
-Diagnostic indicator. Machine local date/time, in seconds since epoch,
+Machine-local date/time, in seconds since epoch,
 at which the job first returned the current value of +rc-code+.
+For diagnostic purposes.
 
 | exec-time |
 indexterm:[exec-time,Action Status]
 indexterm:[Action,Status,exec-time]
 
-Diagnostic indicator. Time, in milliseconds, that the job was running for.
+Time, in milliseconds, that the job was running for.
+For diagnostic purposes.
 
 | queue-time |
 indexterm:[queue-time,Action Status]
 indexterm:[Action,Status,queue-time]
 
-Diagnostic indicator. Time, in seconds, that the job was queued for in the LRMd.
+Time, in seconds, that the job was queued for in the LRMd.
+For diagnostic purposes.
 
 | crm_feature_set |
 indexterm:[crm_feature_set,Action Status]
@@ -274,11 +272,12 @@ necessary.
 indexterm:[crm-debug-origin,Action Status]
 indexterm:[Action,Status,crm-debug-origin]
 
-Diagnostic indicator. The origin of the current values.
+The origin of the current values.
+For diagnostic purposes.
 
 |=========================================================
 
-=== Simple Example ===
+=== Simple Operation History Example ===
         
 .A monitor operation (determines current state of the +apcstonith+ resource)
 ======
@@ -299,24 +298,22 @@ Diagnostic indicator. The origin of the current values.
 In the above example, the job is a non-recurring monitor operation
 often referred to as a "probe" for the +apcstonith+ resource.
 
-The cluster schedules probes for every configured resource on when a
-new node starts, in order to determine the resource's current state
+The cluster schedules probes for every configured resource on a node when
+the node first starts, in order to determine the resource's current state
 before it takes any further action.
         
 From the +transition-key+, we can see that this was the 22nd action of
 the 2nd graph produced by this instance of the crmd
 (2668bbeb-06d5-40f9-936d-24cb7f87006a).
 
-The third field of the +transition-key+ contains a 7, this indicates
-that the job expects to find the resource inactive.
-
-By looking at the +rc-code+ property, we see that this was the case.
-        
+The third field of the +transition-key+ contains a 7, which indicates
+that the job expects to find the resource inactive. By looking at the +rc-code+
+property, we see that this was the case.
 
 As that is the only job recorded for this node, we can conclude that
 the cluster started the resource elsewhere.
 
-=== Complex Resource History Example ===
+=== Complex Operation History Example ===
         
 .Resource history of a +pingd+ clone with multiple jobs
 ======
