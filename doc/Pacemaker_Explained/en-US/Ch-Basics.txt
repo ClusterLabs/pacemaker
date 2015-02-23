@@ -2,28 +2,8 @@
 
 == Configuration Layout ==
 
-The cluster is written using XML notation and divided into two main
-sections: configuration and status.
-
-The status section contains the history of each resource on each node
-and based on this data, the cluster can construct the complete current
-state of the cluster.  The authoritative source for the status section
-is the local resource manager (lrmd) process on each cluster node and
-the cluster will occasionally repopulate the entire section.  For this
-reason it is never written to disk and administrators are advised
-against modifying it in any way.
-
-The configuration section contains the more traditional information
-like cluster options, lists of resources and indications of where they
-should be placed.  The configuration section is the primary focus of
-this document.
-      
-The configuration section itself is divided into four parts:
-
- * Configuration options (called +crm_config+)
- * Nodes
- * Resources
- * Resource relationships (called +constraints+)
+The cluster is defined by the Cluster Information Base (CIB),
+which uses XML notation. The simplest CIB, an empty one, looks like this:
 
 .An empty configuration
 ======
@@ -40,6 +20,38 @@ The configuration section itself is divided into four parts:
 </cib>
 -------
 ======
+
+The empty configuration above contains the major sections that make up a CIB:
+
+* +cib+: The entire CIB is enclosed with a +cib+ tag. Certain fundamental settings
+  are defined as attributes of this tag.
+
+  ** +configuration+: This section -- the primary focus of this document --
+     contains traditional configuration information such as what resources the
+     cluster serves and the relationships among them.
+
+    *** +crm_config+: cluster-wide configuration options
+    *** +nodes+: the machines that host the cluster
+    *** +resources+: the services run by the cluster
+    *** +constraints+: indications of how resources should be placed
+
+  ** +status+: This section contains the history of each resource on each node.
+    Based on this data, the cluster can construct the complete current
+    state of the cluster.  The authoritative source for this section
+    is the local resource manager (lrmd process) on each cluster node, and
+    the cluster will occasionally repopulate the entire section.  For this
+    reason, it is never written to disk, and administrators are advised
+    against modifying it in any way.
+
+In this document, configuration settings will be described as 'properties' or 'options'
+based on how they are defined in the CIB:
+
+* Properties are XML attributes of an XML element.
+* Options are name-value pairs expressed as +nvpair+ child elements of an XML element.
+
+Normally you will use command-line tools that abstract the XML, so the
+distinction will be unimportant; both properties and options are
+cluster settings you can tweak.
 
 == The Current State of the Cluster ==
 
@@ -125,8 +137,10 @@ There are three basic rules for updating the cluster configuration:
  * Rule 2 - Read Rule 1 again.
  * Rule 3 - The cluster will notice if you ignored rules 1 &amp; 2 and refuse to use the configuration.
 
-Now that it is clear how NOT to update the configuration, we can begin
-to explain how you should.
+Now that it is clear how 'not' to update the configuration, we can begin
+to explain how you 'should'.
+
+=== Editing the CIB Using XML ===
 
 The most powerful tool for modifying the configuration is the
 +cibadmin+ command.  With +cibadmin+, you can query, add, remove, update
@@ -165,9 +179,7 @@ query and replace just that section to avoid modifying any others.
 --------
 ======
 
-to avoid modifying any other part of the configuration.
-
-== Quickly Deleting Part of the Configuration ==
+=== Quickly Deleting Part of the Configuration ===
 
 Identify the object you wish to delete by XML tag and id. For example,
 you might search the CIB for all STONITH-related configuration:
@@ -196,7 +208,7 @@ you would run:
 # cibadmin --delete --crm_xml '<primitive id="child_DoFencing"/>'
 ----
 
-== Updating the Configuration Without Using XML ==
+=== Updating the Configuration Without Using XML ===
 
 Most tasks can be performed with one of the other command-line
 tools provided with pacemaker, avoiding the need to read or edit XML.
@@ -307,8 +319,6 @@ commands, invoke it with the `--help` option.
 ----
 ======
 
-Making changes in a sandbox and verifying the real configuration is untouched
-
 [[s-config-testing-changes]]
 == Testing Your Configuration Changes ==
 
@@ -328,12 +338,17 @@ a significant amount of logging, is stored in two files +tmp.graph+
 and +tmp.dot+. Both files are representations of the same thing: the
 cluster's response to your changes.
 
-In the graph file is stored the complete transition, containing a list
-of all the actions, their parameters and their pre-requisites.
-Because the transition graph is not terribly easy to read, the tool
-also generates a Graphviz dot-file representing the same information.
+The graph file stores the complete transition from the existing cluster state
+to your desired new state, containing a list of all the actions, their
+parameters and their pre-requisites. Because the transition graph is not
+terribly easy to read, the tool also generates a Graphviz
+footnote:[Graph visualization software. See http://www.graphviz.org/ for details.]
+dot-file representing the same information.
 
-== Interpreting the Graphviz output ==
+For information on the options supported by `crm_simulate`, use
+its `--help` option.
+
+.Interpreting the Graphviz output
  * Arrows indicate ordering dependencies
  * Dashed arrows indicate dependencies that are not present in the transition graph
  * Actions with a dashed border of any color do not form part of the transition graph
@@ -358,9 +373,6 @@ were not active there, it would have liked to stop *rsc1* and *rsc2*
 on *pcmk-1* and move them to *pcmk-2*.  However, there appears to be
 some problem and the cluster cannot or is not permitted to perform the
 stop actions which implies it also cannot perform the start actions.
-
-For information on the options supported by `crm_simulate`, use
-the `--help` option.
 For some reason the cluster does not want to start *rsc3* anywhere.
 
 === Complex Cluster Transition ===
