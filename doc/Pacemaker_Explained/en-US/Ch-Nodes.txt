@@ -45,10 +45,13 @@ available to display the name used by the node with the corosync
 *nodeid* of pass:[<replaceable>number</replaceable>], for example: `crm_node --name-for-id 2`.
 
 [[s-node-attributes]]
-== Describing a Cluster Node ==
+== Node Attributes ==
 
 indexterm:[Node,attribute]
-Beyond the basic definition of a node the administrator can also
+'Node attributes' are a special type of option (name-value pair) that
+applies to a node object.
+
+Beyond the basic definition of a node, the administrator can
 describe the node's attributes, such as how much RAM, disk, what OS or
 kernel version it has, perhaps even its physical location.  This
 information can then be used by the cluster when deciding where to
@@ -89,20 +92,22 @@ rejoins the cluster.  The cluster uses this area to store a record of
 how many times a resource has failed on that node, but administrators
 can also read and write to this section by specifying `--type status`.
 
-== Corosync ==
+== Managing Nodes in a Corosync-Based Cluster ==
 
 === Adding a New Corosync Node ===
 
 indexterm:[Corosync,Add Cluster Node]
 indexterm:[Add Cluster Node,Corosync]
 
-Adding a new node is as simple as installing Corosync and Pacemaker,
-and copying '/etc/corosync/corosync.conf' and '/etc/corosync/authkey' (if
-it exists) from an existing node.  You may need to modify the
-+mcastaddr+ option to match the new node's IP address.
+To add a new node:
 
-If a log message containing "Invalid digest" appears from Corosync,
-the keys are not consistent between the machines.
+. Install Corosync and Pacemaker on the new host.
+. Copy +/etc/corosync/corosync.conf+ and +/etc/corosync/authkey+ (if it exists)
+  from an existing node. You may need to modify the *mcastaddr* option to match
+  the new node's IP address.
+. Start the cluster software on the new host. If a log message containing
+  "Invalid digest" appears from Corosync, the keys are not consistent between
+  the machines.
 
 === Removing a Corosync Node ===
 
@@ -110,23 +115,20 @@ indexterm:[Corosync,Remove Cluster Node]
 indexterm:[Remove Cluster Node,Corosync]
 
 Because the messaging and membership layers are the authoritative
-source for cluster nodes, deleting them from the CIB is not a reliable
-solution.  First one must arrange for corosync to forget about the
-node (_pcmk-1_ in the example below).
+source for cluster nodes, deleting them from the CIB is not a complete
+solution.  First, one must arrange for corosync to forget about the
+node (*pcmk-1* in the example below).
 
-On the host to be removed:
-
-. Stop the cluster: `/etc/init.d/corosync stop`
-
-Next, from one of the remaining active cluster nodes:
-
-. Tell Pacemaker to forget about the removed host:
+. Stop the cluster on the host to be removed. How to do this will vary with
+  your operating system and installed versions of cluster software, for example,
+  `pcs cluster stop` if you are using pcs for cluster management, or
+  `service corosync stop` on a host using corosync 1.x with the pacemaker plugin.
+. From one of the remaining active cluster nodes, tell Pacemaker to forget
+  about the removed host, which will also delete the node from the CIB:
 +
 ----
 # crm_node -R pcmk-1
 ----
-+
-This includes deleting the node from the CIB
 
 [NOTE]
 ======
@@ -138,18 +140,14 @@ This procedure only works for pacemaker 1.1.8 and later.
 indexterm:[Corosync,Replace Cluster Node]
 indexterm:[Replace Cluster Node,Corosync]
 
-The five-step guide to replacing an existing cluster node:
+To replace an existing cluster node:
 
-. Make sure the old node is completely stopped
-. Give the new machine the same hostname and IP address as the old one
-. Install the cluster software :-)
-. Copy '/etc/corosync/corosync.conf' and '/etc/corosync/authkey' (if it exists) to the new node
-. Start the new cluster node
+. Make sure the old node is completely stopped.
+. Give the new machine the same hostname and IP address as the old one.
+. Follow the procedure above for adding a node.
 
-If a log message containing "Invalid digest" appears from Corosync,
-the keys are not consistent between the machines.
-
-== CMAN ==
+////
+== Managing Nodes in a CMAN-based Cluster ==
 
 === Adding a New CMAN Node ===
 
@@ -160,20 +158,25 @@ indexterm:[Add Cluster Node,CMAN]
 
 indexterm:[CMAN,Remove Cluster Node]
 indexterm:[Remove Cluster Node,CMAN]
+////
 
-== Heartbeat ==
+== Managing Nodes in a Heartbeat-based Cluster ==
 
 === Adding a New Heartbeat Node ===
 
 indexterm:[Heartbeat,Add Cluster Node]
 indexterm:[Add Cluster Node,Heartbeat]
 
-Provided you specified +autojoin any+ in 'ha.cf', adding a new node is
-as simple as installing heartbeat and copying 'ha.cf' and 'authkeys'
-from an existing node.
+To add a new node:
 
-If you don't want to use +autojoin+, then after setting up 'ha.cf' and
-'authkeys', you must use `hb_addnode` before starting the new node.
+. Install heartbeat and pacemaker on the new host.
+. Copy +ha.cf+ and +authkeys+ from an existing node.
+. If you do not use *autojoin any* in +ha.cf+, run:
++
+----
+hb_addnode $(uname -n)
+----
+. Start the cluster software on the new node.
 
 === Removing a Heartbeat Node ===
 
@@ -181,45 +184,42 @@ indexterm:[Heartbeat,Remove Cluster Node]
 indexterm:[Remove Cluster Node,Heartbeat]
 
 Because the messaging and membership layers are the authoritative
-source for cluster nodes, deleting them from the CIB is not a reliable
-solution.
-
-First one must arrange for Heartbeat to forget about the node (pcmk-1
+source for cluster nodes, deleting them from the CIB is not a complete
+solution. First, one must arrange for Heartbeat to forget about the node (pcmk-1
 in the example below).
 
-On the host to be removed:
-
-. Stop the cluster: `/etc/init.d/corosync stop`
-
-Next, from one of the remaining active cluster nodes:
-
-. Tell Heartbeat the node should be removed
-
+. On the host to be removed, stop the cluster:
++
 ----
-# hb_delnode pcmk-1
+service heartbeat stop
 ----
-
+. From one of the remaining active cluster nodes, tell Heartbeat the node
+should be removed:
++
+----
+hb_delnode pcmk-1
+----
 . Tell Pacemaker to forget about the removed host:
-
++
 ----
-# crm_node -R pcmk-1
+crm_node -R pcmk-1
 ----
 
 [NOTE]
 ======
-This proceedure only works for versions after 1.1.8
+This procedure only works for pacemaker versions after 1.1.8.
 ======
 
 === Replacing a Heartbeat Node ===
 
 indexterm:[Heartbeat,Replace Cluster Node]
 indexterm:[Replace Cluster Node,Heartbeat]
-The seven-step guide to replacing an existing cluster node:
+To replace an existing cluster node:
 
-. Make sure the old node is completely stopped
-. Give the new machine the same hostname as the old one
-. Go to an active cluster node and look up the UUID for the old node in '/var/lib/heartbeat/hostcache'
-. Install the cluster software
-. Copy 'ha.cf' and 'authkeys' to the new node
-. On the new node, populate it's UUID using `crm_uuid -w` and the UUID from step 2
-. Start the new cluster node
+. Make sure the old node is completely stopped.
+. Give the new machine the same hostname as the old one.
+. Go to an active cluster node and look up the UUID for the old node in +/var/lib/heartbeat/hostcache+.
+. Install the cluster software.
+. Copy +ha.cf+ and +authkeys+ to the new node.
+. On the new node, populate its UUID using `crm_uuid -w` and the UUID obtained earlier.
+. Start the new cluster node.
