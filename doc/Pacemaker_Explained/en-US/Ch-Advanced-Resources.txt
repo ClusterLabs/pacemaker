@@ -266,24 +266,8 @@ If you think you need to do this, you probably need to re-evaluate your design.
 In most cases, a clone will have a single copy on each active cluster
 node.  If this is not the case, you can indicate which nodes the
 cluster should preferentially assign copies to with resource location
-constraints.  These constraints are written no differently to those
-for regular resources except that the clone's id is used.
-
-Ordering constraints behave slightly differently for clones.  In the
-example below, +apache-stats+ will wait until all copies of the clone
-that need to be started have done so before being started itself.
-Only if _no_ copies can be started +apache-stats+ will be prevented
-from being active.  Additionally, the clone will wait for
-+apache-stats+ to be stopped before stopping the clone.
-
-Colocation of a regular (or group) resource with a clone means that
-the resource can run on any machine with an active copy of the clone.
-The cluster will choose a copy based on where the clone is running and
-the resource's own location preferences.
-
-Colocation between clones is also possible.  In such cases, the set of
-allowed locations for the clone is limited to nodes on which the clone
-is (or will be) active.  Allocation is then performed as normally.
+constraints.  These constraints are written no differently from those
+for primitive resources except that the clone's +id+ is used.
 
 .Some constraints involving clones
 ======
@@ -297,6 +281,24 @@ is (or will be) active.  Allocation is then performed as normally.
 -------
 ======
 
+Ordering constraints behave slightly differently for clones.  In the
+example above, +apache-stats+ will wait until all copies of +apache-clone+
+that need to be started have done so before being started itself.
+Only if _no_ copies can be started will +apache-stats+ be prevented
+from being active.  Additionally, the clone will wait for
++apache-stats+ to be stopped before stopping itself.
+
+Colocation of a primitive or group resource with a clone means that
+the resource can run on any machine with an active copy of the clone.
+The cluster will choose a copy based on where the clone is running and
+the resource's own location preferences.
+
+Colocation between clones is also possible.  If one clone +A+ is colocated
+with another clone +B+, the set of allowed locations for +A+ is limited to
+nodes on which +B+ is (or will be) active.  Placement is then performed
+normally.
+
+[[s-clone-stickiness]]
 === Clone Stickiness ===
 
 indexterm:[resource-stickiness,Clones]
@@ -306,6 +308,16 @@ default.  If no value for +resource-stickiness+ is provided, the clone
 will use a value of 1.  Being a small value, it causes minimal
 disturbance to the score calculations of other resources but is enough
 to prevent Pacemaker from needlessly moving copies around the cluster.
+
+[NOTE]
+====
+For globally unique clones, this may result in multiple instances of the
+clone staying on a single node, even after another eligible node becomes
+active (for example, after being put into standby mode then made active again).
+If you do not want this behavior, specify a +resource-stickiness+ of 0
+for the clone temporarily and let the cluster adjust, then set it back
+to 1 if you want the default behavior to apply again.
+====
 
 === Clone Resource Agent Requirements ===
 
@@ -529,21 +541,12 @@ If you think you need to do this, you probably need to re-evaluate your design.
 
 === Monitoring Multi-State Resources ===
 
-The normal type of monitor actions are not sufficient to monitor a
-multi-state resource in the +Master+ state.  To detect failures of the
-+Master+ instance, you need to define an additional monitor action
-with +role="Master"+.
+The usual monitor actions are insufficient to monitor a multi-state resource,
+because pacemaker needs to verify not only that the resource is active, but
+also that its actual role matches its intended one.
 
-[IMPORTANT]
-===========
-It is crucial that _every_ monitor operation has a different interval!
-
-This is because Pacemaker currently differentiates between operations
-only by resource and interval; so if eg. a master/slave resource has
-the same monitor interval for both roles, Pacemaker would ignore the
-role when checking the status - which would cause unexpected return
-codes, and therefore unnecessary complications.
-===========
+Define two monitoring actions: the usual one will cover the slave role,
+and an additional one with +role="master"+ will cover the master role.
 
 .Monitoring both states of a multi-state resource
 ======
@@ -560,6 +563,15 @@ codes, and therefore unnecessary complications.
 -------
 ======
 
+[IMPORTANT]
+===========
+It is crucial that _every_ monitor operation has a different interval!
+Pacemaker currently differentiates between operations
+only by resource and interval; so if (for example) a master/slave resource had
+the same monitor interval for both roles, Pacemaker would ignore the
+role when checking the status -- which would cause unexpected return
+codes, and therefore unnecessary complications.
+===========
 
 === Multi-state Constraints ===
 
@@ -619,13 +631,7 @@ ordering constraints) are used.
 
 |=========================================================
 
-In the example below, +myApp+ will wait until one of the database
-copies has been started and promoted to master before being started
-itself.  Only if no copies can be promoted will +apache-stats+ be
-prevented from being active.  Additionally, the database will wait for
-+myApp+ to be stopped before it is demoted.
-
-.Example constraints involving multi-state resources       
+.Constraints involving multi-state resources       
 ======
 [source,XML]
 -------
@@ -642,7 +648,13 @@ prevented from being active.  Additionally, the database will wait for
 -------
 ======
 
-Colocation of a regular (or group) resource with a multi-state
+In the example above, +myApp+ will wait until one of the database
+copies has been started and promoted to master before being started
+itself on the same node.  Only if no copies can be promoted will +myApp+ be
+prevented from being active.  Additionally, the cluster will wait for
++myApp+ to be stopped before demoting the database.
+
+Colocation of a primitive or group resource with a multi-state
 resource means that it can run on any machine with an active copy of
 the multi-state resource that has the specified role (+master+ or
 +slave+).  In the example above, the cluster will choose a location based on
@@ -698,6 +710,8 @@ and +B+'s masters.
 -------
 ======
 
+==== Using Multi-state Resources in Ordering Sets ====
+
 .Additional ordered set options relevant to multi-state resources
 [width="95%",cols="1m,1,3<",options="header",align="center"]
 |=========================================================
@@ -715,9 +729,6 @@ and +B+'s masters.
  indexterm:[Constraints,Ordering,action]
 
 |=========================================================
-
-In the following example +B+ cannot be promoted until +A+'s has been promoted.
-Additionally resources +C+ and +D+ must wait until +A+ and +B+ have been promoted before they can start.
 
 .Start C and D after first promoting A and B
 ======
@@ -821,7 +832,7 @@ not indicate to the agent what role it currently believes it to be in.
 
 |=========================================================
 
-=== Multi-state Notifications ===
+==== Multi-state Notifications ====
 
 Like clones, supporting notifications requires the +notify+ action to
 be implemented.  If supported, the notify action will be passed a
@@ -928,7 +939,7 @@ what is about to happen to it.
 
 |=========================================================
 
-=== Multi-state - Proper Interpretation of Notification Environment Variables ===
+==== Proper Interpretation of Multi-state Notification Environment Variables ====
 
 
 .Pre-notification (demote):
