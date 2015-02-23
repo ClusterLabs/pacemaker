@@ -1,18 +1,14 @@
 [appendix]
 
 [[ap-upgrade]]
-== Upgrading Cluster Software
+== Upgrading Cluster Software ==
 
-=== Version Compatibility ===
+There will always be an upgrade path from any pacemaker 1._x_
+release to any other 1._y_ release.
 
-When releasing newer versions we take care to make sure we are
-backwards compatible with older versions. While you will always be
-able to upgrade from version x to x+1, in order to continue to produce
-high quality software it may occasionally be necessary to drop
-compatibility with older versions.
-
-There will always be an upgrade path from any series-2 release to any
-other series-2 release.
+Consult the documentation for your messaging layer
+(Heartbeat or Corosync) to see whether upgrading them to a
+newer version is also supported.
 
 There are three approaches to upgrading your cluster software:
 
@@ -21,10 +17,10 @@ There are three approaches to upgrading your cluster software:
 * Disconnect and Reattach
 
 Each method has advantages and disadvantages, some of which are listed
-in the table below, and you should chose the one most appropriate to
+in the table below, and you should choose the one most appropriate to
 your needs.
 
-.Summary of Upgrade Methodologies
+.Upgrade Methods
 [width="95%",cols="6*",options="header",align="center"]
 |=========================================================
 
@@ -36,11 +32,7 @@ your needs.
 |Allows change of cluster stack type
 indexterm:[Cluster,Switching between Stacks]
 indexterm:[Changing Cluster Stack]
-footnote:[
-For example, switching from Heartbeat to Corosync.  Consult the
-Heartbeat or Corosync documentation to see if upgrading them to a
-newer version is also supported.
-]
+footnote:[For example, switching from Heartbeat to Corosync.]
 
 |Shutdown
 indexterm:[Upgrade,Shutdown]
@@ -73,53 +65,51 @@ indexterm:[Reattach Upgrade]
 
 === Complete Cluster Shutdown ===
 
-In this scenario one shuts down all cluster nodes and resources and
-upgrades all the nodes before restarting the cluster.
+In this scenario, one shuts down all cluster nodes and resources,
+then upgrades all the nodes before restarting the cluster.
 
-==== Procedure ====
 . On each node:
-.. Shutdown the cluster stack (Heartbeat or Corosync)
-.. Upgrade the Pacemaker software.
-   This may also include upgrading the cluster stack and/or the
-   underlying operating system.
+.. Shutdown the cluster software (pacemaker and the messaging layer).
+.. Upgrade the Pacemaker software. This may also include upgrading the
+   messaging layer and/or the underlying operating system.
 .. Check the configuration manually or with the `crm_verify` tool if available.
 . On each node:
-.. Start the cluster stack.
-   This can be either Corosync or Heartbeat and does not need to be
-   the same as the previous cluster stack.
+.. Start the cluster software.
+   The messaging layer can be either Corosync or Heartbeat and does not need to
+   be the same one before the upgrade.
 
 === Rolling (node by node) ===
 
-In this scenario each node is removed from the cluster, upgraded and then brought back online until all nodes are running the newest version.
+In this scenario, each node is removed from the cluster, upgraded and then
+brought back online until all nodes are running the newest version.
 
-[IMPORTANT]
-===========
-This method is currently broken between Pacemaker 0.6.x and 1.0.x.
-
-Measures have been put into place to ensure rolling upgrades always
-work for versions after 1.0.0.  Please try one of the other upgrade
-strategies.  Detach/Reattach is a particularly good option for most
-people.
-===========
-          
-==== Procedure ====
+Rolling upgrades should always be possible for pacemaker versions
+1.0.0 and later.
 
 On each node:
-. Shutdown the cluster stack (Heartbeat or Corosync)
-. Upgrade the Pacemaker software. This may also include upgrading the
-  cluster stack and/or the underlying operating system.
-.. On the first node, check the configuration manually or with the
-   `crm_verify` tool if available.
-.. Start the cluster stack.
-+
-This must be the same type of cluster stack (Corosync or Heartbeat)
-that the rest of the cluster is using.  Upgrading Corosync/Heartbeat
-may also be possible, please consult the documentation for those
-projects to see if the two versions will be compatible.
-+
-.. Repeat for each node in the cluster.
 
-==== Version Compatibility ====
+. Put the node into standby mode, and wait for any active resources
+  to be moved cleanly to another node.
+. Shutdown the cluster software (pacemaker and the messaging layer) on the node.
+. Upgrade the Pacemaker software. This may also include upgrading the
+  messaging layer and/or the underlying operating system.
+. If this is the first node to be upgraded, check the configuration manually
+  or with the `crm_verify` tool if available.
+. Start the messaging layer.
+  This must be the same messaging layer (Corosync or Heartbeat)
+  that the rest of the cluster is using.  Upgrading the messaging layer
+  may also be possible; consult the documentation for those
+  projects to see whether the two versions will be compatible.
+
+[NOTE]
+====
+Rolling upgrades were not always possible with older heartbeat and
+pacemaker versions. The table below shows which versions were
+compatible during rolling upgrades. Rolling upgrades that cross compatibility
+boundaries must be performed in multiple steps (for example,
+upgrading heartbeat 2.0.6 to heartbeat 2.1.3, and then upgrading again
+to pacemaker 0.6.6). Rolling upgrades from pacemaker 0._x_ to 1._y_ are not
+possible.
 
 .Version Compatibility Table
 [width="95%",cols="2*",options="header",align="center"]
@@ -147,59 +137,45 @@ projects to see if the two versions will be compatible.
 |None. Use an alternate upgrade strategy.
 
 |=========================================================
-
-==== Crossing Compatibility Boundaries ====
-
-Rolling upgrades that cross compatibility boundaries must be preformed
-in multiple steps. For example, to perform a rolling update from
-Heartbeat 2.0.1 to Pacemaker 0.6.6 one must:
-
-. Perform a rolling upgrade from Heartbeat 2.0.1 to Heartbeat 2.0.4 
-. Perform a rolling upgrade from Heartbeat 2.0.4 to Heartbeat 2.1.3
-. Perform a rolling upgrade from Heartbeat 2.1.3 to Pacemaker 0.6.6
+====
 
 === Disconnect and Reattach ===
 
-A variant of a complete cluster shutdown, but the resources are left
-active and get re-detected when the cluster is restarted.
+The reattach method is a variant of a complete cluster shutdown, where the
+resources are left active and get re-detected when the cluster is restarted.
 
-==== Procedure ====
-
-. Tell the cluster to stop managing services.
-+
-This is required to allow the services to remain active after the
-cluster shuts down.
+. Tell the cluster to stop managing services. This is required to allow the
+  services to remain active after the cluster shuts down.
 +
 ----
 # crm_attribute -t crm_config -n is-managed-default -v false
 ----
-+
+
 . For any resource that has a value for +is-managed+, make sure it is
-set to +false+ (so that the cluster will not stop it)
+set to +false+ so that the cluster will not stop it (replacing $rsc_id
+appropriately):
 +
 ----
 # crm_resource -t primitive -r $rsc_id -p is-managed -v false
 ----
-+
+
 . On each node:
-.. Shutdown the cluster stack (Heartbeat or Corosync)
-.. Upgrade the cluster stack program - This may also include upgrading
-the underlying operating system.
+.. Shutdown the cluster software (pacemaker and the messaging layer).
+.. Upgrade the Pacemaker software. This may also include upgrading the
+   messaging layer and/or the underlying operating system.
 . Check the configuration manually or with the `crm_verify` tool if available.
 . On each node:
-.. Start the cluster stack.
-+
-This can be either Corosync or Heartbeat and does not need to be the
-same as the previous cluster stack.
-+
+.. Start the cluster software. The messaging layer can be either Corosync or
+   Heartbeat and does not need to be the same one as before the upgrade.
+
 . Verify that the cluster re-detected all resources correctly.
 . Allow the cluster to resume managing resources again:
 +
 ----
 # crm_attribute -t crm_config -n is-managed-default -v true
 ----
-+
-. For any resource that has a value for +is-managed+ reset it to
+
+. For any resource that has a value for +is-managed+, reset it to
   +true+ (so the cluster can recover the service if it fails) if
   desired:
 +
@@ -207,14 +183,11 @@ same as the previous cluster stack.
 # crm_resource -t primitive -r $rsc_id -p is-managed -v true
 ----
 
-
-==== Notes ====
+[NOTE]
+The oldest version of the CRM to support this upgrade type was in Heartbeat 2.0.4.
 
 [IMPORTANT]
 ===========
 Always check your existing configuration is still compatible with the
 version you are installing before starting the cluster.
 ===========
-
-[NOTE]
-The oldest version of the CRM to support this upgrade type was in Heartbeat 2.0.4
