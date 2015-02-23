@@ -402,13 +402,13 @@ what is about to happen to it.
 The variables come in pairs, such as
 +OCF_RESKEY_CRM_meta_notify_start_resource+ and
 +OCF_RESKEY_CRM_meta_notify_start_uname+ and should be treated as an
-array of whitespace separated elements.
+array of whitespace-separated elements.
 
 Thus in order to indicate that +clone:0+ will be started on +sles-1+,
 +clone:2+ will be started on +sles-3+, and +clone:3+ will be started
 on +sles-2+, the cluster would set
 
-.Example notification variables
+.Notification variables
 ======
 [source,Bash]
 -------
@@ -565,8 +565,8 @@ codes, and therefore unnecessary complications.
 In most cases, multi-state resources will have a single copy on each
 active cluster node.  If this is not the case, you can indicate which
 nodes the cluster should preferentially assign copies to with resource
-location constraints.  These constraints are written no differently to
-those for regular resources except that the master's id is used.
+location constraints.  These constraints are written no differently from
+those for primitive resources except that the master's +id+ is used.
 
 When considering multi-state resources in constraints, for most
 purposes it is sufficient to treat them as clones.  The exception is
@@ -643,10 +643,10 @@ prevented from being active.  Additionally, the database will wait for
 
 Colocation of a regular (or group) resource with a multi-state
 resource means that it can run on any machine with an active copy of
-the multi-state resource that is in the specified state (+Master+ or
-+Slave+).  In the example, the cluster will choose a location based on
-where database is running as a +Master+, and if there are multiple
-+Master+ instances it will also factor in +myApp+'s own location
+the multi-state resource that has the specified role (+master+ or
++slave+).  In the example above, the cluster will choose a location based on
+where database is running as a +master+, and if there are multiple
++master+ instances it will also factor in +myApp+'s own location
 preferences when deciding which location to choose.
 
 Colocation with regular clones and other multi-state resources is also
@@ -777,20 +777,20 @@ the requirements of Clones are also requirements of multi-state
 resources.  Additionally, multi-state resources require two extra
 actions: +demote+ and +promote+; these actions are responsible for
 changing the state of the resource.  Like +start+ and +stop+, they
-should return +OCF_SUCCESS+ if they completed successfully or a
+should return +$\{OCF_SUCCESS}+ if they completed successfully or a
 relevant error code if they did not.
 
 The states can mean whatever you wish, but when the resource is
-started, it must come up in the mode called +Slave+.  From there the
-cluster will then decide which instances to promote to +Master+.
+started, it must come up in the mode called +slave+.  From there the
+cluster will decide which instances to promote to +master+.
 
-In addition to the Clone requirements for monitor actions, agents must
+In addition to the clone requirements for monitor actions, agents must
 also _accurately_ report which state they are in.  The cluster relies
 on the agent to report its status (including role) accurately and does
 not indicate to the agent what role it currently believes it to be in.
 
 .Role implications of OCF return codes
-[width="95%",cols="5,3<",options="header",align="center"]
+[width="95%",cols="1,1<",options="header",align="center"]
 |=========================================================
 
 |Monitor Return Code

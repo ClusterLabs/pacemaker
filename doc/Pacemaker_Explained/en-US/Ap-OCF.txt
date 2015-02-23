@@ -6,22 +6,24 @@
 === Location of Custom Scripts ===
 
 indexterm:[OCF Resource Agents]
-OCF Resource Agents are found in '/usr/lib/ocf/resource.d/+provider+'.
+OCF Resource Agents are found in +/usr/lib/ocf/resource.d/pass:[<replaceable>provider</replaceable>]+
 
 When creating your own agents, you are encouraged to create a new
-directory under _/usr/lib/ocf/resource.d/_ so that they are not
-confused with (or overwritten by) the agents shipped with Heartbeat.
+directory under +/usr/lib/ocf/resource.d/+ so that they are not
+confused with (or overwritten by) the agents shipped by existing providers.
 
-So, for example, if you chose the provider name of bigCorp and wanted
-a new resource named bigApp, you would create a script called
-_/usr/lib/ocf/resource.d/bigCorp/bigApp_ and define a resource:
+So, for example, if you choose the provider name of bigCorp and want
+a new resource named bigApp, you would create a resource agent called
++/usr/lib/ocf/resource.d/bigCorp/bigApp+ and define a resource:
  
 [source,XML]
+----
 <primitive id="custom-app" class="ocf" provider="bigCorp" type="bigApp"/>
+----
 
 === Actions ===
 
-All OCF Resource Agents are required to implement the following actions
+All OCF resource agents are required to implement the following actions.
 
 .Required Actions for OCF Agents
 [width="95%",cols="3m,3,7",options="header",align="center"]
@@ -60,7 +62,7 @@ NOTE: The monitor script should test the state of the resource on the local mach
  indexterm:[meta-data,OCF Action]
  indexterm:[OCF,Action,meta-data]
 
-NOTE: This is *not* performed as root.
+NOTE: This is _not_ performed as root.
 
 |validate-all
 |Verify the supplied parameters
@@ -115,7 +117,7 @@ new agent complies with the OCF standard properly.
 
 The first thing the cluster does is to check the return code against
 the expected result.  If the result does not match the expected value,
-then the operation is considered to have failed and recovery action is
+then the operation is considered to have failed, and recovery action is
 initiated.
 
 There are three types of failure recovery:
@@ -141,7 +143,7 @@ indexterm:[hard,OCF error]
 indexterm:[OCF,error,hard]
 
 |fatal
-|A non-transient error that will be common to all cluster nodes (eg. a bad configuration was specified)
+|A non-transient error that will be common to all cluster nodes (e.g. a bad configuration was specified)
 |Stop the resource and prevent it from being started on any cluster node
 indexterm:[fatal,OCF error]
 indexterm:[OCF,error,fatal]
@@ -156,7 +158,7 @@ cluster will initiate when it is received.
 === OCF Return Codes ===
 
 .OCF Return Codes and their Recovery Types
-[width="95%",cols="2m,5^m,6<,1m",options="header",align="center"]
+[width="95%",cols="1m,4<m,6<,1m",options="header",align="center"]
 |=========================================================
 
 |RC
@@ -180,7 +182,7 @@ indexterm:[Return Code,1,OCF_ERR_GENERIC]
 
 |2
 |OCF_ERR_ARGS
-|The resource's configuration is not valid on this machine. Eg. refers to a location/tool not found on the node. 
+|The resource's configuration is not valid on this machine. E.g. it refers to a location not found on the node. 
 indexterm:[Return Code,OCF_ERR_ARGS]
 indexterm:[Return Code,2,OCF_ERR_ARGS]
 |hard
@@ -208,7 +210,7 @@ indexterm:[Return Code,5,OCF_ERR_INSTALLED]
 
 |6
 |OCF_ERR_CONFIGURED
-|The resource's configuration is invalid. Eg. required parameters are missing.
+|The resource's configuration is invalid. E.g. required parameters are missing.
 indexterm:[Return Code,OCF_ERR_CONFIGURED]
 indexterm:[Return Code,6,OCF_ERR_CONFIGURED]
 |fatal

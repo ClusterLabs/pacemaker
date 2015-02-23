@@ -1,4 +1,4 @@
-=  Resource Constraints =
+= Resource Constraints =
 
 indexterm:[Resource,Constraints]
 
@@ -9,7 +9,7 @@ Practically everything from moving a resource to deciding which
 resource to stop in a degraded cluster is achieved by manipulating
 scores in some way.
 
-Scores are calculated on a per-resource basis and any node with a
+Scores are calculated on a per-resource basis, and any node with a
 negative score for a resource can't run that resource.  After
 calculating the scores for a resource, the cluster then chooses the
 node with the highest one.
@@ -20,8 +20,8 @@ node with the highest one.
 with it follows these three basic rules:
 
 * Any value + +INFINITY+ = +INFINITY+
-* Any value - +INFINITY+ = -+INFINITY+
-* +INFINITY+ - +INFINITY+ = -+INFINITY+
+* Any value - +INFINITY+ = +-INFINITY+
+* +INFINITY+ - +INFINITY+ = +-INFINITY+
 
 == Deciding Which Nodes a Resource Can Run On ==
 
@@ -107,10 +107,10 @@ running anywhere by default:
 ----
 
 Then start enabling nodes.  The following fragment says that the web
-server prefers +sles-1+, the database prefers +sles-2+ and both can
-fail over to +sles-3+ if their most preferred node fails.
+server prefers *sles-1*, the database prefers *sles-2* and both can
+fail over to *sles-3* if their most preferred node fails.
 
-.Example set of opt-in location constraints 
+.Opt-in location constraints for two resources
 ======
 [source,XML]
 -------
@@ -136,8 +136,8 @@ anywhere by default:
 
 Then start disabling nodes.  The following fragment is the equivalent
 of the above opt-in configuration.
-       
-.Example set of opt-out location constraints 
+
+.Opt-out location constraints for two resources
 ======
 [source,XML]
 -------
@@ -179,9 +179,9 @@ the cluster was not given enough information to know any better.
 ======
 
 In the example above, assuming no other constraints and an inactive
-cluster, Webserver would probably be placed on sles-1 and Database on
-sles-2.  It would likely have placed Webserver based on the node's
-uname and Database based on the desire to spread the resource load
+cluster, +Webserver+ would probably be placed on +sles-1+ and +Database+ on
++sles-2+.  It would likely have placed +Webserver+ based on the node's
+uname and +Database+ based on the desire to spread the resource load
 evenly across the cluster.  However other factors can also be involved
 in more complex configurations.
 
@@ -191,6 +191,7 @@ in more complex configurations.
 indexterm:[Resource,Constraints,Ordering]
 indexterm:[Resource,Start Order]
 indexterm:[Ordering Constraints]
+
 The way to specify the order in which resources should start is by
 creating +rsc_order+ constraints.
 
@@ -290,7 +291,7 @@ the cluster is not quite so smart. Yet.
 ]
 
 So when you are creating colocation constraints, it is important to
-consider whether you should colocate A with B or B with A.
+consider whether you should colocate A with B, or B with A.
 
 Another thing to keep in mind is that, assuming A is colocated with
 B, the cluster will take into account A's preferences when
@@ -402,7 +403,7 @@ ordered resources, such as:
 
 .Visual representation of the four resources' start order for the above constraints
 image::images/resource-set.png["Ordered set",width="16cm",height="2.5cm",align="center"]
-        
+
 === Ordered Set ===
 
 To simplify this situation, there is an alternate format for ordering
@@ -456,7 +457,7 @@ however +rscC+ and +rscD+ can only start once _both_ +rscA+ _and_
   </constraints>
 -------
 ======
-        
+
 .Visual representation of the start order for two ordered sets of unordered resources
 image::images/two-sets.png["Two ordered sets",width="13cm",height="7.5cm",align="center"]
 
@@ -504,12 +505,12 @@ option.  By default this option is 'require-all=true' which is why the
 "AND" logic is used by default.  Changing +require-all=false+ means only one
 resource in the set needs to be started before continuing on to the next set.
 
-Note that the 'require-all=false' option only makes sense to use in conjunction
-with unordered sets, 'sequential=false'.  Think of it like this, 'sequential=false'
+Note that the +require-all=false+ option only makes sense to use in conjunction
+with unordered sets, +sequential=false+.  Think of it like this, +sequential=false+
 modifies the set to be an unordered set that uses "AND" logic by default, by adding
-'require-all=false' the unordered set's "AND" logic is flipped to "OR" logic.
++require-all=false+ the unordered set's "AND" logic is flipped to "OR" logic.
 
-.Resource Set "OR" logic. Three ordered sets, where the first set is internally unordered with "OR" logic.
+.Resource Set "OR" logic: Three ordered sets, where the first set is internally unordered with "OR" logic
 ======
 [source,XML]
 -------
@@ -586,7 +587,7 @@ stopped. Here is an example +resource_set+:
 [WARNING]
 =========
 Always pay attention to how your tools expose this functionality.
-In some tools +create set A B+ is *NOT* equivalent to +create A with B+.
+In some tools +create set A B+ is 'not' equivalent to +create A with B+.
 =========
 
 .A group resource with the equivalent colocation rules
@@ -602,11 +603,11 @@ In some tools +create set A B+ is *NOT* equivalent to +create A with B+.
 
 This notation can also be used in this context to tell the cluster
 that a set of resources must all be located with a common peer, but
-have no dependencies on each other.  In this scenario, unlike the
-previous, +B would+ be allowed to remain active even if +A or+ +C+ (or
+have no dependencies on each other. In this scenario, unlike the
+previous, +B+ 'would' be allowed to remain active even if +A+ or +C+ (or
 both) were inactive.
 
-.Using colocation sets to specify a common peer.    
+.Using colocation sets to specify a common peer
 ======
 [source,XML]
 -------
@@ -656,6 +657,6 @@ must be in using the set's role attribute.
 </constraints>
 -------
 ======
-        
+
 .Visual representation of a colocation chain where the members of the middle set have no inter-dependencies
 image::images/three-sets-complex.png["Colocation chain",width="16cm",height="9cm",align="center"]

@@ -252,14 +252,14 @@ indexterm:[Duration]
 indexterm:[Resource,Constraint,Duration]
 
 Durations are used to calculate a value for +end+ when one is not
-supplied to in_range operations.  They contain the same fields as
-+date_spec+ objects but without the limitations (ie. you can have a
-duration of 19 months).  Like +date_specs+, any field not supplied is
+supplied to +in-range+ operations. They contain the same fields as
++date_spec+ objects but without the limitations (e.g. you can have a
+duration of 19 months). As with +date_specs+, any field not supplied is
 ignored.
 
 == Sample Time Based Expressions ==
 
-A small sample of how time based expressions can be used.
+A small sample of how time-based expressions can be used:
 
 ////
 On older versions of asciidoc, the [source] directive makes the title disappear
@@ -289,7 +289,7 @@ On older versions of asciidoc, the [source] directive makes the title disappear
 ----
 ====
 
-.9am-5pm, Mon-Friday
+.9am-5pm Monday-Friday
 ====
 [source,XML]
 -------
@@ -517,9 +517,9 @@ Controlling cluster options is achieved in much the same manner as
 specifying different resource options on different nodes.
 
 The difference is that because they are cluster options, one cannot
-(or should not, because they won't work) use attribute based
+(or should not, because they won't work) use attribute-based
 expressions.  The following example illustrates how to set a different
-+resource-stickiness+ value during and outside of work hours.  This
++resource-stickiness+ value during and outside work hours.  This
 allows resources to automatically move back to their most preferred
 hosts, but at a time that (in theory) does not interfere with business
 activities.

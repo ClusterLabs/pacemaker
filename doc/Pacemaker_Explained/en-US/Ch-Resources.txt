@@ -87,9 +87,10 @@ indexterm:[Resource,LSB]
 indexterm:[LSB,Resources]
 indexterm:[Linux Standard Base,Resources]
 
-LSB resource agents are those found in '/etc/init.d'.
+LSB resource agents are those found in +/etc/init.d+.
 
-Generally they are provided by the OS/distribution and, in order to be used with the cluster, they must conform to the LSB Spec.
+Generally, they are provided by the OS distribution and, in order to be used
+with the cluster, they must conform to the LSB Spec.
 footnote:[
 See
 http://refspecs.linux-foundation.org/LSB_3.0.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html
@@ -134,7 +135,7 @@ indexterm:[Upstart,Resources]
 Some newer distributions have replaced the old
 http://en.wikipedia.org/wiki/Init#SysV-style[SYS-V] style of
 initialization daemons (and scripts) with an alternative called
-http://upstart.ubuntu.com[Upstart].
+http://upstart.ubuntu.com/[Upstart].
 
 Pacemaker is able to manage these services _if they are present_.
 
@@ -215,7 +216,7 @@ where to find that script and what standards it conforms to.
  indexterm:[Resource,Property,class]
 
 |type
-|The name of the Resource Agent you wish to use. Eg. +IPaddr+ or +Filesystem+
+|The name of the Resource Agent you wish to use. E.g. +IPaddr+ or +Filesystem+
  indexterm:[type,Resource]
  indexterm:[Resource,Property,type]
 
@@ -668,21 +669,21 @@ simply specify a new value.
 === Multiple Monitor Operations ===
 
 Provided no two operations (for a single resource) have the same name
-and interval you can have as many monitor operations as you like.  In
-this way you can do a superficial health check every minute and
+and interval, you can have as many monitor operations as you like.  In
+this way, you can do a superficial health check every minute and
 progressively more intense ones at higher intervals.
 
 To tell the resource agent what kind of check to perform, you need to
 provide each monitor with a different value for a common parameter.
 The OCF standard creates a special parameter called +OCF_CHECK_LEVEL+
-for this purpose and dictates that it is _"made available to the
-resource agent without the normal +OCF_RESKEY+ prefix"_.
+for this purpose and dictates that it is "made available to the
+resource agent without the normal +OCF_RESKEY+ prefix".
 
 Whatever name you choose, you can specify it by adding an
-+instance_attributes+ block to the op tag.  Note that it is up to each
++instance_attributes+ block to the +op+ tag. It is up to each
 resource agent to look for the parameter and decide how to use it.
 
-.An OCF resource with two recurring health checks, performing different levels of checks - specified via +OCF_CHECK_LEVEL+.
+.An OCF resource with two recurring health checks, performing different levels of checks specified via +OCF_CHECK_LEVEL+.
 =====
 [source,XML]
 -------

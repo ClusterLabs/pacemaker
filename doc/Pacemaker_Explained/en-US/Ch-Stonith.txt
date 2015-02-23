@@ -18,13 +18,12 @@ accessing your data. The only way to be 100% sure that your data is
 safe, is to use STONITH so we can be certain that the node is truly
 offline, before allowing the data to be accessed from another node.
 
-
 STONITH also has a role to play in the event that a clustered service
 cannot be stopped. In this case, the cluster uses STONITH to force the
 whole node offline, thereby making it safe to start the service
 elsewhere.
 
-== What STONITH Device Should You Use ==
+== What STONITH Device Should You Use? ==
 
 It is crucial that the STONITH device can allow the cluster to
 differentiate between a node failure and a network one.
@@ -69,11 +68,9 @@ To prevent a specific node from using a fencing device, location constraints wil
 
 [IMPORTANT]
 ===========
-
 Currently there is a limitation that fencing resources may only have
-one set of meta-attributes and one set of instance-attributes.  This
+one set of meta-attributes and one set of instance attributes.  This
 can be revisited if it becomes a significant limitation for people.
-
 ===========
 
 .Properties of Fencing Resources
@@ -306,33 +303,54 @@ Scratch+ for those details.
 
 ===========
 
-. Find the correct driver: +stonith_admin --list-installed+
+. Find the correct driver:
++
+----
+# stonith_admin --list-installed
+----
 
-. Find the required parameters associated with the device: +stonith_admin --metadata --agent <agent name>+
+. Find the required parameters associated with the device
+  (replacing $AGENT_NAME with the name obtained from the previous step):
++
+----
+# stonith_admin --metadata --agent $AGENT_NAME
+----
 
 . Create a file called +stonith.xml+ containing a primitive resource
-  with a class of 'stonith', a type of <agent name> and a parameter
-  for each of the values returned in step 2.
+  with a class of +stonith+, a type equal to the agent name obtained earlier,
+  and a parameter for each of the values returned in the previous step.
 
 . If the device does not know how to fence nodes based on their uname,
   you may also need to set the special +pcmk_host_map+ parameter.  See
-  +man stonithd+ for details.
+  `man stonithd` for details.
 
-. If the device does not support the list command, you may also need
+. If the device does not support the `list` command, you may also need
   to set the special +pcmk_host_list+ and/or +pcmk_host_check+
-  parameters.  See +man stonithd+ for details.
+  parameters.  See `man stonithd` for details.
 
 . If the device does not expect the victim to be specified with the
-  port parameter, you may also need to set the special
-  +pcmk_host_argument+ parameter. See +man stonithd+ for details.
+  `port` parameter, you may also need to set the special
+  +pcmk_host_argument+ parameter. See `man stonithd` for details.
 
-. Upload it into the CIB using cibadmin: +cibadmin -C -o resources --xml-file stonith.xml+
+. Upload it into the CIB using cibadmin:
++
+----
+# cibadmin -C -o resources --xml-file stonith.xml
+----
 
-. Set stonith-enabled to true. +crm_attribute -t crm_config -n stonith-enabled -v true+
+. Set stonith-enabled to true:
++
+----
+# crm_attribute -t crm_config -n stonith-enabled -v true
+----
 
-. Once the stonith resource is running, you can test it by executing:
-  +stonith_admin --reboot nodename+. Although you might want to stop the
-  cluster on that machine first.
+. Once the stonith resource is running, you can test it by executing the
+  following (although you might want to stop the cluster on that machine
+  first):
++
+----
+# stonith_admin --reboot nodename
+----
 
 === Example ===
 
@@ -490,14 +508,14 @@ And finally, since we disabled it earlier, we need to re-enable STONITH.
 
 Some people consider that having one fencing device is a single point
 of failure footnote:[Not true, since a node or resource must fail
-before fencing even has a chance to], others prefer removing the node
+before fencing even has a chance to]; others prefer removing the node
 from the storage and network instead of turning it off.
 
 Whatever the reason, Pacemaker supports fencing nodes with multiple
-devices through a feature called fencing topologies.
+devices through a feature called 'fencing topologies'.
 
-Simply create the individual devices as you normally would and then
-define one or more fencing levels in the fencing-topology section in
+Simply create the individual devices as you normally would, then
+define one or more +fencing-level+ entries in the +fencing-topology+ section of
 the configuration.
 
 * Each level is attempted in +ascending index+ order
@@ -509,9 +527,9 @@ the configuration.
 
 Some possible uses of topologies include:
 
-* try poison-pill and fail back to power
-* try disk and network, and fall back to power if either fails
-* initiate a kdump and then poweroff the node
+* Try poison-pill and fail back to power
+* Try disk and network, and fall back to power if either fails
+* Initiate a kdump and then poweroff the node
 
 .Properties of Fencing Levels
 [width="95%",cols="1m,6<",options="header",align="center"]

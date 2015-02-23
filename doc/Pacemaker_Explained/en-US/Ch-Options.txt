@@ -393,6 +393,6 @@ Please choose from one of the matches above and supply the 'id' with --id
 -------
 =======
 
-In such cases follow the on-screen instructions to perform the
+In such cases, follow the on-screen instructions to perform the
 requested action.  To determine which value is currently being used by
-the cluster, please refer to <<ch-rules>>.
+the cluster, refer to <<ch-rules>>.

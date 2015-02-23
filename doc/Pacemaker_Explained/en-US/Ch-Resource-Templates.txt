@@ -5,12 +5,11 @@
 If you want to create lots of resources with similar configurations, defining a 
 resource template simplifies the task. Once defined, it can be referenced in 
 primitives or in certain types of constraints.
-
    
 == Configuring Resources with Templates ==
 
-The primitives referencing the template will inherit all meta 
-attributes, instance attributes, utilization attributes and operations defined 
+The primitives referencing the template will inherit all meta-attributes,
+instance attributes, utilization attributes and operations defined 
 in the template. And you can define specific attributes and operations for any 
 of the primitives. If any of these are defined in both the template and the 
 primitive, the values defined in the primitive will take precedence over the 

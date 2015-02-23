@@ -196,17 +196,16 @@ services stopped.
 
 In the contrived example above:
 
-- `rsc-small` would be allocated to `node1`
-- `rsc-medium` would be allocated to `node2`
-- `rsc-large` would remain inactive
+- +rsc-small+ would be allocated to +node1+
+- +rsc-medium+ would be allocated to +node2+
+- +rsc-large+ would remain inactive
 
 Which is not ideal.
 
 
 == Strategies for Dealing with the Limitations ==
 
-- Ensure you have sufficient physical capacity.
-It might sounds obvious, but if the physical capacity of your nodes is (close to)
+It might sound obvious, but if the physical capacity of your nodes is (close to)
 maxed out by the cluster under normal conditions, then failover isn't going to
 go well. Even without the Utilization feature, you'll start hitting timeouts and
 getting secondary failures'.

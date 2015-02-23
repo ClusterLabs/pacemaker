@@ -7,21 +7,21 @@ with that construct for chapter headings
 anchor:ch-notifications[Chapter 7, Receiving Notification for Cluster Events]
 indexterm:[Resource,Notification]
 
-A Pacemaker cluster is an event driven system. In this context, an event is a
-resource failure or configuration change (not exhaustive).
+A Pacemaker cluster is an event-driven system. In this context, an 'event'
+might be a resource failure or a configuration change, among others.
 
-The +ocf:pacemaker:ClusterMon+ resource can monitor the cluster status and
-triggers alerts on each cluster event. This resource runs +crm_mon+ in the
-background at regular intervals (configurable) and uses +crm_mon+ capabilities
-to send emails (SMTP), SNMP traps or to execute an external program via the
-+extra_options+ parameter.
+The *ocf:pacemaker:ClusterMon* resource can monitor the cluster status and
+trigger alerts on each cluster event. This resource runs `crm_mon` in the
+background at regular (configurable) intervals and uses `crm_mon` capabilities
+to trigger emails (SMTP), SNMP traps or external programs (via the
++extra_options+ parameter).
 
 [NOTE]
 =====
 Depending on your system settings and compilation settings, SNMP or email
-alerts might be unavailable. Check +crm_mon --help+ output to see if these
+alerts might be unavailable. Check the output of `crm_mon --help` to see whether these
 options are available to you. In any case, executing an external agent will
-always be available, and you can have this agent to send emails, SNMP traps,
+always be available, and you can use this agent to send emails, SNMP traps
 or whatever action you develop.
 =====
 
@@ -74,8 +74,8 @@ Requires a user to send mail alerts to. "Mail-From", SMTP relay and Subject pref
 == Configuring Notifications via External-Agent ==
 
 Requires a program (external-agent) to run when resource operations take
-place, and an external-recipient (IP address, Email address, URI). When
-triggered, the external-agent is fed with dynamically filled environnement
+place, and an external-recipient (IP address, email address, URI). When
+triggered, the external-agent is fed with dynamically filled environment
 variables describing precisely the cluster event that occurred. By making
 smart usage of these variables in your external-agent code, you can trigger
 any action.

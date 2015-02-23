@@ -1,4 +1,4 @@
-= Status - Here be dragons =
+= Status -- Here be dragons =
 
 Most users never need to understand the contents of the status section
 and can be happy with the output from `crm_mon`.
@@ -12,9 +12,9 @@ indexterm:[Node,Status]
 indexterm:[Status of a Node]
 
 In addition to the cluster's configuration, the CIB holds an
-up-to-date representation of each cluster node in the status section.
+up-to-date representation of each cluster node in the +status+ section.
       
-.A bare-bones status entry for a healthy node called +cl-virt-1+
+.A bare-bones status entry for a healthy node *cl-virt-1*
 ======
 [source,XML]
 -----
@@ -25,13 +25,13 @@ up-to-date representation of each cluster node in the status section.
 -----
 ======      
 
-Users are highly recommended _not to modify_ any part of a node's
+Users are highly recommended _not_ to modify any part of a node's
 state _directly_.  The cluster will periodically regenerate the entire
 section from authoritative sources.  So any changes should be done
 with the tools for those subsystems.
       
 .Authoritative Sources for State Information
-[width="95%",cols="5m,5<",options="header",align="center"]
+[width="95%",cols="1m,1<",options="header",align="center"]
 |=========================================================
 
 |Dataset  |Authoritative Source
@@ -52,7 +52,7 @@ They have remained unchanged to preserve compatibility with older
 versions.
       
 .Node Status Fields
-[width="95%",cols="2m,5<",options="header",align="center"]
+[width="95%",cols="1m,4<",options="header",align="center"]
 |=========================================================
 
 |Field |Description
@@ -140,7 +140,7 @@ You can use the standard +date+ command to print a human readable of
 any seconds-since-epoch value:
             # `date -d @<parameter>number</parameter>`
 ]
-We also see that the node is connected to three "pingd" peers and that
+We also see that the node is connected to three *pingd* peers and that
 all known resources have been checked for on this machine (+probe_complete+).
       
 == Operation History ==
@@ -149,17 +149,17 @@ indexterm:[Operation History]
 A node's resource history is held in the +lrm_resources+ tag (a child
 of the +lrm+ tag). The information stored here includes enough
 information for the cluster to stop the resource safely if it is
-removed from the +configuration+ section. Specifically the resource's
+removed from the +configuration+ section. Specifically, the resource's
 +id+, +class+, +type+ and +provider+ are stored.
 
-.A record of the apcstonith resource
+.A record of the +apcstonith+ resource
 ======
 [source,XML]
 <lrm_resource id="apcstonith" type="apcmastersnmp" class="stonith"/>
 ======
 
 Additionally, we store the last job for every combination of
-+resource, action+ and +interval+.  The concatenation of the values in
++resource+, +action+ and +interval+.  The concatenation of the values in
 this tuple are used to create the id of the +lrm_rsc_op+ object.
 
 .Contents of an +lrm_rsc_op+ job
@@ -280,7 +280,7 @@ Diagnostic indicator. The origin of the current values.
 
 === Simple Example ===
         
-.A monitor operation (determines current state of the apcstonith resource)
+.A monitor operation (determines current state of the +apcstonith+ resource)
 ======
 [source,XML]
 -----
@@ -313,12 +313,12 @@ that the job expects to find the resource inactive.
 By looking at the +rc-code+ property, we see that this was the case.
         
 
-As that is the only job recorded for this node we can conclude that
+As that is the only job recorded for this node, we can conclude that
 the cluster started the resource elsewhere.
 
 === Complex Resource History Example ===
         
-.Resource history of a pingd clone with multiple jobs
+.Resource history of a +pingd+ clone with multiple jobs
 ======
 [source,XML]
 -----
@@ -364,7 +364,7 @@ Once sorted, the above example can be summarized as:
 
 The cluster processes each job record to build up a picture of the
 resource's state.  After the first and second entries, it is
-considered stopped and after the third it considered active.
+considered stopped, and after the third it considered active.
 
 Based on the last operation, we can tell that the resource is
 currently active.

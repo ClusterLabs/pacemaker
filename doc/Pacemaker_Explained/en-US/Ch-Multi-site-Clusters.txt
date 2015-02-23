@@ -70,26 +70,25 @@ administrator.
 
 The presence or absence of tickets for a site is stored in the CIB as a
 cluster status. With regards to a certain ticket, there are only two states
-for a site: `true` (the site has the ticket) or `false` (the site does
+for a site: +true+ (the site has the ticket) or +false+ (the site does
 not have the ticket). The absence of a certain ticket (during the initial
-state of the multi-site cluster) is also reflected by the value `false`.
-
+state of the multi-site cluster) is the same as the value +false+.
 
 ==== Dead Man Dependency ====
 
-A site can only activate the resources safely if it can be sure that the
+A site can only activate resources safely if it can be sure that the
 other site has deactivated them. However after a ticket is revoked, it can
 take a long time until all resources depending on that ticket are stopped
 "cleanly", especially in case of cascaded resources. To cut that process
-short, the concept of a `Dead Man Dependency` was introduced:
+short, the concept of a 'Dead Man Dependency' was introduced.
 
 - If the ticket is revoked from a site, the nodes that are hosting
 dependent resources are fenced. This considerably speeds up the recovery
 process of the cluster and makes sure that resources can be migrated more
 quickly. 
 
-This can be configured by specifying a `loss-policy="fence"` in
-`rsc_ticket` constraints.
+This can be configured by specifying a +loss-policy="fence"+ in
++rsc_ticket+ constraints.
 
 
 ==== CTR (Cluster Ticket Registry) ====
@@ -130,13 +129,13 @@ what should happen to the respective resources if the ticket is revoked.
 
 The attribute `loss-policy` can have the following values:
 
-fence:: Fence the nodes that are running the relevant resources.
+* +fence:+ Fence the nodes that are running the relevant resources.
 
-stop:: Stop the relevant resources.
+* +stop:+ Stop the relevant resources.
 
-freeze:: Do nothing to the relevant resources.
+* +freeze:+ Do nothing to the relevant resources.
 
-demote:: Demote relevant resources that are running in master mode to slave mode. 
+* +demote:+ Demote relevant resources that are running in master mode to slave mode. 
 
 
 An example to configure a `rsc_ticket` constraint:
@@ -146,14 +145,14 @@ An example to configure a `rsc_ticket` constraint:
 <rsc_ticket id="rsc1-req-ticketA" rsc="rsc1" ticket="ticketA" loss-policy="fence"/>
 -------
 
-This creates a constraint with the ID `rsc1-req-ticketA`. It defines that the
-resource `rsc1` depends on `ticketA` and that the node running the resource should
-be fenced in case `ticketA` is revoked.
+The example above creates a constraint with the ID +rsc1-req-ticketA+. It
+defines that the resource +rsc1+ depends on +ticketA+ and that the node running
+the resource should be fenced if +ticketA+ is revoked.
 
-If resource `rsc1` was a multi-state resource that can run in master or
-slave mode, you may want to configure that only `rsc1's` master mode
-depends on `ticketA`. With the following configuration, `rsc1` will be
-demoted to slave mode if `ticketA` is revoked:
+If resource +rsc1+ were a multi-state resource (i.e. it could run in master or
+slave mode), you might want to configure that only master mode
+depends on +ticketA+. With the following configuration, +rsc1+ will be
+demoted to slave mode if +ticketA+ is revoked:
 
 [source,XML]
 -------
@@ -184,13 +183,13 @@ In the example, there are two resource sets for listing the resources with
 different `roles` in one `rsc_ticket` constraint. There's no dependency
 between the two resource sets. And there's no dependency among the
 resources within a resource set. Each of the resources just depends on
-`ticketA`.
++ticketA+.
 
-Referencing resource templates in `rsc_ticket` constraints, and even
+Referencing resource templates in +rsc_ticket+ constraints, and even
 referencing them within resource sets, is also supported. 
 
 If you want other resources to depend on further tickets, create as many
-constraints as necessary with `rsc_ticket`.
+constraints as necessary with +rsc_ticket+.
 
 
 == Managing Multi-Site Clusters ==
@@ -320,24 +319,23 @@ Or you can monitor them with:
 # crm_mon --tickets
 -------
 
-Display the rsc_ticket constraints that apply to a ticket:
+Display the +rsc_ticket+ constraints that apply to a ticket:
 -------
 # crm_ticket --ticket ticketA --constraints
 -------
 
-When you want to do maintenance or manual switch-over of a ticket, the
-ticket could be revoked from the site for any reason, which would
-trigger the loss-policies. If `loss-policy="fence"`, the dependent
-resources could not be gracefully stopped/demoted, and even, other
-unrelated resources could be impacted. 
+When you want to do maintenance or manual switch-over of a ticket,
+revoking the ticket would trigger the loss policies. If
++loss-policy="fence"+, the dependent resources could not be gracefully
+stopped/demoted, and other unrelated resources could even be affected. 
 
-The proper way is making the ticket `standby` first with:
+The proper way is making the ticket 'standby' first with:
 -------
 # crm_ticket --ticket ticketA --standby
 -------
 
 Then the dependent resources will be stopped or demoted gracefully without
-triggering the loss-policies.
+triggering the loss policies.
 
 If you have finished the maintenance and want to activate the ticket again,
 you can run:
@@ -347,8 +345,6 @@ you can run:
 
 == For more information ==
 
-`Multi-site Clusters`
-http://doc.opensuse.org/products/draft/SLE-HA/SLE-ha-guide_sd_draft/cha.ha.geo.html
+* http://doc.opensuse.org/products/draft/SLE-HA/SLE-ha-guide_sd_draft/cha.ha.geo.html[SUSE's Multi-site Clusters guide]
 
-`Booth`
-https://github.com/ClusterLabs/booth
+* https://github.com/ClusterLabs/booth[Booth]
