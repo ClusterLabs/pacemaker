@@ -2,6 +2,7 @@
 <!DOCTYPE appendix PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
 ]>
 <appendix>
+  <!-- see comment in Book_Info.xml for revision numbering -->
   <title>Revision History</title>
   <simpara>
     <revhistory>
@@ -38,6 +39,18 @@
 	      Converted to <ulink url="http://www.methods.co.nz/asciidoc">asciidoc</ulink>
 	      (which is converted to docbook for use with 
 	      <ulink url="https://fedorahosted.org/publican/">Publican</ulink>)
+	    </member>
+          </simplelist>
+        </revdescription>
+      </revision>
+      <revision>
+        <revnumber>5-0</revnumber>
+        <date>Mon Feb 23 2015</date>
+        <author><firstname>Ken</firstname><surname>Gaillot</surname><email>kgaillot@redhat.com</email></author>
+        <revdescription>
+          <simplelist>
+            <member>
+	      Update for clarity, stylistic consistency and current command-line syntax
 	    </member>
           </simplelist>
         </revdescription>
