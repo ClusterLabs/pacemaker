@@ -1,7 +1,5 @@
 = Resource Templates =
 
-== Abstract ==
-
 If you want to create lots of resources with similar configurations, defining a 
 resource template simplifies the task. Once defined, it can be referenced in 
 primitives or in certain types of constraints.
@@ -165,6 +163,8 @@ In a colocation constraint, only one template may be referenced from either
 `rsc` or `with-rsc`; the other reference must be a regular resource.
 ======
 
+=== Referencing Resource Templates in Sequential Resource Sets ===
+
 Resource templates can also be referenced in resource sets.
 
 For example:
@@ -193,6 +193,8 @@ is the equivalent of the following constraint configuration:
   </resource_set>
 </rsc_order>
 ----
+
+=== Referencing Resource Templates in Parallel Resource Sets ===
 
 If the resources referencing the template can run in parallel:
 

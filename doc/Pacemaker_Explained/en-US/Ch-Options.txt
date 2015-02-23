@@ -329,7 +329,7 @@ _Deprecated:_ See <<s-operation-defaults>> instead
 
 |=========================================================
 
-== Querying and Setting Cluster Options ==
+=== Querying and Setting Cluster Options ===
 
 indexterm:[Querying,Cluster Option]
 indexterm:[Setting,Cluster Option]
@@ -377,7 +377,7 @@ To go back to the cluster's default value, you can delete the value, for example
 Deleted crm_config option: id=cib-bootstrap-options-cluster-delay name=cluster-delay
 ----
 
-== When Options are Listed More Than Once ==
+=== When Options are Listed More Than Once ===
 
 If you ever see something like the following, it means that the option you're modifying is present more than once.
 
