@@ -194,7 +194,7 @@ service. This means it arrives at a solution much faster than traditional
 linear programming algorithms, but by doing so at the price of leaving some
 services stopped.
 
-In the contrived example above:
+In the contrived example at the start of this chapter:
 
 - +rsc-small+ would be allocated to +node1+
 - +rsc-medium+ would be allocated to +node2+

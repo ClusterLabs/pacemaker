@@ -16,8 +16,8 @@ node with the highest one.
 
 === Infinity Math ===
 
-+INFINITY+ is currently defined as 1,000,000 and addition/subtraction
-with it follows these three basic rules:
+Pacemaker implements +INFINITY+ internally as a score of 1,000,000.
+Addition/subtraction with it follows these three basic rules:
 
 * Any value + +INFINITY+ = +INFINITY+
 * Any value - +INFINITY+ = +-INFINITY+
@@ -30,7 +30,7 @@ indexterm:[Resource,Constraints,Location]
 There are two alternative strategies for specifying which nodes a
 resources can run on.  One way is to say that by default they can run
 anywhere and then create location constraints for nodes that are not
-allowed.  The other option is to have nodes "opt-in"...  to start with
+allowed.  The other option is to have nodes "opt-in" --  to start with
 nothing able to run anywhere and selectively enable allowed nodes.
 
 === Location Properties ===
@@ -164,7 +164,7 @@ If two nodes have the same score, then the cluster will choose one.
 This choice may seem random and may not be what was intended, however
 the cluster was not given enough information to know any better.
 
-.Example of two resources that prefer two nodes equally 
+.Constraints where a resource prefers two nodes equally
 ======
 [source,XML]
 -------
@@ -186,7 +186,7 @@ evenly across the cluster.  However other factors can also be involved
 in more complex configurations.
 
 [[s-resource-ordering]]
-== Specifying in which Order Resources Should Start/Stop ==
+== Specifying the Order in which Resources Should Start/Stop ==
 
 indexterm:[Resource,Constraints,Ordering]
 indexterm:[Resource,Start Order]
@@ -336,7 +336,7 @@ decide where to put this resource first and then decide where to put +rsc+.
 
 === Mandatory Placement ===
 
-Mandatory placement occurs any time the constraint's score is
+Mandatory placement occurs when the constraint's score is
 ++INFINITY+ or +-INFINITY+.  In such cases, if the constraint can't be
 satisfied, then the +rsc+ resource is not permitted to run.  For
 +score=INFINITY+, this includes cases where the +with-rsc+ resource is
@@ -345,7 +345,8 @@ not active.
 If you need +resource1+ to always run on the same machine as
 +resource2+, you would add the following constraint:
 
-.An example colocation constraint
+.Mandatory colocation constraint for two resources
+====
 [source,XML]
 <rsc_colocation id="colocate" rsc="resource1" with-rsc="resource2" score="INFINITY"/>
 
@@ -370,16 +371,16 @@ only place left to run is where +resource2+ already is, then
 If mandatory placement is about "must" and "must not", then advisory
 placement is the "I'd prefer if" alternative.  For constraints with
 scores greater than +-INFINITY+ and less than +INFINITY+, the cluster
-will try and accommodate your wishes but may ignore them if the
+will try to accommodate your wishes but may ignore them if the
 alternative is to stop some of the cluster resources.
-        
 
-Like in life, where if enough people prefer something it effectively
+As in life, where if enough people prefer something it effectively
 becomes mandatory, advisory colocation constraints can combine with
 other elements of the configuration to behave as if they were
 mandatory.
 
-.An example advisory-only colocation constraint
+.Advisory colocation constraint for two resources
+====
 [source,XML]
 <rsc_colocation id="colocate-maybe" rsc="resource1" with-rsc="resource2" score="500"/>
 
@@ -501,8 +502,8 @@ Those sets can be expressed, +(A and B) then \(C) then (D) then (E and F)+.
 Say for example we want to change the first set, +(A and B)+, to use "OR" logic
 so the sets look like this: +(A or B) then \(C) then (D) then (E and F)+.
 This functionality can be achieved through the use of the +require-all+
-option.  By default this option is 'require-all=true' which is why the
-"AND" logic is used by default.  Changing +require-all=false+ means only one
+option.  This option defaults to TRUE which is why the
+"AND" logic is used by default.  Setting +require-all=false+ means only one
 resource in the set needs to be started before continuing on to the next set.
 
 Note that the +require-all=false+ option only makes sense to use in conjunction

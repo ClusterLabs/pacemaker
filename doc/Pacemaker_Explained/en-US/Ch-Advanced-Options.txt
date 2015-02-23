@@ -122,7 +122,7 @@ example, to specify an operation that would run on the first Monday of
 indexterm:[Moving,Resources] 
 indexterm:[Resource,Moving]
 
-=== Manual Intervention ===
+=== Moving Resources Manually ===
 
 There are primarily two occasions when you would want to move a
 resource from its current location: when the whole node is under
@@ -130,13 +130,13 @@ maintenance, and when a single resource needs to be moved.
 
 Since everything eventually comes down to a score, you could create
 constraints for every resource to prevent them from running on one
-node.  While the configuration can seem convoluted at times, not even
+node.  While pacemaker configuration can seem convoluted at times, not even
 we would require this of administrators.
 
 Instead, one can set a special node attribute which tells the cluster
 "don't let anything run here".  There is even a helpful tool to help
 query and set it, called `crm_standby`.  To check the standby status
-of the current machine, simply run:
+of the current machine, run:
 
 ----
 # crm_standby -G
@@ -162,8 +162,8 @@ Again, you can change another host's value by supplying a hostname with `--node`
 
 ==== Moving One Resource ====
 
-When only one resource is required to move, we do this by creating
-location constraints.  However, once again we provide a user friendly
+When only one resource is required to move, we could do this by creating
+location constraints.  However, once again we provide a user-friendly
 shortcut as part of the `crm_resource` command, which creates and
 modifies the extra constraints for you.  If +Email+ were running on
 +sles-1+ and you wanted it moved to a specific location, the command
@@ -235,13 +235,13 @@ positive and negative constraints. E.g.
 which has the same long-term consequences as discussed earlier.
 
 [[s-failure-migration]]
-=== Moving Resources Due to Failure ===
+=== Moving Resources Due to Repeated Failure ===
 
 
 New in 1.0 is the concept of a migration threshold.
 footnote:[
 The naming of this option was perhaps unfortunate as it is easily
-confused with true migration, the process of moving a resource from
+confused with live migration, the process of moving a resource from
 one node to another without stopping it.  Xen virtual guests are the
 most common example of resources that can be migrated in this manner.
 ]
@@ -251,20 +251,21 @@ migrate to a new node after 'N' failures.  There is no threshold defined
 by default.  To determine the resource's current failure status and
 limits, run `crm_mon --failcounts`.
 
-By default, once the threshold has been reached, this node will no
+By default, once the threshold has been reached, the troublesome node will no
 longer be allowed to run the failed resource until the administrator
 manually resets the resource's failcount using `crm_failcount` (after
-hopefully first fixing the failure's cause).  However it is possible
-to expire them by setting the resource's +failure-timeout+ option.
+hopefully first fixing the failure's cause).  Alternatively, it is possible
+to expire them by setting the +failure-timeout+ option for the resource.
 
-So a setting of +migration-threshold=2+ and +failure-timeout=60s+
+For example, a setting of +migration-threshold=2+ and +failure-timeout=60s+
 would cause the resource to move to a new node after 2 failures, and
-allow it to move back (depending on the stickiness and constraint
-scores) after one minute.
+allow it to move back (depending on stickiness and constraint scores) after one
+minute.
 
-There are two exceptions to the migration threshold concept; they
-occur when a resource either fails to start or fails to stop.  Start
-failures cause the failcount to be set to +INFINITY+ and thus always
+There are two exceptions to the migration threshold concept:
+when a resource either fails to start or fails to stop.
+
+Start failures cause the failcount to be set to +INFINITY+ and thus always
 cause the resource to move immediately.
 
 Stop failures are slightly different and crucial.  If a resource fails
@@ -275,23 +276,23 @@ to start the resource elsewhere, but will try to stop it again after
 the failure timeout.
 
 [IMPORTANT]
-Please read <<s-rules-recheck>> before enabling this option.
+Please read <<s-rules-recheck>> to understand how timeouts work
+before configuring a +failure-timeout+.
 
 === Moving Resources Due to Connectivity Changes ===
 
-Setting up the cluster to move resources when external connectivity is
-lost is a two-step process.
+You can configure the cluster to move resources when external connectivity is
+lost in two steps.
 
-==== Tell Pacemaker to monitor connectivity ====
+==== Tell Pacemaker to Monitor Connectivity ====
 
-
-To do this, you need to add a +ping+ resource to the cluster.  The
-+ping+ resource uses the system utility of the same name to a test if
+First, add an *ocf:pacemaker:ping* resource to the cluster.  The
+*ping* resource uses the system utility of the same name to a test whether
 list of machines (specified by DNS hostname or IPv4/IPv6 address) are
-reachable and uses the results to maintain a node attribute normally
-called +pingd+.
+reachable and uses the results to maintain a node attribute called +pingd+
+by default.
 footnote:[
-The attribute name is customizable; that allows multiple ping groups to be defined.
+The attribute name is customizable, in order to allow multiple ping groups to be defined.
 ]
 
 [NOTE]
@@ -307,7 +308,7 @@ download the latest version from
 https://github.com/ClusterLabs/pacemaker/tree/master/extra/resources/ping
 ===========
 
-Normally the resource will run on all cluster nodes, which means that
+Normally, the ping resource should run on all cluster nodes, which means that
 you'll need to create a clone.  A template for this can be found below
 along with a description of the most interesting parameters.
           
@@ -366,24 +367,21 @@ how to deal with the connectivity status that +ocf:pacemaker:ping+ is
 recording.
 ===========
 
-==== Tell Pacemaker how to interpret the connectivity data ====
+==== Tell Pacemaker How to Interpret the Connectivity Data ====
 
-[NOTE]
+[IMPORTANT]
 ======
-Before reading the following, please make sure you have read and
-understood <<ch-rules>> above.
+Before attempting the following, make sure you understand
+<<ch-rules>>.
 ======
 
-There are a number of ways to use the connectivity data provided by
-Heartbeat.  The most common setup is for people to have a single ping
-node, to prevent the cluster from running a resource on any
-unconnected node.
+There are a number of ways to use the connectivity data.
 
-////
-TODO: is the idea that only nodes that can reach eg. the router should have active resources?
-////
+The most common setup is for people to have a single ping
+target (e.g. the service network's default gateway), to prevent the cluster
+from running a resource on any unconnected node.
 
-.Don't run on unconnected nodes
+.Don't run a resource on unconnected nodes
 =====
 [source,XML]
 -------
@@ -395,23 +393,29 @@ TODO: is the idea that only nodes that can reach eg. the router should have acti
 -------
 =====
 
-A more complex setup is to have a number of ping nodes configured.
+A more complex setup is to have a number of ping targets configured.
 You can require the cluster to only run resources on nodes that can
 connect to all (or a minimum subset) of them.
 
-.Run only on nodes connected to three or more ping nodes; this assumes +multiplier+ is set to 1000:
+.Run only on nodes connected to three or more ping targets.
 =====
 [source,XML]
 -------
+<primitive id="ping" provider="pacemaker" class="ocf" type="ping">
+... <!-- omitting some configuration to highlight important parts -->
+      <nvpair id="pingd-multiplier" name="multiplier" value="1000"/>
+...
+</primitive>
+...
 <rsc_location id="WebServer-connectivity" rsc="Webserver">
    <rule id="ping-prefer-rule" score="-INFINITY" >
-    <expression id="ping-prefer" attribute="pingd" operation="lt" value="3000"/>
+      <expression id="ping-prefer" attribute="pingd" operation="lt" value="3000"/>
    </rule>
 </rsc_location>
 -------
 =====
 
-Instead you can tell the cluster only to _prefer_ nodes with the best
+Alternatively, you can tell the cluster only to _prefer_ nodes with the best
 connectivity.  Just be sure to set +multiplier+ to a value higher than
 that of +resource-stickiness+ (and don't set either of them to
 +INFINITY+).
@@ -473,17 +477,17 @@ another location without loss of state.  We call this resource
 migration; this is different from the normal practice of stopping the
 resource on the first machine and starting it elsewhere.
 
-Not all resources are able to migrate, see the Migration Checklist
+Not all resources are able to migrate; see the Migration Checklist
 below, and those that can, won't do so in all situations.
-Conceptually there are two requirements from which the other
+Conceptually, there are two requirements from which the other
 prerequisites follow:
 
-* the resource must be active and healthy at the old location
+* The resource must be active and healthy at the old location; and
 * everything required for the resource to run must be available on
-  both the old and new locations
+  both the old and new locations.
 
-The cluster is able to accommodate both push and pull migration models
-by requiring the resource agent to support two new actions:
+The cluster is able to accommodate both 'push' and 'pull' migration models
+by requiring the resource agent to support two special actions:
 +migrate_to+ (performed on the current location) and +migrate_from+
 (performed on the destination).
 
@@ -593,17 +597,17 @@ The same principle applies for +meta_attributes+ and
 == Reloading Services After a Definition Change ==
 
 The cluster automatically detects changes to the definition of
-services it manages.  However, the normal response is to stop the
+services it manages.  The normal response is to stop the
 service (using the old definition) and start it again (with the new
 definition).  This works well, but some services are smarter and can
 be told to use a new set of options without restarting.
 
-To take advantage of this capability, your resource agent must:
+To take advantage of this capability, the resource agent must:
 
 . Accept the +reload+ operation and perform any required actions.
-  _The steps required here depend completely on your application!_
+  _The actions here depend completely on your application!_
 +
-.The DRBD Agent's Control logic for Supporting the +reload+ Operation
+.The DRBD agent's logic for supporting +reload+
 =====
 [source,Bash]
 -------
@@ -680,9 +684,9 @@ field changes.
       
 [NOTE]
 ======
-The metadata is re-read when the resource is started.  This may mean
-that the resource will be restarted the first time, even though you
-changed a parameter with +unique=0+
+Metadata will not be re-read unless the resource needs to be started. This may
+mean that the resource will be restarted the first time, even though you
+changed a parameter with +unique=0+.
 ======
 
 [NOTE]

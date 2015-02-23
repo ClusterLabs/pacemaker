@@ -8,10 +8,10 @@ indexterm:[Resources,Groups]
 
 One of the most common elements of a cluster is a set of resources
 that need to be located together, start sequentially, and stop in the
-reverse order.  To simplify this configuration we support the concept
+reverse order.  To simplify this configuration, we support the concept
 of groups.
 
-.An example group
+.A group of two primitive resources
 ======
 [source,XML]
 -------
@@ -81,7 +81,7 @@ mount, an IP address, and an application that uses them.
 |Description
 
 |id
-|Your name for the group
+|A unique name for the group
  indexterm:[id,Group Resource Property]
  indexterm:[Resource,Group Property,id]
 
@@ -89,27 +89,27 @@ mount, an IP address, and an application that uses them.
 
 === Group Options ===
 
-Options inherited from <<s-resource-options,primitive>> resources:
-+priority, target-role, is-managed+
+Groups inherit the +priority+, +target-role+, and +is-managed+ properties
+from primitive resources. See <<s-resource-options>> for information about
+those properties.
 
 === Group Instance Attributes ===
 
-Groups have no instance attributes, however any that are set here will
-be inherited by the group's children.
+Groups have no instance attributes. However, any that are set for the group
+object will be inherited by the group's children.
 
 === Group Contents ===
 
-Groups may only contain a collection of
-<<primitive-resource>> cluster resources.  To refer to
-the child of a group resource, just use the child's id instead of the
-group's.
+Groups may only contain a collection of cluster resources (see
+<<primitive-resource>>).  To refer to a child of a group resource, just use
+the child's +id+ instead of the group's.
 
 === Group Constraints ===
 
-Although it is possible to reference the group's children in
-constraints, it is usually preferable to use the group's name instead.
+Although it is possible to reference a group's children in
+constraints, it is usually preferable to reference the group itself.
 
-.Example constraints involving groups
+.Some constraints involving groups
 ======
 [source,XML]
 -------
@@ -136,32 +136,32 @@ current location with a score of 500.
 indexterm:[Clone Resources]
 indexterm:[Resources,Clones]
 
-Clones were initially conceived as a convenient way to start N
-instances of an IP resource and have them distributed throughout the
+Clones were initially conceived as a convenient way to start multiple
+instances of an IP address resource and have them distributed throughout the
 cluster for load balancing.  They have turned out to quite useful for
-a number of purposes including integrating with Red Hat's DLM, the
-fencing subsystem, and OCFS2.
+a number of purposes including integrating with the Distributed Lock Manager
+(used by many cluster filesystems), the fencing subsystem, and OCFS2.
 
 You can clone any resource, provided the resource agent supports it.
 
 Three types of cloned resources exist:
 
 * Anonymous
-* Globally Unique
+* Globally unique
 * Stateful
 
-Anonymous clones are the simplest type.  These resources behave
+'Anonymous' clones are the simplest.  These behave
 completely identically everywhere they are running.  Because of this,
-there can only be one copy of an anonymous clone active per machine.
+there can be only one copy of an anonymous clone active per machine.
       
-Globally unique clones are distinct entities.  A copy of the clone
+'Globally unique' clones are distinct entities.  A copy of the clone
 running on one machine is not equivalent to another instance on
-another node.  Nor would any two copies on the same node be
+another node, nor would any two copies on the same node be
 equivalent.
 
-Stateful clones are covered later in <<s-resource-multistate>>.
+'Stateful' clones are covered later in <<s-resource-multistate>>.
 
-.An example clone
+.A clone of an LSB resource
 ======
 [source,XML]
 -------
@@ -184,7 +184,7 @@ Stateful clones are covered later in <<s-resource-multistate>>.
 |Description
 
 |id
-|Your name for the clone
+|A unique name for the clone
  indexterm:[id,Clone Property]
  indexterm:[Clone,Property,id]
 
@@ -255,7 +255,7 @@ will be inherited by the clone's children.
 
 === Clone Contents ===
 
-Clones must contain exactly one group or one regular resource.
+Clones must contain exactly one primitive or group resource.
 
 [WARNING]
 You should never reference the name of a clone's child.
@@ -285,7 +285,7 @@ Colocation between clones is also possible.  In such cases, the set of
 allowed locations for the clone is limited to nodes on which the clone
 is (or will be) active.  Allocation is then performed as normally.
 
-.Example constraints involving clones
+.Some constraints involving clones
 ======
 [source,XML]
 -------
@@ -320,22 +320,22 @@ other probes for instances of the clone should result in
 +$\{OCF_NOT_RUNNING}+ (or one of the other OCF error codes if
 they are failed).
 
-Copies of a clone are identified by appending a colon and a numerical
-offset, eg. +apache:2+.
+Individual instances of a clone are identified by appending a colon and a
+numerical offset, e.g. +apache:2+.
 
 Resource agents can find out how many copies there are by examining
 the +OCF_RESKEY_CRM_meta_clone_max+ environment variable and which
 copy it is by examining +OCF_RESKEY_CRM_meta_clone+.
 
-You should not make any assumptions (based on
-+OCF_RESKEY_CRM_meta_clone+) about which copies are active.  In
+The resource agent must not make any assumptions (based on
++OCF_RESKEY_CRM_meta_clone+) about which numerical instances are active.  In
 particular, the list of active copies will not always be an unbroken
 sequence, nor always start at 0.
 
 ==== Clone Notifications ====
 
 Supporting notifications requires the +notify+ action to be
-implemented.  Once supported, the notify action will be passed a
+implemented.  If supported, the notify action will be passed a
 number of extra variables which, when combined with additional
 context, can be used to calculate the current state of the cluster and
 what is about to happen to it.
@@ -458,12 +458,13 @@ OCF_RESKEY_CRM_meta_notify_start_uname="sles-1 sles-3 sles-2"
 indexterm:[Multi-state Resources]
 indexterm:[Resources,Multi-state]
 
-Multi-state resources are a specialization of Clone resources; please
-ensure you understand the section on clones before continuing! They
-allow the instances to be in one of two operating modes; these are
-called +Master+ and +Slave+, but can mean whatever you wish them to
-mean.  The only limitation is that when an instance is started, it
-must come up in the +Slave+ state.
+Multi-state resources are a specialization of clone resources; please
+ensure you understand <<s-resource-clone>> before continuing!
+
+Multi-state resources allow the instances to be in one of two operating modes
+(called 'roles'). The roles are called 'master' and 'slave', but can mean
+whatever you wish them to mean. The only limitation is that when an instance is
+started, it must come up in the slave role.
 
 === Multi-state Properties ===
 
@@ -516,11 +517,11 @@ Options inherited from <<s-resource-clone,clone>> resources:
 === Multi-state Instance Attributes ===
 
 Multi-state resources have no instance attributes; however, any that
-are set here will be inherited by master's children.
+are set here will be inherited by a master's children.
 
 === Multi-state Contents ===
 
-Masters must contain exactly one group or one regular resource.
+Masters must contain exactly one primitive or group resource.
 
 [WARNING]
 You should never reference the name of a master's child.
@@ -653,9 +654,9 @@ Colocation with regular clones and other multi-state resources is also
 possible.  In such cases, the set of allowed locations for the +rsc+
 clone is (after role filtering) limited to nodes on which the
 +with-rsc+ multi-state resource is (or will be) in the specified role.
-Allocation is then performed as-per-normal.
+Placement is then performed as normal.
 
-==== Using Multi-state Resources in Colocation/Ordering Sets ====
+==== Using Multi-state Resources in Colocation Sets ====
 
 .Additional colocation set options relevant to multi-state resources
 [width="95%",cols="1m,1,6<",options="header",align="center"]
@@ -675,7 +676,8 @@ Allocation is then performed as-per-normal.
 |=========================================================
 
 In the following example +B+'s master must be located on the same node as +A+'s master.
-Additionally resources +C+ and +D+ must be located on the same node as +B+'s master.
+Additionally resources +C+ and +D+ must be located on the same node as +A+'s
+and +B+'s masters.
 
 .Colocate C and D with A's and B's master instances
 ======
@@ -736,29 +738,29 @@ Additionally resources +C+ and +D+ must wait until +A+ and +B+ have been promote
 -------
 ======
 
+In the above example, +B+ cannot be promoted to a master role until +A+ has
+been promoted. Additionally, resources +C+ and +D+ must wait until +A+ and +B+
+have been promoted before they can start.
+
 
 === Multi-state Stickiness ===
 
 indexterm:[resource-stickiness,Multi-State]
-To achieve a stable allocation pattern, multi-state resources are
-slightly sticky by default.  If no value for +resource-stickiness+ is
-provided, the multi-state resource will use a value of 1.  Being a
-small value, it causes minimal disturbance to the score calculations
-of other resources but is enough to prevent Pacemaker from needlessly
-moving copies around the cluster.
+As with regular clones, multi-state resources are
+slightly sticky by default. See <<s-clone-stickiness>> for details.
 
 === Which Resource Instance is Promoted ===
 
-During the start operation, most Resource Agent scripts should call
+During the start operation, most resource agents should call
 the `crm_master` utility.  This tool automatically detects both the
 resource and host and should be used to set a preference for being
 promoted.  Based on this, +master-max+, and +master-node-max+, the
 instance(s) with the highest preference will be promoted.
 
-The other alternative is to create a location constraint that
+An alternative is to create a location constraint that
 indicates which nodes are most preferred as masters.
 
-.Manually specifying which node should be promoted
+.Explicitly preferring node1 to be promoted to master
 ======
 [source,XML]
 -------
@@ -770,12 +772,14 @@ indicates which nodes are most preferred as masters.
 -------
 ======
 
-=== Multi-state Resource Agent Requirements ===
+=== Requirements for Multi-state Resource Agents ===
 
 Since multi-state resources are an extension of cloned resources, all
-the requirements of Clones are also requirements of multi-state
-resources.  Additionally, multi-state resources require two extra
-actions: +demote+ and +promote+; these actions are responsible for
+the requirements for resource agents that support clones are also requirements
+for resource agents that support multi-state resources.
+
+Additionally, multi-state resources require two extra
+actions, +demote+ and +promote+, which are responsible for
 changing the state of the resource.  Like +start+ and +stop+, they
 should return +$\{OCF_SUCCESS}+ if they completed successfully or a
 relevant error code if they did not.
@@ -820,12 +824,12 @@ not indicate to the agent what role it currently believes it to be in.
 === Multi-state Notifications ===
 
 Like clones, supporting notifications requires the +notify+ action to
-be implemented.  Once supported the notify action will be passed a
+be implemented.  If supported, the notify action will be passed a
 number of extra variables which, when combined with additional
 context, can be used to calculate the current state of the cluster and
 what is about to happen to it.
           
-.Environment variables supplied with Master notify actions footnote:[Emphasized variables are specific to +Master+ resources and all behave in the same manner as described for Clone resources.]
+.Environment variables supplied with multi-state notify actions footnote:[Emphasized variables are specific to +Master+ resources, and all behave in the same manner as described for Clone resources.]
 [width="95%",cols="5,3<",options="header",align="center"]
 |=========================================================
 

@@ -66,17 +66,17 @@ NOTE: This is _not_ performed as root.
 
 |validate-all
 |Verify the supplied parameters
-|Exit with 0 if parameters are valid, 2 if not valid, 6 if resource is not configured.
+|Return 0 if parameters are valid, 2 if not valid, and 6 if resource is not configured.
  indexterm:[validate-all,OCF Action]
  indexterm:[OCF,Action,validate-all]
 
 |=========================================================
 
-Additional requirements (not part of the OCF specs) are placed on
-agents that will be used for advanced concepts like
+Additional requirements (not part of the OCF specification) are placed on
+agents that will be used for advanced concepts such as
 <<s-resource-clone,clones>> and <<s-resource-multistate,multi-state>> resources.
 
-.Optional Actions for OCF Agents
+.Optional Actions for OCF Resource Agents
 [width="95%",cols="2m,6,3",options="header",align="center"]
 |=========================================================
 
@@ -85,19 +85,19 @@ agents that will be used for advanced concepts like
 |Instructions
 
 |promote
-|Promote the local instance of a multi-state resource to the master/primary state.
+|Promote the local instance of a multi-state resource to the master (primary) state.
 |Return 0 on success
  indexterm:[promote,OCF Action]
  indexterm:[OCF,Action,promote]
 
 |demote
-|Demote the local instance of a multi-state resource to the slave/secondary state.
+|Demote the local instance of a multi-state resource to the slave (secondary) state.
 |Return 0 on success
  indexterm:[demote,OCF Action]
  indexterm:[OCF,Action,demote]
 
 |notify
-|Used by the cluster to send the agent pre and post notification
+|Used by the cluster to send the agent pre- and post-notification
  events telling the resource what has happened and will happen.
 |Must not fail. Must exit with 0
  indexterm:[notify,OCF Action]
@@ -105,13 +105,15 @@ agents that will be used for advanced concepts like
 
 |=========================================================
 
-One action specified in the OCF specs is not currently used by the cluster:
+One action specified in the OCF specs, +recover+, is not currently used by the
+cluster. It is intended to be a variant of the +start+ action that tries to
+recover a resource locally.
 
-* +recover+ - a variant of the +start+ action, this should try to
-  recover a resource locally.
-
-Remember to use indexterm:[ocf-tester]`ocf-tester` to verify that your
-new agent complies with the OCF standard properly.
+[IMPORTANT]
+====
+If you create a new OCF resource agent, use indexterm:[ocf-tester]`ocf-tester`
+to verify that the agent complies with the OCF standard properly.
+====
 
 === How are OCF Return Codes Interpreted? ===
 
@@ -150,12 +152,14 @@ indexterm:[OCF,error,fatal]
 
 |=========================================================
 
-Assuming an action is considered to have failed, the following table
-outlines the different OCF return codes and the type of recovery the
-cluster will initiate when it is received.
-
 [[s-ocf-return-codes]]
 === OCF Return Codes ===
+
+The following table outlines the different OCF return codes and the type of
+recovery the cluster will initiate when a failure code is received.
+Although counterintuitive, even actions that return 0
+(aka. +OCF_SUCCESS+) can be considered to have failed, if 0 was not
+the expected return value.
 
 .OCF Return Codes and their Recovery Types
 [width="95%",cols="1m,4<m,6<,1m",options="header",align="center"]
@@ -224,35 +228,34 @@ indexterm:[Return Code,7,OCF_NOT_RUNNING]
 
 |8
 |OCF_RUNNING_MASTER
-|The resource is running in +Master+ mode.
+|The resource is running in master mode.
 indexterm:[Return Code,OCF_RUNNING_MASTER]
 indexterm:[Return Code,8,OCF_RUNNING_MASTER]
 |soft
 
 |9
 |OCF_FAILED_MASTER
-|The resource is in +Master+ mode but has failed. The resource will be demoted, stopped and then started (and possibly promoted) again.
+|The resource is in master mode but has failed. The resource will be demoted,
+stopped and then started (and possibly promoted) again.
 indexterm:[Return Code,OCF_FAILED_MASTER]
 indexterm:[Return Code,9,OCF_FAILED_MASTER]
 |soft
 
 |other
-|NA
+|N/A
 |Custom error code.
 indexterm:[Return Code,other]
 |soft
 
 |=========================================================
 
-Although counterintuitive, even actions that return 0
-(aka. +OCF_SUCCESS+) can be considered to have failed.
+Exceptions to the recovery handling described above:
 
-=== Exceptions ===
-
-* Non-recurring monitor actions (probes) that find a resource active
-  (or in Master mode) will not result in recovery action unless it is
-  also found active elsewhere
+* Probes (non-recurring monitor actions) that find a resource active
+  (or in master mode) will not result in recovery action unless it is
+  also found active elsewhere.
 * The recovery action taken when a resource is found active more than
-  once is determined by the _multiple-active_ property of the resource
+  once is determined by the resource's +multiple-active+ property
+  (see <<s-resource-options>>).
 * Recurring actions that return +OCF_ERR_UNIMPLEMENTED+
-  do not cause any type of recovery
+  do not cause any type of recovery.

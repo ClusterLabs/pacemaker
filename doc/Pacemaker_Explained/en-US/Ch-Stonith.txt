@@ -1,4 +1,4 @@
-= Configure STONITH =
+= STONITH =
 
 ////
 We prefer [[ch-stonith]], but older versions of asciidoc don't deal well
@@ -7,10 +7,10 @@ with that construct for chapter headings
 anchor:ch-stonith[Chapter 13, STONITH]
 indexterm:[STONITH, Configuration]
 
-== What Is STONITH ==
+== What Is STONITH? ==
 
-STONITH is an acronym for Shoot-The-Other-Node-In-The-Head and it
-protects your data from being corrupted by rogue nodes or concurrent
+STONITH (an acronym for "Shoot The Other Node In The Head"), also called
+'fencing', protects your data from being corrupted by rogue nodes or concurrent
 access.
 
 Just because a node is unresponsive, this doesn't mean it isn't
@@ -37,9 +37,9 @@ from a network fault.
 Likewise, any device that relies on the machine being active (such as
 SSH-based "devices" used during testing) are inappropriate.
 
-== Differences of STONITH Resources ==
+== Special Treatment of STONITH Resources ==
 
-Stonith resources are somewhat special in Pacemaker.
+STONITH resources are somewhat special in Pacemaker.
 
 In previous versions, only "running" resources could be used by
 Pacemaker for fencing.  This requirement has been relaxed to allow
@@ -52,8 +52,8 @@ on-the-fly when needed, however preference is given to 'verified'
 instances which are the ones the cluster has explicitly started.
 
 In the case of a cluster split, the partition with a verified instance
-will have a slight advantage as stonith-ng in the other partition will
-have to hear from all its current peers before choosing a node to
+will have a slight advantage, because the STONITH daemon in the other partition
+will have to hear from all its current peers before choosing a node to
 perform the fencing.
 
 [NOTE]
@@ -294,13 +294,11 @@ to alter the number of times Pacemaker retries before giving up.
 
 [NOTE]
 ===========
-
-Both configuration shells include functionality to simplify the
+Higher-level configuration shells include functionality to simplify the
 process below, particularly the step for deciding which parameters are
 required.  However since this document deals only with core
-components, you should refer to the Stonith chapter of +Clusters from
-Scratch+ for those details.
-
+components, you should refer to the STONITH chapter of the
+http://www.clusterlabs.org/doc/[Clusters from Scratch] guide for those details.
 ===========
 
 . Find the correct driver:
@@ -352,7 +350,7 @@ Scratch+ for those details.
 # stonith_admin --reboot nodename
 ----
 
-=== Example ===
+=== Example STONITH Configuration ===
 
 Assume we have an chassis containing four nodes and an IPMI device
 active on 192.0.2.1. We would choose the `fence_ipmilan` driver,
@@ -477,10 +475,10 @@ and obtain the following list of parameters:
 ----
 ====
 
-from which we would create a STONITH resource fragment that might look
+Based on that, we would create a STONITH resource fragment that might look
 like this:
 
-.Sample STONITH Resource
+.An IPMI-based STONITH Resource
 ====
 [source,XML]
 ----
@@ -498,13 +496,12 @@ like this:
 ----
 ====
 
-And finally, since we disabled it earlier, we need to re-enable STONITH.
-
+Finally, we need to enable STONITH:
 ----
 # crm_attribute -t crm_config -n stonith-enabled -v true
 ----
 
-== Advanced Fencing Configurations ==
+== Advanced STONITH Configurations ==
 
 Some people consider that having one fencing device is a single point
 of failure footnote:[Not true, since a node or resource must fail
@@ -518,12 +515,12 @@ Simply create the individual devices as you normally would, then
 define one or more +fencing-level+ entries in the +fencing-topology+ section of
 the configuration.
 
-* Each level is attempted in +ascending index+ order
-* If a device fails, +processing terminates+ for the current level.
-  No further devices in that level are exercised and the next level is attempted instead.
-* If the operation succeeds for all the listed devices in a level, the level is deemed to have passed
-* The operation is finished +when a level has passed+ (success), or all levels have been attempted (failed)
-* If the operation failed, the next step is determined by the Policy Engine and/or crmd.
+* Each fencing level is attempted in order of ascending +index+.
+* If a device fails, processing terminates for the current level.
+  No further devices in that level are exercised, and the next level is attempted instead.
+* If the operation succeeds for all the listed devices in a level, the level is deemed to have passed.
+* The operation is finished when a level has passed (success), or all levels have been attempted (failed).
+* If the operation failed, the next step is determined by the Policy Engine and/or `crmd`.
 
 Some possible uses of topologies include:
 
@@ -539,7 +536,7 @@ Some possible uses of topologies include:
 |Description
 
 |id
-|Your name for the level
+|A unique name for the level
  indexterm:[id,fencing-level]
  indexterm:[Fencing,fencing-level,id]
 
@@ -550,7 +547,7 @@ Some possible uses of topologies include:
 
 |index
 |The order in which to attempt the levels.
- Levels are attempted in +ascending index+ order +until one succeeds+.
+ Levels are attempted in ascending order 'until one succeeds'.
  indexterm:[index,fencing-level]
  indexterm:[Fencing,fencing-level,index]
 
@@ -582,7 +579,7 @@ Some possible uses of topologies include:
 </cib>
 ----
 
-=== Example use of advanced Fencing Topologies: dual layer and dual devices ===
+=== Example Dual-Layer, Dual-Device Fencing Topologies ===
 
 The following example illustrates an advanced use of +fencing-topology+ in a cluster with the following properties:
 
@@ -596,7 +593,7 @@ The following example illustrates an advanced use of +fencing-topology+ in a clu
 * fencing is only implemented for the active nodes and has location constraints
 * fencing topology is set to try IPMI fencing first then default to a "sure-kill" dual PDU fencing
 
-In a normal failure scenario, STONITH will first select +fence_ipmi+ to try and kill the faulty node.
+In a normal failure scenario, STONITH will first select +fence_ipmi+ to try to kill the faulty node.
 Using a fencing topology, if that first method fails, STONITH will then move on to selecting +fence_apc_snmp+ twice:
 
 * once for the first PDU 
@@ -635,7 +632,8 @@ Each cluster node has it own dedicated IPMI channel that can be called for fenci
 
 .Second fencing method: dual PDU devices
 
-Each cluster node also has two distinct power channels controlled by two distinct PDUs. That means a total of 4 fencing devices configured as follows:
+Each cluster node also has two distinct power channels controlled by two
+distinct PDUs. That means a total of 4 fencing devices configured as follows:
 
 - Node 1, PDU 1, PSU 1 @ port 10
 - Node 1, PDU 2, PSU 2 @ port 10
@@ -689,17 +687,18 @@ The matching fencing agents are configured as follows:
 
 .Location Constraints 
 
-To prevent STONITH from running a fencing agent on the very same node it is supposed to fence, constraints are placed on all the fencing primitives:
+To prevent STONITH from trying to run a fencing agent on the same node it is
+supposed to fence, constraints are placed on all the fencing primitives:
 [source,XML]
 ----
-    <constraints>
-      <rsc_location id="l_fence_prod-mysql1_ipmi" node="prod-mysql1" rsc="fence_prod-mysql1_ipmi" score="-INFINITY"/>
-      <rsc_location id="l_fence_prod-mysql2_ipmi" node="prod-mysql2" rsc="fence_prod-mysql2_ipmi" score="-INFINITY"/>
-      <rsc_location id="l_fence_prod-mysql1_apc2" node="prod-mysql1" rsc="fence_prod-mysql1_apc2" score="-INFINITY"/>
-      <rsc_location id="l_fence_prod-mysql1_apc1" node="prod-mysql1" rsc="fence_prod-mysql1_apc1" score="-INFINITY"/>
-      <rsc_location id="l_fence_prod-mysql2_apc1" node="prod-mysql2" rsc="fence_prod-mysql2_apc1" score="-INFINITY"/>
-      <rsc_location id="l_fence_prod-mysql2_apc2" node="prod-mysql2" rsc="fence_prod-mysql2_apc2" score="-INFINITY"/>
-    </constraints>
+<constraints>
+  <rsc_location id="l_fence_prod-mysql1_ipmi" node="prod-mysql1" rsc="fence_prod-mysql1_ipmi" score="-INFINITY"/>
+  <rsc_location id="l_fence_prod-mysql2_ipmi" node="prod-mysql2" rsc="fence_prod-mysql2_ipmi" score="-INFINITY"/>
+  <rsc_location id="l_fence_prod-mysql1_apc2" node="prod-mysql1" rsc="fence_prod-mysql1_apc2" score="-INFINITY"/>
+  <rsc_location id="l_fence_prod-mysql1_apc1" node="prod-mysql1" rsc="fence_prod-mysql1_apc1" score="-INFINITY"/>
+  <rsc_location id="l_fence_prod-mysql2_apc1" node="prod-mysql2" rsc="fence_prod-mysql2_apc1" score="-INFINITY"/>
+  <rsc_location id="l_fence_prod-mysql2_apc2" node="prod-mysql2" rsc="fence_prod-mysql2_apc2" score="-INFINITY"/>
+</constraints>
 ----
 
 .Fencing topology
@@ -708,14 +707,14 @@ Now that all the fencing resources are defined, it's time to create the right to
 We want to first fence using IPMI and if that does not work, fence both PDUs to effectively and surely kill the node.
 [source,XML]
 ----
-    <fencing-topology>
-      <fencing-level devices="fence_prod-mysql1_ipmi" id="fencing-2" index="1" target="prod-mysql1"/>
-      <fencing-level devices="fence_prod-mysql1_apc1,fence_prod-mysql1_apc2" id="fencing-3" index="2" target="prod-mysql1"/>
-      <fencing-level devices="fence_prod-mysql2_ipmi" id="fencing-0" index="1" target="prod-mysql2"/>
-      <fencing-level devices="fence_prod-mysql2_apc1,fence_prod-mysql2_apc2" id="fencing-1" index="2" target="prod-mysql2"/>
-    </fencing-topology>
+<fencing-topology>
+  <fencing-level devices="fence_prod-mysql1_ipmi" id="fencing-2" index="1" target="prod-mysql1"/>
+  <fencing-level devices="fence_prod-mysql1_apc1,fence_prod-mysql1_apc2" id="fencing-3" index="2" target="prod-mysql1"/>
+  <fencing-level devices="fence_prod-mysql2_ipmi" id="fencing-0" index="1" target="prod-mysql2"/>
+  <fencing-level devices="fence_prod-mysql2_apc1,fence_prod-mysql2_apc2" id="fencing-1" index="2" target="prod-mysql2"/>
+</fencing-topology>
 ----
-Please note, in +fencing-topology+, the lowest +index+ value determines the priority of the first fencing method.
+Please note, in +fencing-topology+, the lowest +index+ value determines the priority of the first fencing method. 
 
 .Final configuration
 

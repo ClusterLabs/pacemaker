@@ -29,8 +29,12 @@ or whatever action you develop.
 == Configuring SNMP Notifications ==
 indexterm:[Resource,Notification,SNMP]
 
-Requires an IP to send SNMP traps to, and a SNMP community.
-Pacemaker MIB is found in _/usr/share/snmp/mibs/PCMK-MIB.txt_
+Requires an IP to send SNMP traps to, and an SNMP community string.
+The Pacemaker MIB is provided with the source, and is typically
+installed in +/usr/share/snmp/mibs/PCMK-MIB.txt+.
+
+This example uses +snmphost.example.com+ as the SNMP IP and
++public+ as the community string:
 
 .Configuring ClusterMon to send SNMP traps
 =====
@@ -52,7 +56,9 @@ Pacemaker MIB is found in _/usr/share/snmp/mibs/PCMK-MIB.txt_
 == Configuring Email Notifications ==
 indexterm:[Resource,Notification,SMTP,Email]
 
-Requires a user to send mail alerts to. "Mail-From", SMTP relay and Subject prefix can also be configured.
+Requires the recipient e-mail address. You can also optionally configure
+the sender e-mail address, the hostname of the SMTP relay, and a prefix string
+for the subject line.
 
 .Configuring ClusterMon to send email alerts
 =====
