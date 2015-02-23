@@ -99,15 +99,24 @@ http://refspecs.linux-foundation.org/LSB_3.0.0/LSB-Core-generic/LSB-Core-generic
 for the LSB Spec as it relates to init scripts.
 ]
 
+[WARNING]
+====
 Many distributions claim LSB compliance but ship with broken init
 scripts.  For details on how to check whether your init script is
 LSB-compatible, see <<ap-lsb>>. Common problematic violations of
 the LSB standard include:
 
 * Not implementing the status operation at all
-* Not observing the correct exit status codes for start/stop/status actions
-* Starting a started resource returns an error (this violates the LSB spec)
-* Stopping a stopped resource returns an error (this violates the LSB spec)
+* Not observing the correct exit status codes for `start/stop/status` actions
+* Starting a started resource returns an error
+* Stopping a stopped resource returns an error
+====
+
+[IMPORTANT]
+====
+Remember to make sure the computer is _not_ configured to start any
+services at boot time -- that should be controlled by the cluster.
+====
 
 === Systemd ===
 indexterm:[Resource,Systemd]
@@ -126,11 +135,11 @@ are online guides for converting from init scripts.
 footnote:[For example,
 http://0pointer.de/blog/projects/systemd-for-admins-3.html]
 
-[NOTE]
-======
-Remember to make sure the computer is +not+ configured to start any
-services at boot time that should be controlled by the cluster.
-======
+[IMPORTANT]
+====
+Remember to make sure the computer is _not_ configured to start any
+services at boot time -- that should be controlled by the cluster.
+====
 
 === Upstart ===
 indexterm:[Resource,Upstart]
@@ -146,11 +155,11 @@ Pacemaker is able to manage these services _if they are present_.
 Instead of init scripts, upstart has 'jobs'.  Generally, the
 services (jobs) are provided by the OS distribution.
 
-[NOTE]
-======
-Remember to make sure the computer is +not+ configured to start any
-services at boot time that should be controlled by the cluster.
-======
+[IMPORTANT]
+====
+Remember to make sure the computer is _not_ configured to start any
+services at boot time -- that should be controlled by the cluster.
+====
 
 === System Services ===
 indexterm:[Resource,System Services]
@@ -180,8 +189,12 @@ discussed later in <<ch-stonith>>.
 indexterm:[Resource,Nagios Plugins]
 indexterm:[Nagios Plugins,Resources]
 
-Nagios plugins allow us to monitor services on the remote hosts.
-http://nagiosplugins.org[Nagios Plugins].
+Nagios Plugins
+footnote:[The project has two independent forks, hosted at
+https://www.nagios-plugins.org/ and https://www.monitoring-plugins.org/. Output
+from both projects' plugins is similar, so plugins from either project can be
+used with pacemaker.]
+allow us to monitor services on remote hosts.
 
 Pacemaker is able to do remote monitoring with the plugins _if they are
 present_.
@@ -438,7 +451,7 @@ resources in the configuration (unless of course the individual
 resources were specifically enabled by having their +is-managed+ set to
 +true+).
 
-== Instance Attributes ==
+=== Resource Instance Attributes ===
 
 The resource agents of some resource classes (lsb, systemd and upstart 'not' among them)
 can be given parameters which determine how they behave and which instance
@@ -546,9 +559,10 @@ the cluster reacts to operation timeouts.
 
 indexterm:[Resource,Action]
 
-=== Monitoring Resources for Failure ===
+Operations are actions the cluster can perform on a resource,
+such as start, stop and monitor.
 
-By default, the cluster will not ensure your resources are still
+As an example, by default the cluster will not ensure your resources are still
 healthy.  To instruct the cluster to do this, you need to add a
 +monitor+ operation to the resource's definition.
 
@@ -634,8 +648,10 @@ indexterm:[Action,Property,on-fail]
 [[s-operation-defaults]]
 === Setting Global Defaults for Operations ===
 
-To set a default value for a operation option, simply add it to the
-+op_defaults+ section with `crm_attribute`. Thus,
+You can change the global default values for operation properties
+in a given cluster. These are defined in an +op_defaults+ section 
+of the CIB's +configuration+ section, and can be set with `crm_attribute`.
+For example,
 
 ----
 # crm_attribute --type op_defaults --name timeout --update 20s
