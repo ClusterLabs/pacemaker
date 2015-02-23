@@ -41,30 +41,33 @@ SSH-based "devices" used during testing) are inappropriate.
 
 STONITH resources are somewhat special in Pacemaker.
 
-In previous versions, only "running" resources could be used by
-Pacemaker for fencing.  This requirement has been relaxed to allow
-other parts of the cluster (such as resources like DRBD) to reliably
-initiate fencing. footnote:[Fencing a node while Pacemaker was moving
-stonith resources around would otherwise fail]
+STONITH may be initiated by pacemaker or by other parts of the cluster
+(such as resources like DRBD or DLM). To accommodate this, pacemaker
+does not require the STONITH resource to be in the 'started' state
+in order to be used, thus allowing reliable use of STONITH devices in such a
+case.
 
-Now all nodes have access to their definitions and instantiate them
-on-the-fly when needed, however preference is given to 'verified'
-instances which are the ones the cluster has explicitly started.
+[NOTE]
+====
+In pacemaker versions 1.1.9 and earlier, this feature either did not exist or
+did not work well. Only "running" STONITH resources could be used by Pacemaker
+for fencing, and if another component tried to fence a node while Pacemaker was
+moving STONITH resources, the fencing could fail.
+====
+
+All nodes have access to STONITH devices' definitions and instantiate them
+on-the-fly when needed, but preference is given to 'verified' instances, which
+are the ones that are 'started' according to the cluster's knowledge.
 
 In the case of a cluster split, the partition with a verified instance
 will have a slight advantage, because the STONITH daemon in the other partition
 will have to hear from all its current peers before choosing a node to
 perform the fencing.
 
-[NOTE]
-===========
-To disable a fencing device/resource, 'target-role' can be set as you would for a normal resource.
-===========
+Fencing resources do work the same as regular resources in some respects:
 
-[NOTE]
-===========
-To prevent a specific node from using a fencing device, location constraints will work as expected.
-===========
+* +target-role+ can be used to enable or disable the resource
+* Location constraints can be used to prevent a specific node from using the resource
 
 [IMPORTANT]
 ===========
@@ -558,7 +561,8 @@ Some possible uses of topologies include:
 
 |=========================================================
 
-=== Example use of Fencing Topologies ===
+.Fencing topology with different devices for different nodes
+====
 [source,XML]
 ----
  <cib crm_feature_set="3.0.6" validate-with="pacemaker-1.2" admin_epoch="1" epoch="0" num_updates="0">
@@ -578,6 +582,7 @@ Some possible uses of topologies include:
   <status/>
 </cib>
 ----
+====
 
 === Example Dual-Layer, Dual-Device Fencing Topologies ===
 
