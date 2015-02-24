@@ -608,11 +608,13 @@ services_list(void)
     return resources_list_agents("lsb", NULL);
 }
 
+#if SUPPORT_HEARTBEAT
 static GList *
 resources_os_list_hb_agents(void)
 {
     return services_os_get_directory_list(HB_RA_DIR, TRUE, TRUE);
 }
+#endif
 
 GList *
 resources_list_standards(void)
