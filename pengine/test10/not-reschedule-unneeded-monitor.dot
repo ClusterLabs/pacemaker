@@ -1,0 +1,9 @@
+digraph "g" {
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+"sle12-kvm_monitor_10000 kimball" [ style=bold color="green" fontcolor="black"]
+"sle12-kvm_start_0 kimball" -> "sle12-kvm_monitor_10000 kimball" [ style = bold]
+"sle12-kvm_start_0 kimball" [ style=bold color="green" fontcolor="black"]
+"sle12-kvm_stop_0 castor" -> "all_stopped" [ style = bold]
+"sle12-kvm_stop_0 castor" -> "sle12-kvm_start_0 kimball" [ style = bold]
+"sle12-kvm_stop_0 castor" [ style=bold color="green" fontcolor="black"]
+}
