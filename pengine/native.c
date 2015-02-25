@@ -725,6 +725,10 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
     if (possible_matches == NULL) {
         is_optional = FALSE;
         pe_rsc_trace(rsc, "Marking %s manditory: not active", key);
+
+    } else if (is_set(rsc->flags, pe_rsc_reschedule_monitor)) {
+        is_optional = FALSE;
+
     } else {
         g_list_free(possible_matches);
     }
