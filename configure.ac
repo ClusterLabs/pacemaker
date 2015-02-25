@@ -453,7 +453,6 @@ case "$host_os" in
 		;;
 *linux*)
 		AC_DEFINE_UNQUOTED(ON_LINUX, 1, Compiling for Linux platform)
-  		CFLAGS="$CFLAGS -I${prefix}/include"
  		;;
 darwin*)
 		AC_DEFINE_UNQUOTED(ON_DARWIN, 1, Compiling for Darwin platform)
