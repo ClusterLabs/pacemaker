@@ -53,6 +53,7 @@ typedef struct st_query_result_s {
     gboolean tried;
     GListPtr device_list;
     GHashTable *custom_action_timeouts;
+    GHashTable *delay_maxes;
     /* Subset of devices that peer has verified connectivity on */
     GHashTable *verified_devices;
 
@@ -84,6 +85,7 @@ free_remote_query(gpointer data)
         free(query->host);
         g_list_free_full(query->device_list, free);
         g_hash_table_destroy(query->custom_action_timeouts);
+        g_hash_table_destroy(query->delay_maxes);
         g_hash_table_destroy(query->verified_devices);
         free(query);
     }
@@ -879,14 +881,20 @@ static int
 get_device_timeout(st_query_result_t * peer, const char *device, int default_timeout)
 {
     gpointer res;
+    int delay_max = 0;
 
     if (!peer || !device) {
         return default_timeout;
     }
 
+    res = g_hash_table_lookup(peer->delay_maxes, device);
+    if (res && GPOINTER_TO_INT(res) > 0) {
+        delay_max = GPOINTER_TO_INT(res);
+    }
+
     res = g_hash_table_lookup(peer->custom_action_timeouts, device);
 
-    return res ? GPOINTER_TO_INT(res) : default_timeout;
+    return res ? GPOINTER_TO_INT(res) + delay_max : default_timeout + delay_max;
 }
 
 static int
@@ -1244,17 +1252,20 @@ process_remote_stonith_query(xmlNode * msg)
     result->host = strdup(host);
     result->devices = devices;
     result->custom_action_timeouts = g_hash_table_new_full(crm_str_hash, g_str_equal, free, NULL);
+    result->delay_maxes = g_hash_table_new_full(crm_str_hash, g_str_equal, free, NULL);
     result->verified_devices = g_hash_table_new_full(crm_str_hash, g_str_equal, free, NULL);
 
     for (child = __xml_first_child(dev); child != NULL; child = __xml_next(child)) {
         const char *device = ID(child);
         int action_timeout = 0;
+        int delay_max = 0;
         int verified = 0;
         int required = 0;
 
         if (device) {
             result->device_list = g_list_prepend(result->device_list, strdup(device));
             crm_element_value_int(child, F_STONITH_ACTION_TIMEOUT, &action_timeout);
+            crm_element_value_int(child, F_STONITH_DELAY_MAX, &delay_max);
             crm_element_value_int(child, F_STONITH_DEVICE_VERIFIED, &verified);
             crm_element_value_int(child, F_STONITH_DEVICE_REQUIRED, &required);
             if (action_timeout) {
@@ -1262,6 +1273,12 @@ process_remote_stonith_query(xmlNode * msg)
                           result->host, device, action_timeout);
                 g_hash_table_insert(result->custom_action_timeouts,
                                     strdup(device), GINT_TO_POINTER(action_timeout));
+            }
+            if (delay_max > 0) {
+                crm_trace("Peer %s with device %s returned maximum of random delay %d",
+                          result->host, device, delay_max);
+                g_hash_table_insert(result->delay_maxes,
+                                    strdup(device), GINT_TO_POINTER(delay_max));
             }
             if (verified) {
                 crm_trace("Peer %s has confirmed a verified device %s", result->host, device);
