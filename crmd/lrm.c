@@ -186,6 +186,7 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
 
         if (op->params &&
             (safe_str_eq(CRMD_ACTION_START, op->op_type) ||
+             safe_str_eq("reload", op->op_type) ||
              safe_str_eq(CRMD_ACTION_STATUS, op->op_type))) {
 
             if (entry->stop_params) {
