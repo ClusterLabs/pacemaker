@@ -273,7 +273,7 @@ static void
 operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode)
 {
     svc_action_t *op = mainloop_child_userdata(p);
-    char *prefix = g_strdup_printf("%s:%d", op->id, op->pid);
+    char *prefix = crm_strdup_printf("%s:%d", op->id, op->pid);
 
     mainloop_clear_child_userdata(p);
     op->status = PCMK_LRM_OP_DONE;
@@ -320,15 +320,15 @@ operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exi
         crm_debug("%s - exited with rc=%d", prefix, exitcode);
     }
 
-    g_free(prefix);
-    prefix = g_strdup_printf("%s:%d:stderr", op->id, op->pid);
+    free(prefix);
+    prefix = crm_strdup_printf("%s:%d:stderr", op->id, op->pid);
     crm_log_output(LOG_NOTICE, prefix, op->stderr_data);
 
-    g_free(prefix);
-    prefix = g_strdup_printf("%s:%d:stdout", op->id, op->pid);
+    free(prefix);
+    prefix = crm_strdup_printf("%s:%d:stdout", op->id, op->pid);
     crm_log_output(LOG_DEBUG, prefix, op->stdout_data);
 
-    g_free(prefix);
+    free(prefix);
     operation_finalize(op);
 }
 
@@ -795,14 +795,14 @@ resources_os_list_nagios_agents(void)
     /* Make sure both the plugin and its metadata exist */
     for (gIter = plugin_list; gIter != NULL; gIter = gIter->next) {
         const char *plugin = gIter->data;
-        char *metadata = g_strdup_printf(NAGIOS_METADATA_DIR "/%s.xml", plugin);
+        char *metadata = crm_strdup_printf(NAGIOS_METADATA_DIR "/%s.xml", plugin);
         struct stat st;
 
         if (stat(metadata, &st) == 0) {
             result = g_list_append(result, strdup(plugin));
         }
 
-        g_free(metadata);
+        free(metadata);
     }
     g_list_free_full(plugin_list, free);
     return result;

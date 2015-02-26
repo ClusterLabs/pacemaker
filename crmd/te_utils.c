@@ -116,7 +116,7 @@ static void
 tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
 {
     if(te_client_id == NULL) {
-        te_client_id = g_strdup_printf("%s.%d", crm_system_name, getpid());
+        te_client_id = crm_strdup_printf("%s.%d", crm_system_name, getpid());
     }
 
     if (st_event == NULL) {

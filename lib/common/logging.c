@@ -497,7 +497,7 @@ crm_log_filter_source(int source, const char *trace_files, const char *trace_fns
             qb_bit_set(cs->targets, source);
 
         } else if (trace_blackbox) {
-            char *key = g_strdup_printf("%s:%d", cs->function, cs->lineno);
+            char *key = crm_strdup_printf("%s:%d", cs->function, cs->lineno);
 
             if (strstr(trace_blackbox, key) != NULL) {
                 qb_bit_set(cs->targets, source);
@@ -1239,4 +1239,20 @@ crm_log_output_fn(const char *file, const char *function, int line, int level, c
         }
 
     } while (next != NULL && next[0] != 0);
+}
+
+char *
+crm_strdup_printf (char const *format, ...)
+{
+    va_list ap;
+    int len = 0;
+    char *string = NULL;
+
+    va_start(ap, format);
+
+    len = vasprintf (&string, format, ap);
+    CRM_ASSERT(len > 0);
+
+    va_end(ap);
+    return string;
 }

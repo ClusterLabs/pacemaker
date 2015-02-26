@@ -146,7 +146,7 @@ static char *find_cib_loadfile(void)
             continue;
         }
 
-        match = g_strdup_printf("/proc/%d/stat", pid);
+        match = crm_strdup_printf("/proc/%d/stat", pid);
         break;
     }
 

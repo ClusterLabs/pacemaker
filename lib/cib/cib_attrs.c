@@ -571,16 +571,16 @@ set_standby(cib_t * the_cib, const char *uuid, const char *scope, const char *st
 
     if (safe_str_eq(scope, "reboot") || safe_str_eq(scope, XML_CIB_TAG_STATUS)) {
         scope = XML_CIB_TAG_STATUS;
-        attr_id = g_strdup_printf("transient-standby-%.256s", uuid);
+        attr_id = crm_strdup_printf("transient-standby-%.256s", uuid);
 
     } else {
         scope = XML_CIB_TAG_NODES;
-        attr_id = g_strdup_printf("standby-%.256s", uuid);
+        attr_id = crm_strdup_printf("standby-%.256s", uuid);
     }
 
     rc = update_attr_delegate(the_cib, cib_sync_call, scope, uuid, NULL, NULL,
                               attr_id, "standby", standby_value, TRUE, NULL, NULL);
 
-    g_free(attr_id);
+    free(attr_id);
     return rc;
 }

@@ -710,16 +710,16 @@ build_update_element(xmlNode *parent, attribute_t *a, const char *nodeid, const 
     xmlNode *xml_obj = NULL;
 
     if(a->set) {
-        set = g_strdup(a->set);
+        set = strdup(a->set);
     } else {
-        set = g_strdup_printf("%s-%s", XML_CIB_TAG_STATUS, nodeid);
+        set = crm_strdup_printf("%s-%s", XML_CIB_TAG_STATUS, nodeid);
     }
 
     if(a->uuid) {
-        uuid = g_strdup(a->uuid);
+        uuid = strdup(a->uuid);
     } else {
         int lpc;
-        uuid = g_strdup_printf("%s-%s", set, a->id);
+        uuid = crm_strdup_printf("%s-%s", set, a->id);
 
         /* Minimal attempt at sanitizing automatic IDs */
         for (lpc = 0; uuid[lpc] != 0; lpc++) {
@@ -751,8 +751,8 @@ build_update_element(xmlNode *parent, attribute_t *a, const char *nodeid, const 
         crm_xml_add(xml_obj, "__delete__", XML_NVPAIR_ATTR_VALUE);
     }
 
-    g_free(uuid);
-    g_free(set);
+    free(uuid);
+    free(set);
 }
 
 void

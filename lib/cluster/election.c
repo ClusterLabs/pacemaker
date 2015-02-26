@@ -80,9 +80,9 @@ election_init(const char *name, const char *uname, guint period_ms, GSourceFunc 
 
     if(e != NULL) {
         if(name) {
-            e->name = g_strdup_printf("election-%s", name);
+            e->name = crm_strdup_printf("election-%s", name);
         } else {
-            e->name = g_strdup_printf("election-%u", count++);
+            e->name = crm_strdup_printf("election-%u", count++);
         }
 
         e->cb = cb;

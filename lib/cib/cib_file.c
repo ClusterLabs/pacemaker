@@ -362,8 +362,8 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
     char *digest_path = crm_concat(cib_path, "sig", '.');
 
     /* Create temporary file name patterns for writing out CIB and signature */
-    char *tmp_cib = g_strdup_printf("%s/cib.XXXXXX", cib_dirname);
-    char *tmp_digest = g_strdup_printf("%s/cib.XXXXXX", cib_dirname);
+    char *tmp_cib = crm_strdup_printf("%s/cib.XXXXXX", cib_dirname);
+    char *tmp_digest = crm_strdup_printf("%s/cib.XXXXXX", cib_dirname);
 
     CRM_ASSERT((cib_path != NULL) && (digest_path != NULL)
                && (tmp_cib != NULL) && (tmp_digest != NULL));

@@ -636,7 +636,7 @@ hb2uniform_rc(const char *action, int rc, const char *stdout_data)
         crm_debug("RA output did not match any pattern, assuming stopped");
         result = PCMK_OCF_NOT_RUNNING;
     }
-    g_free(lower_std_output);
+    free(lower_std_output);
     return result;
 }
 #endif

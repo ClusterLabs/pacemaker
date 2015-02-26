@@ -1545,7 +1545,7 @@ static gboolean
 block_failure(node_t * node, resource_t * rsc, xmlNode * xml_op, pe_working_set_t * data_set)
 {
     char *xml_name = clone_strip(rsc->id);
-    char *xpath = g_strdup_printf("//primitive[@id='%s']//op[@on-fail='block']", xml_name);
+    char *xpath = crm_strdup_printf("//primitive[@id='%s']//op[@on-fail='block']", xml_name);
     xmlXPathObject *xpathObj = xpath_search(rsc->xml, xpath);
     gboolean should_block = FALSE;
 
@@ -1573,7 +1573,7 @@ block_failure(node_t * node, resource_t * rsc, xmlNode * xml_op, pe_working_set_
                 conf_op_name = crm_element_value(pref, "name");
                 conf_op_interval = crm_get_msec(crm_element_value(pref, "interval"));
 
-                lrm_op_xpath = g_strdup_printf("//node_state[@uname='%s']"
+                lrm_op_xpath = crm_strdup_printf("//node_state[@uname='%s']"
                                                "//lrm_resource[@id='%s']"
                                                "/lrm_rsc_op[@operation='%s'][@interval='%d']",
                                                node->details->uname, xml_name,
@@ -2070,7 +2070,7 @@ pe_fence_op(node_t * node, const char *op, bool optional, pe_working_set_t * dat
         op = data_set->stonith_action;
     }
 
-    key = g_strdup_printf("%s-%s-%s", CRM_OP_FENCE, node->details->uname, op);
+    key = crm_strdup_printf("%s-%s-%s", CRM_OP_FENCE, node->details->uname, op);
 
     if(data_set->singletons) {
         stonith_op = g_hash_table_lookup(data_set->singletons, key);

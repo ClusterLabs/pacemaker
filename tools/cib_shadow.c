@@ -54,7 +54,7 @@ static int batch_flag = 0;
 static char *
 get_shadow_prompt(const char *name)
 {
-    return g_strdup_printf("shadow[%.40s] # ", name);
+    return crm_strdup_printf("shadow[%.40s] # ", name);
 }
 
 static void

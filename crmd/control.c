@@ -982,7 +982,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         char *timeout = NULL;
 
         st_timeout = 2 * sbd_timeout / 1000;
-        timeout = g_strdup_printf("%lds", st_timeout);
+        timeout = crm_strdup_printf("%lds", st_timeout);
         crm_notice("Setting stonith-watchdog-timeout=%s", timeout);
 
         update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,

@@ -82,6 +82,7 @@ gboolean crm_is_callsite_active(struct qb_log_callsite *cs, uint8_t level, uint3
 
 void log_data_element(int log_level, const char *file, const char *function, int line,
                       const char *prefix, xmlNode * data, int depth, gboolean formatted);
+char *crm_strdup_printf (char const *format, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
 
 /* returns the old value */
 unsigned int set_crm_log_level(unsigned int level);

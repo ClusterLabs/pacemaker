@@ -1302,9 +1302,9 @@ print_status(pe_working_set_t * data_set)
         char *node_name = NULL;
 
         if (is_container_remote_node(node)) {
-            node_name = g_strdup_printf("%s:%s", node->details->uname, node->details->remote_rsc->container->id);
+            node_name = crm_strdup_printf("%s:%s", node->details->uname, node->details->remote_rsc->container->id);
         } else {
-            node_name = g_strdup_printf("%s", node->details->uname);
+            node_name = crm_strdup_printf("%s", node->details->uname);
         }
 
         if (node->details->unclean) {
@@ -2810,7 +2810,7 @@ mon_refresh_display(gpointer user_data)
 void
 mon_st_callback(stonith_t * st, stonith_event_t * e)
 {
-    char *desc = g_strdup_printf("Operation %s requested by %s for peer %s: %s (ref=%s)",
+    char *desc = crm_strdup_printf("Operation %s requested by %s for peer %s: %s (ref=%s)",
                                  e->operation, e->origin, e->target, pcmk_strerror(e->result),
                                  e->id);
 
@@ -2823,7 +2823,7 @@ mon_st_callback(stonith_t * st, stonith_event_t * e)
     if (external_agent) {
         send_custom_trap(e->target, NULL, e->operation, pcmk_ok, e->result, 0, desc);
     }
-    g_free(desc);
+    free(desc);
 }
 
 /*

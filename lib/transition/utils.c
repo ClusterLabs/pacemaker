@@ -182,14 +182,14 @@ print_synapse(unsigned int log_level, crm_graph_t * graph, synapse_t * synapse)
         crm_action_t *action = (crm_action_t *) lpc->data;
         const char *key = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
         const char *host = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-        char *desc = g_strdup_printf("%s %s op %s", state, actiontype2text(action->type), key);
+        char *desc = crm_strdup_printf("%s %s op %s", state, actiontype2text(action->type), key);
 
         do_crm_log(log_level,
                    "[Action %4d]: %-50s on %s (priority: %d, waiting: %s)",
                    action->id, desc, host ? host : "N/A",
                    synapse->priority, pending ? pending : "none");
 
-        g_free(desc);
+        free(desc);
     }
 
     if (synapse->executed == FALSE) {

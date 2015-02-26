@@ -90,7 +90,7 @@ read_local_file(char *local_file)
     for (p = buf+strlen(buf)-1; p >= buf && isspace(*p); p--)
 		;
     *(p+1) = '\0';
-    return g_strdup(buf);
+    return strdup(buf);
 }
 
 /*
@@ -181,7 +181,7 @@ do_replace_secret_params(char *rsc_id, GHashTable *params, gboolean from_legacy_
         if (strlen(hash_file) + 5 > FILENAME_MAX) {
             crm_err("cannot build such a long name "
                     "for the sign file: %s.sign", hash_file);
-            g_free(secret_value);
+            free(secret_value);
             rc = -1;
             continue;
 
@@ -191,21 +191,21 @@ do_replace_secret_params(char *rsc_id, GHashTable *params, gboolean from_legacy_
             if (hash == NULL) {
                 crm_err("md5 sum for rsc %s parameter %s "
                         "cannot be read from %s", rsc_id, key, hash_file);
-                g_free(secret_value);
+                free(secret_value);
                 rc = -1;
                 continue;
 
             } else if (!check_md5_hash(hash, secret_value)) {
                 crm_err("md5 sum for rsc %s parameter %s "
                         "does not match", rsc_id, key);
-                g_free(secret_value);
-                g_free(hash);
+                free(secret_value);
+                free(hash);
                 rc = -1;
                 continue;
             }
-            g_free(hash);
+            free(hash);
         }
-        g_hash_table_replace(params, g_strdup(key), secret_value);
+        g_hash_table_replace(params, strdup(key), secret_value);
     }
     g_list_free(secret_params);
     return rc;

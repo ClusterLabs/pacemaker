@@ -54,7 +54,7 @@ static void
 cib_rename(const char *old)
 {
     int new_fd;
-    char *new = g_strdup_printf("%s/cib.auto.XXXXXX", cib_root);
+    char *new = crm_strdup_printf("%s/cib.auto.XXXXXX", cib_root);
 
     crm_err("Archiving unusable file %s as %s", old, new);
     umask(S_IWGRP | S_IWOTH | S_IROTH);
@@ -113,7 +113,7 @@ static int cib_archive_filter(const struct dirent * a)
     int rc = 0;
     /* Looking for regular files (d_type = 8) starting with 'cib-' and not ending in .sig */
     struct stat s;
-    char *a_path = g_strdup_printf("%s/%s", cib_root, a->d_name);
+    char *a_path = crm_strdup_printf("%s/%s", cib_root, a->d_name);
 
     if(stat(a_path, &s) != 0) {
         rc = errno;
@@ -162,8 +162,8 @@ static int cib_archive_sort(const struct dirent ** a, const struct dirent **b)
     time_t a_age = 0;
     time_t b_age = 0;
 
-    char *a_path = g_strdup_printf("%s/%s", cib_root, a[0]->d_name);
-    char *b_path = g_strdup_printf("%s/%s", cib_root, b[0]->d_name);
+    char *a_path = crm_strdup_printf("%s/%s", cib_root, a[0]->d_name);
+    char *b_path = crm_strdup_printf("%s/%s", cib_root, b[0]->d_name);
 
     if(stat(a_path, &buf) == 0) {
         a_age = buf.st_ctime;
@@ -227,7 +227,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 
         lpc--;
 
-        filename = g_strdup_printf("%s/%s", cib_root, namelist[lpc]->d_name);
+        filename = crm_strdup_printf("%s/%s", cib_root, namelist[lpc]->d_name);
         sigfile = crm_concat(filename, "sig", '.');
 
         if (cib_file_read_and_verify(filename, sigfile, &root) < 0) {

@@ -643,13 +643,18 @@ static char *
 add_action(char *actions, const char *action)
 {
     static size_t len = 256;
+    int offset = 0;
+
     if (actions == NULL) {
         actions = calloc(1, len);
+    } else {
+        offset = strlen(actions);
     }
-    if (strlen(actions)) {
-        g_strlcat(actions, " ", len);
+
+    if (offset > 0) {
+        offset += snprintf(actions+offset, len-offset, " ");
     }
-    g_strlcat(actions, action, len);
+    offset += snprintf(actions+offset, len-offset, "%s", action);
 
     return actions;
 }
@@ -1074,7 +1079,7 @@ stonith_level_register(xmlNode * msg, char **desc)
 
     crm_element_value_int(level, XML_ATTR_ID, &id);
     if (desc) {
-        *desc = g_strdup_printf("%s[%d]", node, id);
+        *desc = crm_strdup_printf("%s[%d]", node, id);
     }
     if (id <= 0 || id >= ST_LEVEL_MAX) {
         return -EINVAL;
@@ -1113,7 +1118,7 @@ stonith_level_remove(xmlNode * msg, char **desc)
     stonith_topology_t *tp = g_hash_table_lookup(topology, node);
 
     if (desc) {
-        *desc = g_strdup_printf("%s[%d]", node, id);
+        *desc = crm_strdup_printf("%s[%d]", node, id);
     }
     crm_element_value_int(level, XML_ATTR_ID, &id);
 
@@ -1509,10 +1514,10 @@ log_operation(async_command_t * cmd, int rc, int pid, const char *next, const ch
 
     if (output) {
         /* Logging the whole string confuses syslog when the string is xml */
-        char *prefix = g_strdup_printf("%s:%d", cmd->device, pid);
+        char *prefix = crm_strdup_printf("%s:%d", cmd->device, pid);
 
         crm_log_output(rc == 0 ? LOG_DEBUG : LOG_WARNING, prefix, output);
-        g_free(prefix);
+        free(prefix);
     }
 }
 
@@ -2152,6 +2157,7 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
 
         do_stonith_notify(call_options, op, rc, notify_data);
         free_xml(notify_data);
+        free(id);
 
     } else if (crm_str_eq(op, STONITH_OP_LEVEL_DEL, TRUE)) {
         char *id = NULL;

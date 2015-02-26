@@ -91,10 +91,10 @@ corosync_node_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
         uint32_t id = 0;
         char *key = NULL;
 
-        key = g_strdup_printf("nodelist.node.%d.nodeid", lpc);
+        key = crm_strdup_printf("nodelist.node.%d.nodeid", lpc);
         rc = cmap_get_uint32(cmap_handle, key, &id);
         crm_trace("Checking %u vs %u from %s", nodeid, id, key);
-        g_free(key);
+        free(key);
 
         if (rc != CS_OK) {
             break;
@@ -103,7 +103,7 @@ corosync_node_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
         if (nodeid == id) {
             crm_trace("Searching for node name for %u in nodelist.node.%d %s", nodeid, lpc, name);
             if (name == NULL) {
-                key = g_strdup_printf("nodelist.node.%d.ring0_addr", lpc);
+                key = crm_strdup_printf("nodelist.node.%d.ring0_addr", lpc);
                 cmap_get_string(cmap_handle, key, &name);
                 crm_trace("%s = %s", key, name);
 
@@ -111,14 +111,14 @@ corosync_node_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
                     free(name);
                     name = NULL;
                 }
-                g_free(key);
+                free(key);
             }
 
             if (name == NULL) {
-                key = g_strdup_printf("nodelist.node.%d.name", lpc);
+                key = crm_strdup_printf("nodelist.node.%d.name", lpc);
                 cmap_get_string(cmap_handle, key, &name);
                 crm_trace("%s = %s %d", key, name, rc);
-                g_free(key);
+                free(key);
             }
             break;
         }
@@ -504,9 +504,9 @@ corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode * xml
         char *name = NULL;
         char *key = NULL;
 
-        key = g_strdup_printf("nodelist.node.%d.nodeid", lpc);
+        key = crm_strdup_printf("nodelist.node.%d.nodeid", lpc);
         rc = cmap_get_uint32(cmap_handle, key, &nodeid);
-        g_free(key);
+        free(key);
 
         if (rc != CS_OK) {
             break;

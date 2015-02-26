@@ -924,7 +924,7 @@ ban_resource(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * ci
 
     fragment = create_xml_node(NULL, XML_CIB_TAG_CONSTRAINTS);
 
-    id = g_strdup_printf("cli-ban-%s-on-%s", rsc_id, host);
+    id = crm_strdup_printf("cli-ban-%s-on-%s", rsc_id, host);
     location = create_xml_node(fragment, XML_CONS_TAG_RSC_LOCATION);
     crm_xml_add(location, XML_ATTR_ID, id);
     free(id);
@@ -958,14 +958,14 @@ ban_resource(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * ci
         xmlNode *rule = create_xml_node(location, XML_TAG_RULE);
         xmlNode *expr = create_xml_node(rule, XML_TAG_EXPRESSION);
 
-        id = g_strdup_printf("cli-ban-%s-on-%s-rule", rsc_id, host);
+        id = crm_strdup_printf("cli-ban-%s-on-%s-rule", rsc_id, host);
         crm_xml_add(rule, XML_ATTR_ID, id);
         free(id);
 
         crm_xml_add(rule, XML_RULE_ATTR_SCORE, MINUS_INFINITY_S);
         crm_xml_add(rule, XML_RULE_ATTR_BOOLEAN_OP, "and");
 
-        id = g_strdup_printf("cli-ban-%s-on-%s-expr", rsc_id, host);
+        id = crm_strdup_printf("cli-ban-%s-on-%s-expr", rsc_id, host);
         crm_xml_add(expr, XML_ATTR_ID, id);
         free(id);
 
@@ -975,7 +975,7 @@ ban_resource(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * ci
         crm_xml_add(expr, XML_EXPR_ATTR_TYPE, "string");
 
         expr = create_xml_node(rule, "date_expression");
-        id = g_strdup_printf("cli-ban-%s-on-%s-lifetime", rsc_id, host);
+        id = crm_strdup_printf("cli-ban-%s-on-%s-lifetime", rsc_id, host);
         crm_xml_add(expr, XML_ATTR_ID, id);
         free(id);
 
@@ -1011,7 +1011,7 @@ prefer_resource(const char *rsc_id, const char *host, cib_t * cib_conn)
 
     fragment = create_xml_node(NULL, XML_CIB_TAG_CONSTRAINTS);
 
-    id = g_strdup_printf("cli-prefer-%s", rsc_id);
+    id = crm_strdup_printf("cli-prefer-%s", rsc_id);
     location = create_xml_node(fragment, XML_CONS_TAG_RSC_LOCATION);
     crm_xml_add(location, XML_ATTR_ID, id);
     free(id);
@@ -1080,7 +1080,7 @@ clear_resource(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * 
     fragment = create_xml_node(NULL, XML_CIB_TAG_CONSTRAINTS);
 
     if(host) {
-        id = g_strdup_printf("cli-ban-%s-on-%s", rsc_id, host);
+        id = crm_strdup_printf("cli-ban-%s-on-%s", rsc_id, host);
         location = create_xml_node(fragment, XML_CONS_TAG_RSC_LOCATION);
         crm_xml_add(location, XML_ATTR_ID, id);
         free(id);
@@ -1090,14 +1090,14 @@ clear_resource(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * 
         for(; n; n = n->next) {
             node_t *target = n->data;
 
-            id = g_strdup_printf("cli-ban-%s-on-%s", rsc_id, target->details->uname);
+            id = crm_strdup_printf("cli-ban-%s-on-%s", rsc_id, target->details->uname);
             location = create_xml_node(fragment, XML_CONS_TAG_RSC_LOCATION);
             crm_xml_add(location, XML_ATTR_ID, id);
             free(id);
         }
     }
 
-    id = g_strdup_printf("cli-prefer-%s", rsc_id);
+    id = crm_strdup_printf("cli-prefer-%s", rsc_id);
     location = create_xml_node(fragment, XML_CONS_TAG_RSC_LOCATION);
     crm_xml_add(location, XML_ATTR_ID, id);
     if(host && do_force == FALSE) {
@@ -1488,7 +1488,7 @@ max_delay_for_resource(pe_working_set_t * data_set, resource_t *rsc)
         }
 
     } else if(rsc) {
-        char *key = g_strdup_printf("%s_%s_0", rsc->id, RSC_STOP);
+        char *key = crm_strdup_printf("%s_%s_0", rsc->id, RSC_STOP);
         action_t *stop = custom_action(rsc, key, RSC_STOP, NULL, TRUE, FALSE, data_set);
         const char *value = g_hash_table_lookup(stop->meta, XML_ATTR_TIMEOUT);
 

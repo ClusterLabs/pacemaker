@@ -440,16 +440,7 @@ get_rsc_metadata(const char *type, const char *class, const char *provider)
     crm_trace("Retreiving metadata for %s::%s:%s", type, class, provider);
     rc = lrm_state_get_metadata(lrm_state, class, provider, type, &metadata, 0);
 
-    if (metadata) {
-        /* copy the metadata because the LRM likes using
-         *   g_alloc instead of cl_malloc
-         */
-        char *m_copy = strdup(metadata);
-
-        g_free(metadata);
-        metadata = m_copy;
-
-    } else {
+    if (metadata == NULL) {
         crm_warn("No metadata found for %s::%s:%s: %s (%d)", type, class, provider, pcmk_strerror(rc), rc);
     }
 
@@ -2221,14 +2212,14 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op)
 
     if (op->output) {
         char *prefix =
-            g_strdup_printf("%s-%s_%s_%d:%d", lrm_state->node_name, op->rsc_id, op->op_type, op->interval, op->call_id);
+            crm_strdup_printf("%s-%s_%s_%d:%d", lrm_state->node_name, op->rsc_id, op->op_type, op->interval, op->call_id);
 
         if (op->rc) {
             crm_log_output(LOG_NOTICE, prefix, op->output);
         } else {
             crm_log_output(LOG_DEBUG, prefix, op->output);
         }
-        g_free(prefix);
+        free(prefix);
     }
 
     if (op->rsc_deleted) {

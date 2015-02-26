@@ -871,14 +871,14 @@ probe_resources(pe_working_set_t * data_set)
         }
 
         if (probed != NULL && crm_is_true(probed) == FALSE) {
-            action_t *probe_op = custom_action(NULL, g_strdup_printf("%s-%s", CRM_OP_REPROBE, node->details->uname),
+            action_t *probe_op = custom_action(NULL, crm_strdup_printf("%s-%s", CRM_OP_REPROBE, node->details->uname),
                                                CRM_OP_REPROBE, node, FALSE, TRUE, data_set);
 
             add_hash_param(probe_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
             continue;
         }
 
-        probe_node_complete = custom_action(NULL, g_strdup_printf("%s-%s", CRM_OP_PROBED, node->details->uname),
+        probe_node_complete = custom_action(NULL, crm_strdup_printf("%s-%s", CRM_OP_PROBED, node->details->uname),
                                             CRM_OP_PROBED, node, FALSE, TRUE, data_set);
         if (crm_is_true(probed)) {
             crm_trace("unset");
@@ -1390,7 +1390,7 @@ stage6(pe_working_set_t * data_set)
 
             crm_notice("Scheduling Node %s for shutdown", node->details->uname);
 
-            down_op = custom_action(NULL, g_strdup_printf("%s-%s", CRM_OP_SHUTDOWN, node->details->uname),
+            down_op = custom_action(NULL, crm_strdup_printf("%s-%s", CRM_OP_SHUTDOWN, node->details->uname),
                                     CRM_OP_SHUTDOWN, node, FALSE, TRUE, data_set);
 
             shutdown_constraints(node, down_op, data_set);

@@ -80,9 +80,9 @@ print_cluster_status(pe_working_set_t * data_set, long options)
         char *node_name = NULL;
 
         if (is_container_remote_node(node)) {
-            node_name = g_strdup_printf("%s:%s", node->details->uname, node->details->remote_rsc->container->id);
+            node_name = crm_strdup_printf("%s:%s", node->details->uname, node->details->remote_rsc->container->id);
         } else {
-            node_name = g_strdup_printf("%s", node->details->uname);
+            node_name = crm_strdup_printf("%s", node->details->uname);
         }
 
         if (node->details->unclean) {
@@ -226,25 +226,25 @@ create_action_name(action_t * action)
         }
 
         if (action_host) {
-            action_name = g_strdup_printf("%s%s %s", prefix ? prefix : "", key, action_host);
+            action_name = crm_strdup_printf("%s%s %s", prefix ? prefix : "", key, action_host);
         } else {
-            action_name = g_strdup_printf("%s%s", prefix ? prefix : "", key);
+            action_name = crm_strdup_printf("%s%s", prefix ? prefix : "", key);
         }
         free(key);
 
     } else if (safe_str_eq(action->task, CRM_OP_FENCE)) {
         const char *op = g_hash_table_lookup(action->meta, "stonith_action");
 
-        action_name = g_strdup_printf("%s%s '%s' %s", prefix ? prefix : "", action->task, op, action_host);
+        action_name = crm_strdup_printf("%s%s '%s' %s", prefix ? prefix : "", action->task, op, action_host);
 
     } else if (action->rsc && action_host) {
-        action_name = g_strdup_printf("%s%s %s", prefix ? prefix : "", action->uuid, action_host);
+        action_name = crm_strdup_printf("%s%s %s", prefix ? prefix : "", action->uuid, action_host);
 
     } else if (action_host) {
-        action_name = g_strdup_printf("%s%s %s", prefix ? prefix : "", action->task, action_host);
+        action_name = crm_strdup_printf("%s%s %s", prefix ? prefix : "", action->task, action_host);
 
     } else {
-        action_name = g_strdup_printf("%s", action->uuid);
+        action_name = crm_strdup_printf("%s", action->uuid);
     }
 
     return action_name;

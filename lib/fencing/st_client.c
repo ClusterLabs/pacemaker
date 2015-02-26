@@ -1056,21 +1056,25 @@ strdup_null(const char *val)
 }
 
 static void
-stonith_plugin(int priority, const char *fmt, ...)
-G_GNUC_PRINTF(2, 3);
+stonith_plugin(int priority, const char *fmt, ...) __attribute__((__format__ (__printf__, 2, 3)));
 
 static void
-stonith_plugin(int priority, const char *fmt, ...)
+stonith_plugin(int priority, const char *format, ...)
 {
-    va_list args;
-    char *str;
     int err = errno;
 
-    va_start(args, fmt);
-    str = g_strdup_vprintf(fmt, args);
-    va_end(args);
-    do_crm_log_alias(priority, __FILE__, __func__, __LINE__, "%s", str);
-    g_free(str);
+    va_list ap;
+    int len = 0;
+    char *string = NULL;
+
+    va_start(ap, format);
+
+    len = vasprintf (&string, format, ap);
+    CRM_ASSERT(len > 0);
+
+    do_crm_log_alias(priority, __FILE__, __func__, __LINE__, "%s", string);
+
+    free(string);
     errno = err;
 }
 #endif
@@ -1977,7 +1981,7 @@ xml_to_event(xmlNode * msg)
 {
     stonith_event_t *event = calloc(1, sizeof(stonith_event_t));
     const char *ntype = crm_element_value(msg, F_SUBTYPE);
-    char *data_addr = g_strdup_printf("//%s", ntype);
+    char *data_addr = crm_strdup_printf("//%s", ntype);
     xmlNode *data = get_xpath_object(data_addr, msg, LOG_DEBUG);
 
     crm_log_xml_trace(msg, "stonith_notify");
@@ -2002,7 +2006,7 @@ xml_to_event(xmlNode * msg)
         }
     }
 
-    g_free(data_addr);
+    free(data_addr);
     return event;
 }
 

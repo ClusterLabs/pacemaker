@@ -329,7 +329,7 @@ upstart_job_check(const char *name, const char *state, void *userdata)
 static char *
 upstart_job_metadata(const char *name)
 {
-    return g_strdup_printf("<?xml version=\"1.0\"?>\n"
+    return crm_strdup_printf("<?xml version=\"1.0\"?>\n"
                            "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
                            "<resource-agent name=\"%s\" version=\"0.1\">\n"
                            "  <version>1.0</version>\n"

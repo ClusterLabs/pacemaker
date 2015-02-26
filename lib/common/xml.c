@@ -248,9 +248,9 @@ get_schema_path(const char *name, const char *file)
     const char *base = get_schema_root();
 
     if(file) {
-        return g_strdup_printf("%s/%s", base, file);
+        return crm_strdup_printf("%s/%s", base, file);
     }
-    return g_strdup_printf("%s/%s.rng", base, name);
+    return crm_strdup_printf("%s/%s.rng", base, name);
 }
 
 static int schema_filter(const struct dirent * a)
@@ -311,8 +311,8 @@ static void __xml_schema_add(
 
     if(version > 0.0) {
         known_schemas[last].version = version;
-        known_schemas[last].name = g_strdup_printf("pacemaker-%.1f", version);
-        known_schemas[last].location = g_strdup_printf("%s.rng", known_schemas[last].name);
+        known_schemas[last].name = crm_strdup_printf("pacemaker-%.1f", version);
+        known_schemas[last].location = crm_strdup_printf("%s.rng", known_schemas[last].name);
 
     } else {
         char dummy[1024];
@@ -380,7 +380,7 @@ static int __xml_build_schema_list(void)
                     struct stat s;
                     char *xslt = NULL;
 
-                    transform = g_strdup_printf("upgrade-%.1f.xsl", version);
+                    transform = crm_strdup_printf("upgrade-%.1f.xsl", version);
                     xslt = get_schema_path(NULL, transform);
                     if(stat(xslt, &s) != 0) {
                         crm_err("Transform %s not found", xslt);
@@ -1653,7 +1653,7 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode * patchset)
             if(op == NULL) {
             } else if(strcmp(op, "create") == 0) {
                 int lpc = 0, max = 0;
-                char *prefix = g_strdup_printf("++ %s: ", xpath);
+                char *prefix = crm_strdup_printf("++ %s: ", xpath);
 
                 max = strlen(prefix);
                 __xml_log_element(log_level, __FILE__, function, __LINE__, prefix, change->children,
@@ -3384,7 +3384,7 @@ crm_xml_escape(const char *text)
             default:
                 /* Check for and replace non-printing characters with their octal equivalent */
                 if(copy[index] < ' ' || copy[index] > '~') {
-                    char *replace = g_strdup_printf("\\%.3o", copy[index]);
+                    char *replace = crm_strdup_printf("\\%.3o", copy[index]);
 
                     /* crm_trace("Convert to octal: \\%.3o", copy[index]); */
                     copy = crm_xml_escape_shuffle(copy, index, &length, replace);
@@ -3993,14 +3993,14 @@ save_xml_to_file(xmlNode * xml, const char *desc, const char *filename)
     if (filename == NULL) {
         char *uuid = crm_generate_uuid();
 
-        f = g_strdup_printf("/tmp/%s", uuid);
+        f = crm_strdup_printf("/tmp/%s", uuid);
         filename = f;
         free(uuid);
     }
 
     crm_info("Saving %s to %s", desc, filename);
     write_xml_file(xml, filename, FALSE);
-    g_free(f);
+    free(f);
 }
 
 gboolean

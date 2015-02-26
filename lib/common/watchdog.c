@@ -282,7 +282,7 @@ pcmk_locate_sbd(void)
     }
 
     /* Look for the pid file */
-    pidfile = g_strdup_printf("%s/sbd.pid", HA_STATE_DIR);
+    pidfile = crm_strdup_printf("%s/sbd.pid", HA_STATE_DIR);
 
     /* Read the pid file */
     if(pidfile) {

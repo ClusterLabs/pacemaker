@@ -130,7 +130,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         if (value == NULL) {
             value = "unknown";
         }
-        c->name = g_strdup_printf("%s.%u", value, c->pid);
+        c->name = crm_strdup_printf("%s.%u", value, c->pid);
     }
 
     crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);
@@ -772,13 +772,13 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
 
         } else if(strstr(xpath, "/"XML_CIB_TAG_RESOURCES)) {
             shortpath = strrchr(xpath, '/'); CRM_ASSERT(shortpath);
-            reason = g_strdup_printf("%s %s", op, shortpath+1);
+            reason = crm_strdup_printf("%s %s", op, shortpath+1);
             needs_update = TRUE;
             break;
 
         } else if(strstr(xpath, XML_CONS_TAG_RSC_LOCATION)) {
             shortpath = strrchr(xpath, '/'); CRM_ASSERT(shortpath);
-            reason = g_strdup_printf("%s %s", op, shortpath+1);
+            reason = crm_strdup_printf("%s %s", op, shortpath+1);
             needs_update = TRUE;
             break;
         }

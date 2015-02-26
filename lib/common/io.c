@@ -254,7 +254,7 @@ crm_chown_last_sequence(const char *directory, const char *series, uid_t uid, gi
 
     CRM_CHECK((directory != NULL) && (series != NULL), errno = EINVAL; return -1);
 
-    series_file = g_strdup_printf("%s/%s.last", directory, series);
+    series_file = crm_strdup_printf("%s/%s.last", directory, series);
     CRM_CHECK(series_file != NULL, return -1);
 
     rc = chown(series_file, uid, gid);

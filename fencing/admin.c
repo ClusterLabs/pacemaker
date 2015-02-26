@@ -272,7 +272,7 @@ main(int argc, char **argv)
                 break;
             case 'T':
                 free(async_fence_data.name);
-                async_fence_data.name = g_strdup_printf("%s.%s", crm_system_name, optarg);
+                async_fence_data.name = crm_strdup_printf("%s.%s", crm_system_name, optarg);
                 break;
             case 'a':
                 agent = optarg;

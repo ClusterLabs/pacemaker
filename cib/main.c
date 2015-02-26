@@ -215,8 +215,8 @@ main(int argc, char **argv)
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     if (cib_root == NULL) {
-        char *path = g_strdup_printf("%s/cib.xml", CRM_CONFIG_DIR);
-        char *legacy = g_strdup_printf("%s/cib.xml", CRM_LEGACY_CONFIG_DIR);
+        char *path = crm_strdup_printf("%s/cib.xml", CRM_CONFIG_DIR);
+        char *legacy = crm_strdup_printf("%s/cib.xml", CRM_LEGACY_CONFIG_DIR);
 
         if (g_file_test(path, G_FILE_TEST_EXISTS)) {
             cib_root = CRM_CONFIG_DIR;
@@ -230,8 +230,8 @@ main(int argc, char **argv)
             crm_notice("Using new config location: %s", cib_root);
         }
 
-        g_free(legacy);
-        g_free(path);
+        free(legacy);
+        free(path);
 
     } else {
         crm_notice("Using custom config location: %s", cib_root);

@@ -107,7 +107,7 @@ systemd_service_name(const char *name)
         return strdup(name);
     }
 
-    return g_strdup_printf("%s.service", name);
+    return crm_strdup_printf("%s.service", name);
 }
 
 static void
@@ -365,10 +365,10 @@ systemd_unit_metadata(const char *name)
         /* TODO: Worth a making blocking call for? Probably not. Possibly if cached. */
         desc = pcmk_dbus_get_property(systemd_proxy, BUS_NAME, path, BUS_NAME ".Unit", "Description", NULL, NULL);
     } else {
-        desc = g_strdup_printf("Systemd unit file for %s", name);
+        desc = crm_strdup_printf("Systemd unit file for %s", name);
     }
 
-    meta = g_strdup_printf("<?xml version=\"1.0\"?>\n"
+    meta = crm_strdup_printf("<?xml version=\"1.0\"?>\n"
                            "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
                            "<resource-agent name=\"%s\" version=\"0.1\">\n"
                            "  <version>1.0</version>\n"
@@ -532,8 +532,8 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
 
     } else if (g_strcmp0(method, "start") == 0) {
         FILE *file_strm = NULL;
-        char *override_dir = g_strdup_printf("%s/%s", SYSTEMD_OVERRIDE_ROOT, unit);
-        char *override_file = g_strdup_printf("%s/%s/50-pacemaker.conf", SYSTEMD_OVERRIDE_ROOT, unit);
+        char *override_dir = crm_strdup_printf("%s/%s", SYSTEMD_OVERRIDE_ROOT, unit);
+        char *override_file = crm_strdup_printf("%s/%s/50-pacemaker.conf", SYSTEMD_OVERRIDE_ROOT, unit);
 
         method = "StartUnit";
         crm_build_path(override_dir, 0755);
@@ -558,7 +558,7 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
         free(override_dir);
 
     } else if (g_strcmp0(method, "stop") == 0) {
-        char *override_file = g_strdup_printf("%s/%s/50-pacemaker.conf", SYSTEMD_OVERRIDE_ROOT, unit);
+        char *override_file = crm_strdup_printf("%s/%s/50-pacemaker.conf", SYSTEMD_OVERRIDE_ROOT, unit);
 
         method = "StopUnit";
         unlink(override_file);

@@ -1599,24 +1599,27 @@ stonith_get_metadata(const char *provider, const char *type, char **output)
 #define SHORT_DSCR  "# Short-Description:"
 #define DESCRIPTION "# Description:"
 
-#define lsb_meta_helper_free_value(m)   \
-    if ((m) != NULL) {                  \
-        xmlFree(m);                     \
-        (m) = NULL;                     \
-    }
+#define lsb_meta_helper_free_value(m)           \
+    do {                                        \
+        if ((m) != NULL) {                      \
+            xmlFree(m);                         \
+            (m) = NULL;                         \
+        }                                       \
+    } while(0)
 
 #define lsb_meta_helper_get_value(buffer, ptr, keyword)                 \
-    if (!ptr && !strncasecmp(buffer, keyword, strlen(keyword))) {       \
-        (ptr) = (char *)xmlEncodeEntitiesReentrant(NULL, BAD_CAST buffer+strlen(keyword)); \
-        continue;                                                       \
-    }
+    do {                                                                \
+        if (!ptr && !strncasecmp(buffer, keyword, strlen(keyword))) {   \
+            (ptr) = (char *)xmlEncodeEntitiesReentrant(NULL, BAD_CAST buffer+strlen(keyword)); \
+            continue;                                                   \
+        }                                                               \
+    } while(0)
 
 static int
 lsb_get_metadata(const char *type, char **output)
 {
     char ra_pathname[PATH_MAX] = { 0, };
     FILE *fp;
-    GString *meta_data = NULL;
     char buffer[1024];
     char *provides = NULL;
     char *req_start = NULL;
@@ -1627,7 +1630,9 @@ lsb_get_metadata(const char *type, char **output)
     char *dflt_stop = NULL;
     char *s_dscrpt = NULL;
     char *xml_l_dscrpt = NULL;
-    GString *l_dscrpt = NULL;
+    int offset = 0;
+    int max = 2048;
+    char description[max];
 
     if(type[0] == '/') {
         snprintf(ra_pathname, sizeof(ra_pathname), "%s", type);
@@ -1642,25 +1647,29 @@ lsb_get_metadata(const char *type, char **output)
 
     /* Enter into the lsb-compliant comment block */
     while (fgets(buffer, sizeof(buffer), fp)) {
-        /* Now suppose each of the following eight arguments contain only one line */
-        lsb_meta_helper_get_value(buffer, provides, PROVIDES)
-            lsb_meta_helper_get_value(buffer, req_start, REQ_START)
-            lsb_meta_helper_get_value(buffer, req_stop, REQ_STOP)
-            lsb_meta_helper_get_value(buffer, shld_start, SHLD_START)
-            lsb_meta_helper_get_value(buffer, shld_stop, SHLD_STOP)
-            lsb_meta_helper_get_value(buffer, dflt_start, DFLT_START)
-            lsb_meta_helper_get_value(buffer, dflt_stop, DFLT_STOP)
-            lsb_meta_helper_get_value(buffer, s_dscrpt, SHORT_DSCR)
 
-            /* Long description may cross multiple lines */
-            if ((l_dscrpt == NULL) && (0 == strncasecmp(buffer, DESCRIPTION, strlen(DESCRIPTION)))) {
-            l_dscrpt = g_string_new(buffer + strlen(DESCRIPTION));
-            /* Between # and keyword, more than one space, or a tab character,
-             * indicates the continuation line.     Extracted from LSB init script standard */
+        /* Now suppose each of the following eight arguments contain only one line */
+        lsb_meta_helper_get_value(buffer, provides, PROVIDES);
+        lsb_meta_helper_get_value(buffer, req_start, REQ_START);
+        lsb_meta_helper_get_value(buffer, req_stop, REQ_STOP);
+        lsb_meta_helper_get_value(buffer, shld_start, SHLD_START);
+        lsb_meta_helper_get_value(buffer, shld_stop, SHLD_STOP);
+        lsb_meta_helper_get_value(buffer, dflt_start, DFLT_START);
+        lsb_meta_helper_get_value(buffer, dflt_stop, DFLT_STOP);
+        lsb_meta_helper_get_value(buffer, s_dscrpt, SHORT_DSCR);
+
+        /* Long description may cross multiple lines */
+        if (offset == 0 && (0 == strncasecmp(buffer, DESCRIPTION, strlen(DESCRIPTION)))) {
+            /* Between # and keyword, more than one space, or a tab
+             * character, indicates the continuation line.
+             *
+             * Extracted from LSB init script standard
+             */
             while (fgets(buffer, sizeof(buffer), fp)) {
                 if (!strncmp(buffer, "#  ", 3) || !strncmp(buffer, "#\t", 2)) {
                     buffer[0] = ' ';
-                    l_dscrpt = g_string_append(l_dscrpt, buffer);
+                    offset += snprintf(description+offset, max-offset, "%s", buffer);
+
                 } else {
                     fputs(buffer, fp);
                     break;      /* Long description ends */
@@ -1668,9 +1677,11 @@ lsb_get_metadata(const char *type, char **output)
             }
             continue;
         }
-        if (l_dscrpt) {
-            xml_l_dscrpt = (char *)xmlEncodeEntitiesReentrant(NULL, BAD_CAST(l_dscrpt->str));
+
+        if (xml_l_dscrpt == NULL && offset > 0) {
+            xml_l_dscrpt = (char *)xmlEncodeEntitiesReentrant(NULL, BAD_CAST(description));
         }
+
         if (!strncasecmp(buffer, LSB_INITSCRIPT_INFOEND_TAG, strlen(LSB_INITSCRIPT_INFOEND_TAG))) {
             /* Get to the out border of LSB comment block */
             break;
@@ -1681,13 +1692,12 @@ lsb_get_metadata(const char *type, char **output)
     }
     fclose(fp);
 
-    meta_data = g_string_new("");
-    g_string_sprintf(meta_data, lsb_metadata_template, type,
-                     (xml_l_dscrpt == NULL) ? type : xml_l_dscrpt,
-                     (s_dscrpt == NULL) ? type : s_dscrpt, (provides == NULL) ? "" : provides,
-                     (req_start == NULL) ? "" : req_start, (req_stop == NULL) ? "" : req_stop,
-                     (shld_start == NULL) ? "" : shld_start, (shld_stop == NULL) ? "" : shld_stop,
-                     (dflt_start == NULL) ? "" : dflt_start, (dflt_stop == NULL) ? "" : dflt_stop);
+    *output = crm_strdup_printf(lsb_metadata_template, type,
+                                (xml_l_dscrpt == NULL) ? type : xml_l_dscrpt,
+                                (s_dscrpt == NULL) ? type : s_dscrpt, (provides == NULL) ? "" : provides,
+                                (req_start == NULL) ? "" : req_start, (req_stop == NULL) ? "" : req_stop,
+                                (shld_start == NULL) ? "" : shld_start, (shld_stop == NULL) ? "" : shld_stop,
+                                (dflt_start == NULL) ? "" : dflt_start, (dflt_stop == NULL) ? "" : dflt_stop);
 
     lsb_meta_helper_free_value(xml_l_dscrpt);
     lsb_meta_helper_free_value(s_dscrpt);
@@ -1698,13 +1708,6 @@ lsb_get_metadata(const char *type, char **output)
     lsb_meta_helper_free_value(shld_stop);
     lsb_meta_helper_free_value(dflt_start);
     lsb_meta_helper_free_value(dflt_stop);
-
-    if (l_dscrpt) {
-        g_string_free(l_dscrpt, TRUE);
-    }
-
-    *output = strdup(meta_data->str);
-    g_string_free(meta_data, TRUE);
 
     crm_trace("Created fake metadata: %d", strlen(*output));
     return pcmk_ok;
@@ -1847,11 +1850,7 @@ static const char hb_metadata_template[] =
 static int
 heartbeat_get_metadata(const char *type, char **output)
 {
-	GString * meta_data;
-	meta_data = g_string_new("");
-	g_string_sprintf(meta_data, hb_metadata_template, type, type, type);
-	*output = strdup(meta_data->str);
-	g_string_free(meta_data, TRUE);
+	*output = crm_strdup_printf(hb_metadata_template, type, type, type);
 	crm_trace("Created fake metadata: %d", strlen(*output));
 	return pcmk_ok;
 }

@@ -564,7 +564,7 @@ send_cluster_text(int class, const char *data,
             memset(msg->host.uname, 0, MAX_NAME);
             memcpy(msg->host.uname, node->uname, msg->host.size);
         } else {
-            target = g_strdup_printf("%u", node->id);
+            target = crm_strdup_printf("%u", node->id);
         }
         msg->host.id = node->id;
     } else {
