@@ -453,7 +453,6 @@ case "$host_os" in
 		;;
 *linux*)
 		AC_DEFINE_UNQUOTED(ON_LINUX, 1, Compiling for Linux platform)
-  		CFLAGS="$CFLAGS -I${prefix}/include"
  		;;
 darwin*)
 		AC_DEFINE_UNQUOTED(ON_DARWIN, 1, Compiling for Darwin platform)
@@ -463,7 +462,9 @@ darwin*)
 esac
 
 dnl Eventually remove this
-CFLAGS="$CFLAGS -I${prefix}/include/heartbeat"
+if test "$cross_compiling" != "yes"; then
+   CFLAGS="$CFLAGS -I${prefix}/include/heartbeat"
+fi
 
 AC_SUBST(INIT_EXT)
 AC_MSG_NOTICE(Host CPU: $host_cpu)
