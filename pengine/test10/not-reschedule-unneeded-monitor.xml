@@ -1,0 +1,251 @@
+<cib crm_feature_set="3.0.9" validate-with="pacemaker-2.0" epoch="144" num_updates="3" admin_epoch="0" cib-last-written="Sun Jan 25 17:17:03 2015" have-quorum="1" dc-uuid="178325681">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair name="stonith-enabled" value="false" id="cib-bootstrap-options-stonith-enabled"/>
+        <nvpair name="no-quorum-policy" value="ignore" id="cib-bootstrap-options-no-quorum-policy"/>
+        <nvpair name="dc-version" value="1.1.12-ad083a8" id="cib-bootstrap-options-dc-version"/>
+        <nvpair name="cluster-infrastructure" value="corosync" id="cib-bootstrap-options-cluster-infrastructure"/>
+        <nvpair name="cluster-name" value="hacluster" id="cib-bootstrap-options-cluster-name"/>
+        <nvpair name="last-lrm-refresh" value="1422201142" id="cib-bootstrap-options-last-lrm-refresh"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="178325584" uname="castor">
+        <instance_attributes id="nodes-178325584">
+          <nvpair id="nodes-178325584-standby" name="standby" value="off"/>
+        </instance_attributes>
+      </node>
+      <node id="178325681" uname="kimball"/>
+    </nodes>
+    <resources>
+      <primitive id="sbd" class="stonith" type="external/sbd">
+        <instance_attributes id="sbd-instance_attributes">
+          <nvpair name="sbd_device" value="/dev/disk/by-path/ip-10.160.222.150:3260-iscsi-iqn.2011-03.de.suse.hex-10:sbd-castor-lun-0" id="sbd-instance_attributes-sbd_device"/>
+        </instance_attributes>
+        <operations>
+          <op name="monitor" timeout="20" interval="3600" id="sbd-monitor-3600"/>
+          <op name="start" timeout="20" interval="0" id="sbd-start-0"/>
+          <op name="stop" timeout="15" interval="0" id="sbd-stop-0"/>
+        </operations>
+      </primitive>
+      <clone id="base-clone">
+        <meta_attributes id="base-clone-meta_attributes">
+          <nvpair name="interleave" value="true" id="base-clone-meta_attributes-interleave"/>
+        </meta_attributes>
+        <primitive id="dlm" class="ocf" provider="pacemaker" type="controld">
+          <operations>
+            <op name="start" timeout="90" interval="0" id="dlm-start-0"/>
+            <op name="stop" timeout="100" interval="0" id="dlm-stop-0"/>
+            <op name="monitor" interval="60" timeout="60" id="dlm-monitor-60"/>
+          </operations>
+        </primitive>
+      </clone>
+      <clone id="c-vm-fs">
+        <meta_attributes id="c-vm-fs-meta_attributes">
+          <nvpair name="interleave" value="true" id="c-vm-fs-meta_attributes-interleave"/>
+        </meta_attributes>
+        <group id="vm1">
+          <primitive id="vmdisk" class="ocf" provider="heartbeat" type="iscsi">
+            <instance_attributes id="vmdisk-instance_attributes">
+              <nvpair name="portal" value="10.160.222.150:3260" id="vmdisk-instance_attributes-portal"/>
+              <nvpair name="target" value="iqn.2011-03.de.suse.hex-10:vmdisk" id="vmdisk-instance_attributes-target"/>
+            </instance_attributes>
+            <operations>
+              <op name="monitor" interval="120" timeout="30" id="vmdisk-monitor-120"/>
+              <op name="start" interval="0" timeout="120" id="vmdisk-start-0"/>
+              <op name="stop" interval="0" timeout="120" id="vmdisk-stop-0"/>
+            </operations>
+            <meta_attributes id="vmdisk-meta_attributes">
+              <nvpair id="vmdisk-meta_attributes-target-role" name="target-role" value="Started"/>
+            </meta_attributes>
+          </primitive>
+          <primitive id="vm-fs" class="ocf" provider="heartbeat" type="Filesystem">
+            <instance_attributes id="vm-fs-instance_attributes">
+              <nvpair name="device" value="/dev/disk/by-label/vmdisk" id="vm-fs-instance_attributes-device"/>
+              <nvpair name="directory" value="/vmdisk" id="vm-fs-instance_attributes-directory"/>
+              <nvpair name="fstype" value="ocfs2" id="vm-fs-instance_attributes-fstype"/>
+            </instance_attributes>
+            <operations>
+              <op name="start" timeout="60" interval="0" id="vm-fs-start-0"/>
+              <op name="stop" timeout="60" interval="0" id="vm-fs-stop-0"/>
+              <op name="monitor" interval="20" timeout="40" id="vm-fs-monitor-20"/>
+            </operations>
+          </primitive>
+        </group>
+      </clone>
+      <primitive id="xen-f" class="ocf" provider="heartbeat" type="VirtualDomain">
+        <instance_attributes id="xen-f-instance_attributes">
+          <nvpair name="config" value="/etc/vm/xen-f.xml" id="xen-f-instance_attributes-config"/>
+          <nvpair name="migration_transport" value="ssh" id="xen-f-instance_attributes-migration_transport"/>
+        </instance_attributes>
+        <operations>
+          <op name="monitor" interval="10" timeout="30" id="xen-f-monitor-10"/>
+          <op name="start" interval="0" timeout="90" id="xen-f-start-0"/>
+          <op name="stop" interval="0" timeout="90" id="xen-f-stop-0"/>
+        </operations>
+        <meta_attributes id="xen-f-meta_attributes">
+          <nvpair name="allow-migrate" value="true" id="xen-f-meta_attributes-allow-migrate"/>
+          <nvpair name="target-role" value="Stopped" id="xen-f-meta_attributes-target-role"/>
+        </meta_attributes>
+        <utilization id="xen-f-utilization">
+          <nvpair name="cpu" value="2" id="xen-f-utilization-cpu"/>
+          <nvpair name="hv_memory" value="513" id="xen-f-utilization-hv_memory"/>
+        </utilization>
+      </primitive>
+      <primitive id="sle12-kvm" class="ocf" provider="heartbeat" type="VirtualDomain">
+        <instance_attributes id="sle12-kvm-instance_attributes">
+          <nvpair name="config" value="/etc/vm/sle12-kvm.xml" id="sle12-kvm-instance_attributes-config"/>
+          <nvpair name="migration_transport" value="ssh" id="sle12-kvm-instance_attributes-migration_transport"/>
+          <nvpair name="migrate_options" value="--migrateuri=qemu+ssh://%n/system" id="sle12-kvm-instance_attributes-migrate_options"/>
+          <nvpair name="save_config_on_stop" value="1" id="sle12-kvm-instance_attributes-save_config_on_stop"/>
+          <nvpair name="sync_config_on_stop" value="1" id="sle12-kvm-instance_attributes-sync_config_on_stop"/>
+        </instance_attributes>
+        <operations>
+          <op name="monitor" interval="10" timeout="30" id="sle12-kvm-monitor-10">
+            <instance_attributes id="sle12-kvm-monitor-10-instance_attributes">
+              <nvpair name="trace_ra" value="1" id="sle12-kvm-monitor-10-instance_attributes-trace_ra"/>
+            </instance_attributes>
+          </op>
+          <op name="start" interval="0" timeout="90" id="sle12-kvm-start-0">
+            <instance_attributes id="sle12-kvm-start-0-instance_attributes">
+              <nvpair name="trace_ra" value="1" id="sle12-kvm-start-0-instance_attributes-trace_ra"/>
+            </instance_attributes>
+          </op>
+          <op name="stop" interval="0" timeout="90" id="sle12-kvm-stop-0">
+            <instance_attributes id="sle12-kvm-stop-0-instance_attributes">
+              <nvpair name="trace_ra" value="1" id="sle12-kvm-stop-0-instance_attributes-trace_ra"/>
+            </instance_attributes>
+          </op>
+          <op name="migrate_to" interval="0" timeout="120" id="sle12-kvm-migrate_to-0">
+            <instance_attributes id="sle12-kvm-migrate_to-0-instance_attributes">
+              <nvpair name="trace_ra" value="1" id="sle12-kvm-migrate_to-0-instance_attributes-trace_ra"/>
+            </instance_attributes>
+          </op>
+        </operations>
+        <meta_attributes id="sle12-kvm-meta_attributes">
+          <nvpair name="allow-migrate" value="true" id="sle12-kvm-meta_attributes-allow-migrate"/>
+          <nvpair name="is-managed" value="true" id="sle12-kvm-meta_attributes-is-managed"/>
+          <nvpair name="target-role" value="Started" id="sle12-kvm-meta_attributes-target-role"/>
+        </meta_attributes>
+        <utilization id="sle12-kvm-utilization">
+          <nvpair name="cpu" value="4" id="sle12-kvm-utilization-cpu"/>
+          <nvpair name="hv_memory" value="512" id="sle12-kvm-utilization-hv_memory"/>
+        </utilization>
+      </primitive>
+      <clone id="cl_sgdisk">
+        <primitive id="sgdisk" class="ocf" provider="heartbeat" type="iscsi">
+          <instance_attributes id="sgdisk-instance_attributes">
+            <nvpair name="portal" value="10.160.222.150:3260" id="sgdisk-instance_attributes-portal"/>
+            <nvpair name="target" value="iqn.2011-03.de.suse.hex-10:disk0" id="sgdisk-instance_attributes-target"/>
+          </instance_attributes>
+        </primitive>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_colocation id="vm-fs-with-base" score="INFINITY" rsc="c-vm-fs" with-rsc="base-clone"/>
+      <rsc_order id="base-then-vm-fs" score="INFINITY" first="base-clone" then="c-vm-fs"/>
+      <rsc_order id="xen-f-after-vm-fs" score="INFINITY" first="c-vm-fs" then="xen-f"/>
+      <rsc_location id="xen-f-pref" rsc="xen-f" score="100" node="castor"/>
+      <rsc_location id="sle12-kvm-pref" rsc="sle12-kvm" score="100" node="castor"/>
+      <rsc_order id="sle12-kvm-after-vm-fs" score="INFINITY" first="c-vm-fs" then="sle12-kvm"/>
+      <rsc_location id="cli-ban-sle12-kvm-on-castor" rsc="sle12-kvm" role="Started" node="castor" score="-INFINITY"/>
+    </constraints>
+    <rsc_defaults>
+      <meta_attributes id="rsc-options">
+        <nvpair name="resource-stickiness" value="1" id="rsc-options-resource-stickiness"/>
+        <nvpair name="migration-threshold" value="3" id="rsc-options-migration-threshold"/>
+      </meta_attributes>
+    </rsc_defaults>
+    <op_defaults>
+      <meta_attributes id="op-options">
+        <nvpair name="timeout" value="600" id="op-options-timeout"/>
+        <nvpair name="record-pending" value="true" id="op-options-record-pending"/>
+      </meta_attributes>
+    </op_defaults>
+  </configuration>
+  <status>
+    <node_state id="178325681" uname="kimball" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="178325681">
+        <instance_attributes id="status-178325681">
+          <nvpair id="status-178325681-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-178325681-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-178325681-master-default" name="master-default" value="100"/>
+          <nvpair id="status-178325681-pending-master-default" name="pending-master-default" value=""/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="178325681">
+        <lrm_resources>
+          <lrm_resource id="sbd" type="external/sbd" class="stonith">
+            <lrm_rsc_op id="sbd_last_0" operation_key="sbd_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="4:1:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" transition-magic="0:0;4:1:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" call-id="29" rc-code="0" op-status="0" interval="0" last-run="1421153850" last-rc-change="1421153850" exec-time="1139" queue-time="0" op-digest="8d3c494ffb6401cae793c8b62822e093" on_node="kimball"/>
+            <lrm_rsc_op id="sbd_monitor_3600000" operation_key="sbd_monitor_3600000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="5:1:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" transition-magic="0:0;5:1:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" call-id="33" rc-code="0" op-status="0" interval="3600000" last-rc-change="1421153852" exec-time="1285" queue-time="0" op-digest="88e7ed9520fa6ad5ffbdaf57c319db87" on_node="kimball"/>
+          </lrm_resource>
+          <lrm_resource id="dlm" type="controld" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="6:1:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" transition-magic="0:0;6:1:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" call-id="30" rc-code="0" op-status="0" interval="0" last-run="1421153850" last-rc-change="1421153850" exec-time="1069" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="kimball"/>
+            <lrm_rsc_op id="dlm_monitor_60000" operation_key="dlm_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="7:1:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" transition-magic="0:0;7:1:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" call-id="31" rc-code="0" op-status="0" interval="60000" last-rc-change="1421153851" exec-time="27" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea" on_node="kimball"/>
+          </lrm_resource>
+          <lrm_resource id="xen-f" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xen-f_last_0" operation_key="xen-f_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="8:0:7:d984252a-ce86-4ff9-bb41-7598a4b334ed" transition-magic="0:7;8:0:7:d984252a-ce86-4ff9-bb41-7598a4b334ed" call-id="24" rc-code="7" op-status="0" interval="0" last-run="1421153824" last-rc-change="1421153824" exec-time="124" queue-time="0" op-digest="5e1f85571f763a89d3de4ad4b27507cd" on_node="kimball"/>
+          </lrm_resource>
+          <lrm_resource id="vmdisk" type="iscsi" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vmdisk_last_0" operation_key="vmdisk_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="26:123:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" transition-magic="0:0;26:123:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" call-id="56" rc-code="0" op-status="0" interval="0" last-run="1421240435" last-rc-change="1421240435" exec-time="346" queue-time="0" op-digest="fb5c9cd8459b17ce2894db1c70a79651" on_node="kimball"/>
+            <lrm_rsc_op id="vmdisk_monitor_120000" operation_key="vmdisk_monitor_120000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="27:123:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" transition-magic="0:0;27:123:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" call-id="57" rc-code="0" op-status="0" interval="120000" last-rc-change="1421240436" exec-time="42" queue-time="0" op-digest="9ee0c2868aa3e5864649a5faee1bf0c4" on_node="kimball"/>
+          </lrm_resource>
+          <lrm_resource id="vm-fs" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vm-fs_last_0" operation_key="vm-fs_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="28:123:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" transition-magic="0:0;28:123:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" call-id="58" rc-code="0" op-status="0" interval="0" last-run="1421240436" last-rc-change="1421240436" exec-time="476" queue-time="0" op-digest="ed010de5ba75c29d3272efbccb982001" on_node="kimball"/>
+            <lrm_rsc_op id="vm-fs_monitor_20000" operation_key="vm-fs_monitor_20000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="29:123:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" transition-magic="0:0;29:123:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" call-id="59" rc-code="0" op-status="0" interval="20000" last-rc-change="1421240436" exec-time="42" queue-time="0" op-digest="de76a10f5db83940e7590aa8d195e959" on_node="kimball"/>
+          </lrm_resource>
+          <lrm_resource id="sgdisk" type="iscsi" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="sgdisk_last_0" operation_key="sgdisk_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="44:370:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" transition-magic="0:0;44:370:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" call-id="84" rc-code="0" op-status="0" interval="0" last-run="1421438312" last-rc-change="1421438312" exec-time="1705" queue-time="0" op-digest="6e4cc945b6113cba1d4fba3c96fb2d8c" on_node="kimball"/>
+          </lrm_resource>
+          <lrm_resource id="sle12-kvm" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="sle12-kvm_last_0" operation_key="sle12-kvm_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="6:1301:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" transition-magic="0:0;6:1301:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" call-id="112" rc-code="0" op-status="0" interval="0" last-run="1422201147" last-rc-change="1422201147" exec-time="7680" queue-time="0" op-digest="cd0ffbb6ac91bfac02755a7d247d9124" on_node="kimball" migrate_source="kimball" migrate_target="castor"/>
+            <lrm_rsc_op id="sle12-kvm_last_failure_0" operation_key="sle12-kvm_migrate_to_0" operation="migrate_to" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="46:1300:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" transition-magic="0:1;46:1300:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" call-id="111" rc-code="1" op-status="0" interval="0" last-run="1422201147" last-rc-change="1422201147" exec-time="293" queue-time="0" op-digest="cd0ffbb6ac91bfac02755a7d247d9124" migrate_source="kimball" migrate_target="castor"/>
+            <lrm_rsc_op id="sle12-kvm_monitor_10000" operation_key="sle12-kvm_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="44:1299:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" transition-magic="0:0;44:1299:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" call-id="109" rc-code="0" op-status="0" interval="10000" last-rc-change="1422201144" exec-time="342" queue-time="1" op-digest="6f1ea6f7680505f732b9a40529a9a12a" on_node="kimball"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="178325584" uname="castor" crmd="online" crm-debug-origin="do_update_resource" in_ccm="true" join="member" expected="member">
+      <lrm id="178325584">
+        <lrm_resources>
+          <lrm_resource id="sbd" type="external/sbd" class="stonith">
+            <lrm_rsc_op id="sbd_last_0" operation_key="sbd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="9:249:7:d984252a-ce86-4ff9-bb41-7598a4b334ed" transition-magic="0:7;9:249:7:d984252a-ce86-4ff9-bb41-7598a4b334ed" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1421332904" last-rc-change="1421332904" exec-time="1" queue-time="0" op-digest="8d3c494ffb6401cae793c8b62822e093" on_node="castor"/>
+          </lrm_resource>
+          <lrm_resource id="dlm" type="controld" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="20:249:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" transition-magic="0:0;20:249:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" call-id="29" rc-code="0" op-status="0" interval="0" last-run="1421332905" last-rc-change="1421332905" exec-time="1084" queue-time="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="castor"/>
+            <lrm_rsc_op id="dlm_monitor_60000" operation_key="dlm_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="16:250:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" transition-magic="0:0;16:250:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" call-id="30" rc-code="0" op-status="0" interval="60000" last-rc-change="1421332906" exec-time="33" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea" on_node="castor"/>
+          </lrm_resource>
+          <lrm_resource id="vmdisk" type="iscsi" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vmdisk_last_0" operation_key="vmdisk_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="29:250:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" transition-magic="0:0;29:250:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" call-id="31" rc-code="0" op-status="0" interval="0" last-run="1421332906" last-rc-change="1421332906" exec-time="1139" queue-time="0" op-digest="fb5c9cd8459b17ce2894db1c70a79651" on_node="castor"/>
+            <lrm_rsc_op id="vmdisk_monitor_120000" operation_key="vmdisk_monitor_120000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="30:250:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" transition-magic="0:0;30:250:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" call-id="32" rc-code="0" op-status="0" interval="120000" last-rc-change="1421332907" exec-time="46" queue-time="0" op-digest="9ee0c2868aa3e5864649a5faee1bf0c4" on_node="castor"/>
+          </lrm_resource>
+          <lrm_resource id="vm-fs" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vm-fs_last_0" operation_key="vm-fs_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="31:250:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" transition-magic="0:0;31:250:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" call-id="33" rc-code="0" op-status="0" interval="0" last-run="1421332907" last-rc-change="1421332907" exec-time="366" queue-time="0" op-digest="ed010de5ba75c29d3272efbccb982001" on_node="castor"/>
+            <lrm_rsc_op id="vm-fs_monitor_20000" operation_key="vm-fs_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="32:250:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" transition-magic="0:0;32:250:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" call-id="34" rc-code="0" op-status="0" interval="20000" last-rc-change="1421332907" exec-time="38" queue-time="1" op-digest="de76a10f5db83940e7590aa8d195e959" on_node="castor"/>
+          </lrm_resource>
+          <lrm_resource id="xen-f" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xen-f_last_0" operation_key="xen-f_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="13:249:7:d984252a-ce86-4ff9-bb41-7598a4b334ed" transition-magic="0:7;13:249:7:d984252a-ce86-4ff9-bb41-7598a4b334ed" call-id="24" rc-code="7" op-status="0" interval="0" last-run="1421332905" last-rc-change="1421332905" exec-time="142" queue-time="0" op-digest="5e1f85571f763a89d3de4ad4b27507cd" on_node="castor"/>
+          </lrm_resource>
+          <lrm_resource id="sgdisk" type="iscsi" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="sgdisk_last_0" operation_key="sgdisk_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="44:369:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" transition-magic="0:0;44:369:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" call-id="43" rc-code="0" op-status="0" interval="0" last-run="1421438290" last-rc-change="1421438290" exec-time="1112" queue-time="0" op-digest="6e4cc945b6113cba1d4fba3c96fb2d8c" on_node="castor"/>
+          </lrm_resource>
+          <lrm_resource id="sle12-kvm" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="sle12-kvm_last_0" operation_key="sle12-kvm_migrate_to_0" operation="migrate_to" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="45:1304:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" transition-magic="0:1;45:1304:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" call-id="95" rc-code="1" op-status="0" interval="0" last-run="1422202623" last-rc-change="1422202623" exec-time="520" queue-time="0" op-digest="798dfc09fda3a581d31b0a08cf49ad7a" on_node="castor" migrate_source="castor" migrate_target="kimball"/>
+            <lrm_rsc_op id="sle12-kvm_monitor_10000" operation_key="sle12-kvm_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="46:1301:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" transition-magic="0:0;46:1301:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" call-id="91" rc-code="0" op-status="0" interval="10000" last-rc-change="1422201156" exec-time="326" queue-time="0" op-digest="6f1ea6f7680505f732b9a40529a9a12a" on_node="castor"/>
+            <lrm_rsc_op id="sle12-kvm_last_failure_0" operation_key="sle12-kvm_migrate_to_0" operation="migrate_to" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="45:1304:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" transition-magic="0:1;45:1304:0:d984252a-ce86-4ff9-bb41-7598a4b334ed" call-id="95" rc-code="1" op-status="0" interval="0" last-run="1422202623" last-rc-change="1422202623" exec-time="520" queue-time="0" migrate_source="castor" migrate_target="kimball" op-digest="798dfc09fda3a581d31b0a08cf49ad7a"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="178325584">
+        <instance_attributes id="status-178325584">
+          <nvpair id="status-178325584-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-178325584-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-178325584-master-default" name="master-default" value="100"/>
+          <nvpair id="status-178325584-pending-master-default" name="pending-master-default" value=""/>
+          <nvpair id="status-178325584-last-failure-sle12-kvm" name="last-failure-sle12-kvm" value="1422200459"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>

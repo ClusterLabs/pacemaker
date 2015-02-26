@@ -1294,6 +1294,15 @@ main(int argc, char **argv)
         printf("    <content type=\"string\" default=\"dynamic-list\"/>\n");
         printf("  </parameter>\n");
 
+        printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_DELAY_MAX);
+        printf
+            ("    <shortdesc lang=\"en\">Enable random delay for stonith actions and specify the maximum of random delay</shortdesc>\n");
+        printf
+            ("    <longdesc lang=\"en\">This prevents double fencing when using slow devices such as sbd.\n"
+             "Use this to enable random delay for stonith actions and specify the maximum of random delay.</longdesc>\n");
+        printf("    <content type=\"time\" default=\"0s\"/>\n");
+        printf("  </parameter>\n");
+
         for (lpc = 0; lpc < DIMOF(actions); lpc++) {
             printf("  <parameter name=\"pcmk_%s_action\" unique=\"0\">\n", actions[lpc]);
             printf

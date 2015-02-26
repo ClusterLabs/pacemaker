@@ -1,0 +1,36 @@
+
+Current cluster status:
+Online: [ castor kimball ]
+
+ sbd	(stonith:external/sbd):	Started kimball 
+ Clone Set: base-clone [dlm]
+     Started: [ castor kimball ]
+ Clone Set: c-vm-fs [vm1]
+     Started: [ castor kimball ]
+ xen-f	(ocf::heartbeat:VirtualDomain):	(target-role:Stopped) Stopped 
+ sle12-kvm	(ocf::heartbeat:VirtualDomain):	FAILED castor 
+ Clone Set: cl_sgdisk [sgdisk]
+     Started: [ castor kimball ]
+
+Transition Summary:
+ * Recover sle12-kvm	(Started castor -> kimball)
+
+Executing cluster transition:
+ * Resource action: sle12-kvm       stop on castor
+ * Pseudo action:   all_stopped
+ * Resource action: sle12-kvm       start on kimball
+ * Resource action: sle12-kvm       monitor=10000 on kimball
+
+Revised cluster status:
+Online: [ castor kimball ]
+
+ sbd	(stonith:external/sbd):	Started kimball 
+ Clone Set: base-clone [dlm]
+     Started: [ castor kimball ]
+ Clone Set: c-vm-fs [vm1]
+     Started: [ castor kimball ]
+ xen-f	(ocf::heartbeat:VirtualDomain):	(target-role:Stopped) Stopped 
+ sle12-kvm	(ocf::heartbeat:VirtualDomain):	Started kimball 
+ Clone Set: cl_sgdisk [sgdisk]
+     Started: [ castor kimball ]
+

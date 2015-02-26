@@ -81,8 +81,11 @@ typedef struct async_command_s {
     int pid;
     int fd_stdout;
     int options;
-    int default_timeout;
-    int timeout;
+    int default_timeout; /* seconds */
+    int timeout; /* seconds */
+
+    int start_delay; /* milliseconds */
+    int delay_id;
 
     char *op;
     char *origin;
@@ -128,6 +131,24 @@ is_action_required(const char *action, stonith_device_t *device)
 }
 
 static int
+get_action_delay_max(stonith_device_t * device, const char * action)
+{
+    const char *value = NULL;
+    int delay_max_ms = 0;
+
+    if (safe_str_neq(action, "off") && safe_str_neq(action, "reboot")) {
+        return 0;
+    }
+
+    value = g_hash_table_lookup(device->params, STONITH_ATTR_DELAY_MAX);
+    if (value) {
+       delay_max_ms = crm_get_msec(value);
+    }
+
+    return delay_max_ms;
+}
+
+static int
 get_action_timeout(stonith_device_t * device, const char *action, int default_timeout)
 {
     char buffer[512] = { 0, };
@@ -155,6 +176,11 @@ free_async_command(async_command_t * cmd)
     if (!cmd) {
         return;
     }
+
+    if (cmd->delay_id) {
+        g_source_remove(cmd->delay_id);
+    }
+
     cmd_list = g_list_remove(cmd_list, cmd);
 
     g_list_free_full(cmd->device_list, free);
@@ -222,8 +248,16 @@ stonith_device_execute(stonith_device_t * device)
     if (device->pending_ops) {
         GList *first = device->pending_ops;
 
-        device->pending_ops = g_list_remove_link(device->pending_ops, first);
         cmd = first->data;
+        if (cmd && cmd->delay_id) {
+            crm_trace
+                ("Operation %s%s%s on %s was asked to run too early, waiting for start_delay timeout of %dms",
+                 cmd->action, cmd->victim ? " for node " : "", cmd->victim ? cmd->victim : "",
+                 device->id, cmd->start_delay);
+            return TRUE;
+        }
+
+        device->pending_ops = g_list_remove_link(device->pending_ops, first);
         g_list_free_1(first);
     }
 
@@ -301,9 +335,27 @@ stonith_device_dispatch(gpointer user_data)
     return stonith_device_execute(user_data);
 }
 
+static gboolean
+start_delay_helper(gpointer data)
+{
+    async_command_t *cmd = data;
+    stonith_device_t *device = NULL;
+
+    cmd->delay_id = 0;
+    device = cmd->device ? g_hash_table_lookup(device_list, cmd->device) : NULL;
+
+    if (device) {
+        mainloop_set_trigger(device->work);
+    }
+
+    return FALSE;
+}
+
 static void
 schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
 {
+    int delay_max = 0;
+
     CRM_CHECK(cmd != NULL, return);
     CRM_CHECK(device != NULL, return);
 
@@ -330,6 +382,14 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
 
     device->pending_ops = g_list_append(device->pending_ops, cmd);
     mainloop_set_trigger(device->work);
+
+    delay_max = get_action_delay_max(device, cmd->action);
+    if (delay_max > 0) {
+        cmd->start_delay = rand() % delay_max;
+        crm_notice("Delaying %s on %s for %lldms (timeout=%ds)",
+                    cmd->action, device->id, cmd->start_delay, cmd->timeout);
+        cmd->delay_id = g_timeout_add(cmd->start_delay, start_delay_helper, cmd);
+    }
 }
 
 void
@@ -1333,6 +1393,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
     for (lpc = devices; lpc != NULL; lpc = lpc->next) {
         stonith_device_t *device = g_hash_table_lookup(device_list, lpc->data);
         int action_specific_timeout;
+        int delay_max;
 
         if (!device) {
             /* It is possible the device got unregistered while
@@ -1354,6 +1415,12 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
         if (action_specific_timeout) {
             crm_xml_add_int(dev, F_STONITH_ACTION_TIMEOUT, action_specific_timeout);
         }
+
+        delay_max = get_action_delay_max(device, query->action);
+        if (delay_max > 0) {
+            crm_xml_add_int(dev, F_STONITH_DELAY_MAX, delay_max / 1000);
+        }
+
         if (query->target == NULL) {
             xmlNode *attrs = create_xml_node(dev, XML_TAG_ATTRS);
 
