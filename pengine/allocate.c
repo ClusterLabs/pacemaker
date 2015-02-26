@@ -283,6 +283,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
 #else
             /* Re-sending the recurring op is sufficient - the old one will be cancelled automatically */
             set_bit(rsc->flags, pe_rsc_reschedule_monitor);
+            free(key);
 #endif
 
         } else if (digest_restart) {
