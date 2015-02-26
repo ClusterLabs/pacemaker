@@ -274,16 +274,16 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
                  crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
 
         if (interval > 0) {
-#if 0
             action_t *op = NULL;
 
+#if 0
             /* Always reload/restart the entire resource */
             op = custom_action(rsc, start_key(rsc), RSC_START, NULL, FALSE, TRUE, data_set);
             update_action_flags(op, pe_action_allow_reload_conversion);
 #else
             /* Re-sending the recurring op is sufficient - the old one will be cancelled automatically */
-            set_bit(rsc->flags, pe_rsc_reschedule_monitor);
-            free(key);
+            op = custom_action(rsc, key, task, active_node, TRUE, TRUE, data_set);
+            set_bit(op->flags, pe_action_reschedule);
 #endif
 
         } else if (digest_restart) {

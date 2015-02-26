@@ -183,7 +183,6 @@ struct node_s {
 
 #  define pe_rsc_try_reload     0x00001000ULL
 #  define pe_rsc_reload         0x00002000ULL
-#  define pe_rsc_reschedule_monitor 0x00004000ULL
 
 #  define pe_rsc_failed		0x00010000ULL
 #  define pe_rsc_shutdown	0x00020000ULL
@@ -231,6 +230,7 @@ enum pe_action_flags {
     pe_action_requires_any = 0x01000, /* This action requires one or mre of its dependancies to be runnable
                                        * We use this to clear the runnable flag before checking dependancies
                                        */
+    pe_action_reschedule = 0x02000,
 };
 /* *INDENT-ON* */
 
