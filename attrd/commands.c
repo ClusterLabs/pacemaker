@@ -177,85 +177,126 @@ create_attribute(xmlNode *xml)
     return a;
 }
 
+static void attrd_client_peer_remove(const char *client_name, xmlNode *xml);
+static void attrd_client_update(xmlNode *xml);
+static void attrd_client_refresh(void);
+
 void
 attrd_client_message(crm_client_t *client, xmlNode *xml)
 {
-    bool broadcast = FALSE;
-    static int plus_plus_len = 5;
     const char *op = crm_element_value(xml, F_ATTRD_TASK);
 
     if (safe_str_eq(op, ATTRD_OP_PEER_REMOVE)) {
-        const char *host = crm_element_value(xml, F_ATTRD_HOST);
-
-        crm_info("Client %s is requesting all values for %s be removed", client->name, host);
-        if(host) {
-            broadcast = TRUE;
-        }
+        attrd_client_peer_remove(client->name, xml);
 
     } else if (safe_str_eq(op, ATTRD_OP_UPDATE)) {
-        attribute_t *a = NULL;
-        attribute_value_t *v = NULL;
-        char *key = crm_element_value_copy(xml, F_ATTRD_KEY);
-        char *set = crm_element_value_copy(xml, F_ATTRD_SET);
-        char *host = crm_element_value_copy(xml, F_ATTRD_HOST);
-        const char *attr = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
-        const char *value = crm_element_value(xml, F_ATTRD_VALUE);
-        const char *regex = crm_element_value(xml, F_ATTRD_REGEX);
+        attrd_client_update(xml);
 
-        if(attr == NULL && regex) {
-            GHashTableIter aIter;
-            regex_t *r_patt = calloc(1, sizeof(regex_t));
+    } else if (safe_str_eq(op, ATTRD_OP_REFRESH)) {
+        attrd_client_refresh();
 
-            crm_debug("Setting %s to %s", regex, value);
-            if (regcomp(r_patt, regex, REG_EXTENDED)) {
-                crm_err("Bad regex '%s' for update", regex);
+    } else {
+        crm_info("Ignoring request from client %s with unknown operation %s",
+                 client->name, op);
+    }
+}
 
-            } else {
+/*!
+ * \internal
+ * \brief Respond to a client peer-remove request (i.e. propagate to all peers)
+ *
+ * \param[in] client_name Name of client that made request (for log messages)
+ * \param[in] xml         Root of request XML
+ *
+ * \return void
+ */
+static void
+attrd_client_peer_remove(const char *client_name, xmlNode *xml)
+{
+    const char *host = crm_element_value(xml, F_ATTRD_HOST);
 
-                g_hash_table_iter_init(&aIter, attributes);
-                while (g_hash_table_iter_next(&aIter, (gpointer *) & attr, NULL)) {
-                    int status = regexec(r_patt, attr, 0, NULL, 0);
+    if (host) {
+        crm_info("Client %s is requesting all values for %s be removed",
+                 client_name, host);
+        send_attrd_message(NULL, xml); /* ends up at attrd_peer_message() */
+    } else {
+        crm_info("Ignoring request by client %s to remove all peer values without specifying peer",
+                 client_name);
+    }
+}
 
-                    if(status == 0) {
-                        crm_trace("Matched %s with %s", attr, regex);
-                        crm_xml_add(xml, F_ATTRD_ATTRIBUTE, attr);
-                        send_attrd_message(NULL, xml);
-                    }
+/*!
+ * \internal
+ * \brief Respond to a client update request
+ *
+ * \param[in] xml         Root of request XML
+ *
+ * \return void
+ */
+static void
+attrd_client_update(xmlNode *xml)
+{
+    attribute_t *a = NULL;
+    attribute_value_t *v = NULL;
+    char *key = crm_element_value_copy(xml, F_ATTRD_KEY);
+    char *set = crm_element_value_copy(xml, F_ATTRD_SET);
+    char *host = crm_element_value_copy(xml, F_ATTRD_HOST);
+    const char *attr = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
+    const char *value = crm_element_value(xml, F_ATTRD_VALUE);
+    const char *regex = crm_element_value(xml, F_ATTRD_REGEX);
+
+    /* If a regex was specified, broadcast a message for each match */
+    if ((attr == NULL) && regex) {
+        GHashTableIter aIter;
+        regex_t *r_patt = calloc(1, sizeof(regex_t));
+
+        crm_debug("Setting %s to %s", regex, value);
+        if (regcomp(r_patt, regex, REG_EXTENDED)) {
+            crm_err("Bad regex '%s' for update", regex);
+
+        } else {
+            g_hash_table_iter_init(&aIter, attributes);
+            while (g_hash_table_iter_next(&aIter, (gpointer *) & attr, NULL)) {
+                int status = regexec(r_patt, attr, 0, NULL, 0);
+
+                if (status == 0) {
+                    crm_trace("Matched %s with %s", attr, regex);
+                    crm_xml_add(xml, F_ATTRD_ATTRIBUTE, attr);
+                    send_attrd_message(NULL, xml);
                 }
             }
-
-            free(key);
-            free(set);
-            free(host);
-
-            regfree(r_patt);
-            free(r_patt);
-            return;
-
-        } else if(host == NULL) {
-            crm_trace("Inferring host");
-            host = strdup(attrd_cluster->uname);
-            crm_xml_add(xml, F_ATTRD_HOST, host);
-            crm_xml_add_int(xml, F_ATTRD_HOST_ID, attrd_cluster->nodeid);
         }
 
-        a = g_hash_table_lookup(attributes, attr);
+        free(key);
+        free(set);
+        free(host);
+        regfree(r_patt);
+        free(r_patt);
+        return;
+    }
 
-        if (value) {
-            int offset = 1;
-            int int_value = 0;
-            int value_len = strlen(value);
+    if (host == NULL) {
+        crm_trace("Inferring host");
+        host = strdup(attrd_cluster->uname);
+        crm_xml_add(xml, F_ATTRD_HOST, host);
+        crm_xml_add_int(xml, F_ATTRD_HOST_ID, attrd_cluster->nodeid);
+    }
 
-            if (value_len < (plus_plus_len + 2)
-                || value[plus_plus_len] != '+'
-                || (value[plus_plus_len + 1] != '+' && value[plus_plus_len + 1] != '=')) {
-                goto send;
-            }
+    a = g_hash_table_lookup(attributes, attr);
 
-            if(a) {
+    /* If value was specified using ++ or += notation, expand to real value */
+    if (value) {
+        int offset = 1;
+        int int_value = 0;
+        static const int plus_plus_len = 5;
+
+        if ((strlen(value) >= (plus_plus_len + 2)) && (value[plus_plus_len] == '+')
+            && ((value[plus_plus_len + 1] == '+') || (value[plus_plus_len + 1] == '='))) {
+
+            if (a) {
                 v = g_hash_table_lookup(a->values, host);
             }
-            if(v) {
+            if (v) {
                 int_value = char2score(v->current);
             }
 
@@ -273,40 +314,45 @@ attrd_client_message(crm_client_t *client, xmlNode *xml)
             crm_info("Expanded %s=%s to %d", attr, value, int_value);
             crm_xml_add_int(xml, F_ATTRD_VALUE, int_value);
         }
-
-      send:
-
-        if(peer_writer == NULL && election_state(writer) != election_in_progress) {
-            crm_info("Starting an election to determine the writer");
-            election_vote(writer);
-        }
-
-        crm_debug("Broadcasting %s[%s] = %s%s", attr, host, value, election_state(writer) == election_won?" (writer)":"");
-        broadcast = TRUE;
-
-        free(key);
-        free(set);
-        free(host);
-
-    } else if (safe_str_eq(op, ATTRD_OP_REFRESH)) {
-        GHashTableIter iter;
-        attribute_t *a = NULL;
-
-        /* 'refresh' forces a write of the current value of all attributes
-         * Cancel any existing timers, we're writing it NOW
-         */
-        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & a)) {
-            mainloop_timer_stop(a->timer);
-        }
-
-        crm_info("Updating all attributes");
-        write_attributes(TRUE, FALSE);
     }
 
-    if(broadcast) {
-        /* Ends up at attrd_peer_message() */
-        send_attrd_message(NULL, xml);
+    if ((peer_writer == NULL) && (election_state(writer) != election_in_progress)) {
+        crm_info("Starting an election to determine the writer");
+        election_vote(writer);
     }
+
+    crm_debug("Broadcasting %s[%s] = %s%s", attr, host, value,
+              ((election_state(writer) == election_won)? " (writer)" : ""));
+
+    free(key);
+    free(set);
+    free(host);
+
+    send_attrd_message(NULL, xml); /* ends up at attrd_peer_message() */
+}
+
+/*!
+ * \internal
+ * \brief Respond to a client refresh request (i.e. write out all attributes)
+ *
+ * \return void
+ */
+static void
+attrd_client_refresh(void)
+{
+    GHashTableIter iter;
+    attribute_t *a = NULL;
+
+    /* 'refresh' forces a write of the current value of all attributes
+     * Cancel any existing timers, we're writing it NOW
+     */
+    g_hash_table_iter_init(&iter, attributes);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & a)) {
+        mainloop_timer_stop(a->timer);
+    }
+
+    crm_info("Updating all attributes");
+    write_attributes(TRUE, FALSE);
 }
 
 void
