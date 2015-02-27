@@ -276,6 +276,7 @@ int crm_read_pidfile(const char *filename);
 #  define F_ATTRD_VALUE		"attr_value"
 #  define F_ATTRD_SET		"attr_set"
 #  define F_ATTRD_IS_REMOTE	"attr_is_remote"
+#  define F_ATTRD_IS_PRIVATE     "attr_is_private"
 #  define F_ATTRD_SECTION	"attr_section"
 #  define F_ATTRD_DAMPEN	"attr_dampening"
 #  define F_ATTRD_IGNORE_LOCALLY "attr_ignore_locally"

@@ -45,8 +45,12 @@ typedef struct attribute_s {
 
     int update;
     int timeout_ms;
-    bool changed;
-    bool unknown_peer_uuids;
+
+    /* TODO: refactor these three as a bitmask */
+    bool changed; /* whether attribute value has changed since last write */
+    bool unknown_peer_uuids; /* whether we know we're missing a peer uuid */
+    gboolean is_private; /* whether to keep this attribute out of the CIB */
+
     mainloop_timer_t *timer;
 
     char *user;
@@ -118,10 +122,10 @@ free_attribute(gpointer data)
     }
 }
 
-xmlNode *
+static xmlNode *
 build_attribute_xml(
     xmlNode *parent, const char *name, const char *set, const char *uuid, unsigned int timeout_ms, const char *user,
-    const char *peer, uint32_t peerid, const char *value)
+    gboolean is_private, const char *peer, uint32_t peerid, const char *value)
 {
     xmlNode *xml = create_xml_node(parent, __FUNCTION__);
 
@@ -133,6 +137,7 @@ build_attribute_xml(
     crm_xml_add_int(xml, F_ATTRD_HOST_ID, peerid);
     crm_xml_add(xml, F_ATTRD_VALUE, value);
     crm_xml_add_int(xml, F_ATTRD_DAMPEN, timeout_ms/1000);
+    crm_xml_add_int(xml, F_ATTRD_IS_PRIVATE, is_private);
 
     return xml;
 }
@@ -148,6 +153,8 @@ create_attribute(xmlNode *xml)
     a->set     = crm_element_value_copy(xml, F_ATTRD_SET);
     a->uuid    = crm_element_value_copy(xml, F_ATTRD_KEY);
     a->values = g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, NULL, free_attribute_value);
+
+    crm_element_value_int(xml, F_ATTRD_IS_PRIVATE, &a->is_private);
 
 #if ENABLE_ACL
     crm_trace("Performing all %s operations as user '%s'", a->id, a->user);
@@ -428,7 +435,8 @@ attrd_peer_sync(crm_node_t *peer, xmlNode *xml)
         g_hash_table_iter_init(&vIter, a->values);
         while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & v)) {
             crm_debug("Syncing %s[%s] = %s to %s", a->id, v->nodename, v->current, peer?peer->uname:"everyone");
-            build_attribute_xml(sync, a->id, a->set, a->uuid, a->timeout_ms, a->user, v->nodename, v->nodeid, v->current);
+            build_attribute_xml(sync, a->id, a->set, a->uuid, a->timeout_ms, a->user, a->is_private,
+                                v->nodename, v->nodeid, v->current);
         }
     }
 
@@ -463,6 +471,38 @@ attrd_peer_remove(uint32_t nodeid, const char *host, gboolean uncache, const cha
     }
 }
 
+/*!
+ * \internal
+ * \brief Return host's hash table entry (creating one if needed)
+ *
+ * \param[in] values Hash table of values
+ * \param[in] host Name of peer to look up
+ * \param[in] xml XML describing the attribute
+ *
+ * \return Pointer to new or existing hash table entry
+ */
+static attribute_value_t *
+attrd_lookup_or_create_value(GHashTable *values, const char *host, xmlNode *xml)
+{
+    attribute_value_t *v = g_hash_table_lookup(values, host);
+
+    if (v == NULL) {
+        v = calloc(1, sizeof(attribute_value_t));
+        CRM_ASSERT(v != NULL);
+
+        v->nodename = strdup(host);
+        CRM_ASSERT(v->nodename != NULL);
+
+        crm_element_value_int(xml, F_ATTRD_IS_REMOTE, &v->is_remote);
+        if (v->is_remote == TRUE) {
+            crm_remote_peer_cache_add(host);
+        }
+
+        g_hash_table_replace(values, v->nodename, v);
+    }
+    return(v);
+}
+
 void
 attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
 {
@@ -491,18 +531,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
         return;
     }
 
-    v = g_hash_table_lookup(a->values, host);
-
-    if(v == NULL) {
-        v = calloc(1, sizeof(attribute_value_t));
-        v->nodename = strdup(host);
-        crm_element_value_int(xml, F_ATTRD_IS_REMOTE, &v->is_remote);
-        g_hash_table_replace(a->values, v->nodename, v);
-
-        if (v->is_remote == TRUE) {
-            crm_remote_peer_cache_add(host);
-        }
-    }
+    v = attrd_lookup_or_create_value(a->values, host, xml);
 
     if(filter
               && safe_str_neq(v->current, value)
@@ -513,7 +542,8 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
 
         crm_xml_add(sync, F_ATTRD_TASK, "sync-response");
         v = g_hash_table_lookup(a->values, host);
-        build_attribute_xml(sync, a->id, a->set, a->uuid, a->timeout_ms, a->user, v->nodename, v->nodeid, v->current);
+        build_attribute_xml(sync, a->id, a->set, a->uuid, a->timeout_ms, a->user, a->is_private,
+                            v->nodename, v->nodeid, v->current);
 
         crm_xml_add_int(sync, F_ATTRD_WRITER, election_state(writer));
         send_attrd_message(peer, sync);
@@ -758,7 +788,7 @@ build_update_element(xmlNode *parent, attribute_t *a, const char *nodeid, const 
 void
 write_attribute(attribute_t *a)
 {
-    int updates = 0;
+    int private_updates = 0, cib_updates = 0;
     xmlNode *xml_top = NULL;
     attribute_value_t *v = NULL;
     GHashTableIter iter;
@@ -766,73 +796,100 @@ write_attribute(attribute_t *a)
 
     if (a == NULL) {
         return;
-
-    } else if (the_cib == NULL) {
-        crm_info("Write out of '%s' delayed: cib not connected", a->id);
-        return;
-
-    } else if(a->update && a->update < last_cib_op_done) {
-        crm_info("Write out of '%s' continuing: update %d considered lost", a->id, a->update);
-
-    } else if(a->update) {
-        crm_info("Write out of '%s' delayed: update %d in progress", a->id, a->update);
-        return;
-
-    } else if(mainloop_timer_running(a->timer)) {
-        crm_info("Write out of '%s' delayed: timer is running", a->id);
-        return;
     }
 
-    a->changed = FALSE;
-    a->unknown_peer_uuids = FALSE;
-    xml_top = create_xml_node(NULL, XML_CIB_TAG_STATUS);
+    /* If this attribute will be written to the CIB ... */
+    if (!a->is_private) {
 
+        /* Defer the write if now's not a good time */
+        if (the_cib == NULL) {
+            crm_info("Write out of '%s' delayed: cib not connected", a->id);
+            return;
+
+        } else if (a->update && (a->update < last_cib_op_done)) {
+            crm_info("Write out of '%s' continuing: update %d considered lost", a->id, a->update);
+
+        } else if (a->update) {
+            crm_info("Write out of '%s' delayed: update %d in progress", a->id, a->update);
+            return;
+
+        } else if (mainloop_timer_running(a->timer)) {
+            crm_info("Write out of '%s' delayed: timer is running", a->id);
+            return;
+        }
+
+        /* Initialize the status update XML */
+        xml_top = create_xml_node(NULL, XML_CIB_TAG_STATUS);
+    }
+
+    /* Attribute will be written shortly, so clear changed flag */
+    a->changed = FALSE;
+
+    /* We will check all peers' uuids shortly, so initialize this to false */
+    a->unknown_peer_uuids = FALSE;
+
+    /* Iterate over each peer value of this attribute */
     g_hash_table_iter_init(&iter, a->values);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & v)) {
         crm_node_t *peer = crm_get_peer_full(v->nodeid, v->nodename, CRM_GET_PEER_REMOTE|CRM_GET_PEER_CLUSTER);
 
-        if(peer && peer->id && v->nodeid == 0) {
+        /* If the value's peer info does not correspond to a peer, ignore it */
+        if (peer == NULL) {
+            crm_notice("Update error (peer not found): %s[%s]=%s failed (host=%p)",
+                       v->nodename, a->id, v->current, peer);
+            continue;
+        }
+
+        /* If we're just learning the peer's node id, remember it */
+        if (peer->id && (v->nodeid == 0)) {
             crm_trace("Updating value's nodeid");
             v->nodeid = peer->id;
         }
 
-        if (peer == NULL) {
-            /* If the user is trying to set an attribute on an unknown peer, ignore it. */
-            crm_notice("Update error (peer not found): %s[%s]=%s failed (host=%p)", v->nodename, a->id, v->current, peer);
+        /* If this is a private attribute, no update needs to be sent */
+        if (a->is_private) {
+            private_updates++;
+            continue;
+        }
 
-        } else if (peer->uuid == NULL) {
-            /* peer is found, but we don't know the uuid yet. Wait until we discover a new uuid before attempting to write */
-            a->unknown_peer_uuids = FALSE;
+        /* If the peer is found, but its uuid is unknown, defer write */
+        if (peer->uuid == NULL) {
+            a->unknown_peer_uuids = FALSE; /* bug? should this be TRUE? */
             crm_notice("Update error (unknown peer uuid, retry will be attempted once uuid is discovered): %s[%s]=%s failed (host=%p)", v->nodename, a->id, v->current, peer);
+            continue;
+        }
 
+        /* Add this value to status update XML */
+        crm_debug("Update: %s[%s]=%s (%s %u %u %s)", v->nodename, a->id,
+                  v->current, peer->uuid, peer->id, v->nodeid, peer->uname);
+        build_update_element(xml_top, a, peer->uuid, v->current);
+        cib_updates++;
+
+        free(v->requested);
+        v->requested = NULL;
+        if (v->current) {
+            v->requested = strdup(v->current);
         } else {
-            crm_debug("Update: %s[%s]=%s (%s %u %u %s)", v->nodename, a->id, v->current, peer->uuid, peer->id, v->nodeid, peer->uname);
-            build_update_element(xml_top, a, peer->uuid, v->current);
-            updates++;
-
-            free(v->requested);
-            v->requested = NULL;
-
-            if(v->current) {
-                v->requested = strdup(v->current);
-
-            } else {
-                /* Older versions don't know about the cib_mixed_update flag
-                 * Make sure it goes to the local cib which does
-                 */
-                flags |= cib_mixed_update|cib_scope_local;
-            }
+            /* Older attrd versions don't know about the cib_mixed_update
+             * flag so make sure it goes to the local cib which does
+             */
+            flags |= cib_mixed_update|cib_scope_local;
         }
     }
 
-    if(updates) {
+    if (private_updates) {
+        crm_info("Processed %d private change%s for %s, id=%s, set=%s",
+                 private_updates, ((private_updates == 1)? "" : "s"),
+                 a->id, (a->uuid? a->uuid : "<n/a>"), a->set);
+    }
+    if (cib_updates) {
         crm_log_xml_trace(xml_top, __FUNCTION__);
 
         a->update = cib_internal_op(the_cib, CIB_OP_MODIFY, NULL, XML_CIB_TAG_STATUS, xml_top, NULL,
                                     flags, a->user);
 
         crm_info("Sent update %d with %d changes for %s, id=%s, set=%s",
-                   a->update, updates, a->id, a->uuid ? a->uuid : "<n/a>", a->set);
+                 a->update, cib_updates, a->id, (a->uuid? a->uuid : "<n/a>"), a->set);
 
         the_cib->cmds->register_callback(
             the_cib, a->update, 120, FALSE, strdup(a->id), "attrd_cib_callback", attrd_cib_callback);

@@ -31,7 +31,3 @@ void free_attribute(gpointer data);
 
 gboolean attrd_election_cb(gpointer user_data);
 void attrd_peer_change_cb(enum crm_status_type type, crm_node_t *peer, const void *data);
-
-xmlNode *build_attribute_xml(
-    xmlNode *parent, const char *name, const char *set, const char *uuid, unsigned int timeout, const char *user,
-    const char *peer, uint32_t peerid, const char *value);
