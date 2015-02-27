@@ -26,7 +26,10 @@ int attrd_error;
 
 void write_attributes(bool all, bool peer_discovered);
 void attrd_peer_message(crm_node_t *client, xmlNode *msg);
-void attrd_client_message(crm_client_t *client, xmlNode *msg);
+void attrd_client_peer_remove(const char *client_name, xmlNode *xml);
+void attrd_client_update(xmlNode *xml);
+void attrd_client_refresh(void);
+
 void free_attribute(gpointer data);
 
 gboolean attrd_election_cb(gpointer user_data);

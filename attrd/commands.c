@@ -177,30 +177,6 @@ create_attribute(xmlNode *xml)
     return a;
 }
 
-static void attrd_client_peer_remove(const char *client_name, xmlNode *xml);
-static void attrd_client_update(xmlNode *xml);
-static void attrd_client_refresh(void);
-
-void
-attrd_client_message(crm_client_t *client, xmlNode *xml)
-{
-    const char *op = crm_element_value(xml, F_ATTRD_TASK);
-
-    if (safe_str_eq(op, ATTRD_OP_PEER_REMOVE)) {
-        attrd_client_peer_remove(client->name, xml);
-
-    } else if (safe_str_eq(op, ATTRD_OP_UPDATE)) {
-        attrd_client_update(xml);
-
-    } else if (safe_str_eq(op, ATTRD_OP_REFRESH)) {
-        attrd_client_refresh();
-
-    } else {
-        crm_info("Ignoring request from client %s with unknown operation %s",
-                 client->name, op);
-    }
-}
-
 /*!
  * \internal
  * \brief Respond to a client peer-remove request (i.e. propagate to all peers)
@@ -210,7 +186,7 @@ attrd_client_message(crm_client_t *client, xmlNode *xml)
  *
  * \return void
  */
-static void
+void
 attrd_client_peer_remove(const char *client_name, xmlNode *xml)
 {
     const char *host = crm_element_value(xml, F_ATTRD_HOST);
@@ -233,7 +209,7 @@ attrd_client_peer_remove(const char *client_name, xmlNode *xml)
  *
  * \return void
  */
-static void
+void
 attrd_client_update(xmlNode *xml)
 {
     attribute_t *a = NULL;
@@ -337,7 +313,7 @@ attrd_client_update(xmlNode *xml)
  *
  * \return void
  */
-static void
+void
 attrd_client_refresh(void)
 {
     GHashTableIter iter;
