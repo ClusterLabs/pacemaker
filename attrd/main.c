@@ -212,7 +212,6 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     xmlNode *xml = crm_ipcs_recv(client, data, size, &id, &flags);
     const char *op;
 
-    crm_ipcs_send_ack(client, id, flags, "ack", __FUNCTION__, __LINE__);
     if (xml == NULL) {
         crm_debug("No msg from %d (%p)", crm_ipcs_client_pid(c), c);
         return 0;
@@ -228,12 +227,15 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     op = crm_element_value(xml, F_ATTRD_TASK);
 
     if (safe_str_eq(op, ATTRD_OP_PEER_REMOVE)) {
+        attrd_send_ack(client, id, flags);
         attrd_client_peer_remove(client->name, xml);
 
     } else if (safe_str_eq(op, ATTRD_OP_UPDATE)) {
+        attrd_send_ack(client, id, flags);
         attrd_client_update(xml);
 
     } else if (safe_str_eq(op, ATTRD_OP_REFRESH)) {
+        attrd_send_ack(client, id, flags);
         attrd_client_refresh();
 
     } else {
