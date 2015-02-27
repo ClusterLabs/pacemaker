@@ -286,6 +286,15 @@ int crm_read_pidfile(const char *filename);
 #  define F_ATTRD_WRITER	"attr_writer"
 #  define F_ATTRD_VERSION	"attr_version"
 
+/* attrd operations */
+#  define ATTRD_OP_PEER_REMOVE   "peer-remove"
+#  define ATTRD_OP_UPDATE        "update"
+#  define ATTRD_OP_QUERY         "query"
+#  define ATTRD_OP_REFRESH       "refresh"
+#  define ATTRD_OP_FLUSH         "flush"
+#  define ATTRD_OP_SYNC          "sync"
+#  define ATTRD_OP_SYNC_RESPONSE "sync-response"
+
 #  if SUPPORT_COROSYNC
 #    if CS_USES_LIBQB
 #      include <qb/qbipc_common.h>

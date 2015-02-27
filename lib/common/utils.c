@@ -1778,23 +1778,24 @@ attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const cha
 
     switch (command) {
         case 'u':
-            crm_xml_add(update, F_ATTRD_TASK, "update");
+            crm_xml_add(update, F_ATTRD_TASK, ATTRD_OP_UPDATE);
             crm_xml_add(update, F_ATTRD_REGEX, name);
             break;
         case 'D':
         case 'U':
         case 'v':
-            crm_xml_add(update, F_ATTRD_TASK, "update");
+            crm_xml_add(update, F_ATTRD_TASK, ATTRD_OP_UPDATE);
             crm_xml_add(update, F_ATTRD_ATTRIBUTE, name);
             break;
         case 'R':
-            crm_xml_add(update, F_ATTRD_TASK, "refresh");
+            crm_xml_add(update, F_ATTRD_TASK, ATTRD_OP_REFRESH);
             break;
-        case 'q':
-            crm_xml_add(update, F_ATTRD_TASK, "query");
+        case 'Q':
+            crm_xml_add(update, F_ATTRD_TASK, ATTRD_OP_QUERY);
+            crm_xml_add(update, F_ATTRD_ATTRIBUTE, name);
             break;
         case 'C':
-            crm_xml_add(update, F_ATTRD_TASK, "peer-remove");
+            crm_xml_add(update, F_ATTRD_TASK, ATTRD_OP_PEER_REMOVE);
             break;
     }
 

@@ -184,7 +184,7 @@ attrd_client_message(crm_client_t *client, xmlNode *xml)
     static int plus_plus_len = 5;
     const char *op = crm_element_value(xml, F_ATTRD_TASK);
 
-    if(safe_str_eq(op, "peer-remove")) {
+    if (safe_str_eq(op, ATTRD_OP_PEER_REMOVE)) {
         const char *host = crm_element_value(xml, F_ATTRD_HOST);
 
         crm_info("Client %s is requesting all values for %s be removed", client->name, host);
@@ -192,7 +192,7 @@ attrd_client_message(crm_client_t *client, xmlNode *xml)
             broadcast = TRUE;
         }
 
-    } else if(safe_str_eq(op, "update")) {
+    } else if (safe_str_eq(op, ATTRD_OP_UPDATE)) {
         attribute_t *a = NULL;
         attribute_value_t *v = NULL;
         char *key = crm_element_value_copy(xml, F_ATTRD_KEY);
@@ -288,7 +288,7 @@ attrd_client_message(crm_client_t *client, xmlNode *xml)
         free(set);
         free(host);
 
-    } else if(safe_str_eq(op, "refresh")) {
+    } else if (safe_str_eq(op, ATTRD_OP_REFRESH)) {
         GHashTableIter iter;
         attribute_t *a = NULL;
 
@@ -341,13 +341,13 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 
     } else if(v == NULL) {
         /* From the non-atomic version */
-        if(safe_str_eq(op, "update")) {
+        if (safe_str_eq(op, ATTRD_OP_UPDATE)) {
             const char *name = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
 
             crm_trace("Compatibility update of %s from %s", name, peer->uname);
             attrd_peer_update(peer, xml, host, FALSE);
 
-        } else if(safe_str_eq(op, "flush")) {
+        } else if (safe_str_eq(op, ATTRD_OP_FLUSH)) {
             const char *name = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
             attribute_t *a = g_hash_table_lookup(attributes, name);
 
@@ -356,7 +356,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
                 write_or_elect_attribute(a);
             }
 
-        } else if(safe_str_eq(op, "refresh")) {
+        } else if (safe_str_eq(op, ATTRD_OP_REFRESH)) {
             GHashTableIter aIter;
             attribute_t *a = NULL;
 
@@ -387,13 +387,13 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
         }
     }
 
-    if(safe_str_eq(op, "update")) {
+    if (safe_str_eq(op, ATTRD_OP_UPDATE)) {
         attrd_peer_update(peer, xml, host, FALSE);
 
-    } else if(safe_str_eq(op, "sync")) {
+    } else if (safe_str_eq(op, ATTRD_OP_SYNC)) {
         attrd_peer_sync(peer, xml);
 
-    } else if(safe_str_eq(op, "peer-remove")) {
+    } else if (safe_str_eq(op, ATTRD_OP_PEER_REMOVE)) {
         int host_id = 0;
         char *endptr = NULL;
 
@@ -406,7 +406,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
         attrd_peer_remove(host_id, host, TRUE, peer->uname);
 
 
-    } else if(safe_str_eq(op, "sync-response")
+    } else if (safe_str_eq(op, ATTRD_OP_SYNC_RESPONSE)
               && safe_str_neq(peer->uname, attrd_cluster->uname)) {
         xmlNode *child = NULL;
 
@@ -428,7 +428,7 @@ attrd_peer_sync(crm_node_t *peer, xmlNode *xml)
     attribute_value_t *v = NULL;
     xmlNode *sync = create_xml_node(NULL, __FUNCTION__);
 
-    crm_xml_add(sync, F_ATTRD_TASK, "sync-response");
+    crm_xml_add(sync, F_ATTRD_TASK, ATTRD_OP_SYNC_RESPONSE);
 
     g_hash_table_iter_init(&aIter, attributes);
     while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
@@ -540,7 +540,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
         crm_notice("%s[%s]: local value '%s' takes priority over '%s' from %s",
                    a->id, host, v->current, value, peer->uname);
 
-        crm_xml_add(sync, F_ATTRD_TASK, "sync-response");
+        crm_xml_add(sync, F_ATTRD_TASK, ATTRD_OP_SYNC_RESPONSE);
         v = g_hash_table_lookup(a->values, host);
         build_attribute_xml(sync, a->id, a->set, a->uuid, a->timeout_ms, a->user, a->is_private,
                             v->nodename, v->nodeid, v->current);
