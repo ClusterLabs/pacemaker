@@ -1,5 +1,3 @@
-2.3.1 editing CIB copy via VI: isn't that racy? Are concurrent changes detected?
-
 why sometimes <example> and sometimes <figure>? examples have title at top, figures have title at bottom
 
 Example 2.8 (and others) XML line too long, line broken
