@@ -331,6 +331,119 @@ attrd_client_refresh(void)
     write_attributes(TRUE, FALSE);
 }
 
+/*!
+ * \internal
+ * \brief Build the XML reply to a client query
+ *
+ * param[in] attr Name of requested attribute
+ * param[in] host Name of requested host (or NULL for all hosts)
+ *
+ * \return New XML reply
+ * \note Caller is responsible for freeing the resulting XML
+ */
+static xmlNode *build_query_reply(const char *attr, const char *host)
+{
+    xmlNode *reply = create_xml_node(NULL, __FUNCTION__);
+    attribute_t *a;
+
+    if (reply == NULL) {
+        return NULL;
+    }
+    crm_xml_add(reply, F_TYPE, T_ATTRD);
+    crm_xml_add(reply, F_ATTRD_VERSION, ATTRD_PROTOCOL_VERSION);
+
+    /* If desired attribute exists, add its value(s) to the reply */
+    a = g_hash_table_lookup(attributes, attr);
+    if (a) {
+        attribute_value_t *v;
+        xmlNode *host_value;
+
+        crm_xml_add(reply, F_ATTRD_ATTRIBUTE, attr);
+
+        /* Allow caller to use "localhost" to refer to local node */
+        if (safe_str_eq(host, "localhost")) {
+            host = attrd_cluster->uname;
+            crm_trace("Mapped localhost to %s", host);
+        }
+
+        /* If a specific node was requested, add its value */
+        if (host) {
+            v = g_hash_table_lookup(a->values, host);
+            host_value = create_xml_node(reply, XML_CIB_TAG_NODE);
+            if (host_value == NULL) {
+                free_xml(reply);
+                return NULL;
+            }
+            crm_xml_add(host_value, F_ATTRD_HOST, host);
+            crm_xml_add(host_value, F_ATTRD_VALUE, (v? v->current : NULL));
+
+        /* Otherwise, add all nodes' values */
+        } else {
+            GHashTableIter iter;
+
+            g_hash_table_iter_init(&iter, a->values);
+            while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &v)) {
+                host_value = create_xml_node(reply, XML_CIB_TAG_NODE);
+                if (host_value == NULL) {
+                    free_xml(reply);
+                    return NULL;
+                }
+                crm_xml_add(host_value, F_ATTRD_HOST, v->nodename);
+                crm_xml_add(host_value, F_ATTRD_VALUE, v->current);
+            }
+        }
+    }
+    return reply;
+}
+
+/*!
+ * \internal
+ * \brief Respond to a client query
+ *
+ * \param[in] client Who queried us
+ * \param[in] query  Root of query XML
+ *
+ * \return void
+ */
+void
+attrd_client_query(crm_client_t *client, uint32_t id, uint32_t flags, xmlNode *query)
+{
+    const char *attr;
+    const char *origin = crm_element_value(query, F_ORIG);
+    ssize_t rc;
+    xmlNode *reply;
+
+    if (origin == NULL) {
+        origin = "unknown client";
+    }
+    crm_debug("Query arrived from %s", origin);
+
+    /* Request must specify attribute name to query */
+    attr = crm_element_value(query, F_ATTRD_ATTRIBUTE);
+    if (attr == NULL) {
+        crm_warn("Ignoring malformed query from %s (no attribute name given)",
+                 origin);
+        return;
+    }
+
+    /* Build the XML reply */
+    reply = build_query_reply(attr, crm_element_value(query, F_ATTRD_HOST));
+    if (reply == NULL) {
+        crm_err("Could not respond to query from %s: could not create XML reply",
+                 origin);
+        return;
+    }
+    crm_log_xml_trace(reply, "Reply");
+
+    /* Send the reply to the client */
+    client->request_id = 0;
+    if ((rc = crm_ipcs_send(client, id, reply, flags)) < 0) {
+        crm_err("Could not respond to query from %s: %s (%d)",
+                origin, pcmk_strerror(-rc), -rc);
+    }
+    free_xml(reply);
+}
+
 void
 attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 {
