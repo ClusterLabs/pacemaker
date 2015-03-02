@@ -646,7 +646,7 @@ cib_file_write_live(char *path)
     }
 
     /* undo fancy stuff */
-    if ((sep != NULL) && (*sep = '\0')) {
+    if ((sep != NULL) && (*sep == '\0')) {
         *sep = '/';
     }
 

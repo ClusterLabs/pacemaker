@@ -1,6 +1,10 @@
 [appendix]
 
-== Upgrading the Configuration from 0.6 ==
+== Upgrading the Configuration ==
+
+This process was originally written for the upgrade from 0.6.'x' to 1.'y',
+but the concepts should apply for any upgrade involving a change in
+the XML schema version.
 
 indexterm:[Upgrading the Configuration]
 indexterm:[Configuration,Upgrading]
@@ -15,11 +19,11 @@ Refer to the appendix: <<ap-upgrade>>
 
 As XML is not the friendliest of languages, it is common for cluster
 administrators to have scripted some of their activities. In such
-cases, it is likely that those scripts will not work with the new 1.0
+cases, it is likely that those scripts will not work with the new XML
 syntax.
 
 In order to support such environments, it is actually possible to
-continue using the old 0.6 syntax.
+continue using the old XML syntax.
 
 The downside is, however, that not all the new features will be
 available and there is a performance impact since the cluster must do
@@ -28,9 +32,9 @@ while using the old syntax is possible, it is not advisable to
 continue using it indefinitely.
 
 Even if you wish to continue using the old syntax, it is advisable to
-follow the upgrade procedure to ensure that the cluster is able to use
-your existing configuration (since it will perform much the same task
-internally).
+follow the upgrade procedure (except for the last step) to ensure that the
+cluster is able to use your existing configuration (since it will perform much
+the same task internally).
 
 . Create a shadow copy to work with
 +
@@ -55,7 +59,10 @@ internally).
 The most common reason is ID values being repeated or invalid. Pacemaker 1.0 is much stricter regarding this type of validation.
 ]
 +
-If the result of the transformation is invalid, you may see a number of errors from the validation library. If these are not helpful, visit http://clusterlabs.org/wiki/Validation_FAQ and/or try the procedure described below under <<s-upgrade-config-manual>>
+If the result of the transformation is invalid, you may see a number of errors
+from the validation library. If these are not helpful, visit the
+http://clusterlabs.org/wiki/Validation_FAQ[Validation FAQ wiki page] and/or try
+the procedure described below under <<s-upgrade-config-manual>>
 +        
 . Check the changes
 +
@@ -69,11 +76,10 @@ If at this point there is anything about the upgrade that you wish to fine-tune 
 # crm_shadow --edit
 -----
 +
-This will open the configuration in your favorite editor (whichever is specified by the standard +$EDITOR+ environment variable)
+This will open the configuration in your favorite editor (whichever is
+specified by the standard *$EDITOR* environment variable)
 +
-. Preview how the cluster will react
-+
-Test what the cluster will do when you upload the new configuration
+. Preview how the cluster will react:
 +
 ------
 # crm_simulate --live-check --save-dotfile upgrade06.dot -S
@@ -85,24 +91,25 @@ happy with any that are scheduled.  If the output contains actions you
 do not expect (possibly due to changes to the score calculations), you
 may need to make further manual changes.  See
 <<s-config-testing-changes>> for further details on how to interpret
-the output of `crm_simulate`
+the output of `crm_simulate` and `graphviz`.
 +
 . Upload the changes
 +
 -----
 # crm_shadow --commit upgrade06 --force
 -----
-If this step fails, something really strange has occurred. You should report a bug.
++
+In the unlikely event this step fails, please report a bug.
 
 [[s-upgrade-config-manual]]
 ==== Manually Upgrading the Configuration ====
 
 indexterm:[Configuration,Upgrade manually]
-It is also possible to perform the configuration upgrade steps manually. To do this
+It is also possible to perform the configuration upgrade steps manually:
 
-Locate the 'upgrade06.xsl' conversion script or download the latest
-version from
-https://github.com/ClusterLabs/pacemaker/tree/master/xml/upgrade06.xsl[Git]
+. Locate the +upgrade06.xsl+ conversion script provided with the source code
+  (the https://github.com/ClusterLabs/pacemaker/tree/master/xml/upgrade06.xsl[latest version] is available via
+  git).
           
 . Convert the XML blob: indexterm:[XML,Convert]
 +
@@ -110,7 +117,7 @@ https://github.com/ClusterLabs/pacemaker/tree/master/xml/upgrade06.xsl[Git]
 # xsltproc /path/to/upgrade06.xsl config06.xml > config10.xml
 -----
 +          
-. Locate the 'pacemaker.rng' script.
+. Locate the +pacemaker.rng+ script.
 . Check the XML validity: indexterm:[Validate Configuration]indexterm:[Configuration,Validate XML]
 +
 ----

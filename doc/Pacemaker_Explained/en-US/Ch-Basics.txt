@@ -2,28 +2,8 @@
 
 == Configuration Layout ==
 
-The cluster is written using XML notation and divided into two main
-sections: configuration and status.
-
-The status section contains the history of each resource on each node
-and based on this data, the cluster can construct the complete current
-state of the cluster.  The authoritative source for the status section
-is the local resource manager (lrmd) process on each cluster node and
-the cluster will occasionally repopulate the entire section.  For this
-reason it is never written to disk and administrators are advised
-against modifying it in any way.
-
-The configuration section contains the more traditional information
-like cluster options, lists of resources and indications of where they
-should be placed.  The configuration section is the primary focus of
-this document.
-      
-The configuration section itself is divided into four parts:
-
- * Configuration options (called +crm_config+)
- * Nodes
- * Resources
- * Resource relationships (called +constraints+)
+The cluster is defined by the Cluster Information Base (CIB),
+which uses XML notation. The simplest CIB, an empty one, looks like this:
 
 .An empty configuration
 ======
@@ -41,17 +21,48 @@ The configuration section itself is divided into four parts:
 -------
 ======
 
+The empty configuration above contains the major sections that make up a CIB:
+
+* +cib+: The entire CIB is enclosed with a +cib+ tag. Certain fundamental settings
+  are defined as attributes of this tag.
+
+  ** +configuration+: This section -- the primary focus of this document --
+     contains traditional configuration information such as what resources the
+     cluster serves and the relationships among them.
+
+    *** +crm_config+: cluster-wide configuration options
+    *** +nodes+: the machines that host the cluster
+    *** +resources+: the services run by the cluster
+    *** +constraints+: indications of how resources should be placed
+
+  ** +status+: This section contains the history of each resource on each node.
+    Based on this data, the cluster can construct the complete current
+    state of the cluster.  The authoritative source for this section
+    is the local resource manager (lrmd process) on each cluster node, and
+    the cluster will occasionally repopulate the entire section.  For this
+    reason, it is never written to disk, and administrators are advised
+    against modifying it in any way.
+
+In this document, configuration settings will be described as 'properties' or 'options'
+based on how they are defined in the CIB:
+
+* Properties are XML attributes of an XML element.
+* Options are name-value pairs expressed as +nvpair+ child elements of an XML element.
+
+Normally you will use command-line tools that abstract the XML, so the
+distinction will be unimportant; both properties and options are
+cluster settings you can tweak.
+
 == The Current State of the Cluster ==
 
 Before one starts to configure a cluster, it is worth explaining how
 to view the finished product.  For this purpose we have created the
-`crm_mon` utility that will display the
+`crm_mon` utility, which will display the
 current state of an active cluster.  It can show the cluster status by
 node or by resource and can be used in either single-shot or
 dynamically-updating mode.  There are also modes for displaying a list
 of the operations performed (grouped by node and resource) as well as
 information about failures.
-      
 
 Using this tool, you can examine the state of the cluster for
 irregularities and see how it responds when you cause or simulate
@@ -113,7 +124,7 @@ Details on all the available options can be obtained using the
 ======
 
 The DC (Designated Controller) node is where all the decisions are
-made and if the current DC fails a new one is elected from the
+made, and if the current DC fails a new one is elected from the
 remaining cluster nodes.  The choice of DC is of no significance to an
 administrator beyond the fact that its logs will generally be more
 interesting.
@@ -122,23 +133,23 @@ interesting.
 
 There are three basic rules for updating the cluster configuration:
 
- * Rule 1 - Never edit the cib.xml file manually. Ever. I'm not making this up.
+ * Rule 1 - Never edit the +cib.xml+ file manually. Ever. I'm not making this up.
  * Rule 2 - Read Rule 1 again.
  * Rule 3 - The cluster will notice if you ignored rules 1 &amp; 2 and refuse to use the configuration.
 
-Now that it is clear how NOT to update the configuration, we can begin
-to explain how you should.
+Now that it is clear how 'not' to update the configuration, we can begin
+to explain how you 'should'.
+
+=== Editing the CIB Using XML ===
 
 The most powerful tool for modifying the configuration is the
-+cibadmin+ command which talks to a running cluster.  With +cibadmin+,
-the user can query, add, remove, update or replace any part of the
-configuration; all changes take effect immediately, so there is no
-need to perform a reload-like operation.
-      
++cibadmin+ command.  With +cibadmin+, you can query, add, remove, update
+or replace any part of the configuration. All changes take effect immediately,
+so there is no need to perform a reload-like operation.
 
-The simplest way of using cibadmin is to use it to save the current
+The simplest way of using `cibadmin` is to use it to save the current
 configuration to a temporary file, edit that file with your favorite
-text or XML editor and then upload the revised configuration.
+text or XML editor, and then upload the revised configuration.
       
 .Safely using an editor to modify the cluster configuration
 ======
@@ -156,10 +167,10 @@ deployed in a location such as +/usr/share/pacemaker+ or
 +/usr/lib/heartbeat+ depending on your operating system and how you
 installed the software.
 
-If you only wanted to modify the resources section, you could instead
-do
+If you want to modify just one section of the configuration, you can
+query and replace just that section to avoid modifying any others.
       
-.Safely using an editor to modify a subsection of the cluster configuration
+.Safely using an editor to modify only the resources section
 ======
 --------
 # cibadmin --query --obj_type resources > tmp.xml
@@ -168,19 +179,15 @@ do
 --------
 ======
 
-to avoid modifying any other part of the configuration.
+=== Quickly Deleting Part of the Configuration ===
 
-== Quickly Deleting Part of the Configuration ==
-
-Identify the object you wish to delete. Eg. run
+Identify the object you wish to delete by XML tag and id. For example,
+you might search the CIB for all STONITH-related configuration:
       
-.Searching for STONITH related configuration items
+.Searching for STONITH-related configuration items
 ======
---------
+----
 # cibadmin -Q | grep stonith
---------
-[source,XML]
---------
  <nvpair id="cib-bootstrap-options-stonith-action" name="stonith-action" value="reboot"/>
  <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="1"/>
  <primitive id="child_DoFencing" class="stonith" type="external/vmware">
@@ -191,34 +198,34 @@ Identify the object you wish to delete. Eg. run
  <lrm_resource id="child_DoFencing:2" type="external/vmware" class="stonith">
  <lrm_resource id="child_DoFencing:0" type="external/vmware" class="stonith">
  <lrm_resource id="child_DoFencing:3" type="external/vmware" class="stonith">
---------
+----
 ======
 
-Next identify the resource's tag name and id (in this case we'll
-choose +primitive+ and +child_DoFencing+).  Then simply execute:
+If you wanted to delete the +primitive+ tag with id +child_DoFencing+,
+you would run:
 
 ----
 # cibadmin --delete --crm_xml '<primitive id="child_DoFencing"/>'
 ----
 
-== Updating the Configuration Without Using XML ==
+=== Updating the Configuration Without Using XML ===
 
-Some common tasks can also be performed with one of the higher level
-tools that avoid the need to read or edit XML.
+Most tasks can be performed with one of the other command-line
+tools provided with pacemaker, avoiding the need to read or edit XML.
 
-To enable stonith for example, one could run:
+To enable STONITH for example, one could run:
 
 ----
 # crm_attribute --name stonith-enabled --update 1
 ----
 
-Or, to see if +somenode+ is allowed to run resources, there is:
+Or, to check whether *somenode* is allowed to run resources, there is:
 
 ----
 # crm_standby --get-value --node somenode
 ----
 
-Or, to find the current location of +my-test-rsc+, one can use:
+Or, to find the current location of *my-test-rsc*, one can use:
 
 ----
 # crm_resource --locate --resource my-test-rsc
@@ -243,37 +250,40 @@ have created `crm_shadow` which creates a
 "shadow" copy of the configuration and arranges for all the command
 line tools to use it.
 
-To begin, simply invoke `crm_shadow` and give
-it the name of a configuration to create footnote:[Shadow copies are
-identified with a name, making it possible to have more than one.]  ;
-be sure to follow the simple on-screen instructions.
+To begin, simply invoke `crm_shadow --create` with
+the name of a configuration to create footnote:[Shadow copies are
+identified with a name, making it possible to have more than one.],
+and follow the simple on-screen instructions.
 
-WARNING: Read the above carefully, failure to do so could result in you
-destroying the cluster's active configuration!
+[WARNING]
+====
+Read this section and the on-screen instructions carefully; failure to do so could
+result in destroying the cluster's active configuration!
+====
       
       
 .Creating and displaying the active sandbox
 ======
 ----
- # crm_shadow --create test
- Setting up shadow instance
- Type Ctrl-D to exit the crm_shadow shell
- shadow[test]: 
- shadow[test] # crm_shadow --which
- test
+# crm_shadow --create test
+Setting up shadow instance
+Type Ctrl-D to exit the crm_shadow shell
+shadow[test]: 
+shadow[test] # crm_shadow --which
+test
 ----
 ======
 
 From this point on, all cluster commands will automatically use the
 shadow copy instead of talking to the cluster's active configuration.
-Once you have finished experimenting, you can either commit the
-changes, or discard them as shown below.  Again, be sure to follow the
-on-screen instructions carefully.
+Once you have finished experimenting, you can either make the
+changes active via the `--commit` option, or discard them using the `--delete`
+option.  Again, be sure to follow the on-screen instructions carefully!
       
 For a full list of `crm_shadow` options and
 commands, invoke it with the `--help` option.
 
-.Using a sandbox to make multiple changes atomically
+.Using a sandbox to make multiple changes atomically, discard them and verify the real configuration is untouched
 ======
 ----
  shadow[test] # crm_failcount -G -r rsc_c001n01
@@ -309,36 +319,38 @@ commands, invoke it with the `--help` option.
 ----
 ======
 
-Making changes in a sandbox and verifying the real configuration is untouched
-
 [[s-config-testing-changes]]
 == Testing Your Configuration Changes ==
 
 We saw previously how to make a series of changes to a "shadow" copy
 of the configuration.  Before loading the changes back into the
-cluster (eg. `crm_shadow --commit mytest --force`), it is often
-advisable to simulate the effect of the changes with +crm_simulate+,
-eg.
+cluster (e.g. `crm_shadow --commit mytest --force`), it is often
+advisable to simulate the effect of the changes with +crm_simulate+.
+For example:
       
 ----
 # crm_simulate --live-check -VVVVV --save-graph tmp.graph --save-dotfile tmp.dot
 ----
 
-
-The tool uses the same library as the live cluster to show what it
-would have done given the supplied input.  It's output, in addition to
+This tool uses the same library as the live cluster to show what it
+would have done given the supplied input.  Its output, in addition to
 a significant amount of logging, is stored in two files +tmp.graph+
-and +tmp.dot+, both are representations of the same thing -- the
+and +tmp.dot+. Both files are representations of the same thing: the
 cluster's response to your changes.
 
-In the graph file is stored the complete transition, containing a list
-of all the actions, their parameters and their pre-requisites.
-Because the transition graph is not terribly easy to read, the tool
-also generates a Graphviz dot-file representing the same information.
+The graph file stores the complete transition from the existing cluster state
+to your desired new state, containing a list of all the actions, their
+parameters and their pre-requisites. Because the transition graph is not
+terribly easy to read, the tool also generates a Graphviz
+footnote:[Graph visualization software. See http://www.graphviz.org/ for details.]
+dot-file representing the same information.
 
-== Interpreting the Graphviz output ==
+For information on the options supported by `crm_simulate`, use
+its `--help` option.
+
+.Interpreting the Graphviz output
  * Arrows indicate ordering dependencies
- * Dashed-arrows indicate dependencies that are not present in the transition graph
+ * Dashed arrows indicate dependencies that are not present in the transition graph
  * Actions with a dashed border of any color do not form part of the transition graph
  * Actions with a green border form part of the transition graph
  * Actions with a red border are ones the cluster would like to execute but cannot run
@@ -353,24 +365,21 @@ also generates a Graphviz dot-file representing the same information.
 
 image::images/Policy-Engine-small.png["An example transition graph as represented by Graphviz",width="16cm",height="6cm",align="center"]      
 
-In the above example, it appears that a new node, +pcmk-2+, has come
-online and that the cluster is checking to make sure +rsc1+, +rsc2+
-and +rsc3+ are not already running there (Indicated by the
-+*_monitor_0+ entries).  Once it did that, and assuming the resources
-were not active there, it would have liked to stop +rsc1+ and +rsc2+
-on +pcmk-1+ and move them to +pcmk-2+.  However, there appears to be
+In the above example, it appears that a new node, *pcmk-2*, has come
+online and that the cluster is checking to make sure *rsc1*, *rsc2*
+and *rsc3* are not already running there (Indicated by the
+*rscN_monitor_0* entries).  Once it did that, and assuming the resources
+were not active there, it would have liked to stop *rsc1* and *rsc2*
+on *pcmk-1* and move them to *pcmk-2*.  However, there appears to be
 some problem and the cluster cannot or is not permitted to perform the
 stop actions which implies it also cannot perform the start actions.
-For some reason the cluster does not want to start +rsc3+ anywhere.
-
-For information on the options supported by `crm_simulate`, use
-the `--help` option.
+For some reason the cluster does not want to start *rsc3* anywhere.
 
 === Complex Cluster Transition ===
 
 image::images/Policy-Engine-big.png["Another, slightly more complex, transition graph that you're not expected to be able to read",width="16cm",height="20cm",align="center"]
 
-== Do I Need to Update the Configuration on all Cluster Nodes? ==
+== Do I Need to Update the Configuration on All Cluster Nodes? ==
 
 No. Any changes are immediately synchronized to the other active
 members of the cluster.

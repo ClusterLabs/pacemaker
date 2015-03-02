@@ -1,68 +1,61 @@
 = Multi-Site Clusters and Tickets =
 
-[[Multisite]]
-== Abstract ==
 Apart from local clusters, Pacemaker also supports multi-site clusters.
-That means you can have multiple, geographically dispersed sites with a
-local cluster each. Failover between these clusters can be coordinated
-by a higher level entity, the so-called `CTR (Cluster Ticket Registry)`.
-
+That means you can have multiple, geographically dispersed sites, each with a
+local cluster. Failover between these clusters can be coordinated
+manually by the administrator, or automatically by a higher-level entity called
+a 'Cluster Ticket Registry (CTR)'.
 
 == Challenges for Multi-Site Clusters ==
 
 Typically, multi-site environments are too far apart to support
-synchronous communication between the sites and synchronous data
-replication. That leads to the following challenges:
+synchronous communication and data replication between the sites.
+That leads to significant challenges:
 
-- How to make sure that a cluster site is up and running?
+- How do we make sure that a cluster site is up and running?
 
-- How to make sure that resources are only started once?
+- How do we make sure that resources are only started once?
 
-- How to make sure that quorum can be reached between the different
-sites and a split brain scenario can be avoided?
+- How do we make sure that quorum can be reached between the different
+sites and a split-brain scenario avoided?
 
-- How to manage failover between the sites?
+- How do we manage failover between sites?
 
-- How to deal with high latency in case of resources that need to be
+- How do we deal with high latency in case of resources that need to be
 stopped? 
 
 In the following sections, learn how to meet these challenges.
-
 
 == Conceptual Overview ==
 
 Multi-site clusters can be considered as “overlay” clusters where
 each cluster site corresponds to a cluster node in a traditional cluster.
-The overlay cluster can be managed by a `CTR (Cluster Ticket Registry)`
-mechanism. It guarantees that the cluster resources will be highly
+The overlay cluster can be managed by a CTR in order to
+guarantee that the cluster resources will be highly
 available across different cluster sites. This is achieved by using
-so-called `tickets` that are treated as failover domain between cluster
+'tickets' that are treated as failover domain between cluster
 sites, in case a site should be down.
 
-The following list explains the individual components and mechanisms
+The following sections explain the individual components and mechanisms
 that were introduced for multi-site clusters in more detail.
 
+=== Ticket ===
 
-=== Components and Concepts ===
-
-==== Ticket ====
-
-"Tickets" are, essentially, cluster-wide attributes. A ticket grants the
+Tickets are, essentially, cluster-wide attributes. A ticket grants the
 right to run certain resources on a specific cluster site. Resources can
-be bound to a certain ticket by `rsc_ticket` dependencies. Only if the
-ticket is available at a site, the respective resources are started.
+be bound to a certain ticket by +rsc_ticket+ constraints. Only if the
+ticket is available at a site can the respective resources be started there.
 Vice versa, if the ticket is revoked, the resources depending on that
-ticket need to be stopped.
+ticket must be stopped.
 
-The ticket thus is similar to a 'site quorum'; i.e., the permission to
-manage/own resources associated with that site.
+The ticket thus is similar to a 'site quorum', i.e. the permission to
+manage/own resources associated with that site. (One can also think of the
+current +have-quorum+ flag as a special, cluster-wide ticket that is granted in
+case of node majority.)
 
-(One can also think of the current `have-quorum` flag as a special, cluster-wide
-ticket that is granted in case of node majority.)
-
-These tickets can be granted/revoked either manually by administrators
-(which could be the default for the classic enterprise clusters), or via
-an automated `CTR` mechanism described further below.
+Tickets can be granted and revoked either manually by administrators
+(which could be the default for classic enterprise clusters), or via
+the automated CTR mechanism described below.
 
 A ticket can only be owned by one site at a time. Initially, none
 of the sites has a ticket. Each ticket must be granted once by the cluster
@@ -70,58 +63,59 @@ administrator.
 
 The presence or absence of tickets for a site is stored in the CIB as a
 cluster status. With regards to a certain ticket, there are only two states
-for a site: `true` (the site has the ticket) or `false` (the site does
+for a site: +true+ (the site has the ticket) or +false+ (the site does
 not have the ticket). The absence of a certain ticket (during the initial
-state of the multi-site cluster) is also reflected by the value `false`.
+state of the multi-site cluster) is the same as the value +false+.
 
+=== Dead Man Dependency ===
 
-==== Dead Man Dependency ====
-
-A site can only activate the resources safely if it can be sure that the
+A site can only activate resources safely if it can be sure that the
 other site has deactivated them. However after a ticket is revoked, it can
 take a long time until all resources depending on that ticket are stopped
 "cleanly", especially in case of cascaded resources. To cut that process
-short, the concept of a `Dead Man Dependency` was introduced:
+short, the concept of a 'Dead Man Dependency' was introduced.
 
-- If the ticket is revoked from a site, the nodes that are hosting
-dependent resources are fenced. This considerably speeds up the recovery
-process of the cluster and makes sure that resources can be migrated more
-quickly. 
+If a dead man dependency is in force, if a ticket is revoked from a site, the
+nodes that are hosting dependent resources are fenced. This considerably speeds
+up the recovery process of the cluster and makes sure that resources can be
+migrated more quickly.
 
-This can be configured by specifying a `loss-policy="fence"` in
-`rsc_ticket` constraints.
+This can be configured by specifying a +loss-policy="fence"+ in
++rsc_ticket+ constraints.
 
+=== Cluster Ticket Registry ===
 
-==== CTR (Cluster Ticket Registry) ====
-
-This is for those scenarios where the tickets management is supposed to
-be automatic (instead of the administrator revoking the ticket somewhere,
+A CTR is a network daemon that automatically handles granting, revoking, and
+timing out tickets (instead of the administrator revoking the ticket somewhere,
 waiting for everything to stop, and then granting it on the desired site).
 
-A `CTR` is a network daemon that handles granting,
-revoking, and timing out "tickets". The participating clusters would run
-the daemons that would connect to each other, exchange information on
-their connectivity details, and vote on which site gets which ticket(s).
+Pacemaker does not implement its own CTR, but interoperates with external
+software designed for that purpose (similar to how resource and fencing agents
+are not directly part of pacemaker).
 
-A ticket would only be granted to a site once they can be sure that it
-has been relinquished by the previous owner, which would need to be
-implemented via a timer in most scenarios. If a site loses connection
-to its peers, its tickets time out and recovery occurs. After the
-connection timeout plus the recovery timeout has passed, the other sites
-are allowed to re-acquire the ticket and start the resources again.
+Participating clusters run the CTR daemons, which connect to each other, exchange
+information about their connectivity, and vote on which sites gets which
+tickets.
+
+A ticket is granted to a site only once the CTR is sure that the ticket
+has been relinquished by the previous owner, implemented via a timer in most
+scenarios. If a site loses connection to its peers, its tickets time out and
+recovery occurs. After the connection timeout plus the recovery timeout has
+passed, the other sites are allowed to re-acquire the ticket and start the
+resources again.
 
 This can also be thought of as a "quorum server", except that it is not
 a single quorum ticket, but several.
 
+=== Configuration Replication ===
 
-==== Configuration Replication ====
-
-As usual, the CIB is synchronized within each cluster, but it is not synchronized
+As usual, the CIB is synchronized within each cluster, but it is 'not' synchronized
 across cluster sites of a multi-site cluster. You have to configure the resources
 that will be highly available across the multi-site cluster for every site
 accordingly.
 
 
+[[s-ticket-constraints]]
 == Configuring Ticket Dependencies ==
 
 The `rsc_ticket` constraint lets you specify the resources depending on a certain
@@ -130,67 +124,72 @@ what should happen to the respective resources if the ticket is revoked.
 
 The attribute `loss-policy` can have the following values:
 
-fence:: Fence the nodes that are running the relevant resources.
+* +fence:+ Fence the nodes that are running the relevant resources.
 
-stop:: Stop the relevant resources.
+* +stop:+ Stop the relevant resources.
 
-freeze:: Do nothing to the relevant resources.
+* +freeze:+ Do nothing to the relevant resources.
 
-demote:: Demote relevant resources that are running in master mode to slave mode. 
+* +demote:+ Demote relevant resources that are running in master mode to slave mode. 
 
 
-An example to configure a `rsc_ticket` constraint:
-
+.Constraint that fences node if +ticketA+ is revoked
+====
 [source,XML]
 -------
 <rsc_ticket id="rsc1-req-ticketA" rsc="rsc1" ticket="ticketA" loss-policy="fence"/>
 -------
+====
 
-This creates a constraint with the ID `rsc1-req-ticketA`. It defines that the
-resource `rsc1` depends on `ticketA` and that the node running the resource should
-be fenced in case `ticketA` is revoked.
+The example above creates a constraint with the ID +rsc1-req-ticketA+. It
+defines that the resource +rsc1+ depends on +ticketA+ and that the node running
+the resource should be fenced if +ticketA+ is revoked.
 
-If resource `rsc1` was a multi-state resource that can run in master or
-slave mode, you may want to configure that only `rsc1's` master mode
-depends on `ticketA`. With the following configuration, `rsc1` will be
-demoted to slave mode if `ticketA` is revoked:
+If resource +rsc1+ were a multi-state resource (i.e. it could run in master or
+slave mode), you might want to configure that only master mode
+depends on +ticketA+. With the following configuration, +rsc1+ will be
+demoted to slave mode if +ticketA+ is revoked:
 
+.Constraint that demotes +rsc1+ if +ticketA+ is revoked
+====
 [source,XML]
 -------
 <rsc_ticket id="rsc1-req-ticketA" rsc="rsc1" rsc-role="Master" ticket="ticketA" loss-policy="demote"/>
 -------
+====
 
-You can create more `rsc_ticket` constraints to let multiple resources
-depend on the same ticket.
- 
-`rsc_ticket` also supports resource sets. So one can easily list all the
-resources in one `rsc_ticket` constraint. For example:
+You can create multiple `rsc_ticket` constraints to let multiple resources
+depend on the same ticket. However, `rsc_ticket` also supports resource sets,
+so one can easily list all the resources in one `rsc_ticket` constraint instead.
 
+.Ticket constraint for multiple resources
+====
 [source,XML]
 -------
-      <rsc_ticket id="resources-dep-ticketA" ticket="ticketA" loss-policy="fence">
-        <resource_set id="resources-dep-ticketA-0" role="Started">
-          <resource_ref id="rsc1"/>
-          <resource_ref id="group1"/>
-          <resource_ref id="clone1"/>
-        </resource_set>
-        <resource_set id="resources-dep-ticketA-1" role="Master">
-          <resource_ref id="ms1"/>
-        </resource_set>
-      </rsc_ticket>
+<rsc_ticket id="resources-dep-ticketA" ticket="ticketA" loss-policy="fence">
+  <resource_set id="resources-dep-ticketA-0" role="Started">
+    <resource_ref id="rsc1"/>
+    <resource_ref id="group1"/>
+    <resource_ref id="clone1"/>
+  </resource_set>
+  <resource_set id="resources-dep-ticketA-1" role="Master">
+    <resource_ref id="ms1"/>
+  </resource_set>
+</rsc_ticket>
 -------
+====
 
-In the example, there are two resource sets for listing the resources with
-different `roles` in one `rsc_ticket` constraint. There's no dependency
-between the two resource sets. And there's no dependency among the
+In the example above, there are two resource sets, so we can list resources
+with different roles in a single +rsc_ticket+ constraint. There's no dependency
+between the two resource sets, and there's no dependency among the
 resources within a resource set. Each of the resources just depends on
-`ticketA`.
++ticketA+.
 
-Referencing resource templates in `rsc_ticket` constraints, and even
+Referencing resource templates in +rsc_ticket+ constraints, and even
 referencing them within resource sets, is also supported. 
 
 If you want other resources to depend on further tickets, create as many
-constraints as necessary with `rsc_ticket`.
+constraints as necessary with +rsc_ticket+.
 
 
 == Managing Multi-Site Clusters ==
@@ -198,9 +197,9 @@ constraints as necessary with `rsc_ticket`.
 === Granting and Revoking Tickets Manually ===
 
 You can grant tickets to sites or revoke them from sites manually.
-Though if you want to re-distribute a ticket, you should wait for
-the dependent resources to cleanly stop at the previous site before you
-grant the ticket to another desired site.
+If you want to re-distribute a ticket, you should wait for
+the dependent resources to stop cleanly at the previous site before you
+grant the ticket to the new site.
 
 Use the `crm_ticket` command line tool to grant and revoke tickets. 
 
@@ -216,23 +215,44 @@ To revoke a ticket from this site:
 
 [IMPORTANT]
 ====
-If you are managing tickets manually. Use the `crm_ticket` command with
-great care as they cannot help verify if the same ticket is already
+If you are managing tickets manually, use the `crm_ticket` command with
+great care, because it cannot check whether the same ticket is already
 granted elsewhere. 
-
 ====
 
 
 === Granting and Revoking Tickets via a Cluster Ticket Registry ===
 
-==== Booth ====
-Booth is an implementation of `Cluster Ticket Registry` or so-called
-`Cluster Ticket Manager`.
+We will use https://github.com/ClusterLabs/booth[Booth] here as an example of
+software that can be used with pacemaker as a Cluster Ticket Registry.  Booth
+implements the
+http://en.wikipedia.org/wiki/Paxos_%28computer_science%29['Paxos'] lease
+algorithm to guarantee the distributed consensus among different
+cluster sites, and manages the ticket distribution (and thus the failover
+process between sites).
 
-Booth is the instance managing the ticket distribution and thus,
-the failover process between the sites of a multi-site cluster. Each of
-the participating clusters and arbitrators runs a service, the boothd.
-It connects to the booth daemons running at the other sites and
+Each of the participating clusters and 'arbitrators' runs the Booth daemon
+`boothd`.
+
+An 'arbitrator' is the multi-site equivalent of a quorum-only node in a local
+cluster. If you have a setup with an even number of sites,
+you need an additional instance to reach consensus about decisions such
+as failover of resources across sites. In this case, add one or more
+arbitrators running at additional sites. Arbitrators are single machines
+that run a booth instance in a special mode. An arbitrator is especially
+important for a two-site scenario, otherwise there is no way for one site
+to distinguish between a network failure between it and the other site, and
+a failure of the other site.
+
+The most common multi-site scenario is probably a multi-site cluster with two
+sites and a single arbitrator on a third site. However, technically, there are
+no limitations with regards to the number of sites and the number of
+arbitrators involved.
+
+Nodes belonging to the same cluster site should be synchronized via NTP. However,
+time synchronization is not required between the individual cluster sites.
+
+`Boothd` at each site connects to its peers running at the other sites and
 exchanges connectivity details. Once a ticket is granted to a site, the
 booth mechanism will manage the ticket automatically: If the site which
 holds the ticket is out of service, the booth daemons will vote which
@@ -247,66 +267,18 @@ resources before will be treated according to the `loss-policy` you set
 within the `rsc_ticket` constraint.
 
 Before the booth can manage a certain ticket within the multi-site cluster,
-you initially need to grant it to a site manually via `booth client` command.
-After you have initially granted a ticket to a site, the booth mechanism
+you initially need to grant it to a site manually via the `booth` command-line
+tool. After you have initially granted a ticket to a site, `boothd`
 will take over and manage the ticket automatically.  
 
 [IMPORTANT]
 ====
-The `booth client` command line tool can be used to grant, list, or
-revoke tickets.  The `booth client` commands work on any machine where
-the booth daemon is running. 
-
-If you are managing tickets via `Booth`, only use `booth client` for manual
-intervention instead of `crm_ticket`. That can make sure the same ticket
+The `booth` command-line tool can be used to grant, list, or
+revoke tickets and can be run on any machine where `boothd` is running. 
+If you are managing tickets via Booth, use only `booth` for manual
+intervention, not `crm_ticket`. That ensures the same ticket
 will only be owned by one cluster site at a time.
 ====
-
-Booth includes an implementation of
-http://en.wikipedia.org/wiki/Paxos_algorithm['Paxos'] and 'Paxos Lease'
-algorithm, which guarantees the distributed consensus among different
-cluster sites. 
-
-[NOTE]
-====
-`Arbitrator`
-
-Each site runs one booth instance that is responsible for communicating
-with the other sites. If you have a setup with an even number of sites,
-you need an additional instance to reach consensus about decisions such
-as failover of resources across sites. In this case, add one or more
-arbitrators running at additional sites. Arbitrators are single machines
-that run a booth instance in a special mode. As all booth instances
-communicate with each other, arbitrators help to make more reliable
-decisions about granting or revoking tickets.
-
-An arbitrator is especially important for a two-site scenario: For example,
-if site `A` can no longer communicate with site `B`, there are two possible
-causes for that:
-
-- `A` network failure between `A` and `B`.
-
-- Site `B` is down.
-
-However, if site `C` (the arbitrator) can still communicate with site `B`,
-site `B` must still be up and running. 
-
-====
-
-===== Requirements =====
-
-- All clusters that will be part of the multi-site cluster must be based on Pacemaker.
-
-- Booth must be installed on all cluster nodes and on all arbitrators that will
-be part of the multi-site cluster. 
-
-The most common scenario is probably a multi-site cluster with two sites and a
-single arbitrator on a third site. However, technically, there are no limitations
-with regards to the number of sites and the number of arbitrators involved.
-
-Nodes belonging to the same cluster site should be synchronized via NTP. However,
-time synchronization is not required between the individual cluster sites.
-
 
 === General Management of Tickets ===
 
@@ -320,24 +292,23 @@ Or you can monitor them with:
 # crm_mon --tickets
 -------
 
-Display the rsc_ticket constraints that apply to a ticket:
+Display the +rsc_ticket+ constraints that apply to a ticket:
 -------
 # crm_ticket --ticket ticketA --constraints
 -------
 
-When you want to do maintenance or manual switch-over of a ticket, the
-ticket could be revoked from the site for any reason, which would
-trigger the loss-policies. If `loss-policy="fence"`, the dependent
-resources could not be gracefully stopped/demoted, and even, other
-unrelated resources could be impacted. 
+When you want to do maintenance or manual switch-over of a ticket,
+revoking the ticket would trigger the loss policies. If
++loss-policy="fence"+, the dependent resources could not be gracefully
+stopped/demoted, and other unrelated resources could even be affected. 
 
-The proper way is making the ticket `standby` first with:
+The proper way is making the ticket 'standby' first with:
 -------
 # crm_ticket --ticket ticketA --standby
 -------
 
 Then the dependent resources will be stopped or demoted gracefully without
-triggering the loss-policies.
+triggering the loss policies.
 
 If you have finished the maintenance and want to activate the ticket again,
 you can run:
@@ -347,8 +318,6 @@ you can run:
 
 == For more information ==
 
-`Multi-site Clusters`
-http://doc.opensuse.org/products/draft/SLE-HA/SLE-ha-guide_sd_draft/cha.ha.geo.html
+* http://doc.opensuse.org/products/draft/SLE-HA/SLE-ha-guide_sd_draft/cha.ha.geo.html[SUSE's Multi-site Clusters guide]
 
-`Booth`
-https://github.com/ClusterLabs/booth
+* https://github.com/ClusterLabs/booth[Booth]

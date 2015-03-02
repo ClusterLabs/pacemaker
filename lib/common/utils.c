@@ -1741,7 +1741,7 @@ stonith_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handler
 int
 attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const char *name,
                       const char *value, const char *section, const char *set, const char *dampen,
-                      const char *user_name, gboolean is_remote)
+                      const char *user_name, int options)
 {
     int rc = -ENOTCONN;
     int max = 5;
@@ -1778,23 +1778,24 @@ attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const cha
 
     switch (command) {
         case 'u':
-            crm_xml_add(update, F_ATTRD_TASK, "update");
+            crm_xml_add(update, F_ATTRD_TASK, ATTRD_OP_UPDATE);
             crm_xml_add(update, F_ATTRD_REGEX, name);
             break;
         case 'D':
         case 'U':
         case 'v':
-            crm_xml_add(update, F_ATTRD_TASK, "update");
+            crm_xml_add(update, F_ATTRD_TASK, ATTRD_OP_UPDATE);
             crm_xml_add(update, F_ATTRD_ATTRIBUTE, name);
             break;
         case 'R':
-            crm_xml_add(update, F_ATTRD_TASK, "refresh");
+            crm_xml_add(update, F_ATTRD_TASK, ATTRD_OP_REFRESH);
             break;
-        case 'q':
-            crm_xml_add(update, F_ATTRD_TASK, "query");
+        case 'Q':
+            crm_xml_add(update, F_ATTRD_TASK, ATTRD_OP_QUERY);
+            crm_xml_add(update, F_ATTRD_ATTRIBUTE, name);
             break;
         case 'C':
-            crm_xml_add(update, F_ATTRD_TASK, "peer-remove");
+            crm_xml_add(update, F_ATTRD_TASK, ATTRD_OP_PEER_REMOVE);
             break;
     }
 
@@ -1803,7 +1804,8 @@ attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const cha
     crm_xml_add(update, F_ATTRD_SECTION, section);
     crm_xml_add(update, F_ATTRD_HOST, host);
     crm_xml_add(update, F_ATTRD_SET, set);
-    crm_xml_add_int(update, F_ATTRD_IS_REMOTE, is_remote);
+    crm_xml_add_int(update, F_ATTRD_IS_REMOTE, is_set(options, attrd_opt_remote));
+    crm_xml_add_int(update, F_ATTRD_IS_PRIVATE, is_set(options, attrd_opt_private));
 #if ENABLE_ACL
     if (user_name) {
         crm_xml_add(update, F_ATTRD_USER, user_name);

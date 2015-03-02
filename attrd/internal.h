@@ -24,14 +24,16 @@ GHashTable *attributes;
 election_t *writer;
 int attrd_error;
 
+#define attrd_send_ack(client, id, flags) \
+    crm_ipcs_send_ack((client), (id), (flags), "ack", __FUNCTION__, __LINE__)
+
 void write_attributes(bool all, bool peer_discovered);
 void attrd_peer_message(crm_node_t *client, xmlNode *msg);
-void attrd_client_message(crm_client_t *client, xmlNode *msg);
+void attrd_client_peer_remove(const char *client_name, xmlNode *xml);
+void attrd_client_update(xmlNode *xml);
+void attrd_client_refresh(void);
+
 void free_attribute(gpointer data);
 
 gboolean attrd_election_cb(gpointer user_data);
 void attrd_peer_change_cb(enum crm_status_type type, crm_node_t *peer, const void *data);
-
-xmlNode *build_attribute_xml(
-    xmlNode *parent, const char *name, const char *set, const char *uuid, unsigned int timeout, const char *user,
-    const char *peer, uint32_t peerid, const char *value);

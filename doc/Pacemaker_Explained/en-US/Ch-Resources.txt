@@ -1,37 +1,42 @@
 = Cluster Resources =
 
-== What is a Cluster Resource ==
+== What is a Cluster Resource? ==
 
 indexterm:[Resource]
 
-The role of a resource agent is to abstract the service it provides
-and present a consistent view to the cluster, which allows the cluster
-to be agnostic about the resources it manages.
+A resource is a service made highly available by a cluster.
+The simplest type of resource, a 'primitive' resource, is described
+in this chapter. More complex forms, such as groups and clones,
+are described in later chapters.
 
+Every primitive resource has a 'resource agent'. A resource agent is an
+external program that abstracts the service it provides and present a
+consistent view to the cluster.
+
+This allows the cluster to be agnostic about the resources it manages.
 The cluster doesn't need to understand how the resource works because
 it relies on the resource agent to do the right thing when given a
-+start+, +stop+ or +monitor+ command.
+`start`, `stop` or `monitor` command. For this reason, it is crucial that
+resource agents are well-tested.
 
-For this reason it is crucial that resource agents are well tested.
-
-Typically resource agents come in the form of shell scripts, however
+Typically, resource agents come in the form of shell scripts. However,
 they can be written using any technology (such as C, Python or Perl)
 that the author is comfortable with.
 
 [[s-resource-supported]]
-== Supported Resource Classes ==
+== Resource Classes ==
 
 indexterm:[Resource,class]
 
-There are six classes of agents supported by Pacemaker:
+Pacemaker supports six classes of agents:
 
 * OCF
-* LSB
-* Upstart
-* Systemd
-* Fencing
 * Service
-* Nagios
+** LSB
+** Upstart
+** Systemd
+* Fencing
+* Nagios Plugins
 
 === Open Cluster Framework ===
 
@@ -40,24 +45,22 @@ indexterm:[OCF,Resources]
 indexterm:[Open Cluster Framework,Resources]
 
 The OCF standard
-footnote:[
-http://www.opencf.org/cgi-bin/viewcvs.cgi/specs/ra/resource-agent-api.txt?rev=HEAD - at least as it relates to resource agents.
-] footnote:[
-The Pacemaker implementation has been somewhat extended from the OCF
-Specs, but none of those changes are incompatible with the original
-OCF specification.
-]
+footnote:[See
+http://www.opencf.org/cgi-bin/viewcvs.cgi/specs/ra/resource-agent-api.txt?rev=HEAD
+ -- at least as it relates to resource agents.  The Pacemaker implementation has
+been somewhat extended from the OCF specs, but none of those changes are
+incompatible with the original OCF specification.]
 is basically an extension of the Linux Standard Base conventions for
 init scripts to:
 
 * support parameters,
-* make them self describing and
-* extensible
+* make them self-describing, and
+* make them extensible
 
 OCF specs have strict definitions of the exit codes that actions must return.
 footnote:[
-Included with the cluster is the ocf-tester script, which can be
-useful in this regard.
+The resource-agents source code includes the `ocf-tester` script, which
+can be useful in this regard.
 ]
 
 The cluster follows these specifications exactly, and giving the wrong
@@ -66,15 +69,14 @@ find puzzling and annoying.  In particular, the cluster needs to
 distinguish a completely stopped resource from one which is in some
 erroneous and indeterminate state.
 
-Parameters are passed to the script as environment variables, with the
+Parameters are passed to the resource agent as environment variables, with the
 special prefix +OCF_RESKEY_+.  So, a parameter which the user thinks
-of as ip it will be passed to the script as +OCF_RESKEY_ip+.  The
-number and purpose of the parameters is completely arbitrary, however
-your script should advertise any that it supports using the
-+meta-data+ command.
+of as +ip+ will be passed to the resource agent as +OCF_RESKEY_ip+.  The
+number and purpose of the parameters is left to the resource agent; however,
+the resource agent should use the `meta-data` command to advertise any that it
+supports.
 
-
-The OCF class is the most preferred one as it is an industry standard,
+The OCF class is the most preferred as it is an industry standard,
 highly flexible (allowing parameters to be passed to agents in a
 non-positional manner) and self-describing.
 
@@ -87,72 +89,84 @@ indexterm:[Resource,LSB]
 indexterm:[LSB,Resources]
 indexterm:[Linux Standard Base,Resources]
 
-LSB resource agents are those found in '/etc/init.d'.
+LSB resource agents are those found in +/etc/init.d+.
 
-Generally they are provided by the OS/distribution and, in order to be used with the cluster, they must conform to the LSB Spec.
+Generally, they are provided by the OS distribution and, in order to be used
+with the cluster, they must conform to the LSB Spec.
 footnote:[
 See
 http://refspecs.linux-foundation.org/LSB_3.0.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html
-for the LSB Spec (as it relates to init scripts).
+for the LSB Spec as it relates to init scripts.
 ]
 
+[WARNING]
+====
 Many distributions claim LSB compliance but ship with broken init
-scripts.  For details on how to check if your init script is
-LSB-compatible, see <<ap-lsb>>.  The most common problems are:
+scripts.  For details on how to check whether your init script is
+LSB-compatible, see <<ap-lsb>>. Common problematic violations of
+the LSB standard include:
 
 * Not implementing the status operation at all
-* Not observing the correct exit status codes for start/stop/status actions
-* Starting a started resource returns an error (this violates the LSB spec)
-* Stopping a stopped resource returns an error (this violates the LSB spec)
+* Not observing the correct exit status codes for `start/stop/status` actions
+* Starting a started resource returns an error
+* Stopping a stopped resource returns an error
+====
+
+[IMPORTANT]
+====
+Remember to make sure the computer is _not_ configured to start any
+services at boot time -- that should be controlled by the cluster.
+====
 
 === Systemd ===
 indexterm:[Resource,Systemd]
 indexterm:[Systemd,Resources]
 
 Some newer distributions have replaced the old
-http://en.wikipedia.org/wiki/Init#SysV-style[SYS-V] style of
-initialization daemons (and scripts) with an alternative called
+http://en.wikipedia.org/wiki/Init#SysV-style["SysV"] style of
+initialization daemons and scripts with an alternative called
 http://www.freedesktop.org/wiki/Software/systemd[Systemd].
 
 Pacemaker is able to manage these services _if they are present_.
 
-Instead of +init scripts+, systemd has +unit files+.  Generally the
-services (or unit files) are provided by the OS/distribution but there
-are some instructions for converting from init scripts at:
-http://0pointer.de/blog/projects/systemd-for-admins-3.html
+Instead of init scripts, systemd has 'unit files'.  Generally, the
+services (unit files) are provided by the OS distribution, but there
+are online guides for converting from init scripts.
+footnote:[For example,
+http://0pointer.de/blog/projects/systemd-for-admins-3.html]
 
-[NOTE]
-======
-Remember to make sure the computer is +not+ configured to start any
-services at boot time that should be controlled by the cluster.
-======
+[IMPORTANT]
+====
+Remember to make sure the computer is _not_ configured to start any
+services at boot time -- that should be controlled by the cluster.
+====
 
 === Upstart ===
 indexterm:[Resource,Upstart]
 indexterm:[Upstart,Resources]
 
 Some newer distributions have replaced the old
-http://en.wikipedia.org/wiki/Init#SysV-style[SYS-V] style of
+http://en.wikipedia.org/wiki/Init#SysV-style["SysV"] style of
 initialization daemons (and scripts) with an alternative called
-http://upstart.ubuntu.com[Upstart].
+http://upstart.ubuntu.com/[Upstart].
 
 Pacemaker is able to manage these services _if they are present_.
 
-Instead of +init scripts+, upstart has +jobs+.  Generally the
-services (or jobs) are provided by the OS/distribution.
+Instead of init scripts, upstart has 'jobs'.  Generally, the
+services (jobs) are provided by the OS distribution.
 
-[NOTE]
-======
-Remember to make sure the computer is +not+ configured to start any
-services at boot time that should be controlled by the cluster.
-======
+[IMPORTANT]
+====
+Remember to make sure the computer is _not_ configured to start any
+services at boot time -- that should be controlled by the cluster.
+====
 
 === System Services ===
 indexterm:[Resource,System Services]
 indexterm:[System Service,Resources]
 
-Since there are now many "common" types of system services (+systemd+,
-+upstart+, and +lsb+), Pacemaker supports a special alias which
+Since there are various types of system services (+systemd+,
++upstart+, and +lsb+), Pacemaker supports a special +service+ alias which
 intelligently figures out which one applies to a given cluster node.
 
 This is particularly useful when the cluster contains a mix of
@@ -160,7 +174,7 @@ This is particularly useful when the cluster contains a mix of
 
 In order, Pacemaker will try to find the named service as:
 
-. an LSB (SYS-V) init script
+. an LSB init script
 . a Systemd unit file
 . an Upstart job
 
@@ -168,16 +182,19 @@ In order, Pacemaker will try to find the named service as:
 indexterm:[Resource,STONITH]
 indexterm:[STONITH,Resources]
 
-There is also an additional class, STONITH, which is used exclusively
-for fencing related resources.  This is discussed later in
-<<ch-stonith>>.
+The STONITH class is used exclusively for fencing-related resources.  This is
+discussed later in <<ch-stonith>>.
 
 === Nagios Plugins ===
 indexterm:[Resource,Nagios Plugins]
 indexterm:[Nagios Plugins,Resources]
 
-Nagios plugins allow us to monitor services on the remote hosts.
-http://nagiosplugins.org[Nagios Plugins].
+Nagios Plugins
+footnote:[The project has two independent forks, hosted at
+https://www.nagios-plugins.org/ and https://www.monitoring-plugins.org/. Output
+from both projects' plugins is similar, so plugins from either project can be
+used with pacemaker.]
+allow us to monitor services on remote hosts.
 
 Pacemaker is able to do remote monitoring with the plugins _if they are
 present_.
@@ -187,13 +204,13 @@ container (usually a virtual machine), and the container will be restarted
 if any of them has failed. Another use is to configure them as ordinary
 resources to be used for monitoring hosts or services via the network.
 
-The supported parameters are same as the long options of a nagios plugin.
+The supported parameters are same as the long options of the plugin.
 
 [[primitive-resource]]
 == Resource Properties ==
 
-These values tell the cluster which script to use for the resource,
-where to find that script and what standards it conforms to.
+These values tell the cluster which resource agent to use for the resource,
+where to find that resource agent and what standards it conforms to.
 
 .Properties of a Primitive Resource
 [width="95%",cols="1m,6<",options="header",align="center"]
@@ -215,7 +232,7 @@ where to find that script and what standards it conforms to.
  indexterm:[Resource,Property,class]
 
 |type
-|The name of the Resource Agent you wish to use. Eg. +IPaddr+ or +Filesystem+
+|The name of the Resource Agent you wish to use. E.g. +IPaddr+ or +Filesystem+
  indexterm:[type,Resource]
  indexterm:[Resource,Property,type]
 
@@ -228,7 +245,8 @@ where to find that script and what standards it conforms to.
 
 |=========================================================
 
-Resource definitions can be queried with the `crm_resource` tool. For example
+The XML definition of a resource can be queried with the `crm_resource` tool.
+For example:
 
 ----
 # crm_resource --resource Email --query-xml
@@ -236,7 +254,7 @@ Resource definitions can be queried with the `crm_resource` tool. For example
 
 might produce:
 
-.An example system resource
+.A system resource definition
 =====
 [source,XML]
 <primitive id="Email" class="service" type="exim"/>
@@ -244,7 +262,7 @@ might produce:
 
 [NOTE]
 =====
-One of the main drawbacks to system services (such as LSB, Systemd and
+One of the main drawbacks to system services (LSB, systemd or
 Upstart) resources is that they do not allow any parameters!
 =====
 
@@ -421,8 +439,8 @@ the resulting resource definition might be:
 [[s-resource-defaults]]
 === Setting Global Defaults for Resource Meta-Attributes ===
 
-To set a default value for a resource option, simply add it to the
-+rsc_defaults+ section with `crm_attribute`. Thus,
+To set a default value for a resource option, add it to the
++rsc_defaults+ section with `crm_attribute`. For example,
 
 ----
 # crm_attribute --type rsc_defaults --name is-managed --update false
@@ -430,17 +448,17 @@ To set a default value for a resource option, simply add it to the
 
 would prevent the cluster from starting or stopping any of the
 resources in the configuration (unless of course the individual
-resources were specifically enabled and had +is-managed+ set to
+resources were specifically enabled by having their +is-managed+ set to
 +true+).
 
-== Instance Attributes ==
+=== Resource Instance Attributes ===
 
-The scripts of some resource classes (LSB not being one of them) can
-be given parameters which determine how they behave and which instance
+The resource agents of some resource classes (lsb, systemd and upstart 'not' among them)
+can be given parameters which determine how they behave and which instance
 of a service they control.
 
 If your resource agent supports parameters, you can add them with the
-`crm_resource` command. For instance
+`crm_resource` command. For example,
 
 ----
 # crm_resource --resource Public-IP --set-parameter ip --parameter-value 192.0.2.2
@@ -463,17 +481,17 @@ would create an entry in the resource like this:
 For an OCF resource, the result would be an environment variable
 called +OCF_RESKEY_ip+ with a value of +192.0.2.2+.
 
-The list of instance attributes supported by an OCF script can be
-found by calling the resource script with the `meta-data` command.
+The list of instance attributes supported by an OCF resource agent can be
+found by calling the resource agent with the `meta-data` command.
 The output contains an XML description of all the supported
 attributes, their purpose and default values.
 
 .Displaying the metadata for the Dummy resource agent template
 =====
--------
+----
 # export OCF_ROOT=/usr/lib/ocf
 # $OCF_ROOT/resource.d/pacemaker/Dummy meta-data
--------
+----
 [source,XML]
 -------
 <?xml version="1.0"?>
@@ -541,9 +559,10 @@ the cluster reacts to operation timeouts.
 
 indexterm:[Resource,Action]
 
-=== Monitoring Resources for Failure ===
+Operations are actions the cluster can perform on a resource,
+such as start, stop and monitor.
 
-By default, the cluster will not ensure your resources are still
+As an example, by default the cluster will not ensure your resources are still
 healthy.  To instruct the cluster to do this, you need to add a
 +monitor+ operation to the resource's definition.
 
@@ -629,8 +648,10 @@ indexterm:[Action,Property,on-fail]
 [[s-operation-defaults]]
 === Setting Global Defaults for Operations ===
 
-To set a default value for a operation option, simply add it to the
-+op_defaults+ section with `crm_attribute`. Thus,
+You can change the global default values for operation properties
+in a given cluster. These are defined in an +op_defaults+ section 
+of the CIB's +configuration+ section, and can be set with `crm_attribute`.
+For example,
 
 ----
 # crm_attribute --type op_defaults --name timeout --update 20s
@@ -638,15 +659,14 @@ To set a default value for a operation option, simply add it to the
 
 would default each operation's +timeout+ to 20 seconds.  If an
 operation's definition also includes a value for +timeout+, then that
-value would be used instead (for that operation only).
+value would be used for that operation instead.
 
 === When Resources Take a Long Time to Start/Stop ===
 
-There are a number of implicit operations that the cluster will always
-perform - +start+, +stop+ and a non-recurring +monitor+ operation
-(used at startup to check the resource isn't already active).  If one
-of these is taking too long, then you can create an entry for them and
-simply specify a new value.
+The cluster will always perform a number of implicit operations: +start+,
++stop+ and a non-recurring +monitor+ operation used at startup to check
+whether the resource is already active.  If one of these is taking too long,
+then you can create an entry for them and specify a longer timeout.
 
 .An OCF resource with custom timeouts for its implicit actions
 =====
@@ -668,21 +688,21 @@ simply specify a new value.
 === Multiple Monitor Operations ===
 
 Provided no two operations (for a single resource) have the same name
-and interval you can have as many monitor operations as you like.  In
-this way you can do a superficial health check every minute and
+and interval, you can have as many monitor operations as you like.  In
+this way, you can do a superficial health check every minute and
 progressively more intense ones at higher intervals.
 
 To tell the resource agent what kind of check to perform, you need to
 provide each monitor with a different value for a common parameter.
 The OCF standard creates a special parameter called +OCF_CHECK_LEVEL+
-for this purpose and dictates that it is _"made available to the
-resource agent without the normal +OCF_RESKEY+ prefix"_.
+for this purpose and dictates that it is "made available to the
+resource agent without the normal +OCF_RESKEY+ prefix".
 
 Whatever name you choose, you can specify it by adding an
-+instance_attributes+ block to the op tag.  Note that it is up to each
++instance_attributes+ block to the +op+ tag. It is up to each
 resource agent to look for the parameter and decide how to use it.
 
-.An OCF resource with two recurring health checks, performing different levels of checks - specified via +OCF_CHECK_LEVEL+.
+.An OCF resource with two recurring health checks, performing different levels of checks specified via +OCF_CHECK_LEVEL+.
 =====
 [source,XML]
 -------

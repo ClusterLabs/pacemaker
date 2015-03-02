@@ -55,6 +55,7 @@ ylwrap
 Doxyfile
 coverage.sh
 cts/CTSvars.py
+cts/HBDummy
 cts/LSBDummy
 cts/benchmark/clubench
 cts/lxc_autogen.sh
