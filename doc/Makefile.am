@@ -25,6 +25,9 @@ ascii		= crm_fencing.txt acls.txt
 docbook		= Pacemaker_Explained Clusters_from_Scratch Pacemaker_Remote
 doc_DATA	= README.hb2openais $(ascii) $(generated_docs)
 
+# rsync destination for www targets
+RSYNC_DEST      = root@www.clusterlabs.org:/var/www/html/doc/
+
 publican_docs   =
 generated_docs	=
 generated_mans	=
@@ -127,7 +130,6 @@ docbook_build = $(docbook:%=%.build)
 
 all-local: $(docbook_build) */publican.cfg
 
-#install-data-local: all-local
 install-data-local: all-local
 	for book in $(docbook); do 							\
 	    filelist=`find $$book/publish/* -print`;					\
@@ -154,16 +156,11 @@ brand:  $(BRAND_PNGS) $(wildcard publican-clusterlabs/en-US/*.xml)
 pdf:
 	make DOCBOOK_FORMATS="pdf" ASCIIDOC_CLI_TYPE=$(ASCIIDOC_CLI_TYPE) all-local
 
-# Make sure www-(pcs|crmsh) happen in serial
 www: clean-local $(generated_docs) $(ascii)
 	make www-cli
-	rsync -rtz --progress $(generated_docs) $(ascii) $(asciiman) root@www.clusterlabs.org:/var/www/html/doc/
+	rsync -rtz --progress $(generated_docs) $(ascii) $(asciiman) $(RSYNC_DEST)
 
-www-crmsh:
-	make ASCIIDOC_CLI_TYPE=crmsh clean-local www-cli
-
-www-pcs:
-	make ASCIIDOC_CLI_TYPE=pcs www-cli
+www-pcs: www-cli
 
 www-cli:
 	for book in $(docbook); do 										\
@@ -180,7 +177,7 @@ if BUILD_DOCBOOK
 			mv $$book/publish/$$lang/Pacemaker/$(PACKAGE_SERIES)-$(ASCIIDOC_CLI_TYPE)/epub/$$book/Pacemaker-1.1{-$(ASCIIDOC_CLI_TYPE),}-$$book-$$lang.epub;	\
 			mv $$book/publish/$$lang/Pacemaker/$(PACKAGE_SERIES)-$(ASCIIDOC_CLI_TYPE)/pdf/$$book/Pacemaker-1.1{-$(ASCIIDOC_CLI_TYPE),}-$$book-$$lang.pdf;	\
 		done;											\
-		rsync -rtz --progress $$book/publish/* root@www.clusterlabs.org:/var/www/html/doc/;	\
+		rsync -rtz --progress $$book/publish/* $(RSYNC_DEST);					\
 		sed -i.sed 's@version:.*@version: $(PACKAGE_SERIES)@' $$book/publican.cfg;		\
 	done
 endif

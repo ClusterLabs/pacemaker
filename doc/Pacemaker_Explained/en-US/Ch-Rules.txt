@@ -121,13 +121,13 @@ called +#uname+ that can also be used.
 
 |=========================================================
 
-== Time/Date Based Expressions ==
+== Time- and Date-Based Expressions ==
 
 indexterm:[Time Based Expressions]
 indexterm:[Resource,Constraint,Date/Time Expression]
         
 As the name suggests, +date_expressions+ are used to control a
-resource or cluster option based on the current date/time.  They can
+resource or cluster option based on the current date/time.  They may
 contain an optional +date_spec+ and/or +duration+ object depending on
 the context.
       
@@ -181,11 +181,11 @@ Instead of defaulting to zero, any field not supplied is ignored.
 
 For example, +monthdays="1"+ matches the first day of every month and
 +hours="09-17"+ matches the hours between 9am and 5pm (inclusive).
-However, at this time one cannot specify +weekdays="1,2"+ or
-+weekdays="1-2,5-6"+ since they contain multiple ranges.  Depending on
-demand, this may be implemented in a future release.
+At this time, multiple ranges (e.g. +weekdays="1,2"+ or
++weekdays="1-2,5-6"+) are not supported; depending on
+demand, this might be implemented in a future release.
         
-.Properties of a Date Spec
+.Properties of a Date Specification
 [width="95%",cols="2m,5<",options="header",align="center"]
 |=========================================================
 
@@ -193,7 +193,7 @@ demand, this may be implemented in a future release.
 |Description
 
 |id
-|A unique name for the date
+|A unique name for the object
  indexterm:[id,Date Specification]
  indexterm:[Constraint,Date Specification,id]
 
@@ -228,18 +228,19 @@ demand, this may be implemented in a future release.
  indexterm:[Constraint,Date Specification,weeks]
 
 |years
-|Year according the Gregorian calendar
+|Year according to the Gregorian calendar
  indexterm:[years,Date Specification]
  indexterm:[Constraint,Date Specification,years]
 
 |weekyears
-|May differ from Gregorian years; Eg. +2005-001 Ordinal+ is also
- +2005-01-01 Gregorian+ is also +2004-W53-6 Weekly+
+|Year in which the week started; e.g. 1 January 2005
+ can be specified as '2005-001 Ordinal', '2005-01-01 Gregorian' or '2004-W53-6
+ Weekly' and thus would match +years="2005"+ or +weekyears="2004"+
  indexterm:[weekyears,Date Specification]
  indexterm:[Constraint,Date Specification,weekyears]
 
 |moon
-|Allowed values: 0-7 (0 is new, 4 is full moon). Seriously, you can
+|Allowed values are 0-7 (0 is new, 4 is full moon). Seriously, you can
  use this. This was implemented to demonstrate the ease with which new
  comparisons could be added.
  indexterm:[moon,Date Specification]
@@ -252,14 +253,14 @@ indexterm:[Duration]
 indexterm:[Resource,Constraint,Duration]
 
 Durations are used to calculate a value for +end+ when one is not
-supplied to in_range operations.  They contain the same fields as
-+date_spec+ objects but without the limitations (ie. you can have a
-duration of 19 months).  Like +date_specs+, any field not supplied is
+supplied to +in-range+ operations. They contain the same fields as
++date_spec+ objects but without the limitations (e.g. you can have a
+duration of 19 months). As with +date_specs+, any field not supplied is
 ignored.
 
-== Sample Time Based Expressions ==
+=== Sample Time-Based Expressions ===
 
-A small sample of how time based expressions can be used.
+A small sample of how time-based expressions can be used:
 
 ////
 On older versions of asciidoc, the [source] directive makes the title disappear
@@ -289,7 +290,7 @@ On older versions of asciidoc, the [source] directive makes the title disappear
 ----
 ====
 
-.9am-5pm, Mon-Friday
+.9am-5pm Monday-Friday
 ====
 [source,XML]
 -------
@@ -304,7 +305,7 @@ On older versions of asciidoc, the [source] directive makes the title disappear
 Please note that the +16+ matches up to +16:59:59+, as the numeric
 value (hour) still matches!
 
-.9am-6pm, Mon-Friday, or all day saturday
+.9am-6pm Monday through Friday or anytime Saturday
 ====
 [source,XML]
 -------
@@ -319,7 +320,7 @@ value (hour) still matches!
 -------
 ====
 
-.9am-5pm or 9pm-12pm, Mon-Friday
+.9am-5pm or 9pm-12am Monday through Friday
 ====
 [source,XML]
 -------
@@ -355,9 +356,8 @@ value (hour) still matches!
 
 [NOTE]
 ======
-Because no time is specified, 00:00:00 is implied.
-
-This means that the range includes all of 2005-03-01 but none of 2005-04-01.
+Because no time is specified with the above dates, 00:00:00 is implied. This
+means that the range includes all of 2005-03-01 but none of 2005-04-01.
 You may wish to write +end="2005-03-31T23:59:59"+ to avoid confusion.
 ======
 
@@ -377,10 +377,10 @@ You may wish to write +end="2005-03-31T23:59:59"+ to avoid confusion.
 indexterm:[Rule,Determine Resource Location]
 indexterm:[Resource,Location,Determine by Rules]
 
-If the constraint's outer-most rule evaluates to +false+, the cluster
-treats the constraint as if it was not there.  When the rule evaluates
-to +true+, the node's preference for running the resource is updated
-with the score associated with the rule.
+A location constraint may contain rules. When the constraint's outermost
+rule evaluates to +false+, the cluster treats the constraint as if it were not
+there.  When the rule evaluates to +true+, the node's preference for running
+the resource is updated with the score associated with the rule.
 
 If this sounds familiar, it is because you have been using a simplified
 syntax for location constraint rules already.  Consider the following
@@ -412,12 +412,12 @@ This constraint can be more verbosely written as:
 
 The advantage of using the expanded form is that one can then add
 extra clauses to the rule, such as limiting the rule such that it only
-applies during certain times of the day or days of the week (this is
-discussed in subsequent sections).
+applies during certain times of the day or days of the week.
 
+=== Location Rules Based on Other Node Properties ===
 
-It also allows us to match on node properties other than its name.  If
-we rated each machine's CPU power such that the cluster had the
+The expanded form allows us to match on node properties other than its name.
+If we rated each machine's CPU power such that the cluster had the
 following nodes section:
 
 .A sample nodes section for use with score-attribute 
@@ -439,7 +439,7 @@ following nodes section:
 -------
 =====
 
-then we could prevent resources from running on underpowered machines with the rule
+then we could prevent resources from running on underpowered machines with this rule:
 
 [source,XML]
 -------
@@ -460,9 +460,9 @@ would have its preference increased by +5678+.
 
 == Using Rules to Control Resource Options ==
 
-Often some cluster nodes will be different from their peers; sometimes
-these differences (the location of a binary or the names of network
-interfaces) require resources to be configured differently depending
+Often some cluster nodes will be different from their peers. Sometimes,
+these differences -- e.g. the location of a binary or the names of network
+interfaces -- require resources to be configured differently depending
 on the machine they're hosted on.
 
 By defining multiple +instance_attributes+ objects for the resource
@@ -502,12 +502,21 @@ port 9999 for all other nodes.
 
 The order in which +instance_attributes+ objects are evaluated is
 determined by their score (highest to lowest).  If not supplied, score
-defaults to zero and objects with an equal score are processed in
-listed order.  If the +instance_attributes+ object does not have a
-+rule+ or has a +rule+ that evaluates to +true+, then for any
-parameter the resource does not yet have a value for, the resource
-will use the parameter values defined by the +instance_attributes+
-object.
+defaults to zero, and objects with an equal score are processed in
+listed order.  If the +instance_attributes+ object has no rule
+or a +rule+ that evaluates to +true+, then for any parameter the resource does
+not yet have a value for, the resource will use the parameter values defined by
+the +instance_attributes+.
+
+For example, given the configuration above, if the resource is placed on node1:
+
+. +special-node1+ has the highest score (3) and so is evaluated first;
+  its rule evaluates to +true+, so +interface+ is set to +eth1+.
+. +special-node2+ is evaluated next with score 2, but its rule evaluates to +false+,
+  so it is ignored.
+. +defaults+ is evaluated last with score 1, and has no rule, so its values
+  are examined; +interface+ is already defined, so the value here is not used,
+  but +port+ is not yet defined, so +port+ is set to +9999+.
 
 == Using Rules to Control Cluster Options ==
 indexterm:[Rule,Controlling Cluster Options]
@@ -517,9 +526,9 @@ Controlling cluster options is achieved in much the same manner as
 specifying different resource options on different nodes.
 
 The difference is that because they are cluster options, one cannot
-(or should not, because they won't work) use attribute based
+(or should not, because they won't work) use attribute-based
 expressions.  The following example illustrates how to set a different
-+resource-stickiness+ value during and outside of work hours.  This
++resource-stickiness+ value during and outside work hours.  This
 allows resources to automatically move back to their most preferred
 hosts, but at a time that (in theory) does not interfere with business
 activities.
@@ -545,22 +554,20 @@ activities.
 =====
 
 [[s-rules-recheck]]
-== Ensuring Time Based Rules Take Effect ==
+== Ensuring Time-Based Rules Take Effect ==
 
-A Pacemaker cluster is an event driven system.  As such, it won't
-recalculate the best place for resources to run in unless something
+A Pacemaker cluster is an event-driven system.  As such, it won't
+recalculate the best place for resources to run unless something
 (like a resource failure or configuration change) happens.  This can
 mean that a location constraint that only allows resource X to run
 between 9am and 5pm is not enforced.
 
-If you rely on time based rules, it is essential that you set the
-+cluster-recheck-interval+ option.  This tells the cluster to
-periodically recalculate the ideal state of the cluster.  For example,
-if you set +cluster-recheck-interval=5m+, then sometime between 9:00
-and 9:05 the cluster would notice that it needs to start resource X,
-and between 17:00 and 17:05 it would realize that X needed to be
-stopped.
+If you rely on time-based rules, the +cluster-recheck-interval+ cluster option
+(which defaults to 15 minutes) is essential.  This tells the cluster to
+periodically recalculate the ideal state of the cluster.
 
-Note that the timing of the actual start and stop actions depends on
-what else needs to be performed first
-.
+For example, if you set +cluster-recheck-interval="5m"+, then sometime between
+09:00 and 09:05 the cluster would notice that it needs to start resource X,
+and between 17:00 and 17:05 it would realize that X needed to be stopped.
+The timing of the actual start and stop actions depends on what other actions
+the cluster may need to perform first.

@@ -1,4 +1,4 @@
-= Cluster Options =
+= Cluster-Wide Configuration =
 
 == CIB Properties ==
 
@@ -75,9 +75,10 @@ events. Maintained by the cluster.
 
 Although these fields can be written to by the user, in
 most cases the cluster will overwrite any values specified by the
-admin with the "correct" ones.  To change the +admin_epoch+, for
-example, one would use:
+user with the "correct" ones.
 
+To change the ones that can be specified by the user,
+for example +admin_epoch+, one should use:
 ----
 # cibadmin --modify --crm_xml '<cib admin_epoch="42"/>'
 ----
@@ -328,16 +329,15 @@ _Deprecated:_ See <<s-operation-defaults>> instead
 
 |=========================================================
 
-== Querying and Setting Cluster Options ==
+=== Querying and Setting Cluster Options ===
 
 indexterm:[Querying,Cluster Option]
 indexterm:[Setting,Cluster Option]
 indexterm:[Cluster,Querying Options]
 indexterm:[Cluster,Setting Options]
 
-Cluster options can be queried and modified using the
-`crm_attribute` tool.  To get the current
-value of +cluster-delay+, simply use:
+Cluster options can be queried and modified using the `crm_attribute` tool. To
+get the current value of +cluster-delay+, you can run:
 
 ----
 # crm_attribute --query --name cluster-delay
@@ -356,7 +356,7 @@ If a value is found, you'll see a result like this:
 scope=crm_config name=cluster-delay value=60s
 ----
 
-However, if no value is found, the tool will display an error:
+If no value is found, the tool will display an error:
 
 ----
 # crm_attribute -G -n clusta-deway
@@ -364,20 +364,20 @@ scope=crm_config name=clusta-deway value=(null)
 Error performing operation: No such device or address
 ----
 
-To use a different value, eg. +30+, simply run:
+To use a different value (for example, 30 seconds), simply run:
 
 ----
 # crm_attribute --name cluster-delay --update 30s
 ----
 
-To go back to the cluster's default value you can delete the value, for example with this command:
+To go back to the cluster's default value, you can delete the value, for example:
 
 ----
 # crm_attribute --name cluster-delay --delete
 Deleted crm_config option: id=cib-bootstrap-options-cluster-delay name=cluster-delay
 ----
 
-== When Options are Listed More Than Once ==
+=== When Options are Listed More Than Once ===
 
 If you ever see something like the following, it means that the option you're modifying is present more than once.
 
@@ -393,6 +393,6 @@ Please choose from one of the matches above and supply the 'id' with --id
 -------
 =======
 
-In such cases follow the on-screen instructions to perform the
+In such cases, follow the on-screen instructions to perform the
 requested action.  To determine which value is currently being used by
-the cluster, please refer to <<ch-rules>>.
+the cluster, refer to <<ch-rules>>.

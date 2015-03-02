@@ -1,69 +1,18 @@
+2.3.1 editing CIB copy via VI: isn't that racy? Are concurrent changes detected?
 
-That's a "+", not a hyphen:
+why sometimes <example> and sometimes <figure>? examples have title at top, figures have title at bottom
 
-Key combinations can be distinguished from keycaps by the hyphen connecting each part of a key
-combination. For example:
-Press Enter to execute the command.
-Press Ctrl+Alt+F2 to switch to the first virtual terminal. Press Ctrl+Alt+F1 to
-return to your X-Windows session.
-
-
-
-
-doesn't apply here:
-
-If source code is discussed, class names, methods, functions, v
- including application names; dialog box text; labeled buttons; check-box and radio button labels; menu titles and sub-menu titles. 
-
-
-1.2 terminal output has page-break
-
-
-2.3 editing via VI
-isn't that racy? Are concurrent changes detected?
-
-
-why sometimes <example> and sometimes <figure>? example 2.2 has title at top, different to the figures
-
-
-2.8 header slightly too long, line broken
-
+Example 2.8 (and others) XML line too long, line broken
 
 some <command> are in <para>, some in <programlisting> ... I'd like the latter more, or perhaps in a <screen>.
 Indentation makes whitespace at start of lines ... remove?
 
-Chapter 3
-=========
-- table 3.3 "Properties maintained by the Cluster" incomplete (crm-feature-set, ...)
-
-
-4.4.2 structure different from 4.4.1 ... numbered lists
-
-
-5.3 Notes have next content overlaid
-
-
-ex 5.6: <resource-agent ... version=0.9><version>1.0</version> ????
-
-
-perhaps use 10.20.30.40 instead of the 1.2.3.4 example IP address?
-
-
-6.5 images/resource-set.png missing, "images/two-sets.png"  too; images/three-sets; "images/three-sets-complex.png" 
-
+tables 3.1 and 3.2 incomplete (crm-feature-set, ...)
 
 Ch 7 missing?
 
-
 Remove Ex9.9?
 
-
-collocate or colocate? Eg. in C.1:
-Multi-dimensional colocation and ordering constraints. See Section 6.5, “Ordering Sets of
-Resources” and Section 6.6, “Collocating Sets of Resources”
-
-
 Ap-Debug.xml not used?
-
 
 <indexterm> alias for primary?

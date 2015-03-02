@@ -18,7 +18,7 @@ LSB-compatible:
 ----
 +
   .. Did the service start?
-  .. Did the command print result: 0 (in addition to the regular output)?
+  .. Did the command print *result: 0* (in addition to its usual output)?
 +
 . Status (running):
 +
@@ -28,7 +28,7 @@ LSB-compatible:
 +
   .. Did the script accept the command?
   .. Did the script indicate the service was running?
-  .. Did the command print result: 0 (in addition to the regular output)?
+  .. Did the command print *result: 0* (in addition to its usual output)?
 +
 . Start (running):
 +
@@ -37,7 +37,7 @@ LSB-compatible:
 ----
 +
   .. Is the service still running?
-  .. Did the command print result: 0 (in addition to the regular output)?
+  .. Did the command print *result: 0* (in addition to its usual output)?
 +
 . Stop (running):
 +
@@ -46,7 +46,7 @@ LSB-compatible:
 ----
 +
   .. Was the service stopped?
-  .. Did the command print result: 0 (in addition to the regular output)?
+  .. Did the command print *result: 0* (in addition to its usual output)?
 +
 . Status (stopped):
 +
@@ -56,7 +56,7 @@ LSB-compatible:
 +
   .. Did the script accept the command?
   .. Did the script indicate the service was not running?
-  .. Did the command print result: 3 (in addition to the regular output)?
+  .. Did the command print *result: 3* (in addition to its usual output)?
 +
 . Stop (stopped):
 +
@@ -65,18 +65,17 @@ LSB-compatible:
 ----
 +
   .. Is the service still stopped?
-  .. Did the command print result: 0 (in addition to the regular output)?
+  .. Did the command print *result: 0* (in addition to its usual output)?
 +
 . Status (failed):
 +
-This step is not readily testable and relies on manual inspection of the script.
+.. This step is not readily testable and relies on manual inspection of the script.
 +
 The script can use one of the error codes (other than 3) listed in the
 LSB spec to indicate that it is active but failed. This tells the
 cluster that before moving the resource to another node, it needs to
 stop it on the existing one first.
 
-
 If the answer to any of the above questions is no, then the script is
-not LSB compliant. Your options are then to either fix the script or
+not LSB-compliant. Your options are then to either fix the script or
 write an OCF agent based on the existing script.

@@ -6,24 +6,19 @@
   <subtitle>An A-Z guide to Pacemaker's Configuration Options</subtitle>
   <productname>Pacemaker</productname>
   <productnumber>1.1</productnumber>
-  <edition>1</edition>
+  <!--
+	EDITION-PUBSNUMBER should match REVNUMBER in Revision_History.xml.
+	Increment EDITION when the syntax of the documented software
+	changes (pacemaker), and PUBSNUMBER for
+	simple textual changes (corrections, translations, etc.).
+  -->
+  <edition>5</edition>
   <pubsnumber>0</pubsnumber>
   <abstract>
     <para>
       The purpose of this document is to definitively explain the concepts used to configure Pacemaker.
-      To achieve this, it will focus exclusively on the XML syntax used to configure the CIB.
-    </para>
-    <para>
-      For those that are allergic to XML, there exist several unified shells
-      and GUIs for Pacemaker. However these tools will not be covered at all
-      in this document<footnote>
-        <para>I hope, however, that the concepts explained here make the functionality of these tools more easily understood.</para>
-      </footnote>, precisely because they hide the XML.
-    </para>
-    <para>
-      Additionally, this document is NOT a step-by-step how-to guide for configuring a specific clustering scenario.
-      Although such guides exist, the purpose of this document is to provide an understanding of the building blocks that can be used to construct any type of Pacemaker cluster.
-      Try the <ulink url="http://www.clusterlabs.org/doc">Clusters from Scratch</ulink> document instead.
+      To achieve this, it will focus exclusively on the XML syntax used to configure Pacemaker's
+      Cluster Information Base (CIB).
     </para>
   </abstract>
   <corpauthor>

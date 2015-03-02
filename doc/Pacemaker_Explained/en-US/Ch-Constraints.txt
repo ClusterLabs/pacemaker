@@ -1,4 +1,4 @@
-=  Resource Constraints =
+= Resource Constraints =
 
 indexterm:[Resource,Constraints]
 
@@ -9,19 +9,19 @@ Practically everything from moving a resource to deciding which
 resource to stop in a degraded cluster is achieved by manipulating
 scores in some way.
 
-Scores are calculated on a per-resource basis and any node with a
+Scores are calculated on a per-resource basis, and any node with a
 negative score for a resource can't run that resource.  After
 calculating the scores for a resource, the cluster then chooses the
 node with the highest one.
 
 === Infinity Math ===
 
-+INFINITY+ is currently defined as 1,000,000 and addition/subtraction
-with it follows these three basic rules:
+Pacemaker implements +INFINITY+ internally as a score of 1,000,000.
+Addition/subtraction with it follows these three basic rules:
 
 * Any value + +INFINITY+ = +INFINITY+
-* Any value - +INFINITY+ = -+INFINITY+
-* +INFINITY+ - +INFINITY+ = -+INFINITY+
+* Any value - +INFINITY+ = +-INFINITY+
+* +INFINITY+ - +INFINITY+ = +-INFINITY+
 
 == Deciding Which Nodes a Resource Can Run On ==
 
@@ -30,8 +30,15 @@ indexterm:[Resource,Constraints,Location]
 There are two alternative strategies for specifying which nodes a
 resources can run on.  One way is to say that by default they can run
 anywhere and then create location constraints for nodes that are not
-allowed.  The other option is to have nodes "opt-in"...  to start with
+allowed.  The other option is to have nodes "opt-in" --  to start with
 nothing able to run anywhere and selectively enable allowed nodes.
+
+Whether you should choose opt-in or opt-out depends on your
+personal preference and the make-up of your cluster.  If most of your
+resources can run on most of the nodes, then an opt-out arrangement is
+likely to result in a simpler configuration.  On the other-hand, if
+most resources can only run on a small subset of nodes, an opt-in
+configuration might be simpler.
 
 === Location Properties ===
 
@@ -107,10 +114,10 @@ running anywhere by default:
 ----
 
 Then start enabling nodes.  The following fragment says that the web
-server prefers +sles-1+, the database prefers +sles-2+ and both can
-fail over to +sles-3+ if their most preferred node fails.
+server prefers *sles-1*, the database prefers *sles-2* and both can
+fail over to *sles-3* if their most preferred node fails.
 
-.Example set of opt-in location constraints 
+.Opt-in location constraints for two resources
 ======
 [source,XML]
 -------
@@ -136,8 +143,8 @@ anywhere by default:
 
 Then start disabling nodes.  The following fragment is the equivalent
 of the above opt-in configuration.
-       
-.Example set of opt-out location constraints 
+
+.Opt-out location constraints for two resources
 ======
 [source,XML]
 -------
@@ -150,13 +157,6 @@ of the above opt-in configuration.
 -------
 ======
 
-Whether you should choose opt-in or opt-out depends both on your
-personal preference and the make-up of your cluster.  If most of your
-resources can run on most of the nodes, then an opt-out arrangement is
-likely to result in a simpler configuration.  On the other-hand, if
-most resources can only run on a small subset of nodes an opt-in
-configuration might be simpler.
-
 [[node-score-equal]]
 === What if Two Nodes Have the Same Score ===
 
@@ -164,7 +164,7 @@ If two nodes have the same score, then the cluster will choose one.
 This choice may seem random and may not be what was intended, however
 the cluster was not given enough information to know any better.
 
-.Example of two resources that prefer two nodes equally 
+.Constraints where a resource prefers two nodes equally
 ======
 [source,XML]
 -------
@@ -179,20 +179,30 @@ the cluster was not given enough information to know any better.
 ======
 
 In the example above, assuming no other constraints and an inactive
-cluster, Webserver would probably be placed on sles-1 and Database on
-sles-2.  It would likely have placed Webserver based on the node's
-uname and Database based on the desire to spread the resource load
+cluster, +Webserver+ would probably be placed on +sles-1+ and +Database+ on
++sles-2+.  It would likely have placed +Webserver+ based on the node's
+uname and +Database+ based on the desire to spread the resource load
 evenly across the cluster.  However other factors can also be involved
 in more complex configurations.
 
 [[s-resource-ordering]]
-== Specifying in which Order Resources Should Start/Stop ==
+== Specifying the Order in which Resources Should Start/Stop ==
 
 indexterm:[Resource,Constraints,Ordering]
 indexterm:[Resource,Start Order]
 indexterm:[Ordering Constraints]
+
 The way to specify the order in which resources should start is by
 creating +rsc_order+ constraints.
+
+[IMPORTANT]
+====
+Ordering constraints affect 'only' the ordering of resources;
+they do not require that the resources be placed on the
+same node. If you want resources to be started on the same node
+'and' in a specific order, you need an ordering constraint 'and'
+a location constraint (see <<s-resource-colocation>>).
+====
 
 === Ordering Properties ===
 
@@ -279,10 +289,11 @@ indexterm:[Resource,Location Relative to other Resources]
 When the location of one resource depends on the location of another
 one, we call this colocation.
 
-There is an important side-effect of creating a colocation constraint
-between two resources: it affects the order in which resources are
-assigned to a node.  If you think about it, it's somewhat obvious.
-You can't place A relative to B unless you know where B is.
+Colocation has an important side-effect: it affects the order in which
+resources are assigned to a node.
+footnote:['Not' the order in which they are started. For that, see
+<<s-resource-ordering>>.]
+Think about it: You can't place A relative to B unless you know where B is.
 footnote:[
 While the human brain is sophisticated enough to read the constraint
 in any order and choose the correct one depending on the situation,
@@ -290,7 +301,7 @@ the cluster is not quite so smart. Yet.
 ]
 
 So when you are creating colocation constraints, it is important to
-consider whether you should colocate A with B or B with A.
+consider whether you should colocate A with B, or B with A.
 
 Another thing to keep in mind is that, assuming A is colocated with
 B, the cluster will take into account A's preferences when
@@ -335,52 +346,61 @@ decide where to put this resource first and then decide where to put +rsc+.
 
 === Mandatory Placement ===
 
-Mandatory placement occurs any time the constraint's score is
+Mandatory placement occurs when the constraint's score is
 ++INFINITY+ or +-INFINITY+.  In such cases, if the constraint can't be
 satisfied, then the +rsc+ resource is not permitted to run.  For
 +score=INFINITY+, this includes cases where the +with-rsc+ resource is
 not active.
 
-If you need +resource1+ to always run on the same machine as
-+resource2+, you would add the following constraint:
+If you need resource +A+ to always run on the same machine as
+resource +B+, you would add the following constraint:
 
-.An example colocation constraint
+.Mandatory colocation constraint for two resources
+====
 [source,XML]
-<rsc_colocation id="colocate" rsc="resource1" with-rsc="resource2" score="INFINITY"/>
+<rsc_colocation id="colocate" rsc="A" with-rsc="B" score="INFINITY"/>
+====
 
-Remember, because +INFINITY+ was used, if +resource2+ can't run on any
-of the cluster nodes (for whatever reason) then +resource1+ will not
-be allowed to run.
+Remember, because +INFINITY+ was used, if +B+ can't run on any
+of the cluster nodes (for whatever reason) then +A+ will not
+be allowed to run. Whether +A+ is running or not has no effect on +B+.
 
-Alternatively, you may want the opposite...  that +resource1+ cannot
-run on the same machine as +resource2+.  In this case use
-+score="-INFINITY"+
-        
-.An example anti-colocation constraint
+Alternatively, you may want the opposite -- that +A+ 'cannot'
+run on the same machine as +B+.  In this case, use
++score="-INFINITY"+.
+
+.Mandatory anti-colocation constraint for two resources
+====
 [source,XML]
-<rsc_colocation id="anti-colocate" rsc="resource1" with-rsc="resource2" score="-INFINITY"/>
+<rsc_colocation id="anti-colocate" rsc="A" with-rsc="B" score="-INFINITY"/>
+====
 
-Again, by specifying +-INFINTY+, the constraint is binding.  So if the
-only place left to run is where +resource2+ already is, then
-+resource1+ may not run anywhere.
+Again, by specifying +-INFINITY+, the constraint is binding.  So if the
+only place left to run is where +B+ already is, then
++A+ may not run anywhere.
+
+As with +INFINITY+, +B+ can run even if +A+ is stopped.
+However, in this case +A+ also can run if +B+ is stopped, because it still
+meets the constraint of +A+ and +B+ not running on the same node.
 
 === Advisory Placement ===
 
 If mandatory placement is about "must" and "must not", then advisory
 placement is the "I'd prefer if" alternative.  For constraints with
 scores greater than +-INFINITY+ and less than +INFINITY+, the cluster
-will try and accommodate your wishes but may ignore them if the
+will try to accommodate your wishes but may ignore them if the
 alternative is to stop some of the cluster resources.
-        
 
-Like in life, where if enough people prefer something it effectively
+As in life, where if enough people prefer something it effectively
 becomes mandatory, advisory colocation constraints can combine with
 other elements of the configuration to behave as if they were
 mandatory.
 
-.An example advisory-only colocation constraint
+.Advisory colocation constraint for two resources
+====
 [source,XML]
-<rsc_colocation id="colocate-maybe" rsc="resource1" with-rsc="resource2" score="500"/>
+<rsc_colocation id="colocate-maybe" rsc="A" with-rsc="B" score="500"/>
+====
 
 [[s-resource-sets-ordering]]
 == Ordering Sets of Resources ==
@@ -402,7 +422,7 @@ ordered resources, such as:
 
 .Visual representation of the four resources' start order for the above constraints
 image::images/resource-set.png["Ordered set",width="16cm",height="2.5cm",align="center"]
-        
+
 === Ordered Set ===
 
 To simplify this situation, there is an alternate format for ordering
@@ -433,10 +453,10 @@ In some tools +create set A B+ is *NOT* equivalent to +create A then B+.
 
 While the set-based format is not less verbose, it is significantly
 easier to get right and maintain.  It can also be expanded to allow
-ordered sets of (un)ordered resources.  In the example below, +rscA+
-and +rscB+ can both start in parallel, as can +rscC+ and +rscD+,
-however +rscC+ and +rscD+ can only start once _both_ +rscA+ _and_ 
- +rscB+ are active.
+ordered sets of (un)ordered resources.  In the example below, +A+
+and +B+ can both start in parallel, as can +C+ and +D+,
+however +C+ and +D+ can only start once _both_ +A+ _and_
+ +B+ are active.
 
 .Ordered sets of unordered resources
 ======
@@ -456,7 +476,7 @@ however +rscC+ and +rscD+ can only start once _both_ +rscA+ _and_
   </constraints>
 -------
 ======
-        
+
 .Visual representation of the start order for two ordered sets of unordered resources
 image::images/two-sets.png["Two ordered sets",width="13cm",height="7.5cm",align="center"]
 
@@ -500,16 +520,16 @@ Those sets can be expressed, +(A and B) then \(C) then (D) then (E and F)+.
 Say for example we want to change the first set, +(A and B)+, to use "OR" logic
 so the sets look like this: +(A or B) then \(C) then (D) then (E and F)+.
 This functionality can be achieved through the use of the +require-all+
-option.  By default this option is 'require-all=true' which is why the
-"AND" logic is used by default.  Changing +require-all=false+ means only one
+option.  This option defaults to TRUE which is why the
+"AND" logic is used by default.  Setting +require-all=false+ means only one
 resource in the set needs to be started before continuing on to the next set.
 
-Note that the 'require-all=false' option only makes sense to use in conjunction
-with unordered sets, 'sequential=false'.  Think of it like this, 'sequential=false'
+Note that the +require-all=false+ option only makes sense to use in conjunction
+with unordered sets, +sequential=false+.  Think of it like this, +sequential=false+
 modifies the set to be an unordered set that uses "AND" logic by default, by adding
-'require-all=false' the unordered set's "AND" logic is flipped to "OR" logic.
++require-all=false+ the unordered set's "AND" logic is flipped to "OR" logic.
 
-.Resource Set "OR" logic. Three ordered sets, where the first set is internally unordered with "OR" logic.
+.Resource Set "OR" logic: Three ordered sets, where the first set is internally unordered with "OR" logic
 ======
 [source,XML]
 -------
@@ -586,27 +606,16 @@ stopped. Here is an example +resource_set+:
 [WARNING]
 =========
 Always pay attention to how your tools expose this functionality.
-In some tools +create set A B+ is *NOT* equivalent to +create A with B+.
+In some tools +create set A B+ is 'not' equivalent to +create A with B+.
 =========
 
-.A group resource with the equivalent colocation rules
-[source,XML]
--------
-<group id="dummy">
-    <primitive id="A" .../>
-    <primitive id="B" .../>
-    <primitive id="C" .../>
-    <primitive id="D" .../>
-</group>
--------
-
-This notation can also be used in this context to tell the cluster
+This notation can also be used to tell the cluster
 that a set of resources must all be located with a common peer, but
-have no dependencies on each other.  In this scenario, unlike the
-previous, +B would+ be allowed to remain active even if +A or+ +C+ (or
+have no dependencies on each other. In this scenario, unlike the
+previous, +B+ 'would' be allowed to remain active even if +A+ or +C+ (or
 both) were inactive.
 
-.Using colocation sets to specify a common peer.    
+.Using colocation sets to specify a common peer
 ======
 [source,XML]
 -------
@@ -625,15 +634,15 @@ both) were inactive.
 -------
 ======
 
-Of course there is no limit to the number and size of the sets used.
-The only thing that matters is that in order for any member of set N
-to be active, all the members of set N+1 must also be active (and
-naturally on the same node); and if a set has +sequential="true"+,
-then in order for member M to be active, member M+1 must also be
-active.  You can even specify the role in which the members of a set
-must be in using the set's role attribute.
-      
-.A colocation chain where the members of the middle set have no inter-dependencies and the last has master status.
+There is no inherent limit to the number and size of the sets used.
+The only thing that matters is that in order for any member of one set
+in the constraint to be active, all members of sets listed after it must also
+be active (and naturally on the same node); and if a set has +sequential="true"+,
+then in order for one member of that set to be active, all members listed after it
+must also be active. You can even specify the role in which the members of a set
+must be in using the set's +role+ attribute.
+
+.A colocation chain where the members of the middle set have no interdependencies and the last has master status.
 ======
 [source,XML]
 -------
@@ -656,6 +665,6 @@ must be in using the set's role attribute.
 </constraints>
 -------
 ======
-        
+
 .Visual representation of a colocation chain where the members of the middle set have no inter-dependencies
 image::images/three-sets-complex.png["Colocation chain",width="16cm",height="9cm",align="center"]
