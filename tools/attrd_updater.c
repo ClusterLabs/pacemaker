@@ -32,21 +32,12 @@
 
 #include <crm/attrd.h>
 
-const char *attr_node = NULL;
-const char *attr_name = NULL;
-const char *attr_value = NULL;
-const char *attr_set = NULL;
-const char *attr_section = NULL;
-const char *attr_dampen = NULL;
-char command = 'q';
-
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {
     /* Top-level Options */
     {"help",    0, 0, '?', "\tThis text"},
     {"version", 0, 0, '$', "\tVersion information"  },
     {"verbose", 0, 0, 'V', "\tIncrease debug output\n"},
-    {"quiet",   0, 0, 'q', "\tPrint only the value on stdout\n"},
 
     {"name",    1, 0, 'n', "The attribute's name"},
 
@@ -63,17 +54,22 @@ static struct crm_option long_options[] = {
 #ifdef HAVE_ATOMIC_ATTRD
     /* lifetime could be implemented for atomic attrd if there is sufficient user demand */
     {"lifetime",1, 0, 'l', "(Deprecated) Lifetime of the node attribute (silently ignored by cluster)"},
-    {"private", 0, 0, 'p', "\tNever write attribute to CIB (but it can be updated and queried as usual)"},
+    {"private", 0, 0, 'p', "\tIf this creates a new attribute, never write the attribute to the CIB"},
 #else
     {"lifetime",1, 0, 'l', "Lifetime of the node attribute.  Allowed values: forever, reboot"},
 #endif
 
     /* Legacy options */
-    {"update",  1, 0, 'v', NULL, 1},
-    {"section", 1, 0, 'S', NULL, 1},
+    {"quiet",   0, 0, 'q', NULL, pcmk_option_hidden},
+    {"update",  1, 0, 'v', NULL, pcmk_option_hidden},
+    {"section", 1, 0, 'S', NULL, pcmk_option_hidden},
     {0, 0, 0, 0}
 };
 /* *INDENT-ON* */
+
+static int do_update(char command, const char *attr_node, const char *attr_name,
+                     const char *attr_value, const char *attr_section,
+                     const char *attr_set, const char *attr_dampen, int attr_options);
 
 int
 main(int argc, char **argv)
@@ -82,6 +78,13 @@ main(int argc, char **argv)
     int argerr = 0;
     int attr_options = attrd_opt_none;
     int flag;
+    const char *attr_node = NULL;
+    const char *attr_name = NULL;
+    const char *attr_value = NULL;
+    const char *attr_set = NULL;
+    const char *attr_section = NULL;
+    const char *attr_dampen = NULL;
+    char command = 'Q';
 
     crm_log_cli_init("attrd_updater");
     crm_set_options(NULL, "command -n attribute [options]", long_options,
@@ -156,15 +159,23 @@ main(int argc, char **argv)
     if (command == 'Q') {
         fprintf(stderr, "-Q,--query is not yet implemented, use -D to delete existing values\n\n");
         crm_help('?', EX_USAGE);
-
     } else {
-        int rc = attrd_update_delegate(NULL, command, attr_node, attr_name, attr_value, attr_section,
-                                       attr_set, attr_dampen, NULL, attr_options);
-        if (rc != pcmk_ok) {
-            fprintf(stderr, "Could not update %s=%s: %s (%d)\n", attr_name, attr_value, pcmk_strerror(rc), rc);
-        }
-        crm_exit(rc);
+        crm_exit(do_update(command, attr_node, attr_name, attr_value,
+                           attr_section, attr_set, attr_dampen, attr_options));
     }
-
     return crm_exit(pcmk_ok);
+}
+
+static int
+do_update(char command, const char *attr_node, const char *attr_name,
+          const char *attr_value, const char *attr_section,
+          const char *attr_set, const char *attr_dampen, int attr_options)
+{
+    int rc = attrd_update_delegate(NULL, command, attr_node, attr_name,
+                                   attr_value, attr_section, attr_set,
+                                   attr_dampen, NULL, attr_options);
+    if (rc != pcmk_ok) {
+        fprintf(stderr, "Could not update %s=%s: %s (%d)\n", attr_name, attr_value, pcmk_strerror(rc), rc);
+    }
+    return rc;
 }
