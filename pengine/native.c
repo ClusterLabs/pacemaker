@@ -726,10 +726,17 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
         is_optional = FALSE;
         pe_rsc_trace(rsc, "Marking %s manditory: not active", key);
 
-    } else if (is_set(rsc->flags, pe_rsc_reschedule_monitor)) {
-        is_optional = FALSE;
-
     } else {
+        GListPtr gIter = NULL;
+
+        for (gIter = possible_matches; gIter != NULL; gIter = gIter->next) {
+            action_t *op = (action_t *) gIter->data;
+
+            if (is_set(op->flags, pe_action_reschedule)) {
+                is_optional = FALSE;
+                break;
+            }
+        }
         g_list_free(possible_matches);
     }
 
