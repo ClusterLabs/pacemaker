@@ -276,6 +276,7 @@ int crm_read_pidfile(const char *filename);
 #  define F_ATTRD_VALUE		"attr_value"
 #  define F_ATTRD_SET		"attr_set"
 #  define F_ATTRD_IS_REMOTE	"attr_is_remote"
+#  define F_ATTRD_IS_PRIVATE     "attr_is_private"
 #  define F_ATTRD_SECTION	"attr_section"
 #  define F_ATTRD_DAMPEN	"attr_dampening"
 #  define F_ATTRD_IGNORE_LOCALLY "attr_ignore_locally"
@@ -284,6 +285,15 @@ int crm_read_pidfile(const char *filename);
 #  define F_ATTRD_USER		"attr_user"
 #  define F_ATTRD_WRITER	"attr_writer"
 #  define F_ATTRD_VERSION	"attr_version"
+
+/* attrd operations */
+#  define ATTRD_OP_PEER_REMOVE   "peer-remove"
+#  define ATTRD_OP_UPDATE        "update"
+#  define ATTRD_OP_QUERY         "query"
+#  define ATTRD_OP_REFRESH       "refresh"
+#  define ATTRD_OP_FLUSH         "flush"
+#  define ATTRD_OP_SYNC          "sync"
+#  define ATTRD_OP_SYNC_RESPONSE "sync-response"
 
 #  if SUPPORT_COROSYNC
 #    if CS_USES_LIBQB

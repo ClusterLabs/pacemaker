@@ -57,10 +57,16 @@ static struct crm_option long_options[] = {
     {"refresh", 0, 0, 'R', "\t(Advanced) Force the attrd daemon to resend all current values to the CIB\n"},    
     
     {"-spacer-",1, 0, '-', "\nAdditional options:"},
-    {"lifetime",1, 0, 'l', "Lifetime of the node attribute.  Allowed values: forever, reboot"},
-    {"delay",   1, 0, 'd', "The time to wait (dampening) in seconds further changes occur"},
+    {"delay",   1, 0, 'd', "The time to wait (dampening) in seconds for further changes before writing"},
     {"set",     1, 0, 's', "(Advanced) The attribute set in which to place the value"},
     {"node",    1, 0, 'N', "Set the attribute for the named node (instead of the local one)"},
+#ifdef HAVE_ATOMIC_ATTRD
+    /* lifetime could be implemented for atomic attrd if there is sufficient user demand */
+    {"lifetime",1, 0, 'l', "(Deprecated) Lifetime of the node attribute (silently ignored by cluster)"},
+    {"private", 0, 0, 'p', "\tNever write attribute to CIB (but it can be updated and queried as usual)"},
+#else
+    {"lifetime",1, 0, 'l', "Lifetime of the node attribute.  Allowed values: forever, reboot"},
+#endif
 
     /* Legacy options */
     {"update",  1, 0, 'v', NULL, 1},
@@ -74,6 +80,7 @@ main(int argc, char **argv)
 {
     int index = 0;
     int argerr = 0;
+    int attr_options = attrd_opt_none;
     int flag;
 
     crm_log_cli_init("attrd_updater");
@@ -113,6 +120,11 @@ main(int argc, char **argv)
             case 'N':
                 attr_node = strdup(optarg);
                 break;
+#ifdef HAVE_ATOMIC_ATTRD
+            case 'p':
+                set_bit(attr_options, attrd_opt_private);
+                break;
+#endif
             case 'q':
                 break;
             case 'Q':
@@ -147,7 +159,7 @@ main(int argc, char **argv)
 
     } else {
         int rc = attrd_update_delegate(NULL, command, attr_node, attr_name, attr_value, attr_section,
-                                       attr_set, attr_dampen, NULL, FALSE);
+                                       attr_set, attr_dampen, NULL, attr_options);
         if (rc != pcmk_ok) {
             fprintf(stderr, "Could not update %s=%s: %s (%d)\n", attr_name, attr_value, pcmk_strerror(rc), rc);
         }
