@@ -237,7 +237,7 @@ positive and negative constraints. E.g.
 which has the same long-term consequences as discussed earlier.
 
 [[s-failure-migration]]
-=== Moving Resources Due to Repeated Failure ===
+=== Moving Resources Due to Failure ===
 
 Normally, if a running resource fails, pacemaker will try to start
 it again on the same node. However if a resource fails repeatedly,

@@ -249,9 +249,6 @@ sites and a single arbitrator on a third site. However, technically, there are
 no limitations with regards to the number of sites and the number of
 arbitrators involved.
 
-Nodes belonging to the same cluster site should be synchronized via NTP. However,
-time synchronization is not required between the individual cluster sites.
-
 `Boothd` at each site connects to its peers running at the other sites and
 exchanges connectivity details. Once a ticket is granted to a site, the
 booth mechanism will manage the ticket automatically: If the site which
@@ -279,6 +276,17 @@ If you are managing tickets via Booth, use only `booth` for manual
 intervention, not `crm_ticket`. That ensures the same ticket
 will only be owned by one cluster site at a time.
 ====
+
+==== Booth Requirements ====
+
+* All clusters that will be part of the multi-site cluster must be based on
+  Pacemaker.
+
+* Booth must be installed on all cluster nodes and on all arbitrators that will
+  be part of the multi-site cluster. 
+
+* Nodes belonging to the same cluster site should be synchronized via NTP. However,
+  time synchronization is not required between the individual cluster sites.
 
 === General Management of Tickets ===
 
