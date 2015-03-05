@@ -1917,6 +1917,12 @@ main(int argc, char **argv)
     bool do_trace = FALSE;
     bool recursive = FALSE;
 
+    /* Not all commands set these appropriately, but the defaults here are
+     * sufficient to get the logic right. */
+    bool require_resource = TRUE; /* whether command requires that resource be specified */
+    bool require_dataset = TRUE;  /* whether command requires populated dataset instance */
+    bool require_crmd = FALSE;    /* whether command requires connection to CRMd */
+
     int rc = pcmk_ok;
     int option_index = 0;
     int timeout_ms = 0;
@@ -2102,6 +2108,12 @@ main(int argc, char **argv)
             case 'R':
             case 'P':
                 rsc_cmd = 'C';
+                require_resource = FALSE;
+                require_crmd = TRUE;
+                break;
+            case 'F':
+                rsc_cmd = flag;
+                require_crmd = TRUE;
                 break;
             case 'L':
             case 'c':
@@ -2109,7 +2121,6 @@ main(int argc, char **argv)
             case 'q':
             case 'w':
             case 'D':
-            case 'F':
             case 'W':
             case 'M':
             case 'U':
@@ -2174,16 +2185,28 @@ main(int argc, char **argv)
     }
 
     data_set.input = NULL; /* make clean-up easier */
-    if (rsc_cmd != 'P' || rsc_id) {
-        xmlNode *cib_xml_copy = NULL;
-        resource_t *rsc = NULL;
 
-        cib_conn = cib_new();
-        rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
-        if (rc != pcmk_ok) {
-            CMD_ERR("Error signing on to the CIB service: %s\n", pcmk_strerror(rc));
-            return crm_exit(rc);
-        }
+    /* If user specified resource, look for it, even if it's optional for command */
+    if (rsc_id) {
+        require_resource = TRUE;
+    }
+
+    /* We need a dataset to find a resource, even if command doesn't need it */
+    if (require_resource) {
+        require_dataset = TRUE;
+    }
+
+    /* Establish a connection to the CIB */
+    cib_conn = cib_new();
+    rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
+    if (rc != pcmk_ok) {
+        CMD_ERR("Error signing on to the CIB service: %s\n", pcmk_strerror(rc));
+        return crm_exit(rc);
+    }
+
+    /* Populate working set from XML file if specified or CIB query otherwise */
+    if (require_dataset) {
+        xmlNode *cib_xml_copy = NULL;
 
         if (xml_file != NULL) {
             cib_xml_copy = filename2xml(xml_file);
@@ -2204,15 +2227,17 @@ main(int argc, char **argv)
         }
         cluster_status(&data_set);
 
-        if (rsc_id) {
-            rsc = find_rsc_or_clone(rsc_id, &data_set);
-        }
-        if (rsc == NULL && rsc_cmd != 'C') {
+        /* Set rc to -ENXIO if no resource matching rsc_id is found.
+         * This does not bail, but is handled later for certain commands.
+         * That handling could be done here instead if all flags above set
+         * require_resource appropriately. */
+        if (require_resource && rsc_id && (find_rsc_or_clone(rsc_id, &data_set) == NULL)) {
             rc = -ENXIO;
         }
     }
 
-    if (rsc_cmd == 'R' || rsc_cmd == 'C' || rsc_cmd == 'F' || rsc_cmd == 'P') {
+    /* Establish a connection to the CRMd if needed */
+    if (require_crmd) {
         xmlNode *xml = NULL;
         mainloop_io_t *source =
             mainloop_add_ipc_client(CRM_SYSTEM_CRMD, G_PRIORITY_DEFAULT, 0, NULL, &crm_callbacks);
