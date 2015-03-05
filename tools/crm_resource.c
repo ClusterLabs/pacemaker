@@ -1396,28 +1396,77 @@ static void display_list(GList *items, const char *tag)
     }
 }
 
+/*!
+ * \internal
+ * \brief Upgrade XML to latest schema version and use it as working set input
+ *
+ * This also updates the working set timestamp to the current time.
+ *
+ * \param[in] data_set   Working set instance to update
+ * \param[in] xml        XML to use as input
+ *
+ * \return pcmk_ok on success, -ENOKEY if unable to upgrade XML
+ * \note On success, caller is responsible for freeing memory allocated for
+ *       data_set->now.
+ * \todo This follows the example of other callers of cli_config_update()
+ *       and returns -ENOKEY ("Required key not available") if that fails,
+ *       but perhaps -pcmk_err_schema_validation would be better in that case.
+ */
+static int
+update_working_set_xml(pe_working_set_t *data_set, xmlNode **xml)
+{
+    if (cli_config_update(xml, NULL, FALSE) == FALSE) {
+        return -ENOKEY;
+    }
+    data_set->input = *xml;
+    data_set->now = crm_time_new(NULL);
+    return pcmk_ok;
+}
+
+/*!
+ * \internal
+ * \brief Update a working set's XML input based on a CIB query
+ *
+ * \param[in] data_set   Data set instance to initialize
+ * \param[in] cib        Connection to the CIB
+ *
+ * \return pcmk_ok on success, -errno on failure
+ * \note On success, caller is responsible for freeing memory allocated for
+ *       data_set->input and data_set->now.
+ */
+static int
+update_working_set_from_cib(pe_working_set_t * data_set, cib_t *cib)
+{
+    xmlNode *cib_xml_copy = NULL;
+    int rc;
+
+    rc = cib->cmds->query(cib, NULL, &cib_xml_copy, cib_scope_local | cib_sync_call);
+    if (rc != pcmk_ok) {
+        fprintf(stderr, "Could not obtain the current CIB: %s (%d)\n", pcmk_strerror(rc), rc);
+        return rc;
+    }
+    rc = update_working_set_xml(data_set, &cib_xml_copy);
+    if (rc != pcmk_ok) {
+        fprintf(stderr, "Could not upgrade the current CIB XML\n");
+        free_xml(cib_xml_copy);
+        return rc;
+    }
+    return pcmk_ok;
+}
+
 static int
 update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
 {
     char *pid = NULL;
     char *shadow_file = NULL;
     cib_t *shadow_cib = NULL;
-    xmlNode *cib_xml_copy = NULL;
-    int rc = cib->cmds->query(cib, NULL, &cib_xml_copy, cib_scope_local | cib_sync_call);
-
-    if(rc != pcmk_ok) {
-        fprintf(stdout, "Could not obtain the current CIB: %s (%d)\n", pcmk_strerror(rc), rc);
-        goto cleanup;
-
-    } else if (cli_config_update(&cib_xml_copy, NULL, FALSE) == FALSE) {
-        fprintf(stderr, "Could not upgrade the current CIB\n");
-        rc = -ENOKEY;
-        goto cleanup;
-    }
+    int rc;
 
     cleanup_alloc_calculations(data_set);
-    data_set->input = cib_xml_copy;
-    data_set->now = crm_time_new(NULL);
+    rc = update_working_set_from_cib(data_set, cib);
+    if (rc != pcmk_ok) {
+        return rc;
+    }
 
     if(simulate) {
         pid = crm_itoa(getpid());
@@ -1430,7 +1479,7 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
             goto cleanup;
         }
 
-        rc = write_xml_file(cib_xml_copy, shadow_file, FALSE);
+        rc = write_xml_file(data_set->input, shadow_file, FALSE);
 
         if (rc < 0) {
             fprintf(stderr, "Could not populate shadow cib: %s (%d)\n", pcmk_strerror(rc), rc);
@@ -1443,7 +1492,7 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
             goto cleanup;
         }
 
-        do_calculations(data_set, cib_xml_copy, NULL);
+        do_calculations(data_set, data_set->input, NULL);
         run_simulation(data_set, shadow_cib, NULL, TRUE);
         rc = update_dataset(shadow_cib, data_set, FALSE);
 
@@ -1452,7 +1501,7 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
     }
 
   cleanup:
-    /* Do not free 'cib_xml_copy' here, we need rsc->xml to be valid later on */
+    /* Do not free data_set->input here, we need rsc->xml to be valid later on */
     cib_delete(shadow_cib);
     free(pid);
 
@@ -1864,7 +1913,6 @@ main(int argc, char **argv)
 {
     const char *longname = NULL;
     pe_working_set_t data_set;
-    xmlNode *cib_xml_copy = NULL;
     cib_t *cib_conn = NULL;
     bool do_trace = FALSE;
     bool recursive = FALSE;
@@ -2125,8 +2173,9 @@ main(int argc, char **argv)
         cib_options |= cib_quorum_override;
     }
 
-    set_working_set_defaults(&data_set);
+    data_set.input = NULL; /* make clean-up easier */
     if (rsc_cmd != 'P' || rsc_id) {
+        xmlNode *cib_xml_copy = NULL;
         resource_t *rsc = NULL;
 
         cib_conn = cib_new();
@@ -2145,15 +2194,16 @@ main(int argc, char **argv)
 
         if(rc != pcmk_ok) {
             goto bail;
-        } else if (cli_config_update(&cib_xml_copy, NULL, FALSE) == FALSE) {
-            rc = -ENOKEY;
-            goto bail;
         }
 
-        data_set.input = cib_xml_copy;
-        data_set.now = crm_time_new(NULL);
-
+        /* Populate the working set instance */
+        set_working_set_defaults(&data_set);
+        rc = update_working_set_xml(&data_set, &cib_xml_copy);
+        if (rc != pcmk_ok) {
+            goto bail;
+        }
         cluster_status(&data_set);
+
         if (rsc_id) {
             rsc = find_rsc_or_clone(rsc_id, &data_set);
         }
