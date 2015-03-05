@@ -1415,10 +1415,7 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
         goto cleanup;
     }
 
-    if(data_set->input) {
-        free_xml(data_set->input);
-    }
-    set_working_set_defaults(data_set);
+    cleanup_alloc_calculations(data_set);
     data_set->input = cib_xml_copy;
     data_set->now = crm_time_new(NULL);
 
