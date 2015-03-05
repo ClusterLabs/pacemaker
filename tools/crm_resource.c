@@ -31,6 +31,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
+#include <time.h>
 
 #include <crm/msg_xml.h>
 #include <crm/services.h>
@@ -1775,6 +1776,118 @@ resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t * cib
     return rc;
 }
 
+#define action_is_pending(action) \
+    ((is_set((action)->flags, pe_action_optional) == FALSE) \
+    && (is_set((action)->flags, pe_action_runnable) == TRUE) \
+    && (is_set((action)->flags, pe_action_pseudo) == FALSE))
+
+/*!
+ * \internal
+ * \brief Return TRUE if any actions in a list are pending
+ *
+ * \param[in] actions   List of actions to check
+ *
+ * \return TRUE if any actions in the list are pending, FALSE otherwise
+ */
+static gboolean
+actions_are_pending(GListPtr actions)
+{
+    GListPtr action;
+
+    for (action = actions; action != NULL; action = action->next) {
+        if (action_is_pending((action_t *) action->data)) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+/*!
+ * \internal
+ * \brief Print pending actions to stderr
+ *
+ * \param[in] actions   List of actions to check
+ *
+ * \return void
+ */
+static void
+print_pending_actions(GListPtr actions)
+{
+    GListPtr action;
+
+    fprintf(stderr, "Pending actions:\n");
+    for (action = actions; action != NULL; action = action->next) {
+        action_t *a = (action_t *) action->data;
+
+        if (action_is_pending(a)) {
+            fprintf(stderr, "\tAction %d: %s", a->id, a->uuid);
+            if (a->node) {
+                fprintf(stderr, "\ton %s", a->node->details->uname);
+            }
+            fprintf(stderr, "\n");
+        }
+    }
+}
+
+/* For --wait, timeout (in seconds) to use if caller doesn't specify one */
+#define WAIT_DEFAULT_TIMEOUT_S (60 * 60)
+
+/* For --wait, how long to sleep between cluster state checks */
+#define WAIT_SLEEP_S (2)
+
+/*!
+ * \internal
+ * \brief Wait until all pending cluster actions are complete
+ *
+ * This waits until either the CIB's transition graph is idle or a timeout is
+ * reached.
+ *
+ * \param[in] timeout_ms Consider failed if actions do not complete in this time
+ *                       (specified in milliseconds, but one-second granularity
+ *                       is actually used; if 0, a default will be used)
+ * \param[in] cib        Connection to the CIB
+ *
+ * \return pcmk_ok on success, -errno on failure
+ */
+static int
+wait_till_stable(int timeout_ms, cib_t * cib)
+{
+    pe_working_set_t data_set;
+    int rc = -1;
+    int timeout_s = timeout_ms? ((timeout_ms + 999) / 1000) : WAIT_DEFAULT_TIMEOUT_S;
+    time_t expire_time = time(NULL) + timeout_s;
+    time_t time_diff;
+
+    set_working_set_defaults(&data_set);
+    do {
+
+        /* Abort if timeout is reached */
+        time_diff = expire_time - time(NULL);
+        if (time_diff > 0) {
+            crm_info("Waiting up to %d seconds for cluster actions to complete", time_diff);
+        } else {
+            print_pending_actions(data_set.actions);
+            cleanup_alloc_calculations(&data_set);
+            return -ETIME;
+        }
+        if (rc == pcmk_ok) { /* this avoids sleep on first loop iteration */
+            sleep(WAIT_SLEEP_S);
+        }
+
+        /* Get latest transition graph */
+        cleanup_alloc_calculations(&data_set);
+        rc = update_working_set_from_cib(&data_set, cib);
+        if (rc != pcmk_ok) {
+            cleanup_alloc_calculations(&data_set);
+            return rc;
+        }
+        do_calculations(&data_set, data_set.input, NULL);
+
+    } while (actions_are_pending(data_set.actions));
+
+    return pcmk_ok;
+}
+
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {
     /* Top-level Options */
@@ -1846,6 +1959,7 @@ static struct crm_option long_options[] = {
     {"delete",     0, 0, 'D', "\t\t(Advanced) Delete a resource from the CIB"},
     {"fail",       0, 0, 'F', "\t\t(Advanced) Tell the cluster this resource has failed"},
     {"restart",    0, 0,  0,  "\t\t(Advanced) Tell the cluster to restart this resource and anything that depends on it"},
+    {"wait",       0, 0,  0,  "\t\t(Advanced) Wait until the cluster settles into a stable state"},
     {"force-stop", 0, 0,  0,  "\t(Advanced) Bypass the cluster and stop a resource on the local node. Additional detail with -V"},
     {"force-start",0, 0,  0,  "\t(Advanced) Bypass the cluster and start a resource on the local node. Additional detail with -V"},
     {"force-check",0, 0,  0,  "\t(Advanced) Bypass the cluster and check the state of a resource on the local node. Additional detail with -V\n"},
@@ -1859,7 +1973,7 @@ static struct crm_option long_options[] = {
     {"utilization",	0, 0, 'z', "\tModify a resource's utilization attribute. For use with -p, -g, -d"},
     {"set-name",        1, 0, 's', "\t(Advanced) ID of the instance_attributes object to change"},
     {"nvpair",          1, 0, 'i', "\t(Advanced) ID of the nvpair object to change/delete"},
-    {"timeout",         1, 0, 'T',  "\t(Advanced) How long to wait for --restart to take effect", pcmk_option_hidden},
+    {"timeout",         1, 0, 'T',  "\t(Advanced) Abort if command does not finish in this time (with --restart or --wait)", pcmk_option_hidden},
     {"force",		0, 0, 'f', "\n" /* Is this actually true anymore?
 					   "\t\tForce the resource to move by creating a rule for the current location and a score of -INFINITY"
 					   "\n\t\tThis should be used if the resource's stickiness and constraint scores total more than INFINITY (Currently 100,000)"
@@ -1949,6 +2063,12 @@ main(int argc, char **argv)
 
                 } else if(safe_str_eq(longname, "recursive")) {
                     recursive = TRUE;
+
+                } else if (safe_str_eq("wait", longname)) {
+                    rsc_cmd = flag;
+                    rsc_long_cmd = longname;
+                    require_resource = FALSE;
+                    require_dataset = FALSE;
 
                 } else if (safe_str_eq("force-stop", longname)
                     || safe_str_eq("restart", longname)
@@ -2281,6 +2401,9 @@ main(int argc, char **argv)
         resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
 
         rc = resource_restart(rsc, host_uname, timeout_ms, cib_conn);
+
+    } else if (rsc_cmd == 0 && rsc_long_cmd && safe_str_eq(rsc_long_cmd, "wait")) {
+        rc = wait_till_stable(timeout_ms, cib_conn);
 
     } else if (rsc_cmd == 0 && rsc_long_cmd) { /* force-(stop|start|check) */
         svc_action_t *op = NULL;
