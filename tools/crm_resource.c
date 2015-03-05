@@ -1557,12 +1557,12 @@ resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t * cib
       determine resource state of list
       disable or ban
       poll and and watch for resources to get stopped
-      without --wait, calculate the stop timeout for each step and wait for that
-      if we hit --wait or the service timeout, re-enable or un-ban, report failure and indicate which resources we couldn't take down
+      without --timeout, calculate the stop timeout for each step and wait for that
+      if we hit --timeout or the service timeout, re-enable or un-ban, report failure and indicate which resources we couldn't take down
       if everything stopped, re-enable or un-ban
       poll and and watch for resources to get stopped
-      without --wait, calculate the start timeout for each step and wait for that
-      if we hit --wait or the service timeout, report (different) failure and indicate which resources we couldn't bring back up
+      without --timeout, calculate the start timeout for each step and wait for that
+      if we hit --timeout or the service timeout, report (different) failure and indicate which resources we couldn't bring back up
       report success
 
       Optimizations:
@@ -1765,8 +1765,8 @@ static struct crm_option long_options[] = {
         "\t\tPrevent the named resource from running on the named --host.  \n"
         "\t\t\t\tRequires: --resource. Optional: --host, --lifetime, --master\n\n"
         "\t\t\t\tIf --host is not specified, it defaults to:\n"
-        "\t\t\t\t * the curent location for primitives and groups, or\n\n"
-        "\t\t\t\t * the curent location of the master for m/s resources with master-max=1\n\n"
+        "\t\t\t\t * the current location for primitives and groups, or\n\n"
+        "\t\t\t\t * the current location of the master for m/s resources with master-max=1\n\n"
         "\t\t\t\tAll other situations result in an error as there is no sane default.\n\n"
         "\t\t\t\tNOTE: This will prevent the resource from running on this node until the constraint expires or is removed with --clear\n"
     },
@@ -1833,7 +1833,7 @@ static struct crm_option long_options[] = {
     {"-spacer-",	1, 0, '-', " crm_resource --resource myResource --un-move", pcmk_option_example},
     {"-spacer-",	1, 0, '-', "Tell the cluster that 'myResource' failed:", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', " crm_resource --resource myResource --fail", pcmk_option_example},
-    {"-spacer-",	1, 0, '-', "Stop a 'myResource' (and anything that depends on it):", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', "Stop 'myResource' (and anything that depends on it):", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', " crm_resource --resource myResource --set-parameter target-role --meta --parameter-value Stopped", pcmk_option_example},
     {"-spacer-",	1, 0, '-', "Tell the cluster not to manage 'myResource':", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', "The cluster will not attempt to start or stop the resource under any circumstances."},
