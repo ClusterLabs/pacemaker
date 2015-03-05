@@ -226,7 +226,7 @@ granted elsewhere.
 We will use https://github.com/ClusterLabs/booth[Booth] here as an example of
 software that can be used with pacemaker as a Cluster Ticket Registry.  Booth
 implements the
-http://en.wikipedia.org/wiki/Paxos_%28computer_science%29['Paxos'] lease
+http://en.wikipedia.org/wiki/Raft_%28computer_science%29[Raft]
 algorithm to guarantee the distributed consensus among different
 cluster sites, and manages the ticket distribution (and thus the failover
 process between sites).
@@ -326,6 +326,6 @@ you can run:
 
 == For more information ==
 
-* http://doc.opensuse.org/products/draft/SLE-HA/SLE-ha-guide_sd_draft/cha.ha.geo.html[SUSE's Multi-site Clusters guide]
+* https://www.suse.com/documentation/sle-ha-geo-12/art_ha_geo_quick/data/art_ha_geo_quick.html[SUSE's Geo Clustering quick start]
 
 * https://github.com/ClusterLabs/booth[Booth]
