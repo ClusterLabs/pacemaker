@@ -1928,7 +1928,7 @@ expand_list(GListPtr list, char **rsc_list, char **node_list)
 
             crm_trace("Adding %s (%dc) at offset %d", rsc_id, len - 2, existing_len);
             *rsc_list = realloc_safe(*rsc_list, len + existing_len);
-            sprintf(*rsc_list + existing_len, "%s ", rsc_id);
+            sprintf(*rsc_list + existing_len, "%s%s", existing_len == 0 ? "":" ", rsc_id);
         }
 
         if (entry->node != NULL) {
@@ -1945,7 +1945,7 @@ expand_list(GListPtr list, char **rsc_list, char **node_list)
 
             crm_trace("Adding %s (%dc) at offset %d", uname, len - 2, existing_len);
             *node_list = realloc_safe(*node_list, len + existing_len);
-            sprintf(*node_list + existing_len, "%s ", uname);
+            sprintf(*node_list + existing_len, "%s%s", existing_len == 0 ? "":" ", uname);
         }
     }
 
