@@ -363,7 +363,7 @@ systemd_unit_metadata(const char *name)
 
     if (path) {
         /* TODO: Worth a making blocking call for? Probably not. Possibly if cached. */
-        desc = pcmk_dbus_get_property(systemd_proxy, BUS_NAME, path, BUS_NAME ".Unit", "Description", NULL, NULL);
+        desc = pcmk_dbus_get_property(systemd_proxy, BUS_NAME, path, BUS_NAME ".Unit", "Description", NULL, NULL, NULL);
     } else {
         desc = g_strdup_printf("Systemd unit file for %s", name);
     }
@@ -499,6 +499,9 @@ systemd_unit_check(const char *name, const char *state, void *userdata)
     }
 
     if (op->synchronous == FALSE) {
+        if (op->opaque->pending) {
+            dbus_pending_call_unref(op->opaque->pending);
+        }
         op->opaque->pending = NULL;
         operation_finalize(op);
     }
@@ -521,14 +524,24 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
     }
 
     if (safe_str_eq(op->action, "monitor") || safe_str_eq(method, "status")) {
-        char *state = pcmk_dbus_get_property(systemd_proxy, BUS_NAME, unit, BUS_NAME ".Unit", "ActiveState",
-                                             op->synchronous?NULL:systemd_unit_check, op);
+        DBusPendingCall *pending = NULL;
+        char *state;
+
+        state = pcmk_dbus_get_property(systemd_proxy, BUS_NAME, unit,
+                                       BUS_NAME ".Unit", "ActiveState",
+                                       op->synchronous?NULL:systemd_unit_check,
+                                       op, op->synchronous?NULL:&pending);
         if (op->synchronous) {
             systemd_unit_check("ActiveState", state, op);
             free(state);
             return op->rc == PCMK_OCF_OK;
+        } else if (pending) {
+            dbus_pending_call_ref(pending);
+            op->opaque->pending = pending;
+            return TRUE;
         }
-        return TRUE;
+
+        return FALSE;
 
     } else if (g_strcmp0(method, "start") == 0) {
         FILE *file_strm = NULL;

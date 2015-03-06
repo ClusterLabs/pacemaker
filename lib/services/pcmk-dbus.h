@@ -8,7 +8,8 @@ DBusMessage *pcmk_dbus_send_recv(DBusMessage *msg, DBusConnection *connection, D
 bool pcmk_dbus_type_check(DBusMessage *msg, DBusMessageIter *field, int expected, const char *function, int line);
 char *pcmk_dbus_get_property(
     DBusConnection *connection, const char *target, const char *obj, const gchar * iface, const char *name,
-    void (*callback)(const char *name, const char *value, void *userdata), void *userdata);
+    void (*callback)(const char *name, const char *value, void *userdata), void *userdata,
+    DBusPendingCall **pending);
 
 bool pcmk_dbus_find_error(const char *method, DBusPendingCall* pending, DBusMessage *reply, DBusError *error);
 
