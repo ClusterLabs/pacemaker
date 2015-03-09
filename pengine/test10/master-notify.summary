@@ -1,0 +1,34 @@
+
+Current cluster status:
+Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
+
+ shooter	(stonith:fence_xvm):	Started rhel7-auto1 
+ Master/Slave Set: fake-master [fake]
+     Slaves: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
+
+Transition Summary:
+ * Promote fake:0	(Slave -> Master rhel7-auto1)
+
+Executing cluster transition:
+ * Pseudo action:   fake-master_pre_notify_promote_0
+ * Resource action: fake            notify on rhel7-auto1
+ * Resource action: fake            notify on rhel7-auto3
+ * Resource action: fake            notify on rhel7-auto2
+ * Pseudo action:   fake-master_confirmed-pre_notify_promote_0
+ * Pseudo action:   fake-master_promote_0
+ * Resource action: fake            promote on rhel7-auto1
+ * Pseudo action:   fake-master_promoted_0
+ * Pseudo action:   fake-master_post_notify_promoted_0
+ * Resource action: fake            notify on rhel7-auto1
+ * Resource action: fake            notify on rhel7-auto3
+ * Resource action: fake            notify on rhel7-auto2
+ * Pseudo action:   fake-master_confirmed-post_notify_promoted_0
+
+Revised cluster status:
+Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
+
+ shooter	(stonith:fence_xvm):	Started rhel7-auto1 
+ Master/Slave Set: fake-master [fake]
+     Masters: [ rhel7-auto1 ]
+     Slaves: [ rhel7-auto2 rhel7-auto3 ]
+
