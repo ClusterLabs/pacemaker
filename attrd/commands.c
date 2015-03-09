@@ -973,12 +973,6 @@ write_attribute(attribute_t *a)
             crm_notice("Update error (peer not found): %s[%s]=%s failed (host=%p)",
                        v->nodename, a->id, v->current, peer);
             continue;
-        } else if (peer->uuid == NULL) {
-            /* If the peer is found, but its uuid is unknown, defer write */
-            a->unknown_peer_uuids = TRUE;
-            crm_notice("Update error (unknown peer uuid, retry will be attempted once uuid is discovered): %s[%s]=%s failed (host=%p)",
-                       v->nodename, a->id, v->current, peer);
-            continue;
         }
 
         /* If we're just learning the peer's node id, remember it */
@@ -990,6 +984,14 @@ write_attribute(attribute_t *a)
         /* If this is a private attribute, no update needs to be sent */
         if (a->is_private) {
             private_updates++;
+            continue;
+        }
+
+        /* If the peer is found, but its uuid is unknown, defer write */
+        if (peer->uuid == NULL) {
+            a->unknown_peer_uuids = TRUE;
+            crm_notice("Update error (unknown peer uuid, retry will be attempted once uuid is discovered): %s[%s]=%s failed (host=%p)",
+                       v->nodename, a->id, v->current, peer);
             continue;
         }
 
