@@ -56,7 +56,6 @@
  *  - \ref fencing
  *
  * Contributing to the Pacemaker Project:
- *  - \ref commit_messages
  *  - \ref coding_guidelines
  */
 

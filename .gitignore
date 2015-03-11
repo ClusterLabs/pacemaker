@@ -101,6 +101,7 @@ cib/cibmon
 cib/cibpipe
 crmd/atest
 crmd/crmd
+doc/api/*
 doc/Clusters_from_Scratch.txt
 doc/Pacemaker_Explained.txt
 doc/acls.html
