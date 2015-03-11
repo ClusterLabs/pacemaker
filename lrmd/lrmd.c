@@ -576,12 +576,12 @@ lsb2uniform_rc(const char *action, int rc)
             return PCMK_OCF_OK;
         case PCMK_LSB_STATUS_NOT_INSTALLED:
             return PCMK_OCF_NOT_INSTALLED;
+        case PCMK_LSB_STATUS_INSUFFICIENT_PRIV:
+            return PCMK_OCF_INSUFFICIENT_PRIV;
         case PCMK_LSB_STATUS_VAR_PID:
         case PCMK_LSB_STATUS_VAR_LOCK:
         case PCMK_LSB_STATUS_NOT_RUNNING:
             return PCMK_OCF_NOT_RUNNING;
-        default:
-            return PCMK_OCF_UNKNOWN_ERROR;
     }
 
     return PCMK_OCF_UNKNOWN_ERROR;
