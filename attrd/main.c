@@ -238,6 +238,10 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         attrd_send_ack(client, id, flags);
         attrd_client_refresh();
 
+    } else if (safe_str_eq(op, ATTRD_OP_QUERY)) {
+        /* queries will get reply, so no ack is necessary */
+        attrd_client_query(client, id, flags, xml);
+
     } else {
         crm_info("Ignoring request from client %s with unknown operation %s",
                  client->name, op);
