@@ -31,8 +31,8 @@ In the following sections, learn how to meet these challenges.
 Multi-site clusters can be considered as “overlay” clusters where
 each cluster site corresponds to a cluster node in a traditional cluster.
 The overlay cluster can be managed by a CTR in order to
-guarantee that the cluster resources will be highly
-available across different cluster sites. This is achieved by using
+guarantee that any cluster resource will be active
+on no more than one cluster site. This is achieved by using
 'tickets' that are treated as failover domain between cluster
 sites, in case a site should be down.
 
@@ -85,9 +85,10 @@ This can be configured by specifying a +loss-policy="fence"+ in
 
 === Cluster Ticket Registry ===
 
-A CTR is a network daemon that automatically handles granting, revoking, and
-timing out tickets (instead of the administrator revoking the ticket somewhere,
-waiting for everything to stop, and then granting it on the desired site).
+A CTR is a coordinated group of network daemons that automatically handles
+granting, revoking, and timing out tickets (instead of the administrator
+revoking the ticket somewhere, waiting for everything to stop, and then
+granting it on the desired site).
 
 Pacemaker does not implement its own CTR, but interoperates with external
 software designed for that purpose (similar to how resource and fencing agents
