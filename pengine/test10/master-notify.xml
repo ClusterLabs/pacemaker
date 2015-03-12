@@ -1,0 +1,100 @@
+<cib crm_feature_set="3.0.9" validate-with="pacemaker-2.3" epoch="7" num_updates="9" admin_epoch="0" cib-last-written="Fri Mar  6 15:33:55 2015" have-quorum="1" dc-uuid="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.12-a14efad"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="phd"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="rhel7-auto1"/>
+      <node id="2" uname="rhel7-auto2"/>
+      <node id="3" uname="rhel7-auto3"/>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="shooter" type="fence_xvm">
+        <instance_attributes id="shooter-instance_attributes"/>
+        <operations>
+          <op id="shooter-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <master id="fake-master">
+        <primitive class="ocf" id="fake" provider="pacemaker" type="Stateful">
+          <instance_attributes id="fake-instance_attributes"/>
+          <operations>
+            <op id="fake-start-timeout-20" interval="0s" name="start" timeout="20"/>
+            <op id="fake-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
+            <op id="fake-monitor-interval-10-role-Master" interval="10" name="monitor" role="Master" timeout="20"/>
+            <op id="fake-monitor-interval-10-role-Slave" interval="10" name="monitor" role="Slave" timeout="20"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="fake-master-meta_attributes">
+          <nvpair id="fake-master-meta_attributes-notify" name="notify" value="true"/>
+        </meta_attributes>
+      </master>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="1" uname="rhel7-auto1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="shooter" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="9:4:0:b1920de7-91eb-4567-8769-b19d37d5494a" transition-magic="0:0;9:4:0:b1920de7-91eb-4567-8769-b19d37d5494a" call-id="6" rc-code="0" op-status="0" interval="0" last-run="1425673727" last-rc-change="1425673727" exec-time="86" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto1"/>
+            <lrm_rsc_op id="shooter_monitor_60000" operation_key="shooter_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="10:4:0:b1920de7-91eb-4567-8769-b19d37d5494a" transition-magic="0:0;10:4:0:b1920de7-91eb-4567-8769-b19d37d5494a" call-id="7" rc-code="0" op-status="0" interval="60000" last-rc-change="1425673727" exec-time="62" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhel7-auto1"/>
+          </lrm_resource>
+          <lrm_resource id="fake" type="Stateful" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="fake_last_0" operation_key="fake_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="14:5:0:b1920de7-91eb-4567-8769-b19d37d5494a" transition-magic="0:0;14:5:0:b1920de7-91eb-4567-8769-b19d37d5494a" call-id="13" rc-code="0" op-status="0" interval="0" last-run="1425674036" last-rc-change="1425674036" exec-time="133" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-1-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-1-master-fake" name="master-fake" value="5"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="3" uname="rhel7-auto3" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="3">
+        <lrm_resources>
+          <lrm_resource id="shooter" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="8:4:7:b1920de7-91eb-4567-8769-b19d37d5494a" transition-magic="0:7;8:4:7:b1920de7-91eb-4567-8769-b19d37d5494a" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1425673725" last-rc-change="1425673725" exec-time="973" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto3"/>
+          </lrm_resource>
+          <lrm_resource id="fake" type="Stateful" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="fake_last_0" operation_key="fake_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="13:5:0:b1920de7-91eb-4567-8769-b19d37d5494a" transition-magic="0:0;13:5:0:b1920de7-91eb-4567-8769-b19d37d5494a" call-id="11" rc-code="0" op-status="0" interval="0" last-run="1425674036" last-rc-change="1425674036" exec-time="145" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto3"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="3">
+        <instance_attributes id="status-3">
+          <nvpair id="status-3-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-3-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-3-master-fake" name="master-fake" value="5"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="2" uname="rhel7-auto2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="shooter" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="6:4:7:b1920de7-91eb-4567-8769-b19d37d5494a" transition-magic="0:7;6:4:7:b1920de7-91eb-4567-8769-b19d37d5494a" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1425673724" last-rc-change="1425673724" exec-time="970" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto2"/>
+          </lrm_resource>
+          <lrm_resource id="fake" type="Stateful" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="fake_last_0" operation_key="fake_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="12:5:0:b1920de7-91eb-4567-8769-b19d37d5494a" transition-magic="0:0;12:5:0:b1920de7-91eb-4567-8769-b19d37d5494a" call-id="11" rc-code="0" op-status="0" interval="0" last-run="1425674035" last-rc-change="1425674035" exec-time="101" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto2"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-2-master-fake" name="master-fake" value="5"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>

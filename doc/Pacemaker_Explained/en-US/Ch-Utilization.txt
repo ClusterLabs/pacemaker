@@ -130,10 +130,10 @@ colocation constraints.
 
 === Which node is preferred to get consumed first when allocating resources? ===
 
-- The node with the highest weight (cumulative score after taking into account
-  location preferences, constraints, etc.) gets consumed first.
+- The node with the highest node weight gets consumed first. Node weight
+  is a score maintained by the cluster to represent node health.
 
-- If multiple nodes have the same weight:
+- If multiple nodes have the same node weight:
   * If +placement-strategy+ is +default+ or +utilization+,
     the node that has the least number of allocated resources gets consumed first.
     ** If their numbers of allocated resources are equal,

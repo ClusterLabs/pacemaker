@@ -173,13 +173,14 @@ enum nagios_exitcode {
     } svc_action_t;
 
 /**
- * Get a list of files or directories in a given path
+ * \brief Get a list of files or directories in a given path
  *
- * \param[in] root full path to a directory to read
- * \param[in] files true to get a list of files, false for a list of directories
+ * \param[in] root       full path to a directory to read
+ * \param[in] files      return list of files if TRUE or directories if FALSE
+ * \param[in] executable if TRUE and files is TRUE, only return executable files
  *
- * \return a list of what was found.  The list items are gchar *.  This list _must_
- *         be destroyed using g_list_free_full(list, free).
+ * \return a list of what was found.  The list items are char *.
+ * \note It is the caller's responsibility to free the result with g_list_free_full(list, free).
  */
     GList *get_directory_list(const char *root, gboolean files, gboolean executable);
 
@@ -192,23 +193,23 @@ enum nagios_exitcode {
     GList *services_list(void);
 
 /**
- * Get a list of providers
+ * \brief Get a list of providers
  *
- * \param[in] the standard for providers to check for (such as "ocf")
+ * \param[in] standard  list providers of this standard (e.g. ocf, lsb, etc.)
  *
- * \return a list of providers.  The list items are gchar *.  This list _must_
- *         be destroyed using g_list_free_full(list, free).
+ * \return a list of providers as char * list items (or NULL if standard does not support providers)
+ * \note The caller is responsible for freeing the result using g_list_free_full(list, free).
  */
     GList *resources_list_providers(const char *standard);
 
 /**
- * Get a list of resource agents
+ * \brief Get a list of resource agents
  *
- * \param[in] the standard for research agents to check for
- *            (such as "ocf", "lsb", or "windows")
+ * \param[in] standard  list agents using this standard (e.g. ocf, lsb, etc.) (or NULL for all)
+ * \param[in] provider  list agents from this provider (or NULL for all)
  *
- * \return a list of resource agents.  The list items are gchar *.  This list _must_
- *         be destroyed using g_list_free_full(list, free).
+ * \return a list of resource agents.  The list items are char *.
+ * \note The caller is responsible for freeing the result using g_list_free_full(list, free).
  */
     GList *resources_list_agents(const char *standard, const char *provider);
 
@@ -224,13 +225,22 @@ enum nagios_exitcode {
                                          int interval /* ms */ , int timeout /* ms */ );
 
 /**
- * Create a resources action.
+ * \brief Create a new resource action
  *
- * \param[in] timeout the timeout in milliseconds
- * \param[in] interval how often to repeat this action, in milliseconds.
- *            If this value is 0, only execute this action one time.
+ * \param[in] name     name of resource
+ * \param[in] standard resource agent standard (ocf, lsb, etc.)
+ * \param[in] provider resource agent provider
+ * \param[in] agent    resource agent name
+ * \param[in] action   action (start, stop, monitor, etc.)
+ * \param[in] interval how often to repeat this action, in milliseconds (if 0, execute only once)
+ * \param[in] timeout  consider action failed if it does not complete in this many milliseconds
+ * \param[in] params   action parameters
+ *
+ * \return newly allocated action instance
  *
  * \post After the call, 'params' is owned, and later free'd by the svc_action_t result
+ * \note The caller is responsible for freeing the return value using
+ *       services_action_free().
  */
     svc_action_t *resources_action_create(const char *name, const char *standard,
                                           const char *provider, const char *agent,

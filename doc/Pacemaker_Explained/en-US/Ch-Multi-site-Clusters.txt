@@ -31,8 +31,8 @@ In the following sections, learn how to meet these challenges.
 Multi-site clusters can be considered as “overlay” clusters where
 each cluster site corresponds to a cluster node in a traditional cluster.
 The overlay cluster can be managed by a CTR in order to
-guarantee that the cluster resources will be highly
-available across different cluster sites. This is achieved by using
+guarantee that any cluster resource will be active
+on no more than one cluster site. This is achieved by using
 'tickets' that are treated as failover domain between cluster
 sites, in case a site should be down.
 
@@ -85,9 +85,10 @@ This can be configured by specifying a +loss-policy="fence"+ in
 
 === Cluster Ticket Registry ===
 
-A CTR is a network daemon that automatically handles granting, revoking, and
-timing out tickets (instead of the administrator revoking the ticket somewhere,
-waiting for everything to stop, and then granting it on the desired site).
+A CTR is a coordinated group of network daemons that automatically handles
+granting, revoking, and timing out tickets (instead of the administrator
+revoking the ticket somewhere, waiting for everything to stop, and then
+granting it on the desired site).
 
 Pacemaker does not implement its own CTR, but interoperates with external
 software designed for that purpose (similar to how resource and fencing agents
@@ -226,7 +227,7 @@ granted elsewhere.
 We will use https://github.com/ClusterLabs/booth[Booth] here as an example of
 software that can be used with pacemaker as a Cluster Ticket Registry.  Booth
 implements the
-http://en.wikipedia.org/wiki/Paxos_%28computer_science%29['Paxos'] lease
+http://en.wikipedia.org/wiki/Raft_%28computer_science%29[Raft]
 algorithm to guarantee the distributed consensus among different
 cluster sites, and manages the ticket distribution (and thus the failover
 process between sites).
@@ -248,9 +249,6 @@ The most common multi-site scenario is probably a multi-site cluster with two
 sites and a single arbitrator on a third site. However, technically, there are
 no limitations with regards to the number of sites and the number of
 arbitrators involved.
-
-Nodes belonging to the same cluster site should be synchronized via NTP. However,
-time synchronization is not required between the individual cluster sites.
 
 `Boothd` at each site connects to its peers running at the other sites and
 exchanges connectivity details. Once a ticket is granted to a site, the
@@ -279,6 +277,17 @@ If you are managing tickets via Booth, use only `booth` for manual
 intervention, not `crm_ticket`. That ensures the same ticket
 will only be owned by one cluster site at a time.
 ====
+
+==== Booth Requirements ====
+
+* All clusters that will be part of the multi-site cluster must be based on
+  Pacemaker.
+
+* Booth must be installed on all cluster nodes and on all arbitrators that will
+  be part of the multi-site cluster. 
+
+* Nodes belonging to the same cluster site should be synchronized via NTP. However,
+  time synchronization is not required between the individual cluster sites.
 
 === General Management of Tickets ===
 
@@ -318,6 +327,6 @@ you can run:
 
 == For more information ==
 
-* http://doc.opensuse.org/products/draft/SLE-HA/SLE-ha-guide_sd_draft/cha.ha.geo.html[SUSE's Multi-site Clusters guide]
+* https://www.suse.com/documentation/sle-ha-geo-12/art_ha_geo_quick/data/art_ha_geo_quick.html[SUSE's Geo Clustering quick start]
 
 * https://github.com/ClusterLabs/booth[Booth]

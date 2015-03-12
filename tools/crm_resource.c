@@ -31,6 +31,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
+#include <time.h>
 
 #include <crm/msg_xml.h>
 #include <crm/services.h>
@@ -1396,31 +1397,77 @@ static void display_list(GList *items, const char *tag)
     }
 }
 
+/*!
+ * \internal
+ * \brief Upgrade XML to latest schema version and use it as working set input
+ *
+ * This also updates the working set timestamp to the current time.
+ *
+ * \param[in] data_set   Working set instance to update
+ * \param[in] xml        XML to use as input
+ *
+ * \return pcmk_ok on success, -ENOKEY if unable to upgrade XML
+ * \note On success, caller is responsible for freeing memory allocated for
+ *       data_set->now.
+ * \todo This follows the example of other callers of cli_config_update()
+ *       and returns -ENOKEY ("Required key not available") if that fails,
+ *       but perhaps -pcmk_err_schema_validation would be better in that case.
+ */
+static int
+update_working_set_xml(pe_working_set_t *data_set, xmlNode **xml)
+{
+    if (cli_config_update(xml, NULL, FALSE) == FALSE) {
+        return -ENOKEY;
+    }
+    data_set->input = *xml;
+    data_set->now = crm_time_new(NULL);
+    return pcmk_ok;
+}
+
+/*!
+ * \internal
+ * \brief Update a working set's XML input based on a CIB query
+ *
+ * \param[in] data_set   Data set instance to initialize
+ * \param[in] cib        Connection to the CIB
+ *
+ * \return pcmk_ok on success, -errno on failure
+ * \note On success, caller is responsible for freeing memory allocated for
+ *       data_set->input and data_set->now.
+ */
+static int
+update_working_set_from_cib(pe_working_set_t * data_set, cib_t *cib)
+{
+    xmlNode *cib_xml_copy = NULL;
+    int rc;
+
+    rc = cib->cmds->query(cib, NULL, &cib_xml_copy, cib_scope_local | cib_sync_call);
+    if (rc != pcmk_ok) {
+        fprintf(stderr, "Could not obtain the current CIB: %s (%d)\n", pcmk_strerror(rc), rc);
+        return rc;
+    }
+    rc = update_working_set_xml(data_set, &cib_xml_copy);
+    if (rc != pcmk_ok) {
+        fprintf(stderr, "Could not upgrade the current CIB XML\n");
+        free_xml(cib_xml_copy);
+        return rc;
+    }
+    return pcmk_ok;
+}
+
 static int
 update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
 {
     char *pid = NULL;
     char *shadow_file = NULL;
     cib_t *shadow_cib = NULL;
-    xmlNode *cib_xml_copy = NULL;
-    int rc = cib->cmds->query(cib, NULL, &cib_xml_copy, cib_scope_local | cib_sync_call);
+    int rc;
 
-    if(rc != pcmk_ok) {
-        fprintf(stdout, "Could not obtain the current CIB: %s (%d)\n", pcmk_strerror(rc), rc);
-        goto cleanup;
-
-    } else if (cli_config_update(&cib_xml_copy, NULL, FALSE) == FALSE) {
-        fprintf(stderr, "Could not upgrade the current CIB\n");
-        rc = -ENOKEY;
-        goto cleanup;
+    cleanup_alloc_calculations(data_set);
+    rc = update_working_set_from_cib(data_set, cib);
+    if (rc != pcmk_ok) {
+        return rc;
     }
-
-    if(data_set->input) {
-        free_xml(data_set->input);
-    }
-    set_working_set_defaults(data_set);
-    data_set->input = cib_xml_copy;
-    data_set->now = crm_time_new(NULL);
 
     if(simulate) {
         pid = crm_itoa(getpid());
@@ -1433,7 +1480,7 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
             goto cleanup;
         }
 
-        rc = write_xml_file(cib_xml_copy, shadow_file, FALSE);
+        rc = write_xml_file(data_set->input, shadow_file, FALSE);
 
         if (rc < 0) {
             fprintf(stderr, "Could not populate shadow cib: %s (%d)\n", pcmk_strerror(rc), rc);
@@ -1446,7 +1493,7 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
             goto cleanup;
         }
 
-        do_calculations(data_set, cib_xml_copy, NULL);
+        do_calculations(data_set, data_set->input, NULL);
         run_simulation(data_set, shadow_cib, NULL, TRUE);
         rc = update_dataset(shadow_cib, data_set, FALSE);
 
@@ -1455,7 +1502,7 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
     }
 
   cleanup:
-    /* Do not free 'cib_xml_copy' here, we need rsc->xml to be valid later on */
+    /* Do not free data_set->input here, we need rsc->xml to be valid later on */
     cib_delete(shadow_cib);
     free(pid);
 
@@ -1522,6 +1569,20 @@ max_delay_in(pe_working_set_t * data_set, GList *resources)
     return 5 + (max_delay / 1000);
 }
 
+/*!
+ * \internal
+ * \brief Restart a resource (on a particular host if requested).
+ *
+ * \param[in] rsc        The resource to restart
+ * \param[in] host       The host to restart the resource on (or NULL for all)
+ * \param[in] timeout_ms Consider failed if actions do not complete in this time
+ *                       (specified in milliseconds, but a two-second
+ *                       granularity is actually used; if 0, a timeout will be
+ *                       calculated based on the resource timeout)
+ * \param[in] cib        Connection to the CIB for modifying/checking resource
+ *
+ * \return pcmk_ok on success, -errno on failure (exits on certain failures)
+ */
 static int
 resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t * cib)
 {
@@ -1557,12 +1618,12 @@ resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t * cib
       determine resource state of list
       disable or ban
       poll and and watch for resources to get stopped
-      without --wait, calculate the stop timeout for each step and wait for that
-      if we hit --wait or the service timeout, re-enable or un-ban, report failure and indicate which resources we couldn't take down
+      without --timeout, calculate the stop timeout for each step and wait for that
+      if we hit --timeout or the service timeout, re-enable or un-ban, report failure and indicate which resources we couldn't take down
       if everything stopped, re-enable or un-ban
       poll and and watch for resources to get stopped
-      without --wait, calculate the start timeout for each step and wait for that
-      if we hit --wait or the service timeout, report (different) failure and indicate which resources we couldn't bring back up
+      without --timeout, calculate the start timeout for each step and wait for that
+      if we hit --timeout or the service timeout, report (different) failure and indicate which resources we couldn't bring back up
       report success
 
       Optimizations:
@@ -1715,6 +1776,118 @@ resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t * cib
     return rc;
 }
 
+#define action_is_pending(action) \
+    ((is_set((action)->flags, pe_action_optional) == FALSE) \
+    && (is_set((action)->flags, pe_action_runnable) == TRUE) \
+    && (is_set((action)->flags, pe_action_pseudo) == FALSE))
+
+/*!
+ * \internal
+ * \brief Return TRUE if any actions in a list are pending
+ *
+ * \param[in] actions   List of actions to check
+ *
+ * \return TRUE if any actions in the list are pending, FALSE otherwise
+ */
+static gboolean
+actions_are_pending(GListPtr actions)
+{
+    GListPtr action;
+
+    for (action = actions; action != NULL; action = action->next) {
+        if (action_is_pending((action_t *) action->data)) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+/*!
+ * \internal
+ * \brief Print pending actions to stderr
+ *
+ * \param[in] actions   List of actions to check
+ *
+ * \return void
+ */
+static void
+print_pending_actions(GListPtr actions)
+{
+    GListPtr action;
+
+    fprintf(stderr, "Pending actions:\n");
+    for (action = actions; action != NULL; action = action->next) {
+        action_t *a = (action_t *) action->data;
+
+        if (action_is_pending(a)) {
+            fprintf(stderr, "\tAction %d: %s", a->id, a->uuid);
+            if (a->node) {
+                fprintf(stderr, "\ton %s", a->node->details->uname);
+            }
+            fprintf(stderr, "\n");
+        }
+    }
+}
+
+/* For --wait, timeout (in seconds) to use if caller doesn't specify one */
+#define WAIT_DEFAULT_TIMEOUT_S (60 * 60)
+
+/* For --wait, how long to sleep between cluster state checks */
+#define WAIT_SLEEP_S (2)
+
+/*!
+ * \internal
+ * \brief Wait until all pending cluster actions are complete
+ *
+ * This waits until either the CIB's transition graph is idle or a timeout is
+ * reached.
+ *
+ * \param[in] timeout_ms Consider failed if actions do not complete in this time
+ *                       (specified in milliseconds, but one-second granularity
+ *                       is actually used; if 0, a default will be used)
+ * \param[in] cib        Connection to the CIB
+ *
+ * \return pcmk_ok on success, -errno on failure
+ */
+static int
+wait_till_stable(int timeout_ms, cib_t * cib)
+{
+    pe_working_set_t data_set;
+    int rc = -1;
+    int timeout_s = timeout_ms? ((timeout_ms + 999) / 1000) : WAIT_DEFAULT_TIMEOUT_S;
+    time_t expire_time = time(NULL) + timeout_s;
+    time_t time_diff;
+
+    set_working_set_defaults(&data_set);
+    do {
+
+        /* Abort if timeout is reached */
+        time_diff = expire_time - time(NULL);
+        if (time_diff > 0) {
+            crm_info("Waiting up to %d seconds for cluster actions to complete", time_diff);
+        } else {
+            print_pending_actions(data_set.actions);
+            cleanup_alloc_calculations(&data_set);
+            return -ETIME;
+        }
+        if (rc == pcmk_ok) { /* this avoids sleep on first loop iteration */
+            sleep(WAIT_SLEEP_S);
+        }
+
+        /* Get latest transition graph */
+        cleanup_alloc_calculations(&data_set);
+        rc = update_working_set_from_cib(&data_set, cib);
+        if (rc != pcmk_ok) {
+            cleanup_alloc_calculations(&data_set);
+            return rc;
+        }
+        do_calculations(&data_set, data_set.input, NULL);
+
+    } while (actions_are_pending(data_set.actions));
+
+    return pcmk_ok;
+}
+
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {
     /* Top-level Options */
@@ -1728,7 +1901,7 @@ static struct crm_option long_options[] = {
     {"-spacer-",1, 0, '-', "\nQueries:"},
     {"list",       0, 0, 'L', "\t\tList all cluster resources"},
     {"list-raw",   0, 0, 'l', "\tList the IDs of all instantiated resources (no groups/clones/...)"},
-    {"list-cts",   0, 0, 'c', NULL, 1},
+    {"list-cts",   0, 0, 'c', NULL, pcmk_option_hidden},
     {"list-operations", 0, 0, 'O', "\tList active resource operations.  Optionally filtered by resource (-r) and/or node (-N)"},
     {"list-all-operations", 0, 0, 'o', "List all resource operations.  Optionally filtered by resource (-r) and/or node (-N)"},
     {"pending",    0, 0, 'j', "\t\tDisplay pending state if 'record-pending' is enabled\n"},
@@ -1750,8 +1923,8 @@ static struct crm_option long_options[] = {
     {"set-parameter",   1, 0, 'p', "Set the named parameter for a resource. See also -m, --meta"},
     {"get-parameter",   1, 0, 'g', "Display the named parameter for a resource. See also -m, --meta"},
     {"delete-parameter",1, 0, 'd', "Delete the named parameter for a resource. See also -m, --meta"},
-    {"get-property",    1, 0, 'G', "Display the 'class', 'type' or 'provider' of a resource", 1},
-    {"set-property",    1, 0, 'S', "(Advanced) Set the class, type or provider of a resource", 1},
+    {"get-property",    1, 0, 'G', "Display the 'class', 'type' or 'provider' of a resource", pcmk_option_hidden},
+    {"set-property",    1, 0, 'S', "(Advanced) Set the class, type or provider of a resource", pcmk_option_hidden},
 
     {"-spacer-",	1, 0, '-', "\nResource location:"},
     {
@@ -1765,8 +1938,8 @@ static struct crm_option long_options[] = {
         "\t\tPrevent the named resource from running on the named --host.  \n"
         "\t\t\t\tRequires: --resource. Optional: --host, --lifetime, --master\n\n"
         "\t\t\t\tIf --host is not specified, it defaults to:\n"
-        "\t\t\t\t * the curent location for primitives and groups, or\n\n"
-        "\t\t\t\t * the curent location of the master for m/s resources with master-max=1\n\n"
+        "\t\t\t\t * the current location for primitives and groups, or\n\n"
+        "\t\t\t\t * the current location of the master for m/s resources with master-max=1\n\n"
         "\t\t\t\tAll other situations result in an error as there is no sane default.\n\n"
         "\t\t\t\tNOTE: This will prevent the resource from running on this node until the constraint expires or is removed with --clear\n"
     },
@@ -1786,6 +1959,7 @@ static struct crm_option long_options[] = {
     {"delete",     0, 0, 'D', "\t\t(Advanced) Delete a resource from the CIB"},
     {"fail",       0, 0, 'F', "\t\t(Advanced) Tell the cluster this resource has failed"},
     {"restart",    0, 0,  0,  "\t\t(Advanced) Tell the cluster to restart this resource and anything that depends on it"},
+    {"wait",       0, 0,  0,  "\t\t(Advanced) Wait until the cluster settles into a stable state"},
     {"force-stop", 0, 0,  0,  "\t(Advanced) Bypass the cluster and stop a resource on the local node. Additional detail with -V"},
     {"force-start",0, 0,  0,  "\t(Advanced) Bypass the cluster and start a resource on the local node. Additional detail with -V"},
     {"force-check",0, 0,  0,  "\t(Advanced) Bypass the cluster and check the state of a resource on the local node. Additional detail with -V\n"},
@@ -1799,22 +1973,22 @@ static struct crm_option long_options[] = {
     {"utilization",	0, 0, 'z', "\tModify a resource's utilization attribute. For use with -p, -g, -d"},
     {"set-name",        1, 0, 's', "\t(Advanced) ID of the instance_attributes object to change"},
     {"nvpair",          1, 0, 'i', "\t(Advanced) ID of the nvpair object to change/delete"},
-    {"timeout",         1, 0, 'T',  "\t(Advanced) How long to wait for --restart to take effect", 1},
+    {"timeout",         1, 0, 'T',  "\t(Advanced) Abort if command does not finish in this time (with --restart or --wait)", pcmk_option_hidden},
     {"force",		0, 0, 'f', "\n" /* Is this actually true anymore?
 					   "\t\tForce the resource to move by creating a rule for the current location and a score of -INFINITY"
 					   "\n\t\tThis should be used if the resource's stickiness and constraint scores total more than INFINITY (Currently 100,000)"
 					   "\n\t\tNOTE: This will prevent the resource from running on this node until the constraint is removed with -U or the --lifetime duration expires\n"*/ },
 
-    {"xml-file", 1, 0, 'x', NULL, 1},\
+    {"xml-file", 1, 0, 'x', NULL, pcmk_option_hidden},\
 
     /* legacy options */
-    {"host-uname", 1, 0, 'H', NULL, 1},
-    {"migrate",    0, 0, 'M', NULL, 1},
-    {"un-migrate", 0, 0, 'U', NULL, 1},
-    {"un-move",    0, 0, 'U', NULL, 1},
+    {"host-uname", 1, 0, 'H', NULL, pcmk_option_hidden},
+    {"migrate",    0, 0, 'M', NULL, pcmk_option_hidden},
+    {"un-migrate", 0, 0, 'U', NULL, pcmk_option_hidden},
+    {"un-move",    0, 0, 'U', NULL, pcmk_option_hidden},
 
-    {"refresh",    0, 0, 'R', NULL, 1},
-    {"reprobe",    0, 0, 'P', NULL, 1},
+    {"refresh",    0, 0, 'R', NULL, pcmk_option_hidden},
+    {"reprobe",    0, 0, 'P', NULL, pcmk_option_hidden},
 
     {"-spacer-",	1, 0, '-', "\nExamples:", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', "List the configured resources:", pcmk_option_paragraph},
@@ -1833,7 +2007,7 @@ static struct crm_option long_options[] = {
     {"-spacer-",	1, 0, '-', " crm_resource --resource myResource --un-move", pcmk_option_example},
     {"-spacer-",	1, 0, '-', "Tell the cluster that 'myResource' failed:", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', " crm_resource --resource myResource --fail", pcmk_option_example},
-    {"-spacer-",	1, 0, '-', "Stop a 'myResource' (and anything that depends on it):", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', "Stop 'myResource' (and anything that depends on it):", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', " crm_resource --resource myResource --set-parameter target-role --meta --parameter-value Stopped", pcmk_option_example},
     {"-spacer-",	1, 0, '-', "Tell the cluster not to manage 'myResource':", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', "The cluster will not attempt to start or stop the resource under any circumstances."},
@@ -1853,10 +2027,15 @@ main(int argc, char **argv)
 {
     const char *longname = NULL;
     pe_working_set_t data_set;
-    xmlNode *cib_xml_copy = NULL;
     cib_t *cib_conn = NULL;
     bool do_trace = FALSE;
     bool recursive = FALSE;
+
+    /* Not all commands set these appropriately, but the defaults here are
+     * sufficient to get the logic right. */
+    bool require_resource = TRUE; /* whether command requires that resource be specified */
+    bool require_dataset = TRUE;  /* whether command requires populated dataset instance */
+    bool require_crmd = FALSE;    /* whether command requires connection to CRMd */
 
     int rc = pcmk_ok;
     int option_index = 0;
@@ -1878,12 +2057,18 @@ main(int argc, char **argv)
             break;
 
         switch (flag) {
-            case 0:
+            case 0: /* long options with no short equivalent */
                 if (safe_str_eq("master", longname)) {
                     scope_master = TRUE;
 
                 } else if(safe_str_eq(longname, "recursive")) {
                     recursive = TRUE;
+
+                } else if (safe_str_eq("wait", longname)) {
+                    rsc_cmd = flag;
+                    rsc_long_cmd = longname;
+                    require_resource = FALSE;
+                    require_dataset = FALSE;
 
                 } else if (safe_str_eq("force-stop", longname)
                     || safe_str_eq("restart", longname)
@@ -2043,6 +2228,12 @@ main(int argc, char **argv)
             case 'R':
             case 'P':
                 rsc_cmd = 'C';
+                require_resource = FALSE;
+                require_crmd = TRUE;
+                break;
+            case 'F':
+                rsc_cmd = flag;
+                require_crmd = TRUE;
                 break;
             case 'L':
             case 'c':
@@ -2050,7 +2241,6 @@ main(int argc, char **argv)
             case 'q':
             case 'w':
             case 'D':
-            case 'F':
             case 'W':
             case 'M':
             case 'U':
@@ -2114,16 +2304,29 @@ main(int argc, char **argv)
         cib_options |= cib_quorum_override;
     }
 
-    set_working_set_defaults(&data_set);
-    if (rsc_cmd != 'P' || rsc_id) {
-        resource_t *rsc = NULL;
+    data_set.input = NULL; /* make clean-up easier */
 
-        cib_conn = cib_new();
-        rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
-        if (rc != pcmk_ok) {
-            CMD_ERR("Error signing on to the CIB service: %s\n", pcmk_strerror(rc));
-            return crm_exit(rc);
-        }
+    /* If user specified resource, look for it, even if it's optional for command */
+    if (rsc_id) {
+        require_resource = TRUE;
+    }
+
+    /* We need a dataset to find a resource, even if command doesn't need it */
+    if (require_resource) {
+        require_dataset = TRUE;
+    }
+
+    /* Establish a connection to the CIB */
+    cib_conn = cib_new();
+    rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
+    if (rc != pcmk_ok) {
+        CMD_ERR("Error signing on to the CIB service: %s\n", pcmk_strerror(rc));
+        return crm_exit(rc);
+    }
+
+    /* Populate working set from XML file if specified or CIB query otherwise */
+    if (require_dataset) {
+        xmlNode *cib_xml_copy = NULL;
 
         if (xml_file != NULL) {
             cib_xml_copy = filename2xml(xml_file);
@@ -2134,24 +2337,27 @@ main(int argc, char **argv)
 
         if(rc != pcmk_ok) {
             goto bail;
-        } else if (cli_config_update(&cib_xml_copy, NULL, FALSE) == FALSE) {
-            rc = -ENOKEY;
+        }
+
+        /* Populate the working set instance */
+        set_working_set_defaults(&data_set);
+        rc = update_working_set_xml(&data_set, &cib_xml_copy);
+        if (rc != pcmk_ok) {
             goto bail;
         }
-
-        data_set.input = cib_xml_copy;
-        data_set.now = crm_time_new(NULL);
-
         cluster_status(&data_set);
-        if (rsc_id) {
-            rsc = find_rsc_or_clone(rsc_id, &data_set);
-        }
-        if (rsc == NULL && rsc_cmd != 'C') {
+
+        /* Set rc to -ENXIO if no resource matching rsc_id is found.
+         * This does not bail, but is handled later for certain commands.
+         * That handling could be done here instead if all flags above set
+         * require_resource appropriately. */
+        if (require_resource && rsc_id && (find_rsc_or_clone(rsc_id, &data_set) == NULL)) {
             rc = -ENXIO;
         }
     }
 
-    if (rsc_cmd == 'R' || rsc_cmd == 'C' || rsc_cmd == 'F' || rsc_cmd == 'P') {
+    /* Establish a connection to the CRMd if needed */
+    if (require_crmd) {
         xmlNode *xml = NULL;
         mainloop_io_t *source =
             mainloop_add_ipc_client(CRM_SYSTEM_CRMD, G_PRIORITY_DEFAULT, 0, NULL, &crm_callbacks);
@@ -2168,6 +2374,7 @@ main(int argc, char **argv)
         free_xml(xml);
     }
 
+    /* Handle rsc_cmd appropriately */
     if (rsc_cmd == 'L') {
         rc = pcmk_ok;
         do_find_resource_list(&data_set, FALSE);
@@ -2195,7 +2402,10 @@ main(int argc, char **argv)
 
         rc = resource_restart(rsc, host_uname, timeout_ms, cib_conn);
 
-    } else if (rsc_cmd == 0 && rsc_long_cmd) {
+    } else if (rsc_cmd == 0 && rsc_long_cmd && safe_str_eq(rsc_long_cmd, "wait")) {
+        rc = wait_till_stable(timeout_ms, cib_conn);
+
+    } else if (rsc_cmd == 0 && rsc_long_cmd) { /* force-(stop|start|check) */
         svc_action_t *op = NULL;
         const char *rtype = NULL;
         const char *rprov = NULL;
@@ -2361,6 +2571,7 @@ main(int argc, char **argv)
     } else if (rsc_cmd == 'o') {
         rc = list_resource_operations(rsc_id, host_uname, FALSE, &data_set);
 
+    /* All remaining commands require that resource exist */
     } else if (rc == -ENXIO) {
         CMD_ERR("Resource '%s' not found: %s\n", crm_str(rsc_id), pcmk_strerror(rc));
 

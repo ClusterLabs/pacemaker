@@ -28,13 +28,13 @@ that the author is comfortable with.
 
 indexterm:[Resource,class]
 
-Pacemaker supports six classes of agents:
+Pacemaker supports several classes of agents:
 
 * OCF
+* LSB
+* Upstart
+* Systemd
 * Service
-** LSB
-** Upstart
-** Systemd
 * Fencing
 * Nagios Plugins
 

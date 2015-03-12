@@ -149,7 +149,11 @@ so there is no need to perform a reload-like operation.
 
 The simplest way of using `cibadmin` is to use it to save the current
 configuration to a temporary file, edit that file with your favorite
-text or XML editor, and then upload the revised configuration.
+text or XML editor, and then upload the revised configuration. footnote:[This
+process might appear to risk overwriting changes that happen after the initial
+cibadmin call, but pacemaker will reject any update that is "too old". If the
+CIB is updated in some other fashion after the initial cibadmin, the second
+cibadmin will be rejected because the version number will be too low.]
       
 .Safely using an editor to modify the cluster configuration
 ======
