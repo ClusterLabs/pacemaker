@@ -78,7 +78,11 @@ enum lsb_status_exitcode {
     PCMK_LSB_STATUS_VAR_PID        = 1,
     PCMK_LSB_STATUS_VAR_LOCK       = 2,
     PCMK_LSB_STATUS_NOT_RUNNING    = 3,
-    PCMK_LSB_STATUS_NOT_INSTALLED  = 4,
+    PCMK_LSB_STATUS_UNKNOWN        = 4,
+
+    /* custom codes should be in the 150-199 range reserved for application use */
+    PCMK_LSB_STATUS_NOT_INSTALLED      = 150,
+    PCMK_LSB_STATUS_INSUFFICIENT_PRIV  = 151,
 };
 
 /* Uniform exit codes
@@ -305,7 +309,10 @@ enum nagios_exitcode {
                 case PCMK_LRM_OP_ERROR:return "Error";
                 case PCMK_LRM_OP_NOT_INSTALLED:return "Not installed";
                 default:return "UNKNOWN!";
-    }} static inline const char *services_ocf_exitcode_str(enum ocf_exitcode code) {
+        }
+    }
+
+    static inline const char *services_ocf_exitcode_str(enum ocf_exitcode code) {
         switch (code) {
             case PCMK_OCF_OK:
                 return "ok";
@@ -349,7 +356,7 @@ enum nagios_exitcode {
     }
 
     static inline enum ocf_exitcode
-     services_get_ocf_exitcode(char *action, int lsb_exitcode) {
+    services_get_ocf_exitcode(char *action, int lsb_exitcode) {
         if (action != NULL && strcmp("status", action) == 0) {
             switch (lsb_exitcode) {
                 case PCMK_LSB_STATUS_OK:
@@ -361,7 +368,10 @@ enum nagios_exitcode {
                 case PCMK_LSB_STATUS_NOT_RUNNING:
                     return PCMK_OCF_NOT_RUNNING;
                 case PCMK_LSB_STATUS_NOT_INSTALLED:
-                    return PCMK_OCF_UNKNOWN_ERROR;
+                    return PCMK_OCF_NOT_INSTALLED;
+                case PCMK_LSB_STATUS_INSUFFICIENT_PRIV:
+                    return PCMK_OCF_INSUFFICIENT_PRIV;
+                case PCMK_LSB_STATUS_UNKNOWN:
                 default:
                     return PCMK_OCF_UNKNOWN_ERROR;
             }

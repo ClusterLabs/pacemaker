@@ -332,50 +332,56 @@ operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exi
     operation_finalize(op);
 }
 
+/*!
+ * \internal
+ * \brief Set operation rc and status per errno from stat(), fork() or execvp()
+ *
+ * \param[in,out] op     Operation to set rc and status for
+ * \param[in]     error  Value of errno after system call
+ *
+ * \return void
+ */
 static void
 services_handle_exec_error(svc_action_t * op, int error)
 {
-    op->rc = PCMK_OCF_EXEC_ERROR;
-    op->status = PCMK_LRM_OP_ERROR;
+    int rc_not_installed, rc_insufficient_priv, rc_exec_error;
 
-    /* Need to mimic the return codes for each standard as thats what we'll convert back from in get_uniform_rc() */
+    /* Mimic the return codes for each standard as that's what we'll convert back from in get_uniform_rc() */
     if (safe_str_eq(op->standard, "lsb") && safe_str_eq(op->action, "status")) {
-        switch (error) {    /* see execve(2) */
-            case ENOENT:   /* No such file or directory */
-            case EISDIR:   /* Is a directory */
-                op->rc = PCMK_LSB_STATUS_NOT_INSTALLED;
-                op->status = PCMK_LRM_OP_NOT_INSTALLED;
-                break;
-            case EACCES:   /* permission denied (various errors) */
-                /* LSB status ops don't support 'not installed' */
-                break;
-        }
+        rc_not_installed = PCMK_LSB_STATUS_NOT_INSTALLED;
+        rc_insufficient_priv = PCMK_LSB_STATUS_INSUFFICIENT_PRIV;
+        rc_exec_error = PCMK_LSB_STATUS_UNKNOWN;
 
 #if SUPPORT_NAGIOS
     } else if (safe_str_eq(op->standard, "nagios")) {
-        switch (error) {
-            case ENOENT:   /* No such file or directory */
-            case EISDIR:   /* Is a directory */
-                op->rc = NAGIOS_NOT_INSTALLED;
-                op->status = PCMK_LRM_OP_NOT_INSTALLED;
-                break;
-            case EACCES:   /* permission denied (various errors) */
-                op->rc = NAGIOS_INSUFFICIENT_PRIV;
-                break;
-        }
+        rc_not_installed = NAGIOS_NOT_INSTALLED;
+        rc_insufficient_priv = NAGIOS_INSUFFICIENT_PRIV;
+        rc_exec_error = PCMK_OCF_EXEC_ERROR;
 #endif
 
     } else {
-        switch (error) {
-            case ENOENT:   /* No such file or directory */
-            case EISDIR:   /* Is a directory */
-                op->rc = PCMK_OCF_NOT_INSTALLED; /* Valid for LSB */
-                op->status = PCMK_LRM_OP_NOT_INSTALLED;
-                break;
-            case EACCES:   /* permission denied (various errors) */
-                op->rc = PCMK_OCF_INSUFFICIENT_PRIV; /* Valid for LSB */
-                break;
-        }
+        rc_not_installed = PCMK_OCF_NOT_INSTALLED;
+        rc_insufficient_priv = PCMK_OCF_INSUFFICIENT_PRIV;
+        rc_exec_error = PCMK_OCF_EXEC_ERROR;
+    }
+
+    switch (error) {   /* see execve(2), stat(2) and fork(2) */
+        case ENOENT:   /* No such file or directory */
+        case EISDIR:   /* Is a directory */
+        case ENOTDIR:  /* Path component is not a directory */
+        case EINVAL:   /* Invalid executable format */
+        case ENOEXEC:  /* Invalid executable format */
+            op->rc = rc_not_installed;
+            op->status = PCMK_LRM_OP_NOT_INSTALLED;
+            break;
+        case EACCES:   /* permission denied (various errors) */
+        case EPERM:    /* permission denied (various errors) */
+            op->rc = rc_insufficient_priv;
+            op->status = PCMK_LRM_OP_ERROR;
+            break;
+        default:
+            op->rc = rc_exec_error;
+            op->status = PCMK_LRM_OP_ERROR;
     }
 }
 
