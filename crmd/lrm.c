@@ -2131,10 +2131,19 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op)
     op_key = generate_op_key(op->rsc_id, op->op_type, op->interval);
     rsc = lrm_state_get_rsc_info(lrm_state, op->rsc_id, 0);
 
-    if (op->op_status == PCMK_LRM_OP_ERROR
-        && (op->rc == PCMK_OCF_RUNNING_MASTER || op->rc == PCMK_OCF_NOT_RUNNING)) {
-        /* Leave it up to the TE/PE to decide if this is an error */
-        op->op_status = PCMK_LRM_OP_DONE;
+    if (op->op_status == PCMK_LRM_OP_ERROR) {
+        switch(op->rc) {
+            case PCMK_OCF_NOT_RUNNING:
+            case PCMK_OCF_RUNNING_MASTER:
+            case PCMK_OCF_DEGRADED:
+            case PCMK_OCF_DEGRADED_MASTER:
+                /* Leave it up to the TE/PE to decide if this is an error */
+                op->op_status = PCMK_LRM_OP_DONE;
+                break;
+            default:
+                /* Nothing to do */
+                break;
+        }
     }
 
     if (op->op_status != PCMK_LRM_OP_CANCELLED) {

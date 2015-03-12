@@ -98,6 +98,9 @@ enum ocf_exitcode {
 
 
     /* 150-199	reserved for application use */
+    PCMK_OCF_DEGRADED        = 190, /* Active reasource that is no longer 100% functional */
+    PCMK_OCF_DEGRADED_MASTER = 191, /* Promoted reasource that is no longer 100% functional */
+
     PCMK_OCF_EXEC_ERROR    = 192, /* Generic problem invoking the agent */
     PCMK_OCF_UNKNOWN       = 193, /* State of the service is unknown - used for recording in-flight operations */
     PCMK_OCF_SIGNAL        = 194,
@@ -326,6 +329,10 @@ enum nagios_exitcode {
                 return "OCF_TIMEOUT";
             case PCMK_OCF_OTHER_ERROR:
                 return "OCF_OTHER_ERROR";
+            case PCMK_OCF_DEGRADED:
+                return "OCF_DEGRADED";
+            case PCMK_OCF_DEGRADED_MASTER:
+                return "OCF_DEGRADED_MASTER";
             default:
                 return "unknown";
         }

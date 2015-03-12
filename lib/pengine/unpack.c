@@ -2642,7 +2642,7 @@ determine_op_status(
                      services_ocf_exitcode_str(rc), rc,
                      services_ocf_exitcode_str(target_rc), target_rc);
     }
-    
+
     /* we could clean this up significantly except for old LRMs and CRMs that
      * didnt include target_rc and liked to remap status
      */
@@ -2701,6 +2701,7 @@ determine_op_status(
             rsc->role = RSC_ROLE_MASTER;
             break;
 
+        case PCMK_OCF_DEGRADED_MASTER:
         case PCMK_OCF_FAILED_MASTER:
             rsc->role = RSC_ROLE_MASTER;
             result = PCMK_LRM_OP_ERROR;
@@ -2807,6 +2808,8 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
             case PCMK_OCF_OK:
             case PCMK_OCF_NOT_RUNNING:
             case PCMK_OCF_RUNNING_MASTER:
+            case PCMK_OCF_DEGRADED:
+            case PCMK_OCF_DEGRADED_MASTER:
                 /* Don't expire probes that return these values */ 
                 expired = FALSE;
                 break;
@@ -2828,6 +2831,7 @@ int get_target_rc(xmlNode *xml_op)
 
     decode_transition_key(key, &dummy_string, &dummy, &dummy, &target_rc);
     free(dummy_string);
+
     return target_rc;
 }
 
@@ -2976,6 +2980,28 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
 
     if(status != PCMK_LRM_OP_NOT_INSTALLED) {
         expired = check_operation_expiry(rsc, node, rc, xml_op, data_set);
+    }
+
+    /* Degraded results are informational only, re-map them to their error-free equivalents */
+    if (rc == PCMK_OCF_DEGRADED && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+        rc = PCMK_OCF_OK;
+
+        /* Add them to the failed list to highlight them for the user */
+        if ((node->details->shutdown == FALSE) || (node->details->online == TRUE)) {
+            crm_trace("Remapping %d to %d", PCMK_OCF_DEGRADED, PCMK_OCF_OK);
+            crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
+            add_node_copy(data_set->failed, xml_op);
+        }
+
+    } else if (rc == PCMK_OCF_DEGRADED_MASTER && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+        rc = PCMK_OCF_RUNNING_MASTER;
+
+        /* Add them to the failed list to highlight them for the user */
+        if ((node->details->shutdown == FALSE) || (node->details->online == TRUE)) {
+            crm_trace("Remapping %d to %d", PCMK_OCF_DEGRADED_MASTER, PCMK_OCF_RUNNING_MASTER);
+            crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
+            add_node_copy(data_set->failed, xml_op);
+        }
     }
 
     if (expired && target_rc != rc) {
