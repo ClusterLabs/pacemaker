@@ -780,6 +780,18 @@ handle_request(xmlNode * stored_msg, enum crmd_fsa_cause cause)
             crm_warn("Discarding %s op from %s", op, host_from);
         }
 
+    } else if (strcmp(op, CRM_OP_SHUTDOWN_NOTIFY) == 0) {
+        const char *shutdown_target = NULL;
+
+        msg = get_message_xml(stored_msg, F_CRM_DATA);
+        shutdown_target = crm_element_value(msg, XML_LRM_ATTR_TARGET);
+        if (shutdown_target) {
+            crm_node_t *node = crm_get_peer(0, shutdown_target);
+
+            crm_update_peer_expected(__FUNCTION__, node, CRMD_JOINSTATE_DOWN);
+        }
+        return I_NULL;
+
     } else if (strcmp(op, CRM_OP_PING) == 0) {
         /* eventually do some stuff to figure out
          * if we /are/ ok
