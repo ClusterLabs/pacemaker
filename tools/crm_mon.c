@@ -1184,6 +1184,28 @@ crm_mon_get_parameters(resource_t *rsc, pe_working_set_t * data_set)
     }
 }
 
+/*!
+ * \internal
+ * \brief Return human-friendly string representing current time
+ *
+ * \return Current time as string (as by ctime() but without newline) on success
+ *         or "Could not determine current time" on error
+ * \note The return value points to a statically allocated string which might be
+ *       overwritten by subsequent calls to any of the C library date and time functions.
+ */
+static const char *
+crm_now_string(void)
+{
+    time_t a_time = time(NULL);
+    char *since_epoch = ctime(&a_time);
+
+    if ((a_time == (time_t) -1) || (since_epoch == NULL)) {
+        return "Could not determine current time";
+    }
+    since_epoch[strlen(since_epoch) - 1] = EOS; /* trim newline */
+    return (since_epoch);
+}
+
 static int
 print_status(pe_working_set_t * data_set)
 {
@@ -1191,7 +1213,6 @@ print_status(pe_working_set_t * data_set)
 
     GListPtr gIter = NULL;
     node_t *dc = NULL;
-    char *since_epoch = NULL;
     char *online_nodes = NULL;
     char *online_remote_nodes = NULL;
     char *online_remote_containers = NULL;
@@ -1201,7 +1222,6 @@ print_status(pe_working_set_t * data_set)
     xmlNode *dc_version = NULL;
     xmlNode *quorum_node = NULL;
     xmlNode *stack = NULL;
-    time_t a_time = time(NULL);
 
     int print_opts = pe_print_ncurses;
     const char *quorum_votes = "unknown";
@@ -1223,14 +1243,9 @@ print_status(pe_working_set_t * data_set)
     updates++;
     dc = data_set->dc_node;
 
-    if (a_time == (time_t) - 1) {
-        crm_perror(LOG_ERR, "set_node_tstamp(): Invalid time returned");
-        return 1;
-    }
 
-    since_epoch = ctime(&a_time);
-    if (since_epoch != NULL && print_last_updated && !hide_headers) {
-        print_as("Last updated: %s", since_epoch);
+    if (print_last_updated && !hide_headers) {
+        print_as("Last updated: %s\n", crm_now_string());
     }
 
     if (print_last_change && !hide_headers) {
@@ -1575,11 +1590,7 @@ print_xml_status(pe_working_set_t * data_set)
     fprintf(stream, "    <summary>\n");
 
     if (print_last_updated) {
-        time_t now = time(NULL);
-        char *now_str = ctime(&now);
-
-        now_str[24] = EOS;      /* replace the newline */
-        fprintf(stream, "        <last_update time=\"%s\" />\n", now_str);
+        fprintf(stream, "        <last_update time=\"%s\" />\n", crm_now_string());
     }
 
     if (print_last_change) {
@@ -1812,14 +1823,7 @@ print_html_status(pe_working_set_t * data_set, const char *filename, gboolean we
     /*** SUMMARY ***/
 
     fprintf(stream, "<h2>Cluster summary</h2>");
-    {
-        char *now_str = NULL;
-        time_t now = time(NULL);
-
-        now_str = ctime(&now);
-        now_str[24] = EOS;      /* replace the newline */
-        fprintf(stream, "Last updated: <b>%s</b><br/>\n", now_str);
-    }
+    fprintf(stream, "Last updated: <b>%s</b><br/>\n", crm_now_string());
 
     if (dc == NULL) {
         fprintf(stream, "Current DC: <font color=\"red\"><b>NONE</b></font><br/>");
