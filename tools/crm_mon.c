@@ -1186,6 +1186,41 @@ crm_mon_get_parameters(resource_t *rsc, pe_working_set_t * data_set)
 
 /*!
  * \internal
+ * \brief Return resource display options corresponding to command-line choices
+ *
+ * \return Bitmask of pe_print_options suitable for resource print functions
+ */
+static int
+get_resource_display_options(void)
+{
+    int print_opts = as_console? pe_print_ncurses : pe_print_printf;
+
+    /* Determine basic output format */
+    if (as_xml) {
+        print_opts = pe_print_xml;
+    } else if (as_html_file || web_cgi) {
+        print_opts = pe_print_html;
+    } else if (as_console) {
+        print_opts = pe_print_ncurses;
+    } else {
+        print_opts = pe_print_printf;
+    }
+
+    /* Add optional display elements */
+    if (print_pending) {
+        print_opts |= pe_print_pending;
+    }
+    if (print_clone_detail) {
+        print_opts |= pe_print_clone_details;
+    }
+    if (print_brief) {
+        print_opts |= pe_print_brief;
+    }
+    return print_opts;
+}
+
+/*!
+ * \internal
  * \brief Return human-friendly string representing current time
  *
  * \return Current time as string (as by ctime() but without newline) on success
@@ -1223,22 +1258,13 @@ print_status(pe_working_set_t * data_set)
     xmlNode *quorum_node = NULL;
     xmlNode *stack = NULL;
 
-    int print_opts = pe_print_ncurses;
+    int print_opts = get_resource_display_options();
     const char *quorum_votes = "unknown";
 
     if (as_console) {
         blank_screen();
-    } else {
-        print_opts = pe_print_printf;
     }
 
-    if (print_pending) {
-        print_opts |= pe_print_pending;
-    }
-
-    if (print_clone_detail) {
-        print_opts |= pe_print_clone_details;
-    }
 
     updates++;
     dc = data_set->dc_node;
@@ -1437,7 +1463,6 @@ print_status(pe_working_set_t * data_set)
         print_as("\n");
 
         if (print_brief && group_by_node == FALSE) {
-            print_opts |= pe_print_brief;
             print_rscs_brief(data_set->resources, NULL, print_opts, stdout,
                              inactive_resources);
         }
@@ -1575,13 +1600,9 @@ print_xml_status(pe_working_set_t * data_set)
     xmlNode *stack = NULL;
     xmlNode *quorum_node = NULL;
     const char *quorum_votes = "unknown";
-    int print_opts = pe_print_xml;
+    int print_opts = get_resource_display_options();
 
     dc = data_set->dc_node;
-
-    if (print_pending) {
-        print_opts |= pe_print_pending;
-    }
 
     fprintf(stream, "<?xml version=\"1.0\"?>\n");
     fprintf(stream, "<crm_mon version=\"%s\">\n", VERSION);
@@ -1790,11 +1811,7 @@ print_html_status(pe_working_set_t * data_set, const char *filename, gboolean we
     node_t *dc = NULL;
     static int updates = 0;
     char *filename_tmp = NULL;
-    int print_opts = pe_print_html;
-
-    if (print_pending) {
-        print_opts |= pe_print_pending;
-    }
+    int print_opts = get_resource_display_options();
 
     if (web_cgi) {
         stream = stdout;
@@ -1923,7 +1940,6 @@ print_html_status(pe_working_set_t * data_set, const char *filename, gboolean we
 
     if (group_by_node == FALSE || inactive_resources) {
         if (print_brief && group_by_node == FALSE) {
-            print_opts |= pe_print_brief;
             print_rscs_brief(data_set->resources, NULL, print_opts, stream,
                              inactive_resources);
         }
