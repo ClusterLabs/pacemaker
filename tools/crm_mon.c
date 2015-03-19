@@ -1276,6 +1276,9 @@ get_resource_display_options(void)
     if (print_clone_detail) {
         print_opts |= pe_print_clone_details;
     }
+    if (!inactive_resources) {
+        print_opts |= pe_print_clone_active;
+    }
     if (print_brief) {
         print_opts |= pe_print_brief;
     }
