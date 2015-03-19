@@ -322,6 +322,10 @@ upstart_job_check(const char *name, const char *state, void *userdata)
     }
 
     if (op->synchronous == FALSE) {
+        if (op->opaque->pending) {
+            dbus_pending_call_unref(op->opaque->pending);
+        }
+        op->opaque->pending = NULL;
         operation_finalize(op);
     }
 }
@@ -465,9 +469,11 @@ upstart_job_exec(svc_action_t * op, gboolean synchronous)
 
         op->rc = PCMK_OCF_NOT_RUNNING;
         if(path) {
+            DBusPendingCall *pending = NULL;
             char *state = pcmk_dbus_get_property(
                 upstart_proxy, BUS_NAME, path, UPSTART_06_API ".Instance", "state",
-                op->synchronous?NULL:upstart_job_check, op);
+                op->synchronous?NULL:upstart_job_check, op,
+                op->synchronous?NULL:&pending);
 
             free(job);
             free(path);
@@ -476,8 +482,12 @@ upstart_job_exec(svc_action_t * op, gboolean synchronous)
                 upstart_job_check("state", state, op);
                 free(state);
                 return op->rc == PCMK_OCF_OK;
+            } else if (pending) {
+                dbus_pending_call_ref(pending);
+                op->opaque->pending = pending;
+                return TRUE;
             }
-            return TRUE;
+            return FALSE;
         }
         goto cleanup;
 

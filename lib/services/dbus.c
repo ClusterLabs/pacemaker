@@ -325,7 +325,7 @@ pcmk_dbus_lookup_cb(DBusPendingCall *pending, void *user_data)
 char *
 pcmk_dbus_get_property(
     DBusConnection *connection, const char *target, const char *obj, const gchar * iface, const char *name,
-    void (*callback)(const char *name, const char *value, void *userdata), void *userdata)
+    void (*callback)(const char *name, const char *value, void *userdata), void *userdata, DBusPendingCall **pending)
 {
     DBusMessage *msg;
     const char *method = "GetAll";
@@ -365,7 +365,11 @@ pcmk_dbus_get_property(
     }
 
     if(query_data->callback) {
-        pcmk_dbus_send(msg, connection, pcmk_dbus_lookup_cb, query_data);
+        DBusPendingCall* _pending;
+        _pending = pcmk_dbus_send(msg, connection, pcmk_dbus_lookup_cb, query_data);
+        if (pending != NULL) {
+            *pending = _pending;
+        }
 
     } else {
         DBusMessage *reply = pcmk_dbus_send_recv(msg, connection, NULL);
