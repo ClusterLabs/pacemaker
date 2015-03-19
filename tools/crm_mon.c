@@ -345,7 +345,7 @@ static struct crm_option long_options[] = {
     {"neg-locations",  2, 0, 'L', "Display negative location constraints [optionally filtered by id prefix]"},
     {"show-node-attributes", 0, 0, 'A', "Display node attributes" },
     {"hide-headers",   0, 0, 'D', "\tHide all headers" },
-    {"show-detail",    0, 0, 'R', "\tShow more details of cloned resources" },
+    {"show-detail",    0, 0, 'R', "\tShow more details (node IDs, individual clone instances)" },
     {"brief",          0, 0, 'b', "\t\tBrief output" },
     {"pending",        0, 0, 'j', "\t\tDisplay pending state if 'record-pending' is enabled" },
 
@@ -1149,23 +1149,86 @@ print_cluster_tickets(pe_working_set_t * data_set)
     return;
 }
 
+/*!
+ * \internal
+ * \brief Return human-friendly string representing node name
+ *
+ * The returned string will be in the format
+ *    uname[:containerID] [(nodeID)]
+ * ":containerID" will be printed if the node is a remote container node.
+ * "(nodeID)" will be printed if the node ID is different from the node uname,
+ *  and detailed output has been requested.
+ *
+ * \param[in] node  Node to represent
+ * \return Newly allocated string with representation of node name
+ * \note It is the caller's responsibility to free the result with free().
+ */
+static char *
+get_node_display_name(node_t *node)
+{
+    char *node_name;
+    const char *node_container_id = NULL;
+    const char *node_id = NULL;
+    int name_len;
+
+    CRM_ASSERT((node != NULL) && (node->details != NULL) && (node->details->uname != NULL));
+
+    /* Container ID is displayed only if this is a remote container node */
+    if (is_container_remote_node(node)) {
+        node_container_id = node->details->remote_rsc->container->id;
+    }
+
+    /* Node ID is displayed if different from uname and detail is requested */
+    if (print_clone_detail && safe_str_neq(node->details->uname, node->details->id)) {
+        node_id = node->details->id;
+    }
+
+    /* Determine name length */
+    name_len = strlen(node->details->uname) + 1;
+    if (node_container_id) {
+        name_len += strlen(node_container_id) + 1; /* ":node_container_id" */
+    }
+    if (node_id) {
+        name_len += strlen(node_id) + 3; /* + " (node_id)" */
+    }
+
+    /* Allocate and populate display name */
+    node_name = malloc(name_len);
+    CRM_ASSERT(node_name != NULL);
+    strcpy(node_name, node->details->uname);
+    if (node_container_id) {
+        strcat(node_name, ":");
+        strcat(node_name, node_container_id);
+    }
+    if (node_id) {
+        strcat(node_name, " (");
+        strcat(node_name, node_id);
+        strcat(node_name, ")");
+    }
+    return node_name;
+}
+
 static void print_neg_locations(pe_working_set_t *data_set)
 {
     GListPtr gIter, gIter2;
 
-    print_as("\nFencing constraints:\n");
+    print_as("\nNegative location constraints:\n");
     for (gIter = data_set->placement_constraints; gIter != NULL; gIter = gIter->next) {
         rsc_to_node_t *location = (rsc_to_node_t *) gIter->data;
         if (!g_str_has_prefix(location->id, print_neg_location_prefix))
             continue;
         for (gIter2 = location->node_list_rh; gIter2 != NULL; gIter2 = gIter2->next) {
             node_t *node = (node_t *) gIter2->data;
-            if (node->weight >= 0) /* != -INFINITY ??? */
-                continue;
-            print_as(" %s\tprevents %s from running %son %s\n",
-                    location->id, location->rsc_lh->id,
-                    location->role_filter == RSC_ROLE_MASTER ? "as Master " : "",
-                    node->details->uname);
+
+            if (node->weight < 0) {
+                char *node_name = get_node_display_name(node);
+
+                print_as(" %s\tprevents %s from running %son %s\n",
+                         location->id, location->rsc_lh->id,
+                         location->role_filter == RSC_ROLE_MASTER ? "as Master " : "",
+                         node_name);
+                free(node_name);
+            }
         }
     }
 }
@@ -1307,16 +1370,14 @@ print_status(pe_working_set_t * data_set)
         print_as("Current DC: NONE\n");
     } else if (!hide_headers) {
         const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
+        char *dc_name = get_node_display_name(dc);
 
-        if (safe_str_neq(dc->details->uname, dc->details->id)) {
-            print_as("Current DC: %s (%s)", dc->details->uname, dc->details->id);
-        } else {
-            print_as("Current DC: %s", dc->details->uname);
-        }
+        print_as("Current DC: %s", dc_name);
         print_as(" - partition %s quorum\n", crm_is_true(quorum) ? "with" : "WITHOUT");
         if (dc_version) {
             print_as("Version: %s\n", crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE));
         }
+        free(dc_name);
     }
 
     quorum_node =
@@ -1340,13 +1401,7 @@ print_status(pe_working_set_t * data_set)
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
         const char *node_mode = NULL;
-        char *node_name = NULL;
-
-        if (is_container_remote_node(node)) {
-            node_name = crm_strdup_printf("%s:%s", node->details->uname, node->details->remote_rsc->container->id);
-        } else {
-            node_name = crm_strdup_printf("%s", node->details->uname);
-        }
+        char *node_name = get_node_display_name(node);
 
         if (node->details->unclean) {
             if (node->details->online && node->details->unclean) {
@@ -1406,14 +1461,11 @@ print_status(pe_working_set_t * data_set)
         }
 
         if (is_container_remote_node(node)) {
-            print_as("ContainerNode %s: %s\n", node_name, node_mode);
+            print_as("Container");
         } else if (is_baremetal_remote_node(node)) {
-            print_as("RemoteNode %s: %s\n", node_name, node_mode);
-        } else if (safe_str_eq(node->details->uname, node->details->id)) {
-            print_as("Node %s: %s\n", node_name, node_mode);
-        } else {
-            print_as("Node %s (%s): %s\n", node_name, node->details->id, node_mode);
+            print_as("Remote");
         }
+        print_as("Node %s: %s\n", node_name, node_mode);
 
         if (print_brief && group_by_node) {
             print_rscs_brief(node->details->running_rsc, "\t", print_opts | pe_print_rsconly,
@@ -1501,11 +1553,16 @@ print_status(pe_working_set_t * data_set)
 
         for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
             node_t *node = (node_t *) gIter->data;
+            char *node_name;
 
             if (node == NULL || node->details->online == FALSE) {
                 continue;
             }
-            print_as("* Node %s:\n", node->details->uname);
+
+            node_name = get_node_display_name(node);
+            print_as("* Node %s:\n", node_name);
+            free(node_name);
+
             g_hash_table_foreach(node->details->attrs, create_attr_list, NULL);
             g_list_foreach(attr_list, print_node_attribute, node);
             g_list_free(attr_list);
@@ -1693,6 +1750,9 @@ print_xml_status(pe_working_set_t * data_set)
         fprintf(stream, "is_dc=\"%s\" ", node->details->is_dc ? "true" : "false");
         fprintf(stream, "resources_running=\"%d\" ", g_list_length(node->details->running_rsc));
         fprintf(stream, "type=\"%s\" ", node_type);
+        if (is_container_remote_node(node)) {
+            fprintf(stream, "container_id=\"%s\" ", node->details->remote_rsc->container->id);
+        }
 
         if (group_by_node) {
             GListPtr lpc2 = NULL;
@@ -1845,7 +1905,10 @@ print_html_status(pe_working_set_t * data_set, const char *filename, gboolean we
     if (dc == NULL) {
         fprintf(stream, "Current DC: <font color=\"red\"><b>NONE</b></font><br/>");
     } else {
-        fprintf(stream, "Current DC: %s (%s)<br/>", dc->details->uname, dc->details->id);
+        char *dc_name = get_node_display_name(dc);
+
+        fprintf(stream, "Current DC: %s<br/>\n", dc_name);
+        free(dc_name);
     }
     fprintf(stream, "%d Nodes configured.<br/>", g_list_length(data_set->nodes));
     fprintf(stream, "%d Resources configured.<br/>", count_resources(data_set, NULL));
@@ -1884,29 +1947,23 @@ print_html_status(pe_working_set_t * data_set, const char *filename, gboolean we
     fprintf(stream, "<ul>\n");
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
+        char *node_name = get_node_display_name(node);
 
-        fprintf(stream, "<li>");
+        fprintf(stream, "<li>Node: %s: ", node_name);
         if (node->details->standby_onfail && node->details->online) {
-            fprintf(stream, "Node: %s (%s): %s", node->details->uname, node->details->id,
-                    "<font color=\"orange\">standby (on-fail)</font>\n");
+            fprintf(stream, "<font color=\"orange\">standby (on-fail)</font>\n");
         } else if (node->details->standby && node->details->online) {
-            fprintf(stream, "Node: %s (%s): %s", node->details->uname, node->details->id,
-                    "<font color=\"orange\">standby</font>\n");
+            fprintf(stream, "<font color=\"orange\">standby</font>\n");
         } else if (node->details->standby) {
-            fprintf(stream, "Node: %s (%s): %s", node->details->uname, node->details->id,
-                    "<font color=\"red\">OFFLINE (standby)</font>\n");
+            fprintf(stream, "<font color=\"red\">OFFLINE (standby)</font>\n");
         } else if (node->details->maintenance && node->details->online) {
-            fprintf(stream, "Node: %s (%s): %s", node->details->uname, node->details->id,
-                    "<font color=\"blue\">maintenance</font>\n");
+            fprintf(stream, "<font color=\"blue\">maintenance</font>\n");
         } else if (node->details->maintenance) {
-            fprintf(stream, "Node: %s (%s): %s", node->details->uname, node->details->id,
-                    "<font color=\"red\">OFFLINE (maintenance)</font>\n");
+            fprintf(stream, "<font color=\"red\">OFFLINE (maintenance)</font>\n");
         } else if (node->details->online) {
-            fprintf(stream, "Node: %s (%s): %s", node->details->uname, node->details->id,
-                    "<font color=\"green\">online</font>\n");
+            fprintf(stream, "<font color=\"green\">online</font>\n");
         } else {
-            fprintf(stream, "Node: %s (%s): %s", node->details->uname, node->details->id,
-                    "<font color=\"red\">OFFLINE</font>\n");
+            fprintf(stream, "<font color=\"red\">OFFLINE</font>\n");
         }
         if (print_brief && group_by_node) {
             fprintf(stream, "<ul>\n");
