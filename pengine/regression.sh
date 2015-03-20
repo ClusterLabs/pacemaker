@@ -799,4 +799,7 @@ do_test resource-discovery      "Exercises resource-discovery location constrain
 do_test rsc-discovery-per-node  "Disable resource discovery per node"
 
 echo ""
+do_test isolation-start-all "Start docker isolated resources."
+
+echo ""
 test_results
