@@ -492,10 +492,22 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     }
 
     pe_rsc_trace((*rsc), "Options for %s", (*rsc)->id);
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_UNIQUE);
 
     top = uber_parent(*rsc);
-    if (crm_is_true(value) || top->variant < pe_clone) {
+
+    /* check for isolation wrapper mapping if the parent doesn't have one set
+     * isolation mapping is enabled by default. For safety, we are allowing isolation
+     * to be disabled by setting the meta attr, isolation=false. */
+    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_ISOLATION);
+    if (top->isolation_wrapper == NULL && (value == NULL || crm_is_true(value))) {
+        if (g_hash_table_lookup((*rsc)->meta, "pcmk_docker_image")) {
+            (*rsc)->isolation_wrapper = "docker-wrapper";
+        }
+        /* add more isolation technologies here as we expand */
+    }
+
+    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_UNIQUE);
+    if (crm_is_true(value) || top->variant < pe_clone || (*rsc)->isolation_wrapper) {
         set_bit((*rsc)->flags, pe_rsc_unique);
     }
 

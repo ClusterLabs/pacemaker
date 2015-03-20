@@ -29,6 +29,9 @@
 #    undef KEYFILE
 #    include <gnutls/gnutls.h>
 #  endif
+
+#define CONTAINER_PROVIDER "containers"
+
 GHashTable *rsc_list;
 
 typedef struct lrmd_rsc_s {
