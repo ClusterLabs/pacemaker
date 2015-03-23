@@ -533,6 +533,7 @@ pcmk_dbus_timeout_toggle(DBusTimeout *timeout, void *data){
 /* Inspired by http://www.kolej.mff.cuni.cz/~vesej3am/devel/dbus-select.c */
 
 void pcmk_dbus_connection_setup_with_select(DBusConnection *c){
+        dbus_connection_set_exit_on_disconnect (c, FALSE);
 	dbus_connection_set_timeout_functions(
             c, pcmk_dbus_timeout_add, pcmk_dbus_timeout_remove, pcmk_dbus_timeout_toggle, NULL, NULL);
 	dbus_connection_set_watch_functions(c, pcmk_dbus_watch_add, pcmk_dbus_watch_remove, pcmk_dbus_watch_toggle, NULL, NULL);
