@@ -421,6 +421,15 @@ pcmk_shutdown_worker(gpointer user_data)
 
     /* send_cluster_id(); */
     crm_notice("Shutdown complete");
+
+    {
+        const char *delay = daemon_option("shutdown_delay");
+        if(delay) {
+            sync();
+            sleep(crm_get_msec(delay) / 1000);
+        }
+    }
+
     g_main_loop_quit(mainloop);
 
     if (fatal_error) {
