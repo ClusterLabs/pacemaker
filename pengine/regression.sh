@@ -800,6 +800,7 @@ do_test rsc-discovery-per-node  "Disable resource discovery per node"
 
 echo ""
 do_test isolation-start-all "Start docker isolated resources."
+do_test isolation-restart-all "Restart docker isolated resources."
 
 echo ""
 test_results
