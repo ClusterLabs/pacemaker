@@ -1,10 +1,13 @@
 [Unit]
 Description=Pacemaker High Availability Cluster Manager
 
+After=dbus.service
 After=basic.target
+After=syslog.service
 After=network.target
 After=corosync.service
 
+Requires=dbus.service
 Requires=basic.target
 Requires=network.target
 Requires=corosync.service
