@@ -286,7 +286,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
             set_bit(op->flags, pe_action_reschedule);
 #endif
 
-        } else if (digest_restart) {
+        } else if (digest_restart && rsc->isolation_wrapper == NULL && (uber_parent(rsc))->isolation_wrapper == NULL) {
             pe_rsc_trace(rsc, "Reloading '%s' action for resource %s", task, rsc->id);
 
             /* Allow this resource to reload - unless something else causes a full restart */
