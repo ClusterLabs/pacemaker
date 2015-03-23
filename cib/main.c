@@ -139,12 +139,12 @@ main(int argc, char **argv)
     crm_set_options(NULL, "[options]",
                     long_options, "Daemon for storing and replicating the cluster configuration");
 
+    crm_peer_init();
+
     mainloop_add_signal(SIGTERM, cib_shutdown);
     mainloop_add_signal(SIGPIPE, cib_enable_writes);
 
     cib_writer = mainloop_add_trigger(G_PRIORITY_LOW, write_cib_contents, NULL);
-
-    crm_peer_init();
 
     while (1) {
         flag = crm_get_option(argc, argv, &index);
