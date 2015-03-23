@@ -868,13 +868,14 @@ static int
 lrmd_api_poke_connection(lrmd_t * lrmd)
 {
     int rc;
+    lrmd_private_t *native = lrmd->private;
     xmlNode *data = create_xml_node(NULL, F_LRMD_RSC);
 
     crm_xml_add(data, F_LRMD_ORIGIN, __FUNCTION__);
-    rc = lrmd_send_command(lrmd, LRMD_OP_POKE, data, NULL, 0, 0, FALSE);
+    rc = lrmd_send_command(lrmd, LRMD_OP_POKE, data, NULL, 0, 0, native->type == CRM_CLIENT_IPC ? TRUE : FALSE);
     free_xml(data);
 
-    return rc;
+    return rc < 0 ? rc : pcmk_ok;
 }
 
 static int
