@@ -502,8 +502,13 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     if (top->isolation_wrapper == NULL && (value == NULL || crm_is_true(value))) {
         if (g_hash_table_lookup((*rsc)->meta, "pcmk_docker_image")) {
             (*rsc)->isolation_wrapper = "docker-wrapper";
+            clear_bit((*rsc)->flags, pe_rsc_allow_migrate);
         }
         /* add more isolation technologies here as we expand */
+    }
+    if (top->isolation_wrapper) {
+        /* never allow resources with an isolation wrapper migrate */
+        clear_bit((*rsc)->flags, pe_rsc_allow_migrate);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_UNIQUE);
