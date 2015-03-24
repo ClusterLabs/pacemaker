@@ -532,15 +532,27 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
 
     } else if (g_strcmp0(method, "start") == 0) {
         FILE *file_strm = NULL;
-        char *override_dir = crm_strdup_printf("%s/%s", SYSTEMD_OVERRIDE_ROOT, unit);
-        char *override_file = crm_strdup_printf("%s/%s/50-pacemaker.conf", SYSTEMD_OVERRIDE_ROOT, unit);
+        char *override_dir = crm_strdup_printf("%s/%s.service.d", SYSTEMD_OVERRIDE_ROOT, op->agent);
+        char *override_file = crm_strdup_printf("%s/%s.service.d/50-pacemaker.conf", SYSTEMD_OVERRIDE_ROOT, op->agent);
 
         method = "StartUnit";
         crm_build_path(override_dir, 0755);
 
         file_strm = fopen(override_file, "w");
         if (file_strm != NULL) {
-            int rc = fprintf(file_strm, "[Service]\nRestart=no");
+            /* TODO: Insert the start timeout in too */
+            char *override = crm_strdup_printf(
+                "[Unit]\n"
+                "Description=Cluster Controlled %s\n"
+                "Before=pacemaker.service\n"
+                "\n"
+                "[Service]\n"
+                "Restart=no\n",
+                op->agent);
+
+            int rc = fprintf(file_strm, "%s\n", override);
+
+            free(override);
             if (rc < 0) {
                 crm_perror(LOG_ERR, "Cannot write to systemd override file %s", override_file);
             }
@@ -558,7 +570,7 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
         free(override_dir);
 
     } else if (g_strcmp0(method, "stop") == 0) {
-        char *override_file = crm_strdup_printf("%s/%s/50-pacemaker.conf", SYSTEMD_OVERRIDE_ROOT, unit);
+        char *override_file = crm_strdup_printf("%s/%s.service.d/50-pacemaker.conf", SYSTEMD_OVERRIDE_ROOT, op->agent);
 
         method = "StopUnit";
         unlink(override_file);
