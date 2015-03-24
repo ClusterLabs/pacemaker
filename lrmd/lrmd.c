@@ -571,37 +571,6 @@ cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc)
     }
 }
 
-static int
-lsb2uniform_rc(const char *action, int rc)
-{
-    if (rc < 0) {
-        return PCMK_OCF_UNKNOWN_ERROR;
-    }
-
-    /* status has different return codes that everything else. */
-    if (!safe_str_eq(action, "status") && !safe_str_eq(action, "monitor")) {
-        if (rc > PCMK_LSB_NOT_RUNNING) {
-            return PCMK_OCF_UNKNOWN_ERROR;
-        }
-        return rc;
-    }
-
-    switch (rc) {
-        case PCMK_LSB_STATUS_OK:
-            return PCMK_OCF_OK;
-        case PCMK_LSB_STATUS_NOT_INSTALLED:
-            return PCMK_OCF_NOT_INSTALLED;
-        case PCMK_LSB_STATUS_INSUFFICIENT_PRIV:
-            return PCMK_OCF_INSUFFICIENT_PRIV;
-        case PCMK_LSB_STATUS_VAR_PID:
-        case PCMK_LSB_STATUS_VAR_LOCK:
-        case PCMK_LSB_STATUS_NOT_RUNNING:
-            return PCMK_OCF_NOT_RUNNING;
-    }
-
-    return PCMK_OCF_UNKNOWN_ERROR;
-}
-
 #if SUPPORT_HEARTBEAT
 static int pattern_matched(const char *pat, const char *str)
 {
@@ -627,7 +596,7 @@ hb2uniform_rc(const char *action, int rc, const char *stdout_data)
 
     /* Treat class heartbeat the same as class lsb. */
     if (!safe_str_eq(action, "status") && !safe_str_eq(action, "monitor")) {
-        return lsb2uniform_rc(action, rc);
+        return services_get_ocf_exitcode(action, rc);
     }
 
     /* for status though, exit code is ignored,
@@ -726,7 +695,7 @@ get_uniform_rc(const char *standard, const char *action, int rc)
         return nagios2uniform_rc(action, rc);
 #endif
     } else {
-        return lsb2uniform_rc(action, rc);
+        return services_get_ocf_exitcode(action, rc);
     }
 }
 
