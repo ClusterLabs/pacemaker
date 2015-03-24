@@ -9,7 +9,6 @@ After=corosync.service
 
 Requires=dbus.service
 Requires=basic.target
-Requires=network.target
 Requires=corosync.service
 
 [Install]

@@ -1,7 +1,6 @@
 [Unit]
 Description=Pacemaker Remote Service
 After=network.target
-Requires=network.target
 
 [Install]
 WantedBy=multi-user.target
