@@ -95,7 +95,7 @@ END
 #######################################################################
 
 
-CLIENT="/usr/libexec/pacemaker/pacemaker_remote_ctl"
+CLIENT="/usr/libexec/pacemaker/lrmd_internal_ctl"
 DOCKER_AGENT="/usr/lib/ocf/resource.d/heartbeat/docker"
 KEY_VAL_STR=""
 PROVIDER=$OCF_RESKEY_CRM_meta_provider

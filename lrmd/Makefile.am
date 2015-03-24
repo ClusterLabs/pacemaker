@@ -21,7 +21,7 @@ testdir			= $(datadir)/$(PACKAGE)/tests/lrmd
 test_SCRIPTS		= regression.py
 
 lrmdlibdir	= $(CRM_DAEMON_DIR)
-lrmdlib_PROGRAMS = lrmd lrmd_test pacemaker_remote_ctl
+lrmdlib_PROGRAMS = lrmd lrmd_test lrmd_internal_ctl
 
 initdir		 = $(INITDIR)
 init_SCRIPTS	 = pacemaker_remote
@@ -43,8 +43,8 @@ pacemaker_remoted_CFLAGS	= -DSUPPORT_REMOTE
 pacemaker_remoted_LDADD		= $(lrmd_LDADD)
 
 
-pacemaker_remote_ctl_SOURCES	= remote_ctl.c
-pacemaker_remote_ctl_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
+lrmd_internal_ctl_SOURCES	= remote_ctl.c
+lrmd_internal_ctl_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/lrmd/liblrmd.la  \
 			$(top_builddir)/lib/cib/libcib.la   \
 			$(top_builddir)/lib/services/libcrmservice.la \
