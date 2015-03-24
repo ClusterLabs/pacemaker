@@ -12,6 +12,7 @@ Makefile.in
 *.pc
 *.pyc
 *.bz2
+*.tar.gz
 *.rpm
 *.la
 *.lo
@@ -111,6 +112,7 @@ fencing/stonith_admin
 fencing/stonithd
 fencing/stonithd.xml
 lrmd/lrmd
+lrmd/lrmd_internal_ctl
 lrmd/lrmd_test
 mcp/pacemakerd
 pengine/pengine
@@ -156,7 +158,6 @@ mock
 HTML
 pacemaker*.spec
 pengine/.regression.failed.diff
-ClusterLabs-pacemaker-*.tar.gz
 coverity-*
 
 compat_reports
