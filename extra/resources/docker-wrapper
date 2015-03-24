@@ -258,7 +258,7 @@ client_action()
 		if [ -z "$PORT" ]; then
 			get_active_port
 		fi
-		ocf_log debug "$CLIENT -c \"exec\" -S \"127.0.0.1\" -p $PORT -a $action -r \"$OCF_RESOURCE_INSTANCE\" $agent_type $KEY_VAL_STR  >/dev/null 2>&1"
+		ocf_log debug "$CLIENT -c \"exec\" -S \"127.0.0.1\" -p $PORT -a $action -r \"$OCF_RESOURCE_INSTANCE\" -n $CONTAINER $agent_type $KEY_VAL_STR  >/dev/null 2>&1"
 		$CLIENT -c "exec" -S "127.0.0.1" -p $PORT -a $action -r "$OCF_RESOURCE_INSTANCE" $agent_type $KEY_VAL_STR  >/dev/null 2>&1
 	else 
 		echo "$CLIENT -c \"exec\" -a $action -r \"$OCF_RESOURCE_INSTANCE\" $agent_type $KEY_VAL_STR  >/dev/null 2>&1" | nsenter --target $(docker inspect --format {{.State.Pid}} ${CONTAINER}) --mount --uts --ipc --net --pid 2>&1
@@ -277,7 +277,7 @@ poke_remote()
 	if ocf_is_true $OCF_RESKEY_pcmk_docker_privileged ; then
 		get_active_port
 		ocf_log debug "Attempting to contect $CONTAINER on port $PORT"
-		$CLIENT -c "poke" -S "127.0.0.1" -p $PORT >/dev/null 2>&1
+		$CLIENT -c "poke" -S "127.0.0.1" -p $PORT -n $CONTAINER >/dev/null 2>&1
 	fi
 	# no op for non privileged containers since we handed the
 	# client monitor action as the monitor_cmd for the docker agent
