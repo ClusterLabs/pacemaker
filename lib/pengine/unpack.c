@@ -2491,6 +2491,33 @@ unpack_rsc_migration_failure(resource_t *rsc, node_t *node, xmlNode *xml_op, pe_
     }
 }
 
+static void
+record_failed_op(xmlNode *op, node_t* node, pe_working_set_t * data_set)
+{
+    xmlNode *xIter = NULL;
+    const char *op_key = crm_element_value(op, XML_LRM_ATTR_TASK_KEY);
+
+    if (node->details->shutdown) {
+        return;
+    } else if(node->details->online == FALSE) {
+        return;
+    }
+
+    for (xIter = data_set->failed->children; xIter; xIter = xIter->next) {
+        const char *key = crm_element_value(xIter, XML_LRM_ATTR_TASK_KEY);
+        const char *uname = crm_element_value(xIter, XML_ATTR_UNAME);
+
+        if(safe_str_eq(op_key, key) && safe_str_eq(uname, node->details->uname)) {
+            crm_trace("Skipping duplicate entry %s on %s", op_key, node->details->uname);
+            return;
+        }
+    }
+
+    crm_trace("Adding entry %s on %s", op_key, node->details->uname);
+    crm_xml_add(op, XML_ATTR_UNAME, node->details->uname);
+    add_node_copy(data_set->failed, op);
+}
+
 static const char *get_op_key(xmlNode *xml_op)
 {
     const char *key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
@@ -2523,10 +2550,8 @@ unpack_rsc_op_failure(resource_t *rsc, node_t *node, int rc, xmlNode *xml_op, en
                  task, rsc->id, node->details->uname, services_ocf_exitcode_str(rc),
                  rc);
 
-        crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
-        if ((node->details->shutdown == FALSE) || (node->details->online == TRUE)) {
-            add_node_copy(data_set->failed, xml_op);
-        }
+        record_failed_op(xml_op, node, data_set);
+
     } else {
         crm_trace("Processing failed op %s for %s on %s: %s (%d)",
                  task, rsc->id, node->details->uname, services_ocf_exitcode_str(rc),
@@ -2989,8 +3014,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
         /* Add them to the failed list to highlight them for the user */
         if ((node->details->shutdown == FALSE) || (node->details->online == TRUE)) {
             crm_trace("Remapping %d to %d", PCMK_OCF_DEGRADED, PCMK_OCF_OK);
-            crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
-            add_node_copy(data_set->failed, xml_op);
+            record_failed_op(xml_op, node, data_set);
         }
 
     } else if (rc == PCMK_OCF_DEGRADED_MASTER && safe_str_eq(task, CRMD_ACTION_STATUS)) {
@@ -2999,8 +3023,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
         /* Add them to the failed list to highlight them for the user */
         if ((node->details->shutdown == FALSE) || (node->details->online == TRUE)) {
             crm_trace("Remapping %d to %d", PCMK_OCF_DEGRADED_MASTER, PCMK_OCF_RUNNING_MASTER);
-            crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
-            add_node_copy(data_set->failed, xml_op);
+            record_failed_op(xml_op, node, data_set);
         }
     }
 
@@ -3103,10 +3126,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
                 crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
                 set_bit(rsc->flags, pe_rsc_failure_ignored);
 
-                if ((node->details->shutdown == FALSE) || (node->details->online == TRUE)) {
-                    crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
-                    add_node_copy(data_set->failed, xml_op);
-                }
+                record_failed_op(xml_op, node, data_set);
 
                 if (failure_strategy == action_fail_restart_container && *on_fail <= action_fail_recover) {
                     *on_fail = failure_strategy;
