@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Copyright (c) 2015 David Vossel <dvossel@redhat.com>
 #                    All Rights Reserved.
@@ -173,21 +173,21 @@ separate_args()
 	local env key value
 
 	# write out arguments to key value string for ocf agent
-	for item in $(printenv | grep "^OCF.*" | grep -v "^OCF_RESKEY_pcmk_docker_.*");
+	while read -r line;
 	do
-		key="$(echo $item | awk -F= '{print $1}')"
-		val="$(echo $item | awk -F= '{print $2}')"
+		key="$(echo $line | awk -F= '{print $1}')"
+		val="$(echo $line | awk -F= '{print $2}')"
 		KEY_VAL_STR="$KEY_VAL_STR -k \"$key\" -v \"$val\""
-	done
+	done < <(printenv | grep "^OCF.*" | grep -v "^OCF_RESKEY_pcmk_docker_.*")
 
 	# sanitize args for DOCKER agent's consumption
-	for item in $(printenv | grep "^OCF_RESKEY_pcmk_docker_.*");
+	while read -r line;
 	do
-		env="$(echo $item | awk -F= '{print $1}')"
-		val="$(echo $item | awk -F= '{print $2}')"
+		env="$(echo $line | awk -F= '{print $1}')"
+		val="$(echo $line | awk -F= '{print $2}')"
 		key="$(echo "$env" | sed 's/^OCF_RESKEY_pcmk_docker/OCF_RESKEY/g')"
-		export ${key}=$(echo $val)
-	done
+		export $key="$val"
+	done < <(printenv | grep "^OCF_RESKEY_pcmk_docker_.*")
 
 	if ocf_is_true $OCF_RESKEY_pcmk_docker_privileged ; then
 		export OCF_RESKEY_run_cmd="/usr/sbin/pacemaker_remoted"
