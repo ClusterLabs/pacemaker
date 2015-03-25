@@ -258,12 +258,10 @@ client_action()
 		if [ -z "$PORT" ]; then
 			get_active_port
 		fi
-		ocf_log debug "$CLIENT -c \"exec\" -S \"127.0.0.1\" -p $PORT -a $action -r \"$OCF_RESOURCE_INSTANCE\" -n $CONTAINER $agent_type $KEY_VAL_STR  >/dev/null 2>&1"
-		$CLIENT -c "exec" -S "127.0.0.1" -p $PORT -a $action -r "$OCF_RESOURCE_INSTANCE" $agent_type $KEY_VAL_STR  >/dev/null 2>&1
+		ocf_log info "$CLIENT -c \"exec\" -S \"127.0.0.1\" -p $PORT -a $action -r \"$OCF_RESOURCE_INSTANCE\" -n $CONTAINER $agent_type $KEY_VAL_STR  >/dev/null 2>&1"
+		$CLIENT -c "exec" -S "127.0.0.1" -p $PORT -a $action -r "$OCF_RESOURCE_INSTANCE" -n $CONTAINER $agent_type $KEY_VAL_STR  >/dev/null 2>&1
 	else 
 		echo "$CLIENT -c \"exec\" -a $action -r \"$OCF_RESOURCE_INSTANCE\" $agent_type $KEY_VAL_STR  >/dev/null 2>&1" | nsenter --target $(docker inspect --format {{.State.Pid}} ${CONTAINER}) --mount --uts --ipc --net --pid 2>&1
-
-		
 	fi
 	rc=$?
 
@@ -276,7 +274,7 @@ poke_remote()
 	# verifies daemon in container is active
 	if ocf_is_true $OCF_RESKEY_pcmk_docker_privileged ; then
 		get_active_port
-		ocf_log debug "Attempting to contect $CONTAINER on port $PORT"
+		ocf_log info "Attempting to contect $CONTAINER on port $PORT"
 		$CLIENT -c "poke" -S "127.0.0.1" -p $PORT -n $CONTAINER >/dev/null 2>&1
 	fi
 	# no op for non privileged containers since we handed the
@@ -311,6 +309,7 @@ start_container()
 			# generate an authkey if it doesn't exist. 
 			mkdir -p /etc/pacemaker/
 			dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1 > /dev/null 2>&1
+			chmod 600 /etc/pacemaker/authkey
 		fi
 
 		PORT=$(random_port)
