@@ -92,7 +92,7 @@ svc_read_output(int fd, svc_action_t * op, bool is_stderr)
     do {
         rc = read(fd, buf, buf_read_len);
         if (rc > 0) {
-            crm_trace("Got %d characters starting with %.20s", rc, buf);
+            crm_trace("Got %d chars: %.80s", rc, buf);
             buf[rc] = 0;
             data = realloc_safe(data, len + rc + 1);
             len += sprintf(data + len, "%s", buf);
