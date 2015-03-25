@@ -1,0 +1,118 @@
+
+Current cluster status:
+Online: [ rhel7-auto5 ]
+OFFLINE: [ rhel7-auto4 ]
+
+ fake	(ocf::heartbeat:Dummy):	Started rhel7-auto5 
+ Clone Set: replicated-clone [replicated] (unique)
+     replicated:0	(ocf::heartbeat:Dummy):	Started rhel7-auto5 
+     replicated:1	(ocf::heartbeat:Dummy):	Started rhel7-auto5 
+ Resource Group: group_is_container
+     s1	(ocf::heartbeat:Dummy):	Started rhel7-auto5 
+     s2	(ocf::heartbeat:Dummy):	Started rhel7-auto5 
+ Clone Set: mygroup-clone [mygroup] (unique)
+     Resource Group: mygroup:0
+         g1:0	(ocf::heartbeat:Dummy):	Started rhel7-auto5 
+         g2:0	(ocf::heartbeat:Dummy):	Started rhel7-auto5 
+     Resource Group: mygroup:1
+         g1:1	(ocf::heartbeat:Dummy):	Started rhel7-auto5 
+         g2:1	(ocf::heartbeat:Dummy):	Started rhel7-auto5 
+ Resource Group: group_of_containers
+     iso_mem1	(ocf::heartbeat:Dummy):	Started rhel7-auto5 
+     iso_mem2	(ocf::heartbeat:Dummy):	Started rhel7-auto5 
+
+Transition Summary:
+ * Restart fake	(Started rhel7-auto5)
+ * Restart replicated:0	(Started rhel7-auto5)
+ * Restart replicated:1	(Started rhel7-auto5)
+ * Restart s1	(Started rhel7-auto5)
+ * Restart s2	(Started rhel7-auto5)
+ * Restart g1:0	(Started rhel7-auto5)
+ * Restart g2:0	(Started rhel7-auto5)
+ * Restart g1:1	(Started rhel7-auto5)
+ * Restart g2:1	(Started rhel7-auto5)
+ * Restart iso_mem1	(Started rhel7-auto5)
+ * Restart iso_mem2	(Started rhel7-auto5)
+
+Executing cluster transition:
+ * Resource action: fake            stop on rhel7-auto5
+ * Resource action: fake            start on rhel7-auto5
+ * Resource action: fake            monitor=60000 on rhel7-auto5
+ * Pseudo action:   replicated-clone_stop_0
+ * Pseudo action:   group_is_container_stop_0
+ * Resource action: s2              stop on rhel7-auto5
+ * Pseudo action:   mygroup-clone_stop_0
+ * Pseudo action:   group_of_containers_stop_0
+ * Resource action: iso_mem2        stop on rhel7-auto5
+ * Resource action: replicated:0    stop on rhel7-auto5
+ * Resource action: replicated:1    stop on rhel7-auto5
+ * Pseudo action:   replicated-clone_stopped_0
+ * Pseudo action:   replicated-clone_start_0
+ * Resource action: s1              stop on rhel7-auto5
+ * Pseudo action:   mygroup:0_stop_0
+ * Resource action: g2:0            stop on rhel7-auto5
+ * Pseudo action:   mygroup:1_stop_0
+ * Resource action: g2:1            stop on rhel7-auto5
+ * Resource action: iso_mem1        stop on rhel7-auto5
+ * Resource action: replicated:0    start on rhel7-auto5
+ * Resource action: replicated:0    monitor=10000 on rhel7-auto5
+ * Resource action: replicated:1    start on rhel7-auto5
+ * Resource action: replicated:1    monitor=10000 on rhel7-auto5
+ * Pseudo action:   replicated-clone_running_0
+ * Pseudo action:   group_is_container_stopped_0
+ * Pseudo action:   group_is_container_start_0
+ * Resource action: s1              start on rhel7-auto5
+ * Resource action: s1              monitor=10000 on rhel7-auto5
+ * Resource action: s2              start on rhel7-auto5
+ * Resource action: s2              monitor=10000 on rhel7-auto5
+ * Resource action: g1:0            stop on rhel7-auto5
+ * Resource action: g1:1            stop on rhel7-auto5
+ * Pseudo action:   group_of_containers_stopped_0
+ * Pseudo action:   group_of_containers_start_0
+ * Resource action: iso_mem1        start on rhel7-auto5
+ * Resource action: iso_mem1        monitor=60000 on rhel7-auto5
+ * Resource action: iso_mem2        start on rhel7-auto5
+ * Resource action: iso_mem2        monitor=60000 on rhel7-auto5
+ * Pseudo action:   all_stopped
+ * Pseudo action:   group_is_container_running_0
+ * Pseudo action:   mygroup:0_stopped_0
+ * Pseudo action:   mygroup:1_stopped_0
+ * Pseudo action:   mygroup-clone_stopped_0
+ * Pseudo action:   mygroup-clone_start_0
+ * Pseudo action:   group_of_containers_running_0
+ * Pseudo action:   mygroup:0_start_0
+ * Resource action: g1:0            start on rhel7-auto5
+ * Resource action: g1:0            monitor=10000 on rhel7-auto5
+ * Resource action: g2:0            start on rhel7-auto5
+ * Resource action: g2:0            monitor=10000 on rhel7-auto5
+ * Pseudo action:   mygroup:1_start_0
+ * Resource action: g1:1            start on rhel7-auto5
+ * Resource action: g1:1            monitor=10000 on rhel7-auto5
+ * Resource action: g2:1            start on rhel7-auto5
+ * Resource action: g2:1            monitor=10000 on rhel7-auto5
+ * Pseudo action:   mygroup:0_running_0
+ * Pseudo action:   mygroup:1_running_0
+ * Pseudo action:   mygroup-clone_running_0
+
+Revised cluster status:
+Online: [ rhel7-auto5 ]
+OFFLINE: [ rhel7-auto4 ]
+
+ fake	(ocf::heartbeat:Dummy):	Started rhel7-auto5 
+ Clone Set: replicated-clone [replicated] (unique)
+     replicated:0	(ocf::heartbeat:Dummy):	Started rhel7-auto5 
+     replicated:1	(ocf::heartbeat:Dummy):	Started rhel7-auto5 
+ Resource Group: group_is_container
+     s1	(ocf::heartbeat:Dummy):	Started rhel7-auto5 
+     s2	(ocf::heartbeat:Dummy):	Started rhel7-auto5 
+ Clone Set: mygroup-clone [mygroup] (unique)
+     Resource Group: mygroup:0
+         g1:0	(ocf::heartbeat:Dummy):	Started rhel7-auto5 
+         g2:0	(ocf::heartbeat:Dummy):	Started rhel7-auto5 
+     Resource Group: mygroup:1
+         g1:1	(ocf::heartbeat:Dummy):	Started rhel7-auto5 
+         g2:1	(ocf::heartbeat:Dummy):	Started rhel7-auto5 
+ Resource Group: group_of_containers
+     iso_mem1	(ocf::heartbeat:Dummy):	Started rhel7-auto5 
+     iso_mem2	(ocf::heartbeat:Dummy):	Started rhel7-auto5 
+

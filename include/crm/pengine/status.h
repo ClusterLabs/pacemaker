@@ -290,6 +290,8 @@ struct resource_s {
     GListPtr fillers;
 
     char *pending_task;
+
+    const char *isolation_wrapper;
 };
 
 struct pe_action_s {
