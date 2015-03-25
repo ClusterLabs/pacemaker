@@ -110,9 +110,11 @@ read_events(lrmd_event_data_t * event)
     }
     if ((event->call_id == exec_call_id) && (event->type == lrmd_event_exec_complete)) {
         if (event->output) {
-            printf("%s", event->output);
+            crm_info("%s", event->output);
         }
-	
+        if (event->exit_reason) {
+            fprintf(stderr, "%s%s\n", PCMK_OCF_REASON_PREFIX, event->exit_reason);
+        }
         client_exit(event->rc);
     }
 }
