@@ -111,6 +111,7 @@ extern char *crm_system_name;
 #  define CRM_OP_LOCAL_SHUTDOWN 	"start_shutdown"
 #  define CRM_OP_SHUTDOWN_REQ	"req_shutdown"
 #  define CRM_OP_SHUTDOWN 	"do_shutdown"
+#  define CRM_OP_SHUTDOWN_NOTIFY "notify_shutdown"
 #  define CRM_OP_FENCE	 	"stonith"
 #  define CRM_OP_EVENTCC		"event_cc"
 #  define CRM_OP_TEABORT		"te_abort"

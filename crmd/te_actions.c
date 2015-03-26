@@ -216,7 +216,7 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
         te_action_confirmed(action);
         update_graph(graph, action);
         trigger_graph();
-        return TRUE;
+        goto done;
 
     } else if (safe_str_eq(task, CRM_OP_SHUTDOWN)) {
         crm_node_t *peer = crm_get_peer(0, router_node);
@@ -249,6 +249,13 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
             action->timeout = graph->network_delay;
         }
         te_start_action_timer(graph, action);
+    }
+
+done:
+    if (rc == TRUE && safe_str_eq(task, CRM_OP_SHUTDOWN)) {
+        cmd = create_request(CRM_OP_SHUTDOWN_NOTIFY, action->xml, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
+        send_cluster_message(NULL, crm_msg_crmd, cmd, TRUE);
+        free(cmd);
     }
 
     return TRUE;
