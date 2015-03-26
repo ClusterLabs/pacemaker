@@ -426,7 +426,8 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
 
             } else if (is_set(rsc->flags, pe_rsc_unique)) {
                 print_full = TRUE;
-            } else {
+
+            } else if (is_not_set(options, pe_print_clone_active)) {
                 stopped_list = add_list_element(stopped_list, child_rsc->id);
             }
 
@@ -508,36 +509,37 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
     free(list_text);
     list_text = NULL;
 
-    /* Stopped */
-    if(is_not_set(rsc->flags, pe_rsc_unique) 
-	&& (clone_data->clone_max > active_instances)) {
+    if (is_not_set(options, pe_print_clone_active)) {
+        /* Stopped */
+        if (is_not_set(rsc->flags, pe_rsc_unique)
+        && (clone_data->clone_max > active_instances)) {
 
-        GListPtr nIter;
-        GListPtr list = g_hash_table_get_values(rsc->allowed_nodes);
+            GListPtr nIter;
+            GListPtr list = g_hash_table_get_values(rsc->allowed_nodes);
 
-        /* Custom stopped list for non-unique clones */
-        free(stopped_list); stopped_list = NULL;
+            /* Custom stopped list for non-unique clones */
+            free(stopped_list); stopped_list = NULL;
 
-        if(g_list_length(list) == 0) {
-            /* Clusters with symmetrical=false haven't calculated allowed_nodes yet
-             * If we've not probed for them yet, the Stopped list will be empty
-             */
-            list = g_hash_table_get_values(rsc->known_on);
-        }
-
-        list = g_list_sort(list, sort_node_uname);
-        for (nIter = list; nIter != NULL; nIter = nIter->next) {
-            node_t *node = (node_t *)nIter->data;
-
-            if(pe_find_node(rsc->running_on, node->details->uname) == NULL) {
-                stopped_list = add_list_element(stopped_list, node->details->uname);
+            if (g_list_length(list) == 0) {
+                /* Clusters with symmetrical=false haven't calculated allowed_nodes yet
+                 * If we've not probed for them yet, the Stopped list will be empty
+                 */
+                list = g_hash_table_get_values(rsc->known_on);
             }
-        }
-        g_list_free(list);
-    }
 
-    short_print(stopped_list, child_text, "Stopped", options, print_data);
-    free(stopped_list);
+            list = g_list_sort(list, sort_node_uname);
+            for (nIter = list; nIter != NULL; nIter = nIter->next) {
+                node_t *node = (node_t *)nIter->data;
+
+                if (pe_find_node(rsc->running_on, node->details->uname) == NULL) {
+                    stopped_list = add_list_element(stopped_list, node->details->uname);
+                }
+            }
+            g_list_free(list);
+        }
+        short_print(stopped_list, child_text, "Stopped", options, print_data);
+        free(stopped_list);
+    }
 
     if (options & pe_print_html) {
         status_print("</ul>\n");

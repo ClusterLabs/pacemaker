@@ -366,4 +366,22 @@ gboolean crm_digest_verify(xmlNode *input, const char *expected);
 /* cross-platform compatibility functions */
 char *crm_compat_realpath(const char *path);
 
+/* IPC Proxy Backend Shared Functions */
+typedef struct remote_proxy_s {
+    char *node_name;
+    char *session_id;
+
+    gboolean is_local;
+
+    crm_ipc_t *ipc;
+    mainloop_io_t *source;
+    uint32_t last_request_id;
+
+} remote_proxy_t;
+void remote_proxy_notify_destroy(lrmd_t *lrmd, const char *session_id);
+void remote_proxy_relay_event(lrmd_t *lrmd, const char *session_id, xmlNode *msg);
+void remote_proxy_relay_response(lrmd_t *lrmd, const char *session_id, xmlNode *msg, int msg_id);
+void remote_proxy_end_session(const char *session);
+void remote_proxy_free(gpointer data);
+
 #endif                          /* CRM_INTERNAL__H */

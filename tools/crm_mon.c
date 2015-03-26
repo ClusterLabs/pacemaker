@@ -345,7 +345,7 @@ static struct crm_option long_options[] = {
     {"neg-locations",  2, 0, 'L', "Display negative location constraints [optionally filtered by id prefix]"},
     {"show-node-attributes", 0, 0, 'A', "Display node attributes" },
     {"hide-headers",   0, 0, 'D', "\tHide all headers" },
-    {"show-detail",    0, 0, 'R', "\tShow more details of cloned resources" },
+    {"show-detail",    0, 0, 'R', "\tShow more details (node IDs, individual clone instances)" },
     {"brief",          0, 0, 'b', "\t\tBrief output" },
     {"pending",        0, 0, 'j', "\t\tDisplay pending state if 'record-pending' is enabled" },
 
@@ -1149,23 +1149,86 @@ print_cluster_tickets(pe_working_set_t * data_set)
     return;
 }
 
+/*!
+ * \internal
+ * \brief Return human-friendly string representing node name
+ *
+ * The returned string will be in the format
+ *    uname[:containerID] [(nodeID)]
+ * ":containerID" will be printed if the node is a remote container node.
+ * "(nodeID)" will be printed if the node ID is different from the node uname,
+ *  and detailed output has been requested.
+ *
+ * \param[in] node  Node to represent
+ * \return Newly allocated string with representation of node name
+ * \note It is the caller's responsibility to free the result with free().
+ */
+static char *
+get_node_display_name(node_t *node)
+{
+    char *node_name;
+    const char *node_container_id = NULL;
+    const char *node_id = NULL;
+    int name_len;
+
+    CRM_ASSERT((node != NULL) && (node->details != NULL) && (node->details->uname != NULL));
+
+    /* Container ID is displayed only if this is a remote container node */
+    if (is_container_remote_node(node)) {
+        node_container_id = node->details->remote_rsc->container->id;
+    }
+
+    /* Node ID is displayed if different from uname and detail is requested */
+    if (print_clone_detail && safe_str_neq(node->details->uname, node->details->id)) {
+        node_id = node->details->id;
+    }
+
+    /* Determine name length */
+    name_len = strlen(node->details->uname) + 1;
+    if (node_container_id) {
+        name_len += strlen(node_container_id) + 1; /* ":node_container_id" */
+    }
+    if (node_id) {
+        name_len += strlen(node_id) + 3; /* + " (node_id)" */
+    }
+
+    /* Allocate and populate display name */
+    node_name = malloc(name_len);
+    CRM_ASSERT(node_name != NULL);
+    strcpy(node_name, node->details->uname);
+    if (node_container_id) {
+        strcat(node_name, ":");
+        strcat(node_name, node_container_id);
+    }
+    if (node_id) {
+        strcat(node_name, " (");
+        strcat(node_name, node_id);
+        strcat(node_name, ")");
+    }
+    return node_name;
+}
+
 static void print_neg_locations(pe_working_set_t *data_set)
 {
     GListPtr gIter, gIter2;
 
-    print_as("\nFencing constraints:\n");
+    print_as("\nNegative location constraints:\n");
     for (gIter = data_set->placement_constraints; gIter != NULL; gIter = gIter->next) {
         rsc_to_node_t *location = (rsc_to_node_t *) gIter->data;
         if (!g_str_has_prefix(location->id, print_neg_location_prefix))
             continue;
         for (gIter2 = location->node_list_rh; gIter2 != NULL; gIter2 = gIter2->next) {
             node_t *node = (node_t *) gIter2->data;
-            if (node->weight >= 0) /* != -INFINITY ??? */
-                continue;
-            print_as(" %s\tprevents %s from running %son %s\n",
-                    location->id, location->rsc_lh->id,
-                    location->role_filter == RSC_ROLE_MASTER ? "as Master " : "",
-                    node->details->uname);
+
+            if (node->weight < 0) {
+                char *node_name = get_node_display_name(node);
+
+                print_as(" %s\tprevents %s from running %son %s\n",
+                         location->id, location->rsc_lh->id,
+                         location->role_filter == RSC_ROLE_MASTER ? "as Master " : "",
+                         node_name);
+                free(node_name);
+            }
         }
     }
 }
@@ -1184,6 +1247,66 @@ crm_mon_get_parameters(resource_t *rsc, pe_working_set_t * data_set)
     }
 }
 
+/*!
+ * \internal
+ * \brief Return resource display options corresponding to command-line choices
+ *
+ * \return Bitmask of pe_print_options suitable for resource print functions
+ */
+static int
+get_resource_display_options(void)
+{
+    int print_opts = as_console? pe_print_ncurses : pe_print_printf;
+
+    /* Determine basic output format */
+    if (as_xml) {
+        print_opts = pe_print_xml;
+    } else if (as_html_file || web_cgi) {
+        print_opts = pe_print_html;
+    } else if (as_console) {
+        print_opts = pe_print_ncurses;
+    } else {
+        print_opts = pe_print_printf;
+    }
+
+    /* Add optional display elements */
+    if (print_pending) {
+        print_opts |= pe_print_pending;
+    }
+    if (print_clone_detail) {
+        print_opts |= pe_print_clone_details;
+    }
+    if (!inactive_resources) {
+        print_opts |= pe_print_clone_active;
+    }
+    if (print_brief) {
+        print_opts |= pe_print_brief;
+    }
+    return print_opts;
+}
+
+/*!
+ * \internal
+ * \brief Return human-friendly string representing current time
+ *
+ * \return Current time as string (as by ctime() but without newline) on success
+ *         or "Could not determine current time" on error
+ * \note The return value points to a statically allocated string which might be
+ *       overwritten by subsequent calls to any of the C library date and time functions.
+ */
+static const char *
+crm_now_string(void)
+{
+    time_t a_time = time(NULL);
+    char *since_epoch = ctime(&a_time);
+
+    if ((a_time == (time_t) -1) || (since_epoch == NULL)) {
+        return "Could not determine current time";
+    }
+    since_epoch[strlen(since_epoch) - 1] = EOS; /* trim newline */
+    return (since_epoch);
+}
+
 static int
 print_status(pe_working_set_t * data_set)
 {
@@ -1191,7 +1314,6 @@ print_status(pe_working_set_t * data_set)
 
     GListPtr gIter = NULL;
     node_t *dc = NULL;
-    char *since_epoch = NULL;
     char *online_nodes = NULL;
     char *online_remote_nodes = NULL;
     char *online_remote_containers = NULL;
@@ -1201,36 +1323,21 @@ print_status(pe_working_set_t * data_set)
     xmlNode *dc_version = NULL;
     xmlNode *quorum_node = NULL;
     xmlNode *stack = NULL;
-    time_t a_time = time(NULL);
 
-    int print_opts = pe_print_ncurses;
+    int print_opts = get_resource_display_options();
     const char *quorum_votes = "unknown";
 
     if (as_console) {
         blank_screen();
-    } else {
-        print_opts = pe_print_printf;
     }
 
-    if (print_pending) {
-        print_opts |= pe_print_pending;
-    }
-
-    if (print_clone_detail) {
-        print_opts |= pe_print_clone_details;
-    }
 
     updates++;
     dc = data_set->dc_node;
 
-    if (a_time == (time_t) - 1) {
-        crm_perror(LOG_ERR, "set_node_tstamp(): Invalid time returned");
-        return 1;
-    }
 
-    since_epoch = ctime(&a_time);
-    if (since_epoch != NULL && print_last_updated && !hide_headers) {
-        print_as("Last updated: %s", since_epoch);
+    if (print_last_updated && !hide_headers) {
+        print_as("Last updated: %s\n", crm_now_string());
     }
 
     if (print_last_change && !hide_headers) {
@@ -1266,16 +1373,14 @@ print_status(pe_working_set_t * data_set)
         print_as("Current DC: NONE\n");
     } else if (!hide_headers) {
         const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
+        char *dc_name = get_node_display_name(dc);
 
-        if (safe_str_neq(dc->details->uname, dc->details->id)) {
-            print_as("Current DC: %s (%s)", dc->details->uname, dc->details->id);
-        } else {
-            print_as("Current DC: %s", dc->details->uname);
-        }
+        print_as("Current DC: %s", dc_name);
         print_as(" - partition %s quorum\n", crm_is_true(quorum) ? "with" : "WITHOUT");
         if (dc_version) {
             print_as("Version: %s\n", crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE));
         }
+        free(dc_name);
     }
 
     quorum_node =
@@ -1299,13 +1404,7 @@ print_status(pe_working_set_t * data_set)
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
         const char *node_mode = NULL;
-        char *node_name = NULL;
-
-        if (is_container_remote_node(node)) {
-            node_name = crm_strdup_printf("%s:%s", node->details->uname, node->details->remote_rsc->container->id);
-        } else {
-            node_name = crm_strdup_printf("%s", node->details->uname);
-        }
+        char *node_name = get_node_display_name(node);
 
         if (node->details->unclean) {
             if (node->details->online && node->details->unclean) {
@@ -1365,14 +1464,11 @@ print_status(pe_working_set_t * data_set)
         }
 
         if (is_container_remote_node(node)) {
-            print_as("ContainerNode %s: %s\n", node_name, node_mode);
+            print_as("Container");
         } else if (is_baremetal_remote_node(node)) {
-            print_as("RemoteNode %s: %s\n", node_name, node_mode);
-        } else if (safe_str_eq(node->details->uname, node->details->id)) {
-            print_as("Node %s: %s\n", node_name, node_mode);
-        } else {
-            print_as("Node %s (%s): %s\n", node_name, node->details->id, node_mode);
+            print_as("Remote");
         }
+        print_as("Node %s: %s\n", node_name, node_mode);
 
         if (print_brief && group_by_node) {
             print_rscs_brief(node->details->running_rsc, "\t", print_opts | pe_print_rsconly,
@@ -1422,7 +1518,6 @@ print_status(pe_working_set_t * data_set)
         print_as("\n");
 
         if (print_brief && group_by_node == FALSE) {
-            print_opts |= pe_print_brief;
             print_rscs_brief(data_set->resources, NULL, print_opts, stdout,
                              inactive_resources);
         }
@@ -1461,11 +1556,16 @@ print_status(pe_working_set_t * data_set)
 
         for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
             node_t *node = (node_t *) gIter->data;
+            char *node_name;
 
             if (node == NULL || node->details->online == FALSE) {
                 continue;
             }
-            print_as("* Node %s:\n", node->details->uname);
+
+            node_name = get_node_display_name(node);
+            print_as("* Node %s:\n", node_name);
+            free(node_name);
+
             g_hash_table_foreach(node->details->attrs, create_attr_list, NULL);
             g_list_foreach(attr_list, print_node_attribute, node);
             g_list_free(attr_list);
@@ -1560,13 +1660,9 @@ print_xml_status(pe_working_set_t * data_set)
     xmlNode *stack = NULL;
     xmlNode *quorum_node = NULL;
     const char *quorum_votes = "unknown";
-    int print_opts = pe_print_xml;
+    int print_opts = get_resource_display_options();
 
     dc = data_set->dc_node;
-
-    if (print_pending) {
-        print_opts |= pe_print_pending;
-    }
 
     fprintf(stream, "<?xml version=\"1.0\"?>\n");
     fprintf(stream, "<crm_mon version=\"%s\">\n", VERSION);
@@ -1575,11 +1671,7 @@ print_xml_status(pe_working_set_t * data_set)
     fprintf(stream, "    <summary>\n");
 
     if (print_last_updated) {
-        time_t now = time(NULL);
-        char *now_str = ctime(&now);
-
-        now_str[24] = EOS;      /* replace the newline */
-        fprintf(stream, "        <last_update time=\"%s\" />\n", now_str);
+        fprintf(stream, "        <last_update time=\"%s\" />\n", crm_now_string());
     }
 
     if (print_last_change) {
@@ -1661,6 +1753,9 @@ print_xml_status(pe_working_set_t * data_set)
         fprintf(stream, "is_dc=\"%s\" ", node->details->is_dc ? "true" : "false");
         fprintf(stream, "resources_running=\"%d\" ", g_list_length(node->details->running_rsc));
         fprintf(stream, "type=\"%s\" ", node_type);
+        if (is_container_remote_node(node)) {
+            fprintf(stream, "container_id=\"%s\" ", node->details->remote_rsc->container->id);
+        }
 
         if (group_by_node) {
             GListPtr lpc2 = NULL;
@@ -1779,11 +1874,7 @@ print_html_status(pe_working_set_t * data_set, const char *filename, gboolean we
     node_t *dc = NULL;
     static int updates = 0;
     char *filename_tmp = NULL;
-    int print_opts = pe_print_html;
-
-    if (print_pending) {
-        print_opts |= pe_print_pending;
-    }
+    int print_opts = get_resource_display_options();
 
     if (web_cgi) {
         stream = stdout;
@@ -1812,19 +1903,15 @@ print_html_status(pe_working_set_t * data_set, const char *filename, gboolean we
     /*** SUMMARY ***/
 
     fprintf(stream, "<h2>Cluster summary</h2>");
-    {
-        char *now_str = NULL;
-        time_t now = time(NULL);
-
-        now_str = ctime(&now);
-        now_str[24] = EOS;      /* replace the newline */
-        fprintf(stream, "Last updated: <b>%s</b><br/>\n", now_str);
-    }
+    fprintf(stream, "Last updated: <b>%s</b><br/>\n", crm_now_string());
 
     if (dc == NULL) {
         fprintf(stream, "Current DC: <font color=\"red\"><b>NONE</b></font><br/>");
     } else {
-        fprintf(stream, "Current DC: %s (%s)<br/>", dc->details->uname, dc->details->id);
+        char *dc_name = get_node_display_name(dc);
+
+        fprintf(stream, "Current DC: %s<br/>\n", dc_name);
+        free(dc_name);
     }
     fprintf(stream, "%d Nodes configured.<br/>", g_list_length(data_set->nodes));
     fprintf(stream, "%d Resources configured.<br/>", count_resources(data_set, NULL));
@@ -1863,29 +1950,23 @@ print_html_status(pe_working_set_t * data_set, const char *filename, gboolean we
     fprintf(stream, "<ul>\n");
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
+        char *node_name = get_node_display_name(node);
 
-        fprintf(stream, "<li>");
+        fprintf(stream, "<li>Node: %s: ", node_name);
         if (node->details->standby_onfail && node->details->online) {
-            fprintf(stream, "Node: %s (%s): %s", node->details->uname, node->details->id,
-                    "<font color=\"orange\">standby (on-fail)</font>\n");
+            fprintf(stream, "<font color=\"orange\">standby (on-fail)</font>\n");
         } else if (node->details->standby && node->details->online) {
-            fprintf(stream, "Node: %s (%s): %s", node->details->uname, node->details->id,
-                    "<font color=\"orange\">standby</font>\n");
+            fprintf(stream, "<font color=\"orange\">standby</font>\n");
         } else if (node->details->standby) {
-            fprintf(stream, "Node: %s (%s): %s", node->details->uname, node->details->id,
-                    "<font color=\"red\">OFFLINE (standby)</font>\n");
+            fprintf(stream, "<font color=\"red\">OFFLINE (standby)</font>\n");
         } else if (node->details->maintenance && node->details->online) {
-            fprintf(stream, "Node: %s (%s): %s", node->details->uname, node->details->id,
-                    "<font color=\"blue\">maintenance</font>\n");
+            fprintf(stream, "<font color=\"blue\">maintenance</font>\n");
         } else if (node->details->maintenance) {
-            fprintf(stream, "Node: %s (%s): %s", node->details->uname, node->details->id,
-                    "<font color=\"red\">OFFLINE (maintenance)</font>\n");
+            fprintf(stream, "<font color=\"red\">OFFLINE (maintenance)</font>\n");
         } else if (node->details->online) {
-            fprintf(stream, "Node: %s (%s): %s", node->details->uname, node->details->id,
-                    "<font color=\"green\">online</font>\n");
+            fprintf(stream, "<font color=\"green\">online</font>\n");
         } else {
-            fprintf(stream, "Node: %s (%s): %s", node->details->uname, node->details->id,
-                    "<font color=\"red\">OFFLINE</font>\n");
+            fprintf(stream, "<font color=\"red\">OFFLINE</font>\n");
         }
         if (print_brief && group_by_node) {
             fprintf(stream, "<ul>\n");
@@ -1919,7 +2000,6 @@ print_html_status(pe_working_set_t * data_set, const char *filename, gboolean we
 
     if (group_by_node == FALSE || inactive_resources) {
         if (print_brief && group_by_node == FALSE) {
-            print_opts |= pe_print_brief;
             print_rscs_brief(data_set->resources, NULL, print_opts, stream,
                              inactive_resources);
         }

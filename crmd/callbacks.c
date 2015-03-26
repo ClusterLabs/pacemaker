@@ -206,6 +206,9 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             if (alive && safe_str_eq(task, CRM_OP_FENCE)) {
                 crm_info("Node return implies stonith of %s (action %d) completed", node->uname,
                          down->id);
+
+                st_fail_count_reset(node->uname);
+
                 erase_status_tag(node->uname, XML_CIB_TAG_LRM, cib_scope_local);
                 erase_status_tag(node->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
                 /* down->confirmed = TRUE; Only stonith-ng returning should imply completion */

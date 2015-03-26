@@ -27,21 +27,9 @@
 #include <crmd_lrm.h>
 
 GHashTable *lrm_state_table = NULL;
-GHashTable *proxy_table = NULL;
+extern GHashTable *proxy_table;
 int lrmd_internal_proxy_send(lrmd_t * lrmd, xmlNode *msg);
 void lrmd_internal_set_proxy_callback(lrmd_t * lrmd, void *userdata, void (*callback)(lrmd_t *lrmd, void *userdata, xmlNode *msg));
-
-typedef struct remote_proxy_s {
-    char *node_name;
-    char *session_id;
-
-    gboolean is_local;
-
-    crm_ipc_t *ipc;
-    mainloop_io_t *source;
-    uint32_t last_request_id;
-
-} remote_proxy_t;
 
 static void
 history_cache_destroy(gpointer data)
@@ -218,32 +206,6 @@ lrm_state_reset_tables(lrm_state_t * lrm_state)
     }
 }
 
-static void
-remote_proxy_end_session(const char *session)
-{
-    remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
-
-    if (proxy == NULL) {
-        return;
-    }
-    crm_trace("ending session ID %s", proxy->session_id);
-
-    if (proxy->source) {
-        mainloop_del_ipc_client(proxy->source);
-    }
-}
-
-static void
-remote_proxy_free(gpointer data)
-{
-    remote_proxy_t *proxy = data;
-
-    crm_trace("freed proxy session ID %s", proxy->session_id);
-    free(proxy->node_name);
-    free(proxy->session_id);
-    free(proxy);
-}
-
 gboolean
 lrm_state_init_local(void)
 {
@@ -357,43 +319,6 @@ lrm_state_ipc_connect(lrm_state_t * lrm_state)
     }
 
     return ret;
-}
-
-static void
-remote_proxy_notify_destroy(lrmd_t *lrmd, const char *session_id)
-{
-    /* sending to the remote node that an ipc connection has been destroyed */
-    xmlNode *msg = create_xml_node(NULL, T_LRMD_IPC_PROXY);
-    crm_xml_add(msg, F_LRMD_IPC_OP, "destroy");
-    crm_xml_add(msg, F_LRMD_IPC_SESSION, session_id);
-    lrmd_internal_proxy_send(lrmd, msg);
-    free_xml(msg);
-}
-
-static void
-remote_proxy_relay_event(lrmd_t *lrmd, const char *session_id, xmlNode *msg)
-{
-    /* sending to the remote node an event msg. */
-    xmlNode *event = create_xml_node(NULL, T_LRMD_IPC_PROXY);
-    crm_xml_add(event, F_LRMD_IPC_OP, "event");
-    crm_xml_add(event, F_LRMD_IPC_SESSION, session_id);
-    add_message_xml(event, F_LRMD_IPC_MSG, msg);
-    crm_log_xml_explicit(event, "EventForProxy");
-    lrmd_internal_proxy_send(lrmd, event);
-    free_xml(event);
-}
-
-static void
-remote_proxy_relay_response(lrmd_t *lrmd, const char *session_id, xmlNode *msg, int msg_id)
-{
-    /* sending to the remote node a response msg. */
-    xmlNode *response = create_xml_node(NULL, T_LRMD_IPC_PROXY);
-    crm_xml_add(response, F_LRMD_IPC_OP, "response");
-    crm_xml_add(response, F_LRMD_IPC_SESSION, session_id);
-    crm_xml_add_int(response, F_LRMD_IPC_MSG_ID, msg_id);
-    add_message_xml(response, F_LRMD_IPC_MSG, msg);
-    lrmd_internal_proxy_send(lrmd, response);
-    free_xml(response);
 }
 
 static int

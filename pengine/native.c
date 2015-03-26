@@ -3267,6 +3267,7 @@ void
 native_append_meta(resource_t * rsc, xmlNode * xml)
 {
     char *value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INCARNATION);
+    resource_t *parent, *last_parent;
 
     if (value) {
         char *name = NULL;
@@ -3283,5 +3284,41 @@ native_append_meta(resource_t * rsc, xmlNode * xml)
         name = crm_meta_name(XML_RSC_ATTR_REMOTE_NODE);
         crm_xml_add(xml, name, value);
         free(name);
+    }
+
+    last_parent = parent = rsc;
+    while (parent != NULL) {
+        char *name = NULL;
+
+        if (parent->isolation_wrapper == NULL) {
+            last_parent = parent;
+            parent = parent->parent;
+            continue;
+        }
+
+        /* name of wrapper script this resource is routed through. */
+        name = crm_meta_name(XML_RSC_ATTR_ISOLATION_WRAPPER);
+        crm_xml_add(xml, name, parent->isolation_wrapper);
+        free(name);
+
+        /* instance name for isolated environment */
+        name = crm_meta_name(XML_RSC_ATTR_ISOLATION_INSTANCE);
+        if (parent->variant < pe_clone) { 
+            crm_xml_add(xml, name, parent->id);
+        } else {
+            char *iso = NULL;
+            /* if isolation is set at the clone/master level, we have to 
+             * give this resource the unique isolation instance associated
+             * with the matching clone child */
+            value = g_hash_table_lookup(last_parent->meta, XML_RSC_ATTR_INCARNATION);
+            CRM_ASSERT(value != NULL);
+
+            iso = crm_concat(parent->id, value, '_');
+            crm_xml_add(xml, name, iso);
+            free(iso);
+        }
+        free(name);
+
+        break;
     }
 }

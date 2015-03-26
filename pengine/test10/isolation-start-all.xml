@@ -1,0 +1,189 @@
+<cib crm_feature_set="3.0.9" validate-with="pacemaker-2.3" epoch="57" num_updates="11" admin_epoch="0" cib-last-written="Fri Mar 20 17:07:35 2015" have-quorum="0" dc-uuid="5">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.12-9c26cd7"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="phd"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1426885270"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="5" uname="rhel7-auto5">
+        <instance_attributes id="nodes-5">
+        </instance_attributes>
+      </node>
+      <node id="4" uname="rhel7-auto4"/>
+    </nodes>
+    <resources>
+      <primitive class="ocf" id="fake" provider="heartbeat" type="Dummy">
+        <instance_attributes id="fake-instance_attributes">
+          <nvpair id="fake-instance_attributes-docker_image" name="pcmk_docker_image" value="centos:dock-wrapper-test"/>
+          <nvpair id="fake-instance_attributes-docker_privileged" name="pcmk_docker_privileged" value="true"/>
+        </instance_attributes>
+        <operations>
+          <op id="fake-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+        <meta_attributes id="fake-meta_attributes"/>
+      </primitive>
+      <clone id="replicated-clone">
+        <instance_attributes id="clone-instance_attributes">
+          <nvpair id="clone-instance_attributes-docker_image" name="pcmk_docker_image" value="centos:dock-wrapper-test"/>
+          <nvpair id="clone-instance_attributes-docker_privileged" name="pcmk_docker_privileged" value="true"/>
+        </instance_attributes>
+        <primitive class="ocf" id="replicated" provider="heartbeat" type="Dummy">
+          <operations>
+            <op id="replicated-start-interval-0s" interval="0s" name="start" timeout="20"/>
+            <op id="replicated-stop-interval-0s" interval="0s" name="stop" timeout="20"/>
+            <op id="replicated-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="replicated-clone-meta">
+          <nvpair id="replicated-clone-node-max" name="clone-node-max" value="2"/>
+          <nvpair id="replicated-meta_attributes-clone-max" name="clone-max" value="2"/>
+        </meta_attributes>
+        <meta_attributes id="replicated-clone-meta_attributes"/>
+      </clone>
+      <group id="group_is_container">
+        <instance_attributes id="group-is-instance_attributes">
+          <nvpair id="group-is-instance_attributes-docker_image" name="pcmk_docker_image" value="centos:dock-wrapper-test"/>
+          <nvpair id="group-is-instance_attributes-docker_privileged" name="pcmk_docker_privileged" value="true"/>
+        </instance_attributes>
+        <primitive class="ocf" id="s1" provider="heartbeat" type="Dummy">
+          <instance_attributes id="s1-instance_attributes"/>
+          <operations>
+            <op id="s1-start-interval-0s" interval="0s" name="start" timeout="20"/>
+            <op id="s1-stop-interval-0s" interval="0s" name="stop" timeout="20"/>
+            <op id="s1-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="s2" provider="heartbeat" type="Dummy">
+          <instance_attributes id="s2-instance_attributes"/>
+          <operations>
+            <op id="s2-start-interval-0s" interval="0s" name="start" timeout="20"/>
+            <op id="s2-stop-interval-0s" interval="0s" name="stop" timeout="20"/>
+            <op id="s2-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="group_is_container-meta_attributes"/>
+      </group>
+      <clone id="mygroup-clone">
+        <group id="mygroup">
+          <primitive class="ocf" id="g1" provider="heartbeat" type="Dummy">
+            <instance_attributes id="g1-instance_attributes"/>
+            <operations>
+              <op id="g1-start-interval-0s" interval="0s" name="start" timeout="20"/>
+              <op id="g1-stop-interval-0s" interval="0s" name="stop" timeout="20"/>
+              <op id="g1-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+            </operations>
+          </primitive>
+          <primitive class="ocf" id="g2" provider="heartbeat" type="Dummy">
+            <instance_attributes id="g2-instance_attributes"/>
+            <operations>
+              <op id="g2-start-interval-0s" interval="0s" name="start" timeout="20"/>
+              <op id="g2-stop-interval-0s" interval="0s" name="stop" timeout="20"/>
+              <op id="g2-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+            </operations>
+          </primitive>
+          <meta_attributes id="mygroup-meta_attributes"/>
+        </group>
+        <meta_attributes id="mygroup-clone-meta">
+          <nvpair id="mygroup-clone-node-max" name="clone-node-max" value="2"/>
+          <nvpair id="mygroup-clone-max" name="clone-max" value="2"/>
+        </meta_attributes>
+        <instance_attributes id="clone-group-instance_attributes">
+          <nvpair id="clone-group-instance_attributes-docker_image" name="pcmk_docker_image" value="centos:dock-wrapper-test"/>
+          <nvpair id="clone-group-instance_attributes-docker_privileged" name="pcmk_docker_privileged" value="true"/>
+        </instance_attributes>
+        <meta_attributes id="mygroup-clone-meta_attributes"/>
+      </clone>
+      <group id="group_of_containers">
+        <primitive class="ocf" id="iso_mem1" provider="heartbeat" type="Dummy">
+          <instance_attributes id="iso_mem1-instance_attributes">
+            <nvpair id="iso_mem1-instance_attributes-pcmk_docker_privileged" name="pcmk_docker_privileged" value="true"/>
+            <nvpair id="iso_mem1-instance_attributes-docker_image" name="pcmk_docker_image" value="centos:dock-wrapper-test"/>
+          </instance_attributes>
+          <operations>
+            <op id="iso_mem1-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="iso_mem2" provider="heartbeat" type="Dummy">
+          <instance_attributes id="iso_mem2-instance_attributes">
+            <nvpair id="iso_mem2-instance_attributes-pcmk_docker_privileged" name="pcmk_docker_privileged" value="true"/>
+            <nvpair id="iso_mem2-instance_attributes-docker_image" name="pcmk_docker_image" value="centos:dock-wrapper-test"/>
+          </instance_attributes>
+          <operations>
+            <op id="iso_mem2-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="group_of_containers-meta_attributes"/>
+      </group>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="5" uname="rhel7-auto5" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="5">
+        <instance_attributes id="status-5">
+          <nvpair id="status-5-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-5-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-5-last-failure-iso_mem1" name="last-failure-iso_mem1" value="1426885201"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="5">
+        <lrm_resources>
+          <lrm_resource id="fake" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fake_last_failure_0" operation_key="fake_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="4:0:7:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" transition-magic="0:0;4:0:7:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" on_node="rhel7-auto5" call-id="73" rc-code="0" op-status="0" interval="0" last-run="1426884526" last-rc-change="1426884526" exec-time="2075" queue-time="0" op-digest="867ed8af9a799ae36ff3ae6b942436ef"/>
+            <lrm_rsc_op id="fake_last_0" operation_key="fake_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="15:23:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" transition-magic="0:0;15:23:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" on_node="rhel7-auto5" call-id="158" rc-code="0" op-status="0" interval="0" last-run="1426885655" last-rc-change="1426885655" exec-time="3959" queue-time="0" op-digest="867ed8af9a799ae36ff3ae6b942436ef" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="fake_monitor_60000" operation_key="fake_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="12:1:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" transition-magic="0:0;12:1:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" on_node="rhel7-auto5" call-id="74" rc-code="0" op-status="0" interval="60000" last-rc-change="1426884529" exec-time="2078" queue-time="0" op-digest="a29997ef58fb3b729b63f5f588da2452"/>
+          </lrm_resource>
+          <lrm_resource id="g2:0" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="g2:0_last_0" operation_key="g2:0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="29:23:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" transition-magic="0:0;29:23:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" on_node="rhel7-auto5" call-id="170" rc-code="0" op-status="0" interval="0" last-run="1426885681" last-rc-change="1426885681" exec-time="3360" queue-time="0" op-digest="867ed8af9a799ae36ff3ae6b942436ef" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="g2:0_monitor_10000" operation_key="g2:0_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="30:8:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" transition-magic="0:0;30:8:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" on_node="rhel7-auto5" call-id="122" rc-code="0" op-status="0" interval="10000" last-rc-change="1426884742" exec-time="2348" queue-time="1" op-digest="a29997ef58fb3b729b63f5f588da2452"/>
+          </lrm_resource>
+          <lrm_resource id="replicated:0" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="replicated:0_last_failure_0" operation_key="replicated:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="4:1:7:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" transition-magic="0:0;4:1:7:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" on_node="rhel7-auto5" call-id="76" rc-code="0" op-status="0" interval="0" last-run="1426884531" last-rc-change="1426884531" exec-time="2077" queue-time="0" op-digest="867ed8af9a799ae36ff3ae6b942436ef"/>
+            <lrm_rsc_op id="replicated:0_last_0" operation_key="replicated:0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="16:23:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" transition-magic="0:0;16:23:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" on_node="rhel7-auto5" call-id="162" rc-code="0" op-status="0" interval="0" last-run="1426885662" last-rc-change="1426885662" exec-time="4889" queue-time="0" op-digest="867ed8af9a799ae36ff3ae6b942436ef" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="replicated:0_monitor_10000" operation_key="replicated:0_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="14:2:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" transition-magic="0:0;14:2:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" on_node="rhel7-auto5" call-id="77" rc-code="0" op-status="0" interval="10000" last-rc-change="1426884533" exec-time="1994" queue-time="0" op-digest="a29997ef58fb3b729b63f5f588da2452"/>
+          </lrm_resource>
+          <lrm_resource id="replicated:1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="replicated:1_last_failure_0" operation_key="replicated:1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="5:2:7:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" transition-magic="0:0;5:2:7:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" on_node="rhel7-auto5" call-id="79" rc-code="0" op-status="0" interval="0" last-run="1426884535" last-rc-change="1426884535" exec-time="1986" queue-time="0" op-digest="867ed8af9a799ae36ff3ae6b942436ef"/>
+            <lrm_rsc_op id="replicated:1_last_0" operation_key="replicated:1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="17:23:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" transition-magic="0:0;17:23:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" on_node="rhel7-auto5" call-id="164" rc-code="0" op-status="0" interval="0" last-run="1426885667" last-rc-change="1426885667" exec-time="4983" queue-time="0" op-digest="867ed8af9a799ae36ff3ae6b942436ef" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="replicated:1_monitor_10000" operation_key="replicated:1_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="16:3:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" transition-magic="0:0;16:3:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" on_node="rhel7-auto5" call-id="80" rc-code="0" op-status="0" interval="10000" last-rc-change="1426884537" exec-time="1989" queue-time="0" op-digest="a29997ef58fb3b729b63f5f588da2452"/>
+          </lrm_resource>
+          <lrm_resource id="s2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="s2_last_0" operation_key="s2_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="23:23:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" transition-magic="0:0;23:23:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" on_node="rhel7-auto5" call-id="160" rc-code="0" op-status="0" interval="0" last-run="1426885659" last-rc-change="1426885659" exec-time="3176" queue-time="0" op-digest="867ed8af9a799ae36ff3ae6b942436ef" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="s2_monitor_10000" operation_key="s2_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="25:11:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" transition-magic="0:0;25:11:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" on_node="rhel7-auto5" call-id="134" rc-code="0" op-status="0" interval="10000" last-rc-change="1426884934" exec-time="2200" queue-time="0" op-digest="a29997ef58fb3b729b63f5f588da2452"/>
+          </lrm_resource>
+          <lrm_resource id="s1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="s1_last_0" operation_key="s1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="22:23:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" transition-magic="0:0;22:23:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" on_node="rhel7-auto5" call-id="166" rc-code="0" op-status="0" interval="0" last-run="1426885672" last-rc-change="1426885672" exec-time="4555" queue-time="0" op-digest="867ed8af9a799ae36ff3ae6b942436ef" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="s1_monitor_10000" operation_key="s1_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="23:11:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" transition-magic="0:0;23:11:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" on_node="rhel7-auto5" call-id="132" rc-code="0" op-status="0" interval="10000" last-rc-change="1426884927" exec-time="2094" queue-time="0" op-digest="a29997ef58fb3b729b63f5f588da2452"/>
+          </lrm_resource>
+          <lrm_resource id="g1:0" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="g1:0_last_0" operation_key="g1:0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="28:23:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" transition-magic="0:0;28:23:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" on_node="rhel7-auto5" call-id="172" rc-code="0" op-status="0" interval="0" last-run="1426885685" last-rc-change="1426885685" exec-time="4620" queue-time="0" op-digest="867ed8af9a799ae36ff3ae6b942436ef" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="g1:0_monitor_10000" operation_key="g1:0_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="28:8:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" transition-magic="0:0;28:8:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" on_node="rhel7-auto5" call-id="120" rc-code="0" op-status="0" interval="10000" last-rc-change="1426884736" exec-time="2123" queue-time="1" op-digest="a29997ef58fb3b729b63f5f588da2452"/>
+          </lrm_resource>
+          <lrm_resource id="g1:1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="g1:1_last_0" operation_key="g1:1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="34:23:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" transition-magic="0:0;34:23:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" on_node="rhel7-auto5" call-id="176" rc-code="0" op-status="0" interval="0" last-run="1426885692" last-rc-change="1426885692" exec-time="4493" queue-time="0" op-digest="867ed8af9a799ae36ff3ae6b942436ef" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="g1:1_monitor_10000" operation_key="g1:1_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="36:8:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" transition-magic="0:0;36:8:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" on_node="rhel7-auto5" call-id="124" rc-code="0" op-status="0" interval="10000" last-rc-change="1426884749" exec-time="2146" queue-time="0" op-digest="a29997ef58fb3b729b63f5f588da2452"/>
+          </lrm_resource>
+          <lrm_resource id="iso_mem1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="iso_mem1_last_0" operation_key="iso_mem1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="44:23:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" transition-magic="0:0;44:23:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" on_node="rhel7-auto5" call-id="178" rc-code="0" op-status="0" interval="0" last-run="1426885696" last-rc-change="1426885696" exec-time="4098" queue-time="0" op-digest="867ed8af9a799ae36ff3ae6b942436ef" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="iso_mem1_monitor_60000" operation_key="iso_mem1_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="53:22:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" transition-magic="0:0;53:22:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" on_node="rhel7-auto5" call-id="154" rc-code="0" op-status="0" interval="60000" last-rc-change="1426885422" exec-time="1964" queue-time="1" op-digest="a29997ef58fb3b729b63f5f588da2452"/>
+          </lrm_resource>
+          <lrm_resource id="g2:1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="g2:1_last_0" operation_key="g2:1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="35:23:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" transition-magic="0:0;35:23:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" on_node="rhel7-auto5" call-id="174" rc-code="0" op-status="0" interval="0" last-run="1426885689" last-rc-change="1426885689" exec-time="2859" queue-time="0" op-digest="867ed8af9a799ae36ff3ae6b942436ef" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="g2:1_monitor_10000" operation_key="g2:1_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="38:8:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" transition-magic="0:0;38:8:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" on_node="rhel7-auto5" call-id="126" rc-code="0" op-status="0" interval="10000" last-rc-change="1426884755" exec-time="1684" queue-time="0" op-digest="a29997ef58fb3b729b63f5f588da2452"/>
+          </lrm_resource>
+          <lrm_resource id="iso_mem2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="iso_mem2_last_0" operation_key="iso_mem2_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="45:23:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" transition-magic="0:0;45:23:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" on_node="rhel7-auto5" call-id="168" rc-code="0" op-status="0" interval="0" last-run="1426885677" last-rc-change="1426885677" exec-time="4473" queue-time="0" op-digest="867ed8af9a799ae36ff3ae6b942436ef" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="iso_mem2_monitor_60000" operation_key="iso_mem2_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="55:22:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" transition-magic="0:0;55:22:0:7860aa58-03b8-4131-9940-ae9ab9bdcb4a" on_node="rhel7-auto5" call-id="156" rc-code="0" op-status="0" interval="60000" last-rc-change="1426885430" exec-time="2309" queue-time="0" op-digest="a29997ef58fb3b729b63f5f588da2452"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>
