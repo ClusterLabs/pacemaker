@@ -2452,8 +2452,8 @@ main(int argc, char **argv)
             if(rsc->variant >= pe_clone) {
                 rc = search_resource(rsc_id, &data_set);
                 if(rc > 0 && do_force == FALSE) {
-                    CMD_ERR("It is not safe to start %s here: the cluster claims it is already active", rsc_id);
-                    CMD_ERR("Try setting target-role=stopped first or specifying --force");
+                    CMD_ERR("It is not safe to start %s here: the cluster claims it is already active\n", rsc_id);
+                    CMD_ERR("Try setting target-role=stopped first or specifying --force\n");
                     crm_exit(EPERM);
                 }
             }
