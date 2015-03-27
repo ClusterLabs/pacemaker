@@ -1355,6 +1355,7 @@ int (*ccm_api_handle_event) (const oc_ev_t * token) = NULL;
 void
 cib_client_status_callback(const char *node, const char *client, const char *status, void *private)
 {
+    /* Heartbeat only */
     crm_node_t *peer = NULL;
 
     if (safe_str_eq(client, CRM_SYSTEM_CIB)) {
