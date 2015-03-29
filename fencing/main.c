@@ -1174,11 +1174,18 @@ struct qb_ipcs_service_handlers ipc_callbacks = {
 static void
 st_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
 {
+    xmlNode *query = NULL;
+
+    if (type == crm_status_processes) {
+        crm_update_peer_state(__FUNCTION__, node, is_set(node->processes, crm_proc_cpg)?CRM_NODE_MEMBER:CRM_NODE_LOST, 0);
+        return;
+    }
+
     /*
      * This is a hack until we can send to a nodeid and/or we fix node name lookups
      * These messages are ignored in stonith_peer_callback()
      */
-    xmlNode *query = create_xml_node(NULL, "stonith_command");
+    query = create_xml_node(NULL, "stonith_command");
 
     crm_xml_add(query, F_XML_TAGNAME, "stonith_command");
     crm_xml_add(query, F_TYPE, T_STONITH_NG);
