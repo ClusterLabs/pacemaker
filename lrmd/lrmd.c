@@ -884,6 +884,7 @@ action_complete(svc_action_t * action)
             } else {
                 int time_sum = 0;
                 int timeout_left = 0;
+#ifdef HAVE_SYS_TIMEB_H
                 struct timeb now = { 0, };
 
                 ftime(&now);
@@ -891,6 +892,7 @@ action_complete(svc_action_t * action)
                 timeout_left = cmd->timeout_orig - time_sum;
                 crm_debug("%s %s is now complete (elapsed=%dms, remaining=%dms): %s (%d)",
                           cmd->rsc_id, cmd->real_action, time_sum, timeout_left, services_ocf_exitcode_str(cmd->exec_rc), cmd->exec_rc);
+#endif
 
                 if(cmd->lrmd_op_status == PCMK_LRM_OP_DONE && cmd->exec_rc == PCMK_OCF_NOT_RUNNING && safe_str_eq(cmd->real_action, "stop")) {
                     cmd->exec_rc = PCMK_OCF_OK;
@@ -912,12 +914,17 @@ action_complete(svc_action_t * action)
     }
 #endif
 
+    /* Wrapping this section in ifdef implies that systemd resources are not
+     * fully supported on platforms without sys/timeb.h. Since timeb is
+     * obsolete, we should eventually prefer a clock_gettime() implementation
+     * (wrapped in its own ifdef) with timeb as a fallback.
+     */
+#ifdef HAVE_SYS_TIMEB_H
     if(goagain) {
         int time_sum = 0;
         int timeout_left = 0;
         int delay = cmd->timeout_orig / 10;
 
-#  ifdef HAVE_SYS_TIMEB_H
         struct timeb now = { 0, };
 
         ftime(&now);
@@ -959,8 +966,8 @@ action_complete(svc_action_t * action)
             cmd->lrmd_op_status = PCMK_LRM_OP_TIMEOUT;
             cmd->exec_rc = PCMK_OCF_TIMEOUT;
         }
-#  endif
     }
+#endif
 
     if (action->stderr_data) {
         cmd->output = strdup(action->stderr_data);
