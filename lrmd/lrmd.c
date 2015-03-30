@@ -397,17 +397,28 @@ send_client_notify(gpointer key, gpointer value, gpointer user_data)
 }
 
 #ifdef HAVE_SYS_TIMEB_H
+/*!
+ * \internal
+ * \brief Return difference between two times in milliseconds
+ *
+ * \param[in] now  More recent time (or NULL to use current time)
+ * \param[in] old  Earlier time
+ *
+ * \return milliseconds difference (or 0 if old is NULL or has time zero)
+ */
 static int
 time_diff_ms(struct timeb *now, struct timeb *old)
 {
-    int sec = difftime(now->time, old->time);
-    int ms = now->millitm - old->millitm;
+    struct timeb local_now = { 0, };
 
-    if (old->time == 0) {
+    if (now == NULL) {
+        ftime(&local_now);
+        now = &local_now;
+    }
+    if ((old == NULL) || (old->time == 0)) {
         return 0;
     }
-
-    return (sec * 1000) + ms;
+    return difftime(now->time, old->time) * 1000 + now->millitm - old->millitm;
 }
 #endif
 
@@ -419,10 +430,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     xmlNode *notify = NULL;
 
 #ifdef HAVE_SYS_TIMEB_H
-    struct timeb now = { 0, };
-
-    ftime(&now);
-    exec_time = time_diff_ms(&now, &cmd->t_run);
+    exec_time = time_diff_ms(NULL, &cmd->t_run);
     queue_time = time_diff_ms(&cmd->t_run, &cmd->t_queue);
 #endif
 
@@ -885,14 +893,10 @@ action_complete(svc_action_t * action)
                 goagain = true;
 
             } else {
-                int time_sum = 0;
-                int timeout_left = 0;
 #ifdef HAVE_SYS_TIMEB_H
-                struct timeb now = { 0, };
+                int time_sum = time_diff_ms(NULL, &cmd->t_first_run);
+                int timeout_left = cmd->timeout_orig - time_sum;
 
-                ftime(&now);
-                time_sum = time_diff_ms(&now, &cmd->t_first_run);
-                timeout_left = cmd->timeout_orig - time_sum;
                 crm_debug("%s %s is now complete (elapsed=%dms, remaining=%dms): %s (%d)",
                           cmd->rsc_id, cmd->real_action, time_sum, timeout_left, services_ocf_exitcode_str(cmd->exec_rc), cmd->exec_rc);
 #endif
@@ -924,15 +928,9 @@ action_complete(svc_action_t * action)
      */
 #ifdef HAVE_SYS_TIMEB_H
     if(goagain) {
-        int time_sum = 0;
-        int timeout_left = 0;
+        int time_sum = time_diff_ms(NULL, &cmd->t_first_run);
+        int timeout_left = cmd->timeout_orig - time_sum;
         int delay = cmd->timeout_orig / 10;
-
-        struct timeb now = { 0, };
-
-        ftime(&now);
-        time_sum = time_diff_ms(&now, &cmd->t_first_run);
-        timeout_left = cmd->timeout_orig - time_sum;
 
         if(delay >= timeout_left && timeout_left > 20) {
             delay = timeout_left/2;
