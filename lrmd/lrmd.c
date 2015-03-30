@@ -552,6 +552,9 @@ cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc)
         cmd->rsc_deleted = 1;
     }
 
+    /* reset original timeout so client notification has correct information */
+    cmd->timeout = cmd->timeout_orig;
+
     send_cmd_complete_notify(cmd);
 
     if (cmd->interval && (cmd->lrmd_op_status == PCMK_LRM_OP_CANCELLED)) {
@@ -958,6 +961,8 @@ action_complete(svc_action_t * action)
                 rsc->active = NULL;
             }
             schedule_lrmd_cmd(rsc, cmd);
+
+            /* Don't finalize cmd, we're not done with it yet */
             return;
 
         } else {
