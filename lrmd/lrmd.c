@@ -1179,7 +1179,7 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     if (cmd->isolation_wrapper) {
         action = resources_action_create(rsc->rsc_id,
                                          "ocf",
-                                         CONTAINER_PROVIDER,
+                                         ISOLATION_PROVIDER,
                                          cmd->isolation_wrapper,
                                          cmd->action, /*action will be normalized in wrapper*/
                                          cmd->interval, cmd->timeout, params_copy);
