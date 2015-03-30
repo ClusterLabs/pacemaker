@@ -2689,7 +2689,7 @@ determine_op_status(
             break;
 
         case PCMK_OCF_NOT_RUNNING:
-            if (is_probe || target_rc == rc) {
+            if (is_probe || target_rc == rc || is_not_set(rsc->flags, pe_rsc_managed)) {
                 result = PCMK_LRM_OP_DONE;
                 rsc->role = RSC_ROLE_STOPPED;
 
