@@ -1960,8 +1960,10 @@ static struct crm_option long_options[] = {
     {"fail",       0, 0, 'F', "\t\t(Advanced) Tell the cluster this resource has failed"},
     {"restart",    0, 0,  0,  "\t\t(Advanced) Tell the cluster to restart this resource and anything that depends on it"},
     {"wait",       0, 0,  0,  "\t\t(Advanced) Wait until the cluster settles into a stable state"},
+    {"force-demote",0,0,  0,  "\t(Advanced) Bypass the cluster and demote a resource on the local node. Additional detail with -V"},
     {"force-stop", 0, 0,  0,  "\t(Advanced) Bypass the cluster and stop a resource on the local node. Additional detail with -V"},
     {"force-start",0, 0,  0,  "\t(Advanced) Bypass the cluster and start a resource on the local node. Additional detail with -V"},
+    {"force-promote",0,0, 0,  "\t(Advanced) Bypass the cluster and promote a resource on the local node. Additional detail with -V"},
     {"force-check",0, 0,  0,  "\t(Advanced) Bypass the cluster and check the state of a resource on the local node. Additional detail with -V\n"},
 
     {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
@@ -2070,10 +2072,13 @@ main(int argc, char **argv)
                     require_resource = FALSE;
                     require_dataset = FALSE;
 
-                } else if (safe_str_eq("force-stop", longname)
-                    || safe_str_eq("restart", longname)
-                    || safe_str_eq("force-start", longname)
-                    || safe_str_eq("force-check", longname)) {
+                } else if (
+                    safe_str_eq("restart", longname)
+                    || safe_str_eq("force-demote",  longname)
+                    || safe_str_eq("force-stop",    longname)
+                    || safe_str_eq("force-start",   longname)
+                    || safe_str_eq("force-promote", longname)
+                    || safe_str_eq("force-check",   longname)) {
                     rsc_cmd = flag;
                     rsc_long_cmd = longname;
 
@@ -2420,21 +2425,25 @@ main(int argc, char **argv)
             goto bail;
         }
 
-        if (safe_str_eq(rsc_long_cmd, "force-stop")) {
-            action = "stop";
-        } else if (safe_str_eq(rsc_long_cmd, "force-start")) {
-            action = "start";
+        if (safe_str_eq(rsc_long_cmd, "force-check")) {
+            action = "monitor";
+
+        } else if (safe_str_eq(rsc_long_cmd, "force-stop")) {
+            action = rsc_long_cmd+6;
+
+        } else if (safe_str_eq(rsc_long_cmd, "force-start")
+                   || safe_str_eq(rsc_long_cmd, "force-demote")
+                   || safe_str_eq(rsc_long_cmd, "force-promote")) {
+            action = rsc_long_cmd+6;
+
             if(rsc->variant >= pe_clone) {
                 rc = do_find_resource(rsc_id, NULL, &data_set);
                 if(rc > 0 && do_force == FALSE) {
-                    CMD_ERR("It is not safe to start %s here: the cluster claims it is already active", rsc_id);
+                    CMD_ERR("It is not safe to %s %s here: the cluster claims it is already active", action, rsc_id);
                     CMD_ERR("Try setting target-role=stopped first or specifying --force");
                     crm_exit(EPERM);
                 }
             }
-
-        } else if (safe_str_eq(rsc_long_cmd, "force-check")) {
-            action = "monitor";
         }
 
         if(rsc->variant == pe_clone || rsc->variant == pe_master) {
