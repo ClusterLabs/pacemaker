@@ -915,11 +915,19 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
 
     g_hash_table_foreach(action->meta, hash2metafield, args_xml);
     if (action->rsc != NULL) {
+        int isolated = 0;
         resource_t *parent = action->rsc;
 
         while (parent != NULL) {
+            isolated |= parent->isolation_wrapper ? 1 : 0;
             parent->cmds->append_meta(parent, args_xml);
             parent = parent->parent;
+        }
+
+        if (isolated && action->node) {
+            char *nodeattr = crm_meta_name(XML_RSC_ATTR_ISOLATION_HOST);
+            crm_xml_add(args_xml, nodeattr, action->node->details->uname);
+            free(nodeattr);
         }
 
     } else if (safe_str_eq(action->task, CRM_OP_FENCE) && action->node) {
