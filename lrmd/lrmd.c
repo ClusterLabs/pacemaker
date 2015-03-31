@@ -69,14 +69,14 @@ typedef struct lrmd_cmd_s {
     const char *isolation_wrapper;
 
 #ifdef HAVE_SYS_TIMEB_H
-    /* Timestamp of when op first ran */
-    struct timeb t_first_run;
-    /* Timestamp of when op ran */
-    struct timeb t_run;
-    /* Timestamp of when op was queued */
-    struct timeb t_queue;
-    /* Timestamp of last rc change */
-    struct timeb t_rcchange;
+    /* recurring and systemd operations may involve more than one lrmd command
+     * per operation, so they need info about original and most recent
+     */
+    struct timeb t_first_run;   /* Timestamp of when op first ran */
+    struct timeb t_run;         /* Timestamp of when op most recently ran */
+    struct timeb t_first_queue; /* Timestamp of when op first was queued */
+    struct timeb t_queue;       /* Timestamp of when op most recently was queued */
+    struct timeb t_rcchange;    /* Timestamp of last rc change */
 #endif
 
     int first_notify_sent;
@@ -242,6 +242,9 @@ stonith_recurring_op_helper(gpointer data)
     rsc->pending_ops = g_list_append(rsc->pending_ops, cmd);
 #ifdef HAVE_SYS_TIMEB_H
     ftime(&cmd->t_queue);
+    if (cmd->t_first_queue.time == 0) {
+        cmd->t_first_queue = cmd->t_queue;
+    }
 #endif
     mainloop_set_trigger(rsc->work);
 
@@ -350,6 +353,9 @@ schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     rsc->pending_ops = g_list_append(rsc->pending_ops, cmd);
 #ifdef HAVE_SYS_TIMEB_H
     ftime(&cmd->t_queue);
+    if (cmd->t_first_queue.time == 0) {
+        cmd->t_first_queue = cmd->t_queue;
+    }
 #endif
     mainloop_set_trigger(rsc->work);
 
@@ -419,6 +425,33 @@ time_diff_ms(struct timeb *now, struct timeb *old)
         return 0;
     }
     return difftime(now->time, old->time) * 1000 + now->millitm - old->millitm;
+}
+
+/*!
+ * \internal
+ * \brief Reset a command's operation times to their original values.
+ *
+ * Reset a command's run and queued timestamps to the timestamps of the original
+ * command, so we report the entire time since then and not just the time since
+ * the most recent command (for recurring and systemd operations).
+ *
+ * /param[in] cmd  LRMD command object to reset
+ *
+ * /note It's not obvious what the queued time should be for a systemd
+ * start/stop operation, which might go like this:
+ *   initial command queued 5ms, runs 3s
+ *   monitor command queued 10ms, runs 10s
+ *   monitor command queued 10ms, runs 10s
+ * Is the queued time for that operation 5ms, 10ms or 25ms? The current
+ * implementation will report 5ms. If it's 25ms, then we need to
+ * subtract 20ms from the total exec time so as not to count it twice.
+ * We can implement that later if it matters to anyone ...
+ */
+static void
+cmd_original_times(lrmd_cmd_t * cmd)
+{
+    cmd->t_run = cmd->t_first_run;
+    cmd->t_queue = cmd->t_first_queue;
 }
 #endif
 
@@ -899,6 +932,7 @@ action_complete(svc_action_t * action)
 
                 crm_debug("%s %s is now complete (elapsed=%dms, remaining=%dms): %s (%d)",
                           cmd->rsc_id, cmd->real_action, time_sum, timeout_left, services_ocf_exitcode_str(cmd->exec_rc), cmd->exec_rc);
+                cmd_original_times(cmd);
 #endif
 
                 if(cmd->lrmd_op_status == PCMK_LRM_OP_DONE && cmd->exec_rc == PCMK_OCF_NOT_RUNNING && safe_str_eq(cmd->real_action, "stop")) {
@@ -968,6 +1002,7 @@ action_complete(svc_action_t * action)
                        cmd->rsc_id, cmd->action, cmd->exec_rc, time_sum, timeout_left);
             cmd->lrmd_op_status = PCMK_LRM_OP_TIMEOUT;
             cmd->exec_rc = PCMK_OCF_TIMEOUT;
+            cmd_original_times(cmd);
         }
     }
 #endif
