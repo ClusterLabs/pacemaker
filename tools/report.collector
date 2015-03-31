@@ -649,11 +649,17 @@ fi
 
 if [ $SEARCH_LOGS = 1 ]; then
     logfiles=`get_logfiles $cluster "$cluster_cf" "$logd_cf" | sort -u`
+    if [ -z "$logfiles" ]; then
+	fatal "Logfile discovery disabled, try specifying --logfile /some/path"
+    fi
+
+elif [ -z "$extra_logs" ]; then
+   fatal "Could not determine the location of your cluster logs, try specifying --logfile /some/path"
+
+else
+    logfiles="$extra_logs"
 fi
 
-if [ -z "$logfiles" ]; then
-   fatal "Could not determine the location of your cluster logs, try specifying --logfile /some/path"
-fi
 debug "Config: $cluster $cluster_cf $logd_cf $logfiles"
 
 sys_info $cluster $PACKAGES > $SYSINFO_F
