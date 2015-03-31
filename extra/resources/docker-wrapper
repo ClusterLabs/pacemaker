@@ -175,9 +175,9 @@ separate_args()
 	# write out arguments to key value string for ocf agent
 	while read -r line;
 	do
-		key="$(echo $line | awk -F= '{print $1}')"
+		key="$(echo $line | awk -F= '{print $1}' |  sed 's/^OCF_RESKEY_//g')"
 		val="$(echo $line | awk -F= '{print $2}')"
-		KEY_VAL_STR="$KEY_VAL_STR -k \"$key\" -v \"$val\""
+		KEY_VAL_STR="$KEY_VAL_STR -k '$key' -v '$val'"
 	done < <(printenv | grep "^OCF.*" | grep -v "^OCF_RESKEY_pcmk_docker_.*")
 
 	# sanitize args for DOCKER agent's consumption
