@@ -1885,6 +1885,16 @@ print_xml_status(pe_working_set_t * data_set)
     return 0;
 }
 
+/*!
+ * \internal
+ * \brief Print cluster status in HTML format
+ *
+ * \param[in] data_set   Working set of CIB state
+ * \param[in] filename   Name of file to write HTML to (ignored if web_cgi is TRUE)
+ * \param[in] web_cgi    Whether to generate CGI output (i.e. HTTP headers)
+ *
+ * \return 0 on success, -1 on error
+ */
 static int
 print_html_status(pe_working_set_t * data_set, const char *filename, gboolean web_cgi)
 {
@@ -1894,6 +1904,7 @@ print_html_status(pe_working_set_t * data_set, const char *filename, gboolean we
     static int updates = 0;
     char *filename_tmp = NULL;
     int print_opts = get_resource_display_options();
+    int nnodes, nresources;
 
     if (web_cgi) {
         stream = stdout;
@@ -1912,28 +1923,32 @@ print_html_status(pe_working_set_t * data_set, const char *filename, gboolean we
     updates++;
     dc = data_set->dc_node;
 
-    fprintf(stream, "<html>");
-    fprintf(stream, "<head>");
-    fprintf(stream, "<title>Cluster status</title>");
+    fprintf(stream, "<html>\n");
+    fprintf(stream, " <head>\n");
+    fprintf(stream, "  <title>Cluster status</title>\n");
 /* content="%d;url=http://webdesign.about.com" */
-    fprintf(stream, "<meta http-equiv=\"refresh\" content=\"%d\">", reconnect_msec / 1000);
-    fprintf(stream, "</head>");
+    fprintf(stream, "  <meta http-equiv=\"refresh\" content=\"%d\">\n", reconnect_msec / 1000);
+    fprintf(stream, " </head>\n");
+    fprintf(stream, "<body>\n");
 
     /*** SUMMARY ***/
 
-    fprintf(stream, "<h2>Cluster summary</h2>");
+    fprintf(stream, "<h2>Cluster summary</h2>\n");
     fprintf(stream, "Last updated: <b>%s</b><br/>\n", crm_now_string());
 
     if (dc == NULL) {
-        fprintf(stream, "Current DC: <font color=\"red\"><b>NONE</b></font><br/>");
+        fprintf(stream, "Current DC: <font color=\"red\"><b>NONE</b></font><br/>\n");
     } else {
         char *dc_name = get_node_display_name(dc);
 
         fprintf(stream, "Current DC: %s<br/>\n", dc_name);
         free(dc_name);
     }
-    fprintf(stream, "%d Nodes configured.<br/>", g_list_length(data_set->nodes));
-    fprintf(stream, "%d Resources configured.<br/>", count_resources(data_set, NULL));
+
+    nnodes = g_list_length(data_set->nodes);
+    nresources = count_resources(data_set, NULL);
+    fprintf(stream, "%d node%s configured.<br/>\n", nnodes, s_if_plural(nnodes));
+    fprintf(stream, "%d resource%s configured.</br>\n", nresources, s_if_plural(nresources));
 
     /*** CONFIG ***/
 
@@ -1965,7 +1980,7 @@ print_html_status(pe_working_set_t * data_set, const char *filename, gboolean we
 
     /*** NODE LIST ***/
 
-    fprintf(stream, "<h2>Node List</h2>\n");
+    fprintf(stream, " <hr />\n <h2>Node List</h2>\n");
     fprintf(stream, "<ul>\n");
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
@@ -2014,7 +2029,7 @@ print_html_status(pe_working_set_t * data_set, const char *filename, gboolean we
         fprintf(stream, "<h2>Inactive Resources</h2>\n");
 
     } else if (group_by_node == FALSE) {
-        fprintf(stream, "<h2>Resource List</h2>\n");
+        fprintf(stream, " <hr />\n <h2>Resource List</h2>\n");
     }
 
     if (group_by_node == FALSE || inactive_resources) {
@@ -2047,7 +2062,8 @@ print_html_status(pe_working_set_t * data_set, const char *filename, gboolean we
         }
     }
 
-    fprintf(stream, "</html>");
+    fprintf(stream, "</body>\n");
+    fprintf(stream, "</html>\n");
     fflush(stream);
     fclose(stream);
 
