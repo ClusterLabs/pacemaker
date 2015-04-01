@@ -270,6 +270,7 @@ find_hash_entry(xmlNode * msg)
     }
 #if ENABLE_ACL
     free(hash_entry->user);
+    hash_entry->user = NULL;
 
     value = crm_element_value(msg, F_ATTRD_USER);
     if (value != NULL) {
