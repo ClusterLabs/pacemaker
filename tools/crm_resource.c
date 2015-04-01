@@ -140,23 +140,6 @@ do_find_resource(const char *rsc, resource_t * the_rsc, pe_working_set_t * data_
     int found = 0;
     GListPtr lpc = NULL;
 
-    if (the_rsc == NULL) {
-        the_rsc = pe_find_resource(data_set->resources, rsc);
-    }
-
-    if (the_rsc == NULL) {
-        return -ENXIO;
-    }
-
-    if (the_rsc->variant >= pe_clone) {
-        GListPtr gIter = the_rsc->children;
-
-        for (; gIter != NULL; gIter = gIter->next) {
-            found += do_find_resource(rsc, gIter->data, data_set);
-        }
-        return found;
-    }
-
     for (lpc = the_rsc->running_on; lpc != NULL; lpc = lpc->next) {
         node_t *node = (node_t *) lpc->data;
 
@@ -179,7 +162,49 @@ do_find_resource(const char *rsc, resource_t * the_rsc, pe_working_set_t * data_
         fprintf(stderr, "resource %s is NOT running\n", rsc);
     }
 
-    return 0;
+    return found;
+}
+
+static int
+search_resource(const char *rsc, pe_working_set_t * data_set)
+{
+    int found = 0;
+    resource_t *the_rsc = NULL;
+    resource_t *parent = NULL;
+
+    if (the_rsc == NULL) {
+        the_rsc = pe_find_resource(data_set->resources, rsc);
+    }
+
+    if (the_rsc == NULL) {
+        return -ENXIO;
+    }
+
+    if (the_rsc->variant >= pe_clone) {
+        GListPtr gIter = the_rsc->children;
+
+        for (; gIter != NULL; gIter = gIter->next) {
+            found += do_find_resource(rsc, gIter->data, data_set);
+        }
+
+    /* The anonymous clone children's common ID is supplied */
+    } else if ((parent = uber_parent(the_rsc)) != NULL
+               && parent->variant >= pe_clone
+               && is_not_set(the_rsc->flags, pe_rsc_unique)
+               && the_rsc->clone_name
+               && safe_str_eq(rsc, the_rsc->clone_name)
+               && safe_str_neq(rsc, the_rsc->id)) {
+        GListPtr gIter = parent->children;
+
+        for (; gIter != NULL; gIter = gIter->next) {
+            found += do_find_resource(rsc, gIter->data, data_set);
+        }
+
+    } else {
+        found += do_find_resource(rsc, the_rsc, data_set);
+    }
+
+    return found;
 }
 
 #define cons_string(x) x?x:"NA"
@@ -2425,10 +2450,10 @@ main(int argc, char **argv)
         } else if (safe_str_eq(rsc_long_cmd, "force-start")) {
             action = "start";
             if(rsc->variant >= pe_clone) {
-                rc = do_find_resource(rsc_id, NULL, &data_set);
+                rc = search_resource(rsc_id, &data_set);
                 if(rc > 0 && do_force == FALSE) {
-                    CMD_ERR("It is not safe to start %s here: the cluster claims it is already active", rsc_id);
-                    CMD_ERR("Try setting target-role=stopped first or specifying --force");
+                    CMD_ERR("It is not safe to start %s here: the cluster claims it is already active\n", rsc_id);
+                    CMD_ERR("Try setting target-role=stopped first or specifying --force\n");
                     crm_exit(EPERM);
                 }
             }
@@ -2581,7 +2606,10 @@ main(int argc, char **argv)
             rc = -ENXIO;
             goto bail;
         }
-        rc = do_find_resource(rsc_id, NULL, &data_set);
+        rc = search_resource(rsc_id, &data_set);
+        if (rc >= 0) {
+            rc = pcmk_ok;
+        }
 
     } else if (rsc_cmd == 'q') {
         if (rsc_id == NULL) {
