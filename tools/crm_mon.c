@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright (C) 2004-2015 Andrew Beekhof <andrew@beekhof.net>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
@@ -47,9 +47,6 @@
 #include <../pengine/pengine.h>
 #include <crm/stonith-ng.h>
 
-/* GMainLoop *mainloop = NULL; */
-
-void wait_for_refresh(int offset, const char *prefix, int msec);
 void clean_up(int rc);
 void crm_diff_update(const char *event, xmlNode * msg);
 gboolean mon_refresh_display(gpointer user_data);
@@ -63,7 +60,7 @@ char *pid_file = NULL;
 char *snmp_target = NULL;
 char *snmp_community = NULL;
 
-gboolean as_console = TRUE;;
+gboolean as_console = TRUE;
 gboolean simple_status = FALSE;
 gboolean group_by_node = FALSE;
 gboolean inactive_resources = FALSE;
@@ -107,9 +104,6 @@ const char *print_neg_location_prefix_toggle;
 #define FILTER_STR {"shutdown", "terminate", "standby", "fail-count",	\
 	    "last-failure", "probe_complete", "#id", "#uname",		\
 	    "#is_dc", "#kind", NULL}
-
-gboolean log_diffs = FALSE;
-gboolean log_updates = FALSE;
 
 long last_refresh = 0;
 crm_trigger_t *refresh_trigger = NULL;
@@ -369,7 +363,7 @@ static struct crm_option long_options[] = {
     {"external-recipient",1, 0, 'e', "A recipient for your program (assuming you want the program to send something to someone)."},
 
 
-    {"xml-file",       1, 0, 'x', NULL, 1},
+    {"xml-file",       1, 0, 'x', NULL, pcmk_option_hidden},
 
     {"-spacer-",	1, 0, '-', "\nExamples:", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', "Display the cluster status on the console with updates as they occur:", pcmk_option_paragraph},
@@ -1275,7 +1269,7 @@ crm_mon_get_parameters(resource_t *rsc, pe_working_set_t * data_set)
 static int
 get_resource_display_options(void)
 {
-    int print_opts = as_console? pe_print_ncurses : pe_print_printf;
+    int print_opts;
 
     /* Determine basic output format */
     if (as_xml) {
@@ -1326,11 +1320,15 @@ crm_now_string(void)
     return (since_epoch);
 }
 
-static int
+/*!
+ * \internal
+ * \brief Print cluster status to screen
+ *
+ * \param[in] data_set   Working set of CIB state
+ */
+static void
 print_status(pe_working_set_t * data_set)
 {
-    static int updates = 0;
-
     GListPtr gIter = NULL;
     node_t *dc = NULL;
     char *online_nodes = NULL;
@@ -1350,10 +1348,7 @@ print_status(pe_working_set_t * data_set)
         blank_screen();
     }
 
-
-    updates++;
     dc = data_set->dc_node;
-
 
     if (print_last_updated && !hide_headers) {
         print_as("Last updated: %s\n", crm_now_string());
@@ -1420,13 +1415,15 @@ print_status(pe_working_set_t * data_set)
         print_as("\n\n");
     }
 
+    /* Gather node information (and print if in bad state or grouping by node) */
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
         const char *node_mode = NULL;
         char *node_name = get_node_display_name(node);
 
+        /* Get node mode */
         if (node->details->unclean) {
-            if (node->details->online && node->details->unclean) {
+            if (node->details->online) {
                 node_mode = "UNCLEAN (online)";
 
             } else if (node->details->pending) {
@@ -1482,6 +1479,9 @@ print_status(pe_working_set_t * data_set)
             }
         }
 
+        /* If we get here, node is in bad state, or we're grouping by node */
+
+        /* Print the node name and status */
         if (is_container_remote_node(node)) {
             print_as("Container");
         } else if (is_baremetal_remote_node(node)) {
@@ -1505,6 +1505,7 @@ print_status(pe_working_set_t * data_set)
         free(node_name);
     }
 
+    /* If we're not grouping by node, summarize nodes by status */
     if (online_nodes) {
         print_as("Online: [%s ]\n", online_nodes);
         free(online_nodes);
@@ -1536,14 +1537,18 @@ print_status(pe_working_set_t * data_set)
     if (group_by_node == FALSE || inactive_resources) {
         print_as("\n");
 
+        /* If we haven't already printed resources grouped by node,
+         * and brief output was requested, print resource summary */
         if (print_brief && group_by_node == FALSE) {
             print_rscs_brief(data_set->resources, NULL, print_opts, stdout,
                              inactive_resources);
         }
 
+        /* For each resource, display it if appropriate */
         for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
             resource_t *rsc = (resource_t *) gIter->data;
 
+            /* Complex resources may have some sub-resources active and some inactive */
             gboolean is_active = rsc->fns->active(rsc, TRUE);
             gboolean partially_active = rsc->fns->active(rsc, FALSE);
 
@@ -1596,6 +1601,7 @@ print_status(pe_working_set_t * data_set)
         print_node_summary(data_set, print_operations);
     }
 
+    /* If there were any failed actions, print them */
     if (xml_has_children(data_set->failed)) {
         xmlNode *xml_op = NULL;
 
@@ -1656,21 +1662,31 @@ print_status(pe_working_set_t * data_set)
         xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
         unpack_constraints(cib_constraints, data_set);
     }
+
+    /* Print tickets if requested */
     if (print_tickets) {
         print_cluster_tickets(data_set);
     }
+
+    /* Print negative location constraints if requested */
     if (print_neg_location_prefix) {
         print_neg_locations(data_set);
     }
+
 #if CURSES_ENABLED
     if (as_console) {
         refresh();
     }
 #endif
-    return 0;
 }
 
-static int
+/*!
+ * \internal
+ * \brief Print cluster status in XML format
+ *
+ * \param[in] data_set   Working set of CIB state
+ */
+static void
 print_xml_status(pe_working_set_t * data_set)
 {
     FILE *stream = stdout;
@@ -1881,8 +1897,6 @@ print_xml_status(pe_working_set_t * data_set)
     fprintf(stream, "</crm_mon>\n");
     fflush(stream);
     fclose(stream);
-
-    return 0;
 }
 
 /*!
@@ -1901,7 +1915,6 @@ print_html_status(pe_working_set_t * data_set, const char *filename, gboolean we
     FILE *stream;
     GListPtr gIter = NULL;
     node_t *dc = NULL;
-    static int updates = 0;
     char *filename_tmp = NULL;
     int print_opts = get_resource_display_options();
     int nnodes, nresources;
@@ -1920,13 +1933,11 @@ print_html_status(pe_working_set_t * data_set, const char *filename, gboolean we
         }
     }
 
-    updates++;
     dc = data_set->dc_node;
 
     fprintf(stream, "<html>\n");
     fprintf(stream, " <head>\n");
     fprintf(stream, "  <title>Cluster status</title>\n");
-/* content="%d;url=http://webdesign.about.com" */
     fprintf(stream, "  <meta http-equiv=\"refresh\" content=\"%d\">\n", reconnect_msec / 1000);
     fprintf(stream, " </head>\n");
     fprintf(stream, "<body>\n");
@@ -2901,10 +2912,8 @@ mon_refresh_display(gpointer user_data)
             clean_up(EX_USAGE);
         }
     } else if (as_xml) {
-        if (print_xml_status(&data_set) != 0) {
-            fprintf(stderr, "Critical: Unable to output xml file\n");
-            clean_up(EX_USAGE);
-        }
+        print_xml_status(&data_set);
+
     } else if (daemonize) {
         /* do nothing */
 
