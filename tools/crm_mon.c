@@ -130,6 +130,13 @@ crm_trigger_t *refresh_trigger = NULL;
 #define snmp_crm_oid_rc     PACEMAKER_TRAP_PREFIX ".6"
 #define snmp_crm_oid_trc    PACEMAKER_TRAP_PREFIX ".7"
 
+/* Define exit codes for monitoring-compatible output */
+#define MON_STATUS_OK   (0)
+#define MON_STATUS_WARN (1)
+
+/* Convenience macro for prettifying output (e.g. "node" vs "nodes") */
+#define s_if_plural(i) (((i) == 1)? "" : "s")
+
 #if CURSES_ENABLED
 #  define print_dot() if(as_console) {		\
 	printw(".");				\
@@ -730,7 +737,12 @@ main(int argc, char **argv)
         } while (exit_code == -ENOTCONN);
 
         if (exit_code != pcmk_ok) {
-            print_as("\nConnection to cluster failed: %s\n", pcmk_strerror(exit_code));
+            if (simple_status) {
+                printf("CLUSTER WARN: Connection to cluster failed: %s\n", pcmk_strerror(exit_code));
+                clean_up(MON_STATUS_WARN);
+            } else {
+                print_as("\nConnection to cluster failed: %s\n", pcmk_strerror(exit_code));
+            }
             if (as_console) {
                 sleep(2);
             }
@@ -768,7 +780,7 @@ main(int argc, char **argv)
 
 #define mon_warn(fmt...) do {			\
 	if (!has_warnings) {			\
-	    print_as("Warning:");		\
+	    print_as("CLUSTER WARN:");		\
 	} else {				\
 	    print_as(",");			\
 	}					\
@@ -796,19 +808,25 @@ count_resources(pe_working_set_t * data_set, resource_t * rsc)
     return count;
 }
 
-static int
+/*!
+ * \internal
+ * \brief Print one-line status suitable for use with monitoring software
+ *
+ * \param[in] data_set  Working set of CIB state
+ *
+ * \note This function's output (and the return code when the program exits)
+ *       should conform to https://www.monitoring-plugins.org/doc/guidelines.html
+ */
+static void
 print_simple_status(pe_working_set_t * data_set)
 {
-    node_t *dc = NULL;
     GListPtr gIter = NULL;
     int nodes_online = 0;
     int nodes_standby = 0;
     int nodes_maintenance = 0;
 
-    dc = data_set->dc_node;
-
-    if (dc == NULL) {
-        mon_warn("No DC ");
+    if (data_set->dc_node == NULL) {
+        mon_warn(" No DC");
     }
 
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
@@ -821,23 +839,24 @@ print_simple_status(pe_working_set_t * data_set)
         } else if (node->details->online) {
             nodes_online++;
         } else {
-            mon_warn("offline node: %s", node->details->uname);
+            mon_warn(" offline node: %s", node->details->uname);
         }
     }
 
     if (!has_warnings) {
-        print_as("Ok: %d nodes online", nodes_online);
+        int nresources = count_resources(data_set, NULL);
+
+        print_as("CLUSTER OK: %d node%s online", nodes_online, s_if_plural(nodes_online));
         if (nodes_standby > 0) {
-            print_as(", %d standby nodes", nodes_standby);
+            print_as(", %d standby node%s", nodes_standby, s_if_plural(nodes_standby));
         }
         if (nodes_maintenance > 0) {
-            print_as(", %d maintenance nodes", nodes_maintenance);
+            print_as(", %d maintenance node%s", nodes_maintenance, s_if_plural(nodes_maintenance));
         }
-        print_as(", %d resources configured", count_resources(data_set, NULL));
+        print_as(", %d resource%s configured", nresources, s_if_plural(nresources));
     }
 
     print_as("\n");
-    return 0;
 }
 
 static void
@@ -2876,7 +2895,7 @@ mon_refresh_display(gpointer user_data)
     } else if (simple_status) {
         print_simple_status(&data_set);
         if (has_warnings) {
-            clean_up(EX_USAGE);
+            clean_up(MON_STATUS_WARN);
         }
 
     } else {
