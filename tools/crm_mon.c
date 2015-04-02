@@ -53,6 +53,30 @@ gboolean mon_refresh_display(gpointer user_data);
 int cib_connect(gboolean full);
 void mon_st_callback(stonith_t * st, stonith_event_t * e);
 
+/*
+ * Definitions indicating which items to print
+ */
+
+#define mon_show_times      (0x0001U)
+#define mon_show_stack      (0x0002U)
+#define mon_show_dc         (0x0004U)
+#define mon_show_count      (0x0008U)
+#define mon_show_nodes      (0x0010U)
+#define mon_show_resources  (0x0020U)
+#define mon_show_attributes (0x0040U)
+#define mon_show_failcounts (0x0080U)
+#define mon_show_operations (0x0100U)
+#define mon_show_tickets    (0x0200U)
+#define mon_show_bans       (0x0400U)
+
+#define mon_show_headers    (mon_show_times | mon_show_stack | mon_show_dc | mon_show_count)
+#define mon_show_default    (mon_show_headers | mon_show_nodes | mon_show_resources)
+#define mon_show_all        (mon_show_default | mon_show_attributes | mon_show_failcounts \
+                     | mon_show_operations | mon_show_tickets | mon_show_bans)
+
+unsigned int show = mon_show_default;
+
+/* other globals */
 char *xml_file = NULL;
 char *as_html_file = NULL;
 int as_xml = 0;
@@ -84,15 +108,8 @@ xmlNode *current_cib = NULL;
 
 gboolean one_shot = FALSE;
 gboolean has_warnings = FALSE;
-gboolean print_failcount = FALSE;
-gboolean print_operations = FALSE;
 gboolean print_timing = FALSE;
-gboolean print_nodes_attr = FALSE;
-gboolean print_last_updated = TRUE;
-gboolean print_last_change = TRUE;
-gboolean print_tickets = FALSE;
 gboolean watch_fencing = FALSE;
-gboolean hide_headers = FALSE;
 gboolean print_brief = FALSE;
 gboolean print_pending = FALSE;
 gboolean print_clone_detail = FALSE;
@@ -406,6 +423,9 @@ get_option_desc(char c)
     return NULL;
 }
 
+#define print_option_help(option, condition) \
+    print_as("%c %c: \t%s\n", ((condition)? '*': ' '), option, get_option_desc(option));
+
 static gboolean
 detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
 {
@@ -419,16 +439,19 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
 
         switch (c) {
             case 'c':
-                print_tickets = ! print_tickets;
+                show ^= mon_show_tickets;
                 break;
             case 'f':
-                print_failcount = ! print_failcount;
+                show ^= mon_show_failcounts;
                 break;
             case 'n':
                 group_by_node = ! group_by_node;
                 break;
             case 'o':
-                print_operations = ! print_operations;
+                show ^= mon_show_operations;
+                if ((show & mon_show_operations) == 0) {
+                    print_timing = 0;
+                }
                 break;
             case 'r':
                 inactive_resources = ! inactive_resources;
@@ -438,11 +461,12 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
                 break;
             case 't':
                 print_timing = ! print_timing;
-                if (print_timing)
-                    print_operations = TRUE;
+                if (print_timing) {
+                    show |= mon_show_operations;
+                }
                 break;
             case 'A':
-                print_nodes_attr = ! print_nodes_attr;
+                show ^= mon_show_attributes;
                 break;
             case 'L':
                 if (print_neg_location_prefix) {
@@ -459,7 +483,12 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
                 }
                 break;
             case 'D':
-                hide_headers = ! hide_headers;
+                /* If any header is shown, clear them all, otherwise set them all */
+                if (show & mon_show_headers) {
+                    show &= ~mon_show_headers;
+                } else {
+                    show |= mon_show_headers;
+                }
                 break;
             case 'b':
                 print_brief = ! print_brief;
@@ -481,18 +510,18 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
 
         print_as("Display option change mode\n");
         print_as("\n");
-        print_as("%c c: \t%s\n", print_tickets ? '*': ' ', get_option_desc('c'));
-        print_as("%c f: \t%s\n", print_failcount ? '*': ' ', get_option_desc('f'));
-        print_as("%c n: \t%s\n", group_by_node ? '*': ' ', get_option_desc('n'));
-        print_as("%c o: \t%s\n", print_operations ? '*': ' ', get_option_desc('o'));
-        print_as("%c r: \t%s\n", inactive_resources ? '*': ' ', get_option_desc('r'));
-        print_as("%c t: \t%s\n", print_timing ? '*': ' ', get_option_desc('t'));
-        print_as("%c A: \t%s\n", print_nodes_attr ? '*': ' ', get_option_desc('A'));
-        print_as("%c L: \t%s\n", print_neg_location_prefix ? '*': ' ', get_option_desc('L'));
-        print_as("%c D: \t%s\n", hide_headers ? '*': ' ', get_option_desc('D'));
-        print_as("%c R: \t%s\n", print_clone_detail ? '*': ' ', get_option_desc('R'));
-        print_as("%c b: \t%s\n", print_brief ? '*': ' ', get_option_desc('b'));
-        print_as("%c j: \t%s\n", print_pending ? '*': ' ', get_option_desc('j'));
+        print_option_help('c', show & mon_show_tickets);
+        print_option_help('f', show & mon_show_failcounts);
+        print_option_help('n', group_by_node);
+        print_option_help('o', show & mon_show_operations);
+        print_option_help('r', inactive_resources);
+        print_option_help('t', print_timing);
+        print_option_help('A', show & mon_show_attributes);
+        print_option_help('L', print_neg_location_prefix);
+        print_option_help('D', (show & mon_show_headers) == 0);
+        print_option_help('R', print_clone_detail);
+        print_option_help('b', print_brief);
+        print_option_help('j', print_pending);
         print_as("\n");
         print_as("Toggle fields via field letter, type any other key to return");
     }
@@ -537,8 +566,7 @@ main(int argc, char **argv)
                 crm_bump_log_level(argc, argv);
                 break;
             case 'Q':
-                print_last_updated = FALSE;
-                print_last_change = FALSE;
+                show &= ~mon_show_times;
                 break;
             case 'i':
                 reconnect_msec = crm_get_msec(optarg);
@@ -557,22 +585,22 @@ main(int argc, char **argv)
                 break;
             case 't':
                 print_timing = TRUE;
-                print_operations = TRUE;
+                show |= mon_show_operations;
                 break;
             case 'o':
-                print_operations = TRUE;
+                show |= mon_show_operations;
                 break;
             case 'f':
-                print_failcount = TRUE;
+                show |= mon_show_failcounts;
                 break;
             case 'A':
-                print_nodes_attr = TRUE;
+                show |= mon_show_attributes;
                 break;
             case 'L':
-                print_neg_location_prefix = optarg ?: "";
+                print_neg_location_prefix = optarg? optarg : "";
                 break;
             case 'D':
-                hide_headers = TRUE;
+                show &= ~mon_show_headers;
                 break;
             case 'b':
                 print_brief = TRUE;
@@ -584,7 +612,7 @@ main(int argc, char **argv)
                 print_clone_detail = TRUE;
                 break;
             case 'c':
-                print_tickets = TRUE;
+                show |= mon_show_tickets;
                 break;
             case 'p':
                 free(pid_file);
@@ -1330,36 +1358,31 @@ static void
 print_status(pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
-    node_t *dc = NULL;
+    node_t *dc = data_set->dc_node;
+    int print_opts = get_resource_display_options();
+    xmlNode *stack = get_xpath_object("//nvpair[@name='cluster-infrastructure']",
+                                      data_set->input, LOG_DEBUG);
+    const char *stack_s = stack? crm_element_value(stack, XML_NVPAIR_ATTR_VALUE) : "unknown";
+
+    /* space-separated lists of node names */
     char *online_nodes = NULL;
     char *online_remote_nodes = NULL;
     char *online_remote_containers = NULL;
     char *offline_nodes = NULL;
     char *offline_remote_nodes = NULL;
-    const char *stack_s = NULL;
-    xmlNode *dc_version = NULL;
-    xmlNode *quorum_node = NULL;
-    xmlNode *stack = NULL;
-
-    int print_opts = get_resource_display_options();
-    const char *quorum_votes = "unknown";
 
     if (as_console) {
         blank_screen();
     }
 
-    dc = data_set->dc_node;
-
-    if (print_last_updated && !hide_headers) {
-        print_as("Last updated: %s\n", crm_now_string());
-    }
-
-    if (print_last_change && !hide_headers) {
+    /* Print times the display was last updated and CIB last changed if requested */
+    if (show & mon_show_times) {
         const char *last_written = crm_element_value(data_set->input, XML_CIB_ATTR_WRITTEN);
         const char *user = crm_element_value(data_set->input, XML_ATTR_UPDATE_USER);
         const char *client = crm_element_value(data_set->input, XML_ATTR_UPDATE_CLIENT);
         const char *origin = crm_element_value(data_set->input, XML_ATTR_UPDATE_ORIG);
 
+        print_as("Last updated: %s\n", crm_now_string());
         print_as("Last change: %s", last_written ? last_written : "");
         if (user) {
             print_as(" by %s", user);
@@ -1373,19 +1396,19 @@ print_status(pe_working_set_t * data_set)
         print_as("\n");
     }
 
-    stack =
-        get_xpath_object("//nvpair[@name='cluster-infrastructure']", data_set->input, LOG_DEBUG);
-    if (stack) {
-        stack_s = crm_element_value(stack, XML_NVPAIR_ATTR_VALUE);
-        if (!hide_headers) {
-            print_as("Stack: %s\n", stack_s);
-        }
+    /* Print stack if requested */
+    if (show & mon_show_stack) {
+        print_as("Stack: %s\n", stack_s);
     }
 
-    dc_version = get_xpath_object("//nvpair[@name='dc-version']", data_set->input, LOG_DEBUG);
+    /* Print "Current DC" and "Version" headers if requested
+     * (but always print DC if NONE, even if not requested)
+     */
     if (dc == NULL) {
         print_as("Current DC: NONE\n");
-    } else if (!hide_headers) {
+    } else if (show & mon_show_dc) {
+        xmlNode *dc_version = get_xpath_object("//nvpair[@name='dc-version']",
+                                               data_set->input, LOG_DEBUG);
         const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
         char *dc_name = get_node_display_name(dc);
 
@@ -1397,18 +1420,18 @@ print_status(pe_working_set_t * data_set)
         free(dc_name);
     }
 
-    quorum_node =
-        get_xpath_object("//nvpair[@name='" XML_ATTR_EXPECTED_VOTES "']", data_set->input,
-                         LOG_DEBUG);
-    if (quorum_node) {
-        quorum_votes = crm_element_value(quorum_node, XML_NVPAIR_ATTR_VALUE);
-    }
-
-    if(!hide_headers) {
+    /* Print counts of configured nodes and resources if requested */
+    if (show & mon_show_count) {
         int nnodes = g_list_length(data_set->nodes);
         int nresources = count_resources(data_set, NULL);
 
-        if(stack_s && strstr(stack_s, "classic openais") != NULL) {
+        if (stack_s && strstr(stack_s, "classic openais") != NULL) {
+            xmlNode *quorum_node = get_xpath_object("//nvpair[@name='" XML_ATTR_EXPECTED_VOTES "']",
+                                                    data_set->input, LOG_DEBUG);
+            const char *quorum_votes = quorum_node?
+                                       crm_element_value(quorum_node, XML_NVPAIR_ATTR_VALUE)
+                                       : "unknown";
+
             print_as("%d node%s configured, %s expected votes\n",
                      nnodes, s_if_plural(nnodes), quorum_votes);
         } else {
@@ -1492,17 +1515,19 @@ print_status(pe_working_set_t * data_set)
         }
         print_as("Node %s: %s\n", node_name, node_mode);
 
-        if (print_brief && group_by_node) {
-            print_rscs_brief(node->details->running_rsc, "\t", print_opts | pe_print_rsconly,
-                             stdout, FALSE);
+        /* If we're grouping by node, print its resources */
+        if (group_by_node) {
+            if (print_brief) {
+                print_rscs_brief(node->details->running_rsc, "\t", print_opts | pe_print_rsconly,
+                                 stdout, FALSE);
+            } else {
+                GListPtr gIter2 = NULL;
 
-        } else if (group_by_node) {
-            GListPtr gIter2 = NULL;
+                for (gIter2 = node->details->running_rsc; gIter2 != NULL; gIter2 = gIter2->next) {
+                    resource_t *rsc = (resource_t *) gIter2->data;
 
-            for (gIter2 = node->details->running_rsc; gIter2 != NULL; gIter2 = gIter2->next) {
-                resource_t *rsc = (resource_t *) gIter2->data;
-
-                rsc->fns->print(rsc, "\t", print_opts | pe_print_rsconly, stdout);
+                    rsc->fns->print(rsc, "\t", print_opts | pe_print_rsconly, stdout);
+                }
             }
         }
         free(node_name);
@@ -1530,14 +1555,18 @@ print_status(pe_working_set_t * data_set)
         free(online_remote_containers);
     }
 
-    if (group_by_node == FALSE && inactive_resources) {
-        print_as("\nFull list of resources:\n");
-
-    } else if (inactive_resources) {
-        print_as("\nInactive resources:\n");
-    }
-
+    /* If we haven't already displayed resources grouped by node,
+     * or we need to print inactive resources, print a resources section */
     if (group_by_node == FALSE || inactive_resources) {
+
+        /* If we're printing inactive resources, display a heading */
+        if (inactive_resources) {
+            if (group_by_node == FALSE) {
+                print_as("\nFull list of resources:\n");
+            } else {
+                print_as("\nInactive resources:\n");
+            }
+        }
         print_as("\n");
 
         /* If we haven't already printed resources grouped by node,
@@ -1555,26 +1584,32 @@ print_status(pe_working_set_t * data_set)
             gboolean is_active = rsc->fns->active(rsc, TRUE);
             gboolean partially_active = rsc->fns->active(rsc, FALSE);
 
-            if (print_brief && group_by_node == FALSE
-                && rsc->variant == pe_native) {
+            /* Always ignore inactive orphan resources (deleted but not yet gone from CIB) */
+            if (is_set(rsc->flags, pe_rsc_orphan) && (is_active == FALSE)) {
                 continue;
             }
 
-            if (is_set(rsc->flags, pe_rsc_orphan) && is_active == FALSE) {
-                continue;
-
-            } else if (group_by_node == FALSE) {
-                if (partially_active || inactive_resources) {
+            /* If we already printed resources grouped by node,
+             * only print inactive resources, if that was requested */
+            if (group_by_node == TRUE) {
+                if ((is_active == FALSE) && inactive_resources) {
                     rsc->fns->print(rsc, NULL, print_opts, stdout);
                 }
+                continue;
+            }
 
-            } else if (is_active == FALSE && inactive_resources) {
-                rsc->fns->print(rsc, NULL, print_opts, stdout);
+            /* Otherwise, print resource if it's at least partially active
+             * or we're displaying inactive resources,
+             * except for primitive resources already counted in a brief summary */
+            if (!(print_brief && (rsc->variant == pe_native))
+                && (partially_active || inactive_resources)) {
+                    rsc->fns->print(rsc, NULL, print_opts, stdout);
             }
         }
     }
 
-    if (print_nodes_attr) {
+    /* print Node Attributes section if requested */
+    if (show & mon_show_attributes) {
         print_as("\nNode Attributes:\n");
 
         for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
@@ -1600,8 +1635,9 @@ print_status(pe_working_set_t * data_set)
         }
     }
 
-    if (print_operations || print_failcount) {
-        print_node_summary(data_set, print_operations);
+    /* Print resource operations or failcounts if requested (mutually exclusive) */
+    if (show & (mon_show_operations | mon_show_failcounts)) {
+        print_node_summary(data_set, ((show & mon_show_operations)? TRUE : FALSE));
     }
 
     /* If there were any failed actions, print them */
@@ -1657,17 +1693,16 @@ print_status(pe_working_set_t * data_set)
         print_as("\n");
     }
 
-    if (print_tickets || print_neg_location_prefix) {
-        /* For recording the tickets that are referenced in rsc_ticket constraints
-         * but have never been granted yet.
-         * To be able to print negative location constraint summary,
-         * we also need them to be unpacked. */
+    /* Unpack constraints if any section will need them
+     * (tickets may be referenced in constraints but not granted yet,
+     * and negative location constraints obviously need them) */
+    if ((show & mon_show_tickets) || print_neg_location_prefix) {
         xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
         unpack_constraints(cib_constraints, data_set);
     }
 
     /* Print tickets if requested */
-    if (print_tickets) {
+    if (show & mon_show_tickets) {
         print_cluster_tickets(data_set);
     }
 
@@ -1708,16 +1743,13 @@ print_xml_status(pe_working_set_t * data_set)
     /*** SUMMARY ***/
     fprintf(stream, "    <summary>\n");
 
-    if (print_last_updated) {
-        fprintf(stream, "        <last_update time=\"%s\" />\n", crm_now_string());
-    }
-
-    if (print_last_change) {
+    if (show & mon_show_times) {
         const char *last_written = crm_element_value(data_set->input, XML_CIB_ATTR_WRITTEN);
         const char *user = crm_element_value(data_set->input, XML_ATTR_UPDATE_USER);
         const char *client = crm_element_value(data_set->input, XML_ATTR_UPDATE_CLIENT);
         const char *origin = crm_element_value(data_set->input, XML_ATTR_UPDATE_ORIG);
 
+        fprintf(stream, "        <last_update time=\"%s\" />\n", crm_now_string());
         fprintf(stream,
                 "        <last_change time=\"%s\" user=\"%s\" client=\"%s\" origin=\"%s\" />\n",
                 last_written ? last_written : "", user ? user : "", client ? client : "",
