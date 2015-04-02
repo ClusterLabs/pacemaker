@@ -85,6 +85,9 @@ agent will set --name using the resource's instance name
 <action name="stop"         timeout="120" />
 <action name="monitor"      timeout="60" interval="30" depth="0"/>
 <action name="reload"       timeout="120" />
+<action name="promote"      timeout="120s" />
+<action name="demote"       timeout="120s" />
+<action name="notify"       timeout="120" />
 <action name="validate-all" timeout="30" />
 <action name="meta-data"    timeout="10" />
 </actions>
@@ -113,7 +116,7 @@ CONNECTION_FAILURE=0
 
 pcmk_docker_wrapper_usage() {
 	cat <<END
-usage: $0 {start|stop|monitor|reload|validate-all|meta-data}
+usage: $0 {start|stop|monitor|reload|promote|demote|notify|validate-all|meta-data}
 
 Expects to have a fully populated OCF RA-compliant environment set.
 END
@@ -235,13 +238,26 @@ pcmk_docker_wrapper_monitor() {
 	
 	client_action "monitor"
 	rc=$?
-	if [ $rc -eq $OCF_SUCCESS ]; then
+	if [ $rc -eq $OCF_SUCCESS ] || [ $rc -eq $OCF_RUNNING_MASTER ]; then
 		write_state_file
-	elif [ $rc -eq $OCF_NOT_RUNNING ]; then
+	else
 		clear_state_file
 	fi
 
 	return $rc
+}
+
+pcmk_docker_wrapper_generic_action()
+{
+	local rc
+
+	monitor_container
+	rc=$?
+	if [ $? -ne $OCF_SUCCESS ]; then
+		return $rc
+	fi
+
+	client_action "$1"
 }
 
 client_action()
@@ -258,10 +274,11 @@ client_action()
 		if [ -z "$PORT" ]; then
 			get_active_port
 		fi
-		ocf_log info "$CLIENT -c \"exec\" -S \"127.0.0.1\" -p $PORT -a $action -r \"$OCF_RESOURCE_INSTANCE\" -n $CONTAINER $agent_type $KEY_VAL_STR  >/dev/null 2>&1"
-		$CLIENT -c "exec" -S "127.0.0.1" -p $PORT -a $action -r "$OCF_RESOURCE_INSTANCE" -n $CONTAINER $agent_type $KEY_VAL_STR  >/dev/null 2>&1
+		ocf_log info "$CLIENT -c 'exec' -S '127.0.0.1' -p '$PORT' -a '$action' -r '$OCF_RESOURCE_INSTANCE' -n '$CONTAINER' '$agent_type' $KEY_VAL_STR "
+		eval $CLIENT -c 'exec' -S '127.0.0.1' -p '$PORT' -a '$action' -r '$OCF_RESOURCE_INSTANCE' -n '$CONTAINER' '$agent_type' $KEY_VAL_STR
 	else 
-		echo "$CLIENT -c \"exec\" -a $action -r \"$OCF_RESOURCE_INSTANCE\" $agent_type $KEY_VAL_STR  >/dev/null 2>&1" | nsenter --target $(docker inspect --format {{.State.Pid}} ${CONTAINER}) --mount --uts --ipc --net --pid 2>&1
+		ocf_log info "$CLIENT -c \"exec\" -a $action -r \"$OCF_RESOURCE_INSTANCE\" $agent_type $KEY_VAL_STR"
+		echo "$CLIENT -c \"exec\" -a $action -r \"$OCF_RESOURCE_INSTANCE\" $agent_type $KEY_VAL_STR " | nsenter --target $(docker inspect --format {{.State.Pid}} ${CONTAINER}) --mount --uts --ipc --net --pid 2>&1
 	fi
 	rc=$?
 
@@ -275,23 +292,10 @@ poke_remote()
 	if ocf_is_true $OCF_RESKEY_pcmk_docker_privileged ; then
 		get_active_port
 		ocf_log info "Attempting to contect $CONTAINER on port $PORT"
-		$CLIENT -c "poke" -S "127.0.0.1" -p $PORT -n $CONTAINER >/dev/null 2>&1
+		$CLIENT -c "poke" -S "127.0.0.1" -p $PORT -n $CONTAINER
 	fi
 	# no op for non privileged containers since we handed the
 	# client monitor action as the monitor_cmd for the docker agent
-}
-
-pcmk_docker_wrapper_reload()
-{
-	local rc
-
-	monitor_container
-	rc=$?
-	if [ $? -ne $OCF_SUCCESS ]; then
-		return $rc
-	fi
-
-	client_action "reload"
 }
 
 start_container()
@@ -304,6 +308,7 @@ start_container()
 		return $rc
 	fi
 
+	export OCF_RESKEY_run_opts="-e PCMK_debug=yes -e PCMK_logfile=/var/log/pacemaker.log $OCF_RESKEY_run_opts"
 	if ocf_is_true $OCF_RESKEY_pcmk_docker_privileged ; then
 		if ! [ -f "/etc/pacemaker/authkey" ]; then
 			# generate an authkey if it doesn't exist. 
@@ -478,8 +483,9 @@ fi
 case $__OCF_ACTION in
 	start)		pcmk_docker_wrapper_start;;
 	stop)		pcmk_docker_wrapper_stop;;
-	monitor)	pcmk_docker_wrapper_monitor;;
-	reload)		pcmk_docker_wrapper_reload;;
+	monitor|status)	pcmk_docker_wrapper_monitor;;
+	reload|promote|demote|notify)
+			pcmk_docker_wrapper_generic_action $__OCF_ACTION;;
 	validate-all)	pcmk_docker_wrapper_validate;;
 	*)		pcmk_docker_wrapper_usage
 		exit $OCF_ERR_UNIMPLEMENTED
