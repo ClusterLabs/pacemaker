@@ -101,9 +101,9 @@ gboolean print_clone_detail = FALSE;
 const char *print_neg_location_prefix;
 const char *print_neg_location_prefix_toggle;
 
-#define FILTER_STR {"shutdown", "terminate", "standby", "fail-count",	\
-	    "last-failure", "probe_complete", "#id", "#uname",		\
-	    "#is_dc", "#kind", NULL}
+/* Never display node attributes whose name starts with one of these prefixes */
+#define FILTER_STR { "shutdown", "terminate", "standby", "fail-count",  \
+                     "last-failure", "probe_complete", "#", NULL }
 
 long last_refresh = 0;
 crm_trigger_t *refresh_trigger = NULL;
@@ -1405,13 +1405,16 @@ print_status(pe_working_set_t * data_set)
     }
 
     if(!hide_headers) {
+        int nnodes = g_list_length(data_set->nodes);
+        int nresources = count_resources(data_set, NULL);
+
         if(stack_s && strstr(stack_s, "classic openais") != NULL) {
-            print_as("%d Nodes configured, %s expected votes\n", g_list_length(data_set->nodes),
-                     quorum_votes);
+            print_as("%d node%s configured, %s expected votes\n",
+                     nnodes, s_if_plural(nnodes), quorum_votes);
         } else {
-            print_as("%d Nodes configured\n", g_list_length(data_set->nodes));
+            print_as("%d node%s configured\n", nnodes, s_if_plural(nnodes));
         }
-        print_as("%d Resources configured\n", count_resources(data_set, NULL));
+        print_as("%d resource%s configured\n", nresources, s_if_plural(nresources));
         print_as("\n\n");
     }
 
@@ -1648,7 +1651,7 @@ print_status(pe_working_set_t * data_set)
                          rc,
                          call,
                          services_lrm_status_str(status),
-                         exit_reason ? exit_reason : "unknown");
+                         exit_reason ? exit_reason : "none");
             }
         }
         print_as("\n");
