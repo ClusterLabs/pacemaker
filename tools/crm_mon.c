@@ -717,6 +717,7 @@ main(int argc, char **argv)
     /* XML output always prints everything */
     if (output_format == mon_output_xml) {
         show = mon_show_all;
+        print_timing = TRUE;
     }
 
     if (one_shot) {
@@ -907,19 +908,85 @@ print_simple_status(pe_working_set_t * data_set)
     print_as("\n");
 }
 
+/*!
+ * \internal
+ * \brief Print a [name]=[value][units] pair, optionally using time string
+ *
+ * \param[in] stream      File stream to display output to
+ * \param[in] name        Name to display
+ * \param[in] value       Value to display (or NULL to convert time instead)
+ * \param[in] units       Units to display (or NULL for no units)
+ * \param[in] epoch_time  Epoch time to convert if value is NULL
+ */
 static void
-print_date(time_t time)
+print_nvpair(FILE *stream, const char *name, const char *value,
+             const char *units, time_t epoch_time)
 {
-    int lpc = 0;
-    char date_str[26];
+    /* print name= */
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as(" %s=", name);
+            break;
 
-    asctime_r(localtime(&time), date_str);
-    for (; lpc < 26; lpc++) {
-        if (date_str[lpc] == '\n') {
-            date_str[lpc] = 0;
+        case mon_output_html:
+        case mon_output_cgi:
+        case mon_output_xml:
+            fprintf(stream, " %s=", name);
+            break;
+
+        default:
+            break;
+    }
+
+    /* If we have a value (and optionally units), print it */
+    if (value) {
+        switch (output_format) {
+            case mon_output_plain:
+            case mon_output_console:
+                print_as("%s%s", value, (units? units : ""));
+                break;
+
+            case mon_output_html:
+            case mon_output_cgi:
+                fprintf(stream, "%s%s", value, (units? units : ""));
+                break;
+
+            case mon_output_xml:
+                fprintf(stream, "\"%s%s\"", value, (units? units : ""));
+                break;
+
+            default:
+                break;
+        }
+
+    /* Otherwise print user-friendly time string */
+    } else {
+        char *date_str, *c;
+
+        date_str = asctime(localtime(&epoch_time));
+        for (c = date_str; c != '\0'; ++c) {
+            if (*c == '\n') {
+                *c = '\0';
+                break;
+            }
+        }
+        switch (output_format) {
+            case mon_output_plain:
+            case mon_output_console:
+                print_as("'%s'", date_str);
+                break;
+
+            case mon_output_html:
+            case mon_output_cgi:
+            case mon_output_xml:
+                fprintf(stream, "\"%s\"", date_str);
+                break;
+
+            default:
+                break;
         }
     }
-    print_as("'%s'", date_str);
 }
 
 /*!
@@ -982,132 +1049,373 @@ print_node_end(FILE *stream)
     }
 }
 
+/*!
+ * \internal
+ * \brief Print heading for resource history
+ *
+ * \param[in] stream      File stream to display output to
+ * \param[in] data_set    Current state of CIB
+ * \param[in] node        Node that ran this resource
+ * \param[in] rsc         Resource to print
+ * \param[in] rsc_id      ID of resource to print
+ * \param[in] all         Whether to print every resource or just failed ones
+ */
 static void
-print_rsc_summary(pe_working_set_t * data_set, node_t * node, resource_t * rsc, gboolean all)
+print_rsc_history_start(FILE *stream, pe_working_set_t *data_set, node_t *node,
+                        resource_t *rsc, const char *rsc_id, gboolean all)
 {
-    gboolean printed = FALSE;
-
     time_t last_failure = 0;
-    int failcount = get_failcount_full(node, rsc, &last_failure, FALSE, NULL, data_set);
+    int failcount = rsc? get_failcount_full(node, rsc, &last_failure, FALSE, NULL, data_set) : 0;
 
-    if (all || failcount || last_failure > 0) {
-        printed = TRUE;
-        print_as("   %s: migration-threshold=%d", rsc_printable_id(rsc), rsc->migration_threshold);
+    if (!all && !failcount && (last_failure <= 0)) {
+        return;
     }
 
-    if (failcount > 0) {
-        printed = TRUE;
-        print_as(" fail-count=%d", failcount);
+    /* Print resource ID */
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("   %s:", rsc_id);
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, "   <li>%s:", rsc_id);
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "            <resource_history id=\"%s\"", rsc_id);
+            break;
+
+        default:
+            break;
     }
 
-    if (last_failure > 0) {
-        printed = TRUE;
-        print_as(" last-failure=");
-        print_date(last_failure);
+    /* If resource is an orphan, that's all we can say about it */
+    if (rsc == NULL) {
+        switch (output_format) {
+            case mon_output_plain:
+            case mon_output_console:
+                print_as(" orphan");
+                break;
+
+            case mon_output_html:
+            case mon_output_cgi:
+                fprintf(stream, " orphan");
+                break;
+
+            case mon_output_xml:
+                fprintf(stream, " orphan=\"true\"");
+                break;
+
+            default:
+                break;
+        }
+
+    /* If resource is not an orphan, print some details */
+    } else if (all || failcount || (last_failure > 0)) {
+
+        /* Print migration threshold */
+        switch (output_format) {
+            case mon_output_plain:
+            case mon_output_console:
+                print_as(" migration-threshold=%d", rsc->migration_threshold);
+                break;
+
+            case mon_output_html:
+            case mon_output_cgi:
+                fprintf(stream, " migration-threshold=%d", rsc->migration_threshold);
+                break;
+
+            case mon_output_xml:
+                fprintf(stream, " orphan=\"false\" migration-threshold=\"%d\"",
+                        rsc->migration_threshold);
+                break;
+
+            default:
+                break;
+        }
+
+        /* Print fail count if any */
+        if (failcount > 0) {
+            switch (output_format) {
+                case mon_output_plain:
+                case mon_output_console:
+                    print_as(" fail-count=%d", failcount);
+                    break;
+
+                case mon_output_html:
+                case mon_output_cgi:
+                    fprintf(stream, " fail-count=%d", failcount);
+                    break;
+
+                case mon_output_xml:
+                    fprintf(stream, " fail-count=\"%d\"", failcount);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        /* Print last failure time if any */
+        if (last_failure > 0) {
+            print_nvpair(stream, "last-failure", NULL, NULL, last_failure);
+        }
     }
 
-    if (printed) {
-        print_as("\n");
+    /* End the heading */
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("\n");
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, "\n    <ul>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, ">\n");
+            break;
+
+        default:
+            break;
     }
 }
 
+/*!
+ * \internal
+ * \brief Print closing for resource history
+ *
+ * \param[in] stream      File stream to display output to
+ */
 static void
-print_rsc_history(pe_working_set_t * data_set, node_t * node, xmlNode * rsc_entry)
+print_rsc_history_end(FILE *stream)
+{
+    switch (output_format) {
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, "    </ul>\n   </li>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "            </resource_history>\n");
+            break;
+
+        default:
+            break;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Print operation history
+ *
+ * \param[in] stream      File stream to display output to
+ * \param[in] data_set    Current state of CIB
+ * \param[in] node        Node this operation is for
+ * \param[in] xml_op      Root of XML tree describing this operation
+ * \param[in] task        Task parsed from this operation's XML
+ * \param[in] interval    Interval parsed from this operation's XML
+ * \param[in] rc          Return code parsed from this operation's XML
+ */
+static void
+print_op_history(FILE *stream, pe_working_set_t *data_set, node_t *node,
+                 xmlNode *xml_op, const char *task, const char *interval, int rc)
+{
+    const char *value = NULL;
+    const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
+
+    /* Begin the operation description */
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("    + (%s) %s:", call, task);
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, "     <li>(%s) %s:", call, task);
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "                <operation_history call=\"%s\" task=\"%s\"",
+                    call, task);
+            break;
+
+        default:
+            break;
+    }
+
+    /* Add name=value pairs as appropriate */
+    if (safe_str_neq(interval, "0")) {
+        print_nvpair(stream, "interval", interval, "ms", 0);
+    }
+    if (print_timing) {
+        int int_value;
+        const char *attr;
+
+        attr = XML_RSC_OP_LAST_CHANGE;
+        value = crm_element_value(xml_op, attr);
+        if (value) {
+            int_value = crm_parse_int(value, NULL);
+            if (int_value > 0) {
+                print_nvpair(stream, attr, NULL, NULL, int_value);
+            }
+        }
+
+        attr = XML_RSC_OP_LAST_RUN;
+        value = crm_element_value(xml_op, attr);
+        if (value) {
+            int_value = crm_parse_int(value, NULL);
+            if (int_value > 0) {
+                print_nvpair(stream, attr, NULL, NULL, int_value);
+            }
+        }
+
+        attr = XML_RSC_OP_T_EXEC;
+        value = crm_element_value(xml_op, attr);
+        if (value) {
+            print_nvpair(stream, attr, value, "ms", 0);
+        }
+
+        attr = XML_RSC_OP_T_QUEUE;
+        value = crm_element_value(xml_op, attr);
+        if (value) {
+            print_nvpair(stream, attr, value, "ms", 0);
+        }
+    }
+
+    /* End the operation description */
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as(" rc=%d (%s)\n", rc, services_ocf_exitcode_str(rc));
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, " rc=%d (%s)</li>\n", rc, services_ocf_exitcode_str(rc));
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, " rc=\"%d\" rc_text=\"%s\" />\n", rc, services_ocf_exitcode_str(rc));
+            break;
+
+        default:
+            break;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Print resource operation/failure history
+ *
+ * \param[in] stream      File stream to display output to
+ * \param[in] data_set    Current state of CIB
+ * \param[in] node        Node that ran this resource
+ * \param[in] rsc_entry   Root of XML tree describing resource status
+ * \param[in] operations  Whether to print operations or just failcounts
+ */
+static void
+print_rsc_history(FILE *stream, pe_working_set_t *data_set, node_t *node,
+                  xmlNode *rsc_entry, gboolean operations)
 {
     GListPtr gIter = NULL;
     GListPtr op_list = NULL;
-    gboolean print_name = TRUE;
-    GListPtr sorted_op_list = NULL;
+    gboolean printed = FALSE;
     const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
     resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
-
     xmlNode *rsc_op = NULL;
 
+    /* If we're not showing operations, just print the resource failure summary */
+    if (operations == FALSE) {
+        print_rsc_history_start(stream, data_set, node, rsc, rsc_id, FALSE);
+        print_rsc_history_end(stream);
+        return;
+    }
+
+    /* Create a list of this resource's operations */
     for (rsc_op = __xml_first_child(rsc_entry); rsc_op != NULL; rsc_op = __xml_next(rsc_op)) {
         if (crm_str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, TRUE)) {
             op_list = g_list_append(op_list, rsc_op);
         }
     }
+    op_list = g_list_sort(op_list, sort_op_by_callid);
 
-    sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
-    for (gIter = sorted_op_list; gIter != NULL; gIter = gIter->next) {
+    /* Print each operation */
+    for (gIter = op_list; gIter != NULL; gIter = gIter->next) {
         xmlNode *xml_op = (xmlNode *) gIter->data;
-        const char *value = NULL;
-        const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
         const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-        const char *op_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
         const char *interval = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
+        const char *op_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
         int rc = crm_parse_int(op_rc, "0");
 
-        if (safe_str_eq(task, CRMD_ACTION_STATUS)
-            && safe_str_eq(interval, "0")) {
+        /* Display 0-interval monitors as "probe" */
+        if (safe_str_eq(task, CRMD_ACTION_STATUS) && safe_str_eq(interval, "0")) {
             task = "probe";
         }
 
-        if (rc == 7 && safe_str_eq(task, "probe")) {
-            continue;
-
-        } else if (safe_str_eq(task, CRMD_ACTION_NOTIFY)) {
+        /* Ignore notifies and some probes */
+        if (safe_str_eq(task, CRMD_ACTION_NOTIFY) || (safe_str_eq(task, "probe") && (rc == 7))) {
             continue;
         }
 
-        if (print_name) {
-            print_name = FALSE;
-            if (rsc == NULL) {
-                print_as("Orphan resource: %s", rsc_id);
-            } else {
-                print_rsc_summary(data_set, node, rsc, TRUE);
-            }
+        /* If this is the first printed operation, print heading for resource */
+        if (printed == FALSE) {
+            printed = TRUE;
+            print_rsc_history_start(stream, data_set, node, rsc, rsc_id, TRUE);
         }
 
-        print_as("    + (%s) %s:", call, task);
-        if (safe_str_neq(interval, "0")) {
-            print_as(" interval=%sms", interval);
-        }
-
-        if (print_timing) {
-            int int_value;
-            const char *attr = XML_RSC_OP_LAST_CHANGE;
-
-            value = crm_element_value(xml_op, attr);
-            if (value) {
-                int_value = crm_parse_int(value, NULL);
-                if (int_value > 0) {
-                    print_as(" %s=", attr);
-                    print_date(int_value);
-                }
-            }
-
-            attr = XML_RSC_OP_LAST_RUN;
-            value = crm_element_value(xml_op, attr);
-            if (value) {
-                int_value = crm_parse_int(value, NULL);
-                if (int_value > 0) {
-                    print_as(" %s=", attr);
-                    print_date(int_value);
-                }
-            }
-
-            attr = XML_RSC_OP_T_EXEC;
-            value = crm_element_value(xml_op, attr);
-            if (value) {
-                int_value = crm_parse_int(value, NULL);
-                print_as(" %s=%dms", attr, int_value);
-            }
-
-            attr = XML_RSC_OP_T_QUEUE;
-            value = crm_element_value(xml_op, attr);
-            if (value) {
-                int_value = crm_parse_int(value, NULL);
-                print_as(" %s=%dms", attr, int_value);
-            }
-        }
-
-        print_as(" rc=%s (%s)\n", op_rc, services_ocf_exitcode_str(rc));
+        /* Print the operation */
+        print_op_history(stream, data_set, node, xml_op, task, interval, rc);
     }
 
-    /* no need to free the contents */
-    g_list_free(sorted_op_list);
+    /* Free the list we created (no need to free the individual items) */
+    g_list_free(op_list);
+
+    /* If we printed anything, close the resource */
+    if (printed) {
+        print_rsc_history_end(stream);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Print node operation/failure history
+ *
+ * \param[in] stream      File stream to display output to
+ * \param[in] data_set    Current state of CIB
+ * \param[in] node_state  Root of XML tree describing node status
+ * \param[in] operations  Whether to print operations or just failcounts
+ */
+static void
+print_node_history(FILE *stream, pe_working_set_t *data_set,
+                   xmlNode *node_state, gboolean operations)
+{
+    node_t *node = pe_find_node_id(data_set->nodes, ID(node_state));
+    xmlNode *lrm_rsc = NULL;
+    xmlNode *rsc_entry = NULL;
+
+    if (node && node->details && node->details->online) {
+        print_node_start(stream, node);
+
+        lrm_rsc = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
+        lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
+
+        /* Print history of each of the node's resources */
+        for (rsc_entry = __xml_first_child(lrm_rsc); rsc_entry != NULL;
+             rsc_entry = __xml_next(rsc_entry)) {
+
+            if (crm_str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, TRUE)) {
+                print_rsc_history(stream, data_set, node, rsc_entry, operations);
+            }
+        }
+
+        print_node_end(stream);
+    }
 }
 
 /*!
@@ -1285,52 +1593,55 @@ print_node_attribute(gpointer name, gpointer user_data)
 }
 
 static void
-print_node_summary(pe_working_set_t * data_set, gboolean operations)
+print_node_summary(FILE *stream, pe_working_set_t * data_set, gboolean operations)
 {
-    xmlNode *lrm_rsc = NULL;
-    xmlNode *rsc_entry = NULL;
     xmlNode *node_state = NULL;
     xmlNode *cib_status = get_object_root(XML_CIB_TAG_STATUS, data_set->input);
 
-    if (operations) {
-        print_as("\nOperations:\n");
-    } else {
-        print_as("\nMigration summary:\n");
+    /* Print heading */
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            if (operations) {
+                print_as("\nOperations:\n");
+            } else {
+                print_as("\nMigration Summary:\n");
+            }
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            if (operations) {
+                fprintf(stream, " <hr />\n <h2>Operations</h2>\n");
+            } else {
+                fprintf(stream, " <hr />\n <h2>Migration Summary</h2>\n");
+            }
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "    <node_history>\n");
+            break;
+
+        default:
+            break;
     }
 
+    /* Print each node in the CIB status */
     for (node_state = __xml_first_child(cib_status); node_state != NULL;
          node_state = __xml_next(node_state)) {
         if (crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE)) {
-            node_t *node = pe_find_node_id(data_set->nodes, ID(node_state));
-
-            if (node == NULL || node->details->online == FALSE) {
-                continue;
-            }
-
-            print_node_start(stdout, node);
-
-            lrm_rsc = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
-            lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
-
-            for (rsc_entry = __xml_first_child(lrm_rsc); rsc_entry != NULL;
-                 rsc_entry = __xml_next(rsc_entry)) {
-                if (crm_str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, TRUE)) {
-                    if (operations) {
-                        print_rsc_history(data_set, node, rsc_entry);
-
-                    } else {
-                        const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
-                        resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
-
-                        if (rsc) {
-                            print_rsc_summary(data_set, node, rsc, FALSE);
-                        } else {
-                            print_as("   %s: orphan\n", rsc_id);
-                        }
-                    }
-                }
-            }
+            print_node_history(stream, data_set, node_state, operations);
         }
+    }
+
+    /* Close section */
+    switch (output_format) {
+        case mon_output_xml:
+            fprintf(stream, "    </node_history>\n");
+            break;
+
+        default:
+            break;
     }
 }
 
@@ -1342,8 +1653,7 @@ print_ticket(gpointer name, gpointer value, gpointer data)
     print_as(" %s\t%s%10s", ticket->id,
              ticket->granted ? "granted" : "revoked", ticket->standby ? " [standby]" : "");
     if (ticket->last_granted > -1) {
-        print_as(" last-granted=");
-        print_date(ticket->last_granted);
+        print_nvpair(stdout, "last-granted", NULL, NULL, ticket->last_granted);
     }
     print_as("\n");
 
@@ -2207,9 +2517,12 @@ print_status(pe_working_set_t * data_set)
         print_node_attributes(stdout, data_set);
     }
 
-    /* Print resource operations or failcounts if requested (mutually exclusive) */
+    /* If requested, print resource operations (which includes failcounts)
+     * or just failcounts
+     */
     if (show & (mon_show_operations | mon_show_failcounts)) {
-        print_node_summary(data_set, ((show & mon_show_operations)? TRUE : FALSE));
+        print_node_summary(stdout, data_set,
+                           ((show & mon_show_operations)? TRUE : FALSE));
     }
 
     /* If there were any failed actions, print them */
@@ -2385,6 +2698,14 @@ print_xml_status(pe_working_set_t * data_set)
     /* print Node Attributes section if requested */
     if (show & mon_show_attributes) {
         print_node_attributes(stream, data_set);
+    }
+
+    /* If requested, print resource operations (which includes failcounts)
+     * or just failcounts
+     */
+    if (show & (mon_show_operations | mon_show_failcounts)) {
+        print_node_summary(stream, data_set,
+                           ((show & mon_show_operations)? TRUE : FALSE));
     }
 
     /*** FAILURES ***/
@@ -2582,6 +2903,14 @@ print_html_status(pe_working_set_t * data_set, const char *filename)
     /* print Node Attributes section if requested */
     if (show & mon_show_attributes) {
         print_node_attributes(stream, data_set);
+    }
+
+    /* If requested, print resource operations (which includes failcounts)
+     * or just failcounts
+     */
+    if (show & (mon_show_operations | mon_show_failcounts)) {
+        print_node_summary(stream, data_set,
+                           ((show & mon_show_operations)? TRUE : FALSE));
     }
 
     fprintf(stream, "</body>\n");
