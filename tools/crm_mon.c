@@ -712,6 +712,11 @@ main(int argc, char **argv)
         return crm_help('?', EX_USAGE);
     }
 
+    /* XML output always prints everything */
+    if (output_format == mon_output_xml) {
+        show = mon_show_all;
+    }
+
     if (one_shot) {
         if (output_format == mon_output_console) {
             output_format = mon_output_plain;
@@ -1388,7 +1393,414 @@ crm_now_string(void)
 
 /*!
  * \internal
+ * \brief Print header for cluster summary if needed
+ *
+ * \param[in] stream     File stream to display output to
+ */
+static void
+print_cluster_summary_header(FILE *stream)
+{
+    switch (output_format) {
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, " <h2>Cluster Summary</h2>\n <p>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "    <summary>\n");
+            break;
+
+        default:
+            break;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Print footer for cluster summary if needed
+ *
+ * \param[in] stream     File stream to display output to
+ */
+static void
+print_cluster_summary_footer(FILE *stream)
+{
+    switch (output_format) {
+        case mon_output_cgi:
+        case mon_output_html:
+            fprintf(stream, " </p>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "    </summary>\n");
+            break;
+
+        default:
+            break;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Print times the display was last updated and CIB last changed
+ *
+ * \param[in] stream     File stream to display output to
+ * \param[in] data_set   Working set of CIB state
+ */
+static void
+print_cluster_times(FILE *stream, pe_working_set_t *data_set)
+{
+    const char *last_written = crm_element_value(data_set->input, XML_CIB_ATTR_WRITTEN);
+    const char *user = crm_element_value(data_set->input, XML_ATTR_UPDATE_USER);
+    const char *client = crm_element_value(data_set->input, XML_ATTR_UPDATE_CLIENT);
+    const char *origin = crm_element_value(data_set->input, XML_ATTR_UPDATE_ORIG);
+
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("Last updated: %s", crm_now_string());
+            print_as("\t\tLast change: %s", last_written ? last_written : "");
+            if (user) {
+                print_as(" by %s", user);
+            }
+            if (client) {
+                print_as(" via %s", client);
+            }
+            if (origin) {
+                print_as(" on %s", origin);
+            }
+            print_as("\n");
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, " <b>Last updated: %s</b><br/>\n", crm_now_string());
+            fprintf(stream, " <b>Last change:</b> %s", last_written ? last_written : "");
+            if (user) {
+                fprintf(stream, " by %s", user);
+            }
+            if (client) {
+                fprintf(stream, " via %s", client);
+            }
+            if (origin) {
+                fprintf(stream, " on %s", origin);
+            }
+            fprintf(stream, "<br/>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "        <last_update time=\"%s\" />\n", crm_now_string());
+            fprintf(stream, "        <last_change time=\"%s\" user=\"%s\" client=\"%s\" origin=\"%s\" />\n",
+                    last_written ? last_written : "", user ? user : "",
+                    client ? client : "", origin ? origin : "");
+            break;
+
+        default:
+            break;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Print cluster stack
+ *
+ * \param[in] stream     File stream to display output to
+ * \param[in] stack_s    Stack name
+ */
+static void
+print_cluster_stack(FILE *stream, const char *stack_s)
+{
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("Stack: %s\n", stack_s);
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, " <b>Stack:</b> %s<br/>\n", stack_s);
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "        <stack type=\"%s\" />\n", stack_s);
+            break;
+
+        default:
+            break;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Print current DC and its version
+ *
+ * \param[in] stream     File stream to display output to
+ * \param[in] data_set   Working set of CIB state
+ */
+static void
+print_cluster_dc(FILE *stream, pe_working_set_t *data_set)
+{
+    node_t *dc = data_set->dc_node;
+    xmlNode *dc_version = get_xpath_object("//nvpair[@name='dc-version']",
+                                           data_set->input, LOG_DEBUG);
+    const char *dc_version_s = dc_version?
+                               crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE)
+                               : NULL;
+    const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
+    char *dc_name = dc? get_node_display_name(dc) : NULL;
+
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("Current DC: ");
+            if (dc) {
+                print_as("%s (version %s) - partition %s quorum\n",
+                         dc_name, (dc_version_s? dc_version_s : "unknown"),
+                         (crm_is_true(quorum) ? "with" : "WITHOUT"));
+            } else {
+                print_as("NONE\n");
+            }
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, " <b>Current DC:</b> ");
+            if (dc) {
+                fprintf(stream, "%s (version %s) - partition %s quorum",
+                        dc_name, (dc_version_s? dc_version_s : "unknown"),
+                        (crm_is_true(quorum)? "with" : "<font color=\"red\"><b>WITHOUT</b></font>"));
+            } else {
+                fprintf(stream, "<font color=\"red\"><b>NONE</b></font>");
+            }
+            fprintf(stream, "<br/>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(stream,  "        <current_dc ");
+            if (dc) {
+                fprintf(stream,
+                        "present=\"true\" version=\"%s\" name=\"%s\" id=\"%s\" with_quorum=\"%s\"",
+                        (dc_version_s? dc_version_s : ""), dc->details->uname, dc->details->id,
+                        (crm_is_true(quorum) ? "true" : "false"));
+            } else {
+                fprintf(stream, "present=\"false\"");
+            }
+            fprintf(stream, " />\n");
+            break;
+
+        default:
+            break;
+    }
+    free(dc_name);
+}
+
+/*!
+ * \internal
+ * \brief Print counts of configured nodes and resources
+ *
+ * \param[in] stream     File stream to display output to
+ * \param[in] data_set   Working set of CIB state
+ * \param[in] stack_s    Stack name
+ */
+static void
+print_cluster_counts(FILE *stream, pe_working_set_t *data_set, const char *stack_s)
+{
+    int nnodes = g_list_length(data_set->nodes);
+    int nresources = count_resources(data_set, NULL);
+    xmlNode *quorum_node = get_xpath_object("//nvpair[@name='" XML_ATTR_EXPECTED_VOTES "']",
+                                            data_set->input, LOG_DEBUG);
+    const char *quorum_votes = quorum_node?
+                               crm_element_value(quorum_node, XML_NVPAIR_ATTR_VALUE)
+                               : "unknown";
+
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("%d node%s and %d resource%s configured",
+                     nnodes, s_if_plural(nnodes),
+                     nresources, s_if_plural(nresources));
+            if (stack_s && strstr(stack_s, "classic openais") != NULL) {
+                print_as(", %s expected votes", quorum_votes);
+            }
+            print_as("\n\n");
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, " %d node%s configured", nnodes, s_if_plural(nnodes));
+            if (stack_s && strstr(stack_s, "classic openais") != NULL) {
+                fprintf(stream, " (%s expected votes)", quorum_votes);
+            }
+            fprintf(stream, "<br/>\n");
+            fprintf(stream, " %d resource%s configured<br/>\n",
+                    nresources, s_if_plural(nresources));
+            break;
+
+        case mon_output_xml:
+            fprintf(stream,
+                    "        <nodes_configured number=\"%d\" expected_votes=\"%s\" />\n",
+                    g_list_length(data_set->nodes), quorum_votes);
+            fprintf(stream,
+                    "        <resources_configured number=\"%d\" />\n",
+                    count_resources(data_set, NULL));
+            break;
+
+        default:
+            break;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Print cluster-wide options
+ *
+ * \param[in] stream     File stream to display output to
+ * \param[in] data_set   Working set of CIB state
+ *
+ * \note Currently this is only implemented for HTML and XML output, and
+ *       prints only a few options. If there is demand, more could be added.
+ */
+static void
+print_cluster_options(FILE *stream, pe_working_set_t *data_set)
+{
+    switch (output_format) {
+        case mon_output_html:
+            fprintf(stream, " </p>\n <h3>Config Options</h3>\n");
+            fprintf(stream, " <table>\n");
+            fprintf(stream, "  <tr><th>STONITH of failed nodes</th><td>%s</td></tr>\n",
+                    is_set(data_set->flags, pe_flag_stonith_enabled)? "enabled" : "disabled");
+
+            fprintf(stream, "  <tr><th>Cluster is</th><td>%ssymmetric</td></tr>\n",
+                    is_set(data_set->flags, pe_flag_symmetric_cluster)? "" : "a");
+
+            fprintf(stream, "  <tr><th>No Quorum Policy</th><td>");
+            switch (data_set->no_quorum_policy) {
+                case no_quorum_freeze:
+                    fprintf(stream, "Freeze resources");
+                    break;
+                case no_quorum_stop:
+                    fprintf(stream, "Stop ALL resources");
+                    break;
+                case no_quorum_ignore:
+                    fprintf(stream, "Ignore");
+                    break;
+                case no_quorum_suicide:
+                    fprintf(stream, "Suicide");
+                    break;
+            }
+            fprintf(stream, "</td></tr>\n </table>\n <p>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "        <cluster_options");
+            fprintf(stream, " stonith-enabled=\"%s\"",
+                    is_set(data_set->flags, pe_flag_stonith_enabled)?
+                    "true" : "false");
+            fprintf(stream, " symmetric-cluster=\"%s\"",
+                    is_set(data_set->flags, pe_flag_symmetric_cluster)?
+                    "true" : "false");
+            fprintf(stream, " no-quorum-policy=\"");
+            switch (data_set->no_quorum_policy) {
+                case no_quorum_freeze:
+                    fprintf(stream, "freeze");
+                    break;
+                case no_quorum_stop:
+                    fprintf(stream, "stop");
+                    break;
+                case no_quorum_ignore:
+                    fprintf(stream, "ignore");
+                    break;
+                case no_quorum_suicide:
+                    fprintf(stream, "suicide");
+                    break;
+            }
+            fprintf(stream, "\" />\n");
+            break;
+
+        default:
+            break;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Get the name of the stack in use (or "unknown" if not available)
+ *
+ * \param[in] data_set   Working set of CIB state
+ *
+ * \return String representing stack name
+ */
+static const char *
+get_cluster_stack(pe_working_set_t *data_set)
+{
+    xmlNode *stack = get_xpath_object("//nvpair[@name='cluster-infrastructure']",
+                                      data_set->input, LOG_DEBUG);
+    return stack? crm_element_value(stack, XML_NVPAIR_ATTR_VALUE) : "unknown";
+}
+
+/*!
+ * \internal
+ * \brief Print a summary of cluster-wide information
+ *
+ * \param[in] stream     File stream to display output to
+ * \param[in] data_set   Working set of CIB state
+ */
+static void
+print_cluster_summary(FILE *stream, pe_working_set_t *data_set)
+{
+    const char *stack_s = get_cluster_stack(data_set);
+    gboolean header_printed = FALSE;
+
+    if (show & mon_show_times) {
+        if (header_printed == FALSE) {
+            print_cluster_summary_header(stream);
+            header_printed = TRUE;
+        }
+        print_cluster_times(stream, data_set);
+    }
+
+    if (show & mon_show_stack) {
+        if (header_printed == FALSE) {
+            print_cluster_summary_header(stream);
+            header_printed = TRUE;
+        }
+        print_cluster_stack(stream, stack_s);
+    }
+
+    /* Always print DC if none, even if not requested */
+    if ((data_set->dc_node == NULL) || (show & mon_show_dc)) {
+        if (header_printed == FALSE) {
+            print_cluster_summary_header(stream);
+            header_printed = TRUE;
+        }
+        print_cluster_dc(stream, data_set);
+    }
+
+    if (show & mon_show_count) {
+        if (header_printed == FALSE) {
+            print_cluster_summary_header(stream);
+            header_printed = TRUE;
+        }
+        print_cluster_counts(stream, data_set, stack_s);
+    }
+
+    /* There is not a separate option for showing cluster options, so show with
+     * stack for now; a separate option could be added if there is demand
+     */
+    if (show & mon_show_stack) {
+        print_cluster_options(stream, data_set);
+    }
+
+    if (header_printed) {
+        print_cluster_summary_footer(stream);
+    }
+}
+
+/*!
+ * \internal
  * \brief Print cluster status to screen
+ *
+ * This uses the global display preferences set by command-line options
+ * to display cluster status in a human-friendly way.
  *
  * \param[in] data_set   Working set of CIB state
  */
@@ -1396,11 +1808,7 @@ static void
 print_status(pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
-    node_t *dc = data_set->dc_node;
     int print_opts = get_resource_display_options();
-    xmlNode *stack = get_xpath_object("//nvpair[@name='cluster-infrastructure']",
-                                      data_set->input, LOG_DEBUG);
-    const char *stack_s = stack? crm_element_value(stack, XML_NVPAIR_ATTR_VALUE) : "unknown";
 
     /* space-separated lists of node names */
     char *online_nodes = NULL;
@@ -1412,72 +1820,7 @@ print_status(pe_working_set_t * data_set)
     if (output_format == mon_output_console) {
         blank_screen();
     }
-
-    /* Print times the display was last updated and CIB last changed if requested */
-    if (show & mon_show_times) {
-        const char *last_written = crm_element_value(data_set->input, XML_CIB_ATTR_WRITTEN);
-        const char *user = crm_element_value(data_set->input, XML_ATTR_UPDATE_USER);
-        const char *client = crm_element_value(data_set->input, XML_ATTR_UPDATE_CLIENT);
-        const char *origin = crm_element_value(data_set->input, XML_ATTR_UPDATE_ORIG);
-
-        print_as("Last updated: %s\n", crm_now_string());
-        print_as("Last change: %s", last_written ? last_written : "");
-        if (user) {
-            print_as(" by %s", user);
-        }
-        if (client) {
-            print_as(" via %s", client);
-        }
-        if (origin) {
-            print_as(" on %s", origin);
-        }
-        print_as("\n");
-    }
-
-    /* Print stack if requested */
-    if (show & mon_show_stack) {
-        print_as("Stack: %s\n", stack_s);
-    }
-
-    /* Print "Current DC" and "Version" headers if requested
-     * (but always print DC if NONE, even if not requested)
-     */
-    if (dc == NULL) {
-        print_as("Current DC: NONE\n");
-    } else if (show & mon_show_dc) {
-        xmlNode *dc_version = get_xpath_object("//nvpair[@name='dc-version']",
-                                               data_set->input, LOG_DEBUG);
-        const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
-        char *dc_name = get_node_display_name(dc);
-
-        print_as("Current DC: %s", dc_name);
-        print_as(" - partition %s quorum\n", crm_is_true(quorum) ? "with" : "WITHOUT");
-        if (dc_version) {
-            print_as("Version: %s\n", crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE));
-        }
-        free(dc_name);
-    }
-
-    /* Print counts of configured nodes and resources if requested */
-    if (show & mon_show_count) {
-        int nnodes = g_list_length(data_set->nodes);
-        int nresources = count_resources(data_set, NULL);
-
-        if (stack_s && strstr(stack_s, "classic openais") != NULL) {
-            xmlNode *quorum_node = get_xpath_object("//nvpair[@name='" XML_ATTR_EXPECTED_VOTES "']",
-                                                    data_set->input, LOG_DEBUG);
-            const char *quorum_votes = quorum_node?
-                                       crm_element_value(quorum_node, XML_NVPAIR_ATTR_VALUE)
-                                       : "unknown";
-
-            print_as("%d node%s configured, %s expected votes\n",
-                     nnodes, s_if_plural(nnodes), quorum_votes);
-        } else {
-            print_as("%d node%s configured\n", nnodes, s_if_plural(nnodes));
-        }
-        print_as("%d resource%s configured\n", nresources, s_if_plural(nresources));
-        print_as("\n\n");
-    }
+    print_cluster_summary(stdout, data_set);
 
     /* Gather node information (and print if in bad state or grouping by node) */
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
@@ -1767,68 +2110,12 @@ print_xml_status(pe_working_set_t * data_set)
 {
     FILE *stream = stdout;
     GListPtr gIter = NULL;
-    node_t *dc = NULL;
-    xmlNode *stack = NULL;
-    xmlNode *quorum_node = NULL;
-    const char *quorum_votes = "unknown";
     int print_opts = get_resource_display_options();
-
-    dc = data_set->dc_node;
 
     fprintf(stream, "<?xml version=\"1.0\"?>\n");
     fprintf(stream, "<crm_mon version=\"%s\">\n", VERSION);
 
-    /*** SUMMARY ***/
-    fprintf(stream, "    <summary>\n");
-
-    if (show & mon_show_times) {
-        const char *last_written = crm_element_value(data_set->input, XML_CIB_ATTR_WRITTEN);
-        const char *user = crm_element_value(data_set->input, XML_ATTR_UPDATE_USER);
-        const char *client = crm_element_value(data_set->input, XML_ATTR_UPDATE_CLIENT);
-        const char *origin = crm_element_value(data_set->input, XML_ATTR_UPDATE_ORIG);
-
-        fprintf(stream, "        <last_update time=\"%s\" />\n", crm_now_string());
-        fprintf(stream,
-                "        <last_change time=\"%s\" user=\"%s\" client=\"%s\" origin=\"%s\" />\n",
-                last_written ? last_written : "", user ? user : "", client ? client : "",
-                origin ? origin : "");
-    }
-
-    stack = get_xpath_object("//nvpair[@name='cluster-infrastructure']",
-                             data_set->input, LOG_DEBUG);
-    if (stack) {
-        fprintf(stream, "        <stack type=\"%s\" />\n",
-                crm_element_value(stack, XML_NVPAIR_ATTR_VALUE));
-    }
-
-    if (!dc) {
-        fprintf(stream, "        <current_dc present=\"false\" />\n");
-    } else {
-        const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
-        const char *uname = dc->details->uname;
-        const char *id = dc->details->id;
-        xmlNode *dc_version = get_xpath_object("//nvpair[@name='dc-version']",
-                                               data_set->input,
-                                               LOG_DEBUG);
-
-        fprintf(stream,
-                "        <current_dc present=\"true\" version=\"%s\" name=\"%s\" id=\"%s\" with_quorum=\"%s\" />\n",
-                dc_version ? crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE) : "", uname, id,
-                quorum ? (crm_is_true(quorum) ? "true" : "false") : "false");
-    }
-
-    quorum_node = get_xpath_object("//nvpair[@name='" XML_ATTR_EXPECTED_VOTES "']",
-                                   data_set->input, LOG_DEBUG);
-    if (quorum_node) {
-        quorum_votes = crm_element_value(quorum_node, XML_NVPAIR_ATTR_VALUE);
-    }
-    fprintf(stream, "        <nodes_configured number=\"%d\" expected_votes=\"%s\" />\n",
-            g_list_length(data_set->nodes), quorum_votes);
-
-    fprintf(stream, "        <resources_configured number=\"%d\" />\n",
-            count_resources(data_set, NULL));
-
-    fprintf(stream, "    </summary>\n");
+    print_cluster_summary(stream, data_set);
 
     /*** NODES ***/
     fprintf(stream, "    <nodes>\n");
@@ -1986,10 +2273,8 @@ print_html_status(pe_working_set_t * data_set, const char *filename)
 {
     FILE *stream;
     GListPtr gIter = NULL;
-    node_t *dc = NULL;
     char *filename_tmp = NULL;
     int print_opts = get_resource_display_options();
-    int nnodes, nresources;
 
     if (output_format == mon_output_cgi) {
         stream = stdout;
@@ -2005,8 +2290,6 @@ print_html_status(pe_working_set_t * data_set, const char *filename)
         }
     }
 
-    dc = data_set->dc_node;
-
     fprintf(stream, "<html>\n");
     fprintf(stream, " <head>\n");
     fprintf(stream, "  <title>Cluster status</title>\n");
@@ -2014,52 +2297,7 @@ print_html_status(pe_working_set_t * data_set, const char *filename)
     fprintf(stream, " </head>\n");
     fprintf(stream, "<body>\n");
 
-    /*** SUMMARY ***/
-
-    fprintf(stream, "<h2>Cluster summary</h2>\n");
-    fprintf(stream, "Last updated: <b>%s</b><br/>\n", crm_now_string());
-
-    if (dc == NULL) {
-        fprintf(stream, "Current DC: <font color=\"red\"><b>NONE</b></font><br/>\n");
-    } else {
-        char *dc_name = get_node_display_name(dc);
-
-        fprintf(stream, "Current DC: %s<br/>\n", dc_name);
-        free(dc_name);
-    }
-
-    nnodes = g_list_length(data_set->nodes);
-    nresources = count_resources(data_set, NULL);
-    fprintf(stream, "%d node%s configured.<br/>\n", nnodes, s_if_plural(nnodes));
-    fprintf(stream, "%d resource%s configured.</br>\n", nresources, s_if_plural(nresources));
-
-    /*** CONFIG ***/
-
-    fprintf(stream, "<h3>Config Options</h3>\n");
-
-    fprintf(stream, "<table>\n");
-    fprintf(stream, "<tr><td>STONITH of failed nodes</td><td>:</td><td>%s</td></tr>\n",
-            is_set(data_set->flags, pe_flag_stonith_enabled) ? "enabled" : "disabled");
-
-    fprintf(stream, "<tr><td>Cluster is</td><td>:</td><td>%ssymmetric</td></tr>\n",
-            is_set(data_set->flags, pe_flag_symmetric_cluster) ? "" : "a-");
-
-    fprintf(stream, "<tr><td>No Quorum Policy</td><td>:</td><td>");
-    switch (data_set->no_quorum_policy) {
-        case no_quorum_freeze:
-            fprintf(stream, "Freeze resources");
-            break;
-        case no_quorum_stop:
-            fprintf(stream, "Stop ALL resources");
-            break;
-        case no_quorum_ignore:
-            fprintf(stream, "Ignore");
-            break;
-        case no_quorum_suicide:
-            fprintf(stream, "Suicide");
-            break;
-    }
-    fprintf(stream, "\n</td></tr>\n</table>\n");
+    print_cluster_summary(stream, data_set);
 
     /*** NODE LIST ***/
 
