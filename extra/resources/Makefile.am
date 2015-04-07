@@ -22,7 +22,7 @@ include $(top_srcdir)/Makefile.common
 EXTRA_DIST		= $(ocf_SCRIPTS)
 
 
-containertechdir    = @OCF_RA_DIR@/containers
+isolationtechdir    = @OCF_RA_DIR@/isolation
 
 ocfdir		    = @OCF_RA_DIR@/pacemaker
 
@@ -39,7 +39,7 @@ ocf_SCRIPTS	     =  ClusterMon 	\
 			SystemHealth \
 			remote
 
-containertech_SCRIPTS	= docker-wrapper
+isolationtech_SCRIPTS	= docker-wrapper
 
 if BUILD_XML_HELP
 

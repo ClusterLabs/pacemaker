@@ -30,7 +30,7 @@
 #    include <gnutls/gnutls.h>
 #  endif
 
-#define CONTAINER_PROVIDER "containers"
+#define ISOLATION_PROVIDER "isolation"
 
 GHashTable *rsc_list;
 

@@ -301,8 +301,17 @@ char *
 get_node_name(uint32_t nodeid)
 {
     char *name = NULL;
-    enum cluster_type_e stack = get_cluster_type();
+    const char *isolation_host = NULL;
+    enum cluster_type_e stack;
 
+    if (nodeid == 0) {
+        isolation_host = getenv("OCF_RESKEY_"CRM_META"_isolation_host");
+        if (isolation_host) {
+            return strdup(isolation_host);
+        }
+    }
+
+    stack = get_cluster_type();
     switch (stack) {
         case pcmk_cluster_heartbeat:
             break;
