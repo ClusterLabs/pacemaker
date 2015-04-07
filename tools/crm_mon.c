@@ -43,6 +43,7 @@
 
 #include <crm/cib/internal.h>
 #include <crm/pengine/status.h>
+#include <crm/pengine/internal.h>
 #include <../lib/pengine/unpack.h>
 #include <../pengine/pengine.h>
 #include <crm/stonith-ng.h>
@@ -52,6 +53,7 @@ void crm_diff_update(const char *event, xmlNode * msg);
 gboolean mon_refresh_display(gpointer user_data);
 int cib_connect(gboolean full);
 void mon_st_callback(stonith_t * st, stonith_event_t * e);
+static char *get_node_display_name(node_t *node);
 
 /*
  * Definitions indicating which items to print
@@ -920,7 +922,66 @@ print_date(time_t time)
     print_as("'%s'", date_str);
 }
 
-#include <crm/pengine/internal.h>
+/*!
+ * \internal
+ * \brief Print whatever is needed to start a node section
+ *
+ * \param[in] stream     File stream to display output to
+ * \param[in] node       Node to print
+ */
+static void
+print_node_start(FILE *stream, node_t *node)
+{
+    char *node_name;
+
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            node_name = get_node_display_name(node);
+            print_as("* Node %s:\n", node_name);
+            free(node_name);
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            node_name = get_node_display_name(node);
+            fprintf(stream, "  <h3>Node: %s</h3>\n  <ul>\n", node_name);
+            free(node_name);
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "        <node name=\"%s\">\n", node->details->uname);
+            break;
+
+        default:
+            break;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Print whatever is needed to end a node section
+ *
+ * \param[in] stream     File stream to display output to
+ */
+static void
+print_node_end(FILE *stream)
+{
+    switch (output_format) {
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, "  </ul>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "        </node>\n");
+            break;
+
+        default:
+            break;
+    }
+}
+
 static void
 print_rsc_summary(pe_working_set_t * data_set, node_t * node, resource_t * rsc, gboolean all)
 {
@@ -1049,8 +1110,19 @@ print_rsc_history(pe_working_set_t * data_set, node_t * node, xmlNode * rsc_entr
     g_list_free(sorted_op_list);
 }
 
-static void
-print_attr_msg(node_t * node, GListPtr rsc_list, const char *attrname, const char *attrvalue)
+/*!
+ * \internal
+ * \brief Print extended information about an attribute if appropriate
+ *
+ * \param[in] data_set  Working set of CIB state
+ *
+ * \return TRUE if extended information was printed, FALSE otherwise
+ * \note Currently, extended information is only supported for ping/pingd
+ *       resources, for which a message will be printed if connectivity is lost
+ *       or degraded.
+ */
+static gboolean
+print_attr_msg(FILE *stream, node_t * node, GListPtr rsc_list, const char *attrname, const char *attrvalue)
 {
     GListPtr gIter = NULL;
 
@@ -1059,7 +1131,9 @@ print_attr_msg(node_t * node, GListPtr rsc_list, const char *attrname, const cha
         const char *type = g_hash_table_lookup(rsc->meta, "type");
 
         if (rsc->children != NULL) {
-            print_attr_msg(node, rsc->children, attrname, attrvalue);
+            if (print_attr_msg(stream, node, rsc->children, attrname, attrvalue)) {
+                return TRUE;
+            }
         }
 
         if (safe_str_eq(type, "ping") || safe_str_eq(type, "pingd")) {
@@ -1086,15 +1160,38 @@ print_attr_msg(node_t * node, GListPtr rsc_list, const char *attrname, const cha
                 /* pingd multiplier is the same as the default value. */
                 expected_score = host_list_num * crm_parse_int(multiplier, "1");
 
-                /* pingd is abnormal score. */
-                if (value <= 0) {
-                    print_as("\t: Connectivity is lost");
-                } else if (value < expected_score) {
-                    print_as("\t: Connectivity is degraded (Expected=%d)", expected_score);
+                switch (output_format) {
+                    case mon_output_plain:
+                    case mon_output_console:
+                        if (value <= 0) {
+                            print_as("\t: Connectivity is lost");
+                        } else if (value < expected_score) {
+                            print_as("\t: Connectivity is degraded (Expected=%d)", expected_score);
+                        }
+                        break;
+
+                    case mon_output_html:
+                    case mon_output_cgi:
+                        if (value <= 0) {
+                            fprintf(stream, " <b>(connectivity is lost)</b>");
+                        } else if (value < expected_score) {
+                            fprintf(stream, " <b>(connectivity is degraded -- expected %d)</b>",
+                                    expected_score);
+                        }
+                        break;
+
+                    case mon_output_xml:
+                        fprintf(stream, " expected=\"%d\"", expected_score);
+                        break;
+
+                    default:
+                        break;
                 }
+                return TRUE;
             }
         }
     }
+    return FALSE;
 }
 
 static int
@@ -1125,16 +1222,66 @@ create_attr_list(gpointer name, gpointer value, gpointer data)
     attr_list = g_list_insert_sorted(attr_list, name, compare_attribute);
 }
 
+/* structure for passing multiple user data to g_list_foreach() */
+struct mon_attr_data {
+    FILE *stream;
+    node_t *node;
+};
+
 static void
-print_node_attribute(gpointer name, gpointer node_data)
+print_node_attribute(gpointer name, gpointer user_data)
 {
     const char *value = NULL;
-    node_t *node = (node_t *) node_data;
+    struct mon_attr_data *data = (struct mon_attr_data *) user_data;
 
-    value = g_hash_table_lookup(node->details->attrs, name);
-    print_as("    + %-32s\t: %-10s", (char *)name, value);
-    print_attr_msg(node, node->details->running_rsc, name, value);
-    print_as("\n");
+    value = g_hash_table_lookup(data->node->details->attrs, name);
+
+    /* Print attribute name and value */
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("    + %-32s\t: %-10s", (char *)name, value);
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(data->stream, "   <li>%s: %s",
+                    (char *)name, value);
+            break;
+
+        case mon_output_xml:
+            fprintf(data->stream,
+                    "            <attribute name=\"%s\" value=\"%s\"",
+                    (char *)name, value);
+            break;
+
+        default:
+            break;
+    }
+
+    /* Print extended information if appropriate */
+    print_attr_msg(data->stream, data->node, data->node->details->running_rsc,
+                   name, value);
+
+    /* Close out the attribute */
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("\n");
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(data->stream, "</li>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(data->stream, " />\n");
+            break;
+
+        default:
+            break;
+    }
 }
 
 static void
@@ -1160,8 +1307,7 @@ print_node_summary(pe_working_set_t * data_set, gboolean operations)
                 continue;
             }
 
-            print_as("* Node %s: ", crm_element_value(node_state, XML_ATTR_UNAME));
-            print_as("\n");
+            print_node_start(stdout, node);
 
             lrm_rsc = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
             lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
@@ -1322,6 +1468,73 @@ crm_mon_get_parameters(resource_t *rsc, pe_working_set_t * data_set)
         for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
             crm_mon_get_parameters(gIter->data, data_set);
         }
+    }
+}
+
+/*!
+ * \internal
+ * \brief Print node attributes section
+ *
+ * \param[in] stream     File stream to display output to
+ * \param[in] data_set   Working set of CIB state
+ */
+static void
+print_node_attributes(FILE *stream, pe_working_set_t *data_set)
+{
+    GListPtr gIter = NULL;
+
+    /* Print section heading */
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("\nNode Attributes:\n");
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, " <hr />\n <h2>Node Attributes</h2>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "    <node_attributes>\n");
+            break;
+
+        default:
+            break;
+    }
+
+    /* Unpack all resource parameters (it would be more efficient to do this
+     * only when needed for the first time in print_attr_msg())
+     */
+    for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
+        crm_mon_get_parameters(gIter->data, data_set);
+    }
+
+    /* Display each node's attributes */
+    for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+        struct mon_attr_data data;
+
+        data.stream = stream;
+        data.node = (node_t *) gIter->data;
+
+        if (data.node && data.node->details && data.node->details->online) {
+            print_node_start(stream, data.node);
+            g_hash_table_foreach(data.node->details->attrs, create_attr_list, NULL);
+            g_list_foreach(attr_list, print_node_attribute, &data);
+            g_list_free(attr_list);
+            attr_list = NULL;
+            print_node_end(stream);
+        }
+    }
+
+    /* Print section footer */
+    switch (output_format) {
+        case mon_output_xml:
+            fprintf(stream, "    </node_attributes>\n");
+            break;
+
+        default:
+            break;
     }
 }
 
@@ -1991,29 +2204,7 @@ print_status(pe_working_set_t * data_set)
 
     /* print Node Attributes section if requested */
     if (show & mon_show_attributes) {
-        print_as("\nNode Attributes:\n");
-
-        for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-            crm_mon_get_parameters(gIter->data, data_set);
-        }
-
-        for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-            node_t *node = (node_t *) gIter->data;
-            char *node_name;
-
-            if (node == NULL || node->details->online == FALSE) {
-                continue;
-            }
-
-            node_name = get_node_display_name(node);
-            print_as("* Node %s:\n", node_name);
-            free(node_name);
-
-            g_hash_table_foreach(node->details->attrs, create_attr_list, NULL);
-            g_list_foreach(attr_list, print_node_attribute, node);
-            g_list_free(attr_list);
-            attr_list = NULL;
-        }
+        print_node_attributes(stdout, data_set);
     }
 
     /* Print resource operations or failcounts if requested (mutually exclusive) */
@@ -2189,6 +2380,11 @@ print_xml_status(pe_working_set_t * data_set)
             }
         }
         fprintf(stream, "    </resources>\n");
+    }
+
+    /* print Node Attributes section if requested */
+    if (show & mon_show_attributes) {
+        print_node_attributes(stream, data_set);
     }
 
     /*** FAILURES ***/
@@ -2381,6 +2577,11 @@ print_html_status(pe_working_set_t * data_set, const char *filename)
                 rsc->fns->print(rsc, NULL, print_opts, stream);
             }
         }
+    }
+
+    /* print Node Attributes section if requested */
+    if (show & mon_show_attributes) {
+        print_node_attributes(stream, data_set);
     }
 
     fprintf(stream, "</body>\n");
