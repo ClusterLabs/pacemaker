@@ -334,6 +334,49 @@ add_template_rsc(xmlNode * xml_obj, pe_working_set_t * data_set)
     return TRUE;
 }
 
+static void
+handle_rsc_isolation(resource_t *rsc)
+{
+    resource_t *top = uber_parent(rsc);
+    resource_t *iso = rsc;
+    const char *wrapper = NULL;
+    const char *value;
+
+    /* check for isolation wrapper mapping if the parent doesn't have one set
+     * isolation mapping is enabled by default. For safety, we are allowing isolation
+     * to be disabled by setting the meta attr, isolation=false. */
+    value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_ISOLATION);
+    if (top->isolation_wrapper == NULL && (value == NULL || crm_is_true(value))) {
+        if (g_hash_table_lookup(rsc->meta, "pcmk_docker_image")) {
+            wrapper = "docker-wrapper";
+        }
+        /* add more isolation technologies here as we expand */
+    }
+
+    if (wrapper == NULL) {
+        return;
+    }
+
+    /* if this is a cloned primitive/group, go head and set the isolation wrapper at
+     * at the clone level. this is really the only sane thing to do in this situation.
+     * This allows someone to clone an isolated resource without having to shuffle
+     * around the isolation attributes to the clone parent */
+    if (top == rsc->parent && top->variant >= pe_clone) {
+        iso = top;
+    }
+
+    if (wrapper) {
+        iso->isolation_wrapper = wrapper;
+        clear_bit(iso->flags, pe_rsc_allow_migrate);
+        set_bit(iso->flags, pe_rsc_unique);
+    }
+
+    if (top->isolation_wrapper || rsc->isolation_wrapper) {
+        /* never allow resources with an isolation wrapper migrate */
+        clear_bit(rsc->flags, pe_rsc_allow_migrate);
+    }
+}
+
 gboolean
 common_unpack(xmlNode * xml_obj, resource_t ** rsc,
               resource_t * parent, pe_working_set_t * data_set)
@@ -493,24 +536,9 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
 
     pe_rsc_trace((*rsc), "Options for %s", (*rsc)->id);
 
+    handle_rsc_isolation(*rsc);
+
     top = uber_parent(*rsc);
-
-    /* check for isolation wrapper mapping if the parent doesn't have one set
-     * isolation mapping is enabled by default. For safety, we are allowing isolation
-     * to be disabled by setting the meta attr, isolation=false. */
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_ISOLATION);
-    if (top->isolation_wrapper == NULL && (value == NULL || crm_is_true(value))) {
-        if (g_hash_table_lookup((*rsc)->meta, "pcmk_docker_image")) {
-            (*rsc)->isolation_wrapper = "docker-wrapper";
-            clear_bit((*rsc)->flags, pe_rsc_allow_migrate);
-        }
-        /* add more isolation technologies here as we expand */
-    }
-    if (top->isolation_wrapper) {
-        /* never allow resources with an isolation wrapper migrate */
-        clear_bit((*rsc)->flags, pe_rsc_allow_migrate);
-    }
-
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_UNIQUE);
     if (crm_is_true(value) || top->variant < pe_clone || (*rsc)->isolation_wrapper) {
         set_bit((*rsc)->flags, pe_rsc_unique);
