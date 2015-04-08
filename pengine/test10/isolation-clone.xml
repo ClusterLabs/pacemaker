@@ -1,0 +1,74 @@
+<cib crm_feature_set="3.0.9" validate-with="pacemaker-2.3" epoch="10" num_updates="0" admin_epoch="0" cib-last-written="Tue Apr  7 17:08:03 2015" have-quorum="1" dc-uuid="2">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.12-1fe5977"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="phd"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1428440119"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="rhel7-auto1"/>
+      <node id="2" uname="rhel7-auto2"/>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="shooter" type="fence_xvm">
+        <instance_attributes id="shooter-instance_attributes"/>
+        <operations>
+          <op id="shooter-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <clone id="single-clone">
+        <primitive class="ocf" id="single" provider="heartbeat" type="Dummy">
+          <instance_attributes id="single-instance_attributes">
+            <nvpair id="single-instance_attributes-pcmk_docker_image" name="pcmk_docker_image" value="centos:isolation"/>
+          </instance_attributes>
+          <operations>
+            <op id="single-start-timeout-120s" interval="0s" name="start" timeout="120s"/>
+            <op id="single-stop-timeout-90s" interval="0s" name="stop" timeout="90s"/>
+            <op id="single-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+          <meta_attributes id="single-meta_attributes">
+          </meta_attributes>
+        </primitive>
+        <meta_attributes id="single-clone-meta"/>
+      </clone>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="2" uname="rhel7-auto2" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="shooter" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="7:0:7:65447c78-74c5-47f6-a568-c0a5410a0393" transition-magic="0:7;7:0:7:65447c78-74c5-47f6-a568-c0a5410a0393" on_node="rhel7-auto2" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1428439866" last-rc-change="1428439866" exec-time="3" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="1" uname="rhel7-auto1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="shooter" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="shooter_last_failure_0" operation_key="shooter_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="5:0:7:1b1ac834-f5c6-406d-8637-fc16574f1b24" transition-magic="0:0;5:0:7:1b1ac834-f5c6-406d-8637-fc16574f1b24" on_node="rhel7-auto1" call-id="20" rc-code="0" op-status="0" interval="0" last-run="1428440685" last-rc-change="1428440685" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="5:0:7:1b1ac834-f5c6-406d-8637-fc16574f1b24" transition-magic="0:0;5:0:7:1b1ac834-f5c6-406d-8637-fc16574f1b24" on_node="rhel7-auto1" call-id="20" rc-code="0" op-status="0" interval="0" last-run="1428440685" last-rc-change="1428440685" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="shooter_monitor_60000" operation_key="shooter_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="8:1:0:1b1ac834-f5c6-406d-8637-fc16574f1b24" transition-magic="0:0;8:1:0:1b1ac834-f5c6-406d-8637-fc16574f1b24" on_node="rhel7-auto1" call-id="25" rc-code="0" op-status="0" interval="60000" last-rc-change="1428440687" exec-time="98" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
