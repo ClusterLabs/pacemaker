@@ -128,8 +128,7 @@ gboolean print_pending = FALSE;
 gboolean print_clone_detail = FALSE;
 
 /* FIXME allow, detect, and correctly interpret glob pattern or regex? */
-const char *print_neg_location_prefix;
-const char *print_neg_location_prefix_toggle;
+const char *print_neg_location_prefix = "";
 
 /* Never display node attributes whose name starts with one of these prefixes */
 #define FILTER_STR { "shutdown", "terminate", "standby", "fail-count",  \
@@ -482,18 +481,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
                 show ^= mon_show_attributes;
                 break;
             case 'L':
-                if (print_neg_location_prefix) {
-                    /* toggle off */
-                    print_neg_location_prefix_toggle = print_neg_location_prefix;
-                    print_neg_location_prefix = NULL;
-                } else if (print_neg_location_prefix_toggle) {
-                    /* toggle on */
-                    print_neg_location_prefix = print_neg_location_prefix_toggle;
-                    print_neg_location_prefix_toggle = NULL;
-                } else {
-                    /* toggled on for the first time at runtime */
-                    print_neg_location_prefix = "";
-                }
+                show ^= mon_show_bans;
                 break;
             case 'D':
                 /* If any header is shown, clear them all, otherwise set them all */
@@ -530,7 +518,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
         print_option_help('r', inactive_resources);
         print_option_help('t', print_timing);
         print_option_help('A', show & mon_show_attributes);
-        print_option_help('L', print_neg_location_prefix);
+        print_option_help('L', show & mon_show_bans);
         print_option_help('D', (show & mon_show_headers) == 0);
         print_option_help('R', print_clone_detail);
         print_option_help('b', print_brief);
@@ -610,6 +598,7 @@ main(int argc, char **argv)
                 show |= mon_show_attributes;
                 break;
             case 'L':
+                show |= mon_show_bans;
                 print_neg_location_prefix = optarg? optarg : "";
                 break;
             case 'D':
@@ -1742,11 +1731,82 @@ get_node_display_name(node_t *node)
     return node_name;
 }
 
-static void print_neg_locations(pe_working_set_t *data_set)
+/*!
+ * \internal
+ * \brief Print a negative location constraint
+ *
+ * \param[in] stream     File stream to display output to
+ * \param[in] node       Node affected by constraint
+ * \param[in] location   Constraint to print
+ */
+static void print_ban(FILE *stream, node_t *node, rsc_to_node_t *location)
+{
+    char *node_name = NULL;
+
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            node_name = get_node_display_name(node);
+            print_as(" %s\tprevents %s from running %son %s\n",
+                     location->id, location->rsc_lh->id,
+                     ((location->role_filter == RSC_ROLE_MASTER)? "as Master " : ""),
+                     node_name);
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            node_name = get_node_display_name(node);
+            fprintf(stream, "  <li>%s prevents %s from running %son %s</li>\n",
+                     location->id, location->rsc_lh->id,
+                     ((location->role_filter == RSC_ROLE_MASTER)? "as Master " : ""),
+                     node_name);
+            break;
+
+        case mon_output_xml:
+            fprintf(stream,
+                    "        <ban id=\"%s\" resource=\"%s\" node=\"%s\" weight=\"%d\" master_only=\"%s\" />\n",
+                    location->id, location->rsc_lh->id, node->details->uname, node->weight,
+                    ((location->role_filter == RSC_ROLE_MASTER)? "true" : "false"));
+            break;
+
+        default:
+            break;
+    }
+    free(node_name);
+}
+
+/*!
+ * \internal
+ * \brief Print section for negative location constraints
+ *
+ * \param[in] stream     File stream to display output to
+ * \param[in] data_set   Working set corresponding to CIB status to display
+ */
+static void print_neg_locations(FILE *stream, pe_working_set_t *data_set)
 {
     GListPtr gIter, gIter2;
 
-    print_as("\nNegative location constraints:\n");
+    /* Print section heading */
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("\nNegative Location Constraints:\n");
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, " <hr />\n <h2>Negative Location Constraints</h2>\n <ul>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "    <bans>\n");
+            break;
+
+        default:
+            break;
+    }
+
+    /* Print each ban */
     for (gIter = data_set->placement_constraints; gIter != NULL; gIter = gIter->next) {
         rsc_to_node_t *location = (rsc_to_node_t *) gIter->data;
         if (!g_str_has_prefix(location->id, print_neg_location_prefix))
@@ -1755,15 +1815,24 @@ static void print_neg_locations(pe_working_set_t *data_set)
             node_t *node = (node_t *) gIter2->data;
 
             if (node->weight < 0) {
-                char *node_name = get_node_display_name(node);
-
-                print_as(" %s\tprevents %s from running %son %s\n",
-                         location->id, location->rsc_lh->id,
-                         location->role_filter == RSC_ROLE_MASTER ? "as Master " : "",
-                         node_name);
-                free(node_name);
+                print_ban(stream, node, location);
             }
         }
+    }
+
+    /* Close section */
+    switch (output_format) {
+        case mon_output_cgi:
+        case mon_output_html:
+            fprintf(stream, " </ul>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "    </bans>\n");
+            break;
+
+        default:
+            break;
     }
 }
 
@@ -2578,22 +2647,14 @@ print_status(pe_working_set_t * data_set)
         print_as("\n");
     }
 
-    /* Unpack constraints if any section will need them
-     * (tickets may be referenced in constraints but not granted yet,
-     * and negative location constraints obviously need them) */
-    if ((show & mon_show_tickets) || print_neg_location_prefix) {
-        xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
-        unpack_constraints(cib_constraints, data_set);
-    }
-
     /* Print tickets if requested */
     if (show & mon_show_tickets) {
         print_cluster_tickets(data_set);
     }
 
     /* Print negative location constraints if requested */
-    if (print_neg_location_prefix) {
-        print_neg_locations(data_set);
+    if (show & mon_show_bans) {
+        print_neg_locations(stdout, data_set);
     }
 
 #if CURSES_ENABLED
@@ -2771,6 +2832,11 @@ print_xml_status(pe_working_set_t * data_set)
         fprintf(stream, "    </failures>\n");
     }
 
+    /* Print negative location constraints if requested */
+    if (show & mon_show_bans) {
+        print_neg_locations(stream, data_set);
+    }
+
     fprintf(stream, "</crm_mon>\n");
     fflush(stream);
     fclose(stream);
@@ -2911,6 +2977,11 @@ print_html_status(pe_working_set_t * data_set, const char *filename)
     if (show & (mon_show_operations | mon_show_failcounts)) {
         print_node_summary(stream, data_set,
                            ((show & mon_show_operations)? TRUE : FALSE));
+    }
+
+    /* Print negative location constraints if requested */
+    if (show & mon_show_bans) {
+        print_neg_locations(stream, data_set);
     }
 
     fprintf(stream, "</body>\n");
@@ -3745,6 +3816,14 @@ mon_refresh_display(gpointer user_data)
     set_working_set_defaults(&data_set);
     data_set.input = cib_copy;
     cluster_status(&data_set);
+
+    /* Unpack constraints if any section will need them
+     * (tickets may be referenced in constraints but not granted yet,
+     * and bans need negative location constraints) */
+    if (show & (mon_show_bans | mon_show_tickets)) {
+        xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set.input);
+        unpack_constraints(cib_constraints, &data_set);
+    }
 
     switch (output_format) {
         case mon_output_html:
