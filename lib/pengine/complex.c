@@ -351,6 +351,8 @@ handle_rsc_isolation(resource_t *rsc)
             wrapper = "docker-wrapper";
         }
         /* add more isolation technologies here as we expand */
+    } else if (top->isolation_wrapper) {
+        goto set_rsc_opts;
     }
 
     if (wrapper == NULL) {
@@ -365,15 +367,14 @@ handle_rsc_isolation(resource_t *rsc)
         iso = top;
     }
 
-    if (wrapper) {
-        iso->isolation_wrapper = wrapper;
-        clear_bit(iso->flags, pe_rsc_allow_migrate);
-        set_bit(iso->flags, pe_rsc_unique);
-    }
+    iso->isolation_wrapper = wrapper;
+    set_bit(top->flags, pe_rsc_unique);
 
-    if (top->isolation_wrapper || rsc->isolation_wrapper) {
-        /* never allow resources with an isolation wrapper migrate */
-        clear_bit(rsc->flags, pe_rsc_allow_migrate);
+set_rsc_opts:
+    clear_bit(rsc->flags, pe_rsc_allow_migrate);
+    set_bit(rsc->flags, pe_rsc_unique);
+    if (top->variant >= pe_clone) {
+        add_hash_param(rsc->meta, XML_RSC_ATTR_UNIQUE, XML_BOOLEAN_TRUE);
     }
 }
 
@@ -540,7 +541,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
 
     top = uber_parent(*rsc);
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_UNIQUE);
-    if (crm_is_true(value) || top->variant < pe_clone || (*rsc)->isolation_wrapper) {
+    if (crm_is_true(value) || top->variant < pe_clone) {
         set_bit((*rsc)->flags, pe_rsc_unique);
     }
 
