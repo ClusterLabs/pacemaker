@@ -2,8 +2,8 @@
   <synapse id="0">
     <action_set>
       <rsc_op id="13" operation="monitor" operation_key="single:0_monitor_60000" on_node="rhel7-auto2" on_node_uuid="2">
-        <primitive id="single" long-id="single:0" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_interval="60000" CRM_meta_isolation_host="rhel7-auto2" CRM_meta_isolation_instance="single-clone_0" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000"  pcmk_docker_image="centos:isolation"/>
+        <primitive id="single:0" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_interval="60000" CRM_meta_isolation_host="rhel7-auto2" CRM_meta_isolation_instance="single_0" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000"  pcmk_docker_image="centos:isolation"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -15,8 +15,8 @@
   <synapse id="1">
     <action_set>
       <rsc_op id="12" operation="start" operation_key="single:0_start_0" on_node="rhel7-auto2" on_node_uuid="2">
-        <primitive id="single" long-id="single:0" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_isolation_host="rhel7-auto2" CRM_meta_isolation_instance="single-clone_0" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="120000"  pcmk_docker_image="centos:isolation"/>
+        <primitive id="single:0" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_isolation_host="rhel7-auto2" CRM_meta_isolation_instance="single_0" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="120000"  pcmk_docker_image="centos:isolation"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -31,8 +31,8 @@
   <synapse id="2">
     <action_set>
       <rsc_op id="8" operation="monitor" operation_key="single:0_monitor_0" on_node="rhel7-auto2" on_node_uuid="2">
-        <primitive id="single" long-id="single:0" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_isolation_host="rhel7-auto2" CRM_meta_isolation_instance="single-clone_0" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  pcmk_docker_image="centos:isolation"/>
+        <primitive id="single:0" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_isolation_host="rhel7-auto2" CRM_meta_isolation_instance="single_0" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  pcmk_docker_image="centos:isolation"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -40,8 +40,8 @@
   <synapse id="3">
     <action_set>
       <rsc_op id="5" operation="monitor" operation_key="single:0_monitor_0" on_node="rhel7-auto1" on_node_uuid="1">
-        <primitive id="single" long-id="single:0" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_isolation_host="rhel7-auto1" CRM_meta_isolation_instance="single-clone_0" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  pcmk_docker_image="centos:isolation"/>
+        <primitive id="single:0" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_isolation_host="rhel7-auto1" CRM_meta_isolation_instance="single_0" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  pcmk_docker_image="centos:isolation"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -49,8 +49,8 @@
   <synapse id="4">
     <action_set>
       <rsc_op id="15" operation="monitor" operation_key="single:1_monitor_60000" on_node="rhel7-auto1" on_node_uuid="1">
-        <primitive id="single" long-id="single:1" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_interval="60000" CRM_meta_isolation_host="rhel7-auto1" CRM_meta_isolation_instance="single-clone_1" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000"  pcmk_docker_image="centos:isolation"/>
+        <primitive id="single:1" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_interval="60000" CRM_meta_isolation_host="rhel7-auto1" CRM_meta_isolation_instance="single_1" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000"  pcmk_docker_image="centos:isolation"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -62,8 +62,8 @@
   <synapse id="5">
     <action_set>
       <rsc_op id="14" operation="start" operation_key="single:1_start_0" on_node="rhel7-auto1" on_node_uuid="1">
-        <primitive id="single" long-id="single:1" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_isolation_host="rhel7-auto1" CRM_meta_isolation_instance="single-clone_1" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="120000"  pcmk_docker_image="centos:isolation"/>
+        <primitive id="single:1" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_isolation_host="rhel7-auto1" CRM_meta_isolation_instance="single_1" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="120000"  pcmk_docker_image="centos:isolation"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -78,8 +78,8 @@
   <synapse id="6">
     <action_set>
       <rsc_op id="9" operation="monitor" operation_key="single:1_monitor_0" on_node="rhel7-auto2" on_node_uuid="2">
-        <primitive id="single" long-id="single:1" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_isolation_host="rhel7-auto2" CRM_meta_isolation_instance="single-clone_1" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  pcmk_docker_image="centos:isolation"/>
+        <primitive id="single:1" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_isolation_host="rhel7-auto2" CRM_meta_isolation_instance="single_1" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  pcmk_docker_image="centos:isolation"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -87,8 +87,8 @@
   <synapse id="7">
     <action_set>
       <rsc_op id="6" operation="monitor" operation_key="single:1_monitor_0" on_node="rhel7-auto1" on_node_uuid="1">
-        <primitive id="single" long-id="single:1" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_isolation_host="rhel7-auto1" CRM_meta_isolation_instance="single-clone_1" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  pcmk_docker_image="centos:isolation"/>
+        <primitive id="single:1" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_isolation_host="rhel7-auto1" CRM_meta_isolation_instance="single_1" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  pcmk_docker_image="centos:isolation"/>
       </rsc_op>
     </action_set>
     <inputs/>
