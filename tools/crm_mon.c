@@ -1195,8 +1195,8 @@ print_cluster_tickets(pe_working_set_t * data_set)
  * \brief Return human-friendly string representing node name
  *
  * The returned string will be in the format
- *    uname[:containerID] [(nodeID)]
- * ":containerID" will be printed if the node is a remote container node.
+ *    uname[@hostUname] [(nodeID)]
+ * "@hostUname" will be printed if the node is a guest node.
  * "(nodeID)" will be printed if the node ID is different from the node uname,
  *  and detailed output has been requested.
  *
@@ -1208,15 +1208,28 @@ static char *
 get_node_display_name(node_t *node)
 {
     char *node_name;
-    const char *node_container_id = NULL;
+    const char *node_host = NULL;
     const char *node_id = NULL;
     int name_len;
 
     CRM_ASSERT((node != NULL) && (node->details != NULL) && (node->details->uname != NULL));
 
-    /* Container ID is displayed only if this is a remote container node */
+    /* Host is displayed only if this is a guest node */
     if (is_container_remote_node(node)) {
-        node_container_id = node->details->remote_rsc->container->id;
+        if (node->details->remote_rsc->running_on) {
+            /* running_on is a list, but guest nodes will have exactly one entry
+             * unless they are in the process of migrating, in which case they
+             * will have two; either way, we can use the first item in the list
+             */
+            node_t *host_node = (node_t *) node->details->remote_rsc->running_on->data;
+
+            if (host_node && host_node->details) {
+                node_host = host_node->details->uname;
+            }
+        }
+        if (node_host == NULL) {
+            node_host = ""; /* so we at least get "uname@" to indicate guest */
+        }
     }
 
     /* Node ID is displayed if different from uname and detail is requested */
@@ -1226,8 +1239,8 @@ get_node_display_name(node_t *node)
 
     /* Determine name length */
     name_len = strlen(node->details->uname) + 1;
-    if (node_container_id) {
-        name_len += strlen(node_container_id) + 1; /* ":node_container_id" */
+    if (node_host) {
+        name_len += strlen(node_host) + 1; /* "@node_host" */
     }
     if (node_id) {
         name_len += strlen(node_id) + 3; /* + " (node_id)" */
@@ -1237,9 +1250,9 @@ get_node_display_name(node_t *node)
     node_name = malloc(name_len);
     CRM_ASSERT(node_name != NULL);
     strcpy(node_name, node->details->uname);
-    if (node_container_id) {
-        strcat(node_name, ":");
-        strcat(node_name, node_container_id);
+    if (node_host) {
+        strcat(node_name, "@");
+        strcat(node_name, node_host);
     }
     if (node_id) {
         strcat(node_name, " (");
@@ -1367,7 +1380,7 @@ print_status(pe_working_set_t * data_set)
     /* space-separated lists of node names */
     char *online_nodes = NULL;
     char *online_remote_nodes = NULL;
-    char *online_remote_containers = NULL;
+    char *online_guest_nodes = NULL;
     char *offline_nodes = NULL;
     char *offline_remote_nodes = NULL;
 
@@ -1483,7 +1496,7 @@ print_status(pe_working_set_t * data_set)
             node_mode = "online";
             if (group_by_node == FALSE) {
                 if (is_container_remote_node(node)) {
-                    online_remote_containers = add_list_element(online_remote_containers, node_name);
+                    online_guest_nodes = add_list_element(online_guest_nodes, node_name);
                 } else if (is_baremetal_remote_node(node)) {
                     online_remote_nodes = add_list_element(online_remote_nodes, node_name);
                 } else {
@@ -1497,7 +1510,7 @@ print_status(pe_working_set_t * data_set)
                 if (is_baremetal_remote_node(node)) {
                     offline_remote_nodes = add_list_element(offline_remote_nodes, node_name);
                 } else if (is_container_remote_node(node)) {
-                    /* ignore offline container nodes */
+                    /* ignore offline guest nodes */
                 } else {
                     offline_nodes = add_list_element(offline_nodes, node_name);
                 }
@@ -1509,7 +1522,7 @@ print_status(pe_working_set_t * data_set)
 
         /* Print the node name and status */
         if (is_container_remote_node(node)) {
-            print_as("Container");
+            print_as("Guest");
         } else if (is_baremetal_remote_node(node)) {
             print_as("Remote");
         }
@@ -1550,9 +1563,9 @@ print_status(pe_working_set_t * data_set)
         print_as("RemoteOFFLINE: [%s ]\n", offline_remote_nodes);
         free(offline_remote_nodes);
     }
-    if (online_remote_containers) {
-        print_as("Containers: [%s ]\n", online_remote_containers);
-        free(online_remote_containers);
+    if (online_guest_nodes) {
+        print_as("GuestOnline: [%s ]\n", online_guest_nodes);
+        free(online_guest_nodes);
     }
 
     /* If we haven't already displayed resources grouped by node,
@@ -1824,7 +1837,7 @@ print_xml_status(pe_working_set_t * data_set)
         fprintf(stream, "resources_running=\"%d\" ", g_list_length(node->details->running_rsc));
         fprintf(stream, "type=\"%s\" ", node_type);
         if (is_container_remote_node(node)) {
-            fprintf(stream, "container_id=\"%s\" ", node->details->remote_rsc->container->id);
+            fprintf(stream, "id_as_resource=\"%s\" ", node->details->remote_rsc->container->id);
         }
 
         if (group_by_node) {
