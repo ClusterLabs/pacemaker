@@ -1638,25 +1638,95 @@ static void
 print_ticket(gpointer name, gpointer value, gpointer data)
 {
     ticket_t *ticket = (ticket_t *) value;
+    FILE *stream = (FILE *) data;
 
-    print_as(" %s\t%s%10s", ticket->id,
-             ticket->granted ? "granted" : "revoked", ticket->standby ? " [standby]" : "");
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("* %s:\t%s%s", ticket->id,
+                     (ticket->granted? "granted" : "revoked"),
+                     (ticket->standby? " [standby]" : ""));
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, "  <li>%s: %s%s", ticket->id,
+                    (ticket->granted? "granted" : "revoked"),
+                    (ticket->standby? " [standby]" : ""));
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "        <ticket id=\"%s\" status=\"%s\" standby=\"%s\"",
+                    ticket->id, (ticket->granted? "granted" : "revoked"),
+                    (ticket->standby? "true" : "false"));
+            break;
+
+        default:
+            break;
+    }
     if (ticket->last_granted > -1) {
         print_nvpair(stdout, "last-granted", NULL, NULL, ticket->last_granted);
     }
-    print_as("\n");
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("\n");
+            break;
 
-    return;
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, "</li>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, " />\n");
+            break;
+
+        default:
+            break;
+    }
 }
 
 static void
-print_cluster_tickets(pe_working_set_t * data_set)
+print_cluster_tickets(FILE *stream, pe_working_set_t * data_set)
 {
+    /* Print section heading */
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("\nTickets:\n");
+            break;
 
-    print_as("\nTickets:\n");
-    g_hash_table_foreach(data_set->tickets, print_ticket, NULL);
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, " <hr />\n <h2>Tickets</h2>\n <ul>\n");
+            break;
 
-    return;
+        case mon_output_xml:
+            fprintf(stream, "    <tickets>\n");
+            break;
+
+        default:
+            break;
+    }
+
+    /* Print each ticket */
+    g_hash_table_foreach(data_set->tickets, print_ticket, stream);
+
+    /* Close section */
+    switch (output_format) {
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, " </ul>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "    </tickets>\n");
+            break;
+
+        default:
+            break;
+    }
 }
 
 /*!
@@ -2649,7 +2719,7 @@ print_status(pe_working_set_t * data_set)
 
     /* Print tickets if requested */
     if (show & mon_show_tickets) {
-        print_cluster_tickets(data_set);
+        print_cluster_tickets(stdout, data_set);
     }
 
     /* Print negative location constraints if requested */
@@ -2832,6 +2902,11 @@ print_xml_status(pe_working_set_t * data_set)
         fprintf(stream, "    </failures>\n");
     }
 
+    /* Print tickets if requested */
+    if (show & mon_show_tickets) {
+        print_cluster_tickets(stream, data_set);
+    }
+
     /* Print negative location constraints if requested */
     if (show & mon_show_bans) {
         print_neg_locations(stream, data_set);
@@ -2977,6 +3052,11 @@ print_html_status(pe_working_set_t * data_set, const char *filename)
     if (show & (mon_show_operations | mon_show_failcounts)) {
         print_node_summary(stream, data_set,
                            ((show & mon_show_operations)? TRUE : FALSE));
+    }
+
+    /* Print tickets if requested */
+    if (show & mon_show_tickets) {
+        print_cluster_tickets(stream, data_set);
     }
 
     /* Print negative location constraints if requested */
