@@ -76,19 +76,30 @@ void mon_st_callback(stonith_t * st, stonith_event_t * e);
 
 unsigned int show = mon_show_default;
 
+/*
+ * Definitions indicating how to output
+ */
+
+enum mon_output_format_e {
+    mon_output_none,
+    mon_output_monitor,
+    mon_output_plain,
+    mon_output_console,
+    mon_output_xml,
+    mon_output_html,
+    mon_output_cgi
+} output_format = mon_output_console;
+
+char *output_filename = NULL;   /* if sending output to a file, its name */
+
 /* other globals */
 char *xml_file = NULL;
-char *as_html_file = NULL;
-int as_xml = 0;
 char *pid_file = NULL;
 char *snmp_target = NULL;
 char *snmp_community = NULL;
 
-gboolean as_console = TRUE;
-gboolean simple_status = FALSE;
 gboolean group_by_node = FALSE;
 gboolean inactive_resources = FALSE;
-gboolean web_cgi = FALSE;
 int reconnect_msec = 5000;
 gboolean daemonize = FALSE;
 GMainLoop *mainloop = NULL;
@@ -149,7 +160,7 @@ crm_trigger_t *refresh_trigger = NULL;
 #define s_if_plural(i) (((i) == 1)? "" : "s")
 
 #if CURSES_ENABLED
-#  define print_dot() if(as_console) {		\
+#  define print_dot() if (output_format == mon_output_console) { \
 	printw(".");				\
 	clrtoeol();				\
 	refresh();				\
@@ -161,7 +172,7 @@ crm_trigger_t *refresh_trigger = NULL;
 #endif
 
 #if CURSES_ENABLED
-#  define print_as(fmt, args...) if(as_console) {	\
+#  define print_as(fmt, args...) if (output_format == mon_output_console) { \
 	printw(fmt, ##args);				\
 	clrtoeol();					\
 	refresh();					\
@@ -193,7 +204,7 @@ mon_timer_popped(gpointer data)
     int rc = pcmk_ok;
 
 #if CURSES_ENABLED
-    if(as_console) {
+    if (output_format == mon_output_console) {
         clear();
         refresh();
     }
@@ -288,7 +299,7 @@ cib_connect(gboolean full)
 
     if (cib->state != cib_connected_query && cib->state != cib_connected_command) {
         crm_trace("Connecting to the CIB");
-        if (as_console && need_pass && cib->variant == cib_remote) {
+        if ((output_format == mon_output_console) && need_pass && (cib->variant == cib_remote)) {
             need_pass = FALSE;
             print_as("Password:");
         }
@@ -310,7 +321,7 @@ cib_connect(gboolean full)
                 if (rc == -EPROTONOSUPPORT) {
                     print_as
                         ("Notification setup not supported, won't be able to reconnect after failure");
-                    if (as_console) {
+                    if (output_format == mon_output_console) {
                         sleep(2);
                     }
                     rc = pcmk_ok;
@@ -325,7 +336,7 @@ cib_connect(gboolean full)
 
             if (rc != pcmk_ok) {
                 print_as("Notification setup failed, could not monitor CIB actions");
-                if (as_console) {
+                if (output_format == mon_output_console) {
                     sleep(2);
                 }
                 clean_up(-rc);
@@ -552,7 +563,7 @@ main(int argc, char **argv)
 #endif
 
     if (strcmp(crm_system_name, "crm_mon.cgi") == 0) {
-        web_cgi = TRUE;
+        output_format = mon_output_cgi;
         one_shot = TRUE;
     }
 
@@ -632,19 +643,20 @@ main(int argc, char **argv)
                 if(optarg == NULL) {
                     return crm_help(flag, EX_USAGE);
                 }
-                as_html_file = strdup(optarg);
+                output_format = mon_output_html;
+                output_filename = strdup(optarg);
                 umask(S_IWGRP | S_IWOTH);
                 break;
             case 'X':
-                as_xml = TRUE;
+                output_format = mon_output_xml;
                 one_shot = TRUE;
                 break;
             case 'w':
-                web_cgi = TRUE;
+                output_format = mon_output_cgi;
                 one_shot = TRUE;
                 break;
             case 's':
-                simple_status = TRUE;
+                output_format = mon_output_monitor;
                 one_shot = TRUE;
                 break;
             case 'S':
@@ -672,7 +684,9 @@ main(int argc, char **argv)
                 one_shot = TRUE;
                 break;
             case 'N':
-                as_console = FALSE;
+                if (output_format == mon_output_console) {
+                    output_format = mon_output_plain;
+                }
                 break;
             case 'C':
                 snmp_community = optarg;
@@ -699,13 +713,18 @@ main(int argc, char **argv)
     }
 
     if (one_shot) {
-        as_console = FALSE;
+        if (output_format == mon_output_console) {
+            output_format = mon_output_plain;
+        }
 
     } else if (daemonize) {
-        as_console = FALSE;
+        if ((output_format == mon_output_console) || (output_format == mon_output_plain)) {
+            output_format = mon_output_none;
+        }
         crm_enable_stderr(FALSE);
 
-        if (!as_html_file && !snmp_target && !crm_mail_to && !external_agent && !as_xml) {
+        if ((output_format != mon_output_html) && (output_format != mon_output_xml)
+            && !snmp_target && !crm_mail_to && !external_agent) {
             printf
                 ("Looks like you forgot to specify one or more of: --as-html, --as-xml, --mail-to, --snmp-target, --external-agent\n");
             return crm_help('?', EX_USAGE);
@@ -713,7 +732,7 @@ main(int argc, char **argv)
 
         crm_make_daemon(crm_system_name, TRUE, pid_file);
 
-    } else if (as_console) {
+    } else if (output_format == mon_output_console) {
 #if CURSES_ENABLED
         initscr();
         cbreak();
@@ -721,7 +740,7 @@ main(int argc, char **argv)
         crm_enable_stderr(FALSE);
 #else
         one_shot = TRUE;
-        as_console = FALSE;
+        output_format = mon_output_plain;
         printf("Defaulting to one-shot mode\n");
         printf("You need to have curses available at compile time to enable console mode\n");
 #endif
@@ -749,7 +768,7 @@ main(int argc, char **argv)
             } else if (exit_code != pcmk_ok) {
                 sleep(reconnect_msec / 1000);
 #if CURSES_ENABLED
-                if(as_console) {
+                if (output_format == mon_output_console) {
                     clear();
                     refresh();
                 }
@@ -759,13 +778,13 @@ main(int argc, char **argv)
         } while (exit_code == -ENOTCONN);
 
         if (exit_code != pcmk_ok) {
-            if (simple_status) {
+            if (output_format == mon_output_monitor) {
                 printf("CLUSTER WARN: Connection to cluster failed: %s\n", pcmk_strerror(exit_code));
                 clean_up(MON_STATUS_WARN);
             } else {
                 print_as("\nConnection to cluster failed: %s\n", pcmk_strerror(exit_code));
             }
-            if (as_console) {
+            if (output_format == mon_output_console) {
                 sleep(2);
             }
             clean_up(-exit_code);
@@ -781,7 +800,7 @@ main(int argc, char **argv)
     mainloop_add_signal(SIGTERM, mon_shutdown);
     mainloop_add_signal(SIGINT, mon_shutdown);
 #if CURSES_ENABLED
-    if (as_console) {
+    if (output_format == mon_output_console) {
         ncurses_winch_handler = signal(SIGWINCH, mon_winresize);
         if (ncurses_winch_handler == SIG_DFL ||
             ncurses_winch_handler == SIG_IGN || ncurses_winch_handler == SIG_ERR)
@@ -1313,14 +1332,20 @@ get_resource_display_options(void)
     int print_opts;
 
     /* Determine basic output format */
-    if (as_xml) {
-        print_opts = pe_print_xml;
-    } else if (as_html_file || web_cgi) {
-        print_opts = pe_print_html;
-    } else if (as_console) {
-        print_opts = pe_print_ncurses;
-    } else {
-        print_opts = pe_print_printf;
+    switch (output_format) {
+        case mon_output_console:
+            print_opts = pe_print_ncurses;
+            break;
+        case mon_output_html:
+        case mon_output_cgi:
+            print_opts = pe_print_html;
+            break;
+        case mon_output_xml:
+            print_opts = pe_print_xml;
+            break;
+        default:
+            print_opts = pe_print_printf;
+            break;
     }
 
     /* Add optional display elements */
@@ -1384,7 +1409,7 @@ print_status(pe_working_set_t * data_set)
     char *offline_nodes = NULL;
     char *offline_remote_nodes = NULL;
 
-    if (as_console) {
+    if (output_format == mon_output_console) {
         blank_screen();
     }
 
@@ -1725,7 +1750,7 @@ print_status(pe_working_set_t * data_set)
     }
 
 #if CURSES_ENABLED
-    if (as_console) {
+    if (output_format == mon_output_console) {
         refresh();
     }
 #endif
@@ -1949,16 +1974,15 @@ print_xml_status(pe_working_set_t * data_set)
 
 /*!
  * \internal
- * \brief Print cluster status in HTML format
+ * \brief Print cluster status in HTML format (with HTTP headers if CGI)
  *
  * \param[in] data_set   Working set of CIB state
- * \param[in] filename   Name of file to write HTML to (ignored if web_cgi is TRUE)
- * \param[in] web_cgi    Whether to generate CGI output (i.e. HTTP headers)
+ * \param[in] filename   Name of file to write HTML to (ignored if CGI)
  *
  * \return 0 on success, -1 on error
  */
 static int
-print_html_status(pe_working_set_t * data_set, const char *filename, gboolean web_cgi)
+print_html_status(pe_working_set_t * data_set, const char *filename)
 {
     FILE *stream;
     GListPtr gIter = NULL;
@@ -1967,7 +1991,7 @@ print_html_status(pe_working_set_t * data_set, const char *filename, gboolean we
     int print_opts = get_resource_display_options();
     int nnodes, nresources;
 
-    if (web_cgi) {
+    if (output_format == mon_output_cgi) {
         stream = stdout;
         fprintf(stream, "Content-type: text/html\n\n");
 
@@ -2126,7 +2150,7 @@ print_html_status(pe_working_set_t * data_set, const char *filename, gboolean we
     fflush(stream);
     fclose(stream);
 
-    if (!web_cgi) {
+    if (output_format != mon_output_cgi) {
         if (rename(filename_tmp, filename) != 0) {
             crm_perror(LOG_ERR, "Unable to rename %s->%s", filename_tmp, filename);
         }
@@ -2943,7 +2967,7 @@ mon_refresh_display(gpointer user_data)
             cib->cmds->signoff(cib);
         }
         print_as("Upgrade failed: %s", pcmk_strerror(-pcmk_err_schema_validation));
-        if (as_console) {
+        if (output_format == mon_output_console) {
             sleep(2);
         }
         clean_up(EX_USAGE);
@@ -2954,25 +2978,33 @@ mon_refresh_display(gpointer user_data)
     data_set.input = cib_copy;
     cluster_status(&data_set);
 
-    if (as_html_file || web_cgi) {
-        if (print_html_status(&data_set, as_html_file, web_cgi) != 0) {
-            fprintf(stderr, "Critical: Unable to output html file\n");
-            clean_up(EX_USAGE);
-        }
-    } else if (as_xml) {
-        print_xml_status(&data_set);
+    switch (output_format) {
+        case mon_output_html:
+        case mon_output_cgi:
+            if (print_html_status(&data_set, output_filename) != 0) {
+                fprintf(stderr, "Critical: Unable to output html file\n");
+                clean_up(EX_USAGE);
+            }
+            break;
 
-    } else if (daemonize) {
-        /* do nothing */
+        case mon_output_xml:
+            print_xml_status(&data_set);
+            break;
 
-    } else if (simple_status) {
-        print_simple_status(&data_set);
-        if (has_warnings) {
-            clean_up(MON_STATUS_WARN);
-        }
+        case mon_output_monitor:
+            print_simple_status(&data_set);
+            if (has_warnings) {
+                clean_up(MON_STATUS_WARN);
+            }
+            break;
 
-    } else {
-        print_status(&data_set);
+        case mon_output_plain:
+        case mon_output_console:
+            print_status(&data_set);
+            break;
+
+        case mon_output_none:
+            break;
     }
 
     cleanup_calculations(&data_set);
@@ -3014,8 +3046,8 @@ clean_up(int rc)
 #endif
 
 #if CURSES_ENABLED
-    if (as_console) {
-        as_console = FALSE;
+    if (output_format == mon_output_console) {
+        output_format = mon_output_plain;
         echo();
         nocbreak();
         endwin();
@@ -3028,7 +3060,7 @@ clean_up(int rc)
         cib = NULL;
     }
 
-    free(as_html_file);
+    free(output_filename);
     free(xml_file);
     free(pid_file);
 
