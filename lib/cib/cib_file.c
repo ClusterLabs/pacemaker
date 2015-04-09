@@ -158,7 +158,7 @@ cib_file_read_and_verify(const char *filename, const char *sigfile, xmlNode **ro
     }
 
     /* Verify that digests match */
-    crm_info("Verifying cluster configuration signature from %s", sigfile);
+    crm_debug("Verifying cluster configuration signature from %s", sigfile);
     if (cib_file_verify_digest(local_root, sigfile) == FALSE) {
         free(local_sigfile);
         free_xml(local_root);
