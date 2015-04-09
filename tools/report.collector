@@ -605,6 +605,12 @@ get_logfiles() {
 
     # Make sure we get something from the Policy Engine
     findmsg 3 "Calculated Transition"
+
+    # These patterns look for cib and lrmd updates
+    # Helpful on non-DC nodes or when the cluster has been up for a long time
+    findmsg 3 cib_perform_op
+    findmsg 3 process_lrm_event
+
 }
 
 essential_files() {
