@@ -69,14 +69,14 @@ typedef struct lrmd_cmd_s {
     const char *isolation_wrapper;
 
 #ifdef HAVE_SYS_TIMEB_H
-    /* Timestamp of when op first ran */
-    struct timeb t_first_run;
-    /* Timestamp of when op ran */
-    struct timeb t_run;
-    /* Timestamp of when op was queued */
-    struct timeb t_queue;
-    /* Timestamp of last rc change */
-    struct timeb t_rcchange;
+    /* recurring and systemd operations may involve more than one lrmd command
+     * per operation, so they need info about original and most recent
+     */
+    struct timeb t_first_run;   /* Timestamp of when op first ran */
+    struct timeb t_run;         /* Timestamp of when op most recently ran */
+    struct timeb t_first_queue; /* Timestamp of when op first was queued */
+    struct timeb t_queue;       /* Timestamp of when op most recently was queued */
+    struct timeb t_rcchange;    /* Timestamp of last rc change */
 #endif
 
     int first_notify_sent;
@@ -242,6 +242,9 @@ stonith_recurring_op_helper(gpointer data)
     rsc->pending_ops = g_list_append(rsc->pending_ops, cmd);
 #ifdef HAVE_SYS_TIMEB_H
     ftime(&cmd->t_queue);
+    if (cmd->t_first_queue.time == 0) {
+        cmd->t_first_queue = cmd->t_queue;
+    }
 #endif
     mainloop_set_trigger(rsc->work);
 
@@ -350,6 +353,9 @@ schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     rsc->pending_ops = g_list_append(rsc->pending_ops, cmd);
 #ifdef HAVE_SYS_TIMEB_H
     ftime(&cmd->t_queue);
+    if (cmd->t_first_queue.time == 0) {
+        cmd->t_first_queue = cmd->t_queue;
+    }
 #endif
     mainloop_set_trigger(rsc->work);
 
@@ -397,17 +403,55 @@ send_client_notify(gpointer key, gpointer value, gpointer user_data)
 }
 
 #ifdef HAVE_SYS_TIMEB_H
+/*!
+ * \internal
+ * \brief Return difference between two times in milliseconds
+ *
+ * \param[in] now  More recent time (or NULL to use current time)
+ * \param[in] old  Earlier time
+ *
+ * \return milliseconds difference (or 0 if old is NULL or has time zero)
+ */
 static int
 time_diff_ms(struct timeb *now, struct timeb *old)
 {
-    int sec = difftime(now->time, old->time);
-    int ms = now->millitm - old->millitm;
+    struct timeb local_now = { 0, };
 
-    if (old->time == 0) {
+    if (now == NULL) {
+        ftime(&local_now);
+        now = &local_now;
+    }
+    if ((old == NULL) || (old->time == 0)) {
         return 0;
     }
+    return difftime(now->time, old->time) * 1000 + now->millitm - old->millitm;
+}
 
-    return (sec * 1000) + ms;
+/*!
+ * \internal
+ * \brief Reset a command's operation times to their original values.
+ *
+ * Reset a command's run and queued timestamps to the timestamps of the original
+ * command, so we report the entire time since then and not just the time since
+ * the most recent command (for recurring and systemd operations).
+ *
+ * /param[in] cmd  LRMD command object to reset
+ *
+ * /note It's not obvious what the queued time should be for a systemd
+ * start/stop operation, which might go like this:
+ *   initial command queued 5ms, runs 3s
+ *   monitor command queued 10ms, runs 10s
+ *   monitor command queued 10ms, runs 10s
+ * Is the queued time for that operation 5ms, 10ms or 25ms? The current
+ * implementation will report 5ms. If it's 25ms, then we need to
+ * subtract 20ms from the total exec time so as not to count it twice.
+ * We can implement that later if it matters to anyone ...
+ */
+static void
+cmd_original_times(lrmd_cmd_t * cmd)
+{
+    cmd->t_run = cmd->t_first_run;
+    cmd->t_queue = cmd->t_first_queue;
 }
 #endif
 
@@ -419,10 +463,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     xmlNode *notify = NULL;
 
 #ifdef HAVE_SYS_TIMEB_H
-    struct timeb now = { 0, };
-
-    ftime(&now);
-    exec_time = time_diff_ms(&now, &cmd->t_run);
+    exec_time = time_diff_ms(NULL, &cmd->t_run);
     queue_time = time_diff_ms(&cmd->t_run, &cmd->t_queue);
 #endif
 
@@ -551,6 +592,9 @@ cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc)
     if (!rsc) {
         cmd->rsc_deleted = 1;
     }
+
+    /* reset original timeout so client notification has correct information */
+    cmd->timeout = cmd->timeout_orig;
 
     send_cmd_complete_notify(cmd);
 
@@ -882,15 +926,14 @@ action_complete(svc_action_t * action)
                 goagain = true;
 
             } else {
-                int time_sum = 0;
-                int timeout_left = 0;
-                struct timeb now = { 0, };
+#ifdef HAVE_SYS_TIMEB_H
+                int time_sum = time_diff_ms(NULL, &cmd->t_first_run);
+                int timeout_left = cmd->timeout_orig - time_sum;
 
-                ftime(&now);
-                time_sum = time_diff_ms(&now, &cmd->t_first_run);
-                timeout_left = cmd->timeout_orig - time_sum;
                 crm_debug("%s %s is now complete (elapsed=%dms, remaining=%dms): %s (%d)",
                           cmd->rsc_id, cmd->real_action, time_sum, timeout_left, services_ocf_exitcode_str(cmd->exec_rc), cmd->exec_rc);
+                cmd_original_times(cmd);
+#endif
 
                 if(cmd->lrmd_op_status == PCMK_LRM_OP_DONE && cmd->exec_rc == PCMK_OCF_NOT_RUNNING && safe_str_eq(cmd->real_action, "stop")) {
                     cmd->exec_rc = PCMK_OCF_OK;
@@ -912,17 +955,16 @@ action_complete(svc_action_t * action)
     }
 #endif
 
+    /* Wrapping this section in ifdef implies that systemd resources are not
+     * fully supported on platforms without sys/timeb.h. Since timeb is
+     * obsolete, we should eventually prefer a clock_gettime() implementation
+     * (wrapped in its own ifdef) with timeb as a fallback.
+     */
+#ifdef HAVE_SYS_TIMEB_H
     if(goagain) {
-        int time_sum = 0;
-        int timeout_left = 0;
+        int time_sum = time_diff_ms(NULL, &cmd->t_first_run);
+        int timeout_left = cmd->timeout_orig - time_sum;
         int delay = cmd->timeout_orig / 10;
-
-#  ifdef HAVE_SYS_TIMEB_H
-        struct timeb now = { 0, };
-
-        ftime(&now);
-        time_sum = time_diff_ms(&now, &cmd->t_first_run);
-        timeout_left = cmd->timeout_orig - time_sum;
 
         if(delay >= timeout_left && timeout_left > 20) {
             delay = timeout_left/2;
@@ -951,6 +993,8 @@ action_complete(svc_action_t * action)
                 rsc->active = NULL;
             }
             schedule_lrmd_cmd(rsc, cmd);
+
+            /* Don't finalize cmd, we're not done with it yet */
             return;
 
         } else {
@@ -958,9 +1002,10 @@ action_complete(svc_action_t * action)
                        cmd->rsc_id, cmd->action, cmd->exec_rc, time_sum, timeout_left);
             cmd->lrmd_op_status = PCMK_LRM_OP_TIMEOUT;
             cmd->exec_rc = PCMK_OCF_TIMEOUT;
+            cmd_original_times(cmd);
         }
-#  endif
     }
+#endif
 
     if (action->stderr_data) {
         cmd->output = strdup(action->stderr_data);
