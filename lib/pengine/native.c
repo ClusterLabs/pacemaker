@@ -519,6 +519,10 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
 
     if(node) {
         offset += snprintf(buffer + offset, LINE_MAX - offset, "%s ", node->details->uname);
+
+        if (node->details->online == FALSE && node->details->unclean) {
+            offset += snprintf(buffer + offset, LINE_MAX - offset, "(UNCLEAN) ");
+        }
     }
 
     if (options & pe_print_pending) {
