@@ -114,6 +114,8 @@ RSC_STATE_DIR="${HA_RSCTMP}/docker-wrapper/${CONTAINER}-data/"
 RSC_STATE_FILE="$RSC_STATE_DIR/$OCF_RESOURCE_INSTANCE.state" 
 CONNECTION_FAILURE=0
 
+DOCKER_CLIENT="/usr/bin/docker"
+
 pcmk_docker_wrapper_usage() {
 	cat <<END
 usage: $0 {start|stop|monitor|reload|promote|demote|notify|validate-all|meta-data}
@@ -332,7 +334,11 @@ start_container()
 	$DOCKER_AGENT start
 	rc=$?
 	if [ $rc -ne $OCF_SUCCESS ]; then
-		ocf_exit_reason "Docker container failed to start"
+
+		docker ps > /dev/null 2>&1
+		if [ $? -ne 0 ]; then
+			ocf_exit_reason "docker daemon is inactive."
+		fi
 		return $rc
 	fi
 
@@ -446,6 +452,7 @@ pcmk_docker_wrapper_stop() {
 }
 
 pcmk_docker_wrapper_validate() {
+	check_binary docker
 
 	if [ -z "$CLASS" ] || [ -z "$TYPE" ]; then
 		ocf_exit_reason "Update pacemaker to a version that supports container wrappers."
