@@ -30,7 +30,7 @@ libpe_rules_la_LDFLAGS	= -version-info 2:4:0
 libpe_rules_la_SOURCES	= rules.c common.c
 libpe_rules_la_LIBADD	= $(top_builddir)/lib/common/libcrmcommon.la
 
-libpe_status_la_LDFLAGS	= -version-info 7:1:3
+libpe_status_la_LDFLAGS	= -version-info 8:0:0
 libpe_status_la_SOURCES	=  status.c unpack.c utils.c complex.c native.c group.c clone.c rules.c common.c
 libpe_status_la_LIBADD	=  @CURSESLIBS@ $(top_builddir)/lib/common/libcrmcommon.la
 
