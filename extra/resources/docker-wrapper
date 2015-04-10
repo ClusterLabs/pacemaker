@@ -58,6 +58,15 @@ Docker image to run resources within
 <longdesc lang="en">
 Give resources within container access to cluster resources
 such as the CIB and the ability to manage cluster attributes.
+
+NOTE: Do not confuse this with the docker run command's
+'--priviledged' option which gives a container permission
+to access system devices. To toggle the docker run option,
+ set --priviledged=true as part of the ${CONF_PREFIS}_run_opts
+arguments. The ${CONF_PREFIX}_privileged option only pertains
+to whether or not the container has access to the cluster's
+CIB or not. Some multistate resources need to be able to write
+values to the cib, which would require enabling ${CONF_PREFIX}_privileged
 </longdesc>
 <shortdesc lang="en">is privileged</shortdesc>
 <content type="string" default="false" />
