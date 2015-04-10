@@ -31,6 +31,8 @@
 
 #######################################################################
 
+CONF_PREFIX="pcmk_docker"
+
 meta_data() {
 	cat <<END
 <?xml version="1.0"?>
@@ -44,7 +46,7 @@ Docker technology wrapper for pacemaker remote.
 <shortdesc lang="en">docker wrapper</shortdesc>
 
 <parameters>
-<parameter name="pcmk_docker_image" required="1" >
+<parameter name="${CONF_PREFIX}_image" required="1" >
 <longdesc lang="en">
 Docker image to run resources within
 </longdesc>
@@ -52,7 +54,7 @@ Docker image to run resources within
 <content type="string" default="" />
 </parameter>
 
-<parameter name="pcmk_docker_privileged" >
+<parameter name="${CONF_PREFIX}_privileged" >
 <longdesc lang="en">
 Give resources within container access to cluster resources
 such as the CIB and the ability to manage cluster attributes.
@@ -61,7 +63,7 @@ such as the CIB and the ability to manage cluster attributes.
 <content type="string" default="false" />
 </parameter>
 
-<parameter name="pcmk_docker_run_opts" required="0" unique="0">
+<parameter name="${CONF_PREFIX}_run_opts" required="0" unique="0">
 <longdesc lang="en">
 Add options to be appended to the 'docker run' command which is used
 when creating the container during the start action. This option allows
@@ -78,7 +80,7 @@ agent will set --name using the resource's instance name
 <content type="string"/>
 </parameter>
 
-<parameter name="pcmk_docker_reuse" required="0" unique="0">
+<parameter name="${CONF_PREFIX}_reuse" required="0" unique="0">
 <longdesc lang="en">
 Allow the container to be reused after stopping the container. By default
 containers are removed after stop. With the reuse option containers
@@ -193,18 +195,18 @@ separate_args()
 		key="$(echo $line | awk -F= '{print $1}' |  sed 's/^OCF_RESKEY_//g')"
 		val="$(echo $line | awk -F= '{print $2}')"
 		KEY_VAL_STR="$KEY_VAL_STR -k '$key' -v '$val'"
-	done < <(printenv | grep "^OCF.*" | grep -v "^OCF_RESKEY_pcmk_docker_.*")
+	done < <(printenv | grep "^OCF.*" | grep -v "^OCF_RESKEY_${CONF_PREFIX}_.*")
 
 	# sanitize args for DOCKER agent's consumption
 	while read -r line;
 	do
 		env="$(echo $line | awk -F= '{print $1}')"
 		val="$(echo $line | awk -F= '{print $2}')"
-		key="$(echo "$env" | sed 's/^OCF_RESKEY_pcmk_docker/OCF_RESKEY/g')"
+		key="$(echo "$env" | sed "s/^OCF_RESKEY_${CONF_PREFIX}/OCF_RESKEY/g")"
 		export $key="$val"
-	done < <(printenv | grep "^OCF_RESKEY_pcmk_docker_.*")
+	done < <(printenv | grep "^OCF_RESKEY_${CONF_PREFIX}_.*")
 
-	if ocf_is_true $OCF_RESKEY_pcmk_docker_privileged ; then
+	if ocf_is_true $OCF_RESKEY_privileged ; then
 		export OCF_RESKEY_run_cmd="/usr/sbin/pacemaker_remoted"
 		# on start set random port to run_opts
 		# write port to state file... or potentially get from ps? maybe docker info or inspect as well? 
@@ -282,7 +284,7 @@ client_action()
 		agent_type="$agent_type -P $PROVIDER"
 	fi
 
-	if ocf_is_true $OCF_RESKEY_pcmk_docker_privileged ; then
+	if ocf_is_true $OCF_RESKEY_privileged ; then
 		if [ -z "$PORT" ]; then
 			get_active_port
 		fi
@@ -301,7 +303,7 @@ client_action()
 poke_remote()
 {
 	# verifies daemon in container is active
-	if ocf_is_true $OCF_RESKEY_pcmk_docker_privileged ; then
+	if ocf_is_true $OCF_RESKEY_privileged ; then
 		get_active_port
 		ocf_log info "Attempting to contect $CONTAINER on port $PORT"
 		$CLIENT -c "poke" -S "127.0.0.1" -p $PORT -n $CONTAINER
@@ -321,7 +323,7 @@ start_container()
 	fi
 
 	export OCF_RESKEY_run_opts="-e PCMK_debug=yes -e PCMK_logfile=/var/log/pacemaker.log $OCF_RESKEY_run_opts"
-	if ocf_is_true $OCF_RESKEY_pcmk_docker_privileged ; then
+	if ocf_is_true $OCF_RESKEY_privileged ; then
 		if ! [ -f "/etc/pacemaker/authkey" ]; then
 			# generate an authkey if it doesn't exist. 
 			mkdir -p /etc/pacemaker/
