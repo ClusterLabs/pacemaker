@@ -7,11 +7,11 @@ OFFLINE: [ rhel7-auto1 ]
  shooter	(stonith:fence_xvm):	Started rhel7-auto3 
  rhel7-auto4	(ocf::pacemaker:remote):	FAILED rhel7-auto2 
  FAKE1	(ocf::heartbeat:Dummy):	Stopped 
- FAKE2	(ocf::heartbeat:Dummy):	Started rhel7-auto4 
+ FAKE2	(ocf::heartbeat:Dummy):	Started rhel7-auto4 (UNCLEAN)
  FAKE3	(ocf::heartbeat:Dummy):	Started rhel7-auto2 
  FAKE4	(ocf::heartbeat:Dummy):	Started rhel7-auto3 
  FAKE5	(ocf::heartbeat:Dummy):	Started rhel7-auto3 
- FAKE6	(ocf::heartbeat:Dummy):	Started rhel7-auto4 
+ FAKE6	(ocf::heartbeat:Dummy):	Started rhel7-auto4 (UNCLEAN)
 
 Transition Summary:
  * Recover rhel7-auto4	(Started rhel7-auto2)

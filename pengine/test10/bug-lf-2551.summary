@@ -5,70 +5,77 @@ Online: [ hex-0 hex-7 hex-8 ]
 
  vm-00	(ocf::heartbeat:Xen):	Started hex-0
  Clone Set: base-clone [base-group]
-     Started: [ hex-0 hex-7 hex-8 hex-9 ]
+     Resource Group: base-group:3
+         dlm	(ocf::pacemaker:controld):	Started hex-9 (UNCLEAN)
+         o2cb	(ocf::ocfs2:o2cb):	Started hex-9 (UNCLEAN)
+         clvm	(ocf::lvm2:clvmd):	Started hex-9 (UNCLEAN)
+         cmirrord	(ocf::lvm2:cmirrord):	Started hex-9 (UNCLEAN)
+         vg1	(ocf::heartbeat:LVM):	Started hex-9 (UNCLEAN)
+         ocfs2-1	(ocf::heartbeat:Filesystem):	Started hex-9 (UNCLEAN)
+     Started: [ hex-0 hex-7 hex-8 ]
  vm-01	(ocf::heartbeat:Xen):	Started hex-7
  vm-02	(ocf::heartbeat:Xen):	Started hex-8
- vm-03	(ocf::heartbeat:Xen):	Started hex-9
+ vm-03	(ocf::heartbeat:Xen):	Started hex-9 (UNCLEAN)
  vm-04	(ocf::heartbeat:Xen):	Started hex-7
  vm-05	(ocf::heartbeat:Xen):	Started hex-8
- fencing-sbd	(stonith:external/sbd):	Started hex-9
- vm-06	(ocf::heartbeat:Xen):	Started hex-9
+ fencing-sbd	(stonith:external/sbd):	Started hex-9 (UNCLEAN)
+ vm-06	(ocf::heartbeat:Xen):	Started hex-9 (UNCLEAN)
  vm-07	(ocf::heartbeat:Xen):	Started hex-7
  vm-08	(ocf::heartbeat:Xen):	Started hex-8
- vm-09	(ocf::heartbeat:Xen):	Started hex-9
+ vm-09	(ocf::heartbeat:Xen):	Started hex-9 (UNCLEAN)
  vm-10	(ocf::heartbeat:Xen):	Started hex-0
  vm-11	(ocf::heartbeat:Xen):	Started hex-7
  vm-12	(ocf::heartbeat:Xen):	Started hex-8
- vm-13	(ocf::heartbeat:Xen):	Started hex-9
+ vm-13	(ocf::heartbeat:Xen):	Started hex-9 (UNCLEAN)
  vm-14	(ocf::heartbeat:Xen):	Started hex-0
  vm-15	(ocf::heartbeat:Xen):	Started hex-7
  vm-16	(ocf::heartbeat:Xen):	Started hex-8
- vm-17	(ocf::heartbeat:Xen):	Started hex-9
+ vm-17	(ocf::heartbeat:Xen):	Started hex-9 (UNCLEAN)
  vm-18	(ocf::heartbeat:Xen):	Started hex-0
  vm-19	(ocf::heartbeat:Xen):	Started hex-7
  vm-20	(ocf::heartbeat:Xen):	Started hex-8
- vm-21	(ocf::heartbeat:Xen):	Started hex-9
+ vm-21	(ocf::heartbeat:Xen):	Started hex-9 (UNCLEAN)
  vm-22	(ocf::heartbeat:Xen):	Started hex-0
  vm-23	(ocf::heartbeat:Xen):	Started hex-7
  vm-24	(ocf::heartbeat:Xen):	Started hex-8
- vm-25	(ocf::heartbeat:Xen):	Started hex-9
+ vm-25	(ocf::heartbeat:Xen):	Started hex-9 (UNCLEAN)
  vm-26	(ocf::heartbeat:Xen):	Started hex-0
  vm-27	(ocf::heartbeat:Xen):	Started hex-7
  vm-28	(ocf::heartbeat:Xen):	Started hex-8
- vm-29	(ocf::heartbeat:Xen):	Started hex-9
+ vm-29	(ocf::heartbeat:Xen):	Started hex-9 (UNCLEAN)
  vm-30	(ocf::heartbeat:Xen):	Started hex-0
  vm-31	(ocf::heartbeat:Xen):	Started hex-7
  vm-32	(ocf::heartbeat:Xen):	Started hex-8
- dummy1	(ocf::heartbeat:Dummy):	Started hex-9
- vm-33	(ocf::heartbeat:Xen):	Started hex-9
+ dummy1	(ocf::heartbeat:Dummy):	Started hex-9 (UNCLEAN)
+ vm-33	(ocf::heartbeat:Xen):	Started hex-9 (UNCLEAN)
  vm-34	(ocf::heartbeat:Xen):	Started hex-0
  vm-35	(ocf::heartbeat:Xen):	Started hex-7
  vm-36	(ocf::heartbeat:Xen):	Started hex-8
- vm-37	(ocf::heartbeat:Xen):	Started hex-9
+ vm-37	(ocf::heartbeat:Xen):	Started hex-9 (UNCLEAN)
  vm-38	(ocf::heartbeat:Xen):	Started hex-0
  vm-39	(ocf::heartbeat:Xen):	Started hex-7
  vm-40	(ocf::heartbeat:Xen):	Started hex-8
- vm-41	(ocf::heartbeat:Xen):	Started hex-9
+ vm-41	(ocf::heartbeat:Xen):	Started hex-9 (UNCLEAN)
  vm-42	(ocf::heartbeat:Xen):	Started hex-0
  vm-43	(ocf::heartbeat:Xen):	Started hex-7
  vm-44	(ocf::heartbeat:Xen):	Started hex-8
- vm-45	(ocf::heartbeat:Xen):	Started hex-9
+ vm-45	(ocf::heartbeat:Xen):	Started hex-9 (UNCLEAN)
  vm-46	(ocf::heartbeat:Xen):	Started hex-0
  vm-47	(ocf::heartbeat:Xen):	Started hex-7
  vm-48	(ocf::heartbeat:Xen):	Started hex-8
- vm-49	(ocf::heartbeat:Xen):	Started hex-9
+ vm-49	(ocf::heartbeat:Xen):	Started hex-9 (UNCLEAN)
  vm-50	(ocf::heartbeat:Xen):	Started hex-0
  vm-51	(ocf::heartbeat:Xen):	Started hex-7
  vm-52	(ocf::heartbeat:Xen):	Started hex-8
- vm-53	(ocf::heartbeat:Xen):	Started hex-9
+ vm-53	(ocf::heartbeat:Xen):	Started hex-9 (UNCLEAN)
  vm-54	(ocf::heartbeat:Xen):	Started hex-0
  vm-55	(ocf::heartbeat:Xen):	Started hex-7
  vm-56	(ocf::heartbeat:Xen):	Started hex-8
- vm-57	(ocf::heartbeat:Xen):	Started hex-9
+ vm-57	(ocf::heartbeat:Xen):	Started hex-9 (UNCLEAN)
  vm-58	(ocf::heartbeat:Xen):	Started hex-0
  vm-59	(ocf::heartbeat:Xen):	Started hex-7
  vm-60	(ocf::heartbeat:Xen):	Started hex-8
- vm-61	(ocf::heartbeat:Xen):	Started hex-9
+ vm-61	(ocf::heartbeat:Xen):	Started hex-9 (UNCLEAN)
  vm-62	(ocf::heartbeat:Xen):	Stopped 
  vm-63	(ocf::heartbeat:Xen):	Stopped 
  vm-64	(ocf::heartbeat:Xen):	Stopped 
