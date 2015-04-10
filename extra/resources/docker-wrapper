@@ -78,6 +78,16 @@ agent will set --name using the resource's instance name
 <content type="string"/>
 </parameter>
 
+<parameter name="pcmk_docker_reuse" required="0" unique="0">
+<longdesc lang="en">
+Allow the container to be reused after stopping the container. By default
+containers are removed after stop. With the reuse option containers
+will persist after the container stops.
+</longdesc>
+<shortdesc lang="en">reuse container</shortdesc>
+<content type="boolean"/>
+</parameter>
+
 </parameters>
 
 <actions>
