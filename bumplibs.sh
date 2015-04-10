@@ -46,7 +46,9 @@ for lib in crmcommon crmcluster transitioner cib pe_rules pe_status stonithd pen
 	echo "- Changed Sources since $LAST_RELEASE:"
 	git diff -w $LAST_RELEASE..HEAD --stat $full_sources
 	echo ""
-	read -p "Are the changes to lib$lib: [a]dditions, [r]emovals or [f]ixes? [None]: " CHANGE
+	echo "New arguments to functions or changes to the middle of structs are incompatible additions"
+	echo ""
+	read -p "Are the changes to lib$lib: [a]dditions, [i]ncompatible additions, [r]emovals or [f]ixes? [None]: " CHANGE
 
 	git show $LAST_RELEASE:$am | grep version-info
 	VER=`git show $LAST_RELEASE:$am | grep "lib.*${lib}_la.*version-info" | sed s/.*version-info// | awk '{print $1}'`
@@ -57,7 +59,16 @@ for lib in crmcommon crmcluster transitioner cib pe_rules pe_status stonithd pen
 	VER_1_NOW=`echo $VER_NOW | awk -F: '{print $1}'`
 
 	case $CHANGE in
-	    A|a)
+	    i|I)
+		echo "New version with incompatible extensions: x+1:0:0"
+		VER_1=`expr $VER_1 + 1`
+		VER_2=0
+		VER_3=0
+		for h in ${headers[$lib]}; do
+		    sed -i.sed  "s/lib${lib}.so.${VER_1_NOW}/lib${lib}.so.${VER_1}/" $h
+		done
+		;;
+	    a|A)
 		echo "New version with backwards compatible extensions: x+1:0:z+1"
 		VER_1=`expr $VER_1 + 1`
 		VER_2=0
@@ -85,6 +96,7 @@ for lib in crmcommon crmcluster transitioner cib pe_rules pe_status stonithd pen
 		sed -i.sed  "s/version-info\ $VER_NOW/version-info\ $VER_NEW/" $am
 	    else
 		echo "No further version changes needed"
+		sed -i.sed  "s/version-info\ $VER_NOW/version-info\ $VER_NEW/" $am
 	    fi
 	else
 	    echo "Skipping $lib version"
