@@ -487,9 +487,9 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
         offset += snprintf(buffer + offset, LINE_MAX - offset, " ORPHANED ");
     }
     if(rsc->role > RSC_ROLE_SLAVE && is_set(rsc->flags, pe_rsc_failed)) {
-        offset += snprintf(buffer + offset, LINE_MAX - offset, "FAILED %s ", role2text(rsc->role));
+        offset += snprintf(buffer + offset, LINE_MAX - offset, "FAILED %s", role2text(rsc->role));
     } else if(is_set(rsc->flags, pe_rsc_failed)) {
-        offset += snprintf(buffer + offset, LINE_MAX - offset, "FAILED ");
+        offset += snprintf(buffer + offset, LINE_MAX - offset, "FAILED");
     } else {
         const char *rsc_state = NULL;
 
@@ -514,14 +514,14 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
                 offset += snprintf(buffer + offset, LINE_MAX - offset, "(target-role:%s) ", target_role);
             }
         }
-        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s ", rsc_state);
+        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", rsc_state);
     }
 
     if(node) {
-        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s ", node->details->uname);
+        offset += snprintf(buffer + offset, LINE_MAX - offset, " %s", node->details->uname);
 
         if (node->details->online == FALSE && node->details->unclean) {
-            offset += snprintf(buffer + offset, LINE_MAX - offset, "(UNCLEAN) ");
+            offset += snprintf(buffer + offset, LINE_MAX - offset, " (UNCLEAN)");
         }
     }
 
@@ -529,21 +529,21 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
         const char *pending_task = native_pending_task(rsc);
 
         if (pending_task) {
-            offset += snprintf(buffer + offset, LINE_MAX - offset, "(%s) ", pending_task);
+            offset += snprintf(buffer + offset, LINE_MAX - offset, " (%s)", pending_task);
         }
     }
 
     if(is_not_set(rsc->flags, pe_rsc_managed)) {
-        offset += snprintf(buffer + offset, LINE_MAX - offset, "(unmanaged) ");
+        offset += snprintf(buffer + offset, LINE_MAX - offset, " (unmanaged)");
     }
     if(is_set(rsc->flags, pe_rsc_failure_ignored)) {
-        offset += snprintf(buffer + offset, LINE_MAX - offset, "(failure ignored)");
+        offset += snprintf(buffer + offset, LINE_MAX - offset, " (failure ignored)");
     }
 
     if ((options & pe_print_rsconly) || g_list_length(rsc->running_on) > 1) {
         const char *desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
         if(desc) {
-            offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", desc);
+            offset += snprintf(buffer + offset, LINE_MAX - offset, " %s", desc);
         }
     }
 
