@@ -134,8 +134,10 @@ fi
 RSC_STATE_DIR="${HA_RSCTMP}/docker-wrapper/${CONTAINER}-data/"
 RSC_STATE_FILE="$RSC_STATE_DIR/$OCF_RESOURCE_INSTANCE.state" 
 CONNECTION_FAILURE=0
-
-DOCKER_CLIENT="/usr/bin/docker"
+HOST_LOG_DIR="${HA_RSCTMP}/docker-wrapper/${CONTAINER}-logs"
+HOST_LOG_FILE="$HOST_LOG_DIR/pacemaker.log"
+GUEST_LOG_DIR="/var/log/pcmk"
+GUEST_LOG_FILE="$GUEST_LOG_DIR/pacemaker.log"
 
 pcmk_docker_wrapper_usage() {
 	cat <<END
@@ -297,9 +299,11 @@ client_action()
 		if [ -z "$PORT" ]; then
 			get_active_port
 		fi
+		export PCMK_logfile=$HOST_LOG_FILE
 		ocf_log info "$CLIENT -c 'exec' -S '127.0.0.1' -p '$PORT' -a '$action' -r '$OCF_RESOURCE_INSTANCE' -n '$CONTAINER' '$agent_type' $KEY_VAL_STR "
 		eval $CLIENT -c 'exec' -S '127.0.0.1' -p '$PORT' -a '$action' -r '$OCF_RESOURCE_INSTANCE' -n '$CONTAINER' '$agent_type' $KEY_VAL_STR
 	else 
+		export PCMK_logfile=$GUEST_LOG_FILE
 		ocf_log info "$CLIENT -c \"exec\" -a $action -r \"$OCF_RESOURCE_INSTANCE\" $agent_type $KEY_VAL_STR"
 		echo "$CLIENT -c \"exec\" -a $action -r \"$OCF_RESOURCE_INSTANCE\" $agent_type $KEY_VAL_STR " | nsenter --target $(docker inspect --format {{.State.Pid}} ${CONTAINER}) --mount --uts --ipc --net --pid
 	fi
@@ -331,7 +335,9 @@ start_container()
 		return $rc
 	fi
 
-	export OCF_RESKEY_run_opts="-e PCMK_debug=yes -e PCMK_logfile=/var/log/pacemaker.log $OCF_RESKEY_run_opts"
+	mkdir -p $HOST_LOG_DIR
+	export OCF_RESKEY_run_opts="-e PCMK_logfile=$GUEST_LOG_FILE $OCF_RESKEY_run_opts"
+	export OCF_RESKEY_run_opts="-v $HOST_LOG_DIR:$GUEST_LOG_DIR $OCF_RESKEY_run_opts"
 	if ocf_is_true $OCF_RESKEY_privileged ; then
 		if ! [ -f "/etc/pacemaker/authkey" ]; then
 			# generate an authkey if it doesn't exist. 
@@ -383,7 +389,12 @@ pcmk_docker_wrapper_start() {
 	fi
 
 	pcmk_docker_wrapper_monitor
-	return $?
+	rc=$?
+	if [ $rc -eq $OCF_SUCCESS ]; then
+		ocf_log notice "$OCF_RESOURCE_INSTANCE started successfully. Container's logfile can be found at $HOST_LOG_FILE"
+	fi
+
+	return $rc
 }
 
 stop_container()
