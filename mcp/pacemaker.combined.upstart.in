@@ -2,6 +2,9 @@
 #
 # Starts Corosync cluster engine and Pacemaker cluster manager.
 
+# if you use automatic start, uncomment the line below.
+#start on started local and runlevel [2345]
+
 stop on runlevel [0123456]
 kill timeout 3600
 respawn
