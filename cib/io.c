@@ -78,6 +78,8 @@ retrieveCib(const char *filename, const char *sigfile)
 {
     xmlNode *root = NULL;
 
+    crm_info("Reading cluster configuration file %s (digest: %s)",
+             filename, sigfile);
     switch (cib_file_read_and_verify(filename, sigfile, &root)) {
         case -pcmk_err_cib_corrupt:
             crm_warn("Continuing but %s will NOT be used.", filename);
@@ -230,6 +232,8 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         filename = crm_strdup_printf("%s/%s", cib_root, namelist[lpc]->d_name);
         sigfile = crm_concat(filename, "sig", '.');
 
+        crm_info("Reading cluster configuration file %s (digest: %s)",
+                 filename, sigfile);
         if (cib_file_read_and_verify(filename, sigfile, &root) < 0) {
             crm_warn("Continuing but %s will NOT be used.", filename);
         } else {
