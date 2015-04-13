@@ -51,7 +51,10 @@ RNG_cfg_base	 	= options nodes resources constraints fencing acls tags
 RNG_base	 	= cib $(RNG_cfg_base) status score rule nvset
 RNG_files	 	= $(foreach base,$(RNG_base),$(wildcard $(base)*.rng))
 
-RNG_SCRIPTS		= $(RNG_files) $(RNG_generated)
+# List of non-Pacemaker RNGs
+RNG_extra		= crm_mon.rng
+
+RNG_SCRIPTS		= $(RNG_files) $(RNG_generated) $(RNG_extra)
 
 EXTRA_DIST		= best-match.sh
 
