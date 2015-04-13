@@ -131,7 +131,7 @@ get_meta_attributes(GHashTable * meta_hash, resource_t * rsc,
     unpack_instance_attributes(data_set->input, rsc->xml, XML_TAG_META_SETS, node_hash,
                                meta_hash, NULL, FALSE, data_set->now);
 
-    if(version == NULL || compare_version("3.0.8", version) > 0) {
+    if(version == NULL || compare_version(version, "3.0.9") < 0) {
         /* populate from the regular attributes until the GUI can create
          * meta attributes
          */
