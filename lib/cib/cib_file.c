@@ -145,7 +145,6 @@ cib_file_read_and_verify(const char *filename, const char *sigfile, xmlNode **ro
     }
 
     /* Parse XML */
-    crm_info("Reading cluster configuration file %s", filename);
     local_root = filename2xml(filename);
     if (local_root == NULL) {
         crm_warn("Cluster configuration file %s is corrupt (unparseable as XML)", filename);
@@ -158,7 +157,6 @@ cib_file_read_and_verify(const char *filename, const char *sigfile, xmlNode **ro
     }
 
     /* Verify that digests match */
-    crm_debug("Verifying cluster configuration signature from %s", sigfile);
     if (cib_file_verify_digest(local_root, sigfile) == FALSE) {
         free(local_sigfile);
         free_xml(local_root);
@@ -369,6 +367,7 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
                && (tmp_cib != NULL) && (tmp_digest != NULL));
 
     /* Ensure the admin didn't modify the existing CIB underneath us */
+    crm_trace("Reading cluster configuration file %s", cib_path);
     rc = cib_file_read_and_verify(cib_path, NULL, NULL);
     if ((rc != pcmk_ok) && (rc != -ENOENT)) {
         crm_err("%s was manually modified while the cluster was active!",
@@ -439,6 +438,8 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
     crm_debug("Wrote digest %s to disk", digest);
 
     /* Verify that what we wrote is sane */
+    crm_info("Reading cluster configuration file %s (digest: %s)",
+             tmp_cib, tmp_digest);
     rc = cib_file_read_and_verify(tmp_cib, tmp_digest, NULL);
     CRM_ASSERT(rc == 0);
 

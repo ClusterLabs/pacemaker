@@ -14,7 +14,7 @@ Online: [ c001n03 ]
  rsc_c001n01	(ocf::heartbeat:IPaddr):	Stopped 
  Clone Set: DoFencing [child_DoFencing] (unique)
      child_DoFencing:0	(stonith:ssh):	Started c001n03
-     child_DoFencing:1	(stonith:ssh):	Started c001n02
+     child_DoFencing:1	(stonith:ssh):	Started c001n02 (UNCLEAN)
      child_DoFencing:2	(stonith:ssh):	Stopped 
      child_DoFencing:3	(stonith:ssh):	Stopped 
 
@@ -60,7 +60,7 @@ Online: [ c001n03 ]
  rsc_c001n01	(ocf::heartbeat:IPaddr):	Stopped 
  Clone Set: DoFencing [child_DoFencing] (unique)
      child_DoFencing:0	(stonith:ssh):	Started c001n03
-     child_DoFencing:1	(stonith:ssh):	Started c001n02
+     child_DoFencing:1	(stonith:ssh):	Started c001n02 (UNCLEAN)
      child_DoFencing:2	(stonith:ssh):	Stopped 
      child_DoFencing:3	(stonith:ssh):	Stopped 
 
