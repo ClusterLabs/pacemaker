@@ -450,7 +450,10 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
             if (location) {
                 enum rsc_role_e a_role = child_rsc->fns->state(child_rsc, TRUE);
 
-                if (a_role > RSC_ROLE_SLAVE) {
+                if (location->details->online == FALSE && location->details->unclean) {
+                    print_full = TRUE;
+
+                } else if (a_role > RSC_ROLE_SLAVE) {
                     /* And active on a single node as master */
                     master_list = g_list_append(master_list, location);
 

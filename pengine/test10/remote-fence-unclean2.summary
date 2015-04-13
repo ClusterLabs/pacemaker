@@ -7,7 +7,7 @@ OFFLINE: [ rhel7-alt3 ]
 
  shooter	(stonith:fence_xvm):	Stopped 
  rhel7-alt4	(ocf::pacemaker:remote):	Stopped 
- fake	(ocf::heartbeat:Dummy):	Started rhel7-alt4 
+ fake	(ocf::heartbeat:Dummy):	Started rhel7-alt4 (UNCLEAN)
 
 Transition Summary:
  * Stop    fake	(rhel7-alt4)

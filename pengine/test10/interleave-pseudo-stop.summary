@@ -4,13 +4,17 @@ Node node1 (f6d93040-a9ad-4745-a647-57ed32444ca8): UNCLEAN (offline)
 Online: [ node2 ]
 
  Clone Set: stonithcloneset [stonithclone]
-     Started: [ node1 node2 ]
+     stonithclone	(stonith:external/ssh):	Started node1 (UNCLEAN)
+     Started: [ node2 ]
  Clone Set: evmscloneset [evmsclone]
-     Started: [ node1 node2 ]
+     evmsclone	(ocf::heartbeat:EvmsSCC):	Started node1 (UNCLEAN)
+     Started: [ node2 ]
  Clone Set: imagestorecloneset [imagestoreclone]
-     Started: [ node1 node2 ]
+     imagestoreclone	(ocf::heartbeat:Filesystem):	Started node1 (UNCLEAN)
+     Started: [ node2 ]
  Clone Set: configstorecloneset [configstoreclone]
-     Started: [ node1 node2 ]
+     configstoreclone	(ocf::heartbeat:Filesystem):	Started node1 (UNCLEAN)
+     Started: [ node2 ]
 
 Transition Summary:
  * Stop    stonithclone:1	(node1)
