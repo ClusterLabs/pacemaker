@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright (C) 2004-2015 Andrew Beekhof <andrew@beekhof.net>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
@@ -43,31 +43,65 @@
 
 #include <crm/cib/internal.h>
 #include <crm/pengine/status.h>
+#include <crm/pengine/internal.h>
 #include <../lib/pengine/unpack.h>
 #include <../pengine/pengine.h>
 #include <crm/stonith-ng.h>
 
-/* GMainLoop *mainloop = NULL; */
-
-void wait_for_refresh(int offset, const char *prefix, int msec);
 void clean_up(int rc);
 void crm_diff_update(const char *event, xmlNode * msg);
 gboolean mon_refresh_display(gpointer user_data);
 int cib_connect(gboolean full);
 void mon_st_callback(stonith_t * st, stonith_event_t * e);
+static char *get_node_display_name(node_t *node);
 
+/*
+ * Definitions indicating which items to print
+ */
+
+#define mon_show_times      (0x0001U)
+#define mon_show_stack      (0x0002U)
+#define mon_show_dc         (0x0004U)
+#define mon_show_count      (0x0008U)
+#define mon_show_nodes      (0x0010U)
+#define mon_show_resources  (0x0020U)
+#define mon_show_attributes (0x0040U)
+#define mon_show_failcounts (0x0080U)
+#define mon_show_operations (0x0100U)
+#define mon_show_tickets    (0x0200U)
+#define mon_show_bans       (0x0400U)
+
+#define mon_show_headers    (mon_show_times | mon_show_stack | mon_show_dc | mon_show_count)
+#define mon_show_default    (mon_show_headers | mon_show_nodes | mon_show_resources)
+#define mon_show_all        (mon_show_default | mon_show_attributes | mon_show_failcounts \
+                     | mon_show_operations | mon_show_tickets | mon_show_bans)
+
+unsigned int show = mon_show_default;
+
+/*
+ * Definitions indicating how to output
+ */
+
+enum mon_output_format_e {
+    mon_output_none,
+    mon_output_monitor,
+    mon_output_plain,
+    mon_output_console,
+    mon_output_xml,
+    mon_output_html,
+    mon_output_cgi
+} output_format = mon_output_console;
+
+char *output_filename = NULL;   /* if sending output to a file, its name */
+
+/* other globals */
 char *xml_file = NULL;
-char *as_html_file = NULL;
-int as_xml = 0;
 char *pid_file = NULL;
 char *snmp_target = NULL;
 char *snmp_community = NULL;
 
-gboolean as_console = TRUE;;
-gboolean simple_status = FALSE;
 gboolean group_by_node = FALSE;
 gboolean inactive_resources = FALSE;
-gboolean web_cgi = FALSE;
 int reconnect_msec = 5000;
 gboolean daemonize = FALSE;
 GMainLoop *mainloop = NULL;
@@ -87,29 +121,18 @@ xmlNode *current_cib = NULL;
 
 gboolean one_shot = FALSE;
 gboolean has_warnings = FALSE;
-gboolean print_failcount = FALSE;
-gboolean print_operations = FALSE;
 gboolean print_timing = FALSE;
-gboolean print_nodes_attr = FALSE;
-gboolean print_last_updated = TRUE;
-gboolean print_last_change = TRUE;
-gboolean print_tickets = FALSE;
 gboolean watch_fencing = FALSE;
-gboolean hide_headers = FALSE;
 gboolean print_brief = FALSE;
 gboolean print_pending = FALSE;
 gboolean print_clone_detail = FALSE;
 
 /* FIXME allow, detect, and correctly interpret glob pattern or regex? */
-const char *print_neg_location_prefix;
-const char *print_neg_location_prefix_toggle;
+const char *print_neg_location_prefix = "";
 
-#define FILTER_STR {"shutdown", "terminate", "standby", "fail-count",	\
-	    "last-failure", "probe_complete", "#id", "#uname",		\
-	    "#is_dc", "#kind", NULL}
-
-gboolean log_diffs = FALSE;
-gboolean log_updates = FALSE;
+/* Never display node attributes whose name starts with one of these prefixes */
+#define FILTER_STR { "shutdown", "terminate", "standby", "fail-count",  \
+                     "last-failure", "probe_complete", "#", NULL }
 
 long last_refresh = 0;
 crm_trigger_t *refresh_trigger = NULL;
@@ -130,8 +153,15 @@ crm_trigger_t *refresh_trigger = NULL;
 #define snmp_crm_oid_rc     PACEMAKER_TRAP_PREFIX ".6"
 #define snmp_crm_oid_trc    PACEMAKER_TRAP_PREFIX ".7"
 
+/* Define exit codes for monitoring-compatible output */
+#define MON_STATUS_OK   (0)
+#define MON_STATUS_WARN (1)
+
+/* Convenience macro for prettifying output (e.g. "node" vs "nodes") */
+#define s_if_plural(i) (((i) == 1)? "" : "s")
+
 #if CURSES_ENABLED
-#  define print_dot() if(as_console) {		\
+#  define print_dot() if (output_format == mon_output_console) { \
 	printw(".");				\
 	clrtoeol();				\
 	refresh();				\
@@ -143,7 +173,7 @@ crm_trigger_t *refresh_trigger = NULL;
 #endif
 
 #if CURSES_ENABLED
-#  define print_as(fmt, args...) if(as_console) {	\
+#  define print_as(fmt, args...) if (output_format == mon_output_console) { \
 	printw(fmt, ##args);				\
 	clrtoeol();					\
 	refresh();					\
@@ -175,7 +205,7 @@ mon_timer_popped(gpointer data)
     int rc = pcmk_ok;
 
 #if CURSES_ENABLED
-    if(as_console) {
+    if (output_format == mon_output_console) {
         clear();
         refresh();
     }
@@ -270,7 +300,7 @@ cib_connect(gboolean full)
 
     if (cib->state != cib_connected_query && cib->state != cib_connected_command) {
         crm_trace("Connecting to the CIB");
-        if (as_console && need_pass && cib->variant == cib_remote) {
+        if ((output_format == mon_output_console) && need_pass && (cib->variant == cib_remote)) {
             need_pass = FALSE;
             print_as("Password:");
         }
@@ -292,7 +322,7 @@ cib_connect(gboolean full)
                 if (rc == -EPROTONOSUPPORT) {
                     print_as
                         ("Notification setup not supported, won't be able to reconnect after failure");
-                    if (as_console) {
+                    if (output_format == mon_output_console) {
                         sleep(2);
                     }
                     rc = pcmk_ok;
@@ -307,7 +337,7 @@ cib_connect(gboolean full)
 
             if (rc != pcmk_ok) {
                 print_as("Notification setup failed, could not monitor CIB actions");
-                if (as_console) {
+                if (output_format == mon_output_console) {
                     sleep(2);
                 }
                 clean_up(-rc);
@@ -362,7 +392,7 @@ static struct crm_option long_options[] = {
     {"external-recipient",1, 0, 'e', "A recipient for your program (assuming you want the program to send something to someone)."},
 
 
-    {"xml-file",       1, 0, 'x', NULL, 1},
+    {"xml-file",       1, 0, 'x', NULL, pcmk_option_hidden},
 
     {"-spacer-",	1, 0, '-', "\nExamples:", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', "Display the cluster status on the console with updates as they occur:", pcmk_option_paragraph},
@@ -405,6 +435,9 @@ get_option_desc(char c)
     return NULL;
 }
 
+#define print_option_help(option, condition) \
+    print_as("%c %c: \t%s\n", ((condition)? '*': ' '), option, get_option_desc(option));
+
 static gboolean
 detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
 {
@@ -418,16 +451,19 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
 
         switch (c) {
             case 'c':
-                print_tickets = ! print_tickets;
+                show ^= mon_show_tickets;
                 break;
             case 'f':
-                print_failcount = ! print_failcount;
+                show ^= mon_show_failcounts;
                 break;
             case 'n':
                 group_by_node = ! group_by_node;
                 break;
             case 'o':
-                print_operations = ! print_operations;
+                show ^= mon_show_operations;
+                if ((show & mon_show_operations) == 0) {
+                    print_timing = 0;
+                }
                 break;
             case 'r':
                 inactive_resources = ! inactive_resources;
@@ -437,28 +473,23 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
                 break;
             case 't':
                 print_timing = ! print_timing;
-                if (print_timing)
-                    print_operations = TRUE;
-                break;
-            case 'A':
-                print_nodes_attr = ! print_nodes_attr;
-                break;
-            case 'L':
-                if (print_neg_location_prefix) {
-                    /* toggle off */
-                    print_neg_location_prefix_toggle = print_neg_location_prefix;
-                    print_neg_location_prefix = NULL;
-                } else if (print_neg_location_prefix_toggle) {
-                    /* toggle on */
-                    print_neg_location_prefix = print_neg_location_prefix_toggle;
-                    print_neg_location_prefix_toggle = NULL;
-                } else {
-                    /* toggled on for the first time at runtime */
-                    print_neg_location_prefix = "";
+                if (print_timing) {
+                    show |= mon_show_operations;
                 }
                 break;
+            case 'A':
+                show ^= mon_show_attributes;
+                break;
+            case 'L':
+                show ^= mon_show_bans;
+                break;
             case 'D':
-                hide_headers = ! hide_headers;
+                /* If any header is shown, clear them all, otherwise set them all */
+                if (show & mon_show_headers) {
+                    show &= ~mon_show_headers;
+                } else {
+                    show |= mon_show_headers;
+                }
                 break;
             case 'b':
                 print_brief = ! print_brief;
@@ -480,18 +511,18 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
 
         print_as("Display option change mode\n");
         print_as("\n");
-        print_as("%c c: \t%s\n", print_tickets ? '*': ' ', get_option_desc('c'));
-        print_as("%c f: \t%s\n", print_failcount ? '*': ' ', get_option_desc('f'));
-        print_as("%c n: \t%s\n", group_by_node ? '*': ' ', get_option_desc('n'));
-        print_as("%c o: \t%s\n", print_operations ? '*': ' ', get_option_desc('o'));
-        print_as("%c r: \t%s\n", inactive_resources ? '*': ' ', get_option_desc('r'));
-        print_as("%c t: \t%s\n", print_timing ? '*': ' ', get_option_desc('t'));
-        print_as("%c A: \t%s\n", print_nodes_attr ? '*': ' ', get_option_desc('A'));
-        print_as("%c L: \t%s\n", print_neg_location_prefix ? '*': ' ', get_option_desc('L'));
-        print_as("%c D: \t%s\n", hide_headers ? '*': ' ', get_option_desc('D'));
-        print_as("%c R: \t%s\n", print_clone_detail ? '*': ' ', get_option_desc('R'));
-        print_as("%c b: \t%s\n", print_brief ? '*': ' ', get_option_desc('b'));
-        print_as("%c j: \t%s\n", print_pending ? '*': ' ', get_option_desc('j'));
+        print_option_help('c', show & mon_show_tickets);
+        print_option_help('f', show & mon_show_failcounts);
+        print_option_help('n', group_by_node);
+        print_option_help('o', show & mon_show_operations);
+        print_option_help('r', inactive_resources);
+        print_option_help('t', print_timing);
+        print_option_help('A', show & mon_show_attributes);
+        print_option_help('L', show & mon_show_bans);
+        print_option_help('D', (show & mon_show_headers) == 0);
+        print_option_help('R', print_clone_detail);
+        print_option_help('b', print_brief);
+        print_option_help('j', print_pending);
         print_as("\n");
         print_as("Toggle fields via field letter, type any other key to return");
     }
@@ -522,7 +553,7 @@ main(int argc, char **argv)
 #endif
 
     if (strcmp(crm_system_name, "crm_mon.cgi") == 0) {
-        web_cgi = TRUE;
+        output_format = mon_output_cgi;
         one_shot = TRUE;
     }
 
@@ -536,8 +567,7 @@ main(int argc, char **argv)
                 crm_bump_log_level(argc, argv);
                 break;
             case 'Q':
-                print_last_updated = FALSE;
-                print_last_change = FALSE;
+                show &= ~mon_show_times;
                 break;
             case 'i':
                 reconnect_msec = crm_get_msec(optarg);
@@ -556,22 +586,23 @@ main(int argc, char **argv)
                 break;
             case 't':
                 print_timing = TRUE;
-                print_operations = TRUE;
+                show |= mon_show_operations;
                 break;
             case 'o':
-                print_operations = TRUE;
+                show |= mon_show_operations;
                 break;
             case 'f':
-                print_failcount = TRUE;
+                show |= mon_show_failcounts;
                 break;
             case 'A':
-                print_nodes_attr = TRUE;
+                show |= mon_show_attributes;
                 break;
             case 'L':
-                print_neg_location_prefix = optarg ?: "";
+                show |= mon_show_bans;
+                print_neg_location_prefix = optarg? optarg : "";
                 break;
             case 'D':
-                hide_headers = TRUE;
+                show &= ~mon_show_headers;
                 break;
             case 'b':
                 print_brief = TRUE;
@@ -583,7 +614,7 @@ main(int argc, char **argv)
                 print_clone_detail = TRUE;
                 break;
             case 'c':
-                print_tickets = TRUE;
+                show |= mon_show_tickets;
                 break;
             case 'p':
                 free(pid_file);
@@ -603,19 +634,20 @@ main(int argc, char **argv)
                 if(optarg == NULL) {
                     return crm_help(flag, EX_USAGE);
                 }
-                as_html_file = strdup(optarg);
+                output_format = mon_output_html;
+                output_filename = strdup(optarg);
                 umask(S_IWGRP | S_IWOTH);
                 break;
             case 'X':
-                as_xml = TRUE;
+                output_format = mon_output_xml;
                 one_shot = TRUE;
                 break;
             case 'w':
-                web_cgi = TRUE;
+                output_format = mon_output_cgi;
                 one_shot = TRUE;
                 break;
             case 's':
-                simple_status = TRUE;
+                output_format = mon_output_monitor;
                 one_shot = TRUE;
                 break;
             case 'S':
@@ -643,7 +675,9 @@ main(int argc, char **argv)
                 one_shot = TRUE;
                 break;
             case 'N':
-                as_console = FALSE;
+                if (output_format == mon_output_console) {
+                    output_format = mon_output_plain;
+                }
                 break;
             case 'C':
                 snmp_community = optarg;
@@ -669,14 +703,25 @@ main(int argc, char **argv)
         return crm_help('?', EX_USAGE);
     }
 
+    /* XML output always prints everything */
+    if (output_format == mon_output_xml) {
+        show = mon_show_all;
+        print_timing = TRUE;
+    }
+
     if (one_shot) {
-        as_console = FALSE;
+        if (output_format == mon_output_console) {
+            output_format = mon_output_plain;
+        }
 
     } else if (daemonize) {
-        as_console = FALSE;
+        if ((output_format == mon_output_console) || (output_format == mon_output_plain)) {
+            output_format = mon_output_none;
+        }
         crm_enable_stderr(FALSE);
 
-        if (!as_html_file && !snmp_target && !crm_mail_to && !external_agent && !as_xml) {
+        if ((output_format != mon_output_html) && (output_format != mon_output_xml)
+            && !snmp_target && !crm_mail_to && !external_agent) {
             printf
                 ("Looks like you forgot to specify one or more of: --as-html, --as-xml, --mail-to, --snmp-target, --external-agent\n");
             return crm_help('?', EX_USAGE);
@@ -684,7 +729,7 @@ main(int argc, char **argv)
 
         crm_make_daemon(crm_system_name, TRUE, pid_file);
 
-    } else if (as_console) {
+    } else if (output_format == mon_output_console) {
 #if CURSES_ENABLED
         initscr();
         cbreak();
@@ -692,7 +737,7 @@ main(int argc, char **argv)
         crm_enable_stderr(FALSE);
 #else
         one_shot = TRUE;
-        as_console = FALSE;
+        output_format = mon_output_plain;
         printf("Defaulting to one-shot mode\n");
         printf("You need to have curses available at compile time to enable console mode\n");
 #endif
@@ -720,7 +765,7 @@ main(int argc, char **argv)
             } else if (exit_code != pcmk_ok) {
                 sleep(reconnect_msec / 1000);
 #if CURSES_ENABLED
-                if(as_console) {
+                if (output_format == mon_output_console) {
                     clear();
                     refresh();
                 }
@@ -730,8 +775,13 @@ main(int argc, char **argv)
         } while (exit_code == -ENOTCONN);
 
         if (exit_code != pcmk_ok) {
-            print_as("\nConnection to cluster failed: %s\n", pcmk_strerror(exit_code));
-            if (as_console) {
+            if (output_format == mon_output_monitor) {
+                printf("CLUSTER WARN: Connection to cluster failed: %s\n", pcmk_strerror(exit_code));
+                clean_up(MON_STATUS_WARN);
+            } else {
+                print_as("\nConnection to cluster failed: %s\n", pcmk_strerror(exit_code));
+            }
+            if (output_format == mon_output_console) {
                 sleep(2);
             }
             clean_up(-exit_code);
@@ -747,7 +797,7 @@ main(int argc, char **argv)
     mainloop_add_signal(SIGTERM, mon_shutdown);
     mainloop_add_signal(SIGINT, mon_shutdown);
 #if CURSES_ENABLED
-    if (as_console) {
+    if (output_format == mon_output_console) {
         ncurses_winch_handler = signal(SIGWINCH, mon_winresize);
         if (ncurses_winch_handler == SIG_DFL ||
             ncurses_winch_handler == SIG_IGN || ncurses_winch_handler == SIG_ERR)
@@ -768,7 +818,7 @@ main(int argc, char **argv)
 
 #define mon_warn(fmt...) do {			\
 	if (!has_warnings) {			\
-	    print_as("Warning:");		\
+	    print_as("CLUSTER WARN:");		\
 	} else {				\
 	    print_as(",");			\
 	}					\
@@ -796,19 +846,25 @@ count_resources(pe_working_set_t * data_set, resource_t * rsc)
     return count;
 }
 
-static int
+/*!
+ * \internal
+ * \brief Print one-line status suitable for use with monitoring software
+ *
+ * \param[in] data_set  Working set of CIB state
+ *
+ * \note This function's output (and the return code when the program exits)
+ *       should conform to https://www.monitoring-plugins.org/doc/guidelines.html
+ */
+static void
 print_simple_status(pe_working_set_t * data_set)
 {
-    node_t *dc = NULL;
     GListPtr gIter = NULL;
     int nodes_online = 0;
     int nodes_standby = 0;
     int nodes_maintenance = 0;
 
-    dc = data_set->dc_node;
-
-    if (dc == NULL) {
-        mon_warn("No DC ");
+    if (data_set->dc_node == NULL) {
+        mon_warn(" No DC");
     }
 
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
@@ -821,171 +877,549 @@ print_simple_status(pe_working_set_t * data_set)
         } else if (node->details->online) {
             nodes_online++;
         } else {
-            mon_warn("offline node: %s", node->details->uname);
+            mon_warn(" offline node: %s", node->details->uname);
         }
     }
 
     if (!has_warnings) {
-        print_as("Ok: %d nodes online", nodes_online);
+        int nresources = count_resources(data_set, NULL);
+
+        print_as("CLUSTER OK: %d node%s online", nodes_online, s_if_plural(nodes_online));
         if (nodes_standby > 0) {
-            print_as(", %d standby nodes", nodes_standby);
+            print_as(", %d standby node%s", nodes_standby, s_if_plural(nodes_standby));
         }
         if (nodes_maintenance > 0) {
-            print_as(", %d maintenance nodes", nodes_maintenance);
+            print_as(", %d maintenance node%s", nodes_maintenance, s_if_plural(nodes_maintenance));
         }
-        print_as(", %d resources configured", count_resources(data_set, NULL));
+        print_as(", %d resource%s configured", nresources, s_if_plural(nresources));
     }
 
     print_as("\n");
-    return 0;
 }
 
+/*!
+ * \internal
+ * \brief Print a [name]=[value][units] pair, optionally using time string
+ *
+ * \param[in] stream      File stream to display output to
+ * \param[in] name        Name to display
+ * \param[in] value       Value to display (or NULL to convert time instead)
+ * \param[in] units       Units to display (or NULL for no units)
+ * \param[in] epoch_time  Epoch time to convert if value is NULL
+ */
 static void
-print_date(time_t time)
+print_nvpair(FILE *stream, const char *name, const char *value,
+             const char *units, time_t epoch_time)
 {
-    int lpc = 0;
-    char date_str[26];
+    /* print name= */
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as(" %s=", name);
+            break;
 
-    asctime_r(localtime(&time), date_str);
-    for (; lpc < 26; lpc++) {
-        if (date_str[lpc] == '\n') {
-            date_str[lpc] = 0;
+        case mon_output_html:
+        case mon_output_cgi:
+        case mon_output_xml:
+            fprintf(stream, " %s=", name);
+            break;
+
+        default:
+            break;
+    }
+
+    /* If we have a value (and optionally units), print it */
+    if (value) {
+        switch (output_format) {
+            case mon_output_plain:
+            case mon_output_console:
+                print_as("%s%s", value, (units? units : ""));
+                break;
+
+            case mon_output_html:
+            case mon_output_cgi:
+                fprintf(stream, "%s%s", value, (units? units : ""));
+                break;
+
+            case mon_output_xml:
+                fprintf(stream, "\"%s%s\"", value, (units? units : ""));
+                break;
+
+            default:
+                break;
+        }
+
+    /* Otherwise print user-friendly time string */
+    } else {
+        char *date_str, *c;
+
+        date_str = asctime(localtime(&epoch_time));
+        for (c = date_str; c != '\0'; ++c) {
+            if (*c == '\n') {
+                *c = '\0';
+                break;
+            }
+        }
+        switch (output_format) {
+            case mon_output_plain:
+            case mon_output_console:
+                print_as("'%s'", date_str);
+                break;
+
+            case mon_output_html:
+            case mon_output_cgi:
+            case mon_output_xml:
+                fprintf(stream, "\"%s\"", date_str);
+                break;
+
+            default:
+                break;
         }
     }
-    print_as("'%s'", date_str);
 }
 
-#include <crm/pengine/internal.h>
+/*!
+ * \internal
+ * \brief Print whatever is needed to start a node section
+ *
+ * \param[in] stream     File stream to display output to
+ * \param[in] node       Node to print
+ */
 static void
-print_rsc_summary(pe_working_set_t * data_set, node_t * node, resource_t * rsc, gboolean all)
+print_node_start(FILE *stream, node_t *node)
 {
-    gboolean printed = FALSE;
+    char *node_name;
 
-    time_t last_failure = 0;
-    int failcount = get_failcount_full(node, rsc, &last_failure, FALSE, NULL, data_set);
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            node_name = get_node_display_name(node);
+            print_as("* Node %s:\n", node_name);
+            free(node_name);
+            break;
 
-    if (all || failcount || last_failure > 0) {
-        printed = TRUE;
-        print_as("   %s: migration-threshold=%d", rsc_printable_id(rsc), rsc->migration_threshold);
-    }
+        case mon_output_html:
+        case mon_output_cgi:
+            node_name = get_node_display_name(node);
+            fprintf(stream, "  <h3>Node: %s</h3>\n  <ul>\n", node_name);
+            free(node_name);
+            break;
 
-    if (failcount > 0) {
-        printed = TRUE;
-        print_as(" fail-count=%d", failcount);
-    }
+        case mon_output_xml:
+            fprintf(stream, "        <node name=\"%s\">\n", node->details->uname);
+            break;
 
-    if (last_failure > 0) {
-        printed = TRUE;
-        print_as(" last-failure=");
-        print_date(last_failure);
-    }
-
-    if (printed) {
-        print_as("\n");
+        default:
+            break;
     }
 }
 
+/*!
+ * \internal
+ * \brief Print whatever is needed to end a node section
+ *
+ * \param[in] stream     File stream to display output to
+ */
 static void
-print_rsc_history(pe_working_set_t * data_set, node_t * node, xmlNode * rsc_entry)
+print_node_end(FILE *stream)
+{
+    switch (output_format) {
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, "  </ul>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "        </node>\n");
+            break;
+
+        default:
+            break;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Print heading for resource history
+ *
+ * \param[in] stream      File stream to display output to
+ * \param[in] data_set    Current state of CIB
+ * \param[in] node        Node that ran this resource
+ * \param[in] rsc         Resource to print
+ * \param[in] rsc_id      ID of resource to print
+ * \param[in] all         Whether to print every resource or just failed ones
+ */
+static void
+print_rsc_history_start(FILE *stream, pe_working_set_t *data_set, node_t *node,
+                        resource_t *rsc, const char *rsc_id, gboolean all)
+{
+    time_t last_failure = 0;
+    int failcount = rsc? get_failcount_full(node, rsc, &last_failure, FALSE, NULL, data_set) : 0;
+
+    if (!all && !failcount && (last_failure <= 0)) {
+        return;
+    }
+
+    /* Print resource ID */
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("   %s:", rsc_id);
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, "   <li>%s:", rsc_id);
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "            <resource_history id=\"%s\"", rsc_id);
+            break;
+
+        default:
+            break;
+    }
+
+    /* If resource is an orphan, that's all we can say about it */
+    if (rsc == NULL) {
+        switch (output_format) {
+            case mon_output_plain:
+            case mon_output_console:
+                print_as(" orphan");
+                break;
+
+            case mon_output_html:
+            case mon_output_cgi:
+                fprintf(stream, " orphan");
+                break;
+
+            case mon_output_xml:
+                fprintf(stream, " orphan=\"true\"");
+                break;
+
+            default:
+                break;
+        }
+
+    /* If resource is not an orphan, print some details */
+    } else if (all || failcount || (last_failure > 0)) {
+
+        /* Print migration threshold */
+        switch (output_format) {
+            case mon_output_plain:
+            case mon_output_console:
+                print_as(" migration-threshold=%d", rsc->migration_threshold);
+                break;
+
+            case mon_output_html:
+            case mon_output_cgi:
+                fprintf(stream, " migration-threshold=%d", rsc->migration_threshold);
+                break;
+
+            case mon_output_xml:
+                fprintf(stream, " orphan=\"false\" migration-threshold=\"%d\"",
+                        rsc->migration_threshold);
+                break;
+
+            default:
+                break;
+        }
+
+        /* Print fail count if any */
+        if (failcount > 0) {
+            switch (output_format) {
+                case mon_output_plain:
+                case mon_output_console:
+                    print_as(" fail-count=%d", failcount);
+                    break;
+
+                case mon_output_html:
+                case mon_output_cgi:
+                    fprintf(stream, " fail-count=%d", failcount);
+                    break;
+
+                case mon_output_xml:
+                    fprintf(stream, " fail-count=\"%d\"", failcount);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        /* Print last failure time if any */
+        if (last_failure > 0) {
+            print_nvpair(stream, "last-failure", NULL, NULL, last_failure);
+        }
+    }
+
+    /* End the heading */
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("\n");
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, "\n    <ul>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, ">\n");
+            break;
+
+        default:
+            break;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Print closing for resource history
+ *
+ * \param[in] stream      File stream to display output to
+ */
+static void
+print_rsc_history_end(FILE *stream)
+{
+    switch (output_format) {
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, "    </ul>\n   </li>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "            </resource_history>\n");
+            break;
+
+        default:
+            break;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Print operation history
+ *
+ * \param[in] stream      File stream to display output to
+ * \param[in] data_set    Current state of CIB
+ * \param[in] node        Node this operation is for
+ * \param[in] xml_op      Root of XML tree describing this operation
+ * \param[in] task        Task parsed from this operation's XML
+ * \param[in] interval    Interval parsed from this operation's XML
+ * \param[in] rc          Return code parsed from this operation's XML
+ */
+static void
+print_op_history(FILE *stream, pe_working_set_t *data_set, node_t *node,
+                 xmlNode *xml_op, const char *task, const char *interval, int rc)
+{
+    const char *value = NULL;
+    const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
+
+    /* Begin the operation description */
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("    + (%s) %s:", call, task);
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, "     <li>(%s) %s:", call, task);
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "                <operation_history call=\"%s\" task=\"%s\"",
+                    call, task);
+            break;
+
+        default:
+            break;
+    }
+
+    /* Add name=value pairs as appropriate */
+    if (safe_str_neq(interval, "0")) {
+        print_nvpair(stream, "interval", interval, "ms", 0);
+    }
+    if (print_timing) {
+        int int_value;
+        const char *attr;
+
+        attr = XML_RSC_OP_LAST_CHANGE;
+        value = crm_element_value(xml_op, attr);
+        if (value) {
+            int_value = crm_parse_int(value, NULL);
+            if (int_value > 0) {
+                print_nvpair(stream, attr, NULL, NULL, int_value);
+            }
+        }
+
+        attr = XML_RSC_OP_LAST_RUN;
+        value = crm_element_value(xml_op, attr);
+        if (value) {
+            int_value = crm_parse_int(value, NULL);
+            if (int_value > 0) {
+                print_nvpair(stream, attr, NULL, NULL, int_value);
+            }
+        }
+
+        attr = XML_RSC_OP_T_EXEC;
+        value = crm_element_value(xml_op, attr);
+        if (value) {
+            print_nvpair(stream, attr, value, "ms", 0);
+        }
+
+        attr = XML_RSC_OP_T_QUEUE;
+        value = crm_element_value(xml_op, attr);
+        if (value) {
+            print_nvpair(stream, attr, value, "ms", 0);
+        }
+    }
+
+    /* End the operation description */
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as(" rc=%d (%s)\n", rc, services_ocf_exitcode_str(rc));
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, " rc=%d (%s)</li>\n", rc, services_ocf_exitcode_str(rc));
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, " rc=\"%d\" rc_text=\"%s\" />\n", rc, services_ocf_exitcode_str(rc));
+            break;
+
+        default:
+            break;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Print resource operation/failure history
+ *
+ * \param[in] stream      File stream to display output to
+ * \param[in] data_set    Current state of CIB
+ * \param[in] node        Node that ran this resource
+ * \param[in] rsc_entry   Root of XML tree describing resource status
+ * \param[in] operations  Whether to print operations or just failcounts
+ */
+static void
+print_rsc_history(FILE *stream, pe_working_set_t *data_set, node_t *node,
+                  xmlNode *rsc_entry, gboolean operations)
 {
     GListPtr gIter = NULL;
     GListPtr op_list = NULL;
-    gboolean print_name = TRUE;
-    GListPtr sorted_op_list = NULL;
+    gboolean printed = FALSE;
     const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
     resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
-
     xmlNode *rsc_op = NULL;
 
+    /* If we're not showing operations, just print the resource failure summary */
+    if (operations == FALSE) {
+        print_rsc_history_start(stream, data_set, node, rsc, rsc_id, FALSE);
+        print_rsc_history_end(stream);
+        return;
+    }
+
+    /* Create a list of this resource's operations */
     for (rsc_op = __xml_first_child(rsc_entry); rsc_op != NULL; rsc_op = __xml_next(rsc_op)) {
         if (crm_str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, TRUE)) {
             op_list = g_list_append(op_list, rsc_op);
         }
     }
+    op_list = g_list_sort(op_list, sort_op_by_callid);
 
-    sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
-    for (gIter = sorted_op_list; gIter != NULL; gIter = gIter->next) {
+    /* Print each operation */
+    for (gIter = op_list; gIter != NULL; gIter = gIter->next) {
         xmlNode *xml_op = (xmlNode *) gIter->data;
-        const char *value = NULL;
-        const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
         const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-        const char *op_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
         const char *interval = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
+        const char *op_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
         int rc = crm_parse_int(op_rc, "0");
 
-        if (safe_str_eq(task, CRMD_ACTION_STATUS)
-            && safe_str_eq(interval, "0")) {
+        /* Display 0-interval monitors as "probe" */
+        if (safe_str_eq(task, CRMD_ACTION_STATUS) && safe_str_eq(interval, "0")) {
             task = "probe";
         }
 
-        if (rc == 7 && safe_str_eq(task, "probe")) {
-            continue;
-
-        } else if (safe_str_eq(task, CRMD_ACTION_NOTIFY)) {
+        /* Ignore notifies and some probes */
+        if (safe_str_eq(task, CRMD_ACTION_NOTIFY) || (safe_str_eq(task, "probe") && (rc == 7))) {
             continue;
         }
 
-        if (print_name) {
-            print_name = FALSE;
-            if (rsc == NULL) {
-                print_as("Orphan resource: %s", rsc_id);
-            } else {
-                print_rsc_summary(data_set, node, rsc, TRUE);
-            }
+        /* If this is the first printed operation, print heading for resource */
+        if (printed == FALSE) {
+            printed = TRUE;
+            print_rsc_history_start(stream, data_set, node, rsc, rsc_id, TRUE);
         }
 
-        print_as("    + (%s) %s:", call, task);
-        if (safe_str_neq(interval, "0")) {
-            print_as(" interval=%sms", interval);
-        }
-
-        if (print_timing) {
-            int int_value;
-            const char *attr = XML_RSC_OP_LAST_CHANGE;
-
-            value = crm_element_value(xml_op, attr);
-            if (value) {
-                int_value = crm_parse_int(value, NULL);
-                if (int_value > 0) {
-                    print_as(" %s=", attr);
-                    print_date(int_value);
-                }
-            }
-
-            attr = XML_RSC_OP_LAST_RUN;
-            value = crm_element_value(xml_op, attr);
-            if (value) {
-                int_value = crm_parse_int(value, NULL);
-                if (int_value > 0) {
-                    print_as(" %s=", attr);
-                    print_date(int_value);
-                }
-            }
-
-            attr = XML_RSC_OP_T_EXEC;
-            value = crm_element_value(xml_op, attr);
-            if (value) {
-                int_value = crm_parse_int(value, NULL);
-                print_as(" %s=%dms", attr, int_value);
-            }
-
-            attr = XML_RSC_OP_T_QUEUE;
-            value = crm_element_value(xml_op, attr);
-            if (value) {
-                int_value = crm_parse_int(value, NULL);
-                print_as(" %s=%dms", attr, int_value);
-            }
-        }
-
-        print_as(" rc=%s (%s)\n", op_rc, services_ocf_exitcode_str(rc));
+        /* Print the operation */
+        print_op_history(stream, data_set, node, xml_op, task, interval, rc);
     }
 
-    /* no need to free the contents */
-    g_list_free(sorted_op_list);
+    /* Free the list we created (no need to free the individual items) */
+    g_list_free(op_list);
+
+    /* If we printed anything, close the resource */
+    if (printed) {
+        print_rsc_history_end(stream);
+    }
 }
 
+/*!
+ * \internal
+ * \brief Print node operation/failure history
+ *
+ * \param[in] stream      File stream to display output to
+ * \param[in] data_set    Current state of CIB
+ * \param[in] node_state  Root of XML tree describing node status
+ * \param[in] operations  Whether to print operations or just failcounts
+ */
 static void
-print_attr_msg(node_t * node, GListPtr rsc_list, const char *attrname, const char *attrvalue)
+print_node_history(FILE *stream, pe_working_set_t *data_set,
+                   xmlNode *node_state, gboolean operations)
+{
+    node_t *node = pe_find_node_id(data_set->nodes, ID(node_state));
+    xmlNode *lrm_rsc = NULL;
+    xmlNode *rsc_entry = NULL;
+
+    if (node && node->details && node->details->online) {
+        print_node_start(stream, node);
+
+        lrm_rsc = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
+        lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
+
+        /* Print history of each of the node's resources */
+        for (rsc_entry = __xml_first_child(lrm_rsc); rsc_entry != NULL;
+             rsc_entry = __xml_next(rsc_entry)) {
+
+            if (crm_str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, TRUE)) {
+                print_rsc_history(stream, data_set, node, rsc_entry, operations);
+            }
+        }
+
+        print_node_end(stream);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Print extended information about an attribute if appropriate
+ *
+ * \param[in] data_set  Working set of CIB state
+ *
+ * \return TRUE if extended information was printed, FALSE otherwise
+ * \note Currently, extended information is only supported for ping/pingd
+ *       resources, for which a message will be printed if connectivity is lost
+ *       or degraded.
+ */
+static gboolean
+print_attr_msg(FILE *stream, node_t * node, GListPtr rsc_list, const char *attrname, const char *attrvalue)
 {
     GListPtr gIter = NULL;
 
@@ -994,7 +1428,9 @@ print_attr_msg(node_t * node, GListPtr rsc_list, const char *attrname, const cha
         const char *type = g_hash_table_lookup(rsc->meta, "type");
 
         if (rsc->children != NULL) {
-            print_attr_msg(node, rsc->children, attrname, attrvalue);
+            if (print_attr_msg(stream, node, rsc->children, attrname, attrvalue)) {
+                return TRUE;
+            }
         }
 
         if (safe_str_eq(type, "ping") || safe_str_eq(type, "pingd")) {
@@ -1021,15 +1457,38 @@ print_attr_msg(node_t * node, GListPtr rsc_list, const char *attrname, const cha
                 /* pingd multiplier is the same as the default value. */
                 expected_score = host_list_num * crm_parse_int(multiplier, "1");
 
-                /* pingd is abnormal score. */
-                if (value <= 0) {
-                    print_as("\t: Connectivity is lost");
-                } else if (value < expected_score) {
-                    print_as("\t: Connectivity is degraded (Expected=%d)", expected_score);
+                switch (output_format) {
+                    case mon_output_plain:
+                    case mon_output_console:
+                        if (value <= 0) {
+                            print_as("\t: Connectivity is lost");
+                        } else if (value < expected_score) {
+                            print_as("\t: Connectivity is degraded (Expected=%d)", expected_score);
+                        }
+                        break;
+
+                    case mon_output_html:
+                    case mon_output_cgi:
+                        if (value <= 0) {
+                            fprintf(stream, " <b>(connectivity is lost)</b>");
+                        } else if (value < expected_score) {
+                            fprintf(stream, " <b>(connectivity is degraded -- expected %d)</b>",
+                                    expected_score);
+                        }
+                        break;
+
+                    case mon_output_xml:
+                        fprintf(stream, " expected=\"%d\"", expected_score);
+                        break;
+
+                    default:
+                        break;
                 }
+                return TRUE;
             }
         }
     }
+    return FALSE;
 }
 
 static int
@@ -1060,66 +1519,118 @@ create_attr_list(gpointer name, gpointer value, gpointer data)
     attr_list = g_list_insert_sorted(attr_list, name, compare_attribute);
 }
 
+/* structure for passing multiple user data to g_list_foreach() */
+struct mon_attr_data {
+    FILE *stream;
+    node_t *node;
+};
+
 static void
-print_node_attribute(gpointer name, gpointer node_data)
+print_node_attribute(gpointer name, gpointer user_data)
 {
     const char *value = NULL;
-    node_t *node = (node_t *) node_data;
+    struct mon_attr_data *data = (struct mon_attr_data *) user_data;
 
-    value = g_hash_table_lookup(node->details->attrs, name);
-    print_as("    + %-32s\t: %-10s", (char *)name, value);
-    print_attr_msg(node, node->details->running_rsc, name, value);
-    print_as("\n");
+    value = g_hash_table_lookup(data->node->details->attrs, name);
+
+    /* Print attribute name and value */
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("    + %-32s\t: %-10s", (char *)name, value);
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(data->stream, "   <li>%s: %s",
+                    (char *)name, value);
+            break;
+
+        case mon_output_xml:
+            fprintf(data->stream,
+                    "            <attribute name=\"%s\" value=\"%s\"",
+                    (char *)name, value);
+            break;
+
+        default:
+            break;
+    }
+
+    /* Print extended information if appropriate */
+    print_attr_msg(data->stream, data->node, data->node->details->running_rsc,
+                   name, value);
+
+    /* Close out the attribute */
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("\n");
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(data->stream, "</li>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(data->stream, " />\n");
+            break;
+
+        default:
+            break;
+    }
 }
 
 static void
-print_node_summary(pe_working_set_t * data_set, gboolean operations)
+print_node_summary(FILE *stream, pe_working_set_t * data_set, gboolean operations)
 {
-    xmlNode *lrm_rsc = NULL;
-    xmlNode *rsc_entry = NULL;
     xmlNode *node_state = NULL;
     xmlNode *cib_status = get_object_root(XML_CIB_TAG_STATUS, data_set->input);
 
-    if (operations) {
-        print_as("\nOperations:\n");
-    } else {
-        print_as("\nMigration summary:\n");
+    /* Print heading */
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            if (operations) {
+                print_as("\nOperations:\n");
+            } else {
+                print_as("\nMigration Summary:\n");
+            }
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            if (operations) {
+                fprintf(stream, " <hr />\n <h2>Operations</h2>\n");
+            } else {
+                fprintf(stream, " <hr />\n <h2>Migration Summary</h2>\n");
+            }
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "    <node_history>\n");
+            break;
+
+        default:
+            break;
     }
 
+    /* Print each node in the CIB status */
     for (node_state = __xml_first_child(cib_status); node_state != NULL;
          node_state = __xml_next(node_state)) {
         if (crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE)) {
-            node_t *node = pe_find_node_id(data_set->nodes, ID(node_state));
-
-            if (node == NULL || node->details->online == FALSE) {
-                continue;
-            }
-
-            print_as("* Node %s: ", crm_element_value(node_state, XML_ATTR_UNAME));
-            print_as("\n");
-
-            lrm_rsc = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
-            lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
-
-            for (rsc_entry = __xml_first_child(lrm_rsc); rsc_entry != NULL;
-                 rsc_entry = __xml_next(rsc_entry)) {
-                if (crm_str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, TRUE)) {
-                    if (operations) {
-                        print_rsc_history(data_set, node, rsc_entry);
-
-                    } else {
-                        const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
-                        resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
-
-                        if (rsc) {
-                            print_rsc_summary(data_set, node, rsc, FALSE);
-                        } else {
-                            print_as("   %s: orphan\n", rsc_id);
-                        }
-                    }
-                }
-            }
+            print_node_history(stream, data_set, node_state, operations);
         }
+    }
+
+    /* Close section */
+    switch (output_format) {
+        case mon_output_xml:
+            fprintf(stream, "    </node_history>\n");
+            break;
+
+        default:
+            break;
     }
 }
 
@@ -1127,26 +1638,95 @@ static void
 print_ticket(gpointer name, gpointer value, gpointer data)
 {
     ticket_t *ticket = (ticket_t *) value;
+    FILE *stream = (FILE *) data;
 
-    print_as(" %s\t%s%10s", ticket->id,
-             ticket->granted ? "granted" : "revoked", ticket->standby ? " [standby]" : "");
-    if (ticket->last_granted > -1) {
-        print_as(" last-granted=");
-        print_date(ticket->last_granted);
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("* %s:\t%s%s", ticket->id,
+                     (ticket->granted? "granted" : "revoked"),
+                     (ticket->standby? " [standby]" : ""));
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, "  <li>%s: %s%s", ticket->id,
+                    (ticket->granted? "granted" : "revoked"),
+                    (ticket->standby? " [standby]" : ""));
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "        <ticket id=\"%s\" status=\"%s\" standby=\"%s\"",
+                    ticket->id, (ticket->granted? "granted" : "revoked"),
+                    (ticket->standby? "true" : "false"));
+            break;
+
+        default:
+            break;
     }
-    print_as("\n");
+    if (ticket->last_granted > -1) {
+        print_nvpair(stdout, "last-granted", NULL, NULL, ticket->last_granted);
+    }
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("\n");
+            break;
 
-    return;
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, "</li>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, " />\n");
+            break;
+
+        default:
+            break;
+    }
 }
 
 static void
-print_cluster_tickets(pe_working_set_t * data_set)
+print_cluster_tickets(FILE *stream, pe_working_set_t * data_set)
 {
+    /* Print section heading */
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("\nTickets:\n");
+            break;
 
-    print_as("\nTickets:\n");
-    g_hash_table_foreach(data_set->tickets, print_ticket, NULL);
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, " <hr />\n <h2>Tickets</h2>\n <ul>\n");
+            break;
 
-    return;
+        case mon_output_xml:
+            fprintf(stream, "    <tickets>\n");
+            break;
+
+        default:
+            break;
+    }
+
+    /* Print each ticket */
+    g_hash_table_foreach(data_set->tickets, print_ticket, stream);
+
+    /* Close section */
+    switch (output_format) {
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, " </ul>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "    </tickets>\n");
+            break;
+
+        default:
+            break;
+    }
 }
 
 /*!
@@ -1154,8 +1734,8 @@ print_cluster_tickets(pe_working_set_t * data_set)
  * \brief Return human-friendly string representing node name
  *
  * The returned string will be in the format
- *    uname[:containerID] [(nodeID)]
- * ":containerID" will be printed if the node is a remote container node.
+ *    uname[@hostUname] [(nodeID)]
+ * "@hostUname" will be printed if the node is a guest node.
  * "(nodeID)" will be printed if the node ID is different from the node uname,
  *  and detailed output has been requested.
  *
@@ -1167,15 +1747,28 @@ static char *
 get_node_display_name(node_t *node)
 {
     char *node_name;
-    const char *node_container_id = NULL;
+    const char *node_host = NULL;
     const char *node_id = NULL;
     int name_len;
 
     CRM_ASSERT((node != NULL) && (node->details != NULL) && (node->details->uname != NULL));
 
-    /* Container ID is displayed only if this is a remote container node */
+    /* Host is displayed only if this is a guest node */
     if (is_container_remote_node(node)) {
-        node_container_id = node->details->remote_rsc->container->id;
+        if (node->details->remote_rsc->running_on) {
+            /* running_on is a list, but guest nodes will have exactly one entry
+             * unless they are in the process of migrating, in which case they
+             * will have two; either way, we can use the first item in the list
+             */
+            node_t *host_node = (node_t *) node->details->remote_rsc->running_on->data;
+
+            if (host_node && host_node->details) {
+                node_host = host_node->details->uname;
+            }
+        }
+        if (node_host == NULL) {
+            node_host = ""; /* so we at least get "uname@" to indicate guest */
+        }
     }
 
     /* Node ID is displayed if different from uname and detail is requested */
@@ -1185,8 +1778,8 @@ get_node_display_name(node_t *node)
 
     /* Determine name length */
     name_len = strlen(node->details->uname) + 1;
-    if (node_container_id) {
-        name_len += strlen(node_container_id) + 1; /* ":node_container_id" */
+    if (node_host) {
+        name_len += strlen(node_host) + 1; /* "@node_host" */
     }
     if (node_id) {
         name_len += strlen(node_id) + 3; /* + " (node_id)" */
@@ -1196,9 +1789,9 @@ get_node_display_name(node_t *node)
     node_name = malloc(name_len);
     CRM_ASSERT(node_name != NULL);
     strcpy(node_name, node->details->uname);
-    if (node_container_id) {
-        strcat(node_name, ":");
-        strcat(node_name, node_container_id);
+    if (node_host) {
+        strcat(node_name, "@");
+        strcat(node_name, node_host);
     }
     if (node_id) {
         strcat(node_name, " (");
@@ -1208,11 +1801,82 @@ get_node_display_name(node_t *node)
     return node_name;
 }
 
-static void print_neg_locations(pe_working_set_t *data_set)
+/*!
+ * \internal
+ * \brief Print a negative location constraint
+ *
+ * \param[in] stream     File stream to display output to
+ * \param[in] node       Node affected by constraint
+ * \param[in] location   Constraint to print
+ */
+static void print_ban(FILE *stream, node_t *node, rsc_to_node_t *location)
+{
+    char *node_name = NULL;
+
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            node_name = get_node_display_name(node);
+            print_as(" %s\tprevents %s from running %son %s\n",
+                     location->id, location->rsc_lh->id,
+                     ((location->role_filter == RSC_ROLE_MASTER)? "as Master " : ""),
+                     node_name);
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            node_name = get_node_display_name(node);
+            fprintf(stream, "  <li>%s prevents %s from running %son %s</li>\n",
+                     location->id, location->rsc_lh->id,
+                     ((location->role_filter == RSC_ROLE_MASTER)? "as Master " : ""),
+                     node_name);
+            break;
+
+        case mon_output_xml:
+            fprintf(stream,
+                    "        <ban id=\"%s\" resource=\"%s\" node=\"%s\" weight=\"%d\" master_only=\"%s\" />\n",
+                    location->id, location->rsc_lh->id, node->details->uname, node->weight,
+                    ((location->role_filter == RSC_ROLE_MASTER)? "true" : "false"));
+            break;
+
+        default:
+            break;
+    }
+    free(node_name);
+}
+
+/*!
+ * \internal
+ * \brief Print section for negative location constraints
+ *
+ * \param[in] stream     File stream to display output to
+ * \param[in] data_set   Working set corresponding to CIB status to display
+ */
+static void print_neg_locations(FILE *stream, pe_working_set_t *data_set)
 {
     GListPtr gIter, gIter2;
 
-    print_as("\nNegative location constraints:\n");
+    /* Print section heading */
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("\nNegative Location Constraints:\n");
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, " <hr />\n <h2>Negative Location Constraints</h2>\n <ul>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "    <bans>\n");
+            break;
+
+        default:
+            break;
+    }
+
+    /* Print each ban */
     for (gIter = data_set->placement_constraints; gIter != NULL; gIter = gIter->next) {
         rsc_to_node_t *location = (rsc_to_node_t *) gIter->data;
         if (!g_str_has_prefix(location->id, print_neg_location_prefix))
@@ -1221,15 +1885,24 @@ static void print_neg_locations(pe_working_set_t *data_set)
             node_t *node = (node_t *) gIter2->data;
 
             if (node->weight < 0) {
-                char *node_name = get_node_display_name(node);
-
-                print_as(" %s\tprevents %s from running %son %s\n",
-                         location->id, location->rsc_lh->id,
-                         location->role_filter == RSC_ROLE_MASTER ? "as Master " : "",
-                         node_name);
-                free(node_name);
+                print_ban(stream, node, location);
             }
         }
+    }
+
+    /* Close section */
+    switch (output_format) {
+        case mon_output_cgi:
+        case mon_output_html:
+            fprintf(stream, " </ul>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "    </bans>\n");
+            break;
+
+        default:
+            break;
     }
 }
 
@@ -1249,6 +1922,73 @@ crm_mon_get_parameters(resource_t *rsc, pe_working_set_t * data_set)
 
 /*!
  * \internal
+ * \brief Print node attributes section
+ *
+ * \param[in] stream     File stream to display output to
+ * \param[in] data_set   Working set of CIB state
+ */
+static void
+print_node_attributes(FILE *stream, pe_working_set_t *data_set)
+{
+    GListPtr gIter = NULL;
+
+    /* Print section heading */
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("\nNode Attributes:\n");
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, " <hr />\n <h2>Node Attributes</h2>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "    <node_attributes>\n");
+            break;
+
+        default:
+            break;
+    }
+
+    /* Unpack all resource parameters (it would be more efficient to do this
+     * only when needed for the first time in print_attr_msg())
+     */
+    for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
+        crm_mon_get_parameters(gIter->data, data_set);
+    }
+
+    /* Display each node's attributes */
+    for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+        struct mon_attr_data data;
+
+        data.stream = stream;
+        data.node = (node_t *) gIter->data;
+
+        if (data.node && data.node->details && data.node->details->online) {
+            print_node_start(stream, data.node);
+            g_hash_table_foreach(data.node->details->attrs, create_attr_list, NULL);
+            g_list_foreach(attr_list, print_node_attribute, &data);
+            g_list_free(attr_list);
+            attr_list = NULL;
+            print_node_end(stream);
+        }
+    }
+
+    /* Print section footer */
+    switch (output_format) {
+        case mon_output_xml:
+            fprintf(stream, "    </node_attributes>\n");
+            break;
+
+        default:
+            break;
+    }
+}
+
+/*!
+ * \internal
  * \brief Return resource display options corresponding to command-line choices
  *
  * \return Bitmask of pe_print_options suitable for resource print functions
@@ -1256,17 +1996,23 @@ crm_mon_get_parameters(resource_t *rsc, pe_working_set_t * data_set)
 static int
 get_resource_display_options(void)
 {
-    int print_opts = as_console? pe_print_ncurses : pe_print_printf;
+    int print_opts;
 
     /* Determine basic output format */
-    if (as_xml) {
-        print_opts = pe_print_xml;
-    } else if (as_html_file || web_cgi) {
-        print_opts = pe_print_html;
-    } else if (as_console) {
-        print_opts = pe_print_ncurses;
-    } else {
-        print_opts = pe_print_printf;
+    switch (output_format) {
+        case mon_output_console:
+            print_opts = pe_print_ncurses;
+            break;
+        case mon_output_html:
+        case mon_output_cgi:
+            print_opts = pe_print_html;
+            break;
+        case mon_output_xml:
+            print_opts = pe_print_xml;
+            break;
+        default:
+            print_opts = pe_print_printf;
+            break;
     }
 
     /* Add optional display elements */
@@ -1307,107 +2053,629 @@ crm_now_string(void)
     return (since_epoch);
 }
 
-static int
+/*!
+ * \internal
+ * \brief Print header for cluster summary if needed
+ *
+ * \param[in] stream     File stream to display output to
+ */
+static void
+print_cluster_summary_header(FILE *stream)
+{
+    switch (output_format) {
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, " <h2>Cluster Summary</h2>\n <p>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "    <summary>\n");
+            break;
+
+        default:
+            break;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Print footer for cluster summary if needed
+ *
+ * \param[in] stream     File stream to display output to
+ */
+static void
+print_cluster_summary_footer(FILE *stream)
+{
+    switch (output_format) {
+        case mon_output_cgi:
+        case mon_output_html:
+            fprintf(stream, " </p>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "    </summary>\n");
+            break;
+
+        default:
+            break;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Print times the display was last updated and CIB last changed
+ *
+ * \param[in] stream     File stream to display output to
+ * \param[in] data_set   Working set of CIB state
+ */
+static void
+print_cluster_times(FILE *stream, pe_working_set_t *data_set)
+{
+    const char *last_written = crm_element_value(data_set->input, XML_CIB_ATTR_WRITTEN);
+    const char *user = crm_element_value(data_set->input, XML_ATTR_UPDATE_USER);
+    const char *client = crm_element_value(data_set->input, XML_ATTR_UPDATE_CLIENT);
+    const char *origin = crm_element_value(data_set->input, XML_ATTR_UPDATE_ORIG);
+
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("Last updated: %s", crm_now_string());
+            print_as("\t\tLast change: %s", last_written ? last_written : "");
+            if (user) {
+                print_as(" by %s", user);
+            }
+            if (client) {
+                print_as(" via %s", client);
+            }
+            if (origin) {
+                print_as(" on %s", origin);
+            }
+            print_as("\n");
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, " <b>Last updated: %s</b><br/>\n", crm_now_string());
+            fprintf(stream, " <b>Last change:</b> %s", last_written ? last_written : "");
+            if (user) {
+                fprintf(stream, " by %s", user);
+            }
+            if (client) {
+                fprintf(stream, " via %s", client);
+            }
+            if (origin) {
+                fprintf(stream, " on %s", origin);
+            }
+            fprintf(stream, "<br/>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "        <last_update time=\"%s\" />\n", crm_now_string());
+            fprintf(stream, "        <last_change time=\"%s\" user=\"%s\" client=\"%s\" origin=\"%s\" />\n",
+                    last_written ? last_written : "", user ? user : "",
+                    client ? client : "", origin ? origin : "");
+            break;
+
+        default:
+            break;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Print cluster stack
+ *
+ * \param[in] stream     File stream to display output to
+ * \param[in] stack_s    Stack name
+ */
+static void
+print_cluster_stack(FILE *stream, const char *stack_s)
+{
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("Stack: %s\n", stack_s);
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, " <b>Stack:</b> %s<br/>\n", stack_s);
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "        <stack type=\"%s\" />\n", stack_s);
+            break;
+
+        default:
+            break;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Print current DC and its version
+ *
+ * \param[in] stream     File stream to display output to
+ * \param[in] data_set   Working set of CIB state
+ */
+static void
+print_cluster_dc(FILE *stream, pe_working_set_t *data_set)
+{
+    node_t *dc = data_set->dc_node;
+    xmlNode *dc_version = get_xpath_object("//nvpair[@name='dc-version']",
+                                           data_set->input, LOG_DEBUG);
+    const char *dc_version_s = dc_version?
+                               crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE)
+                               : NULL;
+    const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
+    char *dc_name = dc? get_node_display_name(dc) : NULL;
+
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("Current DC: ");
+            if (dc) {
+                print_as("%s (version %s) - partition %s quorum\n",
+                         dc_name, (dc_version_s? dc_version_s : "unknown"),
+                         (crm_is_true(quorum) ? "with" : "WITHOUT"));
+            } else {
+                print_as("NONE\n");
+            }
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, " <b>Current DC:</b> ");
+            if (dc) {
+                fprintf(stream, "%s (version %s) - partition %s quorum",
+                        dc_name, (dc_version_s? dc_version_s : "unknown"),
+                        (crm_is_true(quorum)? "with" : "<font color=\"red\"><b>WITHOUT</b></font>"));
+            } else {
+                fprintf(stream, "<font color=\"red\"><b>NONE</b></font>");
+            }
+            fprintf(stream, "<br/>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(stream,  "        <current_dc ");
+            if (dc) {
+                fprintf(stream,
+                        "present=\"true\" version=\"%s\" name=\"%s\" id=\"%s\" with_quorum=\"%s\"",
+                        (dc_version_s? dc_version_s : ""), dc->details->uname, dc->details->id,
+                        (crm_is_true(quorum) ? "true" : "false"));
+            } else {
+                fprintf(stream, "present=\"false\"");
+            }
+            fprintf(stream, " />\n");
+            break;
+
+        default:
+            break;
+    }
+    free(dc_name);
+}
+
+/*!
+ * \internal
+ * \brief Print counts of configured nodes and resources
+ *
+ * \param[in] stream     File stream to display output to
+ * \param[in] data_set   Working set of CIB state
+ * \param[in] stack_s    Stack name
+ */
+static void
+print_cluster_counts(FILE *stream, pe_working_set_t *data_set, const char *stack_s)
+{
+    int nnodes = g_list_length(data_set->nodes);
+    int nresources = count_resources(data_set, NULL);
+    xmlNode *quorum_node = get_xpath_object("//nvpair[@name='" XML_ATTR_EXPECTED_VOTES "']",
+                                            data_set->input, LOG_DEBUG);
+    const char *quorum_votes = quorum_node?
+                               crm_element_value(quorum_node, XML_NVPAIR_ATTR_VALUE)
+                               : "unknown";
+
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("%d node%s and %d resource%s configured",
+                     nnodes, s_if_plural(nnodes),
+                     nresources, s_if_plural(nresources));
+            if (stack_s && strstr(stack_s, "classic openais") != NULL) {
+                print_as(", %s expected votes", quorum_votes);
+            }
+            print_as("\n\n");
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, " %d node%s configured", nnodes, s_if_plural(nnodes));
+            if (stack_s && strstr(stack_s, "classic openais") != NULL) {
+                fprintf(stream, " (%s expected votes)", quorum_votes);
+            }
+            fprintf(stream, "<br/>\n");
+            fprintf(stream, " %d resource%s configured<br/>\n",
+                    nresources, s_if_plural(nresources));
+            break;
+
+        case mon_output_xml:
+            fprintf(stream,
+                    "        <nodes_configured number=\"%d\" expected_votes=\"%s\" />\n",
+                    g_list_length(data_set->nodes), quorum_votes);
+            fprintf(stream,
+                    "        <resources_configured number=\"%d\" />\n",
+                    count_resources(data_set, NULL));
+            break;
+
+        default:
+            break;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Print cluster-wide options
+ *
+ * \param[in] stream     File stream to display output to
+ * \param[in] data_set   Working set of CIB state
+ *
+ * \note Currently this is only implemented for HTML and XML output, and
+ *       prints only a few options. If there is demand, more could be added.
+ */
+static void
+print_cluster_options(FILE *stream, pe_working_set_t *data_set)
+{
+    switch (output_format) {
+        case mon_output_html:
+            fprintf(stream, " </p>\n <h3>Config Options</h3>\n");
+            fprintf(stream, " <table>\n");
+            fprintf(stream, "  <tr><th>STONITH of failed nodes</th><td>%s</td></tr>\n",
+                    is_set(data_set->flags, pe_flag_stonith_enabled)? "enabled" : "disabled");
+
+            fprintf(stream, "  <tr><th>Cluster is</th><td>%ssymmetric</td></tr>\n",
+                    is_set(data_set->flags, pe_flag_symmetric_cluster)? "" : "a");
+
+            fprintf(stream, "  <tr><th>No Quorum Policy</th><td>");
+            switch (data_set->no_quorum_policy) {
+                case no_quorum_freeze:
+                    fprintf(stream, "Freeze resources");
+                    break;
+                case no_quorum_stop:
+                    fprintf(stream, "Stop ALL resources");
+                    break;
+                case no_quorum_ignore:
+                    fprintf(stream, "Ignore");
+                    break;
+                case no_quorum_suicide:
+                    fprintf(stream, "Suicide");
+                    break;
+            }
+            fprintf(stream, "</td></tr>\n </table>\n <p>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "        <cluster_options");
+            fprintf(stream, " stonith-enabled=\"%s\"",
+                    is_set(data_set->flags, pe_flag_stonith_enabled)?
+                    "true" : "false");
+            fprintf(stream, " symmetric-cluster=\"%s\"",
+                    is_set(data_set->flags, pe_flag_symmetric_cluster)?
+                    "true" : "false");
+            fprintf(stream, " no-quorum-policy=\"");
+            switch (data_set->no_quorum_policy) {
+                case no_quorum_freeze:
+                    fprintf(stream, "freeze");
+                    break;
+                case no_quorum_stop:
+                    fprintf(stream, "stop");
+                    break;
+                case no_quorum_ignore:
+                    fprintf(stream, "ignore");
+                    break;
+                case no_quorum_suicide:
+                    fprintf(stream, "suicide");
+                    break;
+            }
+            fprintf(stream, "\" />\n");
+            break;
+
+        default:
+            break;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Get the name of the stack in use (or "unknown" if not available)
+ *
+ * \param[in] data_set   Working set of CIB state
+ *
+ * \return String representing stack name
+ */
+static const char *
+get_cluster_stack(pe_working_set_t *data_set)
+{
+    xmlNode *stack = get_xpath_object("//nvpair[@name='cluster-infrastructure']",
+                                      data_set->input, LOG_DEBUG);
+    return stack? crm_element_value(stack, XML_NVPAIR_ATTR_VALUE) : "unknown";
+}
+
+/*!
+ * \internal
+ * \brief Print a summary of cluster-wide information
+ *
+ * \param[in] stream     File stream to display output to
+ * \param[in] data_set   Working set of CIB state
+ */
+static void
+print_cluster_summary(FILE *stream, pe_working_set_t *data_set)
+{
+    const char *stack_s = get_cluster_stack(data_set);
+    gboolean header_printed = FALSE;
+
+    if (show & mon_show_times) {
+        if (header_printed == FALSE) {
+            print_cluster_summary_header(stream);
+            header_printed = TRUE;
+        }
+        print_cluster_times(stream, data_set);
+    }
+
+    if (show & mon_show_stack) {
+        if (header_printed == FALSE) {
+            print_cluster_summary_header(stream);
+            header_printed = TRUE;
+        }
+        print_cluster_stack(stream, stack_s);
+    }
+
+    /* Always print DC if none, even if not requested */
+    if ((data_set->dc_node == NULL) || (show & mon_show_dc)) {
+        if (header_printed == FALSE) {
+            print_cluster_summary_header(stream);
+            header_printed = TRUE;
+        }
+        print_cluster_dc(stream, data_set);
+    }
+
+    if (show & mon_show_count) {
+        if (header_printed == FALSE) {
+            print_cluster_summary_header(stream);
+            header_printed = TRUE;
+        }
+        print_cluster_counts(stream, data_set, stack_s);
+    }
+
+    /* There is not a separate option for showing cluster options, so show with
+     * stack for now; a separate option could be added if there is demand
+     */
+    if (show & mon_show_stack) {
+        print_cluster_options(stream, data_set);
+    }
+
+    if (header_printed) {
+        print_cluster_summary_footer(stream);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Print a failed action
+ *
+ * \param[in] stream     File stream to display output to
+ * \param[in] xml_op     Root of XML tree describing failed action
+ */
+static void
+print_failed_action(FILE *stream, xmlNode *xml_op)
+{
+    const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
+    const char *op_key_attr = "op_key";
+    const char *last = crm_element_value(xml_op, XML_RSC_OP_LAST_CHANGE);
+    const char *node = crm_element_value(xml_op, XML_ATTR_UNAME);
+    const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
+    const char *exit_reason = crm_element_value(xml_op, XML_LRM_ATTR_EXIT_REASON);
+    int rc = crm_parse_int(crm_element_value(xml_op, XML_LRM_ATTR_RC), "0");
+    int status = crm_parse_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS), "0");
+    char *exit_reason_cleaned;
+
+    /* If no op_key was given, use id instead */
+    if (op_key == NULL) {
+        op_key = ID(xml_op);
+        op_key_attr = "id";
+    }
+
+    /* If no exit reason was given, use "none" */
+    if (exit_reason == NULL) {
+        exit_reason = "none";
+    }
+
+    /* Print common action information */
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("* %s on %s '%s' (%d): call=%s, status=%s, exitreason='%s'",
+                     op_key, node, services_ocf_exitcode_str(rc), rc,
+                     call, services_lrm_status_str(status), exit_reason);
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, "  <li>%s on %s '%s' (%d): call=%s, status=%s, exitreason='%s'",
+                     op_key, node, services_ocf_exitcode_str(rc), rc,
+                     call, services_lrm_status_str(status), exit_reason);
+            break;
+
+        case mon_output_xml:
+            exit_reason_cleaned = crm_xml_escape(exit_reason);
+            fprintf(stream, "        <failure %s=\"%s\" node=\"%s\"",
+                    op_key_attr, op_key, node);
+            fprintf(stream, " exitstatus=\"%s\" exitreason=\"%s\" exitcode=\"%d\"",
+                    services_ocf_exitcode_str(rc), exit_reason_cleaned, rc);
+            fprintf(stream, " call=\"%s\" status=\"%s\"",
+                    call, services_lrm_status_str(status));
+            free(exit_reason_cleaned);
+            break;
+
+        default:
+            break;
+    }
+
+    /* If last change was given, print timing information as well */
+    if (last) {
+        time_t run_at = crm_parse_int(last, "0");
+        char *run_at_s = ctime(&run_at);
+
+        if (run_at_s) {
+            run_at_s[24] = 0; /* Overwrite the newline */
+        }
+
+        switch (output_format) {
+            case mon_output_plain:
+            case mon_output_console:
+                print_as(",\n    last-rc-change='%s', queued=%sms, exec=%sms",
+                         run_at_s? run_at_s : "",
+                         crm_element_value(xml_op, XML_RSC_OP_T_QUEUE),
+                         crm_element_value(xml_op, XML_RSC_OP_T_EXEC));
+                break;
+
+            case mon_output_html:
+            case mon_output_cgi:
+                fprintf(stream, " last-rc-change='%s', queued=%sms, exec=%sms",
+                        run_at_s? run_at_s : "",
+                        crm_element_value(xml_op, XML_RSC_OP_T_QUEUE),
+                        crm_element_value(xml_op, XML_RSC_OP_T_EXEC));
+                break;
+
+            case mon_output_xml:
+                fprintf(stream,
+                        " last-rc-change=\"%s\" queued=\"%s\" exec=\"%s\" interval=\"%d\" task=\"%s\"",
+                        run_at_s? run_at_s : "",
+                        crm_element_value(xml_op, XML_RSC_OP_T_QUEUE),
+                        crm_element_value(xml_op, XML_RSC_OP_T_EXEC),
+                        crm_parse_int(crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL), "0"),
+                        crm_element_value(xml_op, XML_LRM_ATTR_TASK));
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    /* End the action listing */
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("\n");
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, "</li>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, " />\n");
+            break;
+
+        default:
+            break;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Print a section for failed actions
+ *
+ * \param[in] stream     File stream to display output to
+ * \param[in] data_set   Working set of CIB state
+ */
+static void
+print_failed_actions(FILE *stream, pe_working_set_t *data_set)
+{
+    xmlNode *xml_op = NULL;
+
+    /* Print section heading */
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("\nFailed Actions:\n");
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, " <hr />\n <h2>Failed Actions</h2>\n <ul>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "    <failures>\n");
+            break;
+
+        default:
+            break;
+    }
+
+    /* Print each failed action */
+    for (xml_op = __xml_first_child(data_set->failed); xml_op != NULL;
+         xml_op = __xml_next(xml_op)) {
+        print_failed_action(stream, xml_op);
+    }
+
+    /* End section */
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("\n");
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, " </ul>\n");
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "    </failures>\n");
+            break;
+
+        default:
+            break;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Print cluster status to screen
+ *
+ * This uses the global display preferences set by command-line options
+ * to display cluster status in a human-friendly way.
+ *
+ * \param[in] data_set   Working set of CIB state
+ */
+static void
 print_status(pe_working_set_t * data_set)
 {
-    static int updates = 0;
-
     GListPtr gIter = NULL;
-    node_t *dc = NULL;
+    int print_opts = get_resource_display_options();
+
+    /* space-separated lists of node names */
     char *online_nodes = NULL;
     char *online_remote_nodes = NULL;
-    char *online_remote_containers = NULL;
+    char *online_guest_nodes = NULL;
     char *offline_nodes = NULL;
     char *offline_remote_nodes = NULL;
-    const char *stack_s = NULL;
-    xmlNode *dc_version = NULL;
-    xmlNode *quorum_node = NULL;
-    xmlNode *stack = NULL;
 
-    int print_opts = get_resource_display_options();
-    const char *quorum_votes = "unknown";
-
-    if (as_console) {
+    if (output_format == mon_output_console) {
         blank_screen();
     }
+    print_cluster_summary(stdout, data_set);
 
-
-    updates++;
-    dc = data_set->dc_node;
-
-
-    if (print_last_updated && !hide_headers) {
-        print_as("Last updated: %s\n", crm_now_string());
-    }
-
-    if (print_last_change && !hide_headers) {
-        const char *last_written = crm_element_value(data_set->input, XML_CIB_ATTR_WRITTEN);
-        const char *user = crm_element_value(data_set->input, XML_ATTR_UPDATE_USER);
-        const char *client = crm_element_value(data_set->input, XML_ATTR_UPDATE_CLIENT);
-        const char *origin = crm_element_value(data_set->input, XML_ATTR_UPDATE_ORIG);
-
-        print_as("Last change: %s", last_written ? last_written : "");
-        if (user) {
-            print_as(" by %s", user);
-        }
-        if (client) {
-            print_as(" via %s", client);
-        }
-        if (origin) {
-            print_as(" on %s", origin);
-        }
-        print_as("\n");
-    }
-
-    stack =
-        get_xpath_object("//nvpair[@name='cluster-infrastructure']", data_set->input, LOG_DEBUG);
-    if (stack) {
-        stack_s = crm_element_value(stack, XML_NVPAIR_ATTR_VALUE);
-        if (!hide_headers) {
-            print_as("Stack: %s\n", stack_s);
-        }
-    }
-
-    dc_version = get_xpath_object("//nvpair[@name='dc-version']", data_set->input, LOG_DEBUG);
-    if (dc == NULL) {
-        print_as("Current DC: NONE\n");
-    } else if (!hide_headers) {
-        const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
-        char *dc_name = get_node_display_name(dc);
-
-        print_as("Current DC: %s", dc_name);
-        print_as(" - partition %s quorum\n", crm_is_true(quorum) ? "with" : "WITHOUT");
-        if (dc_version) {
-            print_as("Version: %s\n", crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE));
-        }
-        free(dc_name);
-    }
-
-    quorum_node =
-        get_xpath_object("//nvpair[@name='" XML_ATTR_EXPECTED_VOTES "']", data_set->input,
-                         LOG_DEBUG);
-    if (quorum_node) {
-        quorum_votes = crm_element_value(quorum_node, XML_NVPAIR_ATTR_VALUE);
-    }
-
-    if(!hide_headers) {
-        if(stack_s && strstr(stack_s, "classic openais") != NULL) {
-            print_as("%d Nodes configured, %s expected votes\n", g_list_length(data_set->nodes),
-                     quorum_votes);
-        } else {
-            print_as("%d Nodes configured\n", g_list_length(data_set->nodes));
-        }
-        print_as("%d Resources configured\n", count_resources(data_set, NULL));
-        print_as("\n\n");
-    }
-
+    /* Gather node information (and print if in bad state or grouping by node) */
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
         const char *node_mode = NULL;
         char *node_name = get_node_display_name(node);
 
+        /* Get node mode */
         if (node->details->unclean) {
-            if (node->details->online && node->details->unclean) {
+            if (node->details->online) {
                 node_mode = "UNCLEAN (online)";
 
             } else if (node->details->pending) {
@@ -1441,7 +2709,7 @@ print_status(pe_working_set_t * data_set)
             node_mode = "online";
             if (group_by_node == FALSE) {
                 if (is_container_remote_node(node)) {
-                    online_remote_containers = add_list_element(online_remote_containers, node_name);
+                    online_guest_nodes = add_list_element(online_guest_nodes, node_name);
                 } else if (is_baremetal_remote_node(node)) {
                     online_remote_nodes = add_list_element(online_remote_nodes, node_name);
                 } else {
@@ -1455,7 +2723,7 @@ print_status(pe_working_set_t * data_set)
                 if (is_baremetal_remote_node(node)) {
                     offline_remote_nodes = add_list_element(offline_remote_nodes, node_name);
                 } else if (is_container_remote_node(node)) {
-                    /* ignore offline container nodes */
+                    /* ignore offline guest nodes */
                 } else {
                     offline_nodes = add_list_element(offline_nodes, node_name);
                 }
@@ -1463,29 +2731,35 @@ print_status(pe_working_set_t * data_set)
             }
         }
 
+        /* If we get here, node is in bad state, or we're grouping by node */
+
+        /* Print the node name and status */
         if (is_container_remote_node(node)) {
-            print_as("Container");
+            print_as("Guest");
         } else if (is_baremetal_remote_node(node)) {
             print_as("Remote");
         }
         print_as("Node %s: %s\n", node_name, node_mode);
 
-        if (print_brief && group_by_node) {
-            print_rscs_brief(node->details->running_rsc, "\t", print_opts | pe_print_rsconly,
-                             stdout, FALSE);
+        /* If we're grouping by node, print its resources */
+        if (group_by_node) {
+            if (print_brief) {
+                print_rscs_brief(node->details->running_rsc, "\t", print_opts | pe_print_rsconly,
+                                 stdout, FALSE);
+            } else {
+                GListPtr gIter2 = NULL;
 
-        } else if (group_by_node) {
-            GListPtr gIter2 = NULL;
+                for (gIter2 = node->details->running_rsc; gIter2 != NULL; gIter2 = gIter2->next) {
+                    resource_t *rsc = (resource_t *) gIter2->data;
 
-            for (gIter2 = node->details->running_rsc; gIter2 != NULL; gIter2 = gIter2->next) {
-                resource_t *rsc = (resource_t *) gIter2->data;
-
-                rsc->fns->print(rsc, "\t", print_opts | pe_print_rsconly, stdout);
+                    rsc->fns->print(rsc, "\t", print_opts | pe_print_rsconly, stdout);
+                }
             }
         }
         free(node_name);
     }
 
+    /* If we're not grouping by node, summarize nodes by status */
     if (online_nodes) {
         print_as("Online: [%s ]\n", online_nodes);
         free(online_nodes);
@@ -1502,225 +2776,116 @@ print_status(pe_working_set_t * data_set)
         print_as("RemoteOFFLINE: [%s ]\n", offline_remote_nodes);
         free(offline_remote_nodes);
     }
-    if (online_remote_containers) {
-        print_as("Containers: [%s ]\n", online_remote_containers);
-        free(online_remote_containers);
+    if (online_guest_nodes) {
+        print_as("GuestOnline: [%s ]\n", online_guest_nodes);
+        free(online_guest_nodes);
     }
 
-    if (group_by_node == FALSE && inactive_resources) {
-        print_as("\nFull list of resources:\n");
-
-    } else if (inactive_resources) {
-        print_as("\nInactive resources:\n");
-    }
-
+    /* If we haven't already displayed resources grouped by node,
+     * or we need to print inactive resources, print a resources section */
     if (group_by_node == FALSE || inactive_resources) {
+
+        /* If we're printing inactive resources, display a heading */
+        if (inactive_resources) {
+            if (group_by_node == FALSE) {
+                print_as("\nFull list of resources:\n");
+            } else {
+                print_as("\nInactive resources:\n");
+            }
+        }
         print_as("\n");
 
+        /* If we haven't already printed resources grouped by node,
+         * and brief output was requested, print resource summary */
         if (print_brief && group_by_node == FALSE) {
             print_rscs_brief(data_set->resources, NULL, print_opts, stdout,
                              inactive_resources);
         }
 
+        /* For each resource, display it if appropriate */
         for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
             resource_t *rsc = (resource_t *) gIter->data;
 
+            /* Complex resources may have some sub-resources active and some inactive */
             gboolean is_active = rsc->fns->active(rsc, TRUE);
             gboolean partially_active = rsc->fns->active(rsc, FALSE);
 
-            if (print_brief && group_by_node == FALSE
-                && rsc->variant == pe_native) {
+            /* Always ignore inactive orphan resources (deleted but not yet gone from CIB) */
+            if (is_set(rsc->flags, pe_rsc_orphan) && (is_active == FALSE)) {
                 continue;
             }
 
-            if (is_set(rsc->flags, pe_rsc_orphan) && is_active == FALSE) {
-                continue;
-
-            } else if (group_by_node == FALSE) {
-                if (partially_active || inactive_resources) {
+            /* If we already printed resources grouped by node,
+             * only print inactive resources, if that was requested */
+            if (group_by_node == TRUE) {
+                if ((is_active == FALSE) && inactive_resources) {
                     rsc->fns->print(rsc, NULL, print_opts, stdout);
                 }
-
-            } else if (is_active == FALSE && inactive_resources) {
-                rsc->fns->print(rsc, NULL, print_opts, stdout);
-            }
-        }
-    }
-
-    if (print_nodes_attr) {
-        print_as("\nNode Attributes:\n");
-
-        for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-            crm_mon_get_parameters(gIter->data, data_set);
-        }
-
-        for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-            node_t *node = (node_t *) gIter->data;
-            char *node_name;
-
-            if (node == NULL || node->details->online == FALSE) {
                 continue;
             }
 
-            node_name = get_node_display_name(node);
-            print_as("* Node %s:\n", node_name);
-            free(node_name);
-
-            g_hash_table_foreach(node->details->attrs, create_attr_list, NULL);
-            g_list_foreach(attr_list, print_node_attribute, node);
-            g_list_free(attr_list);
-            attr_list = NULL;
-        }
-    }
-
-    if (print_operations || print_failcount) {
-        print_node_summary(data_set, print_operations);
-    }
-
-    if (xml_has_children(data_set->failed)) {
-        xmlNode *xml_op = NULL;
-
-        print_as("\nFailed actions:\n");
-        for (xml_op = __xml_first_child(data_set->failed); xml_op != NULL;
-             xml_op = __xml_next(xml_op)) {
-            int status = 0;
-            int rc = 0;
-            const char *id = ID(xml_op);
-            const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
-            const char *last = crm_element_value(xml_op, XML_RSC_OP_LAST_CHANGE);
-            const char *node = crm_element_value(xml_op, XML_ATTR_UNAME);
-            const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
-            const char *rc_s = crm_element_value(xml_op, XML_LRM_ATTR_RC);
-            const char *exit_reason = crm_element_value(xml_op, XML_LRM_ATTR_EXIT_REASON);
-            const char *status_s = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
-
-            rc = crm_parse_int(rc_s, "0");
-            status = crm_parse_int(status_s, "0");
-
-            if (last) {
-                time_t run_at = crm_parse_int(last, "0");
-                char *run_at_s = ctime(&run_at);
-                if(run_at_s) {
-                    run_at_s[24] = 0; /* Overwrite the newline */
-                }
-
-                print_as("    %s on %s '%s' (%d): call=%s, status=%s, exit-reason='%s', last-rc-change='%s', queued=%sms, exec=%sms\n",
-                         op_key ? op_key : id,
-                         node,
-                         services_ocf_exitcode_str(rc),
-                         rc,
-                         call,
-                         services_lrm_status_str(status),
-                         exit_reason ? exit_reason : "none",
-                         run_at_s,
-                         crm_element_value(xml_op, XML_RSC_OP_T_QUEUE),
-                         crm_element_value(xml_op, XML_RSC_OP_T_EXEC));
-            } else {
-                print_as("    %s on %s '%s' (%d): call=%s, status=%s, exitreason='%s'\n",
-                         op_key ? op_key : id,
-                         node,
-                         services_ocf_exitcode_str(rc),
-                         rc,
-                         call,
-                         services_lrm_status_str(status),
-                         exit_reason ? exit_reason : "unknown");
+            /* Otherwise, print resource if it's at least partially active
+             * or we're displaying inactive resources,
+             * except for primitive resources already counted in a brief summary */
+            if (!(print_brief && (rsc->variant == pe_native))
+                && (partially_active || inactive_resources)) {
+                    rsc->fns->print(rsc, NULL, print_opts, stdout);
             }
         }
-        print_as("\n");
     }
 
-    if (print_tickets || print_neg_location_prefix) {
-        /* For recording the tickets that are referenced in rsc_ticket constraints
-         * but have never been granted yet.
-         * To be able to print negative location constraint summary,
-         * we also need them to be unpacked. */
-        xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
-        unpack_constraints(cib_constraints, data_set);
+    /* print Node Attributes section if requested */
+    if (show & mon_show_attributes) {
+        print_node_attributes(stdout, data_set);
     }
-    if (print_tickets) {
-        print_cluster_tickets(data_set);
+
+    /* If requested, print resource operations (which includes failcounts)
+     * or just failcounts
+     */
+    if (show & (mon_show_operations | mon_show_failcounts)) {
+        print_node_summary(stdout, data_set,
+                           ((show & mon_show_operations)? TRUE : FALSE));
     }
-    if (print_neg_location_prefix) {
-        print_neg_locations(data_set);
+
+    /* If there were any failed actions, print them */
+    if (xml_has_children(data_set->failed)) {
+        print_failed_actions(stdout, data_set);
     }
+
+    /* Print tickets if requested */
+    if (show & mon_show_tickets) {
+        print_cluster_tickets(stdout, data_set);
+    }
+
+    /* Print negative location constraints if requested */
+    if (show & mon_show_bans) {
+        print_neg_locations(stdout, data_set);
+    }
+
 #if CURSES_ENABLED
-    if (as_console) {
+    if (output_format == mon_output_console) {
         refresh();
     }
 #endif
-    return 0;
 }
 
-static int
+/*!
+ * \internal
+ * \brief Print cluster status in XML format
+ *
+ * \param[in] data_set   Working set of CIB state
+ */
+static void
 print_xml_status(pe_working_set_t * data_set)
 {
     FILE *stream = stdout;
     GListPtr gIter = NULL;
-    node_t *dc = NULL;
-    xmlNode *stack = NULL;
-    xmlNode *quorum_node = NULL;
-    const char *quorum_votes = "unknown";
     int print_opts = get_resource_display_options();
-
-    dc = data_set->dc_node;
 
     fprintf(stream, "<?xml version=\"1.0\"?>\n");
     fprintf(stream, "<crm_mon version=\"%s\">\n", VERSION);
 
-    /*** SUMMARY ***/
-    fprintf(stream, "    <summary>\n");
-
-    if (print_last_updated) {
-        fprintf(stream, "        <last_update time=\"%s\" />\n", crm_now_string());
-    }
-
-    if (print_last_change) {
-        const char *last_written = crm_element_value(data_set->input, XML_CIB_ATTR_WRITTEN);
-        const char *user = crm_element_value(data_set->input, XML_ATTR_UPDATE_USER);
-        const char *client = crm_element_value(data_set->input, XML_ATTR_UPDATE_CLIENT);
-        const char *origin = crm_element_value(data_set->input, XML_ATTR_UPDATE_ORIG);
-
-        fprintf(stream,
-                "        <last_change time=\"%s\" user=\"%s\" client=\"%s\" origin=\"%s\" />\n",
-                last_written ? last_written : "", user ? user : "", client ? client : "",
-                origin ? origin : "");
-    }
-
-    stack = get_xpath_object("//nvpair[@name='cluster-infrastructure']",
-                             data_set->input, LOG_DEBUG);
-    if (stack) {
-        fprintf(stream, "        <stack type=\"%s\" />\n",
-                crm_element_value(stack, XML_NVPAIR_ATTR_VALUE));
-    }
-
-    if (!dc) {
-        fprintf(stream, "        <current_dc present=\"false\" />\n");
-    } else {
-        const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
-        const char *uname = dc->details->uname;
-        const char *id = dc->details->id;
-        xmlNode *dc_version = get_xpath_object("//nvpair[@name='dc-version']",
-                                               data_set->input,
-                                               LOG_DEBUG);
-
-        fprintf(stream,
-                "        <current_dc present=\"true\" version=\"%s\" name=\"%s\" id=\"%s\" with_quorum=\"%s\" />\n",
-                dc_version ? crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE) : "", uname, id,
-                quorum ? (crm_is_true(quorum) ? "true" : "false") : "false");
-    }
-
-    quorum_node = get_xpath_object("//nvpair[@name='" XML_ATTR_EXPECTED_VOTES "']",
-                                   data_set->input, LOG_DEBUG);
-    if (quorum_node) {
-        quorum_votes = crm_element_value(quorum_node, XML_NVPAIR_ATTR_VALUE);
-    }
-    fprintf(stream, "        <nodes_configured number=\"%d\" expected_votes=\"%s\" />\n",
-            g_list_length(data_set->nodes), quorum_votes);
-
-    fprintf(stream, "        <resources_configured number=\"%d\" />\n",
-            count_resources(data_set, NULL));
-
-    fprintf(stream, "    </summary>\n");
+    print_cluster_summary(stream, data_set);
 
     /*** NODES ***/
     fprintf(stream, "    <nodes>\n");
@@ -1754,7 +2919,7 @@ print_xml_status(pe_working_set_t * data_set)
         fprintf(stream, "resources_running=\"%d\" ", g_list_length(node->details->running_rsc));
         fprintf(stream, "type=\"%s\" ", node_type);
         if (is_container_remote_node(node)) {
-            fprintf(stream, "container_id=\"%s\" ", node->details->remote_rsc->container->id);
+            fprintf(stream, "id_as_resource=\"%s\" ", node->details->remote_rsc->container->id);
         }
 
         if (group_by_node) {
@@ -1796,87 +2961,57 @@ print_xml_status(pe_working_set_t * data_set)
         fprintf(stream, "    </resources>\n");
     }
 
-    /*** FAILURES ***/
+    /* print Node Attributes section if requested */
+    if (show & mon_show_attributes) {
+        print_node_attributes(stream, data_set);
+    }
+
+    /* If requested, print resource operations (which includes failcounts)
+     * or just failcounts
+     */
+    if (show & (mon_show_operations | mon_show_failcounts)) {
+        print_node_summary(stream, data_set,
+                           ((show & mon_show_operations)? TRUE : FALSE));
+    }
+
+    /* If there were any failed actions, print them */
     if (xml_has_children(data_set->failed)) {
-        xmlNode *xml_op = NULL;
+        print_failed_actions(stream, data_set);
+    }
 
-        fprintf(stream, "    <failures>\n");
-        for (xml_op = __xml_first_child(data_set->failed); xml_op != NULL;
-             xml_op = __xml_next(xml_op)) {
-            int status = 0;
-            int rc = 0;
-            int interval = 0;
-            const char *id = ID(xml_op);
-            const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
-            const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK); // needed?
-            const char *last = crm_element_value(xml_op, XML_RSC_OP_LAST_CHANGE);
-            const char *node = crm_element_value(xml_op, XML_ATTR_UNAME);
-            const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
-            const char *rc_s = crm_element_value(xml_op, XML_LRM_ATTR_RC);
-            const char *exit_reason = crm_element_value(xml_op, XML_LRM_ATTR_EXIT_REASON);
-            const char *interval_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
-            char *exit_reason_cleaned = NULL;
+    /* Print tickets if requested */
+    if (show & mon_show_tickets) {
+        print_cluster_tickets(stream, data_set);
+    }
 
-            rc = crm_parse_int(rc_s, "0");
-            interval = crm_parse_int(interval_s, "0");
-
-            exit_reason_cleaned = exit_reason ? crm_xml_escape(exit_reason) : NULL;
-
-            if (last) {
-                time_t run_at = crm_parse_int(last, "0");
-                char *run_at_s = ctime(&run_at);
-                if(run_at_s) {
-                    run_at_s[24] = 0; /* Overwrite the newline */
-                }
-
-                fprintf(stream, "        <failure %s=\"%s\" node=\"%s\" exitstatus=\"%s\" exitreason=\"%s\" exitcode=\"%d\" call=\"%s\" status=\"%s\" last-rc-change=\"%s\" queued=\"%s\" exec=\"%s\" interval=\"%d\" task=\"%s\" />\n",
-                        op_key ? "op_key" : "id",
-                        op_key ? op_key : id,
-                        node,
-                        services_ocf_exitcode_str(rc),
-                        exit_reason_cleaned ? exit_reason_cleaned : "none",
-                        rc,
-                        call,
-                        services_lrm_status_str(status),
-                        run_at_s,
-                        crm_element_value(xml_op, XML_RSC_OP_T_QUEUE),
-                        crm_element_value(xml_op, XML_RSC_OP_T_EXEC),
-                        interval,
-                        task);
-            } else {
-                print_as("        <failure %s=\"%s\" node=\"%s\" exitstatus=\"%s\" exitreason=\"%s\" exitcode=\"%d\" call=\"%s\" status=\"%s\" />\n",
-                         op_key ? "op_key" : "id",
-                         op_key ? op_key : id,
-                         node,
-                         services_ocf_exitcode_str(rc),
-                         exit_reason_cleaned ? exit_reason_cleaned : "none",
-                         rc,
-                         call,
-                         services_lrm_status_str(status));
-            }
-            free(exit_reason_cleaned);
-        }
-        fprintf(stream, "    </failures>\n");
+    /* Print negative location constraints if requested */
+    if (show & mon_show_bans) {
+        print_neg_locations(stream, data_set);
     }
 
     fprintf(stream, "</crm_mon>\n");
     fflush(stream);
     fclose(stream);
-
-    return 0;
 }
 
+/*!
+ * \internal
+ * \brief Print cluster status in HTML format (with HTTP headers if CGI)
+ *
+ * \param[in] data_set   Working set of CIB state
+ * \param[in] filename   Name of file to write HTML to (ignored if CGI)
+ *
+ * \return 0 on success, -1 on error
+ */
 static int
-print_html_status(pe_working_set_t * data_set, const char *filename, gboolean web_cgi)
+print_html_status(pe_working_set_t * data_set, const char *filename)
 {
     FILE *stream;
     GListPtr gIter = NULL;
-    node_t *dc = NULL;
-    static int updates = 0;
     char *filename_tmp = NULL;
     int print_opts = get_resource_display_options();
 
-    if (web_cgi) {
+    if (output_format == mon_output_cgi) {
         stream = stdout;
         fprintf(stream, "Content-type: text/html\n\n");
 
@@ -1890,63 +3025,18 @@ print_html_status(pe_working_set_t * data_set, const char *filename, gboolean we
         }
     }
 
-    updates++;
-    dc = data_set->dc_node;
+    fprintf(stream, "<html>\n");
+    fprintf(stream, " <head>\n");
+    fprintf(stream, "  <title>Cluster status</title>\n");
+    fprintf(stream, "  <meta http-equiv=\"refresh\" content=\"%d\">\n", reconnect_msec / 1000);
+    fprintf(stream, " </head>\n");
+    fprintf(stream, "<body>\n");
 
-    fprintf(stream, "<html>");
-    fprintf(stream, "<head>");
-    fprintf(stream, "<title>Cluster status</title>");
-/* content="%d;url=http://webdesign.about.com" */
-    fprintf(stream, "<meta http-equiv=\"refresh\" content=\"%d\">", reconnect_msec / 1000);
-    fprintf(stream, "</head>");
-
-    /*** SUMMARY ***/
-
-    fprintf(stream, "<h2>Cluster summary</h2>");
-    fprintf(stream, "Last updated: <b>%s</b><br/>\n", crm_now_string());
-
-    if (dc == NULL) {
-        fprintf(stream, "Current DC: <font color=\"red\"><b>NONE</b></font><br/>");
-    } else {
-        char *dc_name = get_node_display_name(dc);
-
-        fprintf(stream, "Current DC: %s<br/>\n", dc_name);
-        free(dc_name);
-    }
-    fprintf(stream, "%d Nodes configured.<br/>", g_list_length(data_set->nodes));
-    fprintf(stream, "%d Resources configured.<br/>", count_resources(data_set, NULL));
-
-    /*** CONFIG ***/
-
-    fprintf(stream, "<h3>Config Options</h3>\n");
-
-    fprintf(stream, "<table>\n");
-    fprintf(stream, "<tr><td>STONITH of failed nodes</td><td>:</td><td>%s</td></tr>\n",
-            is_set(data_set->flags, pe_flag_stonith_enabled) ? "enabled" : "disabled");
-
-    fprintf(stream, "<tr><td>Cluster is</td><td>:</td><td>%ssymmetric</td></tr>\n",
-            is_set(data_set->flags, pe_flag_symmetric_cluster) ? "" : "a-");
-
-    fprintf(stream, "<tr><td>No Quorum Policy</td><td>:</td><td>");
-    switch (data_set->no_quorum_policy) {
-        case no_quorum_freeze:
-            fprintf(stream, "Freeze resources");
-            break;
-        case no_quorum_stop:
-            fprintf(stream, "Stop ALL resources");
-            break;
-        case no_quorum_ignore:
-            fprintf(stream, "Ignore");
-            break;
-        case no_quorum_suicide:
-            fprintf(stream, "Suicide");
-            break;
-    }
-    fprintf(stream, "\n</td></tr>\n</table>\n");
+    print_cluster_summary(stream, data_set);
 
     /*** NODE LIST ***/
 
-    fprintf(stream, "<h2>Node List</h2>\n");
+    fprintf(stream, " <hr />\n <h2>Node List</h2>\n");
     fprintf(stream, "<ul>\n");
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
@@ -1995,7 +3085,7 @@ print_html_status(pe_working_set_t * data_set, const char *filename, gboolean we
         fprintf(stream, "<h2>Inactive Resources</h2>\n");
 
     } else if (group_by_node == FALSE) {
-        fprintf(stream, "<h2>Resource List</h2>\n");
+        fprintf(stream, " <hr />\n <h2>Resource List</h2>\n");
     }
 
     if (group_by_node == FALSE || inactive_resources) {
@@ -2028,11 +3118,40 @@ print_html_status(pe_working_set_t * data_set, const char *filename, gboolean we
         }
     }
 
-    fprintf(stream, "</html>");
+    /* print Node Attributes section if requested */
+    if (show & mon_show_attributes) {
+        print_node_attributes(stream, data_set);
+    }
+
+    /* If requested, print resource operations (which includes failcounts)
+     * or just failcounts
+     */
+    if (show & (mon_show_operations | mon_show_failcounts)) {
+        print_node_summary(stream, data_set,
+                           ((show & mon_show_operations)? TRUE : FALSE));
+    }
+
+    /* If there were any failed actions, print them */
+    if (xml_has_children(data_set->failed)) {
+        print_failed_actions(stream, data_set);
+    }
+
+    /* Print tickets if requested */
+    if (show & mon_show_tickets) {
+        print_cluster_tickets(stream, data_set);
+    }
+
+    /* Print negative location constraints if requested */
+    if (show & mon_show_bans) {
+        print_neg_locations(stream, data_set);
+    }
+
+    fprintf(stream, "</body>\n");
+    fprintf(stream, "</html>\n");
     fflush(stream);
     fclose(stream);
 
-    if (!web_cgi) {
+    if (output_format != mon_output_cgi) {
         if (rename(filename_tmp, filename) != 0) {
             crm_perror(LOG_ERR, "Unable to rename %s->%s", filename_tmp, filename);
         }
@@ -2849,7 +3968,7 @@ mon_refresh_display(gpointer user_data)
             cib->cmds->signoff(cib);
         }
         print_as("Upgrade failed: %s", pcmk_strerror(-pcmk_err_schema_validation));
-        if (as_console) {
+        if (output_format == mon_output_console) {
             sleep(2);
         }
         clean_up(EX_USAGE);
@@ -2860,27 +3979,41 @@ mon_refresh_display(gpointer user_data)
     data_set.input = cib_copy;
     cluster_status(&data_set);
 
-    if (as_html_file || web_cgi) {
-        if (print_html_status(&data_set, as_html_file, web_cgi) != 0) {
-            fprintf(stderr, "Critical: Unable to output html file\n");
-            clean_up(EX_USAGE);
-        }
-    } else if (as_xml) {
-        if (print_xml_status(&data_set) != 0) {
-            fprintf(stderr, "Critical: Unable to output xml file\n");
-            clean_up(EX_USAGE);
-        }
-    } else if (daemonize) {
-        /* do nothing */
+    /* Unpack constraints if any section will need them
+     * (tickets may be referenced in constraints but not granted yet,
+     * and bans need negative location constraints) */
+    if (show & (mon_show_bans | mon_show_tickets)) {
+        xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set.input);
+        unpack_constraints(cib_constraints, &data_set);
+    }
 
-    } else if (simple_status) {
-        print_simple_status(&data_set);
-        if (has_warnings) {
-            clean_up(EX_USAGE);
-        }
+    switch (output_format) {
+        case mon_output_html:
+        case mon_output_cgi:
+            if (print_html_status(&data_set, output_filename) != 0) {
+                fprintf(stderr, "Critical: Unable to output html file\n");
+                clean_up(EX_USAGE);
+            }
+            break;
 
-    } else {
-        print_status(&data_set);
+        case mon_output_xml:
+            print_xml_status(&data_set);
+            break;
+
+        case mon_output_monitor:
+            print_simple_status(&data_set);
+            if (has_warnings) {
+                clean_up(MON_STATUS_WARN);
+            }
+            break;
+
+        case mon_output_plain:
+        case mon_output_console:
+            print_status(&data_set);
+            break;
+
+        case mon_output_none:
+            break;
     }
 
     cleanup_calculations(&data_set);
@@ -2922,8 +4055,8 @@ clean_up(int rc)
 #endif
 
 #if CURSES_ENABLED
-    if (as_console) {
-        as_console = FALSE;
+    if (output_format == mon_output_console) {
+        output_format = mon_output_plain;
         echo();
         nocbreak();
         endwin();
@@ -2936,7 +4069,7 @@ clean_up(int rc)
         cib = NULL;
     }
 
-    free(as_html_file);
+    free(output_filename);
     free(xml_file);
     free(pid_file);
 
