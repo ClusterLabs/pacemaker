@@ -1252,14 +1252,6 @@ main(int argc, char **argv)
         printf(" <shortdesc lang=\"en\">Options available for all stonith resources</shortdesc>\n");
         printf(" <parameters>\n");
 
-        printf("  <parameter name=\"stonith-timeout\" unique=\"0\">\n");
-        printf
-            ("    <shortdesc lang=\"en\">How long to wait for the STONITH action to complete per a stonith device.</shortdesc>\n");
-        printf
-            ("    <longdesc lang=\"en\">Overrides the stonith-timeout cluster property</longdesc>\n");
-        printf("    <content type=\"time\" default=\"60s\"/>\n");
-        printf("  </parameter>\n");
-
         printf("  <parameter name=\"priority\" unique=\"0\">\n");
         printf
             ("    <shortdesc lang=\"en\">The priority of the stonith resource. Devices are tried in order of highest priority to lowest.</shortdesc>\n");

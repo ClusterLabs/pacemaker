@@ -107,7 +107,7 @@ Stonith options for: fence_ipmilan
   shell_timeout: Wait X seconds for cmd prompt after issuing command
   retry_on: Count of attempts to retry power on
   sudo: Use sudo (without password) when calling 3rd party sotfware.
-  stonith-timeout: How long to wait for the STONITH action to complete per a stonith device.
+  stonith-timeout: How long to wait for the STONITH action (reboot, on, off) to complete per a stonith device.
   priority: The priority of the stonith resource. Devices are tried in order of highest priority to lowest.
   pcmk_host_map: A mapping of host names to ports numbers for devices that do not support host names.
   pcmk_host_list: A list of machines controlled by this device (Optional unless pcmk_host_check=static-list).
