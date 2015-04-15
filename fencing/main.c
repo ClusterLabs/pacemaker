@@ -1174,11 +1174,18 @@ struct qb_ipcs_service_handlers ipc_callbacks = {
 static void
 st_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
 {
+    xmlNode *query = NULL;
+
+    if (type == crm_status_processes) {
+        crm_update_peer_state(__FUNCTION__, node, is_set(node->processes, crm_proc_cpg)?CRM_NODE_MEMBER:CRM_NODE_LOST, 0);
+        return;
+    }
+
     /*
      * This is a hack until we can send to a nodeid and/or we fix node name lookups
      * These messages are ignored in stonith_peer_callback()
      */
-    xmlNode *query = create_xml_node(NULL, "stonith_command");
+    query = create_xml_node(NULL, "stonith_command");
 
     crm_xml_add(query, F_XML_TAGNAME, "stonith_command");
     crm_xml_add(query, F_TYPE, T_STONITH_NG);
@@ -1244,14 +1251,6 @@ main(int argc, char **argv)
             (" <longdesc lang=\"en\">This is a fake resource that details the instance attributes handled by stonithd.</longdesc>\n");
         printf(" <shortdesc lang=\"en\">Options available for all stonith resources</shortdesc>\n");
         printf(" <parameters>\n");
-
-        printf("  <parameter name=\"stonith-timeout\" unique=\"0\">\n");
-        printf
-            ("    <shortdesc lang=\"en\">How long to wait for the STONITH action to complete per a stonith device.</shortdesc>\n");
-        printf
-            ("    <longdesc lang=\"en\">Overrides the stonith-timeout cluster property</longdesc>\n");
-        printf("    <content type=\"time\" default=\"60s\"/>\n");
-        printf("  </parameter>\n");
 
         printf("  <parameter name=\"priority\" unique=\"0\">\n");
         printf

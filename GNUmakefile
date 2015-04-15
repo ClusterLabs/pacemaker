@@ -265,7 +265,7 @@ global: clean-generic
 	groff -mandoc `man -w ./$<` -T html > $@
 	rsync -azxlSD --progress $@ root@www.clusterlabs.org:/var/www/html/man/
 
-doxygen:
+doxygen: Doxyfile
 	doxygen Doxyfile
 
 abi:

@@ -422,6 +422,10 @@ cib_cs_destroy(gpointer user_data)
 static void
 cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
 {
+    if (type == crm_status_processes) {
+        crm_update_peer_state(__FUNCTION__, node, is_set(node->processes, crm_proc_cpg)?CRM_NODE_MEMBER:CRM_NODE_LOST, 0);
+    }
+
     if (type == crm_status_processes && legacy_mode && is_not_set(node->processes, crm_proc_cpg)) {
         uint32_t old = 0;
 

@@ -111,6 +111,7 @@ get_meta_attributes(GHashTable * meta_hash, resource_t * rsc,
                     node_t * node, pe_working_set_t * data_set)
 {
     GHashTable *node_hash = NULL;
+    const char *version = crm_element_value(data_set->input, XML_ATTR_CRM_VERSION);
 
     if (node) {
         node_hash = node->details->attrs;
@@ -130,11 +131,13 @@ get_meta_attributes(GHashTable * meta_hash, resource_t * rsc,
     unpack_instance_attributes(data_set->input, rsc->xml, XML_TAG_META_SETS, node_hash,
                                meta_hash, NULL, FALSE, data_set->now);
 
-    /* populate from the regular attributes until the GUI can create
-     * meta attributes
-     */
-    unpack_instance_attributes(data_set->input, rsc->xml, XML_TAG_ATTR_SETS, node_hash,
-                               meta_hash, NULL, FALSE, data_set->now);
+    if(version == NULL || compare_version(version, "3.0.9") < 0) {
+        /* populate from the regular attributes until the GUI can create
+         * meta attributes
+         */
+        unpack_instance_attributes(data_set->input, rsc->xml, XML_TAG_ATTR_SETS, node_hash,
+                                   meta_hash, NULL, FALSE, data_set->now);
+    }
 
     /* set anything else based on the parent */
     if (rsc->parent != NULL) {
@@ -334,6 +337,50 @@ add_template_rsc(xmlNode * xml_obj, pe_working_set_t * data_set)
     return TRUE;
 }
 
+static void
+handle_rsc_isolation(resource_t *rsc)
+{
+    resource_t *top = uber_parent(rsc);
+    resource_t *iso = rsc;
+    const char *wrapper = NULL;
+    const char *value;
+
+    /* check for isolation wrapper mapping if the parent doesn't have one set
+     * isolation mapping is enabled by default. For safety, we are allowing isolation
+     * to be disabled by setting the meta attr, isolation=false. */
+    value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_ISOLATION);
+    if (top->isolation_wrapper == NULL && (value == NULL || crm_is_true(value))) {
+        if (g_hash_table_lookup(rsc->meta, "pcmk_docker_image")) {
+            wrapper = "docker-wrapper";
+        }
+        /* add more isolation technologies here as we expand */
+    } else if (top->isolation_wrapper) {
+        goto set_rsc_opts;
+    }
+
+    if (wrapper == NULL) {
+        return;
+    }
+
+    /* if this is a cloned primitive/group, go head and set the isolation wrapper at
+     * at the clone level. this is really the only sane thing to do in this situation.
+     * This allows someone to clone an isolated resource without having to shuffle
+     * around the isolation attributes to the clone parent */
+    if (top == rsc->parent && top->variant >= pe_clone) {
+        iso = top;
+    }
+
+    iso->isolation_wrapper = wrapper;
+    set_bit(top->flags, pe_rsc_unique);
+
+set_rsc_opts:
+    clear_bit(rsc->flags, pe_rsc_allow_migrate);
+    set_bit(rsc->flags, pe_rsc_unique);
+    if (top->variant >= pe_clone) {
+        add_hash_param(rsc->meta, XML_RSC_ATTR_UNIQUE, XML_BOOLEAN_TRUE);
+    }
+}
+
 gboolean
 common_unpack(xmlNode * xml_obj, resource_t ** rsc,
               resource_t * parent, pe_working_set_t * data_set)
@@ -493,26 +540,11 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
 
     pe_rsc_trace((*rsc), "Options for %s", (*rsc)->id);
 
+    handle_rsc_isolation(*rsc);
+
     top = uber_parent(*rsc);
-
-    /* check for isolation wrapper mapping if the parent doesn't have one set
-     * isolation mapping is enabled by default. For safety, we are allowing isolation
-     * to be disabled by setting the meta attr, isolation=false. */
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_ISOLATION);
-    if (top->isolation_wrapper == NULL && (value == NULL || crm_is_true(value))) {
-        if (g_hash_table_lookup((*rsc)->meta, "pcmk_docker_image")) {
-            (*rsc)->isolation_wrapper = "docker-wrapper";
-            clear_bit((*rsc)->flags, pe_rsc_allow_migrate);
-        }
-        /* add more isolation technologies here as we expand */
-    }
-    if (top->isolation_wrapper) {
-        /* never allow resources with an isolation wrapper migrate */
-        clear_bit((*rsc)->flags, pe_rsc_allow_migrate);
-    }
-
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_UNIQUE);
-    if (crm_is_true(value) || top->variant < pe_clone || (*rsc)->isolation_wrapper) {
+    if (crm_is_true(value) || top->variant < pe_clone) {
         set_bit((*rsc)->flags, pe_rsc_unique);
     }
 

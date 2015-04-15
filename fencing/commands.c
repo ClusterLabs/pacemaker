@@ -2190,6 +2190,8 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
         name = crm_element_value(request, XML_ATTR_UNAME);
         reap_crm_member(id, name);
 
+        return pcmk_ok;
+
     } else {
         crm_err("Unknown %s from %s", op, client ? client->name : remote_peer);
         crm_log_xml_warn(request, "UnknownOp");

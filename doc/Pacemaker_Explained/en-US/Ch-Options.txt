@@ -218,7 +218,7 @@ legacy devices.
 | stonith-timeout | 60s |
 indexterm:[stonith-timeout,Cluster Option]
 indexterm:[Cluster,Option,stonith-timeout]
-How long to wait for STONITH actions to complete
+How long to wait for STONITH actions (reboot, on, off) to complete
 
 | cluster-delay | 60s |
 indexterm:[cluster-delay,Cluster Option]

@@ -6,7 +6,7 @@ Online: [ 18builder 18node1 18node2 ]
  shooter	(stonith:fence_xvm):	Started 18builder 
  remote1	(ocf::pacemaker:remote):	FAILED 18node1 
  FAKE1	(ocf::heartbeat:Dummy):	Started 18node2 
- FAKE2	(ocf::heartbeat:Dummy):	Started remote1 
+ FAKE2	(ocf::heartbeat:Dummy):	Started remote1 (UNCLEAN)
  FAKE3	(ocf::heartbeat:Dummy):	Started 18builder 
  FAKE4	(ocf::heartbeat:Dummy):	Started 18node1 
 

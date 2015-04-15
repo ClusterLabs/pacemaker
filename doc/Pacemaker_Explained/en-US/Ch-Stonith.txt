@@ -86,10 +86,10 @@ can be revisited if it becomes a significant limitation for people.
 |Description
 
 |stonith-timeout
-|time
-|60s
-|How long to wait for a STONITH action using this device to complete.
- Overrides the +stonith-timeout+ cluster property.
+|NA
+|NA
+|Older versions used this to override the default period to wait for a STONITH (reboot, on, off) action to complete for this device.
+ It has been replaced by the +pcmk_reboot_timeout+ and +pcmk_off_timeout+ properties.
  indexterm:[stonith-timeout,Fencing]
  indexterm:[Fencing,Property,stonith-timeout]
 
@@ -159,6 +159,8 @@ time to complete than normal. Use this to specify an alternate, device-specific
 timeout.
  indexterm:[pcmk_reboot_timeout,Fencing]
  indexterm:[Fencing,Property,pcmk_reboot_timeout]
+ indexterm:[stonith-timeout,Fencing]
+ indexterm:[Fencing,Property,stonith-timeout]
 
 |pcmk_reboot_retries
 |integer
@@ -189,6 +191,8 @@ time to complete than normal. Use this to specify an alternate, device-specific
 timeout.
  indexterm:[pcmk_off_timeout,Fencing]
  indexterm:[Fencing,Property,pcmk_off_timeout]
+ indexterm:[stonith-timeout,Fencing]
+ indexterm:[Fencing,Property,stonith-timeout]
 
 |pcmk_off_retries
 |integer

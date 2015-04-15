@@ -5,18 +5,21 @@ Online: [ kiff-02 ]
 Containers: [ lxc-01_kiff-01:R-lxc-01_kiff-01 lxc-01_kiff-02:R-lxc-01_kiff-02 lxc-02_kiff-01:R-lxc-02_kiff-01 lxc-02_kiff-02:R-lxc-02_kiff-02 ]
 
  fence-kiff-01	(stonith:fence_ipmilan):	Started kiff-02 
- fence-kiff-02	(stonith:fence_ipmilan):	Started kiff-01 
+ fence-kiff-02	(stonith:fence_ipmilan):	Started kiff-01 (UNCLEAN)
  Clone Set: dlm-clone [dlm]
-     Started: [ kiff-01 kiff-02 ]
+     dlm	(ocf::pacemaker:controld):	Started kiff-01 (UNCLEAN)
+     Started: [ kiff-02 ]
      Stopped: [ lxc-01_kiff-01 lxc-01_kiff-02 lxc-02_kiff-01 lxc-02_kiff-02 ]
  Clone Set: clvmd-clone [clvmd]
-     Started: [ kiff-01 kiff-02 ]
+     clvmd	(ocf::heartbeat:clvm):	Started kiff-01 (UNCLEAN)
+     Started: [ kiff-02 ]
      Stopped: [ lxc-01_kiff-01 lxc-01_kiff-02 lxc-02_kiff-01 lxc-02_kiff-02 ]
  Clone Set: shared0-clone [shared0]
-     Started: [ kiff-01 kiff-02 ]
+     shared0	(ocf::heartbeat:Filesystem):	Started kiff-01 (UNCLEAN)
+     Started: [ kiff-02 ]
      Stopped: [ lxc-01_kiff-01 lxc-01_kiff-02 lxc-02_kiff-01 lxc-02_kiff-02 ]
- R-lxc-01_kiff-01	(ocf::heartbeat:VirtualDomain):	Started kiff-01 
- R-lxc-02_kiff-01	(ocf::heartbeat:VirtualDomain):	Started kiff-01 
+ R-lxc-01_kiff-01	(ocf::heartbeat:VirtualDomain):	Started kiff-01 (UNCLEAN)
+ R-lxc-02_kiff-01	(ocf::heartbeat:VirtualDomain):	Started kiff-01 (UNCLEAN)
  R-lxc-01_kiff-02	(ocf::heartbeat:VirtualDomain):	Started kiff-02 
  R-lxc-02_kiff-02	(ocf::heartbeat:VirtualDomain):	Started kiff-02 
  vm-fs	(ocf::heartbeat:Filesystem):	Started lxc-01_kiff-01 

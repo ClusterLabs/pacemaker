@@ -31,6 +31,8 @@
 
 #######################################################################
 
+CONF_PREFIX="pcmk_docker"
+
 meta_data() {
 	cat <<END
 <?xml version="1.0"?>
@@ -44,7 +46,7 @@ Docker technology wrapper for pacemaker remote.
 <shortdesc lang="en">docker wrapper</shortdesc>
 
 <parameters>
-<parameter name="pcmk_docker_image" required="1" >
+<parameter name="${CONF_PREFIX}_image" required="1" >
 <longdesc lang="en">
 Docker image to run resources within
 </longdesc>
@@ -52,16 +54,25 @@ Docker image to run resources within
 <content type="string" default="" />
 </parameter>
 
-<parameter name="pcmk_docker_privileged" >
+<parameter name="${CONF_PREFIX}_privileged" >
 <longdesc lang="en">
 Give resources within container access to cluster resources
 such as the CIB and the ability to manage cluster attributes.
+
+NOTE: Do not confuse this with the docker run command's
+'--priviledged' option which gives a container permission
+to access system devices. To toggle the docker run option,
+ set --priviledged=true as part of the ${CONF_PREFIS}_run_opts
+arguments. The ${CONF_PREFIX}_privileged option only pertains
+to whether or not the container has access to the cluster's
+CIB or not. Some multistate resources need to be able to write
+values to the cib, which would require enabling ${CONF_PREFIX}_privileged
 </longdesc>
 <shortdesc lang="en">is privileged</shortdesc>
 <content type="string" default="false" />
 </parameter>
 
-<parameter name="pcmk_docker_run_opts" required="0" unique="0">
+<parameter name="${CONF_PREFIX}_run_opts" required="0" unique="0">
 <longdesc lang="en">
 Add options to be appended to the 'docker run' command which is used
 when creating the container during the start action. This option allows
@@ -78,6 +89,16 @@ agent will set --name using the resource's instance name
 <content type="string"/>
 </parameter>
 
+<parameter name="${CONF_PREFIX}_reuse" required="0" unique="0">
+<longdesc lang="en">
+Allow the container to be reused after stopping the container. By default
+containers are removed after stop. With the reuse option containers
+will persist after the container stops.
+</longdesc>
+<shortdesc lang="en">reuse container</shortdesc>
+<content type="boolean"/>
+</parameter>
+
 </parameters>
 
 <actions>
@@ -85,6 +106,9 @@ agent will set --name using the resource's instance name
 <action name="stop"         timeout="120" />
 <action name="monitor"      timeout="60" interval="30" depth="0"/>
 <action name="reload"       timeout="120" />
+<action name="promote"      timeout="120s" />
+<action name="demote"       timeout="120s" />
+<action name="notify"       timeout="120" />
 <action name="validate-all" timeout="30" />
 <action name="meta-data"    timeout="10" />
 </actions>
@@ -110,10 +134,14 @@ fi
 RSC_STATE_DIR="${HA_RSCTMP}/docker-wrapper/${CONTAINER}-data/"
 RSC_STATE_FILE="$RSC_STATE_DIR/$OCF_RESOURCE_INSTANCE.state" 
 CONNECTION_FAILURE=0
+HOST_LOG_DIR="${HA_RSCTMP}/docker-wrapper/${CONTAINER}-logs"
+HOST_LOG_FILE="$HOST_LOG_DIR/pacemaker.log"
+GUEST_LOG_DIR="/var/log/pcmk"
+GUEST_LOG_FILE="$GUEST_LOG_DIR/pacemaker.log"
 
 pcmk_docker_wrapper_usage() {
 	cat <<END
-usage: $0 {start|stop|monitor|reload|validate-all|meta-data}
+usage: $0 {start|stop|monitor|reload|promote|demote|notify|validate-all|meta-data}
 
 Expects to have a fully populated OCF RA-compliant environment set.
 END
@@ -175,21 +203,21 @@ separate_args()
 	# write out arguments to key value string for ocf agent
 	while read -r line;
 	do
-		key="$(echo $line | awk -F= '{print $1}')"
+		key="$(echo $line | awk -F= '{print $1}' |  sed 's/^OCF_RESKEY_//g')"
 		val="$(echo $line | awk -F= '{print $2}')"
-		KEY_VAL_STR="$KEY_VAL_STR -k \"$key\" -v \"$val\""
-	done < <(printenv | grep "^OCF.*" | grep -v "^OCF_RESKEY_pcmk_docker_.*")
+		KEY_VAL_STR="$KEY_VAL_STR -k '$key' -v '$val'"
+	done < <(printenv | grep "^OCF.*" | grep -v "^OCF_RESKEY_${CONF_PREFIX}_.*")
 
 	# sanitize args for DOCKER agent's consumption
 	while read -r line;
 	do
 		env="$(echo $line | awk -F= '{print $1}')"
 		val="$(echo $line | awk -F= '{print $2}')"
-		key="$(echo "$env" | sed 's/^OCF_RESKEY_pcmk_docker/OCF_RESKEY/g')"
+		key="$(echo "$env" | sed "s/^OCF_RESKEY_${CONF_PREFIX}/OCF_RESKEY/g")"
 		export $key="$val"
-	done < <(printenv | grep "^OCF_RESKEY_pcmk_docker_.*")
+	done < <(printenv | grep "^OCF_RESKEY_${CONF_PREFIX}_.*")
 
-	if ocf_is_true $OCF_RESKEY_pcmk_docker_privileged ; then
+	if ocf_is_true $OCF_RESKEY_privileged ; then
 		export OCF_RESKEY_run_cmd="/usr/sbin/pacemaker_remoted"
 		# on start set random port to run_opts
 		# write port to state file... or potentially get from ps? maybe docker info or inspect as well? 
@@ -235,13 +263,26 @@ pcmk_docker_wrapper_monitor() {
 	
 	client_action "monitor"
 	rc=$?
-	if [ $rc -eq $OCF_SUCCESS ]; then
+	if [ $rc -eq $OCF_SUCCESS ] || [ $rc -eq $OCF_RUNNING_MASTER ]; then
 		write_state_file
-	elif [ $rc -eq $OCF_NOT_RUNNING ]; then
+	else
 		clear_state_file
 	fi
 
 	return $rc
+}
+
+pcmk_docker_wrapper_generic_action()
+{
+	local rc
+
+	monitor_container
+	rc=$?
+	if [ $? -ne $OCF_SUCCESS ]; then
+		return $rc
+	fi
+
+	client_action "$1"
 }
 
 client_action()
@@ -254,14 +295,17 @@ client_action()
 		agent_type="$agent_type -P $PROVIDER"
 	fi
 
-	if ocf_is_true $OCF_RESKEY_pcmk_docker_privileged ; then
+	if ocf_is_true $OCF_RESKEY_privileged ; then
 		if [ -z "$PORT" ]; then
 			get_active_port
 		fi
-		ocf_log info "$CLIENT -c \"exec\" -S \"127.0.0.1\" -p $PORT -a $action -r \"$OCF_RESOURCE_INSTANCE\" -n $CONTAINER $agent_type $KEY_VAL_STR  >/dev/null 2>&1"
-		$CLIENT -c "exec" -S "127.0.0.1" -p $PORT -a $action -r "$OCF_RESOURCE_INSTANCE" -n $CONTAINER $agent_type $KEY_VAL_STR  >/dev/null 2>&1
+		export PCMK_logfile=$HOST_LOG_FILE
+		ocf_log info "$CLIENT -c 'exec' -S '127.0.0.1' -p '$PORT' -a '$action' -r '$OCF_RESOURCE_INSTANCE' -n '$CONTAINER' '$agent_type' $KEY_VAL_STR "
+		eval $CLIENT -c 'exec' -S '127.0.0.1' -p '$PORT' -a '$action' -r '$OCF_RESOURCE_INSTANCE' -n '$CONTAINER' '$agent_type' $KEY_VAL_STR
 	else 
-		echo "$CLIENT -c \"exec\" -a $action -r \"$OCF_RESOURCE_INSTANCE\" $agent_type $KEY_VAL_STR  >/dev/null 2>&1" | nsenter --target $(docker inspect --format {{.State.Pid}} ${CONTAINER}) --mount --uts --ipc --net --pid 2>&1
+		export PCMK_logfile=$GUEST_LOG_FILE
+		ocf_log info "$CLIENT -c \"exec\" -a $action -r \"$OCF_RESOURCE_INSTANCE\" $agent_type $KEY_VAL_STR"
+		echo "$CLIENT -c \"exec\" -a $action -r \"$OCF_RESOURCE_INSTANCE\" $agent_type $KEY_VAL_STR " | nsenter --target $(docker inspect --format {{.State.Pid}} ${CONTAINER}) --mount --uts --ipc --net --pid
 	fi
 	rc=$?
 
@@ -272,26 +316,13 @@ client_action()
 poke_remote()
 {
 	# verifies daemon in container is active
-	if ocf_is_true $OCF_RESKEY_pcmk_docker_privileged ; then
+	if ocf_is_true $OCF_RESKEY_privileged ; then
 		get_active_port
 		ocf_log info "Attempting to contect $CONTAINER on port $PORT"
-		$CLIENT -c "poke" -S "127.0.0.1" -p $PORT -n $CONTAINER >/dev/null 2>&1
+		$CLIENT -c "poke" -S "127.0.0.1" -p $PORT -n $CONTAINER
 	fi
 	# no op for non privileged containers since we handed the
 	# client monitor action as the monitor_cmd for the docker agent
-}
-
-pcmk_docker_wrapper_reload()
-{
-	local rc
-
-	monitor_container
-	rc=$?
-	if [ $? -ne $OCF_SUCCESS ]; then
-		return $rc
-	fi
-
-	client_action "reload"
 }
 
 start_container()
@@ -304,7 +335,10 @@ start_container()
 		return $rc
 	fi
 
-	if ocf_is_true $OCF_RESKEY_pcmk_docker_privileged ; then
+	mkdir -p $HOST_LOG_DIR
+	export OCF_RESKEY_run_opts="-e PCMK_logfile=$GUEST_LOG_FILE $OCF_RESKEY_run_opts"
+	export OCF_RESKEY_run_opts="-v $HOST_LOG_DIR:$GUEST_LOG_DIR $OCF_RESKEY_run_opts"
+	if ocf_is_true $OCF_RESKEY_privileged ; then
 		if ! [ -f "/etc/pacemaker/authkey" ]; then
 			# generate an authkey if it doesn't exist. 
 			mkdir -p /etc/pacemaker/
@@ -327,7 +361,11 @@ start_container()
 	$DOCKER_AGENT start
 	rc=$?
 	if [ $rc -ne $OCF_SUCCESS ]; then
-		ocf_exit_reason "Docker container failed to start"
+
+		docker ps > /dev/null 2>&1
+		if [ $? -ne 0 ]; then
+			ocf_exit_reason "docker daemon is inactive."
+		fi
 		return $rc
 	fi
 
@@ -351,7 +389,12 @@ pcmk_docker_wrapper_start() {
 	fi
 
 	pcmk_docker_wrapper_monitor
-	return $?
+	rc=$?
+	if [ $rc -eq $OCF_SUCCESS ]; then
+		ocf_log notice "$OCF_RESOURCE_INSTANCE started successfully. Container's logfile can be found at $HOST_LOG_FILE"
+	fi
+
+	return $rc
 }
 
 stop_container()
@@ -441,6 +484,7 @@ pcmk_docker_wrapper_stop() {
 }
 
 pcmk_docker_wrapper_validate() {
+	check_binary docker
 
 	if [ -z "$CLASS" ] || [ -z "$TYPE" ]; then
 		ocf_exit_reason "Update pacemaker to a version that supports container wrappers."
@@ -478,8 +522,9 @@ fi
 case $__OCF_ACTION in
 	start)		pcmk_docker_wrapper_start;;
 	stop)		pcmk_docker_wrapper_stop;;
-	monitor)	pcmk_docker_wrapper_monitor;;
-	reload)		pcmk_docker_wrapper_reload;;
+	monitor|status)	pcmk_docker_wrapper_monitor;;
+	reload|promote|demote|notify)
+			pcmk_docker_wrapper_generic_action $__OCF_ACTION;;
 	validate-all)	pcmk_docker_wrapper_validate;;
 	*)		pcmk_docker_wrapper_usage
 		exit $OCF_ERR_UNIMPLEMENTED

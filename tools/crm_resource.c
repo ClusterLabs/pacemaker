@@ -74,7 +74,7 @@ extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
 
 #define CMD_ERR(fmt, args...) do {		\
 	crm_warn(fmt, ##args);			\
-	fprintf(stderr, fmt, ##args);		\
+	fprintf(stderr, fmt"\n", ##args);		\
     } while(0)
 
 #define message_timeout_ms 60*1000
@@ -140,23 +140,6 @@ do_find_resource(const char *rsc, resource_t * the_rsc, pe_working_set_t * data_
     int found = 0;
     GListPtr lpc = NULL;
 
-    if (the_rsc == NULL) {
-        the_rsc = pe_find_resource(data_set->resources, rsc);
-    }
-
-    if (the_rsc == NULL) {
-        return -ENXIO;
-    }
-
-    if (the_rsc->variant >= pe_clone) {
-        GListPtr gIter = the_rsc->children;
-
-        for (; gIter != NULL; gIter = gIter->next) {
-            found += do_find_resource(rsc, gIter->data, data_set);
-        }
-        return found;
-    }
-
     for (lpc = the_rsc->running_on; lpc != NULL; lpc = lpc->next) {
         node_t *node = (node_t *) lpc->data;
 
@@ -179,7 +162,49 @@ do_find_resource(const char *rsc, resource_t * the_rsc, pe_working_set_t * data_
         fprintf(stderr, "resource %s is NOT running\n", rsc);
     }
 
-    return 0;
+    return found;
+}
+
+static int
+search_resource(const char *rsc, pe_working_set_t * data_set)
+{
+    int found = 0;
+    resource_t *the_rsc = NULL;
+    resource_t *parent = NULL;
+
+    if (the_rsc == NULL) {
+        the_rsc = pe_find_resource(data_set->resources, rsc);
+    }
+
+    if (the_rsc == NULL) {
+        return -ENXIO;
+    }
+
+    if (the_rsc->variant >= pe_clone) {
+        GListPtr gIter = the_rsc->children;
+
+        for (; gIter != NULL; gIter = gIter->next) {
+            found += do_find_resource(rsc, gIter->data, data_set);
+        }
+
+    /* The anonymous clone children's common ID is supplied */
+    } else if ((parent = uber_parent(the_rsc)) != NULL
+               && parent->variant >= pe_clone
+               && is_not_set(the_rsc->flags, pe_rsc_unique)
+               && the_rsc->clone_name
+               && safe_str_eq(rsc, the_rsc->clone_name)
+               && safe_str_neq(rsc, the_rsc->id)) {
+        GListPtr gIter = parent->children;
+
+        for (; gIter != NULL; gIter = gIter->next) {
+            found += do_find_resource(rsc, gIter->data, data_set);
+        }
+
+    } else {
+        found += do_find_resource(rsc, the_rsc, data_set);
+    }
+
+    return found;
 }
 
 #define cons_string(x) x?x:"NA"
@@ -383,7 +408,7 @@ dump_resource_attr(const char *rsc, const char *attr, pe_working_set_t * data_se
 
     } else if (g_list_length(the_rsc->running_on) > 1) {
         CMD_ERR("%s is active on more than one node,"
-                " returning the default value for %s\n", the_rsc->id, crm_str(value));
+                " returning the default value for %s", the_rsc->id, crm_str(value));
     }
 
     params = g_hash_table_new_full(crm_str_hash, g_str_equal,
@@ -405,7 +430,7 @@ dump_resource_attr(const char *rsc, const char *attr, pe_working_set_t * data_se
         rc = 0;
 
     } else {
-        CMD_ERR("Attribute '%s' not found for '%s'\n", attr, the_rsc->id);
+        CMD_ERR("Attribute '%s' not found for '%s'", attr, the_rsc->id);
     }
 
     g_hash_table_destroy(params);
@@ -708,15 +733,15 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
     resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
     if (rsc == NULL) {
-        CMD_ERR("Resource %s not found\n", rsc_id);
+        CMD_ERR("Resource %s not found", rsc_id);
         return -ENXIO;
 
     } else if (rsc->variant != pe_native) {
-        CMD_ERR("We can only process primitive resources, not %s\n", rsc_id);
+        CMD_ERR("We can only process primitive resources, not %s", rsc_id);
         return -EINVAL;
 
     } else if (host_uname == NULL) {
-        CMD_ERR("Please supply a hostname with -H\n");
+        CMD_ERR("Please supply a hostname with -H");
         return -EINVAL;
     } else {
         node_t *node = pe_find_node(data_set->nodes, host_uname);
@@ -754,14 +779,14 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
     value = crm_element_value(rsc->xml, XML_ATTR_TYPE);
     crm_xml_add(xml_rsc, XML_ATTR_TYPE, value);
     if (value == NULL) {
-        CMD_ERR("%s has no type!  Aborting...\n", rsc_id);
+        CMD_ERR("%s has no type!  Aborting...", rsc_id);
         return -ENXIO;
     }
 
     value = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, value);
     if (value == NULL) {
-        CMD_ERR("%s has no class!  Aborting...\n", rsc_id);
+        CMD_ERR("%s has no class!  Aborting...", rsc_id);
         return -ENXIO;
     }
 
@@ -876,10 +901,10 @@ parse_cli_lifetime(const char *input)
 
     duration = crm_time_parse_duration(move_lifetime);
     if (duration == NULL) {
-        CMD_ERR("Invalid duration specified: %s\n", move_lifetime);
+        CMD_ERR("Invalid duration specified: %s", move_lifetime);
         CMD_ERR("Please refer to"
                 " http://en.wikipedia.org/wiki/ISO_8601#Durations"
-                " for examples of valid durations\n");
+                " for examples of valid durations");
         return NULL;
     }
 
@@ -933,14 +958,14 @@ ban_resource(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * ci
     if (BE_QUIET == FALSE) {
         CMD_ERR("WARNING: Creating rsc_location constraint '%s'"
                 " with a score of -INFINITY for resource %s"
-                " on %s.\n", ID(location), rsc_id, host);
+                " on %s.", ID(location), rsc_id, host);
         CMD_ERR("\tThis will prevent %s from %s"
                 " on %s until the constraint is removed using"
                 " the 'crm_resource --clear' command or manually"
-                " with cibadmin\n", rsc_id, scope_master?"being promoted":"running", host);
+                " with cibadmin", rsc_id, scope_master?"being promoted":"running", host);
         CMD_ERR("\tThis will be the case even if %s is"
-                " the last node in the cluster\n", host);
-        CMD_ERR("\tThis message can be disabled with --quiet\n");
+                " the last node in the cluster", host);
+        CMD_ERR("\tThis message can be disabled with --quiet");
     }
 
     crm_xml_add(location, XML_COLOC_ATTR_SOURCE, rsc_id);
@@ -2275,7 +2300,7 @@ main(int argc, char **argv)
                 break;
 
             default:
-                CMD_ERR("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
+                CMD_ERR("Argument code 0%o (%c) is not (?yet?) supported", flag, flag);
                 ++argerr;
                 break;
         }
@@ -2287,7 +2312,6 @@ main(int argc, char **argv)
             CMD_ERR("%s ", argv[optind++]);
             ++argerr;
         }
-        CMD_ERR("\n");
     }
 
     if (optind > argc) {
@@ -2325,7 +2349,7 @@ main(int argc, char **argv)
     cib_conn = cib_new();
     rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
     if (rc != pcmk_ok) {
-        CMD_ERR("Error signing on to the CIB service: %s\n", pcmk_strerror(rc));
+        CMD_ERR("Error signing on to the CIB service: %s", pcmk_strerror(rc));
         return crm_exit(rc);
     }
 
@@ -2369,7 +2393,7 @@ main(int argc, char **argv)
         crmd_channel = mainloop_get_ipc_client(source);
 
         if (crmd_channel == NULL) {
-            CMD_ERR("Error signing on to the CRMd service\n");
+            CMD_ERR("Error signing on to the CRMd service");
             rc = -ENOTCONN;
             goto bail;
         }
@@ -2420,7 +2444,7 @@ main(int argc, char **argv)
         resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
 
         if (rsc == NULL) {
-            CMD_ERR("Must supply a resource id with -r\n");
+            CMD_ERR("Must supply a resource id with -r");
             rc = -ENXIO;
             goto bail;
         }
@@ -2437,7 +2461,7 @@ main(int argc, char **argv)
             action = rsc_long_cmd+6;
 
             if(rsc->variant >= pe_clone) {
-                rc = do_find_resource(rsc_id, NULL, &data_set);
+                rc = search_resource(rsc_id, &data_set);
                 if(rc > 0 && do_force == FALSE) {
                     CMD_ERR("It is not safe to %s %s here: the cluster claims it is already active", action, rsc_id);
                     CMD_ERR("Try setting target-role=stopped first or specifying --force");
@@ -2452,7 +2476,7 @@ main(int argc, char **argv)
         }
 
         if(rsc->variant == pe_group) {
-            CMD_ERR("Sorry, --%s doesn't support group resources\n", rsc_long_cmd);
+            CMD_ERR("Sorry, --%s doesn't support group resources", rsc_long_cmd);
             crm_exit(EOPNOTSUPP);
         }
 
@@ -2461,7 +2485,7 @@ main(int argc, char **argv)
         rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
 
         if(safe_str_eq(rclass, "stonith")){
-            CMD_ERR("Sorry, --%s doesn't support %s resources yet\n", rsc_long_cmd, rclass);
+            CMD_ERR("Sorry, --%s doesn't support %s resources yet", rsc_long_cmd, rclass);
             crm_exit(EOPNOTSUPP);
         }
 
@@ -2529,7 +2553,7 @@ main(int argc, char **argv)
         xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set.input);
 
         if (rsc == NULL) {
-            CMD_ERR("Must supply a resource id with -r\n");
+            CMD_ERR("Must supply a resource id with -r");
             rc = -ENXIO;
             goto bail;
         }
@@ -2582,19 +2606,22 @@ main(int argc, char **argv)
 
     /* All remaining commands require that resource exist */
     } else if (rc == -ENXIO) {
-        CMD_ERR("Resource '%s' not found: %s\n", crm_str(rsc_id), pcmk_strerror(rc));
+        CMD_ERR("Resource '%s' not found: %s", crm_str(rsc_id), pcmk_strerror(rc));
 
     } else if (rsc_cmd == 'W') {
         if (rsc_id == NULL) {
-            CMD_ERR("Must supply a resource id with -r\n");
+            CMD_ERR("Must supply a resource id with -r");
             rc = -ENXIO;
             goto bail;
         }
-        rc = do_find_resource(rsc_id, NULL, &data_set);
+        rc = search_resource(rsc_id, &data_set);
+        if (rc >= 0) {
+            rc = pcmk_ok;
+        }
 
     } else if (rsc_cmd == 'q') {
         if (rsc_id == NULL) {
-            CMD_ERR("Must supply a resource id with -r\n");
+            CMD_ERR("Must supply a resource id with -r");
             rc = -ENXIO;
             goto bail;
         }
@@ -2602,7 +2629,7 @@ main(int argc, char **argv)
 
     } else if (rsc_cmd == 'w') {
         if (rsc_id == NULL) {
-            CMD_ERR("Must supply a resource id with -r\n");
+            CMD_ERR("Must supply a resource id with -r");
             rc = -ENXIO;
             goto bail;
         }
@@ -2612,7 +2639,7 @@ main(int argc, char **argv)
         node_t *dest = NULL;
 
         if (rsc_id == NULL) {
-            CMD_ERR("No value specified for --resource\n");
+            CMD_ERR("No value specified for --resource");
             rc = -ENXIO;
             goto bail;
         }
@@ -2620,7 +2647,7 @@ main(int argc, char **argv)
         if (host_uname) {
             dest = pe_find_node(data_set.nodes, host_uname);
             if (dest == NULL) {
-                CMD_ERR("Unknown node: %s\n", host_uname);
+                CMD_ERR("Unknown node: %s", host_uname);
                 rc = -ENXIO;
                 goto bail;
             }
@@ -2641,19 +2668,19 @@ main(int argc, char **argv)
         rc = -EINVAL;
 
         if (rsc == NULL) {
-            CMD_ERR("Resource '%s' not moved: not found\n", rsc_id);
+            CMD_ERR("Resource '%s' not moved: not found", rsc_id);
             rc = -ENXIO;
             goto bail;
 
         } else if (scope_master && rsc->variant < pe_master) {
             resource_t *p = uber_parent(rsc);
             if(p->variant == pe_master) {
-                CMD_ERR("Using parent '%s' for --move command instead of '%s'.\n", rsc->id, rsc_id);
+                CMD_ERR("Using parent '%s' for --move command instead of '%s'.", rsc->id, rsc_id);
                 rsc_id = p->id;
                 rsc = p;
 
             } else {
-                CMD_ERR("Ignoring '--master' option: not valid for %s resources.\n",
+                CMD_ERR("Ignoring '--master' option: not valid for %s resources.",
                         get_resource_typename(rsc->variant));
                 scope_master = FALSE;
             }
@@ -2680,12 +2707,12 @@ main(int argc, char **argv)
             count = g_list_length(rsc->running_on);
 
         } else if (g_list_length(rsc->running_on) > 1) {
-            CMD_ERR("Resource '%s' not moved: active on multiple nodes\n", rsc_id);
+            CMD_ERR("Resource '%s' not moved: active on multiple nodes", rsc_id);
             goto bail;
         }
 
         if(dest == NULL) {
-            CMD_ERR("Error performing operation: node '%s' is unknown\n", host_uname);
+            CMD_ERR("Error performing operation: node '%s' is unknown", host_uname);
             rc = -ENXIO;
             goto bail;
         }
@@ -2702,10 +2729,10 @@ main(int argc, char **argv)
         } else if (safe_str_eq(current->details->uname, dest->details->uname)) {
             cur_is_dest = TRUE;
             if (do_force) {
-                crm_info("%s is already %s on %s, reinforcing placement with location constraint.\n",
+                crm_info("%s is already %s on %s, reinforcing placement with location constraint.",
                          rsc_id, scope_master?"promoted":"active", dest->details->uname);
             } else {
-                CMD_ERR("Error performing operation: %s is already %s on %s\n",
+                CMD_ERR("Error performing operation: %s is already %s on %s",
                         rsc_id, scope_master?"promoted":"active", dest->details->uname);
                 goto bail;
             }
@@ -2729,10 +2756,10 @@ main(int argc, char **argv)
                 ban_resource(rsc_id, current->details->uname, NULL, cib_conn);
 
             } else if(count > 1) {
-                CMD_ERR("Resource '%s' is currently %s in %d locations.  One may now move one to %s\n",
+                CMD_ERR("Resource '%s' is currently %s in %d locations.  One may now move one to %s",
                         rsc_id, scope_master?"promoted":"active", count, dest->details->uname);
                 CMD_ERR("You can prevent '%s' from being %s at a specific location with:"
-                        " --ban %s--host <name>\n", rsc_id, scope_master?"promoted":"active", scope_master?"--master ":"");
+                        " --ban %s--host <name>", rsc_id, scope_master?"promoted":"active", scope_master?"--master ":"");
 
             } else {
                 crm_trace("Not banning %s from it's current location: not active", rsc_id);
@@ -2745,13 +2772,13 @@ main(int argc, char **argv)
 
         rc = -ENXIO;
         if (rsc_id == NULL) {
-            CMD_ERR("No value specified for --resource\n");
+            CMD_ERR("No value specified for --resource");
             goto bail;
         } else if(rsc == NULL) {
-            CMD_ERR("Resource '%s' not moved: unknown\n", rsc_id);
+            CMD_ERR("Resource '%s' not moved: unknown", rsc_id);
 
         } else if (dest == NULL) {
-            CMD_ERR("Error performing operation: node '%s' is unknown\n", host_uname);
+            CMD_ERR("Error performing operation: node '%s' is unknown", host_uname);
             goto bail;
         }
         rc = ban_resource(rsc_id, dest->details->uname, NULL, cib_conn);
@@ -2761,13 +2788,13 @@ main(int argc, char **argv)
 
         rc = -ENXIO;
         if (rsc_id == NULL) {
-            CMD_ERR("No value specified for --resource\n");
+            CMD_ERR("No value specified for --resource");
             goto bail;
         }
 
         rc = -EINVAL;
         if(rsc == NULL) {
-            CMD_ERR("Resource '%s' not moved: unknown\n", rsc_id);
+            CMD_ERR("Resource '%s' not moved: unknown", rsc_id);
 
         } else if(g_list_length(rsc->running_on) == 1) {
             node_t *current = rsc->running_on->data;
@@ -2792,20 +2819,20 @@ main(int argc, char **argv)
                 rc = ban_resource(rsc_id, current->details->uname, NULL, cib_conn);
 
             } else {
-                CMD_ERR("Resource '%s' not moved: active in %d locations (promoted in %d).\n", rsc_id, g_list_length(rsc->running_on), count);
-                CMD_ERR("You can prevent '%s' from running on a specific location with: --ban --host <name>\n", rsc_id);
+                CMD_ERR("Resource '%s' not moved: active in %d locations (promoted in %d).", rsc_id, g_list_length(rsc->running_on), count);
+                CMD_ERR("You can prevent '%s' from running on a specific location with: --ban --host <name>", rsc_id);
                 CMD_ERR("You can prevent '%s' from being promoted at a specific location with:"
-                        " --ban --master --host <name>\n", rsc_id);
+                        " --ban --master --host <name>", rsc_id);
             }
 
         } else {
-            CMD_ERR("Resource '%s' not moved: active in %d locations.\n", rsc_id, g_list_length(rsc->running_on));
-            CMD_ERR("You can prevent '%s' from running on a specific location with: --ban --host <name>\n", rsc_id);
+            CMD_ERR("Resource '%s' not moved: active in %d locations.", rsc_id, g_list_length(rsc->running_on));
+            CMD_ERR("You can prevent '%s' from running on a specific location with: --ban --host <name>", rsc_id);
         }
 
     } else if (rsc_cmd == 'G') {
         if (rsc_id == NULL) {
-            CMD_ERR("Must supply a resource id with -r\n");
+            CMD_ERR("Must supply a resource id with -r");
             rc = -ENXIO;
             goto bail;
         }
@@ -2815,7 +2842,7 @@ main(int argc, char **argv)
         xmlNode *msg_data = NULL;
 
         if (prop_value == NULL || strlen(prop_value) == 0) {
-            CMD_ERR("You need to supply a value with the -v option\n");
+            CMD_ERR("You need to supply a value with the -v option");
             rc = -EINVAL;
             goto bail;
 
@@ -2825,7 +2852,7 @@ main(int argc, char **argv)
         }
 
         if (rsc_id == NULL) {
-            CMD_ERR("Must supply a resource id with -r\n");
+            CMD_ERR("Must supply a resource id with -r");
             rc = -ENXIO;
             goto bail;
         }
@@ -2842,7 +2869,7 @@ main(int argc, char **argv)
 
     } else if (rsc_cmd == 'g') {
         if (rsc_id == NULL) {
-            CMD_ERR("Must supply a resource id with -r\n");
+            CMD_ERR("Must supply a resource id with -r");
             rc = -ENXIO;
             goto bail;
         }
@@ -2850,12 +2877,12 @@ main(int argc, char **argv)
 
     } else if (rsc_cmd == 'p') {
         if (rsc_id == NULL) {
-            CMD_ERR("Must supply a resource id with -r\n");
+            CMD_ERR("Must supply a resource id with -r");
             rc = -ENXIO;
             goto bail;
         }
         if (prop_value == NULL || strlen(prop_value) == 0) {
-            CMD_ERR("You need to supply a value with the -v option\n");
+            CMD_ERR("You need to supply a value with the -v option");
             rc = -EINVAL;
             goto bail;
         }
@@ -2866,7 +2893,7 @@ main(int argc, char **argv)
 
     } else if (rsc_cmd == 'd') {
         if (rsc_id == NULL) {
-            CMD_ERR("Must supply a resource id with -r\n");
+            CMD_ERR("Must supply a resource id with -r");
             rc = -ENXIO;
             goto bail;
         }
@@ -2919,7 +2946,7 @@ main(int argc, char **argv)
         xmlNode *msg_data = NULL;
 
         if (rsc_id == NULL) {
-            CMD_ERR("Must supply a resource id with -r\n");
+            CMD_ERR("Must supply a resource id with -r");
             rc = -ENXIO;
             goto bail;
 
@@ -2941,7 +2968,7 @@ main(int argc, char **argv)
         free_xml(msg_data);
 
     } else {
-        CMD_ERR("Unknown command: %c\n", rsc_cmd);
+        CMD_ERR("Unknown command: %c", rsc_cmd);
     }
 
   bail:
@@ -2955,11 +2982,11 @@ main(int argc, char **argv)
     }
 
     if (rc == -pcmk_err_no_quorum) {
-        CMD_ERR("Error performing operation: %s\n", pcmk_strerror(rc));
-        CMD_ERR("Try using -f\n");
+        CMD_ERR("Error performing operation: %s", pcmk_strerror(rc));
+        CMD_ERR("Try using -f");
 
     } else if (rc != pcmk_ok) {
-        CMD_ERR("Error performing operation: %s\n", pcmk_strerror(rc));
+        CMD_ERR("Error performing operation: %s", pcmk_strerror(rc));
     }
 
     return crm_exit(rc);

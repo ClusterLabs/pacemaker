@@ -5,16 +5,19 @@ Node srv02 (3232238290): UNCLEAN (offline)
 Online: [ srv03 ]
 
  Resource Group: grpStonith1
-     prmStonith1-1	(stonith:external/ssh):	Started srv02 
+     prmStonith1-1	(stonith:external/ssh):	Started srv02 (UNCLEAN)
  Resource Group: grpStonith2
-     prmStonith2-1	(stonith:external/ssh):	Started srv01 
+     prmStonith2-1	(stonith:external/ssh):	Started srv01 (UNCLEAN)
  Resource Group: grpStonith3
-     prmStonith3-1	(stonith:external/ssh):	Started srv01 
+     prmStonith3-1	(stonith:external/ssh):	Started srv01 (UNCLEAN)
  Master/Slave Set: msPostgresql [pgsql]
-     Masters: [ srv01 ]
-     Slaves: [ srv02 srv03 ]
+     pgsql	(ocf::pacemaker:Stateful):	Started srv02 (UNCLEAN)
+     pgsql	(ocf::pacemaker:Stateful):	Master srv01 (UNCLEAN)
+     Slaves: [ srv03 ]
  Clone Set: clnPingd [prmPingd]
-     Started: [ srv01 srv02 srv03 ]
+     prmPingd	(ocf::pacemaker:ping):	Started srv02 (UNCLEAN)
+     prmPingd	(ocf::pacemaker:ping):	Started srv01 (UNCLEAN)
+     Started: [ srv03 ]
 
 Transition Summary:
  * Stop    prmStonith1-1	(Started srv02 - blocked)
@@ -48,14 +51,17 @@ Node srv02 (3232238290): UNCLEAN (offline)
 Online: [ srv03 ]
 
  Resource Group: grpStonith1
-     prmStonith1-1	(stonith:external/ssh):	Started srv02 
+     prmStonith1-1	(stonith:external/ssh):	Started srv02 (UNCLEAN)
  Resource Group: grpStonith2
-     prmStonith2-1	(stonith:external/ssh):	Started srv01 
+     prmStonith2-1	(stonith:external/ssh):	Started srv01 (UNCLEAN)
  Resource Group: grpStonith3
-     prmStonith3-1	(stonith:external/ssh):	Started srv01 
+     prmStonith3-1	(stonith:external/ssh):	Started srv01 (UNCLEAN)
  Master/Slave Set: msPostgresql [pgsql]
-     Masters: [ srv01 ]
-     Slaves: [ srv02 srv03 ]
+     pgsql	(ocf::pacemaker:Stateful):	Started srv02 (UNCLEAN)
+     pgsql	(ocf::pacemaker:Stateful):	Master srv01 (UNCLEAN)
+     Slaves: [ srv03 ]
  Clone Set: clnPingd [prmPingd]
-     Started: [ srv01 srv02 srv03 ]
+     prmPingd	(ocf::pacemaker:ping):	Started srv02 (UNCLEAN)
+     prmPingd	(ocf::pacemaker:ping):	Started srv01 (UNCLEAN)
+     Started: [ srv03 ]
 

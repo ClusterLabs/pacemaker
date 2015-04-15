@@ -489,7 +489,7 @@ main(int argc, char **argv)
     if (optind > argc) {
         ++argerr;
     }
-    crm_log_init("remote_client", LOG_INFO, TRUE, options.verbose ? TRUE : FALSE, argc, argv, FALSE);
+    crm_log_init("remote_client", LOG_INFO, FALSE, options.verbose ? TRUE : FALSE, argc, argv, FALSE);
 
     /* if we can't perform an api_call or listen for events, 
      * there is nothing to do */
