@@ -520,7 +520,7 @@ parse_host_line(const char *line, int max, GListPtr * output)
         if (a_space && lpc < max && isspace(line[lpc + 1])) {
             /* fast-forward to the end of the spaces */
 
-        } else if (a_space || line[lpc] == ',' || line[lpc] == 0) {
+        } else if (a_space || line[lpc] == ',' || line[lpc] == ';' || line[lpc] == 0) {
             int rc = 1;
             char *entry = NULL;
 
