@@ -148,6 +148,8 @@ extern int stonith_level_register(xmlNode * msg, char **desc);
 
 extern int stonith_level_remove(xmlNode * msg, char **desc);
 
+extern stonith_topology_t *find_topology_for_host(const char *host);
+
 extern void do_local_reply(xmlNode * notify_src, const char *client_id, gboolean sync_reply,
                            gboolean from_peer);
 

@@ -30,6 +30,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <ctype.h>
+#include <regex.h>
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
@@ -472,6 +473,38 @@ set_op_device_list(remote_fencing_op_t * op, GListPtr devices)
     op->devices = op->devices_list;
 }
 
+stonith_topology_t *
+find_topology_for_host(const char *host) 
+{
+    stonith_topology_t *tp = g_hash_table_lookup(topology, host);
+
+    if(tp == NULL) {
+        int status = 1;
+        regex_t r_patt;
+        GHashTableIter tIter;
+
+        crm_trace("Testing %d topologies for a match", g_hash_table_size(topology));
+        g_hash_table_iter_init(&tIter, topology);
+        while (g_hash_table_iter_next(&tIter, NULL, (gpointer *) & tp)) {
+
+            if (regcomp(&r_patt, tp->node, REG_EXTENDED)) {
+                crm_info("Bad regex '%s' for fencing level", tp->node);
+            } else {
+                status = regexec(&r_patt, host, 0, NULL, 0);
+            }
+
+            if (status == 0) {
+                crm_notice("Matched %s with %s", host, tp->node);
+                break;
+            }
+            crm_trace("No match for %s with %s", host, tp->node);
+        }
+    }
+
+    return tp;
+}
+
+
 static int
 stonith_topology_next(remote_fencing_op_t * op)
 {
@@ -479,7 +512,7 @@ stonith_topology_next(remote_fencing_op_t * op)
 
     if (op->target) {
         /* Queries don't have a target set */
-        tp = g_hash_table_lookup(topology, op->target);
+        tp = find_topology_for_host(op->target);
     }
     if (topology_is_empty(tp)) {
         return pcmk_ok;
@@ -914,8 +947,8 @@ get_peer_timeout(st_query_result_t * peer, int default_timeout)
 static int
 get_op_total_timeout(remote_fencing_op_t * op, st_query_result_t * chosen_peer, int default_timeout)
 {
-    stonith_topology_t *tp = g_hash_table_lookup(topology, op->target);
     int total_timeout = 0;
+    stonith_topology_t *tp = find_topology_for_host(op->target);
 
     if (is_set(op->call_options, st_opt_topology) && tp) {
         int i;
@@ -1169,8 +1202,7 @@ all_topology_devices_found(remote_fencing_op_t * op)
     gboolean skip_target = FALSE;
     int i;
 
-    tp = g_hash_table_lookup(topology, op->target);
-
+    tp = find_topology_for_host(op->target);
     if (!tp) {
         return FALSE;
     }

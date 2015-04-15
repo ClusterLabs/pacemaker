@@ -378,6 +378,7 @@
 #  define XML_TAG_FENCING_LEVEL         "fencing-level"
 #  define XML_ATTR_STONITH_INDEX        "index"
 #  define XML_ATTR_STONITH_TARGET       "target"
+#  define XML_ATTR_STONITH_TARGET_PATTERN       "target-pattern"
 #  define XML_ATTR_STONITH_DEVICES      "devices"
 
 #  define XML_TAG_DIFF                  "diff"

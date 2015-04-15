@@ -503,6 +503,9 @@ handle_topology_change(xmlNode *match, bool remove)
 
         crm_element_value_int(match, XML_ATTR_STONITH_INDEX, &index);
         target = crm_element_value(match, XML_ATTR_STONITH_TARGET);
+        if(target == NULL) {
+            target = crm_element_value(match, XML_ATTR_STONITH_TARGET_PATTERN);
+        }
         dev_list = crm_element_value(match, XML_ATTR_STONITH_DEVICES);
         devices = parse_device_list(dev_list);
 
@@ -529,6 +532,10 @@ remove_fencing_topology(xmlXPathObjectPtr xpathObj)
             /* Deletion */
             int index = 0;
             const char *target = crm_element_value(match, XML_ATTR_STONITH_TARGET);
+
+            if(target == NULL) {
+                target = crm_element_value(match, XML_ATTR_STONITH_TARGET_PATTERN);
+            }
 
             crm_element_value_int(match, XML_ATTR_STONITH_INDEX, &index);
             if (target == NULL) {

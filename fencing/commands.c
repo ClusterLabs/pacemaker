@@ -1077,6 +1077,8 @@ stonith_level_register(xmlNode * msg, char **desc)
     const char *node = crm_element_value(level, F_STONITH_TARGET);
     stonith_topology_t *tp = g_hash_table_lookup(topology, node);
 
+    CRM_LOG_ASSERT(node != NULL);
+
     crm_element_value_int(level, XML_ATTR_ID, &id);
     if (desc) {
         *desc = crm_strdup_printf("%s[%d]", node, id);
@@ -1116,6 +1118,8 @@ stonith_level_remove(xmlNode * msg, char **desc)
     xmlNode *level = get_xpath_object("//" F_STONITH_LEVEL, msg, LOG_ERR);
     const char *node = crm_element_value(level, F_STONITH_TARGET);
     stonith_topology_t *tp = g_hash_table_lookup(topology, node);
+
+    CRM_LOG_ASSERT(node != NULL);
 
     if (desc) {
         *desc = crm_strdup_printf("%s[%d]", node, id);
@@ -1933,7 +1937,7 @@ check_alternate_host(const char *target)
 {
     const char *alternate_host = NULL;
 
-    if (g_hash_table_lookup(topology, target) && safe_str_eq(target, stonith_our_uname)) {
+    if (find_topology_for_host(target) && safe_str_eq(target, stonith_our_uname)) {
         GHashTableIter gIter;
         crm_node_t *entry = NULL;
 
