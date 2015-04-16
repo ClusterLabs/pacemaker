@@ -121,7 +121,7 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc, int targe
     const char *on_uname = crm_peer_uname(event_node_uuid);
     const char *origin = crm_element_value(event, XML_ATTR_ORIGIN);
 
-    if (rc == 99) {
+    if (rc == CRM_DIRECT_NACK_RC) {
         /* this is an internal code for "we're busy, try again" */
         return FALSE;
 
@@ -216,8 +216,7 @@ status_from_rc(crm_action_t * action, int orig_status, int rc, int target_rc)
         status = PCMK_LRM_OP_ERROR;
     }
 
-    /* 99 is the code we use for direct nack's */
-    if (rc != 99 && status != PCMK_LRM_OP_DONE) {
+    if ((rc != CRM_DIRECT_NACK_RC) && (status != PCMK_LRM_OP_DONE)) {
         const char *task, *uname;
 
         task = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
