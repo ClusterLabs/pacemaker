@@ -335,12 +335,15 @@ rm -rf %{buildroot}
 %if %{defined _unitdir}
 
 %post
+%systemd_post crm_mon.service
 %systemd_post pacemaker.service
 
 %preun
 %systemd_preun pacemaker.service
+%systemd_preun crm_mon.service
 
 %postun
+%systemd_postun_with_restart crm_mon.service 
 %systemd_postun_with_restart pacemaker.service 
 
 %post remote
@@ -403,6 +406,7 @@ exit 0
 
 %if %{defined _unitdir}
 %{_unitdir}/pacemaker.service
+%{_unitdir}/crm_mon.service
 %else
 %{_initrddir}/pacemaker
 %endif
