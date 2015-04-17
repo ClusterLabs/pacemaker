@@ -2482,7 +2482,7 @@ main(int argc, char **argv)
         }
 
         params = generate_resource_params(rsc, &data_set);
-        op = resources_action_create(rsc->id, rclass, rprov, rtype, action, 0, -1, params);
+        op = resources_action_create(rsc->id, rclass, rprov, rtype, action, 0, -1, params, 0);
 
         if(do_trace) {
             setenv("OCF_TRACE_RA", "1", 1);
@@ -2491,7 +2491,7 @@ main(int argc, char **argv)
         if(op == NULL) {
             /* Re-run but with stderr enabled so we can display a sane error message */
             crm_enable_stderr(TRUE);
-            resources_action_create(rsc->id, rclass, rprov, rtype, action, 0, -1, params);
+            resources_action_create(rsc->id, rclass, rprov, rtype, action, 0, -1, params, 0);
             return crm_exit(EINVAL);
 
         } else if (services_action_sync(op)) {
