@@ -312,6 +312,12 @@ main(int argc, char **argv)
         }
     }
 
+    /* The presence of this variable allegedly controls whether child
+     * processes like httpd will try and use Systemd's sd_notify
+     * API
+     */
+    unsetenv("NOTIFY_SOCKET");
+
     /* Used by RAs - Leave owned by root */
     crm_build_path(CRM_RSCTMP_DIR, 0755);
 
