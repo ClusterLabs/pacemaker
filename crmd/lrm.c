@@ -1228,6 +1228,44 @@ get_fake_call_id(lrm_state_t *lrm_state, const char *rsc_id)
     return call_id;
 }
 
+static void
+force_reprobe(lrm_state_t *lrm_state, const char *from_sys, const char *from_host, const char *user_name, gboolean is_remote_node)
+{
+        GHashTableIter gIter;
+        rsc_history_t *entry = NULL;
+
+
+        crm_info("clearing resource history on node %s", lrm_state->node_name);
+        g_hash_table_iter_init(&gIter, lrm_state->resource_history);
+        while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
+            /* only unregister the resource during a reprobe if it is not a remote connection
+             * resource. otherwise unregistering the connection will terminate remote-node
+             * membership */
+            gboolean unregister = TRUE;
+
+            if (is_remote_lrmd_ra(NULL, NULL, entry->id)) {
+                lrm_state_t *remote_lrm_state = lrm_state_find(entry->id);
+                if (remote_lrm_state) {
+                    /* when forcing a reprobe, make sure to clear remote node before
+                     * clearing the remote node's connection resource */ 
+                    force_reprobe(remote_lrm_state, from_sys, from_host, user_name, TRUE);
+                }
+                unregister = FALSE;
+            }
+
+            delete_resource(lrm_state, entry->id, &entry->rsc, &gIter, from_sys, from_host,
+                            user_name, NULL, unregister);
+        }
+
+        /* Now delete the copy in the CIB */
+        erase_status_tag(lrm_state->node_name, XML_CIB_TAG_LRM, cib_scope_local);
+
+        /* And finally, _delete_ the value in attrd
+         * Setting it to FALSE results in the PE sending us back here again
+         */
+        update_attrd(lrm_state->node_name, CRM_OP_PROBED, NULL, user_name, is_remote_node);
+}
+
 
 /*	 A_LRM_INVOKE	*/
 void
@@ -1383,29 +1421,9 @@ do_lrm_invoke(long long action,
         update_attrd(lrm_state->node_name, CRM_OP_PROBED, XML_BOOLEAN_TRUE, user_name, is_remote_node);
 
     } else if (safe_str_eq(operation, CRM_OP_REPROBE) || safe_str_eq(crm_op, CRM_OP_REPROBE)) {
-        GHashTableIter gIter;
-        rsc_history_t *entry = NULL;
-
         crm_notice("Forcing the status of all resources to be redetected");
 
-        g_hash_table_iter_init(&gIter, lrm_state->resource_history);
-        while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
-            /* only unregister the resource during a reprobe if it is not a remote connection
-             * resource. otherwise unregistering the connection will terminate remote-node
-             * membership */
-            gboolean unregister = is_remote_lrmd_ra(NULL, NULL, entry->id) ? FALSE : TRUE;
-
-            delete_resource(lrm_state, entry->id, &entry->rsc, &gIter, from_sys, from_host,
-                            user_name, NULL, unregister);
-        }
-
-        /* Now delete the copy in the CIB */
-        erase_status_tag(lrm_state->node_name, XML_CIB_TAG_LRM, cib_scope_local);
-
-        /* And finally, _delete_ the value in attrd
-         * Setting it to FALSE results in the PE sending us back here again
-         */
-        update_attrd(lrm_state->node_name, CRM_OP_PROBED, NULL, user_name, is_remote_node);
+        force_reprobe(lrm_state, from_sys, from_host, user_name, is_remote_node);
 
         if(strcmp(CRM_SYSTEM_TENGINE, from_sys) != 0
            && strcmp(CRM_SYSTEM_TENGINE, from_sys) != 0) {
