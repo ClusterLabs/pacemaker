@@ -407,6 +407,8 @@ exit 0
 %{_initrddir}/pacemaker
 %endif
 
+%exclude %{_datadir}/pacemaker/report.common
+%exclude %{_datadir}/pacemaker/report.collector
 %{_datadir}/pacemaker
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
 %exclude %{_libexecdir}/pacemaker/lrmd_test
@@ -474,6 +476,8 @@ exit 0
 %{_sbindir}/crm_simulate
 %{_sbindir}/crm_report
 %{_sbindir}/crm_ticket
+%{_datadir}/pacemaker/report.common
+%{_datadir}/pacemaker/report.collector
 %doc %{_mandir}/man8/*
 %exclude %{_mandir}/man8/attrd_updater.*
 %exclude %{_mandir}/man8/crm_attribute.*
