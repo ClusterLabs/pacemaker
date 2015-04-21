@@ -352,7 +352,7 @@ match_graph_event(int action_id, xmlNode * event, const char *event_node,
     this_event = crm_element_value(event, XML_LRM_ATTR_TASK_KEY);
     target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
     crm_info("Action %s (%d) confirmed on %s (rc=%d)",
-             crm_str(this_event), action->id, crm_str(target), op_status);
+             crm_str(this_event), action->id, crm_str(target), op_rc);
 
     /* determine if this action affects a remote-node's online/offline status */
     process_remote_node_action(action, event);
