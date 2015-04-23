@@ -31,9 +31,6 @@
 char *failed_stop_offset = NULL;
 char *failed_start_offset = NULL;
 
-int match_graph_event(int action_id, xmlNode * event, const char *event_node,
-                      int op_status, int op_rc, int target_rc);
-
 gboolean
 fail_incompletable_actions(crm_graph_t * graph, const char *down_node)
 {
@@ -204,32 +201,40 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc, int targe
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Return simplified operation status based on operation return code
+ *
+ * \param[in] action       CRM action instance of operation
+ * \param[in] orig_status  Original reported operation status
+ * \param[in] rc           Actual operation return code
+ * \param[in] target_rc    Expected operation return code
+ *
+ * \return PCMK_LRM_OP_DONE if rc equals target_rc, PCMK_LRM_OP_ERROR otherwise
+ *
+ * \note This assumes that PCMK_LRM_OP_PENDING operations have already been
+ *       filtered (otherwise they will get simplified as well).
+ */
 static int
 status_from_rc(crm_action_t * action, int orig_status, int rc, int target_rc)
 {
-    int status = orig_status;
-
     if (target_rc == rc) {
         crm_trace("Target rc: == %d", rc);
-        if (status != PCMK_LRM_OP_DONE) {
-            crm_trace("Re-mapping op status to" " PCMK_LRM_OP_DONE for rc=%d", rc);
-            status = PCMK_LRM_OP_DONE;
+        if (orig_status != PCMK_LRM_OP_DONE) {
+            crm_trace("Re-mapping op status to PCMK_LRM_OP_DONE for rc=%d", rc);
         }
-
-    } else {
-        status = PCMK_LRM_OP_ERROR;
+        return PCMK_LRM_OP_DONE;
     }
 
-    if ((rc != CRM_DIRECT_NACK_RC) && (status != PCMK_LRM_OP_DONE)) {
-        const char *task, *uname;
+    if (rc != CRM_DIRECT_NACK_RC) {
+        const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
+        const char *uname = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 
-        task = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
-        uname = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
         crm_warn("Action %d (%s) on %s failed (target: %d vs. rc: %d): %s",
-                 action->id, task, uname, target_rc, rc, services_lrm_status_str(status));
+                 action->id, task, uname, target_rc, rc,
+                 services_lrm_status_str(PCMK_LRM_OP_ERROR));
     }
-
-    return status;
+    return PCMK_LRM_OP_ERROR;
 }
 
 static void
@@ -288,15 +293,22 @@ process_remote_node_action(crm_action_t *action, xmlNode *event)
     }
 }
 
-/*
- * returns the ID of the action if a match is found
- * returns -1 if a match was not found
- * returns -2 if a match was found but the action failed (and was
- *            not allowed to)
+/*!
+ * \internal
+ * \brief Confirm action and update transition graph, aborting transition on failures
+ *
+ * \param[in]     action_id        Action number of operation
+ * \param[in]     event            Event instance of this operation
+ * \param[in]     orig_status      Original reported operation status
+ * \param[in]     op_rc            Actual operation return code
+ * \param[in]     target_rc        Expected operation return code
+ *
+ * \return 0 on success, -1 if action does not exist
+ * \note This assumes that PCMK_LRM_OP_PENDING operations have already been
+ *       filtered (otherwise they may be treated as failures).
  */
-int
-match_graph_event(int action_id, xmlNode * event, const char *event_node,
-                  int op_status, int op_rc, int target_rc)
+static int
+match_graph_event(int action_id, xmlNode *event, int op_status, int op_rc, int target_rc)
 {
     const char *target = NULL;
     const char *allow_fail = NULL;
@@ -308,14 +320,11 @@ match_graph_event(int action_id, xmlNode * event, const char *event_node,
         return -1;
     }
 
+    /* Remap operation status based on return code */
     op_status = status_from_rc(action, op_status, op_rc, target_rc);
 
     /* Process OP status */
     switch (op_status) {
-        case PCMK_LRM_OP_PENDING:
-            crm_debug("Ignoring pending operation");
-            return action->id;
-            break;
         case PCMK_LRM_OP_DONE:
             break;
         case PCMK_LRM_OP_ERROR:
@@ -328,6 +337,11 @@ match_graph_event(int action_id, xmlNode * event, const char *event_node,
             crm_err("Dont know what to do for cancelled ops yet");
             break;
         default:
+            /*
+             PCMK_LRM_OP_ERROR_HARD,
+             PCMK_LRM_OP_ERROR_FATAL,
+             PCMK_LRM_OP_NOT_INSTALLED
+             */
             action->failed = TRUE;
             crm_err("Unsupported action result: %d", op_status);
     }
@@ -357,7 +371,7 @@ match_graph_event(int action_id, xmlNode * event, const char *event_node,
 
     /* determine if this action affects a remote-node's online/offline status */
     process_remote_node_action(action, event);
-    return action->id;
+    return 0;
 }
 
 crm_action_t *
@@ -565,7 +579,7 @@ process_graph_event(xmlNode * event, const char *event_node)
         desc = "arrived late";
         abort_transition(INFINITY, tg_restart, "Inactive graph", event);
 
-    } else if (match_graph_event(action, event, event_node, status, rc, target_rc) < 0) {
+    } else if (match_graph_event(action, event, status, rc, target_rc) < 0) {
         desc = "unknown";
         abort_transition(INFINITY, tg_restart, "Unknown event", event);
 

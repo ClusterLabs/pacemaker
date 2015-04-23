@@ -688,15 +688,11 @@ tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
 
     } else {
         const char *target = crm_element_value_const(action->xml, XML_LRM_ATTR_TARGET);
-        const char *allow_fail = crm_meta_value(action->params, XML_ATTR_TE_ALLOWFAIL);
 
         action->failed = TRUE;
-        if (crm_is_true(allow_fail) == FALSE) {
-            crm_notice("Stonith operation %d for %s failed (%s): aborting transition.", call_id,
-                       target, pcmk_strerror(rc));
-            abort_transition(INFINITY, tg_restart, "Stonith failed", NULL);
-        }
-
+        crm_notice("Stonith operation %d for %s failed (%s): aborting transition.",
+                   call_id, target, pcmk_strerror(rc));
+        abort_transition(INFINITY, tg_restart, "Stonith failed", NULL);
         st_fail_count_increment(target, rc);
     }
 
