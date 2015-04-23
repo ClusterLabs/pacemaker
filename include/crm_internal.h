@@ -384,4 +384,6 @@ void remote_proxy_relay_response(lrmd_t *lrmd, const char *session_id, xmlNode *
 void remote_proxy_end_session(const char *session);
 void remote_proxy_free(gpointer data);
 
+#define LRMD_ISOLATION_PROVIDER "isolation"
+
 #endif                          /* CRM_INTERNAL__H */

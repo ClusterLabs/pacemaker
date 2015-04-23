@@ -764,7 +764,18 @@ resources_os_list_lsb_agents(void)
 GList *
 resources_os_list_ocf_providers(void)
 {
-    return get_directory_list(OCF_ROOT_DIR "/resource.d", FALSE, TRUE);
+    GList *gIter = NULL;
+    GList *providers = NULL;
+
+    providers = get_directory_list(OCF_ROOT_DIR "/resource.d", FALSE, TRUE);
+    for (gIter = providers; gIter != NULL; gIter = gIter->next) {
+        if (safe_str_eq(gIter->data, LRMD_ISOLATION_PROVIDER)) {
+            providers = g_list_remove_link(providers, gIter);
+            g_list_free_1(gIter);
+            break;
+        }
+    }
+    return providers;
 }
 
 GList *
