@@ -107,6 +107,18 @@ fail_incompletable_actions(crm_graph_t * graph, const char *down_node)
     return FALSE;
 }
 
+/*!
+ * \internal
+ * \brief Update failure-related node attributes if warranted
+ *
+ * \param[in] event            XML describing operation that (maybe) failed
+ * \param[in] event_node_uuid  Node that event occurred on
+ * \param[in] rc               Actual operation return code
+ * \param[in] target_rc        Expected operation return code
+ * \param[in] do_update        If TRUE, do update regardless of operation type
+ *
+ * \return TRUE if this was not a direct nack, success or lrm status refresh
+ */
 static gboolean
 update_failcount(xmlNode * event, const char *event_node_uuid, int rc, int target_rc, gboolean do_update)
 {
@@ -114,66 +126,58 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc, int targe
 
     char *task = NULL;
     char *rsc_id = NULL;
-    char *attr_name = NULL;
 
     const char *value = NULL;
     const char *id = crm_element_value(event, XML_LRM_ATTR_TASK_KEY);
     const char *on_uname = crm_peer_uname(event_node_uuid);
     const char *origin = crm_element_value(event, XML_ATTR_ORIGIN);
 
-    if (rc == CRM_DIRECT_NACK_RC) {
-        /* this is an internal code for "we're busy, try again" */
+    /* Nothing needs to be done for success, lrm status refresh,
+     * or direct nack (internal code for "busy, try again")
+     */
+    if ((rc == CRM_DIRECT_NACK_RC) || (rc == target_rc)) {
         return FALSE;
-
-    } else if (rc == target_rc) {
-        return FALSE;
-    }
-
-    if (safe_str_eq(origin, "build_active_RAs")) {
+    } else if (safe_str_eq(origin, "build_active_RAs")) {
         crm_debug("No update for %s (rc=%d) on %s: Old failure from lrm status refresh",
                   id, rc, on_uname);
         return FALSE;
     }
 
+    /* Sanity check */
     CRM_CHECK(on_uname != NULL, return TRUE);
-
-    if (failed_stop_offset == NULL) {
-        failed_stop_offset = strdup(INFINITY_S);
-    }
-
-    if (failed_start_offset == NULL) {
-        failed_start_offset = strdup(INFINITY_S);
-    }
-
-    CRM_CHECK(parse_op_key(id, &rsc_id, &task, &interval), crm_err("Couldn't parse: %s", ID(event));
-              goto bail);
+    CRM_CHECK(parse_op_key(id, &rsc_id, &task, &interval),
+              crm_err("Couldn't parse: %s", ID(event)); goto bail);
     CRM_CHECK(task != NULL, goto bail);
     CRM_CHECK(rsc_id != NULL, goto bail);
 
-    if (do_update || interval > 0) {
+    /* Decide whether update is necessary and what value to use */
+    if ((interval > 0) || safe_str_eq(task, CRMD_ACTION_PROMOTE)
+        || safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
         do_update = TRUE;
 
     } else if (safe_str_eq(task, CRMD_ACTION_START)) {
         do_update = TRUE;
+        if (failed_start_offset == NULL) {
+            failed_start_offset = strdup(INFINITY_S);
+        }
         value = failed_start_offset;
 
     } else if (safe_str_eq(task, CRMD_ACTION_STOP)) {
         do_update = TRUE;
+        if (failed_stop_offset == NULL) {
+            failed_stop_offset = strdup(INFINITY_S);
+        }
         value = failed_stop_offset;
-
-    } else if (safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
-        do_update = TRUE;
-
-    } else if (safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
-        do_update = TRUE;
     }
 
+    /* Fail count will be either incremented or set to infinity */
     if (value == NULL || safe_str_neq(value, INFINITY_S)) {
         value = XML_NVPAIR_ATTR_VALUE "++";
     }
 
     if (do_update) {
         char *now = crm_itoa(time(NULL));
+        char *attr_name = NULL;
         gboolean is_remote_node = FALSE;
 
         if (g_hash_table_lookup(crm_remote_peer_cache, event_node_uuid)) {
