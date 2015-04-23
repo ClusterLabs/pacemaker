@@ -297,28 +297,21 @@ process_remote_node_action(crm_action_t *action, xmlNode *event)
  * \internal
  * \brief Confirm action and update transition graph, aborting transition on failures
  *
- * \param[in]     action_id        Action number of operation
+ * \param[in/out] action           CRM action instance of this operation
  * \param[in]     event            Event instance of this operation
  * \param[in]     orig_status      Original reported operation status
  * \param[in]     op_rc            Actual operation return code
  * \param[in]     target_rc        Expected operation return code
  *
- * \return 0 on success, -1 if action does not exist
  * \note This assumes that PCMK_LRM_OP_PENDING operations have already been
  *       filtered (otherwise they may be treated as failures).
  */
-static int
-match_graph_event(int action_id, xmlNode *event, int op_status, int op_rc, int target_rc)
+static void
+match_graph_event(crm_action_t *action, xmlNode *event, int op_status, int op_rc, int target_rc)
 {
     const char *target = NULL;
     const char *allow_fail = NULL;
     const char *this_event = NULL;
-    crm_action_t *action = NULL;
-
-    action = get_action(action_id, FALSE);
-    if (action == NULL) {
-        return -1;
-    }
 
     /* Remap operation status based on return code */
     op_status = status_from_rc(action, op_status, op_rc, target_rc);
@@ -371,7 +364,6 @@ match_graph_event(int action_id, xmlNode *event, int op_status, int op_rc, int t
 
     /* determine if this action affects a remote-node's online/offline status */
     process_remote_node_action(action, event);
-    return 0;
 }
 
 crm_action_t *
@@ -523,12 +515,13 @@ process_graph_event(xmlNode * event, const char *event_node)
     int callid = -1;
 
     int action_num = -1;
+    crm_action_t *action = NULL;
+
     int target_rc = -1;
     int transition_num = -1;
     char *update_te_uuid = NULL;
 
     gboolean stop_early = FALSE;
-    gboolean passed = FALSE;
     const char *id = NULL;
     const char *desc = NULL;
     const char *magic = NULL;
@@ -579,16 +572,21 @@ process_graph_event(xmlNode * event, const char *event_node)
         desc = "arrived late";
         abort_transition(INFINITY, tg_restart, "Inactive graph", event);
 
-    } else if (match_graph_event(action_num, event, status, rc, target_rc) < 0) {
-        desc = "unknown";
-        abort_transition(INFINITY, tg_restart, "Unknown event", event);
+    } else {
+        action = get_action(action_num, FALSE);
 
-    } else if (rc == target_rc) {
-        passed = TRUE;
-        crm_trace("Processed update to %s: %s", id, magic);
+        if (action == NULL) {
+            desc = "unknown";
+            abort_transition(INFINITY, tg_restart, "Unknown event", event);
+
+        } else {
+            match_graph_event(action, event, status, rc, target_rc);
+        }
     }
 
-    if (passed == FALSE) {
+    if (action && (rc == target_rc)) {
+        crm_trace("Processed update to %s: %s", id, magic);
+    } else {
         if (update_failcount(event, event_node, rc, target_rc, transition_num == -1)) {
             /* Turns out this wasn't an lrm status refresh update aferall */
             stop_early = FALSE;
