@@ -305,9 +305,6 @@ match_graph_event(int action_id, xmlNode * event, const char *event_node,
     }
 
     op_status = status_from_rc(action, op_status, op_rc, target_rc);
-    if (op_status != PCMK_LRM_OP_DONE) {
-        update_failcount(event, event_node, op_rc, target_rc, FALSE);
-    }
 
     /* Process OP status */
     switch (op_status) {
