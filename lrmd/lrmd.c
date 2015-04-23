@@ -1200,7 +1200,7 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
         g_hash_table_remove(params_copy, "CRM_meta_isolation_wrapper");
         action = resources_action_create(rsc->rsc_id,
                                          "ocf",
-                                         ISOLATION_PROVIDER,
+                                         LRMD_ISOLATION_PROVIDER,
                                          cmd->isolation_wrapper,
                                          cmd->action, /*action will be normalized in wrapper*/
                                          cmd->interval,
