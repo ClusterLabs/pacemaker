@@ -522,7 +522,7 @@ process_graph_event(xmlNode * event, const char *event_node)
     int status = -1;
     int callid = -1;
 
-    int action = -1;
+    int action_num = -1;
     int target_rc = -1;
     int transition_num = -1;
     char *update_te_uuid = NULL;
@@ -550,8 +550,8 @@ process_graph_event(xmlNode * event, const char *event_node)
         return FALSE;
     }
 
-    if (decode_transition_key(magic, &update_te_uuid, &transition_num, &action, &target_rc) ==
-        FALSE) {
+    if (decode_transition_key(magic, &update_te_uuid, &transition_num,
+                              &action_num, &target_rc) == FALSE) {
         crm_err("Invalid event %s.%d detected: %s", id, callid, magic);
         abort_transition(INFINITY, tg_restart, "Bad event", event);
         return FALSE;
@@ -565,7 +565,7 @@ process_graph_event(xmlNode * event, const char *event_node)
         desc = "initiated outside of the cluster";
         abort_transition(INFINITY, tg_restart, "Unexpected event", event);
 
-    } else if (action < 0 || crm_str_eq(update_te_uuid, te_uuid, TRUE) == FALSE) {
+    } else if ((action_num < 0) || (crm_str_eq(update_te_uuid, te_uuid, TRUE) == FALSE)) {
         desc = "initiated by a different node";
         abort_transition(INFINITY, tg_restart, "Foreign event", event);
         stop_early = TRUE;      /* This could be an lrm status refresh */
@@ -579,7 +579,7 @@ process_graph_event(xmlNode * event, const char *event_node)
         desc = "arrived late";
         abort_transition(INFINITY, tg_restart, "Inactive graph", event);
 
-    } else if (match_graph_event(action, event, status, rc, target_rc) < 0) {
+    } else if (match_graph_event(action_num, event, status, rc, target_rc) < 0) {
         desc = "unknown";
         abort_transition(INFINITY, tg_restart, "Unknown event", event);
 
@@ -594,8 +594,8 @@ process_graph_event(xmlNode * event, const char *event_node)
             stop_early = FALSE;
             desc = "failed";
         }
-        crm_info("Detected action (%d.%d) %s.%d=%s: %s", transition_num, action, id, callid,
-                 services_ocf_exitcode_str(rc), desc);
+        crm_info("Detected action (%d.%d) %s.%d=%s: %s", transition_num,
+                 action_num, id, callid, services_ocf_exitcode_str(rc), desc);
     }
 
   bail:
