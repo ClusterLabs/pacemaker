@@ -770,6 +770,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
     } else if (safe_str_eq(value, "ignore")
                || safe_str_eq(value, "nothing")) {
         action->on_fail = action_fail_ignore;
+        pe_clear_action_bit(action, pe_action_failure_is_fatal);
         value = "ignore";
 
     } else if (safe_str_eq(value, "migrate")) {

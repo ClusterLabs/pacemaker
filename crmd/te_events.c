@@ -113,11 +113,13 @@ fail_incompletable_actions(crm_graph_t * graph, const char *down_node)
  * \param[in] rc               Actual operation return code
  * \param[in] target_rc        Expected operation return code
  * \param[in] do_update        If TRUE, do update regardless of operation type
+ * \param[in] ignore_failures  If TRUE, update last failure but not fail count
  *
  * \return TRUE if this was not a direct nack, success or lrm status refresh
  */
 static gboolean
-update_failcount(xmlNode * event, const char *event_node_uuid, int rc, int target_rc, gboolean do_update)
+update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
+                 int target_rc, gboolean do_update, gboolean ignore_failures)
 {
     int interval = 0;
 
@@ -181,13 +183,20 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc, int targe
             is_remote_node = TRUE;
         }
 
-        crm_warn("Updating failcount for %s on %s after failed %s:"
-                 " rc=%d (update=%s, time=%s)", rsc_id, on_uname, task, rc, value, now);
+        crm_warn("Updating %s for %s on %s after failed %s: rc=%d (update=%s, time=%s)",
+                 (ignore_failures? "last failure" : "failcount"),
+                 rsc_id, on_uname, task, rc, value, now);
 
-        attr_name = crm_concat("fail-count", rsc_id, '-');
-        update_attrd(on_uname, attr_name, value, NULL, is_remote_node);
-        free(attr_name);
+        /* Update the fail count, if we're not ignoring failures */
+        if (!ignore_failures) {
+            attr_name = crm_concat("fail-count", rsc_id, '-');
+            update_attrd(on_uname, attr_name, value, NULL, is_remote_node);
+            free(attr_name);
+        }
 
+        /* Update the last failure time (even if we're ignoring failures,
+         * so that failure can still be detected and shown, e.g. by crm_mon)
+         */
         attr_name = crm_concat("last-failure", rsc_id, '-');
         update_attrd(on_uname, attr_name, now, NULL, is_remote_node);
         free(attr_name);
@@ -302,16 +311,18 @@ process_remote_node_action(crm_action_t *action, xmlNode *event)
  * \param[in]     orig_status      Original reported operation status
  * \param[in]     op_rc            Actual operation return code
  * \param[in]     target_rc        Expected operation return code
+ * \param[in]     ignore_failures  Whether to ignore operation failures
  *
  * \note This assumes that PCMK_LRM_OP_PENDING operations have already been
  *       filtered (otherwise they may be treated as failures).
  */
 static void
-match_graph_event(crm_action_t *action, xmlNode *event, int op_status, int op_rc, int target_rc)
+match_graph_event(crm_action_t *action, xmlNode *event, int op_status,
+                  int op_rc, int target_rc, gboolean ignore_failures)
 {
     const char *target = NULL;
-    const char *allow_fail = NULL;
     const char *this_event = NULL;
+    const char *ignore_s = "";
 
     /* Remap operation status based on return code */
     op_status = status_from_rc(action, op_status, op_rc, target_rc);
@@ -323,7 +334,11 @@ match_graph_event(crm_action_t *action, xmlNode *event, int op_status, int op_rc
         case PCMK_LRM_OP_ERROR:
         case PCMK_LRM_OP_TIMEOUT:
         case PCMK_LRM_OP_NOTSUPPORTED:
-            action->failed = TRUE;
+            if (ignore_failures) {
+                ignore_s = ", ignoring failure";
+            } else {
+                action->failed = TRUE;
+            }
             break;
         case PCMK_LRM_OP_CANCELLED:
             /* do nothing?? */
@@ -347,20 +362,13 @@ match_graph_event(crm_action_t *action, xmlNode *event, int op_status, int op_rc
     trigger_graph();
 
     if (action->failed) {
-        allow_fail = crm_meta_value(action->params, XML_ATTR_TE_ALLOWFAIL);
-        if (crm_is_true(allow_fail)) {
-            action->failed = FALSE;
-        }
-    }
-
-    if (action->failed) {
         abort_transition(action->synapse->priority + 1, tg_restart, "Event failed", event);
     }
 
     this_event = crm_element_value(event, XML_LRM_ATTR_TASK_KEY);
     target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-    crm_info("Action %s (%d) confirmed on %s (rc=%d)",
-             crm_str(this_event), action->id, crm_str(target), op_rc);
+    crm_info("Action %s (%d) confirmed on %s (rc=%d%s)",
+             crm_str(this_event), action->id, crm_str(target), op_rc, ignore_s);
 
     /* determine if this action affects a remote-node's online/offline status */
     process_remote_node_action(action, event);
@@ -522,6 +530,7 @@ process_graph_event(xmlNode * event, const char *event_node)
     char *update_te_uuid = NULL;
 
     gboolean stop_early = FALSE;
+    gboolean ignore_failures = FALSE;
     const char *id = NULL;
     const char *desc = NULL;
     const char *magic = NULL;
@@ -580,14 +589,19 @@ process_graph_event(xmlNode * event, const char *event_node)
             abort_transition(INFINITY, tg_restart, "Unknown event", event);
 
         } else {
-            match_graph_event(action, event, status, rc, target_rc);
+            /* XML_ATTR_TE_ALLOWFAIL will be true if on-fail=ignore for the operation */
+            ignore_failures = crm_is_true(crm_meta_value(action->params,
+                                                         XML_ATTR_TE_ALLOWFAIL));
+
+            match_graph_event(action, event, status, rc, target_rc, ignore_failures);
         }
     }
 
     if (action && (rc == target_rc)) {
         crm_trace("Processed update to %s: %s", id, magic);
     } else {
-        if (update_failcount(event, event_node, rc, target_rc, transition_num == -1)) {
+        if (update_failcount(event, event_node, rc, target_rc,
+                             (transition_num == -1), ignore_failures)) {
             /* Turns out this wasn't an lrm status refresh update aferall */
             stop_early = FALSE;
             desc = "failed";
