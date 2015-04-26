@@ -170,7 +170,7 @@ init_smart() {
     upper_yellow_limit=$((${upper_red_limit}-${yellow_threshold}))
 
     #Set disk defaults
-    if [ -z ${OCF_RESKEY_drives} ] ; then
+    if [ -z "${OCF_RESKEY_drives}" ] ; then
         DRIVES="/dev/sda"
     else
         DRIVES=${OCF_RESKEY_drives}
