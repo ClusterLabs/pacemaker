@@ -41,6 +41,8 @@ struct mainloop_child_s {
     gboolean timeout;
     void *privatedata;
 
+    enum mainloop_child_flags flags;
+
     /* Called when a process dies */
     void (*callback) (mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode);
 };
@@ -846,6 +848,8 @@ mainloop_del_fd(mainloop_io_t * client)
     }
 }
 
+static GListPtr child_list = NULL;
+
 pid_t
 mainloop_child_pid(mainloop_child_t * child)
 {
@@ -893,7 +897,16 @@ child_free(mainloop_child_t *child)
 static int
 child_kill_helper(mainloop_child_t *child)
 {
-    if (kill(-child->pid, SIGKILL) < 0) {
+    int rc;
+    if (child->flags & mainloop_leave_pid_group) {
+        crm_debug("Kill pid %d only. leave group intact.", child->pid);
+        rc = kill(child->pid, SIGKILL);
+    } else {
+        crm_debug("Kill pid %d's group", child->pid);
+        rc = kill(-child->pid, SIGKILL);
+    }
+
+    if (rc < 0) {
         if (errno != ESRCH) {
             crm_perror(LOG_ERR, "kill(%d, KILL) failed", child->pid);
         }
@@ -926,8 +939,6 @@ child_timeout_callback(gpointer p)
     child->timerid = g_timeout_add(5000, child_timeout_callback, child);
     return FALSE;
 }
-
-static GListPtr child_list = NULL;
 
 static gboolean
 child_waitpid(mainloop_child_t *child, int flags)
@@ -1067,7 +1078,7 @@ mainloop_child_kill(pid_t pid)
  * To track a process group, use -pid
  */
 void
-mainloop_child_add(pid_t pid, int timeout, const char *desc, void *privatedata,
+mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc, void *privatedata, enum mainloop_child_flags flags, 
                    void (*callback) (mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode))
 {
     static bool need_init = TRUE;
@@ -1078,6 +1089,7 @@ mainloop_child_add(pid_t pid, int timeout, const char *desc, void *privatedata,
     child->timeout = FALSE;
     child->privatedata = privatedata;
     child->callback = callback;
+    child->flags = flags;
 
     if(desc) {
         child->desc = strdup(desc);
@@ -1099,6 +1111,12 @@ mainloop_child_add(pid_t pid, int timeout, const char *desc, void *privatedata,
     }
 }
 
+void
+mainloop_child_add(pid_t pid, int timeout, const char *desc, void *privatedata,
+                   void (*callback) (mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode))
+{
+    mainloop_child_add_with_flags(pid, timeout, desc, privatedata, 0, callback);
+}
 
 struct mainloop_timer_s {
         guint id;

@@ -750,6 +750,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
 
     } else if (safe_str_eq(value, "block")) {
         action->on_fail = action_fail_block;
+        g_hash_table_insert(action->meta, strdup(XML_OP_ATTR_ON_FAIL), strdup("block"));
 
     } else if (safe_str_eq(value, "fence")) {
         action->on_fail = action_fail_fence;

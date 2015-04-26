@@ -335,12 +335,15 @@ rm -rf %{buildroot}
 %if %{defined _unitdir}
 
 %post
+%systemd_post crm_mon.service
 %systemd_post pacemaker.service
 
 %preun
 %systemd_preun pacemaker.service
+%systemd_preun crm_mon.service
 
 %postun
+%systemd_postun_with_restart crm_mon.service 
 %systemd_postun_with_restart pacemaker.service 
 
 %post remote
@@ -403,10 +406,13 @@ exit 0
 
 %if %{defined _unitdir}
 %{_unitdir}/pacemaker.service
+%{_unitdir}/crm_mon.service
 %else
 %{_initrddir}/pacemaker
 %endif
 
+%exclude %{_datadir}/pacemaker/report.common
+%exclude %{_datadir}/pacemaker/report.collector
 %{_datadir}/pacemaker
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
 %exclude %{_libexecdir}/pacemaker/lrmd_test
@@ -474,6 +480,8 @@ exit 0
 %{_sbindir}/crm_simulate
 %{_sbindir}/crm_report
 %{_sbindir}/crm_ticket
+%{_datadir}/pacemaker/report.common
+%{_datadir}/pacemaker/report.collector
 %doc %{_mandir}/man8/*
 %exclude %{_mandir}/man8/attrd_updater.*
 %exclude %{_mandir}/man8/crm_attribute.*
