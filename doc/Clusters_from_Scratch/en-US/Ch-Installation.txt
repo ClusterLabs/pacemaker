@@ -387,7 +387,7 @@ on both nodes and run the following to install pacemaker and command-line
 cluster management software:
 
 ----
-# yum install -y pacemaker pcs
+# yum install -y pacemaker pcs psmisc
 ----
 
 [IMPORTANT]
