@@ -401,7 +401,7 @@ append_host_specific_args(const char *victim, const char *map, GHashTable * para
 }
 
 static char *
-make_args(const char *action, const char *victim, uint32_t victim_nodeid, GHashTable * device_args,
+make_args(const char *agent, const char *action, const char *victim, uint32_t victim_nodeid, GHashTable * device_args,
           GHashTable * port_map)
 {
     char buffer[512];
@@ -456,7 +456,10 @@ make_args(const char *action, const char *victim, uint32_t victim_nodeid, GHashT
         }
 
         /* Check if we need to supply the victim in any other form */
-        if (param == NULL) {
+        if(safe_str_neq(agent, "fence_legacy")) {
+            value = agent;
+
+        } else if (param == NULL) {
             const char *map = g_hash_table_lookup(device_args, STONITH_ATTR_ARGMAP);
 
             if (map == NULL) {
@@ -580,7 +583,7 @@ stonith_action_create(const char *agent,
 
     action = calloc(1, sizeof(stonith_action_t));
     crm_debug("Initiating action %s for agent %s (target=%s)", _action, agent, victim);
-    action->args = make_args(_action, victim, victim_nodeid, device_args, port_map);
+    action->args = make_args(agent, _action, victim, victim_nodeid, device_args, port_map);
     action->agent = strdup(agent);
     action->action = strdup(_action);
     if (victim) {

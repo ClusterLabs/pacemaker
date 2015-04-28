@@ -141,7 +141,7 @@ sub get_options_stdin
         {
             $opt_o = $val;
         }
-	elsif ($name eq "port" ) 
+	elsif ($name eq "nodename" ) 
 	{
             $opt_n = $val;
 	    $ENV{$name} = $val;
