@@ -456,7 +456,7 @@ make_args(const char *agent, const char *action, const char *victim, uint32_t vi
         }
 
         /* Check if we need to supply the victim in any other form */
-        if(safe_str_neq(agent, "fence_legacy")) {
+        if(safe_str_eq(agent, "fence_legacy")) {
             value = agent;
 
         } else if (param == NULL) {
