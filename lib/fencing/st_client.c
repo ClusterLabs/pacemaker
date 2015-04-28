@@ -1589,8 +1589,8 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
 
         if (native->ipc && crm_ipc_connect(native->ipc)) {
             *stonith_fd = crm_ipc_get_fd(native->ipc);
-
         } else if (native->ipc) {
+            crm_perror(LOG_ERR, "Connection to STONITH manager failed");
             rc = -ENOTCONN;
         }
 

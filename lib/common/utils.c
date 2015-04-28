@@ -1820,6 +1820,8 @@ attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const cha
 
         if (connected) {
             rc = crm_ipc_send(ipc, update, flags, 0, NULL);
+        } else {
+            crm_perror(LOG_INFO, "Connection to cluster attribute manager failed");
         }
 
         if (ipc != local_ipc) {
