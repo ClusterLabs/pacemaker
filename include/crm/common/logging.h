@@ -34,6 +34,24 @@
 #  define LOG_DEBUG_5  LOG_TRACE
 #  define LOG_DEBUG_6  LOG_TRACE
 
+/* "Extended information" logging support */
+#ifdef QB_XS
+#  define CRM_XS QB_XS
+#  define crm_extended_logging(t, e) qb_log_ctl((t), QB_LOG_CONF_EXTENDED, (e))
+#else
+#  define CRM_XS "|"
+
+/* A caller might want to check the return value, so we can't define this as a
+ * no-op, and we can't simply define it to be 0 because gcc will then complain
+ * when the value isn't checked.
+ */
+static inline int
+crm_extended_logging(int t, int e)
+{
+    return 0;
+}
+#endif
+
 extern unsigned int crm_log_level;
 extern gboolean crm_config_error;
 extern gboolean crm_config_warning;
@@ -100,9 +118,23 @@ unsigned int get_crm_log_level(void);
 #    define CRM_TRACE_INIT_DATA(name) QB_LOG_INIT_DATA(name)
 #endif
 
-#  define do_crm_log(level, fmt, args...) qb_log_from_external_source( __func__, __FILE__, fmt, level, __LINE__, 0, ##args)
+/*!
+ * \brief Log a message
+ *
+ * \param[in] level  Severity at which to log the message
+ * \param[in] fmt    printf-style format string for message
+ * \param[in] args   Any arguments needed by format string
+ */
+#  define do_crm_log(level, fmt, args...) \
+    qb_log_from_external_source(__func__, __FILE__, fmt, level, __LINE__, 0 , ##args)
 
-/* level /MUST/ be a constant or compilation will fail */
+/*!
+ * \brief Log a message that is likely to be filtered out
+ *
+ * \param[in] level  Severity at which to log the message
+ * \param[in] fmt    printf-style format string for message
+ * \param[in] args   Any arguments needed by format string
+ */
 #  define do_crm_log_unlikely(level, fmt, args...) do {               \
         static struct qb_log_callsite *trace_cs = NULL;                 \
         if(trace_cs == NULL) {                                          \
@@ -110,7 +142,7 @@ unsigned int get_crm_log_level(void);
         }                                                               \
         if (crm_is_callsite_active(trace_cs, level, 0)) {            \
             qb_log_from_external_source(                                \
-                __func__, __FILE__, fmt, level, __LINE__, 0,  ##args);  \
+                __func__, __FILE__, fmt, level, __LINE__, 0 , ##args); \
         }                                                               \
     } while(0)
 
@@ -150,22 +182,52 @@ unsigned int get_crm_log_level(void);
         }                                                               \
     } while(0)
 
+/*!
+ * \brief Log a message as if it came from a different code location
+ *
+ * \param[in] level     Severity at which to log the message
+ * \param[in] file      Source file name to use instead of __FILE__
+ * \param[in] function  Source function name to use instead of __func__
+ * \param[in] line      Source line number to use instead of __line__
+ * \param[in] fmt       printf-style format string for message
+ * \param[in] args      Any arguments needed by format string
+ */
 #  define do_crm_log_alias(level, file, function, line, fmt, args...) do { \
         if(level > 0) {                                                 \
-            qb_log_from_external_source(function, file, fmt, level, line, 0,  ##args); \
+            qb_log_from_external_source(function, file, fmt, level, line, 0 , ##args); \
         } else {                                                        \
-            printf(fmt "\n", ##args);                                    \
+            printf(fmt "\n" , ##args);                                    \
         }                                                               \
     } while(0)
 
+/*!
+ * \brief Log a message using constant severity
+ *
+ * \param[in] level     Severity at which to log the message
+ * \param[in] fmt       printf-style format string for message
+ * \param[in] args      Any arguments needed by format string
+ *
+ * \note level and fmt /MUST/ be constants else compilation may fail
+ */
 #  define do_crm_log_always(level, fmt, args...) qb_log(level, fmt , ##args)
 
+/*!
+ * \brief Log a system error message
+ *
+ * \param[in] level  Severity at which to log the message
+ * \param[in] fmt    printf-style format string for message
+ * \param[in] args   Any arguments needed by format string
+ *
+ * \note Because crm_perror() adds the system error message and error number
+ *       onto the end of fmt, that information will become extended information
+ *       if CRM_XS is used inside fmt and will not show up in syslog.
+ */
 #  define crm_perror(level, fmt, args...) do {				\
 	const char *err = strerror(errno);				\
         if(level <= crm_log_level) {                                    \
-            fprintf(stderr, "%s: " fmt ": %s (%d)\n", __FUNCTION__, ##args, err, errno); \
+            fprintf(stderr, fmt ": %s (%d)\n" , ##args, err, errno);    \
         }                                                               \
-	do_crm_log(level, fmt ": %s (%d)", ##args, err, errno);		\
+        do_crm_log(level, fmt ": %s (%d)" , ##args, err, errno);        \
     } while(0)
 
 #  define crm_log_tag(level, tag, fmt, args...)    do {               \
@@ -175,7 +237,8 @@ unsigned int get_crm_log_level(void);
             trace_tag_cs = qb_log_callsite_get(__func__, __FILE__, fmt, level, __LINE__, converted_tag); \
         }                                                               \
         if (crm_is_callsite_active(trace_tag_cs, level, converted_tag)) {               \
-            qb_log_from_external_source( __func__, __FILE__, fmt, level, __LINE__, converted_tag, ##args); \
+            qb_log_from_external_source(__func__, __FILE__, fmt, level,     \
+                                        __LINE__, converted_tag , ##args);  \
         }                                                               \
       } while(0)
 
