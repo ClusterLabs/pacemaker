@@ -1210,8 +1210,6 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
         num_active_nodes++;
     }
 
-    get_rsc_attributes(rsc->parameters, rsc, chosen, data_set);
-
     for (gIter = rsc->dangling_migrations; gIter != NULL; gIter = gIter->next) {
         node_t *current = (node_t *) gIter->data;
 

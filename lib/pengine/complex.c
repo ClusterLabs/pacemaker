@@ -346,7 +346,7 @@ handle_rsc_isolation(resource_t *rsc)
      * to be disabled by setting the meta attr, isolation=false. */
     value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_ISOLATION);
     if (top->isolation_wrapper == NULL && (value == NULL || crm_is_true(value))) {
-        if (g_hash_table_lookup(rsc->meta, "pcmk_docker_image")) {
+        if (g_hash_table_lookup(rsc->parameters, "pcmk_docker_image")) {
             wrapper = "docker-wrapper";
         }
         /* add more isolation technologies here as we expand */
@@ -457,6 +457,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     pe_rsc_trace((*rsc), "Unpacking resource...");
 
     get_meta_attributes((*rsc)->meta, *rsc, NULL, data_set);
+    get_rsc_attributes((*rsc)->parameters, *rsc, NULL, data_set);
 
     (*rsc)->flags = 0;
     set_bit((*rsc)->flags, pe_rsc_runnable);
