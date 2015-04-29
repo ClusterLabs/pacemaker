@@ -220,7 +220,7 @@ recurring_action_timer(gpointer data)
 {
     svc_action_t *op = data;
 
-    crm_debug("Scheduling another invokation of %s", op->id);
+    crm_debug("Scheduling another invocation of %s", op->id);
 
     /* Clean out the old result */
     free(op->stdout_data);
