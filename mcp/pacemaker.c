@@ -324,7 +324,7 @@ start_child(pcmk_child_t * child)
 
                 /* Keep the root group (so we can access corosync), but add the haclient group (so we can access ipc) */
             } else if (initgroups(child->uid, gid) < 0) {
-                crm_err("Cannot initalize groups for %s: %s (%d)", child->uid, pcmk_strerror(errno), errno);
+                crm_err("Cannot initialize groups for %s: %s (%d)", child->uid, pcmk_strerror(errno), errno);
             }
         }
 
