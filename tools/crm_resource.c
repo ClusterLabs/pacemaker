@@ -632,7 +632,7 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
             }
         }
 
-        crm_debug("Looking for dependancies %p", rsc->rsc_cons_lhs);
+        crm_debug("Looking for dependencies %p", rsc->rsc_cons_lhs);
         set_bit(rsc->flags, pe_rsc_allocating);
         for (lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
             rsc_colocation_t *cons = (rsc_colocation_t *) lpc->data;
@@ -641,7 +641,7 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
             crm_debug("Checking %s %d", cons->id, cons->score);
             if (cons->score > 0 && is_not_set(peer->flags, pe_rsc_allocating)) {
                 /* Don't get into colocation loops */
-                crm_debug("Setting %s=%s for dependant resource %s", attr_name, attr_value, peer->id);
+                crm_debug("Setting %s=%s for dependent resource %s", attr_name, attr_value, peer->id);
                 set_resource_attr(peer->id, NULL, NULL, attr_name, attr_value, recursive, cib, data_set);
             }
         }
@@ -1218,7 +1218,7 @@ show_location(resource_t * rsc, const char *prefix)
 }
 
 static void
-show_colocation(resource_t * rsc, gboolean dependants, gboolean recursive, int offset)
+show_colocation(resource_t * rsc, gboolean dependents, gboolean recursive, int offset)
 {
     char *prefix = NULL;
     GListPtr lpc = NULL;
@@ -1227,7 +1227,7 @@ show_colocation(resource_t * rsc, gboolean dependants, gboolean recursive, int o
     prefix = calloc(1, (offset * 4) + 1);
     memset(prefix, ' ', offset * 4);
 
-    if (dependants) {
+    if (dependents) {
         list = rsc->rsc_cons_lhs;
     }
 
@@ -1245,26 +1245,26 @@ show_colocation(resource_t * rsc, gboolean dependants, gboolean recursive, int o
         char *score = NULL;
         resource_t *peer = cons->rsc_rh;
 
-        if (dependants) {
+        if (dependents) {
             peer = cons->rsc_lh;
         }
 
         if (is_set(peer->flags, pe_rsc_allocating)) {
-            if (dependants == FALSE) {
+            if (dependents == FALSE) {
                 fprintf(stdout, "%s%-*s (id=%s - loop)\n", prefix, 80 - (4 * offset), peer->id,
                         cons->id);
             }
             continue;
         }
 
-        if (dependants && recursive) {
-            show_colocation(peer, dependants, recursive, offset + 1);
+        if (dependents && recursive) {
+            show_colocation(peer, dependents, recursive, offset + 1);
         }
 
         score = score2char(cons->score);
         if (cons->role_rh > RSC_ROLE_STARTED) {
             fprintf(stdout, "%s%-*s (score=%s, %s role=%s, id=%s)\n", prefix, 80 - (4 * offset),
-                    peer->id, score, dependants ? "needs" : "with", role2text(cons->role_rh),
+                    peer->id, score, dependents ? "needs" : "with", role2text(cons->role_rh),
                     cons->id);
         } else {
             fprintf(stdout, "%s%-*s (score=%s, id=%s)\n", prefix, 80 - (4 * offset),
@@ -1273,8 +1273,8 @@ show_colocation(resource_t * rsc, gboolean dependants, gboolean recursive, int o
         show_location(peer, prefix);
         free(score);
 
-        if (!dependants && recursive) {
-            show_colocation(peer, dependants, recursive, offset + 1);
+        if (!dependents && recursive) {
+            show_colocation(peer, dependents, recursive, offset + 1);
         }
     }
     free(prefix);
