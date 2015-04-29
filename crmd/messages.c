@@ -252,7 +252,7 @@ delete_fsa_input(fsa_data_t * fsa_data)
 
             case fsa_dt_none:
                 if (fsa_data->data != NULL) {
-                    crm_err("Dont know how to free %s data from %s",
+                    crm_err("Don't know how to free %s data from %s",
                             fsa_cause2string(fsa_data->fsa_cause), fsa_data->origin);
                     crmd_exit(pcmk_err_generic);
                 }
