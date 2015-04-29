@@ -200,10 +200,10 @@ print_synapse(unsigned int log_level, crm_graph_t * graph, synapse_t * synapse)
 
             if (find_action(graph, input->id) == NULL) {
                 if (host == NULL) {
-                    do_crm_log(log_level, " * [Input %2d]: Unresolved dependancy %s op %s",
+                    do_crm_log(log_level, " * [Input %2d]: Unresolved dependency %s op %s",
                                input->id, actiontype2text(input->type), key);
                 } else {
-                    do_crm_log(log_level, " * [Input %2d]: Unresolved dependancy %s op %s on %s",
+                    do_crm_log(log_level, " * [Input %2d]: Unresolved dependency %s op %s on %s",
                                input->id, actiontype2text(input->type), key, host);
                 }
             }
