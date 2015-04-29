@@ -3057,7 +3057,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
     switch (status) {
         case PCMK_LRM_OP_CANCELLED:
             /* do nothing?? */
-            pe_err("Dont know what to do for cancelled ops yet");
+            pe_err("Don't know what to do for cancelled ops yet");
             break;
 
         case PCMK_LRM_OP_PENDING:
