@@ -856,7 +856,7 @@ status_search_cb(GPid pid, int rc, const char *output, gpointer user_data)
     dev->active_pid = 0;
     mainloop_set_trigger(dev->work);
 
-    if (rc == 1 /* unkown */ ) {
+    if (rc == 1 /* unknown */ ) {
         crm_trace("Host %s is not known by %s", search->host, dev->id);
 
     } else if (rc == 0 /* active */  || rc == 2 /* inactive */ ) {
@@ -864,7 +864,7 @@ status_search_cb(GPid pid, int rc, const char *output, gpointer user_data)
         can = TRUE;
 
     } else {
-        crm_notice("Unkown result when testing if %s can fence %s: rc=%d", dev->id, search->host,
+        crm_notice("Unknown result when testing if %s can fence %s: rc=%d", dev->id, search->host,
                    rc);
     }
     search_devices_record_result(search, dev->id, can);
