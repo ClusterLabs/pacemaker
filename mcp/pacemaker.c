@@ -1014,7 +1014,8 @@ main(int argc, char **argv)
         crm_exit(ENODATA);
     }
 
-    crm_notice("Starting Pacemaker %s (Build: %s): %s", PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
+    crm_notice("Starting Pacemaker %s "CRM_XS" build=%s features:%s",
+               PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
     mainloop = g_main_new(FALSE);
     sysrq_init();
 

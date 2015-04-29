@@ -551,7 +551,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
               && safe_str_neq(peer->uname, attrd_cluster->uname)) {
         xmlNode *child = NULL;
 
-        crm_notice("Processing %s from %s", op, peer->uname);
+        crm_info("Processing %s from %s", op, peer->uname);
         for (child = __xml_first_child(xml); child != NULL; child = __xml_next(child)) {
             host = crm_element_value(child, F_ATTRD_HOST);
             attrd_peer_update(peer, child, host, TRUE);

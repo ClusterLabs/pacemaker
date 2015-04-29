@@ -992,8 +992,10 @@ crm_update_peer_state_iter(const char *source, crm_node_t * node, const char *st
 {
     gboolean is_member;
 
-    CRM_CHECK(node != NULL, crm_err("%s: Could not set 'state' to %s", source, state);
-                            return NULL);
+    CRM_CHECK(node != NULL,
+              crm_err("Could not set state for unknown host to %s"
+                      CRM_XS " source=%s", state, source);
+              return NULL);
 
     is_member = safe_str_eq(state, CRM_NODE_MEMBER);
     if (membership && is_member) {
@@ -1006,8 +1008,9 @@ crm_update_peer_state_iter(const char *source, crm_node_t * node, const char *st
                                            crm_status_rstate : crm_status_nstate;
 
         node->state = strdup(state);
-        crm_notice("%s: Node %s[%u] - state is now %s (was %s)",
-                   source, node->uname, node->id, state, last);
+        crm_notice("Node %s state is now %s " CRM_XS
+                   " nodeid=%u previous=%s source=%s", node->uname, state,
+                   node->id, (last? last : "unknown"), source);
         if (crm_status_callback) {
             crm_status_callback(status_type, node, last);
         }
@@ -1029,8 +1032,8 @@ crm_update_peer_state_iter(const char *source, crm_node_t * node, const char *st
         }
 
     } else {
-        crm_trace("%s: Node %s[%u] - state is unchanged (%s)", source, node->uname, node->id,
-                  state);
+        crm_trace("Node %s state is unchanged (%s) " CRM_XS
+                  " nodeid=%u source=%s", node->uname, state, node->id, source);
     }
     return node;
 }

@@ -503,8 +503,10 @@ do_state_transition(long long actions,
         level = LOG_WARNING;
     }
 
-    do_crm_log(level, "State transition %s -> %s [ input=%s cause=%s origin=%s ]",
-               state_from, state_to, input, fsa_cause2string(cause), msg_data->origin);
+    do_crm_log(level, "State transition %s -> %s "
+               CRM_XS " input=%s cause=%s origin=%s",
+               state_from, state_to, input, fsa_cause2string(cause),
+               msg_data->origin);
 
     /* the last two clauses might cause trouble later */
     if (next_state != S_ELECTION && cur_state != S_RELEASE_DC) {

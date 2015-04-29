@@ -268,7 +268,11 @@ cluster_connect_quorum(gboolean(*dispatch) (unsigned long long, gboolean),
         goto bail;
     }
 
-    crm_notice("Quorum %s", quorate ? "acquired" : "lost");
+    if (quorate) {
+        crm_notice("Quorum acquired");
+    } else {
+        crm_warn("Quorum lost");
+    }
     quorum_app_callback = dispatch;
     crm_have_quorum = quorate;
 

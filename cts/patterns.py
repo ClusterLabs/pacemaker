@@ -168,7 +168,7 @@ class crm_cs_v0(BasePatterns):
 # The next pattern would be preferred, but it doesn't always come out
 #            "Pat:We_stopped"   : "%s.*Corosync Cluster Engine exiting with status",
             "Pat:We_stopped"   : "%s\W.*Service engine unloaded: corosync cluster quorum service",
-            "Pat:They_stopped" : "%s\W.*crmd.*Node %s\[.*state is now lost",
+            "Pat:They_stopped" : "%s\W.*crmd.*Node %s(\[|\s).*state is now lost",
             "Pat:They_dead"    : "corosync:.*Node %s is now: lost",
 
             "Pat:ChildExit"    : "Child process .* exited",
@@ -412,8 +412,8 @@ class crm_mcp(crm_cs_v0):
             # Close enough... "Corosync Cluster Engine exiting normally" isn't printed
             #   reliably and there's little interest in doing anything about it
             "Pat:We_stopped"   : "%s\W.*Unloading all Corosync service engines",
-            "Pat:They_stopped" : "%s\W.*crmd.*Node %s\[.*state is now lost",
-            "Pat:They_dead"    : "crmd.*Node %s\[.*state is now lost",
+            "Pat:They_stopped" : "%s\W.*crmd.*Node %s(\[|\s).*state is now lost",
+            "Pat:They_dead"    : "crmd.*Node %s(\[|\s).*state is now lost",
 
             "Pat:ChildExit"    : "The .* process exited",
             "Pat:ChildKilled"  : "%s\W.*pacemakerd.*The %s process .* terminated with signal 9",
@@ -462,8 +462,8 @@ class crm_cman(crm_cs_v0):
 
         self.search.update({
             "Pat:We_stopped"   : "%s.*Unloading all Corosync service engines",
-            "Pat:They_stopped" : "%s\W.*crmd.*Node %s\[.*state is now lost",
-            "Pat:They_dead"    : "crmd.*Node %s\[.*state is now lost",
+            "Pat:They_stopped" : "%s\W.*crmd.*Node %s(\[|\s).*state is now lost",
+            "Pat:They_dead"    : "crmd.*Node %s(\[|\s).*state is now lost",
 
             "Pat:ChildKilled"  : "%s\W.*pacemakerd.*The %s process .* terminated with signal 9",
             "Pat:ChildRespawn" : "%s\W.*pacemakerd.*Respawning failed child process: %s",
