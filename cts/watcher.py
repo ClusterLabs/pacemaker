@@ -160,22 +160,23 @@ class FileObj(SearchObj):
         global has_log_watcher
         SearchObj.__init__(self, filename, host, name)
 
-        if not has_log_watcher.has_key(host):
+        if host is not None:
+            if not has_log_watcher.has_key(host):
 
-            global log_watcher
-            global log_watcher_bin
+                global log_watcher
+                global log_watcher_bin
 
-            self.debug("Installing %s on %s" % (log_watcher_file, host))
+                self.debug("Installing %s on %s" % (log_watcher_file, host))
 
-            os.system("cat << END >> %s\n%s\nEND" %(log_watcher_file, log_watcher))
-            os.system("chmod 755 %s" %(log_watcher_file))
+                os.system("cat << END >> %s\n%s\nEND" %(log_watcher_file, log_watcher))
+                os.system("chmod 755 %s" %(log_watcher_file))
 
-            self.rsh.cp(log_watcher_file, "root@%s:%s" % (host, log_watcher_bin))
-            has_log_watcher[host] = 1
+                self.rsh.cp(log_watcher_file, "root@%s:%s" % (host, log_watcher_bin))
+                has_log_watcher[host] = 1
 
-            os.system("rm -f %s" %(log_watcher_file))
+                os.system("rm -f %s" %(log_watcher_file))
 
-        self.harvest()
+            self.harvest()
 
     def async_complete(self, pid, returncode, outLines, errLines):
         for line in outLines:

@@ -88,11 +88,6 @@ class Environment:
         if not seed:
             seed = int(time.time())
 
-        if self.has_key("RandSeed"):
-            self.logger.log("New random seed is: " + str(seed))
-        else:
-            self.logger.log("Random seed is: " + str(seed))
-
         self["RandSeed"] = seed
         self.RandomGen.seed(str(seed))
 

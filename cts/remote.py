@@ -130,7 +130,6 @@ class RemoteExec:
     '''
 
     def __init__(self, rsh, silent=False):
-        print repr(self)
         self.async = []
         self.rsh = rsh
         self.silent = silent
