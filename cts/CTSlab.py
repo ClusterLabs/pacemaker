@@ -23,8 +23,7 @@ Licensed under the GNU GPL.
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA.
 
-from UserDict import UserDict
-import sys, types, string, string, signal, os, socket
+import sys, signal, os
 
 pdir = os.path.dirname(sys.path[0])
 sys.path.insert(0, pdir) # So that things work from the source directory
@@ -71,9 +70,6 @@ if __name__ == '__main__':
     if Environment["Stack"] == "heartbeat":
         cm = crm_lha(Environment)
 
-    elif Environment["Stack"] == "openais (whitetank)":
-        cm = crm_whitetank(Environment)
-        
     elif Environment["Stack"] == "corosync 2.x":
         cm = crm_mcp(Environment)
         

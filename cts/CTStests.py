@@ -38,7 +38,7 @@ Add RecourceRecover testcase Zhao Kai <zhaokai@cn.ibm.com>
 #                Thank you.
 #
 
-import time, os, re, types, string, tempfile, sys
+import time, os, re, string, tempfile
 from stat import *
 from cts import CTS
 from cts.CTSaudits import *

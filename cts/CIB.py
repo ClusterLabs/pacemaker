@@ -5,8 +5,7 @@ Author: Andrew Beekhof <abeekhof@suse.de>
 Copyright (C) 2008 Andrew Beekhof
 '''
 
-from UserDict import UserDict
-import sys, time, types, syslog, os, struct, string, signal, traceback, warnings, socket
+import os, string, warnings
 
 from cts.CTSvars import *
 from cts.CTS     import ClusterManager

@@ -22,21 +22,16 @@ Licensed under the GNU GPL.
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA.
 
-import types, string, select, sys, time, re, os, struct, signal
-import time, syslog, random, traceback, base64, pickle, binascii, fcntl
+import string, sys, re, os
 
-from cts.logging import LogFactory 
-
-from socket import gethostbyname_ex
-from UserDict import UserDict
 from subprocess import Popen,PIPE
+from threading import Thread
 
 pdir=os.path.dirname(sys.path[0])
 sys.path.insert(0, pdir) # So that things work from the source directory
 
 from cts.CTSvars import *
 from cts.logging import *
-from threading import Thread
 
 trace_rsh=None
 trace_lw=None
@@ -198,6 +193,7 @@ class RemoteExec:
             return 0
 
         #if not blocking:
+        #    import fcntl
         #    fcntl.fcntl(proc.stdout.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
 
         if proc.stdout:

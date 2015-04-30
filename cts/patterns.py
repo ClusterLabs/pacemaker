@@ -1,5 +1,4 @@
-from UserDict import UserDict
-import sys, time, types, syslog, os, struct, string, signal, traceback, warnings, socket
+import sys, os
 
 from cts.CTSvars import *
 
@@ -504,8 +503,6 @@ if __name__ == '__main__':
 
     pdir=os.path.dirname(sys.path[0])
     sys.path.insert(0, pdir) # So that things work from the source directory
-
-    from cts.CTSvars   import *
 
     kind=None
     template=None

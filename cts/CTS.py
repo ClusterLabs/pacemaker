@@ -23,14 +23,9 @@ Licensed under the GNU GPL.
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA.
 
-import types, string, select, sys, time, re, os, struct, signal
-import time, syslog, random, traceback, base64, pickle, binascii, fcntl
+import string, sys, time, re, os, traceback
 
-
-from socket import gethostbyname_ex
 from UserDict import UserDict
-from subprocess import Popen,PIPE
-from threading import Thread
 
 from cts.CTSvars     import *
 from cts.logging     import LogFactory
@@ -170,14 +165,6 @@ class CtsLab:
     def __setitem__(self, key, value):
         self.Env[key] = value
 
-    def HasMinimalKeys(self):
-        'Return TRUE if our object has the minimal set of keys/values in it'
-        result = 1
-        for key in self.MinimalKeys:
-            if not self.has_key(key):
-                result = None
-        return result
-
     def run(self, Scenario, Iterations):
         if not Scenario:
             self.logger.log("No scenario was defined")
@@ -212,10 +199,6 @@ class CtsLab:
             return 1
 
         return 0
-
-    def IsValidNode(self, node):
-        'Return TRUE if the given node is valid'
-        return self.Nodes.has_key(node)
 
     def __CheckNode(self, node):
         "Raise a ValueError if the given node isn't valid"
