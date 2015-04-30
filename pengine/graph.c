@@ -548,7 +548,7 @@ update_action(action_t * then)
             changed |= graph_update_action(first, then, node, first_flags, otype);
 
             /* 'first' was for a complex resource (clone, group, etc),
-             * create a new dependancy if necessary
+             * create a new dependency if necessary
              */
         } else if (order_actions(first, then, other->type)) {
             /* This was the first time 'first' and 'then' were associated,
@@ -629,7 +629,7 @@ shutdown_constraints(node_t * node, action_t * shutdown_op, pe_working_set_t * d
         } else if (action->node->details != node->details) {
             continue;
         } else if (is_set(action->rsc->flags, pe_rsc_maintenance)) {
-            pe_rsc_trace(action->rsc, "Skipping %s: maintainence mode", action->uuid);
+            pe_rsc_trace(action->rsc, "Skipping %s: maintenance mode", action->uuid);
             continue;
         } else if (node->details->maintenance) {
             pe_rsc_trace(action->rsc, "Skipping %s: node %s is in maintenance mode",
@@ -976,12 +976,12 @@ should_dump_action(action_t * action)
             } else if (safe_str_neq(wrapper->action->task, RSC_START)) {
                 /* Only interested in start operations */
             } else if (is_set(wrapper->action->flags, pe_action_dumped)) {
-                crm_trace("action %d (%s) dependancy of %s",
+                crm_trace("action %d (%s) dependency of %s",
                           action->id, action->uuid, wrapper->action->uuid);
                 return TRUE;
 
             } else if (should_dump_action(wrapper->action)) {
-                crm_trace("action %d (%s) dependancy of %s",
+                crm_trace("action %d (%s) dependency of %s",
                           action->id, action->uuid, wrapper->action->uuid);
                 return TRUE;
             }
