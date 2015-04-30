@@ -115,7 +115,8 @@ if __name__ == '__main__':
                    match = test
 
            if not match:
-               usage("--choose: No applicable/valid tests chosen")
+               LogFactory().log("--choose: No applicable/valid tests chosen")
+               sys.exit(1)
            else:
                Tests.append(match)
 
