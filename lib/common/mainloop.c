@@ -431,10 +431,9 @@ gio_read_socket(GIOChannel * gio, GIOCondition condition, gpointer data)
 
     crm_trace("%p.%d %d", data, fd, condition);
 
-    if (condition & G_IO_NVAL) {
-        crm_trace("Marking failed adaptor %p unused", adaptor);
-        adaptor->is_used = QB_FALSE;
-    }
+    /* if this assert get's hit, then there is a race condition between
+     * when we destroy a fd and when mainloop actually gives it up */
+    CRM_ASSERT(adaptor->is_used > 0);
 
     return (adaptor->fn(fd, condition, adaptor->data) == 0);
 }
@@ -444,8 +443,13 @@ gio_poll_destroy(gpointer data)
 {
     struct gio_to_qb_poll *adaptor = (struct gio_to_qb_poll *)data;
 
-    adaptor->is_used = QB_FALSE;
-    adaptor->source = 0;
+    adaptor->is_used--;
+    CRM_ASSERT(adaptor->is_used >= 0);
+
+    if (adaptor->is_used == 0) {
+        crm_trace("Marking adaptor %p unused", adaptor);
+        adaptor->source = 0;
+    }
 }
 
 static int32_t
@@ -463,7 +467,8 @@ gio_poll_dispatch_update(enum qb_loop_priority p, int32_t fd, int32_t evts,
     }
 
     crm_trace("Adding fd=%d to mainloop as adaptor %p", fd, adaptor);
-    if (add && adaptor->is_used) {
+
+    if (add && adaptor->source) {
         crm_err("Adaptor for descriptor %d is still in-use", fd);
         return -EEXIST;
     }
@@ -479,18 +484,19 @@ gio_poll_dispatch_update(enum qb_loop_priority p, int32_t fd, int32_t evts,
         return -ENOMEM;
     }
 
+    if (adaptor->source) {
+        g_source_remove(adaptor->source);
+        adaptor->source = 0;
+    }
+
     /* Because unlike the poll() API, glib doesn't tell us about HUPs by default */
     evts |= (G_IO_HUP | G_IO_NVAL | G_IO_ERR);
-
-    if (adaptor->is_used) {
-        g_source_remove(adaptor->source);
-    }
 
     adaptor->fn = fn;
     adaptor->events = evts;
     adaptor->data = data;
     adaptor->p = p;
-    adaptor->is_used = QB_TRUE;
+    adaptor->is_used++;
     adaptor->source =
         g_io_add_watch_full(channel, G_PRIORITY_DEFAULT, evts, gio_read_socket, adaptor,
                             gio_poll_destroy);
@@ -535,12 +541,10 @@ gio_poll_dispatch_del(int32_t fd)
 
     crm_trace("Looking for fd=%d", fd);
     if (qb_array_index(gio_map, fd, (void **)&adaptor) == 0) {
-        crm_trace("Marking adaptor %p unused", adaptor);
         if (adaptor->source) {
             g_source_remove(adaptor->source);
             adaptor->source = 0;
         }
-        adaptor->is_used = QB_FALSE;
     }
     return 0;
 }
