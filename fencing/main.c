@@ -908,49 +908,66 @@ update_fencing_topology(const char *event, xmlNode * msg)
 
     } else if(format == 2) {
         xmlNode *change = NULL;
+        int add[] = { 0, 0, 0 };
+        int del[] = { 0, 0, 0 };
+
+        xml_patch_versions(patchset, add, del);
 
         for (change = __xml_first_child(patchset); change != NULL; change = __xml_next(change)) {
             const char *op = crm_element_value(change, XML_DIFF_OP);
             const char *xpath = crm_element_value(change, XML_DIFF_PATH);
-            xmlNode *f_topology = get_message_xml(change, XML_TAG_FENCING_TOPOLOGY);
 
             if(op == NULL) {
                 continue;
-            } else if (strstr(xpath, "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION) && f_topology != NULL) {
-                if(strcmp(op, "delete") == 0 || strcmp(op, "create") == 0) {
-                    crm_info("Re-initializing fencing topology after top-level %s operation", op);
+
+            } else if(strstr(xpath, "/" XML_TAG_FENCING_LEVEL) != NULL) {
+                /* Change to a specific entry */
+
+                crm_trace("Handling %s operation %d.%d.%d for %s", op, add[0], add[1], add[2], xpath);
+                if(strcmp(op, "move") == 0) {
+                    continue;
+
+                } else if(strcmp(op, "create") == 0) {
+                    handle_topology_change(change->children, FALSE);
+
+                } else if(strcmp(op, "modify") == 0) {
+                    xmlNode *match = first_named_child(change, XML_DIFF_RESULT);
+
+                    if(match) {
+                        handle_topology_change(match->children, TRUE);
+                    }
+
+                } else if(strcmp(op, "delete") == 0) {
+                    /* Nuclear option, all we have is the path and an id... not enough to remove a specific entry */
+                    crm_info("Re-initializing fencing topology after %s operation %d.%d.%d for %s",
+                             op, add[0], add[1], add[2], xpath);
                     fencing_topology_init(NULL);
-                }
-                return;
-            } else if (strstr(xpath, "/" XML_TAG_FENCING_TOPOLOGY "/") == NULL) {
-                continue;
-            } else if(strstr(xpath, "/" XML_TAG_FENCING_LEVEL "/") == NULL) {
-                if(strcmp(op, "delete") == 0 || strcmp(op, "create") == 0) {
-                    crm_info("Re-initializing fencing topology after top-level %s operation", op);
-                    fencing_topology_init(NULL);
-                }
-                return;
-            }
-
-            crm_trace("Handling %s operation for %s", op, xpath);
-            if(strcmp(op, "move") == 0) {
-                continue;
-
-            } else if(strcmp(op, "create") == 0) {
-                handle_topology_change(change->children, FALSE);
-
-            } else if(strcmp(op, "modify") == 0) {
-                xmlNode *match = first_named_child(change, XML_DIFF_RESULT);
-
-                if(match) {
-                    handle_topology_change(match->children, TRUE);
+                    return;
                 }
 
-            } else if(strcmp(op, "delete") == 0) {
-                /* Nuclear option, all we have is the path and an id... not enough to remove a specific entry */
-                crm_info("Re-initializing fencing topology after %s operation", op);
+            } else if (strstr(xpath, "/" XML_TAG_FENCING_TOPOLOGY) != NULL) {
+                /* Change to the topology in general */
+                crm_info("Re-initializing fencing topology after top-level %s operation  %d.%d.%d for %s",
+                         op, add[0], add[1], add[2], xpath);
                 fencing_topology_init(NULL);
                 return;
+
+            } else if (strstr(xpath, "/" XML_CIB_TAG_CONFIGURATION)) {
+                /* Changes to the whole config section, possibly including the topology as a whild */
+                if(first_named_child(change, XML_TAG_FENCING_TOPOLOGY) == NULL) {
+                    crm_trace("Nothing for us in %s operation %d.%d.%d for %s.",
+                              op, add[0], add[1], add[2], xpath);
+
+                } else if(strcmp(op, "delete") == 0 || strcmp(op, "create") == 0) {
+                    crm_info("Re-initializing fencing topology after top-level %s operation %d.%d.%d for %s.",
+                             op, add[0], add[1], add[2], xpath);
+                    fencing_topology_init(NULL);
+                    return;
+                }
+
+            } else {
+                crm_trace("Nothing for us in %s operation %d.%d.%d for %s",
+                          op, add[0], add[1], add[2], xpath);
             }
         }
 
