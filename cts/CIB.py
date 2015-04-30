@@ -300,14 +300,18 @@ class CIB11(ConfigBase):
         g.add_child(self.NewIP())
 
         if self.CM.Env["have_systemd"]:
+            # It would be better to put the python in a separate file, so we
+            # could loop "while True" rather than sleep for 24 hours. We can't
+            # put a loop in a single-line python command; only simple commands
+            # may be separated by semicolon in python.
             dummy_service_file = """
 [Unit]
 Description=Dummy resource that takes a while to start
 
 [Service]
 Type=notify
-ExecStart=/usr/bin/python -c 'import time; import systemd.daemon;time.sleep(10); systemd.daemon.notify("READY=1"); time.sleep(3600)'
-ExecStop=sleep 10
+ExecStart=/usr/bin/python -c 'import time, systemd.daemon; time.sleep(10); systemd.daemon.notify("READY=1"); time.sleep(86400)'
+ExecStop=/bin/sleep 10
 ExecStop=/bin/kill -KILL $MAINPID
 """
 
