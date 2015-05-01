@@ -526,9 +526,9 @@ class StonithdTest(CTSTest):
         return [
             self.templates["Pat:Fencing_start"] % ".*",
             self.templates["Pat:Fencing_ok"] % ".*",
-            "error: native_create_actions: Resource .*stonith::.* is active on 2 nodes attempting recovery",
-            "error: remote_op_done: Operation reboot of .*by .* for stonith_admin.*: Timer expired",
-            ]
+            r"error.*: Resource .*stonith::.* is active on 2 nodes attempting recovery",
+            r"error.*: Operation reboot of .*by .* for stonith_admin.*: Timer expired",
+        ]
 
     def is_applicable(self):
         if not self.is_applicable_common():
@@ -745,7 +745,9 @@ class PartialStart(CTSTest):
         '''Return list of errors which should be ignored'''
 
         # We might do some fencing in the 2-node case if we make it up far enough
-        return [ """Executing reboot fencing operation""" ]
+        return [
+            """Executing reboot fencing operation""",
+        ]
 
 #     Register StopOnebyOne as a good test to run
 AllTestClasses.append(PartialStart)
@@ -788,7 +790,7 @@ class StandbyTest(CTSTest):
         rsc_on_node = self.CM.active_resources(node)
 
         watchpats = []
-        watchpats.append("do_state_transition:.*-> S_POLICY_ENGINE")
+        watchpats.append(r"State transition .* -> S_POLICY_ENGINE")
         watch = self.create_watch(watchpats, self.Env["DeadTime"]+10)
         watch.setwatch()
 
@@ -918,7 +920,11 @@ class ValgrindTest(CTSTest):
 
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
-        return [ """cib:.*readCibXmlFile:""", """HA_VALGRIND_ENABLED""" ]
+        return [
+            r"cib.*: \*\*\*\*\*\*\*\*\*\*\*\*\*",
+            r"cib.*: .* avoid confusing Valgrind",
+            r"HA_VALGRIND_ENABLED",
+        ]
 
 
 class StandbyLoopTest(ValgrindTest):
@@ -1246,13 +1252,14 @@ class MaintenanceMode(CTSTest):
 
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
-        return [ """Updating failcount for %s""" % self.rid,
-                 """LogActions: Recover %s""" % self.rid,
-                 """Unknown operation: fail""",
-                 """(ERROR|error): sending stonithRA op to stonithd failed.""",
-                 self.templates["Pat:RscOpOK"] % (self.rid, ("%s_%d" % (self.action, self.interval))),
-                 """(ERROR|error): process_graph_event: Action %s_%s_%d .* initiated outside of a transition""" % (self.rid, self.action, self.interval),
-                ]
+        return [
+            r"Updating failcount for %s" % self.rid,
+            r"pengine.*: Recover %s\s*\(.*\)" % self.rid,
+            r"Unknown operation: fail",
+            r"(ERROR|error): sending stonithRA op to stonithd failed.",
+            self.templates["Pat:RscOpOK"] % (self.rid, ("%s_%d" % (self.action, self.interval))),
+            r"(ERROR|error).*: Action %s_%s_%d .* initiated outside of a transition" % (self.rid, self.action, self.interval),
+        ]
 
 AllTestClasses.append(MaintenanceMode)
 
@@ -1346,14 +1353,14 @@ class ResourceRecover(CTSTest):
 
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
-        return [ """Updating failcount for %s""" % self.rid,
-                 """LogActions: Recover %s""" % self.rid,
-                 """LogActions: Recover %s""" % self.rid_alt,
-                 """Unknown operation: fail""",
-                 """(ERROR|error): sending stonithRA op to stonithd failed.""",
-                 self.templates["Pat:RscOpOK"] % (self.rid, ("%s_%d" % (self.action, self.interval))),
-                 """(ERROR|error): process_graph_event: Action %s_%s_%d .* initiated outside of a transition""" % (self.rid, self.action, self.interval),
-                 ]
+        return [
+            r"Updating failcount for %s" % self.rid,
+            r"pengine.*: Recover (%s|%s)\s*\(.*\)" % (self.rid, self.rid_alt),
+            r"Unknown operation: fail",
+            r"(ERROR|error): sending stonithRA op to stonithd failed.",
+            self.templates["Pat:RscOpOK"] % (self.rid, ("%s_%d" % (self.action, self.interval))),
+            r"(ERROR|error).*: Action %s_%s_%d .* initiated outside of a transition" % (self.rid, self.action, self.interval),
+        ]
 
 AllTestClasses.append(ResourceRecover)
 
@@ -1657,11 +1664,11 @@ class SplitBrainTest(CTSTest):
     def errorstoignore(self):
         '''Return list of errors which are 'normal' and should be ignored'''
         return [
-            "Another DC detected:",
-            "(ERROR|error): attrd_cib_callback: .*Application of an update diff failed",
-            "crmd_ha_msg_callback:.*not in our membership list",
-            "CRIT:.*node.*returning after partition",
-            ]
+            r"Another DC detected:",
+            r"(ERROR|error).*: .*Application of an update diff failed",
+            r"crmd.*:.*not in our membership list",
+            r"CRIT:.*node.*returning after partition",
+        ]
 
     def is_applicable(self):
         if not self.is_applicable_common():
@@ -1805,11 +1812,8 @@ class Reattach(CTSTest):
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
         return [
-            "resources were active at shutdown",
-            "pingd: .*(ERROR|error): send_ipc_message:",
-            "pingd: .*(ERROR|error): send_update:",
-            "lrmd: .*(ERROR|error): notify_client:",
-            ]
+            r"resources were active at shutdown",
+        ]
 
     def is_applicable(self):
         if self.Env["Name"] == "crm-lha":
@@ -1856,11 +1860,10 @@ class SpecialTest1(CTSTest):
         '''Return list of errors which should be ignored'''
         # Errors that occur as a result of the CIB being wiped
         return [
-            """warning: retrieveCib: Cluster configuration not found:""",
-            """error: cib_perform_op: v1 patchset error, patch failed to apply: Application of an update diff failed""",
-            """error: unpack_resources: Resource start-up disabled since no STONITH resources have been defined""",
-            """error: unpack_resources: Either configure some or disable STONITH with the stonith-enabled option""",
-            """error: unpack_resources: NOTE: Clusters with shared data need STONITH to ensure data integrity""",
+            r"error.*: v1 patchset error, patch failed to apply: Application of an update diff failed",
+            r"error.*: Resource start-up disabled since no STONITH resources have been defined",
+            r"error.*: Either configure some or disable STONITH with the stonith-enabled option",
+            r"error.*: NOTE: Clusters with shared data need STONITH to ensure data integrity",
         ]
 
 AllTestClasses.append(SpecialTest1)
@@ -2612,23 +2615,19 @@ class RemoteLXC(CTSTest):
 
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
-        return [ """Updating failcount for ping""",
-                 """LogActions: Recover ping""",
-                 """LogActions: Recover lxc-ms""",
-                 """LogActions: Recover container""",
-                 # The orphaned lxc-ms resource causes an expected transition error
-                 # that is a result of the pengine not having knowledge that the 
-                 # ms resource used to be a clone.  As a result it looks like that 
-                 # resource is running in multiple locations when it shouldn't... But in
-                 # this instance we know why this error is occurring and that it is expected.
-                 """Calculated Transition .* /var/lib/pacemaker/pengine/pe-error""",
-                 """Resource lxc-ms .* is active on 2 nodes attempting recovery""",
-                 """Unknown operation: fail""",
-                 """notice: operation_finished: ping-""",
-                 """notice: operation_finished: container""",
-                 """notice: operation_finished: .*_monitor_0:.*:stderr""",
-                 """(ERROR|error): sending stonithRA op to stonithd failed.""",
-                ]
+        return [
+            r"Updating failcount for ping",
+            r"pengine.*: Recover (ping|lxc-ms|container)\s*\(.*\)",
+            # The orphaned lxc-ms resource causes an expected transition error
+            # that is a result of the pengine not having knowledge that the 
+            # ms resource used to be a clone.  As a result it looks like that 
+            # resource is running in multiple locations when it shouldn't... But in
+            # this instance we know why this error is occurring and that it is expected.
+            r"Calculated Transition .* /var/lib/pacemaker/pengine/pe-error",
+            r"Resource lxc-ms .* is active on 2 nodes attempting recovery",
+            r"Unknown operation: fail",
+            r"(ERROR|error): sending stonithRA op to stonithd failed.",
+        ]
 
 AllTestClasses.append(RemoteLXC)
 
@@ -3093,11 +3092,11 @@ class RemoteStonithd(CTSTest):
 
     def errorstoignore(self):
         ignore_pats = [
-            """Unexpected disconnect on remote-node""",
-            """error: process_lrm_event: Operation remote_.*_monitor""",
-            """LogActions: Recover remote_""",
-            """Calculated Transition .* /var/lib/pacemaker/pengine/pe-error""",
-            """error: native_create_actions: Resource .*ocf::.* is active on 2 nodes attempting recovery""",
+            r"Unexpected disconnect on remote-node",
+            r"crmd.*: error.*: Operation remote_.*_monitor",
+            r"pengine.*: Recover remote_.*\s*\(.*\)",
+            r"Calculated Transition .* /var/lib/pacemaker/pengine/pe-error",
+            r"error.*: Resource .*ocf::.* is active on 2 nodes attempting recovery",
         ]
 
         ignore_pats.extend(self.driver.errorstoignore())
@@ -3191,7 +3190,7 @@ class RemoteRscFailure(CTSTest):
 
     def errorstoignore(self):
         ignore_pats = [
-            """LogActions: Recover remote-rsc""",
+            r"pengine.*: Recover remote-rsc\s*\(.*\)",
         ]
 
         ignore_pats.extend(self.driver.errorstoignore())
