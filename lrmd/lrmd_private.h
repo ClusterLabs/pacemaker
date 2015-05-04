@@ -30,7 +30,7 @@
 #    include <gnutls/gnutls.h>
 #  endif
 
-#define ISOLATION_PROVIDER "isolation"
+#define LRMD_ISOLATION_PROVIDER ".isolation"
 
 GHashTable *rsc_list;
 
