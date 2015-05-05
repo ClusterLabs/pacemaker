@@ -429,9 +429,9 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
         no_wait = TRUE;
     }
 
-    crm_notice("Initiating action %d: %s %s on %s%s%s",
-               action->id, task, task_uuid, on_node,
-               is_local ? " (local)" : "", no_wait ? " - no waiting" : "");
+    crm_notice("Initiating %s operation %s%s on %s%s "CRM_XS" action %d",
+               task, task_uuid, (is_local? " locally" : ""), on_node,
+               (no_wait? " without waiting" : ""), action->id);
 
     cmd = create_request(CRM_OP_INVOKE_LRM, rsc_op, router_node,
                          CRM_SYSTEM_LRMD, CRM_SYSTEM_TENGINE, NULL);

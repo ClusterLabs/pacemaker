@@ -60,8 +60,8 @@ class BasePatterns:
             "Pat:Fencing_ok"    : r"stonith.*:\s*Operation .* of %s by .* for .*@.*: OK",
             "Pat:Fencing_recover"    : r"pengine.*: Recover %s",
 
-            "Pat:RscOpOK"       : r"crmd.*:\s*Operation %s_%s.*:\s*ok \(.*confirmed=\S+\)",
-            "Pat:RscRemoteOpOK" : r"crmd.*:\s*Operation %s_%s.*:\s*ok \(node=%s,.*,\s*confirmed=true\)",
+            "Pat:RscOpOK"       : r"crmd.*:\s+Result of %s operation for %s.*: ok",
+            "Pat:RscRemoteOpOK" : r"crmd.*:\s+Result of %s operation for %s on %s: ok",
             "Pat:NodeFenced"    : r"crmd.*:\s*Peer\s+%s\s+was\s+terminated\s+\(.*\)\s+by\s+.*\s+for\s+.*:\s+OK",
             "Pat:FenceOpOK"     : "Operation .* for host '%s' with device .* returned: 0",
         }
@@ -386,7 +386,7 @@ class crm_cs_v0(BasePatterns):
             r"crit:.*Fencing daemon connection failed",
             r"error:.*Sign-in failed: triggered a retry",
             "STONITH connection failed, finalizing .* pending operations.",
-            r"crmd.*:\s*Operation Fencing.* Error",
+            r"crmd.*:\s+Result of .* operation for Fencing.* Error",
         ]
         self.components["stonith-ignore"].extend(self.components["common-ignore"])
 

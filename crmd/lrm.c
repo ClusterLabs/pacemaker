@@ -2330,27 +2330,37 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op, struct recurr
 
     switch (op->op_status) {
         case PCMK_LRM_OP_CANCELLED:
-            crm_info("Operation %s: %s (node=%s, call=%d, confirmed=%s)",
-                     op_key, services_lrm_status_str(op->op_status), lrm_state->node_name,
-                     op->call_id, removed ? "true" : "false");
+            crm_info("Result of %s operation for %s on %s: %s "
+                     CRM_XS " call=%d key=%s confirmed=%s",
+                     op->op_type, op->rsc_id, lrm_state->node_name,
+                     services_lrm_status_str(op->op_status),
+                     op->call_id, op_key, (removed? "true" : "false"));
             break;
 
         case PCMK_LRM_OP_DONE:
             do_crm_log(op->interval?LOG_INFO:LOG_NOTICE,
-                       "Operation %s: %s (node=%s, call=%d, rc=%d, cib-update=%d, confirmed=%s)",
-                       op_key, services_ocf_exitcode_str(op->rc), lrm_state->node_name,
-                       op->call_id, op->rc, update_id, removed ? "true" : "false");
+                       "Result of %s operation for %s on %s: %s "
+                       CRM_XS " call=%d key=%s confirmed=%s rc=%d cib-update=%d",
+                       op->op_type, op->rsc_id, lrm_state->node_name,
+                       services_ocf_exitcode_str(op->rc),
+                       op->call_id, op_key, (removed? "true" : "false"),
+                       op->rc, update_id);
             break;
 
         case PCMK_LRM_OP_TIMEOUT:
-            crm_err("Operation %s: %s (node=%s, call=%d, timeout=%dms)",
-                    op_key, services_lrm_status_str(op->op_status), lrm_state->node_name, op->call_id, op->timeout);
+            crm_err("Result of %s operation for %s on %s: %s "
+                    CRM_XS " call=%d key=%s timeout=%dms",
+                    op->op_type, op->rsc_id, lrm_state->node_name,
+                    services_lrm_status_str(op->op_status),
+                    op->call_id, op_key, op->timeout);
             break;
 
         default:
-            crm_err("Operation %s (node=%s, call=%d, status=%d, cib-update=%d, confirmed=%s) %s",
-                    op_key, lrm_state->node_name, op->call_id, op->op_status, update_id, removed ? "true" : "false",
-                    services_lrm_status_str(op->op_status));
+            crm_err("Result of %s operation for %s on %s: %s "
+                    CRM_XS " call=%d key=%s confirmed=%s status=%d cib-update=%d",
+                    op->op_type, op->rsc_id, lrm_state->node_name,
+                    services_lrm_status_str(op->op_status), op->call_id, op_key,
+                    (removed? "true" : "false"), op->op_status, update_id);
     }
 
     if (op->output) {
