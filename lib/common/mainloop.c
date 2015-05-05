@@ -269,7 +269,9 @@ crm_signal_dispatch(GSource * source, GSourceFunc callback, gpointer userdata)
     crm_signal_t *sig = (crm_signal_t *) source;
 
     if(sig->signal != SIGCHLD) {
-        crm_notice("Invoking handler for signal %d: %s", sig->signal, strsignal(sig->signal));
+        crm_notice("Caught '%s' signal "CRM_XS" %d (%s handler)",
+                   strsignal(sig->signal), sig->signal,
+                   (sig->handler? "invoking" : "no"));
     }
 
     sig->trigger.trigger = FALSE;

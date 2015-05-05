@@ -396,9 +396,12 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
     if (lrm_state->pending_ops && lrm_state_is_connected(lrm_state) == TRUE) {
         guint removed = g_hash_table_foreach_remove(
             lrm_state->pending_ops, stop_recurring_actions, lrm_state);
+        guint nremaining = g_hash_table_size(lrm_state->pending_ops);
 
-        crm_notice("Stopped %u recurring operations at %s (%u ops remaining)",
-                   removed, when, g_hash_table_size(lrm_state->pending_ops));
+        if (removed || nremaining) {
+            crm_notice("Stopped %u recurring operations at %s (%u operations remaining)",
+                       removed, when, nremaining);
+        }
     }
 
     if (lrm_state->pending_ops) {
@@ -2002,8 +2005,10 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
         removed = g_hash_table_foreach_remove(
             lrm_state->pending_ops, stop_recurring_action_by_rsc, &data);
 
-        crm_debug("Stopped %u recurring operations in preparation for %s_%s_%d",
-                  removed, rsc->id, operation, op->interval);
+        if (removed) {
+            crm_debug("Stopped %u recurring operations in preparation for %s_%s_%d",
+                      removed, rsc->id, operation, op->interval);
+        }
     }
 
     /* now do the op */

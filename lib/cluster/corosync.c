@@ -139,7 +139,7 @@ corosync_node_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
 void
 terminate_cs_connection(crm_cluster_t *cluster)
 {
-    crm_notice("Disconnecting from Corosync");
+    crm_info("Disconnecting from Corosync");
 
     cluster_disconnect_cpg(cluster);
 
@@ -151,6 +151,8 @@ terminate_cs_connection(crm_cluster_t *cluster)
     } else {
         crm_info("No Quorum connection");
     }
+
+    crm_notice("Disconnected from Corosync");
 }
 
 int ais_membership_timer = 0;

@@ -1131,8 +1131,8 @@ crm_shutdown(int nsig)
             }
 
             /* can't rely on this... */
-            crm_notice("Requesting shutdown, upper limit is %dms",
-                       shutdown_escalation_timer->period_ms);
+            crm_notice("Shutting down cluster resource manager " CRM_XS
+                       " limit=%dms", shutdown_escalation_timer->period_ms);
             crm_timer_start(shutdown_escalation_timer);
         }
 
