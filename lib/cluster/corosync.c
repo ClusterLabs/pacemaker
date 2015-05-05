@@ -184,13 +184,19 @@ pcmk_quorum_notification(quorum_handle_t handle,
     static gboolean init_phase = TRUE;
 
     if (quorate != crm_have_quorum) {
-        crm_notice("Membership " U64T ": quorum %s (%lu)", ring_id,
-                   quorate ? "acquired" : "lost", (long unsigned int)view_list_entries);
+        if (quorate) {
+            crm_notice("Quorum acquired " CRM_XS " membership=" U64T " members=%lu",
+                       ring_id, (long unsigned int)view_list_entries);
+        } else {
+            crm_warn("Quorum lost " CRM_XS " membership=" U64T " members=%lu",
+                     ring_id, (long unsigned int)view_list_entries);
+        }
         crm_have_quorum = quorate;
 
     } else {
-        crm_info("Membership " U64T ": quorum %s (%lu)", ring_id,
-                 quorate ? "retained" : "still lost", (long unsigned int)view_list_entries);
+        crm_info("Quorum %s " CRM_XS " membership=" U64T " members=%lu",
+                 (quorate? "retained" : "still lost"), ring_id,
+                 (long unsigned int)view_list_entries);
     }
 
     if (view_list_entries == 0 && init_phase) {

@@ -751,7 +751,8 @@ class PartialStart(CTSTest):
 
         # We might do some fencing in the 2-node case if we make it up far enough
         return [
-            """Executing reboot fencing operation""",
+            r"Executing reboot fencing operation",
+            r"Requesting fencing \([^)]+\) of node ",
         ]
 
 #     Register StopOnebyOne as a good test to run
@@ -2631,7 +2632,7 @@ class RemoteLXC(CTSTest):
             # ms resource used to be a clone.  As a result it looks like that 
             # resource is running in multiple locations when it shouldn't... But in
             # this instance we know why this error is occurring and that it is expected.
-            r"Calculated Transition .* /var/lib/pacemaker/pengine/pe-error",
+            r"Calculated [Tt]ransition .* /var/lib/pacemaker/pengine/pe-error",
             r"Resource lxc-ms .* is active on 2 nodes attempting recovery",
             r"Unknown operation: fail",
             r"(ERROR|error): sending stonithRA op to stonithd failed.",
@@ -3099,7 +3100,7 @@ class RemoteStonithd(RemoteDriver):
             r"crmd.*:\s+error.*: Operation remote_.*_monitor",
             r"crmd.*:\s+error.*: Result of monitor operation for remote_.*",
             r"pengine.*:\s+Recover remote_.*\s*\(.*\)",
-            r"Calculated Transition .* /var/lib/pacemaker/pengine/pe-error",
+            r"Calculated [Tt]ransition .* /var/lib/pacemaker/pengine/pe-error",
             r"error.*: Resource .*ocf::.* is active on 2 nodes attempting recovery",
         ]
 

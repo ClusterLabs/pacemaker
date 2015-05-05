@@ -41,10 +41,9 @@ do_log(long long action,
         log_type = LOG_ERR;
     }
 
-    do_crm_log(log_type,
-               "FSA: Input %s from %s() received in state %s",
+    do_crm_log(log_type, "Input %s received in state %s from %s",
                fsa_input2string(msg_data->fsa_input),
-               msg_data->origin, fsa_state2string(cur_state));
+               fsa_state2string(cur_state), msg_data->origin);
 
     if (msg_data->data_type == fsa_dt_ha_msg) {
         ha_msg_input_t *input = fsa_typed_data(msg_data->data_type);

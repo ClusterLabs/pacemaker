@@ -154,8 +154,9 @@ te_fence_node(crm_graph_t * graph, crm_action_t * action)
         return FALSE;
     }
 
-    crm_notice("Executing %s fencing operation (%s) on %s (timeout=%d)",
-               type, id, target, transition_graph->stonith_timeout);
+    crm_notice("Requesting fencing (%s) of node %s "
+               CRM_XS " action=%s timeout=%d",
+               type, target, id, transition_graph->stonith_timeout);
 
     /* Passing NULL means block until we can connect... */
     te_connect_stonith(NULL);

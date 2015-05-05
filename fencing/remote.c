@@ -541,7 +541,7 @@ remote_op_watchdog_done(gpointer userdata)
 
     op->op_timer_one = 0;
 
-    crm_notice("Remote %s operation on %s for %s.%8s assumed complete",
+    crm_notice("Self-fencing (%s) by %s for %s.%8s assumed complete",
                op->action, op->target, op->client_name, op->id);
     op->state = st_done;
     remote_op_done(op, NULL, pcmk_ok, FALSE);
@@ -555,7 +555,7 @@ remote_op_timeout_one(gpointer userdata)
 
     op->op_timer_one = 0;
 
-    crm_notice("Remote %s operation on %s for %s.%8s timed out",
+    crm_notice("Peer's fencing (%s) of %s for %s timed out" CRM_XS "id=%s",
                op->action, op->target, op->client_name, op->id);
     call_remote_stonith(op, NULL);
     return FALSE;
@@ -1074,19 +1074,20 @@ initiate_remote_stonith_op(crm_client_t * client, xmlNode * request, gboolean ma
 
     switch (op->state) {
         case st_failed:
-            crm_warn("Initiation of remote operation %s for %s: failed (%s)", op->action,
-                     op->target, op->id);
+            crm_warn("Could not request peer fencing (%s) of %s "
+                     CRM_XS " id=%s", op->action, op->target, op->id);
             remote_op_done(op, NULL, -EINVAL, FALSE);
             return op;
 
         case st_duplicate:
-            crm_info("Initiating remote operation %s for %s: %s (duplicate)", op->action,
-                     op->target, op->id);
+            crm_info("Requesting peer fencing (%s) of %s (duplicate) "
+                     CRM_XS " id=%s", op->action, op->target, op->id);
             return op;
 
         default:
-            crm_notice("Initiating remote operation %s for %s: %s (%d)", op->action, op->target,
-                       op->id, op->state);
+            crm_notice("Requesting peer fencing (%s) of %s "
+                       CRM_XS " id=%s state=%d",
+                       op->action, op->target, op->id, op->state);
     }
 
     query = stonith_create_op(op->client_callid, op->id, STONITH_OP_QUERY,
@@ -1445,7 +1446,8 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
         op->total_timeout = TIMEOUT_MULTIPLY_FACTOR * total_timeout;
         op->op_timer_total = g_timeout_add(1000 * op->total_timeout, remote_op_timeout, op);
         report_timeout_period(op, op->total_timeout);
-        crm_info("Total remote op timeout set to %d for fencing of node %s for %s.%.8s",
+        crm_info("Total timeout set to %d for peer's fencing of %s for %s"
+                 CRM_XS "id=%s",
                  total_timeout, op->target, op->client_name, op->id);
     }
 
@@ -1819,7 +1821,8 @@ process_remote_stonith_query(xmlNode * msg)
 
     op = g_hash_table_lookup(remote_op_list, id);
     if (op == NULL) {
-        crm_debug("Unknown or expired remote op: %s", id);
+        crm_debug("Received query reply for unknown or expired operation %s",
+                  id);
         return -EOPNOTSUPP;
     }
 
@@ -1925,14 +1928,14 @@ process_remote_stonith_exec(xmlNode * msg)
     if (op == NULL) {
         /* Could be for an event that began before we started */
         /* TODO: Record the op for later querying */
-        crm_info("Unknown or expired remote op: %s", id);
+        crm_info("Received peer result of unknown or expired operation %s", id);
         return -EOPNOTSUPP;
     }
 
     if (op->devices && device && safe_str_neq(op->devices->data, device)) {
-        crm_err
-            ("Received outdated reply for device %s (instead of %s) to %s node %s. Operation already timed out at remote level.",
-             device, op->devices->data, op->action, op->target);
+        crm_err("Received outdated reply for device %s (instead of %s) to "
+                "fence (%s) %s. Operation already timed out at peer level.",
+                device, op->devices->data, op->action, op->target);
         return rc;
     }
 

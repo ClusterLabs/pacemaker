@@ -56,7 +56,7 @@ class BasePatterns:
             "Pat:They_dead"     : "node %s.*: is dead",
             "Pat:TransitionComplete" : "Transition status: Complete: complete",
 
-            "Pat:Fencing_start" : "Initiating remote operation .* for %s",
+            "Pat:Fencing_start" : "(Initiating remote operation|Requesting peer fencing ).* (for|of) %s",
             "Pat:Fencing_ok"    : r"stonith.*:\s*Operation .* of %s by .* for .*@.*: OK",
             "Pat:Fencing_recover"    : r"pengine.*: Recover %s",
 
@@ -268,6 +268,7 @@ class crm_cs_v0(BasePatterns):
                     "verify_stopped:.*Resource .* was active at shutdown.  You may ignore this error if it is unmanaged.",
                     "error: attrd_connection_destroy:.*Lost connection to attrd",
                     r".*:\s*Executing .* fencing operation \(.*\) on ",
+                    r".*:\s*Requesting fencing \([^)]+\) of node ",
                     r"(Blackbox dump requested|Problem detected)",
 #                    "error: native_create_actions: Resource .*stonith::.* is active on 2 nodes attempting recovery",
 #                    "error: process_pe_message: Transition .* ERRORs found during PE processing",
@@ -289,8 +290,8 @@ class crm_cs_v0(BasePatterns):
             r"lrmd.*error:.*Connection to stonith-ng.* closed",
             r"lrmd.*error:.*LRMD lost STONITH connection",
             r"crmd.*State transition .* S_RECOVERY",
-            r"crmd.*error:.*FSA: Input I_ERROR",
-            r"crmd.*error:.*FSA: Input I_TERMINATE",
+            r"crmd.*error:.*Input I_ERROR .*received in state",
+            r"crmd.*error:.*Input I_TERMINATE .*received in state",
             r"crmd.*error:.*Connection to cman failed",
             r"crmd.*error:.*Could not recover from internal error",
             r"error:.*Connection to cib_shm failed",
@@ -328,7 +329,7 @@ class crm_cs_v0(BasePatterns):
                     "(Child process|The) crmd .* exited: Generic Pacemaker error",
                     "(Child process|The) attrd .* exited: (Connection reset by peer|Transport endpoint is not connected)",
                     "Lost connection to CIB service",
-                    "crmd.*Input I_TERMINATE from do_recover",
+                    r"crmd.*: Input I_TERMINATE .*from do_recover",
                     "crmd.*I_ERROR.*crmd_cib_connection_destroy",
                     "crmd.*Could not recover from internal error",
                     ]
@@ -341,7 +342,7 @@ class crm_cs_v0(BasePatterns):
                     "Connection to lrmd.* closed",
                     "crmd.*I_ERROR.*lrm_connection_destroy",
                     "(Child process|The) crmd .* exited: Generic Pacemaker error",
-                    "crmd.*Input I_TERMINATE from do_recover",
+                    r"crmd.*: Input I_TERMINATE .*from do_recover",
                     "crmd.*Could not recover from internal error",
                     ]
         self.components["lrmd-ignore"] = []
@@ -366,7 +367,7 @@ class crm_cs_v0(BasePatterns):
                     "Connection to pengine.* closed",
                     "Connection to the Policy Engine failed",
                     "crmd.*I_ERROR.*save_cib_contents",
-                    "crmd.*Input I_TERMINATE from do_recover",
+                    r"crmd.*: Input I_TERMINATE .*from do_recover",
                     "crmd.*Could not recover from internal error",
                     ]
         self.components["pengine-ignore"] = []
