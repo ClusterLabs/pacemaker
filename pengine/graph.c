@@ -909,7 +909,7 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
         g_hash_table_foreach(p, hash2smartfield, args_xml);
 
         g_hash_table_destroy(p);
-    } else if(action->rsc) {
+    } else if(action->rsc && action->rsc->variant <= pe_native) {
         g_hash_table_foreach(action->rsc->parameters, hash2smartfield, args_xml);
     }
 

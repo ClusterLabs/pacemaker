@@ -1210,8 +1210,6 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
         num_active_nodes++;
     }
 
-    get_rsc_attributes(rsc->parameters, rsc, chosen, data_set);
-
     for (gIter = rsc->dangling_migrations; gIter != NULL; gIter = gIter->next) {
         node_t *current = (node_t *) gIter->data;
 
@@ -3267,7 +3265,7 @@ void
 native_append_meta(resource_t * rsc, xmlNode * xml)
 {
     char *value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INCARNATION);
-    resource_t *iso_parent, *last_parent;
+    resource_t *iso_parent, *last_parent, *parent;
 
     if (value) {
         char *name = NULL;
@@ -3284,6 +3282,12 @@ native_append_meta(resource_t * rsc, xmlNode * xml)
         name = crm_meta_name(XML_RSC_ATTR_REMOTE_NODE);
         crm_xml_add(xml, name, value);
         free(name);
+    }
+
+    for (parent = rsc; parent != NULL; parent = parent->parent) {
+        if (parent->container) {
+            crm_xml_add(xml, CRM_META"_"XML_RSC_ATTR_CONTAINER, parent->container->id);
+        }
     }
 
     last_parent = iso_parent = rsc;
