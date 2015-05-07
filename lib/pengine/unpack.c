@@ -1910,16 +1910,27 @@ process_rsc_state(resource_t * rsc, node_t * node,
             break;
         case action_fail_reset_remote:
             set_bit(rsc->flags, pe_rsc_failed);
-            tmpnode = NULL;
-            if (rsc->is_remote_node) {
-                tmpnode = pe_find_node(data_set->nodes, rsc->id);
+            if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+                tmpnode = NULL;
+                if (rsc->is_remote_node) {
+                    tmpnode = pe_find_node(data_set->nodes, rsc->id);
+                }
+                if (tmpnode && is_baremetal_remote_node(tmpnode)) {
+                    /* connection resource to baremetal resource failed in a way that
+                     * should result in fencing the remote-node. */
+                    pe_fence_node(data_set, tmpnode, "because of connection failure(s)");
+                }
             }
-            if (tmpnode && is_baremetal_remote_node(tmpnode)) {
-                /* connection resource to baremetal resource failed in a way that
-                 * should result in fencing the remote-node. */
-                pe_fence_node(data_set, tmpnode, "because of connection failure(s)");
-            } else if (rsc->role != RSC_ROLE_STOPPED && rsc->role != RSC_ROLE_UNKNOWN) {
+
+            /* require the stop action regardless if fencing is occuring or not. */
+            if (rsc->role > RSC_ROLE_STOPPED) {
                 stop_action(rsc, node, FALSE);
+            }
+
+            /* if reconnect delay is in use, prevent the connection from exiting the
+             * "STOPPED" role until the failure is cleared by the delay timeout. */
+            if (rsc->remote_reconnect_interval) {
+                rsc->next_role = RSC_ROLE_STOPPED;
             }
             break;
     }
@@ -2935,9 +2946,18 @@ update_resource_state(resource_t *rsc, node_t * node, xmlNode * xml_op, const ch
             case action_fail_ignore:
             case action_fail_recover:
             case action_fail_restart_container:
-            case action_fail_reset_remote:
                 *on_fail = action_fail_ignore;
                 rsc->next_role = RSC_ROLE_UNKNOWN;
+                break;
+            case action_fail_reset_remote:
+                if (rsc->remote_reconnect_interval == 0) {
+                    /* when reconnect delay is not in use, the connection is allowed
+                     * to start again after the remote node is fenced and completely
+                     * stopped. Otherwise, with reconnect delay we wait for the failure
+                     * to be cleared entirely before reconnected can be attempted. */ 
+                    *on_fail = action_fail_ignore;
+                    rsc->next_role = RSC_ROLE_UNKNOWN;
+                }
                 break;
         }
     }

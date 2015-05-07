@@ -804,21 +804,29 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
         action->on_fail = action_fail_restart_container;
         value = "restart container (and possibly migrate) (default)";
 
-    /* for baremetal remote nodes, ensure that a recurring monitor operation failure
-     * defaults to either fencing the remote-node for recovery, or at least
-     * attempting to recover the the connection when fencing is disabled. */
+    /* for barmetal remote nodes, ensure that any failure that results in
+     * dropping an active connection to a remote node results in fencing of
+     * the remote node.
+     *
+     * There are only two action failures that don't result in fencing.
+     * 1. probes - probe failures are expected.
+     * 2. start - a start failure indicates that an active connection does not already
+     * exist. The user can set op on-fail=fence if they really want to fence start
+     * failures. */
     } else if (value == NULL &&
                is_rsc_baremetal_remote_node(action->rsc, data_set) &&
-               safe_str_eq(action->task, CRMD_ACTION_STATUS) &&
-               interval > 0) {
+               !(safe_str_eq(action->task, CRMD_ACTION_STATUS) && interval == 0) &&
+                (safe_str_neq(action->task, CRMD_ACTION_START))) {
 
         if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            action->on_fail = action_fail_reset_remote;
             value = "fence baremetal remote node (default)";
         } else {
-            action->on_fail = action_fail_recover;
             value = "recover baremetal remote node connection (default)";
         }
+        if (action->rsc->remote_reconnect_interval) {
+            action->fail_role = RSC_ROLE_STOPPED;
+        }
+        action->on_fail = action_fail_reset_remote;
 
     } else if (value == NULL && safe_str_eq(action->task, CRMD_ACTION_STOP)) {
         if (is_set(data_set->flags, pe_flag_stonith_enabled)) {

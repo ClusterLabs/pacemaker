@@ -683,11 +683,22 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     }
 
     pe_rsc_trace((*rsc), "\tRequired to start: %s%s", value, isdefault?" (default)":"");
-
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_FAIL_TIMEOUT);
     if (value != NULL) {
         /* call crm_get_msec() and convert back to seconds */
         (*rsc)->failure_timeout = (crm_get_msec(value) / 1000);
+    }
+
+    if (baremetal_remote_node) {
+        value = g_hash_table_lookup((*rsc)->parameters, XML_REMOTE_ATTR_RECONNECT_INTERVAL);
+        if (value) {
+            /* reconnect delay works by setting failure_timeout and preventing the
+             * connection from starting until the failure is cleared. */
+            (*rsc)->remote_reconnect_interval = (crm_get_msec(value) / 1000);
+            /* we want to override any default failure_timeout in use when remote
+             * reconnect_interval is in use. */ 
+            (*rsc)->failure_timeout = (*rsc)->remote_reconnect_interval;
+        }
     }
 
     get_target_role(*rsc, &((*rsc)->next_role));

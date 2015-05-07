@@ -254,6 +254,7 @@ struct resource_s {
     int stickiness;
     int sort_index;
     int failure_timeout;
+    int remote_reconnect_interval;
     int effective_priority;
     int migration_threshold;
 

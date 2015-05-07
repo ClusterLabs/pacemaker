@@ -53,12 +53,24 @@ meta_data() {
     <shortdesc lang="en">Server location</shortdesc>
     <content type="string"/>
     </parameter>
-    <parameter name="port" unique="1">
+    <parameter name="port">
     <longdesc lang="en">
        tcp port to connect to.
     </longdesc>
     <shortdesc lang="en">tcp port</shortdesc>
     <content type="string" default="3121"/>
+    </parameter>
+    <parameter name="reconnect_interval">
+    <longdesc lang="en">
+       Time in seconds to wait before attempting to reconnect to a remote node
+       after an active connection to the remote node has been severed. This wait
+       is recurring. If reconnect fails after the wait period, a new reconnect
+       attempt will be made after observing the wait time. When this option is
+       in use, pacemaker will keep attempting to reach out and connect to the
+       remote node indefinitely after each wait interval.
+    </longdesc>
+    <shortdesc lang="en">reconnect interval</shortdesc>
+    <content type="string" default="0"/>
     </parameter>
   </parameters>
   <actions>
