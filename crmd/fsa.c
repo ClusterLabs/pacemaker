@@ -441,7 +441,7 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
 
             /* Error checking and reporting */
         } else {
-            crm_err("Action %s (0x%llx) not supported ",
+            crm_err("Action %s not supported "CRM_XS" 0x%llx",
                     fsa_action2string(fsa_actions), fsa_actions);
             register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, fsa_data, NULL, __FUNCTION__);
         }

@@ -45,7 +45,8 @@ crm_update_peer_join(const char *source, crm_node_t * node, enum crm_join_phase 
     enum crm_join_phase last = 0;
 
     if(node == NULL) {
-        crm_err("%s: Could not set join-%u to %d for NULL", source, current_join_id, phase);
+        crm_err("Could not update join because node not specified" CRM_XS
+                " join-%u source=%s phase=%d", source, current_join_id, phase);
         return;
     }
 
@@ -70,8 +71,9 @@ crm_update_peer_join(const char *source, crm_node_t * node, enum crm_join_phase 
         crm_info("%s: Node %s[%u] - join-%u phase %u -> %u",
                  source, node->uname, node->id, current_join_id, last, phase);
     } else {
-        crm_err("%s: Node %s[%u] - join-%u phase cannot transition from %u to %u",
-                source, node->uname, node->id, current_join_id, last, phase);
+        crm_err("Could not update join for node %s because phase transition invalid "
+                CRM_XS " join-%u source=%s node_id=%u last=%u new=%u",
+                node->uname, current_join_id, source, node->id, last, phase);
 
     }
 }
@@ -349,7 +351,8 @@ do_dc_join_filter_offer(long long action,
         /* NACK this client */
         ack_nack = CRMD_JOINSTATE_NACK;
         crm_update_peer_join(__FUNCTION__, join_node, crm_join_nack);
-        crm_err("join-%d: NACK'ing node %s (ref %s)", join_id, join_from, ref);
+        crm_err("Rejecting cluster join request from %s " CRM_XS
+                " NACK join-%d ref=%s", join_from, join_id, ref);
 
     } else {
         crm_debug("join-%d: Welcoming node %s (ref %s)", join_id, join_from, ref);
@@ -403,8 +406,8 @@ do_dc_join_finalize(long long action,
     }
 
     if (is_set(fsa_input_register, R_IN_TRANSITION)) {
-        crm_warn("join-%d: We are still in a transition."
-                 "  Delaying until the TE completes.", current_join_id);
+        crm_warn("Delaying response to cluster join offer while transition in progress "
+                 CRM_XS " join-%d", current_join_id);
         crmd_fsa_stall(FALSE);
         return;
     }
@@ -413,8 +416,8 @@ do_dc_join_finalize(long long action,
         /* ask for the agreed best CIB */
         sync_from = strdup(max_generation_from);
         set_bit(fsa_input_register, R_CIB_ASKED);
-        crm_notice("join-%d: Syncing the CIB from %s to the rest of the cluster",
-                   current_join_id, sync_from);
+        crm_notice("Syncing the Cluster Information Base from %s to rest of cluster "
+                   CRM_XS " join-%d", sync_from, current_join_id);
         crm_log_xml_notice(max_generation_xml, "Requested version");
 
     } else {

@@ -218,7 +218,9 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                           (down->confirmed? "after" : "before"), node->uname);
 
             } else if ((alive == FALSE) && safe_str_eq(task, CRM_OP_SHUTDOWN)) {
-                crm_notice("%s of %s (op %d) is complete", task, node->uname, down->id);
+                crm_notice("%s of peer %s is complete "CRM_XS" op=%d",
+                           task, node->uname, down->id);
+
                 /* down->confirmed = TRUE; */
                 stop_te_timer(down->timer);
 

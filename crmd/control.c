@@ -245,8 +245,9 @@ int
 crmd_fast_exit(int rc) 
 {
     if (is_set(fsa_input_register, R_STAYDOWN)) {
-        crm_warn("Inhibiting respawn: %d -> %d", rc, 100);
-        rc = 100;
+        crm_warn("Inhibiting respawn "CRM_XS" remapping exit code %d to %d",
+                 rc, DAEMON_RESPAWN_STOP);
+        rc = DAEMON_RESPAWN_STOP;
     }
 
     if (rc == pcmk_ok && is_set(fsa_input_register, R_IN_RECOVERY)) {
@@ -269,7 +270,8 @@ crmd_exit(int rc)
         return rc;
 
     } else if(in_progress) {
-        crm_notice("Error during shutdown process, terminating now: %s (%d)", pcmk_strerror(rc), rc);
+        crm_notice("Error during shutdown process, terminating now with status %d: %s",
+                   rc, pcmk_strerror(rc));
         crm_write_blackbox(SIGTRAP, NULL);
         crmd_fast_exit(rc);
     }
@@ -318,7 +320,8 @@ crmd_exit(int rc)
      * to report on - allowing real errors stand out
      */
     if(rc != pcmk_ok) {
-        crm_notice("Forcing immediate exit: %s (%d)", pcmk_strerror(rc), rc);
+        crm_notice("Forcing immediate exit with status %d: %s",
+                   rc, pcmk_strerror(rc));
         crm_write_blackbox(SIGTRAP, NULL);
         return crmd_fast_exit(rc);
     }

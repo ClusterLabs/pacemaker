@@ -133,10 +133,9 @@ revision_check_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, vo
     cmp = compare_version(revision, CRM_FEATURE_SET);
 
     if (cmp > 0) {
-        crm_err("This build (%s) does not support the current resource configuration", PACEMAKER_VERSION);
-        crm_err("We can only support up to CRM feature set %s (current=%s)",
-                CRM_FEATURE_SET, revision);
-        crm_err("Shutting down the CRM");
+        crm_err("Shutting down because the current configuration is not supported by this version "
+                CRM_XS " build=%s supported=%s current=%s",
+                PACEMAKER_VERSION, CRM_FEATURE_SET, revision);
         /* go into a stall state */
         register_fsa_error_adv(C_FSA_INTERNAL, I_SHUTDOWN, NULL, NULL, __FUNCTION__);
         return;
