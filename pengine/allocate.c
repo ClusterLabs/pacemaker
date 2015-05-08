@@ -1058,7 +1058,8 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
     resource_t *resource1 = (resource_t *) convert_const_pointer(a);
     resource_t *resource2 = (resource_t *) convert_const_pointer(b);
 
-    node_t *node = NULL;
+    node_t *r1_node = NULL;
+    node_t *r2_node = NULL;
     GListPtr gIter = NULL;
     GHashTable *r1_nodes = NULL;
     GHashTable *r2_nodes = NULL;
@@ -1107,17 +1108,17 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
     r2_weight = -INFINITY;
 
     if (resource1->running_on) {
-        node = g_list_nth_data(resource1->running_on, 0);
-        node = g_hash_table_lookup(r1_nodes, node->details->id);
-        if (node != NULL) {
-            r1_weight = node->weight;
+        r1_node = g_list_nth_data(resource1->running_on, 0);
+        r1_node = g_hash_table_lookup(r1_nodes, r1_node->details->id);
+        if (r1_node != NULL) {
+            r1_weight = r1_node->weight;
         }
     }
     if (resource2->running_on) {
-        node = g_list_nth_data(resource2->running_on, 0);
-        node = g_hash_table_lookup(r2_nodes, node->details->id);
-        if (node != NULL) {
-            r2_weight = node->weight;
+        r2_node = g_list_nth_data(resource2->running_on, 0);
+        r2_node = g_hash_table_lookup(r2_nodes, r2_node->details->id);
+        if (r2_node != NULL) {
+            r2_weight = r2_node->weight;
         }
     }
 
@@ -1133,10 +1134,10 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
 
     reason = "score";
     for (gIter = nodes; gIter != NULL; gIter = gIter->next) {
-        node_t *r1_node = NULL;
-        node_t *r2_node = NULL;
+        node_t *node = (node_t *) gIter->data;
 
-        node = (node_t *) gIter->data;
+        r1_node = NULL;
+        r2_node = NULL;
 
         r1_weight = -INFINITY;
         if (r1_nodes) {
@@ -1166,6 +1167,11 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
     }
 
   done:
+    crm_trace("%s (%d) on %s %c %s (%d) on %s: %s",
+              resource1->id, r1_weight, r1_node ? r1_node->details->id : "n/a",
+              rc < 0 ? '>' : rc > 0 ? '<' : '=',
+              resource2->id, r2_weight, r2_node ? r2_node->details->id : "n/a", reason);
+
     if (r1_nodes) {
         g_hash_table_destroy(r1_nodes);
     }
@@ -1173,9 +1179,6 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
         g_hash_table_destroy(r2_nodes);
     }
 
-    crm_trace("%s (%d) %c %s (%d) on %s: %s",
-              resource1->id, r1_weight, rc < 0 ? '>' : rc > 0 ? '<' : '=',
-              resource2->id, r2_weight, node ? node->details->id : "n/a", reason);
     return rc;
 }
 
