@@ -7,5 +7,9 @@ EnvironmentFile=-@sysconfdir@/sysconfig/crm_mon
 ExecStart=@sbindir@/crm_mon $OPTIONS
 Restart=always
 
+# crm_perror() writes directly to stderr, so ignore it here to avoid
+# double-logging with the wrong format
+StandardError=null
+
 [Install]
 WantedBy=multi-user.target
