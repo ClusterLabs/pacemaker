@@ -178,7 +178,10 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 /* Did the DC leave us? */
                 crm_notice("Our peer on the DC (%s) is dead", fsa_our_dc);
                 register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
-                erase_status_tag(node->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
+
+                if (compare_version(fsa_our_dc_version, "3.0.9") > 0) {
+                    erase_status_tag(node->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
+                }
 
             } else if(AM_I_DC && appeared == FALSE) {
                 crm_info("Peer %s left us", node->uname);
