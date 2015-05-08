@@ -467,6 +467,12 @@ enum crmd_fsa_input {
 
 #  define R_IN_RECOVERY	0x80000000ULL
 
+/*
+ * Magic RC used within CRMd to indicate direct nacks
+ * (operation is invalid in current state)
+ */
+#define CRM_DIRECT_NACK_RC (99)
+
 enum crmd_fsa_cause {
     C_UNKNOWN = 0,
     C_STARTUP,
