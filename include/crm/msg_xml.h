@@ -342,7 +342,6 @@
 
 #  define XML_ATTR_TE_NOWAIT		"op_no_wait"
 #  define XML_ATTR_TE_TARGET_RC		"op_target_rc"
-#  define XML_ATTR_TE_ALLOWFAIL		"op_allow_fail"
 #  define XML_ATTR_LRM_PROBE		"lrm-is-probe"
 #  define XML_TAG_TRANSIENT_NODEATTRS	"transient_attributes"
 
@@ -391,6 +390,9 @@
 #  define XML_DIFF_OP                   "operation"
 #  define XML_DIFF_PATH                 "path"
 #  define XML_DIFF_POSITION             "position"
+
+/* Defined for backward API compatibility but no longer used by Pacemaker */
+#  define XML_ATTR_TE_ALLOWFAIL         "op_allow_fail"
 
 #  include <crm/common/xml.h>
 

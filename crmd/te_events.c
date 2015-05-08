@@ -589,10 +589,8 @@ process_graph_event(xmlNode * event, const char *event_node)
             abort_transition(INFINITY, tg_restart, "Unknown event", event);
 
         } else {
-            /* XML_ATTR_TE_ALLOWFAIL will be true if on-fail=ignore for the operation */
-            ignore_failures = crm_is_true(crm_meta_value(action->params,
-                                                         XML_ATTR_TE_ALLOWFAIL));
-
+            ignore_failures = safe_str_eq(
+                crm_meta_value(action->params, XML_OP_ATTR_ON_FAIL), "ignore");
             match_graph_event(action, event, status, rc, target_rc, ignore_failures);
         }
     }
