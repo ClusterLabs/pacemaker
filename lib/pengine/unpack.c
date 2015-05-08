@@ -1031,8 +1031,11 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
                 continue;
 
             } else if (is_remote_node(this_node)) {
-                /* online state for remote nodes is determined by the rsc state
-                 * after all the unpacking is done. */
+                /* online state for remote nodes is determined by the
+                 * rsc state after all the unpacking is done. we do however
+                 * need to mark whether or not the node has been fenced as this plays
+                 * a role during unpacking cluster node resource state */
+                this_node->details->remote_was_fenced = crm_is_true(crm_element_value(state, XML_NODE_IS_REMOTE_FENCED));
                 continue;
             }
 
@@ -1915,7 +1918,10 @@ process_rsc_state(resource_t * rsc, node_t * node,
                 if (rsc->is_remote_node) {
                     tmpnode = pe_find_node(data_set->nodes, rsc->id);
                 }
-                if (tmpnode && is_baremetal_remote_node(tmpnode)) {
+                if (tmpnode &&
+                    is_baremetal_remote_node(tmpnode) &&
+                    tmpnode->details->remote_was_fenced == FALSE) {
+
                     /* connection resource to baremetal resource failed in a way that
                      * should result in fencing the remote-node. */
                     pe_fence_node(data_set, tmpnode, "because of connection failure(s)");
