@@ -2490,7 +2490,7 @@ main(int argc, char **argv)
         }
 
         params = generate_resource_params(rsc, &data_set);
-        op = resources_action_create(rsc->id, rclass, rprov, rtype, action, 0, -1, params);
+        op = resources_action_create(rsc->id, rclass, rprov, rtype, action, 0, -1, params, 0);
 
         if(do_trace) {
             setenv("OCF_TRACE_RA", "1", 1);
@@ -2499,7 +2499,7 @@ main(int argc, char **argv)
         if(op == NULL) {
             /* Re-run but with stderr enabled so we can display a sane error message */
             crm_enable_stderr(TRUE);
-            resources_action_create(rsc->id, rclass, rprov, rtype, action, 0, -1, params);
+            resources_action_create(rsc->id, rclass, rprov, rtype, action, 0, -1, params, 0);
             return crm_exit(EINVAL);
 
         } else if (services_action_sync(op)) {
@@ -2917,8 +2917,33 @@ main(int argc, char **argv)
 
     } else if (rsc_cmd == 'C') {
 #if HAVE_ATOMIC_ATTRD
-        xmlNode *cmd = create_request(CRM_OP_REPROBE, NULL, host_uname,
-                                      CRM_SYSTEM_CRMD, crm_system_name, our_pid);
+        const char *router_node = host_uname;
+        xmlNode *msg_data = NULL;
+        xmlNode *cmd = NULL;
+
+        if (host_uname) {
+            node_t *node = pe_find_node(data_set.nodes, host_uname);
+
+            if (node && is_remote_node(node)) {
+                if (node->details->remote_rsc == NULL || node->details->remote_rsc->running_on == NULL) {
+                    CMD_ERR("No lrmd connection detected to remote node %s", host_uname);
+                    return -ENXIO;
+                }
+                node = node->details->remote_rsc->running_on->data;
+                router_node = node->details->uname;
+
+            }
+        }
+
+        msg_data = create_xml_node(NULL, "crm-resource-reprobe-op");
+        crm_xml_add(msg_data, XML_LRM_ATTR_TARGET, host_uname);
+        if (safe_str_neq(router_node, host_uname)) {
+            crm_xml_add(msg_data, XML_LRM_ATTR_ROUTER_NODE, router_node);
+        }
+
+        cmd = create_request(CRM_OP_REPROBE, msg_data, router_node,
+                             CRM_SYSTEM_CRMD, crm_system_name, our_pid);
+        free_xml(msg_data);
 
         crm_debug("Re-checking the state of all resources on %s", host_uname?host_uname:"all nodes");
 

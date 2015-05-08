@@ -41,6 +41,8 @@ struct mainloop_child_s {
     gboolean timeout;
     void *privatedata;
 
+    enum mainloop_child_flags flags;
+
     /* Called when a process dies */
     void (*callback) (mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode);
 };
@@ -429,10 +431,9 @@ gio_read_socket(GIOChannel * gio, GIOCondition condition, gpointer data)
 
     crm_trace("%p.%d %d", data, fd, condition);
 
-    if (condition & G_IO_NVAL) {
-        crm_trace("Marking failed adaptor %p unused", adaptor);
-        adaptor->is_used = QB_FALSE;
-    }
+    /* if this assert get's hit, then there is a race condition between
+     * when we destroy a fd and when mainloop actually gives it up */
+    CRM_ASSERT(adaptor->is_used > 0);
 
     return (adaptor->fn(fd, condition, adaptor->data) == 0);
 }
@@ -442,8 +443,13 @@ gio_poll_destroy(gpointer data)
 {
     struct gio_to_qb_poll *adaptor = (struct gio_to_qb_poll *)data;
 
-    adaptor->is_used = QB_FALSE;
-    adaptor->source = 0;
+    adaptor->is_used--;
+    CRM_ASSERT(adaptor->is_used >= 0);
+
+    if (adaptor->is_used == 0) {
+        crm_trace("Marking adaptor %p unused", adaptor);
+        adaptor->source = 0;
+    }
 }
 
 static int32_t
@@ -461,7 +467,8 @@ gio_poll_dispatch_update(enum qb_loop_priority p, int32_t fd, int32_t evts,
     }
 
     crm_trace("Adding fd=%d to mainloop as adaptor %p", fd, adaptor);
-    if (add && adaptor->is_used) {
+
+    if (add && adaptor->source) {
         crm_err("Adaptor for descriptor %d is still in-use", fd);
         return -EEXIST;
     }
@@ -477,18 +484,19 @@ gio_poll_dispatch_update(enum qb_loop_priority p, int32_t fd, int32_t evts,
         return -ENOMEM;
     }
 
+    if (adaptor->source) {
+        g_source_remove(adaptor->source);
+        adaptor->source = 0;
+    }
+
     /* Because unlike the poll() API, glib doesn't tell us about HUPs by default */
     evts |= (G_IO_HUP | G_IO_NVAL | G_IO_ERR);
-
-    if (adaptor->is_used) {
-        g_source_remove(adaptor->source);
-    }
 
     adaptor->fn = fn;
     adaptor->events = evts;
     adaptor->data = data;
     adaptor->p = p;
-    adaptor->is_used = QB_TRUE;
+    adaptor->is_used++;
     adaptor->source =
         g_io_add_watch_full(channel, G_PRIORITY_DEFAULT, evts, gio_read_socket, adaptor,
                             gio_poll_destroy);
@@ -533,12 +541,10 @@ gio_poll_dispatch_del(int32_t fd)
 
     crm_trace("Looking for fd=%d", fd);
     if (qb_array_index(gio_map, fd, (void **)&adaptor) == 0) {
-        crm_trace("Marking adaptor %p unused", adaptor);
         if (adaptor->source) {
             g_source_remove(adaptor->source);
             adaptor->source = 0;
         }
-        adaptor->is_used = QB_FALSE;
     }
     return 0;
 }
@@ -846,6 +852,8 @@ mainloop_del_fd(mainloop_io_t * client)
     }
 }
 
+static GListPtr child_list = NULL;
+
 pid_t
 mainloop_child_pid(mainloop_child_t * child)
 {
@@ -893,7 +901,16 @@ child_free(mainloop_child_t *child)
 static int
 child_kill_helper(mainloop_child_t *child)
 {
-    if (kill(-child->pid, SIGKILL) < 0) {
+    int rc;
+    if (child->flags & mainloop_leave_pid_group) {
+        crm_debug("Kill pid %d only. leave group intact.", child->pid);
+        rc = kill(child->pid, SIGKILL);
+    } else {
+        crm_debug("Kill pid %d's group", child->pid);
+        rc = kill(-child->pid, SIGKILL);
+    }
+
+    if (rc < 0) {
         if (errno != ESRCH) {
             crm_perror(LOG_ERR, "kill(%d, KILL) failed", child->pid);
         }
@@ -926,8 +943,6 @@ child_timeout_callback(gpointer p)
     child->timerid = g_timeout_add(5000, child_timeout_callback, child);
     return FALSE;
 }
-
-static GListPtr child_list = NULL;
 
 static gboolean
 child_waitpid(mainloop_child_t *child, int flags)
@@ -1067,7 +1082,7 @@ mainloop_child_kill(pid_t pid)
  * To track a process group, use -pid
  */
 void
-mainloop_child_add(pid_t pid, int timeout, const char *desc, void *privatedata,
+mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc, void *privatedata, enum mainloop_child_flags flags, 
                    void (*callback) (mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode))
 {
     static bool need_init = TRUE;
@@ -1078,6 +1093,7 @@ mainloop_child_add(pid_t pid, int timeout, const char *desc, void *privatedata,
     child->timeout = FALSE;
     child->privatedata = privatedata;
     child->callback = callback;
+    child->flags = flags;
 
     if(desc) {
         child->desc = strdup(desc);
@@ -1099,6 +1115,12 @@ mainloop_child_add(pid_t pid, int timeout, const char *desc, void *privatedata,
     }
 }
 
+void
+mainloop_child_add(pid_t pid, int timeout, const char *desc, void *privatedata,
+                   void (*callback) (mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode))
+{
+    mainloop_child_add_with_flags(pid, timeout, desc, privatedata, 0, callback);
+}
 
 struct mainloop_timer_s {
         guint id;

@@ -1867,7 +1867,8 @@ generic_get_metadata(const char *standard, const char *provider, const char *typ
                                                    "meta-data",
                                                    0,
                                                    30000,
-                                                   NULL);
+                                                   NULL,
+                                                   0);
 
     if (!(services_action_sync(action))) {
         crm_err("Failed to retrieve meta-data for %s:%s:%s", standard, provider, type);

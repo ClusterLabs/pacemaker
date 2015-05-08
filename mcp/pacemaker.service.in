@@ -10,6 +10,8 @@ After=corosync.service
 Requires=dbus.service
 Requires=basic.target
 Requires=corosync.service
+# if you use crm_mon, uncomment the line below.
+# Wants=crm_mon.service
 
 [Install]
 WantedBy=multi-user.target
@@ -54,3 +56,6 @@ TimeoutStartSec=60s
 
 # Restart options include: no, on-success, on-failure, on-abort or always
 Restart=on-failure
+# if you use crm_mon, uncomment the line below.
+# ExecStopPost=/bin/sh -c 'systemctl status crm_mon >/dev/null && systemctl stop crm_mon'
+

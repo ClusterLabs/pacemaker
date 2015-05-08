@@ -239,6 +239,9 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
     } else if (interval == 0 && safe_str_eq(task, RSC_MIGRATED)) {
         /* Reload based on the start action not a migrate */
         task = RSC_START;
+    } else if (interval == 0 && safe_str_eq(task, RSC_PROMOTE)) {
+        /* Reload based on the start action not a promote */
+        task = RSC_START;
     }
 
     digest_data = rsc_action_digest_cmp(rsc, xml_op, active_node, data_set);
@@ -395,7 +398,7 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
             (is_set(rsc->flags, pe_rsc_maintenance) || node->details->maintenance)) {
             CancelXmlOp(rsc, rsc_op, node, "maintenance mode", data_set);
 
-        } else if (is_probe || safe_str_eq(task, RSC_START) || interval > 0
+        } else if (is_probe || safe_str_eq(task, RSC_START) || safe_str_eq(task, RSC_PROMOTE) || interval > 0
                    || safe_str_eq(task, RSC_MIGRATED)) {
             did_change = check_action_definition(rsc, node, rsc_op, data_set);
         }

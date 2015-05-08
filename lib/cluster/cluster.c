@@ -390,8 +390,11 @@ crm_peer_uname(const char *uuid)
     if (is_openais_cluster()) {
         if (uname_is_uuid() == FALSE && is_corosync_cluster()) {
             uint32_t id = crm_int_helper(uuid, NULL);
-
-            node = crm_find_peer(id, NULL);
+            if(id != 0) {
+                node = crm_find_peer(id, NULL);
+            } else {
+                crm_err("Invalid node id: %s", uuid);
+            }
 
         } else {
             node = crm_find_peer(0, uuid);

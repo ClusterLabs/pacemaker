@@ -220,7 +220,7 @@
           </lrm_resource>
           <lrm_resource id="ocf_msdummy:0" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="ocf_msdummy-0_start_0" op-digest="ec8db50619941e7d81394ae605c8b3e7" operation="start" interval="0" transition-key="4:a798051c-7b67-4033-a6dc-85775e8bf816" crm_feature_set="2.0" transition-magic="0:0;4:a798051c-7b67-4033-a6dc-85775e8bf816" call-id="17" rc-code="0" op-status="0"/>
-            <lrm_rsc_op id="ocf_msdummy-0_promote_0" operation="promote" interval="0" transition-key="4:a798051c-7b67-4033-a6dc-85775e8bf816" crm_feature_set="2.0" transition-magic="0:0;4:a798051c-7b67-4033-a6dc-85775e8bf816" call-id="19" rc-code="0" op-status="0"/>
+            <lrm_rsc_op id="ocf_msdummy-0_promote_0" op-digest="ec8db50619941e7d81394ae605c8b3e7" operation="promote" interval="0" transition-key="4:a798051c-7b67-4033-a6dc-85775e8bf816" crm_feature_set="2.0" transition-magic="0:0;4:a798051c-7b67-4033-a6dc-85775e8bf816" call-id="19" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="ocf_msdummy-0_monitor_6000" op-digest="58ac6c95966de17b553a8743eab51b18" interval="6000" operation="monitor" transition-key="5:a798051c-7b67-4033-a6dc-85775e8bf816" crm_feature_set="2.0" transition-magic="0:0;5:a798051c-7b67-4033-a6dc-85775e8bf816" call-id="22" rc-code="8" op-status="0"/>
           </lrm_resource>
           <lrm_resource id="DcIPaddr" type="IPaddr" class="ocf" provider="heartbeat">

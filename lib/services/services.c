@@ -53,7 +53,7 @@ GHashTable *recurring_actions = NULL;
 svc_action_t *
 services_action_create(const char *name, const char *action, int interval, int timeout)
 {
-    return resources_action_create(name, "lsb", NULL, name, action, interval, timeout, NULL);
+    return resources_action_create(name, "lsb", NULL, name, action, interval, timeout, NULL, 0);
 }
 
 const char *
@@ -95,7 +95,7 @@ resources_find_service_class(const char *agent)
 svc_action_t *
 resources_action_create(const char *name, const char *standard, const char *provider,
                         const char *agent, const char *action, int interval, int timeout,
-                        GHashTable * params)
+                        GHashTable * params, enum svc_action_flags flags)
 {
     svc_action_t *op = NULL;
 
@@ -150,6 +150,7 @@ resources_action_create(const char *name, const char *standard, const char *prov
     op->standard = strdup(standard);
     op->agent = strdup(agent);
     op->sequence = ++operations;
+    op->flags = flags;
     if (asprintf(&op->id, "%s_%s_%d", name, action, interval) == -1) {
         goto return_error;
     }

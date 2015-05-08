@@ -26,16 +26,35 @@ xslt_SCRIPTS		= upgrade06.xsl upgrade-*.xsl
 RNGdir			= $(dtddir)
 
 # See Readme.md for details on updating schema files
-RNG_max			?= $(firstword $(shell ls -1 *.rng | sed -e 's/.*-//' -e 's/.rng//' | sort -unr))
-RNG_last		?= $(shell ls -1 *.rng | sed -e 's/.*-//' -e 's/.rng//' | sort -unr | head -n 2 | tail -n 1)
-RNG_versions		= $(shell ls -1 *.rng | sed -e 's/.*-//' -e 's/.rng//' | sort -un)
+
+# Sorted list of available numeric RNG versions,
+# extracted from filenames like NAME-MAJOR[.MINOR][.MINOR-MINOR].rng
+RNG_numeric_versions    = $(shell ls -1 *.rng \
+			  | sed -n -e 's/^.*-\([0-9.]\+\).rng$$/\1/p' \
+			  | sort -u -t. -k 1,1n -k 2,2n -k 3,3n)
+
+# The highest numeric version
+RNG_max			?= $(lastword $(RNG_numeric_versions))
+
+# The previous numeric version before $(RNG_max)
+RNG_last		?= $(shell ls -1 *.rng \
+			   | sed -n -e 's/^.*-\([0-9.]\+\).rng$$/\1/p' \
+			   | sort -u -t. -k 1,1nr -k 2,2nr -k 3,3nr \
+			   | head -n 2 | tail -n 1)
+
+# A sorted list of all RNG versions (numeric and "next")
+RNG_versions		= next $(RNG_numeric_versions)
+
 RNG_generated		= pacemaker.rng $(foreach base,$(RNG_versions),pacemaker-$(base).rng) versions.rng
 
 RNG_cfg_base	 	= options nodes resources constraints fencing acls tags
 RNG_base	 	= cib $(RNG_cfg_base) status score rule nvset
 RNG_files	 	= $(foreach base,$(RNG_base),$(wildcard $(base)*.rng))
 
-RNG_SCRIPTS		= $(RNG_files) $(RNG_generated)
+# List of non-Pacemaker RNGs
+RNG_extra		= crm_mon.rng
+
+RNG_SCRIPTS		= $(RNG_files) $(RNG_generated) $(RNG_extra)
 
 EXTRA_DIST		= best-match.sh
 

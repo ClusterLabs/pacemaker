@@ -137,6 +137,12 @@ enum nagios_exitcode {
     NAGIOS_INSUFFICIENT_PRIV = 100,
     NAGIOS_NOT_INSTALLED     = 101,
 };
+
+enum svc_action_flags {
+    /* On timeout, only kill pid, do not kill entire pid group */
+    SVC_ACTION_LEAVE_GROUP = 0x01,
+};
+
 /* *INDENT-ON* */
 
     typedef struct svc_action_private_s svc_action_private_t;
@@ -160,6 +166,7 @@ enum nagios_exitcode {
         int sequence;
         int expected_rc;
         int synchronous;
+        enum svc_action_flags flags;
 
         char *stderr_data;
         char *stdout_data;
@@ -249,7 +256,8 @@ enum nagios_exitcode {
     svc_action_t *resources_action_create(const char *name, const char *standard,
                                           const char *provider, const char *agent,
                                           const char *action, int interval /* ms */ ,
-                                          int timeout /* ms */ , GHashTable * params);
+                                          int timeout /* ms */ , GHashTable * params,
+                                          enum svc_action_flags flags);
 
 /**
  * Kick a recurring action so it is scheduled immediately for re-execution
