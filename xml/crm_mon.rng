@@ -53,6 +53,13 @@
                 <element name="resources_configured">
                     <attribute name="number"> <data type="int" /> </attribute>
                 </element>
+                <optional>
+                    <element name="cluster_options">
+                        <attribute name="stonith-enabled"> <data type="boolean" /> </attribute>
+                        <attribute name="symmetric-cluster"> <data type="boolean" /> </attribute>
+                        <attribute name="no-quorum-policy"> <text/> </attribute>
+                    </element>
+                </optional>
             </element>
             <element name="nodes">
                 <zeroOrMore>
@@ -78,8 +85,12 @@
                             </choice>
                         </attribute>
                         <optional>
-                            <!-- 1.1.13 adds container_id for virtualized pacemaker_remote nodes -->
-                            <attribute name="container_id"> <text/> </attribute>
+                            <!-- for virtualized pacemaker_remote nodes, crm_mon 1.1.13 uses
+                                 "container_id" while later versions use "id_as_resource" -->
+                            <choice>
+                                <attribute name="container_id"> <text/> </attribute>
+                                <attribute name="id_as_resource"> <text/> </attribute>
+                            </choice>
                         </optional>
                         <ref name="resource_list" />
                     </element>
@@ -88,6 +99,69 @@
             <optional>
                 <element name="resources">
                     <ref name="resource_list" />
+                </element>
+            </optional>
+            <optional>
+                <element name="node_attributes">
+                    <zeroOrMore>
+                        <element name="node">
+                            <attribute name="name"> <text/> </attribute>
+                            <zeroOrMore>
+                                <element name="attribute">
+                                    <attribute name="name"> <text/> </attribute>
+                                    <attribute name="value"> <text/> </attribute>
+                                    <optional>
+                                        <attribute name="expected"> <data type="int" /> </attribute>
+                                    </optional>
+                                </element>
+                            </zeroOrMore>
+                        </element>
+                    </zeroOrMore>
+                </element>
+            </optional>
+            <optional>
+                <element name="node_history">
+                    <zeroOrMore>
+                        <element name="node">
+                            <attribute name="name"> <text/> </attribute>
+                            <zeroOrMore>
+                                <element name="resource_history">
+                                    <attribute name="id"> <text/> </attribute>
+                                    <attribute name="orphan"> <data type="boolean" /> </attribute>
+                                    <attribute name="migration-threshold"> <data type="int" /> </attribute>
+                                    <optional>
+                                        <attribute name="fail-count"> <data type="int" /> </attribute>
+                                    </optional>
+                                    <optional>
+                                        <attribute name="last-failure"> <text/> </attribute>
+                                    </optional>
+                                    <zeroOrMore>
+                                        <element name="operation_history">
+                                            <attribute name="call"> <text/> </attribute>
+                                            <attribute name="task"> <text/> </attribute>
+                                            <optional>
+                                                <attribute name="interval"> <text/> </attribute>
+                                            </optional>
+                                            <optional>
+                                                <attribute name="last-rc-change"> <text/> </attribute>
+                                            </optional>
+                                            <optional>
+                                                <attribute name="last-run"> <text/> </attribute>
+                                            </optional>
+                                            <optional>
+                                                <attribute name="exec-time"> <text/> </attribute>
+                                            </optional>
+                                            <optional>
+                                                <attribute name="queue-time"> <text/> </attribute>
+                                            </optional>
+                                            <attribute name="rc"> <data type="int" /> </attribute>
+                                            <attribute name="rc_text"> <text/> </attribute>
+                                        </element>
+                                    </zeroOrMore>
+                                </element>
+                            </zeroOrMore>
+                        </element>
+                    </zeroOrMore>
                 </element>
             </optional>
             <optional>
@@ -113,6 +187,33 @@
                                     <attribute name="task"> <text/> </attribute>
                                 </group>
                             </optional>
+                        </element>
+                    </zeroOrMore>
+                </element>
+            </optional>
+            <optional>
+                <element name="tickets">
+                    <zeroOrMore>
+                        <element name="ticket">
+                            <attribute name="id"> <text/> </attribute>
+                            <attribute name="status"> <text/> </attribute>
+                            <attribute name="standby"> <data type="boolean" /> </attribute>
+                            <optional>
+                                <attribute name="last-granted"> <text/> </attribute>
+                            </optional>
+                        </element>
+                    </zeroOrMore>
+                </element>
+            </optional>
+            <optional>
+                <element name="bans">
+                    <zeroOrMore>
+                        <element name="ban">
+                            <attribute name="id"> <text/> </attribute>
+                            <attribute name="resource"> <text/> </attribute>
+                            <attribute name="node"> <text/> </attribute>
+                            <attribute name="weight"> <data type="int" />  </attribute>
+                            <attribute name="master_only"> <data type="boolean" /> </attribute>
                         </element>
                     </zeroOrMore>
                 </element>
