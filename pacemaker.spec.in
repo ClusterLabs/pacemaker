@@ -566,7 +566,7 @@ exit 0
 %{_includedir}/pacemaker
 %{_libdir}/*.so
 %if %{with coverage}
-%{_var}/lib/pacemaker
+%{_var}/lib/pacemaker/gcov
 %endif
 %{_libdir}/pkgconfig/*.pc
 %doc COPYING.LIB
