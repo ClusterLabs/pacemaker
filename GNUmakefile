@@ -139,14 +139,14 @@ $(PACKAGE)-%.spec: $(PACKAGE).spec.in
 	    git show $(TAG):$(PACKAGE).spec.in >> $(PACKAGE)-$*.spec;		\
 	    echo "Rebuilt $@ from $(TAG)";					\
 	fi
-	echo "* $(shell date +"%a %b %d %Y") Andrew Beekhof <andrew@beekhof.net> $(shell git describe --tags $(TAG) | sed -e s:Pacemaker-:: -e s:-.*::)-1" >> $(PACKAGE)-$*.spec
-	echo " - See included ChangeLog file or https://raw.github.com/ClusterLabs/pacemaker/master/ChangeLog for full details" >> $(PACKAGE)-$*.spec
 
 # rpmbuild apparently temporarily lost the ability to use --with arguments at some point
 # Compensate by tweaking the format for pcmk_release here
 srpm-%:	export $(PACKAGE)-%.spec
 	rm -f *.src.rpm
 	cp $(PACKAGE)-$*.spec $(PACKAGE).spec
+	echo "* $(shell date +"%a %b %d %Y") Andrew Beekhof <andrew@beekhof.net> $(shell git describe --tags $(TAG) | sed -e s:Pacemaker-:: -e s:-.*::)-1" >> $(PACKAGE).spec
+	echo " - See included ChangeLog file or https://raw.github.com/ClusterLabs/pacemaker/master/ChangeLog for full details" >> $(PACKAGE).spec
 	if [ -e $(BUILD_COUNTER) ]; then					\
 		echo $(COUNT) > $(BUILD_COUNTER);				\
 	fi
