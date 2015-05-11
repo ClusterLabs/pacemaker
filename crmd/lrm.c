@@ -1862,7 +1862,7 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
             && safe_str_neq(operation, CRMD_ACTION_STOP)) {
             crm_info("Discarding attempt to perform action %s on %s in state %s",
                      operation, rsc->id, fsa_state2string(fsa_state));
-            op->rc = 99;
+            op->rc = CRM_DIRECT_NACK_RC;
             op->op_status = PCMK_LRM_OP_ERROR;
             send_direct_ack(NULL, NULL, rsc, op, rsc->id);
             lrmd_free_event(op);

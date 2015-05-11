@@ -218,7 +218,7 @@ enum pe_action_flags {
     pe_action_print_always = 0x00008,
 
     pe_action_have_node_attrs = 0x00010,
-    pe_action_failure_is_fatal = 0x00020,
+    pe_action_failure_is_fatal = 0x00020, /* no longer used, here for API compatibility */
     pe_action_implied_by_stonith = 0x00040,
     pe_action_migrate_runnable =   0x00080,
 

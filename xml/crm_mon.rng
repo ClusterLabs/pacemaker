@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" 
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <ref name="element-crm_mon"/>
+    </start>
+
+    <define name="element-crm_mon">
+        <element name="crm_mon">
+            <attribute name="version"> <text/> </attribute>
+            <element name="summary">
+                <optional>
+                    <element name="last_update">
+                        <!-- crm_mon shows dates like "Mon Apr 13 16:06:27 2015" not
+                             the XSD dateTime like "2015-04-13T16:06:27-05:00" -->
+                        <attribute name="time"> <text/> </attribute>
+                    </element>
+                </optional>
+                <optional>
+                    <element name="last_change">
+                        <attribute name="time"> <text/> </attribute>
+                        <attribute name="user"> <text/> </attribute>
+                        <attribute name="client"> <text/> </attribute>
+                        <attribute name="origin"> <text/> </attribute>
+                    </element>
+                </optional>
+                <optional>
+                    <element name="stack">
+                        <attribute name="type"> <text/> </attribute>
+                    </element>
+                </optional>
+                <element name="current_dc">
+                    <attribute name="present"> <data type="boolean" /> </attribute>
+                    <optional>
+                        <group>
+                            <attribute name="version"> <text/> </attribute>
+                            <attribute name="name"> <text/> </attribute>
+                            <!-- pacemaker IDs are user-defined strings that are
+                                 not as restricted as the XSD ID type -->
+                            <attribute name="id"> <text/> </attribute>
+                            <attribute name="with_quorum"> <data type="boolean" /> </attribute>
+                        </group>
+                    </optional>
+                </element>
+                <element name="nodes_configured">
+                    <attribute name="number"> <data type="int" /> </attribute>
+                    <choice>
+                        <attribute name="expected_votes"> <data type="int" /> </attribute>
+                        <attribute name="expected_votes"> <value>unknown</value> </attribute>
+                    </choice>
+                </element>
+                <element name="resources_configured">
+                    <attribute name="number"> <data type="int" /> </attribute>
+                </element>
+            </element>
+            <element name="nodes">
+                <zeroOrMore>
+                    <element name="node">
+                        <attribute name="name"> <text/> </attribute>
+                        <attribute name="id"> <text/> </attribute>
+                        <attribute name="online"> <data type="boolean" /> </attribute>
+                        <attribute name="standby"> <data type="boolean" /> </attribute>
+                        <attribute name="standby_onfail"> <data type="boolean" /> </attribute>
+                        <attribute name="maintenance"> <data type="boolean" /> </attribute>
+                        <attribute name="pending"> <data type="boolean" /> </attribute>
+                        <attribute name="unclean"> <data type="boolean" /> </attribute>
+                        <attribute name="shutdown"> <data type="boolean" /> </attribute>
+                        <attribute name="expected_up"> <data type="boolean" /> </attribute>
+                        <attribute name="is_dc"> <data type="boolean" /> </attribute>
+                        <attribute name="resources_running"> <data type="int" /> </attribute>
+                        <attribute name="type">
+                            <choice>
+                                <value>unknown</value>
+                                <value>member</value>
+                                <value>remote</value>
+                                <value>ping</value>
+                            </choice>
+                        </attribute>
+                        <optional>
+                            <!-- 1.1.13 adds container_id for virtualized pacemaker_remote nodes -->
+                            <attribute name="container_id"> <text/> </attribute>
+                        </optional>
+                        <ref name="resource_list" />
+                    </element>
+                </zeroOrMore>
+            </element>
+            <optional>
+                <element name="resources">
+                    <ref name="resource_list" />
+                </element>
+            </optional>
+            <optional>
+                <element name="failures">
+                    <zeroOrMore>
+                        <element name="failure">
+                            <choice>
+                                <attribute name="op_key"> <text/> </attribute>
+                                <attribute name="id"> <text/> </attribute>
+                            </choice>
+                            <attribute name="node"> <text/> </attribute>
+                            <attribute name="exitstatus"> <text/> </attribute>
+                            <attribute name="exitreason"> <text/> </attribute>
+                            <attribute name="exitcode"> <data type="int" /> </attribute>
+                            <attribute name="call"> <text/> </attribute>
+                            <attribute name="status"> <text/> </attribute>
+                            <optional>
+                                <group>
+                                    <attribute name="last-rc-change"> <text/> </attribute>
+                                    <attribute name="queued"> <text/> </attribute>
+                                    <attribute name="exec"> <text/> </attribute>
+                                    <attribute name="interval"> <data type="int" />  </attribute>
+                                    <attribute name="task"> <text/> </attribute>
+                                </group>
+                            </optional>
+                        </element>
+                    </zeroOrMore>
+                </element>
+            </optional>
+        </element>
+    </define>
+
+    <define name="resource_list">
+        <interleave>
+            <zeroOrMore>
+                <ref name="element-resource" />
+            </zeroOrMore>
+            <zeroOrMore>
+                <ref name="element-group" />
+            </zeroOrMore>
+            <zeroOrMore>
+                <ref name="element-clone" />
+            </zeroOrMore>
+        </interleave>
+    </define>
+
+    <define name="element-resource">
+        <element name="resource">
+            <attribute name="id"> <text/> </attribute>
+            <attribute name="resource_agent"> <text/> </attribute>
+            <attribute name="role"> <text/> </attribute>
+            <attribute name="active"> <data type="boolean" /> </attribute>
+            <attribute name="orphaned"> <data type="boolean" /> </attribute>
+            <attribute name="managed"> <data type="boolean" /> </attribute>
+            <attribute name="failed"> <data type="boolean" /> </attribute>
+            <attribute name="failure_ignored"> <data type="boolean" /> </attribute>
+            <attribute name="nodes_running_on"> <data type="int" />  </attribute>
+            <optional>
+                <attribute name="pending"> <text/> </attribute>
+            </optional>
+            <optional>
+                <!-- crm_mon prints the node only if group-by-node is false -->
+                <element name="node">
+                    <attribute name="name"> <text/> </attribute>
+                    <attribute name="id"> <text/> </attribute>
+                    <attribute name="cached"> <data type="boolean" /> </attribute>
+                </element>
+            </optional>
+        </element>
+    </define>
+
+    <define name="element-group">
+        <element name="group">
+            <attribute name="id"> <text/> </attribute>
+            <attribute name="number_resources"> <data type="int" /> </attribute>
+            <ref name="resource_list" />
+        </element>
+    </define>
+
+    <define name="element-clone">
+        <element name="clone">
+            <attribute name="id"> <text/> </attribute>
+            <attribute name="multi_state"> <data type="boolean" /> </attribute>
+            <attribute name="unique"> <data type="boolean" /> </attribute>
+            <attribute name="managed"> <data type="boolean" /> </attribute>
+            <attribute name="failed"> <data type="boolean" /> </attribute>
+            <attribute name="failure_ignored"> <data type="boolean" /> </attribute>
+            <ref name="resource_list" />
+        </element>
+    </define>
+
+</grammar>
