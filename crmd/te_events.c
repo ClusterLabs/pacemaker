@@ -342,7 +342,7 @@ match_graph_event(crm_action_t *action, xmlNode *event, int op_status,
             break;
         case PCMK_LRM_OP_CANCELLED:
             /* do nothing?? */
-            crm_err("Dont know what to do for cancelled ops yet");
+            crm_err("Don't know what to do for cancelled ops yet");
             break;
         default:
             /*

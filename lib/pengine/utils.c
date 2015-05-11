@@ -1772,7 +1772,7 @@ order_actions(action_t * lh_action, action_t * rh_action, enum pe_ordering order
 
     crm_trace("Ordering Action %s before %s", lh_action->uuid, rh_action->uuid);
 
-    /* Ensure we never create a dependancy on ourselves... its happened */
+    /* Ensure we never create a dependency on ourselves... its happened */
     CRM_ASSERT(lh_action != rh_action);
 
     /* Filter dups, otherwise update_action_states() has too much work to do */
@@ -2098,7 +2098,7 @@ pe_fence_op(node_t * node, const char *op, bool optional, pe_working_set_t * dat
 
 void
 trigger_unfencing(
-    resource_t * rsc, node_t *node, const char *reason, action_t *dependancy, pe_working_set_t * data_set) 
+    resource_t * rsc, node_t *node, const char *reason, action_t *dependency, pe_working_set_t * data_set) 
 {
     if(is_not_set(data_set->flags, pe_flag_enable_unfencing)) {
         /* No resources require it */
@@ -2115,8 +2115,8 @@ trigger_unfencing(
         action_t *unfence = pe_fence_op(node, "on", FALSE, data_set);
 
         crm_notice("Unfencing %s: %s", node->details->uname, reason);
-        if(dependancy) {
-            order_actions(unfence, dependancy, pe_order_optional);
+        if(dependency) {
+            order_actions(unfence, dependency, pe_order_optional);
         }
 
     } else if(rsc) {
@@ -2125,7 +2125,7 @@ trigger_unfencing(
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
             if(node->details->online && node->details->unclean == FALSE && node->details->shutdown == FALSE) {
-                trigger_unfencing(rsc, node, reason, dependancy, data_set);
+                trigger_unfencing(rsc, node, reason, dependency, data_set);
             }
         }
     }

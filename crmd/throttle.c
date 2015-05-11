@@ -414,7 +414,7 @@ throttle_handle_load(float load, const char *desc, int cores)
         return throttle_med;
 
     } else if(adjusted_load > THROTTLE_FACTOR_LOW * throttle_load_target) {
-        crm_debug("Noticable %s detected: %f", desc, load);
+        crm_debug("Noticeable %s detected: %f", desc, load);
         return throttle_low;
     }
 
@@ -470,7 +470,7 @@ throttle_mode(void)
             mode |= throttle_med;
 
         } else if(load > cib_max_cpu * 0.8) {
-            crm_debug("Noticable %s detected: %f", desc, load);
+            crm_debug("Noticeable %s detected: %f", desc, load);
             mode |= throttle_low;
 
         } else {
