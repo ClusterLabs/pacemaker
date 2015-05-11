@@ -22,7 +22,7 @@ Licensed under the GNU GPL.
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA.
 
-import types, string, sys, time, re, os, syslog
+import types, string, sys, time, os
 
 class Logger:
     TimeFormat = "%b %d %H:%M:%S\t"
@@ -60,7 +60,6 @@ class StdErrLog(Logger):
 class FileLog(Logger):
     def __init__(self, filename, tag):
         self.logfile=filename
-        import os
         self.hostname = os.uname()[1]+" "
 
         self.source = ""

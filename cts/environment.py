@@ -22,8 +22,7 @@ Licensed under the GNU GPL.
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA.
 
-import types, string, select, sys, time, re, os, struct, signal, socket
-import time, syslog, random, traceback, base64, pickle, binascii, fcntl
+import sys, time, os, socket, random
 
 from cts.remote import *
 
@@ -88,11 +87,6 @@ class Environment:
         if not seed:
             seed = int(time.time())
 
-        if self.has_key("RandSeed"):
-            self.logger.log("New random seed is: " + str(seed))
-        else:
-            self.logger.log("Random seed is: " + str(seed))
-
         self["RandSeed"] = seed
         self.RandomGen.seed(str(seed))
 
@@ -144,7 +138,7 @@ class Environment:
                 try:
                     n = node.strip()
                     if self.data["docker"] == 0:
-                        gethostbyname_ex(n)
+                        socket.gethostbyname_ex(n)
 
                     self.Nodes.append(n) 
                 except:
