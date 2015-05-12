@@ -48,7 +48,13 @@ typedef struct cib_local_notify_s {
 } cib_local_notify_t;
 
 int next_client_id = 0;
+
+#if SUPPORT_PLUGIN
+gboolean legacy_mode = TRUE;
+#else
 gboolean legacy_mode = FALSE;
+#endif
+
 qb_ipcs_service_t *ipcs_ro = NULL;
 qb_ipcs_service_t *ipcs_rw = NULL;
 qb_ipcs_service_t *ipcs_shm = NULL;
@@ -84,6 +90,10 @@ static gboolean cib_read_legacy_mode(void)
 
 static gboolean cib_legacy_mode(void)
 {
+#if SUPPORT_PLUGIN
+    return TRUE;
+#endif
+
     if(cib_read_legacy_mode()) {
         return TRUE;
     }
