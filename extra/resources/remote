@@ -60,7 +60,7 @@ meta_data() {
     <shortdesc lang="en">tcp port</shortdesc>
     <content type="string" default="3121"/>
     </parameter>
-    <parameter name="reconnect_interval">
+    <parameter name="reconnect_interval" unique="0">
     <longdesc lang="en">
        Time in seconds to wait before attempting to reconnect to a remote node
        after an active connection to the remote node has been severed. This wait
@@ -76,6 +76,7 @@ meta_data() {
   <actions>
     <action name="start"   timeout="60" />
     <action name="stop"    timeout="60" />
+    <action name="reload"  timeout="60" />
     <action name="monitor"    timeout="30" />
     <action name="migrate_to"   timeout="60" />
     <action name="migrate_from" timeout="60" />
@@ -108,8 +109,9 @@ start)		remote_unsupported;;
 stop)		remote_unsupported;;
 monitor)	remote_unsupported;;
 migrate_to)	remote_unsupported;;
-migrate_from) remote_unsupported;;
-validate-all) remote_unsupported;;
+migrate_from)	remote_unsupported;;
+reload)		remote_unsupported;;
+validate-all)	remote_unsupported;;
 usage|help)	remote_usage
 		exit $OCF_SUCCESS
 		;;

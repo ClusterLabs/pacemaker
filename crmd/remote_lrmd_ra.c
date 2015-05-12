@@ -601,6 +601,11 @@ handle_remote_ra_exec(gpointer user_data)
             cmd->rc = PCMK_OCF_OK;
             cmd->op_status = PCMK_LRM_OP_DONE;
             report_remote_ra_result(cmd);
+        } else if (!strcmp(cmd->action, "reload")) {
+            /* reloads are a no-op right now, add logic here when they become important */
+            cmd->rc = PCMK_OCF_OK;
+            cmd->op_status = PCMK_LRM_OP_DONE;
+            report_remote_ra_result(cmd);
         }
 
         free_cmd(cmd);
@@ -681,6 +686,7 @@ is_remote_ra_supported_action(const char *action)
         return FALSE;
     } else if (strcmp(action, "start") &&
                strcmp(action, "stop") &&
+               strcmp(action, "reload") &&
                strcmp(action, "migrate_to") &&
                strcmp(action, "migrate_from") && strcmp(action, "monitor")) {
         return FALSE;
