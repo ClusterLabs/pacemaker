@@ -302,6 +302,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     const char *new_version = NULL;
     static struct qb_log_callsite *diff_cs = NULL;
     const char *user = crm_element_value(req, F_CIB_USER);
+    bool with_digest = FALSE;
 
     crm_trace("Begin %s%s op", is_query ? "read-only " : "", op);
 
@@ -443,18 +444,21 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     strip_text_nodes(scratch);
     fix_plus_plus_recursive(scratch);
 
+    if (is_set(call_options, cib_force_digest)) {
+        with_digest = TRUE;
+    }
+
     if (is_set(call_options, cib_zero_copy)) {
         /* At this point, current_cib is just the 'cib' tag and its properties,
          *
          * The v1 format would barf on this, but we know the v2 patch
          * format only needs it for the top-level version fields
          */
-        local_diff = xml_create_patchset(2, current_cib, scratch, (bool*)config_changed, manage_counters, FALSE);
+        local_diff = xml_create_patchset(2, current_cib, scratch, (bool*)config_changed, manage_counters, with_digest);
 
     } else {
         static time_t expires = 0;
         time_t tm_now = time(NULL);
-        bool with_digest = FALSE;
 
         if (expires < tm_now) {
             expires = tm_now + 60;  /* Validate clients are correctly applying v2-style diffs at most once a minute */

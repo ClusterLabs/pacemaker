@@ -1196,6 +1196,10 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     crm_element_value_int(request, F_CIB_CALLOPTS, &call_options);
     rc = cib_get_operation_id(op, &call_type);
 
+    if (cib_legacy_mode()) {
+        call_options |= cib_force_digest;
+    }
+
     if (rc == pcmk_ok && privileged == FALSE) {
         rc = cib_op_can_run(call_type, call_options, privileged, global_update);
     }
