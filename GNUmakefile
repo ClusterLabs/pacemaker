@@ -140,9 +140,13 @@ $(PACKAGE)-%.spec: $(PACKAGE).spec.in
 	    echo "Rebuilt $@ from $(TAG)";					\
 	fi
 
+# rpmbuild apparently temporarily lost the ability to use --with arguments at some point
+# Compensate by tweaking the format for pcmk_release here
 srpm-%:	export $(PACKAGE)-%.spec
 	rm -f *.src.rpm
 	cp $(PACKAGE)-$*.spec $(PACKAGE).spec
+	echo "* $(shell date +"%a %b %d %Y") Andrew Beekhof <andrew@beekhof.net> $(shell git describe --tags $(TAG) | sed -e s:Pacemaker-:: -e s:-.*::)-1" >> $(PACKAGE).spec
+	echo " - See included ChangeLog file or https://raw.github.com/ClusterLabs/pacemaker/master/ChangeLog for full details" >> $(PACKAGE).spec
 	if [ -e $(BUILD_COUNTER) ]; then					\
 		echo $(COUNT) > $(BUILD_COUNTER);				\
 	fi
@@ -150,11 +154,12 @@ srpm-%:	export $(PACKAGE)-%.spec
 	sed -i 's/global\ commit.*/global\ commit\ $(TAG)/' $(PACKAGE).spec
 	case "$(WITH)" in 	\
 	  *pre_release*)	\
-	    sed -i 's/Version:.*/Version:\ $(shell echo $(NEXT_RELEASE) | sed -e s:Pacemaker-:: -e s:-.*::)/' $(PACKAGE).spec;;\
+	    sed -i 's/global\ pcmk_release.*/global\ pcmk_release\ 0.%{specversion}.%{shortcommit}.git/' $(PACKAGE).spec;	\
+	    sed -i 's/Version:.*/Version:\ $(shell echo $(NEXT_RELEASE) | sed -e s:Pacemaker-:: -e s:-.*::)/' $(PACKAGE).spec;;	\
 	  *)			\
 	    sed -i 's/Version:.*/Version:\ $(shell git describe --tags $(TAG) | sed -e s:Pacemaker-:: -e s:-.*::)/' $(PACKAGE).spec;;\
 	esac
-	rpmbuild -bs --define "dist .$*" $(RPM_OPTS) $(WITH)  $(PACKAGE).spec
+	rpmbuild -bs --define "dist .$*" $(RPM_OPTS) $(PACKAGE).spec
 
 chroot: mock-$(MOCK_CFG) mock-install-$(MOCK_CFG) mock-sh-$(MOCK_CFG)
 	echo "Done"

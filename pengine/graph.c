@@ -823,10 +823,6 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
         }
     }
 
-    if (is_set(action->flags, pe_action_failure_is_fatal) == FALSE) {
-        add_hash_param(action->meta, XML_ATTR_TE_ALLOWFAIL, XML_BOOLEAN_TRUE);
-    }
-
     if (as_input) {
         return action_xml;
     }
