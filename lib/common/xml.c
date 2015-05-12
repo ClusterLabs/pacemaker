@@ -3790,6 +3790,10 @@ dump_xml_comment(xmlNode * data, int options, char **buffer, int *offset, int *m
 void
 crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, int depth)
 {
+    if(data == NULL) {
+        *offset = 0;
+        *max = 0;
+    }
 #if 0
     if (is_not_set(options, xml_log_option_filtered)) {
         /* Turning this code on also changes the PE tests for some reason
