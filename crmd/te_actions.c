@@ -90,7 +90,10 @@ send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
 
     /* we have to mark whether or not remote nodes have already been fenced */
     if (peer->flags & crm_remote_node) {
-        crm_xml_add(node_state, XML_NODE_IS_REMOTE_FENCED, "true");
+        time_t now = time(NULL);
+        char *now_s = crm_itoa(now);
+        crm_xml_add(node_state, XML_NODE_IS_FENCED, now_s);
+        free(now_s);
     }
 
     /* Force our known ID */

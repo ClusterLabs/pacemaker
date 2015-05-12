@@ -247,7 +247,7 @@
 #  define XML_NODE_IN_CLUSTER        	"in_ccm"
 #  define XML_NODE_IS_PEER    	"crmd"
 #  define XML_NODE_IS_REMOTE    	"remote_node"
-#  define XML_NODE_IS_REMOTE_FENCED  	"remote_node_fenced"
+#  define XML_NODE_IS_FENCED		"node_fenced"
 
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
 #  define XML_CIB_ATTR_STONITH	    	"stonith"

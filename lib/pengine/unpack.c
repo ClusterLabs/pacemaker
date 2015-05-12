@@ -1035,7 +1035,8 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
                  * rsc state after all the unpacking is done. we do however
                  * need to mark whether or not the node has been fenced as this plays
                  * a role during unpacking cluster node resource state */
-                this_node->details->remote_was_fenced = crm_is_true(crm_element_value(state, XML_NODE_IS_REMOTE_FENCED));
+                this_node->details->remote_was_fenced = 
+                    crm_atoi(crm_element_value(state, XML_NODE_IS_FENCED), "0");
                 continue;
             }
 
@@ -1920,7 +1921,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
                 }
                 if (tmpnode &&
                     is_baremetal_remote_node(tmpnode) &&
-                    tmpnode->details->remote_was_fenced == FALSE) {
+                    tmpnode->details->remote_was_fenced == 0) {
 
                     /* connection resource to baremetal resource failed in a way that
                      * should result in fencing the remote-node. */
