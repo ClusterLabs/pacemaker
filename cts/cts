@@ -227,20 +227,21 @@ if [ $install = 1 ]; then
     cluster-helper -g $cluster_name -- yum install -y pacemaker pacemaker-debuginfo pacemaker-cts libqb libqb-debuginfo
 fi
 
-if [ $boot = 1 ]; then
+if [ $setup = 1 ]; then
+    cluster-init -g $cluster_name $target -u --test
+    exit 0
+
+elif [ $boot = 1 ]; then
     $cts_root/CTSlab.py -r -c -g $cluster_name --boot
     rc=$?
     if [ $rc = 0 ]; then
 	echo "The cluster is ready..."
     fi
     exit $rc
+
 elif [ $run = 1 ]; then
     $cts_root/CTSlab.py -r -c -g $cluster_name 500 $*
     exit $?
-
-elif [ $setup = 1 ]; then
-    cluster-init -g $cluster_name $target -u --test
-    exit 0
 
 elif [ $clean = 1 ]; then
     exit 0
