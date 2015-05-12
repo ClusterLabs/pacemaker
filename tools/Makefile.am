@@ -17,6 +17,10 @@
 #
 include $(top_srcdir)/Makefile.common
 
+if BUILD_SYSTEMD
+systemdunit_DATA = crm_mon.service
+endif
+
 COMMONLIBS	= 							\
 		$(top_builddir)/lib/common/libcrmcommon.la		\
 		$(top_builddir)/lib/cib/libcib.la			\

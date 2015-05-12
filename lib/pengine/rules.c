@@ -729,7 +729,9 @@ unpack_instance_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_nam
         data.top = top;
     }
 
-    sorted = g_list_sort(unsorted, sort_pairs);
-    g_list_foreach(sorted, unpack_attr_set, &data);
-    g_list_free_full(sorted, free);
+    if (unsorted) {
+        sorted = g_list_sort(unsorted, sort_pairs);
+        g_list_foreach(sorted, unpack_attr_set, &data);
+        g_list_free_full(sorted, free);
+    }
 }

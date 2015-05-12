@@ -22,10 +22,7 @@ Licensed under the GNU GPL.
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA.
 
-import types, string, select, sys, time, re, os, struct, signal
-import time, syslog, random, traceback, base64, pickle, binascii, fcntl
-import threading
-
+import time, re, os, threading
 
 from cts.remote import *
 from cts.logging import *
@@ -160,22 +157,23 @@ class FileObj(SearchObj):
         global has_log_watcher
         SearchObj.__init__(self, filename, host, name)
 
-        if not has_log_watcher.has_key(host):
+        if host is not None:
+            if not has_log_watcher.has_key(host):
 
-            global log_watcher
-            global log_watcher_bin
+                global log_watcher
+                global log_watcher_bin
 
-            self.debug("Installing %s on %s" % (log_watcher_file, host))
+                self.debug("Installing %s on %s" % (log_watcher_file, host))
 
-            os.system("cat << END >> %s\n%s\nEND" %(log_watcher_file, log_watcher))
-            os.system("chmod 755 %s" %(log_watcher_file))
+                os.system("cat << END >> %s\n%s\nEND" %(log_watcher_file, log_watcher))
+                os.system("chmod 755 %s" %(log_watcher_file))
 
-            self.rsh.cp(log_watcher_file, "root@%s:%s" % (host, log_watcher_bin))
-            has_log_watcher[host] = 1
+                self.rsh.cp(log_watcher_file, "root@%s:%s" % (host, log_watcher_bin))
+                has_log_watcher[host] = 1
 
-            os.system("rm -f %s" %(log_watcher_file))
+                os.system("rm -f %s" %(log_watcher_file))
 
-        self.harvest()
+            self.harvest()
 
     def async_complete(self, pid, returncode, outLines, errLines):
         for line in outLines:
@@ -207,7 +205,7 @@ class FileObj(SearchObj):
 
         global log_watcher_bin
         return self.rsh.call_async(self.host,
-                                   "python %s -t %s -p CTSwatcher: -l 200 -f %s -o %s -t %s" % (log_watcher_bin, self.name, self.filename, self.offset, self.name),
+                                   "python %s -t %s -p CTSwatcher: -l 200 -f %s -o %s" % (log_watcher_bin, self.name, self.filename, self.offset),
                 completionDelegate=self)
 
     def setend(self):
@@ -216,7 +214,7 @@ class FileObj(SearchObj):
 
         global log_watcher_bin
         (rc, lines) = self.rsh(self.host,
-                               "python %s -t %s -p CTSwatcher: -l 2 -f %s -o %s -t %s" % (log_watcher_bin, self.name, self.filename, "EOF", self.name),
+                               "python %s -t %s -p CTSwatcher: -l 2 -f %s -o %s" % (log_watcher_bin, self.name, self.filename, "EOF"),
                  None, silent=True)
 
         for line in lines:
@@ -469,6 +467,7 @@ class LogWatcher(RemoteExec):
                 for regex in self.regexes:
                     which=which+1
                     if self.debug_level > 3: self.debug("Comparing line to: "+ regex)
+                    #import string
                     #matchobj = re.search(string.lower(regex), string.lower(line))
                     matchobj = re.search(regex, line)
                     if matchobj:

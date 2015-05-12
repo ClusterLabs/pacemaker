@@ -1,5 +1,4 @@
-from UserDict import UserDict
-import sys, time, types, syslog, os, struct, string, signal, traceback, warnings, socket
+import sys, os
 
 from cts.CTSvars import *
 
@@ -53,11 +52,11 @@ class BasePatterns:
             "Pat:TransitionComplete" : "Transition status: Complete: complete",
 
             "Pat:Fencing_start" : "Initiating remote operation .* for %s",
-            "Pat:Fencing_ok"    : "stonith.*remote_op_done:.*Operation .* of %s by .*: OK",
+            "Pat:Fencing_ok"    : r"stonith.*:\s*Operation .* of %s by .* for .*@.*: OK",
 
-            "Pat:RscOpOK"       : "process_lrm_event:.*Operation %s_%s.*ok.*confirmed",
-            "Pat:RscRemoteOpOK" : "process_lrm_event:.*Operation %s_%s.*ok.*node=%s, .*confirmed.*true",
-            "Pat:NodeFenced"    : "tengine_stonith_notify:.*Peer %s was terminated .*: OK",
+            "Pat:RscOpOK"       : r"crmd.*:\s*Operation %s_%s.*:\s*ok \(.*confirmed=\S+\)",
+            "Pat:RscRemoteOpOK" : r"crmd.*:\s*Operation %s_%s.*:\s*ok \(node=%s,.*,\s*confirmed=true\)",
+            "Pat:NodeFenced"    : r"crmd.*:\s*Peer\s+%s\s+was\s+terminated\s+\(.*\)\s+by\s+.*\s+for\s+.*:\s+OK",
             "Pat:FenceOpOK"     : "Operation .* for host '%s' with device .* returned: 0",
         }
 
@@ -138,7 +137,7 @@ class crm_lha(BasePatterns):
             ]
 
         self.ignore = [
-                "(ERROR|error): crm_abort:.*crm_glib_handler: ",
+                r"(ERROR|error):.*\s+assert\s+at\s+crm_glib_handler:"
                 "(ERROR|error): Message hist queue is filling up",
                 "stonithd.*CRIT: external_hostlist:.*'vmware gethosts' returned an empty hostlist",
                 "stonithd.*(ERROR|error): Could not list nodes for stonith RA external/vmware.",
@@ -184,8 +183,8 @@ class crm_cs_v0(BasePatterns):
             r"Child process .* terminated with signal 9",
             r"getinfo response error: 1$",
             "sbd.* error: inquisitor_child: DEBUG MODE IS ACTIVE",
-            "sbd.* pcmk:    error: crm_ipc_read: Connection to cib_ro failed",
-            "sbd.* pcmk:    error: mainloop_gio_callback: Connection to cib_ro.* closed .I/O condition=17",
+            r"sbd.* pcmk:\s*error:.*Connection to cib_ro failed",
+            r"sbd.* pcmk:\s*error:.*Connection to cib_ro.* closed .I/O condition=17",
         ]
 
         self.BadNews = [
@@ -216,12 +215,12 @@ class crm_cs_v0(BasePatterns):
             r"Parameters to .* changed",
             r"The .* process .* terminated with signal",
             r"Child process .* terminated with signal",
-            r"LogActions:.*Recover",
+            r"pengine:.*Recover .*\(.* -\> .*\)",
             r"rsyslogd.* imuxsock lost .* messages from pid .* due to rate-limiting",
             r"Peer is not part of our cluster",
             r"We appear to be in an election loop",
             r"Unknown node -> we will not deliver message",
-            r"crm_write_blackbox",
+            r"(Blackbox dump requested|Problem detected)",
             r"pacemakerd.*Could not connect to Cluster Configuration Database API",
             r"Receiving messages from a node we think is dead",
             r"share the same cluster nodeid",
@@ -234,9 +233,10 @@ class crm_cs_v0(BasePatterns):
             #r"No need to invoke the TE",
             #r"ping.*: DEBUG: Updated connected = 0",
             #r"Digest mis-match:",
-            r"te_graph_trigger:.*Transition failed: terminated",
-            r"process_ping_reply",
-            r"warn.*:retrieveCib",
+            r"crmd:.*Transition failed: terminated",
+            r"Local CIB .* differs from .*:",
+            r"warn.*:\s*Continuing but .* will NOT be used",
+            r"warn.*:\s*Cluster configuration file .* is corrupt",
             #r"Executing .* fencing operation",
             #r"fence_pcmk.* Call to fence",
             #r"fence_pcmk",
@@ -255,52 +255,51 @@ class crm_cs_v0(BasePatterns):
                     "Connection to the CIB terminated...",
                     "Sending message to CIB service FAILED",
                     "apply_xml_diff:.*Diff application failed!",
-                    "crmd.*Action A_RECOVER .* not supported",
+                    r"crmd.*:\s*Action A_RECOVER .* not supported",
                     "unconfirmed_actions:.*Waiting on .* unconfirmed actions",
                     "cib_native_msgready:.*Message pending on command channel",
-                    "crmd.*do_exit:.*Performing A_EXIT_1 - forcefully exiting the CRMd",
+                    r"crmd.*:\s*Performing A_EXIT_1 - forcefully exiting the CRMd",
                     "verify_stopped:.*Resource .* was active at shutdown.  You may ignore this error if it is unmanaged.",
                     "error: attrd_connection_destroy:.*Lost connection to attrd",
-                    "info: te_fence_node:.*Executing .* fencing operation",
-                    "crm_write_blackbox:",
+                    r".*:\s*Executing .* fencing operation \(.*\) on ",
+                    r"(Blackbox dump requested|Problem detected)",
 #                    "error: native_create_actions: Resource .*stonith::.* is active on 2 nodes attempting recovery",
 #                    "error: process_pe_message: Transition .* ERRORs found during PE processing",
             ]
         
         self.components["corosync-ignore"] = [
-            r"error: pcmk_cpg_dispatch:.*Connection to the CPG API failed: Library error",
+            r"error:.*Connection to the CPG API failed: Library error",
             r"The .* process .* exited",
-            r"pacemakerd.*error: pcmk_child_exit:.*Child process .* exited",
-            r"cib.*error: cib_cs_destroy:.*Corosync connection lost",
-            r"stonith-ng.*error: stonith_peer_cs_destroy:.*Corosync connection terminated",
+            r"pacemakerd.*error:.*Child process .* exited",
+            r"cib.*error:.*Corosync connection lost",
+            r"stonith-ng.*error:.*Corosync connection terminated",
             r"The cib process .* exited: Invalid argument",
             r"The attrd process .* exited: Transport endpoint is not connected",
             r"The crmd process .* exited: Link has been severed",
-            r"error: pcmk_child_exit:.*Child process cib .* exited: Invalid argument",
-            r"error: pcmk_child_exit:.*Child process attrd .* exited: Transport endpoint is not connected",
-            r"error: pcmk_child_exit:.*Child process crmd .* exited: Link has been severed",
-            r"lrmd.*error: crm_ipc_read:.*Connection to stonith-ng failed",
-            r"lrmd.*error: mainloop_gio_callback:.*Connection to stonith-ng.* closed",
-            r"lrmd.*error: stonith_connection_destroy_cb:.*LRMD lost STONITH connection",
-            r"crmd.*do_state_transition:.*State transition .* S_RECOVERY",
-            r"crmd.*error: do_log:.*FSA: Input I_ERROR",
-            r"crmd.*error: do_log:.*FSA: Input I_TERMINATE",
-            r"crmd.*error: pcmk_cman_dispatch:.*Connection to cman failed",
-            r"crmd.*error: crmd_fast_exit:.*Could not recover from internal error",
-            r"error: crm_ipc_read:.*Connection to cib_shm failed",
-            r"error: mainloop_gio_callback:.*Connection to cib_shm.* closed",
-            r"error: stonith_connection_failed:.*STONITH connection failed",
+            r"error:.*Child process cib .* exited: Invalid argument",
+            r"error:.*Child process attrd .* exited: Transport endpoint is not connected",
+            r"error:.*Child process crmd .* exited: Link has been severed",
+            r"lrmd.*error:.*Connection to stonith-ng failed",
+            r"lrmd.*error:.*Connection to stonith-ng.* closed",
+            r"lrmd.*error:.*LRMD lost STONITH connection",
+            r"crmd.*State transition .* S_RECOVERY",
+            r"crmd.*error:.*FSA: Input I_ERROR",
+            r"crmd.*error:.*FSA: Input I_TERMINATE",
+            r"crmd.*error:.*Connection to cman failed",
+            r"crmd.*error:.*Could not recover from internal error",
+            r"error:.*Connection to cib_shm failed",
+            r"error:.*Connection to cib_shm.* closed",
+            r"error:.*STONITH connection failed",
             ]
 
         self.components["corosync"] = [
-            r"pacemakerd.*error: cfg_connection_destroy:.*Connection destroyed",
-            r"pacemakerd.*error: mcp_cpg_destroy:.*Connection destroyed",
-            r"crit: attrd_(cs|cpg)_destroy:.*Lost connection to Corosync service",
-            r"stonith_peer_cs_destroy:.*Corosync connection terminated",
-            r"cib_cs_destroy:.*Corosync connection lost!  Exiting.",
-            r"crmd_(cs|quorum)_destroy:.*connection terminated",
+            r"pacemakerd.*error:.*Connection destroyed",
+            r"attrd.*:\s*crit:.*Lost connection to Corosync service",
+            r"stonith.*:\s*Corosync connection terminated",
+            r"cib.*:\s*Corosync connection lost!\s+Exiting.",
+            r"crmd.*:\s*connection terminated",
             r"pengine.*Scheduling Node .* for STONITH",
-            r"tengine_stonith_notify:.*Peer .* was terminated .*: OK",
+            r"crmd.*:\s*Peer %s was terminated \(.*\) by .* for .*:\s*OK",
         ]
 
         self.components["cib-ignore"] = [
@@ -368,17 +367,17 @@ class crm_cs_v0(BasePatterns):
             "LRMD lost STONITH connection",
             "Connection to stonith-ng.* closed",
             "Fencing daemon connection failed",
-            "crmd.*stonith_api_add_notification:.*Callback already present",
+            r"crmd.*:\s*warn.*:\s*Callback already present",
         ]
         self.components["stonith-ignore"] = [
             "LogActions: Recover Fencing",
             "Updating failcount for Fencing",
-            "error: crm_ipc_read: Connection to stonith-ng failed",
-            "error: mainloop_gio_callback: Connection to stonith-ng.*closed (I/O condition=17)",
-            "crit: tengine_stonith_connection_destroy: Fencing daemon connection failed",
-            "error: te_connect_stonith:.*Sign-in failed: triggered a retry",
+            r"error:.*Connection to stonith-ng failed",
+            r"error:.*Connection to stonith-ng.*closed \(I/O condition=17\)",
+            r"crit:.*Fencing daemon connection failed",
+            r"error:.*Sign-in failed: triggered a retry",
             "STONITH connection failed, finalizing .* pending operations.",
-            "process_lrm_event:.*Operation Fencing.* Error",
+            r"crmd.*:\s*Operation Fencing.* Error",
         ]
         self.components["stonith-ignore"].extend(self.components["common-ignore"])
 
@@ -504,8 +503,6 @@ if __name__ == '__main__':
 
     pdir=os.path.dirname(sys.path[0])
     sys.path.insert(0, pdir) # So that things work from the source directory
-
-    from cts.CTSvars   import *
 
     kind=None
     template=None

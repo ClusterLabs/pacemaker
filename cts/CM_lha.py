@@ -25,8 +25,7 @@ Additional Audits, Revised Start action, Default Configuration:
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA.
 
-import os, sys, warnings
-from cts          import CTS
+import sys
 from cts.CTSvars  import *
 from cts.CTS      import *
 from cts.CIB      import *

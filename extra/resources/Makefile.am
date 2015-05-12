@@ -22,7 +22,7 @@ include $(top_srcdir)/Makefile.common
 EXTRA_DIST		= $(ocf_SCRIPTS)
 
 
-isolationtechdir    = @OCF_RA_DIR@/isolation
+isolationtechdir    = @OCF_RA_DIR@/.isolation
 
 ocfdir		    = @OCF_RA_DIR@/pacemaker
 

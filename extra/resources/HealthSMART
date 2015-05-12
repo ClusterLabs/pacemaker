@@ -63,7 +63,7 @@ Location to store the resource state in.
 <content type="string" default="${HA_VARRUN}/HealthSMART-{OCF_RESOURCE_INSTANCE}.state" />
 </parameter>
 
-<parameter name="drives" unique="1">
+<parameter name="drives" unique="0">
 <longdesc lang="en">
 The drive(s) to check as a SPACE separated list. Enter the full path to the device, e.g. "/dev/sda".
 </longdesc>
@@ -71,7 +71,7 @@ The drive(s) to check as a SPACE separated list. Enter the full path to the devi
 <content type="string" default="/dev/sda" />
 </parameter>
 
-<parameter name="devices" unique="1">
+<parameter name="devices" unique="0">
 <longdesc lang="en">
 The device type(s) to assume for the drive(s) being tested as a SPACE separated list.
 </longdesc>
@@ -79,7 +79,7 @@ The device type(s) to assume for the drive(s) being tested as a SPACE separated 
 <content type="string" />
 </parameter>
 
-<parameter name="temp_lower_limit" unique="1">
+<parameter name="temp_lower_limit" unique="0">
 <longdesc lang="en">
 Lower limit of the temperature in deg C of the drive(s). Below this limit the status will be red.
 </longdesc>
@@ -87,7 +87,7 @@ Lower limit of the temperature in deg C of the drive(s). Below this limit the st
 <content type="string" default="0"/>
 </parameter>
 
-<parameter name="temp_upper_limit" unique="1">
+<parameter name="temp_upper_limit" unique="0">
 <longdesc lang="en">
 Upper limit of the temperature if deg C of the drives(s). If the drive reports
 a temperature higher than this value the status of #health-smart will be red.
@@ -96,7 +96,7 @@ a temperature higher than this value the status of #health-smart will be red.
 <content type="string" default="60"/>
 </parameter>
 
-<parameter name="temp_warning" unique="1">
+<parameter name="temp_warning" unique="0">
 <longdesc lang="en">
 Number of deg C below/above the upper/lower temp limits at which point the status of #health-smart will change to yellow.
 </longdesc>
@@ -170,7 +170,7 @@ init_smart() {
     upper_yellow_limit=$((${upper_red_limit}-${yellow_threshold}))
 
     #Set disk defaults
-    if [ -z ${OCF_RESKEY_drives} ] ; then
+    if [ -z "${OCF_RESKEY_drives}" ] ; then
         DRIVES="/dev/sda"
     else
         DRIVES=${OCF_RESKEY_drives}

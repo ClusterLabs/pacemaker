@@ -56,6 +56,8 @@ typedef struct lrmd_cmd_s {
 
     int rsc_deleted;
 
+    int service_flags;
+
     char *client_id;
     char *origin;
     char *rsc_id;
@@ -196,6 +198,10 @@ create_lrmd_cmd(xmlNode * msg, crm_client_t * client, lrmd_rsc_t *rsc)
         g_hash_table_insert(cmd->params, strdup("CRM_meta_type"), strdup(rsc->type));
     }
 
+    if (safe_str_eq(g_hash_table_lookup(cmd->params, "CRM_meta_on_fail"), "block")) {
+        crm_debug("Setting flag to leave pid group on timeout and only kill action pid for %s_%s_%d", cmd->rsc_id, cmd->action, cmd->interval);
+        cmd->service_flags |= SVC_ACTION_LEAVE_GROUP;
+    }
     return cmd;
 }
 
@@ -1194,18 +1200,23 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
         g_hash_table_remove(params_copy, "CRM_meta_isolation_wrapper");
         action = resources_action_create(rsc->rsc_id,
                                          "ocf",
-                                         ISOLATION_PROVIDER,
+                                         LRMD_ISOLATION_PROVIDER,
                                          cmd->isolation_wrapper,
                                          cmd->action, /*action will be normalized in wrapper*/
-                                         cmd->interval, cmd->timeout, params_copy);
+                                         cmd->interval,
+                                         cmd->timeout,
+                                         params_copy,
+                                         cmd->service_flags);
     } else {
         action = resources_action_create(rsc->rsc_id,
                                          rsc->class,
                                          rsc->provider,
                                          rsc->type,
                                          normalize_action_name(rsc, cmd->action),
-                                         cmd->interval, cmd->timeout, params_copy);
-
+                                         cmd->interval,
+                                         cmd->timeout,
+                                         params_copy,
+                                         cmd->service_flags);
     }
 
     if (!action) {

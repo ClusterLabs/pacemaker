@@ -220,7 +220,7 @@ recurring_action_timer(gpointer data)
 {
     svc_action_t *op = data;
 
-    crm_debug("Scheduling another invokation of %s", op->id);
+    crm_debug("Scheduling another invocation of %s", op->id);
 
     /* Clean out the old result */
     free(op->stdout_data);
@@ -680,7 +680,13 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
     } else {
 
         crm_trace("Async waiting for %d - %s", op->pid, op->opaque->exec);
-        mainloop_child_add(op->pid, op->timeout, op->id, op, operation_finished);
+        mainloop_child_add_with_flags(op->pid,
+                                      op->timeout,
+                                      op->id,
+                                      op,
+                                      (op->flags & SVC_ACTION_LEAVE_GROUP) ? mainloop_leave_pid_group : 0,
+                                      operation_finished);
+
 
         op->opaque->stdout_gsource = mainloop_add_fd(op->id,
                                                      G_PRIORITY_LOW,

@@ -352,6 +352,15 @@ rm -rf %{buildroot}
 %postun remote
 %systemd_postun_with_restart pacemaker_remote.service 
 
+%post cli
+%systemd_post crm_mon.service
+
+%preun cli
+%systemd_preun crm_mon.service
+
+%postun cli
+%systemd_postun_with_restart crm_mon.service
+
 %else
 
 %post
@@ -397,7 +406,6 @@ exit 0
 %exclude %{_datadir}/pacemaker/tests
 
 %config(noreplace) %{_sysconfdir}/sysconfig/pacemaker
-%config(noreplace) %{_sysconfdir}/sysconfig/crm_mon
 %config(noreplace) %{_sysconfdir}/logrotate.d/pacemaker
 %{_sbindir}/pacemakerd
 
@@ -407,6 +415,8 @@ exit 0
 %{_initrddir}/pacemaker
 %endif
 
+%exclude %{_datadir}/pacemaker/report.common
+%exclude %{_datadir}/pacemaker/report.collector
 %{_datadir}/pacemaker
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
 %exclude %{_libexecdir}/pacemaker/lrmd_test
@@ -444,7 +454,7 @@ exit 0
 %dir /usr/lib/ocf
 %dir /usr/lib/ocf/resource.d
 /usr/lib/ocf/resource.d/pacemaker
-/usr/lib/ocf/resource.d/isolation
+/usr/lib/ocf/resource.d/.isolation
 
 %if "%{?cs_version}" != "UNKNOWN"
 %if 0%{?cs_version} < 2
@@ -455,11 +465,21 @@ exit 0
 %if %{with upstart_job}
 %config(noreplace) %{_sysconfdir}/init/pacemaker.conf
 %config(noreplace) %{_sysconfdir}/init/pacemaker.combined.conf
-%config(noreplace) %{_sysconfdir}/init/crm_mon.conf
 %endif
 
 %files cli
 %defattr(-,root,root)
+
+%config(noreplace) %{_sysconfdir}/sysconfig/crm_mon
+
+%if %{defined _unitdir}
+%{_unitdir}/crm_mon.service
+%endif
+
+%if %{with upstart_job}
+%config(noreplace) %{_sysconfdir}/init/crm_mon.conf
+%endif
+
 %{_sbindir}/cibadmin
 %{_sbindir}/crm_diff
 %{_sbindir}/crm_error
@@ -474,6 +494,8 @@ exit 0
 %{_sbindir}/crm_simulate
 %{_sbindir}/crm_report
 %{_sbindir}/crm_ticket
+%{_datadir}/pacemaker/report.common
+%{_datadir}/pacemaker/report.collector
 %doc %{_mandir}/man8/*
 %exclude %{_mandir}/man8/attrd_updater.*
 %exclude %{_mandir}/man8/crm_attribute.*

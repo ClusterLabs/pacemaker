@@ -23,7 +23,7 @@ Licensed under the GNU GPL.
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA.
 
-import string,sys,struct,os,random,time,syslog
+import string, sys, struct, os, random, time, syslog
 from cts.CTSvars import *
 
 

@@ -21,7 +21,6 @@ Copyright (C) 2007 Andrew Beekhof <andrew@suse.de>
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA.
 
-import os, sys, warnings
 from cts.CTSvars import *
 from cts.CM_lha  import crm_lha
 from cts.CTS     import Process

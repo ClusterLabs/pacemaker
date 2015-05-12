@@ -26,6 +26,11 @@
 
 #  include <glib.h>
 
+enum mainloop_child_flags {
+    /* don't kill pid group on timeout, only kill the pid */
+    mainloop_leave_pid_group = 0x01,
+};
+
 typedef struct trigger_s crm_trigger_t;
 typedef struct mainloop_io_s mainloop_io_t;
 typedef struct mainloop_child_s mainloop_child_t;
@@ -99,6 +104,13 @@ void mainloop_child_add(pid_t pid,
                         int timeout,
                         const char *desc,
                         void *userdata,
+                        void (*callback) (mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode));
+
+void mainloop_child_add_with_flags(pid_t pid,
+                        int timeout,
+                        const char *desc,
+                        void *userdata,
+                        enum mainloop_child_flags,
                         void (*callback) (mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode));
 
 void *mainloop_child_userdata(mainloop_child_t * child);
