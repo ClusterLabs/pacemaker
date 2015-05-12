@@ -393,7 +393,7 @@ class crm_mcp(crm_cs_v0):
 
         self.commands.update({
             "StartCmd"       : "service corosync start && service pacemaker start",
-            "StopCmd"        : "service pacemaker stop; service pacemaker_remote stop; service corosync stop",
+            "StopCmd"        : "service pacemaker stop; [ ! -e /usr/sbin/pacemaker_remoted ] || service pacemaker_remote stop; service corosync stop",
 
             "EpochCmd"      : "crm_node -e",
             "QuorumCmd"      : "crm_node -q",
@@ -443,7 +443,7 @@ class crm_cman(crm_cs_v0):
 
         self.commands.update({
             "StartCmd"       : "service pacemaker start",
-            "StopCmd"        : "service pacemaker stop; service pacemaker_remote stop",
+            "StopCmd"        : "service pacemaker stop; [ ! -e /usr/sbin/pacemaker_remoted ] || service pacemaker_remote stop",
 
             "EpochCmd"      : "crm_node -e --cman",
             "QuorumCmd"      : "crm_node -q --cman",

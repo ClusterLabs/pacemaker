@@ -290,10 +290,12 @@ class JournalObj(SearchObj):
         self.hitLimit = False
         (rc, lines) = self.rsh(self.host, "date +'%Y-%m-%d %H:%M:%S'", stdout=None, silent=True)
 
-        for line in lines:
-            self.limit = line.strip()
+        if (rc == 0) and (len(lines) == 1):
+            self.limit = lines[0].strip()
             self.debug("Set limit to: %s" % self.limit)
-
+        else:
+            self.debug("Unable to set limit for %s because date returned %d lines with status %d" % (self.host,
+                len(lines), rc))
 
         return
 
