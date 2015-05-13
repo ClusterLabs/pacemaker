@@ -90,7 +90,7 @@ static gboolean cib_read_legacy_mode(void)
     return legacy;
 }
 
-static gboolean cib_legacy_mode(void)
+gboolean cib_legacy_mode(void)
 {
 #if SUPPORT_PLUGIN
     return TRUE;
