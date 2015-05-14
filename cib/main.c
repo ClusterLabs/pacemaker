@@ -426,14 +426,18 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
         crm_update_peer_state(__FUNCTION__, node, is_set(node->processes, crm_proc_cpg)?CRM_NODE_MEMBER:CRM_NODE_LOST, 0);
     }
 
-    if (type == crm_status_processes && legacy_mode && is_not_set(node->processes, crm_proc_cpg)) {
+    if (type == crm_status_processes && legacy_mode) {
         uint32_t old = 0;
+
 
         if (data) {
             old = *(const uint32_t *)data;
         }
 
-        if ((node->processes ^ old) & crm_proc_cpg) {
+        if ((is_not_set(node->processes, crm_proc_cpg)
+             && ((node->processes ^ old) & crm_proc_cpg))
+            || (is_not_set(node->processes, crm_proc_cib)
+                && ((node->processes ^ old) & crm_proc_cib))) {
             crm_info("Attempting to disable legacy mode after %s left the cluster", node->uname);
             legacy_mode = FALSE;
         }
