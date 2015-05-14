@@ -874,9 +874,12 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
         int diff_del_admin_epoch = 0;
 
         const char *digest = NULL;
+        int format = 1;
 
         CRM_LOG_ASSERT(result_diff != NULL);
         digest = crm_element_value(result_diff, XML_ATTR_DIGEST);
+        crm_element_value_int(result_diff, "format", &format);
+
         cib_diff_version_details(result_diff,
                                  &diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates,
                                  &diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
@@ -889,7 +892,9 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
         crm_xml_add(msg, F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
         crm_xml_add(msg, F_CIB_OPERATION, CIB_OP_APPLY_DIFF);
 
-        CRM_ASSERT(digest != NULL);
+        if (format == 1) {
+            CRM_ASSERT(digest != NULL);
+        }
 
         add_message_xml(msg, F_CIB_UPDATE_DIFF, result_diff);
         crm_log_xml_explicit(msg, "copy");
@@ -1195,10 +1200,6 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     op = crm_element_value(request, F_CIB_OPERATION);
     crm_element_value_int(request, F_CIB_CALLOPTS, &call_options);
     rc = cib_get_operation_id(op, &call_type);
-
-    if (cib_legacy_mode()) {
-        call_options |= cib_force_digest;
-    }
 
     if (rc == pcmk_ok && privileged == FALSE) {
         rc = cib_op_can_run(call_type, call_options, privileged, global_update);
