@@ -297,7 +297,14 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
             crm_xml_add(up, F_CIB_CALLOPTS, crm_element_value(req, F_CIB_CALLOPTS));
             crm_xml_add(up, F_CIB_CALLID, crm_element_value(req, F_CIB_CALLID));
 
-            send_cluster_message(NULL, crm_msg_cib, up, FALSE);
+            if (cib_legacy_mode() && cib_is_master) {
+                rc = cib_process_upgrade(
+                    op, options, section, up, input, existing_cib, result_cib, answer);
+
+            } else {
+                send_cluster_message(NULL, crm_msg_cib, up, FALSE);
+            }
+
             free_xml(up);
 
         } else if(rc == pcmk_ok) {
