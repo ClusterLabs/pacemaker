@@ -3416,7 +3416,7 @@ dump_xml_attr(xmlAttrPtr attr, int options, char **buffer, int *offset, int *max
     }
 
     p = attr->_private;
-    if (is_set(p->flags, xpf_deleted)) {
+    if (p && is_set(p->flags, xpf_deleted)) {
         return;
     }
 
