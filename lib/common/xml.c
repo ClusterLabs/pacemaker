@@ -1439,9 +1439,9 @@ xml_repair_v1_diff(xmlNode * last, xmlNode * next, xmlNode * local_diff, gboolea
 }
 
 static xmlNode *
-xml_create_patchset_v1(xmlNode *source, xmlNode *target, bool config, bool with_digest)
+xml_create_patchset_v1(xmlNode *source, xmlNode *target, bool config, bool suppress)
 {
-    xmlNode *patchset = diff_xml_object(source, target, !with_digest);
+    xmlNode *patchset = diff_xml_object(source, target, suppress);
 
     if(patchset) {
         CRM_LOG_ASSERT(xml_document_dirty(target));
@@ -1527,7 +1527,7 @@ static gboolean patch_legacy_mode(void)
 }
 
 xmlNode *
-xml_create_patchset(int format, xmlNode *source, xmlNode *target, bool *config_changed, bool manage_version, bool with_digest)
+xml_create_patchset(int format, xmlNode *source, xmlNode *target, bool *config_changed, bool manage_version)
 {
     int counter = 0;
     bool config = FALSE;
@@ -1573,8 +1573,7 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target, bool *config_c
 
     switch(format) {
         case 1:
-            with_digest = TRUE;
-            patch = xml_create_patchset_v1(source, target, config, with_digest);
+            patch = xml_create_patchset_v1(source, target, config, FALSE);
             break;
         case 2:
             patch = xml_create_patchset_v2(source, target);
@@ -1584,13 +1583,36 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target, bool *config_c
             return NULL;
     }
 
-    if(patch && with_digest) {
-        char *digest = calculate_xml_versioned_digest(target, FALSE, TRUE, version);
-
-        crm_xml_add(patch, XML_ATTR_DIGEST, digest);
-        free(digest);
-    }
     return patch;
+}
+
+void
+patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target, bool with_digest)
+{
+    int format = 1;
+    const char *version = NULL;
+    char *digest = NULL;
+
+    if (patch == NULL || source == NULL || target == NULL) {
+        return;
+    }
+
+    /* NOTE: We should always call xml_accept_changes() before calculating digest. */
+    /* Otherwise, with an on-tracking dirty target, we could get a wrong digest. */
+    CRM_LOG_ASSERT(xml_document_dirty(target) == FALSE);
+
+    crm_element_value_int(patch, "format", &format);
+    if (format > 1 && with_digest == FALSE) {
+        return;
+    }
+
+    version = crm_element_value(source, XML_ATTR_CRM_VERSION);
+    digest = calculate_xml_versioned_digest(target, FALSE, TRUE, version);
+
+    crm_xml_add(patch, XML_ATTR_DIGEST, digest);
+    free(digest);
+
+    return;
 }
 
 static void

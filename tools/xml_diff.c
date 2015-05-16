@@ -203,7 +203,14 @@ main(int argc, char **argv)
         xml_calculate_changes(object_1, object_2);
         crm_log_xml_debug(object_2, xml_file_2?xml_file_2:"target");
 
-        output = xml_create_patchset(0, object_1, object_2, NULL, FALSE, as_cib);
+        output = xml_create_patchset(0, object_1, object_2, NULL, FALSE);
+
+        xml_log_changes(LOG_INFO, __FUNCTION__, object_2);
+        xml_accept_changes(object_2);
+
+        if (output) {
+            patchset_process_digest(output, object_1, object_2, as_cib);
+        }
 
         if(as_cib && output) {
             int add[] = { 0, 0, 0 };
@@ -267,7 +274,6 @@ main(int argc, char **argv)
                 }
             }
         }
-        xml_log_changes(LOG_INFO, __FUNCTION__, object_2);
         xml_log_patchset(LOG_NOTICE, __FUNCTION__, output);
     }
 

@@ -433,7 +433,7 @@ main(int argc, char **argv)
             goto done;
         }
 
-        diff = xml_create_patchset(0, old_config, new_config, NULL, FALSE, FALSE);
+        diff = xml_create_patchset(0, old_config, new_config, NULL, FALSE);
         if (diff != NULL) {
             xml_log_patchset(0, "  ", diff);
             rc = 1;
