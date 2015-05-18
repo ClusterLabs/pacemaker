@@ -4548,6 +4548,8 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
     /* changes to name/value pairs */
     for (xIter = crm_first_attr(left); xIter != NULL; xIter = xIter->next) {
         const char *prop_name = (const char *)xIter->name;
+        xmlAttrPtr right_attr = NULL;
+        xml_private_t *p = NULL;
 
         if (strcmp(prop_name, XML_ATTR_ID) == 0) {
             continue;
@@ -4566,8 +4568,13 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
             continue;
         }
 
+        right_attr = xmlHasProp(right, (const xmlChar *)prop_name);
+        if (right_attr) {
+            p = right_attr->_private;
+        }
+
         right_val = crm_element_value(right, prop_name);
-        if (right_val == NULL) {
+        if (right_val == NULL || (p && is_set(p->flags, xpf_deleted))) {
             /* new */
             *changed = TRUE;
             if (full) {
