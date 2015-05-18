@@ -331,7 +331,11 @@ native_pending_task(resource_t * rsc)
     } else if (safe_str_eq(rsc->pending_task, CRMD_ACTION_STATUS)) {
         pending_task = "Monitoring";
 
-    /* Comment this out until someone requests it */
+    /* Pending probes are not printed, even if pending
+     * operations are requested. If someone ever requests that
+     * behavior, uncomment this and the corresponding part of
+     * unpack.c:unpack_rsc_op().
+     */
     /*
     } else if (safe_str_eq(rsc->pending_task, "probe")) {
         pending_task = "Checking";

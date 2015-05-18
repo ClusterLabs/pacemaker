@@ -361,7 +361,6 @@ get_node_name(uint32_t nodeid)
     return name;
 }
 
-/* Only used by update_failcount() in te_utils.c */
 const char *
 crm_peer_uname(const char *uuid)
 {

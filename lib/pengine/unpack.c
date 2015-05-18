@@ -3080,8 +3080,11 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
 
             if (rsc->pending_task == NULL) {
                 if (safe_str_eq(task, CRMD_ACTION_STATUS) && interval == 0) {
-                    /* Comment this out until someone requests it */
-                    /* Comment this out until cl#5184 is fixed */
+                    /* Pending probes are not printed, even if pending
+                     * operations are requested. If someone ever requests that
+                     * behavior, uncomment this and the corresponding part of
+                     * native.c:native_pending_task().
+                     */
                     /*rsc->pending_task = strdup("probe");*/
 
                 } else {
