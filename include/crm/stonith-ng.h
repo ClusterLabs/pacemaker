@@ -352,7 +352,7 @@ int stonith_api_kick(uint32_t nodeid, const char *uname, int timeout, bool off);
 time_t stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress);
 
 /*
- * Helpers for using the above functions without install-time dependancies
+ * Helpers for using the above functions without install-time dependencies
  *
  * Usage:
  *  #include <crm/stonith-ng.h>

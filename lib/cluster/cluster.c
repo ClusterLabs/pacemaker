@@ -583,7 +583,7 @@ get_cluster_type(void)
 
   done:
     if (cluster_type == pcmk_cluster_unknown) {
-        crm_notice("Could not determin the current cluster type");
+        crm_notice("Could not determine the current cluster type");
 
     } else if (cluster_type == pcmk_cluster_invalid) {
         crm_notice("This installation does not support the '%s' cluster infrastructure: terminating.",

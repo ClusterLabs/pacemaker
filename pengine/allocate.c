@@ -1338,7 +1338,7 @@ any_managed_resources(pe_working_set_t * data_set)
 }
 
 /*
- * Create dependancies for stonith and shutdown operations
+ * Create dependencies for stonith and shutdown operations
  */
 gboolean
 stage6(pe_working_set_t * data_set)

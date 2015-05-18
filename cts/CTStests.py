@@ -495,8 +495,8 @@ class StonithdTest(CTSTest):
             self.logger.log("Fencing command on %s failed to fence %s (rc=%d)" % (origin, node, rc))
 
         elif origin == node and rc != 255:
-            # 255 == broken pipe, ie. the node was fenced as epxected
-            self.logger.log("Logcally originated fencing returned %d" % rc)
+            # 255 == broken pipe, ie. the node was fenced as expected
+            self.logger.log("Locally originated fencing returned %d" % rc)
 
         self.set_timer("fence")
         matched = watch.lookforall()
