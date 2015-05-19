@@ -564,6 +564,8 @@ do_test colocated-utilization-primitive-2 "Colocated Utilization - Choose the mo
 do_test colocated-utilization-group "Colocated Utilization - Group"
 do_test colocated-utilization-clone "Colocated Utilization - Clone"
 
+do_test utilization-check-allowed-nodes "Only check the capacities of the nodes that can run the resource"
+
 echo ""
 do_test reprobe-target_rc "Ensure correct target_rc for reprobe of inactive resources"
 do_test node-maintenance-1 "cl#5128 - Node maintenance"
