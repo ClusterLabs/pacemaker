@@ -498,6 +498,7 @@ find_topology_for_host(const char *host)
                 break;
             }
             crm_trace("No match for %s with %s", host, tp->node);
+            tp = NULL;
         }
     }
 
