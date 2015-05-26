@@ -482,8 +482,8 @@ crm_get_peer(unsigned int id, const char *uname)
     }
 
     if (uname_lookup) {
-        crm_trace("Inferred a name of '%s' for node %u", uname, id);
         uname = uname_lookup;
+        crm_trace("Inferred a name of '%s' for node %u", uname, id);
 
         /* try to turn up the node one more time now that we know the uname. */
         if (node == NULL) {
