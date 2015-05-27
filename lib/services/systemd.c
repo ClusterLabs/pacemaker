@@ -514,8 +514,6 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
     DBusMessage *msg = NULL;
     DBusMessage *reply = NULL;
 
-    CRM_ASSERT(unit);
-
     if (unit == NULL) {
         crm_debug("Could not obtain unit named '%s'", op->agent);
         op->rc = PCMK_OCF_NOT_INSTALLED;
