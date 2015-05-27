@@ -138,7 +138,7 @@ systemd_daemon_reload_complete(DBusPendingCall *pending, void *user_data)
 }
 
 static bool
-systemd_daemon_reload(void)
+systemd_daemon_reload(int timeout)
 {
     static unsigned int reload_count = 0;
     const char *method = "Reload";
@@ -149,7 +149,7 @@ systemd_daemon_reload(void)
         DBusMessage *msg = systemd_new_method(BUS_NAME".Manager", method);
 
         CRM_ASSERT(msg != NULL);
-        pcmk_dbus_send(msg, systemd_proxy, systemd_daemon_reload_complete, GUINT_TO_POINTER(reload_count));
+        pcmk_dbus_send(msg, systemd_proxy, systemd_daemon_reload_complete, GUINT_TO_POINTER(reload_count), timeout);
         dbus_message_unref(msg);
     }
     return TRUE;
@@ -236,7 +236,7 @@ systemd_unit_by_name(const gchar * arg_name, svc_action_t *op)
         DBusError error;
 
         dbus_error_init(&error);
-        reply = pcmk_dbus_send_recv(msg, systemd_proxy, &error);
+        reply = pcmk_dbus_send_recv(msg, systemd_proxy, &error, op? op->timeout : DBUS_TIMEOUT_USE_DEFAULT);
         dbus_message_unref(msg);
 
         unit = systemd_loadunit_result(reply, op);
@@ -249,7 +249,7 @@ systemd_unit_by_name(const gchar * arg_name, svc_action_t *op)
         return munit;
     }
 
-    pcmk_dbus_send(msg, systemd_proxy, systemd_loadunit_cb, op);
+    pcmk_dbus_send(msg, systemd_proxy, systemd_loadunit_cb, op, op? op->timeout : DBUS_TIMEOUT_USE_DEFAULT);
     dbus_message_unref(msg);
     return NULL;
 }
@@ -281,7 +281,7 @@ systemd_unit_listall(void)
     msg = systemd_new_method(BUS_NAME".Manager", method);
     CRM_ASSERT(msg != NULL);
 
-    reply = pcmk_dbus_send_recv(msg, systemd_proxy, &error);
+    reply = pcmk_dbus_send_recv(msg, systemd_proxy, &error, DBUS_TIMEOUT_USE_DEFAULT);
     dbus_message_unref(msg);
 
     if(error.name) {
@@ -355,7 +355,7 @@ systemd_unit_exists(const char *name)
 }
 
 static char *
-systemd_unit_metadata(const char *name)
+systemd_unit_metadata(const char *name, int timeout)
 {
     char *meta = NULL;
     char *desc = NULL;
@@ -363,7 +363,7 @@ systemd_unit_metadata(const char *name)
 
     if (path) {
         /* TODO: Worth a making blocking call for? Probably not. Possibly if cached. */
-        desc = pcmk_dbus_get_property(systemd_proxy, BUS_NAME, path, BUS_NAME ".Unit", "Description", NULL, NULL, NULL);
+        desc = pcmk_dbus_get_property(systemd_proxy, BUS_NAME, path, BUS_NAME ".Unit", "Description", NULL, NULL, NULL, timeout);
     } else {
         desc = crm_strdup_printf("Systemd unit file for %s", name);
     }
@@ -528,7 +528,7 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
         state = pcmk_dbus_get_property(systemd_proxy, BUS_NAME, unit,
                                        BUS_NAME ".Unit", "ActiveState",
                                        op->synchronous?NULL:systemd_unit_check,
-                                       op, op->synchronous?NULL:&pending);
+                                       op, op->synchronous?NULL:&pending, op->timeout);
         if (op->synchronous) {
             systemd_unit_check("ActiveState", state, op);
             free(state);
@@ -576,7 +576,7 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
             fflush(file_strm);
             fclose(file_strm);
         }
-        systemd_daemon_reload();
+        systemd_daemon_reload(op->timeout);
         free(override_file);
         free(override_dir);
 
@@ -586,7 +586,7 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
         method = "StopUnit";
         unlink(override_file);
         free(override_file);
-        systemd_daemon_reload();
+        systemd_daemon_reload(op->timeout);
 
     } else if (g_strcmp0(method, "restart") == 0) {
         method = "RestartUnit";
@@ -613,7 +613,7 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
     }
 
     if (op->synchronous == FALSE) {
-        DBusPendingCall* pending = pcmk_dbus_send(msg, systemd_proxy, systemd_async_dispatch, op);
+        DBusPendingCall* pending = pcmk_dbus_send(msg, systemd_proxy, systemd_async_dispatch, op, op->timeout);
 
         dbus_message_unref(msg);
         if(pending) {
@@ -626,7 +626,7 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
     } else {
         DBusError error;
 
-        reply = pcmk_dbus_send_recv(msg, systemd_proxy, &error);
+        reply = pcmk_dbus_send_recv(msg, systemd_proxy, &error, op->timeout);
         dbus_message_unref(msg);
         systemd_exec_result(reply, op);
 
@@ -670,7 +670,7 @@ systemd_unit_exec(svc_action_t * op)
 
     if (safe_str_eq(op->action, "meta-data")) {
         /* TODO: See if we can teach the lrmd not to make these calls synchronously */
-        op->stdout_data = systemd_unit_metadata(op->agent);
+        op->stdout_data = systemd_unit_metadata(op->agent, op->timeout);
         op->rc = PCMK_OCF_OK;
 
         if (op->synchronous == FALSE) {
