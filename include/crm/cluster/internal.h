@@ -457,6 +457,8 @@ crm_node_t *crm_update_peer(const char *source, unsigned int id, uint64_t born, 
 void crm_update_peer_expected(const char *source, crm_node_t * node, const char *expected);
 void crm_update_peer_state(const char *source, crm_node_t * node, const char *state,
                            int membership);
+void crm_reap_unseen_nodes(uint64_t ring_id);
+
 
 gboolean init_cman_connection(gboolean(*dispatch) (unsigned long long, gboolean),
                               void (*destroy) (gpointer));

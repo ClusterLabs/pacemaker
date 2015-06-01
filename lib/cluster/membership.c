@@ -730,6 +730,49 @@ crm_update_peer_state(const char *source, crm_node_t * node, const char *state, 
     }
 }
 
+/*!
+ * \internal
+ * \brief Reap all nodes from cache whose membership information does not match
+ *
+ * \param[in] membership  Membership ID of nodes to keep
+ */
+void
+crm_reap_unseen_nodes(uint64_t membership)
+{
+    GHashTableIter iter;
+    crm_node_t *node = NULL;
+
+    crm_trace("Reaping unseen nodes...");
+    g_hash_table_iter_init(&iter, crm_peer_cache);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *)&node)) {
+        if (node->last_seen != membership) {
+            if (node->state) {
+                /* crm_update_peer_state() cannot be called here, because that
+                 * might modify the peer cache, invalidating our iterator
+                 */
+                if (safe_str_eq(node->state, CRM_NODE_LOST)) {
+                    crm_trace("Node %s[%u] - state is unchanged (%s)",
+                              node->uname, node->id, CRM_NODE_LOST);
+                } else {
+                    char *last = node->state;
+
+                    node->state = strdup(CRM_NODE_LOST);
+                    crm_notice("Node %s[%u] - state is now %s (was %s)",
+                               node->uname, node->id, CRM_NODE_LOST, last);
+                    if (crm_status_callback) {
+                        crm_status_callback(crm_status_nstate, node, last);
+                    }
+                    free(last);
+                    g_hash_table_iter_remove(&iter);
+                }
+            } else {
+                crm_info("State of node %s[%u] is still unknown",
+                         node->uname, node->id);
+            }
+        }
+    }
+}
+
 int
 crm_terminate_member(int nodeid, const char *uname, void *unused)
 {

@@ -198,37 +198,35 @@ pcmk_quorum_notification(quorum_handle_t handle,
 
     init_phase = FALSE;
 
+    /* Reset last_seen for all cached nodes so we can tell which ones aren't
+     * in the view list */
     g_hash_table_iter_init(&iter, crm_peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
         node->last_seen = 0;
     }
 
+    /* Update the peer cache for each node in view list */
     for (i = 0; i < view_list_entries; i++) {
         uint32_t id = view_list[i];
-        char *name = NULL;
 
         crm_debug("Member[%d] %u ", i, id);
 
+        /* Get this node's peer cache entry (adding one if not already there) */
         node = crm_get_peer(id, NULL);
         if (node->uname == NULL) {
+            char *name = corosync_node_name(0, id);
+
             crm_info("Obtaining name for new node %u", id);
-            name = corosync_node_name(0, id);
             node = crm_get_peer(id, name);
+            free(name);
         }
 
+        /* Update the node state (including updating last_seen to ring_id) */
         crm_update_peer_state(__FUNCTION__, node, CRM_NODE_MEMBER, ring_id);
-        free(name);
     }
 
-    crm_trace("Reaping unseen nodes...");
-    g_hash_table_iter_init(&iter, crm_peer_cache);
-    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-        if (node->last_seen != ring_id && node->state) {
-            crm_update_peer_state(__FUNCTION__, node, CRM_NODE_LOST, 0);
-        } else if (node->last_seen != ring_id) {
-            crm_info("State of node %s[%u] is still unknown", node->uname, node->id);
-        }
-    }
+    /* Remove any peer cache entries we didn't update */
+    crm_reap_unseen_nodes(ring_id);
 
     if (quorum_app_callback) {
         quorum_app_callback(ring_id, quorate);
