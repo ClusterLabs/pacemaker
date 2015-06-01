@@ -170,28 +170,6 @@ extern enum pe_graph_flags clone_update_actions(action_t * first, action_t * the
                                                 enum pe_action_flags flags,
                                                 enum pe_action_flags filter, enum pe_ordering type);
 
-static inline gboolean
-update_action_flags(action_t * action, enum pe_action_flags flags)
-{
-    gboolean changed = FALSE;
-    gboolean clear = is_set(flags, pe_action_clear);
-    enum pe_action_flags last = action->flags;
-
-    if (clear) {
-        pe_clear_action_bit(action, flags);
-    } else {
-        pe_set_action_bit(action, flags);
-    }
-
-    if (last != action->flags) {
-        changed = TRUE;
-        clear_bit(flags, pe_action_clear);
-        crm_trace("%s on %s: %sset flags 0x%.6x (was 0x%.6x, now 0x%.6x)",
-                  action->uuid, action->node ? action->node->details->uname : "[none]",
-                  clear ? "un-" : "", flags, last, action->flags);
-    }
-
-    return changed;
-}
+gboolean update_action_flags(action_t * action, enum pe_action_flags flags);
 
 #endif

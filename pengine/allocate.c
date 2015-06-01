@@ -96,6 +96,34 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      }
 };
 
+gboolean
+update_action_flags(action_t * action, enum pe_action_flags flags)
+{
+    static unsigned long calls = 0;
+    gboolean changed = FALSE;
+    gboolean clear = is_set(flags, pe_action_clear);
+    enum pe_action_flags last = action->flags;
+
+    if (clear) {
+        pe_clear_action_bit(action, flags);
+    } else {
+        pe_set_action_bit(action, flags);
+    }
+
+    if (last != action->flags) {
+        calls++;
+        changed = TRUE;
+        /* Useful for tracking down _who_ changed a specific flag */
+        /* CRM_ASSERT(calls != 534); */
+        clear_bit(flags, pe_action_clear);
+        crm_trace("%s on %s: %sset flags 0x%.6x (was 0x%.6x, now 0x%.6x, %lu)",
+                  action->uuid, action->node ? action->node->details->uname : "[none]",
+                  clear ? "un-" : "", flags, last, action->flags, calls);
+    }
+
+    return changed;
+}
+
 static gboolean
 check_rsc_parameters(resource_t * rsc, node_t * node, xmlNode * rsc_entry,
                      gboolean active_here, pe_working_set_t * data_set)
