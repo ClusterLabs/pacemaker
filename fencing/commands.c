@@ -1918,7 +1918,7 @@ bool fencing_peer_active(crm_node_t *peer)
         return FALSE;
     } else if (peer->uname == NULL) {
         return FALSE;
-    } else if(peer->processes & (crm_proc_plugin | crm_proc_heartbeat | crm_proc_cpg)) {
+    } else if (is_set(peer->processes, crm_get_cluster_proc())) {
         return TRUE;
     }
     return FALSE;

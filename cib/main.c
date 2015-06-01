@@ -426,7 +426,8 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
         crm_update_peer_state(__FUNCTION__, node, is_set(node->processes, crm_proc_cpg)?CRM_NODE_MEMBER:CRM_NODE_LOST, 0);
     }
 
-    if (type == crm_status_processes && legacy_mode && is_not_set(node->processes, crm_proc_cpg)) {
+    if ((type == crm_status_processes) && legacy_mode
+        && is_not_set(node->processes, crm_get_cluster_proc())) {
         uint32_t old = 0;
 
         if (data) {

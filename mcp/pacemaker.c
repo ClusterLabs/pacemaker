@@ -105,11 +105,7 @@ static uint32_t
 get_process_list(void)
 {
     int lpc = 0;
-    uint32_t procs = 0;
-
-    if(is_classic_ais_cluster()) {
-        procs |= crm_proc_plugin;
-    }
+    uint32_t procs = crm_get_cluster_proc();
 
     for (lpc = 0; lpc < SIZEOF(pcmk_children); lpc++) {
         if (pcmk_children[lpc].pid != 0) {

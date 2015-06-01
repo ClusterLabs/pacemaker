@@ -102,13 +102,38 @@ enum crm_proc_flag {
 };
 /* *INDENT-ON* */
 
+/*!
+ * \internal
+ * \brief Return the process bit corresponding to the current cluster stack
+ *
+ * \return Process flag if detectable, otherwise 0
+ */
+static inline uint32_t
+crm_get_cluster_proc()
+{
+    switch (get_cluster_type()) {
+        case pcmk_cluster_corosync:
+        case pcmk_cluster_cman:
+            return crm_proc_cpg;
+
+        case pcmk_cluster_heartbeat:
+            return crm_proc_heartbeat;
+
+        case pcmk_cluster_classic_ais:
+            return crm_proc_plugin;
+
+        default:
+            break;
+    }
+    return crm_proc_none;
+}
+
 static inline const char *
 peer2text(enum crm_proc_flag proc)
 {
     const char *text = "unknown";
 
-    if (proc == (crm_proc_cpg | crm_proc_crmd)
-    ||  proc == (crm_proc_heartbeat | crm_proc_crmd)) {
+    if (proc == (crm_proc_crmd | crm_get_cluster_proc())) {
         return "peer";
     }
 
