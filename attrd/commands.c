@@ -598,10 +598,8 @@ attrd_peer_remove(uint32_t nodeid, const char *host, gboolean uncache, const cha
         }
     }
 
-    /* if this matches a remote peer, it will be removed from the cache */
-    crm_remote_peer_cache_remove(host);
-
     if (uncache) {
+        crm_remote_peer_cache_remove(host);
         reap_crm_member(nodeid, host);
     }
 }
@@ -762,28 +760,23 @@ attrd_election_cb(gpointer user_data)
 void
 attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *data)
 {
-    if(election_state(writer) == election_won
-        && kind == crm_status_nstate
-        && safe_str_eq(peer->state, CRM_NODE_MEMBER)) {
-
-        attrd_peer_sync(peer, NULL);
-
-    } else if(kind == crm_status_nstate
-              && safe_str_neq(peer->state, CRM_NODE_MEMBER)) {
-
-        attrd_peer_remove(peer->id, peer->uname, FALSE, __FUNCTION__);
-        if(peer_writer && safe_str_eq(peer->uname, peer_writer)) {
-            free(peer_writer);
-            peer_writer = NULL;
-            crm_notice("Lost attribute writer %s", peer->uname);
-        }
-
-    } else if(kind == crm_status_processes) {
-        if(is_set(peer->processes, crm_proc_cpg)) {
-            crm_update_peer_state(__FUNCTION__, peer, CRM_NODE_MEMBER, 0);
+    if ((kind == crm_status_nstate) || (kind == crm_status_rstate)) {
+        if (safe_str_eq(peer->state, CRM_NODE_MEMBER)) {
+            if ((election_state(writer) == election_won)) {
+                attrd_peer_sync(peer, NULL);
+            }
         } else {
-            crm_update_peer_state(__FUNCTION__, peer, CRM_NODE_LOST, 0);
+            attrd_peer_remove(peer->id, peer->uname, FALSE, __FUNCTION__);
+            if (peer_writer && safe_str_eq(peer->uname, peer_writer)) {
+                free(peer_writer);
+                peer_writer = NULL;
+                crm_notice("Lost attribute writer %s", peer->uname);
+            }
         }
+    } else if (kind == crm_status_processes) {
+        crm_update_peer_state(__FUNCTION__, peer,
+                              is_set(peer->processes, crm_proc_cpg)?
+                              CRM_NODE_MEMBER : CRM_NODE_LOST, 0);
     }
 }
 
