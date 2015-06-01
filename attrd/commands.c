@@ -773,10 +773,6 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
                 crm_notice("Lost attribute writer %s", peer->uname);
             }
         }
-    } else if (kind == crm_status_processes) {
-        crm_update_peer_state(__FUNCTION__, peer,
-                              is_set(peer->processes, crm_proc_cpg)?
-                              CRM_NODE_MEMBER : CRM_NODE_LOST, 0);
     }
 }
 

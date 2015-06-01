@@ -395,7 +395,7 @@ pcmk_cpg_membership(cpg_handle_t handle,
          * But its _not_ safe to assume its in the quorum membership.
          * We may have just found out its dead and are processing the last couple of messages it sent
          */
-        crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, ONLINESTATUS);
+        peer = crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, ONLINESTATUS);
         if(peer && peer->state && crm_is_peer_active(peer) == FALSE) {
             time_t now = time(NULL);
 
@@ -410,8 +410,9 @@ pcmk_cpg_membership(cpg_handle_t handle,
                  * Set the threshold to 1 minute
                  */
                 crm_err("Node %s[%u] appears to be online even though we think it is dead", peer->uname, peer->id);
-                crm_update_peer_state(__FUNCTION__, peer, CRM_NODE_MEMBER, 0);
-                peer->votes = 0;
+                if (crm_update_peer_state(__FUNCTION__, peer, CRM_NODE_MEMBER, 0)) {
+                    peer->votes = 0;
+                }
             }
         }
 

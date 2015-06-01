@@ -422,10 +422,6 @@ cib_cs_destroy(gpointer user_data)
 static void
 cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
 {
-    if (type == crm_status_processes) {
-        crm_update_peer_state(__FUNCTION__, node, is_set(node->processes, crm_proc_cpg)?CRM_NODE_MEMBER:CRM_NODE_LOST, 0);
-    }
-
     if ((type == crm_status_processes) && legacy_mode
         && is_not_set(node->processes, crm_get_cluster_proc())) {
         uint32_t old = 0;
@@ -443,11 +439,6 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
     if (cib_shutdown_flag && crm_active_peers() < 2 && crm_hash_table_size(client_connections) == 0) {
         crm_info("No more peers");
         terminate_cib(__FUNCTION__, FALSE);
-    }
-
-    if(type == crm_status_nstate && node->id && safe_str_eq(node->state, CRM_NODE_LOST)) {
-        /* Avoid conflicts, keep the membership list to active members */
-        reap_crm_member(node->id, NULL);
     }
 }
 

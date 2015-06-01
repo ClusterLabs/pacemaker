@@ -883,7 +883,12 @@ mcp_cpg_membership(cpg_handle_t handle,
                     const struct cpg_address *left_list, size_t left_list_entries,
                     const struct cpg_address *joined_list, size_t joined_list_entries)
 {
-    /* Don't care about CPG membership, but we do want to broadcast our own presence */
+    /* Update peer cache if needed */
+    pcmk_cpg_membership(handle, groupName, member_list, member_list_entries,
+                        left_list, left_list_entries,
+                        joined_list, joined_list_entries);
+
+    /* Always broadcast our own presence after any membership change */
     update_process_peers();
 }
 

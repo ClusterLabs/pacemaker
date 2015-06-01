@@ -448,17 +448,17 @@ int get_corosync_id(int id, const char *uuid);
 char *get_corosync_uuid(crm_node_t *peer);
 enum crm_quorum_source get_quorum_source(void);
 
-void crm_update_peer_proc(const char *source, crm_node_t * peer, uint32_t flag, const char *status);
-
-crm_node_t *crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t seen,
-                            int32_t votes, uint32_t children, const char *uuid, const char *uname,
+crm_node_t *crm_update_peer(const char *source, unsigned int id, uint64_t born,
+                            uint64_t seen, int32_t votes, uint32_t children,
+                            const char *uuid, const char *uname,
                             const char *addr, const char *state);
+crm_node_t *crm_update_peer_proc(const char *source, crm_node_t * peer,
+                                 uint32_t flag, const char *status);
+crm_node_t *crm_update_peer_state(const char *source, crm_node_t * node,
+                                  const char *state, int membership);
 
 void crm_update_peer_expected(const char *source, crm_node_t * node, const char *expected);
-void crm_update_peer_state(const char *source, crm_node_t * node, const char *state,
-                           int membership);
 void crm_reap_unseen_nodes(uint64_t ring_id);
-
 
 gboolean init_cman_connection(gboolean(*dispatch) (unsigned long long, gboolean),
                               void (*destroy) (gpointer));

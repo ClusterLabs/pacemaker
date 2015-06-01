@@ -373,9 +373,12 @@ crm_update_ccm_node(const oc_ev_membership_t * oc, int offset, const char *state
     peer = crm_get_peer(0, oc->m_array[offset].node_uname);
     uuid = crm_peer_uuid(peer);
 
-    crm_update_peer(__FUNCTION__, oc->m_array[offset].node_id,
+    peer = crm_update_peer(__FUNCTION__, oc->m_array[offset].node_id,
                            oc->m_array[offset].node_born_on, seq, -1, 0,
                            uuid, oc->m_array[offset].node_uname, NULL, state);
+    if (peer == NULL) {
+        return NULL;
+    }
 
     if (safe_str_eq(CRM_NODE_MEMBER, state)) {
         /* Heartbeat doesn't send status notifications for nodes that were already part of the cluster.
@@ -389,11 +392,11 @@ crm_update_ccm_node(const oc_ev_membership_t * oc, int offset, const char *state
         if (safe_str_eq(const_uname, peer->uname)) {
             flags |= this_proc;
         }
-        crm_update_peer_proc(__FUNCTION__, peer, flags, ONLINESTATUS);
+        peer = crm_update_peer_proc(__FUNCTION__, peer, flags, ONLINESTATUS);
     } else {
         /* crm_update_peer_proc(__FUNCTION__, peer, crm_proc_heartbeat, OFFLINESTATUS); */
         /* heartbeat may well be still alive. peer client process apparently vanished, though ... */
-        crm_update_peer_proc(__FUNCTION__, peer, this_proc, OFFLINESTATUS);
+        peer = crm_update_peer_proc(__FUNCTION__, peer, this_proc, OFFLINESTATUS);
     }
     return peer;
 }
