@@ -23,6 +23,7 @@ core=`dirname $0`
 create_mode="true"
 info Generating test outputs for these tests...
 # do_test file description
+do_test one-or-more-unrunnnable-instances "Avoid dependancies on instances that wont ever be started"
 
 info Done.
 echo ""
@@ -137,6 +138,7 @@ do_test clone-require-all-7 "clone A and B both start at the same time. all inst
 do_test clone-require-all-no-interleave-1 "C starts everywhere after A and B"
 do_test clone-require-all-no-interleave-2 "C starts on nodes 1, 2, and 4 with only one active instance of B"
 do_test clone-require-all-no-interleave-3 "C remains active when instance of B is stopped on one node and started on another."
+do_test one-or-more-unrunnnable-instances "Avoid dependancies on instances that wont ever be started"
 
 echo ""
 do_test order1 "Order start 1     "
