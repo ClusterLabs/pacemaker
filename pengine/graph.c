@@ -198,7 +198,7 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
         if (changed) {
             pe_rsc_trace(then->rsc, "implies right: %s then %s: changed", first->uuid, then->uuid);
         } else {
-            crm_trace("implies right: %s then %s", first->uuid, then->uuid);
+            crm_trace("implies right: %s then %s %p", first->uuid, then->uuid, then->rsc);
         }
     }
 
@@ -457,6 +457,13 @@ update_action(action_t * then)
 
     if (is_set(then->flags, pe_action_requires_any)) {
         clear_bit(then->flags, pe_action_runnable);
+        /* We are relying on the pe_order_one_or_more clause of
+         * graph_update_action(), called as part of the:
+         *
+         *    'if (first == other->action)'
+         *
+         * block below, to set this back if appropriate
+         */
     }
 
     for (lpc = then->actions_before; lpc != NULL; lpc = lpc->next) {
@@ -1104,6 +1111,12 @@ should_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper
     } else if (is_set(wrapper->action->flags, pe_action_runnable) == FALSE
                && type == pe_order_none && safe_str_neq(wrapper->action->uuid, CRM_OP_PROBED)) {
         crm_trace("Input (%d) %s optional (ordering) for %s",
+                  wrapper->action->id, wrapper->action->uuid, action->uuid);
+        return FALSE;
+
+    } else if (is_set(wrapper->action->flags, pe_action_runnable) == FALSE
+               && is_set(type, pe_order_one_or_more)) {
+        crm_trace("Input (%d) %s optional (one-or-more) for %s",
                   wrapper->action->id, wrapper->action->uuid, action->uuid);
         return FALSE;
 
