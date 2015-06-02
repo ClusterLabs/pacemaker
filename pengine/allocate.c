@@ -227,6 +227,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
 
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
     const char *op_version;
+    const char *digest_secure;
 
     CRM_CHECK(active_node != NULL, return FALSE);
     if (safe_str_eq(task, RSC_STOP)) {
@@ -272,11 +273,22 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
         task = RSC_START;
     }
 
-    digest_data = rsc_action_digest_cmp(rsc, xml_op, active_node, data_set);
     op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
+    digest_data = rsc_action_digest_cmp(rsc, xml_op, active_node, data_set);
 
-    /* Changes that force a restart */
-    if (digest_data->rc == RSC_DIGEST_RESTART) {
+    if(is_set(data_set->flags, pe_flag_sanitized)) {
+        digest_secure = crm_element_value(xml_op, XML_LRM_ATTR_SECURE_DIGEST);
+    }
+
+    if(digest_data->rc != RSC_DIGEST_MATCH
+       && digest_secure
+       && strcmp(digest_data->digest_secure_calc, digest_secure) == 0) {
+        fprintf(stdout, "Only 'private' parameters to %s on %s changed: %s",
+                key, active_node->details->uname,
+                crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
+
+    } else if (digest_data->rc == RSC_DIGEST_RESTART) {
+        /* Changes that force a restart */
         const char *digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
 
         did_change = TRUE;

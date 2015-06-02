@@ -1889,6 +1889,7 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
     const char *digest_all;
     const char *digest_restart;
+    const char *secure_list;
     const char *restart_list;
     const char *op_version;
 
@@ -1901,7 +1902,10 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
 
     digest_all = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
     digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
+
+    secure_list = crm_element_value(xml_op, XML_LRM_ATTR_OP_SECURE);
     restart_list = crm_element_value(xml_op, XML_LRM_ATTR_OP_RESTART);
+
     op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
 
     /* key is freed in custom_action */
@@ -1922,6 +1926,15 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
 
     data->digest_all_calc = calculate_operation_digest(data->params_all, op_version);
 
+    if (secure_list && is_set(data_set->flags, pe_flag_sanitized)) {
+        data->params_secure = copy_xml(data->params_all);
+
+        if (secure_list) {
+            filter_reload_parameters(data->params_secure, secure_list);
+        }
+        data->digest_secure_calc = calculate_operation_digest(data->params_secure, op_version);
+    }
+
     if (digest_restart) {
         data->params_restart = copy_xml(data->params_all);
 
@@ -1931,11 +1944,14 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
         data->digest_restart_calc = calculate_operation_digest(data->params_restart, op_version);
     }
 
+    data->rc = RSC_DIGEST_MATCH;
     if (digest_restart && strcmp(data->digest_restart_calc, digest_restart) != 0) {
         data->rc = RSC_DIGEST_RESTART;
+
     } else if (digest_all == NULL) {
         /* it is unknown what the previous op digest was */
         data->rc = RSC_DIGEST_UNKNOWN;
+
     } else if (strcmp(digest_all, data->digest_all_calc) != 0) {
         data->rc = RSC_DIGEST_ALL;
     }

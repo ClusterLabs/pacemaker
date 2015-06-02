@@ -227,7 +227,7 @@ extern char *max_generation_from;
 extern xmlNode *max_generation_xml;
 extern GHashTable *resource_history;
 extern GHashTable *voted;
-extern GHashTable *reload_hash;
+extern GHashTable *metadata_hash;
 extern char *te_client_id;
 
 void log_connected_client(gpointer key, gpointer value, gpointer user_data);
@@ -341,9 +341,9 @@ crmd_exit(int rc)
     free(te_subsystem); te_subsystem = NULL;
     free(cib_subsystem); cib_subsystem = NULL;
 
-    if (reload_hash) {
-        crm_trace("Destroying reload cache with %d members", g_hash_table_size(reload_hash));
-        g_hash_table_destroy(reload_hash); reload_hash = NULL;
+    if (metadata_hash) {
+        crm_trace("Destroying reload cache with %d members", g_hash_table_size(metadata_hash));
+        g_hash_table_destroy(metadata_hash); metadata_hash = NULL;
     }
 
     election_fini(fsa_election);

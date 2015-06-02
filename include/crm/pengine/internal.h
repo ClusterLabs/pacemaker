@@ -254,8 +254,10 @@ enum rsc_digest_cmp_val {
 typedef struct op_digest_cache_s {
     enum rsc_digest_cmp_val rc;
     xmlNode *params_all;
+    xmlNode *params_secure;
     xmlNode *params_restart;
     char *digest_all_calc;
+    char *digest_secure_calc;
     char *digest_restart_calc;
 } op_digest_cache_t;
 

@@ -75,6 +75,7 @@ enum pe_find {
 #  define pe_flag_have_remote_nodes	0x00040000ULL
 
 #  define pe_flag_quick_location  	0x00100000ULL
+#  define pe_flag_sanitized             0x00200000ULL
 
 typedef struct pe_working_set_s {
     xmlNode *input;

@@ -421,219 +421,247 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
     return rc;
 }
 
+GHashTable *metadata_hash = NULL;
+
 static char *
-get_rsc_metadata(const char *type, const char *class, const char *provider)
+get_rsc_metadata(const char *type, const char *rclass, const char *provider, bool force)
 {
-    int rc = 0;
+    int rc = pcmk_ok;
+    int len = 0;
+    char *key = NULL;
     char *metadata = NULL;
 
     /* Always use a local connection for this operation */
     lrm_state_t *lrm_state = lrm_state_find(fsa_our_uname);
 
     CRM_CHECK(type != NULL, return NULL);
-    CRM_CHECK(class != NULL, return NULL);
+    CRM_CHECK(rclass != NULL, return NULL);
     CRM_CHECK(lrm_state != NULL, return NULL);
 
     if (provider == NULL) {
         provider = "heartbeat";
     }
 
-    crm_trace("Retreiving metadata for %s::%s:%s", type, class, provider);
-    rc = lrm_state_get_metadata(lrm_state, class, provider, type, &metadata, 0);
-
-    if (metadata == NULL) {
-        crm_warn("No metadata found for %s::%s:%s: %s (%d)", type, class, provider, pcmk_strerror(rc), rc);
+    if (metadata_hash == NULL) {
+        metadata_hash = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
     }
 
+    len = strlen(type) + strlen(rclass) + strlen(provider) + 4;
+    key = malloc(len);
+    if(key == NULL) {
+        return NULL;
+    }
+
+    snprintf(key, len, "%s::%s:%s", type, rclass, provider);
+    if(force == FALSE) {
+        snprintf(key, len, "%s::%s:%s", type, rclass, provider);
+
+        crm_trace("Retreiving cached metadata for %s", key);
+        metadata = g_hash_table_lookup(metadata_hash, key);
+    }
+
+    if(metadata == NULL) {
+        rc = lrm_state_get_metadata(lrm_state, rclass, provider, type, &metadata, 0);
+        crm_trace("Retreived live metadata for %s: %s (%d)", key, pcmk_strerror(rc), rc);
+        if(rc == pcmk_ok) {
+            CRM_LOG_ASSERT(metadata != NULL);
+            g_hash_table_insert(metadata_hash, key, metadata);
+            key = NULL;
+        } else {
+            CRM_LOG_ASSERT(metadata == NULL);
+            metadata = NULL;
+        }
+    }
+
+    if (metadata == NULL) {
+        crm_warn("No metadata found for %s: %s (%d)", key, pcmk_strerror(rc), rc);
+    }
+
+    free(key);
     return metadata;
 }
 
-typedef struct reload_data_s {
-    char *key;
-    char *metadata;
-    time_t last_query;
-    gboolean can_reload;
-    GListPtr restart_list;
-} reload_data_t;
-
-static void
-g_hash_destroy_reload(gpointer data)
-{
-    reload_data_t *reload = data;
-
-    free(reload->key);
-    free(reload->metadata);
-    g_list_free_full(reload->restart_list, free);
-    free(reload);
-}
-
-GHashTable *reload_hash = NULL;
-static GListPtr
-get_rsc_restart_list(lrmd_rsc_info_t * rsc, lrmd_event_data_t * op)
+static char *
+build_parameter_list(lrmd_event_data_t *op, xmlNode *metadata, xmlNode *result, const char *criteria, bool target)
 {
     int len = 0;
-    char *key = NULL;
-    char *copy = NULL;
-    const char *value = NULL;
-    const char *provider = NULL;
+    int max = 0;
+    char *list = NULL;
 
     xmlNode *param = NULL;
     xmlNode *params = NULL;
-    xmlNode *actions = NULL;
-    xmlNode *metadata = NULL;
 
-    time_t now = time(NULL);
-    reload_data_t *reload = NULL;
+    const char *secure_terms[] = {
+        "password",
+        "passwd",
+        "user",
+    };
 
-    if (reload_hash == NULL) {
-        reload_hash = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, g_hash_destroy_reload);
+    if(safe_str_eq("private", criteria)) {
+        /* It will take time for the agents to be updated
+         * Check for some common terms
+         */
+        max = DIMOF(secure_terms);
     }
 
-    provider = rsc->provider;
-    if (provider == NULL) {
-        provider = "heartbeat";
-    }
+    params = find_xml_node(metadata, "parameters", TRUE);
+    for (param = __xml_first_child(params); param != NULL; param = __xml_next(param)) {
+        if (crm_str_eq((const char *)param->name, "parameter", TRUE)) {
+            bool accept = FALSE;
+            const char *name = crm_element_value(param, "name");
+            const char *value = crm_element_value(param, criteria);
 
-    len = strlen(rsc->type) + strlen(rsc->class) + strlen(provider) + 4;
-    key = malloc(len);
-    if(key) {
-        snprintf(key, len, "%s::%s:%s", rsc->type, rsc->class, provider);
-        reload = g_hash_table_lookup(reload_hash, key);
-    }
-
-    if (reload && ((now - 9) > reload->last_query)
-        && safe_str_eq(op->op_type, RSC_START)) {
-        reload = NULL;          /* re-query */
-    }
-
-    if (reload == NULL) {
-        xmlNode *action = NULL;
-
-        reload = calloc(1, sizeof(reload_data_t));
-        g_hash_table_replace(reload_hash, key, reload);
-
-        reload->last_query = now;
-        reload->key = key;
-        key = NULL;
-        reload->metadata = get_rsc_metadata(rsc->type, rsc->class, provider);
-
-        if(reload->metadata == NULL) {
-            goto cleanup;
-        }
-
-        metadata = string2xml(reload->metadata);
-        if (metadata == NULL) {
-            crm_err("Metadata for %s::%s:%s is not valid XML",
-                    rsc->provider, rsc->class, rsc->type);
-            goto cleanup;
-        }
-
-        actions = find_xml_node(metadata, "actions", TRUE);
-
-        for (action = __xml_first_child(actions); action != NULL; action = __xml_next(action)) {
-            if (crm_str_eq((const char *)action->name, "action", TRUE)) {
-                value = crm_element_value(action, "name");
-                if (safe_str_eq("reload", value)) {
-                    reload->can_reload = TRUE;
-                    break;
-                }
+            if(max && value) {
+                /* Turn off the compatibility logic once an agent has been updated to know about 'private' */
+                max = 0;
             }
-        }
 
-        if (reload->can_reload == FALSE) {
-            goto cleanup;
-        }
+            if (name == NULL) {
+                crm_err("Invalid parameter in %s metadata", op->rsc_id);
 
-        params = find_xml_node(metadata, "parameters", TRUE);
-        for (param = __xml_first_child(params); param != NULL; param = __xml_next(param)) {
-            if (crm_str_eq((const char *)param->name, "parameter", TRUE)) {
-                value = crm_element_value(param, "unique");
-                if (crm_is_true(value)) {
-                    value = crm_element_value(param, "name");
-                    if (value == NULL) {
-                        crm_err("%s: NULL param", key);
-                        continue;
+            } else if(target == crm_is_true(value)) {
+                accept = TRUE;
+
+            } else if(max) {
+                int lpc = 0;
+
+                accept = TRUE;
+                for(lpc = 0; accept && lpc < max; lpc++) {
+                    if(safe_str_eq(secure_terms[lpc], name)) {
+                        accept = FALSE;
                     }
-                    crm_debug("Attr %s is not reloadable", value);
-                    copy = strdup(value);
-                    CRM_LOG_ASSERT(copy != NULL);
-                    if(copy == NULL) { continue; };
-                    reload->restart_list = g_list_append(reload->restart_list, copy);
                 }
+            }
+
+            if(accept) {
+                int start = len;
+
+                crm_trace("Attr %s is %s%s", name, target?"":"not ", criteria);
+                value = g_hash_table_lookup(op->params, name);
+
+                if (result != NULL && value != NULL) {
+                    crm_xml_add(result, name, value);
+                }
+
+                len += strlen(name) + 2;
+                list = realloc_safe(list, len + 1);
+                sprintf(list + start, " %s ", name);
+
+            } else {
+                crm_trace("Rejecting %s for %s", name, criteria);
             }
         }
     }
 
-  cleanup:
-    free(key);
-    free_xml(metadata);
-    return reload->restart_list;
+    return list;
+}
+
+static bool
+resource_supports_action(xmlNode *metadata, const char *name) 
+{
+    const char *value = NULL;
+
+    xmlNode *action = NULL;
+    xmlNode *actions = NULL;
+
+    actions = find_xml_node(metadata, "actions", TRUE);
+    for (action = __xml_first_child(actions); action != NULL; action = __xml_next(action)) {
+        if (crm_str_eq((const char *)action->name, "action", TRUE)) {
+            value = crm_element_value(action, "name");
+            if (safe_str_eq("reload", value)) {
+                return TRUE;
+            }
+        }
+    }
+
+    return FALSE;
 }
 
 static void
-append_restart_list(lrmd_rsc_info_t * rsc, lrmd_event_data_t * op, xmlNode * update,
-                    const char *version)
+append_restart_list(lrmd_event_data_t *op, xmlNode *metadata, xmlNode * update, const char *version)
 {
-    int len = 0;
     char *list = NULL;
     char *digest = NULL;
-    const char *value = NULL;
     xmlNode *restart = NULL;
-    GListPtr restart_list = NULL;
-    GListPtr lpc = NULL;
+
+    CRM_LOG_ASSERT(op->params != NULL);
 
     if (op->interval > 0) {
         /* monitors are not reloadable */
         return;
-
-    } else if (op->params == NULL) {
-        crm_debug("%s has no parameters", ID(update));
-        return;
-
-    } else if (rsc == NULL) {
-        return;
-
-    } else if (crm_str_eq(CRMD_ACTION_STOP, op->op_type, TRUE)) {
-        /* Stopped resources don't need to be reloaded */
-        return;
-
-    } else if (compare_version("1.0.8", version) > 0) {
-        /* Caller version does not support reloads */
-        return;
     }
 
-    restart_list = get_rsc_restart_list(rsc, op);
-    if (restart_list == NULL) {
+    if(resource_supports_action(metadata, "reload")) {
+        restart = create_xml_node(NULL, XML_TAG_PARAMS);
+        list = build_parameter_list(op, metadata, restart, "unique", FALSE);
+    }
+
+    if (list == NULL) {
         /* Resource does not support reloads */
         return;
-    }
-
-    restart = create_xml_node(NULL, XML_TAG_PARAMS);
-    for (lpc = restart_list; lpc != NULL; lpc = lpc->next) {
-        const char *param = (const char *)lpc->data;
-
-        int start = len;
-
-        CRM_LOG_ASSERT(param != NULL);
-        if(param == NULL) {  continue; };
-
-        value = g_hash_table_lookup(op->params, param);
-        if (value != NULL) {
-            crm_xml_add(restart, param, value);
-        }
-        len += strlen(param) + 2;
-        list = realloc_safe(list, len + 1);
-        sprintf(list + start, " %s ", param);
     }
 
     digest = calculate_operation_digest(restart, version);
     crm_xml_add(update, XML_LRM_ATTR_OP_RESTART, list);
     crm_xml_add(update, XML_LRM_ATTR_RESTART_DIGEST, digest);
 
-    crm_trace("%s: %s, %s", rsc->id, digest, list);
+    crm_trace("%s: %s, %s", op->rsc_id, digest, list);
     crm_log_xml_trace(restart, "restart digest source");
 
     free_xml(restart);
+    free(digest);
+    free(list);
+}
+
+static void
+append_secure_list(lrmd_event_data_t *op, xmlNode *metadata, xmlNode * update, const char *version)
+{
+    char *list = NULL;
+    char *digest = NULL;
+    xmlNode *secure = NULL;
+
+    CRM_LOG_ASSERT(op->params != NULL);
+
+    secure = create_xml_node(NULL, XML_TAG_PARAMS);
+    list = build_parameter_list(op, metadata, secure, "private", FALSE);
+
+    if (list == NULL) {
+        /* It will take time for the agents to be updated
+         * Check for some common terms
+         */
+        int lpc = 0;
+        int len = 0;
+        const char *secure_terms[] = {
+                "password",
+                "passwd",
+                "user",
+            };
+
+        for(lpc = 0; lpc < DIMOF(secure_terms); lpc++) {
+            const char *name = secure_terms[lpc];
+            const char *value = g_hash_table_lookup(op->params, name);
+
+            if(value) {
+                int start = len;
+                crm_xml_add(secure, name, value);
+
+                len += strlen(name) + 2;
+                list = realloc_safe(list, len + 1);
+                sprintf(list + start, " %s ", name);
+            }
+        }
+    }
+
+    if (list != NULL) {
+        digest = calculate_operation_digest(secure, version);
+        crm_xml_add(update, XML_LRM_ATTR_OP_SECURE, list);
+        crm_xml_add(update, XML_LRM_ATTR_SECURE_DIGEST, digest);
+
+        crm_trace("%s: %s, %s", op->rsc_id, digest, list);
+        crm_log_xml_trace(secure, "secure digest source");
+    }
+
+    free_xml(secure);
     free(digest);
     free(list);
 }
@@ -644,33 +672,58 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
 {
     int target_rc = 0;
     xmlNode *xml_op = NULL;
-    const char *caller_version = CRM_FEATURE_SET;
+    xmlNode *metadata = NULL;
+    const char *m_string = NULL;
+    const char *caller_version = NULL;
 
     if (op == NULL) {
         return FALSE;
-
-    } else if (AM_I_DC) {
-
-    } else if (fsa_our_dc_version != NULL) {
-        caller_version = fsa_our_dc_version;
-    } else if (op->params == NULL) {
-        caller_version = fsa_our_dc_version;
-    } else {
-        /* there is a small risk in formerly mixed clusters that
-         *   it will be sub-optimal.
-         * however with our upgrade policy, the update we send
-         *   should still be completely supported anyway
-         */
-        caller_version = g_hash_table_lookup(op->params, XML_ATTR_CRM_VERSION);
-        crm_debug("Falling back to operation originator version: %s", caller_version);
     }
 
     target_rc = rsc_op_expected_rc(op);
-    xml_op = create_operation_update(parent, op, caller_version, target_rc, fsa_our_uname, src, LOG_DEBUG);
 
-    if (xml_op) {
-        append_restart_list(rsc, op, xml_op, caller_version);
+    /* there is a small risk in formerly mixed clusters that it will
+     * be sub-optimal.
+     *
+     * however with our upgrade policy, the update we send should
+     * still be completely supported anyway
+     */
+    caller_version = g_hash_table_lookup(op->params, XML_ATTR_CRM_VERSION);
+    CRM_LOG_ASSERT(caller_version != NULL);
+
+    if(caller_version == NULL) {
+        caller_version = CRM_FEATURE_SET;
     }
+
+    crm_trace("Building %s operation update with originator version: %s", op->rsc_id, caller_version);
+    xml_op = create_operation_update(parent, op, caller_version, target_rc, fsa_our_uname, src, LOG_DEBUG);
+    if (xml_op == NULL) {
+        return TRUE;
+    }
+
+    if (op->params == NULL || crm_str_eq(CRMD_ACTION_STOP, op->op_type, TRUE)) {
+        /* Stopped resources don't need the digest logic */
+        crm_trace("No digests needed for %s %p %s", op->rsc_id, op->params, op->op_type);
+        return TRUE;
+    }
+
+    m_string = get_rsc_metadata(rsc->type, rsc->class, rsc->provider, safe_str_eq(op->op_type, RSC_START));
+    if(m_string == NULL) {
+        crm_err("No metadata for %s::%s:%s", rsc->provider, rsc->class, rsc->type);
+        return TRUE;
+    }
+
+    metadata = string2xml(m_string);
+    if(metadata == NULL) {
+        crm_err("Metadata for %s::%s:%s is not valid XML", rsc->provider, rsc->class, rsc->type);
+        return TRUE;
+    }
+
+    crm_trace("Includind additional digests for %s::%s:%s", rsc->provider, rsc->class, rsc->type);
+    append_restart_list(op, metadata, xml_op, caller_version);
+    append_secure_list(op, metadata, xml_op, caller_version);
+
+    free_xml(metadata);
     return TRUE;
 }
 
