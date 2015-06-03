@@ -227,7 +227,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
 
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
     const char *op_version;
-    const char *digest_secure;
+    const char *digest_secure = NULL;
 
     CRM_CHECK(active_node != NULL, return FALSE);
     if (safe_str_eq(task, RSC_STOP)) {
