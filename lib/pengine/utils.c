@@ -1872,6 +1872,47 @@ ticket_new(const char *ticket_id, pe_working_set_t * data_set)
     return ticket;
 }
 
+static void
+filter_parameters(xmlNode * param_set, const char *param_string, bool need_present)
+{
+    int len = 0;
+    char *name = NULL;
+    char *match = NULL;
+
+    if (param_set == NULL) {
+        return;
+    }
+
+    if (param_set) {
+        xmlAttrPtr xIter = param_set->properties;
+
+        while (xIter) {
+            const char *prop_name = (const char *)xIter->name;
+
+            xIter = xIter->next;
+            name = NULL;
+            len = strlen(prop_name) + 3;
+
+            name = malloc(len);
+            if(name) {
+                sprintf(name, " %s ", prop_name);
+                name[len - 1] = 0;
+                match = strstr(param_string, name);
+            }
+
+            if (need_present && match == NULL) {
+                crm_trace("%s not found in %s", prop_name, param_string);
+                xml_remove_prop(param_set, prop_name);
+
+            } else if (need_present == FALSE && match) {
+                crm_trace("%s found in %s", prop_name, param_string);
+                xml_remove_prop(param_set, prop_name);
+            }
+            free(name);
+        }
+    }
+}
+
 op_digest_cache_t *
 rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
                       pe_working_set_t * data_set)
@@ -1930,7 +1971,7 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
         data->params_secure = copy_xml(data->params_all);
 
         if (secure_list) {
-            filter_reload_parameters(data->params_secure, secure_list);
+            filter_parameters(data->params_secure, secure_list, FALSE);
         }
         data->digest_secure_calc = calculate_operation_digest(data->params_secure, op_version);
     }
@@ -1939,7 +1980,7 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
         data->params_restart = copy_xml(data->params_all);
 
         if (restart_list) {
-            filter_reload_parameters(data->params_restart, restart_list);
+            filter_parameters(data->params_restart, restart_list, TRUE);
         }
         data->digest_restart_calc = calculate_operation_digest(data->params_restart, op_version);
     }

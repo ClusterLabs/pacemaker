@@ -66,6 +66,14 @@ Location to store the resource state in.
 <content type="string" default="${HA_VARRUN}/Dummy-{OCF_RESOURCE_INSTANCE}.state" />
 </parameter>
 
+<parameter name="passwd" unique="1">
+<longdesc lang="en">
+Fake password field
+</longdesc>
+<shortdesc lang="en">Password</shortdesc>
+<content type="string" default="" />
+</parameter>
+
 <parameter name="fake" unique="0">
 <longdesc lang="en">
 Fake attribute that can be changed to cause a reload

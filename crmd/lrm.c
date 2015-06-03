@@ -482,7 +482,8 @@ get_rsc_metadata(const char *type, const char *rclass, const char *provider, boo
 }
 
 static char *
-build_parameter_list(lrmd_event_data_t *op, xmlNode *metadata, xmlNode *result, const char *criteria, bool target)
+build_parameter_list(lrmd_event_data_t *op, xmlNode *metadata, xmlNode *result,
+                     const char *criteria, bool target, bool invert_for_xml)
 {
     int len = 0;
     int max = 0;
@@ -524,12 +525,16 @@ build_parameter_list(lrmd_event_data_t *op, xmlNode *metadata, xmlNode *result, 
 
             } else if(max) {
                 int lpc = 0;
+                bool found = FALSE;
 
-                accept = TRUE;
-                for(lpc = 0; accept && lpc < max; lpc++) {
+                for(lpc = 0; found == FALSE && lpc < max; lpc++) {
                     if(safe_str_eq(secure_terms[lpc], name)) {
-                        accept = FALSE;
+                        found = TRUE;
                     }
+                }
+
+                if(found == target) {
+                    accept = TRUE;
                 }
             }
 
@@ -537,11 +542,6 @@ build_parameter_list(lrmd_event_data_t *op, xmlNode *metadata, xmlNode *result, 
                 int start = len;
 
                 crm_trace("Attr %s is %s%s", name, target?"":"not ", criteria);
-                value = g_hash_table_lookup(op->params, name);
-
-                if (result != NULL && value != NULL) {
-                    crm_xml_add(result, name, value);
-                }
 
                 len += strlen(name) + 2;
                 list = realloc_safe(list, len + 1);
@@ -549,6 +549,19 @@ build_parameter_list(lrmd_event_data_t *op, xmlNode *metadata, xmlNode *result, 
 
             } else {
                 crm_trace("Rejecting %s for %s", name, criteria);
+            }
+
+            if(invert_for_xml) {
+                crm_trace("Inverting %s match for %s xml", name, criteria);
+                accept = !accept;
+            }
+
+            if(result && accept) {
+                value = g_hash_table_lookup(op->params, name);
+                if(value != NULL) {
+                    crm_trace("Adding attr to the xml result", name, target?"":"not ", criteria);
+                    crm_xml_add(result, name, value);
+                }
             }
         }
     }
@@ -593,7 +606,7 @@ append_restart_list(lrmd_event_data_t *op, xmlNode *metadata, xmlNode * update, 
 
     if(resource_supports_action(metadata, "reload")) {
         restart = create_xml_node(NULL, XML_TAG_PARAMS);
-        list = build_parameter_list(op, metadata, restart, "unique", FALSE);
+        list = build_parameter_list(op, metadata, restart, "unique", FALSE, FALSE);
     }
 
     if (list == NULL) {
@@ -622,35 +635,13 @@ append_secure_list(lrmd_event_data_t *op, xmlNode *metadata, xmlNode * update, c
 
     CRM_LOG_ASSERT(op->params != NULL);
 
+    /*
+     * To keep XML_LRM_ATTR_OP_SECURE short, we want it to contain the
+     * secure parameters but XML_LRM_ATTR_SECURE_DIGEST to be based on
+     * the insecure ones
+     */
     secure = create_xml_node(NULL, XML_TAG_PARAMS);
-    list = build_parameter_list(op, metadata, secure, "private", FALSE);
-
-    if (list == NULL) {
-        /* It will take time for the agents to be updated
-         * Check for some common terms
-         */
-        int lpc = 0;
-        int len = 0;
-        const char *secure_terms[] = {
-                "password",
-                "passwd",
-                "user",
-            };
-
-        for(lpc = 0; lpc < DIMOF(secure_terms); lpc++) {
-            const char *name = secure_terms[lpc];
-            const char *value = g_hash_table_lookup(op->params, name);
-
-            if(value) {
-                int start = len;
-                crm_xml_add(secure, name, value);
-
-                len += strlen(name) + 2;
-                list = realloc_safe(list, len + 1);
-                sprintf(list + start, " %s ", name);
-            }
-        }
-    }
+    list = build_parameter_list(op, metadata, secure, "private", TRUE, TRUE);
 
     if (list != NULL) {
         digest = calculate_operation_digest(secure, version);
@@ -659,6 +650,8 @@ append_secure_list(lrmd_event_data_t *op, xmlNode *metadata, xmlNode * update, c
 
         crm_trace("%s: %s, %s", op->rsc_id, digest, list);
         crm_log_xml_trace(secure, "secure digest source");
+    } else {
+        crm_trace("%s: no secure parameters", op->rsc_id);
     }
 
     free_xml(secure);

@@ -131,7 +131,6 @@ gboolean check_utilization(const char *value);
 
 /* Shared PE/crmd functionality */
 void filter_action_parameters(xmlNode * param_set, const char *version);
-void filter_reload_parameters(xmlNode * param_set, const char *restart_string);
 
 /* Resource operation updates */
 xmlNode *create_operation_update(xmlNode * parent, lrmd_event_data_t * event,

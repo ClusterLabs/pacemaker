@@ -266,10 +266,10 @@
 #  define XML_LRM_ATTR_CALLID		"call-id"
 #  define XML_LRM_ATTR_OP_DIGEST	"op-digest"
 #  define XML_LRM_ATTR_OP_RESTART	"op-force-restart"
-#  define XML_LRM_ATTR_OP_SECURE	"op-secure-restart"
+#  define XML_LRM_ATTR_OP_SECURE	"op-secure-params"
 #  define XML_LRM_ATTR_RESTART_DIGEST	"op-restart-digest"
 #  define XML_LRM_ATTR_SECURE_DIGEST	"op-secure-digest"
-#  define XML_LRM_ATTR_EXIT_REASON		"exit-reason"
+#  define XML_LRM_ATTR_EXIT_REASON	"exit-reason"
 
 #  define XML_RSC_OP_LAST_CHANGE        "last-rc-change"
 #  define XML_RSC_OP_LAST_RUN           "last-run"

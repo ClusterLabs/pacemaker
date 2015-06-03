@@ -1264,6 +1264,7 @@ clone_update_actions_interleave(action_t * first, action_t * then, node_t * node
             if (type & (pe_order_runnable_left | pe_order_implies_then) /* Mandatory */ ) {
                 pe_rsc_info(then->rsc, "Inhibiting %s from being active", then_child->id);
                 assign_node(then_child, NULL, TRUE);
+                /* TODO - set changed correctly? */
             }
 
         } else {
