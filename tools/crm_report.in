@@ -37,7 +37,7 @@ report_data=`dirname $0`
 
 
 extra_logs=""
-sanitize_patterns=""
+sanitize_patterns="passw.*"
 log_patterns="CRIT: ERROR:"
 
 usage() {

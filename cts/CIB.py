@@ -260,6 +260,7 @@ class CIB11(ConfigBase):
         # Migrator
         # Make this slightly sticky (since we have no other location constraints) to avoid relocation during Reattach
         m = Resource(self.Factory, "migrator","Dummy",  "ocf", "pacemaker")
+        m["passwd"] = "whatever"
         m.add_meta("resource-stickiness","1")
         m.add_meta("allow-migrate", "1")
         m.add_op("monitor", "P10S")
