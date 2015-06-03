@@ -694,9 +694,9 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
         return TRUE;
     }
 
-    if (op->params == NULL || crm_str_eq(CRMD_ACTION_STOP, op->op_type, TRUE)) {
+    if (rsc == NULL || op->params == NULL || crm_str_eq(CRMD_ACTION_STOP, op->op_type, TRUE)) {
         /* Stopped resources don't need the digest logic */
-        crm_trace("No digests needed for %s %p %s", op->rsc_id, op->params, op->op_type);
+        crm_trace("No digests needed for %s %p %p %s", op->rsc_id, op->params, rsc, op->op_type);
         return TRUE;
     }
 
