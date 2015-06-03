@@ -788,12 +788,13 @@ main(int argc, char **argv)
             goto done;
         }
 
-        cleanup_alloc_calculations(&data_set);
+        cleanup_calculations(&data_set);
         data_set.now = get_date();
         data_set.input = input;
         if(xml_file) {
             set_bit(data_set.flags, pe_flag_sanitized);
         }
+        cluster_status(&data_set);
     }
 
     if (input_file != NULL) {
@@ -816,7 +817,6 @@ main(int argc, char **argv)
             printf("Utilization information:\n");
         }
 
-        cluster_status(&data_set);
         do_calculations(&data_set, input, local_date);
         input = NULL;           /* Don't try and free it twice */
 
