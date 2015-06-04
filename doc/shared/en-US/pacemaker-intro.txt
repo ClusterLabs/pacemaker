@@ -27,7 +27,7 @@ Pacemaker's key features include:
  ** Clones: for services which need to be active on multiple nodes
  ** Multi-state: for services with multiple modes
     (eg. master/slave, primary/secondary)
- * Unified, scriptable, cluster management tools.
+ * Unified, scriptable cluster management tools
 
 == Pacemaker Architecture ==
 
@@ -134,7 +134,7 @@ image::images/pcmk-shared-failover.png["Shared Failover",width="10cm",height="7.
 
 By supporting many nodes, Pacemaker can dramatically reduce hardware
 costs by allowing several active/passive clusters to be combined and
-share a common backup node
+share a common backup node.
 
 .N to N Redundancy
 image::images/pcmk-active-active.png["N to N Redundancy",width="10cm",height="7.5cm",align="center"]
