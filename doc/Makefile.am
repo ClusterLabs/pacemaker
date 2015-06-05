@@ -185,6 +185,3 @@ endif
 clean-local:
 	-rm -rf $(generated_docs) $(generated_mans) $(docbook_build) $(CFS_XML) $(PE_XML) $(PR_XML)
 	for book in $(docbook); do rm -rf $$book/tmp $$book/publish; done
-
-foo:
-	rm -f $(CFS_XML)
