@@ -4,7 +4,7 @@
 Pacemaker is a 'cluster resource manager'.
 
 It achieves maximum availability for your cluster services
-(aka. 'resources') by detecting and recovering from node- and
+(a.k.a. 'resources') by detecting and recovering from node- and
 resource-level failures by making use of the messaging and membership
 capabilities provided by your preferred cluster infrastructure (either
 http://www.corosync.org/[Corosync] or
@@ -15,7 +15,8 @@ Pacemaker's key features include:
  * Detection and recovery of node and service-level failures
  * Storage agnostic, no requirement for shared storage
  * Resource agnostic, anything that can be scripted can be clustered
- * Supports 'fencing' (aka. 'STONITH') for ensuring data integrity
+ * Supports 'fencing' (also known under 'STONITH' acronym) for ensuring
+   data integrity
  * Supports large and small clusters
  * Supports both quorate and resource-driven clusters
  * Supports practically any redundancy configuration
@@ -26,7 +27,7 @@ Pacemaker's key features include:
  * Support for advanced service types
  ** Clones: for services which need to be active on multiple nodes
  ** Multi-state: for services with multiple modes
-    (eg. master/slave, primary/secondary)
+    (e.g. master/slave, primary/secondary)
  * Unified, scriptable cluster management tools
 
 == Pacemaker Architecture ==
