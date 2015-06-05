@@ -15,6 +15,14 @@ http://www.corosync.org/[Corosync] or
 http://linux-ha.org/wiki/Heartbeat[Heartbeat]), and possibly by
 utilizing other parts of the overall cluster stack.
 
+.High Availability Clusters
+[NOTE]
+For *the goal of minimal downtime* a term 'high availability' was coined
+and together with its acronym, 'HA', is well-established in the sector.
+To differentiate this sort of clusters from high performance computing
+('HPC') ones, should a context require it (apparently, not the case in
+this document), using 'HA cluster' is an option.
+
 Pacemaker's key features include:
 
  * Detection and recovery of node and service-level failures
