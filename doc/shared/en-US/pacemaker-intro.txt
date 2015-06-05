@@ -1,7 +1,11 @@
 
 == What Is 'Pacemaker'? ==
 
-Pacemaker is a 'cluster resource manager'.
+Pacemaker is a 'cluster resource manager', that is, a logic responsible
+for a life-cycle of deployed software -- indirectly perhaps even whole
+systems or their interconnections -- under its control within a set of
+computers (a.k.a. 'cluster nodes', 'nodes' for short) and driven by
+prescribed rules.
 
 It achieves maximum availability for your cluster services
 (a.k.a. 'resources') by detecting and recovering from node- and
