@@ -12,7 +12,8 @@ It achieves maximum availability for your cluster services
 resource-level failures by making use of the messaging and membership
 capabilities provided by your preferred cluster infrastructure (either
 http://www.corosync.org/[Corosync] or
-http://linux-ha.org/wiki/Heartbeat[Heartbeat]).
+http://linux-ha.org/wiki/Heartbeat[Heartbeat]), and possibly by
+utilizing other parts of the overall cluster stack.
 
 Pacemaker's key features include:
 
