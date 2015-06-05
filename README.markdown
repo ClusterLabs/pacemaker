@@ -14,7 +14,7 @@ resource health.
 ## For more information look at:
 * [Website](http://www.clusterlabs.org)
 * [Issues/Bugs](http://bugs.clusterlabs.org)
-* [Mailing list](http://oss.clusterlabs.org/mailman/listinfo/pacemaker).
+* Mailing lists per audience: [users](http://oss.clusterlabs.org/mailman/listinfo/users), [developers](http://oss.clusterlabs.org/mailman/listinfo/developers), or possibly [the original one](http://oss.clusterlabs.org/mailman/listinfo/pacemaker) ([deprecated](http://oss.clusterlabs.org/pipermail/pacemaker/2015-February/023521.html))
 * [Documentation](http://www.clusterlabs.org/doc)
 
 ## User interfaces / shells
@@ -87,8 +87,8 @@ If you find this project useful, you may want to consider supporting its future 
 There are a number of ways to support the project.
 
 * Test and report issues.
-* Tick something off our [todo list](https://github.com/ClusterLabs/pacemaker/blob/master/TODO.markdown)
-* Help others on the [mailing list](http://oss.clusterlabs.org/mailman/listinfo/pacemaker).
+* Tick something off our [todo list](https://github.com/ClusterLabs/pacemaker/blob/master/TODO.markdown).
+* Help others on the [mailing list](http://oss.clusterlabs.org/mailman/listinfo/users).
 * Contribute documentation, examples and test cases.
 * Contribute patches.
 * Spread the word.

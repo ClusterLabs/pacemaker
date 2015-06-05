@@ -313,7 +313,7 @@ cfg_register_device(struct device *dev)
     dump = dump_xml_formatted(data);
     crm_info("Standalone device being added:\n%s", dump);
 
-    res = stonith_device_register(data, NULL);
+    res = stonith_device_register(data, NULL, FALSE);
 
     free(dump);
     free_xml(data);

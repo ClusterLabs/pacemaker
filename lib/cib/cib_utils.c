@@ -302,6 +302,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     const char *new_version = NULL;
     static struct qb_log_callsite *diff_cs = NULL;
     const char *user = crm_element_value(req, F_CIB_USER);
+    bool with_digest = FALSE;
 
     crm_trace("Begin %s%s op", is_query ? "read-only " : "", op);
 
@@ -449,26 +450,30 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
          * The v1 format would barf on this, but we know the v2 patch
          * format only needs it for the top-level version fields
          */
-        local_diff = xml_create_patchset(2, current_cib, scratch, (bool*)config_changed, manage_counters, FALSE);
+        local_diff = xml_create_patchset(2, current_cib, scratch, (bool*)config_changed, manage_counters);
 
     } else {
         static time_t expires = 0;
         time_t tm_now = time(NULL);
-        bool with_digest = FALSE;
 
         if (expires < tm_now) {
             expires = tm_now + 60;  /* Validate clients are correctly applying v2-style diffs at most once a minute */
             with_digest = TRUE;
         }
 
-        local_diff = xml_create_patchset(0, current_cib, scratch, (bool*)config_changed, manage_counters, with_digest);
+        local_diff = xml_create_patchset(0, current_cib, scratch, (bool*)config_changed, manage_counters);
     }
+
+    xml_log_changes(LOG_TRACE, __FUNCTION__, scratch);
+    xml_accept_changes(scratch);
 
     if (diff_cs == NULL) {
         diff_cs = qb_log_callsite_get(__PRETTY_FUNCTION__, __FILE__, "diff-validation", LOG_DEBUG, __LINE__, crm_trace_nonlog);
     }
 
     if(local_diff) {
+        patchset_process_digest(local_diff, current_cib, scratch, with_digest);
+
         xml_log_patchset(LOG_INFO, __FUNCTION__, local_diff);
         crm_log_xml_trace(local_diff, "raw patch");
     }
@@ -493,9 +498,6 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         }
         free_xml(c);
     }
-
-    xml_log_changes(LOG_TRACE, __FUNCTION__, scratch);
-    xml_accept_changes(scratch);
 
     if (safe_str_eq(section, XML_CIB_TAG_STATUS)) {
         /* Throttle the amount of costly validation we perform due to status updates
