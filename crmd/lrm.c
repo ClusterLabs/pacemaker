@@ -1971,8 +1971,10 @@ remote_node_init_status(const char *node_name, int call_opt)
 {
     int call_id = 0;
     xmlNode *update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
+    xmlNode *state;
 
-    simple_remote_node_status(node_name, update,__FUNCTION__);
+    state = simple_remote_node_status(node_name, update,__FUNCTION__);
+    crm_xml_add(state, XML_NODE_IS_FENCED, "0");
 
     fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, call_id, NULL);
     if (call_id != pcmk_ok) {

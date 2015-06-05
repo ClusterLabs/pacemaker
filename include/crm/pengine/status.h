@@ -139,6 +139,7 @@ struct node_shared_s {
     gboolean rsc_discovery_enabled;
 
     gboolean remote_requires_reset;
+    gboolean remote_was_fenced;
 
     int num_resources;
     GListPtr running_rsc;       /* resource_t* */
@@ -254,6 +255,7 @@ struct resource_s {
     int stickiness;
     int sort_index;
     int failure_timeout;
+    int remote_reconnect_interval;
     int effective_priority;
     int migration_threshold;
 

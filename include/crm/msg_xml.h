@@ -214,6 +214,8 @@
 #  define XML_RSC_ATTR_MAINTENANCE	"maintenance"
 #  define XML_RSC_ATTR_REMOTE_NODE  	"remote-node"
 
+#  define XML_REMOTE_ATTR_RECONNECT_INTERVAL "reconnect_interval"
+
 #  define XML_OP_ATTR_ON_FAIL		"on-fail"
 #  define XML_OP_ATTR_START_DELAY	"start-delay"
 #  define XML_OP_ATTR_ALLOW_MIGRATE	"allow-migrate"
@@ -245,6 +247,7 @@
 #  define XML_NODE_IN_CLUSTER        	"in_ccm"
 #  define XML_NODE_IS_PEER    	"crmd"
 #  define XML_NODE_IS_REMOTE    	"remote_node"
+#  define XML_NODE_IS_FENCED		"node_fenced"
 
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
 #  define XML_CIB_ATTR_STONITH	    	"stonith"
