@@ -38,6 +38,10 @@ At the highest level, the cluster is made up of three pieces:
    include the resources themselves; scripts that start, stop and
    monitor them; and a local daemon that masks the differences
    between the different standards these scripts implement.
+   Even though interactions of these resources when run as multiple
+   instances can resemble a distributed system, they still lack
+   the proper HA mechanisms and/or autonomous cluster-wide governance
+   as subsumed in the following item.
 
  * *Resource management*. Pacemaker provides the brain that processes
    and reacts to events regarding the cluster.  These events include
