@@ -252,18 +252,19 @@ process_remote_node_action(crm_action_t *action, xmlNode *event)
     xmlNode *child = NULL;
 
     /* The whole point of this function is to detect when a remote-node
-     * is integrated into the cluster, and abort the transition if that remote-node
-     * was fenced earlier in the transition. This allows a new transition to be
-     * generated so resources can be placed on the new node.
+     * is integrated into the cluster or has failed, and properly abort
+     * the transition so resources can be placed on the new node or fail
+     * all pending actions on a lost node.
      */
 
     if (crm_remote_peer_cache_size() == 0) {
         return;
     } else if (action->type != action_type_rsc) {
         return;
-    } else if (action->failed || action->confirmed == FALSE) {
+    } else if (action->confirmed == FALSE) {
         return;
-    } else if (safe_str_neq(crm_element_value(action->xml, XML_LRM_ATTR_TASK), "start")) {
+    } else if (!action->failed || safe_str_neq(crm_element_value(action->xml, XML_LRM_ATTR_TASK), "start")) {
+        /* we only care about failed remote nodes, or remote nodes that have just come online. */
         return;
     }
 
@@ -271,6 +272,7 @@ process_remote_node_action(crm_action_t *action, xmlNode *event)
         const char *provider;
         const char *type;
         const char *rsc;
+        const char *action_type;
         crm_node_t *remote_peer;
 
         if (safe_str_neq(crm_element_name(child), XML_CIB_TAG_RESOURCE)) {
@@ -280,6 +282,7 @@ process_remote_node_action(crm_action_t *action, xmlNode *event)
         provider = crm_element_value(child, XML_AGENT_ATTR_PROVIDER);
         type = crm_element_value(child, XML_ATTR_TYPE);
         rsc = ID(child);
+        action_type = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
 
         if (safe_str_neq(provider, "pacemaker") || safe_str_neq(type, "remote") || rsc == NULL) {
             break;
@@ -290,11 +293,23 @@ process_remote_node_action(crm_action_t *action, xmlNode *event)
             break;
         }
 
-        /* A remote node will be placed in the "lost" state after
-         * it has been successfully fenced.  After successfully connecting
-         * to a remote-node after being fenced, we need to abort the transition
-         * so resources can be placed on the newly integrated remote-node */
-        if (safe_str_eq(remote_peer->state, CRM_NODE_LOST)) {
+        /* if a remote node connection failed, and this failure is not related to a probe
+         * action, make sure to cancel any in-flight operations occurring on that remote node
+         * since those actions will timeout. we don't want to wait around for the timeouts */
+        if (action->failed &&
+            !(safe_str_eq(action_type, "monitor") && action->interval == 0)) {
+
+            /* the rsc id is actually the remote node id. we want to mark all
+             * in-flight actions on a failed remote node as incompletable */
+            fail_incompletable_actions(transition_graph, rsc);
+
+        } else if (!action->failed &&
+                   safe_str_eq(remote_peer->state, CRM_NODE_LOST) &&
+                   safe_str_eq(action_type, "start")) {
+            /* A remote node will be placed in the "lost" state after
+             * it has been successfully fenced.  After successfully connecting
+             * to a remote-node after being fenced, we need to abort the transition
+             * so resources can be placed on the newly integrated remote-node */
             abort_transition(INFINITY, tg_restart, "Remote-node re-discovered.", event);
         }
 
