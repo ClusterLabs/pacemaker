@@ -59,4 +59,8 @@ gboolean cancel_recurring_action(svc_action_t * op);
 gboolean recurring_action_timer(gpointer data);
 gboolean operation_finalize(svc_action_t * op);
 
+void handle_blocked_ops(void);
+
+gboolean is_op_blocked(const char *rsc);
+
 #endif                          /* __MH_SERVICES_PRIVATE_H__ */
