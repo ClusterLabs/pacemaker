@@ -52,8 +52,6 @@ GHashTable *device_list = NULL;
 GHashTable *topology = NULL;
 GList *cmd_list = NULL;
 
-static int active_children = 0;
-
 struct device_search_s {
     char *host;
     char *action;
@@ -1622,7 +1620,6 @@ cancel_stonith_command(async_command_t * cmd)
     }
 }
 
-#define READ_MAX 500
 static void
 st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
 {
@@ -1634,8 +1631,6 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
     GListPtr gIterNext = NULL;
 
     CRM_CHECK(cmd != NULL, return);
-
-    active_children--;
 
     /* The device is ready to do something else now */
     device = g_hash_table_lookup(device_list, cmd->device);
