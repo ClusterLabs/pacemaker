@@ -1175,18 +1175,24 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
     }
 }
 
+/*!
+ * \internal
+ * \brief Comparison function for sorting query results
+ *
+ * \param[in] a  GList item to compare
+ * \param[in] b  GList item to compare
+ *
+ * \return Per the glib documentation, "a negative integer if the first value
+ *         comes before the second, 0 if they are equal, or a positive integer
+ *         if the first value comes after the second."
+ */
 static gint
 sort_peers(gconstpointer a, gconstpointer b)
 {
     const st_query_result_t *peer_a = a;
-    const st_query_result_t *peer_b = a;
+    const st_query_result_t *peer_b = b;
 
-    if (peer_a->devices > peer_b->devices) {
-        return -1;
-    } else if (peer_a->devices > peer_b->devices) {
-        return 1;
-    }
-    return 0;
+    return (peer_b->devices - peer_a->devices);
 }
 
 /*!
