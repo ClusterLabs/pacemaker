@@ -505,7 +505,15 @@ find_topology_for_host(const char *host)
     return tp;
 }
 
-
+/*!
+ * \internal
+ * \brief Set fencing operation's device list to target's next topology level
+ *
+ * \param[in,out] op  Remote fencing operation to modify
+ *
+ * \return pcmk_ok if successful, target was not specified (i.e. queries) or
+ *         target has no topology, or -EINVAL if no more topology levels to try
+ */
 static int
 stonith_topology_next(remote_fencing_op_t * op)
 {
