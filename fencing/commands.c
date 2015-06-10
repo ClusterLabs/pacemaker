@@ -146,26 +146,40 @@ get_action_delay_max(stonith_device_t * device, const char * action)
     return delay_max_ms;
 }
 
+/*!
+ * \internal
+ * \brief Override STONITH timeout with pcmk_*_timeout if available
+ *
+ * \param[in] device           STONITH device to use
+ * \param[in] action           STONITH action name
+ * \param[in] default_timeout  Timeout to use if device does not have
+ *                             a pcmk_*_timeout parameter for action
+ *
+ * \return Value of pcmk_(action)_timeout if available, otherwise default_timeout
+ * \note For consistency, it would be nice if reboot/off/on timeouts could be
+ *       set the same way as start/stop/monitor timeouts, i.e. with an
+ *       <operation> entry in the fencing resource configuration. However that
+ *       is insufficient because fencing devices may be registered directly via
+ *       the STONITH register_device() API instead of going through the CIB
+ *       (e.g. stonith_admin uses it for its -R option, and the LRMD uses it to
+ *       ensure a device is registered when a command is issued). As device
+ *       properties, pcmk_*_timeout parameters can be grabbed by stonithd when
+ *       the device is registered, whether by CIB change or API call.
+ */
 static int
 get_action_timeout(stonith_device_t * device, const char *action, int default_timeout)
 {
-    char buffer[512] = { 0, };
-    char *value = NULL;
+    if (action && device && device->params) {
+        char buffer[64] = { 0, };
+        const char *value = NULL;
 
-    CRM_CHECK(action != NULL, return default_timeout);
-
-    if (!device->params) {
-        return default_timeout;
+        snprintf(buffer, sizeof(buffer) - 1, "pcmk_%s_timeout", action);
+        value = g_hash_table_lookup(device->params, buffer);
+        if (value) {
+            return atoi(value);
+        }
     }
-
-    snprintf(buffer, sizeof(buffer) - 1, "pcmk_%s_timeout", action);
-    value = g_hash_table_lookup(device->params, buffer);
-
-    if (!value) {
-        return default_timeout;
-    }
-
-    return atoi(value);
+    return default_timeout;
 }
 
 static void
