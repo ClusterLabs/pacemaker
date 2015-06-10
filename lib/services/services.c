@@ -50,6 +50,13 @@
 static int operations = 0;
 GHashTable *recurring_actions = NULL;
 
+/* ops waiting to run async because of conflicting active
+ * pending ops*/
+GList *blocked_ops = NULL;
+
+/* ops currently active (in-flight) */
+GList *inflight_ops = NULL;
+
 svc_action_t *
 services_action_create(const char *name, const char *action, int interval, int timeout)
 {
@@ -456,6 +463,8 @@ services_action_cancel(const char *name, const char *action, int interval)
         if (op->opaque->callback) {
             op->opaque->callback(op);
         }
+
+        blocked_ops = g_list_remove(blocked_ops, op);
         services_action_free(op);
 
     } else {
@@ -541,6 +550,30 @@ handle_duplicate_recurring(svc_action_t * op, void (*action_callback) (svc_actio
     return FALSE;
 }
 
+static gboolean
+action_async_helper(svc_action_t * op) {
+    gboolean res = FALSE;
+
+    if (op->standard && strcasecmp(op->standard, "upstart") == 0) {
+#if SUPPORT_UPSTART
+        res = upstart_job_exec(op, FALSE);
+#endif
+    } else if (op->standard && strcasecmp(op->standard, "systemd") == 0) {
+#if SUPPORT_SYSTEMD
+        res =  systemd_unit_exec(op);
+#endif
+    } else {
+        res = services_os_action_execute(op, FALSE);
+    }
+
+    /* keep track of ops that are in-flight to avoid collisions in the same namespace */
+    if (res) {
+        inflight_ops = g_list_append(inflight_ops, op);
+    }
+
+    return res;
+}
+
 gboolean
 services_action_async(svc_action_t * op, void (*action_callback) (svc_action_t *))
 {
@@ -552,21 +585,78 @@ services_action_async(svc_action_t * op, void (*action_callback) (svc_action_t *
     if (op->interval > 0) {
         if (handle_duplicate_recurring(op, action_callback) == TRUE) {
             /* entry rescheduled, dup freed */
+            /* exit early */
             return TRUE;
         }
         g_hash_table_replace(recurring_actions, op->id, op);
     }
-    if (op->standard && strcasecmp(op->standard, "upstart") == 0) {
-#if SUPPORT_UPSTART
-        return upstart_job_exec(op, FALSE);
-#endif
+
+    if (is_op_blocked(op->rsc)) {
+        blocked_ops = g_list_append(blocked_ops, op);
+        return TRUE;
     }
-    if (op->standard && strcasecmp(op->standard, "systemd") == 0) {
-#if SUPPORT_SYSTEMD
-        return systemd_unit_exec(op);
-#endif
+
+    return action_async_helper(op);
+}
+
+
+static gboolean processing_blocked_ops = FALSE;
+
+gboolean
+is_op_blocked(const char *rsc)
+{
+    GList *gIter = NULL;
+    svc_action_t *op = NULL;
+
+    for (gIter = inflight_ops; gIter != NULL; gIter = gIter->next) {
+        op = gIter->data;
+        if (safe_str_eq(op->rsc, rsc)) {
+            return TRUE;
+        }
     }
-    return services_os_action_execute(op, FALSE);
+
+    return FALSE;
+}
+
+void
+handle_blocked_ops(void)
+{
+    GList *executed_ops = NULL;
+    GList *gIter = NULL;
+    svc_action_t *op = NULL;
+    gboolean res = FALSE;
+
+    if (processing_blocked_ops) {
+        /* avoid nested calling of this function */
+        return;
+    }
+
+    processing_blocked_ops = TRUE;
+
+    /* n^2 operation here, but blocked ops are incredibly rare. this list
+     * will be empty 99% of the time. */
+    for (gIter = blocked_ops; gIter != NULL; gIter = gIter->next) {
+        op = gIter->data;
+        if (is_op_blocked(op->rsc)) {
+            continue;
+        }
+        executed_ops = g_list_append(executed_ops, op);
+        res = action_async_helper(op);
+        if (res == FALSE) {
+            op->status = PCMK_LRM_OP_ERROR;
+            /* this can cause this function to be called recursively
+             * which is why we have processing_blocked_ops static variable */
+            operation_finalize(op);
+        }
+    }
+
+    for (gIter = executed_ops; gIter != NULL; gIter = gIter->next) {
+        op = gIter->data;
+        blocked_ops = g_list_remove(blocked_ops, op);
+    }
+    g_list_free(executed_ops);
+
+    processing_blocked_ops = FALSE;
 }
 
 gboolean
