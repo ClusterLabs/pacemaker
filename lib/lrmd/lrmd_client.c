@@ -52,6 +52,8 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
+#define MAX_TLS_RECV_WAIT 10000
+
 CRM_TRACE_INIT_DATA(lrmd);
 
 static int lrmd_api_disconnect(lrmd_t * lrmd);
@@ -589,8 +591,8 @@ lrmd_tls_recv_reply(lrmd_t * lrmd, int total_timeout, int expected_reply_id, int
 
     /* A timeout of 0 here makes no sense.  We have to wait a period of time
      * for the response to come back.  If -1 or 0, default to 10 seconds. */
-    if (total_timeout <= 0) {
-        total_timeout = 10000;
+    if (total_timeout <= 0 || total_timeout > MAX_TLS_RECV_WAIT) {
+        total_timeout = MAX_TLS_RECV_WAIT;
     }
 
     while (!xml) {
@@ -1470,7 +1472,7 @@ lrmd_api_get_rsc_info(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options 
 
     crm_xml_add(data, F_LRMD_ORIGIN, __FUNCTION__);
     crm_xml_add(data, F_LRMD_RSC_ID, rsc_id);
-    lrmd_send_command(lrmd, LRMD_OP_RSC_INFO, data, &output, 30000, options, TRUE);
+    lrmd_send_command(lrmd, LRMD_OP_RSC_INFO, data, &output, 0, options, TRUE);
     free_xml(data);
 
     if (!output) {
