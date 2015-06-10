@@ -1437,7 +1437,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
         }
     }
 
-    crm_xml_add_int(list, "st-available-devices", available_devices);
+    crm_xml_add_int(list, F_STONITH_AVAILABLE_DEVICES, available_devices);
     if (query->target) {
         crm_debug("Found %d matching devices for '%s'", available_devices, query->target);
     } else {
