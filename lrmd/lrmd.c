@@ -1061,6 +1061,9 @@ stonith_connection_failed(void)
     g_hash_table_iter_init(&iter, rsc_list);
     while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & rsc)) {
         if (safe_str_eq(rsc->class, "stonith")) {
+            if (rsc->active) {
+                cmd_list = g_list_append(cmd_list, rsc->active);
+            }
             if (rsc->recurring_ops) {
                 cmd_list = g_list_concat(cmd_list, rsc->recurring_ops);
             }
