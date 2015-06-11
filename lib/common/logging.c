@@ -204,16 +204,13 @@ set_format_string(int method, const char *daemon)
         }
     }
 
-    if (crm_tracing_enabled() && method >= QB_LOG_STDERR) {
-        offset += snprintf(fmt + offset, FMT_MAX - offset, "(%%-12f:%%5l %%g) %%-7p: %%n: ");
-    } else {
-        offset += snprintf(fmt + offset, FMT_MAX - offset, "%%g %%-7p: %%n: ");
-    }
-
     if (method == QB_LOG_SYSLOG) {
-        offset += snprintf(fmt + offset, FMT_MAX - offset, "%%b");
+        offset += snprintf(fmt + offset, FMT_MAX - offset, "%%g %%-7p: %%b");
+        crm_extended_logging(method, QB_FALSE);
+    } else if (crm_tracing_enabled()) {
+        offset += snprintf(fmt + offset, FMT_MAX - offset, "(%%-12f:%%5l %%g) %%-7p: %%n:\t%%b");
     } else {
-        offset += snprintf(fmt + offset, FMT_MAX - offset, "\t%%b");
+        offset += snprintf(fmt + offset, FMT_MAX - offset, "%%g %%-7p: %%n:\t%%b");
     }
 
     CRM_LOG_ASSERT(offset > 0);

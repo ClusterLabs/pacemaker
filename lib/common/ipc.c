@@ -785,6 +785,13 @@ crm_ipc_new(const char *name, size_t max_size)
     return client;
 }
 
+/*!
+ * \brief Establish an IPC connection to a Pacemaker component
+ *
+ * \param[in] client  Connection instance obtained from crm_ipc_new()
+ *
+ * \return TRUE on success, FALSE otherwise (in which case errno will be set)
+ */
 bool
 crm_ipc_connect(crm_ipc_t * client)
 {
@@ -792,13 +799,11 @@ crm_ipc_connect(crm_ipc_t * client)
     client->ipc = qb_ipcc_connect(client->name, client->buf_size);
 
     if (client->ipc == NULL) {
-        crm_perror(LOG_INFO, "Could not establish %s connection", client->name);
         return FALSE;
     }
 
     client->pfd.fd = crm_ipc_get_fd(client);
     if (client->pfd.fd < 0) {
-        crm_perror(LOG_INFO, "Could not obtain file descriptor for %s connection", client->name);
         return FALSE;
     }
 

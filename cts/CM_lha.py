@@ -350,16 +350,13 @@ class crm_lha(ClusterManager):
                     "send_ipc_message: IPC Channel to .* is not connected",
                     "unconfirmed_actions: Waiting on .* unconfirmed actions",
                     "cib_native_msgready: Message pending on command channel",
-                    "do_exit: Performing A_EXIT_1 - forcefully exiting the CRMd",
-                    "verify_stopped: Resource .* was active at shutdown.  You may ignore this error if it is unmanaged.",
+                    r": Performing A_EXIT_1 - forcefully exiting the CRMd",
+                    r"Resource .* was active at shutdown.  You may ignore this error if it is unmanaged.",
             ]
 
         stonith_ignore = [
-            "(ERROR|error): stonithd_signon: ",
             "update_failcount: Updating failcount for child_DoFencing",
-            "(ERROR|error): te_connect_stonith: Sign-in failed: triggered a retry",
-            "lrmd.*(ERROR|error): cl_get_value: wrong argument (reply)",
-            "lrmd.*(ERROR|error): is_expected_msg:.* null message",
+            r"(ERROR|error).*: Sign-in failed: triggered a retry",
             "lrmd.*(ERROR|error): stonithd_receive_ops_result failed.",
              ]
 
@@ -377,7 +374,7 @@ class crm_lha(ClusterManager):
                     "crmd.*Action A_RECOVER .* not supported",
                     "crmd.*Input I_TERMINATE from do_recover",
                     "Exiting to recover from CCM connection failure",
-                    "crmd.*do_exit: Could not recover from internal error",
+                    r"crmd.*: Could not recover from internal error",
                     "crmd.*I_ERROR.*(ccm_dispatch|crmd_cib_connection_destroy)",
                     "crmd.*exited with return code 2.",
                     "attrd.*exited with return code 1.",
@@ -401,7 +398,7 @@ class crm_lha(ClusterManager):
                     "Connection to the CIB terminated...",
                     "crmd.*Input I_TERMINATE from do_recover",
                     "crmd.*I_ERROR.*crmd_cib_connection_destroy",
-                    "crmd.*do_exit: Could not recover from internal error",
+                    r"crmd.*: Could not recover from internal error",
                     "crmd.*exited with return code 2.",
                     "attrd.*exited with return code 1.",
                     ], badnews_ignore = common_ignore)
@@ -412,7 +409,7 @@ class crm_lha(ClusterManager):
                     "crmd.*I_ERROR.*lrm_connection_destroy",
                     "State transition S_STARTING -> S_PENDING",
                     "crmd.*Input I_TERMINATE from do_recover",
-                    "crmd.*do_exit: Could not recover from internal error",
+                    r"crmd.*: Could not recover from internal error",
                     "crmd.*exited with return code 2.",
                     ], badnews_ignore = common_ignore)
 
@@ -429,17 +426,16 @@ class crm_lha(ClusterManager):
                     "State transition .* S_RECOVERY",
                     "crmd.*exited with return code 2.",
                     "crmd.*Input I_TERMINATE from do_recover",
-                    "crmd.*do_exit: Could not recover from internal error",
-                    "crmd.*CRIT: pe_connection_destroy: Connection to the Policy Engine failed",
+                    r"crmd.*: Could not recover from internal error",
+                    r"crmd.*CRIT.*: Connection to the Policy Engine failed",
                     "crmd.*I_ERROR.*save_cib_contents",
                     "crmd.*exited with return code 2.",
                     ], badnews_ignore = common_ignore, dc_only=1)
 
         if self.Env["DoFencing"] == 1 :
             complist.append(Process(self, "stoniths", triggersreboot=self.fastfail, dc_pats = [
-                        "crmd.*CRIT: tengine_stonith_connection_destroy: Fencing daemon connection failed",
+                        r"crmd.*CRIT.*: Fencing daemon connection failed",
                         "Attempting connection to fencing daemon",
-                        "te_connect_stonith: Connected",
                     ], badnews_ignore = stonith_ignore))
 
         if self.fastfail == 0:

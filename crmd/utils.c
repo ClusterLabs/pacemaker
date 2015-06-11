@@ -1032,8 +1032,10 @@ update_attrd_helper(const char *host, const char *name, const char *value, const
     do {
         if (crm_ipc_connected(attrd_ipc) == FALSE) {
             crm_ipc_close(attrd_ipc);
-            crm_info("Connecting to attrd... %d retries remaining", max);
-            crm_ipc_connect(attrd_ipc);
+            crm_info("Connecting to attribute manager ... %d retries remaining", max);
+            if (crm_ipc_connect(attrd_ipc) == FALSE) {
+                crm_perror(LOG_INFO, "Connection to attribute manager failed");
+            }
         }
 
         rc = attrd_update_delegate(attrd_ipc, command, host, name, value, XML_CIB_TAG_STATUS, NULL,
@@ -1042,7 +1044,7 @@ update_attrd_helper(const char *host, const char *name, const char *value, const
             break;
 
         } else if (rc != -EAGAIN && rc != -EALREADY) {
-            crm_info("Disconnecting from attrd: %s (%d)", pcmk_strerror(rc), rc);
+            crm_info("Disconnecting from attribute manager: %s (%d)", pcmk_strerror(rc), rc);
             crm_ipc_close(attrd_ipc);
         }
 
