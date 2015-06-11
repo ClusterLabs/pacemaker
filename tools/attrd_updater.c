@@ -96,7 +96,7 @@ main(int argc, char **argv)
 #endif
 
     crm_log_cli_init("attrd_updater");
-    crm_set_options(NULL, "command -n attribute [options]", long_options,
+    crm_set_options(NULL, "command [options] attribute [additional options]", long_options,
                     "Tool for updating cluster node attributes");
 
     if (argc < 2) {
