@@ -1215,8 +1215,8 @@ all_topology_devices_found(remote_fencing_op_t * op)
 
     for (i = 0; i < ST_LEVEL_MAX; i++) {
         for (device = tp->levels[i]; device; device = device->next) {
-            match = FALSE;
-            for (iter = op->query_results; iter != NULL; iter = iter->next) {
+            match = NULL;
+            for (iter = op->query_results; match == NULL && iter != NULL; iter = iter->next) {
                 st_query_result_t *peer = iter->data;
 
                 if (skip_target && safe_str_eq(peer->host, op->target)) {
