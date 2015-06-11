@@ -659,7 +659,7 @@ is_remote_lrmd_ra(const char *agent, const char *provider, const char *id)
     if (agent && provider && !strcmp(agent, REMOTE_LRMD_RA) && !strcmp(provider, "pacemaker")) {
         return TRUE;
     }
-    if (id && lrm_state_find(id)) {
+    if (id && lrm_state_find(id) && safe_str_neq(id, fsa_our_uname)) {
         return TRUE;
     }
 
