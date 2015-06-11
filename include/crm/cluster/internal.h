@@ -102,13 +102,38 @@ enum crm_proc_flag {
 };
 /* *INDENT-ON* */
 
+/*!
+ * \internal
+ * \brief Return the process bit corresponding to the current cluster stack
+ *
+ * \return Process flag if detectable, otherwise 0
+ */
+static inline uint32_t
+crm_get_cluster_proc()
+{
+    switch (get_cluster_type()) {
+        case pcmk_cluster_corosync:
+        case pcmk_cluster_cman:
+            return crm_proc_cpg;
+
+        case pcmk_cluster_heartbeat:
+            return crm_proc_heartbeat;
+
+        case pcmk_cluster_classic_ais:
+            return crm_proc_plugin;
+
+        default:
+            break;
+    }
+    return crm_proc_none;
+}
+
 static inline const char *
 peer2text(enum crm_proc_flag proc)
 {
     const char *text = "unknown";
 
-    if (proc == (crm_proc_cpg | crm_proc_crmd)
-    ||  proc == (crm_proc_heartbeat | crm_proc_crmd)) {
+    if (proc == (crm_proc_crmd | crm_get_cluster_proc())) {
         return "peer";
     }
 
@@ -423,15 +448,17 @@ int get_corosync_id(int id, const char *uuid);
 char *get_corosync_uuid(crm_node_t *peer);
 enum crm_quorum_source get_quorum_source(void);
 
-void crm_update_peer_proc(const char *source, crm_node_t * peer, uint32_t flag, const char *status);
-
-crm_node_t *crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t seen,
-                            int32_t votes, uint32_t children, const char *uuid, const char *uname,
+crm_node_t *crm_update_peer(const char *source, unsigned int id, uint64_t born,
+                            uint64_t seen, int32_t votes, uint32_t children,
+                            const char *uuid, const char *uname,
                             const char *addr, const char *state);
+crm_node_t *crm_update_peer_proc(const char *source, crm_node_t * peer,
+                                 uint32_t flag, const char *status);
+crm_node_t *crm_update_peer_state(const char *source, crm_node_t * node,
+                                  const char *state, int membership);
 
 void crm_update_peer_expected(const char *source, crm_node_t * node, const char *expected);
-void crm_update_peer_state(const char *source, crm_node_t * node, const char *state,
-                           int membership);
+void crm_reap_unseen_nodes(uint64_t ring_id);
 
 gboolean init_cman_connection(gboolean(*dispatch) (unsigned long long, gboolean),
                               void (*destroy) (gpointer));

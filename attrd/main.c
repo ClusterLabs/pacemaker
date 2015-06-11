@@ -342,7 +342,7 @@ main(int argc, char **argv)
     attrd_cluster->cpg.cpg_deliver_fn = attrd_cpg_dispatch;
     attrd_cluster->cpg.cpg_confchg_fn = pcmk_cpg_membership;
 
-    crm_set_status_callback(attrd_peer_change_cb);
+    crm_set_status_callback(&attrd_peer_change_cb);
 
     if (crm_cluster_connect(attrd_cluster) == FALSE) {
         crm_err("Cluster connection failed");

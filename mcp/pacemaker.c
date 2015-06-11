@@ -105,11 +105,7 @@ static uint32_t
 get_process_list(void)
 {
     int lpc = 0;
-    uint32_t procs = 0;
-
-    if(is_classic_ais_cluster()) {
-        procs |= crm_proc_plugin;
-    }
+    uint32_t procs = crm_get_cluster_proc();
 
     for (lpc = 0; lpc < SIZEOF(pcmk_children); lpc++) {
         if (pcmk_children[lpc].pid != 0) {
@@ -551,14 +547,18 @@ struct qb_ipcs_service_handlers mcp_ipc_callbacks = {
     .connection_destroyed = pcmk_ipc_destroy
 };
 
+/*!
+ * \internal
+ * \brief Send an XML message with process list of all known peers to client(s)
+ *
+ * \param[in] client  Send message to this client, or all clients if NULL
+ */
 void
 update_process_clients(crm_client_t *client)
 {
     GHashTableIter iter;
     crm_node_t *node = NULL;
     xmlNode *update = create_xml_node(NULL, "nodes");
-
-    crm_trace("Sending process list to %d children", crm_hash_table_size(client_connections));
 
     g_hash_table_iter_init(&iter, crm_peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
@@ -571,9 +571,11 @@ update_process_clients(crm_client_t *client)
     }
 
     if(client) {
+        crm_trace("Sending process list to client %s", client->id);
         crm_ipcs_send(client, 0, update, crm_ipc_server_event);
 
     } else {
+        crm_trace("Sending process list to %d clients", crm_hash_table_size(client_connections));
         g_hash_table_iter_init(&iter, client_connections);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & client)) {
             crm_ipcs_send(client, 0, update, crm_ipc_server_event);
@@ -583,6 +585,10 @@ update_process_clients(crm_client_t *client)
     free_xml(update);
 }
 
+/*!
+ * \internal
+ * \brief Send a CPG message with local node's process list to all peers
+ */
 void
 update_process_peers(void)
 {
@@ -608,6 +614,16 @@ update_process_peers(void)
     send_cpg_iov(iov);
 }
 
+/*!
+ * \internal
+ * \brief Update a node's process list, notifying clients and peers if needed
+ *
+ * \param[in] id     Node ID of affected node
+ * \param[in] uname  Uname of affected node
+ * \param[in] procs  Affected node's process list mask
+ *
+ * \return TRUE if the process list changed, FALSE otherwise
+ */
 gboolean
 update_node_processes(uint32_t id, const char *uname, uint32_t procs)
 {
@@ -621,14 +637,15 @@ update_node_processes(uint32_t id, const char *uname, uint32_t procs)
             node->processes = procs;
             changed = TRUE;
 
+            /* If local node's processes have changed, notify clients/peers */
+            if (id == local_nodeid) {
+                update_process_clients(NULL);
+                update_process_peers();
+            }
+
         } else {
             crm_trace("Node %s still has process list: %.32x", node->uname, procs);
         }
-    }
-
-    if (changed && id == local_nodeid) {
-        update_process_clients(NULL);
-        update_process_peers();
     }
     return changed;
 }
@@ -810,6 +827,17 @@ mcp_cpg_destroy(gpointer user_data)
     crm_exit(ENOTCONN);
 }
 
+/*!
+ * \internal
+ * \brief Process a CPG message (process list or manual peer cache removal)
+ *
+ * \param[in] handle     CPG connection (ignored)
+ * \param[in] groupName  CPG group name (ignored)
+ * \param[in] nodeid     ID of affected node
+ * \param[in] pid        Process ID (ignored)
+ * \param[in] msg        CPG XML message
+ * \param[in] msg_len    Length of msg in bytes (ignored)
+ */
 static void
 mcp_cpg_deliver(cpg_handle_t handle,
                  const struct cpg_name *groupName,
@@ -818,15 +846,20 @@ mcp_cpg_deliver(cpg_handle_t handle,
     xmlNode *xml = string2xml(msg);
     const char *task = crm_element_value(xml, F_CRM_TASK);
 
-    crm_trace("Received %s %.200s", task, msg);
-    if (task == NULL && nodeid != local_nodeid) {
-        uint32_t procs = 0;
-        const char *uname = crm_element_value(xml, "uname");
+    crm_trace("Received CPG message (%s): %.200s",
+              (task? task : "process list"), msg);
 
-        crm_element_value_int(xml, "proclist", (int *)&procs);
-        /* crm_debug("Got proclist %.32x from %s", procs, uname); */
-        if (update_node_processes(nodeid, uname, procs)) {
-            update_process_clients(NULL);
+    if (task == NULL) {
+        if (nodeid == local_nodeid) {
+            crm_info("Ignoring process list sent by peer for local node");
+        } else {
+            uint32_t procs = 0;
+            const char *uname = crm_element_value(xml, "uname");
+
+            crm_element_value_int(xml, "proclist", (int *)&procs);
+            if (update_node_processes(nodeid, uname, procs)) {
+                update_process_clients(NULL);
+            }
         }
 
     } else if (crm_str_eq(task, CRM_OP_RM_NODE_CACHE, TRUE)) {
@@ -850,7 +883,12 @@ mcp_cpg_membership(cpg_handle_t handle,
                     const struct cpg_address *left_list, size_t left_list_entries,
                     const struct cpg_address *joined_list, size_t joined_list_entries)
 {
-    /* Don't care about CPG membership, but we do want to broadcast our own presence */
+    /* Update peer cache if needed */
+    pcmk_cpg_membership(handle, groupName, member_list, member_list_entries,
+                        left_list, left_list_entries,
+                        joined_list, joined_list_entries);
+
+    /* Always broadcast our own presence after any membership change */
     update_process_peers();
 }
 
