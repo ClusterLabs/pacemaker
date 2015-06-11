@@ -43,7 +43,6 @@ struct delete_event_s {
     lrm_state_t *lrm_state;
 };
 
-gboolean process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op);
 static gboolean is_rsc_active(lrm_state_t * lrm_state, const char *rsc_id);
 static gboolean build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list);
 static gboolean stop_recurring_actions(gpointer key, gpointer value, gpointer user_data);
@@ -254,7 +253,7 @@ lrm_op_callback(lrmd_event_data_t * op)
     lrm_state = lrm_state_find(nodename);
     CRM_ASSERT(lrm_state != NULL);
 
-    process_lrm_event(lrm_state, op);
+    process_lrm_event(lrm_state, op, NULL);
 }
 
 /*	 A_LRM_CONNECT	*/
@@ -1413,7 +1412,7 @@ do_lrm_invoke(long long action,
         rsc = get_lrm_resource(lrm_state, xml_rsc, input->xml, create_rsc);
         if (rsc) {
             crm_info("Failing resource %s...", rsc->id);
-            process_lrm_event(lrm_state, op);
+            process_lrm_event(lrm_state, op, NULL);
             op->op_status = PCMK_LRM_OP_DONE;
             op->rc = PCMK_OCF_OK;
             lrmd_free_rsc_info(rsc);
@@ -1952,7 +1951,7 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
         op->rc = PCMK_OCF_UNKNOWN_ERROR;
         op->t_run = time(NULL);
         op->t_rcchange = op->t_run;
-        process_lrm_event(lrm_state, op);
+        process_lrm_event(lrm_state, op, NULL);
 
     } else {
         /* record all operations so we can wait
@@ -1969,6 +1968,8 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
         pending->op_type = strdup(operation);
         pending->op_key = strdup(op_id);
         pending->rsc_id = strdup(rsc->id);
+        pending->start_time = time(NULL);
+        pending->user_data = strdup(op->user_data);
         g_hash_table_replace(lrm_state->pending_ops, call_id_s, pending);
 
         if (op->interval > 0 && op->start_delay > START_DELAY_THRESHOLD) {
@@ -1984,6 +1985,9 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
             op->op_status = PCMK_LRM_OP_DONE;
             send_direct_ack(NULL, NULL, rsc, op, rsc->id);
         }
+
+        pending->params = op->params;
+        op->params = NULL;
     }
 
     free(op_id);
@@ -2178,24 +2182,26 @@ do_lrm_event(long long action,
 }
 
 gboolean
-process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op)
+process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op, struct recurring_op_s *pending)
 {
     char *op_id = NULL;
     char *op_key = NULL;
 
     int update_id = 0;
+    gboolean remove = FALSE;
     gboolean removed = FALSE;
     lrmd_rsc_info_t *rsc = NULL;
 
-    struct recurring_op_s *pending = NULL;
-
     CRM_CHECK(op != NULL, return FALSE);
-
     CRM_CHECK(op->rsc_id != NULL, return FALSE);
+
     op_id = make_stop_id(op->rsc_id, op->call_id);
-    pending = g_hash_table_lookup(lrm_state->pending_ops, op_id);
     op_key = generate_op_key(op->rsc_id, op->op_type, op->interval);
     rsc = lrm_state_get_rsc_info(lrm_state, op->rsc_id, 0);
+    if(pending == NULL) {
+        remove = TRUE;
+        pending = g_hash_table_lookup(lrm_state->pending_ops, op_id);
+    }
 
     if (op->op_status == PCMK_LRM_OP_ERROR) {
         switch(op->rc) {
@@ -2252,7 +2258,11 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op)
         crm_trace("Op %s (call=%d): no delete event required", op_key, op->call_id);
     }
 
-    if ((op->interval == 0) && g_hash_table_remove(lrm_state->pending_ops, op_id)) {
+    if(remove == FALSE) {
+        /* The caller will do this afterwards, but keep the logging consistent */
+        removed = TRUE;
+
+    } else if ((op->interval == 0) && g_hash_table_remove(lrm_state->pending_ops, op_id)) {
         removed = TRUE;
         crm_trace("Op %s (call=%d, stop-id=%s, remaining=%u): Confirmed",
                   op_key, op->call_id, op_id, g_hash_table_size(lrm_state->pending_ops));

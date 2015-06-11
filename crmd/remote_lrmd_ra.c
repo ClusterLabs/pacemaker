@@ -281,12 +281,13 @@ monitor_timeout_cb(gpointer data)
     lrm_state_t *lrm_state = NULL;
     remote_ra_cmd_t *cmd = data;
 
-    crm_info("Poke async response timed out for node %s", cmd->rsc_id);
+    lrm_state = lrm_state_find(cmd->rsc_id);
+
+    crm_info("Poke async response timed out for node %s (%p)", cmd->rsc_id, lrm_state);
     cmd->monitor_timeout_id = 0;
     cmd->op_status = PCMK_LRM_OP_TIMEOUT;
     cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
 
-    lrm_state = lrm_state_find(cmd->rsc_id);
     if (lrm_state && lrm_state->remote_ra_data) {
         remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
 
@@ -300,6 +301,10 @@ monitor_timeout_cb(gpointer data)
 
     report_remote_ra_result(cmd);
     free_cmd(cmd);
+
+    if(lrm_state) {
+        lrm_state_disconnect(lrm_state);
+    }
     return FALSE;
 }
 
@@ -440,7 +445,6 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
         cmd_handled = TRUE;
 
     } else if (op->type == lrmd_event_disconnect && safe_str_eq(cmd->action, "monitor")) {
-
         if (ra_data->active == TRUE && (cmd->cancel == FALSE)) {
             cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
             cmd->op_status = PCMK_LRM_OP_ERROR;
@@ -714,6 +718,7 @@ fail_all_monitor_cmds(GList * list)
 
         cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
         cmd->op_status = PCMK_LRM_OP_ERROR;
+        crm_trace("Pre-emptively failing %s %s (interval=%d, %s)", cmd->action, cmd->rsc_id, cmd->interval, cmd->userdata);
         report_remote_ra_result(cmd);
 
         list = g_list_remove(list, cmd);

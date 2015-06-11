@@ -72,10 +72,45 @@ free_recurring_op(gpointer value)
 {
     struct recurring_op_s *op = (struct recurring_op_s *)value;
 
+    free(op->user_data);
     free(op->rsc_id);
     free(op->op_type);
     free(op->op_key);
+    if (op->params) {
+        g_hash_table_destroy(op->params);
+    }
     free(op);
+}
+
+static gboolean
+fail_pending_op(gpointer key, gpointer value, gpointer user_data)
+{
+    lrmd_event_data_t event = { 0, };
+    lrm_state_t *lrm_state = user_data;
+    struct recurring_op_s *op = (struct recurring_op_s *)value;
+
+    crm_trace("Pre-emptively failing %s_%s_%d on %s (call=%s, %s)",
+              op->rsc_id, op->op_type, op->interval,
+              lrm_state->node_name, key, op->user_data);
+
+    event.type = lrmd_event_exec_complete;
+    event.rsc_id = op->rsc_id;
+    event.op_type = op->op_type;
+    event.user_data = op->user_data;
+    event.timeout = 0;
+    event.interval = op->interval;
+    event.rc = PCMK_OCF_CONNECTION_DIED;
+    event.op_status = PCMK_LRM_OP_ERROR;
+    event.t_run = op->start_time;
+    event.t_rcchange = op->start_time;
+    event.t_rcchange = op->start_time;
+
+    event.call_id = op->call_id;
+    event.remote_nodename = lrm_state->node_name;
+    event.params = op->params;
+
+    process_lrm_event(lrm_state, &event, op);
+    return TRUE;
 }
 
 gboolean
@@ -84,7 +119,7 @@ lrm_state_is_local(lrm_state_t *lrm_state)
     if (lrm_state == NULL || fsa_our_uname == NULL) {
         return FALSE;
     }
-    
+
     if (strcmp(lrm_state->node_name, fsa_our_uname) != 0) {
         return FALSE;
     }
@@ -155,7 +190,7 @@ internal_lrm_state_destroy(gpointer data)
         return;
     }
 
-    crm_trace("Destroying proxy table with %d members", g_hash_table_size(proxy_table));
+    crm_trace("Destroying proxy table %s with %d members", lrm_state->node_name, g_hash_table_size(proxy_table));
     g_hash_table_foreach_remove(proxy_table, remote_proxy_remove_by_node, (char *) lrm_state->node_name);
     remote_ra_cleanup(lrm_state);
     lrmd_api_delete(lrm_state->conn);
@@ -273,10 +308,17 @@ lrm_state_get_list(void)
 void
 lrm_state_disconnect(lrm_state_t * lrm_state)
 {
+    int removed = 0;
+
     if (!lrm_state->conn) {
         return;
     }
+    crm_trace("Disconnecting %s", lrm_state->node_name);
     ((lrmd_t *) lrm_state->conn)->cmds->disconnect(lrm_state->conn);
+
+    removed = g_hash_table_foreach_remove(lrm_state->pending_ops, fail_pending_op, lrm_state);
+    crm_trace("Synthesized %d operation failures for %s", removed, lrm_state->node_name);
+
     lrmd_api_delete(lrm_state->conn);
     lrm_state->conn = NULL;
 }
@@ -360,7 +402,7 @@ remote_proxy_disconnected(void *userdata)
     remote_proxy_t *proxy = userdata;
     lrm_state_t *lrm_state = lrm_state_find(proxy->node_name);
 
-    crm_trace("destroying %p", userdata);
+    crm_trace("Destroying %s (%p)", lrm_state->node_name, userdata);
 
     proxy->source = NULL;
     proxy->ipc = NULL;

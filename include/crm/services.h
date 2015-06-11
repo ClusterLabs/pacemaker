@@ -102,6 +102,8 @@ enum ocf_exitcode {
 
 
     /* 150-199	reserved for application use */
+    PCMK_OCF_CONNECTION_DIED = 189, /* Operation failure implied by disconnection of the LRM API to a local or remote node */
+
     PCMK_OCF_DEGRADED        = 190, /* Active reasource that is no longer 100% functional */
     PCMK_OCF_DEGRADED_MASTER = 191, /* Promoted reasource that is no longer 100% functional */
 
