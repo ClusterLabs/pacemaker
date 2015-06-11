@@ -154,7 +154,6 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 changed = node->processes ^ old;
             }
 
-            /* crmd_proc_update(node, proc_flags); */
             status = (node->processes & proc_flags) ? ONLINESTATUS : OFFLINESTATUS;
             crm_info("Client %s/%s now has status [%s] (DC=%s, changed=%6x)",
                      node->uname, peer2text(proc_flags), status,

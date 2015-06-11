@@ -491,7 +491,7 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     task = crm_element_value(msg, F_CRM_TASK);
     if (crm_str_eq(task, CRM_OP_QUIT, TRUE)) {
         /* Time to quit */
-        crm_notice("Shutting down in responce to ticket %s (%s)",
+        crm_notice("Shutting down in response to ticket %s (%s)",
                    crm_element_value(msg, F_CRM_REFERENCE), crm_element_value(msg, F_CRM_ORIGIN));
         pcmk_shutdown(15);
 

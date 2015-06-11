@@ -711,7 +711,7 @@ class PartitionAudit(ClusterAudit):
         ,        "failure":0
         ,        "skipped":0
         ,        "auditfail":0}
-        self.NodeEpoche = {}
+        self.NodeEpoch = {}
         self.NodeState = {}
         self.NodeQuorum = {}
 
@@ -768,7 +768,7 @@ class PartitionAudit(ClusterAudit):
         passed = 1
         dc_found = []
         dc_allowed_list = []
-        lowest_epoche = None
+        lowest_epoch = None
         node_list = partition.split()
 
         self.debug("Auditing partition: %s" % (partition))
@@ -780,39 +780,39 @@ class PartitionAudit(ClusterAudit):
                 #  checking for in this audit)
 
             self.NodeState[node]  = self.CM.rsh(node, self.CM["StatusCmd"] % node, 1)
-            self.NodeEpoche[node] = self.CM.rsh(node, self.CM["EpocheCmd"], 1)
+            self.NodeEpoch[node] = self.CM.rsh(node, self.CM["EpochCmd"], 1)
             self.NodeQuorum[node] = self.CM.rsh(node, self.CM["QuorumCmd"], 1)
             
-            self.debug("Node %s: %s - %s - %s." % (node, self.NodeState[node], self.NodeEpoche[node], self.NodeQuorum[node]))
+            self.debug("Node %s: %s - %s - %s." % (node, self.NodeState[node], self.NodeEpoch[node], self.NodeQuorum[node]))
             self.NodeState[node]  = self.trim_string(self.NodeState[node])
-            self.NodeEpoche[node] = self.trim2int(self.NodeEpoche[node])
+            self.NodeEpoch[node] = self.trim2int(self.NodeEpoch[node])
             self.NodeQuorum[node] = self.trim_string(self.NodeQuorum[node])
 
-            if not self.NodeEpoche[node]:
-                self.CM.log("Warn: Node %s dissappeared: cant determin epoche" % (node))
+            if not self.NodeEpoch[node]:
+                self.CM.log("Warn: Node %s dissappeared: cant determin epoch" % (node))
                 self.CM.ShouldBeStatus[node] = "down"
                 # not in itself a reason to fail the audit (not what we're
                 #  checking for in this audit)
-            elif lowest_epoche == None or self.NodeEpoche[node] < lowest_epoche:
-                lowest_epoche = self.NodeEpoche[node]
+            elif lowest_epoch == None or self.NodeEpoch[node] < lowest_epoch:
+                lowest_epoch = self.NodeEpoch[node]
                 
-        if not lowest_epoche:
-            self.CM.log("Lowest epoche not determined in %s" % (partition))
+        if not lowest_epoch:
+            self.CM.log("Lowest epoch not determined in %s" % (partition))
             passed = 0
 
         for node in node_list:
             if self.CM.ShouldBeStatus[node] == "up":
                 if self.CM.is_node_dc(node, self.NodeState[node]):
                     dc_found.append(node)
-                    if self.NodeEpoche[node] == lowest_epoche:
+                    if self.NodeEpoch[node] == lowest_epoch:
                         self.debug("%s: OK" % node)
-                    elif not self.NodeEpoche[node]:
-                        self.debug("Check on %s ignored: no node epoche" % node)
-                    elif not lowest_epoche:
-                        self.debug("Check on %s ignored: no lowest epoche" % node)
+                    elif not self.NodeEpoch[node]:
+                        self.debug("Check on %s ignored: no node epoch" % node)
+                    elif not lowest_epoch:
+                        self.debug("Check on %s ignored: no lowest epoch" % node)
                     else:
                         self.CM.log("DC %s is not the oldest node (%d vs. %d)"
-                            % (node, self.NodeEpoche[node], lowest_epoche))
+                            % (node, self.NodeEpoch[node], lowest_epoch))
                         passed = 0
 
         if len(dc_found) == 0:
@@ -827,8 +827,8 @@ class PartitionAudit(ClusterAudit):
         if passed == 0:
             for node in node_list:
                 if self.CM.ShouldBeStatus[node] == "up":
-                    self.CM.log("epoche %s : %s"  
-                                % (self.NodeEpoche[node], self.NodeState[node]))
+                    self.CM.log("epoch %s : %s"  
+                                % (self.NodeEpoch[node], self.NodeState[node]))
 
         return passed
 

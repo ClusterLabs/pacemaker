@@ -288,7 +288,7 @@ class crm_lha(ClusterManager):
 
         for node in self.Env["nodes"]:
             if self.ShouldBeStatus[node] == "up":
-                partition = self.rsh(node, self.templates["ParitionCmd"], 1)
+                partition = self.rsh(node, self.templates["PartitionCmd"], 1)
 
                 if not partition:
                     self.log("no partition details for %s" % node)
