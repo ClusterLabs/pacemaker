@@ -23,7 +23,6 @@ core=`dirname $0`
 create_mode="true"
 info Generating test outputs for these tests...
 # do_test file description
-do_test one-or-more-unrunnnable-instances "Avoid dependancies on instances that wont ever be started"
 
 info Done.
 echo ""

@@ -151,7 +151,7 @@ extern notify_data_t *create_notification_boundaries(resource_t * rsc, const cha
 
 extern void collect_notification_data(resource_t * rsc, gboolean state, gboolean activity,
                                       notify_data_t * n_data);
-extern gboolean expand_notification_data(notify_data_t * n_data);
+extern gboolean expand_notification_data(notify_data_t * n_data, pe_working_set_t * data_set);
 extern void create_notifications(resource_t * rsc, notify_data_t * n_data,
                                  pe_working_set_t * data_set);
 extern void free_notification_data(notify_data_t * n_data);

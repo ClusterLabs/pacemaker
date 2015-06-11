@@ -1913,6 +1913,36 @@ sort_notify_entries(gconstpointer a, gconstpointer b)
     return strcmp(entry_a->node->details->id, entry_b->node->details->id);
 }
 
+static char *
+expand_node_list(GListPtr list)
+{
+    GListPtr gIter = NULL;
+    char *node_list = NULL;
+
+    if (list == NULL) {
+        return strdup(" ");
+    }
+
+    for (gIter = list; gIter != NULL; gIter = gIter->next) {
+        node_t *node = (node_t *) gIter->data;
+
+        if (node->details->uname) {
+            int existing_len = 0;
+            int len = 2 + strlen(node->details->uname);
+
+            if(node_list) {
+                existing_len = strlen(node_list);
+            }
+
+            crm_trace("Adding %s (%dc) at offset %d", node->details->uname, len - 2, existing_len);
+            node_list = realloc_safe(node_list, len + existing_len);
+            sprintf(node_list + existing_len, "%s%s", existing_len == 0 ? "":" ", node->details->uname);
+        }
+    }
+
+    return node_list;
+}
+
 static void
 expand_list(GListPtr list, char **rsc_list, char **node_list)
 {
@@ -2209,6 +2239,10 @@ collect_notification_data(resource_t * rsc, gboolean state, gboolean activity,
                           notify_data_t * n_data)
 {
 
+    if(n_data->allowed_nodes == NULL) {
+        n_data->allowed_nodes = rsc->allowed_nodes;
+    }
+
     if (rsc->children) {
         GListPtr gIter = rsc->children;
 
@@ -2291,7 +2325,7 @@ collect_notification_data(resource_t * rsc, gboolean state, gboolean activity,
 }
 
 gboolean
-expand_notification_data(notify_data_t * n_data)
+expand_notification_data(notify_data_t * n_data, pe_working_set_t * data_set)
 {
     /* Expand the notification entries into a key=value hashtable
      * This hashtable is later used in action2xml()
@@ -2299,6 +2333,7 @@ expand_notification_data(notify_data_t * n_data)
     gboolean required = FALSE;
     char *rsc_list = NULL;
     char *node_list = NULL;
+    GListPtr nodes = NULL;
 
     if (n_data->stop) {
         n_data->stop = g_list_sort(n_data->stop, sort_notify_entries);
@@ -2369,6 +2404,13 @@ expand_notification_data(notify_data_t * n_data)
     }
     expand_list(n_data->inactive, &rsc_list, NULL);
     g_hash_table_insert(n_data->keys, strdup("notify_inactive_resource"), rsc_list);
+
+    nodes = g_hash_table_get_values(n_data->allowed_nodes);
+    node_list = expand_node_list(nodes);
+    g_hash_table_insert(n_data->keys, strdup("notify_available_uname"), node_list);
+
+    node_list = expand_node_list(data_set->nodes);
+    g_hash_table_insert(n_data->keys, strdup("notify_all_uname"), node_list);
 
     if (required && n_data->pre) {
         update_action_flags(n_data->pre, pe_action_optional | pe_action_clear);

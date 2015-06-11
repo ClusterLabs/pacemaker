@@ -48,6 +48,7 @@ typedef struct notify_data_s {
     GListPtr promote;           /* notify_entry_t*  */
     GListPtr master;            /* notify_entry_t*  */
     GListPtr slave;             /* notify_entry_t*  */
+    GHashTable *allowed_nodes;
 
 } notify_data_t;
 
