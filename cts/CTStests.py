@@ -1438,7 +1438,7 @@ class ComponentFail(CTSTest):
                 if re.search("^Resource", line):
                     r = AuditResource(self.CM, line)
                     if r.rclass == "stonith":
-                        self.okerrpatterns.append(self.templates["LogActions: Recover.*%s"] % r.id)
+                        self.okerrpatterns.append(self.templates["Pat:Fencing_recover"] % r.id)
 
         # supply a copy so self.patterns doesnt end up empty
         tmpPats = []

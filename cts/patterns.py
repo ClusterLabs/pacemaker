@@ -53,6 +53,7 @@ class BasePatterns:
 
             "Pat:Fencing_start" : "Initiating remote operation .* for %s",
             "Pat:Fencing_ok"    : r"stonith.*:\s*Operation .* of %s by .* for .*@.*: OK",
+            "Pat:Fencing_recover"    : r"pengine.*: Recover %s",
 
             "Pat:RscOpOK"       : r"crmd.*:\s*Operation %s_%s.*:\s*ok \(.*confirmed=\S+\)",
             "Pat:RscRemoteOpOK" : r"crmd.*:\s*Operation %s_%s.*:\s*ok \(node=%s,.*,\s*confirmed=true\)",
@@ -179,7 +180,7 @@ class crm_cs_v0(BasePatterns):
             r"update_trace_data",
             r"async_notify:.*strange, client not found",
             r"Parse error: Ignoring unknown option .*nodename",
-            r"error: log_operation:.*Operation 'reboot' .* with device 'FencingFail' returned:",
+            r"error.*: Operation 'reboot' .* with device 'FencingFail' returned:",
             r"Child process .* terminated with signal 9",
             r"getinfo response error: 1$",
             "sbd.* error: inquisitor_child: DEBUG MODE IS ACTIVE",
@@ -370,7 +371,7 @@ class crm_cs_v0(BasePatterns):
             r"crmd.*:\s*warn.*:\s*Callback already present",
         ]
         self.components["stonith-ignore"] = [
-            "LogActions: Recover Fencing",
+            r"pengine.*: Recover Fencing",
             "Updating failcount for Fencing",
             r"error:.*Connection to stonith-ng failed",
             r"error:.*Connection to stonith-ng.*closed \(I/O condition=17\)",
@@ -392,7 +393,7 @@ class crm_mcp(crm_cs_v0):
 
         self.commands.update({
             "StartCmd"       : "service corosync start && service pacemaker start",
-            "StopCmd"        : "service pacemaker stop; service pacemaker_remote stop; service corosync stop",
+            "StopCmd"        : "service pacemaker stop; [ ! -e /usr/sbin/pacemaker_remoted ] || service pacemaker_remote stop; service corosync stop",
 
             "EpochCmd"      : "crm_node -e",
             "QuorumCmd"      : "crm_node -q",
@@ -442,7 +443,7 @@ class crm_cman(crm_cs_v0):
 
         self.commands.update({
             "StartCmd"       : "service pacemaker start",
-            "StopCmd"        : "service pacemaker stop; service pacemaker_remote stop",
+            "StopCmd"        : "service pacemaker stop; [ ! -e /usr/sbin/pacemaker_remoted ] || service pacemaker_remote stop",
 
             "EpochCmd"      : "crm_node -e --cman",
             "QuorumCmd"      : "crm_node -q --cman",

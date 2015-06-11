@@ -770,17 +770,20 @@ mainloop_add_ipc_client(const char *name, int priority, size_t max_size, void *u
         int32_t fd = crm_ipc_get_fd(conn);
 
         client = mainloop_add_fd(name, priority, fd, userdata, NULL);
-        client->ipc = conn;
-        client->destroy_fn = callbacks->destroy;
-        client->dispatch_fn_ipc = callbacks->dispatch;
     }
 
-    if (conn && client == NULL) {
-        crm_trace("Connection to %s failed", name);
-        crm_ipc_close(conn);
-        crm_ipc_destroy(conn);
+    if (client == NULL) {
+        crm_perror(LOG_TRACE, "Connection to %s failed", name);
+        if (conn) {
+            crm_ipc_close(conn);
+            crm_ipc_destroy(conn);
+        }
+        return NULL;
     }
 
+    client->ipc = conn;
+    client->destroy_fn = callbacks->destroy;
+    client->dispatch_fn_ipc = callbacks->dispatch;
     return client;
 }
 
@@ -807,6 +810,9 @@ mainloop_add_fd(const char *name, int priority, int fd, void *userdata,
 
     if (fd >= 0) {
         client = calloc(1, sizeof(mainloop_io_t));
+        if (client == NULL) {
+            return NULL;
+        }
         client->name = strdup(name);
         client->userdata = userdata;
 
@@ -833,6 +839,8 @@ mainloop_add_fd(const char *name, int priority, int fd, void *userdata,
          */
         g_io_channel_unref(client->channel);
         crm_trace("Added connection %d for %s[%p].%d", client->source, client->name, client, fd);
+    } else {
+        errno = EINVAL;
     }
 
     return client;

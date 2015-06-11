@@ -19,3 +19,7 @@ TimeoutStartSec=30s
 
 # Restart options include: no, on-success, on-failure, on-abort or always
 Restart=on-failure
+
+# crm_perror() writes directly to stderr, so ignore it here
+# to avoid double-logging with the wrong format
+StandardError=null

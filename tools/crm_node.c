@@ -145,6 +145,7 @@ int tools_remove_node_cache(const char *node, const char *target)
     }
 
     if (!crm_ipc_connect(conn)) {
+        crm_perror(LOG_ERR, "Connection to %s failed", target);
         crm_ipc_destroy(conn);
         return -ENOTCONN;
     }

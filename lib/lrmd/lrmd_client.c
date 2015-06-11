@@ -960,6 +960,7 @@ lrmd_ipc_connect(lrmd_t * lrmd, int *fd)
         if (native->ipc && crm_ipc_connect(native->ipc)) {
             *fd = crm_ipc_get_fd(native->ipc);
         } else if (native->ipc) {
+            crm_perror(LOG_ERR, "Connection to local resource manager failed");
             rc = -ENOTCONN;
         }
     } else {

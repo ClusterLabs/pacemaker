@@ -215,6 +215,7 @@ send_attrd_query(const char *name, const char *host, xmlNode **reply)
     crm_debug("Sending query for value of %s on %s", name, (host? host : "all nodes"));
     ipc = crm_ipc_new(T_ATTRD, 0);
     if (crm_ipc_connect(ipc) == FALSE) {
+        crm_perror(LOG_ERR, "Connection to cluster attribute manager failed");
         rc = -ENOTCONN;
     } else {
         rc = crm_ipc_send(ipc, query, crm_ipc_flags_none|crm_ipc_client_response, 0, reply);

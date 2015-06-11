@@ -215,6 +215,7 @@ cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, in
             *async_fd = crm_ipc_get_fd(native->ipc);
 
         } else if (native->ipc) {
+            crm_perror(LOG_ERR, "Connection to cluster information base failed");
             rc = -ENOTCONN;
         }
 
