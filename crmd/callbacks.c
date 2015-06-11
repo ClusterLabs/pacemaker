@@ -99,6 +99,8 @@ crmd_ha_msg_filter(xmlNode * msg)
     trigger_fsa(fsa_source);
 }
 
+#define state_text(state) ((state)? (const char *)(state) : "in unknown state")
+
 void
 peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
 {
@@ -115,13 +117,15 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
     switch (type) {
         case crm_status_uname:
             /* If we've never seen the node, then it also wont be in the status section */
-            crm_info("%s is now %s", node->uname, node->state);
+            crm_info("%s is now %s", node->uname, state_text(node->state));
             return;
         case crm_status_rstate:
-            crm_info("Remote node %s is now %s (was %s)", node->uname, node->state, (const char *)data);
+            crm_info("Remote node %s is now %s (was %s)",
+                     node->uname, state_text(node->state), state_text(data));
             /* Keep going */
         case crm_status_nstate:
-            crm_info("%s is now %s (was %s)", node->uname, node->state, (const char *)data);
+            crm_info("%s is now %s (was %s)",
+                     node->uname, state_text(node->state), state_text(data));
             if (safe_str_eq(data, node->state)) {
                 /* State did not change */
                 return;
@@ -150,7 +154,6 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 changed = node->processes ^ old;
             }
 
-            /* crmd_proc_update(node, proc_flags); */
             status = (node->processes & proc_flags) ? ONLINESTATUS : OFFLINESTATUS;
             crm_info("Client %s/%s now has status [%s] (DC=%s, changed=%6x)",
                      node->uname, peer2text(proc_flags), status,

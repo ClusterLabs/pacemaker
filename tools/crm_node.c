@@ -183,7 +183,7 @@ int tools_remove_node_cache(const char *node, const char *target)
         crm_xml_add(cmd, F_TYPE, T_ATTRD);
         crm_xml_add(cmd, F_ORIG, crm_system_name);
 
-        crm_xml_add(cmd, F_ATTRD_TASK, "peer-remove");
+        crm_xml_add(cmd, F_ATTRD_TASK, ATTRD_OP_PEER_REMOVE);
         crm_xml_add(cmd, F_ATTRD_HOST, name);
 
         if (n) {

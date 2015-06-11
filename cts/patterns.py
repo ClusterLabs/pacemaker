@@ -96,9 +96,9 @@ class crm_lha(BasePatterns):
         self.commands.update({
             "StartCmd"       : "service heartbeat start > /dev/null 2>&1",
             "StopCmd"        : "service heartbeat stop  > /dev/null 2>&1",
-            "EpocheCmd"      : "crm_node -H -e",
+            "EpochCmd"      : "crm_node -H -e",
             "QuorumCmd"      : "crm_node -H -q",
-            "ParitionCmd"    : "crm_node -H -p",
+            "PartitionCmd"    : "crm_node -H -p",
         })
 
         self.search.update({
@@ -149,9 +149,9 @@ class crm_cs_v0(BasePatterns):
         BasePatterns.__init__(self, name)
 
         self.commands.update({
-            "EpocheCmd"      : "crm_node -e --openais",
+            "EpochCmd"      : "crm_node -e --openais",
             "QuorumCmd"      : "crm_node -q --openais",
-            "ParitionCmd"    : "crm_node -p --openais",
+            "PartitionCmd"    : "crm_node -p --openais",
             "StartCmd"       : "service corosync start",
             "StopCmd"        : "service corosync stop",
         })
@@ -394,9 +394,9 @@ class crm_mcp(crm_cs_v0):
             "StartCmd"       : "service corosync start && service pacemaker start",
             "StopCmd"        : "service pacemaker stop; service pacemaker_remote stop; service corosync stop",
 
-            "EpocheCmd"      : "crm_node -e",
+            "EpochCmd"      : "crm_node -e",
             "QuorumCmd"      : "crm_node -q",
-            "ParitionCmd"    : "crm_node -p",
+            "PartitionCmd"    : "crm_node -p",
         })
 
         self.search.update({
@@ -444,9 +444,9 @@ class crm_cman(crm_cs_v0):
             "StartCmd"       : "service pacemaker start",
             "StopCmd"        : "service pacemaker stop; service pacemaker_remote stop",
 
-            "EpocheCmd"      : "crm_node -e --cman",
+            "EpochCmd"      : "crm_node -e --cman",
             "QuorumCmd"      : "crm_node -q --cman",
-            "ParitionCmd"    : "crm_node -p --cman",
+            "PartitionCmd"    : "crm_node -p --cman",
 
             "Pat:We_stopped"   : "%s.*Unloading all Corosync service engines",
             "Pat:They_stopped" : "%s\W.*crmd.*Node %s\[.*state is now lost",

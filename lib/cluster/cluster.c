@@ -361,7 +361,6 @@ get_node_name(uint32_t nodeid)
     return name;
 }
 
-/* Only used by update_failcount() in te_utils.c */
 const char *
 crm_peer_uname(const char *uuid)
 {
@@ -584,7 +583,7 @@ get_cluster_type(void)
 
   done:
     if (cluster_type == pcmk_cluster_unknown) {
-        crm_notice("Could not determin the current cluster type");
+        crm_notice("Could not determine the current cluster type");
 
     } else if (cluster_type == pcmk_cluster_invalid) {
         crm_notice("This installation does not support the '%s' cluster infrastructure: terminating.",

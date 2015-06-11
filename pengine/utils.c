@@ -332,7 +332,7 @@ log_action(unsigned int log_level, const char *pre_text, action_t * action, gboo
                       pre_text == NULL ? "" : pre_text,
                       pre_text == NULL ? "" : ": ",
                       is_set(action->flags,
-                             pe_action_pseudo) ? "Pseduo " : is_set(action->flags,
+                             pe_action_pseudo) ? "Pseudo " : is_set(action->flags,
                                                                     pe_action_optional) ?
                       "Optional " : is_set(action->flags,
                                            pe_action_runnable) ? is_set(action->flags,
@@ -349,7 +349,7 @@ log_action(unsigned int log_level, const char *pre_text, action_t * action, gboo
                       is_set(action->flags,
                              pe_action_optional) ? "Optional " : is_set(action->flags,
                                                                         pe_action_pseudo)
-                      ? "Pseduo " : is_set(action->flags,
+                      ? "Pseudo " : is_set(action->flags,
                                            pe_action_runnable) ? is_set(action->flags,
                                                                         pe_action_processed)
                       ? "" : "(Provisional) " : "!!Non-Startable!! ", action->id,

@@ -2101,7 +2101,7 @@ native_expand(resource_t * rsc, pe_working_set_t * data_set)
 
 #define STOP_SANITY_ASSERT(lineno) do {                                 \
         if(current && current->details->unclean) {                      \
-            /* It will be a pseduo op */                                \
+            /* It will be a pseudo op */                                \
         } else if(stop == NULL) {                                       \
             crm_err("%s:%d: No stop action exists for %s", __FUNCTION__, lineno, rsc->id); \
             CRM_ASSERT(stop != NULL);                                   \

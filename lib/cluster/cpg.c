@@ -369,26 +369,33 @@ pcmk_cpg_membership(cpg_handle_t handle,
     uint32_t local_nodeid = get_local_nodeid(handle);
 
     for (i = 0; i < left_list_entries; i++) {
-        crm_node_t *peer = crm_get_peer(left_list[i].nodeid, NULL);
+        crm_node_t *peer = crm_find_peer(left_list[i].nodeid, NULL);
 
-        crm_info("Left[%d.%d] %s.%u ", counter, i, groupName->value, left_list[i].nodeid);
-        crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, OFFLINESTATUS);
+        crm_info("Node %u left group %s (peer=%s, counter=%d.%d)",
+                 left_list[i].nodeid, groupName->value,
+                 (peer? peer->uname : "<none>"), counter, i);
+        if (peer) {
+            crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, OFFLINESTATUS);
+        }
     }
 
     for (i = 0; i < joined_list_entries; i++) {
-        crm_info("Joined[%d.%d] %s.%u ", counter, i, groupName->value, joined_list[i].nodeid);
+        crm_info("Node %u joined group %s (counter=%d.%d)",
+                 joined_list[i].nodeid, groupName->value, counter, i);
     }
 
     for (i = 0; i < member_list_entries; i++) {
         crm_node_t *peer = crm_get_peer(member_list[i].nodeid, NULL);
 
-        crm_info("Member[%d.%d] %s.%u ", counter, i, groupName->value, member_list[i].nodeid);
+        crm_info("Node %u still member of group %s (peer=%s, counter=%d.%d)",
+                 member_list[i].nodeid, groupName->value,
+                 (peer? peer->uname : "<none>"), counter, i);
 
         /* Anyone that is sending us CPG messages must also be a _CPG_ member.
          * But its _not_ safe to assume its in the quorum membership.
          * We may have just found out its dead and are processing the last couple of messages it sent
          */
-        crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, ONLINESTATUS);
+        peer = crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, ONLINESTATUS);
         if(peer && peer->state && crm_is_peer_active(peer) == FALSE) {
             time_t now = time(NULL);
 
@@ -403,8 +410,9 @@ pcmk_cpg_membership(cpg_handle_t handle,
                  * Set the threshold to 1 minute
                  */
                 crm_err("Node %s[%u] appears to be online even though we think it is dead", peer->uname, peer->id);
-                crm_update_peer_state(__FUNCTION__, peer, CRM_NODE_MEMBER, 0);
-                peer->votes = 0;
+                if (crm_update_peer_state(__FUNCTION__, peer, CRM_NODE_MEMBER, 0)) {
+                    peer->votes = 0;
+                }
             }
         }
 
