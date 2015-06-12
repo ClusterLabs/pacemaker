@@ -28,8 +28,8 @@ Pacemaker's key features include:
  * Detection and recovery of node and service-level failures
  * Storage agnostic, no requirement for shared storage
  * Resource agnostic, anything that can be scripted can be clustered
- * Supports 'fencing' (also known under 'STONITH' acronym) for ensuring
-   data integrity
+ * Supports 'fencing' (also known under 'STONITH' acronym,
+   <<s-intro-stonith,deciphered>> later on) for ensuring data integrity
  * Supports large and small clusters
  * Supports both quorate and resource-driven clusters
  * Supports practically any redundancy configuration
@@ -126,8 +126,13 @@ In some cases, it may be necessary to power off nodes in order to
 protect shared data or complete resource recovery. For this, Pacemaker
 comes with STONITHd. 
 
-STONITH is an acronym for 'Shoot-The-Other-Node-In-The-Head' and is
-usually implemented with a remote power switch.
+[[s-intro-stonith]]
+.STONITH
+[NOTE]
+*STONITH* is an acronym for 'Shoot-The-Other-Node-In-The-Head',
+a recommended practice that misbehaving node is best to be promptly
+'fenced' (shut off, cut from shared resources or otherwise immobilized),
+and is usually implemented with a remote power switch.
 
 In Pacemaker, STONITH devices are modeled as resources (and configured
 in the CIB) to enable them to be easily monitored for failure, however
