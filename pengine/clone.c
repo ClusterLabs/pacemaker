@@ -1518,6 +1518,23 @@ clone_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         return FALSE;
     }
 
+    if (rsc->exclusive_discover) {
+        node_t *allowed = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
+        if (allowed && allowed->rsc_discover_mode != discover_exclusive) {
+            /* exclusive discover is enabled and this node is not marked
+             * as a node this resource should be discovered on
+             *
+             * remove the node from allowed_nodes so that the
+             * notification contains only nodes that we might ever run
+             * on
+             */
+            g_hash_table_remove(rsc->allowed_nodes, node->details->id);
+
+            /* Bit of a shortcut - might as well take it */
+            return FALSE;
+        }
+    }
+
     if (is_not_set(rsc->flags, pe_rsc_unique)
         && clone_data->clone_node_max == 1) {
         /* only look for one copy */

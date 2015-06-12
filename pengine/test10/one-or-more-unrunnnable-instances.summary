@@ -251,6 +251,7 @@ Transition Summary:
 Executing cluster transition:
  * Resource action: galera          monitor=10000 on rdo7-node2
  * Pseudo action:   keystone-clone_start_0
+ * Pseudo action:   nova-compute-clone_pre_notify_start_0
  * Resource action: keystone        start on rdo7-node2
  * Resource action: keystone        start on rdo7-node3
  * Resource action: keystone        start on rdo7-node1
@@ -261,6 +262,7 @@ Executing cluster transition:
  * Pseudo action:   neutron-server-clone_start_0
  * Pseudo action:   nova-consoleauth-clone_start_0
  * Pseudo action:   ceilometer-central-clone_start_0
+ * Pseudo action:   nova-compute-clone_confirmed-pre_notify_start_0
  * Resource action: keystone        monitor=60000 on rdo7-node2
  * Resource action: keystone        monitor=60000 on rdo7-node3
  * Resource action: keystone        monitor=60000 on rdo7-node1
@@ -549,12 +551,17 @@ Executing cluster transition:
  * Resource action: heat-engine     start on rdo7-node3
  * Resource action: heat-engine     start on rdo7-node1
  * Pseudo action:   heat-engine-clone_running_0
- * Resource action: nova-compute    monitor=10000 on mrg-07
- * Resource action: nova-compute    monitor=10000 on mrg-08
- * Resource action: nova-compute    monitor=10000 on mrg-09
+ * Pseudo action:   nova-compute-clone_post_notify_running_0
  * Resource action: heat-engine     monitor=60000 on rdo7-node2
  * Resource action: heat-engine     monitor=60000 on rdo7-node3
  * Resource action: heat-engine     monitor=60000 on rdo7-node1
+ * Resource action: nova-compute    notify on mrg-07
+ * Resource action: nova-compute    notify on mrg-08
+ * Resource action: nova-compute    notify on mrg-09
+ * Pseudo action:   nova-compute-clone_confirmed-post_notify_running_0
+ * Resource action: nova-compute    monitor=10000 on mrg-07
+ * Resource action: nova-compute    monitor=10000 on mrg-08
+ * Resource action: nova-compute    monitor=10000 on mrg-09
 
 Revised cluster status:
 Online: [ rdo7-node1 rdo7-node2 rdo7-node3 ]

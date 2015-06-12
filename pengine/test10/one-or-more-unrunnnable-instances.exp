@@ -4298,24 +4298,40 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="293">
+  <synapse id="293" priority="1000000">
+    <action_set>
+      <rsc_op id="785" operation="notify" operation_key="nova-compute_post_notify_start_0" internal_operation_key="nova-compute:0_post_notify_start_0" on_node="mrg-07" on_node_uuid="mrg-07" router_node="rdo7-node1">
+        <primitive id="nova-compute" long-id="nova-compute:0" class="ocf" provider="openstack" type="NovaCompute"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3" CRM_meta_notify_available_uname="mrg-09 mrg-08 mrg-07" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="nova-compute:0 nova-compute:1 nova-compute:2 nova-compute:3 nova-compute:4 nova-compute:5" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="nova-compute:0 nova-compute:1 nova-compute:2" CRM_meta_notify_start_uname="mrg-07 mrg-08 mrg-09" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="593" operation="notify" operation_key="nova-compute-clone_post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="294">
     <action_set>
       <rsc_op id="584" operation="monitor" operation_key="nova-compute_monitor_10000" internal_operation_key="nova-compute:0_monitor_10000" on_node="mrg-07" on_node_uuid="mrg-07" router_node="rdo7-node1">
         <primitive id="nova-compute" long-id="nova-compute:0" class="ocf" provider="openstack" type="NovaCompute"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
         <rsc_op id="583" operation="start" operation_key="nova-compute_start_0" internal_operation_key="nova-compute:0_start_0" on_node="mrg-07" on_node_uuid="mrg-07" router_node="rdo7-node1"/>
       </trigger>
+      <trigger>
+        <pseudo_event id="594" operation="notified" operation_key="nova-compute-clone_confirmed-post_notify_running_0"/>
+      </trigger>
     </inputs>
   </synapse>
-  <synapse id="294">
+  <synapse id="295">
     <action_set>
       <rsc_op id="583" operation="start" operation_key="nova-compute_start_0" internal_operation_key="nova-compute:0_start_0" on_node="mrg-07" on_node_uuid="mrg-07" router_node="rdo7-node1">
         <primitive id="nova-compute" long-id="nova-compute:0" class="ocf" provider="openstack" type="NovaCompute"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3" CRM_meta_notify_available_uname="mrg-09 mrg-08 mrg-07" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="nova-compute:0 nova-compute:1 nova-compute:2 nova-compute:3 nova-compute:4 nova-compute:5" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="nova-compute:0 nova-compute:1 nova-compute:2" CRM_meta_notify_start_uname="mrg-07 mrg-08 mrg-09" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -4327,24 +4343,40 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="295">
+  <synapse id="296" priority="1000000">
+    <action_set>
+      <rsc_op id="786" operation="notify" operation_key="nova-compute:1_post_notify_start_0" on_node="mrg-08" on_node_uuid="mrg-08" router_node="rdo7-node2">
+        <primitive id="nova-compute" long-id="nova-compute:1" class="ocf" provider="openstack" type="NovaCompute"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3" CRM_meta_notify_available_uname="mrg-09 mrg-08 mrg-07" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="nova-compute:0 nova-compute:1 nova-compute:2 nova-compute:3 nova-compute:4 nova-compute:5" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="nova-compute:0 nova-compute:1 nova-compute:2" CRM_meta_notify_start_uname="mrg-07 mrg-08 mrg-09" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="593" operation="notify" operation_key="nova-compute-clone_post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="297">
     <action_set>
       <rsc_op id="586" operation="monitor" operation_key="nova-compute:1_monitor_10000" on_node="mrg-08" on_node_uuid="mrg-08" router_node="rdo7-node2">
         <primitive id="nova-compute" long-id="nova-compute:1" class="ocf" provider="openstack" type="NovaCompute"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
         <rsc_op id="585" operation="start" operation_key="nova-compute:1_start_0" on_node="mrg-08" on_node_uuid="mrg-08" router_node="rdo7-node2"/>
       </trigger>
+      <trigger>
+        <pseudo_event id="594" operation="notified" operation_key="nova-compute-clone_confirmed-post_notify_running_0"/>
+      </trigger>
     </inputs>
   </synapse>
-  <synapse id="296">
+  <synapse id="298">
     <action_set>
       <rsc_op id="585" operation="start" operation_key="nova-compute:1_start_0" on_node="mrg-08" on_node_uuid="mrg-08" router_node="rdo7-node2">
         <primitive id="nova-compute" long-id="nova-compute:1" class="ocf" provider="openstack" type="NovaCompute"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3" CRM_meta_notify_available_uname="mrg-09 mrg-08 mrg-07" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="nova-compute:0 nova-compute:1 nova-compute:2 nova-compute:3 nova-compute:4 nova-compute:5" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="nova-compute:0 nova-compute:1 nova-compute:2" CRM_meta_notify_start_uname="mrg-07 mrg-08 mrg-09" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -4356,24 +4388,40 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="297">
+  <synapse id="299" priority="1000000">
+    <action_set>
+      <rsc_op id="787" operation="notify" operation_key="nova-compute:2_post_notify_start_0" on_node="mrg-09" on_node_uuid="mrg-09" router_node="rdo7-node3">
+        <primitive id="nova-compute" long-id="nova-compute:2" class="ocf" provider="openstack" type="NovaCompute"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3" CRM_meta_notify_available_uname="mrg-09 mrg-08 mrg-07" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="nova-compute:0 nova-compute:1 nova-compute:2 nova-compute:3 nova-compute:4 nova-compute:5" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="nova-compute:0 nova-compute:1 nova-compute:2" CRM_meta_notify_start_uname="mrg-07 mrg-08 mrg-09" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="593" operation="notify" operation_key="nova-compute-clone_post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="300">
     <action_set>
       <rsc_op id="588" operation="monitor" operation_key="nova-compute:2_monitor_10000" on_node="mrg-09" on_node_uuid="mrg-09" router_node="rdo7-node3">
         <primitive id="nova-compute" long-id="nova-compute:2" class="ocf" provider="openstack" type="NovaCompute"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
         <rsc_op id="587" operation="start" operation_key="nova-compute:2_start_0" on_node="mrg-09" on_node_uuid="mrg-09" router_node="rdo7-node3"/>
       </trigger>
+      <trigger>
+        <pseudo_event id="594" operation="notified" operation_key="nova-compute-clone_confirmed-post_notify_running_0"/>
+      </trigger>
     </inputs>
   </synapse>
-  <synapse id="298">
+  <synapse id="301">
     <action_set>
       <rsc_op id="587" operation="start" operation_key="nova-compute:2_start_0" on_node="mrg-09" on_node_uuid="mrg-09" router_node="rdo7-node3">
         <primitive id="nova-compute" long-id="nova-compute:2" class="ocf" provider="openstack" type="NovaCompute"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3" CRM_meta_notify_available_uname="mrg-09 mrg-08 mrg-07" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="nova-compute:0 nova-compute:1 nova-compute:2 nova-compute:3 nova-compute:4 nova-compute:5" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="nova-compute:0 nova-compute:1 nova-compute:2" CRM_meta_notify_start_uname="mrg-07 mrg-08 mrg-09" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -4385,10 +4433,66 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="299" priority="1000000">
+  <synapse id="302" priority="1000000">
+    <action_set>
+      <pseudo_event id="594" operation="notified" operation_key="nova-compute-clone_confirmed-post_notify_running_0">
+        <attributes CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="593" operation="notify" operation_key="nova-compute-clone_post_notify_running_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="785" operation="notify" operation_key="nova-compute_post_notify_start_0" internal_operation_key="nova-compute:0_post_notify_start_0" on_node="mrg-07" on_node_uuid="mrg-07" router_node="rdo7-node1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="786" operation="notify" operation_key="nova-compute:1_post_notify_start_0" on_node="mrg-08" on_node_uuid="mrg-08" router_node="rdo7-node2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="787" operation="notify" operation_key="nova-compute:2_post_notify_start_0" on_node="mrg-09" on_node_uuid="mrg-09" router_node="rdo7-node3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="303" priority="1000000">
+    <action_set>
+      <pseudo_event id="593" operation="notify" operation_key="nova-compute-clone_post_notify_running_0">
+        <attributes CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="590" operation="running" operation_key="nova-compute-clone_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="592" operation="notified" operation_key="nova-compute-clone_confirmed-pre_notify_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="304">
+    <action_set>
+      <pseudo_event id="592" operation="notified" operation_key="nova-compute-clone_confirmed-pre_notify_start_0">
+        <attributes CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="591" operation="notify" operation_key="nova-compute-clone_pre_notify_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="305">
+    <action_set>
+      <pseudo_event id="591" operation="notify" operation_key="nova-compute-clone_pre_notify_start_0">
+        <attributes CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="306" priority="1000000">
     <action_set>
       <pseudo_event id="590" operation="running" operation_key="nova-compute-clone_running_0">
-        <attributes CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -4406,10 +4510,10 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="300">
+  <synapse id="307">
     <action_set>
       <pseudo_event id="589" operation="start" operation_key="nova-compute-clone_start_0">
-        <attributes CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -4419,24 +4523,27 @@
       <trigger>
         <pseudo_event id="580" operation="running" operation_key="ceilometer-compute-clone_running_0"/>
       </trigger>
+      <trigger>
+        <pseudo_event id="592" operation="notified" operation_key="nova-compute-clone_confirmed-pre_notify_start_0"/>
+      </trigger>
     </inputs>
   </synapse>
-  <synapse id="301">
+  <synapse id="308">
     <action_set>
-      <rsc_op id="594" operation="monitor" operation_key="fence-nova_monitor_60000" on_node="rdo7-node2" on_node_uuid="2">
+      <rsc_op id="602" operation="monitor" operation_key="fence-nova_monitor_60000" on_node="rdo7-node2" on_node_uuid="2">
         <primitive id="fence-nova" class="stonith" type="fence_compute"/>
         <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_timeout="20000" auth-url="http://vip-keystone:35357/v2.0/"  domain="mpc.lab.eng.bos.redhat.com" login="admin" passwd="keystonetest" tenant-name="admin"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="593" operation="start" operation_key="fence-nova_start_0" on_node="rdo7-node2" on_node_uuid="2"/>
+        <rsc_op id="601" operation="start" operation_key="fence-nova_start_0" on_node="rdo7-node2" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="302">
+  <synapse id="309">
     <action_set>
-      <rsc_op id="593" operation="start" operation_key="fence-nova_start_0" on_node="rdo7-node2" on_node_uuid="2">
+      <rsc_op id="601" operation="start" operation_key="fence-nova_start_0" on_node="rdo7-node2" on_node_uuid="2">
         <primitive id="fence-nova" class="stonith" type="fence_compute"/>
         <attributes CRM_meta_timeout="20000" auth-url="http://vip-keystone:35357/v2.0/"  domain="mpc.lab.eng.bos.redhat.com" login="admin" passwd="keystonetest" tenant-name="admin"/>
       </rsc_op>
@@ -4447,7 +4554,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="303">
+  <synapse id="310">
     <action_set>
       <pseudo_event id="52" operation="clone-one-or-more:order-nova-conductor-clone-nova-compute-clone-mandatory" operation_key="clone-one-or-more:order-nova-conductor-clone-nova-compute-clone-mandatory">
         <attributes />
@@ -4465,7 +4572,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="304">
+  <synapse id="311">
     <action_set>
       <pseudo_event id="51" operation="clone-one-or-more:order-ceilometer-notification-clone-ceilometer-compute-clone-mandatory" operation_key="clone-one-or-more:order-ceilometer-notification-clone-ceilometer-compute-clone-mandatory">
         <attributes />
@@ -4483,7 +4590,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="305">
+  <synapse id="312">
     <action_set>
       <pseudo_event id="50" operation="clone-one-or-more:order-neutron-server-clone-neutron-openvswitch-agent-compute-clone-mandatory" operation_key="clone-one-or-more:order-neutron-server-clone-neutron-openvswitch-agent-compute-clone-mandatory">
         <attributes />

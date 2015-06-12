@@ -287,9 +287,7 @@
           <operations>
             <op id="keystone-monitor-interval-60s" interval="60s" name="monitor"/>
           </operations>
-          <meta_attributes id="keystone-meta_attributes"/>
         </primitive>
-        <meta_attributes id="keystone-clone-meta"/>
       </clone>
       <clone id="glance-fs-clone">
         <primitive class="ocf" id="glance-fs" provider="heartbeat" type="Filesystem">
@@ -776,10 +774,10 @@
             <op id="nova-compute-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
             <op id="nova-compute-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
           </operations>
-          <meta_attributes id="nova-compute-meta_attributes"/>
         </primitive>
         <meta_attributes id="nova-compute-clone-meta">
           <nvpair id="nova-compute-interleave" name="interleave" value="true"/>
+          <nvpair id="nova-compute-clone-meta_attributes-notify" name="notify" value="true"/>
         </meta_attributes>
       </clone>
       <primitive class="stonith" id="fence-nova" type="fence_compute">
