@@ -3,11 +3,11 @@ See also:
 
 Commands:    `some-tool --with option`
 Files:       '/tmp/file.name' 
-Italic:	     _some text_
+Italic:      _some text_
 Mono:        +some text+
 Bold:        *some text*
-Super:	     ^some text^
-Sub:	     ~some text~
+Super:       ^some text^
+Sub:         ~some text~
 Quotes:
              ``double quoted''
               `single quoted'
@@ -20,12 +20,12 @@ Emphasis:    italic bold
 Replaceable: italic mono 
 
 
-.Title for Eaxmple
+.Title for Example
 =====
 Some text
 =====
 
-.Title for Eaxmple with XML Listing
+.Title for Example with XML Listing
 =====
 [source,XML]
 -----
