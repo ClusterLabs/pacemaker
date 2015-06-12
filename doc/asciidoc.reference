@@ -1,5 +1,17 @@
+= Single-chapter part of the documentation =
+
+== Go-to reference chapter for how we use AsciiDoc on this project ==
+
+[NOTE]
+======
+This is *not* an attempt for fully self-hosted AsciiDoc document,
+consider it a plaintext full of AsciiDoc samples (it's up to the reader
+to recognize the borderline) at documentation writers' disposal
+to somewhat standardize the style.
+
 See also:
    http://powerman.name/doc/asciidoc
+======
 
 Emphasis:    _some test_
 Mono:        +some text+
