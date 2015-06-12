@@ -100,7 +100,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="30" operation="stonith" operation_key="stonith-rhel7-auto4-reboot" on_node="rhel7-auto4" on_node_uuid="rhel7-auto4" router_node="rhel7-auto2"/>
+        <crm_event id="30" operation="stonith" operation_key="stonith-rhel7-auto4-reboot" on_node="rhel7-auto4" on_node_uuid="rhel7-auto4"/>
       </trigger>
     </inputs>
   </synapse>
@@ -159,13 +159,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="30" operation="stonith" operation_key="stonith-rhel7-auto4-reboot" on_node="rhel7-auto4" on_node_uuid="rhel7-auto4" router_node="rhel7-auto2"/>
+        <crm_event id="30" operation="stonith" operation_key="stonith-rhel7-auto4-reboot" on_node="rhel7-auto4" on_node_uuid="rhel7-auto4"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="13">
     <action_set>
-      <crm_event id="30" operation="stonith" operation_key="stonith-rhel7-auto4-reboot" on_node="rhel7-auto4" on_node_uuid="rhel7-auto4" router_node="rhel7-auto2">
+      <crm_event id="30" operation="stonith" operation_key="stonith-rhel7-auto4-reboot" on_node="rhel7-auto4" on_node_uuid="rhel7-auto4">
         <attributes CRM_meta_on_node="rhel7-auto4" CRM_meta_on_node_uuid="rhel7-auto4" CRM_meta_probe_complete="true" CRM_meta_stonith_action="reboot" />
       </crm_event>
     </action_set>
@@ -179,7 +179,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="30" operation="stonith" operation_key="stonith-rhel7-auto4-reboot" on_node="rhel7-auto4" on_node_uuid="rhel7-auto4" router_node="rhel7-auto2"/>
+        <crm_event id="30" operation="stonith" operation_key="stonith-rhel7-auto4-reboot" on_node="rhel7-auto4" on_node_uuid="rhel7-auto4"/>
       </trigger>
     </inputs>
   </synapse>
