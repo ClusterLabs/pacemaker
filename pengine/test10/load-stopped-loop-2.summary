@@ -1,0 +1,111 @@
+
+Current cluster status:
+Online: [ xfc0 xfc1 xfc2 xfc3 ]
+
+ Clone Set: cl_glusterd [p_glusterd]
+     Started: [ xfc0 xfc1 xfc2 xfc3 ]
+ Clone Set: cl_p_bl_glusterfs [p_bl_glusterfs]
+     Started: [ xfc0 xfc1 xfc2 xfc3 ]
+ xu-test8	(ocf::heartbeat:Xen):	Started xfc3
+ xu-test1	(ocf::heartbeat:Xen):	Started xfc3
+ xu-test10	(ocf::heartbeat:Xen):	Started xfc3
+ xu-test11	(ocf::heartbeat:Xen):	Started xfc3
+ xu-test12	(ocf::heartbeat:Xen):	Started xfc2
+ xu-test13	(ocf::heartbeat:Xen):	Stopped
+ xu-test14	(ocf::heartbeat:Xen):	(target-role:Stopped) Stopped
+ xu-test15	(ocf::heartbeat:Xen):	(target-role:Stopped) Stopped
+ xu-test16	(ocf::heartbeat:Xen):	(target-role:Stopped) Stopped
+ xu-test17	(ocf::heartbeat:Xen):	(target-role:Stopped) Stopped
+ xu-test2	(ocf::heartbeat:Xen):	Started xfc3
+ xu-test3	(ocf::heartbeat:Xen):	Started xfc1
+ xu-test4	(ocf::heartbeat:Xen):	Started xfc0
+ xu-test5	(ocf::heartbeat:Xen):	Started xfc2
+ xu-test6	(ocf::heartbeat:Xen):	Started xfc3
+ xu-test7	(ocf::heartbeat:Xen):	Started xfc1
+ xu-test9	(ocf::heartbeat:Xen):	Started xfc0
+
+Transition Summary:
+ * Migrate xu-test12	(Started xfc2 -> xfc3)
+ * Migrate xu-test2	(Started xfc3 -> xfc1)
+ * Migrate xu-test3	(Started xfc1 -> xfc0)
+ * Migrate xu-test4	(Started xfc0 -> xfc2)
+ * Migrate xu-test5	(Started xfc2 -> xfc3)
+ * Migrate xu-test6	(Started xfc3 -> xfc1)
+ * Migrate xu-test7	(Started xfc1 -> xfc0)
+ * Migrate xu-test9	(Started xfc0 -> xfc2)
+ * Start   xu-test13	(xfc3)
+
+Executing cluster transition:
+ * Resource action: xu-test12       migrate_to on xfc2
+ * Resource action: xu-test2        migrate_to on xfc3
+ * Resource action: xu-test3        migrate_to on xfc1
+ * Resource action: xu-test4        migrate_to on xfc0
+ * Resource action: xu-test5        migrate_to on xfc2
+ * Resource action: xu-test12       migrate_from on xfc3
+ * Resource action: xu-test12       stop on xfc2
+ * Resource action: xu-test2        migrate_from on xfc1
+ * Resource action: xu-test2        stop on xfc3
+ * Resource action: xu-test3        migrate_from on xfc0
+ * Resource action: xu-test3        stop on xfc1
+ * Resource action: xu-test4        migrate_from on xfc2
+ * Resource action: xu-test4        stop on xfc0
+ * Resource action: xu-test5        migrate_from on xfc3
+ * Resource action: xu-test5        stop on xfc2
+ * Pseudo action:   load_stopped_xfc2
+ * Pseudo action:   xu-test4_start_0
+ * Resource action: xu-test9        migrate_to on xfc0
+ * Resource action: xu-test4        monitor=10000 on xfc2
+ * Resource action: xu-test9        migrate_from on xfc2
+ * Resource action: xu-test9        stop on xfc0
+ * Pseudo action:   load_stopped_xfc0
+ * Pseudo action:   xu-test3_start_0
+ * Resource action: xu-test7        migrate_to on xfc1
+ * Pseudo action:   xu-test9_start_0
+ * Resource action: xu-test3        monitor=10000 on xfc0
+ * Resource action: xu-test7        migrate_from on xfc0
+ * Resource action: xu-test7        stop on xfc1
+ * Resource action: xu-test9        monitor=10000 on xfc2
+ * Pseudo action:   load_stopped_xfc1
+ * Pseudo action:   xu-test2_start_0
+ * Resource action: xu-test6        migrate_to on xfc3
+ * Pseudo action:   xu-test7_start_0
+ * Resource action: xu-test2        monitor=10000 on xfc1
+ * Resource action: xu-test6        migrate_from on xfc1
+ * Resource action: xu-test6        stop on xfc3
+ * Resource action: xu-test7        monitor=10000 on xfc0
+ * Pseudo action:   load_stopped_xfc3
+ * Pseudo action:   all_stopped
+ * Pseudo action:   xu-test12_start_0
+ * Pseudo action:   xu-test5_start_0
+ * Pseudo action:   xu-test6_start_0
+ * Resource action: xu-test13       start on xfc3
+ * Resource action: xu-test12       monitor=10000 on xfc3
+ * Resource action: xu-test5        monitor=10000 on xfc3
+ * Resource action: xu-test6        monitor=10000 on xfc1
+ * Resource action: xu-test13       monitor=10000 on xfc3
+
+Revised cluster status:
+Online: [ xfc0 xfc1 xfc2 xfc3 ]
+
+ Clone Set: cl_glusterd [p_glusterd]
+     Started: [ xfc0 xfc1 xfc2 xfc3 ]
+ Clone Set: cl_p_bl_glusterfs [p_bl_glusterfs]
+     Started: [ xfc0 xfc1 xfc2 xfc3 ]
+ xu-test8	(ocf::heartbeat:Xen):	Started xfc3
+ xu-test1	(ocf::heartbeat:Xen):	Started xfc3
+ xu-test10	(ocf::heartbeat:Xen):	Started xfc3
+ xu-test11	(ocf::heartbeat:Xen):	Started xfc3
+ xu-test12	(ocf::heartbeat:Xen):	Started xfc3
+ xu-test13	(ocf::heartbeat:Xen):	Started xfc3
+ xu-test14	(ocf::heartbeat:Xen):	(target-role:Stopped) Stopped
+ xu-test15	(ocf::heartbeat:Xen):	(target-role:Stopped) Stopped
+ xu-test16	(ocf::heartbeat:Xen):	(target-role:Stopped) Stopped
+ xu-test17	(ocf::heartbeat:Xen):	(target-role:Stopped) Stopped
+ xu-test2	(ocf::heartbeat:Xen):	Started xfc1
+ xu-test3	(ocf::heartbeat:Xen):	Started xfc0
+ xu-test4	(ocf::heartbeat:Xen):	Started xfc2
+ xu-test5	(ocf::heartbeat:Xen):	Started xfc3
+ xu-test6	(ocf::heartbeat:Xen):	Started xfc1
+ xu-test7	(ocf::heartbeat:Xen):	Started xfc0
+ xu-test9	(ocf::heartbeat:Xen):	Started xfc2
+

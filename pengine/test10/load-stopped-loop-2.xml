@@ -1,0 +1,814 @@
+<cib epoch="1503" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" crm_feature_set="3.0.9" update-origin="xfc0" update-client="crm_attribute" cib-last-written="Tue Dec 16 14:35:07 2014" have-quorum="1" dc-uuid="16843011">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair name="dc-version" value="1.1.12-561c4cf" id="cib-bootstrap-options-dc-version"/>
+        <nvpair name="cluster-infrastructure" value="corosync" id="cib-bootstrap-options-cluster-infrastructure"/>
+        <nvpair name="expected-quorum-votes" value="4" id="cib-bootstrap-options-expected-quorum-votes"/>
+        <nvpair name="stonith-enabled" value="false" id="cib-bootstrap-options-stonith-enabled"/>
+        <nvpair name="placement-strategy" value="balanced" id="cib-bootstrap-options-placement-strategy"/>
+        <nvpair name="last-lrm-refresh" value="1418736429" id="cib-bootstrap-options-last-lrm-refresh"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="16843009" uname="xfc1">
+        <utilization id="xfc1-utilization">
+          <nvpair name="memory" value="6470" id="xfc1-utilization-memory"/>
+          <nvpair name="cpu" value="4" id="xfc1-utilization-cpu"/>
+        </utilization>
+      </node>
+      <node id="16843008" uname="xfc0">
+        <utilization id="xfc0-utilization">
+          <nvpair name="memory" value="2870" id="xfc0-utilization-memory"/>
+          <nvpair name="cpu" value="4" id="xfc0-utilization-cpu"/>
+        </utilization>
+      </node>
+      <node id="16843011" uname="xfc3">
+        <utilization id="xfc3-utilization">
+          <nvpair name="cpu" value="8" id="xfc3-utilization-cpu"/>
+          <nvpair name="memory" value="13274" id="xfc3-utilization-memory"/>
+        </utilization>
+        <instance_attributes id="nodes-16843011">
+          <nvpair id="nodes-16843011-standby" name="standby" value="off"/>
+        </instance_attributes>
+      </node>
+      <node id="16843010" uname="xfc2">
+        <utilization id="xfc2-utilization">
+          <nvpair name="cpu" value="4" id="xfc2-utilization-cpu"/>
+          <nvpair name="memory" value="1275" id="xfc2-utilization-memory"/>
+        </utilization>
+        <instance_attributes id="nodes-16843010">
+          <nvpair id="nodes-16843010-standby" name="standby" value="off"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <clone id="cl_glusterd">
+        <meta_attributes id="cl_glusterd-meta_attributes">
+          <nvpair name="interleave" value="true" id="cl_glusterd-meta_attributes-interleave"/>
+          <nvpair name="target-role" value="Started" id="cl_glusterd-meta_attributes-target-role"/>
+          <nvpair name="is-managed" value="true" id="cl_glusterd-meta_attributes-is-managed"/>
+        </meta_attributes>
+        <primitive id="p_glusterd" class="ocf" provider="glusterfs" type="glusterd">
+          <operations>
+            <op name="monitor" interval="30" id="p_glusterd-monitor-30"/>
+          </operations>
+        </primitive>
+      </clone>
+      <clone id="cl_p_bl_glusterfs">
+        <meta_attributes id="cl_p_bl_glusterfs-meta_attributes">
+          <nvpair name="interleave" value="true" id="cl_p_bl_glusterfs-meta_attributes-interleave"/>
+          <nvpair name="target-role" value="Started" id="cl_p_bl_glusterfs-meta_attributes-target-role"/>
+        </meta_attributes>
+        <primitive id="p_bl_glusterfs" class="ocf" provider="heartbeat" type="Filesystem">
+          <instance_attributes id="p_bl_glusterfs-instance_attributes">
+            <nvpair name="device" value="gfs0:/diskimg" id="p_bl_glusterfs-instance_attributes-device"/>
+            <nvpair name="directory" value="/shared" id="p_bl_glusterfs-instance_attributes-directory"/>
+            <nvpair name="fstype" value="glusterfs" id="p_bl_glusterfs-instance_attributes-fstype"/>
+          </instance_attributes>
+          <operations>
+            <op name="monitor" interval="10s" timeout="60s" id="p_bl_glusterfs-monitor-10s"/>
+            <op name="start" interval="0" timeout="60s" id="p_bl_glusterfs-start-0"/>
+            <op name="stop" interval="0" timeout="60s" id="p_bl_glusterfs-stop-0"/>
+          </operations>
+        </primitive>
+      </clone>
+      <primitive id="xu-test8" class="ocf" provider="heartbeat" type="Xen">
+        <instance_attributes id="xu-test8-instance_attributes">
+          <nvpair name="xmfile" value="/shared/domu/test8.cfg" id="xu-test8-instance_attributes-xmfile"/>
+          <nvpair name="name" value="test8" id="xu-test8-instance_attributes-name"/>
+        </instance_attributes>
+        <operations>
+          <op name="start" interval="0" timeout="60s" id="xu-test8-start-0"/>
+          <op name="stop" interval="0" timeout="300s" id="xu-test8-stop-0"/>
+          <op name="monitor" interval="10s" timeout="30s" id="xu-test8-monitor-10s"/>
+          <op name="migrate_from" interval="0" timeout="120s" id="xu-test8-migrate_from-0"/>
+          <op name="migrate_to" interval="0" timeout="120s" id="xu-test8-migrate_to-0"/>
+        </operations>
+        <utilization id="xu-test8-utilization">
+          <nvpair name="memory" value="512" id="xu-test8-utilization-memory"/>
+          <nvpair name="cpu" value="1" id="xu-test8-utilization-cpu"/>
+        </utilization>
+        <meta_attributes id="xu-test8-meta_attributes">
+          <nvpair name="allow-migrate" value="true" id="xu-test8-meta_attributes-allow-migrate"/>
+          <nvpair name="target-role" value="Started" id="xu-test8-meta_attributes-target-role"/>
+        </meta_attributes>
+      </primitive>
+      <primitive id="xu-test1" class="ocf" provider="heartbeat" type="Xen">
+        <instance_attributes id="xu-test1-instance_attributes">
+          <nvpair name="xmfile" value="/shared/domu/test1.cfg" id="xu-test1-instance_attributes-xmfile"/>
+          <nvpair name="name" value="test1" id="xu-test1-instance_attributes-name"/>
+        </instance_attributes>
+        <operations>
+          <op name="start" interval="0" timeout="60s" id="xu-test1-start-0"/>
+          <op name="stop" interval="0" timeout="300s" id="xu-test1-stop-0"/>
+          <op name="monitor" interval="10s" timeout="30s" id="xu-test1-monitor-10s"/>
+          <op name="migrate_from" interval="0" timeout="120s" id="xu-test1-migrate_from-0"/>
+          <op name="migrate_to" interval="0" timeout="120s" id="xu-test1-migrate_to-0"/>
+        </operations>
+        <utilization id="xu-test1-utilization">
+          <nvpair name="memory" value="512" id="xu-test1-utilization-memory"/>
+          <nvpair name="cpu" value="1" id="xu-test1-utilization-cpu"/>
+        </utilization>
+        <meta_attributes id="xu-test1-meta_attributes">
+          <nvpair name="allow-migrate" value="true" id="xu-test1-meta_attributes-allow-migrate"/>
+          <nvpair name="target-role" value="Started" id="xu-test1-meta_attributes-target-role"/>
+          <nvpair id="xu-test1-meta_attributes-is-managed" name="is-managed" value="true"/>
+        </meta_attributes>
+      </primitive>
+      <primitive id="xu-test10" class="ocf" provider="heartbeat" type="Xen">
+        <instance_attributes id="xu-test10-instance_attributes">
+          <nvpair name="xmfile" value="/shared/domu/test10.cfg" id="xu-test10-instance_attributes-xmfile"/>
+          <nvpair name="name" value="test10" id="xu-test10-instance_attributes-name"/>
+        </instance_attributes>
+        <operations>
+          <op name="start" interval="0" timeout="60s" id="xu-test10-start-0"/>
+          <op name="stop" interval="0" timeout="300s" id="xu-test10-stop-0"/>
+          <op name="monitor" interval="10s" timeout="30s" id="xu-test10-monitor-10s"/>
+          <op name="migrate_from" interval="0" timeout="120s" id="xu-test10-migrate_from-0"/>
+          <op name="migrate_to" interval="0" timeout="120s" id="xu-test10-migrate_to-0"/>
+        </operations>
+        <utilization id="xu-test10-utilization">
+          <nvpair name="memory" value="512" id="xu-test10-utilization-memory"/>
+          <nvpair name="cpu" value="1" id="xu-test10-utilization-cpu"/>
+        </utilization>
+        <meta_attributes id="xu-test10-meta_attributes">
+          <nvpair name="allow-migrate" value="true" id="xu-test10-meta_attributes-allow-migrate"/>
+          <nvpair name="target-role" value="Started" id="xu-test10-meta_attributes-target-role"/>
+        </meta_attributes>
+      </primitive>
+      <primitive id="xu-test11" class="ocf" provider="heartbeat" type="Xen">
+        <instance_attributes id="xu-test11-instance_attributes">
+          <nvpair name="xmfile" value="/shared/domu/test11.cfg" id="xu-test11-instance_attributes-xmfile"/>
+          <nvpair name="name" value="test11" id="xu-test11-instance_attributes-name"/>
+        </instance_attributes>
+        <operations>
+          <op name="start" interval="0" timeout="60s" id="xu-test11-start-0"/>
+          <op name="stop" interval="0" timeout="300s" id="xu-test11-stop-0"/>
+          <op name="monitor" interval="10s" timeout="30s" id="xu-test11-monitor-10s"/>
+          <op name="migrate_from" interval="0" timeout="120s" id="xu-test11-migrate_from-0"/>
+          <op name="migrate_to" interval="0" timeout="120s" id="xu-test11-migrate_to-0"/>
+        </operations>
+        <utilization id="xu-test11-utilization">
+          <nvpair name="memory" value="512" id="xu-test11-utilization-memory"/>
+          <nvpair name="cpu" value="1" id="xu-test11-utilization-cpu"/>
+        </utilization>
+        <meta_attributes id="xu-test11-meta_attributes">
+          <nvpair name="allow-migrate" value="true" id="xu-test11-meta_attributes-allow-migrate"/>
+          <nvpair name="target-role" value="Started" id="xu-test11-meta_attributes-target-role"/>
+        </meta_attributes>
+      </primitive>
+      <primitive id="xu-test12" class="ocf" provider="heartbeat" type="Xen">
+        <instance_attributes id="xu-test12-instance_attributes">
+          <nvpair name="xmfile" value="/shared/domu/test12.cfg" id="xu-test12-instance_attributes-xmfile"/>
+          <nvpair name="name" value="test12" id="xu-test12-instance_attributes-name"/>
+        </instance_attributes>
+        <operations>
+          <op name="start" interval="0" timeout="60s" id="xu-test12-start-0"/>
+          <op name="stop" interval="0" timeout="300s" id="xu-test12-stop-0"/>
+          <op name="monitor" interval="10s" timeout="30s" id="xu-test12-monitor-10s"/>
+          <op name="migrate_from" interval="0" timeout="120s" id="xu-test12-migrate_from-0"/>
+          <op name="migrate_to" interval="0" timeout="120s" id="xu-test12-migrate_to-0"/>
+        </operations>
+        <utilization id="xu-test12-utilization">
+          <nvpair name="memory" value="512" id="xu-test12-utilization-memory"/>
+          <nvpair name="cpu" value="1" id="xu-test12-utilization-cpu"/>
+        </utilization>
+        <meta_attributes id="xu-test12-meta_attributes">
+          <nvpair name="allow-migrate" value="true" id="xu-test12-meta_attributes-allow-migrate"/>
+          <nvpair name="target-role" value="Started" id="xu-test12-meta_attributes-target-role"/>
+        </meta_attributes>
+      </primitive>
+      <primitive id="xu-test13" class="ocf" provider="heartbeat" type="Xen">
+        <instance_attributes id="xu-test13-instance_attributes">
+          <nvpair name="xmfile" value="/shared/domu/test13.cfg" id="xu-test13-instance_attributes-xmfile"/>
+          <nvpair name="name" value="test13" id="xu-test13-instance_attributes-name"/>
+        </instance_attributes>
+        <operations>
+          <op name="start" interval="0" timeout="60s" id="xu-test13-start-0"/>
+          <op name="stop" interval="0" timeout="300s" id="xu-test13-stop-0"/>
+          <op name="monitor" interval="10s" timeout="30s" id="xu-test13-monitor-10s"/>
+          <op name="migrate_from" interval="0" timeout="120s" id="xu-test13-migrate_from-0"/>
+          <op name="migrate_to" interval="0" timeout="120s" id="xu-test13-migrate_to-0"/>
+        </operations>
+        <utilization id="xu-test13-utilization">
+          <nvpair name="memory" value="512" id="xu-test13-utilization-memory"/>
+          <nvpair name="cpu" value="1" id="xu-test13-utilization-cpu"/>
+        </utilization>
+        <meta_attributes id="xu-test13-meta_attributes">
+          <nvpair name="allow-migrate" value="true" id="xu-test13-meta_attributes-allow-migrate"/>
+          <nvpair name="target-role" value="Started" id="xu-test13-meta_attributes-target-role"/>
+          <nvpair id="xu-test13-meta_attributes-is-managed" name="is-managed" value="true"/>
+        </meta_attributes>
+      </primitive>
+      <primitive id="xu-test14" class="ocf" provider="heartbeat" type="Xen">
+        <instance_attributes id="xu-test14-instance_attributes">
+          <nvpair name="xmfile" value="/shared/domu/test14.cfg" id="xu-test14-instance_attributes-xmfile"/>
+          <nvpair name="name" value="test14" id="xu-test14-instance_attributes-name"/>
+        </instance_attributes>
+        <operations>
+          <op name="start" interval="0" timeout="60s" id="xu-test14-start-0"/>
+          <op name="stop" interval="0" timeout="300s" id="xu-test14-stop-0"/>
+          <op name="monitor" interval="10s" timeout="30s" id="xu-test14-monitor-10s"/>
+          <op name="migrate_from" interval="0" timeout="120s" id="xu-test14-migrate_from-0"/>
+          <op name="migrate_to" interval="0" timeout="120s" id="xu-test14-migrate_to-0"/>
+        </operations>
+        <utilization id="xu-test14-utilization">
+          <nvpair name="memory" value="512" id="xu-test14-utilization-memory"/>
+          <nvpair name="cpu" value="1" id="xu-test14-utilization-cpu"/>
+        </utilization>
+        <meta_attributes id="xu-test14-meta_attributes">
+          <nvpair name="allow-migrate" value="true" id="xu-test14-meta_attributes-allow-migrate"/>
+          <nvpair name="target-role" value="Stopped" id="xu-test14-meta_attributes-target-role"/>
+        </meta_attributes>
+      </primitive>
+      <primitive id="xu-test15" class="ocf" provider="heartbeat" type="Xen">
+        <instance_attributes id="xu-test15-instance_attributes">
+          <nvpair name="xmfile" value="/shared/domu/test15.cfg" id="xu-test15-instance_attributes-xmfile"/>
+          <nvpair name="name" value="test15" id="xu-test15-instance_attributes-name"/>
+        </instance_attributes>
+        <operations>
+          <op name="start" interval="0" timeout="60s" id="xu-test15-start-0"/>
+          <op name="stop" interval="0" timeout="300s" id="xu-test15-stop-0"/>
+          <op name="monitor" interval="10s" timeout="30s" id="xu-test15-monitor-10s"/>
+          <op name="migrate_from" interval="0" timeout="120s" id="xu-test15-migrate_from-0"/>
+          <op name="migrate_to" interval="0" timeout="120s" id="xu-test15-migrate_to-0"/>
+        </operations>
+        <utilization id="xu-test15-utilization">
+          <nvpair name="memory" value="512" id="xu-test15-utilization-memory"/>
+          <nvpair name="cpu" value="1" id="xu-test15-utilization-cpu"/>
+        </utilization>
+        <meta_attributes id="xu-test15-meta_attributes">
+          <nvpair name="allow-migrate" value="true" id="xu-test15-meta_attributes-allow-migrate"/>
+          <nvpair name="target-role" value="Stopped" id="xu-test15-meta_attributes-target-role"/>
+        </meta_attributes>
+      </primitive>
+      <primitive id="xu-test16" class="ocf" provider="heartbeat" type="Xen">
+        <instance_attributes id="xu-test16-instance_attributes">
+          <nvpair name="xmfile" value="/shared/domu/test16.cfg" id="xu-test16-instance_attributes-xmfile"/>
+          <nvpair name="name" value="test16" id="xu-test16-instance_attributes-name"/>
+        </instance_attributes>
+        <operations>
+          <op name="start" interval="0" timeout="60s" id="xu-test16-start-0"/>
+          <op name="stop" interval="0" timeout="300s" id="xu-test16-stop-0"/>
+          <op name="monitor" interval="10s" timeout="30s" id="xu-test16-monitor-10s"/>
+          <op name="migrate_from" interval="0" timeout="120s" id="xu-test16-migrate_from-0"/>
+          <op name="migrate_to" interval="0" timeout="120s" id="xu-test16-migrate_to-0"/>
+        </operations>
+        <utilization id="xu-test16-utilization">
+          <nvpair name="memory" value="512" id="xu-test16-utilization-memory"/>
+          <nvpair name="cpu" value="1" id="xu-test16-utilization-cpu"/>
+        </utilization>
+        <meta_attributes id="xu-test16-meta_attributes">
+          <nvpair name="allow-migrate" value="true" id="xu-test16-meta_attributes-allow-migrate"/>
+          <nvpair name="target-role" value="Stopped" id="xu-test16-meta_attributes-target-role"/>
+        </meta_attributes>
+      </primitive>
+      <primitive id="xu-test17" class="ocf" provider="heartbeat" type="Xen">
+        <instance_attributes id="xu-test17-instance_attributes">
+          <nvpair name="xmfile" value="/shared/domu/test17.cfg" id="xu-test17-instance_attributes-xmfile"/>
+          <nvpair name="name" value="test17" id="xu-test17-instance_attributes-name"/>
+        </instance_attributes>
+        <operations>
+          <op name="start" interval="0" timeout="60s" id="xu-test17-start-0"/>
+          <op name="stop" interval="0" timeout="300s" id="xu-test17-stop-0"/>
+          <op name="monitor" interval="10s" timeout="30s" id="xu-test17-monitor-10s"/>
+          <op name="migrate_from" interval="0" timeout="120s" id="xu-test17-migrate_from-0"/>
+          <op name="migrate_to" interval="0" timeout="120s" id="xu-test17-migrate_to-0"/>
+        </operations>
+        <utilization id="xu-test17-utilization">
+          <nvpair name="memory" value="512" id="xu-test17-utilization-memory"/>
+          <nvpair name="cpu" value="1" id="xu-test17-utilization-cpu"/>
+        </utilization>
+        <meta_attributes id="xu-test17-meta_attributes">
+          <nvpair name="allow-migrate" value="true" id="xu-test17-meta_attributes-allow-migrate"/>
+          <nvpair name="target-role" value="Stopped" id="xu-test17-meta_attributes-target-role"/>
+        </meta_attributes>
+      </primitive>
+      <primitive id="xu-test2" class="ocf" provider="heartbeat" type="Xen">
+        <instance_attributes id="xu-test2-instance_attributes">
+          <nvpair name="xmfile" value="/shared/domu/test2.cfg" id="xu-test2-instance_attributes-xmfile"/>
+          <nvpair name="name" value="test2" id="xu-test2-instance_attributes-name"/>
+        </instance_attributes>
+        <operations>
+          <op name="start" interval="0" timeout="60s" id="xu-test2-start-0"/>
+          <op name="stop" interval="0" timeout="300s" id="xu-test2-stop-0"/>
+          <op name="monitor" interval="10s" timeout="30s" id="xu-test2-monitor-10s"/>
+          <op name="migrate_from" interval="0" timeout="120s" id="xu-test2-migrate_from-0"/>
+          <op name="migrate_to" interval="0" timeout="120s" id="xu-test2-migrate_to-0"/>
+        </operations>
+        <utilization id="xu-test2-utilization">
+          <nvpair name="memory" value="512" id="xu-test2-utilization-memory"/>
+          <nvpair name="cpu" value="1" id="xu-test2-utilization-cpu"/>
+        </utilization>
+        <meta_attributes id="xu-test2-meta_attributes">
+          <nvpair name="allow-migrate" value="true" id="xu-test2-meta_attributes-allow-migrate"/>
+          <nvpair name="target-role" value="Started" id="xu-test2-meta_attributes-target-role"/>
+        </meta_attributes>
+      </primitive>
+      <primitive id="xu-test3" class="ocf" provider="heartbeat" type="Xen">
+        <instance_attributes id="xu-test3-instance_attributes">
+          <nvpair name="xmfile" value="/shared/domu/test3.cfg" id="xu-test3-instance_attributes-xmfile"/>
+          <nvpair name="name" value="test3" id="xu-test3-instance_attributes-name"/>
+        </instance_attributes>
+        <operations>
+          <op name="start" interval="0" timeout="60s" id="xu-test3-start-0"/>
+          <op name="stop" interval="0" timeout="300s" id="xu-test3-stop-0"/>
+          <op name="monitor" interval="10s" timeout="30s" id="xu-test3-monitor-10s"/>
+          <op name="migrate_from" interval="0" timeout="120s" id="xu-test3-migrate_from-0"/>
+          <op name="migrate_to" interval="0" timeout="120s" id="xu-test3-migrate_to-0"/>
+        </operations>
+        <utilization id="xu-test3-utilization">
+          <nvpair name="memory" value="512" id="xu-test3-utilization-memory"/>
+          <nvpair name="cpu" value="1" id="xu-test3-utilization-cpu"/>
+        </utilization>
+        <meta_attributes id="xu-test3-meta_attributes">
+          <nvpair name="allow-migrate" value="true" id="xu-test3-meta_attributes-allow-migrate"/>
+          <nvpair name="target-role" value="Started" id="xu-test3-meta_attributes-target-role"/>
+        </meta_attributes>
+      </primitive>
+      <primitive id="xu-test4" class="ocf" provider="heartbeat" type="Xen">
+        <instance_attributes id="xu-test4-instance_attributes">
+          <nvpair name="xmfile" value="/shared/domu/test4.cfg" id="xu-test4-instance_attributes-xmfile"/>
+          <nvpair name="name" value="test4" id="xu-test4-instance_attributes-name"/>
+        </instance_attributes>
+        <operations>
+          <op name="start" interval="0" timeout="60s" id="xu-test4-start-0"/>
+          <op name="stop" interval="0" timeout="300s" id="xu-test4-stop-0"/>
+          <op name="monitor" interval="10s" timeout="30s" id="xu-test4-monitor-10s"/>
+          <op name="migrate_from" interval="0" timeout="120s" id="xu-test4-migrate_from-0"/>
+          <op name="migrate_to" interval="0" timeout="120s" id="xu-test4-migrate_to-0"/>
+        </operations>
+        <utilization id="xu-test4-utilization">
+          <nvpair name="memory" value="512" id="xu-test4-utilization-memory"/>
+          <nvpair name="cpu" value="1" id="xu-test4-utilization-cpu"/>
+        </utilization>
+        <meta_attributes id="xu-test4-meta_attributes">
+          <nvpair name="allow-migrate" value="true" id="xu-test4-meta_attributes-allow-migrate"/>
+          <nvpair name="target-role" value="Started" id="xu-test4-meta_attributes-target-role"/>
+        </meta_attributes>
+      </primitive>
+      <primitive id="xu-test5" class="ocf" provider="heartbeat" type="Xen">
+        <instance_attributes id="xu-test5-instance_attributes">
+          <nvpair name="xmfile" value="/shared/domu/test5.cfg" id="xu-test5-instance_attributes-xmfile"/>
+          <nvpair name="name" value="test5" id="xu-test5-instance_attributes-name"/>
+        </instance_attributes>
+        <operations>
+          <op name="start" interval="0" timeout="60s" id="xu-test5-start-0"/>
+          <op name="stop" interval="0" timeout="300s" id="xu-test5-stop-0"/>
+          <op name="monitor" interval="10s" timeout="30s" id="xu-test5-monitor-10s"/>
+          <op name="migrate_from" interval="0" timeout="120s" id="xu-test5-migrate_from-0"/>
+          <op name="migrate_to" interval="0" timeout="120s" id="xu-test5-migrate_to-0"/>
+        </operations>
+        <utilization id="xu-test5-utilization">
+          <nvpair name="memory" value="512" id="xu-test5-utilization-memory"/>
+          <nvpair name="cpu" value="1" id="xu-test5-utilization-cpu"/>
+        </utilization>
+        <meta_attributes id="xu-test5-meta_attributes">
+          <nvpair name="allow-migrate" value="true" id="xu-test5-meta_attributes-allow-migrate"/>
+          <nvpair name="target-role" value="Started" id="xu-test5-meta_attributes-target-role"/>
+        </meta_attributes>
+      </primitive>
+      <primitive id="xu-test6" class="ocf" provider="heartbeat" type="Xen">
+        <instance_attributes id="xu-test6-instance_attributes">
+          <nvpair name="xmfile" value="/shared/domu/test6.cfg" id="xu-test6-instance_attributes-xmfile"/>
+          <nvpair name="name" value="test6" id="xu-test6-instance_attributes-name"/>
+        </instance_attributes>
+        <operations>
+          <op name="start" interval="0" timeout="60s" id="xu-test6-start-0"/>
+          <op name="stop" interval="0" timeout="300s" id="xu-test6-stop-0"/>
+          <op name="monitor" interval="10s" timeout="30s" id="xu-test6-monitor-10s"/>
+          <op name="migrate_from" interval="0" timeout="120s" id="xu-test6-migrate_from-0"/>
+          <op name="migrate_to" interval="0" timeout="120s" id="xu-test6-migrate_to-0"/>
+        </operations>
+        <utilization id="xu-test6-utilization">
+          <nvpair name="memory" value="512" id="xu-test6-utilization-memory"/>
+          <nvpair name="cpu" value="1" id="xu-test6-utilization-cpu"/>
+        </utilization>
+        <meta_attributes id="xu-test6-meta_attributes">
+          <nvpair name="allow-migrate" value="true" id="xu-test6-meta_attributes-allow-migrate"/>
+          <nvpair name="target-role" value="Started" id="xu-test6-meta_attributes-target-role"/>
+        </meta_attributes>
+      </primitive>
+      <primitive id="xu-test7" class="ocf" provider="heartbeat" type="Xen">
+        <instance_attributes id="xu-test7-instance_attributes">
+          <nvpair name="xmfile" value="/shared/domu/test7.cfg" id="xu-test7-instance_attributes-xmfile"/>
+          <nvpair name="name" value="test7" id="xu-test7-instance_attributes-name"/>
+        </instance_attributes>
+        <operations>
+          <op name="start" interval="0" timeout="60s" id="xu-test7-start-0"/>
+          <op name="stop" interval="0" timeout="300s" id="xu-test7-stop-0"/>
+          <op name="monitor" interval="10s" timeout="30s" id="xu-test7-monitor-10s"/>
+          <op name="migrate_from" interval="0" timeout="120s" id="xu-test7-migrate_from-0"/>
+          <op name="migrate_to" interval="0" timeout="120s" id="xu-test7-migrate_to-0"/>
+        </operations>
+        <utilization id="xu-test7-utilization">
+          <nvpair name="memory" value="512" id="xu-test7-utilization-memory"/>
+          <nvpair name="cpu" value="1" id="xu-test7-utilization-cpu"/>
+        </utilization>
+        <meta_attributes id="xu-test7-meta_attributes">
+          <nvpair name="allow-migrate" value="true" id="xu-test7-meta_attributes-allow-migrate"/>
+          <nvpair name="target-role" value="Started" id="xu-test7-meta_attributes-target-role"/>
+        </meta_attributes>
+      </primitive>
+      <primitive id="xu-test9" class="ocf" provider="heartbeat" type="Xen">
+        <instance_attributes id="xu-test9-instance_attributes">
+          <nvpair name="xmfile" value="/shared/domu/test9.cfg" id="xu-test9-instance_attributes-xmfile"/>
+          <nvpair name="name" value="test9" id="xu-test9-instance_attributes-name"/>
+        </instance_attributes>
+        <operations>
+          <op name="start" interval="0" timeout="60s" id="xu-test9-start-0"/>
+          <op name="stop" interval="0" timeout="300s" id="xu-test9-stop-0"/>
+          <op name="monitor" interval="10s" timeout="30s" id="xu-test9-monitor-10s"/>
+          <op name="migrate_from" interval="0" timeout="120s" id="xu-test9-migrate_from-0"/>
+          <op name="migrate_to" interval="0" timeout="120s" id="xu-test9-migrate_to-0"/>
+        </operations>
+        <utilization id="xu-test9-utilization">
+          <nvpair name="memory" value="512" id="xu-test9-utilization-memory"/>
+          <nvpair name="cpu" value="1" id="xu-test9-utilization-cpu"/>
+        </utilization>
+        <meta_attributes id="xu-test9-meta_attributes">
+          <nvpair name="allow-migrate" value="true" id="xu-test9-meta_attributes-allow-migrate"/>
+          <nvpair name="target-role" value="Started" id="xu-test9-meta_attributes-target-role"/>
+        </meta_attributes>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_colocation id="c_volume_on_glusterd" score="INFINITY" rsc="cl_p_bl_glusterfs" with-rsc="cl_glusterd"/>
+      <rsc_order id="o_before_mount" score="INFINITY" first="cl_glusterd" then="cl_p_bl_glusterfs"/>
+      <rsc_order id="xu-test1-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test1"/>
+      <rsc_order id="xu-test2-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test2"/>
+      <rsc_order id="xu-test3-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test3"/>
+      <rsc_order id="xu-test4-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test4"/>
+      <rsc_order id="xu-test5-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test5"/>
+      <rsc_order id="xu-test6-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test6"/>
+      <rsc_order id="xu-test7-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test7"/>
+      <rsc_order id="xu-test8-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test8"/>
+      <rsc_order id="xu-test9-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test9"/>
+      <rsc_order id="xu-test10-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test10"/>
+      <rsc_order id="xu-test11-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test11"/>
+      <rsc_order id="xu-test12-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test12"/>
+      <rsc_order id="xu-test13-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test13"/>
+      <rsc_order id="xu-test14-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test14"/>
+      <rsc_order id="xu-test15-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test15"/>
+      <rsc_order id="xu-test16-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test16"/>
+      <rsc_order id="xu-test17-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test17"/>
+      <rsc_order id="o_glusterfs_on_glusterd" first="cl_glusterd" then="cl_p_bl_glusterfs"/>
+      <rsc_location id="cli-prefer-xu-test8" rsc="xu-test8" role="Started" node="xfc3" score="INFINITY"/>
+      <rsc_colocation id="xu-test1-colo-cl_p_bl_glusterfs" score="INFINITY" rsc="xu-test1" with-rsc="cl_p_bl_glusterfs"/>
+      <rsc_colocation id="xu-test2-colo-cl_p_bl_glusterfs" score="INFINITY" rsc="xu-test2" with-rsc="cl_p_bl_glusterfs"/>
+      <rsc_colocation id="xu-test3-colo-cl_p_bl_glusterfs" score="INFINITY" rsc="xu-test3" with-rsc="cl_p_bl_glusterfs"/>
+      <rsc_colocation id="xu-test4-colo-cl_p_bl_glusterfs" score="INFINITY" rsc="xu-test4" with-rsc="cl_p_bl_glusterfs"/>
+      <rsc_colocation id="xu-test5-colo-cl_p_bl_glusterfs" score="INFINITY" rsc="xu-test5" with-rsc="cl_p_bl_glusterfs"/>
+      <rsc_colocation id="xu-test6-colo-cl_p_bl_glusterfs" score="INFINITY" rsc="xu-test6" with-rsc="cl_p_bl_glusterfs"/>
+      <rsc_colocation id="xu-test7-colo-cl_p_bl_glusterfs" score="INFINITY" rsc="xu-test7" with-rsc="cl_p_bl_glusterfs"/>
+      <rsc_colocation id="xu-test8-colo-cl_p_bl_glusterfs" score="INFINITY" rsc="xu-test8" with-rsc="cl_p_bl_glusterfs"/>
+      <rsc_colocation id="xu-test9-colo-cl_p_bl_glusterfs" score="INFINITY" rsc="xu-test9" with-rsc="cl_p_bl_glusterfs"/>
+      <rsc_colocation id="xu-test10-colo-cl_p_bl_glusterfs" score="INFINITY" rsc="xu-test10" with-rsc="cl_p_bl_glusterfs"/>
+      <rsc_colocation id="xu-test11-colo-cl_p_bl_glusterfs" score="INFINITY" rsc="xu-test11" with-rsc="cl_p_bl_glusterfs"/>
+      <rsc_colocation id="xu-test12-colo-cl_p_bl_glusterfs" score="INFINITY" rsc="xu-test12" with-rsc="cl_p_bl_glusterfs"/>
+      <rsc_colocation id="xu-test13-colo-cl_p_bl_glusterfs" score="INFINITY" rsc="xu-test13" with-rsc="cl_p_bl_glusterfs"/>
+      <rsc_colocation id="xu-test14-colo-cl_p_bl_glusterfs" score="INFINITY" rsc="xu-test14" with-rsc="cl_p_bl_glusterfs"/>
+      <rsc_colocation id="xu-test15-colo-cl_p_bl_glusterfs" score="INFINITY" rsc="xu-test15" with-rsc="cl_p_bl_glusterfs"/>
+      <rsc_colocation id="xu-test16-colo-cl_p_bl_glusterfs" score="INFINITY" rsc="xu-test16" with-rsc="cl_p_bl_glusterfs"/>
+      <rsc_colocation id="xu-test17-colo-cl_p_bl_glusterfs" score="INFINITY" rsc="xu-test17" with-rsc="cl_p_bl_glusterfs"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="16843011" uname="xfc3" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="16843011">
+        <instance_attributes id="status-16843011">
+          <nvpair id="status-16843011-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-16843011-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-16843011-last-failure-xu-test1" name="last-failure-xu-test1" value="1417699642"/>
+          <nvpair id="status-16843011-last-failure-xu-test8" name="last-failure-xu-test8" value="1417701400"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="16843011">
+        <lrm_resources>
+          <lrm_resource id="xu-test17" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test17_last_0" operation_key="xu-test17_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="49:261:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;49:261:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="694" rc-code="7" op-status="0" interval="0" last-run="1417787690" last-rc-change="1417787690" exec-time="438" queue-time="0" op-digest="d070fcb1dd1730d37e4a955f43e663bd" on_node="xfc3"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test8" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test8_last_failure_0" operation_key="xu-test8_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="27:258:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;27:258:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="647" rc-code="0" op-status="0" interval="0" last-run="1417787618" last-rc-change="1417787618" exec-time="253" queue-time="0" op-digest="0b9bebd71acf2d07e39bccc81c201048"/>
+            <lrm_rsc_op id="xu-test8_last_0" operation_key="xu-test8_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="64:1398:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;64:1398:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="884" rc-code="0" op-status="0" interval="0" last-run="1418736465" last-rc-change="1418736465" exec-time="3549" queue-time="0" op-digest="0b9bebd71acf2d07e39bccc81c201048" on_node="xfc3"/>
+            <lrm_rsc_op id="xu-test8_monitor_10000" operation_key="xu-test8_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="65:1398:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;65:1398:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="885" rc-code="0" op-status="0" interval="10000" last-rc-change="1418736469" exec-time="269" queue-time="0" op-digest="5f6a1dd394c47baa76267d3ed096b188" on_node="xfc3"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test9" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test9_last_0" operation_key="xu-test9_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="61:861:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;61:861:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="766" rc-code="0" op-status="0" interval="0" last-run="1418304135" last-rc-change="1418304135" exec-time="145432" queue-time="0" op-digest="5f24cdfd064be528e317be1a8e3ffcc0" on_node="xfc3"/>
+            <lrm_rsc_op id="xu-test9_monitor_10000" operation_key="xu-test9_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="65:852:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;65:852:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="725" rc-code="0" op-status="0" interval="10000" last-rc-change="1418303808" exec-time="304" queue-time="0" op-digest="94a186fcf5e5f11a39118c56f8fbc1b9" on_node="xfc3"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test10" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test10_last_0" operation_key="xu-test10_migrate_from_0" operation="migrate_from" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="62:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;62:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="903" rc-code="0" op-status="0" interval="0" last-run="1418736835" last-rc-change="1418736835" exec-time="477" queue-time="0" op-digest="405c3ec4fb4ef14fe3d3c8e304c6df5e" on_node="xfc3" migrate_source="xfc2" migrate_target="xfc3"/>
+            <lrm_rsc_op id="xu-test10_monitor_10000" operation_key="xu-test10_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="60:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;60:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="904" rc-code="0" op-status="0" interval="10000" last-rc-change="1418736844" exec-time="250" queue-time="0" op-digest="c0cc77fd59c18b24f06277b2ccd6f49b" on_node="xfc3"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test11" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test11_last_0" operation_key="xu-test11_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="64:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;64:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="900" rc-code="0" op-status="0" interval="0" last-run="1418736828" last-rc-change="1418736828" exec-time="3215" queue-time="0" op-digest="94059d5152b3989047436e2eb7d8aded" on_node="xfc3"/>
+            <lrm_rsc_op id="xu-test11_monitor_10000" operation_key="xu-test11_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="65:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;65:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="902" rc-code="0" op-status="0" interval="10000" last-rc-change="1418736831" exec-time="279" queue-time="0" op-digest="64c17354426134cf294477a3a8c670ee" on_node="xfc3"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test12" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test12_last_0" operation_key="xu-test12_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="44:261:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;44:261:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="674" rc-code="7" op-status="0" interval="0" last-run="1417787690" last-rc-change="1417787690" exec-time="458" queue-time="0" op-digest="bd0ed5684298bbae428b449053bd25bc" on_node="xfc3"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test13" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test13_last_failure_0" operation_key="xu-test13_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="45:261:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;45:261:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="678" rc-code="0" op-status="0" interval="0" last-run="1417787690" last-rc-change="1417787690" exec-time="296" queue-time="0" op-digest="1b225dc5ab4801565a1e4f4f36b1d89a"/>
+            <lrm_rsc_op id="xu-test13_last_0" operation_key="xu-test13_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="52:861:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;52:861:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="758" rc-code="0" op-status="0" interval="0" last-run="1418304135" last-rc-change="1418304135" exec-time="6309" queue-time="0" op-digest="1b225dc5ab4801565a1e4f4f36b1d89a" on_node="xfc3"/>
+            <lrm_rsc_op id="xu-test13_monitor_10000" operation_key="xu-test13_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="55:262:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;55:262:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="695" rc-code="0" op-status="0" interval="10000" last-rc-change="1417787697" exec-time="250" queue-time="0" op-digest="26a9c76da03fb0dc83a6038f3aa35248" on_node="xfc3"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test15" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test15_last_0" operation_key="xu-test15_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="54:861:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;54:861:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="759" rc-code="0" op-status="0" interval="0" last-run="1418304135" last-rc-change="1418304135" exec-time="7944" queue-time="0" migrate_source="xfc3" migrate_target="xfc1" op-digest="f092daef8ab840b854eaecec6b05e4d6" on_node="xfc3"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test16" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test16_last_0" operation_key="xu-test16_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="55:861:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;55:861:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="761" rc-code="0" op-status="0" interval="0" last-run="1418304135" last-rc-change="1418304135" exec-time="140771" queue-time="0" migrate_source="xfc0" migrate_target="xfc3" op-digest="4b505e094d49c8456fa12c5e896d364f" on_node="xfc3"/>
+            <lrm_rsc_op id="xu-test16_monitor_10000" operation_key="xu-test16_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="66:262:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;66:262:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="697" rc-code="0" op-status="0" interval="10000" last-rc-change="1417787713" exec-time="247" queue-time="0" op-digest="ba24acd89710174f31f488df3d36c23c" on_node="xfc3"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test6" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test6_last_failure_0" operation_key="xu-test6_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="23:859:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;23:859:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="744" rc-code="0" op-status="0" interval="0" last-run="1418304122" last-rc-change="1418304122" exec-time="250" queue-time="0" op-digest="9e67660ae11abd770c96fc7f7022e227"/>
+            <lrm_rsc_op id="xu-test6_last_0" operation_key="xu-test6_migrate_from_0" operation="migrate_from" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="84:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;84:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="896" rc-code="0" op-status="0" interval="0" last-run="1418736820" last-rc-change="1418736820" exec-time="492" queue-time="0" op-digest="9e67660ae11abd770c96fc7f7022e227" on_node="xfc3" migrate_source="xfc1" migrate_target="xfc3"/>
+            <lrm_rsc_op id="xu-test6_monitor_10000" operation_key="xu-test6_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="83:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;83:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="901" rc-code="0" op-status="0" interval="10000" last-rc-change="1418736828" exec-time="257" queue-time="1" op-digest="907491e16908fb3cfa5b81d246a143ae" on_node="xfc3"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test1" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test1_last_0" operation_key="xu-test1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="43:1395:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;43:1395:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="874" rc-code="0" op-status="0" interval="0" last-run="1418736408" last-rc-change="1418736408" exec-time="3218" queue-time="0" op-digest="62fc6be7853e3ca70dfbbaf42386a5a4" on_node="xfc3"/>
+            <lrm_rsc_op id="xu-test1_monitor_10000" operation_key="xu-test1_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="44:1395:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;44:1395:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="875" rc-code="0" op-status="0" interval="10000" last-rc-change="1418736412" exec-time="249" queue-time="0" op-digest="82402b99bbfa236a0dfdf14da931ac3f" on_node="xfc3"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test7" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test7_last_0" operation_key="xu-test7_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="85:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;85:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="899" rc-code="0" op-status="0" interval="0" last-run="1418736820" last-rc-change="1418736820" exec-time="7842" queue-time="0" op-digest="5dd868544b626f7537a870d987b84177" on_node="xfc3" migrate_source="xfc3" migrate_target="xfc1"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test2" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test2_last_0" operation_key="xu-test2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="46:1396:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;46:1396:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="876" rc-code="0" op-status="0" interval="0" last-run="1418736457" last-rc-change="1418736457" exec-time="3166" queue-time="0" op-digest="fd99b3b6a694015713c57974b7008cc9" on_node="xfc3"/>
+            <lrm_rsc_op id="xu-test2_monitor_10000" operation_key="xu-test2_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="48:1397:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;48:1397:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="877" rc-code="0" op-status="0" interval="10000" last-rc-change="1418736460" exec-time="296" queue-time="0" op-digest="6c632d7686e801e6d832fb4a855e164e" on_node="xfc3"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test3" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test3_last_0" operation_key="xu-test3_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="68:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;68:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="898" rc-code="0" op-status="0" interval="0" last-run="1418736820" last-rc-change="1418736820" exec-time="7856" queue-time="0" op-digest="449d3294976cfb52c465358e038f3169" on_node="xfc3" migrate_source="xfc3" migrate_target="xfc1"/>
+            <lrm_rsc_op id="xu-test3_monitor_10000" operation_key="xu-test3_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="51:1398:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;51:1398:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="881" rc-code="0" op-status="0" interval="10000" last-rc-change="1418736465" exec-time="329" queue-time="0" op-digest="bd00699c3748c130965657c3016b1f0a" on_node="xfc3"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test4" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test4_last_0" operation_key="xu-test4_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="72:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;72:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="897" rc-code="0" op-status="0" interval="0" last-run="1418736820" last-rc-change="1418736820" exec-time="7874" queue-time="0" op-digest="58a4f2c02fb1d04a71ee58521fa8088b" on_node="xfc3" migrate_source="xfc3" migrate_target="xfc0"/>
+            <lrm_rsc_op id="xu-test4_monitor_10000" operation_key="xu-test4_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="54:1398:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;54:1398:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="882" rc-code="0" op-status="0" interval="10000" last-rc-change="1418736465" exec-time="373" queue-time="0" op-digest="2a8fb18b3f93a788daf5389e99d13911" on_node="xfc3"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test5" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test5_last_0" operation_key="xu-test5_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="71:1399:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;71:1399:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="889" rc-code="0" op-status="0" interval="0" last-run="1418736682" last-rc-change="1418736682" exec-time="7724" queue-time="0" op-digest="d677573f1207b6f59a04316cd542c833" on_node="xfc3" migrate_source="xfc3" migrate_target="xfc0"/>
+            <lrm_rsc_op id="xu-test5_monitor_10000" operation_key="xu-test5_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="57:1398:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;57:1398:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="883" rc-code="0" op-status="0" interval="10000" last-rc-change="1418736465" exec-time="355" queue-time="0" op-digest="b5b2e53744b1a521510774f9c7df4079" on_node="xfc3"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test14" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test14_last_0" operation_key="xu-test14_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="17:870:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;17:870:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="791" rc-code="7" op-status="0" interval="0" last-run="1418304301" last-rc-change="1418304301" exec-time="400" queue-time="0" op-digest="63699ffcd98fd6d1694c2390d8137018" on_node="xfc3"/>
+          </lrm_resource>
+          <lrm_resource id="p_glusterd" type="glusterd" class="ocf" provider="glusterfs">
+            <lrm_rsc_op id="p_glusterd_last_failure_0" operation_key="p_glusterd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="17:1387:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;17:1387:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="860" rc-code="0" op-status="0" interval="0" last-run="1418736388" last-rc-change="1418736388" exec-time="23" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="p_glusterd_last_0" operation_key="p_glusterd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="17:1387:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;17:1387:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="860" rc-code="0" op-status="0" interval="0" last-run="1418736388" last-rc-change="1418736388" exec-time="23" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="xfc3"/>
+            <lrm_rsc_op id="p_glusterd_monitor_30000" operation_key="p_glusterd_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="16:1388:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;16:1388:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="861" rc-code="0" op-status="0" interval="30000" last-rc-change="1418736389" exec-time="23" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="xfc3"/>
+          </lrm_resource>
+          <lrm_resource id="p_bl_glusterfs" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="p_bl_glusterfs_last_failure_0" operation_key="p_bl_glusterfs_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="18:1393:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;18:1393:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="872" rc-code="0" op-status="0" interval="0" last-run="1418736395" last-rc-change="1418736395" exec-time="64" queue-time="0" op-digest="13f13b82c89864d0463e25fafec1d3f3"/>
+            <lrm_rsc_op id="p_bl_glusterfs_last_0" operation_key="p_bl_glusterfs_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="18:1393:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;18:1393:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="872" rc-code="0" op-status="0" interval="0" last-run="1418736395" last-rc-change="1418736395" exec-time="64" queue-time="0" op-digest="13f13b82c89864d0463e25fafec1d3f3" on_node="xfc3"/>
+            <lrm_rsc_op id="p_bl_glusterfs_monitor_10000" operation_key="p_bl_glusterfs_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="29:1394:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;29:1394:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="873" rc-code="0" op-status="0" interval="10000" last-rc-change="1418736396" exec-time="64" queue-time="0" op-digest="10130a71ec14e7d01c6eee4349d2adf8" on_node="xfc3"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="16843008" uname="xfc0" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="16843008">
+        <lrm_resources>
+          <lrm_resource id="xu-test8" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test8_last_0" operation_key="xu-test8_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="21:858:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;21:858:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="17" rc-code="7" op-status="0" interval="0" last-run="1418304138" last-rc-change="1418304138" exec-time="587" queue-time="0" op-digest="0b9bebd71acf2d07e39bccc81c201048" on_node="xfc0"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test10" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test10_last_0" operation_key="xu-test10_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="23:858:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;23:858:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="25" rc-code="7" op-status="0" interval="0" last-run="1418304138" last-rc-change="1418304138" exec-time="675" queue-time="0" op-digest="405c3ec4fb4ef14fe3d3c8e304c6df5e" on_node="xfc0"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test13" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test13_last_0" operation_key="xu-test13_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="26:858:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;26:858:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="37" rc-code="7" op-status="0" interval="0" last-run="1418304138" last-rc-change="1418304138" exec-time="825" queue-time="0" op-digest="1b225dc5ab4801565a1e4f4f36b1d89a" on_node="xfc0"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test12" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test12_last_0" operation_key="xu-test12_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="25:858:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;25:858:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="33" rc-code="7" op-status="0" interval="0" last-run="1418304138" last-rc-change="1418304138" exec-time="873" queue-time="0" op-digest="bd0ed5684298bbae428b449053bd25bc" on_node="xfc0"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test11" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test11_last_0" operation_key="xu-test11_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="9:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;9:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="239" rc-code="0" op-status="0" interval="0" last-run="1418736848" last-rc-change="1418736848" exec-time="5504" queue-time="0" op-digest="94059d5152b3989047436e2eb7d8aded" on_node="xfc0" migrate_source="xfc0" migrate_target="xfc3"/>
+            <lrm_rsc_op id="xu-test11_monitor_10000" operation_key="xu-test11_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="89:1399:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;89:1399:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="236" rc-code="0" op-status="0" interval="10000" last-rc-change="1418736720" exec-time="215" queue-time="0" op-digest="64c17354426134cf294477a3a8c670ee" on_node="xfc0"/>
+            <lrm_rsc_op id="xu-test11_last_failure_0" operation_key="xu-test11_migrate_to_0" operation="migrate_to" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="65:1400:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:1;65:1400:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="238" rc-code="1" op-status="0" interval="0" last-run="1418736830" last-rc-change="1418736830" exec-time="2626" queue-time="0" migrate_source="xfc0" migrate_target="xfc3" op-digest="94059d5152b3989047436e2eb7d8aded"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test15" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test15_last_0" operation_key="xu-test15_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="28:858:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;28:858:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="45" rc-code="7" op-status="0" interval="0" last-run="1418304138" last-rc-change="1418304138" exec-time="940" queue-time="0" op-digest="f092daef8ab840b854eaecec6b05e4d6" on_node="xfc0"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test16" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test16_last_0" operation_key="xu-test16_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="29:858:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;29:858:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="49" rc-code="7" op-status="0" interval="0" last-run="1418304139" last-rc-change="1418304139" exec-time="825" queue-time="0" op-digest="4b505e094d49c8456fa12c5e896d364f" on_node="xfc0"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test17" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test17_last_0" operation_key="xu-test17_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="30:858:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;30:858:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="53" rc-code="7" op-status="0" interval="0" last-run="1418304139" last-rc-change="1418304139" exec-time="838" queue-time="0" op-digest="d070fcb1dd1730d37e4a955f43e663bd" on_node="xfc0"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test6" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test6_last_0" operation_key="xu-test6_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="18:859:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;18:859:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="83" rc-code="7" op-status="0" interval="0" last-run="1418304140" last-rc-change="1418304140" exec-time="345" queue-time="0" op-digest="9e67660ae11abd770c96fc7f7022e227" on_node="xfc0"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test9" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test9_last_0" operation_key="xu-test9_migrate_from_0" operation="migrate_from" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="93:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;93:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="245" rc-code="0" op-status="0" interval="0" last-run="1418736901" last-rc-change="1418736901" exec-time="399" queue-time="1" op-digest="5f24cdfd064be528e317be1a8e3ffcc0" on_node="xfc0" migrate_source="xfc1" migrate_target="xfc0"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test1" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test1_last_0" operation_key="xu-test1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="18:860:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;18:860:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="95" rc-code="7" op-status="0" interval="0" last-run="1418304150" last-rc-change="1418304150" exec-time="359" queue-time="0" op-digest="62fc6be7853e3ca70dfbbaf42386a5a4" on_node="xfc0"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test7" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test7_last_0" operation_key="xu-test7_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="81:1399:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;81:1399:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="232" rc-code="0" op-status="0" interval="0" last-run="1418736709" last-rc-change="1418736709" exec-time="7416" queue-time="0" op-digest="5dd868544b626f7537a870d987b84177" on_node="xfc0" migrate_source="xfc0" migrate_target="xfc3"/>
+            <lrm_rsc_op id="xu-test7_monitor_10000" operation_key="xu-test7_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="63:1398:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;63:1398:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="229" rc-code="0" op-status="0" interval="10000" last-rc-change="1418736494" exec-time="228" queue-time="0" op-digest="e2fb6a506d29844831e0a3f408a6fb04" on_node="xfc0"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test2" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test2_last_0" operation_key="xu-test2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="12:862:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;12:862:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="108" rc-code="7" op-status="0" interval="0" last-run="1418304299" last-rc-change="1418304299" exec-time="2742" queue-time="0" op-digest="fd99b3b6a694015713c57974b7008cc9" on_node="xfc0"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test3" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test3_last_0" operation_key="xu-test3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="13:862:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;13:862:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="112" rc-code="7" op-status="0" interval="0" last-run="1418304301" last-rc-change="1418304301" exec-time="641" queue-time="0" op-digest="449d3294976cfb52c465358e038f3169" on_node="xfc0"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test4" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test4_last_0" operation_key="xu-test4_migrate_from_0" operation="migrate_from" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="75:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;75:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="240" rc-code="0" op-status="0" interval="0" last-run="1418736848" last-rc-change="1418736848" exec-time="434" queue-time="0" op-digest="58a4f2c02fb1d04a71ee58521fa8088b" on_node="xfc0" migrate_source="xfc3" migrate_target="xfc0"/>
+            <lrm_rsc_op id="xu-test4_monitor_10000" operation_key="xu-test4_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="74:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;74:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="244" rc-code="0" op-status="0" interval="10000" last-rc-change="1418736895" exec-time="210" queue-time="0" op-digest="2a8fb18b3f93a788daf5389e99d13911" on_node="xfc0"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test5" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test5_last_0" operation_key="xu-test5_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="76:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;76:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="243" rc-code="0" op-status="0" interval="0" last-run="1418736887" last-rc-change="1418736887" exec-time="7313" queue-time="0" op-digest="d677573f1207b6f59a04316cd542c833" on_node="xfc0" migrate_source="xfc0" migrate_target="xfc2"/>
+            <lrm_rsc_op id="xu-test5_monitor_10000" operation_key="xu-test5_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="73:1399:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;73:1399:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="235" rc-code="0" op-status="0" interval="10000" last-rc-change="1418736718" exec-time="341" queue-time="0" op-digest="b5b2e53744b1a521510774f9c7df4079" on_node="xfc0"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test14" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test14_last_0" operation_key="xu-test14_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="11:870:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;11:870:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="126" rc-code="7" op-status="0" interval="0" last-run="1418304319" last-rc-change="1418304319" exec-time="414" queue-time="1" op-digest="63699ffcd98fd6d1694c2390d8137018" on_node="xfc0"/>
+          </lrm_resource>
+          <lrm_resource id="p_glusterd" type="glusterd" class="ocf" provider="glusterfs">
+            <lrm_rsc_op id="p_glusterd_last_failure_0" operation_key="p_glusterd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="11:1387:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;11:1387:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="207" rc-code="0" op-status="0" interval="0" last-run="1418736416" last-rc-change="1418736416" exec-time="33" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="p_glusterd_last_0" operation_key="p_glusterd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="11:1387:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;11:1387:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="207" rc-code="0" op-status="0" interval="0" last-run="1418736416" last-rc-change="1418736416" exec-time="33" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="xfc0"/>
+            <lrm_rsc_op id="p_glusterd_monitor_30000" operation_key="p_glusterd_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="19:1388:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;19:1388:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="208" rc-code="0" op-status="0" interval="30000" last-rc-change="1418736417" exec-time="34" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="xfc0"/>
+          </lrm_resource>
+          <lrm_resource id="p_bl_glusterfs" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="p_bl_glusterfs_last_failure_0" operation_key="p_bl_glusterfs_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="12:1393:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;12:1393:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="226" rc-code="0" op-status="0" interval="0" last-run="1418736423" last-rc-change="1418736423" exec-time="54" queue-time="0" op-digest="13f13b82c89864d0463e25fafec1d3f3"/>
+            <lrm_rsc_op id="p_bl_glusterfs_last_0" operation_key="p_bl_glusterfs_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="12:1393:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;12:1393:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="226" rc-code="0" op-status="0" interval="0" last-run="1418736423" last-rc-change="1418736423" exec-time="54" queue-time="0" op-digest="13f13b82c89864d0463e25fafec1d3f3" on_node="xfc0"/>
+            <lrm_rsc_op id="p_bl_glusterfs_monitor_10000" operation_key="p_bl_glusterfs_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="32:1394:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;32:1394:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="227" rc-code="0" op-status="0" interval="10000" last-rc-change="1418736424" exec-time="53" queue-time="0" op-digest="10130a71ec14e7d01c6eee4349d2adf8" on_node="xfc0"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="16843008">
+        <instance_attributes id="status-16843008">
+          <nvpair id="status-16843008-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-16843008-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="16843009" uname="xfc1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="16843009">
+        <instance_attributes id="status-16843009">
+          <nvpair id="status-16843009-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-16843009-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-16843009-last-failure-xu-test1" name="last-failure-xu-test1" value="1417699624"/>
+          <nvpair id="status-16843009-last-failure-xu-test2" name="last-failure-xu-test2" value="1417701400"/>
+          <nvpair id="status-16843009-last-failure-xu-test7" name="last-failure-xu-test7" value="1417701400"/>
+          <nvpair id="status-16843009-last-failure-xu-test3" name="last-failure-xu-test3" value="1417701717"/>
+          <nvpair id="status-16843009-last-failure-xu-test9" name="last-failure-xu-test9" value="1417785570"/>
+          <nvpair id="status-16843009-last-failure-xu-test14" name="last-failure-xu-test14" value="1418303872"/>
+          <nvpair id="status-16843009-last-failure-xu-test5" name="last-failure-xu-test5" value="1418303872"/>
+          <nvpair id="status-16843009-last-failure-p_bl_glusterfs" name="last-failure-p_bl_glusterfs" value="1418306027"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="16843009">
+        <lrm_resources>
+          <lrm_resource id="xu-test1" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test1_last_0" operation_key="xu-test1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="24:251:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;24:251:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="662" rc-code="7" op-status="0" interval="0" last-run="1417787611" last-rc-change="1417787611" exec-time="363" queue-time="0" op-digest="62fc6be7853e3ca70dfbbaf42386a5a4" on_node="xfc1"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test6" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test6_last_0" operation_key="xu-test6_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="81:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;81:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="936" rc-code="0" op-status="0" interval="0" last-run="1418736807" last-rc-change="1418736807" exec-time="7487" queue-time="0" op-digest="9e67660ae11abd770c96fc7f7022e227" on_node="xfc1" migrate_source="xfc1" migrate_target="xfc3"/>
+            <lrm_rsc_op id="xu-test6_monitor_10000" operation_key="xu-test6_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="60:1398:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;60:1398:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="929" rc-code="0" op-status="0" interval="10000" last-rc-change="1418736452" exec-time="237" queue-time="0" op-digest="907491e16908fb3cfa5b81d246a143ae" on_node="xfc1"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test7" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test7_last_0" operation_key="xu-test7_migrate_from_0" operation="migrate_from" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="88:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;88:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="935" rc-code="0" op-status="0" interval="0" last-run="1418736806" last-rc-change="1418736806" exec-time="483" queue-time="0" op-digest="5dd868544b626f7537a870d987b84177" on_node="xfc1" migrate_source="xfc3" migrate_target="xfc1"/>
+            <lrm_rsc_op id="xu-test7_monitor_10000" operation_key="xu-test7_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="63:852:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;63:852:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="787" rc-code="0" op-status="0" interval="10000" last-rc-change="1418303800" exec-time="312" queue-time="1" op-digest="e2fb6a506d29844831e0a3f408a6fb04" on_node="xfc1"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test8" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test8_last_0" operation_key="xu-test8_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="23:258:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;23:258:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="699" rc-code="7" op-status="0" interval="0" last-run="1417787617" last-rc-change="1417787617" exec-time="377" queue-time="0" op-digest="0b9bebd71acf2d07e39bccc81c201048" on_node="xfc1"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test10" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test10_last_failure_0" operation_key="xu-test10_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="23:260:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;23:260:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="710" rc-code="0" op-status="0" interval="0" last-run="1417787619" last-rc-change="1417787619" exec-time="239" queue-time="0" op-digest="405c3ec4fb4ef14fe3d3c8e304c6df5e"/>
+            <lrm_rsc_op id="xu-test10_last_0" operation_key="xu-test10_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="50:861:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;50:861:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="793" rc-code="0" op-status="0" interval="0" last-run="1418304127" last-rc-change="1418304127" exec-time="119647" queue-time="0" op-digest="405c3ec4fb4ef14fe3d3c8e304c6df5e" on_node="xfc1"/>
+            <lrm_rsc_op id="xu-test10_monitor_10000" operation_key="xu-test10_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="76:261:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;76:261:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="719" rc-code="0" op-status="0" interval="10000" last-rc-change="1417787689" exec-time="275" queue-time="0" op-digest="c0cc77fd59c18b24f06277b2ccd6f49b" on_node="xfc1"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test11" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test11_last_0" operation_key="xu-test11_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="27:261:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;27:261:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="723" rc-code="7" op-status="0" interval="0" last-run="1417787689" last-rc-change="1417787689" exec-time="550" queue-time="0" op-digest="94059d5152b3989047436e2eb7d8aded" on_node="xfc1"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test12" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test12_last_0" operation_key="xu-test12_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="51:861:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;51:861:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="795" rc-code="0" op-status="0" interval="0" last-run="1418304127" last-rc-change="1418304127" exec-time="121461" queue-time="0" op-digest="bd0ed5684298bbae428b449053bd25bc" on_node="xfc1"/>
+            <lrm_rsc_op id="xu-test12_monitor_10000" operation_key="xu-test12_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="52:262:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;52:262:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="752" rc-code="0" op-status="0" interval="10000" last-rc-change="1417787699" exec-time="257" queue-time="0" op-digest="422611fc17f4eea512e9ffb437c3ce25" on_node="xfc1"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test13" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test13_last_0" operation_key="xu-test13_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="29:261:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;29:261:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="731" rc-code="7" op-status="0" interval="0" last-run="1417787689" last-rc-change="1417787689" exec-time="739" queue-time="0" op-digest="1b225dc5ab4801565a1e4f4f36b1d89a" on_node="xfc1"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test16" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test16_last_0" operation_key="xu-test16_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="32:261:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;32:261:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="743" rc-code="7" op-status="0" interval="0" last-run="1417787689" last-rc-change="1417787689" exec-time="623" queue-time="0" op-digest="4b505e094d49c8456fa12c5e896d364f" on_node="xfc1"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test17" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test17_last_0" operation_key="xu-test17_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="33:261:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;33:261:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="747" rc-code="7" op-status="0" interval="0" last-run="1417787689" last-rc-change="1417787689" exec-time="680" queue-time="0" op-digest="d070fcb1dd1730d37e4a955f43e663bd" on_node="xfc1"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test9" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test9_last_0" operation_key="xu-test9_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="89:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;89:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="939" rc-code="0" op-status="0" interval="0" last-run="1418736860" last-rc-change="1418736860" exec-time="7479" queue-time="0" op-digest="5f24cdfd064be528e317be1a8e3ffcc0" on_node="xfc1" migrate_source="xfc1" migrate_target="xfc0"/>
+            <lrm_rsc_op id="xu-test9_monitor_10000" operation_key="xu-test9_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="69:1398:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;69:1398:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="931" rc-code="0" op-status="0" interval="10000" last-rc-change="1418736455" exec-time="227" queue-time="0" op-digest="94a186fcf5e5f11a39118c56f8fbc1b9" on_node="xfc1"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test15" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test15_last_0" operation_key="xu-test15_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="53:861:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;53:861:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="796" rc-code="0" op-status="0" interval="0" last-run="1418304127" last-rc-change="1418304127" exec-time="12031" queue-time="0" op-digest="f092daef8ab840b854eaecec6b05e4d6" on_node="xfc1"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test2" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test2_last_0" operation_key="xu-test2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="16:862:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;16:862:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="810" rc-code="7" op-status="0" interval="0" last-run="1418304273" last-rc-change="1418304273" exec-time="1124" queue-time="0" op-digest="fd99b3b6a694015713c57974b7008cc9" on_node="xfc1"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test3" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test3_last_0" operation_key="xu-test3_migrate_from_0" operation="migrate_from" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="71:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;71:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="934" rc-code="0" op-status="0" interval="0" last-run="1418736806" last-rc-change="1418736806" exec-time="462" queue-time="0" op-digest="449d3294976cfb52c465358e038f3169" on_node="xfc1" migrate_source="xfc3" migrate_target="xfc1"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test4" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test4_last_0" operation_key="xu-test4_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="18:862:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;18:862:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="818" rc-code="7" op-status="0" interval="0" last-run="1418304276" last-rc-change="1418304276" exec-time="813" queue-time="0" op-digest="58a4f2c02fb1d04a71ee58521fa8088b" on_node="xfc1"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test5" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test5_last_0" operation_key="xu-test5_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="13:868:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;13:868:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="823" rc-code="7" op-status="0" interval="0" last-run="1418304290" last-rc-change="1418304290" exec-time="1081" queue-time="0" op-digest="d677573f1207b6f59a04316cd542c833" on_node="xfc1"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test14" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test14_last_0" operation_key="xu-test14_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="13:870:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;13:870:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="828" rc-code="7" op-status="0" interval="0" last-run="1418304294" last-rc-change="1418304294" exec-time="1001" queue-time="0" op-digest="63699ffcd98fd6d1694c2390d8137018" on_node="xfc1"/>
+          </lrm_resource>
+          <lrm_resource id="p_glusterd" type="glusterd" class="ocf" provider="glusterfs">
+            <lrm_rsc_op id="p_glusterd_last_failure_0" operation_key="p_glusterd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="13:1387:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;13:1387:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="909" rc-code="0" op-status="0" interval="0" last-run="1418736375" last-rc-change="1418736375" exec-time="21" queue-time="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="p_glusterd_last_0" operation_key="p_glusterd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="13:1387:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;13:1387:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="909" rc-code="0" op-status="0" interval="0" last-run="1418736375" last-rc-change="1418736375" exec-time="21" queue-time="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="xfc1"/>
+            <lrm_rsc_op id="p_glusterd_monitor_30000" operation_key="p_glusterd_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="22:1388:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;22:1388:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="910" rc-code="0" op-status="0" interval="30000" last-rc-change="1418736375" exec-time="19" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="xfc1"/>
+          </lrm_resource>
+          <lrm_resource id="p_bl_glusterfs" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="p_bl_glusterfs_last_failure_0" operation_key="p_bl_glusterfs_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="14:1393:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;14:1393:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="926" rc-code="0" op-status="0" interval="0" last-run="1418736382" last-rc-change="1418736382" exec-time="57" queue-time="0" op-digest="13f13b82c89864d0463e25fafec1d3f3"/>
+            <lrm_rsc_op id="p_bl_glusterfs_last_0" operation_key="p_bl_glusterfs_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="14:1393:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;14:1393:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="926" rc-code="0" op-status="0" interval="0" last-run="1418736382" last-rc-change="1418736382" exec-time="57" queue-time="0" op-digest="13f13b82c89864d0463e25fafec1d3f3" on_node="xfc1"/>
+            <lrm_rsc_op id="p_bl_glusterfs_monitor_10000" operation_key="p_bl_glusterfs_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="35:1394:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;35:1394:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="927" rc-code="0" op-status="0" interval="10000" last-rc-change="1418736383" exec-time="60" queue-time="0" op-digest="10130a71ec14e7d01c6eee4349d2adf8" on_node="xfc1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="16843010" uname="xfc2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="16843010">
+        <instance_attributes id="status-16843010">
+          <nvpair id="status-16843010-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-16843010-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-16843010-last-failure-xu-test15" name="last-failure-xu-test15" value="1417786898"/>
+          <nvpair id="status-16843010-last-failure-xu-test11" name="last-failure-xu-test11" value="1417786291"/>
+          <nvpair id="status-16843010-last-failure-p_bl_glusterfs" name="last-failure-p_bl_glusterfs" value="1418304132"/>
+          <nvpair id="status-16843010-last-failure-xu-test12" name="last-failure-xu-test12" value="1417786372"/>
+          <nvpair id="status-16843010-last-failure-xu-test9" name="last-failure-xu-test9" value="1417787199"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="16843010">
+        <lrm_resources>
+          <lrm_resource id="xu-test1" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test1_last_0" operation_key="xu-test1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="26:251:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;26:251:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="111" rc-code="7" op-status="0" interval="0" last-run="1417787615" last-rc-change="1417787615" exec-time="521" queue-time="0" op-digest="62fc6be7853e3ca70dfbbaf42386a5a4" on_node="xfc2"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test2" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test2_last_0" operation_key="xu-test2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="25:252:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;25:252:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="116" rc-code="7" op-status="0" interval="0" last-run="1417787616" last-rc-change="1417787616" exec-time="544" queue-time="0" op-digest="fd99b3b6a694015713c57974b7008cc9" on_node="xfc2"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test3" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test3_last_0" operation_key="xu-test3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="25:253:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;25:253:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="121" rc-code="7" op-status="0" interval="0" last-run="1417787617" last-rc-change="1417787617" exec-time="515" queue-time="0" op-digest="449d3294976cfb52c465358e038f3169" on_node="xfc2"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test4" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test4_last_0" operation_key="xu-test4_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="25:254:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;25:254:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="126" rc-code="7" op-status="0" interval="0" last-run="1417787618" last-rc-change="1417787618" exec-time="514" queue-time="0" op-digest="58a4f2c02fb1d04a71ee58521fa8088b" on_node="xfc2"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test6" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test6_last_0" operation_key="xu-test6_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="25:256:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;25:256:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="136" rc-code="7" op-status="0" interval="0" last-run="1417787619" last-rc-change="1417787619" exec-time="540" queue-time="0" op-digest="9e67660ae11abd770c96fc7f7022e227" on_node="xfc2"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test7" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test7_last_0" operation_key="xu-test7_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="25:257:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;25:257:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="141" rc-code="7" op-status="0" interval="0" last-run="1417787620" last-rc-change="1417787620" exec-time="517" queue-time="0" op-digest="5dd868544b626f7537a870d987b84177" on_node="xfc2"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test8" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test8_last_0" operation_key="xu-test8_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="25:258:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;25:258:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="146" rc-code="7" op-status="0" interval="0" last-run="1417787621" last-rc-change="1417787621" exec-time="522" queue-time="0" op-digest="0b9bebd71acf2d07e39bccc81c201048" on_node="xfc2"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test10" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test10_last_0" operation_key="xu-test10_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="58:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;58:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="290" rc-code="0" op-status="0" interval="0" last-run="1418736870" last-rc-change="1418736870" exec-time="8521" queue-time="0" op-digest="405c3ec4fb4ef14fe3d3c8e304c6df5e" on_node="xfc2" migrate_source="xfc2" migrate_target="xfc3"/>
+            <lrm_rsc_op id="xu-test10_monitor_10000" operation_key="xu-test10_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="67:1398:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;67:1398:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="287" rc-code="0" op-status="0" interval="10000" last-rc-change="1418736513" exec-time="4454" queue-time="0" op-digest="c0cc77fd59c18b24f06277b2ccd6f49b" on_node="xfc2"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test12" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test12_last_0" operation_key="xu-test12_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="94:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;94:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="291" rc-code="0" op-status="0" interval="0" last-run="1418736879" last-rc-change="1418736879" exec-time="11814" queue-time="0" op-digest="bd0ed5684298bbae428b449053bd25bc" on_node="xfc2"/>
+            <lrm_rsc_op id="xu-test12_monitor_10000" operation_key="xu-test12_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="95:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;95:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="293" rc-code="0" op-status="0" interval="10000" last-rc-change="1418736892" exec-time="1689" queue-time="0" op-digest="422611fc17f4eea512e9ffb437c3ce25" on_node="xfc2"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test13" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test13_last_0" operation_key="xu-test13_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="37:261:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;37:261:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="176" rc-code="7" op-status="0" interval="0" last-run="1417787693" last-rc-change="1417787693" exec-time="1083" queue-time="0" op-digest="1b225dc5ab4801565a1e4f4f36b1d89a" on_node="xfc2"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test11" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test11_last_0" operation_key="xu-test11_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="35:261:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;35:261:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="168" rc-code="7" op-status="0" interval="0" last-run="1417787693" last-rc-change="1417787693" exec-time="1177" queue-time="0" op-digest="94059d5152b3989047436e2eb7d8aded" on_node="xfc2"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test17" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test17_last_0" operation_key="xu-test17_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="41:261:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;41:261:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="192" rc-code="7" op-status="0" interval="0" last-run="1417787693" last-rc-change="1417787693" exec-time="1355" queue-time="0" op-digest="d070fcb1dd1730d37e4a955f43e663bd" on_node="xfc2"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test16" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test16_last_0" operation_key="xu-test16_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="40:261:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;40:261:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="188" rc-code="7" op-status="0" interval="0" last-run="1417787693" last-rc-change="1417787693" exec-time="1409" queue-time="0" op-digest="4b505e094d49c8456fa12c5e896d364f" on_node="xfc2"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test9" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test9_last_0" operation_key="xu-test9_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="29:273:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;29:273:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="215" rc-code="7" op-status="0" interval="0" last-run="1417788235" last-rc-change="1417788235" exec-time="499" queue-time="0" op-digest="5f24cdfd064be528e317be1a8e3ffcc0" on_node="xfc2"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test15" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test15_last_0" operation_key="xu-test15_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="29:276:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;29:276:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="220" rc-code="7" op-status="0" interval="0" last-run="1417788238" last-rc-change="1417788238" exec-time="497" queue-time="1" op-digest="f092daef8ab840b854eaecec6b05e4d6" on_node="xfc2"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test5" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test5_last_0" operation_key="xu-test5_migrate_from_0" operation="migrate_from" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="80:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;80:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="292" rc-code="0" op-status="0" interval="0" last-run="1418736886" last-rc-change="1418736886" exec-time="7889" queue-time="0" op-digest="d677573f1207b6f59a04316cd542c833" on_node="xfc2" migrate_source="xfc0" migrate_target="xfc2"/>
+            <lrm_rsc_op id="xu-test5_monitor_10000" operation_key="xu-test5_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="78:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;78:1401:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="294" rc-code="0" op-status="0" interval="10000" last-rc-change="1418736901" exec-time="427" queue-time="0" op-digest="b5b2e53744b1a521510774f9c7df4079" on_node="xfc2"/>
+          </lrm_resource>
+          <lrm_resource id="xu-test14" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="xu-test14_last_0" operation_key="xu-test14_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="15:870:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:7;15:870:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="234" rc-code="7" op-status="0" interval="0" last-run="1418304321" last-rc-change="1418304321" exec-time="546" queue-time="5" op-digest="63699ffcd98fd6d1694c2390d8137018" on_node="xfc2"/>
+          </lrm_resource>
+          <lrm_resource id="p_glusterd" type="glusterd" class="ocf" provider="glusterfs">
+            <lrm_rsc_op id="p_glusterd_last_failure_0" operation_key="p_glusterd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="15:1387:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;15:1387:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="267" rc-code="0" op-status="0" interval="0" last-run="1418736423" last-rc-change="1418736423" exec-time="47" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="p_glusterd_last_0" operation_key="p_glusterd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="15:1387:7:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;15:1387:7:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="267" rc-code="0" op-status="0" interval="0" last-run="1418736423" last-rc-change="1418736423" exec-time="47" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="xfc2"/>
+            <lrm_rsc_op id="p_glusterd_monitor_30000" operation_key="p_glusterd_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="25:1388:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;25:1388:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="268" rc-code="0" op-status="0" interval="30000" last-rc-change="1418736423" exec-time="52" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="xfc2"/>
+          </lrm_resource>
+          <lrm_resource id="p_bl_glusterfs" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="p_bl_glusterfs_last_0" operation_key="p_bl_glusterfs_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="36:1394:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;36:1394:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="284" rc-code="0" op-status="0" interval="0" last-run="1418736430" last-rc-change="1418736430" exec-time="326" queue-time="0" op-digest="13f13b82c89864d0463e25fafec1d3f3" on_node="xfc2"/>
+            <lrm_rsc_op id="p_bl_glusterfs_monitor_10000" operation_key="p_bl_glusterfs_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="37:1394:0:2c912be8-732b-4ff5-9774-2848417d3a89" transition-magic="0:0;37:1394:0:2c912be8-732b-4ff5-9774-2848417d3a89" call-id="285" rc-code="0" op-status="0" interval="10000" last-rc-change="1418736431" exec-time="82" queue-time="0" op-digest="10130a71ec14e7d01c6eee4349d2adf8" on_node="xfc2"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>
