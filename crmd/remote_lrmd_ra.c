@@ -774,6 +774,66 @@ remote_ra_cancel(lrm_state_t * lrm_state, const char *rsc_id, const char *action
     return 0;
 }
 
+static remote_ra_cmd_t *
+handle_dup_monitor(remote_ra_data_t *ra_data, int interval)
+{
+    GList *gIter = NULL;
+    remote_ra_cmd_t *cmd = NULL;
+
+    /* there are 3 places a potential duplicate monitor operation
+     * could exist.
+     * 1. recurring_cmds list. where the op is waiting for its next interval
+     * 2. cmds list, where the op is queued to get executed immediately
+     * 3. cur_cmd, which means the monitor op is in flight right now.
+     */
+    if (interval == 0) {
+        return NULL;
+    }
+
+    if (ra_data->cur_cmd &&
+        ra_data->cur_cmd->interval == interval &&
+        safe_str_eq(ra_data->cur_cmd->action, "monitor")) {
+
+        cmd = ra_data->cur_cmd;
+        goto handle_dup;
+    }
+
+    for (gIter = ra_data->recurring_cmds; gIter != NULL; gIter = gIter->next) {
+        cmd = gIter->data;
+        if (cmd->interval == interval && safe_str_eq(cmd->action, "monitor")) {
+            goto handle_dup;
+        }
+    }
+
+    for (gIter = ra_data->cmds; gIter != NULL; gIter = gIter->next) {
+        cmd = gIter->data;
+        if (cmd->interval == interval && safe_str_eq(cmd->action, "monitor")) {
+            goto handle_dup;
+        }
+    }
+
+    return NULL;
+
+handle_dup:
+
+    /* if we've already reported success, generate a new call id */
+    if (cmd->reported_success) {
+        cmd->call_id = generate_callid();
+        cmd->reported_success = 0;
+    }
+
+    /* if we have an interval_id set, that means we are in the process of
+     * waiting for this cmd's next interval. instead of waiting, cancel
+     * the timer and execute the action immediately */
+    if (cmd->interval_id) {
+        g_source_remove(cmd->interval_id);
+        cmd->interval_id = 0;
+        recurring_helper(cmd);
+    }
+
+    return cmd;  
+}
+
 int
 remote_ra_exec(lrm_state_t * lrm_state, const char *rsc_id, const char *action, const char *userdata, int interval,     /* ms */
                int timeout,     /* ms */
@@ -797,6 +857,12 @@ remote_ra_exec(lrm_state_t * lrm_state, const char *rsc_id, const char *action, 
     }
 
     remote_ra_data_init(connection_rsc);
+    ra_data = connection_rsc->remote_ra_data;
+
+    cmd = handle_dup_monitor(ra_data, interval);
+    if (cmd) {
+       return cmd->call_id;
+    }
 
     cmd = calloc(1, sizeof(remote_ra_cmd_t));
     cmd->owner = strdup(lrm_state->node_name);
@@ -814,7 +880,6 @@ remote_ra_exec(lrm_state_t * lrm_state, const char *rsc_id, const char *action, 
     if (cmd->start_delay) {
         cmd->delay_id = g_timeout_add(cmd->start_delay, start_delay_helper, cmd);
     }
-    ra_data = connection_rsc->remote_ra_data;
 
     ra_data->cmds = g_list_append(ra_data->cmds, cmd);
     mainloop_set_trigger(ra_data->work);
