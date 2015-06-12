@@ -1067,9 +1067,16 @@ sort_action_id(gconstpointer a, gconstpointer b)
 }
 
 static gboolean
-should_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper)
+check_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper)
 {
     int type = wrapper->type;
+
+    if (wrapper->state == pe_link_dumped) {
+        return TRUE;
+
+    } else if (wrapper->state == pe_link_dup) {
+        return FALSE;
+    }
 
     type &= ~pe_order_implies_first_printed;
     type &= ~pe_order_implies_then_printed;
@@ -1096,7 +1103,6 @@ should_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper
         return FALSE;
     }
 
-    wrapper->state = pe_link_not_dumped;
     if (last_action == wrapper->action->id) {
         crm_trace("Input (%d) %s duplicated for %s",
                   wrapper->action->id, wrapper->action->uuid, action->uuid);
@@ -1140,6 +1146,7 @@ should_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper
         /* for optional only ordering, ordering is not preserved for
          * a stop action that is actually involved with a migration. */
         return FALSE;
+
     } else if (wrapper->type == pe_order_load) {
         crm_trace("check load filter %s.%s -> %s.%s",
                   wrapper->action->uuid,
@@ -1147,7 +1154,7 @@ should_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper
                   action->node ? action->node->details->uname : "");
 
         if (action->rsc && safe_str_eq(action->task, RSC_MIGRATE)) {
-            /* Remove the orders like the following if not needed or introducing transition loop:
+            /* Remove the orders like the following if not relevant:
              *     "load_stopped_node2" -> "rscA_migrate_to node1"
              * which were created also from: pengine/native.c: MigrateRsc()
              *     order_actions(other, then, other_w->type);
@@ -1162,40 +1169,6 @@ should_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper
                 crm_trace("load filter - migrate");
                 wrapper->type = pe_order_none;
                 return FALSE;
-
-            } else {
-                GListPtr lpc = NULL;
-
-                for (lpc = wrapper->action->actions_before; lpc != NULL; lpc = lpc->next) {
-                    action_wrapper_t *wrapper_before = (action_wrapper_t *) lpc->data;
-
-                    /* If there's any order like:
-                     * "rscB_stop node2"-> "load_stopped_node2" -> "rscA_migrate_to node1"
-                     * rscA is being migrated from node1 to node2,
-                     * while rscB is being migrated from node2 to node1.
-                     * There will be potential transition loop.
-                     * Break the order "load_stopped_node2" -> "rscA_migrate_to node1".
-                     */
-
-                    if (wrapper_before->type != pe_order_load
-                        || is_set(wrapper_before->action->flags, pe_action_optional)
-                        || is_not_set(wrapper_before->action->flags, pe_action_migrate_runnable)
-                        || wrapper_before->action->node == NULL
-                        || wrapper->action->node == NULL
-                        || wrapper_before->action->node->details != wrapper->action->node->details) {
-                        continue;
-                    }
-
-                    if (wrapper_before->action->rsc
-                        && wrapper_before->action->rsc->allocated_to
-                        && action->node
-                        && wrapper_before->action->rsc->allocated_to->details == action->node->details) {
-
-                        crm_trace("load filter - migrate loop");
-                        wrapper->type = pe_order_none;
-                        return FALSE;
-                    }
-                }
             }
 
         } else if (wrapper->action->node == NULL || action->node == NULL
@@ -1273,6 +1246,106 @@ should_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper
     }
 
   dump:
+    return TRUE;
+}
+
+static gboolean
+graph_has_loop(action_t * init_action, action_t * action, action_wrapper_t * wrapper)
+{
+    GListPtr lpc = NULL;
+    gboolean has_loop = FALSE;
+
+    if (is_set(wrapper->action->flags, pe_action_tracking)) {
+        crm_trace("Breaking tracking loop: %s.%s -> %s.%s (0x%.6x)",
+                  wrapper->action->uuid,
+                  wrapper->action->node ? wrapper->action->node->details->uname : "",
+                  action->uuid,
+                  action->node ? action->node->details->uname : "",
+                  wrapper->type);
+        return FALSE;
+    }
+
+    if (check_dump_input(-1, action, wrapper) == FALSE) {
+        return FALSE;
+    }
+
+    /* If there's any order like:
+     * "rscB_stop node2"-> "load_stopped_node2" -> "rscA_migrate_to node1"
+     * rscA is being migrated from node1 to node2,
+     * while rscB is being migrated from node2 to node1.
+     * There will be potential graph loop.
+     * Break the order "load_stopped_node2" -> "rscA_migrate_to node1".
+     */
+
+    crm_trace("Checking graph loop: %s.%s -> %s.%s (0x%.6x)",
+              wrapper->action->uuid,
+              wrapper->action->node ? wrapper->action->node->details->uname : "",
+              action->uuid,
+              action->node ? action->node->details->uname : "",
+              wrapper->type);
+
+    if (wrapper->action == init_action) {
+        crm_debug("Found graph loop: %s.%s ->...-> %s.%s",
+                  action->uuid,
+                  action->node ? action->node->details->uname : "",
+                  init_action->uuid,
+                  init_action->node ? init_action->node->details->uname : "");
+
+        return TRUE;
+    }
+
+    set_bit(wrapper->action->flags, pe_action_tracking);
+
+    for (lpc = wrapper->action->actions_before; lpc != NULL; lpc = lpc->next) {
+        action_wrapper_t *wrapper_before = (action_wrapper_t *) lpc->data;
+
+        if (graph_has_loop(init_action, wrapper->action, wrapper_before)) {
+            has_loop = TRUE;
+            goto done;
+        }
+    }
+
+done:
+    clear_bit(wrapper->action->flags, pe_action_tracking);
+
+    return has_loop;
+}
+
+static gboolean
+should_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper)
+{
+    wrapper->state = pe_link_not_dumped;
+
+    if (check_dump_input(last_action, action, wrapper) == FALSE) {
+        return FALSE;
+    }
+
+    if (wrapper->type == pe_order_load
+        && action->rsc
+        && safe_str_eq(action->task, RSC_MIGRATE)) {
+        crm_trace("Checking graph loop - load migrate: %s.%s -> %s.%s",
+                  wrapper->action->uuid,
+                  wrapper->action->node ? wrapper->action->node->details->uname : "",
+                  action->uuid,
+                  action->node ? action->node->details->uname : "");
+
+        if (graph_has_loop(action, action, wrapper)) {
+            /* Remove the orders like the following if they are introducing any graph loops:
+             *     "load_stopped_node2" -> "rscA_migrate_to node1"
+             * which were created also from: pengine/native.c: MigrateRsc()
+             *     order_actions(other, then, other_w->type);
+             */
+            crm_debug("Breaking graph loop - load migrate: %s.%s -> %s.%s",
+                      wrapper->action->uuid,
+                      wrapper->action->node ? wrapper->action->node->details->uname : "",
+                      action->uuid,
+                      action->node ? action->node->details->uname : "");
+
+            wrapper->type = pe_order_none;
+            return FALSE;
+        }
+    }
+
     crm_trace("Input (%d) %s n=%p p=%d r=%d o=%d a=%d f=0x%.6x dumped for %s",
               wrapper->action->id,
               wrapper->action->uuid,
