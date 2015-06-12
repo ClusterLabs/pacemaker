@@ -696,7 +696,7 @@ get_router_node(action_t *action)
     node_t *ended_on = NULL;
     node_t *router_node = NULL;
 
-    if (is_remote_node(action->node) == FALSE) {
+    if (safe_str_eq(action->task, CRM_OP_FENCE) || is_remote_node(action->node) == FALSE) {
         return NULL;
     }
 
