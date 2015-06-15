@@ -59,6 +59,7 @@ void send_direct_ack(const char *to_host, const char *to_sys,
 
 static gboolean lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
                                          int log_level);
+static int do_update_resource(const char *node_name, lrmd_rsc_info_t * rsc, lrmd_event_data_t * op);
 
 static void
 lrm_connection_destroy(void)
@@ -1255,10 +1256,12 @@ delete_resource(lrm_state_t * lrm_state,
 static int
 get_fake_call_id(lrm_state_t *lrm_state, const char *rsc_id)
 {
-    int call_id = 0;
+    int call_id = 999999999;
     rsc_history_t *entry = NULL;
 
-    entry = g_hash_table_lookup(lrm_state->resource_history, rsc_id);
+    if(lrm_state) {
+        entry = g_hash_table_lookup(lrm_state->resource_history, rsc_id);
+    }
 
     /* Make sure the call id is greater than the last successful operation,
      * otherwise the failure will not result in a possible recovery of the resource
@@ -1311,6 +1314,60 @@ force_reprobe(lrm_state_t *lrm_state, const char *from_sys, const char *from_hos
         update_attrd(lrm_state->node_name, CRM_OP_PROBED, NULL, user_name, is_remote_node);
 }
 
+static void
+synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action, int rc) 
+{
+    lrmd_event_data_t *op = NULL;
+    const char *operation = crm_element_value(action, XML_LRM_ATTR_TASK);
+    const char *target_node = crm_element_value(action, XML_LRM_ATTR_TARGET);
+    xmlNode *xml_rsc = find_xml_node(action, XML_CIB_TAG_RESOURCE, TRUE);
+
+    if(xml_rsc == NULL) {
+        /* Do something else?  driect_ack? */
+        crm_info("Skipping %s=%d on %s (%p): no resource",
+                 crm_element_value(action, XML_LRM_ATTR_TASK_KEY), rc, target_node, lrm_state);
+        return;
+    }
+
+    op = construct_op(lrm_state, action, ID(xml_rsc), operation);
+    CRM_ASSERT(op != NULL);
+
+    op->call_id = get_fake_call_id(lrm_state, op->rsc_id);
+    if(safe_str_eq(operation, RSC_NOTIFY)) {
+        /* Notifications can't fail yet */
+        op->op_status = PCMK_LRM_OP_DONE;
+        op->rc = PCMK_OCF_OK;
+
+    } else {
+        op->op_status = PCMK_LRM_OP_ERROR;
+        op->rc = rc;
+    }
+    op->t_run = time(NULL);
+    op->t_rcchange = op->t_run;
+
+    crm_info("Faking result %d for %s_%s_%d on %s (%p)", op->rc, op->rsc_id, op->op_type, op->interval, target_node, lrm_state);
+
+    if(lrm_state) {
+        process_lrm_event(lrm_state, op, NULL);
+
+    } else {
+        lrmd_rsc_info_t rsc;
+
+        rsc.id = strdup(op->rsc_id);
+        rsc.type = crm_element_value_copy(xml_rsc, XML_ATTR_TYPE);
+        rsc.class = crm_element_value_copy(xml_rsc, XML_AGENT_ATTR_CLASS);
+        rsc.provider = crm_element_value_copy(xml_rsc, XML_AGENT_ATTR_PROVIDER);
+
+        do_update_resource(target_node, &rsc, op);
+
+        free(rsc.id);
+        free(rsc.type);
+        free(rsc.class);
+        free(rsc.provider);
+    }
+    lrmd_free_event(op);
+}
+
 
 /*	 A_LRM_INVOKE	*/
 void
@@ -1346,6 +1403,9 @@ do_lrm_invoke(long long action,
     if (lrm_state == NULL && is_remote_node) {
         crm_err("no lrmd connection for remote node %s found on cluster node %s. Can not process request.",
             target_node, fsa_our_uname);
+
+        /* The action must be recorded here and in the CIB as failed */
+        synthesize_lrmd_failure(NULL, input->xml, PCMK_OCF_CONNECTION_DIED);
         return;
     }
 
@@ -1498,26 +1558,19 @@ do_lrm_invoke(long long action,
             create_rsc = FALSE;
         }
 
-        rsc = get_lrm_resource(lrm_state, xml_rsc, input->xml, create_rsc);
+        if(lrm_state_is_connected(lrm_state) == FALSE) {
+            synthesize_lrmd_failure(lrm_state, input->xml, PCMK_OCF_CONNECTION_DIED);
+            return;
+        }
 
+        rsc = get_lrm_resource(lrm_state, xml_rsc, input->xml, create_rsc);
         if (rsc == NULL && create_rsc) {
-            lrmd_event_data_t *op = NULL;
+            crm_err("Invalid resource definition for %s", ID(xml_rsc));
+            crm_log_xml_warn(input->msg, "bad input");
 
             /* if the operation couldn't complete because we can't register
              * the resource, return a generic error */
-            op = construct_op(lrm_state, input->xml, ID(xml_rsc), operation);
-            CRM_ASSERT(op != NULL);
-
-            op->op_status = PCMK_LRM_OP_DONE;
-            op->rc = PCMK_OCF_UNKNOWN_ERROR;
-            op->t_run = time(NULL);
-            op->t_rcchange = op->t_run;
-
-            send_direct_ack(from_host, from_sys, NULL, op, ID(xml_rsc));
-            lrmd_free_event(op);
-
-            crm_err("Invalid resource definition");
-            crm_log_xml_warn(input->msg, "bad input");
+            synthesize_lrmd_failure(lrm_state, input->xml, PCMK_OCF_NOT_CONFIGURED);
 
         } else if (rsc == NULL) {
             lrmd_event_data_t *op = NULL;
@@ -1526,9 +1579,12 @@ do_lrm_invoke(long long action,
             delete_rsc_entry(lrm_state, input, ID(xml_rsc), NULL, pcmk_ok, user_name);
 
             op = construct_op(lrm_state, input->xml, ID(xml_rsc), operation);
+
+            /* Deleting something that does not exist is a success */
             op->op_status = PCMK_LRM_OP_DONE;
             op->rc = PCMK_OCF_OK;
             CRM_ASSERT(op != NULL);
+
             send_direct_ack(from_host, from_sys, NULL, op, ID(xml_rsc));
             lrmd_free_event(op);
 
@@ -2045,7 +2101,7 @@ remote_node_clear_status(const char *node_name, int call_opt)
 }
 
 static int
-do_update_resource(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_data_t * op)
+do_update_resource(const char *node_name, lrmd_rsc_info_t * rsc, lrmd_event_data_t * op)
 {
 /*
   <status>
@@ -2071,12 +2127,12 @@ do_update_resource(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_da
     update = iter;
     iter = create_xml_node(iter, XML_CIB_TAG_STATE);
 
-    if (safe_str_eq(lrm_state->node_name, fsa_our_uname)) {
+    if (safe_str_eq(node_name, fsa_our_uname)) {
         uuid = fsa_our_uuid;
 
     } else {
         /* remote nodes uuid and uname are equal */
-        uuid = lrm_state->node_name;
+        uuid = node_name;
         crm_xml_add(iter, XML_NODE_IS_REMOTE, "true");
     }
 
@@ -2087,7 +2143,7 @@ do_update_resource(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_da
     }
 
     crm_xml_add(iter, XML_ATTR_UUID,  uuid);
-    crm_xml_add(iter, XML_ATTR_UNAME, lrm_state->node_name);
+    crm_xml_add(iter, XML_ATTR_UNAME, node_name);
     crm_xml_add(iter, XML_ATTR_ORIGIN, __FUNCTION__);
 
     iter = create_xml_node(iter, XML_CIB_TAG_LRM);
@@ -2223,7 +2279,7 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op, struct recurr
             /* Keep notify ops out of the CIB */
             send_direct_ack(NULL, NULL, NULL, op, op->rsc_id);
         } else {
-            update_id = do_update_resource(lrm_state, rsc, op);
+            update_id = do_update_resource(lrm_state->node_name, rsc, op);
         }
     } else if (op->interval == 0) {
         /* This will occur when "crm resource cleanup" is called while actions are in-flight */
