@@ -780,7 +780,7 @@ remote_ra_cancel(lrm_state_t * lrm_state, const char *rsc_id, const char *action
 }
 
 static remote_ra_cmd_t *
-handle_dup_monitor(remote_ra_data_t *ra_data, int interval)
+handle_dup_monitor(remote_ra_data_t *ra_data, int interval, const char *userdata)
 {
     GList *gIter = NULL;
     remote_ra_cmd_t *cmd = NULL;
@@ -796,6 +796,7 @@ handle_dup_monitor(remote_ra_data_t *ra_data, int interval)
     }
 
     if (ra_data->cur_cmd &&
+        ra_data->cur_cmd->cancel == FALSE &&
         ra_data->cur_cmd->interval == interval &&
         safe_str_eq(ra_data->cur_cmd->action, "monitor")) {
 
@@ -821,8 +822,17 @@ handle_dup_monitor(remote_ra_data_t *ra_data, int interval)
 
 handle_dup:
 
+    crm_trace("merging duplicate monitor cmd %s_monitor_%d", cmd->rsc_id, interval);
+
+    /* update the userdata */
+    if (userdata) {
+       free(cmd->userdata);
+       cmd->userdata = strdup(userdata);
+    }
+
     /* if we've already reported success, generate a new call id */
     if (cmd->reported_success) {
+        cmd->start_time = time(NULL);
         cmd->call_id = generate_callid();
         cmd->reported_success = 0;
     }
@@ -864,7 +874,7 @@ remote_ra_exec(lrm_state_t * lrm_state, const char *rsc_id, const char *action, 
     remote_ra_data_init(connection_rsc);
     ra_data = connection_rsc->remote_ra_data;
 
-    cmd = handle_dup_monitor(ra_data, interval);
+    cmd = handle_dup_monitor(ra_data, interval, userdata);
     if (cmd) {
        return cmd->call_id;
     }
