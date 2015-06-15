@@ -1695,6 +1695,7 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
         if (safe_str_eq(action->task, "monitor") ||
             safe_str_eq(action->task, "start") ||
             safe_str_eq(action->task, "promote") ||
+            safe_str_eq(action->task, "notify") ||
             safe_str_eq(action->task, CRM_OP_LRM_REFRESH) ||
             safe_str_eq(action->task, CRM_OP_CLEAR_FAILCOUNT) ||
             safe_str_eq(action->task, "delete")) {
@@ -2476,6 +2477,16 @@ create_notifications(resource_t * rsc, notify_data_t * n_data, pe_working_set_t 
             gIter = rsc->running_on;
             for (; gIter != NULL; gIter = gIter->next) {
                 node_t *current_node = (node_t *) gIter->data;
+
+                /* if this stop action is a pseudo action as a result of the current
+                 * node being fenced, this stop action is implied by the fencing 
+                 * action. There's no reason to send the fenced node a stop notification */ 
+                if (stop &&
+                    is_set(stop->flags, pe_action_pseudo) &&
+                    current_node->details->unclean) {
+
+                    continue;
+                }
 
                 pe_notify(rsc, current_node, n_data->pre, n_data->pre_done, n_data, data_set);
                 if (task == action_demote || stop == NULL
