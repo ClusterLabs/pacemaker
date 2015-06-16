@@ -174,13 +174,13 @@ Executing cluster transition:
  * Resource action: stonith-v03-a   start on v03-b
  * Resource action: stonith-v03-a   monitor=60000 on v03-b
  * Resource action: license.anbriz.vds-ok.com-vm migrate_to on v03-b
- * Resource action: terminal0.anbriz.vds-ok.com-vm migrate_to on v03-a
  * Pseudo action:   load_stopped_mgmt01
  * Resource action: license.anbriz.vds-ok.com-vm migrate_from on v03-a
  * Resource action: license.anbriz.vds-ok.com-vm stop on v03-b
+ * Pseudo action:   load_stopped_v03-b
+ * Resource action: terminal0.anbriz.vds-ok.com-vm migrate_to on v03-a
  * Resource action: terminal0.anbriz.vds-ok.com-vm migrate_from on v03-b
  * Resource action: terminal0.anbriz.vds-ok.com-vm stop on v03-a
- * Pseudo action:   load_stopped_v03-b
  * Pseudo action:   load_stopped_v03-a
  * Pseudo action:   all_stopped
  * Pseudo action:   license.anbriz.vds-ok.com-vm_start_0

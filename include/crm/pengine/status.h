@@ -233,6 +233,7 @@ enum pe_action_flags {
                                        * We use this to clear the runnable flag before checking dependencies
                                        */
     pe_action_reschedule = 0x02000,
+    pe_action_tracking = 0x04000,
 };
 /* *INDENT-ON* */
 

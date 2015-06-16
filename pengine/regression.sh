@@ -558,6 +558,7 @@ do_test utilization-order3 "Utilization Order - Migrate"
 do_test utilization-order4 "Utilization Order - Live Mirgration (bnc#695440)"
 do_test utilization-shuffle "Don't displace prmExPostgreSQLDB2 on act2, Start prmExPostgreSQLDB1 on act3"
 do_test load-stopped-loop "Avoid transition loop due to load_stopped (cl#5044)"
+do_test load-stopped-loop-2 "cl#5235 - Prevent graph loops that can be introduced by load_stopped -> migrate_to ordering"
 
 echo ""
 do_test colocated-utilization-primitive-1 "Colocated Utilization - Primitive"
