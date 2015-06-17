@@ -184,7 +184,7 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
             is_remote_node = TRUE;
         }
 
-        crm_warn("Updating %s for %s on %s after failed %s: rc=%d (update=%s, time=%s)",
+        crm_info("Updating %s for %s on %s after failed %s: rc=%d (update=%s, time=%s)",
                  (ignore_failures? "last failure" : "failcount"),
                  rsc_id, on_uname, task, rc, value, now);
 

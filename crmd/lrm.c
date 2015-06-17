@@ -2336,7 +2336,8 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op, struct recurr
             break;
 
         case PCMK_LRM_OP_DONE:
-            crm_notice("Operation %s: %s (node=%s, call=%d, rc=%d, cib-update=%d, confirmed=%s)",
+            do_crm_log(op->interval?LOG_INFO:LOG_NOTICE,
+                       "Operation %s: %s (node=%s, call=%d, rc=%d, cib-update=%d, confirmed=%s)",
                        op_key, services_ocf_exitcode_str(op->rc), lrm_state->node_name,
                        op->call_id, op->rc, update_id, removed ? "true" : "false");
             break;
