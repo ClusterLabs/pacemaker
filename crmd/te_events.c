@@ -88,8 +88,8 @@ fail_incompletable_actions(crm_graph_t * graph, const char *down_node)
                     crm_notice("Action %d (%s) was pending on %s (offline)",
                                action->id, crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY), down_node);
                 } else {
-                    crm_notice("Action %d (%s) is scheduled for %s (offline)",
-                               action->id, crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY), down_node);
+                    crm_info("Action %d (%s) is scheduled for %s (offline)",
+                             action->id, crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY), down_node);
                 }
             }
         }
