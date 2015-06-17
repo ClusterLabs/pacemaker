@@ -135,7 +135,7 @@ should_fire_synapse(crm_graph_t * graph, synapse_t * synapse)
     CRM_CHECK(synapse->executed == FALSE, return FALSE);
     CRM_CHECK(synapse->confirmed == FALSE, return FALSE);
 
-    crm_trace("Checking pre-reqs for %d", synapse->id);
+    crm_trace("Checking pre-reqs for synapse %d", synapse->id);
     /* lookup prereqs */
     synapse->ready = TRUE;
     for (lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
@@ -143,23 +143,30 @@ should_fire_synapse(crm_graph_t * graph, synapse_t * synapse)
 
         crm_trace("Processing input %d", prereq->id);
         if (prereq->confirmed == FALSE) {
-            crm_trace("Inputs for synapse %d not satisfied: not confirmed", synapse->id);
+            crm_trace("Input %d for synapse %d not satisfied: not confirmed", prereq->id, synapse->id);
             synapse->ready = FALSE;
             break;
         } else if(prereq->failed && prereq->can_fail == FALSE) {
-            crm_trace("Inputs for synapse %d not satisfied: failed", synapse->id);
+            crm_trace("Input %d for synapse %d not satisfied: failed", prereq->id, synapse->id);
             synapse->ready = FALSE;
             break;
         }
     }
 
-    if(synapse->ready && graph_fns->allowed) {
-        for (lpc = synapse->actions; lpc != NULL; lpc = lpc->next) {
-            crm_action_t *a = (crm_action_t *) lpc->data;
+    for (lpc = synapse->actions; synapse->ready && lpc != NULL; lpc = lpc->next) {
+        crm_action_t *a = (crm_action_t *) lpc->data;
 
-            if(graph_fns->allowed(graph, a) == FALSE) {
-                return FALSE;
-            }
+        if (a->type == action_type_pseudo) {
+            /* None of the below applies to pseudo ops */
+
+        } else if (synapse->priority < graph->abort_priority) {
+            crm_trace("Skipping synapse %d: abort level %d", synapse->id, graph->abort_priority);
+            graph->skipped++;
+            return FALSE;
+
+        } else if(graph_fns->allowed && graph_fns->allowed(graph, a) == FALSE) {
+            crm_trace("Deferring synapse %d: allowed", synapse->id);
+            return FALSE;
         }
     }
 
@@ -289,11 +296,7 @@ run_graph(crm_graph_t * graph)
             continue;
         }
 
-        if (synapse->priority < graph->abort_priority) {
-            crm_trace("Skipping synapse %d: aborting", synapse->id);
-            graph->skipped++;
-
-        } else if (should_fire_synapse(graph, synapse)) {
+        if (should_fire_synapse(graph, synapse)) {
             crm_trace("Synapse %d fired", synapse->id);
             graph->fired++;
             if(fire_synapse(graph, synapse) == FALSE) {
