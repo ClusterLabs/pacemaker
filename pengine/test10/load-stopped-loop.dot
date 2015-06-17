@@ -16,6 +16,7 @@ digraph "g" {
 "load_stopped_v03-a v03-a" -> "license.anbriz.vds-ok.com-vm_start_0 v03-a" [ style = bold]
 "load_stopped_v03-a v03-a" -> "vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm_start_0 v03-a" [ style = bold]
 "load_stopped_v03-a v03-a" [ style=bold color="green" fontcolor="orange"]
+"load_stopped_v03-b v03-b" -> "terminal0.anbriz.vds-ok.com-vm_migrate_to_0 v03-a" [ style = bold]
 "load_stopped_v03-b v03-b" -> "terminal0.anbriz.vds-ok.com-vm_start_0 v03-b" [ style = bold]
 "load_stopped_v03-b v03-b" [ style=bold color="green" fontcolor="orange"]
 "stonith-v03-a_monitor_60000 v03-b" [ style=bold color="green" fontcolor="black"]
