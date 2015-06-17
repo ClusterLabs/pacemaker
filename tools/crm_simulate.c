@@ -38,6 +38,7 @@
 
 cib_t *global_cib = NULL;
 GListPtr op_fail = NULL;
+bool action_numbers = FALSE;
 gboolean quiet = FALSE;
 gboolean print_pending = FALSE;
 char *temp_shadow = NULL;
@@ -247,6 +248,12 @@ create_action_name(action_t * action)
         action_name = crm_strdup_printf("%s", action->uuid);
     }
 
+    if(action_numbers) {
+        char *with_id = crm_strdup_printf("%s (%d)", action_name, action->id);
+
+        free(action_name);
+        action_name = with_id;
+    }
     return action_name;
 }
 
@@ -620,6 +627,7 @@ main(int argc, char **argv)
                 }
 
                 crm_bump_log_level(argc, argv);
+                action_numbers = TRUE;
                 break;
             case '?':
             case '$':
