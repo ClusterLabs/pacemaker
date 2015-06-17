@@ -50,7 +50,8 @@ fail_incompletable_actions(crm_graph_t * graph, const char *down_node)
     for (; gIter != NULL; gIter = gIter->next) {
         synapse_t *synapse = (synapse_t *) gIter->data;
 
-        if (synapse->confirmed) {
+        if (synapse->confirmed || synapse->failed) {
+            /* We've already been here */
             continue;
         }
 
@@ -96,7 +97,7 @@ fail_incompletable_actions(crm_graph_t * graph, const char *down_node)
     }
 
     if (last_action != NULL) {
-        crm_warn("Node %s shutdown resulted in un-runnable actions", down_node);
+        crm_info("Node %s shutdown resulted in un-runnable actions", down_node);
         abort_transition(INFINITY, tg_restart, "Node failure", last_action);
         return TRUE;
     }
