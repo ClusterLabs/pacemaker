@@ -2790,23 +2790,52 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
     time_t last_failure = 0;
     int clear_failcount = 0;
     int interval = 0;
+    int failure_timeout = rsc->failure_timeout;
     const char *key = get_op_key(xml_op);
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
 
-    if (rsc->failure_timeout > 0) {
+    /* clearing recurring monitor operation failures automatically
+     * needs to be carefully considered */
+    if (safe_str_eq(crm_element_value(xml_op, XML_LRM_ATTR_TASK), "monitor") &&
+        safe_str_neq(crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL), "0")) {
+
+        /* TODO, in the future we should consider not clearing recurring monitor
+         * op failures unless the last action for a resource was a "stop" action.
+         * otherwise it is possible that clearing the monitor failure will result
+         * in the resource being in an undeterministic state.
+         *
+         * For now we handle this potential undeterministic condition for remote
+         * node connection resources by not clearing a recurring monitor op failure
+         * until after the node has been fenced. */
+
+        if (is_set(data_set->flags, pe_flag_stonith_enabled) &&
+            (rsc->remote_reconnect_interval)) {
+
+            node_t *remote_node = pe_find_node(data_set->nodes, rsc->id);
+            if (remote_node && remote_node->details->remote_was_fenced == 0) {
+            
+                crm_info("Waiting to clear monitor failure for remote node %s until fencing has occured", rsc->id); 
+                /* disabling failure timeout for this operation because we believe
+                 * fencing of the remote node should occur first. */ 
+                failure_timeout = 0;
+            }
+        }
+    }
+
+    if (failure_timeout > 0) {
         int last_run = 0;
 
         if (crm_element_value_int(xml_op, XML_RSC_OP_LAST_CHANGE, &last_run) == 0) {
             time_t now = get_effective_time(data_set);
 
-            if (now > (last_run + rsc->failure_timeout)) {
+            if (now > (last_run + failure_timeout)) {
                 expired = TRUE;
             }
         }
     }
 
     if (expired) {
-        if (rsc->failure_timeout > 0) {
+        if (failure_timeout > 0) {
             int fc = get_failcount_full(node, rsc, &last_failure, FALSE, xml_op, data_set);
             if(fc) {
                 if (get_failcount_full(node, rsc, &last_failure, TRUE, xml_op, data_set) == 0) {
