@@ -702,6 +702,10 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
         }
     }
 
+    if (safe_str_eq(op, CIB_OP_DELETE) && (options & cib_multiple)) {
+        dedupXpathResults(xpathObj);
+    }
+
     for (lpc = 0; lpc < max; lpc++) {
         xmlChar *path = NULL;
         xmlNode *match = getXpathResult(xpathObj, lpc);
