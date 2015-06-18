@@ -2055,6 +2055,12 @@ pe_notify(resource_t * rsc, node_t * node, action_t * op, action_t * confirm,
     if (node->details->online == FALSE) {
         pe_rsc_trace(rsc, "Skipping notification for %s: node offline", rsc->id);
         return NULL;
+    } else if (is_remote_node(node) && node->details->unclean == TRUE) {
+        pe_rsc_trace(rsc, "Skipping notification for %s: remote node %s is unclean", rsc->id, node->details->uname);
+        return NULL;
+    } else if (node->details->remote_rsc && node->details->remote_rsc->role == RSC_ROLE_STOPPED) {
+        pe_rsc_trace(rsc, "Skipping notification for %s: remote node %s offline", rsc->id, node->details->uname);
+        return NULL;
     } else if (is_set(op->flags, pe_action_runnable) == FALSE) {
         pe_rsc_trace(rsc, "Skipping notification for %s: not runnable", op->uuid);
         return NULL;
@@ -2077,6 +2083,18 @@ pe_notify(resource_t * rsc, node_t * node, action_t * op, action_t * confirm,
 
     order_actions(op, trigger, pe_order_optional);
     order_actions(trigger, confirm, pe_order_optional);
+
+
+    if (node->details->remote_rsc) {
+        resource_t *remote_rsc = node->details->remote_rsc;
+        if (remote_rsc->next_role == RSC_ROLE_STARTED) {
+            action_t *start = find_first_action(node->details->remote_rsc->actions, NULL, RSC_START, NULL);
+            order_actions(start, op, pe_order_optional);
+        } else {
+           action_t *stop = find_first_action(node->details->remote_rsc->actions, NULL, RSC_STOP, NULL);
+           order_actions(op, stop, pe_order_optional);
+        }
+    }
     return trigger;
 }
 
