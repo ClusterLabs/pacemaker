@@ -7,7 +7,9 @@
 This is *not* an attempt for fully self-hosted AsciiDoc document,
 consider it a plaintext full of AsciiDoc samples (it's up to the reader
 to recognize the borderline) at documentation writers' disposal
-to somewhat standardize the style.
+to somewhat standardize the style{empty}footnote:[
+  style of both source notation and final visual appearance
+].
 
 See also:
    http://powerman.name/doc/asciidoc
