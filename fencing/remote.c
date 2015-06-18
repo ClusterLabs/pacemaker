@@ -792,7 +792,8 @@ initiate_remote_stonith_op(crm_client_t * client, xmlNode * request, gboolean ma
                        op->id, op->state);
     }
 
-    query = stonith_create_op(op->client_callid, op->id, STONITH_OP_QUERY, NULL, 0);
+    query = stonith_create_op(op->client_callid, op->id, STONITH_OP_QUERY,
+                              NULL, op->call_options);
 
     crm_xml_add(query, F_STONITH_REMOTE_OP_ID, op->id);
     crm_xml_add(query, F_STONITH_TARGET, op->target);
@@ -801,7 +802,6 @@ initiate_remote_stonith_op(crm_client_t * client, xmlNode * request, gboolean ma
     crm_xml_add(query, F_STONITH_CLIENTID, op->client_id);
     crm_xml_add(query, F_STONITH_CLIENTNAME, op->client_name);
     crm_xml_add_int(query, F_STONITH_TIMEOUT, op->base_timeout);
-    crm_xml_add_int(query, F_STONITH_CALLOPTS, op->call_options);
 
     send_cluster_message(NULL, crm_msg_stonith_ng, query, FALSE);
     free_xml(query);
