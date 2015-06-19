@@ -531,7 +531,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
             int current_schema = get_schema_version(schema);
 
             if (minimum_schema == 0) {
-                minimum_schema = get_schema_version("pacemaker-1.1");
+                minimum_schema = get_schema_version("pacemaker-1.2");
             }
 
             /* Does the CIB support the "update-*" attributes... */
