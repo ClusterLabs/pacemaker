@@ -2409,6 +2409,7 @@ expand_notification_data(notify_data_t * n_data, pe_working_set_t * data_set)
     nodes = g_hash_table_get_values(n_data->allowed_nodes);
     node_list = expand_node_list(nodes);
     g_hash_table_insert(n_data->keys, strdup("notify_available_uname"), node_list);
+    g_list_free(nodes);
 
     node_list = expand_node_list(data_set->nodes);
     g_hash_table_insert(n_data->keys, strdup("notify_all_uname"), node_list);
