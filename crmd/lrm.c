@@ -1327,6 +1327,12 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action, int rc)
         crm_info("Skipping %s=%d on %s (%p): no resource",
                  crm_element_value(action, XML_LRM_ATTR_TASK_KEY), rc, target_node, lrm_state);
         return;
+
+    } else if(operation == NULL) {
+        /* This probably came from crm_resource -C, nothing to do */
+        crm_info("Skipping %s=%d on %s (%p): no operation",
+                 crm_element_value(action, XML_ATTR_TRANSITION_KEY), rc, target_node, lrm_state);
+        return;
     }
 
     op = construct_op(lrm_state, action, ID(xml_rsc), operation);
