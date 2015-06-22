@@ -1,0 +1,98 @@
+
+Current cluster status:
+Online: [ c7auto1 c7auto2 c7auto3 ]
+
+ shooter	(stonith:fence_phd_kvm):	Started c7auto2
+ fake1	(ocf::heartbeat:Dummy):	Stopped
+ fake2	(ocf::heartbeat:Dummy):	Stopped
+ fake3	(ocf::heartbeat:Dummy):	Stopped
+ fake4	(ocf::heartbeat:Dummy):	Stopped
+ fake5	(ocf::heartbeat:Dummy):	Stopped
+ Clone Set: fake_clone [fake]
+     Stopped: [ c7auto1 c7auto2 c7auto3 c7auto4 ]
+ Resource Group: fake_group
+     fake_fs	(ocf::heartbeat:Dummy):	Stopped
+     container	(ocf::heartbeat:Dummy):	Stopped
+
+Transition Summary:
+ * Start   fake1	(c7auto3)
+ * Start   fake2	(c7auto4)
+ * Start   fake3	(c7auto2)
+ * Start   fake4	(c7auto3)
+ * Start   fake5	(c7auto4)
+ * Start   fake:0	(c7auto2)
+ * Start   fake:1	(c7auto3)
+ * Start   fake:2	(c7auto4)
+ * Start   fake:3	(c7auto1)
+ * Start   fake_fs	(c7auto1)
+ * Start   container	(c7auto1)
+ * Start   c7auto4	(c7auto1)
+
+Executing cluster transition:
+ * Resource action: fake1           monitor on c7auto3
+ * Resource action: fake1           monitor on c7auto2
+ * Resource action: fake1           monitor on c7auto1
+ * Resource action: fake2           monitor on c7auto3
+ * Resource action: fake2           monitor on c7auto2
+ * Resource action: fake2           monitor on c7auto1
+ * Resource action: fake3           monitor on c7auto3
+ * Resource action: fake3           monitor on c7auto2
+ * Resource action: fake3           monitor on c7auto1
+ * Resource action: fake4           monitor on c7auto3
+ * Resource action: fake4           monitor on c7auto2
+ * Resource action: fake4           monitor on c7auto1
+ * Resource action: fake5           monitor on c7auto3
+ * Resource action: fake5           monitor on c7auto2
+ * Resource action: fake5           monitor on c7auto1
+ * Resource action: fake:0          monitor on c7auto2
+ * Resource action: fake:1          monitor on c7auto3
+ * Resource action: fake:3          monitor on c7auto1
+ * Pseudo action:   fake_clone_start_0
+ * Pseudo action:   fake_group_start_0
+ * Resource action: fake_fs         monitor on c7auto3
+ * Resource action: fake_fs         monitor on c7auto2
+ * Resource action: fake_fs         monitor on c7auto1
+ * Pseudo action:   probe_complete
+ * Resource action: fake1           start on c7auto3
+ * Resource action: fake3           start on c7auto2
+ * Resource action: fake4           start on c7auto3
+ * Resource action: fake:0          start on c7auto2
+ * Resource action: fake:1          start on c7auto3
+ * Resource action: fake:3          start on c7auto1
+ * Resource action: fake_fs         start on c7auto1
+ * Resource action: container       start on c7auto1
+ * Resource action: c7auto4         start on c7auto1
+ * Resource action: fake1           monitor=10000 on c7auto3
+ * Resource action: fake2           start on c7auto4
+ * Resource action: fake3           monitor=10000 on c7auto2
+ * Resource action: fake4           monitor=10000 on c7auto3
+ * Resource action: fake5           start on c7auto4
+ * Resource action: fake:0          monitor=10000 on c7auto2
+ * Resource action: fake:1          monitor=10000 on c7auto3
+ * Resource action: fake:2          start on c7auto4
+ * Resource action: fake:3          monitor=10000 on c7auto1
+ * Pseudo action:   fake_clone_running_0
+ * Pseudo action:   fake_group_running_0
+ * Resource action: fake_fs         monitor=10000 on c7auto1
+ * Resource action: container       monitor=10000 on c7auto1
+ * Resource action: c7auto4         monitor=30000 on c7auto1
+ * Resource action: fake2           monitor=10000 on c7auto4
+ * Resource action: fake5           monitor=10000 on c7auto4
+ * Resource action: fake:2          monitor=10000 on c7auto4
+
+Revised cluster status:
+Online: [ c7auto1 c7auto2 c7auto3 ]
+Containers: [ c7auto4:container ]
+
+ shooter	(stonith:fence_phd_kvm):	Started c7auto2
+ fake1	(ocf::heartbeat:Dummy):	Started c7auto3
+ fake2	(ocf::heartbeat:Dummy):	Started c7auto4
+ fake3	(ocf::heartbeat:Dummy):	Started c7auto2
+ fake4	(ocf::heartbeat:Dummy):	Started c7auto3
+ fake5	(ocf::heartbeat:Dummy):	Started c7auto4
+ Clone Set: fake_clone [fake]
+     Started: [ c7auto1 c7auto2 c7auto3 c7auto4 ]
+ Resource Group: fake_group
+     fake_fs	(ocf::heartbeat:Dummy):	Started c7auto1
+     container	(ocf::heartbeat:Dummy):	Started c7auto1
+

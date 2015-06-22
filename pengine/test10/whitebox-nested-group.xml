@@ -1,0 +1,151 @@
+<cib crm_feature_set="3.0.10" validate-with="pacemaker-2.3" epoch="10" num_updates="1" admin_epoch="0" cib-last-written="Mon Jun 22 11:56:24 2015" have-quorum="1" dc-uuid="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.12-4dc87a4"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="phd"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="c7auto1"/>
+      <node id="2" uname="c7auto2"/>
+      <node id="3" uname="c7auto3"/>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="shooter" type="fence_phd_kvm">
+        <instance_attributes id="shooter-instance_attributes"/>
+        <operations>
+          <op id="shooter-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="fake1" provider="heartbeat" type="Dummy">
+        <operations>
+          <op id="fake1-start-timeout-20" interval="0s" name="start" timeout="20"/>
+          <op id="fake1-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
+          <op id="fake1-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="fake2" provider="heartbeat" type="Dummy">
+        <operations>
+          <op id="fake2-start-timeout-20" interval="0s" name="start" timeout="20"/>
+          <op id="fake2-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
+          <op id="fake2-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="fake3" provider="heartbeat" type="Dummy">
+        <operations>
+          <op id="fake3-start-timeout-20" interval="0s" name="start" timeout="20"/>
+          <op id="fake3-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
+          <op id="fake3-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="fake4" provider="heartbeat" type="Dummy">
+        <operations>
+          <op id="fake4-start-timeout-20" interval="0s" name="start" timeout="20"/>
+          <op id="fake4-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
+          <op id="fake4-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="fake5" provider="heartbeat" type="Dummy">
+        <operations>
+          <op id="fake5-start-timeout-20" interval="0s" name="start" timeout="20"/>
+          <op id="fake5-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
+          <op id="fake5-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+        </operations>
+      </primitive>
+      <clone id="fake_clone">
+        <primitive class="ocf" id="fake" provider="heartbeat" type="Dummy">
+          <operations>
+            <op id="fake-start-timeout-20" interval="0s" name="start" timeout="20"/>
+            <op id="fake-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
+            <op id="fake-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+          </operations>
+        </primitive>
+      </clone>
+      <group id="fake_group">
+        <primitive class="ocf" id="fake_fs" provider="heartbeat" type="Dummy">
+          <instance_attributes id="fake_fs-instance_attributes"/>
+          <operations>
+            <op id="fake_fs-start-timeout-20" interval="0s" name="start" timeout="20"/>
+            <op id="fake_fs-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
+            <op id="fake_fs-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="container" provider="heartbeat" type="Dummy">
+          <instance_attributes id="container-instance_attributes"/>
+          <operations>
+            <op id="container-start-timeout-20" interval="0s" name="start" timeout="20"/>
+            <op id="container-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
+            <op id="container-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+          </operations>
+          <meta_attributes id="container-meta_attributes">
+            <nvpair id="container-meta_attributes-remote-node" name="remote-node" value="c7auto4"/>
+          </meta_attributes>
+        </primitive>
+      </group>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="1" uname="c7auto1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="shooter" type="fence_phd_kvm" class="stonith">
+            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="11:5:0:cee9d25f-bc4b-4fff-99d9-a897f2ea8953" transition-magic="0:0;11:5:0:cee9d25f-bc4b-4fff-99d9-a897f2ea8953" on_node="c7auto1" call-id="13" rc-code="0" op-status="0" interval="0" last-run="1434988458" last-rc-change="1434988458" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="shooter_monitor_60000" operation_key="shooter_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="10:4:0:cee9d25f-bc4b-4fff-99d9-a897f2ea8953" transition-magic="0:0;10:4:0:cee9d25f-bc4b-4fff-99d9-a897f2ea8953" on_node="c7auto1" call-id="7" rc-code="0" op-status="0" interval="60000" last-rc-change="1434988250" exec-time="5" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="container" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="container_last_0" operation_key="container_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="12:6:0:cee9d25f-bc4b-4fff-99d9-a897f2ea8953" transition-magic="0:0;12:6:0:cee9d25f-bc4b-4fff-99d9-a897f2ea8953" on_node="c7auto1" call-id="18" rc-code="0" op-status="0" interval="0" last-run="1434988517" last-rc-change="1434988517" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" fake " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="container_monitor_10000" operation_key="container_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="15:5:0:cee9d25f-bc4b-4fff-99d9-a897f2ea8953" transition-magic="0:0;15:5:0:cee9d25f-bc4b-4fff-99d9-a897f2ea8953" on_node="c7auto1" call-id="15" rc-code="0" op-status="0" interval="10000" last-rc-change="1434988459" exec-time="7" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-1-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="2" uname="c7auto2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="shooter" type="fence_phd_kvm" class="stonith">
+            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="12:5:0:cee9d25f-bc4b-4fff-99d9-a897f2ea8953" transition-magic="0:0;12:5:0:cee9d25f-bc4b-4fff-99d9-a897f2ea8953" on_node="c7auto2" call-id="10" rc-code="0" op-status="0" interval="0" last-run="1434988459" last-rc-change="1434988459" exec-time="8" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="shooter_monitor_60000" operation_key="shooter_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="13:5:0:cee9d25f-bc4b-4fff-99d9-a897f2ea8953" transition-magic="0:0;13:5:0:cee9d25f-bc4b-4fff-99d9-a897f2ea8953" on_node="c7auto2" call-id="11" rc-code="0" op-status="0" interval="60000" last-rc-change="1434988460" exec-time="6" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="container" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="container_last_0" operation_key="container_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="8:5:7:cee9d25f-bc4b-4fff-99d9-a897f2ea8953" transition-magic="0:7;8:5:7:cee9d25f-bc4b-4fff-99d9-a897f2ea8953" on_node="c7auto2" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1434988459" last-rc-change="1434988459" exec-time="25" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" fake " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="3" uname="c7auto3" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="3">
+        <lrm_resources>
+          <lrm_resource id="shooter" type="fence_phd_kvm" class="stonith">
+            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="8:4:7:cee9d25f-bc4b-4fff-99d9-a897f2ea8953" transition-magic="0:7;8:4:7:cee9d25f-bc4b-4fff-99d9-a897f2ea8953" on_node="c7auto3" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1434988248" last-rc-change="1434988248" exec-time="996" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="container" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="container_last_0" operation_key="container_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="10:5:7:cee9d25f-bc4b-4fff-99d9-a897f2ea8953" transition-magic="0:7;10:5:7:cee9d25f-bc4b-4fff-99d9-a897f2ea8953" on_node="c7auto3" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1434988458" last-rc-change="1434988458" exec-time="22" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" fake " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="3">
+        <instance_attributes id="status-3">
+          <nvpair id="status-3-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-3-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state remote_node="true" id="c7auto4" uname="c7auto4" crm-debug-origin="remote_node_init_status" node_fenced="0"/>
+  </status>
+</cib>
