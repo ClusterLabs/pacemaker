@@ -1247,6 +1247,42 @@ all_topology_devices_found(remote_fencing_op_t * op)
     return TRUE;
 }
 
+/*
+ * \internal
+ * \brief Parse action-specific device properties from XML
+ *
+ * \param[in]     msg     XML element containing the properties
+ * \param[in]     peer    Name of peer that sent XML (for logs)
+ * \param[in]     device  Device ID (for logs)
+ * \param[in]     action  Action the properties relate to
+ * \param[in,out] values  3-integer array to contain timeout, delay, required
+ */
+static void
+parse_action_specific(xmlNode *xml, const char *peer, const char *device,
+                      const char *action, int *values)
+{
+    values[0] = 0;
+    crm_element_value_int(xml, F_STONITH_ACTION_TIMEOUT, &values[0]);
+    if (values[0]) {
+        crm_trace("Peer %s with device %s returned %s action timeout %d",
+                  peer, device, action, values[0]);
+    }
+
+    values[1] = 0;
+    crm_element_value_int(xml, F_STONITH_DELAY_MAX, &values[1]);
+    if (values[1]) {
+        crm_trace("Peer %s with device %s returned maximum of random delay %d for %s",
+                  peer, device, values[1], action);
+    }
+
+    values[2] = 0;
+    crm_element_value_int(xml, F_STONITH_DEVICE_REQUIRED, &values[2]);
+    if (values[2]) {
+        crm_trace("Peer %s requires device %s to execute for action %s",
+                  peer, device, action);
+    }
+}
+
 int
 process_remote_stonith_query(xmlNode * msg)
 {
@@ -1308,37 +1344,30 @@ process_remote_stonith_query(xmlNode * msg)
 
     for (child = __xml_first_child(dev); child != NULL; child = __xml_next(child)) {
         const char *device = ID(child);
-        int action_timeout = 0;
-        int delay_max = 0;
-        int verified = 0;
-        int required = 0;
 
         if (device) {
+            int values[3];
+            int verified = 0;
+
             result->device_list = g_list_prepend(result->device_list, strdup(device));
-            crm_element_value_int(child, F_STONITH_ACTION_TIMEOUT, &action_timeout);
-            crm_element_value_int(child, F_STONITH_DELAY_MAX, &delay_max);
             crm_element_value_int(child, F_STONITH_DEVICE_VERIFIED, &verified);
-            crm_element_value_int(child, F_STONITH_DEVICE_REQUIRED, &required);
-            if (action_timeout) {
-                crm_trace("Peer %s with device %s returned action timeout %d",
-                          result->host, device, action_timeout);
+
+            /* Parse properties specific to the operation's action */
+            parse_action_specific(child, result->host, device, op->action, values);
+            if (values[0]) {
                 g_hash_table_insert(result->custom_action_timeouts,
-                                    strdup(device), GINT_TO_POINTER(action_timeout));
+                                    strdup(device), GINT_TO_POINTER(values[0]));
             }
-            if (delay_max > 0) {
-                crm_trace("Peer %s with device %s returned maximum of random delay %d",
-                          result->host, device, delay_max);
+            if (values[1] > 0) {
                 g_hash_table_insert(result->delay_maxes,
-                                    strdup(device), GINT_TO_POINTER(delay_max));
+                                    strdup(device), GINT_TO_POINTER(values[1]));
             }
             if (verified) {
                 crm_trace("Peer %s has confirmed a verified device %s", result->host, device);
                 g_hash_table_insert(result->verified_devices,
                                     strdup(device), GINT_TO_POINTER(verified));
             }
-            if (required) {
-                crm_trace("Peer %s requires device %s to execute for action %s",
-                          result->host, device, op->action);
+            if (values[2]) {
                 /* This matters when executing a topology. Required devices will get 
                  * executed regardless of their topology level. We use this for unfencing. */
                 add_required_device(op, device);
