@@ -139,9 +139,6 @@ tools/report.collector.1
 xml/crm.dtd
 xml/pacemaker*.rng
 xml/versions.rng
-extra/rgmanager/ccs2cib
-extra/rgmanager/ccs_flatten
-extra/rgmanager/disable_rgmanager
 doc/Clusters_from_Scratch.build
 doc/Clusters_from_Scratch/en-US/Ap-*.xml
 doc/Clusters_from_Scratch/en-US/Ch-*.xml

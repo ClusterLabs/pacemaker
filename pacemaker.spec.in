@@ -314,11 +314,6 @@ rm -f %{buildroot}/%{_initrddir}/pacemaker
 rm -f %{buildroot}/%{_initrddir}/pacemaker_remote
 %endif
 
-# Only useful on rhel6
-rm -f %{buildroot}/%{_bindir}/ccs2cib
-rm -f %{buildroot}/%{_bindir}/ccs_flatten
-rm -f %{buildroot}/%{_bindir}/disable_rgmanager
-
 %if %{with coverage}
 GCOV_BASE=%{buildroot}/%{_var}/lib/pacemaker/gcov
 mkdir -p $GCOV_BASE

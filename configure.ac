@@ -1886,7 +1886,6 @@ lrmd/Makefile                                                   \
         lrmd/pacemaker_remote					\
 extra/Makefile							\
 	extra/resources/Makefile				\
-	extra/rgmanager/Makefile				\
 	extra/logrotate/Makefile				\
 	extra/logrotate/pacemaker				\
 tools/Makefile							\
