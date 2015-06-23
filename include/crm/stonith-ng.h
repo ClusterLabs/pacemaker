@@ -60,7 +60,6 @@ enum stonith_call_options {
     st_opt_report_only_success = 0x00004000,
 };
 
-#define stonith_default_options = stonith_none
 /*! Order matters here, do not change values */
 enum op_state
 {

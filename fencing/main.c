@@ -605,6 +605,40 @@ fencing_topology_init(xmlNode * msg)
 
 #define rsc_name(x) x->clone_name?x->clone_name:x->id
 
+/*!
+ * \internal
+ * \brief Check whether our uname is in a resource's allowed node list
+ *
+ * \param[in] rsc  Resource to check
+ *
+ * \return Pointer to node object if found, NULL otherwise
+ */
+static node_t *
+our_node_allowed_for(resource_t *rsc)
+{
+    GHashTableIter iter;
+    node_t *node = NULL;
+
+    if (rsc && stonith_our_uname) {
+        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+        while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
+            if (node && strcmp(node->details->uname, stonith_our_uname) == 0) {
+                break;
+            }
+            node = NULL;
+        }
+    }
+    return node;
+}
+
+/*!
+ * \internal
+ * \brief If a resource or any of its children are STONITH devices, update their
+ *        definitions given a cluster working set.
+ *
+ * \param[in] rsc       Resource to check
+ * \param[in] data_set  Cluster working set with device information
+ */
 static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
 {
     node_t *node = NULL;
@@ -613,7 +647,9 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
     node_t *parent = NULL;
     gboolean remove = TRUE;
 
-    /* TODO: Mark each installed device and remove if untouched when this process finishes */
+    /* If this is a complex resource, check children rather than this resource itself.
+     * TODO: Mark each installed device and remove if untouched when this process finishes.
+     */
     if(rsc->children) {
         GListPtr gIter = NULL;
         for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
@@ -626,41 +662,27 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
         return;
     }
 
+    /* We only care about STONITH resources. */
     rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     if(safe_str_neq(rclass, "stonith")) {
         return;
     }
 
+    /* If this STONITH resource is disabled, just remove it. */
     value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
-    if(value && strcmp(RSC_STOPPED, value) == 0) {
+    if (safe_str_eq(value, RSC_STOPPED)) {
         crm_info("Device %s has been disabled", rsc->id);
         goto update_done;
-
-    } else if(stonith_our_uname) {
-        GHashTableIter iter;
-
-        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
-        while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-            if(node && strcmp(node->details->uname, stonith_our_uname) == 0) {
-                break;
-            }
-            node = NULL;
-        }
     }
 
-    if (rsc->parent && rsc->parent->variant == pe_group && stonith_our_uname) {
-        GHashTableIter iter;
-
-        g_hash_table_iter_init(&iter, rsc->parent->allowed_nodes);
-        while (g_hash_table_iter_next(&iter, NULL, (void **)&parent)) {
-            if(parent && strcmp(parent->details->uname, stonith_our_uname) == 0) {
-                break;
-            }
-            parent = NULL;
-        }
+    /* Check whether our node is allowed for this resource (and its parent if in a group) */
+    node = our_node_allowed_for(rsc);
+    if (rsc->parent && (rsc->parent->variant == pe_group)) {
+        parent = our_node_allowed_for(rsc->parent);
     }
 
     if(node == NULL) {
+        /* Our node is disallowed, so remove the device */
         GHashTableIter iter;
 
         crm_info("Device %s has been disabled on %s: unknown", rsc->id, stonith_our_uname);
@@ -672,6 +694,7 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
         goto update_done;
 
     } else if(node->weight < 0 || (parent && parent->weight < 0)) {
+        /* Our node (or its group) is disallowed by score, so remove the device */
         char *score = score2char((node->weight < 0) ? node->weight : parent->weight);
 
         crm_info("Device %s has been disabled on %s: score=%s", rsc->id, stonith_our_uname, score);
@@ -680,6 +703,7 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
         goto update_done;
 
     } else {
+        /* Our node is allowed, so update the device information */
         xmlNode *data;
         GHashTableIter gIter;
         stonith_key_value_t *params = NULL;
@@ -722,6 +746,10 @@ update_done:
 extern xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
 extern node_t *create_node(const char *id, const char *uname, const char *type, const char *score, pe_working_set_t * data_set);
 
+/*!
+ * \internal
+ * \brief Update all STONITH device definitions based on current CIB
+ */
 static void
 cib_devices_update(void)
 {

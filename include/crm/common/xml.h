@@ -241,6 +241,7 @@ xmlNode *expand_idref(xmlNode * input, xmlNode * top);
 
 void freeXpathObject(xmlXPathObjectPtr xpathObj);
 xmlNode *getXpathResult(xmlXPathObjectPtr xpathObj, int index);
+void dedupXpathResults(xmlXPathObjectPtr xpathObj);
 
 static inline int numXpathResults(xmlXPathObjectPtr xpathObj)
 {

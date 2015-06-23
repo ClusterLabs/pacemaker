@@ -615,28 +615,49 @@ unpack_remote_nodes(xmlNode * xml_resources, pe_working_set_t * data_set)
     for (xml_obj = __xml_first_child(xml_resources); xml_obj != NULL; xml_obj = __xml_next(xml_obj)) {
         const char *new_node_id = NULL;
 
-        /* remote rsc can be defined as primitive, or exist within the metadata of another rsc */
+        /* first check if this is a bare metal remote node. Bare metal remote nodes
+         * are defined as a resource primitive only. */
         if (xml_contains_remote_node(xml_obj)) {
             new_node_id = ID(xml_obj);
-            /* This check is here to make sure we don't iterate over
+            /* The "pe_find_node" check is here to make sure we don't iterate over
              * an expanded node that has already been added to the node list. */
-            if (new_node_id && pe_find_node(data_set->nodes, new_node_id) != NULL) {
-                continue;
+            if (new_node_id && pe_find_node(data_set->nodes, new_node_id) == NULL) {
+                crm_trace("Found baremetal remote node %s in container resource %s", new_node_id, ID(xml_obj));
+                create_node(new_node_id, new_node_id, "remote", NULL, data_set);
             }
-        } else {
+            continue;
+        }
+
+        /* Now check for guest remote nodes.
+         * guest remote nodes are defined within a resource primitive.
+         * Example1: a vm resource might be configured as a remote node.
+         * Example2: a vm resource might be configured within a group to be a remote node.
+         * Note: right now we only support guest remote nodes in as a standalone primitive
+         * or a primitive within a group. No cloned primitives can be a guest remote node
+         * right now */
+        if (crm_str_eq((const char *)xml_obj->name, XML_CIB_TAG_RESOURCE, TRUE)) {
             /* expands a metadata defined remote resource into the xml config
              * as an actual rsc primitive to be unpacked later. */
             new_node_id = expand_remote_rsc_meta(xml_obj, xml_resources, &rsc_name_check);
-        }
 
-        if (new_node_id) {
-            crm_trace("detected remote node %s", new_node_id);
-
-            /* only create the remote node entry if the node didn't already exist */
-            if (pe_find_node(data_set->nodes, new_node_id) == NULL) {
+            if (new_node_id && pe_find_node(data_set->nodes, new_node_id) == NULL) {
+                crm_trace("Found guest remote node %s in container resource %s", new_node_id, ID(xml_obj));
                 create_node(new_node_id, new_node_id, "remote", NULL, data_set);
             }
+            continue;
 
+        } else if (crm_str_eq((const char *)xml_obj->name, XML_CIB_TAG_GROUP, TRUE)) {
+            xmlNode *xml_obj2 = NULL;
+            /* search through a group to see if any of the primitive contain a remote node. */
+            for (xml_obj2 = __xml_first_child(xml_obj); xml_obj2 != NULL; xml_obj2 = __xml_next(xml_obj2)) {
+
+                new_node_id = expand_remote_rsc_meta(xml_obj2, xml_resources, &rsc_name_check);
+
+                if (new_node_id && pe_find_node(data_set->nodes, new_node_id) == NULL) {
+                    crm_trace("Found guest remote node %s in container resource %s which is in group %s", new_node_id, ID(xml_obj2), ID(xml_obj));
+                    create_node(new_node_id, new_node_id, "remote", NULL, data_set);
+                }
+            }
         }
     }
     if (rsc_name_check) {
@@ -2790,23 +2811,52 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
     time_t last_failure = 0;
     int clear_failcount = 0;
     int interval = 0;
+    int failure_timeout = rsc->failure_timeout;
     const char *key = get_op_key(xml_op);
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
 
-    if (rsc->failure_timeout > 0) {
+    /* clearing recurring monitor operation failures automatically
+     * needs to be carefully considered */
+    if (safe_str_eq(crm_element_value(xml_op, XML_LRM_ATTR_TASK), "monitor") &&
+        safe_str_neq(crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL), "0")) {
+
+        /* TODO, in the future we should consider not clearing recurring monitor
+         * op failures unless the last action for a resource was a "stop" action.
+         * otherwise it is possible that clearing the monitor failure will result
+         * in the resource being in an undeterministic state.
+         *
+         * For now we handle this potential undeterministic condition for remote
+         * node connection resources by not clearing a recurring monitor op failure
+         * until after the node has been fenced. */
+
+        if (is_set(data_set->flags, pe_flag_stonith_enabled) &&
+            (rsc->remote_reconnect_interval)) {
+
+            node_t *remote_node = pe_find_node(data_set->nodes, rsc->id);
+            if (remote_node && remote_node->details->remote_was_fenced == 0) {
+            
+                crm_info("Waiting to clear monitor failure for remote node %s until fencing has occured", rsc->id); 
+                /* disabling failure timeout for this operation because we believe
+                 * fencing of the remote node should occur first. */ 
+                failure_timeout = 0;
+            }
+        }
+    }
+
+    if (failure_timeout > 0) {
         int last_run = 0;
 
         if (crm_element_value_int(xml_op, XML_RSC_OP_LAST_CHANGE, &last_run) == 0) {
             time_t now = get_effective_time(data_set);
 
-            if (now > (last_run + rsc->failure_timeout)) {
+            if (now > (last_run + failure_timeout)) {
                 expired = TRUE;
             }
         }
     }
 
     if (expired) {
-        if (rsc->failure_timeout > 0) {
+        if (failure_timeout > 0) {
             int fc = get_failcount_full(node, rsc, &last_failure, FALSE, xml_op, data_set);
             if(fc) {
                 if (get_failcount_full(node, rsc, &last_failure, TRUE, xml_op, data_set) == 0) {

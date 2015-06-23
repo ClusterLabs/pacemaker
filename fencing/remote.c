@@ -505,7 +505,15 @@ find_topology_for_host(const char *host)
     return tp;
 }
 
-
+/*!
+ * \internal
+ * \brief Set fencing operation's device list to target's next topology level
+ *
+ * \param[in,out] op  Remote fencing operation to modify
+ *
+ * \return pcmk_ok if successful, target was not specified (i.e. queries) or
+ *         target has no topology, or -EINVAL if no more topology levels to try
+ */
 static int
 stonith_topology_next(remote_fencing_op_t * op)
 {
@@ -1175,18 +1183,24 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
     }
 }
 
+/*!
+ * \internal
+ * \brief Comparison function for sorting query results
+ *
+ * \param[in] a  GList item to compare
+ * \param[in] b  GList item to compare
+ *
+ * \return Per the glib documentation, "a negative integer if the first value
+ *         comes before the second, 0 if they are equal, or a positive integer
+ *         if the first value comes after the second."
+ */
 static gint
 sort_peers(gconstpointer a, gconstpointer b)
 {
     const st_query_result_t *peer_a = a;
-    const st_query_result_t *peer_b = a;
+    const st_query_result_t *peer_b = b;
 
-    if (peer_a->devices > peer_b->devices) {
-        return -1;
-    } else if (peer_a->devices > peer_b->devices) {
-        return 1;
-    }
-    return 0;
+    return (peer_b->devices - peer_a->devices);
 }
 
 /*!
@@ -1216,7 +1230,7 @@ all_topology_devices_found(remote_fencing_op_t * op)
     for (i = 0; i < ST_LEVEL_MAX; i++) {
         for (device = tp->levels[i]; device; device = device->next) {
             match = NULL;
-            for (iter = op->query_results; match == NULL && iter != NULL; iter = iter->next) {
+            for (iter = op->query_results; iter && !match; iter = iter->next) {
                 st_query_result_t *peer = iter->data;
 
                 if (skip_target && safe_str_eq(peer->host, op->target)) {
@@ -1238,11 +1252,12 @@ process_remote_stonith_query(xmlNode * msg)
 {
     int devices = 0;
     gboolean host_is_target = FALSE;
+    gboolean have_all_replies = FALSE;
     const char *id = NULL;
     const char *host = NULL;
     remote_fencing_op_t *op = NULL;
     st_query_result_t *result = NULL;
-    uint32_t active = fencing_active_peers();
+    uint32_t replies_expected;
     xmlNode *dev = get_xpath_object("//@" F_STONITH_REMOTE_OP_ID, msg, LOG_ERR);
     xmlNode *child = NULL;
 
@@ -1251,9 +1266,9 @@ process_remote_stonith_query(xmlNode * msg)
     id = crm_element_value(dev, F_STONITH_REMOTE_OP_ID);
     CRM_CHECK(id != NULL, return -EPROTO);
 
-    dev = get_xpath_object("//@st-available-devices", msg, LOG_ERR);
+    dev = get_xpath_object("//@" F_STONITH_AVAILABLE_DEVICES, msg, LOG_ERR);
     CRM_CHECK(dev != NULL, return -EPROTO);
-    crm_element_value_int(dev, "st-available-devices", &devices);
+    crm_element_value_int(dev, F_STONITH_AVAILABLE_DEVICES, &devices);
 
     op = g_hash_table_lookup(remote_op_list, id);
     if (op == NULL) {
@@ -1261,25 +1276,28 @@ process_remote_stonith_query(xmlNode * msg)
         return -EOPNOTSUPP;
     }
 
-    op->replies++;
+    replies_expected = QB_MIN(op->replies_expected, fencing_active_peers());
+    if ((++op->replies >= replies_expected) && (op->state == st_query)) {
+        have_all_replies = TRUE;
+    }
     host = crm_element_value(msg, F_ORIG);
     host_is_target = safe_str_eq(host, op->target);
 
     if (devices <= 0) {
         /* If we're doing 'known' then we might need to fire anyway */
         crm_trace("Query result %d of %d from %s for %s/%s (%d devices) %s",
-                  op->replies, op->replies_expected, host,
+                  op->replies, replies_expected, host,
                   op->target, op->action, devices, id);
-        if(op->state == st_query && (op->replies >= op->replies_expected || op->replies >= active)) {
-            crm_info("All queries have arrived, continuing (%d, %d, %d, %s)",
-                     op->replies_expected, active, op->replies, id);
+        if (have_all_replies) {
+            crm_info("All query replies have arrived, continuing (%d expected/%d received for id %s)",
+                     replies_expected, op->replies, id);
             call_remote_stonith(op, NULL);
         }
         return pcmk_ok;
     }
 
     crm_info("Query result %d of %d from %s for %s/%s (%d devices) %s",
-             op->replies, op->replies_expected, host,
+             op->replies, replies_expected, host,
              op->target, op->action, devices, id);
     result = calloc(1, sizeof(st_query_result_t));
     result->host = strdup(host);
@@ -1343,8 +1361,9 @@ process_remote_stonith_query(xmlNode * msg)
             crm_trace("All topology devices found");
             call_remote_stonith(op, result);
 
-        } else if(op->state == st_query && (op->replies >= op->replies_expected || op->replies >= active)) {
-            crm_info("All topology queries have arrived, continuing (%d, %d, %d) ", op->replies_expected, active, op->replies);
+        } else if (have_all_replies) {
+            crm_info("All topology query replies have arrived, continuing (%d expected/%d received) ",
+                     replies_expected, op->replies);
             call_remote_stonith(op, NULL);
         }
 
@@ -1356,8 +1375,9 @@ process_remote_stonith_query(xmlNode * msg)
             crm_trace("Found %d verified devices", g_hash_table_size(result->verified_devices));
             call_remote_stonith(op, result);
 
-        } else if(op->replies >= op->replies_expected || op->replies >= active) {
-            crm_info("All queries have arrived, continuing (%d, %d, %d) ", op->replies_expected, active, op->replies);
+        } else if (have_all_replies) {
+            crm_info("All query replies have arrived, continuing (%d expected/%d received) ",
+                     replies_expected, op->replies);
             call_remote_stonith(op, NULL);
 
         } else {
