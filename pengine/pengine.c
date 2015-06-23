@@ -64,6 +64,7 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
     static char *last_digest = NULL;
     static char *filename = NULL;
 
+    time_t execution_date = time(NULL);
     const char *sys_to = crm_element_value(msg, F_CRM_SYS_TO);
     const char *op = crm_element_value(msg, F_CRM_TASK);
     const char *ref = crm_element_value(msg, F_CRM_REFERENCE);
@@ -185,6 +186,7 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
 
         if (is_repoke == FALSE && series_wrap != 0) {
             unlink(filename);
+            crm_xml_add_int(reply, "execution-date", execution_date);
             write_xml_file(xml_data, filename, HAVE_BZLIB_H);
             write_last_sequence(PE_STATE_DIR, series[series_id].name, seq + 1, series_wrap);
         } else {

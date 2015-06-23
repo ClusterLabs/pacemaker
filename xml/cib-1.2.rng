@@ -37,6 +37,9 @@
     <optional>
       <attribute name="update-user"><text/></attribute>
     </optional>
+    <optional>
+      <attribute name="execution-date"><text/></attribute>
+    </optional>
   </define>
 
 </grammar>
