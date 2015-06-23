@@ -1241,6 +1241,38 @@ search_devices_record_result(struct device_search_s *search, const char *device,
     }
 }
 
+/*
+ * \internal
+ * \brief Check whether the local host is allowed to execute a fencing action
+ *
+ * \param[in] device         Fence device to check
+ * \param[in] action         Fence action to check
+ * \param[in] target         Hostname of fence target
+ * \param[in] allow_suicide  Whether self-fencing is allowed for this operation
+ *
+ * \return TRUE if local host is allowed to execute action, FALSE otherwise
+ */
+static gboolean
+localhost_is_eligible(const stonith_device_t *device, const char *action,
+                      const char *target, gboolean allow_suicide)
+{
+    gboolean localhost_is_target = safe_str_eq(target, stonith_our_uname);
+
+    if (device && action && device->on_target_actions
+        && strstr(device->on_target_actions, action)) {
+        if (!localhost_is_target) {
+            crm_trace("%s operation with %s can only be executed for localhost not %s",
+                      action, device->id, target);
+            return FALSE;
+        }
+
+    } else if (localhost_is_target && !allow_suicide) {
+        crm_trace("%s operation does not support self-fencing", action);
+        return FALSE;
+    }
+    return TRUE;
+}
+
 static void
 can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *search)
 {
@@ -1258,19 +1290,11 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
         goto search_report_results;
     }
 
-    if (dev->on_target_actions &&
-        search->action &&
-        strstr(dev->on_target_actions, search->action)) {
-        /* this device can only execute this action on the target node */
-
-        if(safe_str_neq(host, stonith_our_uname)) {
-            crm_trace("%s operation with %s can only be executed for localhost not %s",
-                      search->action, dev->id, host);
-            goto search_report_results;
-        }
-
-    } else if(safe_str_eq(host, stonith_our_uname) && search->allow_suicide == FALSE) {
-        crm_trace("%s operation does not support self-fencing", search->action);
+    /* Short-circuit the query if the local host is not allowed to perform the
+     * desired action.
+     */
+    if (!localhost_is_eligible(dev, search->action, host,
+                               search->allow_suicide)) {
         goto search_report_results;
     }
 
