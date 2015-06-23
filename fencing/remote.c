@@ -92,6 +92,66 @@ free_remote_query(gpointer data)
     }
 }
 
+/*!
+ * \internal
+ * \brief Check the number of available devices in a peer's query results
+ *
+ * \param[in] peer           Peer to count
+ * \param[in] verified_only  Whether to count only verified devices
+ *
+ * \return Number of devices available to peer
+ */
+static int
+count_peer_devices(const st_query_result_t *peer, gboolean verified_only)
+{
+    return verified_only? g_hash_table_size(peer->verified_devices)
+           : g_list_length(peer->device_list);
+}
+
+/*!
+ * \internal
+ * \brief Search for a device in a query result
+ *
+ * \param[in] peer    Query result for a peer
+ * \param[in] device  Device ID to search for
+ *
+ * \return Device list entry if found, NULL otherwise
+ */
+static GListPtr
+find_peer_device(const st_query_result_t *peer, const char *device)
+{
+    return g_list_find_custom(peer->device_list, device, sort_strings);
+}
+
+/*!
+ * \internal
+ * \brief Remove a device from a peer's device list if it is present
+ *
+ * \param[in,out] peer                   Peer with results to search
+ * \param[in]     device                 ID of device to find and remove
+ * \param[in]     verified_devices_only  Only consider verified devices
+ *
+ * \return TRUE if device was found and removed, FALSE otherwise
+ */
+static gboolean
+grab_peer_device(st_query_result_t *peer, const char *device,
+                 gboolean verified_devices_only)
+{
+    GListPtr match;
+
+    if (verified_devices_only && !g_hash_table_lookup(peer->verified_devices, device)) {
+        return FALSE;
+    }
+    match = find_peer_device(peer, device);
+    if (match == NULL) {
+        return FALSE;
+    }
+    crm_trace("Removing %s from %s (%d remaining)",
+              device, peer->host, count_peer_devices(peer, FALSE));
+    peer->device_list = g_list_remove(peer->device_list, match->data);
+    return TRUE;
+}
+
 static void
 clear_remote_op_timers(remote_fencing_op_t * op)
 {
@@ -844,25 +904,13 @@ find_best_peer(const char *device, remote_fencing_op_t * op, enum find_best_peer
         }
 
         if (is_set(op->call_options, st_opt_topology)) {
-            /* Do they have the next device of the current fencing level? */
-            GListPtr match = NULL;
 
-            if (verified_devices_only && !g_hash_table_lookup(peer->verified_devices, device)) {
-                continue;
-            }
-
-            match = g_list_find_custom(peer->device_list, device, sort_strings);
-            if (match) {
-                crm_trace("Removing %s from %s (%d remaining)", (char *)match->data, peer->host,
-                          g_list_length(peer->device_list));
-                peer->device_list = g_list_remove(peer->device_list, match->data);
+            if (grab_peer_device(peer, device, verified_devices_only)) {
                 return peer;
             }
 
-        } else if (peer->devices > 0 && peer->tried == FALSE) {
-            if (verified_devices_only && !g_hash_table_size(peer->verified_devices)) {
-                continue;
-            }
+        } else if ((peer->tried == FALSE)
+                   && count_peer_devices(peer, verified_devices_only)) {
 
             /* No topology: Use the current best peer */
             crm_trace("Simple fencing");
@@ -979,7 +1027,7 @@ get_op_total_timeout(remote_fencing_op_t * op, st_query_result_t * chosen_peer, 
                 for (iter = op->query_results; iter != NULL; iter = iter->next) {
                     st_query_result_t *peer = iter->data;
 
-                    if (g_list_find_custom(peer->device_list, device_list->data, sort_strings)) {
+                    if (find_peer_device(peer, device_list->data)) {
                         total_timeout +=
                             get_device_timeout(peer, device_list->data, default_timeout);
                         break;
@@ -1236,7 +1284,7 @@ all_topology_devices_found(remote_fencing_op_t * op)
                 if (skip_target && safe_str_eq(peer->host, op->target)) {
                     continue;
                 }
-                match = g_list_find_custom(peer->device_list, device->data, sort_strings);
+                match = find_peer_device(peer, device->data);
             }
             if (!match) {
                 return FALSE;
@@ -1397,11 +1445,13 @@ process_remote_stonith_query(xmlNode * msg)
         }
 
     } else if (op->state == st_query) {
+        int nverified = count_peer_devices(result, TRUE);
+
         /* We have a result for a non-topology fencing op that looks promising,
          * go ahead and start fencing before query timeout */
-        if (host_is_target == FALSE && g_hash_table_size(result->verified_devices)) {
+        if ((host_is_target == FALSE) && nverified) {
             /* we have a verified device living on a peer that is not the target */
-            crm_trace("Found %d verified devices", g_hash_table_size(result->verified_devices));
+            crm_trace("Found %d verified devices", nverified);
             call_remote_stonith(op, result);
 
         } else if (have_all_replies) {
