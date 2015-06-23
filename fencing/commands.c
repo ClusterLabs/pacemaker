@@ -173,6 +173,10 @@ get_action_timeout(stonith_device_t * device, const char *action, int default_ti
         char buffer[64] = { 0, };
         const char *value = NULL;
 
+        if (safe_str_eq(action, "reboot")
+            && is_not_set(device->flags, st_device_supports_reboot)) {
+            action = "off";
+        }
         snprintf(buffer, sizeof(buffer) - 1, "pcmk_%s_timeout", action);
         value = g_hash_table_lookup(device->params, buffer);
         if (value) {
@@ -1491,6 +1495,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
     crm_xml_add(list, F_STONITH_TARGET, query->target);
     for (lpc = devices; lpc != NULL; lpc = lpc->next) {
         stonith_device_t *device = g_hash_table_lookup(device_list, lpc->data);
+        const char *action = query->action;
 
         if (!device) {
             /* It is possible the device got unregistered while
@@ -1506,8 +1511,16 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
         crm_xml_add(dev, "agent", device->agent);
         crm_xml_add_int(dev, F_STONITH_DEVICE_VERIFIED, device->verified);
 
+        /* If the originating stonithd wants to reboot the node, and we have a
+         * capable device that doesn't support "reboot", remap to "off" instead.
+         */
+        if (is_not_set(device->flags, st_device_supports_reboot)
+            && safe_str_eq(query->action, "reboot")) {
+            action = "off";
+        }
+
         /* Add action-specific values if available */
-        add_action_specific_attributes(dev, query->action, device);
+        add_action_specific_attributes(dev, action, device);
 
         if (query->target == NULL) {
             xmlNode *attrs = create_xml_node(dev, XML_TAG_ATTRS);
