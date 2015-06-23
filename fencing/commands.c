@@ -1447,6 +1447,36 @@ struct st_query_data {
     int call_options;
 };
 
+/*
+ * \internal
+ * \brief Add action-specific attributes to query reply XML
+ *
+ * \param[in,out] xml     XML to add attributes to
+ * \param[in]     action  Fence action
+ * \param[in]     device  Fence device
+ */
+static void
+add_action_specific_attributes(xmlNode *xml, const char *action,
+                               stonith_device_t *device)
+{
+    int action_specific_timeout;
+    int delay_max;
+
+    if (is_action_required(action, device)) {
+        crm_xml_add_int(xml, F_STONITH_DEVICE_REQUIRED, 1);
+    }
+
+    action_specific_timeout = get_action_timeout(device, action, 0);
+    if (action_specific_timeout) {
+        crm_xml_add_int(xml, F_STONITH_ACTION_TIMEOUT, action_specific_timeout);
+    }
+
+    delay_max = get_action_delay_max(device, action);
+    if (delay_max > 0) {
+        crm_xml_add_int(xml, F_STONITH_DELAY_MAX, delay_max / 1000);
+    }
+}
+
 static void
 stonith_query_capable_device_cb(GList * devices, void *user_data)
 {
@@ -1461,8 +1491,6 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
     crm_xml_add(list, F_STONITH_TARGET, query->target);
     for (lpc = devices; lpc != NULL; lpc = lpc->next) {
         stonith_device_t *device = g_hash_table_lookup(device_list, lpc->data);
-        int action_specific_timeout;
-        int delay_max;
 
         if (!device) {
             /* It is possible the device got unregistered while
@@ -1472,23 +1500,14 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
 
         available_devices++;
 
-        action_specific_timeout = get_action_timeout(device, query->action, 0);
         dev = create_xml_node(list, F_STONITH_DEVICE);
         crm_xml_add(dev, XML_ATTR_ID, device->id);
         crm_xml_add(dev, "namespace", device->namespace);
         crm_xml_add(dev, "agent", device->agent);
         crm_xml_add_int(dev, F_STONITH_DEVICE_VERIFIED, device->verified);
-        if (is_action_required(query->action, device)) {
-            crm_xml_add_int(dev, F_STONITH_DEVICE_REQUIRED, 1);
-        }
-        if (action_specific_timeout) {
-            crm_xml_add_int(dev, F_STONITH_ACTION_TIMEOUT, action_specific_timeout);
-        }
 
-        delay_max = get_action_delay_max(device, query->action);
-        if (delay_max > 0) {
-            crm_xml_add_int(dev, F_STONITH_DELAY_MAX, delay_max / 1000);
-        }
+        /* Add action-specific values if available */
+        add_action_specific_attributes(dev, query->action, device);
 
         if (query->target == NULL) {
             xmlNode *attrs = create_xml_node(dev, XML_TAG_ATTRS);
