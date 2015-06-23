@@ -48,9 +48,10 @@
 #define TIMEOUT_MULTIPLY_FACTOR 1.2
 
 typedef struct st_query_result_s {
+    /* Name of peer that sent this result */
     char *host;
-    int devices;
-    /* only try peers for non-topology based operations once */
+    int ndevices;
+    /* Only try peers for non-topology based operations once */
     gboolean tried;
     GListPtr device_list;
     GHashTable *custom_action_timeouts;
@@ -895,7 +896,7 @@ find_best_peer(const char *device, remote_fencing_op_t * op, enum find_best_peer
         st_query_result_t *peer = iter->data;
 
         crm_trace("Testing result from %s for %s with %d devices: %d %x",
-                  peer->host, op->target, peer->devices, peer->tried, options);
+                  peer->host, op->target, peer->ndevices, peer->tried, options);
         if ((options & FIND_PEER_SKIP_TARGET) && safe_str_eq(peer->host, op->target)) {
             continue;
         }
@@ -1248,7 +1249,7 @@ sort_peers(gconstpointer a, gconstpointer b)
     const st_query_result_t *peer_a = a;
     const st_query_result_t *peer_b = b;
 
-    return (peer_b->devices - peer_a->devices);
+    return (peer_b->ndevices - peer_a->ndevices);
 }
 
 /*!
@@ -1331,10 +1332,24 @@ parse_action_specific(xmlNode *xml, const char *peer, const char *device,
     }
 }
 
+/*
+ * \internal
+ * \brief Handle a peer's reply to our fencing query
+ *
+ * Parse a query result from XML and store it in the remote operation
+ * table, and when enough replies have been received, issue a fencing request.
+ *
+ * \param[in] msg  XML reply received
+ *
+ * \return pcmk_ok on success, -errno on error
+ *
+ * \note See initiate_remote_stonith_op() for how the XML query was initially
+ *       formed, and stonith_query() for how the peer formed its XML reply.
+ */
 int
 process_remote_stonith_query(xmlNode * msg)
 {
-    int devices = 0;
+    int ndevices = 0;
     gboolean host_is_target = FALSE;
     gboolean have_all_replies = FALSE;
     const char *id = NULL;
@@ -1352,7 +1367,7 @@ process_remote_stonith_query(xmlNode * msg)
 
     dev = get_xpath_object("//@" F_STONITH_AVAILABLE_DEVICES, msg, LOG_ERR);
     CRM_CHECK(dev != NULL, return -EPROTO);
-    crm_element_value_int(dev, F_STONITH_AVAILABLE_DEVICES, &devices);
+    crm_element_value_int(dev, F_STONITH_AVAILABLE_DEVICES, &ndevices);
 
     op = g_hash_table_lookup(remote_op_list, id);
     if (op == NULL) {
@@ -1367,11 +1382,11 @@ process_remote_stonith_query(xmlNode * msg)
     host = crm_element_value(msg, F_ORIG);
     host_is_target = safe_str_eq(host, op->target);
 
-    if (devices <= 0) {
+    if (ndevices <= 0) {
         /* If we're doing 'known' then we might need to fire anyway */
         crm_trace("Query result %d of %d from %s for %s/%s (%d devices) %s",
                   op->replies, replies_expected, host,
-                  op->target, op->action, devices, id);
+                  op->target, op->action, ndevices, id);
         if (have_all_replies) {
             crm_info("All query replies have arrived, continuing (%d expected/%d received for id %s)",
                      replies_expected, op->replies, id);
@@ -1382,10 +1397,10 @@ process_remote_stonith_query(xmlNode * msg)
 
     crm_info("Query result %d of %d from %s for %s/%s (%d devices) %s",
              op->replies, replies_expected, host,
-             op->target, op->action, devices, id);
+             op->target, op->action, ndevices, id);
     result = calloc(1, sizeof(st_query_result_t));
     result->host = strdup(host);
-    result->devices = devices;
+    result->ndevices = ndevices;
     result->custom_action_timeouts = g_hash_table_new_full(crm_str_hash, g_str_equal, free, NULL);
     result->delay_maxes = g_hash_table_new_full(crm_str_hash, g_str_equal, free, NULL);
     result->verified_devices = g_hash_table_new_full(crm_str_hash, g_str_equal, free, NULL);
@@ -1423,8 +1438,8 @@ process_remote_stonith_query(xmlNode * msg)
         }
     }
 
-    CRM_CHECK(devices == g_list_length(result->device_list),
-              crm_err("Mis-match: Query claimed to have %d devices but %d found", devices,
+    CRM_CHECK(ndevices == g_list_length(result->device_list),
+              crm_err("Mis-match: Query claimed to have %d devices but %d found", ndevices,
                       g_list_length(result->device_list)));
 
     op->query_results = g_list_insert_sorted(op->query_results, result, sort_peers);
@@ -1465,7 +1480,7 @@ process_remote_stonith_query(xmlNode * msg)
 
     } else if (op->state == st_done) {
         crm_info("Discarding query result from %s (%d devices): Operation is in state %d",
-                 result->host, result->devices, op->state);
+                 result->host, result->ndevices, op->state);
     }
 
     return pcmk_ok;
