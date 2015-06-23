@@ -52,8 +52,6 @@ GHashTable *device_list = NULL;
 GHashTable *topology = NULL;
 GList *cmd_list = NULL;
 
-static int active_children = 0;
-
 struct device_search_s {
     char *host;
     char *action;
@@ -148,26 +146,40 @@ get_action_delay_max(stonith_device_t * device, const char * action)
     return delay_max_ms;
 }
 
+/*!
+ * \internal
+ * \brief Override STONITH timeout with pcmk_*_timeout if available
+ *
+ * \param[in] device           STONITH device to use
+ * \param[in] action           STONITH action name
+ * \param[in] default_timeout  Timeout to use if device does not have
+ *                             a pcmk_*_timeout parameter for action
+ *
+ * \return Value of pcmk_(action)_timeout if available, otherwise default_timeout
+ * \note For consistency, it would be nice if reboot/off/on timeouts could be
+ *       set the same way as start/stop/monitor timeouts, i.e. with an
+ *       <operation> entry in the fencing resource configuration. However that
+ *       is insufficient because fencing devices may be registered directly via
+ *       the STONITH register_device() API instead of going through the CIB
+ *       (e.g. stonith_admin uses it for its -R option, and the LRMD uses it to
+ *       ensure a device is registered when a command is issued). As device
+ *       properties, pcmk_*_timeout parameters can be grabbed by stonithd when
+ *       the device is registered, whether by CIB change or API call.
+ */
 static int
 get_action_timeout(stonith_device_t * device, const char *action, int default_timeout)
 {
-    char buffer[512] = { 0, };
-    char *value = NULL;
+    if (action && device && device->params) {
+        char buffer[64] = { 0, };
+        const char *value = NULL;
 
-    CRM_CHECK(action != NULL, return default_timeout);
-
-    if (!device->params) {
-        return default_timeout;
+        snprintf(buffer, sizeof(buffer) - 1, "pcmk_%s_timeout", action);
+        value = g_hash_table_lookup(device->params, buffer);
+        if (value) {
+            return atoi(value);
+        }
     }
-
-    snprintf(buffer, sizeof(buffer) - 1, "pcmk_%s_timeout", action);
-    value = g_hash_table_lookup(device->params, buffer);
-
-    if (!value) {
-        return default_timeout;
-    }
-
-    return atoi(value);
+    return default_timeout;
 }
 
 static void
@@ -880,7 +892,7 @@ dynamic_list_search_cb(GPid pid, int rc, const char *output, gpointer user_data)
 
     free_async_command(cmd);
 
-    /* Host/alias must be in the list output to be eligable to be fenced
+    /* Host/alias must be in the list output to be eligible to be fenced
      *
      * Will cause problems if down'd nodes aren't listed or (for virtual nodes)
      *  if the guest is still listed despite being moved to another machine
@@ -1036,6 +1048,15 @@ stonith_device_remove(const char *id, gboolean from_cib)
     return pcmk_ok;
 }
 
+/*!
+ * \internal
+ * \brief Return the number of stonith levels registered for a node
+ *
+ * \param[in] tp  Node's topology table entry
+ *
+ * \return Number of non-NULL levels in topology entry
+ * \note This function is used only for log messages.
+ */
 static int
 count_active_levels(stonith_topology_t * tp)
 {
@@ -1066,6 +1087,20 @@ free_topology_entry(gpointer data)
     free(tp);
 }
 
+/*!
+ * \internal
+ * \brief Register a STONITH level for a node
+ *
+ * Given an XML request specifying the node name, level index, and device IDs
+ * for the level, this will create an entry for the node in the global topology
+ * table if one does not already exist, then append the specified device IDs to
+ * the entry's device list for the specified level.
+ *
+ * \param[in]  msg   XML request for STONITH level registration
+ * \param[out] desc  If not NULL, will be set to string representation ("NODE[LEVEL]")
+ *
+ * \return pcmk_ok on success, -EINVAL if XML does not specify valid level index
+ */
 int
 stonith_level_register(xmlNode * msg, char **desc)
 {
@@ -1349,13 +1384,14 @@ get_capable_devices(const char *host, const char *action, int timeout, bool suic
     if (devices_needing_async_query) {
         per_device_timeout = timeout / devices_needing_async_query;
         if (!per_device_timeout) {
-            crm_err("stonith-timeout duration %d is too low, raise the duration to %d seconds",
-                    timeout, DEFAULT_QUERY_TIMEOUT * devices_needing_async_query);
+            crm_err("STONITH timeout %ds is too low; using %ds, but consider raising to at least %ds",
+                    timeout, DEFAULT_QUERY_TIMEOUT,
+                    DEFAULT_QUERY_TIMEOUT * devices_needing_async_query);
             per_device_timeout = DEFAULT_QUERY_TIMEOUT;
         } else if (per_device_timeout < DEFAULT_QUERY_TIMEOUT) {
-            crm_notice
-                ("stonith-timeout duration %d is low for the current configuration. Consider raising it to %d seconds",
-                 timeout, DEFAULT_QUERY_TIMEOUT * devices_needing_async_query);
+            crm_notice("STONITH timeout %ds is low for the current configuration;"
+                       " consider raising to at least %ds",
+                       timeout, DEFAULT_QUERY_TIMEOUT * devices_needing_async_query);
         }
     }
 
@@ -1437,7 +1473,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
         }
     }
 
-    crm_xml_add_int(list, "st-available-devices", available_devices);
+    crm_xml_add_int(list, F_STONITH_AVAILABLE_DEVICES, available_devices);
     if (query->target) {
         crm_debug("Found %d matching devices for '%s'", available_devices, query->target);
     } else {
@@ -1622,7 +1658,6 @@ cancel_stonith_command(async_command_t * cmd)
     }
 }
 
-#define READ_MAX 500
 static void
 st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
 {
@@ -1634,8 +1669,6 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
     GListPtr gIterNext = NULL;
 
     CRM_CHECK(cmd != NULL, return);
-
-    active_children--;
 
     /* The device is ready to do something else now */
     device = g_hash_table_lookup(device_list, cmd->device);
@@ -2203,7 +2236,7 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
 
   done:
 
-    /* Always reply unles the request is in process still.
+    /* Always reply unless the request is in process still.
      * If in progress, a reply will happen async after the request
      * processing is finished */
     if (rc != -EINPROGRESS) {
@@ -2250,16 +2283,17 @@ stonith_command(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * re
     int call_options = 0;
     int rc = 0;
     gboolean is_reply = FALSE;
-    char *op = crm_element_value_copy(request, F_STONITH_OPERATION);
 
-    /* F_STONITH_OPERATION can be overwritten in remote_op_done() with crm_xml_add()
-     *
-     * by 0x4C2E934: crm_xml_add (xml.c:377)
-     * by 0x40C5E9: remote_op_done (remote.c:178)
-     * by 0x40F1D3: process_remote_stonith_exec (remote.c:1084)
-     * by 0x40AD4F: stonith_command (commands.c:1891)
-     *
+    /* Copy op for reporting. The original might get freed by handle_reply()
+     * before we use it in crm_debug():
+     *     handle_reply()
+     *     |- process_remote_stonith_exec()
+     *     |-- remote_op_done()
+     *     |--- handle_local_reply_and_notify()
+     *     |---- crm_xml_add(...F_STONITH_OPERATION...)
+     *     |--- free_xml(op->request)
      */
+    char *op = crm_element_value_copy(request, F_STONITH_OPERATION);
 
     if (get_xpath_object("//" T_STONITH_REPLY, request, LOG_DEBUG_3)) {
         is_reply = TRUE;
