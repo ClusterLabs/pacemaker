@@ -702,6 +702,10 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
         }
     }
 
+    if (safe_str_eq(op, CIB_OP_DELETE) && (options & cib_multiple)) {
+        dedupXpathResults(xpathObj);
+    }
+
     for (lpc = 0; lpc < max; lpc++) {
         xmlChar *path = NULL;
         xmlNode *match = getXpathResult(xpathObj, lpc);
@@ -715,6 +719,13 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
         free(path);
 
         if (safe_str_eq(op, CIB_OP_DELETE)) {
+            if (match == *result_cib) {
+                /* Attempting to delete the whole "/cib" */
+                crm_warn("Cannot perform %s for %s: The xpath is addressing the whole /cib", op, section);
+                rc = -EINVAL;
+                break;
+            }
+
             free_xml(match);
             if ((options & cib_multiple) == 0) {
                 break;
