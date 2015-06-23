@@ -615,28 +615,49 @@ unpack_remote_nodes(xmlNode * xml_resources, pe_working_set_t * data_set)
     for (xml_obj = __xml_first_child(xml_resources); xml_obj != NULL; xml_obj = __xml_next(xml_obj)) {
         const char *new_node_id = NULL;
 
-        /* remote rsc can be defined as primitive, or exist within the metadata of another rsc */
+        /* first check if this is a bare metal remote node. Bare metal remote nodes
+         * are defined as a resource primitive only. */
         if (xml_contains_remote_node(xml_obj)) {
             new_node_id = ID(xml_obj);
-            /* This check is here to make sure we don't iterate over
+            /* The "pe_find_node" check is here to make sure we don't iterate over
              * an expanded node that has already been added to the node list. */
-            if (new_node_id && pe_find_node(data_set->nodes, new_node_id) != NULL) {
-                continue;
+            if (new_node_id && pe_find_node(data_set->nodes, new_node_id) == NULL) {
+                crm_trace("Found baremetal remote node %s in container resource %s", new_node_id, ID(xml_obj));
+                create_node(new_node_id, new_node_id, "remote", NULL, data_set);
             }
-        } else {
+            continue;
+        }
+
+        /* Now check for guest remote nodes.
+         * guest remote nodes are defined within a resource primitive.
+         * Example1: a vm resource might be configured as a remote node.
+         * Example2: a vm resource might be configured within a group to be a remote node.
+         * Note: right now we only support guest remote nodes in as a standalone primitive
+         * or a primitive within a group. No cloned primitives can be a guest remote node
+         * right now */
+        if (crm_str_eq((const char *)xml_obj->name, XML_CIB_TAG_RESOURCE, TRUE)) {
             /* expands a metadata defined remote resource into the xml config
              * as an actual rsc primitive to be unpacked later. */
             new_node_id = expand_remote_rsc_meta(xml_obj, xml_resources, &rsc_name_check);
-        }
 
-        if (new_node_id) {
-            crm_trace("detected remote node %s", new_node_id);
-
-            /* only create the remote node entry if the node didn't already exist */
-            if (pe_find_node(data_set->nodes, new_node_id) == NULL) {
+            if (new_node_id && pe_find_node(data_set->nodes, new_node_id) == NULL) {
+                crm_trace("Found guest remote node %s in container resource %s", new_node_id, ID(xml_obj));
                 create_node(new_node_id, new_node_id, "remote", NULL, data_set);
             }
+            continue;
 
+        } else if (crm_str_eq((const char *)xml_obj->name, XML_CIB_TAG_GROUP, TRUE)) {
+            xmlNode *xml_obj2 = NULL;
+            /* search through a group to see if any of the primitive contain a remote node. */
+            for (xml_obj2 = __xml_first_child(xml_obj); xml_obj2 != NULL; xml_obj2 = __xml_next(xml_obj2)) {
+
+                new_node_id = expand_remote_rsc_meta(xml_obj2, xml_resources, &rsc_name_check);
+
+                if (new_node_id && pe_find_node(data_set->nodes, new_node_id) == NULL) {
+                    crm_trace("Found guest remote node %s in container resource %s which is in group %s", new_node_id, ID(xml_obj2), ID(xml_obj));
+                    create_node(new_node_id, new_node_id, "remote", NULL, data_set);
+                }
+            }
         }
     }
     if (rsc_name_check) {

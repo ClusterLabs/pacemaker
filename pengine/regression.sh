@@ -784,6 +784,7 @@ do_test whitebox-orphan-ms   "Properly tear down orphan ms resources on remote-n
 do_test whitebox-unexpectedly-running "Recover container nodes the cluster did not start."
 do_test whitebox-migrate1 "Migrate both container and connection resource"
 do_test whitebox-imply-stop-on-fence "imply stop action on container node rsc when host node is fenced"
+do_test whitebox-nested-group "Verify guest remote-node works nested in a group"
 
 echo ""
 do_test remote-startup-probes  "Baremetal remote-node startup probes"
