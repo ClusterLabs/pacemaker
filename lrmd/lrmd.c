@@ -1336,7 +1336,12 @@ free_rsc(gpointer data)
 
         if (is_stonith) {
             cmd->lrmd_op_status = PCMK_LRM_OP_CANCELLED;
-            cmd_finalize(cmd, NULL);
+            /* if a stonith cmd is in-flight, mark just mark it as cancelled,
+             * it is not safe to finalize/free the cmd until the stonith api
+             * says it has either completed or timed out.*/ 
+            if (rsc->active != cmd) {
+                cmd_finalize(cmd, NULL);
+            }
         } else {
             /* This command is already handed off to service library,
              * let service library cancel it and tell us via the callback
