@@ -316,8 +316,10 @@ lrm_state_disconnect(lrm_state_t * lrm_state)
     crm_trace("Disconnecting %s", lrm_state->node_name);
     ((lrmd_t *) lrm_state->conn)->cmds->disconnect(lrm_state->conn);
 
-    removed = g_hash_table_foreach_remove(lrm_state->pending_ops, fail_pending_op, lrm_state);
-    crm_trace("Synthesized %d operation failures for %s", removed, lrm_state->node_name);
+    if (is_not_set(fsa_input_register, R_SHUTDOWN)) {
+        removed = g_hash_table_foreach_remove(lrm_state->pending_ops, fail_pending_op, lrm_state);
+        crm_trace("Synthesized %d operation failures for %s", removed, lrm_state->node_name);
+    }
 
     lrmd_api_delete(lrm_state->conn);
     lrm_state->conn = NULL;
