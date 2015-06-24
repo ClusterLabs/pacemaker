@@ -527,7 +527,9 @@ set_op_device_list(remote_fencing_op_t * op, GListPtr devices)
     for (lpc = op->required_list; lpc != NULL; lpc = lpc->next) {
         GListPtr match  = g_list_find_custom(op->devices_list, lpc->data, sort_strings);
         if (match == NULL) {
-           op->devices_list = g_list_append(op->devices_list, strdup(lpc->data));
+            crm_trace("Adding required device %s to device list for %s",
+                      lpc->data, op->id);
+            op->devices_list = g_list_append(op->devices_list, strdup(lpc->data));
         }
     }
 
@@ -1486,6 +1488,17 @@ process_remote_stonith_query(xmlNode * msg)
     return pcmk_ok;
 }
 
+/*
+ * \internal
+ * \brief Handle a peer's reply to a fencing request
+ *
+ * Parse a fencing reply from XML, and either finalize the operation
+ * or attempt another device as appropriate.
+ *
+ * \param[in] msg  XML reply received
+ *
+ * \return pcmk_ok on success, -errno on error
+ */
 int
 process_remote_stonith_exec(xmlNode * msg)
 {

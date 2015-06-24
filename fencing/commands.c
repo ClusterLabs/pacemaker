@@ -53,15 +53,24 @@ GHashTable *topology = NULL;
 GList *cmd_list = NULL;
 
 struct device_search_s {
+    /* target of fence action */
     char *host;
+    /* requested fence action */
     char *action;
+    /* timeout to use if a device is queried dynamically for possible targets */
     int per_device_timeout;
+    /* number of registered fencing devices at time of request */
     int replies_needed;
+    /* number of device replies received so far */
     int replies_received;
+    /* whether the target is eligible to perform requested action (or off) */
     bool allow_suicide;
 
+    /* private data to pass to search callback function */
     void *user_data;
+    /* function to call when all replies have been received */
     void (*callback) (GList * devices, void *user_data);
+    /* devices capable of performing requested action (or off if remapping) */
     GListPtr capable;
 };
 
@@ -173,10 +182,17 @@ get_action_timeout(stonith_device_t * device, const char *action, int default_ti
         char buffer[64] = { 0, };
         const char *value = NULL;
 
+        /* If "reboot" was requested but the device does not support it,
+         * we will remap to "off", so check timeout for "off" instead
+         */
         if (safe_str_eq(action, "reboot")
             && is_not_set(device->flags, st_device_supports_reboot)) {
+            crm_trace("%s doesn't support reboot, using timeout for off instead",
+                      device->id);
             action = "off";
         }
+
+        /* If the device config specified an action-specific timeout, use it */
         snprintf(buffer, sizeof(buffer) - 1, "pcmk_%s_timeout", action);
         value = g_hash_table_lookup(device->params, buffer);
         if (value) {
@@ -1466,17 +1482,24 @@ add_action_specific_attributes(xmlNode *xml, const char *action,
     int action_specific_timeout;
     int delay_max;
 
+    CRM_CHECK(xml && action && device, return);
+
     if (is_action_required(action, device)) {
+        crm_trace("Action %s is required on %s", action, device->id);
         crm_xml_add_int(xml, F_STONITH_DEVICE_REQUIRED, 1);
     }
 
     action_specific_timeout = get_action_timeout(device, action, 0);
     if (action_specific_timeout) {
+        crm_trace("Action %s has timeout %dms on %s",
+                  action, action_specific_timeout, device->id);
         crm_xml_add_int(xml, F_STONITH_ACTION_TIMEOUT, action_specific_timeout);
     }
 
     delay_max = get_action_delay_max(device, action);
     if (delay_max > 0) {
+        crm_trace("Action %s has maximum random delay %dms on %s",
+                  action, delay_max, device->id);
         crm_xml_add_int(xml, F_STONITH_DELAY_MAX, delay_max / 1000);
     }
 }
@@ -1490,7 +1513,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
     xmlNode *list = NULL;
     GListPtr lpc = NULL;
 
-    /* Pack the results into data */
+    /* Pack the results into XML */
     list = create_xml_node(NULL, __FUNCTION__);
     crm_xml_add(list, F_STONITH_TARGET, query->target);
     for (lpc = devices; lpc != NULL; lpc = lpc->next) {
@@ -1516,6 +1539,8 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
          */
         if (is_not_set(device->flags, st_device_supports_reboot)
             && safe_str_eq(query->action, "reboot")) {
+            crm_trace("%s doesn't support reboot, using values for off instead",
+                      device->id);
             action = "off";
         }
 
@@ -1537,7 +1562,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
     }
 
     if (list != NULL) {
-        crm_trace("Attaching query list output");
+        crm_log_xml_trace(list, "Add query results");
         add_message_xml(query->reply, F_STONITH_CALLDATA, list);
     }
     stonith_send_reply(query->reply, query->call_options, query->remote_peer, query->client_id);
