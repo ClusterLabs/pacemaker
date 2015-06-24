@@ -355,7 +355,7 @@ class crm_lha(ClusterManager):
             ]
 
         stonith_ignore = [
-            "update_failcount: Updating failcount for child_DoFencing",
+            r"Updating failcount for child_DoFencing",
             r"(ERROR|error).*: Sign-in failed: triggered a retry",
             "lrmd.*(ERROR|error): stonithd_receive_ops_result failed.",
              ]

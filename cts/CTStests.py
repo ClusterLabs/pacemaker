@@ -1105,7 +1105,7 @@ class MaintenanceMode(CTSTest):
         # fail the resource right after turning Maintenance mode on
         # verify it is not recovered until maintenance mode is turned off
         if action == "On":
-            pats.append("Updating failcount for %s on .* after .* %s" % (self.rid, self.action))
+            pats.append("pengine.*: warning: Processing failed op %s for %s on" % (self.action, self.rid))
         else:
             pats.append(self.templates["Pat:RscOpOK"] % (self.rid, "stop_0"))
             pats.append(self.templates["Pat:RscOpOK"] % (self.rid, "start_0"))
@@ -1314,8 +1314,7 @@ class ResourceRecover(CTSTest):
         self.debug("Shooting %s aka. %s" % (rsc.clone_id, rsc.id))
 
         pats = []
-        pats.append("Updating failcount for %s on .* after .* %s"
-                    % (self.rid, self.action))
+        pats.append("pengine.*: warning: Processing failed op %s for %s on" % (self.action, self.rid))
 
         if rsc.managed():
             pats.append(self.templates["Pat:RscOpOK"] % (self.rid, "stop_0"))
