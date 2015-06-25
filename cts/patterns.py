@@ -372,7 +372,7 @@ class crm_cs_v0(BasePatterns):
         ]
         self.components["stonith-ignore"] = [
             r"pengine.*: Recover Fencing",
-            "Updating failcount for Fencing",
+            r"Updating failcount for Fencing",
             r"error:.*Connection to stonith-ng failed",
             r"error:.*Connection to stonith-ng.*closed \(I/O condition=17\)",
             r"crit:.*Fencing daemon connection failed",
