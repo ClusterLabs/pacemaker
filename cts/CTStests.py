@@ -1314,7 +1314,8 @@ class ResourceRecover(CTSTest):
         self.debug("Shooting %s aka. %s" % (rsc.clone_id, rsc.id))
 
         pats = []
-        pats.append("pengine.*: warning: Processing failed op %s for %s on" % (self.action, self.rid))
+        pats.append(r"pengine.*: warning: Processing failed op %s for (%s|%s) on" % (self.action,
+            rsc.id, rsc.clone_id))
 
         if rsc.managed():
             pats.append(self.templates["Pat:RscOpOK"] % (self.rid, "stop_0"))
