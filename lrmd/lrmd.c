@@ -974,7 +974,7 @@ action_complete(svc_action_t * action)
 
         } else {
             crm_notice("Giving up on %s %s (rc=%d): timeout (elapsed=%dms, remaining=%dms)",
-                       cmd->rsc_id, cmd->action, cmd->exec_rc, time_sum, timeout_left);
+                       cmd->rsc_id, cmd->real_action?cmd->real_action:cmd->action, cmd->exec_rc, time_sum, timeout_left);
             cmd->lrmd_op_status = PCMK_LRM_OP_TIMEOUT;
             cmd->exec_rc = PCMK_OCF_TIMEOUT;
             cmd_original_times(cmd);
