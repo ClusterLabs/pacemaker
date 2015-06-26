@@ -584,7 +584,7 @@ unpack_operation_on_fail(action_t * action)
         CRM_CHECK(action->rsc != NULL, return NULL);
 
         for (operation = __xml_first_child(action->rsc->ops_xml);
-             operation && !value; operation = __xml_next(operation)) {
+             operation && !value; operation = __xml_next_element(operation)) {
 
             if (!crm_str_eq((const char *)operation->name, "op", TRUE)) {
                 continue;
@@ -623,7 +623,7 @@ find_min_interval_mon(resource_t * rsc, gboolean include_disabled)
     xmlNode *operation = NULL;
 
     for (operation = __xml_first_child(rsc->ops_xml); operation != NULL;
-         operation = __xml_next(operation)) {
+         operation = __xml_next_element(operation)) {
 
         if (crm_str_eq((const char *)operation->name, "op", TRUE)) {
             name = crm_element_value(operation, "name");
@@ -965,7 +965,7 @@ find_rsc_op_entry_helper(resource_t * rsc, const char *key, gboolean include_dis
 
   retry:
     for (operation = __xml_first_child(rsc->ops_xml); operation != NULL;
-         operation = __xml_next(operation)) {
+         operation = __xml_next_element(operation)) {
         if (crm_str_eq((const char *)operation->name, "op", TRUE)) {
             name = crm_element_value(operation, "name");
             interval = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);

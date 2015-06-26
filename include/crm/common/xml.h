@@ -230,6 +230,18 @@ __xml_next(xmlNode * child)
     return child;
 }
 
+static inline xmlNode *
+__xml_next_element(xmlNode * child)
+{
+    if (child) {
+        child = child->next;
+        while (child && child->type != XML_ELEMENT_NODE) {
+            child = child->next;
+        }
+    }
+    return child;
+}
+
 void free_xml(xmlNode * child);
 
 xmlNode *first_named_child(xmlNode * parent, const char *name);

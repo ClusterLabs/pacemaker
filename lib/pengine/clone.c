@@ -208,7 +208,7 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
 
     if (clone_data->xml_obj_child == NULL) {
         clone_data->xml_obj_child = find_xml_node(xml_obj, XML_CIB_TAG_RESOURCE, TRUE);
-        for (a_child = __xml_first_child(xml_obj); a_child != NULL; a_child = __xml_next(a_child)) {
+        for (a_child = __xml_first_child(xml_obj); a_child != NULL; a_child = __xml_next_element(a_child)) {
             if (crm_str_eq((const char *)a_child->name, XML_CIB_TAG_RESOURCE, TRUE)) {
                 num_xml_children++;
             }
@@ -220,7 +220,7 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
         return FALSE;
     }
 
-    for (a_child = __xml_first_child(xml_obj); a_child != NULL; a_child = __xml_next(a_child)) {
+    for (a_child = __xml_first_child(xml_obj); a_child != NULL; a_child = __xml_next_element(a_child)) {
         if (crm_str_eq((const char *)a_child->name, type, TRUE)) {
             num_xml_children++;
         }
