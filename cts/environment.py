@@ -160,7 +160,7 @@ class Environment:
             self.data["Stack"] = "heartbeat"
 
         elif name == "openais" or name == "ais"  or name == "whitetank":
-            self.data["Stack"] = "openais (whitetank)"
+            self.data["Stack"] = "corosync (plugin v0)"
 
         elif name == "corosync" or name == "cs" or name == "mcp":
             self.data["Stack"] = "corosync 2.x"
