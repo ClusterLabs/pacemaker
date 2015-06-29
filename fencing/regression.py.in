@@ -384,7 +384,7 @@ class Tests:
 		test = self.new_test("cpg_custom_merge_multiple",
 				"Verify multiple overlapping identical fencing operations are merged", 1)
 		test.add_cmd("stonith_admin", "-R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3\"")
-		test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node3\" ")
+		test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o \"mode=pass\" -o \"delay=2\" -o \"pcmk_host_list=node3\" ")
 		test.add_cmd("stonith_admin", "-R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3\"")
 		test.add_cmd_no_wait("stonith_admin", "-F node3 -t 10")
 		test.add_cmd_no_wait("stonith_admin", "-F node3 -t 10")
@@ -554,9 +554,9 @@ class Tests:
 			test.add_cmd("stonith_admin", "-r node3 -i 3 -v true3")
 			test.add_cmd("stonith_admin", "-r node3 -i 3 -v true4")
 
-			test.add_cmd("stonith_admin", "-F node3 -t 2")
+			test.add_cmd("stonith_admin", "-F node3 -t 3")
 
-			test.add_stonith_log_pattern("remote op timeout set to 12")
+			test.add_stonith_log_pattern("remote op timeout set to 18")
 			test.add_stonith_log_pattern("for host 'node3' with device 'false1' returned: -201")
 			test.add_stonith_log_pattern("for host 'node3' with device 'false2' returned: -201")
 			test.add_stonith_log_pattern("for host 'node3' with device 'true3' returned: 0")
