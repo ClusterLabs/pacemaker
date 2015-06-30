@@ -1139,6 +1139,40 @@ report_timeout_period(remote_fencing_op_t * op, int op_timeout)
     }
 }
 
+/*
+ * \internal
+ * \brief Advance an operation to the next device in its topology
+ *
+ * \param[in,out] op      Operation to advance
+ * \param[in]     device  ID of device just completed
+ * \param[in]     msg     XML reply that contained device result (if available)
+ * \param[in]     rc      Return code of device's execution
+ */
+static void
+advance_op_topology(remote_fencing_op_t *op, const char *device, xmlNode *msg,
+                    int rc)
+{
+    /* Advance to the next device at this topology level, if any */
+    if (op->devices) {
+        op->devices = op->devices->next;
+    }
+
+    /* If this device was required, it's not anymore */
+    remove_required_device(op, device);
+
+    if (op->devices) {
+        /* Necessary devices remain, so execute the next one */
+        crm_trace("Next for %s on behalf of %s@%s (rc was %d)",
+                  op->target, op->originator, op->client_name, rc);
+        call_remote_stonith(op, NULL);
+    } else {
+        /* We're done with all devices, so finalize operation */
+        crm_trace("Marking complex fencing op for %s as complete", op->target);
+        op->state = st_done;
+        remote_op_done(op, msg, rc, FALSE);
+    }
+}
+
 void
 call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
 {
@@ -1618,23 +1652,11 @@ process_remote_stonith_exec(xmlNode * msg)
             return rc;
         }
 
-        /* An operation completed succesfully but has not yet been marked as done.
-         * Continue the topology if more devices exist at the current level, otherwise
-         * mark as done. */
         if (rc == pcmk_ok) {
-            if (op->devices) {
-                /* Success, are there any more? */
-                op->devices = op->devices->next;
-            }
-            remove_required_device(op, device);
-            /* if no more devices at this fencing level, we are done,
-             * else we need to contine with executing the next device in the list */
-            if (op->devices == NULL) {
-                crm_trace("Marking complex fencing op for %s as complete", op->target);
-                op->state = st_done;
-                remote_op_done(op, msg, rc, FALSE);
-                return rc;
-            }
+            /* An operation completed successfully. Try another device if
+             * necessary, otherwise mark the operation as done. */
+            advance_op_topology(op, device, msg, rc);
+            return rc;
         } else {
             /* This device failed, time to try another topology level. If no other
              * levels are available, mark this operation as failed and report results. */
@@ -1659,7 +1681,7 @@ process_remote_stonith_exec(xmlNode * msg)
         /* fall-through and attempt other fencing action using another peer */
     }
 
-    /* Retry on failure or execute the rest of the topology */
+    /* Retry on failure */
     crm_trace("Next for %s on behalf of %s@%s (rc was %d)", op->target, op->originator,
               op->client_name, rc);
     call_remote_stonith(op, NULL);
