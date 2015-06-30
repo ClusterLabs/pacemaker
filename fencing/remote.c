@@ -517,14 +517,6 @@ add_required_device(remote_fencing_op_t * op, const char *device)
         return;
     }
     op->required_list = g_list_prepend(op->required_list, strdup(device));
-
-    /* make sure the required devices is in the current list of devices to be executed */
-    if (op->devices_list) {
-        GListPtr match  = g_list_find_custom(op->devices_list, device, sort_strings);
-        if (match == NULL) {
-           op->devices_list = g_list_append(op->devices_list, strdup(device));
-        }
-    }
 }
 
 /*
@@ -558,20 +550,6 @@ set_op_device_list(remote_fencing_op_t * op, GListPtr devices)
     for (lpc = devices; lpc != NULL; lpc = lpc->next) {
         op->devices_list = g_list_append(op->devices_list, strdup(lpc->data));
     }
-
-    /* tack on whatever required devices have not been executed
-     * to the end of the current devices list. This ensures that
-     * the required devices will get executed regardless of what topology
-     * level they exist at. */
-    for (lpc = op->required_list; lpc != NULL; lpc = lpc->next) {
-        GListPtr match  = g_list_find_custom(op->devices_list, lpc->data, sort_strings);
-        if (match == NULL) {
-            crm_trace("Adding required device %s to device list for %s",
-                      lpc->data, op->id);
-            op->devices_list = g_list_append(op->devices_list, strdup(lpc->data));
-        }
-    }
-
     op->devices = op->devices_list;
 }
 
@@ -1159,6 +1137,13 @@ advance_op_topology(remote_fencing_op_t *op, const char *device, xmlNode *msg,
 
     /* If this device was required, it's not anymore */
     remove_required_device(op, device);
+
+    /* If there are no more devices at this topology level,
+     * run through any required devices not already executed
+     */
+    if (op->devices == NULL) {
+        op->devices = op->required_list;
+    }
 
     if (op->devices) {
         /* Necessary devices remain, so execute the next one */
