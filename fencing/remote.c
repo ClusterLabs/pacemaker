@@ -153,6 +153,21 @@ grab_peer_device(st_query_result_t *peer, const char *device,
     return TRUE;
 }
 
+/*
+ * \internal
+ * \brief Free the list of required devices
+ *
+ * \param[in,out] op     Operation to modify
+ */
+static void
+free_required_list(remote_fencing_op_t *op)
+{
+    if (op->required_list) {
+        g_list_free_full(op->required_list, free);
+        op->required_list = NULL;
+    }
+}
+
 static void
 clear_remote_op_timers(remote_fencing_op_t * op)
 {
@@ -198,10 +213,7 @@ free_remote_op(gpointer data)
         g_list_free_full(op->devices_list, free);
         op->devices_list = NULL;
     }
-    if (op->required_list) {
-        g_list_free_full(op->required_list, free);
-        op->required_list = NULL;
-    }
+    free_required_list(op);
     free(op);
 }
 
@@ -489,6 +501,13 @@ topology_is_empty(stonith_topology_t *tp)
     return TRUE;
 }
 
+/*
+ * \internal
+ * \brief Add a device to the required list
+ *
+ * \param[in,out] op      Operation to modify
+ * \param[in]     device  Device ID to add
+ */
 static void
 add_required_device(remote_fencing_op_t * op, const char *device)
 {
@@ -505,6 +524,24 @@ add_required_device(remote_fencing_op_t * op, const char *device)
         if (match == NULL) {
            op->devices_list = g_list_append(op->devices_list, strdup(device));
         }
+    }
+}
+
+/*
+ * \internal
+ * \brief Remove a device from the required list
+ *
+ * \param[in,out] op      Operation to modify
+ * \param[in]     device  Device ID to remove
+ */
+static void
+remove_required_device(remote_fencing_op_t *op, const char *device)
+{
+    GListPtr match = g_list_find_custom(op->required_list, device,
+                                        sort_strings);
+
+    if (match) {
+        op->required_list = g_list_remove(op->required_list, match->data);
     }
 }
 
@@ -1585,14 +1622,11 @@ process_remote_stonith_exec(xmlNode * msg)
          * Continue the topology if more devices exist at the current level, otherwise
          * mark as done. */
         if (rc == pcmk_ok) {
-            GListPtr required_match = g_list_find_custom(op->required_list, device, sort_strings);
             if (op->devices) {
                 /* Success, are there any more? */
                 op->devices = op->devices->next;
             }
-            if (required_match) {
-                op->required_list = g_list_remove(op->required_list, required_match->data);
-            }
+            remove_required_device(op, device);
             /* if no more devices at this fencing level, we are done,
              * else we need to contine with executing the next device in the list */
             if (op->devices == NULL) {
