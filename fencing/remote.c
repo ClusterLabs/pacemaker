@@ -47,18 +47,30 @@
 
 #define TIMEOUT_MULTIPLY_FACTOR 1.2
 
+/* When one stonithd queries its peers for devices able to handle a fencing
+ * request, each peer will reply with a list of such devices available to it.
+ * Each reply will be parsed into a st_query_result_t, with each device's
+ * information kept in a device_properties_t.
+ */
+
+typedef struct device_properties_s {
+    /* Whether access to this device has been verified */
+    gboolean verified;
+    /* Action-specific timeout */
+    int custom_action_timeout;
+    /* Action-specific maximum random delay */
+    int delay_max;
+} device_properties_t;
+
 typedef struct st_query_result_s {
     /* Name of peer that sent this result */
     char *host;
-    int ndevices;
     /* Only try peers for non-topology based operations once */
     gboolean tried;
-    GListPtr device_list;
-    GHashTable *custom_action_timeouts;
-    GHashTable *delay_maxes;
-    /* Subset of devices that peer has verified connectivity on */
-    GHashTable *verified_devices;
-
+    /* Number of entries in the devices table */
+    int ndevices;
+    /* Devices available to this host that are capable of fencing the target */
+    GHashTable *devices;
 } st_query_result_t;
 
 GHashTable *remote_op_list = NULL;
@@ -84,12 +96,33 @@ free_remote_query(gpointer data)
         st_query_result_t *query = data;
 
         crm_trace("Free'ing query result from %s", query->host);
+        g_hash_table_destroy(query->devices);
         free(query->host);
-        g_list_free_full(query->device_list, free);
-        g_hash_table_destroy(query->custom_action_timeouts);
-        g_hash_table_destroy(query->delay_maxes);
-        g_hash_table_destroy(query->verified_devices);
         free(query);
+    }
+}
+
+struct peer_count_data {
+    gboolean verified_only;
+    int count;
+};
+
+/*!
+ * \internal
+ * \brief Increment a counter for a device
+ *
+ * \param[in] key        Device ID (ignored)
+ * \param[in] value      Device properties
+ * \param[in] user_data  Peer count data
+ */
+static void
+count_peer_device(gpointer key, gpointer value, gpointer user_data)
+{
+    device_properties_t *props = (device_properties_t*)value;
+    struct peer_count_data *data = user_data;
+
+    if (!data->verified_only || props->verified) {
+        ++(data->count);
     }
 }
 
@@ -105,8 +138,14 @@ free_remote_query(gpointer data)
 static int
 count_peer_devices(const st_query_result_t *peer, gboolean verified_only)
 {
-    return verified_only? g_hash_table_size(peer->verified_devices)
-           : g_list_length(peer->device_list);
+    struct peer_count_data data;
+
+    data.verified_only = verified_only;
+    data.count = 0;
+    if (peer) {
+        g_hash_table_foreach(peer->devices, count_peer_device, &data);
+    }
+    return data.count;
 }
 
 /*!
@@ -116,12 +155,12 @@ count_peer_devices(const st_query_result_t *peer, gboolean verified_only)
  * \param[in] peer    Query result for a peer
  * \param[in] device  Device ID to search for
  *
- * \return Device list entry if found, NULL otherwise
+ * \return Device properties if found, NULL otherwise
  */
-static GListPtr
+static device_properties_t *
 find_peer_device(const st_query_result_t *peer, const char *device)
 {
-    return g_list_find_custom(peer->device_list, device, sort_strings);
+    return g_hash_table_lookup(peer->devices, device);
 }
 
 /*!
@@ -138,18 +177,15 @@ static gboolean
 grab_peer_device(st_query_result_t *peer, const char *device,
                  gboolean verified_devices_only)
 {
-    GListPtr match;
+    device_properties_t *props = find_peer_device(peer, device);
 
-    if (verified_devices_only && !g_hash_table_lookup(peer->verified_devices, device)) {
+    if ((props == NULL) || (verified_devices_only && !props->verified)) {
         return FALSE;
     }
-    match = find_peer_device(peer, device);
-    if (match == NULL) {
-        return FALSE;
-    }
+
     crm_trace("Removing %s from %s (%d remaining)",
               device, peer->host, count_peer_devices(peer, FALSE));
-    peer->device_list = g_list_remove(peer->device_list, match->data);
+    g_hash_table_remove(peer->devices, device);
     return TRUE;
 }
 
@@ -988,37 +1024,59 @@ stonith_choose_peer(remote_fencing_op_t * op)
 }
 
 static int
-get_device_timeout(st_query_result_t * peer, const char *device, int default_timeout)
+get_device_timeout(const st_query_result_t *peer, const char *device, int default_timeout)
 {
-    gpointer res;
-    int delay_max = 0;
+    device_properties_t *props;
 
     if (!peer || !device) {
         return default_timeout;
     }
 
-    res = g_hash_table_lookup(peer->delay_maxes, device);
-    if (res && GPOINTER_TO_INT(res) > 0) {
-        delay_max = GPOINTER_TO_INT(res);
+    props = g_hash_table_lookup(peer->devices, device);
+    if (!props) {
+        return default_timeout;
     }
 
-    res = g_hash_table_lookup(peer->custom_action_timeouts, device);
+    return (props->custom_action_timeout?
+           props->custom_action_timeout : default_timeout)
+           + props->delay_max;
+}
 
-    return res ? GPOINTER_TO_INT(res) + delay_max : default_timeout + delay_max;
+struct timeout_data {
+    const st_query_result_t *peer;
+    int default_timeout;
+    int total_timeout;
+};
+
+/*!
+ * \internal
+ * \brief Add timeout to a total
+ *
+ * \param[in] key        GHashTable key (device ID)
+ * \param[in] value      GHashTable value (device properties)
+ * \param[in] user_data  Timeout data
+ */
+static void
+add_device_timeout(gpointer key, gpointer value, gpointer user_data)
+{
+    const char *device_id = key;
+    struct timeout_data *timeout = user_data;
+
+    timeout->total_timeout += get_device_timeout(timeout->peer, device_id, timeout->default_timeout);
 }
 
 static int
-get_peer_timeout(st_query_result_t * peer, int default_timeout)
+get_peer_timeout(const st_query_result_t *peer, int default_timeout)
 {
-    int total_timeout = 0;
+    struct timeout_data timeout;
 
-    GListPtr cur = NULL;
+    timeout.peer = peer;
+    timeout.default_timeout = default_timeout;
+    timeout.total_timeout = 0;
 
-    for (cur = peer->device_list; cur; cur = cur->next) {
-        total_timeout += get_device_timeout(peer, cur->data, default_timeout);
-    }
+    g_hash_table_foreach(peer->devices, add_device_timeout, &timeout);
 
-    return total_timeout ? total_timeout : default_timeout;
+    return (timeout.total_timeout? timeout.total_timeout : default_timeout);
 }
 
 static int
@@ -1228,7 +1286,7 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
                        stonith_watchdog_timeout_ms/1000, op->target, op->client_name, op->id, device);
             op->op_timer_one = g_timeout_add(stonith_watchdog_timeout_ms, remote_op_watchdog_done, op);
 
-            /* TODO: We should probably look into peer->device_list to verify watchdog is going to be in use */
+            /* TODO check devices to verify watchdog will be in use */
         } else if(stonith_watchdog_timeout_ms > 0
                   && safe_str_eq(peer->host, op->target)
                   && safe_str_neq(op->action, "on")) {
@@ -1321,7 +1379,7 @@ all_topology_devices_found(remote_fencing_op_t * op)
 {
     GListPtr device = NULL;
     GListPtr iter = NULL;
-    GListPtr match = NULL;
+    device_properties_t *match = NULL;
     stonith_topology_t *tp = NULL;
     gboolean skip_target = FALSE;
     int i;
@@ -1364,31 +1422,41 @@ all_topology_devices_found(remote_fencing_op_t * op)
  * \param[in]     peer    Name of peer that sent XML (for logs)
  * \param[in]     device  Device ID (for logs)
  * \param[in]     action  Action the properties relate to
- * \param[in,out] values  3-integer array to contain timeout, delay, required
+ * \param[in,out] props   Device properties to update
  */
 static void
 parse_action_specific(xmlNode *xml, const char *peer, const char *device,
-                      const char *action, int *values)
+                      const char *action, remote_fencing_op_t *op,
+                      device_properties_t *props)
 {
-    values[0] = 0;
-    crm_element_value_int(xml, F_STONITH_ACTION_TIMEOUT, &values[0]);
-    if (values[0]) {
+    int required;
+
+    props->custom_action_timeout = 0;
+    crm_element_value_int(xml, F_STONITH_ACTION_TIMEOUT,
+                          &props->custom_action_timeout);
+    if (props->custom_action_timeout) {
         crm_trace("Peer %s with device %s returned %s action timeout %d",
-                  peer, device, action, values[0]);
+                  peer, device, action, props->custom_action_timeout);
     }
 
-    values[1] = 0;
-    crm_element_value_int(xml, F_STONITH_DELAY_MAX, &values[1]);
-    if (values[1]) {
+    props->delay_max = 0;
+    crm_element_value_int(xml, F_STONITH_DELAY_MAX, &props->delay_max);
+    if (props->delay_max) {
         crm_trace("Peer %s with device %s returned maximum of random delay %d for %s",
-                  peer, device, values[1], action);
+                  peer, device, props->delay_max, action);
     }
 
-    values[2] = 0;
-    crm_element_value_int(xml, F_STONITH_DEVICE_REQUIRED, &values[2]);
-    if (values[2]) {
+    required = 0;
+    crm_element_value_int(xml, F_STONITH_DEVICE_REQUIRED, &required);
+    if (required) {
+        /* If the action is marked as required, add the device to the
+         * operation's list of required devices. We use this
+         * for unfencing when executing a topology.
+         * Required devices get executed regardless of their topology level.
+         */
         crm_trace("Peer %s requires device %s to execute for action %s",
                   peer, device, action);
+        add_required_device(op, device);
     }
 }
 
@@ -1406,31 +1474,23 @@ add_device_properties(xmlNode *xml, remote_fencing_op_t *op,
                       st_query_result_t *result, const char *device)
 {
     int verified = 0;
-    int values[3];
+    device_properties_t *props = calloc(1, sizeof(device_properties_t));
 
-    result->device_list = g_list_prepend(result->device_list, strdup(device));
+    /* Add a new entry to this result's devices list */
+    CRM_ASSERT(props != NULL);
+    g_hash_table_insert(result->devices, strdup(device), props);
+
+    /* Peers with verified (monitored) access will be preferred */
     crm_element_value_int(xml, F_STONITH_DEVICE_VERIFIED, &verified);
-
-    /* Parse properties specific to the operation's action */
-    parse_action_specific(xml, result->host, device, op->action, values);
-    if (values[0]) {
-        g_hash_table_insert(result->custom_action_timeouts,
-                            strdup(device), GINT_TO_POINTER(values[0]));
-    }
-    if (values[1] > 0) {
-        g_hash_table_insert(result->delay_maxes,
-                            strdup(device), GINT_TO_POINTER(values[1]));
-    }
     if (verified) {
-        crm_trace("Peer %s has confirmed a verified device %s", result->host, device);
-        g_hash_table_insert(result->verified_devices,
-                            strdup(device), GINT_TO_POINTER(verified));
+        crm_trace("Peer %s has confirmed a verified device %s",
+                  result->host, device);
+        props->verified = TRUE;
     }
-    if (values[2]) {
-        /* This matters when executing a topology. Required devices will get
-         * executed regardless of their topology level. We use this for unfencing. */
-        add_required_device(op, device);
-    }
+
+    /* Parse action-specific device properties */
+    parse_action_specific(xml, result->host, device, op->action,
+                          op, props);
 }
 
 /*
@@ -1452,9 +1512,7 @@ add_result(remote_fencing_op_t *op, const char *host, int ndevices, xmlNode *xml
 
     CRM_CHECK(result != NULL, return NULL);
     result->host = strdup(host);
-    result->custom_action_timeouts = g_hash_table_new_full(crm_str_hash, g_str_equal, free, NULL);
-    result->delay_maxes = g_hash_table_new_full(crm_str_hash, g_str_equal, free, NULL);
-    result->verified_devices = g_hash_table_new_full(crm_str_hash, g_str_equal, free, NULL);
+    result->devices = g_hash_table_new_full(crm_str_hash, g_str_equal, free, free);
 
     /* Each child element describes one capable device available to the peer */
     for (child = __xml_first_child(xml); child != NULL; child = __xml_next(child)) {
@@ -1465,7 +1523,7 @@ add_result(remote_fencing_op_t *op, const char *host, int ndevices, xmlNode *xml
         }
     }
 
-    result->ndevices = g_list_length(result->device_list);
+    result->ndevices = g_hash_table_size(result->devices);
     CRM_CHECK(ndevices == result->ndevices,
               crm_err("Query claimed to have %d devices but %d found",
                       ndevices, result->ndevices));
