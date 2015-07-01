@@ -1394,6 +1394,47 @@ parse_action_specific(xmlNode *xml, const char *peer, const char *device,
 
 /*
  * \internal
+ * \brief Parse one device's properties from peer's XML query reply
+ *
+ * \param[in]     xml       XML node containing device properties
+ * \param[in,out] op        Operation that query and reply relate to
+ * \param[in,out] result    Peer's results
+ * \param[in]     device    ID of device being parsed
+ */
+static void
+add_device_properties(xmlNode *xml, remote_fencing_op_t *op,
+                      st_query_result_t *result, const char *device)
+{
+    int verified = 0;
+    int values[3];
+
+    result->device_list = g_list_prepend(result->device_list, strdup(device));
+    crm_element_value_int(xml, F_STONITH_DEVICE_VERIFIED, &verified);
+
+    /* Parse properties specific to the operation's action */
+    parse_action_specific(xml, result->host, device, op->action, values);
+    if (values[0]) {
+        g_hash_table_insert(result->custom_action_timeouts,
+                            strdup(device), GINT_TO_POINTER(values[0]));
+    }
+    if (values[1] > 0) {
+        g_hash_table_insert(result->delay_maxes,
+                            strdup(device), GINT_TO_POINTER(values[1]));
+    }
+    if (verified) {
+        crm_trace("Peer %s has confirmed a verified device %s", result->host, device);
+        g_hash_table_insert(result->verified_devices,
+                            strdup(device), GINT_TO_POINTER(verified));
+    }
+    if (values[2]) {
+        /* This matters when executing a topology. Required devices will get
+         * executed regardless of their topology level. We use this for unfencing. */
+        add_required_device(op, device);
+    }
+}
+
+/*
+ * \internal
  * \brief Handle a peer's reply to our fencing query
  *
  * Parse a query result from XML and store it in the remote operation
@@ -1469,32 +1510,7 @@ process_remote_stonith_query(xmlNode * msg)
         const char *device = ID(child);
 
         if (device) {
-            int values[3];
-            int verified = 0;
-
-            result->device_list = g_list_prepend(result->device_list, strdup(device));
-            crm_element_value_int(child, F_STONITH_DEVICE_VERIFIED, &verified);
-
-            /* Parse properties specific to the operation's action */
-            parse_action_specific(child, result->host, device, op->action, values);
-            if (values[0]) {
-                g_hash_table_insert(result->custom_action_timeouts,
-                                    strdup(device), GINT_TO_POINTER(values[0]));
-            }
-            if (values[1] > 0) {
-                g_hash_table_insert(result->delay_maxes,
-                                    strdup(device), GINT_TO_POINTER(values[1]));
-            }
-            if (verified) {
-                crm_trace("Peer %s has confirmed a verified device %s", result->host, device);
-                g_hash_table_insert(result->verified_devices,
-                                    strdup(device), GINT_TO_POINTER(verified));
-            }
-            if (values[2]) {
-                /* This matters when executing a topology. Required devices will get 
-                 * executed regardless of their topology level. We use this for unfencing. */
-                add_required_device(op, device);
-            }
+            add_device_properties(child, op, result, device);
         }
     }
 
