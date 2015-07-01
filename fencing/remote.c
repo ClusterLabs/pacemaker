@@ -60,6 +60,8 @@ typedef struct device_properties_s {
     int custom_action_timeout;
     /* Action-specific maximum random delay */
     int delay_max;
+    /* Whether this device has been executed */
+    gboolean executed;
 } device_properties_t;
 
 typedef struct st_query_result_s {
@@ -109,7 +111,7 @@ struct peer_count_data {
 
 /*!
  * \internal
- * \brief Increment a counter for a device
+ * \brief Increment a counter if a device has not been executed yet
  *
  * \param[in] key        Device ID (ignored)
  * \param[in] value      Device properties
@@ -121,7 +123,8 @@ count_peer_device(gpointer key, gpointer value, gpointer user_data)
     device_properties_t *props = (device_properties_t*)value;
     struct peer_count_data *data = user_data;
 
-    if (!data->verified_only || props->verified) {
+    if (!props->executed
+        && (!data->verified_only || props->verified)) {
         ++(data->count);
     }
 }
@@ -133,7 +136,7 @@ count_peer_device(gpointer key, gpointer value, gpointer user_data)
  * \param[in] peer           Peer to count
  * \param[in] verified_only  Whether to count only verified devices
  *
- * \return Number of devices available to peer
+ * \return Number of devices available to peer that were not already executed
  */
 static int
 count_peer_devices(const st_query_result_t *peer, gboolean verified_only)
@@ -160,18 +163,20 @@ count_peer_devices(const st_query_result_t *peer, gboolean verified_only)
 static device_properties_t *
 find_peer_device(const st_query_result_t *peer, const char *device)
 {
-    return g_hash_table_lookup(peer->devices, device);
+    device_properties_t *props = g_hash_table_lookup(peer->devices, device);
+
+    return (props && !props->executed)? props : NULL;
 }
 
 /*!
  * \internal
- * \brief Remove a device from a peer's device list if it is present
+ * \brief Find a device in a peer's device list and mark it as executed
  *
  * \param[in,out] peer                   Peer with results to search
- * \param[in]     device                 ID of device to find and remove
+ * \param[in]     device                 ID of device to mark as done
  * \param[in]     verified_devices_only  Only consider verified devices
  *
- * \return TRUE if device was found and removed, FALSE otherwise
+ * \return TRUE if device was found and marked, FALSE otherwise
  */
 static gboolean
 grab_peer_device(st_query_result_t *peer, const char *device,
@@ -185,7 +190,7 @@ grab_peer_device(st_query_result_t *peer, const char *device,
 
     crm_trace("Removing %s from %s (%d remaining)",
               device, peer->host, count_peer_devices(peer, FALSE));
-    g_hash_table_remove(peer->devices, device);
+    props->executed = TRUE;
     return TRUE;
 }
 
@@ -1050,7 +1055,7 @@ struct timeout_data {
 
 /*!
  * \internal
- * \brief Add timeout to a total
+ * \brief Add timeout to a total if device has not been executed yet
  *
  * \param[in] key        GHashTable key (device ID)
  * \param[in] value      GHashTable value (device properties)
@@ -1060,9 +1065,12 @@ static void
 add_device_timeout(gpointer key, gpointer value, gpointer user_data)
 {
     const char *device_id = key;
+    device_properties_t *props = value;
     struct timeout_data *timeout = user_data;
 
-    timeout->total_timeout += get_device_timeout(timeout->peer, device_id, timeout->default_timeout);
+    if (!props->executed) {
+        timeout->total_timeout += get_device_timeout(timeout->peer, device_id, timeout->default_timeout);
+    }
 }
 
 static int
@@ -1238,11 +1246,11 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
     }
 
     if (is_set(op->call_options, st_opt_topology) && op->devices) {
-        /* Ignore any preference, they might not have the device we need */
-        /* When using topology, the stonith_choose_peer function pops off
-         * the peer from the op's query results.  Make sure to calculate
-         * the op_timeout before calling this function when topology is in use */
+        /* Ignore any peer preference, they might not have the device we need */
+        /* When using topology, stonith_choose_peer() removes the device from
+         * further consideration, so be sure to calculate timeout beforehand */
         peer = stonith_choose_peer(op);
+
         device = op->devices->data;
         timeout = get_device_timeout(peer, device, op->base_timeout);
     }
