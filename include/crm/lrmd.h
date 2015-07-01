@@ -200,8 +200,6 @@ typedef struct lrmd_event_data_s {
     enum ocf_exitcode rc;
     /*! The lrmd status returned for exec_complete events */
     int op_status;
-    /*! exit failure reason string from resource agent operation */
-    const char *exit_reason;
     /*! stdout from resource agent operation */
     const char *output;
     /*! Timestamp of when op ran */
@@ -225,6 +223,9 @@ typedef struct lrmd_event_data_s {
      * a single process. This name allows the actions to be matched
      * to the proper client. */
     const char *remote_nodename;
+
+    /*! exit failure reason string from resource agent operation */
+    const char *exit_reason;
 
 } lrmd_event_data_t;
 

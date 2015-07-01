@@ -344,9 +344,10 @@ process_utilization(resource_t * rsc, node_t ** prefer, pe_working_set_t * data_
     int alloc_details = scores_log_level + 1;
 
     if (safe_str_neq(data_set->placement_strategy, "default")) {
-        GListPtr gIter = NULL;
+        GHashTableIter iter;
         GListPtr colocated_rscs = NULL;
         gboolean any_capable = FALSE;
+        node_t *node = NULL;
 
         colocated_rscs = find_colocated_rscs(colocated_rscs, rsc, rsc);
         if (colocated_rscs) {
@@ -356,8 +357,11 @@ process_utilization(resource_t * rsc, node_t ** prefer, pe_working_set_t * data_
 
             unallocated_utilization = sum_unallocated_utilization(rsc, colocated_rscs);
 
-            for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-                node_t *node = (node_t *) gIter->data;
+            g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+            while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
+                if (can_run_resources(node) == FALSE || node->weight < 0) {
+                    continue;
+                }
 
                 if (have_enough_capacity(node, rscs_id, unallocated_utilization)) {
                     any_capable = TRUE;
@@ -371,8 +375,11 @@ process_utilization(resource_t * rsc, node_t ** prefer, pe_working_set_t * data_
             }
 
             if (any_capable) {
-                for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-                    node_t *node = (node_t *) gIter->data;
+                g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+                while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
+                    if (can_run_resources(node) == FALSE || node->weight < 0) {
+                        continue;
+                    }
 
                     if (have_enough_capacity(node, rscs_id, unallocated_utilization) == FALSE) {
                         pe_rsc_debug(rsc, "Resource %s and its colocated resources cannot be allocated to node %s: no enough capacity",
@@ -394,8 +401,11 @@ process_utilization(resource_t * rsc, node_t ** prefer, pe_working_set_t * data_
         }
 
         if (any_capable == FALSE) {
-            for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-                node_t *node = (node_t *) gIter->data;
+            g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+            while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
+                if (can_run_resources(node) == FALSE || node->weight < 0) {
+                    continue;
+                }
 
                 if (have_enough_capacity(node, rsc->id, rsc->utilization) == FALSE) {
                     pe_rsc_debug(rsc, "Resource %s cannot be allocated to node %s: no enough capacity",

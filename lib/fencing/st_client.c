@@ -1100,57 +1100,62 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
     if (safe_str_eq(provider, "redhat")) {
         stonith_action_t *action = stonith_action_create(agent, "metadata", NULL, 0, 5, NULL, NULL);
         int exec_rc = stonith_action_execute(action, &rc, &buffer);
+        xmlNode *xml = NULL;
+        xmlNode *actions = NULL;
+        xmlXPathObject *xpathObj = NULL;
 
         if (exec_rc < 0 || rc != 0 || buffer == NULL) {
+            crm_warn("Could not obtain metadata for %s", agent);
             crm_debug("Query failed: %d %d: %s", exec_rc, rc, crm_str(buffer));
             free(buffer);       /* Just in case */
             return -EINVAL;
+        }
 
-        } else {
-
-            xmlNode *xml = string2xml(buffer);
-            xmlNode *actions = NULL;
-            xmlXPathObject *xpathObj = NULL;
-
-            xpathObj = xpath_search(xml, "//actions");
-            if (numXpathResults(xpathObj) > 0) {
-                actions = getXpathResult(xpathObj, 0);
-            }
-
-            freeXpathObject(xpathObj);
-
-            /* Now fudge the metadata so that the start/stop actions appear */
-            xpathObj = xpath_search(xml, "//action[@name='stop']");
-            if (numXpathResults(xpathObj) <= 0) {
-                xmlNode *tmp = NULL;
-
-                tmp = create_xml_node(actions, "action");
-                crm_xml_add(tmp, "name", "stop");
-                crm_xml_add(tmp, "timeout", "20s");
-
-                tmp = create_xml_node(actions, "action");
-                crm_xml_add(tmp, "name", "start");
-                crm_xml_add(tmp, "timeout", "20s");
-            }
-
-            freeXpathObject(xpathObj);
-
-            /* Now fudge the metadata so that the port isn't required in the configuration */
-            xpathObj = xpath_search(xml, "//parameter[@name='port']");
-            if (numXpathResults(xpathObj) > 0) {
-                /* We'll fill this in */
-                xmlNode *tmp = getXpathResult(xpathObj, 0);
-
-                crm_xml_add(tmp, "required", "0");
-            }
-
-            freeXpathObject(xpathObj);
+        xml = string2xml(buffer);
+        if(xml == NULL) {
+            crm_warn("Metadata for %s is invalid", agent);
             free(buffer);
-            buffer = dump_xml_formatted(xml);
-            free_xml(xml);
-            if (!buffer) {
-                return -EINVAL;
-            }
+            return -EINVAL;
+        }
+
+        xpathObj = xpath_search(xml, "//actions");
+        if (numXpathResults(xpathObj) > 0) {
+            actions = getXpathResult(xpathObj, 0);
+        }
+
+        freeXpathObject(xpathObj);
+
+        /* Now fudge the metadata so that the start/stop actions appear */
+        xpathObj = xpath_search(xml, "//action[@name='stop']");
+        if (numXpathResults(xpathObj) <= 0) {
+            xmlNode *tmp = NULL;
+
+            tmp = create_xml_node(actions, "action");
+            crm_xml_add(tmp, "name", "stop");
+            crm_xml_add(tmp, "timeout", "20s");
+
+            tmp = create_xml_node(actions, "action");
+            crm_xml_add(tmp, "name", "start");
+            crm_xml_add(tmp, "timeout", "20s");
+        }
+
+        freeXpathObject(xpathObj);
+
+        /* Now fudge the metadata so that the port isn't required in the configuration */
+        xpathObj = xpath_search(xml, "//parameter[@name='port']");
+        if (numXpathResults(xpathObj) > 0) {
+            /* We'll fill this in */
+            xmlNode *tmp = getXpathResult(xpathObj, 0);
+
+            crm_xml_add(tmp, "required", "0");
+        }
+
+        freeXpathObject(xpathObj);
+        free(buffer);
+        buffer = dump_xml_formatted(xml);
+        free_xml(xml);
+        if (!buffer) {
+            return -EINVAL;
         }
 
     } else {

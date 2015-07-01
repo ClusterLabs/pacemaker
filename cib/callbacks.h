@@ -73,6 +73,8 @@ void cib_shutdown(int nsig);
 void initiate_exit(void);
 void terminate_cib(const char *caller, gboolean fast);
 
+extern gboolean cib_legacy_mode(void);
+
 #if SUPPORT_HEARTBEAT
 extern void cib_ha_peer_callback(HA_Message * msg, void *private_data);
 extern int cib_ccm_dispatch(gpointer user_data);
