@@ -1435,6 +1435,47 @@ add_device_properties(xmlNode *xml, remote_fencing_op_t *op,
 
 /*
  * \internal
+ * \brief Parse a peer's XML query reply and add it to operation's results
+ *
+ * \param[in,out] op        Operation that query and reply relate to
+ * \param[in]     host      Name of peer that sent this reply
+ * \param[in]     ndevices  Number of devices expected in reply
+ * \param[in]     xml       XML node containing device list
+ *
+ * \return Newly allocated result structure with parsed reply
+ */
+static st_query_result_t *
+add_result(remote_fencing_op_t *op, const char *host, int ndevices, xmlNode *xml)
+{
+    st_query_result_t *result = calloc(1, sizeof(st_query_result_t));
+    xmlNode *child;
+
+    CRM_CHECK(result != NULL, return NULL);
+    result->host = strdup(host);
+    result->custom_action_timeouts = g_hash_table_new_full(crm_str_hash, g_str_equal, free, NULL);
+    result->delay_maxes = g_hash_table_new_full(crm_str_hash, g_str_equal, free, NULL);
+    result->verified_devices = g_hash_table_new_full(crm_str_hash, g_str_equal, free, NULL);
+
+    /* Each child element describes one capable device available to the peer */
+    for (child = __xml_first_child(xml); child != NULL; child = __xml_next(child)) {
+        const char *device = ID(child);
+
+        if (device) {
+            add_device_properties(child, op, result, device);
+        }
+    }
+
+    result->ndevices = g_list_length(result->device_list);
+    CRM_CHECK(ndevices == result->ndevices,
+              crm_err("Query claimed to have %d devices but %d found",
+                      ndevices, result->ndevices));
+
+    op->query_results = g_list_insert_sorted(op->query_results, result, sort_peers);
+    return result;
+}
+
+/*
+ * \internal
  * \brief Handle a peer's reply to our fencing query
  *
  * Parse a query result from XML and store it in the remote operation
@@ -1459,7 +1500,6 @@ process_remote_stonith_query(xmlNode * msg)
     st_query_result_t *result = NULL;
     uint32_t replies_expected;
     xmlNode *dev = get_xpath_object("//@" F_STONITH_REMOTE_OP_ID, msg, LOG_ERR);
-    xmlNode *child = NULL;
 
     CRM_CHECK(dev != NULL, return -EPROTO);
 
@@ -1483,42 +1523,12 @@ process_remote_stonith_query(xmlNode * msg)
     host = crm_element_value(msg, F_ORIG);
     host_is_target = safe_str_eq(host, op->target);
 
-    if (ndevices <= 0) {
-        /* If we're doing 'known' then we might need to fire anyway */
-        crm_trace("Query result %d of %d from %s for %s/%s (%d devices) %s",
-                  op->replies, replies_expected, host,
-                  op->target, op->action, ndevices, id);
-        if (have_all_replies) {
-            crm_info("All query replies have arrived, continuing (%d expected/%d received for id %s)",
-                     replies_expected, op->replies, id);
-            call_remote_stonith(op, NULL);
-        }
-        return pcmk_ok;
-    }
-
     crm_info("Query result %d of %d from %s for %s/%s (%d devices) %s",
              op->replies, replies_expected, host,
              op->target, op->action, ndevices, id);
-    result = calloc(1, sizeof(st_query_result_t));
-    result->host = strdup(host);
-    result->ndevices = ndevices;
-    result->custom_action_timeouts = g_hash_table_new_full(crm_str_hash, g_str_equal, free, NULL);
-    result->delay_maxes = g_hash_table_new_full(crm_str_hash, g_str_equal, free, NULL);
-    result->verified_devices = g_hash_table_new_full(crm_str_hash, g_str_equal, free, NULL);
-
-    for (child = __xml_first_child(dev); child != NULL; child = __xml_next(child)) {
-        const char *device = ID(child);
-
-        if (device) {
-            add_device_properties(child, op, result, device);
-        }
+    if (ndevices > 0) {
+        result = add_result(op, host, ndevices, dev);
     }
-
-    CRM_CHECK(ndevices == g_list_length(result->device_list),
-              crm_err("Mis-match: Query claimed to have %d devices but %d found", ndevices,
-                      g_list_length(result->device_list)));
-
-    op->query_results = g_list_insert_sorted(op->query_results, result, sort_peers);
 
     if (is_set(op->call_options, st_opt_topology)) {
         /* If we start the fencing before all the topology results are in,
@@ -1540,7 +1550,7 @@ process_remote_stonith_query(xmlNode * msg)
 
         /* We have a result for a non-topology fencing op that looks promising,
          * go ahead and start fencing before query timeout */
-        if ((host_is_target == FALSE) && nverified) {
+        if (result && (host_is_target == FALSE) && nverified) {
             /* we have a verified device living on a peer that is not the target */
             crm_trace("Found %d verified devices", nverified);
             call_remote_stonith(op, result);
@@ -1554,7 +1564,7 @@ process_remote_stonith_query(xmlNode * msg)
             crm_trace("Waiting for more peer results before launching fencing operation");
         }
 
-    } else if (op->state == st_done) {
+    } else if (result && (op->state == st_done)) {
         crm_info("Discarding query result from %s (%d devices): Operation is in state %d",
                  result->host, result->ndevices, op->state);
     }
