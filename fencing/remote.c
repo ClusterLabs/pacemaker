@@ -1327,16 +1327,18 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
         }
 
         if(stonith_watchdog_timeout_ms > 0 && device && safe_str_eq(device, "watchdog")) {
-            crm_notice("Waiting %ds for %s to self-terminate for %s.%.8s (%p)",
-                       stonith_watchdog_timeout_ms/1000, op->target, op->client_name, op->id, device);
+            crm_notice("Waiting %ds for %s to self-fence (%s) for %s.%.8s (%p)",
+                       stonith_watchdog_timeout_ms/1000, op->target,
+                       op->action, op->client_name, op->id, device);
             op->op_timer_one = g_timeout_add(stonith_watchdog_timeout_ms, remote_op_watchdog_done, op);
 
             /* TODO check devices to verify watchdog will be in use */
         } else if(stonith_watchdog_timeout_ms > 0
                   && safe_str_eq(peer->host, op->target)
                   && safe_str_neq(op->action, "on")) {
-            crm_notice("Waiting %ds for %s to self-terminate for %s.%.8s (%p)",
-                       stonith_watchdog_timeout_ms/1000, op->target, op->client_name, op->id, device);
+            crm_notice("Waiting %ds for %s to self-fence (%s) for %s.%.8s (%p)",
+                       stonith_watchdog_timeout_ms/1000, op->target,
+                       op->action, op->client_name, op->id, device);
             op->op_timer_one = g_timeout_add(stonith_watchdog_timeout_ms, remote_op_watchdog_done, op);
 
         } else {
@@ -1350,12 +1352,13 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
         return;
 
     } else if (op->owner == FALSE) {
-        crm_err("The termination of %s for %s is not ours to control", op->target, op->client_name);
+        crm_err("Fencing (%s) of %s for %s is not ours to control",
+                op->action, op->target, op->client_name);
 
     } else if (op->query_timer == 0) {
         /* We've exhausted all available peers */
-        crm_info("No remaining peers capable of terminating %s for %s (%d)", op->target,
-                 op->client_name, op->state);
+        crm_info("No remaining peers capable of fencing (%s) %s for %s (%d)",
+                 op->target, op->action, op->client_name, op->state);
         CRM_LOG_ASSERT(op->state < st_done);
         remote_op_timeout(op);
 
@@ -1365,33 +1368,37 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
         /* if the operation never left the query state,
          * but we have all the expected replies, then no devices
          * are available to execute the fencing operation. */
+
         if(stonith_watchdog_timeout_ms && (device == NULL || safe_str_eq(device, "watchdog"))) {
-            crm_notice("Waiting %ds for %s to self-terminate for %s.%.8s (%p)",
-                     stonith_watchdog_timeout_ms/1000, op->target, op->client_name, op->id, device);
+            crm_notice("Waiting %ds for %s to self-fence (%s) for %s.%.8s (%p)",
+                     stonith_watchdog_timeout_ms/1000, op->target,
+                     op->action, op->client_name, op->id, device);
 
             op->op_timer_one = g_timeout_add(stonith_watchdog_timeout_ms, remote_op_watchdog_done, op);
             return;
         }
 
         if (op->state == st_query) {
-           crm_info("None of the %d peers have devices capable of terminating %s for %s (%d)",
-                   op->replies, op->target, op->client_name, op->state);
+           crm_info("None of the %d peers have devices capable of fencing (%s) %s for %s (%d)",
+                   op->replies, op->action, op->target, op->client_name,
+                   op->state);
 
             rc = -ENODEV;
         } else {
-           crm_info("None of the %d peers are capable of terminating %s for %s (%d)",
-                   op->replies, op->target, op->client_name, op->state);
+           crm_info("None of the %d peers are capable of fencing (%s) %s for %s (%d)",
+                   op->replies, op->action, op->target, op->client_name,
+                   op->state);
         }
 
         op->state = st_failed;
         remote_op_done(op, NULL, rc, FALSE);
 
     } else if (device) {
-        crm_info("Waiting for additional peers capable of terminating %s with %s for %s.%.8s",
-                 op->target, device, op->client_name, op->id);
+        crm_info("Waiting for additional peers capable of fencing (%s) %s with %s for %s.%.8s",
+                 op->action, op->target, device, op->client_name, op->id);
     } else {
-        crm_info("Waiting for additional peers capable of terminating %s for %s%.8s",
-                 op->target, op->client_name, op->id);
+        crm_info("Waiting for additional peers capable of fencing (%s) %s for %s%.8s",
+                 op->action, op->target, op->client_name, op->id);
     }
 }
 
