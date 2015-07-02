@@ -1552,6 +1552,15 @@ parse_action_specific(xmlNode *xml, const char *peer, const char *device,
                   peer, device, action);
         add_required_device(op, phase, device);
     }
+
+    /* If a reboot is remapped to off+on, it's possible that a node is allowed
+     * to perform one action but not another.
+     */
+    if (crm_is_true(crm_element_value(xml, F_STONITH_ACTION_DISALLOWED))) {
+        props->disallowed[phase] = TRUE;
+        crm_trace("Peer %s is disallowed from executing %s for device %s",
+                  peer, action, device);
+    }
 }
 
 /*
@@ -1567,6 +1576,7 @@ static void
 add_device_properties(xmlNode *xml, remote_fencing_op_t *op,
                       st_query_result_t *result, const char *device)
 {
+    xmlNode *child;
     int verified = 0;
     device_properties_t *props = calloc(1, sizeof(device_properties_t));
 
@@ -1585,6 +1595,19 @@ add_device_properties(xmlNode *xml, remote_fencing_op_t *op,
     /* Parse action-specific device properties */
     parse_action_specific(xml, result->host, device, op_requested_action(op),
                           op, st_phase_requested, props);
+    for (child = __xml_first_child(xml); child != NULL; child = __xml_next(child)) {
+        /* Replies for "reboot" operations will include the action-specific
+         * values for "off" and "on" in child elements, just in case the reboot
+         * winds up getting remapped.
+         */
+        if (safe_str_eq(ID(child), "off")) {
+            parse_action_specific(child, result->host, device, "off",
+                                  op, st_phase_off, props);
+        } else if (safe_str_eq(ID(child), "on")) {
+            parse_action_specific(child, result->host, device, "on",
+                                  op, st_phase_on, props);
+        }
+    }
 }
 
 /*
