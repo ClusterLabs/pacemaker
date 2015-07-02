@@ -309,6 +309,44 @@ op_phase_off(remote_fencing_op_t *op)
 
 /*!
  * \internal
+ * \brief Advance a remapped reboot operation to the "on" phase
+ *
+ * \param[in,out] op  Operation to remap
+ */
+static void
+op_phase_on(remote_fencing_op_t *op)
+{
+    GListPtr iter = NULL;
+
+    crm_info("Remapped off of %s complete, remapping to on for %s.%.8s",
+             op->target, op->client_name, op->id);
+    op->phase = st_phase_on;
+    strcpy(op->action, "on");
+
+    /* Any devices that are required for "on" will be automatically executed by
+     * the cluster when the node next joins, so we skip them here.
+     */
+    for (iter = op->required_list[op->phase]; iter != NULL; iter = iter->next) {
+        GListPtr match = g_list_find_custom(op->devices_list, iter->data,
+                                            sort_strings);
+
+        if (match) {
+            op->devices_list = g_list_remove(op->devices_list, match->data);
+        }
+    }
+
+    /* We know this level will succeed, because phase 1 completed successfully
+     * and we ignore any errors from phase 2. So we can free the required list,
+     * which will keep them from being executed after the device list is done.
+     */
+    free_required_list(op, op->phase);
+
+    /* Rewind device list pointer */
+    op->devices = op->devices_list;
+}
+
+/*!
+ * \internal
  * \brief Reset a remapped reboot operation
  *
  * \param[in,out] op  Operation to reset
@@ -560,6 +598,16 @@ remote_op_timeout(gpointer userdata)
 
     crm_debug("Action %s (%s) for %s (%s) timed out",
               op->action, op->id, op->target, op->client_name);
+
+    if (op->phase == st_phase_on) {
+        /* A remapped reboot operation timed out in the "on" phase, but the
+         * "off" phase completed successfully, so quit trying any further
+         * devices, and return success.
+         */
+        remote_op_done(op, NULL, pcmk_ok, FALSE);
+        return FALSE;
+    }
+
     op->state = st_failed;
 
     remote_op_done(op, NULL, -ETIME, FALSE);
@@ -1314,13 +1362,21 @@ advance_op_topology(remote_fencing_op_t *op, const char *device, xmlNode *msg,
         op->devices = op->required_list[op->phase];
     }
 
+    if ((op->devices == NULL) && (op->phase == st_phase_off)) {
+        /* We're done with this level and with required devices, but we had
+         * remapped "reboot" to "off", so start over with "on". If any devices
+         * need to be turned back on, op->devices will be non-NULL after this.
+         */
+        op_phase_on(op);
+    }
+
     if (op->devices) {
         /* Necessary devices remain, so execute the next one */
         crm_trace("Next for %s on behalf of %s@%s (rc was %d)",
                   op->target, op->originator, op->client_name, rc);
         call_remote_stonith(op, NULL);
     } else {
-        /* We're done with all devices, so finalize operation */
+        /* We're done with all devices and phases, so finalize operation */
         crm_trace("Marking complex fencing op for %s as complete", op->target);
         op->state = st_done;
         remote_op_done(op, msg, rc, FALSE);
@@ -1415,6 +1471,15 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
         send_cluster_message(crm_get_peer(0, peer->host), crm_msg_stonith_ng, remote_op, FALSE);
         peer->tried = TRUE;
         free_xml(remote_op);
+        return;
+
+    } else if (op->phase == st_phase_on) {
+        /* A remapped "on" cannot be executed, but the node was already
+         * turned off successfully, so ignore the error and continue.
+         */
+        crm_warn("Ignoring %s 'on' failure (no capable peers) for %s after successful 'off'",
+                 device, op->target);
+        advance_op_topology(op, device, NULL, pcmk_ok);
         return;
 
     } else if (op->owner == FALSE) {
@@ -1864,6 +1929,15 @@ process_remote_stonith_exec(xmlNode * msg)
         if (op->state == st_done) {
             remote_op_done(op, msg, rc, FALSE);
             return rc;
+        }
+
+        if ((op->phase == 2) && (rc != pcmk_ok)) {
+            /* A remapped "on" failed, but the node was already turned off
+             * successfully, so ignore the error and continue.
+             */
+            crm_warn("Ignoring %s 'on' failure (exit code %d) for %s after successful 'off'",
+                     device, rc, op->target);
+            rc = pcmk_ok;
         }
 
         if (rc == pcmk_ok) {
