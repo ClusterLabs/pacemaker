@@ -606,7 +606,8 @@ append_restart_list(lrmd_event_data_t *op, xmlNode *metadata, xmlNode * update, 
 
     if(resource_supports_action(metadata, "reload")) {
         restart = create_xml_node(NULL, XML_TAG_PARAMS);
-        list = build_parameter_list(op, metadata, restart, "unique", FALSE, FALSE);
+        /* Any parameters with unique="1" should be added into the "op-force-restart" list. */
+        list = build_parameter_list(op, metadata, restart, "unique", TRUE, FALSE);
     }
 
     if (list == NULL) {
