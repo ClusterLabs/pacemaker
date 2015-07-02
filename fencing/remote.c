@@ -196,16 +196,17 @@ grab_peer_device(st_query_result_t *peer, const char *device,
 
 /*
  * \internal
- * \brief Free the list of required devices
+ * \brief Free the list of required devices for a particular phase
  *
  * \param[in,out] op     Operation to modify
+ * \param[in]     phase  Phase to modify
  */
 static void
-free_required_list(remote_fencing_op_t *op)
+free_required_list(remote_fencing_op_t *op, enum st_remap_phase phase)
 {
-    if (op->required_list) {
-        g_list_free_full(op->required_list, free);
-        op->required_list = NULL;
+    if (op->required_list[phase]) {
+        g_list_free_full(op->required_list[phase], free);
+        op->required_list[phase] = NULL;
     }
 }
 
@@ -254,7 +255,9 @@ free_remote_op(gpointer data)
         g_list_free_full(op->devices_list, free);
         op->devices_list = NULL;
     }
-    free_required_list(op);
+    free_required_list(op, st_phase_requested);
+    free_required_list(op, st_phase_off);
+    free_required_list(op, st_phase_on);
     free(op);
 }
 
@@ -544,25 +547,28 @@ topology_is_empty(stonith_topology_t *tp)
 
 /*
  * \internal
- * \brief Add a device to the required list
+ * \brief Add a device to the required list for a particular phase
  *
  * \param[in,out] op      Operation to modify
+ * \param[in]     phase   Phase to modify
  * \param[in]     device  Device ID to add
  */
 static void
-add_required_device(remote_fencing_op_t * op, const char *device)
+add_required_device(remote_fencing_op_t *op, enum st_remap_phase phase,
+                    const char *device)
 {
-    GListPtr match  = g_list_find_custom(op->required_list, device, sort_strings);
-    if (match) {
-        /* device already marked required */
-        return;
+    GListPtr match  = g_list_find_custom(op->required_list[phase], device,
+                                         sort_strings);
+
+    if (!match) {
+        op->required_list[phase] = g_list_prepend(op->required_list[phase],
+                                                  strdup(device));
     }
-    op->required_list = g_list_prepend(op->required_list, strdup(device));
 }
 
 /*
  * \internal
- * \brief Remove a device from the required list
+ * \brief Remove a device from the required list for the current phase
  *
  * \param[in,out] op      Operation to modify
  * \param[in]     device  Device ID to remove
@@ -570,11 +576,12 @@ add_required_device(remote_fencing_op_t * op, const char *device)
 static void
 remove_required_device(remote_fencing_op_t *op, const char *device)
 {
-    GListPtr match = g_list_find_custom(op->required_list, device,
+    GListPtr match = g_list_find_custom(op->required_list[op->phase], device,
                                         sort_strings);
 
     if (match) {
-        op->required_list = g_list_remove(op->required_list, match->data);
+        op->required_list[op->phase] = g_list_remove(op->required_list[op->phase],
+                                                     match->data);
     }
 }
 
@@ -1211,7 +1218,7 @@ advance_op_topology(remote_fencing_op_t *op, const char *device, xmlNode *msg,
      * run through any required devices not already executed
      */
     if (op->devices == NULL) {
-        op->devices = op->required_list;
+        op->devices = op->required_list[op->phase];
     }
 
     if (op->devices) {
@@ -1433,12 +1440,13 @@ all_topology_devices_found(remote_fencing_op_t * op)
  * \param[in]     peer    Name of peer that sent XML (for logs)
  * \param[in]     device  Device ID (for logs)
  * \param[in]     action  Action the properties relate to
+ * \param[in]     phase   Phase the properties relate to
  * \param[in,out] props   Device properties to update
  */
 static void
 parse_action_specific(xmlNode *xml, const char *peer, const char *device,
                       const char *action, remote_fencing_op_t *op,
-                      device_properties_t *props)
+                      enum st_remap_phase phase, device_properties_t *props)
 {
     int required;
 
@@ -1461,13 +1469,16 @@ parse_action_specific(xmlNode *xml, const char *peer, const char *device,
     crm_element_value_int(xml, F_STONITH_DEVICE_REQUIRED, &required);
     if (required) {
         /* If the action is marked as required, add the device to the
-         * operation's list of required devices. We use this
-         * for unfencing when executing a topology.
-         * Required devices get executed regardless of their topology level.
+         * operation's list of required devices for this phase. We use this
+         * for unfencing when executing a topology. In phase 0 (requested
+         * action) or phase 1 (remapped "off"), required devices get executed
+         * regardless of their topology level; in phase 2 (remapped "on"),
+         * required devices are not attempted, because the cluster will
+         * execute them automatically later.
          */
         crm_trace("Peer %s requires device %s to execute for action %s",
                   peer, device, action);
-        add_required_device(op, device);
+        add_required_device(op, phase, device);
     }
 }
 
@@ -1501,7 +1512,7 @@ add_device_properties(xmlNode *xml, remote_fencing_op_t *op,
 
     /* Parse action-specific device properties */
     parse_action_specific(xml, result->host, device, op->action,
-                          op, props);
+                          op, st_phase_requested, props);
 }
 
 /*
