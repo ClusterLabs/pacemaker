@@ -20,6 +20,15 @@
 }
 
 {
+   Another bash leak
+   Memcheck:Leak
+   fun:malloc
+   fun:xmalloc
+   fun:set_default_locale
+   fun:main
+}
+
+{
    Ignore option parsing
    Memcheck:Leak
    fun:realloc
