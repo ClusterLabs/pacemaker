@@ -288,6 +288,25 @@ op_requested_action(const remote_fencing_op_t *op)
     return ((op->phase > st_phase_requested)? "reboot" : op->action);
 }
 
+/*
+ * \internal
+ * \brief Remap a "reboot" operation to the "off" phase
+ *
+ * \param[in,out] op      Operation to remap
+ */
+static void
+op_phase_off(remote_fencing_op_t *op)
+{
+    crm_info("Remapping multiple-device reboot of %s (%s) to off",
+             op->target, op->id);
+    op->phase = st_phase_off;
+
+    /* Happily, "off" and "on" are shorter than "reboot", so we can reuse the
+     * memory allocation at each phase.
+     */
+    strcpy(op->action, "off");
+}
+
 /*!
  * \internal
  * \brief Reset a remapped reboot operation
@@ -716,6 +735,15 @@ stonith_topology_next(remote_fencing_op_t * op)
                   op->level, op->target, g_list_length(tp->levels[op->level]),
                   op->client_name, op->originator, op->id);
         set_op_device_list(op, tp->levels[op->level]);
+
+        if (g_list_next(op->devices_list) && safe_str_eq(op->action, "reboot")) {
+            /* A reboot has been requested for a topology level with multiple
+             * devices. Instead of rebooting the devices sequentially, we will
+             * turn them all off, then turn them all on again. (Think about
+             * switched power outlets for redundant power supplies.)
+             */
+            op_phase_off(op);
+        }
         return pcmk_ok;
     }
 
