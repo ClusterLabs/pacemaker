@@ -274,6 +274,37 @@ free_remote_op(gpointer data)
     free(op);
 }
 
+/*
+ * \internal
+ * \brief Return an operation's originally requested action (before any remap)
+ *
+ * \param[in] op  Operation to check
+ *
+ * \return Operation's original action
+ */
+static const char *
+op_requested_action(const remote_fencing_op_t *op)
+{
+    return ((op->phase > st_phase_requested)? "reboot" : op->action);
+}
+
+/*!
+ * \internal
+ * \brief Reset a remapped reboot operation
+ *
+ * \param[in,out] op  Operation to reset
+ */
+static void
+undo_op_remap(remote_fencing_op_t *op)
+{
+    if (op->phase > 0) {
+        crm_info("Undoing remap of reboot of %s for %s.%.8s",
+                 op->target, op->client_name, op->id);
+        op->phase = st_phase_requested;
+        strcpy(op->action, "reboot");
+    }
+}
+
 static xmlNode *
 create_op_done_notify(remote_fencing_op_t * op, int rc)
 {
@@ -401,6 +432,7 @@ remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup)
 
     op->completed = time(NULL);
     clear_remote_op_timers(op);
+    undo_op_remap(op);
 
     if (op->notify_sent == TRUE) {
         crm_err("Already sent notifications for '%s of %s by %s' (for=%s@%s.%.8s, state=%d): %s",
@@ -671,6 +703,9 @@ stonith_topology_next(remote_fencing_op_t * op)
 
     set_bit(op->call_options, st_opt_topology);
 
+    /* This is a new level, so undo any remapping left over from previous */
+    undo_op_remap(op);
+
     do {
         op->level++;
 
@@ -705,6 +740,7 @@ merge_duplicates(remote_fencing_op_t * op)
     g_hash_table_iter_init(&iter, remote_op_list);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&other)) {
         crm_node_t *peer = NULL;
+        const char *other_action = op_requested_action(other);
 
         if (other->state > st_exec) {
             /* Must be in-progress */
@@ -712,8 +748,9 @@ merge_duplicates(remote_fencing_op_t * op)
         } else if (safe_str_neq(op->target, other->target)) {
             /* Must be for the same node */
             continue;
-        } else if (safe_str_neq(op->action, other->action)) {
-            crm_trace("Must be for the same action: %s vs. ", op->action, other->action);
+        } else if (safe_str_neq(op->action, other_action)) {
+            crm_trace("Must be for the same action: %s vs. %s",
+                      op->action, other_action);
             continue;
         } else if (safe_str_eq(op->client_name, other->client_name)) {
             crm_trace("Must be for different clients: %s", op->client_name);
@@ -939,7 +976,7 @@ initiate_remote_stonith_op(crm_client_t * client, xmlNode * request, gboolean ma
 
     crm_xml_add(query, F_STONITH_REMOTE_OP_ID, op->id);
     crm_xml_add(query, F_STONITH_TARGET, op->target);
-    crm_xml_add(query, F_STONITH_ACTION, op->action);
+    crm_xml_add(query, F_STONITH_ACTION, op_requested_action(op));
     crm_xml_add(query, F_STONITH_ORIGIN, op->originator);
     crm_xml_add(query, F_STONITH_CLIENTID, op->client_id);
     crm_xml_add(query, F_STONITH_CLIENTNAME, op->client_name);
@@ -1474,7 +1511,7 @@ all_topology_devices_found(remote_fencing_op_t * op)
  * \param[in]     msg     XML element containing the properties
  * \param[in]     peer    Name of peer that sent XML (for logs)
  * \param[in]     device  Device ID (for logs)
- * \param[in]     action  Action the properties relate to
+ * \param[in]     action  Action the properties relate to (for logs)
  * \param[in]     phase   Phase the properties relate to
  * \param[in,out] props   Device properties to update
  */
@@ -1546,7 +1583,7 @@ add_device_properties(xmlNode *xml, remote_fencing_op_t *op,
     }
 
     /* Parse action-specific device properties */
-    parse_action_specific(xml, result->host, device, op->action,
+    parse_action_specific(xml, result->host, device, op_requested_action(op),
                           op, st_phase_requested, props);
 }
 
@@ -1886,6 +1923,9 @@ stonith_check_fence_tolerance(int tolerance, const char *target, const char *act
             continue;
         } else if (rop->state != st_done) {
             continue;
+        /* We don't have to worry about remapped reboots here
+         * because if state is done, any remapping has been undone
+         */
         } else if (strcmp(rop->action, action) != 0) {
             continue;
         } else if ((rop->completed + tolerance) < now) {
