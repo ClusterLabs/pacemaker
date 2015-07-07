@@ -874,6 +874,82 @@ class Tests:
         test.add_expected_fail_cmd("stonith_admin", "-U node_fake -t 3", 237)
         test.add_stonith_log_pattern("(on) to be executed on the target node")
 
+    def build_remap_tests(self):
+        test = self.new_test("cpg_remap_simple",
+                             "Verify sequential topology reboot is remapped to all-off-then-all-on", 1)
+        test.add_cmd("stonith_admin",
+                     """-R true1 -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node_fake" """
+                     """-o "pcmk_off_timeout=1" -o "pcmk_reboot_timeout=10" """)
+        test.add_cmd("stonith_admin",
+                     """-R true2 -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node_fake" """
+                     """-o "pcmk_off_timeout=2" -o "pcmk_reboot_timeout=20" """)
+        test.add_cmd("stonith_admin", "-r node_fake -i 1 -v true1 -v true2")
+        test.add_cmd("stonith_admin", "-B node_fake -t 5")
+        test.add_stonith_log_pattern("Remapping multiple-device reboot of node_fake")
+        # timeout should be sum of off timeouts (1+2=3), not reboot timeouts (10+20=30)
+        test.add_stonith_log_pattern("remote op timeout set to 3 for fencing of node node_fake")
+        test.add_stonith_log_pattern("perform op off node_fake with true1")
+        test.add_stonith_log_pattern("perform op off node_fake with true2")
+        test.add_stonith_log_pattern("Remapped off of node_fake complete, remapping to on")
+        # fence_dummy sets "on" as an on_target action
+        test.add_stonith_log_pattern("Ignoring true1 'on' failure (no capable peers) for node_fake")
+        test.add_stonith_log_pattern("Ignoring true2 'on' failure (no capable peers) for node_fake")
+        test.add_stonith_log_pattern("Undoing remap of reboot of node_fake")
+
+        test = self.new_test("cpg_remap_automatic",
+                             "Verify remapped topology reboot skips automatic 'on'", 1)
+        test.add_cmd("stonith_admin",
+                     """-R true1 -a fence_dummy_automatic_unfence """
+                     """-o "mode=pass" -o "pcmk_host_list=node_fake" """)
+        test.add_cmd("stonith_admin",
+                     """-R true2 -a fence_dummy_automatic_unfence """
+                     """-o "mode=pass" -o "pcmk_host_list=node_fake" """)
+        test.add_cmd("stonith_admin", "-r node_fake -i 1 -v true1 -v true2")
+        test.add_cmd("stonith_admin", "-B node_fake -t 5")
+        test.add_stonith_log_pattern("Remapping multiple-device reboot of node_fake")
+        test.add_stonith_log_pattern("perform op off node_fake with true1")
+        test.add_stonith_log_pattern("perform op off node_fake with true2")
+        test.add_stonith_log_pattern("Remapped off of node_fake complete, remapping to on")
+        test.add_stonith_log_pattern("Undoing remap of reboot of node_fake")
+        test.add_stonith_negative_log_pattern("perform op on node_fake with")
+        test.add_stonith_negative_log_pattern("'on' failure")
+
+        test = self.new_test("cpg_remap_complex_1",
+                "Verify remapped topology reboot in second level works if non-remapped first level fails", 1)
+        test.add_cmd("stonith_admin", """-R false1 -a fence_dummy -o "mode=fail" -o "pcmk_host_list=node_fake" """)
+        test.add_cmd("stonith_admin", """-R true1 -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node_fake" """)
+        test.add_cmd("stonith_admin", """-R true2 -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node_fake" """)
+        test.add_cmd("stonith_admin", "-r node_fake -i 1 -v false1")
+        test.add_cmd("stonith_admin", "-r node_fake -i 2 -v true1 -v true2")
+        test.add_cmd("stonith_admin", "-B node_fake -t 5")
+        test.add_stonith_log_pattern("perform op reboot node_fake with false1")
+        test.add_stonith_log_pattern("Remapping multiple-device reboot of node_fake")
+        test.add_stonith_log_pattern("perform op off node_fake with true1")
+        test.add_stonith_log_pattern("perform op off node_fake with true2")
+        test.add_stonith_log_pattern("Remapped off of node_fake complete, remapping to on")
+        test.add_stonith_log_pattern("Ignoring true1 'on' failure (no capable peers) for node_fake")
+        test.add_stonith_log_pattern("Ignoring true2 'on' failure (no capable peers) for node_fake")
+        test.add_stonith_log_pattern("Undoing remap of reboot of node_fake")
+
+        test = self.new_test("cpg_remap_complex_2",
+                "Verify remapped topology reboot failure in second level proceeds to third level", 1)
+        test.add_cmd("stonith_admin", """-R false1 -a fence_dummy -o "mode=fail" -o "pcmk_host_list=node_fake" """)
+        test.add_cmd("stonith_admin", """-R false2 -a fence_dummy -o "mode=fail" -o "pcmk_host_list=node_fake" """)
+        test.add_cmd("stonith_admin", """-R true1 -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node_fake" """)
+        test.add_cmd("stonith_admin", """-R true2 -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node_fake" """)
+        test.add_cmd("stonith_admin", """-R true3 -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node_fake" """)
+        test.add_cmd("stonith_admin", "-r node_fake -i 1 -v false1")
+        test.add_cmd("stonith_admin", "-r node_fake -i 2 -v true1 -v false2 -v true3")
+        test.add_cmd("stonith_admin", "-r node_fake -i 3 -v true2")
+        test.add_cmd("stonith_admin", "-B node_fake -t 5")
+        test.add_stonith_log_pattern("perform op reboot node_fake with false1")
+        test.add_stonith_log_pattern("Remapping multiple-device reboot of node_fake")
+        test.add_stonith_log_pattern("perform op off node_fake with true1")
+        test.add_stonith_log_pattern("perform op off node_fake with false2")
+        test.add_stonith_log_pattern("Attempted to execute agent fence_dummy (off) the maximum number of times")
+        test.add_stonith_log_pattern("Undoing remap of reboot of node_fake")
+        test.add_stonith_log_pattern("perform op reboot node_fake with true2")
+        test.add_stonith_negative_log_pattern("node_fake with true3")
 
     def setup_environment(self, use_corosync):
         if self.autogen_corosync_cfg and use_corosync:
@@ -1044,6 +1120,7 @@ def main(argv):
     tests.build_fence_merge_tests()
     tests.build_unfence_tests()
     tests.build_nodeid_tests()
+    tests.build_remap_tests()
 
     if o.options['list-tests']:
         tests.print_list()
