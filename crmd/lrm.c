@@ -454,8 +454,6 @@ get_rsc_metadata(const char *type, const char *rclass, const char *provider, boo
 
     snprintf(key, len, "%s::%s:%s", type, rclass, provider);
     if(force == FALSE) {
-        snprintf(key, len, "%s::%s:%s", type, rclass, provider);
-
         crm_trace("Retreiving cached metadata for %s", key);
         metadata = g_hash_table_lookup(metadata_hash, key);
     }
