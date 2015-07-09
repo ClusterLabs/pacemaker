@@ -608,15 +608,16 @@ append_restart_list(lrmd_event_data_t *op, xmlNode *metadata, xmlNode * update, 
         restart = create_xml_node(NULL, XML_TAG_PARAMS);
         /* Any parameters with unique="1" should be added into the "op-force-restart" list. */
         list = build_parameter_list(op, metadata, restart, "unique", TRUE, FALSE);
-    }
 
-    if (list == NULL) {
+    } else {
         /* Resource does not support reloads */
         return;
     }
 
     digest = calculate_operation_digest(restart, version);
-    crm_xml_add(update, XML_LRM_ATTR_OP_RESTART, list);
+    /* Add "op-force-restart" and "op-restart-digest" to indicate the resource supports reload,
+     * no matter if it actually supports any parameters with unique="1"). */
+    crm_xml_add(update, XML_LRM_ATTR_OP_RESTART, list? list: "");
     crm_xml_add(update, XML_LRM_ATTR_RESTART_DIGEST, digest);
 
     crm_trace("%s: %s, %s", op->rsc_id, digest, list);
