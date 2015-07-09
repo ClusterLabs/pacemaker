@@ -2834,8 +2834,9 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
 
             node_t *remote_node = pe_find_node(data_set->nodes, rsc->id);
             if (remote_node && remote_node->details->remote_was_fenced == 0) {
-            
-                crm_info("Waiting to clear monitor failure for remote node %s until fencing has occured", rsc->id); 
+                if (strstr(ID(xml_op), "last_failure")) {
+                    crm_info("Waiting to clear monitor failure for remote node %s until fencing has occured", rsc->id); 
+                }
                 /* disabling failure timeout for this operation because we believe
                  * fencing of the remote node should occur first. */ 
                 failure_timeout = 0;
@@ -2866,6 +2867,9 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
                 } else {
                     expired = FALSE;
                 }
+            } else if (rsc->remote_reconnect_interval && strstr(ID(xml_op), "last_failure")) {
+                /* always clear last failure when reconnect interval is set */
+                clear_failcount = 1;
             }
         }
 
