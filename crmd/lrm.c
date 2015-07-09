@@ -579,7 +579,7 @@ resource_supports_action(xmlNode *metadata, const char *name)
     for (action = __xml_first_child(actions); action != NULL; action = __xml_next(action)) {
         if (crm_str_eq((const char *)action->name, "action", TRUE)) {
             value = crm_element_value(action, "name");
-            if (safe_str_eq("reload", value)) {
+            if (safe_str_eq(name, value)) {
                 return TRUE;
             }
         }
