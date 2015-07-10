@@ -92,41 +92,60 @@ int throttle_num_cores(void)
     return cores;
 }
 
+/*
+ * \internal
+ * \brief Return name of /proc file containing the CIB deamon's load statistics
+ *
+ * \return Newly allocated memory with file name on success, NULL otherwise
+ *
+ * \note It is the caller's responsibility to free the return value.
+ *       This will return NULL if the daemon is being run via valgrind.
+ *       This should be called only on Linux systems.
+ */
 static char *find_cib_loadfile(void) 
 {
     DIR *dp;
     struct dirent *entry;
     struct stat statbuf;
     char *match = NULL;
+    char procpath[128];
+    char value[64];
+    char key[16];
 
     dp = opendir("/proc");
     if (!dp) {
         /* no proc directory to search through */
         crm_notice("Can not read /proc directory to track existing components");
-        return FALSE;
+        return NULL;
     }
 
+    /* Iterate through contents of /proc */
     while ((entry = readdir(dp)) != NULL) {
-        char procpath[128];
-        char value[64];
-        char key[16];
         FILE *file;
         int pid;
 
+        /* We're only interested in entries whose name is a PID,
+         * so skip anything non-numeric or that is too long.
+         *
+         * 114 = 128 - strlen("/proc/") - strlen("/status") - 1
+         */
+        pid = atoi(entry->d_name);
+        if ((pid <= 0) || (strlen(entry->d_name) > 114)) {
+            continue;
+        }
+
+        /* We're only interested in subdirectories */
         strcpy(procpath, "/proc/");
-        /* strlen("/proc/") + strlen("/status") + 1 = 14
-         * 128 - 14 = 114 */
-        strncat(procpath, entry->d_name, 114);
-
-        if (lstat(procpath, &statbuf)) {
-            continue;
-        }
-        if (!S_ISDIR(statbuf.st_mode) || !isdigit(entry->d_name[0])) {
+        strcat(procpath, entry->d_name);
+        if (lstat(procpath, &statbuf) || !S_ISDIR(statbuf.st_mode)) {
             continue;
         }
 
+        /* Read the first entry ("Name:") from the process's status file.
+         * We could handle the valgrind case if we parsed the cmdline file
+         * instead, but that's more of a pain than it's worth.
+         */
         strcat(procpath, "/status");
-
         file = fopen(procpath, "r");
         if (!file) {
             continue;
@@ -137,17 +156,11 @@ static char *find_cib_loadfile(void)
         }
         fclose(file);
 
-        if (safe_str_neq("cib", value)) {
-            continue;
+        if (safe_str_eq("cib", value)) {
+            /* We found the CIB! */
+            match = crm_strdup_printf("/proc/%d/stat", pid);
+            break;
         }
-
-        pid = atoi(entry->d_name);
-        if (pid <= 0) {
-            continue;
-        }
-
-        match = crm_strdup_printf("/proc/%d/stat", pid);
-        break;
     }
 
     closedir(dp);
@@ -214,6 +227,10 @@ static bool throttle_cib_load(float *load)
         last_utime = 0;
         last_stime = 0;
         loadfile = find_cib_loadfile();
+        if (loadfile == NULL) {
+            crm_warn("Couldn't find CIB load file");
+            return FALSE;
+        }
         ticks_per_s = sysconf(_SC_CLK_TCK);
         crm_trace("Found %s", loadfile);
     }
