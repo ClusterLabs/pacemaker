@@ -289,6 +289,9 @@ attrd_client_update(xmlNode *xml)
 
             crm_info("Expanded %s=%s to %d", attr, value, int_value);
             crm_xml_add_int(xml, F_ATTRD_VALUE, int_value);
+
+            /* Replacing the value frees the previous memory, so re-query it */
+            value = crm_element_value(xml, F_ATTRD_VALUE);
         }
     }
 
