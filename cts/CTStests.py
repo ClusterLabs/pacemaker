@@ -2651,30 +2651,28 @@ class RemoteDriver(CTSTest):
         self.remote_use_reconnect_interval = self.Env.RandomGen.choice(["true","false"])
         self.cib_cmd = """cibadmin -C -o %s -X '%s' """
 
-    def del_rsc(self, node, rsc):
-
+    def get_othernode(self, node):
         for othernode in self.Env["nodes"]:
             if othernode == node:
                 # we don't want to try and use the cib that we just shutdown.
                 # find a cluster node that is not our soon to be remote-node.
                 continue
-            rc = self.rsh(othernode, "crm_resource -D -r %s -t primitive" % (rsc))
-            if rc != 0:
-                self.fail_string = ("Removal of resource '%s' failed" % (rsc))
-                self.failed = 1
-            return
+            else:
+                return othernode
+
+    def del_rsc(self, node, rsc):
+        othernode = self.get_othernode(node)
+        rc = self.rsh(othernode, "crm_resource -D -r %s -t primitive" % (rsc))
+        if rc != 0:
+            self.fail_string = ("Removal of resource '%s' failed" % (rsc))
+            self.failed = 1
 
     def add_rsc(self, node, rsc_xml):
-        for othernode in self.CM.Env["nodes"]:
-            if othernode == node:
-                # we don't want to try and use the cib that we just shutdown.
-                # find a cluster node that is not our soon to be remote-node.
-                continue
-            rc = self.rsh(othernode, self.cib_cmd % ("resources", rsc_xml))
-            if rc != 0:
-                self.fail_string = "resource creation failed"
-                self.failed = 1
-            return
+        othernode = self.get_othernode(node)
+        rc = self.rsh(othernode, self.cib_cmd % ("resources", rsc_xml))
+        if rc != 0:
+            self.fail_string = "resource creation failed"
+            self.failed = 1
 
     def add_primitive_rsc(self, node):
         rsc_xml = """
@@ -2703,7 +2701,7 @@ class RemoteDriver(CTSTest):
       <op id="remote-name-start-interval-0-timeout-120" interval="0" name="start" timeout="60"/>
     </operations>
 </primitive>""" % (self.remote_node, node)
-            self.rsh(node, self.templates["SetCheckInterval"] % ("45s"))
+            self.rsh(self.get_othernode(node), self.templates["SetCheckInterval"] % ("45s"))
         else:
             # not using reconnect interval
             rsc_xml = """
@@ -2950,7 +2948,7 @@ class RemoteDriver(CTSTest):
 
         if self.remote_use_reconnect_interval == "true":
             self.debug("Cleaning up re-check interval")
-            self.rsh(node, self.templates["ClearCheckInterval"])
+            self.rsh(self.get_othernode(node), self.templates["ClearCheckInterval"])
         if self.remote_rsc_added == 1:
             self.debug("Cleaning up dummy rsc put on remote node")
             self.rsh(node, "crm_resource -U -r %s -N %s" % (self.remote_rsc, self.remote_node))
