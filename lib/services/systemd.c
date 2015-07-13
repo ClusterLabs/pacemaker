@@ -461,7 +461,12 @@ systemd_async_dispatch(DBusPendingCall *pending, void *user_data)
 
     if(op) {
         crm_trace("Got result: %p for %p for %s, %s", reply, pending, op->rsc, op->action);
-        op->opaque->pending = NULL;
+        if (pending == op->opaque->pending) {
+            op->opaque->pending = NULL;
+        } else {
+            crm_info("Received unexpected reply for pending DBus call (%p vs %p)",
+                     op->opaque->pending, pending);
+        }
         systemd_exec_result(reply, op);
 
     } else {
@@ -499,10 +504,7 @@ systemd_unit_check(const char *name, const char *state, void *userdata)
     }
 
     if (op->synchronous == FALSE) {
-        if (op->opaque->pending) {
-            dbus_pending_call_unref(op->opaque->pending);
-        }
-        op->opaque->pending = NULL;
+        services_set_op_pending(op, NULL);
         operation_finalize(op);
     }
 }
@@ -535,7 +537,7 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
             return op->rc == PCMK_OCF_OK;
         } else if (pending) {
             dbus_pending_call_ref(pending);
-            op->opaque->pending = pending;
+            services_set_op_pending(op, pending);
             return TRUE;
         }
 
@@ -617,8 +619,7 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
 
         dbus_message_unref(msg);
         if(pending) {
-            dbus_pending_call_ref(pending);
-            op->opaque->pending = pending;
+            services_set_op_pending(op, pending);
             return TRUE;
         }
         return FALSE;
