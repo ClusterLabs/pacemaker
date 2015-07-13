@@ -612,6 +612,7 @@ find_topology_for_host(const char *host)
                 crm_info("Bad regex '%s' for fencing level", tp->node);
             } else {
                 status = regexec(&r_patt, host, 0, NULL, 0);
+                regfree(&r_patt);
             }
 
             if (status == 0) {
