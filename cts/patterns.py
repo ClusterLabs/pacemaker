@@ -291,6 +291,9 @@ class crm_cs_v0(BasePatterns):
             r"error:.*Connection to cib_shm failed",
             r"error:.*Connection to cib_shm.* closed",
             r"error:.*STONITH connection failed",
+            r"error: Connection to stonith-ng failed",
+            r"crit: Fencing daemon connection failed",
+            r"error: Connection to stonith-ng.* closed",
             ]
 
         self.components["corosync"] = [
