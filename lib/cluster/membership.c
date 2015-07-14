@@ -734,6 +734,14 @@ crm_update_peer_proc(const char *source, crm_node_t * node, uint32_t flag, const
         if (crm_status_callback) {
             crm_status_callback(crm_status_processes, node, &last);
         }
+
+        /* The client callback shouldn't touch the peer caches,
+         * but as a safety net, bail if the peer cache was destroyed.
+         */
+        if (crm_peer_cache == NULL) {
+            return NULL;
+        }
+
         if (crm_autoreap) {
             node = crm_update_peer_state(__FUNCTION__, node,
                                          is_set(node->processes, crm_get_cluster_proc())?
