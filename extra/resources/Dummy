@@ -137,7 +137,7 @@ dummy_stop() {
     if [ $? =  $OCF_SUCCESS ]; then
 	rm ${OCF_RESKEY_state}
     fi
-    rm ${VERIFY_SERIALIZED_FILE}
+    rm -f ${VERIFY_SERIALIZED_FILE}
     return $OCF_SUCCESS
 }
 

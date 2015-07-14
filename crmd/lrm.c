@@ -454,8 +454,6 @@ get_rsc_metadata(const char *type, const char *rclass, const char *provider, boo
 
     snprintf(key, len, "%s::%s:%s", type, rclass, provider);
     if(force == FALSE) {
-        snprintf(key, len, "%s::%s:%s", type, rclass, provider);
-
         crm_trace("Retreiving cached metadata for %s", key);
         metadata = g_hash_table_lookup(metadata_hash, key);
     }
@@ -581,7 +579,7 @@ resource_supports_action(xmlNode *metadata, const char *name)
     for (action = __xml_first_child(actions); action != NULL; action = __xml_next(action)) {
         if (crm_str_eq((const char *)action->name, "action", TRUE)) {
             value = crm_element_value(action, "name");
-            if (safe_str_eq("reload", value)) {
+            if (safe_str_eq(name, value)) {
                 return TRUE;
             }
         }

@@ -1681,10 +1681,38 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
         resource_t *remote_rsc = NULL;
         resource_t *container = NULL;
 
+        if (action->rsc == NULL) {
+            continue;
+        }
+
+        /* Special case. */
+        if (action->rsc &&
+            action->rsc->is_remote_node &&
+            safe_str_eq(action->task, CRM_OP_CLEAR_FAILCOUNT)) {
+
+            /* if we are clearing the failcount of an actual remote node connect
+             * resource, then make sure this happens before allowing the connection
+             * to start if we are planning on starting the connection during this
+             * transition */ 
+            custom_action_order(action->rsc,
+                NULL,
+                action,
+                action->rsc,
+                generate_op_key(action->rsc->id, RSC_START, 0),
+                NULL,
+                pe_order_optional,
+                data_set);
+
+                continue;
+        }
+
+        /* detect if the action occurs on a remote node. if so create
+         * ordering constraints that guarantee the action occurs while
+         * the remote node is active (after start, before stop...) things
+         * like that */ 
         if (action->node == NULL ||
             is_remote_node(action->node) == FALSE ||
             action->node->details->remote_rsc == NULL ||
-            action->rsc == NULL ||
             is_set(action->flags, pe_action_pseudo)) {
             continue;
         }
