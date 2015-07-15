@@ -87,7 +87,7 @@ cib_process_shutdown_req(const char *op, int options, const char *section, xmlNo
 
     } else if (cib_shutdown_flag) {
         crm_info("Shutdown ACK from %s", host);
-        terminate_cib(__FUNCTION__, FALSE);
+        terminate_cib(__FUNCTION__, 0);
         return pcmk_ok;
 
     } else {

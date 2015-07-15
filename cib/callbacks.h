@@ -71,7 +71,7 @@ extern void cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op
 
 void cib_shutdown(int nsig);
 void initiate_exit(void);
-void terminate_cib(const char *caller, gboolean fast);
+void terminate_cib(const char *caller, int fast);
 
 extern gboolean cib_legacy_mode(void);
 
