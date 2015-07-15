@@ -43,8 +43,7 @@ meta_data() {
 <version>1.0</version>
 
 <longdesc lang="en">
-Every time the monitor action is run, this resource agent records (in the CIB) the current number of ping nodes the host can connect to.
-It is essentially the same as pingd except that it uses the system ping tool to obtain the results.
+Every time the monitor action is run, this resource agent records (in the CIB) the current number of nodes the host can connect to using the system fping (preferred) or ping tool.
 </longdesc>
 <shortdesc lang="en">node connectivity</shortdesc>
 
