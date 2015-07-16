@@ -454,8 +454,6 @@ get_rsc_metadata(const char *type, const char *rclass, const char *provider, boo
 
     snprintf(key, len, "%s::%s:%s", type, rclass, provider);
     if(force == FALSE) {
-        snprintf(key, len, "%s::%s:%s", type, rclass, provider);
-
         crm_trace("Retreiving cached metadata for %s", key);
         metadata = g_hash_table_lookup(metadata_hash, key);
     }
@@ -581,7 +579,7 @@ resource_supports_action(xmlNode *metadata, const char *name)
     for (action = __xml_first_child(actions); action != NULL; action = __xml_next(action)) {
         if (crm_str_eq((const char *)action->name, "action", TRUE)) {
             value = crm_element_value(action, "name");
-            if (safe_str_eq("reload", value)) {
+            if (safe_str_eq(name, value)) {
                 return TRUE;
             }
         }
@@ -606,16 +604,18 @@ append_restart_list(lrmd_event_data_t *op, xmlNode *metadata, xmlNode * update, 
 
     if(resource_supports_action(metadata, "reload")) {
         restart = create_xml_node(NULL, XML_TAG_PARAMS);
-        list = build_parameter_list(op, metadata, restart, "unique", FALSE, FALSE);
-    }
+        /* Any parameters with unique="1" should be added into the "op-force-restart" list. */
+        list = build_parameter_list(op, metadata, restart, "unique", TRUE, FALSE);
 
-    if (list == NULL) {
+    } else {
         /* Resource does not support reloads */
         return;
     }
 
     digest = calculate_operation_digest(restart, version);
-    crm_xml_add(update, XML_LRM_ATTR_OP_RESTART, list);
+    /* Add "op-force-restart" and "op-restart-digest" to indicate the resource supports reload,
+     * no matter if it actually supports any parameters with unique="1"). */
+    crm_xml_add(update, XML_LRM_ATTR_OP_RESTART, list? list: "");
     crm_xml_add(update, XML_LRM_ATTR_RESTART_DIGEST, digest);
 
     crm_trace("%s: %s, %s", op->rsc_id, digest, list);

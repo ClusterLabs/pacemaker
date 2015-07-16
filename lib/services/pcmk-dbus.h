@@ -1,3 +1,7 @@
+#ifndef DBUS_TIMEOUT_USE_DEFAULT
+#  define DBUS_TIMEOUT_USE_DEFAULT -1
+#endif
+
 DBusConnection *pcmk_dbus_connect(void);
 void pcmk_dbus_connection_setup_with_select(DBusConnection *c);
 void pcmk_dbus_disconnect(DBusConnection *connection);

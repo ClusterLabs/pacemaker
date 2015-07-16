@@ -32,6 +32,9 @@ class BasePatterns:
 
             "UUIDQueryCmd"    : "crmadmin -N",
 
+            "SetCheckInterval"    : "cibadmin --modify -c --xml-text '<cluster_property_set id=\"cib-bootstrap-options\"><nvpair id=\"cts-recheck-interval-setting\" name=\"cluster-recheck-interval\" value=\"%s\"/></cluster_property_set>'",
+            "ClearCheckInterval"    : "cibadmin --delete --xpath \"//nvpair[@name='cluster-recheck-interval']\"",
+
             "MaintenanceModeOn"    : "cibadmin --modify -c --xml-text '<cluster_property_set id=\"cib-bootstrap-options\"><nvpair id=\"cts-maintenance-mode-setting\" name=\"maintenance-mode\" value=\"true\"/></cluster_property_set>'",
             "MaintenanceModeOff"    : "cibadmin --delete --xpath \"//nvpair[@name='maintenance-mode']\"",
 
@@ -291,6 +294,9 @@ class crm_cs_v0(BasePatterns):
             r"error:.*Connection to cib_shm failed",
             r"error:.*Connection to cib_shm.* closed",
             r"error:.*STONITH connection failed",
+            r"error: Connection to stonith-ng failed",
+            r"crit: Fencing daemon connection failed",
+            r"error: Connection to stonith-ng.* closed",
             ]
 
         self.components["corosync"] = [

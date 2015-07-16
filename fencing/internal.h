@@ -129,6 +129,20 @@ typedef struct remote_fencing_op_s {
 
 } remote_fencing_op_t;
 
+/*
+ * Complex fencing requirements are specified via fencing topologies.
+ * A topology consists of levels; each level is a list of fencing devices.
+ * Topologies are stored in a hash table by node name. When a node needs to be
+ * fenced, if it has an entry in the topology table, the levels are tried
+ * sequentially, and the devices in each level are tried sequentially.
+ * Fencing is considered successful as soon as any level succeeds;
+ * a level is considered successful if all its devices succeed.
+ * Essentially, all devices at a given level are "and-ed" and the
+ * levels are "or-ed".
+ *
+ * This structure is used for the topology table entries.
+ * Topology levels start from 1, so levels[0] is unused and always NULL.
+ */
 typedef struct stonith_topology_s {
     char *node;
     GListPtr levels[ST_LEVEL_MAX];

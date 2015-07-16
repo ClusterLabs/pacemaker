@@ -137,10 +137,6 @@ struct node_shared_s {
     gboolean shutdown;
     gboolean expected_up;
     gboolean is_dc;
-    gboolean rsc_discovery_enabled;
-
-    gboolean remote_requires_reset;
-    gboolean remote_was_fenced;
 
     int num_resources;
     GListPtr running_rsc;       /* resource_t* */
@@ -157,14 +153,17 @@ struct node_shared_s {
     GHashTable *digest_cache;
 
     gboolean maintenance;
+    gboolean rsc_discovery_enabled;
+    gboolean remote_requires_reset;
+    gboolean remote_was_fenced;
 };
 
 struct node_s {
     int weight;
     gboolean fixed;
-    int rsc_discover_mode;
     int count;
     struct node_shared_s *details;
+    int rsc_discover_mode;
 };
 
 #  include <crm/pengine/complex.h>
@@ -262,7 +261,6 @@ struct resource_s {
     int migration_threshold;
 
     gboolean is_remote_node;
-    gboolean exclusive_discover;
 
     unsigned long long flags;
 
@@ -296,6 +294,7 @@ struct resource_s {
     char *pending_task;
 
     const char *isolation_wrapper;
+    gboolean exclusive_discover;
 };
 
 struct pe_action_s {

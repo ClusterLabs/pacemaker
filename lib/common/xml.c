@@ -3430,9 +3430,15 @@ dump_xml_attr(xmlAttrPtr attr, int options, char **buffer, int *offset, int *max
 {
     char *p_value = NULL;
     const char *p_name = NULL;
+    xml_private_t *p = NULL;
 
     CRM_ASSERT(buffer != NULL);
     if (attr == NULL || attr->children == NULL) {
+        return;
+    }
+
+    p = attr->_private;
+    if (p && is_set(p->flags, xpf_deleted)) {
         return;
     }
 
@@ -3812,6 +3818,10 @@ dump_xml_comment(xmlNode * data, int options, char **buffer, int *offset, int *m
 void
 crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, int depth)
 {
+    if(data == NULL) {
+        *offset = 0;
+        *max = 0;
+    }
 #if 0
     if (is_not_set(options, xml_log_option_filtered)) {
         /* Turning this code on also changes the PE tests for some reason
@@ -4564,6 +4574,8 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
     /* changes to name/value pairs */
     for (xIter = crm_first_attr(left); xIter != NULL; xIter = xIter->next) {
         const char *prop_name = (const char *)xIter->name;
+        xmlAttrPtr right_attr = NULL;
+        xml_private_t *p = NULL;
 
         if (strcmp(prop_name, XML_ATTR_ID) == 0) {
             continue;
@@ -4582,8 +4594,13 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
             continue;
         }
 
+        right_attr = xmlHasProp(right, (const xmlChar *)prop_name);
+        if (right_attr) {
+            p = right_attr->_private;
+        }
+
         right_val = crm_element_value(right, prop_name);
-        if (right_val == NULL) {
+        if (right_val == NULL || (p && is_set(p->flags, xpf_deleted))) {
             /* new */
             *changed = TRUE;
             if (full) {

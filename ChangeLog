@@ -1,4 +1,218 @@
 
+* Wed Jun 24 2015 Andrew Beekhof <andrew@beekhof.net> Pacemaker-1.1.13-1
+- Update source tarball to revision: 2a1847e
+- Changesets: 750
+- Diff:       156 files changed, 11323 insertions(+), 3725 deletions(-)
+
+- Features added since Pacemaker-1.1.12
+  + Allow fail-counts to be removed en-mass when the new attrd is in operation
+  + attrd supports private attributes (not written to CIB)
+  + crmd: Ensure a watchdog device is in use if stonith-watchdog-timeout is configured
+  + crmd: If configured, trigger the watchdog immediately if we loose quorum and no-quorum-policy=suicide
+  + crm_diff: Support generating a difference without versions details if --no-version/-u is supplied
+  + crm_resource: Implement an intelligent restart capability
+  + Fencing: Advertise the watchdog device for fencing operations
+  + Fencing: Allow the cluster to recover resources if the watchdog is in use
+  + fencing: cl#5134 - Support random fencing delay to avoid double fencing
+  + mcp: Allow orphan children to initiate node panic via SIGQUIT
+  + mcp: Turn on sbd integration if pacemakerd finds it running
+  + mcp: Two new error codes that result in machine reset or power off
+  + Officially support the resource-discovery attribute for location constraints
+  + PE: Allow natural ordering of colocation sets
+  + PE: Support non-actionable degraded mode for OCF
+  + pengine: cl#5207 - Display "UNCLEAN" for resources running on unclean offline nodes
+  + remote: pcmk remote client tool for use with container wrapper script
+  + Support machine panics for some kinds of errors (via sbd if available)
+  + tools: add crm_resource --wait option
+  + tools: attrd_updater supports --query and --all options
+  + tools: attrd_updater: Allow attributes to be set for other nodes
+
+- Changes since Pacemaker-1.1.12
+  + pengine: exclusive discovery implies rsc is only allowed on exclusive subset of nodes
+  + acl: Correctly implement the 'reference' acl directive
+  + acl: Do not delay evaluation of added nodes in some situations
+  + attrd: b22b1fe did uuid test too early
+  + attrd: Clean out the node cache when requested by the admin
+  + attrd: fixes double free in attrd legacy
+  + attrd: properly write attributes for peers once uuid is discovered
+  + attrd: refresh should force an immediate write-out of all attributes
+  + attrd: Simplify how node deletions happen
+  + Bug rhbz#1067544 - Tools: Correctly handle --ban, --move and --locate for master/slave groups
+  + Bug rhbz#1181824 - Ensure the DC can be reliably fenced
+  + cib: Ability to upgrade cib validation schema in legacy mode
+  + cib: Always generate digests for cib diffs in legacy mode
+  + cib: assignment where comparison intended
+  + cib: Avoid nodeid conflicts we don't care about
+  + cib: Correctly add "update-origin", "update-client" and "update-user" attributes for cib
+  + cib: Correctly set up signal handlers
+  + cib: Correctly track node state
+  + cib: Do not update on disk backups if we're just querying them
+  + cib: Enable cib legacy mode for plugin-based clusters
+  + cib: Ensure file-based backends treat '-o section' consistently with the native backend
+  + cib: Ensure upgrade operations from a non-DC get an acknowledgement
+  + cib: No need to enforce cib digests for v2 diffs in legacy mode
+  + cib: Revert d153b86 to instantly get cib synchronized in legacy mode
+  + cib: tls sock cleanup for remote cib connections
+  + cli: Ensure subsequent unknown long options are correctly detected
+  + cluster: Invoke crm_remove_conflicting_peer() only when the new node's uname is being assigned in the node cache
+  + common: Increment current and age for lib common as a result of APIs being added
+  + corosync:  Bug cl#5232 - Somewhat gracefully handle nodes with invalid UUIDs
+  + corosync: Avoid unnecessary repeated CMAP API calls
+  + crmd/pengine: handle on-fail=ignore properly
+  + crmd: Add "on_node" attribute for *_last_failure_0 lrm resource operations
+  + crmd: All peers need to track node shutdown requests
+  + crmd: Cached copies of transient attributes cease to be valid once a node leaves the membership
+  + crmd: Correctly add the local option that validates against schema for pengine to calculate
+  + crmd: Disable debug logging that results in significant overhead
+  + crmd: do not remove connection resources during re-probe
+  + crmd: don't update fail count twice for same failure
+  + crmd: Ensure remote connection resources timeout properly during 'migrate_from' action
+  + crmd: Ensure throttle_mode() does something on Linux
+  + crmd: Fixes crash when remote connection migration fails
+  + crmd: gracefully handle remote node disconnects during op execution
+  + crmd: Handle remote connection failures while executing ops on remote connection
+  + crmd: include remote nodes when forcing cluster wide resource reprobe
+  + crmd: never stop recurring monitor ops for pcmk remote during incomplete migration
+  + crmd: Prevent the old version of DC from being fenced when it shuts down for rolling-upgrade
+  + crmd: Prevent use-of-NULL during reprobe
+  + crmd: properly update job limit for baremetal remote-nodes
+  + crmd: Remote-node throttle jobs count towards cluster-node hosting conneciton rsc
+  + crmd: Reset stonith failcount to recover transitioner when the node rejoins
+  + crmd: resolves memory leak in crmd.
+  + crmd: respect start-failure-is-fatal even for artifically injected events
+  + crmd: Wait for all pending operations to complete before poking the policy engine
+  + crmd: When container's host is fenced, cancel in-flight operations
+  + crm_attribute: Correctly update config options when -o crm_config is specified
+  + crm_failcount: Better error reporting when no resource is specified
+  + crm_mon: add exit reason to resource failure output
+  + crm_mon: Fill CRM_notify_node in traps with node's uname rather than node's id if possible
+  + crm_mon: Repair notification delivery when the v2 patch format is in use
+  + crm_node: Correctly remove nodes from the CIB by nodeid
+  + crm_report: More patterns for finding logs on non-DC nodes
+  + crm_resource: Allow resource restart operations to be node specific
+  + crm_resource: avoid deletion of lrm cache on node with resource discovery disabled.
+  + crm_resource: Calculate how long to wait for a restart based on the resource timeouts
+  + crm_resource: Clean up memory in --restart error paths
+  + crm_resource: Display the locations of all anonymous clone children when supplying the children's common ID
+  + crm_resource: Ensure --restart sets/clears meta attributes
+  + crm_resource: Ensure fail-counts are purged when we redetect the state of all resources
+  + crm_resource: Implement --timeout for resource restart operations
+  + crm_resource: Include group members when calculating the next timeout
+  + crm_resource: Memory leak in error paths
+  + crm_resource: Prevent use-after-free
+  + crm_resource: Repair regression test outputs
+  + crm_resource: Use-after-free when restarting a resource
+  + dbus: ref count leaks
+  + dbus: Ensure both the read and write queues get dispatched
+  + dbus: Fail gracefully if malloc fails
+  + dbus: handle dispatch queue when multiple replies need to be processed
+  + dbus: Notice when dbus connections get disabled
+  + dbus: Remove double-free introduced while trying to make coverity shut up
+  + ensure if B is colocated with A, B can never run without A
+  + fence_legacy: Avoid passing 'port' to cluster-glue agents
+  + fencing: Allow nodes to be purged from the member cache
+  + fencing: Correctly make args for fencing agents
+  + fencing: Correctly wait for self-fencing to occur when the watchdog is in use
+  + fencing: Ensure the hostlist parameter is set for watchdog agents
+  + fencing: Force 'stonith-ng' as the system name
+  + fencing: Gracefully handle invalid metadata from agents
+  + fencing: If configured, wait stonith-watchdog-timer seconds for self-fencing to complete
+  + fencing: Reject actions for devices that haven't been explicitly registered yet
+  + ipc: properly allocate server enforced buffer size on client
+  + ipc: use server enforced buffer during ipc client send
+  + lrmd, services: interpret LSB status codes properly
+  + lrmd: add back support for class heartbeat agents
+  + lrmd: cancel pending async connection during disconnect
+  + lrmd: enable ipc proxy for docker-wrapper privileged mode
+  + lrmd: fix rescheduling of systemd monitor op during start
+  + lrmd: Handle systemd reporting 'done' before a resource is actually stopped
+  + lrmd: Hint to child processes that using sd_notify is not required
+  + lrmd: Log with the correct personality
+  + lrmd: Prevent glib assert triggered by timers being removed from mainloop more than once
+  + lrmd: report original timeout when systemd operation completes
+  + lrmd: store failed operation exit reason in cib
+  + mainloop: resolves race condition mainloop poll involving modification of ipc connections
+  + make targetted reprobe for remote node work, crm_resource -C -N <remote node>
+  + mcp: Allow a configurable delay when debugging shutdown issues
+  + mcp: Avoid requiring 'export' for SYS-V sysconfig options
+  + Membership: Detect and resolve nodes that change their ID
+  + pacemakerd: resolves memory leak of xml structure in pacemakerd
+  + pengine: ability to launch resources in isolated containers
+  + pengine: add #kind=remote for baremetal remote-nodes
+  + pengine: allow baremetal remote-nodes to recover without requiring fencing when cluster-node fails
+  + pengine: allow remote-nodes to be placed in maintenance mode
+  + pengine: Avoid trailing whitespaces when printing resource state
+  + pengine: cl#5130 - Choose nodes capable of running all the colocated utilization resources
+  + pengine: cl#5130 - Only check the capacities of the nodes that are allowed to run the resource
+  + pengine: Correctly compare feature set to determine how to unpack meta attributes
+  + pengine: disable migrations for resources with isolation containers
+  + pengine: disable reloading of resources within isolated container wrappers
+  + pengine: Do not aggregate children in a pending state into the started/stopped/etc lists
+  + pengine: Do not record duplicate copies of the failed actions
+  + pengine: Do not reschedule monitors that are no longer needed while resource definitions have changed
+  + pengine: Fence baremetal remote when recurring monitor op fails
+  + pengine: Fix colocation with unmanaged resources
+  + pengine: Fix the behaviors of multi-state resources with asymmetrical ordering
+  + pengine: fixes pengine crash with orphaned remote node connection resource
+  + pengine: fixes segfault caused by malformed log warning
+  + pengine: handle cloned isolated resources in a sane way
+  + pengine: handle isolated resource scenario, cloned group of isolated resources
+  + pengine: Handle ordering between stateful and migratable resources
+  + pengine: imply stop in container node resources when host node is fenced
+  + pengine: only fence baremetal remote when connection can fails or can not be recovered
+  + pengine: only kill process group on timeout when on-fail does not equal block.
+  + pengine: per-node control over resource discovery
+  + pengine: prefer migration target for remote node connections
+  + pengine: prevent disabling rsc discovery per node in certain situations
+  + pengine: Prevent use-after-free in sort_rsc_process_order()
+  + pengine: properly handle ordering during remote connection partial migration
+  + pengine: properly recover remote-nodes when cluster-node proxy goes offline
+  + pengine: remove unnecessary whitespace from notify environment variables
+  + pengine: require-all feature for ordered clones
+  + pengine: Resolve memory leaks
+  + pengine: resource discovery mode for location constraints
+  + pengine: restart master instances on instance attribute changes
+  + pengine: Turn off legacy unpacking of resource options into the meta hashtable
+  + pengine: Watchdog integration is sufficient for fencing
+  + Perform systemd reloads asynchronously
+  + ping: Correctly advertise multiplier default
+  + Prefer to inherit the  watchdog timeout from SBD
+  + properly record stop args after reload
+  + provide fake meta data for ra class heartbeat
+  + remote: report timestamps for remote connection resource operations
+  + remote: Treat recv msg timeout as a disconnect
+  + service: Prevent potential use-of-NULL in metadata lookups
+  + solaris: Allow compilation when dirent.d_type is not available
+  + solaris: Correctly replace the linux swab functions
+  + solaris: Disable throttling since /proc doesn't exist
+  + stonith-ng: Correctly observe the watchdog completion timeout
+  + stonith-ng: Correctly track node state
+  + stonith-ng: Reset mainloop source IDs after removing them
+  + systemd: Correctly handle long running stop actions
+  + systemd: Ensure failed monitor operations always return
+  + systemd: Ensure we don't call dbus_message_unref() with NULL
+  + systemd: fix crash caused when canceling in-flight operation
+  + systemd: Kindly ask dbus NOT to kill the process if the dbus connection fails
+  + systemd: Perform actions asynchronously
+  + systemd: Perform monitor operations without blocking
+  + systemd: Tell systemd not to take DBus down from underneath us
+  + systemd: Trick systemd into not stopping our services before us during shutdown
+  + tools: Improve crm_mon output with certain option combinations
+  + upstart: Monitor actions always return 'ok' or 'not running'
+  + upstart: Perform more parts of monitor operations without blocking
+  + xml: add 'require-all' to xml schema for constraints
+  + xml: cl#5231 - Unset the deleted attributes in the resulting diffs
+  + xml: Clone the latest constraint schema in preparation for changes"
+  + xml: Correctly create v1 patchsets when deleting attributes
+  + xml: Do not change the ordering of properties when applying v1 cib diffs
+  + xml: Do not dump deleted attributes
+  + xml: Do not prune leaves from v1 cib diffs that are being created with digests
+  + xml: Ensure ACLs are reapplied before calculating what a replace operation changed
+  + xml: Fix upgrade-1.3.xsl to correctly transform ACL rules with "attribute"
+  + xml: Prevent assert errors in crm_element_value() on applying a patch without version information
+  + xml: Prevent potential use-of-NULL
+
+
 * Tue Jul 22 2014 Andrew Beekhof <andrew@beekhof.net> Pacemaker-1.1.12-1
 - Update source tarball to revision: 93a037d
 - Changesets: 795
