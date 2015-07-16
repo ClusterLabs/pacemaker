@@ -56,12 +56,17 @@
 typedef struct device_properties_s {
     /* Whether access to this device has been verified */
     gboolean verified;
-    /* Action-specific timeout */
-    int custom_action_timeout;
-    /* Action-specific maximum random delay */
-    int delay_max;
-    /* Whether this device has been executed */
-    gboolean executed;
+
+    /* The remaining members are indexed by the operation's "phase" */
+
+    /* Whether this device has been executed in each phase */
+    gboolean executed[3];
+    /* Whether this device is disallowed from executing in each phase */
+    gboolean disallowed[3];
+    /* Action-specific timeout for each phase */
+    int custom_action_timeout[3];
+    /* Action-specific maximum random delay for each phase */
+    int delay_max[3];
 } device_properties_t;
 
 typedef struct st_query_result_s {
@@ -105,6 +110,7 @@ free_remote_query(gpointer data)
 }
 
 struct peer_count_data {
+    const remote_fencing_op_t *op;
     gboolean verified_only;
     int count;
 };
@@ -123,7 +129,7 @@ count_peer_device(gpointer key, gpointer value, gpointer user_data)
     device_properties_t *props = (device_properties_t*)value;
     struct peer_count_data *data = user_data;
 
-    if (!props->executed
+    if (!props->executed[data->op->phase]
         && (!data->verified_only || props->verified)) {
         ++(data->count);
     }
@@ -133,16 +139,19 @@ count_peer_device(gpointer key, gpointer value, gpointer user_data)
  * \internal
  * \brief Check the number of available devices in a peer's query results
  *
+ * \param[in] op             Operation that results are for
  * \param[in] peer           Peer to count
  * \param[in] verified_only  Whether to count only verified devices
  *
  * \return Number of devices available to peer that were not already executed
  */
 static int
-count_peer_devices(const st_query_result_t *peer, gboolean verified_only)
+count_peer_devices(const remote_fencing_op_t *op, const st_query_result_t *peer,
+                   gboolean verified_only)
 {
     struct peer_count_data data;
 
+    data.op = op;
     data.verified_only = verified_only;
     data.count = 0;
     if (peer) {
@@ -155,23 +164,27 @@ count_peer_devices(const st_query_result_t *peer, gboolean verified_only)
  * \internal
  * \brief Search for a device in a query result
  *
+ * \param[in] op      Operation that result is for
  * \param[in] peer    Query result for a peer
  * \param[in] device  Device ID to search for
  *
  * \return Device properties if found, NULL otherwise
  */
 static device_properties_t *
-find_peer_device(const st_query_result_t *peer, const char *device)
+find_peer_device(const remote_fencing_op_t *op, const st_query_result_t *peer,
+                 const char *device)
 {
     device_properties_t *props = g_hash_table_lookup(peer->devices, device);
 
-    return (props && !props->executed)? props : NULL;
+    return (props && !props->executed[op->phase]
+           && !props->disallowed[op->phase])? props : NULL;
 }
 
 /*!
  * \internal
  * \brief Find a device in a peer's device list and mark it as executed
  *
+ * \param[in]     op                     Operation that peer result is for
  * \param[in,out] peer                   Peer with results to search
  * \param[in]     device                 ID of device to mark as done
  * \param[in]     verified_devices_only  Only consider verified devices
@@ -179,33 +192,34 @@ find_peer_device(const st_query_result_t *peer, const char *device)
  * \return TRUE if device was found and marked, FALSE otherwise
  */
 static gboolean
-grab_peer_device(st_query_result_t *peer, const char *device,
-                 gboolean verified_devices_only)
+grab_peer_device(const remote_fencing_op_t *op, st_query_result_t *peer,
+                 const char *device, gboolean verified_devices_only)
 {
-    device_properties_t *props = find_peer_device(peer, device);
+    device_properties_t *props = find_peer_device(op, peer, device);
 
     if ((props == NULL) || (verified_devices_only && !props->verified)) {
         return FALSE;
     }
 
     crm_trace("Removing %s from %s (%d remaining)",
-              device, peer->host, count_peer_devices(peer, FALSE));
-    props->executed = TRUE;
+              device, peer->host, count_peer_devices(op, peer, FALSE));
+    props->executed[op->phase] = TRUE;
     return TRUE;
 }
 
 /*
  * \internal
- * \brief Free the list of required devices
+ * \brief Free the list of required devices for a particular phase
  *
  * \param[in,out] op     Operation to modify
+ * \param[in]     phase  Phase to modify
  */
 static void
-free_required_list(remote_fencing_op_t *op)
+free_required_list(remote_fencing_op_t *op, enum st_remap_phase phase)
 {
-    if (op->required_list) {
-        g_list_free_full(op->required_list, free);
-        op->required_list = NULL;
+    if (op->required_list[phase]) {
+        g_list_free_full(op->required_list[phase], free);
+        op->required_list[phase] = NULL;
     }
 }
 
@@ -254,7 +268,9 @@ free_remote_op(gpointer data)
         g_list_free_full(op->devices_list, free);
         op->devices_list = NULL;
     }
-    free_required_list(op);
+    free_required_list(op, st_phase_requested);
+    free_required_list(op, st_phase_off);
+    free_required_list(op, st_phase_on);
     free(op);
 }
 
@@ -544,25 +560,28 @@ topology_is_empty(stonith_topology_t *tp)
 
 /*
  * \internal
- * \brief Add a device to the required list
+ * \brief Add a device to the required list for a particular phase
  *
  * \param[in,out] op      Operation to modify
+ * \param[in]     phase   Phase to modify
  * \param[in]     device  Device ID to add
  */
 static void
-add_required_device(remote_fencing_op_t * op, const char *device)
+add_required_device(remote_fencing_op_t *op, enum st_remap_phase phase,
+                    const char *device)
 {
-    GListPtr match  = g_list_find_custom(op->required_list, device, sort_strings);
-    if (match) {
-        /* device already marked required */
-        return;
+    GListPtr match  = g_list_find_custom(op->required_list[phase], device,
+                                         sort_strings);
+
+    if (!match) {
+        op->required_list[phase] = g_list_prepend(op->required_list[phase],
+                                                  strdup(device));
     }
-    op->required_list = g_list_prepend(op->required_list, strdup(device));
 }
 
 /*
  * \internal
- * \brief Remove a device from the required list
+ * \brief Remove a device from the required list for the current phase
  *
  * \param[in,out] op      Operation to modify
  * \param[in]     device  Device ID to remove
@@ -570,11 +589,12 @@ add_required_device(remote_fencing_op_t * op, const char *device)
 static void
 remove_required_device(remote_fencing_op_t *op, const char *device)
 {
-    GListPtr match = g_list_find_custom(op->required_list, device,
+    GListPtr match = g_list_find_custom(op->required_list[op->phase], device,
                                         sort_strings);
 
     if (match) {
-        op->required_list = g_list_remove(op->required_list, match->data);
+        op->required_list[op->phase] = g_list_remove(op->required_list[op->phase],
+                                                     match->data);
     }
 }
 
@@ -967,12 +987,12 @@ find_best_peer(const char *device, remote_fencing_op_t * op, enum find_best_peer
 
         if (is_set(op->call_options, st_opt_topology)) {
 
-            if (grab_peer_device(peer, device, verified_devices_only)) {
+            if (grab_peer_device(op, peer, device, verified_devices_only)) {
                 return peer;
             }
 
         } else if ((peer->tried == FALSE)
-                   && count_peer_devices(peer, verified_devices_only)) {
+                   && count_peer_devices(op, peer, verified_devices_only)) {
 
             /* No topology: Use the current best peer */
             crm_trace("Simple fencing");
@@ -993,11 +1013,14 @@ stonith_choose_peer(remote_fencing_op_t * op)
     do {
         if (op->devices) {
             device = op->devices->data;
-            crm_trace("Checking for someone to fence %s with %s", op->target, device);
+            crm_trace("Checking for someone to fence (%s) %s with %s",
+                      op->action, op->target, device);
         } else {
-            crm_trace("Checking for someone to fence %s", op->target);
+            crm_trace("Checking for someone to fence (%s) %s",
+                      op->action, op->target);
         }
 
+        /* Best choice is a peer other than the target with verified access */
         peer = find_best_peer(device, op, FIND_PEER_SKIP_TARGET|FIND_PEER_VERIFIED_ONLY);
         if (peer) {
             crm_trace("Found verified peer %s for %s", peer->host, device?device:"<any>");
@@ -1009,23 +1032,33 @@ stonith_choose_peer(remote_fencing_op_t * op)
             return NULL;
         }
 
+        /* If no other peer has verified access, next best is unverified access */
         peer = find_best_peer(device, op, FIND_PEER_SKIP_TARGET);
         if (peer) {
             crm_trace("Found best unverified peer %s", peer->host);
             return peer;
         }
 
-        peer = find_best_peer(device, op, FIND_PEER_TARGET_ONLY);
-        if(peer) {
-            crm_trace("%s will fence itself", peer->host);
-            return peer;
+        /* If no other peer can do it, last option is self-fencing
+         * (which is never allowed for the "on" phase of a remapped reboot)
+         */
+        if (op->phase != st_phase_on) {
+            peer = find_best_peer(device, op, FIND_PEER_TARGET_ONLY);
+            if (peer) {
+                crm_trace("%s will fence itself", peer->host);
+                return peer;
+            }
         }
 
-        /* Try the next fencing level if there is one */
-    } while (is_set(op->call_options, st_opt_topology)
+        /* Try the next fencing level if there is one (unless we're in the "on"
+         * phase of a remapped "reboot", because we ignore errors in that case)
+         */
+    } while ((op->phase != st_phase_on)
+             && is_set(op->call_options, st_opt_topology)
              && stonith_topology_next(op) == pcmk_ok);
 
-    crm_notice("Couldn't find anyone to fence %s with %s", op->target, device?device:"<any>");
+    crm_notice("Couldn't find anyone to fence (%s) %s with %s",
+               op->action, op->target, (device? device : "any device"));
     return NULL;
 }
 
@@ -1044,9 +1077,9 @@ get_device_timeout(const remote_fencing_op_t *op, const st_query_result_t *peer,
         return op->base_timeout;
     }
 
-    return (props->custom_action_timeout?
-           props->custom_action_timeout : op->base_timeout)
-           + props->delay_max;
+    return (props->custom_action_timeout[op->phase]?
+           props->custom_action_timeout[op->phase] : op->base_timeout)
+           + props->delay_max[op->phase];
 }
 
 struct timeout_data {
@@ -1070,7 +1103,8 @@ add_device_timeout(gpointer key, gpointer value, gpointer user_data)
     device_properties_t *props = value;
     struct timeout_data *timeout = user_data;
 
-    if (!props->executed) {
+    if (!props->executed[timeout->op->phase]
+        && !props->disallowed[timeout->op->phase]) {
         timeout->total_timeout += get_device_timeout(timeout->op,
                                                      timeout->peer, device_id);
     }
@@ -1117,7 +1151,7 @@ get_op_total_timeout(const remote_fencing_op_t *op,
                 for (iter = op->query_results; iter != NULL; iter = iter->next) {
                     const st_query_result_t *peer = iter->data;
 
-                    if (find_peer_device(peer, device_list->data)) {
+                    if (find_peer_device(op, peer, device_list->data)) {
                         total_timeout += get_device_timeout(op, peer,
                                                             device_list->data);
                         break;
@@ -1212,7 +1246,7 @@ advance_op_topology(remote_fencing_op_t *op, const char *device, xmlNode *msg,
      * run through any required devices not already executed
      */
     if (op->devices == NULL) {
-        op->devices = op->required_list;
+        op->devices = op->required_list[op->phase];
     }
 
     if (op->devices) {
@@ -1294,16 +1328,18 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
         }
 
         if(stonith_watchdog_timeout_ms > 0 && device && safe_str_eq(device, "watchdog")) {
-            crm_notice("Waiting %ds for %s to self-terminate for %s.%.8s (%p)",
-                       stonith_watchdog_timeout_ms/1000, op->target, op->client_name, op->id, device);
+            crm_notice("Waiting %ds for %s to self-fence (%s) for %s.%.8s (%p)",
+                       stonith_watchdog_timeout_ms/1000, op->target,
+                       op->action, op->client_name, op->id, device);
             op->op_timer_one = g_timeout_add(stonith_watchdog_timeout_ms, remote_op_watchdog_done, op);
 
             /* TODO check devices to verify watchdog will be in use */
         } else if(stonith_watchdog_timeout_ms > 0
                   && safe_str_eq(peer->host, op->target)
                   && safe_str_neq(op->action, "on")) {
-            crm_notice("Waiting %ds for %s to self-terminate for %s.%.8s (%p)",
-                       stonith_watchdog_timeout_ms/1000, op->target, op->client_name, op->id, device);
+            crm_notice("Waiting %ds for %s to self-fence (%s) for %s.%.8s (%p)",
+                       stonith_watchdog_timeout_ms/1000, op->target,
+                       op->action, op->client_name, op->id, device);
             op->op_timer_one = g_timeout_add(stonith_watchdog_timeout_ms, remote_op_watchdog_done, op);
 
         } else {
@@ -1317,12 +1353,13 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
         return;
 
     } else if (op->owner == FALSE) {
-        crm_err("The termination of %s for %s is not ours to control", op->target, op->client_name);
+        crm_err("Fencing (%s) of %s for %s is not ours to control",
+                op->action, op->target, op->client_name);
 
     } else if (op->query_timer == 0) {
         /* We've exhausted all available peers */
-        crm_info("No remaining peers capable of terminating %s for %s (%d)", op->target,
-                 op->client_name, op->state);
+        crm_info("No remaining peers capable of fencing (%s) %s for %s (%d)",
+                 op->target, op->action, op->client_name, op->state);
         CRM_LOG_ASSERT(op->state < st_done);
         remote_op_timeout(op);
 
@@ -1332,33 +1369,37 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
         /* if the operation never left the query state,
          * but we have all the expected replies, then no devices
          * are available to execute the fencing operation. */
+
         if(stonith_watchdog_timeout_ms && (device == NULL || safe_str_eq(device, "watchdog"))) {
-            crm_notice("Waiting %ds for %s to self-terminate for %s.%.8s (%p)",
-                     stonith_watchdog_timeout_ms/1000, op->target, op->client_name, op->id, device);
+            crm_notice("Waiting %ds for %s to self-fence (%s) for %s.%.8s (%p)",
+                     stonith_watchdog_timeout_ms/1000, op->target,
+                     op->action, op->client_name, op->id, device);
 
             op->op_timer_one = g_timeout_add(stonith_watchdog_timeout_ms, remote_op_watchdog_done, op);
             return;
         }
 
         if (op->state == st_query) {
-           crm_info("None of the %d peers have devices capable of terminating %s for %s (%d)",
-                   op->replies, op->target, op->client_name, op->state);
+           crm_info("None of the %d peers have devices capable of fencing (%s) %s for %s (%d)",
+                   op->replies, op->action, op->target, op->client_name,
+                   op->state);
 
             rc = -ENODEV;
         } else {
-           crm_info("None of the %d peers are capable of terminating %s for %s (%d)",
-                   op->replies, op->target, op->client_name, op->state);
+           crm_info("None of the %d peers are capable of fencing (%s) %s for %s (%d)",
+                   op->replies, op->action, op->target, op->client_name,
+                   op->state);
         }
 
         op->state = st_failed;
         remote_op_done(op, NULL, rc, FALSE);
 
     } else if (device) {
-        crm_info("Waiting for additional peers capable of terminating %s with %s for %s.%.8s",
-                 op->target, device, op->client_name, op->id);
+        crm_info("Waiting for additional peers capable of fencing (%s) %s with %s for %s.%.8s",
+                 op->action, op->target, device, op->client_name, op->id);
     } else {
-        crm_info("Waiting for additional peers capable of terminating %s for %s%.8s",
-                 op->target, op->client_name, op->id);
+        crm_info("Waiting for additional peers capable of fencing (%s) %s for %s%.8s",
+                 op->action, op->target, op->client_name, op->id);
     }
 }
 
@@ -1415,7 +1456,7 @@ all_topology_devices_found(remote_fencing_op_t * op)
                 if (skip_target && safe_str_eq(peer->host, op->target)) {
                     continue;
                 }
-                match = find_peer_device(peer, device->data);
+                match = find_peer_device(op, peer, device->data);
             }
             if (!match) {
                 return FALSE;
@@ -1434,41 +1475,45 @@ all_topology_devices_found(remote_fencing_op_t * op)
  * \param[in]     peer    Name of peer that sent XML (for logs)
  * \param[in]     device  Device ID (for logs)
  * \param[in]     action  Action the properties relate to
+ * \param[in]     phase   Phase the properties relate to
  * \param[in,out] props   Device properties to update
  */
 static void
 parse_action_specific(xmlNode *xml, const char *peer, const char *device,
                       const char *action, remote_fencing_op_t *op,
-                      device_properties_t *props)
+                      enum st_remap_phase phase, device_properties_t *props)
 {
     int required;
 
-    props->custom_action_timeout = 0;
+    props->custom_action_timeout[phase] = 0;
     crm_element_value_int(xml, F_STONITH_ACTION_TIMEOUT,
-                          &props->custom_action_timeout);
-    if (props->custom_action_timeout) {
+                          &props->custom_action_timeout[phase]);
+    if (props->custom_action_timeout[phase]) {
         crm_trace("Peer %s with device %s returned %s action timeout %d",
-                  peer, device, action, props->custom_action_timeout);
+                  peer, device, action, props->custom_action_timeout[phase]);
     }
 
-    props->delay_max = 0;
-    crm_element_value_int(xml, F_STONITH_DELAY_MAX, &props->delay_max);
-    if (props->delay_max) {
+    props->delay_max[phase] = 0;
+    crm_element_value_int(xml, F_STONITH_DELAY_MAX, &props->delay_max[phase]);
+    if (props->delay_max[phase]) {
         crm_trace("Peer %s with device %s returned maximum of random delay %d for %s",
-                  peer, device, props->delay_max, action);
+                  peer, device, props->delay_max[phase], action);
     }
 
     required = 0;
     crm_element_value_int(xml, F_STONITH_DEVICE_REQUIRED, &required);
     if (required) {
         /* If the action is marked as required, add the device to the
-         * operation's list of required devices. We use this
-         * for unfencing when executing a topology.
-         * Required devices get executed regardless of their topology level.
+         * operation's list of required devices for this phase. We use this
+         * for unfencing when executing a topology. In phase 0 (requested
+         * action) or phase 1 (remapped "off"), required devices get executed
+         * regardless of their topology level; in phase 2 (remapped "on"),
+         * required devices are not attempted, because the cluster will
+         * execute them automatically later.
          */
         crm_trace("Peer %s requires device %s to execute for action %s",
                   peer, device, action);
-        add_required_device(op, device);
+        add_required_device(op, phase, device);
     }
 }
 
@@ -1502,7 +1547,7 @@ add_device_properties(xmlNode *xml, remote_fencing_op_t *op,
 
     /* Parse action-specific device properties */
     parse_action_specific(xml, result->host, device, op->action,
-                          op, props);
+                          op, st_phase_requested, props);
 }
 
 /*
@@ -1616,7 +1661,7 @@ process_remote_stonith_query(xmlNode * msg)
         }
 
     } else if (op->state == st_query) {
-        int nverified = count_peer_devices(result, TRUE);
+        int nverified = count_peer_devices(op, result, TRUE);
 
         /* We have a result for a non-topology fencing op that looks promising,
          * go ahead and start fencing before query timeout */
