@@ -28,7 +28,7 @@ Pacemaker's key features include:
  * Detection and recovery of node and service-level failures
  * Storage agnostic, no requirement for shared storage
  * Resource agnostic, anything that can be scripted can be clustered
- * Supports 'fencing' (also known under 'STONITH' acronym,
+ * Supports 'fencing' (also referred to as the 'STONITH' acronym,
    <<s-intro-stonith,deciphered>> later on) for ensuring data integrity
  * Supports large and small clusters
  * Supports both quorate and resource-driven clusters
