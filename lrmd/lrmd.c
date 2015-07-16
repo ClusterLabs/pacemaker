@@ -219,6 +219,7 @@ free_lrmd_cmd(lrmd_cmd_t * cmd)
     }
     free(cmd->origin);
     free(cmd->action);
+    free(cmd->real_action);
     free(cmd->userdata_str);
     free(cmd->rsc_id);
     free(cmd->output);

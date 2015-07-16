@@ -438,6 +438,13 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
 
     if (cib_shutdown_flag && crm_active_peers() < 2 && crm_hash_table_size(client_connections) == 0) {
         crm_info("No more peers");
+        /* @TODO
+         * terminate_cib() calls crm_cluster_disconnect() which calls
+         * crm_peer_destroy() which destroys the peer caches, which a peer
+         * status callback shouldn't do. For now, there is a workaround in
+         * crm_update_peer_proc(), but CIB should be refactored to avoid
+         * destroying the peer caches here.
+         */
         terminate_cib(__FUNCTION__, FALSE);
     }
 }

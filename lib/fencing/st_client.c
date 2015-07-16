@@ -1285,7 +1285,10 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
 
             CRM_LOG_ASSERT(match != NULL);
             if(match != NULL) {
-                crm_info("%s[%d] = %s", "//@agent", lpc, xmlGetNodePath(match));
+                xmlChar *match_path = xmlGetNodePath(match);
+
+                crm_info("%s[%d] = %s", "//@agent", lpc, match_path);
+                free(match_path);
                 *devices = stonith_key_value_add(*devices, NULL, crm_element_value(match, XML_ATTR_ID));
             }
         }

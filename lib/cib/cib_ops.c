@@ -373,7 +373,10 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
 
         for (lpc = 0; lpc < max; lpc++) {
             xmlNode *match = getXpathResult(xpathObj, lpc);
-            crm_debug("Destroying %s", (char *)xmlGetNodePath(match));
+            xmlChar *match_path = xmlGetNodePath(match);
+
+            crm_debug("Destroying %s", match_path);
+            free(match_path);
             free_xml(match);
         }
 
