@@ -256,7 +256,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     resource_t *rsc_then = NULL;
     resource_t *rsc_first = NULL;
     gboolean invert_bool = TRUE;
-    gboolean require_all = TRUE;
+    int min_required_before = 0;
     enum pe_order_kind kind = pe_order_kind_mandatory;
     enum pe_ordering cons_weight = pe_order_optional;
 
@@ -351,7 +351,15 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         && crm_is_true(require_all_s) == FALSE
         && rsc_first->variant >= pe_clone) {
 
-        require_all = FALSE;
+        /* require-all=false means only one instance of the clone is required */
+        min_required_before = 1;
+    } else if (rsc_first->variant >= pe_clone) {
+        const char *min_clones_s = g_hash_table_lookup(rsc_first->meta, XML_RSC_ATTR_INCARNATION_MIN);
+        if (min_clones_s) {
+            /* if clone min is set, we require at a minimum X number of instances
+             * to be runnable before allowing dependencies to be runnable. */
+            min_required_before = crm_parse_int(min_clones_s, "0");
+        }
     }
 
     cons_weight = pe_order_optional;
@@ -368,22 +376,31 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         cons_weight |= get_flags(id, kind, action_first, action_then, FALSE);
     }
 
-    if (require_all == FALSE) {
+    /* If there is a minimum number of instances that must be runnable before
+     * the 'then' action is runnable, we use a pseudo action as an intermediate step
+     * start min number of clones -> pseudo action is runnable -> dependency runnable. */
+    if (min_required_before) {
         GListPtr rIter = NULL;
         char *task = crm_concat(CRM_OP_RELAXED_CLONE, id, ':');
         action_t *unordered_action = get_pseudo_op(task, data_set);
         free(task);
 
+        /* require the pseudo action to have "min_required_before" number of
+         * actions to be considered runnable before allowing the pseudo action
+         * to be runnable. */ 
+        unordered_action->required_runnable_before = min_required_before;
         update_action_flags(unordered_action, pe_action_requires_any);
 
         for (rIter = rsc_first->children; id && rIter; rIter = rIter->next) {
             resource_t *child = rIter->data;
-
+            /* order each clone instance before the pseudo action */
             custom_action_order(child, generate_op_key(child->id, action_first, 0), NULL,
                                 NULL, NULL, unordered_action,
                                 pe_order_one_or_more | pe_order_implies_then_printed, data_set);
         }
 
+        /* order the "then" dependency to occur after the pseudo action only if
+         * the pseudo action is runnable */ 
         order_id = custom_action_order(NULL, NULL, unordered_action,
                        rsc_then, generate_op_key(rsc_then->id, action_then, 0), NULL,
                        cons_weight | pe_order_runnable_left, data_set);

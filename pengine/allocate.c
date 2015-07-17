@@ -1962,7 +1962,6 @@ expand_node_list(GListPtr list)
             if(node_list) {
                 existing_len = strlen(node_list);
             }
-
             crm_trace("Adding %s (%dc) at offset %d", node->details->uname, len - 2, existing_len);
             node_list = realloc_safe(node_list, len + existing_len);
             sprintf(node_list + existing_len, "%s%s", existing_len == 0 ? "":" ", node->details->uname);
