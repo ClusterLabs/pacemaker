@@ -59,7 +59,7 @@ class Environment:
         self["stonith-params"] = "hostlist=all,livedangerously=yes"
         self["loop-minutes"] = 60
         self["valgrind-prefix"] = None
-        self["valgrind-procs"] = "cib crmd attrd pengine stonith-ng"
+        self["valgrind-procs"] = "attrd cib crmd lrmd pengine stonith-ng"
         self["valgrind-opts"] = """--leak-check=full --show-reachable=yes --trace-children=no --num-callers=25 --gen-suppressions=all --suppressions="""+CTSvars.CTS_home+"""/cts.supp"""
 
         self["experimental-tests"] = 0
@@ -577,6 +577,10 @@ class Environment:
 
             elif args[i] == "--valgrind-tests":
                 self["valgrind-tests"] = 1
+
+            elif args[i] == "--valgrind-procs":
+                self["valgrind-procs"] = args[i+1]
+                skipthis = 1
 
             elif args[i] == "--no-loop-tests":
                 self["loop-tests"] = 0
