@@ -343,7 +343,7 @@ http://www.clusterlabs.org/doc/[Clusters from Scratch] guide for those details.
 # cibadmin -C -o resources --xml-file stonith.xml
 ----
 
-. Set stonith-enabled to true:
+. Set +stonith-enabled+ to true:
 +
 ----
 # crm_attribute -t crm_config -n stonith-enabled -v true
@@ -831,3 +831,29 @@ Put together, the configuration looks like this:
   </configuration>
 </cib>
 ----
+
+== Remapping Reboots ==
+
+When the cluster needs to reboot a node, whether because +stonith-action+ is +reboot+ or because
+a reboot was manually requested (such as by `stonith_admin --reboot`), it will remap that to
+other commands in two cases:
+
+. If the chosen fencing device does not support the +reboot+ command, the cluster
+  will ask it to perform +off+ instead.
+
+. If a fencing topology level with multiple devices must be executed, the cluster
+  will ask all the devices to perform +off+, then ask the devices to perform +on+.
+
+To understand the second case, consider the example of a node with redundant
+power supplies connected to intelligent power switches. Rebooting one switch
+and then the other would have no effect on the node. Turning both switches off,
+and then on, actually reboots the node.
+
+In such a case, the fencing operation will be treated as successful as long as
+the +off+ commands succeed, because then it is safe for the cluster to recover
+any resources that were on the node. Timeouts and errors in the +on+ phase will
+be logged but ignored.
+
+When a reboot operation is remapped, any action-specific timeout for the
+remapped action will be used (for example, +pcmk_off_timeout+ will be used when
+executing the +off+ command, not +pcmk_reboot_timeout+).

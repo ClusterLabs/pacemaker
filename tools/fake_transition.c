@@ -65,11 +65,14 @@ inject_transient_attr(xmlNode * cib_node, const char *name, const char *value)
     xmlNode *attrs = NULL;
     xmlNode *container = NULL;
     xmlNode *nvp = NULL;
+    xmlChar *node_path;
     const char *node_uuid = ID(cib_node);
     char *nvp_id = crm_concat(name, node_uuid, '-');
 
-    quiet_log("Injecting attribute %s=%s into %s '%s'", name, value, xmlGetNodePath(cib_node),
+    node_path = xmlGetNodePath(cib_node);
+    quiet_log("Injecting attribute %s=%s into %s '%s'", name, value, node_path,
              ID(cib_node));
+    free(node_path);
 
     attrs = first_named_child(cib_node, XML_TAG_TRANSIENT_NODEATTRS);
     if (attrs == NULL) {

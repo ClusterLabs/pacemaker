@@ -1310,11 +1310,20 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
         goto search_report_results;
     }
 
-    /* Short-circuit the query if the local host is not allowed to perform the
-     * desired action.
-     */
-    if (!localhost_is_eligible(dev, search->action, host,
-                               search->allow_suicide)) {
+    /* Short-circuit query if this host is not allowed to perform the action */
+    if (safe_str_eq(search->action, "reboot")) {
+        /* A "reboot" *might* get remapped to "off" then "on", so short-circuit
+         * only if all three are disallowed. If only one or two are disallowed,
+         * we'll report that with the results. We never allow suicide for
+         * remapped "on" operations because the host is off at that point.
+         */
+        if (!localhost_is_eligible(dev, "reboot", host, search->allow_suicide)
+            && !localhost_is_eligible(dev, "off", host, search->allow_suicide)
+            && !localhost_is_eligible(dev, "on", host, FALSE)) {
+            goto search_report_results;
+        }
+    } else if (!localhost_is_eligible(dev, search->action, host,
+                                      search->allow_suicide)) {
         goto search_report_results;
     }
 
@@ -1504,6 +1513,48 @@ add_action_specific_attributes(xmlNode *xml, const char *action,
     }
 }
 
+/*
+ * \internal
+ * \brief Add "disallowed" attribute to query reply XML if appropriate
+ *
+ * \param[in,out] xml            XML to add attribute to
+ * \param[in]     action         Fence action
+ * \param[in]     device         Fence device
+ * \param[in]     target         Fence target
+ * \param[in]     allow_suicide  Whether self-fencing is allowed
+ */
+static void
+add_disallowed(xmlNode *xml, const char *action, stonith_device_t *device,
+               const char *target, gboolean allow_suicide)
+{
+    if (!localhost_is_eligible(device, action, target, allow_suicide)) {
+        crm_trace("Action %s on %s is disallowed for local host",
+                  action, device->id);
+        crm_xml_add(xml, F_STONITH_ACTION_DISALLOWED, XML_BOOLEAN_TRUE);
+    }
+}
+
+/*
+ * \internal
+ * \brief Add child element with action-specific values to query reply XML
+ *
+ * \param[in,out] xml            XML to add attribute to
+ * \param[in]     action         Fence action
+ * \param[in]     device         Fence device
+ * \param[in]     target         Fence target
+ * \param[in]     allow_suicide  Whether self-fencing is allowed
+ */
+static void
+add_action_reply(xmlNode *xml, const char *action, stonith_device_t *device,
+               const char *target, gboolean allow_suicide)
+{
+    xmlNode *child = create_xml_node(xml, F_STONITH_ACTION);
+
+    crm_xml_add(child, XML_ATTR_ID, action);
+    add_action_specific_attributes(child, action, device);
+    add_disallowed(child, action, device, target, allow_suicide);
+}
+
 static void
 stonith_query_capable_device_cb(GList * devices, void *user_data)
 {
@@ -1546,7 +1597,26 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
 
         /* Add action-specific values if available */
         add_action_specific_attributes(dev, action, device);
+        if (safe_str_eq(query->action, "reboot")) {
+            /* A "reboot" *might* get remapped to "off" then "on", so after
+             * sending the "reboot"-specific values in the main element, we add
+             * sub-elements for "off" and "on" values.
+             *
+             * We short-circuited earlier if "reboot", "off" and "on" are all
+             * disallowed for the local host. However if only one or two are
+             * disallowed, we send back the results and mark which ones are
+             * disallowed. If "reboot" is disallowed, this might cause problems
+             * with older stonithd versions, which won't check for it. Older
+             * versions will ignore "off" and "on", so they are not a problem.
+             */
+            add_disallowed(dev, action, device, query->target,
+                           is_set(query->call_options, st_opt_allow_suicide));
+            add_action_reply(dev, "off", device, query->target,
+                             is_set(query->call_options, st_opt_allow_suicide));
+            add_action_reply(dev, "on", device, query->target, FALSE);
+        }
 
+        /* A query without a target wants device parameters */
         if (query->target == NULL) {
             xmlNode *attrs = create_xml_node(dev, XML_TAG_ATTRS);
 
@@ -1847,6 +1917,14 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
             continue;
         }
 
+        /* Duplicate merging will do the right thing for either type of remapped
+         * reboot. If the executing stonithd remapped an unsupported reboot to
+         * off, then cmd->action will be reboot and will be merged with any
+         * other reboot requests. If the originating stonithd remapped a
+         * topology reboot to off then on, we will get here once with
+         * cmd->action "off" and once with "on", and they will be merged
+         * separately with similar requests.
+         */
         crm_notice
             ("Merging stonith action %s for node %s originating from client %s with identical stonith request from client %s",
              cmd_other->action, cmd_other->victim, cmd_other->client_name, cmd->client_name);

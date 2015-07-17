@@ -1,31 +1,49 @@
+= Single-chapter part of the documentation =
+
+== Go-to reference chapter for how we use AsciiDoc on this project ==
+
+[NOTE]
+======
+This is *not* an attempt for fully self-hosted AsciiDoc document,
+consider it a plaintext full of AsciiDoc samples (it's up to the reader
+to recognize the borderline) at documentation writers' disposal
+to somewhat standardize the style{empty}footnote:[
+  style of both source notation and final visual appearance
+].
+
 See also:
    http://powerman.name/doc/asciidoc
+======
 
-Commands:    `some-tool --with option`
-Files:       '/tmp/file.name' 
-Italic:	     _some text_
+Emphasis:    _some test_
 Mono:        +some text+
-Bold:        *some text*
-Super:	     ^some text^
-Sub:	     ~some text~
+Strong:      *some text*
+Super:       ^some text^
+Sub:         ~some text~
 Quotes:
              ``double quoted''
               `single quoted'
 
-Tool:        command
+Command:     `some-tool --with option`
+Newly introduced term:
+             'some text' (another form of emphasis as of this edit)
+
+File:        mono
 Literal:     mono
+Tool:        command
+Option:      mono
+Replaceable: emphasis mono
 Varname:     mono
-Option:      italic
-Emphasis:    italic bold
-Replaceable: italic mono 
+Term encountered on system (e.g., menu choice, hostname):
+             strong
 
 
-.Title for Eaxmple
+.Title for Example
 =====
 Some text
 =====
 
-.Title for Eaxmple with XML Listing
+.Title for Example with XML Listing
 =====
 [source,XML]
 -----
