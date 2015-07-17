@@ -63,6 +63,8 @@ xmlNode *create_device_registration_xml(const char *id, const char *namespace, c
 #  define F_STONITH_TOLERANCE     "st_tolerance"
 /*! Action specific timeout period returned in query of fencing devices. */
 #  define F_STONITH_ACTION_TIMEOUT       "st_action_timeout"
+/*! Host in query result is not allowed to run this action */
+#  define F_STONITH_ACTION_DISALLOWED     "st_action_disallowed"
 /*! Maximum of random fencing delay for a device */
 #  define F_STONITH_DELAY_MAX            "st_delay_max"
 /*! Has this device been verified using a monitor type

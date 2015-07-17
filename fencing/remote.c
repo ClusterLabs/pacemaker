@@ -274,6 +274,94 @@ free_remote_op(gpointer data)
     free(op);
 }
 
+/*
+ * \internal
+ * \brief Return an operation's originally requested action (before any remap)
+ *
+ * \param[in] op  Operation to check
+ *
+ * \return Operation's original action
+ */
+static const char *
+op_requested_action(const remote_fencing_op_t *op)
+{
+    return ((op->phase > st_phase_requested)? "reboot" : op->action);
+}
+
+/*
+ * \internal
+ * \brief Remap a "reboot" operation to the "off" phase
+ *
+ * \param[in,out] op      Operation to remap
+ */
+static void
+op_phase_off(remote_fencing_op_t *op)
+{
+    crm_info("Remapping multiple-device reboot of %s (%s) to off",
+             op->target, op->id);
+    op->phase = st_phase_off;
+
+    /* Happily, "off" and "on" are shorter than "reboot", so we can reuse the
+     * memory allocation at each phase.
+     */
+    strcpy(op->action, "off");
+}
+
+/*!
+ * \internal
+ * \brief Advance a remapped reboot operation to the "on" phase
+ *
+ * \param[in,out] op  Operation to remap
+ */
+static void
+op_phase_on(remote_fencing_op_t *op)
+{
+    GListPtr iter = NULL;
+
+    crm_info("Remapped off of %s complete, remapping to on for %s.%.8s",
+             op->target, op->client_name, op->id);
+    op->phase = st_phase_on;
+    strcpy(op->action, "on");
+
+    /* Any devices that are required for "on" will be automatically executed by
+     * the cluster when the node next joins, so we skip them here.
+     */
+    for (iter = op->required_list[op->phase]; iter != NULL; iter = iter->next) {
+        GListPtr match = g_list_find_custom(op->devices_list, iter->data,
+                                            sort_strings);
+
+        if (match) {
+            op->devices_list = g_list_remove(op->devices_list, match->data);
+        }
+    }
+
+    /* We know this level will succeed, because phase 1 completed successfully
+     * and we ignore any errors from phase 2. So we can free the required list,
+     * which will keep them from being executed after the device list is done.
+     */
+    free_required_list(op, op->phase);
+
+    /* Rewind device list pointer */
+    op->devices = op->devices_list;
+}
+
+/*!
+ * \internal
+ * \brief Reset a remapped reboot operation
+ *
+ * \param[in,out] op  Operation to reset
+ */
+static void
+undo_op_remap(remote_fencing_op_t *op)
+{
+    if (op->phase > 0) {
+        crm_info("Undoing remap of reboot of %s for %s.%.8s",
+                 op->target, op->client_name, op->id);
+        op->phase = st_phase_requested;
+        strcpy(op->action, "reboot");
+    }
+}
+
 static xmlNode *
 create_op_done_notify(remote_fencing_op_t * op, int rc)
 {
@@ -401,6 +489,7 @@ remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup)
 
     op->completed = time(NULL);
     clear_remote_op_timers(op);
+    undo_op_remap(op);
 
     if (op->notify_sent == TRUE) {
         crm_err("Already sent notifications for '%s of %s by %s' (for=%s@%s.%.8s, state=%d): %s",
@@ -509,6 +598,16 @@ remote_op_timeout(gpointer userdata)
 
     crm_debug("Action %s (%s) for %s (%s) timed out",
               op->action, op->id, op->target, op->client_name);
+
+    if (op->phase == st_phase_on) {
+        /* A remapped reboot operation timed out in the "on" phase, but the
+         * "off" phase completed successfully, so quit trying any further
+         * devices, and return success.
+         */
+        remote_op_done(op, NULL, pcmk_ok, FALSE);
+        return FALSE;
+    }
+
     op->state = st_failed;
 
     remote_op_done(op, NULL, -ETIME, FALSE);
@@ -671,6 +770,9 @@ stonith_topology_next(remote_fencing_op_t * op)
 
     set_bit(op->call_options, st_opt_topology);
 
+    /* This is a new level, so undo any remapping left over from previous */
+    undo_op_remap(op);
+
     do {
         op->level++;
 
@@ -681,6 +783,15 @@ stonith_topology_next(remote_fencing_op_t * op)
                   op->level, op->target, g_list_length(tp->levels[op->level]),
                   op->client_name, op->originator, op->id);
         set_op_device_list(op, tp->levels[op->level]);
+
+        if (g_list_next(op->devices_list) && safe_str_eq(op->action, "reboot")) {
+            /* A reboot has been requested for a topology level with multiple
+             * devices. Instead of rebooting the devices sequentially, we will
+             * turn them all off, then turn them all on again. (Think about
+             * switched power outlets for redundant power supplies.)
+             */
+            op_phase_off(op);
+        }
         return pcmk_ok;
     }
 
@@ -705,6 +816,7 @@ merge_duplicates(remote_fencing_op_t * op)
     g_hash_table_iter_init(&iter, remote_op_list);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&other)) {
         crm_node_t *peer = NULL;
+        const char *other_action = op_requested_action(other);
 
         if (other->state > st_exec) {
             /* Must be in-progress */
@@ -712,8 +824,9 @@ merge_duplicates(remote_fencing_op_t * op)
         } else if (safe_str_neq(op->target, other->target)) {
             /* Must be for the same node */
             continue;
-        } else if (safe_str_neq(op->action, other->action)) {
-            crm_trace("Must be for the same action: %s vs. ", op->action, other->action);
+        } else if (safe_str_neq(op->action, other_action)) {
+            crm_trace("Must be for the same action: %s vs. %s",
+                      op->action, other_action);
             continue;
         } else if (safe_str_eq(op->client_name, other->client_name)) {
             crm_trace("Must be for different clients: %s", op->client_name);
@@ -939,7 +1052,7 @@ initiate_remote_stonith_op(crm_client_t * client, xmlNode * request, gboolean ma
 
     crm_xml_add(query, F_STONITH_REMOTE_OP_ID, op->id);
     crm_xml_add(query, F_STONITH_TARGET, op->target);
-    crm_xml_add(query, F_STONITH_ACTION, op->action);
+    crm_xml_add(query, F_STONITH_ACTION, op_requested_action(op));
     crm_xml_add(query, F_STONITH_ORIGIN, op->originator);
     crm_xml_add(query, F_STONITH_CLIENTID, op->client_id);
     crm_xml_add(query, F_STONITH_CLIENTNAME, op->client_name);
@@ -1249,13 +1362,21 @@ advance_op_topology(remote_fencing_op_t *op, const char *device, xmlNode *msg,
         op->devices = op->required_list[op->phase];
     }
 
+    if ((op->devices == NULL) && (op->phase == st_phase_off)) {
+        /* We're done with this level and with required devices, but we had
+         * remapped "reboot" to "off", so start over with "on". If any devices
+         * need to be turned back on, op->devices will be non-NULL after this.
+         */
+        op_phase_on(op);
+    }
+
     if (op->devices) {
         /* Necessary devices remain, so execute the next one */
         crm_trace("Next for %s on behalf of %s@%s (rc was %d)",
                   op->target, op->originator, op->client_name, rc);
         call_remote_stonith(op, NULL);
     } else {
-        /* We're done with all devices, so finalize operation */
+        /* We're done with all devices and phases, so finalize operation */
         crm_trace("Marking complex fencing op for %s as complete", op->target);
         op->state = st_done;
         remote_op_done(op, msg, rc, FALSE);
@@ -1350,6 +1471,15 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
         send_cluster_message(crm_get_peer(0, peer->host), crm_msg_stonith_ng, remote_op, FALSE);
         peer->tried = TRUE;
         free_xml(remote_op);
+        return;
+
+    } else if (op->phase == st_phase_on) {
+        /* A remapped "on" cannot be executed, but the node was already
+         * turned off successfully, so ignore the error and continue.
+         */
+        crm_warn("Ignoring %s 'on' failure (no capable peers) for %s after successful 'off'",
+                 device, op->target);
+        advance_op_topology(op, device, NULL, pcmk_ok);
         return;
 
     } else if (op->owner == FALSE) {
@@ -1474,7 +1604,7 @@ all_topology_devices_found(remote_fencing_op_t * op)
  * \param[in]     msg     XML element containing the properties
  * \param[in]     peer    Name of peer that sent XML (for logs)
  * \param[in]     device  Device ID (for logs)
- * \param[in]     action  Action the properties relate to
+ * \param[in]     action  Action the properties relate to (for logs)
  * \param[in]     phase   Phase the properties relate to
  * \param[in,out] props   Device properties to update
  */
@@ -1515,6 +1645,15 @@ parse_action_specific(xmlNode *xml, const char *peer, const char *device,
                   peer, device, action);
         add_required_device(op, phase, device);
     }
+
+    /* If a reboot is remapped to off+on, it's possible that a node is allowed
+     * to perform one action but not another.
+     */
+    if (crm_is_true(crm_element_value(xml, F_STONITH_ACTION_DISALLOWED))) {
+        props->disallowed[phase] = TRUE;
+        crm_trace("Peer %s is disallowed from executing %s for device %s",
+                  peer, action, device);
+    }
 }
 
 /*
@@ -1530,6 +1669,7 @@ static void
 add_device_properties(xmlNode *xml, remote_fencing_op_t *op,
                       st_query_result_t *result, const char *device)
 {
+    xmlNode *child;
     int verified = 0;
     device_properties_t *props = calloc(1, sizeof(device_properties_t));
 
@@ -1546,8 +1686,21 @@ add_device_properties(xmlNode *xml, remote_fencing_op_t *op,
     }
 
     /* Parse action-specific device properties */
-    parse_action_specific(xml, result->host, device, op->action,
+    parse_action_specific(xml, result->host, device, op_requested_action(op),
                           op, st_phase_requested, props);
+    for (child = __xml_first_child(xml); child != NULL; child = __xml_next(child)) {
+        /* Replies for "reboot" operations will include the action-specific
+         * values for "off" and "on" in child elements, just in case the reboot
+         * winds up getting remapped.
+         */
+        if (safe_str_eq(ID(child), "off")) {
+            parse_action_specific(child, result->host, device, "off",
+                                  op, st_phase_off, props);
+        } else if (safe_str_eq(ID(child), "on")) {
+            parse_action_specific(child, result->host, device, "on",
+                                  op, st_phase_on, props);
+        }
+    }
 }
 
 /*
@@ -1778,6 +1931,15 @@ process_remote_stonith_exec(xmlNode * msg)
             return rc;
         }
 
+        if ((op->phase == 2) && (rc != pcmk_ok)) {
+            /* A remapped "on" failed, but the node was already turned off
+             * successfully, so ignore the error and continue.
+             */
+            crm_warn("Ignoring %s 'on' failure (exit code %d) for %s after successful 'off'",
+                     device, rc, op->target);
+            rc = pcmk_ok;
+        }
+
         if (rc == pcmk_ok) {
             /* An operation completed successfully. Try another device if
              * necessary, otherwise mark the operation as done. */
@@ -1886,6 +2048,9 @@ stonith_check_fence_tolerance(int tolerance, const char *target, const char *act
             continue;
         } else if (rop->state != st_done) {
             continue;
+        /* We don't have to worry about remapped reboots here
+         * because if state is done, any remapping has been undone
+         */
         } else if (strcmp(rop->action, action) != 0) {
             continue;
         } else if ((rop->completed + tolerance) < now) {
