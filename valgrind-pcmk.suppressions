@@ -1,4 +1,4 @@
-# Valgrind suppressions for PE testing
+# Valgrind suppressions for Pacemaker testing
 {
    Valgrind bug
    Memcheck:Addr8
@@ -51,6 +51,15 @@
    Cman - Points to uninitialized bytes
    Memcheck:Param
    socketcall.sendmsg(msg)
+   fun:__sendmsg_nocancel
+   obj:*/libcman.so.3.0
+   obj:*/libcman.so.3.0
+}
+
+{
+   Cman - Who cares if unused bytes are uninitialized
+   Memcheck:Param
+   sendmsg(msg)
    fun:__sendmsg_nocancel
    obj:*/libcman.so.3.0
    obj:*/libcman.so.3.0
