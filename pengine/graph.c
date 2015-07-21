@@ -29,7 +29,6 @@
 #include <allocate.h>
 #include <utils.h>
 
-gboolean update_action(action_t * action);
 void update_colo_start_chain(action_t * action);
 gboolean rsc_update_action(action_t * first, action_t * then, enum pe_ordering type);
 
