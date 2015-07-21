@@ -7,7 +7,9 @@ class BasePatterns:
     def __init__(self, name):
         self.name = name
         patternvariants[name] = self
-        self.ignore = []
+        self.ignore = [
+            "avoid confusing Valgrind",
+        ]
         self.BadNews = []
         self.components = {}
         self.commands = {
@@ -140,7 +142,7 @@ class crm_lha(BasePatterns):
                 r"Parameters to .* changed",
             ]
 
-        self.ignore = [
+        self.ignore = self.ignore + [
                 r"(ERROR|error):.*\s+assert\s+at\s+crm_glib_handler:"
                 "(ERROR|error): Message hist queue is filling up",
                 "stonithd.*CRIT: external_hostlist:.*'vmware gethosts' returned an empty hostlist",
@@ -177,7 +179,7 @@ class crm_cs_v0(BasePatterns):
             "Pat:PacemakerUp"  : "%s\W.*pacemakerd.*Starting Pacemaker",
         })
 
-        self.ignore = [
+        self.ignore = self.ignore + [
             r"crm_mon:",
             r"crmadmin:",
             r"update_trace_data",
