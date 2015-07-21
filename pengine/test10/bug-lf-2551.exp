@@ -18,11 +18,7 @@
         <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000"  sbd_device="/dev/disk/by-id/dm-uuid-part1-mpath-3600508b400105b5a0001500000250000"/>
       </pseudo_event>
     </action_set>
-    <inputs>
-      <trigger>
-        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="2">
     <action_set>

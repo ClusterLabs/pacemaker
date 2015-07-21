@@ -35,18 +35,22 @@ Transition Summary:
 
 Executing cluster transition:
  * Resource action: prmVM2          stop on bl460g1n6
+ * Pseudo action:   grpStonith8_stop_0
+ * Pseudo action:   prmStonith8-2_stop_0
  * Fencing bl460g1n7 (reboot)
  * Pseudo action:   stonith_complete
  * Pseudo action:   prmDummy_stop_0
  * Pseudo action:   prmVM2_stop_0
- * Pseudo action:   grpStonith8_stop_0
- * Pseudo action:   prmStonith8-2_stop_0
+ * Pseudo action:   prmStonith8-1_stop_0
  * Pseudo action:   clnDiskd1_stop_0
  * Pseudo action:   clnDiskd2_stop_0
  * Pseudo action:   clnPing_stop_0
  * Resource action: prmDummy        start on bl460g1n6
  * Resource action: prmVM2          start on bl460g1n8
- * Pseudo action:   prmStonith8-1_stop_0
+ * Pseudo action:   grpStonith8_stopped_0
+ * Pseudo action:   grpStonith8_start_0
+ * Resource action: prmStonith8-1   start on bl460g1n6
+ * Resource action: prmStonith8-2   start on bl460g1n6
  * Pseudo action:   prmDiskd1_stop_0
  * Pseudo action:   clnDiskd1_stopped_0
  * Pseudo action:   prmDiskd2_stop_0
@@ -55,10 +59,6 @@ Executing cluster transition:
  * Pseudo action:   clnPing_stopped_0
  * Pseudo action:   all_stopped
  * Resource action: prmVM2          monitor=10000 on bl460g1n8
- * Pseudo action:   grpStonith8_stopped_0
- * Pseudo action:   grpStonith8_start_0
- * Resource action: prmStonith8-1   start on bl460g1n6
- * Resource action: prmStonith8-2   start on bl460g1n6
  * Pseudo action:   grpStonith8_running_0
  * Resource action: prmStonith8-1   monitor=10000 on bl460g1n6
  * Resource action: prmStonith8-2   monitor=3600000 on bl460g1n6

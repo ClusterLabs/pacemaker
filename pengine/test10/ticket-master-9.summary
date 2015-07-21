@@ -12,14 +12,14 @@ Transition Summary:
  * Demote  rsc1:0	(Master -> Stopped node1)
 
 Executing cluster transition:
+ * Pseudo action:   rsc_stonith_stop_0
  * Pseudo action:   ms1_demote_0
  * Fencing node1 (reboot)
  * Pseudo action:   stonith_complete
- * Pseudo action:   rsc_stonith_stop_0
+ * Resource action: rsc_stonith     start on node2
  * Pseudo action:   rsc1:1_demote_0
  * Pseudo action:   ms1_demoted_0
  * Pseudo action:   ms1_stop_0
- * Resource action: rsc_stonith     start on node2
  * Pseudo action:   rsc1:1_stop_0
  * Pseudo action:   ms1_stopped_0
  * Pseudo action:   all_stopped

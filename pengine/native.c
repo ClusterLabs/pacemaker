@@ -2817,8 +2817,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
 }
 
 static void
-native_start_constraints(resource_t * rsc, action_t * stonith_op, gboolean is_stonith,
-                         pe_working_set_t * data_set)
+native_start_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_t * data_set)
 {
     node_t *target = stonith_op ? stonith_op->node : NULL;
 
@@ -2893,13 +2892,23 @@ find_fence_target_node_actions(GListPtr search_list, const char *key, node_t *fe
 }
 
 static void
-native_stop_constraints(resource_t * rsc, action_t * stonith_op, gboolean is_stonith,
-                        pe_working_set_t * data_set)
+native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_t * data_set)
 {
     char *key = NULL;
     GListPtr gIter = NULL;
     GListPtr action_list = NULL;
+
+    action_t *start = NULL;
     resource_t *top = uber_parent(rsc);
+
+    key = start_key(rsc);
+    action_list = find_actions(rsc->actions, key, NULL);
+    if(action_list) {
+        start = action_list->data;
+    }
+
+    g_list_free(action_list);
+    free(key);
 
     key = stop_key(rsc);
     action_list = find_fence_target_node_actions(rsc->actions, key, stonith_op->node, data_set);
@@ -2932,7 +2941,7 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, gboolean is_sto
         update_action_flags(action, pe_action_runnable);
         update_action_flags(action, pe_action_implied_by_stonith);
 
-        {
+        if(start == NULL || start->needs > rsc_req_quorum) {
             enum pe_ordering flags = pe_order_optional;
             action_t *parent_stop = find_first_action(top->actions, NULL, RSC_STOP, NULL);
 
@@ -3032,7 +3041,8 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, gboolean is_sto
             crm_trace("here - 1");
             update_action_flags(action, pe_action_pseudo);
             update_action_flags(action, pe_action_runnable);
-            if (is_stonith == FALSE) {
+
+            if (start == NULL || start->needs > rsc_req_quorum) {
                 order_actions(stonith_op, action, pe_order_preserve|pe_order_optional);
             }
         }
@@ -3044,8 +3054,6 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, gboolean is_sto
 void
 rsc_stonith_ordering(resource_t * rsc, action_t * stonith_op, pe_working_set_t * data_set)
 {
-    gboolean is_stonith = FALSE;
-
     if (rsc->children) {
         GListPtr gIter = NULL;
 
@@ -3063,11 +3071,11 @@ rsc_stonith_ordering(resource_t * rsc, action_t * stonith_op, pe_working_set_t *
     }
 
     /* Start constraints */
-    native_start_constraints(rsc, stonith_op, is_stonith, data_set);
+    native_start_constraints(rsc, stonith_op, data_set);
 
     /* Stop constraints */
     if (stonith_op) {
-        native_stop_constraints(rsc, stonith_op, is_stonith, data_set);
+        native_stop_constraints(rsc, stonith_op, data_set);
     }
 }
 

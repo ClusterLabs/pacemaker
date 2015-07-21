@@ -23,7 +23,6 @@ digraph "g" {
 "stonith 'reboot' node1" -> "ms1_stop_0" [ style = bold]
 "stonith 'reboot' node1" -> "rsc1:1_demote_0 node1" [ style = bold]
 "stonith 'reboot' node1" -> "rsc1:1_stop_0 node1" [ style = bold]
-"stonith 'reboot' node1" -> "rsc_stonith_stop_0 node1" [ style = bold]
 "stonith 'reboot' node1" -> "stonith_complete" [ style = bold]
 "stonith 'reboot' node1" [ style=bold color="green" fontcolor="black"]
 "stonith_complete" -> "all_stopped" [ style = bold]

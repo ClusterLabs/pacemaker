@@ -18,11 +18,7 @@
         <attributes CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
-    <inputs>
-      <trigger>
-        <crm_event id="21" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="node1"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="2">
     <action_set>

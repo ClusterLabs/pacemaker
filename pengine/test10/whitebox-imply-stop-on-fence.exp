@@ -31,11 +31,7 @@
         <attributes CRM_meta_timeout="20000" action="reboot"  ipaddr="kiff-02-ilo" login="admin" passwd="admin" pcmk_host_check="static-list" pcmk_host_list="kiff-02"/>
       </pseudo_event>
     </action_set>
-    <inputs>
-      <trigger>
-        <crm_event id="63" operation="stonith" operation_key="stonith-kiff-01-reboot" on_node="kiff-01" on_node_uuid="1"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="3">
     <action_set>

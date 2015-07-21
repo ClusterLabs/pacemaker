@@ -69,7 +69,6 @@
 "stonith 'reboot' kiff-01" -> "clvmd_stop_0 kiff-01" [ style = bold]
 "stonith 'reboot' kiff-01" -> "dlm-clone_stop_0" [ style = bold]
 "stonith 'reboot' kiff-01" -> "dlm_stop_0 kiff-01" [ style = bold]
-"stonith 'reboot' kiff-01" -> "fence-kiff-02_stop_0 kiff-01" [ style = bold]
 "stonith 'reboot' kiff-01" -> "lxc-01_kiff-01_stop_0 kiff-01" [ style = bold]
 "stonith 'reboot' kiff-01" -> "lxc-02_kiff-01_stop_0 kiff-01" [ style = bold]
 "stonith 'reboot' kiff-01" -> "shared0-clone_stop_0" [ style = bold]

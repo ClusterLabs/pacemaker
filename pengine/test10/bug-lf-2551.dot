@@ -56,7 +56,6 @@ digraph "g" {
 "stonith 'reboot' hex-9" -> "cmirrord:3_stop_0 hex-9" [ style = bold]
 "stonith 'reboot' hex-9" -> "dlm:3_stop_0 hex-9" [ style = bold]
 "stonith 'reboot' hex-9" -> "dummy1_stop_0 hex-9" [ style = bold]
-"stonith 'reboot' hex-9" -> "fencing-sbd_stop_0 hex-9" [ style = bold]
 "stonith 'reboot' hex-9" -> "o2cb:3_stop_0 hex-9" [ style = bold]
 "stonith 'reboot' hex-9" -> "ocfs2-1:3_stop_0 hex-9" [ style = bold]
 "stonith 'reboot' hex-9" -> "stonith_complete" [ style = bold]
