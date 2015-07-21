@@ -361,6 +361,7 @@ cman_event_callback(cman_handle_t handle, void *privdata, int reason, int arg)
                          arg ? "retained" : "still lost");
             }
 
+            memset(cman_nodes, 0, MAX_NODES * sizeof(cman_node_t));
             rc = cman_get_nodes(pcmk_cman_handle, MAX_NODES, &node_count, cman_nodes);
             if (rc < 0) {
                 crm_err("Couldn't query cman node list: %d %d", rc, errno);
@@ -631,7 +632,7 @@ cman_node_name(uint32_t nodeid)
 
     cman = cman_init(NULL);
     if (cman != NULL && cman_is_active(cman)) {
-        us.cn_name[0] = 0;
+        memset(&us, 0, sizeof(cman_node_t));
         cman_get_node(cman, nodeid, &us);
         name = strdup(us.cn_name);
         crm_info("Using CMAN node name %s for %u", name, nodeid);

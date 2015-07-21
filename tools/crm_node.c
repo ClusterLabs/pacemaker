@@ -470,6 +470,7 @@ try_cman(int command, enum cluster_type_e stack)
 
         case 'l':
         case 'p':
+            memset(cman_nodes, 0, MAX_NODES * sizeof(cman_node_t));
             rc = cman_get_nodes(cman_handle, MAX_NODES, &node_count, cman_nodes);
             if (rc != 0) {
                 fprintf(stderr, "Couldn't query cman node list: %d %d", rc, errno);
@@ -489,6 +490,7 @@ try_cman(int command, enum cluster_type_e stack)
             break;
 
         case 'i':
+            memset(&node, 0, sizeof(cman_node_t));
             rc = cman_get_node(cman_handle, CMAN_NODEID_US, &node);
             if (rc != 0) {
                 fprintf(stderr, "Couldn't query cman node id: %d %d", rc, errno);
