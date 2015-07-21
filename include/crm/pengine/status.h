@@ -256,7 +256,6 @@ struct resource_s {
     int stickiness;
     int sort_index;
     int failure_timeout;
-    int remote_reconnect_interval;
     int effective_priority;
     int migration_threshold;
 
@@ -295,6 +294,7 @@ struct resource_s {
 
     const char *isolation_wrapper;
     gboolean exclusive_discover;
+    int remote_reconnect_interval;
 };
 
 struct pe_action_s {
