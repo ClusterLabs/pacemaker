@@ -668,7 +668,6 @@ init_cs_connection_once(crm_cluster_t * cluster)
             if (cluster_connect_cpg(cluster) == FALSE) {
                 return FALSE;
             }
-            cluster->uname = cman_node_name(0 /* CMAN_NODEID_US */ );
             break;
         case pcmk_cluster_heartbeat:
             crm_info("Could not find an active corosync based cluster");
