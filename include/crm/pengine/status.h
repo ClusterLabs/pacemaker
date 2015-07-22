@@ -324,6 +324,26 @@ struct pe_action_s {
     GHashTable *meta;
     GHashTable *extra;
 
+    /* 
+     * These two varables are associated with the constraint logic
+     * that involves first having one or more actions runnable before
+     * then allowing this action to execute.
+     *
+     * These varables are used with features such as 'clone-min' which
+     * requires at minimum X number of cloned instances to be running
+     * before an order dependency can run. Another option that uses
+     * this is 'require-all=false' in ordering constrants. This option
+     * says "only required one instance of a resource to start before
+     * allowing dependencies to start" basicall require-all=false is
+     * the same as clone-min=1.
+     */
+
+    /* current number of known runnable actions in the before list. */
+    int runnable_before;
+    /* the number of "before" runnable actions required for this action
+     * to be considered runnable */ 
+    int required_runnable_before;
+
     GListPtr actions_before;    /* action_warpper_t* */
     GListPtr actions_after;     /* action_warpper_t* */
 };

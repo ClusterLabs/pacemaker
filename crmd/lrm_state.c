@@ -32,24 +32,6 @@ int lrmd_internal_proxy_send(lrmd_t * lrmd, xmlNode *msg);
 void lrmd_internal_set_proxy_callback(lrmd_t * lrmd, void *userdata, void (*callback)(lrmd_t *lrmd, void *userdata, xmlNode *msg));
 
 static void
-history_cache_destroy(gpointer data)
-{
-    rsc_history_t *entry = data;
-
-    if (entry->stop_params) {
-        g_hash_table_destroy(entry->stop_params);
-    }
-
-    free(entry->rsc.type);
-    free(entry->rsc.class);
-    free(entry->rsc.provider);
-
-    lrmd_free_event(entry->failed);
-    lrmd_free_event(entry->last);
-    free(entry->id);
-    free(entry);
-}
-static void
 free_rsc_info(gpointer value)
 {
     lrmd_rsc_info_t *rsc_info = value;
@@ -155,7 +137,7 @@ lrm_state_create(const char *node_name)
                                                g_str_equal, g_hash_destroy_str, free_recurring_op);
 
     state->resource_history = g_hash_table_new_full(crm_str_hash,
-                                                    g_str_equal, NULL, history_cache_destroy);
+                                                    g_str_equal, NULL, history_free);
 
     g_hash_table_insert(lrm_state_table, (char *)state->node_name, state);
     return state;

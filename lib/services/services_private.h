@@ -63,4 +63,8 @@ void handle_blocked_ops(void);
 
 gboolean is_op_blocked(const char *rsc);
 
+#if SUPPORT_DBUS
+void services_set_op_pending(svc_action_t *op, DBusPendingCall *pending);
+#endif
+
 #endif                          /* __MH_SERVICES_PRIVATE_H__ */

@@ -64,11 +64,14 @@ pcmk_dbus_find_error(const char *method, DBusPendingCall* pending, DBusMessage *
     } else {
         DBusMessageIter args;
         int dtype = dbus_message_get_type(reply);
+        char *sig;
 
         switch(dtype) {
             case DBUS_MESSAGE_TYPE_METHOD_RETURN:
                 dbus_message_iter_init(reply, &args);
-                crm_trace("Call to %s returned '%s'", method, dbus_message_iter_get_signature(&args));
+                sig = dbus_message_iter_get_signature(&args);
+                crm_trace("Call to %s returned '%s'", method, sig);
+                dbus_free(sig);
                 break;
             case DBUS_MESSAGE_TYPE_INVALID:
                 error.message = "Invalid reply";
@@ -217,11 +220,14 @@ bool pcmk_dbus_type_check(DBusMessage *msg, DBusMessageIter *field, int expected
 
     if(dtype != expected) {
         DBusMessageIter args;
+        char *sig;
 
         dbus_message_iter_init(msg, &args);
+        sig = dbus_message_iter_get_signature(&args);
         do_crm_log_alias(LOG_ERR, __FILE__, function, line,
-                         "Unexepcted DBus type, expected %c in '%s' instead of %c",
-                         expected, dbus_message_iter_get_signature(&args), dtype);
+                         "Unexpected DBus type, expected %c in '%s' instead of %c",
+                         expected, sig, dtype);
+        dbus_free(sig);
         return FALSE;
     }
 

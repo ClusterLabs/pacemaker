@@ -1,0 +1,18 @@
+ digraph "g" {
+"FAKE1-clone_running_0" [ style=bold color="green" fontcolor="orange"]
+"FAKE1-clone_start_0" -> "FAKE1-clone_running_0" [ style = bold]
+"FAKE1-clone_start_0" -> "FAKE1_start_0 <none>" [ style = dashed]
+"FAKE1-clone_start_0" [ style=bold color="green" fontcolor="orange"]
+"FAKE1-clone_stop_0" -> "FAKE1-clone_stopped_0" [ style = bold]
+"FAKE1-clone_stop_0" -> "FAKE1_stop_0 c7auto3" [ style = bold]
+"FAKE1-clone_stop_0" [ style=bold color="green" fontcolor="orange"]
+"FAKE1-clone_stopped_0" -> "FAKE1-clone_start_0" [ style = bold]
+"FAKE1-clone_stopped_0" [ style=bold color="green" fontcolor="orange"]
+"FAKE1_start_0 <none>" -> "FAKE1-clone_running_0" [ style = dashed]
+"FAKE1_start_0 <none>" [ style=dashed color="red" fontcolor="black"]
+"FAKE1_stop_0 c7auto3" -> "FAKE1-clone_stopped_0" [ style = bold]
+"FAKE1_stop_0 c7auto3" -> "FAKE1_start_0 <none>" [ style = dashed]
+"FAKE1_stop_0 c7auto3" -> "all_stopped" [ style = bold]
+"FAKE1_stop_0 c7auto3" [ style=bold color="green" fontcolor="black"]
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+}

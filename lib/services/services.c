@@ -348,6 +348,34 @@ services_action_create_generic(const char *exec, const char *args[])
     return op;
 }
 
+#if SUPPORT_DBUS
+/*
+ * \internal
+ * \brief Update operation's pending DBus call, unreferencing old one if needed
+ *
+ * \param[in,out] op       Operation to modify
+ * \param[in]     pending  Pending call to set
+ */
+void
+services_set_op_pending(svc_action_t *op, DBusPendingCall *pending)
+{
+    if (op->opaque->pending && (op->opaque->pending != pending)) {
+        if (pending) {
+            crm_info("Lost pending DBus call (%p)", op->opaque->pending);
+        } else {
+            crm_trace("Done with pending DBus call (%p)", op->opaque->pending);
+        }
+        dbus_pending_call_unref(op->opaque->pending);
+    }
+    op->opaque->pending = pending;
+    if (pending) {
+        crm_trace("Updated pending DBus call (%p)", pending);
+    } else {
+        crm_trace("Cleared pending DBus call");
+    }
+}
+#endif
+
 void
 services_action_cleanup(svc_action_t * op)
 {

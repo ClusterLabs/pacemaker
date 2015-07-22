@@ -103,6 +103,80 @@ copy_meta_keys(gpointer key, gpointer value, gpointer user_data)
     }
 }
 
+/*
+ * \internal
+ * \brief Remove a recurring operation from a resource's history
+ *
+ * \param[in,out] history  Resource history to modify
+ * \param[in]     op       Operation to remove
+ *
+ * \return TRUE if the operation was found and removed, FALSE otherwise
+ */
+static gboolean
+history_remove_recurring_op(rsc_history_t *history, const lrmd_event_data_t *op)
+{
+    GList *iter;
+
+    for (iter = history->recurring_op_list; iter != NULL; iter = iter->next) {
+        lrmd_event_data_t *existing = iter->data;
+
+        if ((op->interval == existing->interval)
+            && crm_str_eq(op->rsc_id, existing->rsc_id, TRUE)
+            && safe_str_eq(op->op_type, existing->op_type)) {
+
+            history->recurring_op_list = g_list_delete_link(history->recurring_op_list, iter);
+            lrmd_free_event(existing);
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+/*
+ * \internal
+ * \brief Free all recurring operations in resource history
+ *
+ * \param[in,out] history  Resource history to modify
+ */
+static void
+history_free_recurring_ops(rsc_history_t *history)
+{
+    GList *iter;
+
+    for (iter = history->recurring_op_list; iter != NULL; iter = iter->next) {
+        lrmd_free_event(iter->data);
+    }
+    g_list_free(history->recurring_op_list);
+    history->recurring_op_list = NULL;
+}
+
+/*
+ * \internal
+ * \brief Free resource history
+ *
+ * \param[in,out] history  Resource history to free
+ */
+void
+history_free(gpointer data)
+{
+    rsc_history_t *history = (rsc_history_t*)data;
+
+    if (history->stop_params) {
+        g_hash_table_destroy(history->stop_params);
+    }
+
+    /* Don't need to free history->rsc.id because it's set to history->id */
+    free(history->rsc.type);
+    free(history->rsc.class);
+    free(history->rsc.provider);
+
+    lrmd_free_event(history->failed);
+    lrmd_free_event(history->last);
+    free(history->id);
+    history_free_recurring_ops(history);
+    free(history);
+}
+
 static void
 update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_data_t * op)
 {
@@ -145,25 +219,10 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
     target_rc = rsc_op_expected_rc(op);
     if (op->op_status == PCMK_LRM_OP_CANCELLED) {
         if (op->interval > 0) {
-            GList *gIter, *gIterNext;
-
             crm_trace("Removing cancelled recurring op: %s_%s_%d", op->rsc_id, op->op_type,
                       op->interval);
-
-            for (gIter = entry->recurring_op_list; gIter != NULL; gIter = gIterNext) {
-                lrmd_event_data_t *existing = gIter->data;
-
-                gIterNext = gIter->next;
-
-                if (crm_str_eq(op->rsc_id, existing->rsc_id, TRUE)
-                    && safe_str_eq(op->op_type, existing->op_type)
-                    && op->interval == existing->interval) {
-                    lrmd_free_event(existing);
-                    entry->recurring_op_list = g_list_delete_link(entry->recurring_op_list, gIter);
-                }
-            }
+            history_remove_recurring_op(entry, op);
             return;
-
         } else {
             crm_trace("Skipping %s_%s_%d rc=%d, status=%d", op->rsc_id, op->op_type, op->interval,
                       op->rc, op->op_status);
@@ -201,32 +260,17 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
     }
 
     if (op->interval > 0) {
-        GListPtr iter = NULL;
-
-        for(iter = entry->recurring_op_list; iter; iter = iter->next) {
-            lrmd_event_data_t *o = iter->data;
-
-            /* op->rsc_id is implied */
-            if(op->interval == o->interval && strcmp(op->op_type, o->op_type) == 0) {
-                crm_trace("Removing existing recurring op entry: %s_%s_%d", op->rsc_id, op->op_type, op->interval);
-                entry->recurring_op_list = g_list_remove(entry->recurring_op_list, o);
-                break;
-            }
-        }
+        /* Ensure there are no duplicates */
+        history_remove_recurring_op(entry, op);
 
         crm_trace("Adding recurring op: %s_%s_%d", op->rsc_id, op->op_type, op->interval);
         entry->recurring_op_list = g_list_prepend(entry->recurring_op_list, lrmd_copy_event(op));
 
     } else if (entry->recurring_op_list && safe_str_eq(op->op_type, RSC_STATUS) == FALSE) {
-        GList *gIter = entry->recurring_op_list;
-
         crm_trace("Dropping %d recurring ops because of: %s_%s_%d",
-                  g_list_length(gIter), op->rsc_id, op->op_type, op->interval);
-        for (; gIter != NULL; gIter = gIter->next) {
-            lrmd_free_event(gIter->data);
-        }
-        g_list_free(entry->recurring_op_list);
-        entry->recurring_op_list = NULL;
+                  g_list_length(entry->recurring_op_list), op->rsc_id,
+                  op->op_type, op->interval);
+        history_free_recurring_ops(entry);
     }
 }
 

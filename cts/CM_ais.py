@@ -49,42 +49,46 @@ class crm_ais(crm_lha):
     def NodeUUID(self, node):
         return node
 
-    def ais_components(self):
+    def ais_components(self, extra={}):
 
         complist = []
         if not len(self.fullcomplist.keys()):
             for c in ["cib", "lrmd", "crmd", "attrd" ]:
-               self.fullcomplist[c] = Process(
-                   self, c, 
-                   pats = self.templates.get_component(self.name, c),
-                   badnews_ignore = self.templates.get_component(self.name, "%s-ignore"%c),
-                   common_ignore = self.templates.get_component(self.name, "common-ignore"))
+                self.fullcomplist[c] = Process(
+                    self, c, 
+                    pats = self.templates.get_component(self.name, c),
+                    badnews_ignore = self.templates.get_component(self.name, "%s-ignore" % c),
+                    common_ignore = self.templates.get_component(self.name, "common-ignore"))
 
-               self.fullcomplist["pengine"] = Process(
-                   self, "pengine", 
-                   dc_pats = self.templates.get_component(self.name, "pengine"),
-                   badnews_ignore = self.templates.get_component(self.name, "pengine-ignore"),
-                   common_ignore = self.templates.get_component(self.name, "common-ignore"))
+            # pengine uses dc_pats instead of pats
+            self.fullcomplist["pengine"] = Process(
+                self, "pengine", 
+                dc_pats = self.templates.get_component(self.name, "pengine"),
+                badnews_ignore = self.templates.get_component(self.name, "pengine-ignore"),
+                common_ignore = self.templates.get_component(self.name, "common-ignore"))
 
-               self.fullcomplist["stonith-ng"] = Process(
-                   self, "stonith-ng", process="stonithd", 
-                   pats = self.templates.get_component(self.name, "stonith"),
-                   badnews_ignore = self.templates.get_component(self.name, "stonith-ignore"),
-                   common_ignore = self.templates.get_component(self.name, "common-ignore"))
+            # stonith-ng's process name is different from its component name
+            self.fullcomplist["stonith-ng"] = Process(
+                self, "stonith-ng", process="stonithd", 
+                pats = self.templates.get_component(self.name, "stonith"),
+                badnews_ignore = self.templates.get_component(self.name, "stonith-ignore"),
+                common_ignore = self.templates.get_component(self.name, "common-ignore"))
 
+            # add (or replace) any extra components passed in
+            self.fullcomplist.update(extra)
+
+        # Processes running under valgrind can't be shot with "killall -9 processname",
+        # so don't include them in the returned list
         vgrind = self.Env["valgrind-procs"].split()
         for key in self.fullcomplist.keys():
             if self.Env["valgrind-tests"]:
-               if key in vgrind:
-               # Processes running under valgrind can't be shot with "killall -9 processname"
+                if key in vgrind:
                     self.log("Filtering %s from the component list as it is being profiled by valgrind" % key)
                     continue
             if key == "stonith-ng" and not self.Env["DoFencing"]:
                 continue
-
             complist.append(self.fullcomplist[key])
 
-        #self.complist = [ fullcomplist["pengine"] ]
         return complist
 
 
@@ -100,17 +104,14 @@ class crm_cs_v0(crm_ais):
         crm_ais.__init__(self, Environment, randseed=randseed, name=name)
 
     def Components(self):
-        self.ais_components()
-        c = "corosync"
-
-        self.fullcomplist[c] = Process(
-            self, c, 
-            pats = self.templates.get_component(self.name, c),
-            badnews_ignore = self.templates.get_component(self.name, "%s-ignore"%c),
+        extra = {}
+        extra["corosync"] = Process(
+            self, "corosync", 
+            pats = self.templates.get_component(self.name, "corosync"),
+            badnews_ignore = self.templates.get_component(self.name, "corosync-ignore"),
             common_ignore = self.templates.get_component(self.name, "common-ignore")
         )
-
-        return self.ais_components()
+        return self.ais_components(extra=extra)
 
 
 class crm_cs_v1(crm_cs_v0):
