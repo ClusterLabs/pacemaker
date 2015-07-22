@@ -194,6 +194,7 @@
 #  define XML_RSC_ATTR_INTERLEAVE	"interleave"
 #  define XML_RSC_ATTR_INCARNATION	"clone"
 #  define XML_RSC_ATTR_INCARNATION_MAX	"clone-max"
+#  define XML_RSC_ATTR_INCARNATION_MIN	"clone-min"
 #  define XML_RSC_ATTR_INCARNATION_NODEMAX	"clone-node-max"
 #  define XML_RSC_ATTR_MASTER_MAX	"master-max"
 #  define XML_RSC_ATTR_MASTER_NODEMAX	"master-node-max"

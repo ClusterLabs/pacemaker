@@ -1,0 +1,18 @@
+ digraph "g" {
+"FAKECLONE-clone_running_0" [ style=bold color="green" fontcolor="orange"]
+"FAKECLONE-clone_start_0" -> "FAKECLONE-clone_running_0" [ style = bold]
+"FAKECLONE-clone_start_0" -> "FAKECLONE_start_0 <none>" [ style = dashed]
+"FAKECLONE-clone_start_0" [ style=bold color="green" fontcolor="orange"]
+"FAKECLONE-clone_stop_0" -> "FAKECLONE-clone_stopped_0" [ style = bold]
+"FAKECLONE-clone_stop_0" -> "FAKECLONE_stop_0 c7auto2" [ style = bold]
+"FAKECLONE-clone_stop_0" [ style=bold color="green" fontcolor="orange"]
+"FAKECLONE-clone_stopped_0" -> "FAKECLONE-clone_start_0" [ style = bold]
+"FAKECLONE-clone_stopped_0" [ style=bold color="green" fontcolor="orange"]
+"FAKECLONE_start_0 <none>" -> "FAKECLONE-clone_running_0" [ style = dashed]
+"FAKECLONE_start_0 <none>" [ style=dashed color="red" fontcolor="black"]
+"FAKECLONE_stop_0 c7auto2" -> "FAKECLONE-clone_stopped_0" [ style = bold]
+"FAKECLONE_stop_0 c7auto2" -> "FAKECLONE_start_0 <none>" [ style = dashed]
+"FAKECLONE_stop_0 c7auto2" -> "all_stopped" [ style = bold]
+"FAKECLONE_stop_0 c7auto2" [ style=bold color="green" fontcolor="black"]
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+}

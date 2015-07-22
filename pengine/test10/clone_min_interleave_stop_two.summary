@@ -1,0 +1,53 @@
+
+Current cluster status:
+Online: [ c7auto1 c7auto2 c7auto3 ]
+
+ shooter	(stonith:fence_phd_kvm):	Started c7auto1
+ Clone Set: FAKE1-clone [FAKE1]
+     Started: [ c7auto1 c7auto2 c7auto3 ]
+ Clone Set: FAKE2-clone [FAKE2]
+     Started: [ c7auto1 c7auto2 c7auto3 ]
+ Clone Set: FAKE3-clone [FAKE3]
+     Started: [ c7auto1 c7auto2 c7auto3 ]
+
+Transition Summary:
+ * Stop    FAKE1:0	(c7auto3)
+ * Stop    FAKE1:2	(c7auto2)
+ * Stop    FAKE2:0	(Started c7auto3)
+ * Stop    FAKE2:1	(Started c7auto1)
+ * Stop    FAKE2:2	(Started c7auto2)
+ * Stop    FAKE3:0	(Started c7auto3)
+ * Stop    FAKE3:1	(Started c7auto1)
+ * Stop    FAKE3:2	(Started c7auto2)
+
+Executing cluster transition:
+ * Pseudo action:   FAKE3-clone_stop_0
+ * Resource action: FAKE3           stop on c7auto3
+ * Resource action: FAKE3           stop on c7auto1
+ * Resource action: FAKE3           stop on c7auto2
+ * Pseudo action:   FAKE3-clone_stopped_0
+ * Pseudo action:   FAKE2-clone_stop_0
+ * Resource action: FAKE2           stop on c7auto3
+ * Resource action: FAKE2           stop on c7auto1
+ * Resource action: FAKE2           stop on c7auto2
+ * Pseudo action:   FAKE2-clone_stopped_0
+ * Pseudo action:   FAKE1-clone_stop_0
+ * Resource action: FAKE1           stop on c7auto3
+ * Resource action: FAKE1           stop on c7auto2
+ * Pseudo action:   FAKE1-clone_stopped_0
+ * Pseudo action:   FAKE1-clone_start_0
+ * Pseudo action:   all_stopped
+ * Pseudo action:   FAKE1-clone_running_0
+
+Revised cluster status:
+Online: [ c7auto1 c7auto2 c7auto3 ]
+
+ shooter	(stonith:fence_phd_kvm):	Started c7auto1
+ Clone Set: FAKE1-clone [FAKE1]
+     Started: [ c7auto1 ]
+     Stopped: [ c7auto2 c7auto3 ]
+ Clone Set: FAKE2-clone [FAKE2]
+     Stopped: [ c7auto1 c7auto2 c7auto3 ]
+ Clone Set: FAKE3-clone [FAKE3]
+     Stopped: [ c7auto1 c7auto2 c7auto3 ]
+

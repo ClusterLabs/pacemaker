@@ -1,0 +1,153 @@
+<cib crm_feature_set="3.0.10" validate-with="pacemaker-2.3" epoch="29" num_updates="0" admin_epoch="0" cib-last-written="Thu Jul 16 18:03:09 2015" update-origin="c7auto1" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="2">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.12-ef86b49"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="phd"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="c7auto1"/>
+      <node id="2" uname="c7auto2"/>
+      <node id="3" uname="c7auto3">
+        <instance_attributes id="nodes-3">
+          <nvpair id="nodes-3-standby" name="standby" value="on"/>
+        </instance_attributes>
+      </node>
+      <node id="4" uname="c7auto4"/>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="shooter" type="fence_phd_kvm">
+        <instance_attributes id="shooter-instance_attributes"/>
+        <operations>
+          <op id="shooter-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <clone id="FAKECLONE-clone">
+        <primitive class="ocf" id="FAKECLONE" provider="heartbeat" type="Dummy">
+          <instance_attributes id="FAKECLONE-instance_attributes"/>
+          <operations>
+            <op id="FAKECLONE-start-timeout-20" interval="0s" name="start" timeout="20"/>
+            <op id="FAKECLONE-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
+            <op id="FAKECLONE-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="FAKECLONE-clone-meta">
+          <nvpair id="FAKECLONE-clone-min" name="clone-min" value="2"/>
+        </meta_attributes>
+        <meta_attributes id="FAKECLONE-clone-meta_attributes"/>
+      </clone>
+      <clone id="FAKECLONE2-clone">
+        <primitive class="ocf" id="FAKECLONE2" provider="heartbeat" type="Dummy">
+          <instance_attributes id="FAKECLONE2-instance_attributes"/>
+          <operations>
+            <op id="FAKECLONE2-start-timeout-20" interval="0s" name="start" timeout="20"/>
+            <op id="FAKECLONE2-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
+            <op id="FAKECLONE2-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="FAKECLONE2-clone-meta"/>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="location-FAKECLONE-clone-c7auto4--INFINITY" node="c7auto4" rsc="FAKECLONE-clone" score="-INFINITY"/>
+      <rsc_location id="location-FAKECLONE2-clone-c7auto1--INFINITY" node="c7auto1" rsc="FAKECLONE2-clone" score="-INFINITY"/>
+      <rsc_location id="location-FAKECLONE2-clone-c7auto2--INFINITY" node="c7auto2" rsc="FAKECLONE2-clone" score="-INFINITY"/>
+      <rsc_order first="FAKECLONE-clone" first-action="start" id="order-FAKECLONE-clone-FAKECLONE2-clone-mandatory" then="FAKECLONE2-clone" then-action="start"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="1" uname="c7auto1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-1-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="FAKECLONE2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="FAKECLONE2_last_0" operation_key="FAKECLONE2_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.10" transition-key="17:28:0:b489d50c-a7db-4605-8519-a2d5e1452e29" transition-magic="0:0;17:28:0:b489d50c-a7db-4605-8519-a2d5e1452e29" on_node="c7auto1" call-id="30" rc-code="0" op-status="0" interval="0" last-run="1437083676" last-rc-change="1437083676" exec-time="12" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="shooter" type="fence_phd_kvm" class="stonith">
+            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.10" transition-key="11:0:0:b489d50c-a7db-4605-8519-a2d5e1452e29" transition-magic="0:0;11:0:0:b489d50c-a7db-4605-8519-a2d5e1452e29" on_node="c7auto1" call-id="6" rc-code="0" op-status="0" interval="0" last-run="1437073991" last-rc-change="1437073991" exec-time="9" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="shooter_monitor_60000" operation_key="shooter_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.10" transition-key="9:1:0:b489d50c-a7db-4605-8519-a2d5e1452e29" transition-magic="0:0;9:1:0:b489d50c-a7db-4605-8519-a2d5e1452e29" on_node="c7auto1" call-id="7" rc-code="0" op-status="0" interval="60000" last-rc-change="1437073992" exec-time="7" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="FAKECLONE" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="FAKECLONE_last_0" operation_key="FAKECLONE_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="16:33:0:b489d50c-a7db-4605-8519-a2d5e1452e29" transition-magic="0:0;16:33:0:b489d50c-a7db-4605-8519-a2d5e1452e29" on_node="c7auto1" call-id="31" rc-code="0" op-status="0" interval="0" last-run="1437084158" last-rc-change="1437084158" exec-time="9" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" fake " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="FAKECLONE_monitor_10000" operation_key="FAKECLONE_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="17:33:0:b489d50c-a7db-4605-8519-a2d5e1452e29" transition-magic="0:0;17:33:0:b489d50c-a7db-4605-8519-a2d5e1452e29" on_node="c7auto1" call-id="32" rc-code="0" op-status="0" interval="10000" last-rc-change="1437084158" exec-time="7" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="2" uname="c7auto2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="FAKECLONE2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="FAKECLONE2_last_0" operation_key="FAKECLONE2_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.10" transition-key="16:29:0:b489d50c-a7db-4605-8519-a2d5e1452e29" transition-magic="0:0;16:29:0:b489d50c-a7db-4605-8519-a2d5e1452e29" on_node="c7auto2" call-id="32" rc-code="0" op-status="0" interval="0" last-run="1437083678" last-rc-change="1437083678" exec-time="10" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="shooter" type="fence_phd_kvm" class="stonith">
+            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.10" transition-key="6:0:7:b489d50c-a7db-4605-8519-a2d5e1452e29" transition-magic="0:7;6:0:7:b489d50c-a7db-4605-8519-a2d5e1452e29" on_node="c7auto2" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1437073988" last-rc-change="1437073988" exec-time="964" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="FAKECLONE" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="FAKECLONE_last_0" operation_key="FAKECLONE_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="12:33:0:b489d50c-a7db-4605-8519-a2d5e1452e29" transition-magic="0:0;12:33:0:b489d50c-a7db-4605-8519-a2d5e1452e29" on_node="c7auto2" call-id="33" rc-code="0" op-status="0" interval="0" last-run="1437084158" last-rc-change="1437084158" exec-time="11" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" fake " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="FAKECLONE_monitor_10000" operation_key="FAKECLONE_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="13:33:0:b489d50c-a7db-4605-8519-a2d5e1452e29" transition-magic="0:0;13:33:0:b489d50c-a7db-4605-8519-a2d5e1452e29" on_node="c7auto2" call-id="34" rc-code="0" op-status="0" interval="10000" last-rc-change="1437084158" exec-time="12" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="3" uname="c7auto3" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="3">
+        <instance_attributes id="status-3">
+          <nvpair id="status-3-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-3-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="3">
+        <lrm_resources>
+          <lrm_resource id="FAKECLONE2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="FAKECLONE2_last_0" operation_key="FAKECLONE2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.10" transition-key="17:30:0:b489d50c-a7db-4605-8519-a2d5e1452e29" transition-magic="0:0;17:30:0:b489d50c-a7db-4605-8519-a2d5e1452e29" on_node="c7auto3" call-id="29" rc-code="0" op-status="0" interval="0" last-run="1437083710" last-rc-change="1437083710" exec-time="6" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" fake " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="FAKECLONE2_monitor_10000" operation_key="FAKECLONE2_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.10" transition-key="18:30:0:b489d50c-a7db-4605-8519-a2d5e1452e29" transition-magic="0:0;18:30:0:b489d50c-a7db-4605-8519-a2d5e1452e29" on_node="c7auto3" call-id="30" rc-code="0" op-status="0" interval="10000" last-rc-change="1437083710" exec-time="6" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="shooter" type="fence_phd_kvm" class="stonith">
+            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.10" transition-key="8:0:7:b489d50c-a7db-4605-8519-a2d5e1452e29" transition-magic="0:7;8:0:7:b489d50c-a7db-4605-8519-a2d5e1452e29" on_node="c7auto3" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1437073988" last-rc-change="1437073988" exec-time="963" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="FAKECLONE" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="FAKECLONE_last_0" operation_key="FAKECLONE_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="14:33:0:b489d50c-a7db-4605-8519-a2d5e1452e29" transition-magic="0:0;14:33:0:b489d50c-a7db-4605-8519-a2d5e1452e29" on_node="c7auto3" call-id="31" rc-code="0" op-status="0" interval="0" last-run="1437084157" last-rc-change="1437084157" exec-time="9" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" fake " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="FAKECLONE_monitor_10000" operation_key="FAKECLONE_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="15:33:0:b489d50c-a7db-4605-8519-a2d5e1452e29" transition-magic="0:0;15:33:0:b489d50c-a7db-4605-8519-a2d5e1452e29" on_node="c7auto3" call-id="32" rc-code="0" op-status="0" interval="10000" last-rc-change="1437084157" exec-time="7" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="4" uname="c7auto4" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="4">
+        <instance_attributes id="status-4">
+          <nvpair id="status-4-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-4-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="4">
+        <lrm_resources>
+          <lrm_resource id="FAKECLONE2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="FAKECLONE2_last_0" operation_key="FAKECLONE2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.10" transition-key="22:26:0:b489d50c-a7db-4605-8519-a2d5e1452e29" transition-magic="0:0;22:26:0:b489d50c-a7db-4605-8519-a2d5e1452e29" on_node="c7auto4" call-id="29" rc-code="0" op-status="0" interval="0" last-run="1437083649" last-rc-change="1437083649" exec-time="7" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" fake " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="FAKECLONE2_monitor_10000" operation_key="FAKECLONE2_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.10" transition-key="23:26:0:b489d50c-a7db-4605-8519-a2d5e1452e29" transition-magic="0:0;23:26:0:b489d50c-a7db-4605-8519-a2d5e1452e29" on_node="c7auto4" call-id="30" rc-code="0" op-status="0" interval="10000" last-rc-change="1437083649" exec-time="7" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="shooter" type="fence_phd_kvm" class="stonith">
+            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.10" transition-key="10:0:7:b489d50c-a7db-4605-8519-a2d5e1452e29" transition-magic="0:7;10:0:7:b489d50c-a7db-4605-8519-a2d5e1452e29" on_node="c7auto4" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1437073988" last-rc-change="1437073988" exec-time="963" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="FAKECLONE" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="FAKECLONE_last_0" operation_key="FAKECLONE_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.10" transition-key="20:3:0:b489d50c-a7db-4605-8519-a2d5e1452e29" transition-magic="0:0;20:3:0:b489d50c-a7db-4605-8519-a2d5e1452e29" on_node="c7auto4" call-id="14" rc-code="0" op-status="0" interval="0" last-run="1437074856" last-rc-change="1437074856" exec-time="8" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

@@ -1,0 +1,39 @@
+
+Current cluster status:
+Online: [ c7auto1 c7auto2 c7auto3 ]
+
+ shooter	(stonith:fence_phd_kvm):	Started c7auto1
+ Clone Set: FAKE1-clone [FAKE1]
+     Stopped: [ c7auto1 c7auto2 c7auto3 ]
+ Clone Set: FAKE2-clone [FAKE2]
+     Stopped: [ c7auto1 c7auto2 c7auto3 ]
+ Clone Set: FAKE3-clone [FAKE3]
+     Stopped: [ c7auto1 c7auto2 c7auto3 ]
+
+Transition Summary:
+ * Start   FAKE1:0	(c7auto1)
+ * Start   FAKE2:0	(c7auto2 - blocked)
+ * Start   FAKE2:1	(c7auto3 - blocked)
+ * Start   FAKE2:2	(c7auto1 - blocked)
+ * Start   FAKE3:0	(c7auto2 - blocked)
+ * Start   FAKE3:1	(c7auto3 - blocked)
+ * Start   FAKE3:2	(c7auto1 - blocked)
+
+Executing cluster transition:
+ * Pseudo action:   FAKE1-clone_start_0
+ * Resource action: FAKE1           start on c7auto1
+ * Pseudo action:   FAKE1-clone_running_0
+ * Resource action: FAKE1           monitor=10000 on c7auto1
+
+Revised cluster status:
+Online: [ c7auto1 c7auto2 c7auto3 ]
+
+ shooter	(stonith:fence_phd_kvm):	Started c7auto1
+ Clone Set: FAKE1-clone [FAKE1]
+     Started: [ c7auto1 ]
+     Stopped: [ c7auto2 c7auto3 ]
+ Clone Set: FAKE2-clone [FAKE2]
+     Stopped: [ c7auto1 c7auto2 c7auto3 ]
+ Clone Set: FAKE3-clone [FAKE3]
+     Stopped: [ c7auto1 c7auto2 c7auto3 ]
+

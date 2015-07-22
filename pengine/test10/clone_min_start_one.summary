@@ -1,0 +1,37 @@
+
+Current cluster status:
+Node c7auto1 (1): standby
+Node c7auto2 (2): standby
+Online: [ c7auto3 c7auto4 ]
+
+ shooter	(stonith:fence_phd_kvm):	Started c7auto1
+ Clone Set: FAKECLONE-clone [FAKECLONE]
+     Stopped: [ c7auto1 c7auto2 c7auto3 c7auto4 ]
+ FAKE	(ocf::heartbeat:Dummy):	Stopped
+
+Transition Summary:
+ * Move    shooter	(Started c7auto1 -> c7auto3)
+ * Start   FAKECLONE:0	(c7auto3)
+ * Start   FAKE	(c7auto4 - blocked)
+
+Executing cluster transition:
+ * Resource action: shooter         stop on c7auto1
+ * Pseudo action:   FAKECLONE-clone_start_0
+ * Pseudo action:   all_stopped
+ * Resource action: shooter         start on c7auto3
+ * Resource action: FAKECLONE       start on c7auto3
+ * Pseudo action:   FAKECLONE-clone_running_0
+ * Resource action: shooter         monitor=60000 on c7auto3
+ * Resource action: FAKECLONE       monitor=10000 on c7auto3
+
+Revised cluster status:
+Node c7auto1 (1): standby
+Node c7auto2 (2): standby
+Online: [ c7auto3 c7auto4 ]
+
+ shooter	(stonith:fence_phd_kvm):	Started c7auto3
+ Clone Set: FAKECLONE-clone [FAKECLONE]
+     Started: [ c7auto3 ]
+     Stopped: [ c7auto1 c7auto2 c7auto4 ]
+ FAKE	(ocf::heartbeat:Dummy):	Stopped
+

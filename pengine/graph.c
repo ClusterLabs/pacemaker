@@ -29,7 +29,6 @@
 #include <allocate.h>
 #include <utils.h>
 
-gboolean update_action(action_t * action);
 void update_colo_start_chain(action_t * action);
 gboolean rsc_update_action(action_t * first, action_t * then, enum pe_ordering type);
 
@@ -261,8 +260,16 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
                                                 pe_action_runnable, pe_order_one_or_more);
 
         } else if (is_set(flags, pe_action_runnable)) {
-            if (update_action_flags(then, pe_action_runnable)) {
-                changed |= pe_graph_updated_then;
+            /* alright. a "first" action is considered runnable, incremente
+             * the 'runnable_before' counter */
+            then->runnable_before++;
+
+            /* if the runnable before count for then exceeds the required number
+             * of "before" runnable actions... mark then as runnable */
+            if (then->runnable_before >= then->required_runnable_before) {
+                if (update_action_flags(then, pe_action_runnable)) {
+                    changed |= pe_graph_updated_then;
+                }
             }
         }
         if (changed) {
@@ -456,6 +463,18 @@ update_action(action_t * then)
                      pe_action_pseudo) ? "pseudo" : then->node ? then->node->details->uname : "");
 
     if (is_set(then->flags, pe_action_requires_any)) {
+        /* initialize current known runnable before actions to 0
+         * from here as graph_update_action is called for each of
+         * then's before actions, this number will increment as
+         * runnable 'first' actions are encountered */
+        then->runnable_before = 0;
+
+        /* for backwards compatibility with previous options that use
+         * the 'requires_any' flag, initalize required to 1 if it is
+         * not set. */ 
+        if (then->required_runnable_before == 0) {
+            then->required_runnable_before = 1;
+        }
         clear_bit(then->flags, pe_action_runnable);
         /* We are relying on the pe_order_one_or_more clause of
          * graph_update_action(), called as part of the:
