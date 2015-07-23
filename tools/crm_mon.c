@@ -2715,6 +2715,7 @@ print_status(pe_working_set_t * data_set)
                 } else {
                     online_nodes = add_list_element(online_nodes, node_name);
                 }
+                free(node_name);
                 continue;
             }
         } else {
@@ -2727,6 +2728,7 @@ print_status(pe_working_set_t * data_set)
                 } else {
                     offline_nodes = add_list_element(offline_nodes, node_name);
                 }
+                free(node_name);
                 continue;
             }
         }
@@ -3078,6 +3080,7 @@ print_html_status(pe_working_set_t * data_set, const char *filename)
             fprintf(stream, "</ul>\n");
         }
         fprintf(stream, "</li>\n");
+        free(node_name);
     }
     fprintf(stream, "</ul>\n");
 
