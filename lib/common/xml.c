@@ -3821,6 +3821,7 @@ crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, 
     if(data == NULL) {
         *offset = 0;
         *max = 0;
+        return;
     }
 #if 0
     if (is_not_set(options, xml_log_option_filtered)) {
