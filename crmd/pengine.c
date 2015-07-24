@@ -77,8 +77,6 @@ save_cib_contents(xmlNode * msg, int call_id, int rc, xmlNode * output, void *us
 
         free(filename);
     }
-
-    free(id);
 }
 
 static void
