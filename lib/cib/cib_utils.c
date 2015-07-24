@@ -624,12 +624,6 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
 {
     xmlNode *output = NULL;
     cib_callback_client_t *blob = NULL;
-    cib_callback_client_t local_blob;
-
-    local_blob.id = NULL;
-    local_blob.callback = NULL;
-    local_blob.user_data = NULL;
-    local_blob.only_success = FALSE;
 
     if (msg != NULL) {
         crm_element_value_int(msg, F_CIB_RC, &rc);
@@ -638,16 +632,8 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
     }
 
     blob = g_hash_table_lookup(cib_op_callback_table, GINT_TO_POINTER(call_id));
-
-    if (blob != NULL) {
-        local_blob = *blob;
-        blob = NULL;
-
-        remove_cib_op_callback(call_id, FALSE);
-
-    } else {
+    if (blob == NULL) {
         crm_trace("No callback found for call %d", call_id);
-        local_blob.callback = NULL;
     }
 
     if (cib == NULL) {
@@ -659,13 +645,18 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
         rc = pcmk_ok;
     }
 
-    if (local_blob.callback != NULL && (rc == pcmk_ok || local_blob.only_success == FALSE)) {
-        crm_trace("Invoking callback %s for call %d", crm_str(local_blob.id), call_id);
-        local_blob.callback(msg, call_id, rc, output, local_blob.user_data);
+    if (blob && blob->callback && (rc == pcmk_ok || blob->only_success == FALSE)) {
+        crm_trace("Invoking callback %s for call %d", crm_str(blob->id), call_id);
+        blob->callback(msg, call_id, rc, output, blob->user_data);
 
     } else if (cib && cib->op_callback == NULL && rc != pcmk_ok) {
         crm_warn("CIB command failed: %s", pcmk_strerror(rc));
         crm_log_xml_debug(msg, "Failed CIB Update");
+    }
+
+    /* This may free user_data, so do it after the callback */
+    if (blob) {
+        remove_cib_op_callback(call_id, FALSE);
     }
 
     if (cib && cib->op_callback != NULL) {

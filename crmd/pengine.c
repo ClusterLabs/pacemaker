@@ -320,9 +320,10 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         crm_debug("Discarding PE request in state: %s", fsa_state2string(fsa_state));
         return;
 
-    } else if (num_cib_op_callbacks() != 0) {
-        crm_debug("Re-asking for the CIB: %d peer updates still pending", num_cib_op_callbacks());
-
+    /* this callback counts as 1 */
+    } else if (num_cib_op_callbacks() > 1) {
+        crm_debug("Re-asking for the CIB: %d other peer updates still pending",
+                  (num_cib_op_callbacks() - 1));
         sleep(1);
         register_fsa_action(A_PE_INVOKE);
         return;
