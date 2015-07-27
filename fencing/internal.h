@@ -59,7 +59,8 @@ typedef struct stonith_device_s {
 enum st_remap_phase {
     st_phase_requested = 0,
     st_phase_off = 1,
-    st_phase_on = 2
+    st_phase_on = 2,
+    st_phase_max = 3
 };
 
 typedef struct remote_fencing_op_s {
@@ -135,7 +136,7 @@ typedef struct remote_fencing_op_s {
      * node next joins the cluster.
      */
     /*! Lists of devices marked as required for each phase */
-    GListPtr required_list[3];
+    GListPtr required_list[st_phase_max];
     /*! The device list of all the devices at the current executing topology level. */
     GListPtr devices_list;
     /*! Current entry in the topology device list */

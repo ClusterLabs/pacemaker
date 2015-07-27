@@ -60,13 +60,13 @@ typedef struct device_properties_s {
     /* The remaining members are indexed by the operation's "phase" */
 
     /* Whether this device has been executed in each phase */
-    gboolean executed[3];
+    gboolean executed[st_phase_max];
     /* Whether this device is disallowed from executing in each phase */
-    gboolean disallowed[3];
+    gboolean disallowed[st_phase_max];
     /* Action-specific timeout for each phase */
-    int custom_action_timeout[3];
+    int custom_action_timeout[st_phase_max];
     /* Action-specific maximum random delay for each phase */
-    int delay_max[3];
+    int delay_max[st_phase_max];
 } device_properties_t;
 
 typedef struct st_query_result_s {
