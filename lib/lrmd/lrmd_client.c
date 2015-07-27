@@ -1369,7 +1369,7 @@ lrmd_api_disconnect(lrmd_t * lrmd)
 {
     lrmd_private_t *native = lrmd->private;
 
-    crm_info("Disconnecting from lrmd service");
+    crm_info("Disconnecting from %d lrmd service", native->type);
     switch (native->type) {
         case CRM_CLIENT_IPC:
             lrmd_ipc_disconnect(lrmd);

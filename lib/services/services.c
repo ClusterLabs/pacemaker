@@ -457,7 +457,7 @@ services_action_free(svc_action_t * op)
 gboolean
 cancel_recurring_action(svc_action_t * op)
 {
-    crm_info("Cancelling operation %s", op->id);
+    crm_info("Cancelling %s operation %s", op->standard, op->id);
 
     if (recurring_actions) {
         g_hash_table_remove(recurring_actions, op->id);
