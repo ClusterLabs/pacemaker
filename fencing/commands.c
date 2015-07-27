@@ -713,8 +713,6 @@ read_action_metadata(stonith_device_t *device)
     for (lpc = 0; lpc < max; lpc++) {
         const char *on_target = NULL;
         const char *action = NULL;
-        const char *automatic = NULL;
-        const char *required = NULL;
         xmlNode *match = getXpathResult(xpath, lpc);
 
         CRM_LOG_ASSERT(match != NULL);
@@ -722,8 +720,6 @@ read_action_metadata(stonith_device_t *device)
 
         on_target = crm_element_value(match, "on_target");
         action = crm_element_value(match, "name");
-        automatic = crm_element_value(match, "automatic");
-        required = crm_element_value(match, "required");
 
         if(safe_str_eq(action, "list")) {
             set_bit(device->flags, st_device_supports_list);
@@ -731,16 +727,20 @@ read_action_metadata(stonith_device_t *device)
             set_bit(device->flags, st_device_supports_status);
         } else if(safe_str_eq(action, "reboot")) {
             set_bit(device->flags, st_device_supports_reboot);
-        } else if(safe_str_eq(action, "on") && (crm_is_true(automatic))) {
-            /* this setting implies required=true for unfencing */
-            required = "true";
+        } else if (safe_str_eq(action, "on")) {
+            /* "automatic" means the cluster will unfence node when it joins */
+            const char *automatic = crm_element_value(match, "automatic");
+
+            /* "required" is a deprecated synonym for "automatic" */
+            const char *required = crm_element_value(match, "required");
+
+            if (crm_is_true(automatic) || crm_is_true(required)) {
+                device->required_actions = add_action(device->required_actions, action);
+            }
         }
 
         if (action && crm_is_true(on_target)) {
             device->on_target_actions = add_action(device->on_target_actions, action);
-        }
-        if (action && crm_is_true(required)) {
-            device->required_actions = add_action(device->required_actions, action);
         }
     }
 
