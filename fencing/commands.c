@@ -1224,7 +1224,6 @@ stonith_device_action(xmlNode * msg, char **output)
     } else if (device) {
         cmd = create_async_command(msg);
         if (cmd == NULL) {
-            free_device(device);
             return -EPROTO;
         }
 
