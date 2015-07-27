@@ -150,6 +150,7 @@ resources_action_create(const char *name, const char *standard, const char *prov
 
     op = calloc(1, sizeof(svc_action_t));
     op->opaque = calloc(1, sizeof(svc_action_private_t));
+    op->opaque->pending = NULL;
     op->rsc = strdup(name);
     op->action = strdup(action);
     op->interval = interval;
@@ -158,6 +159,7 @@ resources_action_create(const char *name, const char *standard, const char *prov
     op->agent = strdup(agent);
     op->sequence = ++operations;
     op->flags = flags;
+
     if (asprintf(&op->id, "%s_%s_%d", name, action, interval) == -1) {
         goto return_error;
     }
@@ -335,6 +337,7 @@ services_action_create_generic(const char *exec, const char *args[])
 
     op->opaque->exec = strdup(exec);
     op->opaque->args[0] = strdup(exec);
+    op->opaque->pending = NULL;
 
     for (cur_arg = 1; args && args[cur_arg - 1]; cur_arg++) {
         op->opaque->args[cur_arg] = strdup(args[cur_arg - 1]);
@@ -361,17 +364,17 @@ services_set_op_pending(svc_action_t *op, DBusPendingCall *pending)
 {
     if (op->opaque->pending && (op->opaque->pending != pending)) {
         if (pending) {
-            crm_info("Lost pending DBus call (%p)", op->opaque->pending);
+            crm_info("Lost pending %s DBus call (%p)", op->id, op->opaque->pending);
         } else {
-            crm_trace("Done with pending DBus call (%p)", op->opaque->pending);
+            crm_info("Done with pending %s DBus call (%p)", op->id, op->opaque->pending);
         }
         dbus_pending_call_unref(op->opaque->pending);
     }
     op->opaque->pending = pending;
     if (pending) {
-        crm_trace("Updated pending DBus call (%p)", pending);
+        crm_info("Updated pending %s DBus call (%p)", op->id, pending);
     } else {
-        crm_trace("Cleared pending DBus call");
+        crm_info("Cleared pending %s DBus call", op->id);
     }
 }
 #endif

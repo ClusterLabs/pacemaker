@@ -527,8 +527,7 @@ upstart_job_exec(svc_action_t * op, gboolean synchronous)
         free(job);
 
         if(pending) {
-            dbus_pending_call_ref(pending);
-            op->opaque->pending = pending;
+            services_set_op_pending(op, pending);
             return TRUE;
         }
         return FALSE;
