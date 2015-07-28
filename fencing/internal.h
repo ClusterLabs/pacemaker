@@ -130,15 +130,9 @@ typedef struct remote_fencing_op_s {
     /*! The current operation phase being executed */
     enum st_remap_phase phase;
 
-    /* For phase 0 or 1 (requested action or a remapped "off"), required devices
-     * will be executed regardless of what topology level is being executed
-     * currently. For phase 1 (remapped "on"), required devices will not be
-     * attempted, because the cluster will execute them automatically when the
-     * node next joins the cluster.
-     */
-    /*! Lists of devices marked as required for each phase */
-    GListPtr required_list[st_phase_max];
-    /*! The device list of all the devices at the current executing topology level. */
+    /*! Devices with automatic unfencing (always run if "on" requested, never if remapped) */
+    GListPtr automatic_list;
+    /*! List of all devices at the currently executing topology level */
     GListPtr devices_list;
     /*! Current entry in the topology device list */
     GListPtr devices;
