@@ -26,12 +26,13 @@ typedef struct stonith_device_s {
 
     /*! list of actions that must execute on the target node. Used for unfencing */
     char *on_target_actions;
-    char *required_actions;
     GListPtr targets;
     time_t targets_age;
     gboolean has_attr_map;
     /* should nodeid parameter for victim be included in agent arguments */
     gboolean include_nodeid;
+    /* whether the cluster should automatically unfence nodes with the device */
+    gboolean automatic_unfencing;
     guint priority;
     guint active_pid;
 

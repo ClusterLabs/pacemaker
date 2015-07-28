@@ -124,17 +124,7 @@ static xmlNode *stonith_construct_async_reply(async_command_t * cmd, const char 
 static gboolean
 is_action_required(const char *action, stonith_device_t *device)
 {
-    if(device == NULL) {
-        return FALSE;
-
-    } else if (device->required_actions == NULL) {
-        return FALSE;
-
-    } else if (strstr(device->required_actions, action)) {
-        return TRUE;
-    }
-
-    return FALSE;
+    return device && device->automatic_unfencing && safe_str_eq(action, "on");
 }
 
 static int
@@ -449,7 +439,6 @@ free_device(gpointer data)
     free_xml(device->agent_metadata);
     free(device->namespace);
     free(device->on_target_actions);
-    free(device->required_actions);
     free(device->agent);
     free(device->id);
     free(device);
@@ -735,7 +724,7 @@ read_action_metadata(stonith_device_t *device)
             const char *required = crm_element_value(match, "required");
 
             if (crm_is_true(automatic) || crm_is_true(required)) {
-                device->required_actions = add_action(device->required_actions, action);
+                device->automatic_unfencing = TRUE;
             }
         }
 
@@ -778,8 +767,7 @@ build_device_from_xml(xmlNode * msg)
 
     value = crm_element_value(dev, "rsc_provides");
     if (safe_str_eq(value, "unfencing")) {
-        /* if this agent requires unfencing, 'on' is considered a required action */
-        device->required_actions = add_action(device->required_actions, "on");
+        device->automatic_unfencing = TRUE;
     }
 
     if (is_action_required("on", device)) {
