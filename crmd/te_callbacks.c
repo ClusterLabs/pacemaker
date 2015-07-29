@@ -717,7 +717,6 @@ cib_fencing_updated(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
     } else {
         crm_info("Fencing update %d for %s: complete", call_id, (char *)user_data);
     }
-    free(user_data);
 }
 
 void

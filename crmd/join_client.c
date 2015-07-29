@@ -116,8 +116,8 @@ do_cl_join_offer_respond(long long action,
 
     /* we only ever want the last one */
     if (query_call_id > 0) {
-        /* Calling remove_cib_op_callback() would result in a memory leak of the data field */
         crm_trace("Cancelling previous join query: %d", query_call_id);
+        remove_cib_op_callback(query_call_id, FALSE);
         query_call_id = 0;
     }
 
@@ -173,7 +173,6 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
 
   done:
     free_xml(generation);
-    free(join_id);
 }
 
 /*	A_CL_JOIN_RESULT	*/

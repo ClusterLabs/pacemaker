@@ -200,7 +200,6 @@ remove_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
     do_crm_log_unlikely(rc == 0 ? LOG_DEBUG : LOG_NOTICE,
                         "Deletion of the unknown conflicting node \"%s\": %s (rc=%d)",
                         node_uuid, pcmk_strerror(rc), rc);
-    free(node_uuid);
 }
 
 static void
@@ -215,11 +214,9 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
             crm_notice("Searching conflicting nodes for %s failed: %s (%d)",
                        new_node_uuid, pcmk_strerror(rc), rc);
         }
-        free(new_node_uuid);
         return;
 
     } else if (output == NULL) {
-        free(new_node_uuid);
         return;
     }
 
@@ -283,8 +280,6 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
             free_xml(node_state_xml);
         }
     }
-
-    free(new_node_uuid);
 }
 
 static void

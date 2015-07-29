@@ -136,6 +136,13 @@ typedef struct cib_api_operations_s {
                                    void *user_data, const char *callback_name,
                                    void (*callback) (xmlNode *, int, int, xmlNode *, void *));
 
+    gboolean (*register_callback_full)(cib_t *cib, int call_id, int timeout,
+                                       gboolean only_success, void *user_data,
+                                       const char *callback_name,
+                                       void (*callback)(xmlNode *, int, int,
+                                                        xmlNode *, void *),
+                                       void (*free_func)(void *));
+
 } cib_api_operations_t;
 
 struct cib_s {
