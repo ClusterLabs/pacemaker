@@ -527,7 +527,6 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
             free(state);
             return op->rc == PCMK_OCF_OK;
         } else if (pending) {
-            dbus_pending_call_ref(pending);
             services_set_op_pending(op, pending);
             return TRUE;
         }

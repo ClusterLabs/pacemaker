@@ -480,7 +480,6 @@ upstart_job_exec(svc_action_t * op, gboolean synchronous)
                 free(state);
                 return op->rc == PCMK_OCF_OK;
             } else if (pending) {
-                dbus_pending_call_ref(pending);
                 services_set_op_pending(op, pending);
                 return TRUE;
             }
