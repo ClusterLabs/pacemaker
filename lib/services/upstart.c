@@ -417,6 +417,7 @@ upstart_async_dispatch(DBusPendingCall *pending, void *user_data)
         }
     }
 
+    CRM_LOG_ASSERT(pending == op->opaque->pending);
     services_set_op_pending(op, NULL);
     operation_finalize(op);
 
@@ -479,6 +480,7 @@ upstart_job_exec(svc_action_t * op, gboolean synchronous)
                 free(state);
                 return op->rc == PCMK_OCF_OK;
             } else if (pending) {
+                dbus_pending_call_ref(pending);
                 services_set_op_pending(op, pending);
                 return TRUE;
             }

@@ -71,8 +71,6 @@ gboolean cib_register_ha(ll_cluster_t * hb_cluster, const char *client_name);
 void *hb_conn = NULL;
 #endif
 
-extern void terminate_cib(const char *caller, gboolean fast);
-
 GMainLoop *mainloop = NULL;
 const char *cib_root = NULL;
 char *cib_our_uname = NULL;
@@ -414,7 +412,7 @@ cib_cs_destroy(gpointer user_data)
         crm_info("Corosync disconnection complete");
     } else {
         crm_err("Corosync connection lost!  Exiting.");
-        terminate_cib(__FUNCTION__, TRUE);
+        terminate_cib(__FUNCTION__, -1);
     }
 }
 #endif
@@ -422,30 +420,29 @@ cib_cs_destroy(gpointer user_data)
 static void
 cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
 {
-    if ((type == crm_status_processes) && legacy_mode
-        && is_not_set(node->processes, crm_get_cluster_proc())) {
-        uint32_t old = 0;
+    switch (type) {
+        case crm_status_processes:
+            if (legacy_mode && is_not_set(node->processes, crm_get_cluster_proc())) {
+                uint32_t old = data? *(const uint32_t *)data : 0;
 
-        if (data) {
-            old = *(const uint32_t *)data;
-        }
+                if ((node->processes ^ old) & crm_proc_cpg) {
+                    crm_info("Attempting to disable legacy mode after %s left the cluster",
+                             node->uname);
+                    legacy_mode = FALSE;
+                }
+            }
+            break;
 
-        if ((node->processes ^ old) & crm_proc_cpg) {
-            crm_info("Attempting to disable legacy mode after %s left the cluster", node->uname);
-            legacy_mode = FALSE;
-        }
-    }
+        case crm_status_uname:
+        case crm_status_rstate:
+        case crm_status_nstate:
+            if (cib_shutdown_flag && (crm_active_peers() < 2)
+                && crm_hash_table_size(client_connections) == 0) {
 
-    if (cib_shutdown_flag && crm_active_peers() < 2 && crm_hash_table_size(client_connections) == 0) {
-        crm_info("No more peers");
-        /* @TODO
-         * terminate_cib() calls crm_cluster_disconnect() which calls
-         * crm_peer_destroy() which destroys the peer caches, which a peer
-         * status callback shouldn't do. For now, there is a workaround in
-         * crm_update_peer_proc(), but CIB should be refactored to avoid
-         * destroying the peer caches here.
-         */
-        terminate_cib(__FUNCTION__, FALSE);
+                crm_info("No more peers");
+                terminate_cib(__FUNCTION__, 1);
+            }
+            break;
     }
 }
 
@@ -455,10 +452,10 @@ cib_ha_connection_destroy(gpointer user_data)
 {
     if (cib_shutdown_flag) {
         crm_info("Heartbeat disconnection complete... exiting");
-        terminate_cib(__FUNCTION__, FALSE);
+        terminate_cib(__FUNCTION__, 0);
     } else {
         crm_err("Heartbeat connection lost!  Exiting.");
-        terminate_cib(__FUNCTION__, TRUE);
+        terminate_cib(__FUNCTION__, -1);
     }
 }
 #endif
@@ -541,8 +538,12 @@ cib_init(void)
     /* Create the mainloop and run it... */
     mainloop = g_main_new(FALSE);
     crm_info("Starting %s mainloop", crm_system_name);
-
     g_main_run(mainloop);
+
+    /* If main loop returned, clean up and exit. We disconnect in case
+     * terminate_cib() was called with fast=1.
+     */
+    crm_cluster_disconnect(&crm_cluster);
     cib_ipc_servers_destroy(ipcs_ro, ipcs_rw, ipcs_shm);
 
     return crm_exit(pcmk_ok);

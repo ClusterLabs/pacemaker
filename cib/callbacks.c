@@ -1570,7 +1570,7 @@ static gboolean
 cib_force_exit(gpointer data)
 {
     crm_notice("Forcing exit!");
-    terminate_cib(__FUNCTION__, TRUE);
+    terminate_cib(__FUNCTION__, -1);
     return FALSE;
 }
 
@@ -1656,7 +1656,7 @@ initiate_exit(void)
 
     active = crm_active_peers();
     if (active < 2) {
-        terminate_cib(__FUNCTION__, FALSE);
+        terminate_cib(__FUNCTION__, 0);
         return;
     }
 
@@ -1675,9 +1675,19 @@ initiate_exit(void)
 extern int remote_fd;
 extern int remote_tls_fd;
 
+/*
+ * \internal
+ * \brief Close remote sockets, free the global CIB and quit
+ *
+ * \param[in] caller           Name of calling function (for log message)
+ * \param[in] fast             If 1, skip disconnect; if -1, also exit error
+ */
 void
-terminate_cib(const char *caller, gboolean fast)
+terminate_cib(const char *caller, int fast)
 {
+    crm_info("%s: Exiting%s...", caller,
+             (fast < 0)? " fast" : mainloop ? " from mainloop" : "");
+
     if (remote_fd > 0) {
         close(remote_fd);
         remote_fd = 0;
@@ -1687,27 +1697,29 @@ terminate_cib(const char *caller, gboolean fast)
         remote_tls_fd = 0;
     }
 
-    if (!fast) {
-        crm_info("%s: Disconnecting from cluster infrastructure", caller);
-        crm_cluster_disconnect(&crm_cluster);
-    }
-
     uninitializeCib();
 
-    crm_info("%s: Exiting%s...", caller, fast ? " fast" : mainloop ? " from mainloop" : "");
+    if (fast < 0) {
+        /* Quit fast on error */
+        cib_ipc_servers_destroy(ipcs_ro, ipcs_rw, ipcs_shm);
+        crm_exit(EINVAL);
 
-    if (fast == FALSE && mainloop != NULL && g_main_is_running(mainloop)) {
+    } else if ((mainloop != NULL) && g_main_is_running(mainloop)) {
+        /* Quit via returning from the main loop. If fast == 1, we skip the
+         * disconnect here, and it will be done when the main loop returns
+         * (this allows the peer status callback to avoid messing with the
+         * peer caches).
+         */
+        if (fast == 0) {
+            crm_cluster_disconnect(&crm_cluster);
+        }
         g_main_quit(mainloop);
 
     } else {
-        qb_ipcs_destroy(ipcs_ro);
-        qb_ipcs_destroy(ipcs_rw);
-        qb_ipcs_destroy(ipcs_shm);
-
-        if (fast) {
-            crm_exit(EINVAL);
-        } else {
-            crm_exit(pcmk_ok);
-        }
+        /* Quit via clean exit. Even the peer status callback can disconnect
+         * here, because we're not returning control to the caller. */
+        crm_cluster_disconnect(&crm_cluster);
+        cib_ipc_servers_destroy(ipcs_ro, ipcs_rw, ipcs_shm);
+        crm_exit(pcmk_ok);
     }
 }
