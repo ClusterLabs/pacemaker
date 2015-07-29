@@ -69,7 +69,7 @@ function status() {
 function start() {
     # Is it already running?
     if
-	status
+        status
     then
         return
     fi
@@ -94,20 +94,20 @@ case $action in
         nohup $0 $f start >/dev/null 2>&1 </dev/null &
         ;;
     stop)
-	killpid
-	;;
+        killpid
+        ;;
     delete)
-	killpid
-	rm -f $f
-	;;
+        killpid
+        rm -f $f
+        ;;
     mark)
-	uptime | sed s/up.*:/,/ | tr '\\n' ',' >> $f
-	echo " $*" >> $f
+        uptime | sed s/up.*:/,/ | tr '\\n' ',' >> $f
+        echo " $*" >> $f
         start
-	;;
+        ;;
     *)
-	echo "Unknown action: $action."
-	;;
+        echo "Unknown action: $action."
+        ;;
 esac
 """
 
@@ -275,7 +275,7 @@ class ClusterManager(UserDict):
         None
 
     def _finalConditions(self):
-        for key in self.keys():
+        for key in list(self.keys()):
             if self[key] == None:
                 raise ValueError("Improper derivation: self[" + key +   "] must be overridden by subclass.")
 
@@ -986,7 +986,7 @@ class Process(Component):
         self.CM = cm
         self.badnews_ignore = badnews_ignore
         self.badnews_ignore.extend(common_ignore)
-	self.triggersreboot = triggersreboot
+        self.triggersreboot = triggersreboot
 
         if process:
             self.proc = str(process)
