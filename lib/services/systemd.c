@@ -461,23 +461,12 @@ systemd_async_dispatch(DBusPendingCall *pending, void *user_data)
         reply = dbus_pending_call_steal_reply(pending);
     }
 
-    if(op) {
-        crm_trace("Got result: %p for %p for %s, %s", reply, pending, op->rsc, op->action);
-        if (pending == op->opaque->pending) {
-            services_set_op_pending(op, NULL);
-        } else {
-            crm_info("Received unexpected reply for pending DBus call (%p vs %p)",
-                     op->opaque->pending, pending);
-        }
-        systemd_exec_result(reply, op);
+    crm_trace("Got result: %p for %p for %s, %s", reply, pending, op->rsc, op->action);
 
-    } else {
-        crm_trace("Got result: %p for %p", reply, pending);
-    }
+    CRM_LOG_ASSERT(pending == op->opaque->pending);
+    services_set_op_pending(op, NULL);
+    systemd_exec_result(reply, op);
 
-    if(pending) {
-        dbus_pending_call_unref(pending);
-    }
     if(reply) {
         dbus_message_unref(reply);
     }
