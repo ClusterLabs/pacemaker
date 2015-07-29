@@ -106,7 +106,7 @@ typedef struct cib_callback_client_s {
     void *user_data;
     gboolean only_success;
     struct timer_rec_s *timer;
-
+    void (*free_func)(void *);
 } cib_callback_client_t;
 
 struct timer_rec_s {
@@ -137,6 +137,13 @@ int cib_native_register_notification(cib_t * cib, const char *callback, int enab
 gboolean cib_client_register_callback(cib_t * cib, int call_id, int timeout, gboolean only_success,
                                       void *user_data, const char *callback_name,
                                       void (*callback) (xmlNode *, int, int, xmlNode *, void *));
+gboolean cib_client_register_callback_full(cib_t *cib, int call_id,
+                                           int timeout, gboolean only_success,
+                                           void *user_data,
+                                           const char *callback_name,
+                                           void (*callback)(xmlNode *, int, int,
+                                                            xmlNode *, void *),
+                                           void (*free_func)(void *));
 
 int cib_process_query(const char *op, int options, const char *section, xmlNode * req,
                       xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,

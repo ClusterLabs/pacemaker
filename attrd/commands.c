@@ -832,7 +832,6 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
         }
     }
   done:
-    free(name);
     if(a && a->changed && election_state(writer) == election_won) {
         write_attribute(a);
     }
@@ -1019,8 +1018,10 @@ write_attribute(attribute_t *a)
         crm_info("Sent update %d with %d changes for %s, id=%s, set=%s",
                  a->update, cib_updates, a->id, (a->uuid? a->uuid : "<n/a>"), a->set);
 
-        the_cib->cmds->register_callback(
-            the_cib, a->update, 120, FALSE, strdup(a->id), "attrd_cib_callback", attrd_cib_callback);
+        the_cib->cmds->register_callback_full(the_cib, a->update, 120, FALSE,
+                                              strdup(a->id),
+                                              "attrd_cib_callback",
+                                              attrd_cib_callback, free);
     }
     free_xml(xml_top);
 }

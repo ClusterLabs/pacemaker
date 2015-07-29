@@ -198,6 +198,11 @@ cib_destroy_op_callback(gpointer data)
         g_source_remove(blob->timer->ref);
     }
     free(blob->timer);
+
+    if (blob->user_data && blob->free_func) {
+        blob->free_func(blob->user_data);
+    }
+
     free(blob);
 }
 
@@ -327,10 +332,15 @@ cib_new(void)
     return cib_native_new();
 }
 
-/* this is backwards...
-   cib_*_new should call this not the other way around
+/*
+ * \internal
+ * \brief Create a generic CIB connection instance
+ *
+ * \return Newly allocated and initialized cib_t instance
+ *
+ * \note This is called by each variant's cib_*_new() function before setting
+ *       variant-specific values.
  */
-
 cib_t *
 cib_new_variant(void)
 {
@@ -364,6 +374,7 @@ cib_new_variant(void)
     new_cib->cmds->add_notify_callback = cib_client_add_notify_callback;
     new_cib->cmds->del_notify_callback = cib_client_del_notify_callback;
     new_cib->cmds->register_callback = cib_client_register_callback;
+    new_cib->cmds->register_callback_full = cib_client_register_callback_full;
 
     new_cib->cmds->noop = cib_client_noop;
     new_cib->cmds->ping = cib_client_ping;
@@ -545,6 +556,19 @@ cib_client_register_callback(cib_t * cib, int call_id, int timeout, gboolean onl
                              void *user_data, const char *callback_name,
                              void (*callback) (xmlNode *, int, int, xmlNode *, void *))
 {
+    return cib_client_register_callback_full(cib, call_id, timeout,
+                                             only_success, user_data,
+                                             callback_name, callback, NULL);
+}
+
+gboolean
+cib_client_register_callback_full(cib_t *cib, int call_id, int timeout,
+                                  gboolean only_success, void *user_data,
+                                  const char *callback_name,
+                                  void (*callback)(xmlNode *, int, int,
+                                                   xmlNode *, void *),
+                                  void (*free_func)(void *))
+{
     cib_callback_client_t *blob = NULL;
 
     if (call_id < 0) {
@@ -552,6 +576,9 @@ cib_client_register_callback(cib_t * cib, int call_id, int timeout, gboolean onl
             callback(NULL, call_id, call_id, NULL, user_data);
         } else {
             crm_warn("CIB call failed: %s", pcmk_strerror(call_id));
+        }
+        if (user_data && free_func) {
+            free_func(user_data);
         }
         return FALSE;
     }
@@ -561,6 +588,7 @@ cib_client_register_callback(cib_t * cib, int call_id, int timeout, gboolean onl
     blob->only_success = only_success;
     blob->user_data = user_data;
     blob->callback = callback;
+    blob->free_func = free_func;
 
     if (timeout > 0) {
         struct timer_rec_s *async_timer = NULL;
