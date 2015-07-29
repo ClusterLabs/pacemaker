@@ -322,10 +322,7 @@ upstart_job_check(const char *name, const char *state, void *userdata)
     }
 
     if (op->synchronous == FALSE) {
-        if (op->opaque->pending) {
-            dbus_pending_call_unref(op->opaque->pending);
-        }
-        op->opaque->pending = NULL;
+        services_set_op_pending(op, NULL);
         operation_finalize(op);
     }
 }
@@ -392,6 +389,7 @@ upstart_async_dispatch(DBusPendingCall *pending, void *user_data)
     if(pending) {
         reply = dbus_pending_call_steal_reply(pending);
     }
+
     if(pcmk_dbus_find_error(op->action, pending, reply, &error)) {
 
         /* ignore "already started" or "not running" errors */
@@ -419,11 +417,9 @@ upstart_async_dispatch(DBusPendingCall *pending, void *user_data)
         }
     }
 
+    services_set_op_pending(op, NULL);
     operation_finalize(op);
 
-    if(pending) {
-        dbus_pending_call_unref(pending);
-    }
     if(reply) {
         dbus_message_unref(reply);
     }
@@ -483,8 +479,7 @@ upstart_job_exec(svc_action_t * op, gboolean synchronous)
                 free(state);
                 return op->rc == PCMK_OCF_OK;
             } else if (pending) {
-                dbus_pending_call_ref(pending);
-                op->opaque->pending = pending;
+                services_set_op_pending(op, pending);
                 return TRUE;
             }
             return FALSE;
