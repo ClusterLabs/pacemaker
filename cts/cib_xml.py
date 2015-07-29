@@ -19,7 +19,7 @@ class XmlBase(CibBase):
         text = '''<%s''' % self.tag
         if self.name:
             text += ''' id="%s"''' % (self.name)
-        for k in self.kwargs.keys():
+        for k in list(self.kwargs.keys()):
             text += ''' %s="%s"''' % (k, self.kwargs[k])
 
         if not self.children:
@@ -149,22 +149,22 @@ class Resource(XmlBase):
     def constraints(self):
         text = "<constraints>"
 
-        for k in self.scores.keys():
+        for k in list(self.scores.keys()):
             text += '''<rsc_location id="prefer-%s" rsc="%s">''' % (k, self.name)
             text += self.scores[k].show()
             text += '''</rsc_location>'''
 
-        for k in self.needs.keys():
+        for k in list(self.needs.keys()):
             text += '''<rsc_order id="%s-after-%s" first="%s" then="%s"''' % (self.name, k, k, self.name)
             kargs = self.needs[k]
-            for kw in kargs.keys():
+            for kw in list(kargs.keys()):
                 text += ''' %s="%s"''' % (kw, kargs[kw])
             text += '''/>'''
 
-        for k in self.coloc.keys():
+        for k in list(self.coloc.keys()):
             text += '''<rsc_colocation id="%s-with-%s" rsc="%s" with-rsc="%s"''' % (self.name, k, self.name, k)
             kargs = self.coloc[k]
-            for kw in kargs.keys():
+            for kw in list(kargs.keys()):
                 text += ''' %s="%s"''' % (kw, kargs[kw])
             text += '''/>'''
 
@@ -179,13 +179,13 @@ class Resource(XmlBase):
 
         if len(self.meta) > 0:
             text += '''<meta_attributes id="%s-meta">''' % self.name
-            for p in self.meta.keys():
+            for p in list(self.meta.keys()):
                 text += '''<nvpair id="%s-%s" name="%s" value="%s"/>''' % (self.name, p, p, self.meta[p])
             text += '''</meta_attributes>'''
 
         if len(self.param) > 0:
             text += '''<instance_attributes id="%s-params">''' % self.name
-            for p in self.param.keys():
+            for p in list(self.param.keys()):
                 text += '''<nvpair id="%s-%s" name="%s" value="%s"/>''' % (self.name, p, p, self.param[p])
             text += '''</instance_attributes>'''
 
@@ -219,7 +219,7 @@ class Group(Resource):
 
         if len(self.meta) > 0:
             text += '''<meta_attributes id="%s-meta">''' % self.name
-            for p in self.meta.keys():
+            for p in list(self.meta.keys()):
                 text += '''<nvpair id="%s-%s" name="%s" value="%s"/>''' % (self.name, p, p, self.meta[p])
             text += '''</meta_attributes>'''
 

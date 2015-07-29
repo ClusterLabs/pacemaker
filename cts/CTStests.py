@@ -1583,13 +1583,13 @@ class SplitBrainTest(CTSTest):
             # else, try again
 
         self.debug("Created %d partitions" % p_max)
-        for key in partitions.keys():
+        for key in list(partitions.keys()):
             self.debug("Partition["+str(key)+"]:\t"+repr(partitions[key]))
 
         # Disabling STONITH to reduce test complexity for now
         self.rsh(node, "crm_attribute -V -n stonith-enabled -v false")
 
-        for key in partitions.keys():
+        for key in list(partitions.keys()):
             self.isolate_partition(partitions[key])
 
         count = 30
@@ -1612,7 +1612,7 @@ class SplitBrainTest(CTSTest):
         self.CM.partitions_expected = 1
 
         # And heal them again
-        for key in partitions.keys():
+        for key in list(partitions.keys()):
             self.heal_partition(partitions[key])
 
         # Wait for a single partition to form

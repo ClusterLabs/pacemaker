@@ -80,7 +80,7 @@ class crm_ais(crm_lha):
         # Processes running under valgrind can't be shot with "killall -9 processname",
         # so don't include them in the returned list
         vgrind = self.Env["valgrind-procs"].split()
-        for key in self.fullcomplist.keys():
+        for key in list(self.fullcomplist.keys()):
             if self.Env["valgrind-tests"]:
                 if key in vgrind:
                     self.log("Filtering %s from the component list as it is being profiled by valgrind" % key)

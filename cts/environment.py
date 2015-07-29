@@ -92,7 +92,7 @@ class Environment:
 
     def dump(self):
         keys = []
-        for key in self.data.keys():
+        for key in list(self.data.keys()):
             keys.append(key)
 
         keys.sort()

@@ -211,7 +211,7 @@ A partially set up scenario is torn down if it fails during setup.
             }
         self.ClusterManager.log("Test Summary")
         for test in self.Tests:
-            for key in stat_filter.keys():
+            for key in list(stat_filter.keys()):
                 stat_filter[key] = test.Stats[key]
             self.ClusterManager.log(("Test %s: "%test.name).ljust(25) + " %s"%repr(stat_filter))
 

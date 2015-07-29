@@ -118,7 +118,7 @@ class LogAudit(ClusterAudit):
                         self.CM.Env["LogWatcher"] = w.kind
                     return 1
 
-        for k in watch.keys():
+        for k in list(watch.keys()):
             w = watch[k]
             if w.unmatched:
                 for regex in w.unmatched:
