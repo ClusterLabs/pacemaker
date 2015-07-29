@@ -28,13 +28,13 @@ from cts.CTSvars import *
 
 
 def usage():
-    print "usage: " + sys.argv[0]  \
+    print("usage: " + sys.argv[0]  \
     +  " [-2]"\
     +  " [--ipbase|-i first-test-ip]"\
     +  " [--ipnum|-n test-ip-num]"\
     +  " [--help|-h]"\
     +  " [--perform|-p op]"\
-    +  " [number-of-iterations]"
+    +  " [number-of-iterations]")
     sys.exit(1)
 
 
@@ -71,7 +71,7 @@ def log(towrite):
     t = time.strftime("%Y/%m/%d_%H:%M:%S\t", time.localtime(time.time()))  
     logstr = t + " "+str(towrite)
     syslog.syslog(logstr)
-    print logstr
+    print(logstr)
 
 if __name__ == '__main__': 
     ra = "IPaddr"

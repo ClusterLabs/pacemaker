@@ -449,4 +449,4 @@ if __name__ == '__main__':
 
     CibFactory = ConfigFactory(manager)
     cib = CibFactory.createConfig("pacemaker-1.1")
-    print cib.contents()
+    print(cib.contents())

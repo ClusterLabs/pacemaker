@@ -73,7 +73,7 @@ for i in range(0, len(args)):
         skipthis=1
 
 if not os.access(filename, os.R_OK):
-    print prefix + 'Last read: %d, limit=%d, count=%d - unreadable' % (0, limit, 0)
+    print(prefix + 'Last read: %d, limit=%d, count=%d - unreadable' % (0, limit, 0))
     sys.exit(1)
 
 logfile=open(filename, 'r')
@@ -85,7 +85,7 @@ if offset != 'EOF':
     if newsize >= offset:
         logfile.seek(offset)
     else:
-        print prefix + ('File truncated from %d to %d' % (offset, newsize))
+        print(prefix + ('File truncated from %d to %d' % (offset, newsize)))
         if (newsize*1.05) < offset:
             logfile.seek(0)
         # else: we probably just lost a few logs after a fencing op
@@ -103,10 +103,10 @@ while True:
     line = logfile.readline()
     if not line: break
 
-    print line.strip()
+    print(line.strip())
     count += 1
 
-print prefix + 'Last read: %d, limit=%d, count=%d' % (logfile.tell(), limit, count)
+print(prefix + 'Last read: %d, limit=%d, count=%d' % (logfile.tell(), limit, count))
 logfile.close()
 """
 
@@ -381,7 +381,7 @@ class LogWatcher(RemoteExec):
         else:
             self.file_list.append(FileObj(self.filename))
 
-        # print "%s now has %d files" % (self.name, len(self.file_list))
+        # print("%s now has %d files" % (self.name, len(self.file_list)))
 
     def __del__(self):
         if self.debug_level > 1: self.debug("Destroy")
@@ -406,7 +406,7 @@ class LogWatcher(RemoteExec):
             raise ValueError("No sources to read from")
 
         pending = []
-        #print "%s waiting for %d operations" % (self.name, self.pending)
+        #print("%s waiting for %d operations" % (self.name, self.pending))
         for f in self.file_list:
             t = f.harvest_async(self)
             if t:
@@ -418,7 +418,7 @@ class LogWatcher(RemoteExec):
                 self.logger.log("%s: Aborting after 20s waiting for %s logging commands" % (self.name, repr(t)))
                 return
 
-        #print "Got %d lines" % len(self.line_cache)
+        #print("Got %d lines" % len(self.line_cache))
 
     def end(self):
         for f in self.file_list:

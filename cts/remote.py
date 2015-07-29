@@ -147,7 +147,7 @@ class RemoteExec:
         sysname = args[0]
         command = args[1]
 
-        #print "sysname: %s, us: %s" % (sysname, self.OurNode)
+        #print("sysname: %s, us: %s" % (sysname, self.OurNode))
         if sysname == None or string.lower(sysname) == self.OurNode or sysname == "localhost":
             ret = command
         else:
@@ -164,7 +164,7 @@ class RemoteExec:
             self.logger.debug(args)
 
     def call_async(self, node, command, completionDelegate=None):
-        #if completionDelegate: print "Waiting for %d on %s: %s" % (proc.pid, node, command)
+        #if completionDelegate: print("Waiting for %d on %s: %s" % (proc.pid, node, command))
         aproc = AsyncRemoteCmd(node, self._cmd([node, command]), completionDelegate=completionDelegate)
         aproc.start()
         return aproc
@@ -186,7 +186,7 @@ class RemoteExec:
         proc = Popen(self._cmd([node, command]),
                      stdout = PIPE, stderr = PIPE, close_fds = True, shell = True)
 
-        #if completionDelegate: print "Waiting for %d on %s: %s" % (proc.pid, node, command)
+        #if completionDelegate: print("Waiting for %d on %s: %s" % (proc.pid, node, command))
         if not synchronous and proc.pid > 0 and not self.silent:
             aproc = AsyncWaitProc(proc, node, command, completionDelegate=completionDelegate)
             aproc.start()
@@ -257,14 +257,14 @@ class RemoteFactory:
         return RemoteExec(RemoteFactory.rsh, silent)
 
     def enable_docker(self):
-        print "Using DOCKER backend for connections to cluster nodes"
+        print("Using DOCKER backend for connections to cluster nodes")
 
         RemoteFactory.rsh.Command = "/usr/libexec/phd/docker/phd_docker_remote_cmd "
         RemoteFactory.rsh.CpCommand = "/usr/libexec/phd/docker/phd_docker_cp"
 
     def enable_qarsh(self):
         # http://nstraz.wordpress.com/2008/12/03/introducing-qarsh/
-        print "Using QARSH for connections to cluster nodes"
+        print("Using QARSH for connections to cluster nodes")
 
         RemoteFactory.rsh.Command = "qarsh -t 300 -l root"
         RemoteFactory.rsh.CpCommand = "qacp -q"

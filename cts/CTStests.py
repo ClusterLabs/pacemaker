@@ -2305,7 +2305,7 @@ class BSC_AddResource(CTSTest):
         if ":" in ip:
             fields = ip.rpartition(":")
             fields[2] = str(hex(int(fields[2], 16)+1))
-            print str(hex(int(f[2], 16)+1))
+            print(str(hex(int(f[2], 16)+1)))
         else:
             fields = ip.rpartition('.')
             fields[2] = str(int(fields[2])+1)

@@ -550,7 +550,7 @@ Test a rolling upgrade between two versions of the stack
         return self.install(node, self.CM.Env["previous-version"])
 
     def SetUp(self, CM):
-        print repr(self)+"prepare"
+        print(repr(self)+"prepare")
         CM.prepare()
 
         # Clear out the cobwebs

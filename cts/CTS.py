@@ -299,14 +299,14 @@ class ClusterManager(UserDict):
         if key == "Name":
             return self.name
 
-        print "FIXME: Getting %s from %s" % (key, repr(self))
+        print("FIXME: Getting %s from %s" % (key, repr(self)))
         if self.data.has_key(key):
             return self.data[key]
 
         return self.templates.get_patterns(self.Env["Name"], key)
 
     def __setitem__(self, key, value):
-        print "FIXME: Setting %s=%s on %s" % (key, value, repr(self))
+        print("FIXME: Setting %s=%s on %s" % (key, value, repr(self)))
         self.data[key] = value
 
     def key_for_node(self, node):
@@ -333,7 +333,7 @@ class ClusterManager(UserDict):
     def prepare(self):
         '''Finish the Initialization process. Prepare to test...'''
 
-        print repr(self)+"prepare"
+        print(repr(self)+"prepare")
         for node in self.Env["nodes"]:
             if self.StataCM(node):
                 self.ShouldBeStatus[node] = "up"
@@ -387,11 +387,11 @@ class ClusterManager(UserDict):
             return None
 
         if not self.templates["Pat:Fencing_start"]:
-            print "No start pattern"
+            print("No start pattern")
             return None
 
         if not self.templates["Pat:Fencing_ok"]:
-            print "No ok pattern"
+            print("No ok pattern")
             return None
 
         stonith = None
@@ -877,7 +877,7 @@ class ClusterManager(UserDict):
                 self.rsh(host, '''bash %s %s delete''' % (log_stats_bin, log_stats_file))
 
                 fname = "cts-stats-%d-nodes-%s.csv" % (len(self.Env["nodes"]), host)
-                print "Extracted stats: %s" % fname
+                print("Extracted stats: %s" % fname)
                 fd = open(fname, "a")
                 fd.writelines(lines)
                 fd.close()
