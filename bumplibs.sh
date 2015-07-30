@@ -3,6 +3,7 @@
 declare -A headers
 headers[crmcommon]="include/crm/common include/crm/crm.h"
 headers[crmcluster]="include/crm/cluster.h"
+headers[crmservice]="include/crm/services.h"
 headers[transitioner]="include/crm/transition.h"
 headers[cib]="include/crm/cib.h include/crm/cib/util.h"
 headers[pe_rules]="include/crm/pengine/rules.h"
@@ -11,8 +12,17 @@ headers[pengine]="include/crm/pengine/common.h  include/crm/pengine/complex.h  i
 headers[stonithd]="include/crm/stonith-ng.h"
 headers[lrmd]="include/crm/lrmd.h"
 
-LAST_RELEASE=`test -e /Volumes || git tag -l | grep Pacemaker | grep -v rc | sort -Vr | head -n 1`
-for lib in crmcommon crmcluster transitioner cib pe_rules pe_status stonithd pengine lrmd; do
+if [ ! -z $1 ]; then
+    LAST_RELEASE=$1
+else
+    LAST_RELEASE=`test -e /Volumes || git tag -l | grep Pacemaker | grep -v rc | sort -Vr | head -n 1`
+fi
+libs=$(find . -name "*.am" -exec grep "lib.*_la_LDFLAGS.*version-info"  \{\} \; | sed -e s/_la_LDFLAGS.*// -e s/^lib//)
+for lib in $libs; do
+    if [ -z "${headers[$lib]}" ]; then
+	echo "Unknown headers for lib$lib"
+	exit 0
+    fi
     git diff -w $LAST_RELEASE..HEAD ${headers[$lib]}
     echo ""
 
@@ -27,6 +37,7 @@ for lib in crmcommon crmcluster transitioner cib pe_rules pe_status stonithd pen
     fi
 
     sources=`grep "lib${lib}_la_SOURCES" $am | sed s/.*=// | sed 's:$(top_builddir)/::' | sed 's:$(top_srcdir)/::' | sed 's:\\\::' | sed 's:$(libpe_rules_la_SOURCES):rules.c\ common.c:'`
+
     full_sources=""
     for f in $sources; do
 	if
@@ -47,6 +58,11 @@ for lib in crmcommon crmcluster transitioner cib pe_rules pe_status stonithd pen
 	git diff -w $LAST_RELEASE..HEAD --stat $full_sources
 	echo ""
 	echo "New arguments to functions or changes to the middle of structs are incompatible additions"
+	echo ""
+	echo "Where possible:"
+	echo "- move new fields to the end of structs"
+	echo "- use bitfields instead of booleans"
+	echo "- when adding arguments, create new functions that the old version can call"
 	echo ""
 	read -p "Are the changes to lib$lib: [a]dditions, [i]ncompatible additions, [r]emovals or [f]ixes? [None]: " CHANGE
 
