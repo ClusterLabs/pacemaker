@@ -534,7 +534,20 @@ remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
             }
 
         } else if(is_set(flags, crm_ipc_proxied)) {
-            int rc = crm_ipc_send(proxy->ipc, request, flags, 5000, NULL);
+            const char *type = crm_element_value(request, F_TYPE);
+            const char *host = NULL;
+            remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
+            int rc;
+
+            if (safe_str_eq(type, T_ATTRD)) {
+                host = crm_element_value_copy(request, F_ATTRD_HOST);
+                if (host == NULL) {
+                    crm_xml_add(request, F_ATTRD_HOST, proxy->node_name);
+                    crm_xml_add_int(request, F_ATTRD_HOST_ID, get_local_nodeid(0));
+                }
+            }
+
+            rc = crm_ipc_send(proxy->ipc, request, flags, 5000, NULL);
 
             if(rc < 0) {
                 xmlNode *op_reply = create_xml_node(NULL, "nack");
