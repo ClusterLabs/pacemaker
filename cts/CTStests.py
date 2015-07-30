@@ -1048,7 +1048,7 @@ class BandwidthTest(CTSTest):
                 T1 = linesplit[0]
                 timesplit = string.split(T1,":")
                 time2split = string.split(timesplit[2],".")
-                time1 = (long(timesplit[0])*60+long(timesplit[1]))*60+long(time2split[0])+long(time2split[1])*0.000001
+                time1 = (int(timesplit[0])*60+int(timesplit[1]))*60+int(time2split[0])+int(time2split[1])*0.000001
                 break
 
         while count < 100:
@@ -1070,7 +1070,7 @@ class BandwidthTest(CTSTest):
         T2 = linessplit[0]
         timesplit = string.split(T2,":")
         time2split = string.split(timesplit[2],".")
-        time2 = (long(timesplit[0])*60+long(timesplit[1]))*60+long(time2split[0])+long(time2split[1])*0.000001
+        time2 = (int(timesplit[0])*60+int(timesplit[1]))*60+int(time2split[0])+int(time2split[1])*0.000001
         time = time2-time1
         if (time <= 0):
             return 0
