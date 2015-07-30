@@ -124,7 +124,7 @@ A partially set up scenario is torn down if it fails during setup.
 
     def incr(self, name):
         '''Increment (or initialize) the value associated with the given name'''
-        if not self.Stats.has_key(name):
+        if not name in self.Stats:
             self.Stats[name] = 0
         self.Stats[name] = self.Stats[name]+1
 
@@ -176,7 +176,7 @@ A partially set up scenario is torn down if it fails during setup.
 
         elapsed_time = stoptime - starttime
         test_time = stoptime - test.get_timer()
-        if not test.has_key("min_time"):
+        if not test["min_time"]:
             test["elapsed_time"] = elapsed_time
             test["min_time"] = test_time
             test["max_time"] = test_time
@@ -387,7 +387,7 @@ According to the manual page for ping:
         '''Start the PingFest!'''
 
         self.PingSize = 1024
-        if CM.Env.has_key("PingSize"):
+        if "PingSize" in CM.Env.keys():
                 self.PingSize = CM.Env["PingSize"]
 
         CM.log("Starting %d byte flood pings" % self.PingSize)

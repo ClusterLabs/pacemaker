@@ -108,7 +108,7 @@ class LogAudit(ClusterAudit):
                 self.CM.log ("ERROR: Cannot execute remote command [%s] on %s" % (cmd, node))
 
         for k in self.kinds:
-            if watch.has_key(k):
+            if k in watch:
                 w = watch[k]
                 if watch_pref == "any": self.CM.log("Testing for %s logs" % (k))
                 w.lookforall(silent=True)
@@ -226,7 +226,7 @@ class FileAudit(ClusterAudit):
                     self.known.append(line)
                     self.CM.log("Warning: Corosync core file on %s: %s" % (node, line))
 
-            if self.CM.ShouldBeStatus.has_key(node) and self.CM.ShouldBeStatus[node] == "down":
+            if node in self.CM.ShouldBeStatus and self.CM.ShouldBeStatus[node] == "down":
                 clean = 0
                 (rc, lsout) = self.CM.rsh(node, "ls -al /dev/shm | grep qb-", None)
                 for line in lsout:
@@ -532,7 +532,7 @@ class CrmdStateAudit(ClusterAudit):
         ,        "auditfail":0}
 
     def has_key(self, key):
-        return self.Stats.has_key(key)
+        return key in self.Stats
 
     def __setitem__(self, key, value):
         self.Stats[key] = value
@@ -542,7 +542,7 @@ class CrmdStateAudit(ClusterAudit):
 
     def incr(self, name):
         '''Increment (or initialize) the value associated with the given name'''
-        if not self.Stats.has_key(name):
+        if not name in self.Stats:
             self.Stats[name] = 0
         self.Stats[name] = self.Stats[name]+1
 
@@ -601,7 +601,7 @@ class CIBAudit(ClusterAudit):
         ,        "auditfail":0}
 
     def has_key(self, key):
-        return self.Stats.has_key(key)
+        return key in self.Stats
 
     def __setitem__(self, key, value):
         self.Stats[key] = value
@@ -611,7 +611,7 @@ class CIBAudit(ClusterAudit):
     
     def incr(self, name):
         '''Increment (or initialize) the value associated with the given name'''
-        if not self.Stats.has_key(name):
+        if not name in self.Stats:
             self.Stats[name] = 0
         self.Stats[name] = self.Stats[name]+1
 
@@ -726,7 +726,7 @@ class PartitionAudit(ClusterAudit):
     
     def incr(self, name):
         '''Increment (or initialize) the value associated with the given name'''
-        if not self.Stats.has_key(name):
+        if not name in self.Stats:
             self.Stats[name] = 0
         self.Stats[name] = self.Stats[name]+1
 

@@ -67,7 +67,7 @@ class BasePatterns:
         }
 
     def get_component(self, key):
-        if self.components.has_key(key):
+        if key in self.components:
             return self.components[key]
         print("Unknown component '%s' for %s" % (key, self.name))
         return []
@@ -87,9 +87,9 @@ class BasePatterns:
     def __getitem__(self, key):
         if key == "Name":
             return self.name
-        elif self.commands.has_key(key):
+        elif key in self.commands:
             return self.commands[key]
-        elif self.search.has_key(key):
+        elif key in self.search:
             return self.search[key]
         else:
             print("Unknown template '%s' for %s" % (key, self.name))
@@ -489,7 +489,7 @@ class PatternSelector:
             crm_mcp_docker(name)
 
     def get_variant(self, variant):
-        if patternvariants.has_key(variant):
+        if variant in patternvariants:
             return patternvariants[variant]
         print("defaulting to crm-base for %s" % variant)
         return self.base

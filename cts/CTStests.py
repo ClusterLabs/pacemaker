@@ -97,13 +97,18 @@ class CTSTest:
         self.logger.debug(args)
 
     def has_key(self, key):
-        return self.Stats.has_key(key)
+        return key in self.Stats
 
     def __setitem__(self, key, value):
         self.Stats[key] = value
 
     def __getitem__(self, key):
-        return self.Stats[key]
+        if str(key) == "0":
+            raise ValueError("Bad call to 'foo in X', should reference 'foo in X.Stats' instead")
+
+        if key in self.Stats:
+            return self.Stats[key]
+        return None
 
     def log_mark(self, msg):
         self.debug("MARK: test %s %s %d" % (self.name,msg,time.time()))
@@ -128,7 +133,7 @@ class CTSTest:
 
     def incr(self, name):
         '''Increment (or initialize) the value associated with the given name'''
-        if not self.Stats.has_key(name):
+        if not name in self.Stats:
             self.Stats[name] = 0
         self.Stats[name] = self.Stats[name]+1
 
@@ -534,7 +539,7 @@ class StonithdTest(CTSTest):
         if not self.is_applicable_common():
             return 0
 
-        if self.Env.has_key("DoFencing"):
+        if "DoFencing" in self.Env.keys():
             return self.Env["DoFencing"]
 
         return 1
@@ -1574,7 +1579,7 @@ class SplitBrainTest(CTSTest):
             p_max = len(self.Env["nodes"])
             for node in self.Env["nodes"]:
                 p = self.Env.RandomGen.randint(1, p_max)
-                if not partitions.has_key(p):
+                if not p in partitions:
                     partitions[p] = []
                 partitions[p].append(node)
             p_max = len(partitions.keys())
@@ -2247,11 +2252,11 @@ class RollingUpgradeTest(CTSTest):
         if not self.is_applicable_common():
             return None
 
-        if not self.Env.has_key("rpm-dir"):
+        if not "rpm-dir" in self.Env.keys():
             return None
-        if not self.Env.has_key("current-version"):
+        if not "current-version" in self.Env.keys():
             return None
-        if not self.Env.has_key("previous-version"):
+        if not "previous-version" in self.Env.keys():
             return None
 
         return 1
@@ -3109,7 +3114,7 @@ class RemoteStonithd(CTSTest):
         if not self.driver.is_applicable():
             return False
 
-        if self.Env.has_key("DoFencing"):
+        if "DoFencing" in self.Env.keys():
             return self.Env["DoFencing"]
 
         return True

@@ -106,16 +106,19 @@ class Environment:
         if key == "nodes":
             return True
 
-        return self.data.has_key(key)
+        return key in self.data
 
     def __getitem__(self, key):
+        if str(key) == "0":
+            raise ValueError("Bad call to 'foo in X', should reference 'foo in X.keys()' instead")
+
         if key == "nodes":
             return self.Nodes
 
         elif key == "Name":
             return self.get_stack_short()
 
-        elif self.data.has_key(key):
+        elif key in self.data:
             return self.data[key]
 
         else:
@@ -175,12 +178,12 @@ class Environment:
             self.data["Stack"] = "corosync (plugin v0)"
 
         else:
-            print("Unknown stack: "+name)
+            raise ValueError("Unknown stack: "+name)
             sys.exit(1)
 
     def get_stack_short(self):
         # Create the Cluster Manager object
-        if not self.data.has_key("Stack"):
+        if not "Stack" in self.data:
             return "unknown"
 
         elif self.data["Stack"] == "heartbeat":
@@ -202,12 +205,12 @@ class Environment:
             return "crm-plugin-v0"
 
         else:
-            LogFactory().log("Unknown stack: "+self.data["stack"])
-            sys.exit(1)
+            LogFactory().log("Unknown stack: "+self["stack"])
+            raise ValueError("Unknown stack: "+self["stack"])
 
     def detect_syslog(self):
         # Detect syslog variant
-        if not self.has_key("syslogd"):
+        if not "syslogd" in self.data:
             if self["have_systemd"]:
                 # Systemd
                 self["syslogd"] = self.rsh(self.target, "systemctl list-units | grep syslog.*\.service.*active.*running | sed 's:.service.*::'", stdout=1).strip()
@@ -215,13 +218,13 @@ class Environment:
                 # SYS-V
                 self["syslogd"] = self.rsh(self.target, "chkconfig --list | grep syslog.*on | awk '{print $1}' | head -n 1", stdout=1).strip()
 
-            if not self.has_key("syslogd") or not self["syslogd"]:
+            if not "syslogd" in self.data or not self["syslogd"]:
                 # default
                 self["syslogd"] = "rsyslog"
 
     def detect_at_boot(self):
         # Detect if the cluster starts at boot
-        if not self.has_key("at-boot"):
+        if not "at-boot" in self.data:
             atboot = 0
 
             if self["have_systemd"]:
@@ -237,7 +240,7 @@ class Environment:
 
     def detect_ip_offset(self):
         # Try to determin an offset for IPaddr resources
-        if self["CIBResource"] and not self.has_key("IPBase"):
+        if self["CIBResource"] and not "IPBase" in self.data:
             network=self.rsh(self.target, "ip addr | grep inet | grep -v -e link -e inet6 -e '/32' -e ' lo' | awk '{print $2}'", stdout=1).strip()
             self["IPBase"] = self.rsh(self.target, "nmap -sn -n %s | grep 'scan report' | awk '{print $NF}' | sed 's:(::' | sed 's:)::' | sort -V | tail -n 1" % network, stdout=1).strip()
             if not self["IPBase"]:
@@ -276,7 +279,7 @@ class Environment:
                 break;
         self["cts-master"] = master
 
-        if not self.has_key("have_systemd"):
+        if not "have_systemd" in self.data:
             self["have_systemd"] = not self.rsh(self.target, "systemctl list-units")
         
         self.detect_syslog()

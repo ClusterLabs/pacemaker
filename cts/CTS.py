@@ -157,7 +157,7 @@ class CtsLab:
         self.Env.dump()
 
     def has_key(self, key):
-        return self.Env.has_key(key)
+        return key in self.Env.keys()
 
     def __getitem__(self, key):
         return self.Env[key]
@@ -300,7 +300,7 @@ class ClusterManager(UserDict):
             return self.name
 
         print("FIXME: Getting %s from %s" % (key, repr(self)))
-        if self.data.has_key(key):
+        if key in self.data:
             return self.data[key]
 
         return self.templates.get_patterns(self.Env["Name"], key)
@@ -500,7 +500,7 @@ class ClusterManager(UserDict):
         else: self.debug("Starting %s on node %s" % (self.templates["Name"], node))
         ret = 1
 
-        if not self.ShouldBeStatus.has_key(node):
+        if not node in self.ShouldBeStatus:
             self.ShouldBeStatus[node] = "down"
 
         if self.ShouldBeStatus[node] != "down":
@@ -871,7 +871,7 @@ class ClusterManager(UserDict):
 
         for host in self.Env["nodes"]:
             log_stats_file = "%s/cts-stats.csv" % CTSvars.CRM_DAEMON_DIR
-            if has_log_stats.has_key(host):
+            if host in has_log_stats:
                 self.rsh(host, '''bash %s %s stop''' % (log_stats_bin, log_stats_file))
                 (rc, lines) = self.rsh(host, '''cat %s''' % log_stats_file, stdout=2)
                 self.rsh(host, '''bash %s %s delete''' % (log_stats_bin, log_stats_file))
@@ -891,7 +891,7 @@ class ClusterManager(UserDict):
 
         for host in self.Env["nodes"]:
             log_stats_file = "%s/cts-stats.csv" % CTSvars.CRM_DAEMON_DIR
-            if not has_log_stats.has_key(host):
+            if not host in has_log_stats:
 
                 global log_stats
                 global log_stats_bin

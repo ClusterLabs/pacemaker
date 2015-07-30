@@ -92,7 +92,7 @@ class crm_lha(ClusterManager):
             self.log("Node %s is not up." % node)
             return None
 
-        if not self.CIBsync.has_key(node) and self.Env["ClobberCIB"] == 1:
+        if not node in self.CIBsync and self.Env["ClobberCIB"] == 1:
             self.CIBsync[node] = 1
             self.rsh(node, "rm -f "+CTSvars.CRM_CONFIG_DIR+"/cib*")
 
