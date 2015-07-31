@@ -553,7 +553,7 @@ remove_fencing_topology(xmlXPathObjectPtr xpathObj)
 }
 
 static void
-register_fencing_topology(xmlXPathObjectPtr xpathObj, gboolean force)
+register_fencing_topology(xmlXPathObjectPtr xpathObj)
 {
     int max = numXpathResults(xpathObj), lpc = 0;
 
@@ -584,7 +584,7 @@ register_fencing_topology(xmlXPathObjectPtr xpathObj, gboolean force)
 */
 
 static void
-fencing_topology_init(xmlNode * msg)
+fencing_topology_init()
 {
     xmlXPathObjectPtr xpathObj = NULL;
     const char *xpath = "//" XML_TAG_FENCING_LEVEL;
@@ -598,7 +598,7 @@ fencing_topology_init(xmlNode * msg)
 
     /* Grab everything */
     xpathObj = xpath_search(local_cib, xpath);
-    register_fencing_topology(xpathObj, TRUE);
+    register_fencing_topology(xpathObj);
 
     freeXpathObject(xpathObj);
 }
@@ -931,7 +931,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
         xpath = "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_TAG_FENCING_LEVEL;
         xpathObj = xpath_search(msg, xpath);
 
-        register_fencing_topology(xpathObj, FALSE);
+        register_fencing_topology(xpathObj);
         freeXpathObject(xpathObj);
 
     } else if(format == 2) {
@@ -969,7 +969,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
                     /* Nuclear option, all we have is the path and an id... not enough to remove a specific entry */
                     crm_info("Re-initializing fencing topology after %s operation %d.%d.%d for %s",
                              op, add[0], add[1], add[2], xpath);
-                    fencing_topology_init(NULL);
+                    fencing_topology_init();
                     return;
                 }
 
@@ -977,7 +977,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
                 /* Change to the topology in general */
                 crm_info("Re-initializing fencing topology after top-level %s operation  %d.%d.%d for %s",
                          op, add[0], add[1], add[2], xpath);
-                fencing_topology_init(NULL);
+                fencing_topology_init();
                 return;
 
             } else if (strstr(xpath, "/" XML_CIB_TAG_CONFIGURATION)) {
@@ -989,7 +989,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
                 } else if(strcmp(op, "delete") == 0 || strcmp(op, "create") == 0) {
                     crm_info("Re-initializing fencing topology after top-level %s operation %d.%d.%d for %s.",
                              op, add[0], add[1], add[2], xpath);
-                    fencing_topology_init(NULL);
+                    fencing_topology_init();
                     return;
                 }
 
@@ -1098,7 +1098,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
     } else if (stonith_enabled_saved == FALSE) {
         crm_info("Updating stonith device and topology lists now that stonith is enabled");
         stonith_enabled_saved = TRUE;
-        fencing_topology_init(NULL);
+        fencing_topology_init();
         cib_devices_update();
 
     } else {
@@ -1114,7 +1114,7 @@ init_cib_cache_cb(xmlNode * msg, int call_id, int rc, xmlNode * output, void *us
     have_cib_devices = TRUE;
     local_cib = copy_xml(output);
 
-    fencing_topology_init(msg);
+    fencing_topology_init();
     cib_devices_update();
 }
 
