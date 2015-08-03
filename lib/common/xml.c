@@ -5622,7 +5622,7 @@ update_validation(xmlNode ** xml_blob, int *best, int max, gboolean transform, g
                 break;
 
             } else if (known_schemas[lpc].transform == NULL) {
-                crm_notice("%s-style configuration is also valid for %s",
+                crm_debug("%s-style configuration is also valid for %s",
                            known_schemas[lpc].name, known_schemas[next].name);
 
                 if (validate_with(xml, next, to_logs)) {
