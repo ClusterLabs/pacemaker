@@ -20,7 +20,6 @@ WantedBy=multi-user.target
 Type=simple
 KillMode=process
 NotifyAccess=main
-SysVStartPriority=99
 EnvironmentFile=-@sysconfdir@/sysconfig/pacemaker
 EnvironmentFile=-@sysconfdir@/sysconfig/sbd
 SuccessExitStatus=100
