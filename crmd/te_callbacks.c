@@ -294,6 +294,49 @@ static char *get_node_from_xpath(const char *xpath)
     return nodeid;
 }
 
+static char *extract_node_uuid(const char *xpath) 
+{
+    char *mutable_path = strdup(xpath);
+    char *node_uuid = NULL;
+    char *search = NULL;
+    char *match = NULL;
+
+    match = strstr(mutable_path, "node_state[@id=\'") + strlen("node_state[@id=\'");
+    search = strchr(match, '\'');
+    search[0] = 0;
+
+    node_uuid = strdup(match);
+    free(mutable_path);
+    return node_uuid;
+}
+
+static void abort_unless_down(const char *xpath, const char *op, xmlNode *change, const char *reason) 
+{
+    char *node_uuid = NULL;
+    crm_action_t *down = NULL;
+
+    if(safe_str_neq(op, "delete")) {
+        abort_transition(INFINITY, tg_restart, reason, change);
+        return;
+    }
+
+    node_uuid = extract_node_uuid(xpath);
+    if(node_uuid == NULL) {
+        crm_err("Could not extract node ID from %s", xpath);
+        abort_transition(INFINITY, tg_restart, reason, change);
+        return;
+    }
+
+    down = match_down_event(0, node_uuid, NULL, FALSE);
+    if(down == NULL || down->executed == false) {
+        crm_trace("Not expecting %s to be down (%s)", node_uuid, xpath);
+        abort_transition(INFINITY, tg_restart, reason, change);
+    } else {
+        crm_trace("Expecting changes to %s (%s)", node_uuid, xpath);
+    }
+    free(node_uuid);
+}
+
 void
 te_update_diff(const char *event, xmlNode * msg)
 {
@@ -388,26 +431,21 @@ te_update_diff(const char *event, xmlNode * msg)
             break; /* Wont be packaged with any resource operations we may be waiting for */
 
         } else if(strstr(xpath, "/"XML_TAG_TRANSIENT_NODEATTRS"[") || safe_str_eq(name, XML_TAG_TRANSIENT_NODEATTRS)) {
-            abort_transition(INFINITY, tg_restart, "Transient attribute change", change);
+            abort_unless_down(xpath, op, change, "Transient attribute change");
             break; /* Wont be packaged with any resource operations we may be waiting for */
 
         } else if(strstr(xpath, "/"XML_LRM_TAG_RSC_OP"[") && safe_str_eq(op, "delete")) {
             crm_action_t *cancel = NULL;
             char *mutable_key = strdup(xpath);
-            char *mutable_node = strdup(xpath);
             char *search = NULL;
 
             const char *key = NULL;
-            const char *node_uuid = NULL;
+            char *node_uuid = extract_node_uuid(xpath);
 
             search = strrchr(mutable_key, '\'');
             search[0] = 0;
 
             key = strrchr(mutable_key, '\'') + 1;
-
-            node_uuid = strstr(mutable_node, "node_state[@id=\'") + strlen("node_state[@id=\'");
-            search = strchr(node_uuid, '\'');
-            search[0] = 0;
 
             cancel = get_cancel_action(key, node_uuid);
             if (cancel == NULL) {
@@ -422,14 +460,14 @@ te_update_diff(const char *event, xmlNode * msg)
                 trigger_graph();
 
             }
-            free(mutable_node);
             free(mutable_key);
+            free(node_uuid);
 
         } else if(strstr(xpath, "/"XML_CIB_TAG_LRM"[") && safe_str_eq(op, "delete")) {
-            abort_transition(INFINITY, tg_restart, "Resource state removal", change);
+            abort_unless_down(xpath, op, change, "Resource state removal");
 
         } else if(strstr(xpath, "/"XML_CIB_TAG_STATE"[") && safe_str_eq(op, "delete")) {
-            abort_transition(INFINITY, tg_restart, "Node state removal", change);
+            abort_unless_down(xpath, op, change, "Node state removal");
 
         } else if(name == NULL) {
             crm_debug("No result for %s operation to %s", op, xpath);
