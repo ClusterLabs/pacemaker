@@ -522,16 +522,24 @@ cli_resource_delete(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_
 
     if (rc == pcmk_ok) {
         char *attr_name = NULL;
-        const char *id = rsc->id;
 
         if(node && node->details->remote_rsc == NULL && node->details->rsc_discovery_enabled) {
             crmd_replies_needed++;
         }
-        if (rsc->clone_name) {
-            id = rsc->clone_name;
+
+        if(is_not_set(rsc->flags, pe_rsc_unique)) {
+            char *id = clone_strip(rsc->id);
+            attr_name = crm_strdup_printf("fail-count-%s", id);
+            free(id);
+
+        } else if (rsc->clone_name) {
+            attr_name = crm_strdup_printf("fail-count-%s", rsc->clone_name);
+
+        } else {
+            attr_name = crm_strdup_printf("fail-count-%s", rsc->id);
         }
 
-        attr_name = crm_concat("fail-count", id, '-');
+        crm_trace("Removing %s", attr_name);
         rc = attrd_update_delegate(NULL, 'D', host_uname, attr_name, NULL, XML_CIB_TAG_STATUS, NULL,
                               NULL, NULL, node ? is_remote_node(node) : FALSE);
         free(attr_name);
