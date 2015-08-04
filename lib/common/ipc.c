@@ -46,8 +46,8 @@ struct crm_ipc_response_header {
 };
 
 static int hdr_offset = 0;
-static int ipc_buffer_max = 0;
-static unsigned int pick_ipc_buffer(int max);
+static unsigned int ipc_buffer_max = 0;
+static unsigned int pick_ipc_buffer(unsigned int max);
 
 static inline void
 crm_ipc_init(void)
@@ -60,7 +60,7 @@ crm_ipc_init(void)
     }
 }
 
-int
+unsigned int
 crm_ipc_default_buffer_size(void)
 {
     return pick_ipc_buffer(0);
@@ -431,7 +431,7 @@ crm_ipcs_recv(crm_client_t * c, void *data, size_t size, uint32_t * id, uint32_t
         unsigned int size_u = 1 + header->size_uncompressed;
         uncompressed = calloc(1, size_u);
 
-        crm_trace("Decompressing message data %d bytes into %d bytes",
+        crm_trace("Decompressing message data %u bytes into %u bytes",
                   header->size_compressed, size_u);
 
         rc = BZ2_bzBuffToBuffDecompress(uncompressed, &size_u, text, header->size_compressed, 1, 0);
@@ -531,9 +531,9 @@ crm_ipcs_flush_events(crm_client_t * c)
 }
 
 ssize_t
-crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec ** result, int32_t max_send_size)
+crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec ** result, uint32_t max_send_size)
 {
-    static int biggest = 0;
+    static unsigned int biggest = 0;
     struct iovec *iov;
     unsigned int total = 0;
     char *compressed = NULL;
@@ -590,8 +590,8 @@ crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec ** result, int
             biggest = 2 * QB_MAX(header->size_uncompressed, biggest);
 
             crm_err
-                ("Could not compress the message into less than the configured ipc limit (%d bytes)."
-                 "Set PCMK_ipc_buffer to a higher value (%d bytes suggested)", max_send_size,
+                ("Could not compress the message into less than the configured ipc limit (%u bytes)."
+                 "Set PCMK_ipc_buffer to a higher value (%u bytes suggested)", max_send_size,
                  biggest);
 
             free(compressed);
@@ -747,9 +747,9 @@ struct crm_ipc_s {
 };
 
 static unsigned int
-pick_ipc_buffer(int max)
+pick_ipc_buffer(unsigned int max)
 {
-    static int global_max = 0;
+    static unsigned int global_max = 0;
 
     if(global_max == 0) {
         const char *env = getenv("PCMK_ipc_buffer");
@@ -925,7 +925,7 @@ crm_ipc_decompress(crm_ipc_t * client)
         unsigned int new_buf_size = QB_MAX((hdr_offset + size_u), client->max_buf_size);
         char *uncompressed = calloc(1, new_buf_size);
 
-        crm_trace("Decompressing message data %d bytes into %d bytes",
+        crm_trace("Decompressing message data %u bytes into %u bytes",
                  header->size_compressed, size_u);
 
         rc = BZ2_bzBuffToBuffDecompress(uncompressed + hdr_offset, &size_u,
@@ -1166,9 +1166,9 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
 
     if(header->size_compressed) {
         if(factor < 10 && (client->max_buf_size / 10) < (rc / factor)) {
-            crm_notice("Compressed message exceeds %d0%% of the configured ipc limit (%d bytes), "
-                       "consider setting PCMK_ipc_buffer to %d or higher",
-                       factor, client->max_buf_size, 2*client->max_buf_size);
+            crm_notice("Compressed message exceeds %d0%% of the configured ipc limit (%u bytes), "
+                       "consider setting PCMK_ipc_buffer to %u or higher",
+                       factor, client->max_buf_size, 2 * client->max_buf_size);
             factor++;
         }
     }

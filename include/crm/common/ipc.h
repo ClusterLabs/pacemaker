@@ -75,7 +75,7 @@ long crm_ipc_read(crm_ipc_t * client);
 const char *crm_ipc_buffer(crm_ipc_t * client);
 uint32_t crm_ipc_buffer_flags(crm_ipc_t * client);
 const char *crm_ipc_name(crm_ipc_t * client);
-int crm_ipc_default_buffer_size(void);
+unsigned int crm_ipc_default_buffer_size(void);
 
 /* Utils */
 xmlNode *create_hello_message(const char *uuid, const char *client_name,
