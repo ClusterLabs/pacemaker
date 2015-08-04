@@ -643,6 +643,16 @@ indexterm:[Action,Property,on-fail]
  indexterm:[enabled,Action Property]
  indexterm:[Action,Property,enabled]
 
+|role
+|
+|This option only makes sense for recurring operations.  It restricts
+ the operation to a specific role.  The truely paranoid can even
+ specify +role=Stopped+ which allows the cluster to detect an admin
+ that manually started cluster services.
+ Allowed values: +Stopped+, +Started+, +Slave+, +Master+.
+ indexterm:[role,Action Property]
+ indexterm:[Action,Property,role]
+
 |=========================================================
 
 [[s-operation-defaults]]
