@@ -59,8 +59,11 @@ char *use_date = NULL;
 static void
 get_date(pe_working_set_t * data_set)
 {
+    int value = 0;
     time_t original_date = 0;
-    crm_element_value_int(data_set->input, "execution-date", (int*)&original_date);
+
+    crm_element_value_int(data_set->input, "execution-date", &value);
+    original_date = value;
 
     if (use_date) {
         data_set->now = crm_time_new(use_date);
