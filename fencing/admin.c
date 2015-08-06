@@ -68,8 +68,11 @@ static struct crm_option long_options[] = {
     {"register",    1, 0, 'R', "Register the named stonith device. Requires: --agent, optional: --option"},
     {"deregister",  1, 0, 'D', "De-register the named stonith device"},
 
-    {"register-level",    1, 0, 'r', "Register a stonith level for the named host. Requires: --index, one or more --device entries"},
-    {"deregister-level",  1, 0, 'd', "De-register a stonith level for the named host. Requires: --index"},
+    {"register-level",    1, 0, 'r',
+     "Register a stonith level for the named target (a node name\n\t"
+     "pattern, or a node attribute NAME=VALUE pair).\n\t"
+     "Requires: --index, one or more --device entries"},
+    {"deregister-level",  1, 0, 'd', "De-register a stonith level for the named target. Requires: --index"},
 
     {"-spacer-",    0, 0, '-', ""},
     {"-spacer-",    0, 0, '-', "Options and modifiers:"},
