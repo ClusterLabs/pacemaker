@@ -158,7 +158,9 @@ typedef struct remote_fencing_op_s {
  * Topology levels start from 1, so levels[0] is unused and always NULL.
  */
 typedef struct stonith_topology_s {
-    char *node;
+    /*! Node name regex or attribute name=value for which topology applies */
+    char *target;
+    /*! Names of fencing devices at each topology level */
     GListPtr levels[ST_LEVEL_MAX];
 
 } stonith_topology_t;
