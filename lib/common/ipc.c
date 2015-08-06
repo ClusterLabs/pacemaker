@@ -91,7 +91,7 @@ generateReference(const char *custom1, const char *custom2)
     since_epoch = calloc(1, reference_len);
 
     if (since_epoch != NULL) {
-        sprintf(since_epoch, "%s-%s-%ld-%u",
+        sprintf(since_epoch, "%s-%s-%lu-%u",
                 local_cust1, local_cust2, (unsigned long)time(NULL), ref_counter++);
     }
 
@@ -656,7 +656,7 @@ crm_ipcs_sendv(crm_client_t * c, struct iovec * iov, enum crm_ipc_flags flags)
 
         rc = qb_ipcs_response_sendv(c->ipcs, iov, 2);
         if (rc < header->qb.size) {
-            crm_notice("Response %d to %p[%d] (%d bytes) failed: %s (%d)",
+            crm_notice("Response %d to %p[%d] (%u bytes) failed: %s (%d)",
                        header->qb.id, c->ipcs, c->pid, header->qb.size, pcmk_strerror(rc), rc);
 
         } else {
@@ -986,7 +986,7 @@ crm_ipc_read(crm_ipc_t * client)
             return -EBADMSG;
         }
 
-        crm_trace("Received %s event %d, size=%d, rc=%d, text: %.100s",
+        crm_trace("Received %s event %d, size=%u, rc=%d, text: %.100s",
                   client->name, header->qb.id, header->qb.size, client->msg_size,
                   client->buffer + hdr_offset);
 
@@ -1211,7 +1211,7 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
     if (rc > 0) {
         struct crm_ipc_response_header *hdr = (struct crm_ipc_response_header *)(void*)client->buffer;
 
-        crm_trace("Received response %d, size=%d, rc=%ld, text: %.200s", hdr->qb.id, hdr->qb.size,
+        crm_trace("Received response %d, size=%u, rc=%ld, text: %.200s", hdr->qb.id, hdr->qb.size,
                   rc, crm_ipc_buffer(client));
 
         if (reply) {
