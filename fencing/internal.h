@@ -214,6 +214,8 @@ void unfence_cb(GPid pid, int rc, const char *output, gpointer user_data);
 
 gboolean string_in_list(GListPtr list, const char *item);
 
+gboolean node_has_attr(const char *node, char *nvpair);
+
 void
 schedule_internal_command(const char *origin,
                           stonith_device_t * device,

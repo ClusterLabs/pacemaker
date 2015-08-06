@@ -1113,7 +1113,6 @@ int
 stonith_level_register(xmlNode * msg, char **desc)
 {
     int id = 0;
-    int rc = pcmk_ok;
     xmlNode *child = NULL;
 
     xmlNode *level = get_xpath_object("//" F_STONITH_LEVEL, msg, LOG_ERR);
@@ -1127,6 +1126,11 @@ stonith_level_register(xmlNode * msg, char **desc)
         *desc = crm_strdup_printf("%s[%d]", target, id);
     }
     if (id <= 0 || id >= ST_LEVEL_MAX) {
+        return -EINVAL;
+    }
+
+    /* Target-by-node-attribute requires the CIB, so disallow if standalone */
+    if (stand_alone && target && strchr(target, '=')) {
         return -EINVAL;
     }
 
@@ -1151,7 +1155,7 @@ stonith_level_register(xmlNode * msg, char **desc)
 
     crm_info("Target %s has %d active fencing levels",
              target, count_active_levels(tp));
-    return rc;
+    return pcmk_ok;
 }
 
 int
