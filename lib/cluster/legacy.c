@@ -52,6 +52,21 @@ void *ais_ipc_ctx = NULL;
 
 hdb_handle_t ais_ipc_handle = 0;
 
+static bool valid_cman_name(const char *name, uint32_t nodeid) 
+{
+    bool rc = TRUE;
+
+    /* Yes, %d, because that's what CMAN does */
+    char *fakename = crm_strdup_printf("Node%d", nodeid);
+
+    if(crm_str_eq(fakename, name, TRUE)) {
+        rc = FALSE;
+        crm_notice("Ignoring inferred name from cman: %s", fakename);
+    }
+    free(fakename);
+    return rc;
+}
+
 static gboolean
 plugin_get_details(uint32_t * id, char **uname)
 {
@@ -370,6 +385,7 @@ cman_event_callback(cman_handle_t handle, void *privdata, int reason, int arg)
 
             for (lpc = 0; lpc < node_count; lpc++) {
                 crm_node_t *peer = NULL;
+                const char *name = NULL;
 
                 if (cman_nodes[lpc].cn_nodeid == 0) {
                     /* Never allow node ID 0 to be considered a member #315711 */
@@ -377,7 +393,11 @@ cman_event_callback(cman_handle_t handle, void *privdata, int reason, int arg)
                     continue;
                 }
 
-                peer = crm_get_peer(cman_nodes[lpc].cn_nodeid, cman_nodes[lpc].cn_name);
+                if(valid_cman_name(cman_nodes[lpc].cn_name, cman_nodes[lpc].cn_nodeid)) {
+                    name = cman_nodes[lpc].cn_name;
+                }
+
+                peer = crm_get_peer(cman_nodes[lpc].cn_nodeid, name);
                 if(cman_nodes[lpc].cn_member) {
                     crm_update_peer_state(__FUNCTION__, peer, CRM_NODE_MEMBER, crm_peer_seq);
 
@@ -632,15 +652,17 @@ cman_node_name(uint32_t nodeid)
 
     cman = cman_init(NULL);
     if (cman != NULL && cman_is_active(cman)) {
+
         memset(&us, 0, sizeof(cman_node_t));
         cman_get_node(cman, nodeid, &us);
-        name = strdup(us.cn_name);
-        crm_info("Using CMAN node name %s for %u", name, nodeid);
-    }
+        if(valid_cman_name(us.cn_name, nodeid)) {
+            name = strdup(us.cn_name);
+            crm_info("Using CMAN node name %s for %u", name, nodeid);
+        }
+     }
 
     cman_finish(cman);
 #  endif
-
     if (name == NULL) {
         crm_debug("Unable to get node name for nodeid %u", nodeid);
     }
