@@ -189,10 +189,10 @@ run_fence_failure_test(void)
                 "Register device1 for failure test", 1, 0);
 
     single_test(st->cmds->fence(st, st_opts, "false_1_node2", "off", 3, 0),
-                "Fence failure results off", 1, -201);
+                "Fence failure results off", 1, -pcmk_err_generic);
 
     single_test(st->cmds->fence(st, st_opts, "false_1_node2", "reboot", 3, 0),
-                "Fence failure results reboot", 1, -201);
+                "Fence failure results reboot", 1, -pcmk_err_generic);
 
     single_test(st->cmds->remove_device(st, st_opts, "test-id1"),
                 "Remove device1 for failure test", 1, 0);
@@ -223,9 +223,9 @@ run_fence_failure_rollover_test(void)
     single_test(st->cmds->fence(st, st_opts, "false_1_node2", "off", 3, 0),
                 "Fence rollover results off", 1, 0);
 
-    /* we expect -19 here because fence_dummy now requires 'on' to be executed on target. */
+    /* Expect -ENODEV because fence_dummy requires 'on' to be executed on target */
     single_test(st->cmds->fence(st, st_opts, "false_1_node2", "on", 3, 0),
-                "Fence rollover results on", 1, -19);
+                "Fence rollover results on", 1, -ENODEV);
 
     single_test(st->cmds->remove_device(st, st_opts, "test-id1"),
                 "Remove device1 for rollover tests", 1, 0);
@@ -247,6 +247,8 @@ run_standard_test(void)
     single_test(st->
                 cmds->register_device(st, st_opts, "test-id", "stonith-ng", "fence_dummy", params),
                 "Register", 1, 0);
+    stonith_key_value_freeall(params, 1, 1);
+    params = NULL;
 
     single_test(st->cmds->list(st, st_opts, "test-id", NULL, 1), "list", 1, 0);
 
@@ -259,14 +261,23 @@ run_standard_test(void)
                 "Status false_1_node1", 1, 0);
 
     single_test(st->cmds->fence(st, st_opts, "unknown-host", "off", 1, 0),
-                "Fence unknown-host (expected failure)", 0, -19);
+                "Fence unknown-host (expected failure)", 0, -ENODEV);
 
     single_test(st->cmds->fence(st, st_opts, "false_1_node1", "off", 1, 0),
                 "Fence false_1_node1", 1, 0);
 
-    /* we expect -19 here because fence_dummy now requires 'on' to be executed on target. */
+    /* Expect -ENODEV because fence_dummy requires 'on' to be executed on target */
     single_test(st->cmds->fence(st, st_opts, "false_1_node1", "on", 1, 0),
-                "Unfence false_1_node1", 1, -19);
+                "Unfence false_1_node1", 1, -ENODEV);
+
+    /* Confirm that targeting by attribute is rejected in standalone mode */
+    params = stonith_key_value_add(params, NULL, "test-id");
+    single_test(st->cmds->register_level(st, st_opts, "a=b", 1, params),
+                "Attempt to register a level by attribute", 0, -EINVAL);
+
+    /* Confirm that an invalid level index is rejected */
+    single_test(st->cmds->register_level(st, st_opts, "node1", 999, params),
+                "Attempt to register an invalid level index", 0, -EINVAL);
 
     single_test(st->cmds->remove_device(st, st_opts, "test-id"), "Remove test-id", 1, 0);
 
