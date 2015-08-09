@@ -198,6 +198,7 @@ cli_resource_update_attribute(const char *rsc_id, const char *attr_set, const ch
     int rc = pcmk_ok;
     static bool need_init = TRUE;
 
+    char *lookup_id = NULL;
     char *local_attr_id = NULL;
     char *local_attr_set = NULL;
 
@@ -212,14 +213,31 @@ cli_resource_update_attribute(const char *rsc_id, const char *attr_set, const ch
     }
 
     if (safe_str_eq(attr_set_type, XML_TAG_ATTR_SETS)) {
-        rc = find_resource_attr(cib, XML_ATTR_ID, rsc_id, XML_TAG_META_SETS, attr_set, attr_id,
+        rc = find_resource_attr(cib, XML_ATTR_ID, uber_parent(rsc)->id, XML_TAG_META_SETS, attr_set, attr_id,
                                 attr_name, &local_attr_id);
         if (rc == pcmk_ok) {
-            printf("WARNING: There is already a meta attribute called %s (id=%s)\n", attr_name,
-                   local_attr_id);
+            printf("WARNING: There is already a meta attribute for %s called %s (id=%s)\n",
+                   uber_parent(rsc)->id, attr_name, local_attr_id);
+        }
+
+    } else if(rsc->parent) {
+
+        switch(rsc->parent->variant) {
+            case pe_group:
+                printf("Updating %s for %s will not apply to its peers in %s\n", attr_name, rsc_id, rsc->parent->id);
+                break;
+            case pe_master:
+            case pe_clone:
+                rsc = rsc->parent;
+                printf("Updating %s for %s...\n", rsc->id, rsc_id);
+                break;
+            default:
+                break;
         }
     }
-    rc = find_resource_attr(cib, XML_ATTR_ID, rsc_id, attr_set_type, attr_set, attr_id, attr_name,
+
+    lookup_id = clone_strip(rsc->id); /* Could be a cloned group! */
+    rc = find_resource_attr(cib, XML_ATTR_ID, lookup_id, attr_set_type, attr_set, attr_id, attr_name,
                             &local_attr_id);
 
     if (rc == pcmk_ok) {
@@ -227,6 +245,7 @@ cli_resource_update_attribute(const char *rsc_id, const char *attr_set, const ch
         attr_id = local_attr_id;
 
     } else if (rc != -ENXIO) {
+        free(lookup_id);
         free(local_attr_id);
         return rc;
 
@@ -250,7 +269,7 @@ cli_resource_update_attribute(const char *rsc_id, const char *attr_set, const ch
         free_xml(cib_top);
 
         if (attr_set == NULL) {
-            local_attr_set = crm_concat(rsc_id, attr_set_type, '-');
+            local_attr_set = crm_concat(lookup_id, attr_set_type, '-');
             attr_set = local_attr_set;
         }
         if (attr_id == NULL) {
@@ -263,7 +282,7 @@ cli_resource_update_attribute(const char *rsc_id, const char *attr_set, const ch
         }
 
         xml_top = create_xml_node(NULL, tag);
-        crm_xml_add(xml_top, XML_ATTR_ID, rsc_id);
+        crm_xml_add(xml_top, XML_ATTR_ID, lookup_id);
 
         xml_obj = create_xml_node(xml_top, attr_set_type);
         crm_xml_add(xml_obj, XML_ATTR_ID, attr_set);
@@ -285,7 +304,15 @@ cli_resource_update_attribute(const char *rsc_id, const char *attr_set, const ch
     crm_log_xml_debug(xml_top, "Update");
 
     rc = cib->cmds->modify(cib, XML_CIB_TAG_RESOURCES, xml_top, cib_options);
+    if (rc == pcmk_ok) {
+        printf("Set %s option: id=%s%s%s%s%s\n", lookup_id, local_attr_id,
+               attr_set ? " set=" : "", attr_set ? attr_set : "",
+               attr_name ? " name=" : "", attr_name ? attr_name : "");
+    }
+
     free_xml(xml_top);
+
+    free(lookup_id);
     free(local_attr_id);
     free(local_attr_set);
 
@@ -330,6 +357,7 @@ cli_resource_delete_attribute(const char *rsc_id, const char *attr_set, const ch
     xmlNode *xml_obj = NULL;
 
     int rc = pcmk_ok;
+    char *lookup_id = NULL;
     char *local_attr_id = NULL;
     resource_t *rsc = find_rsc_or_clone(rsc_id, data_set);
 
@@ -337,7 +365,14 @@ cli_resource_delete_attribute(const char *rsc_id, const char *attr_set, const ch
         return -ENXIO;
     }
 
-    rc = find_resource_attr(cib, XML_ATTR_ID, rsc_id, attr_set_type, attr_set, attr_id, attr_name,
+    if(rsc->parent
+       && rsc->parent->variant > pe_group
+       && safe_str_eq(attr_set_type, XML_TAG_META_SETS)) {
+        rsc = rsc->parent;
+    }
+
+    lookup_id = clone_strip(rsc->id);
+    rc = find_resource_attr(cib, XML_ATTR_ID, lookup_id, attr_set_type, attr_set, attr_id, attr_name,
                             &local_attr_id);
 
     if (rc == -ENXIO) {
@@ -361,7 +396,7 @@ cli_resource_delete_attribute(const char *rsc_id, const char *attr_set, const ch
     rc = cib->cmds->delete(cib, XML_CIB_TAG_RESOURCES, xml_obj, cib_options);
 
     if (rc == pcmk_ok) {
-        printf("Deleted %s option: id=%s%s%s%s%s\n", rsc_id, local_attr_id,
+        printf("Deleted %s option: id=%s%s%s%s%s\n", lookup_id, local_attr_id,
                attr_set ? " set=" : "", attr_set ? attr_set : "",
                attr_name ? " name=" : "", attr_name ? attr_name : "");
     }
@@ -514,7 +549,7 @@ cli_resource_delete(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_
     node = pe_find_node(data_set->nodes, host_uname);
 
     if (node && node->details->rsc_discovery_enabled) {
-        printf("Cleaning up %s on %s\n", rsc->id, host_uname);
+        printf("Cleaning up %s on %s", rsc->id, host_uname);
         rc = send_lrm_rsc_op(crmd_channel, CRM_OP_LRM_DELETE, host_uname, rsc->id, TRUE, data_set);
     } else {
         printf("Resource discovery disabled on %s. Unable to delete lrm state.\n", host_uname);
@@ -539,10 +574,12 @@ cli_resource_delete(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_
             attr_name = crm_strdup_printf("fail-count-%s", rsc->id);
         }
 
-        crm_trace("Removing %s", attr_name);
+        printf(", removing %s\n", attr_name);
         rc = attrd_update_delegate(NULL, 'D', host_uname, attr_name, NULL, XML_CIB_TAG_STATUS, NULL,
                               NULL, NULL, node ? is_remote_node(node) : FALSE);
         free(attr_name);
+    } else {
+        printf(" - FAILED\n");
     }
     return rc;
 }

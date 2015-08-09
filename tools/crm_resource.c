@@ -883,6 +883,10 @@ main(int argc, char **argv)
     } else if (rsc_cmd == 'C' && rsc_id) {
         resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
 
+        if(rsc->parent && rsc->parent->variant > pe_group) {
+            rsc = rsc->parent;
+        }
+
         crm_debug("Re-checking the state of %s on %s", rsc_id, host_uname);
         if(rsc) {
             crmd_replies_needed = 0;
@@ -890,6 +894,8 @@ main(int argc, char **argv)
         } else {
             rc = -ENODEV;
         }
+
+        /* Now check XML_RSC_ATTR_TARGET_ROLE and XML_RSC_ATTR_MANAGED */
 
         if (rc == pcmk_ok) {
             start_mainloop();
