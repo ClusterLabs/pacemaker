@@ -8,7 +8,6 @@ Copyright (C) 2008 Andrew Beekhof
 import os, string, warnings
 
 from cts.CTSvars import *
-from cts.CTS     import ClusterManager
 
 
 class CibBase:
@@ -16,7 +15,6 @@ class CibBase:
         self.tag = tag
         self.name = _id
         self.kwargs = kwargs
-        self.values = []
         self.children = []
         self.Factory = Factory
 
@@ -30,7 +28,7 @@ class CibBase:
         if value:
             self.kwargs[key] = value
         else:
-            self.values.append(key)
+            self.kwargs.pop(key, None)
 
 from cib_xml import *
 
@@ -133,16 +131,12 @@ class CIB11(ConfigBase):
         self.Factory.rsh(self.Factory.target, "HOME=/root cibadmin --empty %s > %s" % (self.version, self.Factory.tmpfile))
         #cib_base = self.cib_template % (self.feature_set, self.version, ''' remote-tls-port='9898' remote-clear-port='9999' ''')
 
-        nodelist = ""
-        self.num_nodes = 0
-        for node in self.CM.Env["nodes"]:
-            nodelist += node + " "
-            self.num_nodes = self.num_nodes + 1
+        self.num_nodes = len(self.CM.Env["nodes"])
 
         no_quorum = "stop"
         if self.num_nodes < 3:
             no_quorum = "ignore"
-            self.Factory.log("Cluster only has %d nodes, configuring: no-quroum-policy=ignore" % self.num_nodes)
+            self.Factory.log("Cluster only has %d nodes, configuring: no-quorum-policy=ignore" % self.num_nodes)
 
         # Fencing resource
         # Define first so that the shell doesn't reject every update
@@ -174,10 +168,12 @@ class CIB11(ConfigBase):
                 # Create the levels
                 stl = FencingTopology(self.Factory)
                 for node in self.CM.Env["nodes"]:
+                    # Randomly assign node to a fencing method
                     ftype = self.CM.Env.RandomGen.choice(["levels-and", "levels-or ", "broadcast "])
                     self.CM.log(" - Using %s fencing for node: %s" % (ftype, node))
-                    # for baremetal remote node tests
+                    # for baremetal remote node tests (is this really necessary?)
                     stt_nodes.append("remote_%s" % node)
+
                     if ftype == "levels-and":
                         stl.level(1, node, "FencingPass,Fencing")
                         stt_nodes.append(node)
