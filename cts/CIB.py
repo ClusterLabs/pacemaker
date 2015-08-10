@@ -138,6 +138,9 @@ class CIB11(ConfigBase):
             no_quorum = "ignore"
             self.Factory.log("Cluster only has %d nodes, configuring: no-quorum-policy=ignore" % self.num_nodes)
 
+        # We don't need a nodes section unless we add attributes
+        stn = None
+
         # Fencing resource
         # Define first so that the shell doesn't reject every update
         if self.CM.Env["DoFencing"]:
@@ -164,24 +167,45 @@ class CIB11(ConfigBase):
             if True:
                 stf_nodes = []
                 stt_nodes = []
+                attr_nodes = []
 
                 # Create the levels
                 stl = FencingTopology(self.Factory)
                 for node in self.CM.Env["nodes"]:
                     # Randomly assign node to a fencing method
                     ftype = self.CM.Env.RandomGen.choice(["levels-and", "levels-or ", "broadcast "])
-                    self.CM.log(" - Using %s fencing for node: %s" % (ftype, node))
+
+                    # For levels-and, randomly choose targeting by node name or attribute
+                    by = ""
+                    if ftype == "levels-and":
+                        if self.CM.Env.RandomGen.choice([True, False]):
+                            attr_nodes.append(node)
+                            by = " (by attribute)"
+                        else:
+                            by = " (by name)"
+
+                    self.CM.log(" - Using %s fencing for node: %s%s" % (ftype, node, by))
+
                     # for baremetal remote node tests (is this really necessary?)
                     stt_nodes.append("remote_%s" % node)
 
                     if ftype == "levels-and":
-                        stl.level(1, node, "FencingPass,Fencing")
+                        if node not in attr_nodes:
+                            stl.level(1, node, "FencingPass,Fencing")
                         stt_nodes.append(node)
 
                     elif ftype == "levels-or ":
                         stl.level(1, node, "FencingFail")
                         stl.level(2, node, "Fencing")
                         stf_nodes.append(node)
+
+                # If any levels-and nodes were targeted by attribute,
+                # create the attributes and a level for the attribute.
+                if len(attr_nodes):
+                    stn = Nodes(self.Factory)
+                    for node in attr_nodes:
+                        stn[node] = { "cts-fencing" : "levels-and" }
+                    stl.level(1, "cts-fencing=levels-and", "FencingPass,Fencing")
 
                 # Create a Dummy agent that always passes for levels-and
                 if len(stt_nodes):
@@ -220,6 +244,10 @@ class CIB11(ConfigBase):
             o["ident-string"] = "Linux-HA TEST configuration file - REMOVEME!!"
 
         o.commit()
+
+        # Commit the nodes section if we defined one
+        if stn is not None:
+            stn.commit()
 
         # Add resources?
         if self.CM.Env["CIBResource"] == 1:
