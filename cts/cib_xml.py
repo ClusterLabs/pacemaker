@@ -35,7 +35,11 @@ class XmlBase(CibBase):
         return text
 
     def _run(self, operation, xml, section="all", options=""):
-        self.Factory.debug("Writing out %s" % self.name)
+        if self.name:
+            label = self.name
+        else:
+            label = "<%s>" % self.tag
+        self.Factory.debug("Writing out %s" % label)
         fixed  = "HOME=/root CIB_file="+self.Factory.tmpfile
         fixed += " cibadmin --%s --scope %s %s --xml-text '%s'" % (operation, section, options, xml)
         rc = self.Factory.rsh(self.Factory.target, fixed)
