@@ -579,20 +579,18 @@ crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec ** result, uin
 
             free(buffer);
 
-            if (header->size_compressed > biggest) {
-                biggest = 2 * QB_MAX(header->size_compressed, biggest);
-            }
+            biggest = QB_MAX(header->size_compressed, biggest);
 
         } else {
             ssize_t rc = -EMSGSIZE;
 
             crm_log_xml_trace(message, "EMSGSIZE");
-            biggest = 2 * QB_MAX(header->size_uncompressed, biggest);
+            biggest = QB_MAX(header->size_uncompressed, biggest);
 
             crm_err
-                ("Could not compress the message into less than the configured ipc limit (%u bytes)."
-                 "Set PCMK_ipc_buffer to a higher value (%u bytes suggested)", max_send_size,
-                 biggest);
+                ("Could not compress the message (%u bytes) into less than the configured ipc limit (%u bytes). "
+                 "Set PCMK_ipc_buffer to a higher value (%u bytes suggested)",
+                 header->size_uncompressed, max_send_size, 4 * biggest);
 
             free(compressed);
             free(buffer);
