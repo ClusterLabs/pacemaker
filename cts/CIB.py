@@ -423,25 +423,28 @@ class ConfigFactoryItem:
         _kargs.update(kargs)
         return self._function(*_args,**_kargs)
 
-# Basic Sanity Testing
 if __name__ == '__main__':
-    import CTSlab
-    env = CTSlab.LabEnvironment()
-    env["nodes"] = []
-    env["nodes"].append("pcmk-1")
-    env["nodes"].append("pcmk-2")
-    env["nodes"].append("pcmk-3")
-    env["nodes"].append("pcmk-4")
+    """ Unit test (pass cluster node names as command line arguments) """
 
-    env["CIBResource"] = 1
-    env["IPBase"] = "fe80::1234:56:7890:1000"
-    env["DoStonith"] = 1
-    env["stonith-type"] = "fence_xvm"
-    env["stonith-params"] = "pcmk_arg_map=domain:uname"
+    import CTS
+    import CM_ais
+    import sys
 
-    manager = ClusterManager(env)
-    manager.cluster_monitor = False
+    if len(sys.argv) < 2:
+        print("Usage: %s <node> ..." % sys.argv[0])
+        sys.exit(1)
 
-    CibFactory = ConfigFactory(manager)
+    args = [
+        "--nodes", " ".join(sys.argv[1:]),
+        "--clobber-cib",
+        "--populate-resources",
+        "--stack", "corosync",
+        "--test-ip-base", "fe80::1234:56:7890:1000",
+        "--stonith", "rhcs",
+        "--stonith-args", "pcmk_arg_map=domain:uname"
+    ]
+    env = CTS.CtsLab(args)
+    cm = CM_ais.crm_mcp(env)
+    CibFactory = ConfigFactory(cm)
     cib = CibFactory.createConfig("pacemaker-1.1")
     print(cib.contents())
