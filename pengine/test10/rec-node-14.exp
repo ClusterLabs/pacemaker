@@ -39,7 +39,7 @@
      </action_set>
      <inputs>
        <trigger>
-        <crm_event id="5" operation="stonith" operation_key="stonith-node3-reboot" on_node="node3" on_node_uuid="uuid3"/>
+        <crm_event id="4" operation="stonith" operation_key="stonith-node2-reboot" on_node="node2" on_node_uuid="uuid2"/>
        </trigger>
      </inputs>
    </synapse>
