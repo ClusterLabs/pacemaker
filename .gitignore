@@ -139,6 +139,7 @@ tools/report.collector.1
 xml/crm.dtd
 xml/pacemaker*.rng
 xml/versions.rng
+doc/shared/en-US/*.xml
 doc/Clusters_from_Scratch.build
 doc/Clusters_from_Scratch/en-US/Ap-*.xml
 doc/Clusters_from_Scratch/en-US/Ch-*.xml
