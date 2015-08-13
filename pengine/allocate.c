@@ -1495,11 +1495,12 @@ stage6(pe_working_set_t * data_set)
         }
     }
 
-    if (last_stonith) {
-        order_actions(last_stonith, done, pe_order_implies_then);
 
-    } else if (dc_fence) {
+    if (dc_fence) {
         order_actions(dc_down, done, pe_order_implies_then);
+
+    } else if (last_stonith) {
+        order_actions(last_stonith, done, pe_order_implies_then);
     }
 
     order_actions(done, all_stopped, pe_order_implies_then);
