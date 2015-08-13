@@ -215,21 +215,29 @@ cli_resource_update_attribute(const char *rsc_id, const char *attr_set, const ch
     if (safe_str_eq(attr_set_type, XML_TAG_ATTR_SETS)) {
         rc = find_resource_attr(cib, XML_ATTR_ID, uber_parent(rsc)->id, XML_TAG_META_SETS, attr_set, attr_id,
                                 attr_name, &local_attr_id);
-        if (rc == pcmk_ok) {
-            printf("WARNING: There is already a meta attribute for %s called %s (id=%s)\n",
-                   uber_parent(rsc)->id, attr_name, local_attr_id);
+        if(rc == pcmk_ok && do_force == FALSE) {
+            if (BE_QUIET == FALSE) {
+                printf("WARNING: There is already a meta attribute for '%s' called '%s' (id=%s)\n",
+                       uber_parent(rsc)->id, attr_name, local_attr_id);
+                printf("         Delete '%s' first or use --force to override\n", local_attr_id);
+            }
+            return -ENOTUNIQ;
         }
 
     } else if(rsc->parent) {
 
         switch(rsc->parent->variant) {
             case pe_group:
-                printf("Updating %s for %s will not apply to its peers in %s\n", attr_name, rsc_id, rsc->parent->id);
+                if (BE_QUIET == FALSE) {
+                    printf("Updating '%s' for '%s' will not apply to its peers in '%s'\n", attr_name, rsc_id, rsc->parent->id);
+                }
                 break;
             case pe_master:
             case pe_clone:
                 rsc = rsc->parent;
-                printf("Updating %s for %s...\n", rsc->id, rsc_id);
+                if (BE_QUIET == FALSE) {
+                    printf("Updating '%s' for '%s'...\n", rsc->id, rsc_id);
+                }
                 break;
             default:
                 break;
@@ -304,10 +312,10 @@ cli_resource_update_attribute(const char *rsc_id, const char *attr_set, const ch
     crm_log_xml_debug(xml_top, "Update");
 
     rc = cib->cmds->modify(cib, XML_CIB_TAG_RESOURCES, xml_top, cib_options);
-    if (rc == pcmk_ok) {
-        printf("Set %s option: id=%s%s%s%s%s\n", lookup_id, local_attr_id,
+    if (rc == pcmk_ok && BE_QUIET == FALSE) {
+        printf("Set '%s' option: id=%s%s%s%s%s=%s\n", lookup_id, local_attr_id,
                attr_set ? " set=" : "", attr_set ? attr_set : "",
-               attr_name ? " name=" : "", attr_name ? attr_name : "");
+               attr_name ? " name=" : "", attr_name ? attr_name : "", attr_value);
     }
 
     free_xml(xml_top);
@@ -365,10 +373,25 @@ cli_resource_delete_attribute(const char *rsc_id, const char *attr_set, const ch
         return -ENXIO;
     }
 
-    if(rsc->parent
-       && rsc->parent->variant > pe_group
-       && safe_str_eq(attr_set_type, XML_TAG_META_SETS)) {
-        rsc = rsc->parent;
+    if(rsc->parent && safe_str_eq(attr_set_type, XML_TAG_META_SETS)) {
+
+        switch(rsc->parent->variant) {
+            case pe_group:
+                if (BE_QUIET == FALSE) {
+                    printf("Removing '%s' for '%s' will not apply to its peers in '%s'\n", attr_name, rsc_id, rsc->parent->id);
+                }
+                break;
+            case pe_master:
+            case pe_clone:
+                rsc = rsc->parent;
+                if (BE_QUIET == FALSE) {
+                    printf("Removing '%s' from '%s' for '%s'...\n", attr_name, rsc->id, rsc_id);
+                }
+                break;
+            default:
+                break;
+        }
+
     }
 
     lookup_id = clone_strip(rsc->id);
@@ -395,8 +418,8 @@ cli_resource_delete_attribute(const char *rsc_id, const char *attr_set, const ch
     CRM_ASSERT(cib);
     rc = cib->cmds->delete(cib, XML_CIB_TAG_RESOURCES, xml_obj, cib_options);
 
-    if (rc == pcmk_ok) {
-        printf("Deleted %s option: id=%s%s%s%s%s\n", lookup_id, local_attr_id,
+    if (rc == pcmk_ok && BE_QUIET == FALSE) {
+        printf("Deleted '%s' option: id=%s%s%s%s%s\n", lookup_id, local_attr_id,
                attr_set ? " set=" : "", attr_set ? attr_set : "",
                attr_name ? " name=" : "", attr_name ? attr_name : "");
     }
@@ -528,7 +551,10 @@ cli_resource_delete(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_
         for (lpc = rsc->children; lpc != NULL; lpc = lpc->next) {
             resource_t *child = (resource_t *) lpc->data;
 
-            cli_resource_delete(cib_conn, crmd_channel, host_uname, child, data_set);
+            rc = cli_resource_delete(cib_conn, crmd_channel, host_uname, child, data_set);
+            if(rc != pcmk_ok || is_not_set(rsc->flags, pe_rsc_unique)) {
+                return rc;
+            }
         }
         return pcmk_ok;
 
@@ -553,6 +579,7 @@ cli_resource_delete(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_
         rc = send_lrm_rsc_op(crmd_channel, CRM_OP_LRM_DELETE, host_uname, rsc->id, TRUE, data_set);
     } else {
         printf("Resource discovery disabled on %s. Unable to delete lrm state.\n", host_uname);
+        rc = -EOPNOTSUPP;
     }
 
     if (rc == pcmk_ok) {
@@ -578,10 +605,46 @@ cli_resource_delete(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_
         rc = attrd_update_delegate(NULL, 'D', host_uname, attr_name, NULL, XML_CIB_TAG_STATUS, NULL,
                               NULL, NULL, node ? is_remote_node(node) : FALSE);
         free(attr_name);
-    } else {
+
+    } else if(rc != -EOPNOTSUPP) {
         printf(" - FAILED\n");
     }
+
     return rc;
+}
+
+void
+cli_resource_check(cib_t * cib_conn, resource_t *rsc)
+{
+
+    char *role_s = NULL;
+    char *managed = NULL;
+    resource_t *parent = uber_parent(rsc);
+
+    find_resource_attr(cib_conn, XML_ATTR_ID, parent->id,
+                       XML_TAG_META_SETS, NULL, NULL, XML_RSC_ATTR_MANAGED, &managed);
+
+    find_resource_attr(cib_conn, XML_ATTR_ID, parent->id,
+                       XML_TAG_META_SETS, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, &role_s);
+
+    if(managed == NULL) {
+        managed = strdup("1");
+    }
+    if(crm_is_true(managed) == FALSE) {
+        printf("\n\t*Resource %s is configured to not be managed by the cluster\n", parent->id);
+    }
+    if(role_s) {
+        enum rsc_role_e role = text2role(role_s);
+        if(role == RSC_ROLE_UNKNOWN) {
+            // Treated as if unset
+
+        } else if(role == RSC_ROLE_STOPPED) {
+            printf("\n\t* The configuration specifies that '%s' should remain stopped\n", parent->id);
+
+        } else if(parent->variant > pe_clone && role != RSC_ROLE_MASTER) {
+            printf("\n\t* The configuration specifies that '%s' should not be promoted\n", parent->id);
+        }
+    }
 }
 
 int

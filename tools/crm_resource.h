@@ -68,6 +68,7 @@ int cli_resource_print_property(const char *rsc, const char *attr, pe_working_se
 int cli_resource_print_operations(const char *rsc_id, const char *host_uname, bool active, pe_working_set_t * data_set);
 
 /* runtime */
+void cli_resource_check(cib_t * cib, resource_t *rsc);
 int cli_resource_fail(crm_ipc_t * crmd_channel, const char *host_uname, const char *rsc_id, pe_working_set_t * data_set);
 int cli_resource_search(const char *rsc, pe_working_set_t * data_set);
 int cli_resource_delete(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_uname, resource_t * rsc, pe_working_set_t * data_set);

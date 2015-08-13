@@ -352,8 +352,11 @@ cli_resource_print_attribute(const char *rsc, const char *attr, pe_working_set_t
 
     if (safe_str_eq(attr_set_type, XML_TAG_ATTR_SETS)) {
         get_rsc_attributes(params, the_rsc, current, data_set);
+
     } else if (safe_str_eq(attr_set_type, XML_TAG_META_SETS)) {
+        /* No need to redirect to the parent */ 
         get_meta_attributes(params, the_rsc, current, data_set);
+
     } else {
         unpack_instance_attributes(data_set->input, the_rsc->xml, XML_TAG_UTILIZATION, NULL,
                                    params, NULL, FALSE, data_set->now);
