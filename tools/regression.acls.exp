@@ -253,10 +253,10 @@ Error performing operation: Permission denied
 =#=#=#= End test: unknownguy: Set stonith-enabled - Permission denied (13) =#=#=#=
 * Passed: crm_attribute  - unknownguy: Set stonith-enabled
 =#=#=#= Begin test: unknownguy: Create a resource =#=#=#=
-__xml_acl_check: 	Ordinary user unknownguy cannot access the CIB without any defined ACLs
-__xml_acl_check: 	Ordinary user unknownguy cannot access the CIB without any defined ACLs
-__xml_acl_check: 	Ordinary user unknownguy cannot access the CIB without any defined ACLs
-__xml_acl_check: 	Ordinary user unknownguy cannot access the CIB without any defined ACLs
+__xml_acl_check:	Ordinary user unknownguy cannot access the CIB without any defined ACLs
+__xml_acl_check:	Ordinary user unknownguy cannot access the CIB without any defined ACLs
+__xml_acl_check:	Ordinary user unknownguy cannot access the CIB without any defined ACLs
+__xml_acl_check:	Ordinary user unknownguy cannot access the CIB without any defined ACLs
 Call failed: Permission denied
 =#=#=#= End test: unknownguy: Create a resource - Permission denied (13) =#=#=#=
 * Passed: cibadmin       - unknownguy: Create a resource
@@ -273,8 +273,8 @@ Error performing operation: Permission denied
 =#=#=#= End test: l33t-haxor: Set stonith-enabled - Permission denied (13) =#=#=#=
 * Passed: crm_attribute  - l33t-haxor: Set stonith-enabled
 =#=#=#= Begin test: l33t-haxor: Create a resource =#=#=#=
-__xml_acl_check: 	400 access denied to /cib/configuration/resources/primitive[@id='dummy']: parent
-__xml_acl_post_process: 	Cannot add new node primitive at /cib/configuration/resources/primitive[@id='dummy']
+__xml_acl_check:	400 access denied to /cib/configuration/resources/primitive[@id='dummy']: parent
+__xml_acl_post_process:	Cannot add new node primitive at /cib/configuration/resources/primitive[@id='dummy']
 Call failed: Permission denied
 =#=#=#= End test: l33t-haxor: Create a resource - Permission denied (13) =#=#=#=
 * Passed: cibadmin       - l33t-haxor: Create a resource
@@ -323,13 +323,13 @@ Call failed: Permission denied
 =#=#=#= End test: niceguy: Query configuration - OK (0) =#=#=#=
 * Passed: cibadmin       - niceguy: Query configuration
 =#=#=#= Begin test: niceguy: Set enable-acl =#=#=#=
-__xml_acl_check: 	400 access denied to /cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-enable-acl'][@value]: default
+__xml_acl_check:	400 access denied to /cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-enable-acl'][@value]: default
 Error performing operation: Permission denied
 Error setting enable-acl=false (section=crm_config, set=<null>): Permission denied
 =#=#=#= End test: niceguy: Set enable-acl - Permission denied (13) =#=#=#=
 * Passed: crm_attribute  - niceguy: Set enable-acl
 =#=#=#= Begin test: niceguy: Set stonith-enabled =#=#=#=
-__xml_acl_post_process: 	Creation of nvpair=cib-bootstrap-options-stonith-enabled is allowed
+__xml_acl_post_process:	Creation of nvpair=cib-bootstrap-options-stonith-enabled is allowed
 =#=#=#= Current cib after: niceguy: Set stonith-enabled =#=#=#=
 <cib epoch="7" num_updates="0" admin_epoch="0">
   <configuration>
@@ -376,8 +376,8 @@ __xml_acl_post_process: 	Creation of nvpair=cib-bootstrap-options-stonith-enable
 =#=#=#= End test: niceguy: Set stonith-enabled - OK (0) =#=#=#=
 * Passed: crm_attribute  - niceguy: Set stonith-enabled
 =#=#=#= Begin test: niceguy: Create a resource =#=#=#=
-__xml_acl_check: 	400 access denied to /cib/configuration/resources/primitive[@id='dummy']: default
-__xml_acl_post_process: 	Cannot add new node primitive at /cib/configuration/resources/primitive[@id='dummy']
+__xml_acl_check:	400 access denied to /cib/configuration/resources/primitive[@id='dummy']: default
+__xml_acl_post_process:	Cannot add new node primitive at /cib/configuration/resources/primitive[@id='dummy']
 Call failed: Permission denied
 =#=#=#= End test: niceguy: Create a resource - Permission denied (13) =#=#=#=
 * Passed: cibadmin       - niceguy: Create a resource
@@ -533,10 +533,11 @@ Error performing operation: Permission denied
 =#=#=#= End test: l33t-haxor: Remove a resource meta attribute - Permission denied (13) =#=#=#=
 * Passed: crm_resource   - l33t-haxor: Remove a resource meta attribute
 =#=#=#= Begin test: niceguy: Create a resource meta attribute =#=#=#=
-error: unpack_resources: 	Resource start-up disabled since no STONITH resources have been defined
-error: unpack_resources: 	Either configure some or disable STONITH with the stonith-enabled option
-error: unpack_resources: 	NOTE: Clusters with shared data need STONITH to ensure data integrity
-__xml_acl_post_process: 	Creation of nvpair=dummy-meta_attributes-target-role is allowed
+error: unpack_resources:	Resource start-up disabled since no STONITH resources have been defined
+error: unpack_resources:	Either configure some or disable STONITH with the stonith-enabled option
+error: unpack_resources:	NOTE: Clusters with shared data need STONITH to ensure data integrity
+__xml_acl_post_process:	Creation of nvpair=dummy-meta_attributes-target-role is allowed
+Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attributes name=target-role=Stopped
 =#=#=#= Current cib after: niceguy: Create a resource meta attribute =#=#=#=
 <cib epoch="10" num_updates="0" admin_epoch="0">
   <configuration>
@@ -589,9 +590,9 @@ __xml_acl_post_process: 	Creation of nvpair=dummy-meta_attributes-target-role is
 =#=#=#= End test: niceguy: Create a resource meta attribute - OK (0) =#=#=#=
 * Passed: crm_resource   - niceguy: Create a resource meta attribute
 =#=#=#= Begin test: niceguy: Query a resource meta attribute =#=#=#=
-error: unpack_resources: 	Resource start-up disabled since no STONITH resources have been defined
-error: unpack_resources: 	Either configure some or disable STONITH with the stonith-enabled option
-error: unpack_resources: 	NOTE: Clusters with shared data need STONITH to ensure data integrity
+error: unpack_resources:	Resource start-up disabled since no STONITH resources have been defined
+error: unpack_resources:	Either configure some or disable STONITH with the stonith-enabled option
+error: unpack_resources:	NOTE: Clusters with shared data need STONITH to ensure data integrity
 Stopped
 =#=#=#= Current cib after: niceguy: Query a resource meta attribute =#=#=#=
 <cib epoch="10" num_updates="0" admin_epoch="0">
@@ -645,10 +646,10 @@ Stopped
 =#=#=#= End test: niceguy: Query a resource meta attribute - OK (0) =#=#=#=
 * Passed: crm_resource   - niceguy: Query a resource meta attribute
 =#=#=#= Begin test: niceguy: Remove a resource meta attribute =#=#=#=
-error: unpack_resources: 	Resource start-up disabled since no STONITH resources have been defined
-error: unpack_resources: 	Either configure some or disable STONITH with the stonith-enabled option
-error: unpack_resources: 	NOTE: Clusters with shared data need STONITH to ensure data integrity
-Deleted dummy option: id=dummy-meta_attributes-target-role name=target-role
+error: unpack_resources:	Resource start-up disabled since no STONITH resources have been defined
+error: unpack_resources:	Either configure some or disable STONITH with the stonith-enabled option
+error: unpack_resources:	NOTE: Clusters with shared data need STONITH to ensure data integrity
+Deleted 'dummy' option: id=dummy-meta_attributes-target-role name=target-role
 =#=#=#= Current cib after: niceguy: Remove a resource meta attribute =#=#=#=
 <cib epoch="11" num_updates="0" admin_epoch="0">
   <configuration>
@@ -699,10 +700,11 @@ Deleted dummy option: id=dummy-meta_attributes-target-role name=target-role
 =#=#=#= End test: niceguy: Remove a resource meta attribute - OK (0) =#=#=#=
 * Passed: crm_resource   - niceguy: Remove a resource meta attribute
 =#=#=#= Begin test: niceguy: Create a resource meta attribute =#=#=#=
-error: unpack_resources: 	Resource start-up disabled since no STONITH resources have been defined
-error: unpack_resources: 	Either configure some or disable STONITH with the stonith-enabled option
-error: unpack_resources: 	NOTE: Clusters with shared data need STONITH to ensure data integrity
-__xml_acl_post_process: 	Creation of nvpair=dummy-meta_attributes-target-role is allowed
+error: unpack_resources:	Resource start-up disabled since no STONITH resources have been defined
+error: unpack_resources:	Either configure some or disable STONITH with the stonith-enabled option
+error: unpack_resources:	NOTE: Clusters with shared data need STONITH to ensure data integrity
+__xml_acl_post_process:	Creation of nvpair=dummy-meta_attributes-target-role is allowed
+Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attributes name=target-role=Started
 =#=#=#= Current cib after: niceguy: Create a resource meta attribute =#=#=#=
 <cib epoch="12" num_updates="0" admin_epoch="0">
   <configuration>
@@ -804,8 +806,8 @@ __xml_acl_post_process: 	Creation of nvpair=dummy-meta_attributes-target-role is
   <status/>
 </cib>
 =#=#=#= Begin test: niceguy: Replace - remove acls =#=#=#=
-__xml_acl_check: 	400 access denied to /cib[@epoch]: default
-__xml_acl_check: 	400 access denied to /cib/configuration/acls: default
+__xml_acl_check:	400 access denied to /cib[@epoch]: default
+__xml_acl_check:	400 access denied to /cib/configuration/acls: default
 Call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - remove acls - Permission denied (13) =#=#=#=
 * Passed: cibadmin       - niceguy: Replace - remove acls
@@ -859,9 +861,9 @@ Call failed: Permission denied
   <status/>
 </cib>
 =#=#=#= Begin test: niceguy: Replace - create resource =#=#=#=
-__xml_acl_check: 	400 access denied to /cib[@epoch]: default
-__xml_acl_check: 	400 access denied to /cib/configuration/resources/primitive[@id='dummy2']: default
-__xml_acl_post_process: 	Cannot add new node primitive at /cib/configuration/resources/primitive[@id='dummy2']
+__xml_acl_check:	400 access denied to /cib[@epoch]: default
+__xml_acl_check:	400 access denied to /cib/configuration/resources/primitive[@id='dummy2']: default
+__xml_acl_post_process:	Cannot add new node primitive at /cib/configuration/resources/primitive[@id='dummy2']
 Call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - create resource - Permission denied (13) =#=#=#=
 * Passed: cibadmin       - niceguy: Replace - create resource
@@ -914,8 +916,8 @@ Call failed: Permission denied
   <status/>
 </cib>
 =#=#=#= Begin test: niceguy: Replace - modify attribute (deny) =#=#=#=
-__xml_acl_check: 	400 access denied to /cib[@epoch]: default
-__xml_acl_check: 	400 access denied to /cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-enable-acl'][@value]: default
+__xml_acl_check:	400 access denied to /cib[@epoch]: default
+__xml_acl_check:	400 access denied to /cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-enable-acl'][@value]: default
 Call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - modify attribute (deny) - Permission denied (13) =#=#=#=
 * Passed: cibadmin       - niceguy: Replace - modify attribute (deny)
@@ -968,8 +970,8 @@ Call failed: Permission denied
   <status/>
 </cib>
 =#=#=#= Begin test: niceguy: Replace - delete attribute (deny) =#=#=#=
-__xml_acl_check: 	400 access denied to /cib[@epoch]: default
-__xml_acl_check: 	400 access denied to /cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-enable-acl']: default
+__xml_acl_check:	400 access denied to /cib[@epoch]: default
+__xml_acl_check:	400 access denied to /cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-enable-acl']: default
 Call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - delete attribute (deny) - Permission denied (13) =#=#=#=
 * Passed: cibadmin       - niceguy: Replace - delete attribute (deny)
@@ -1022,8 +1024,8 @@ Call failed: Permission denied
   <status/>
 </cib>
 =#=#=#= Begin test: niceguy: Replace - create attribute (deny) =#=#=#=
-__xml_acl_check: 	400 access denied to /cib[@epoch]: default
-__xml_acl_check: 	400 access denied to /cib/configuration/resources/primitive[@id='dummy'][@description]: default
+__xml_acl_check:	400 access denied to /cib[@epoch]: default
+__xml_acl_check:	400 access denied to /cib/configuration/resources/primitive[@id='dummy'][@description]: default
 Call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - create attribute (deny) - Permission denied (13) =#=#=#=
 * Passed: cibadmin       - niceguy: Replace - create attribute (deny)
@@ -1180,28 +1182,28 @@ Call failed: Permission denied
 
     !#!#!#!#! Upgrading to pacemaker-2.0 and retesting !#!#!#!#!
 =#=#=#= Begin test: root: Upgrade to pacemaker-2.0 =#=#=#=
-__xml_acl_post_process: 	Creation of acl_permission=observer-read-1 is allowed
-__xml_acl_post_process: 	Creation of acl_permission=observer-write-1 is allowed
-__xml_acl_post_process: 	Creation of acl_permission=observer-write-2 is allowed
-__xml_acl_post_process: 	Creation of acl_permission=admin-read-1 is allowed
-__xml_acl_post_process: 	Creation of acl_permission=admin-write-1 is allowed
-__xml_acl_post_process: 	Creation of acl_target=l33t-haxor is allowed
-__xml_acl_post_process: 	Creation of role=auto-l33t-haxor is allowed
-__xml_acl_post_process: 	Creation of acl_role=auto-l33t-haxor is allowed
-__xml_acl_post_process: 	Creation of acl_permission=crook-nothing is allowed
-__xml_acl_post_process: 	Creation of acl_target=niceguy is allowed
-__xml_acl_post_process: 	Creation of role=observer is allowed
-__xml_acl_post_process: 	Creation of acl_target=bob is allowed
-__xml_acl_post_process: 	Creation of role=admin is allowed
-__xml_acl_post_process: 	Creation of acl_target=badidea is allowed
-__xml_acl_post_process: 	Creation of role=auto-badidea is allowed
-__xml_acl_post_process: 	Creation of acl_role=auto-badidea is allowed
-__xml_acl_post_process: 	Creation of acl_permission=badidea-resources is allowed
-__xml_acl_post_process: 	Creation of acl_target=betteridea is allowed
-__xml_acl_post_process: 	Creation of role=auto-betteridea is allowed
-__xml_acl_post_process: 	Creation of acl_role=auto-betteridea is allowed
-__xml_acl_post_process: 	Creation of acl_permission=betteridea-nothing is allowed
-__xml_acl_post_process: 	Creation of acl_permission=betteridea-resources is allowed
+__xml_acl_post_process:	Creation of acl_permission=observer-read-1 is allowed
+__xml_acl_post_process:	Creation of acl_permission=observer-write-1 is allowed
+__xml_acl_post_process:	Creation of acl_permission=observer-write-2 is allowed
+__xml_acl_post_process:	Creation of acl_permission=admin-read-1 is allowed
+__xml_acl_post_process:	Creation of acl_permission=admin-write-1 is allowed
+__xml_acl_post_process:	Creation of acl_target=l33t-haxor is allowed
+__xml_acl_post_process:	Creation of role=auto-l33t-haxor is allowed
+__xml_acl_post_process:	Creation of acl_role=auto-l33t-haxor is allowed
+__xml_acl_post_process:	Creation of acl_permission=crook-nothing is allowed
+__xml_acl_post_process:	Creation of acl_target=niceguy is allowed
+__xml_acl_post_process:	Creation of role=observer is allowed
+__xml_acl_post_process:	Creation of acl_target=bob is allowed
+__xml_acl_post_process:	Creation of role=admin is allowed
+__xml_acl_post_process:	Creation of acl_target=badidea is allowed
+__xml_acl_post_process:	Creation of role=auto-badidea is allowed
+__xml_acl_post_process:	Creation of acl_role=auto-badidea is allowed
+__xml_acl_post_process:	Creation of acl_permission=badidea-resources is allowed
+__xml_acl_post_process:	Creation of acl_target=betteridea is allowed
+__xml_acl_post_process:	Creation of role=auto-betteridea is allowed
+__xml_acl_post_process:	Creation of acl_role=auto-betteridea is allowed
+__xml_acl_post_process:	Creation of acl_permission=betteridea-nothing is allowed
+__xml_acl_post_process:	Creation of acl_permission=betteridea-resources is allowed
 =#=#=#= Current cib after: root: Upgrade to pacemaker-2.0 =#=#=#=
 <cib epoch="2" num_updates="0" admin_epoch="1">
   <configuration>
@@ -1271,10 +1273,10 @@ Error performing operation: Permission denied
 =#=#=#= End test: unknownguy: Set stonith-enabled - Permission denied (13) =#=#=#=
 * Passed: crm_attribute  - unknownguy: Set stonith-enabled
 =#=#=#= Begin test: unknownguy: Create a resource =#=#=#=
-__xml_acl_check: 	Ordinary user unknownguy cannot access the CIB without any defined ACLs
-__xml_acl_check: 	Ordinary user unknownguy cannot access the CIB without any defined ACLs
-__xml_acl_check: 	Ordinary user unknownguy cannot access the CIB without any defined ACLs
-__xml_acl_check: 	Ordinary user unknownguy cannot access the CIB without any defined ACLs
+__xml_acl_check:	Ordinary user unknownguy cannot access the CIB without any defined ACLs
+__xml_acl_check:	Ordinary user unknownguy cannot access the CIB without any defined ACLs
+__xml_acl_check:	Ordinary user unknownguy cannot access the CIB without any defined ACLs
+__xml_acl_check:	Ordinary user unknownguy cannot access the CIB without any defined ACLs
 Call failed: Permission denied
 =#=#=#= End test: unknownguy: Create a resource - Permission denied (13) =#=#=#=
 * Passed: cibadmin       - unknownguy: Create a resource
@@ -1291,8 +1293,8 @@ Error performing operation: Permission denied
 =#=#=#= End test: l33t-haxor: Set stonith-enabled - Permission denied (13) =#=#=#=
 * Passed: crm_attribute  - l33t-haxor: Set stonith-enabled
 =#=#=#= Begin test: l33t-haxor: Create a resource =#=#=#=
-__xml_acl_check: 	400 access denied to /cib/configuration/resources/primitive[@id='dummy']: parent
-__xml_acl_post_process: 	Cannot add new node primitive at /cib/configuration/resources/primitive[@id='dummy']
+__xml_acl_check:	400 access denied to /cib/configuration/resources/primitive[@id='dummy']: parent
+__xml_acl_post_process:	Cannot add new node primitive at /cib/configuration/resources/primitive[@id='dummy']
 Call failed: Permission denied
 =#=#=#= End test: l33t-haxor: Create a resource - Permission denied (13) =#=#=#=
 * Passed: cibadmin       - l33t-haxor: Create a resource
@@ -1351,7 +1353,7 @@ Call failed: Permission denied
 =#=#=#= End test: niceguy: Query configuration - OK (0) =#=#=#=
 * Passed: cibadmin       - niceguy: Query configuration
 =#=#=#= Begin test: niceguy: Set enable-acl =#=#=#=
-__xml_acl_check: 	400 access denied to /cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-enable-acl'][@value]: default
+__xml_acl_check:	400 access denied to /cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-enable-acl'][@value]: default
 Error performing operation: Permission denied
 Error setting enable-acl=false (section=crm_config, set=<null>): Permission denied
 =#=#=#= End test: niceguy: Set enable-acl - Permission denied (13) =#=#=#=
@@ -1412,8 +1414,8 @@ Error setting enable-acl=false (section=crm_config, set=<null>): Permission deni
 =#=#=#= End test: niceguy: Set stonith-enabled - OK (0) =#=#=#=
 * Passed: crm_attribute  - niceguy: Set stonith-enabled
 =#=#=#= Begin test: niceguy: Create a resource =#=#=#=
-__xml_acl_check: 	400 access denied to /cib/configuration/resources/primitive[@id='dummy']: default
-__xml_acl_post_process: 	Cannot add new node primitive at /cib/configuration/resources/primitive[@id='dummy']
+__xml_acl_check:	400 access denied to /cib/configuration/resources/primitive[@id='dummy']: default
+__xml_acl_post_process:	Cannot add new node primitive at /cib/configuration/resources/primitive[@id='dummy']
 Call failed: Permission denied
 =#=#=#= End test: niceguy: Create a resource - Permission denied (13) =#=#=#=
 * Passed: cibadmin       - niceguy: Create a resource
@@ -1596,10 +1598,11 @@ Error performing operation: Permission denied
 =#=#=#= End test: l33t-haxor: Remove a resource meta attribute - Permission denied (13) =#=#=#=
 * Passed: crm_resource   - l33t-haxor: Remove a resource meta attribute
 =#=#=#= Begin test: niceguy: Create a resource meta attribute =#=#=#=
-error: unpack_resources: 	Resource start-up disabled since no STONITH resources have been defined
-error: unpack_resources: 	Either configure some or disable STONITH with the stonith-enabled option
-error: unpack_resources: 	NOTE: Clusters with shared data need STONITH to ensure data integrity
-__xml_acl_post_process: 	Creation of nvpair=dummy-meta_attributes-target-role is allowed
+error: unpack_resources:	Resource start-up disabled since no STONITH resources have been defined
+error: unpack_resources:	Either configure some or disable STONITH with the stonith-enabled option
+error: unpack_resources:	NOTE: Clusters with shared data need STONITH to ensure data integrity
+__xml_acl_post_process:	Creation of nvpair=dummy-meta_attributes-target-role is allowed
+Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attributes name=target-role=Stopped
 =#=#=#= Current cib after: niceguy: Create a resource meta attribute =#=#=#=
 <cib epoch="11" num_updates="0" admin_epoch="0">
   <configuration>
@@ -1661,9 +1664,9 @@ __xml_acl_post_process: 	Creation of nvpair=dummy-meta_attributes-target-role is
 =#=#=#= End test: niceguy: Create a resource meta attribute - OK (0) =#=#=#=
 * Passed: crm_resource   - niceguy: Create a resource meta attribute
 =#=#=#= Begin test: niceguy: Query a resource meta attribute =#=#=#=
-error: unpack_resources: 	Resource start-up disabled since no STONITH resources have been defined
-error: unpack_resources: 	Either configure some or disable STONITH with the stonith-enabled option
-error: unpack_resources: 	NOTE: Clusters with shared data need STONITH to ensure data integrity
+error: unpack_resources:	Resource start-up disabled since no STONITH resources have been defined
+error: unpack_resources:	Either configure some or disable STONITH with the stonith-enabled option
+error: unpack_resources:	NOTE: Clusters with shared data need STONITH to ensure data integrity
 Stopped
 =#=#=#= Current cib after: niceguy: Query a resource meta attribute =#=#=#=
 <cib epoch="11" num_updates="0" admin_epoch="0">
@@ -1726,10 +1729,10 @@ Stopped
 =#=#=#= End test: niceguy: Query a resource meta attribute - OK (0) =#=#=#=
 * Passed: crm_resource   - niceguy: Query a resource meta attribute
 =#=#=#= Begin test: niceguy: Remove a resource meta attribute =#=#=#=
-error: unpack_resources: 	Resource start-up disabled since no STONITH resources have been defined
-error: unpack_resources: 	Either configure some or disable STONITH with the stonith-enabled option
-error: unpack_resources: 	NOTE: Clusters with shared data need STONITH to ensure data integrity
-Deleted dummy option: id=dummy-meta_attributes-target-role name=target-role
+error: unpack_resources:	Resource start-up disabled since no STONITH resources have been defined
+error: unpack_resources:	Either configure some or disable STONITH with the stonith-enabled option
+error: unpack_resources:	NOTE: Clusters with shared data need STONITH to ensure data integrity
+Deleted 'dummy' option: id=dummy-meta_attributes-target-role name=target-role
 =#=#=#= Current cib after: niceguy: Remove a resource meta attribute =#=#=#=
 <cib epoch="12" num_updates="0" admin_epoch="0">
   <configuration>
@@ -1789,10 +1792,11 @@ Deleted dummy option: id=dummy-meta_attributes-target-role name=target-role
 =#=#=#= End test: niceguy: Remove a resource meta attribute - OK (0) =#=#=#=
 * Passed: crm_resource   - niceguy: Remove a resource meta attribute
 =#=#=#= Begin test: niceguy: Create a resource meta attribute =#=#=#=
-error: unpack_resources: 	Resource start-up disabled since no STONITH resources have been defined
-error: unpack_resources: 	Either configure some or disable STONITH with the stonith-enabled option
-error: unpack_resources: 	NOTE: Clusters with shared data need STONITH to ensure data integrity
-__xml_acl_post_process: 	Creation of nvpair=dummy-meta_attributes-target-role is allowed
+error: unpack_resources:	Resource start-up disabled since no STONITH resources have been defined
+error: unpack_resources:	Either configure some or disable STONITH with the stonith-enabled option
+error: unpack_resources:	NOTE: Clusters with shared data need STONITH to ensure data integrity
+__xml_acl_post_process:	Creation of nvpair=dummy-meta_attributes-target-role is allowed
+Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attributes name=target-role=Started
 =#=#=#= Current cib after: niceguy: Create a resource meta attribute =#=#=#=
 <cib epoch="13" num_updates="0" admin_epoch="0">
   <configuration>
@@ -1903,8 +1907,8 @@ __xml_acl_post_process: 	Creation of nvpair=dummy-meta_attributes-target-role is
   <status/>
 </cib>
 =#=#=#= Begin test: niceguy: Replace - remove acls =#=#=#=
-__xml_acl_check: 	400 access denied to /cib[@epoch]: default
-__xml_acl_check: 	400 access denied to /cib/configuration/acls: default
+__xml_acl_check:	400 access denied to /cib[@epoch]: default
+__xml_acl_check:	400 access denied to /cib/configuration/acls: default
 Call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - remove acls - Permission denied (13) =#=#=#=
 * Passed: cibadmin       - niceguy: Replace - remove acls
@@ -1967,9 +1971,9 @@ Call failed: Permission denied
   <status/>
 </cib>
 =#=#=#= Begin test: niceguy: Replace - create resource =#=#=#=
-__xml_acl_check: 	400 access denied to /cib[@epoch]: default
-__xml_acl_check: 	400 access denied to /cib/configuration/resources/primitive[@id='dummy2']: default
-__xml_acl_post_process: 	Cannot add new node primitive at /cib/configuration/resources/primitive[@id='dummy2']
+__xml_acl_check:	400 access denied to /cib[@epoch]: default
+__xml_acl_check:	400 access denied to /cib/configuration/resources/primitive[@id='dummy2']: default
+__xml_acl_post_process:	Cannot add new node primitive at /cib/configuration/resources/primitive[@id='dummy2']
 Call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - create resource - Permission denied (13) =#=#=#=
 * Passed: cibadmin       - niceguy: Replace - create resource
@@ -2031,8 +2035,8 @@ Call failed: Permission denied
   <status/>
 </cib>
 =#=#=#= Begin test: niceguy: Replace - modify attribute (deny) =#=#=#=
-__xml_acl_check: 	400 access denied to /cib[@epoch]: default
-__xml_acl_check: 	400 access denied to /cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-enable-acl'][@value]: default
+__xml_acl_check:	400 access denied to /cib[@epoch]: default
+__xml_acl_check:	400 access denied to /cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-enable-acl'][@value]: default
 Call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - modify attribute (deny) - Permission denied (13) =#=#=#=
 * Passed: cibadmin       - niceguy: Replace - modify attribute (deny)
@@ -2094,8 +2098,8 @@ Call failed: Permission denied
   <status/>
 </cib>
 =#=#=#= Begin test: niceguy: Replace - delete attribute (deny) =#=#=#=
-__xml_acl_check: 	400 access denied to /cib[@epoch]: default
-__xml_acl_check: 	400 access denied to /cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-enable-acl']: default
+__xml_acl_check:	400 access denied to /cib[@epoch]: default
+__xml_acl_check:	400 access denied to /cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-enable-acl']: default
 Call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - delete attribute (deny) - Permission denied (13) =#=#=#=
 * Passed: cibadmin       - niceguy: Replace - delete attribute (deny)
@@ -2157,8 +2161,8 @@ Call failed: Permission denied
   <status/>
 </cib>
 =#=#=#= Begin test: niceguy: Replace - create attribute (deny) =#=#=#=
-__xml_acl_check: 	400 access denied to /cib[@epoch]: default
-__xml_acl_check: 	400 access denied to /cib/configuration/resources/primitive[@id='dummy'][@description]: default
+__xml_acl_check:	400 access denied to /cib[@epoch]: default
+__xml_acl_check:	400 access denied to /cib/configuration/resources/primitive[@id='dummy'][@description]: default
 Call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - create attribute (deny) - Permission denied (13) =#=#=#=
 * Passed: cibadmin       - niceguy: Replace - create attribute (deny)
