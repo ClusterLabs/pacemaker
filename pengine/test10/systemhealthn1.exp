@@ -27,7 +27,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="4" operation="stonith" operation_key="stonith-hs21d-reboot" on_node="hs21d" on_node_uuid="737318c6-0f92-4592-9754-45967d45aff7"/>
+        <crm_event id="3" operation="stonith" operation_key="stonith-hs21c-reboot" on_node="hs21c" on_node_uuid="c97a3ee5-02d8-4fad-a9fb-a79ae2b35549"/>
       </trigger>
     </inputs>
   </synapse>
