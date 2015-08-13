@@ -938,7 +938,7 @@ create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
 
     op = calloc(1, sizeof(remote_fencing_op_t));
 
-    crm_element_value_int(request, F_STONITH_TIMEOUT, (int *)&(op->base_timeout));
+    crm_element_value_int(request, F_STONITH_TIMEOUT, &(op->base_timeout));
 
     if (peer && dev) {
         op->id = crm_element_value_copy(dev, F_STONITH_REMOTE_OP_ID);
@@ -974,7 +974,7 @@ create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
     crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);
     op->call_options = call_options;
 
-    crm_element_value_int(request, F_STONITH_CALLID, (int *)&(op->client_callid));
+    crm_element_value_int(request, F_STONITH_CALLID, &(op->client_callid));
 
     crm_trace("%s new stonith op: %s - %s of %s for %s",
               (peer
