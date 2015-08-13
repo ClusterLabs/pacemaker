@@ -616,34 +616,39 @@ cli_resource_delete(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_
 void
 cli_resource_check(cib_t * cib_conn, resource_t *rsc)
 {
-
+    int need_nl = 0;
     char *role_s = NULL;
     char *managed = NULL;
     resource_t *parent = uber_parent(rsc);
 
-    find_resource_attr(cib_conn, XML_ATTR_ID, parent->id,
-                       XML_TAG_META_SETS, NULL, NULL, XML_RSC_ATTR_MANAGED, &managed);
+    find_resource_attr(cib_conn, XML_NVPAIR_ATTR_VALUE, parent->id,
+                       NULL, NULL, NULL, XML_RSC_ATTR_MANAGED, &managed);
 
-    find_resource_attr(cib_conn, XML_ATTR_ID, parent->id,
-                       XML_TAG_META_SETS, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, &role_s);
+    find_resource_attr(cib_conn, XML_NVPAIR_ATTR_VALUE, parent->id,
+                       NULL, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, &role_s);
 
-    if(managed == NULL) {
-        managed = strdup("1");
-    }
-    if(crm_is_true(managed) == FALSE) {
-        printf("\n\t*Resource %s is configured to not be managed by the cluster\n", parent->id);
-    }
     if(role_s) {
         enum rsc_role_e role = text2role(role_s);
         if(role == RSC_ROLE_UNKNOWN) {
             // Treated as if unset
 
         } else if(role == RSC_ROLE_STOPPED) {
-            printf("\n\t* The configuration specifies that '%s' should remain stopped\n", parent->id);
+            printf("\n  * The configuration specifies that '%s' should remain stopped\n", parent->id);
+            need_nl++;
 
         } else if(parent->variant > pe_clone && role != RSC_ROLE_MASTER) {
-            printf("\n\t* The configuration specifies that '%s' should not be promoted\n", parent->id);
+            printf("\n  * The configuration specifies that '%s' should not be promoted\n", parent->id);
+            need_nl++;
         }
+    }
+
+    if(managed && crm_is_true(managed) == FALSE) {
+        printf("%s  * The configuration prevents the cluster from stopping or starting '%s' (unmanaged)\n", need_nl == 0?"\n":"", parent->id);
+        need_nl++;
+    }
+
+    if(need_nl) {
+        printf("\n");
     }
 }
 

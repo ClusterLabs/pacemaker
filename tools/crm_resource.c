@@ -888,7 +888,7 @@ main(int argc, char **argv)
             rsc = uber_parent(rsc);
         }
 
-        crm_debug("Re-checking the state of %s on %s", rsc_id, host_uname);
+        crm_debug("Re-checking the state of %s for %s on %s", rsc->id, rsc_id, host_uname);
         if(rsc) {
             crmd_replies_needed = 0;
             rc = cli_resource_delete(cib_conn, crmd_channel, host_uname, rsc, &data_set);
