@@ -535,7 +535,7 @@ remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 
         } else if(is_set(flags, crm_ipc_proxied)) {
             const char *type = crm_element_value(request, F_TYPE);
-            int rc;
+            int rc = 0;
 
             if (safe_str_eq(type, T_ATTRD)
                 && crm_element_value(request, F_ATTRD_HOST) == NULL) {
