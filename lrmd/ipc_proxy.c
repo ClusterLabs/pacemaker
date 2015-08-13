@@ -165,14 +165,14 @@ ipc_proxy_forward_client(crm_client_t *ipc_proxy, xmlNode *xml)
      */
 
     if (safe_str_eq(msg_type, "event")) {
-        crm_info("Sending event to %s", ipc_client->id);
+        crm_trace("Sending event to %s", ipc_client->id);
         rc = crm_ipcs_send(ipc_client, 0, msg, crm_ipc_server_event);
 
     } else if (safe_str_eq(msg_type, "response")) {
         int msg_id = 0;
 
         crm_element_value_int(xml, F_LRMD_IPC_MSG_ID, &msg_id);
-        crm_info("Sending response to %d - %s", ipc_client->request_id, ipc_client->id);
+        crm_trace("Sending response to %d - %s", ipc_client->request_id, ipc_client->id);
         rc = crm_ipcs_send(ipc_client, msg_id, msg, FALSE);
 
         CRM_LOG_ASSERT(msg_id == ipc_client->request_id);

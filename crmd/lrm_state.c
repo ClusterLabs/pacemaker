@@ -490,7 +490,7 @@ remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
         if (remote_proxy_new(lrm_state->node_name, session, channel) == NULL) {
             remote_proxy_notify_destroy(lrmd, session);
         }
-        crm_info("new remote proxy client established to %s, session id %s", channel, session);
+        crm_trace("new remote proxy client established to %s, session id %s", channel, session);
     } else if (safe_str_eq(op, "destroy")) {
         remote_proxy_end_session(session);
 
