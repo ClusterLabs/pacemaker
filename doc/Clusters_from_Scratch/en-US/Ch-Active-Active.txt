@@ -196,6 +196,7 @@ and ordering constraints for it:
 ----
 [root@pcmk-1 ~]# pcs constraint colocation add WebFS with dlm-clone INFINITY
 [root@pcmk-1 ~]# pcs constraint order dlm-clone then WebFS
+Adding dlm-clone WebFS (kind: Mandatory) (Options: first-action=start then-action=start)
 ----
 
 == Clone the IP address ==

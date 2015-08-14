@@ -106,7 +106,8 @@ Ensure that the machine has the static IP address you configured earlier.
 
 [NOTE]
 =====
-If you ever need to change the node's IP address from the command line, follow these instructions:
+If you ever need to change the node's IP address from the command line, follow
+these instructions, replacing *${device}* with the name of your network device:
 
 ....
 [root@pcmk-1 ~]# vim /etc/sysconfig/network-scripts/ifcfg-${device} # manually edit as desired
@@ -130,9 +131,10 @@ default via 192.168.122.1 dev eth0  proto static  metric 1024
 If there is no line beginning with *default via*, then you may need to add a line such as
 
 [source,Bash]
-GATEWAY=192.168.122.1
+GATEWAY="192.168.122.1"
 
-to +/etc/sysconfig/network+ and restart the network.
+to the device configuration using the same process as described above for
+changing the IP address.
 
 Now, check for connectivity to the outside world. Start small by
 testing whether we can reach the gateway we configured.
@@ -180,9 +182,13 @@ rtt min/avg/max/mdev = 1.012/1.012/1.012/0.000 ms
 Next, login as root via SSH.
 
 -----
-beekhof@f16 ~ # ssh -l root 192.168.122.11
-root@192.168.122.11's password:
-Last login: Fri Mar 30 19:41:19 2012 from 192.168.122.1
+beekhof@f16 ~ # ssh -l root 192.168.122.101
+The authenticity of host '192.168.122.101 (192.168.122.101)' can't be established.
+ECDSA key fingerprint is 6e:b7:8f:e2:4c:94:43:54:a8:53:cc:20:0f:29:a4:e0.
+Are you sure you want to continue connecting (yes/no)? yes
+Warning: Permanently added '192.168.122.101' (ECDSA) to the list of known hosts.
+root@192.168.122.101's password:
+Last login: Tue Aug 11 13:14:39 2015
 [root@pcmk-1 ~]#
 -----
 
@@ -265,9 +271,6 @@ pcmk-1
 clusterlabs.org
 ----
 
-If it concerns you that the shell prompt has not been updated, simply
-log out and back in again.
-
 == Repeat for Second Node ==
 
 Repeat the Installation steps so far, so that you have two
@@ -344,7 +347,6 @@ Your identification has been saved in /root/.ssh/id_dsa.
 Your public key has been saved in /root/.ssh/id_dsa.pub.
 The key fingerprint is:
 91:09:5c:82:5a:6a:50:08:4e:b2:0c:62:de:cc:74:44 root@pcmk-1.clusterlabs.org
-
 The key's randomart image is:
 +--[ DSA 1024]----+
 |==.ooEo..        |
@@ -357,25 +359,26 @@ The key's randomart image is:
 |                 |
 |                 |
 +-----------------+
-
 [root@pcmk-1 ~]# cp ~/.ssh/id_dsa.pub ~/.ssh/authorized_keys
 ----
 (((Creating and Activating a new SSH Key)))
 
-Install the key on the other node and test that you can now run commands
-remotely, without being prompted.
-
-.Installing the SSH Key on Another Host
+Install the key on the other node:
 ----
 [root@pcmk-1 ~]# scp -r ~/.ssh pcmk-2:
 The authenticity of host 'pcmk-2 (192.168.122.102)' can't be established.
-RSA key fingerprint is b1:2b:55:93:f1:d9:52:2b:0f:f2:8a:4e:ae:c6:7c:9a.
+ECDSA key fingerprint is a4:f5:b2:34:9d:86:2b:34:a2:87:37:b9:ca:68:52:ec.
 Are you sure you want to continue connecting (yes/no)? yes
-Warning: Permanently added 'pcmk-2,192.168.122.102' (RSA) to the list of known hosts.root@pcmk-2's password:
+Warning: Permanently added 'pcmk-2,192.168.122.102' (ECDSA) to the list of known hosts.
+root@pcmk-2's password:
 id_dsa.pub                           100%  616     0.6KB/s   00:00
 id_dsa                               100%  672     0.7KB/s   00:00
 known_hosts                          100%  400     0.4KB/s   00:00
 authorized_keys                      100%  616     0.6KB/s   00:00
+----
+
+Test that you can now run commands remotely, without being prompted:
+----
 [root@pcmk-1 ~]# ssh pcmk-2 -- uname -n
 pcmk-2
 ----
@@ -396,8 +399,8 @@ with a simple `#` prompt. Be sure to run them on each node individually.
 
 [NOTE]
 ===========
-This document uses pcs for cluster management. Other alternatives,
-such as crmsh, are available, but their syntax
+This document uses `pcs` for cluster management. Other alternatives,
+such as `crmsh`, are available, but their syntax
 will differ from the examples used here.
 ===========
 
@@ -414,6 +417,7 @@ Start and enable the daemon by issuing the following commands on each node:
 ----
 # systemctl start pcsd.service
 # systemctl enable pcsd.service
+ln -s '/usr/lib/systemd/system/pcsd.service' '/etc/systemd/system/multi-user.target.wants/pcsd.service'
 ----
 
 The installed packages will create a *hacluster* user with a disabled password.
@@ -427,13 +431,16 @@ on both nodes:
 
 ----
 # passwd hacluster
-password:
+Changing password for user hacluster.
+New password:
+Retype new password:
+passwd: all authentication tokens updated successfully.
 ----
 
 [NOTE]
 ===========
 Alternatively, to script this process or set the password on a
-different machine from the one you're logged into, you can use 
+different machine from the one you're logged into, you can use
 the `--stdin` option for `passwd`:
 
 ----
@@ -448,7 +455,7 @@ On either node, use `pcs cluster auth` to authenticate as the *hacluster* user:
 ----
 [root@pcmk-1 ~]# pcs cluster auth pcmk-1 pcmk-2
 Username: hacluster
-Password: 
+Password:
 pcmk-1: Authorized
 pcmk-2: Authorized
 ----
@@ -494,10 +501,11 @@ with the same password.
 ======
 Early versions of pcs required that `--name` be omitted from the above command.
 
-If using a different cluster shell such as crmsh rather than pcs, you must
-manually create a corosync.conf and copy it to all nodes.
+If you are not using `pcs` for cluster administration,
+follow whatever procedures are appropriate for your tools
+to create a corosync.conf and copy it to all nodes.
 
-The pcs command will configure corosync to use UDP unicast transport; if you
+The `pcs` command will configure corosync to use UDP unicast transport; if you
 choose to use multicast instead, choose a multicast address carefully.
 footnote:[For some subtle issues, see the now-defunct http://web.archive.org/web/20101211210054/http://29west.com/docs/THPM/multicast-address-assignment.html or the more detailed treatment in
 http://www.cisco.com/c/dam/en/us/support/docs/ip/ip-multicast/ipmlt_wp.pdf[Cisco's
@@ -505,20 +513,4 @@ Guidelines for Enterprise IP Multicast Address Allocation] paper.]
 ======
 
 The final /etc/corosync.conf configuration on each node should look
-something like the sample in Appendix B, Sample Corosync Configuration.
-
-[NOTE]
-======
-With versions of Corosync before 2.0, Pacemaker could obtain membership and
-quorum from a custom Corosync plugin. This plugin also had the capability to
-start Pacemaker automatically when Corosync was started.
-Neither behavior is possible with Corosync 2.0 and later, as support for
-plugins was removed.
-
-Because Pacemaker made use of the plugin for message routing, a cluster node
-using an older Corosync cannot talk to one using Corosync 2.0 or later.
-Rolling upgrades between these versions are therefore not possible, and an
-alternate strategy
-footnote:[http://www.clusterlabs.org/doc/en-US/Pacemaker/1.1/html/Pacemaker_Explained/ap-upgrade.html]
-must be used.
-======
+something like the sample in <<ap-corosync-conf>>.

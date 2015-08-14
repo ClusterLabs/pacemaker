@@ -12,13 +12,13 @@ command-line shells (and GUIs) that hide all the messy XML
 scaffolding.
 
 These shells take all the individual aspects required for managing and
-configuring a cluster, and packs them into one simple-to-use command
+configuring a cluster, and pack them into one simple-to-use command
 line tool.
 
 They even allow you to queue up several changes at once and commit
 them atomically.
 
-There are currently two command-line shells that people use, `pcs` and
+Two popular command-line shells are `pcs` and
 `crmsh`.  This edition of Clusters from Scratch is based on `pcs`.
 
 [NOTE]

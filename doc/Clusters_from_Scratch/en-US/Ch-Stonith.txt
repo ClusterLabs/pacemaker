@@ -20,23 +20,25 @@ elsewhere.
 It is crucial that your STONITH device can allow the cluster to
 differentiate between a node failure and a network failure.
 
-The biggest mistake people make in choosing a STONITH device is to
-use a remote power switch (such as many on-board IPMI controllers) that
-shares power with the node it controls. In such cases, the cluster
-cannot be sure if the node is really offline, or active and suffering
-from a network fault.
+A common mistake people make when choosing a STONITH device is to use a remote
+power switch (such as many on-board IPMI controllers) that shares power with
+the node it controls. If the power fails in such a case, the cluster cannot be
+sure whether the node is really offline, or active and suffering from a network
+fault, so the cluster will stop all resources to avoid a possible split-brain
+situation.
 
 Likewise, any device that relies on the machine being active (such as
-SSH-based "devices" used during testing) are inappropriate.
+SSH-based "devices" sometimes used during testing) is inappropriate.
 
 == Configure the Cluster for STONITH ==
 
-. Configure the STONITH device itself to be able to fence your nodes and accept
-  fencing requests.
-
 . Install the STONITH agent(s). To see what packages are available, run `yum
-  search fence-agents fence-virt`. Be sure to install the package(s) on all
-  cluster nodes.
+  search fence-`. Be sure to install the package(s) on all cluster nodes.
+
+. Configure the STONITH device itself to be able to fence your nodes and accept
+  fencing requests. This includes any necessary configuration on the device and
+  on the nodes, and any firewall or SELinux changes needed. Test the
+  communication between the device and your nodes.
 
 . Find the correct STONITH agent script: `pcs stonith list`
 
@@ -72,9 +74,9 @@ For this example, assume we have a chassis containing four nodes
 and an IPMI device active on 10.0.0.1. Following the steps above
 would go something like this:
 
-Step 1: Configure the IP address, authentication credentials, etc. in the IPMI device itself.
+Step 1: Install the *fence-agents-ipmilan* package on both nodes.
 
-Step 2: Install the *fence-agents-ipmilan* package on both nodes.
+Step 2: Configure the IP address, authentication credentials, etc. in the IPMI device itself.
 
 Step 3: Choose the *fence_ipmilan* STONITH agent.
 
@@ -118,17 +120,17 @@ Step 5: `pcs cluster cib stonith_cfg`
 
 Step 6: Here are example parameters for creating our STONITH resource:
 ----
-# pcs -f stonith_cfg stonith create ipmi-fencing fence_ipmilan \
+[root@pcmk-1 ~]# pcs -f stonith_cfg stonith create ipmi-fencing fence_ipmilan \
       pcmk_host_list="pcmk-1 pcmk-2" ipaddr=10.0.0.1 login=testuser \
       passwd=acd123 op monitor interval=60s
-# pcs -f stonith_cfg stonith
+[root@pcmk-1 ~]# pcs -f stonith_cfg stonith
  ipmi-fencing	(stonith:fence_ipmilan):	Stopped 
 ----
 
 Steps 7-10: Enable STONITH in the cluster:
 ----
-# pcs -f stonith_cfg property set stonith-enabled=true
-# pcs -f stonith_cfg property
+[root@pcmk-1 ~]# pcs -f stonith_cfg property set stonith-enabled=true
+[root@pcmk-1 ~]# pcs -f stonith_cfg property
 Cluster Properties:
  cluster-infrastructure: corosync
  cluster-name: mycluster
@@ -138,3 +140,12 @@ Cluster Properties:
 ----
 
 Step 11: `pcs cluster cib-push stonith_cfg`
+
+Step 12: Test:
+----
+[root@pcmk-1 ~]# pcs cluster stop pcmk-2
+[root@pcmk-1 ~]# stonith_admin --reboot pcmk-2
+----
+
+After a successful test, login to any rebooted nodes, and start the cluster
+(with `pcs cluster start`).

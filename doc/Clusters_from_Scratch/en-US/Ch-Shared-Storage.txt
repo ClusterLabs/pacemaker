@@ -40,7 +40,7 @@ Logical volume "drbd-demo" created
   swap      fedora-server_pcmk-1 -wi-ao---- 1.00g
 ----
 
-Repeat this on the second node, making sure to use the same size.
+Repeat for the second node, making sure to use the same size:
 
 ----
 [root@pcmk-1 ~]# ssh pcmk-2 -- lvcreate --name drbd-demo --size 1G fedora-server_pcmk-2
@@ -154,10 +154,8 @@ and run this command on it:
 
 [NOTE]
 ======
-In DRBD 8.3 and earlier, the equivalent command is:
-----
-[root@pcmk-1 ~]# drbdadm -- --overwrite-data-of-peer primary wwwdata
-----
+If you are using an older version of DRBD, the required syntax may be different.
+See the documentation for your version for how to perform these commands.
 ======
 
 If we check the status immediately, we'll see something like this:
@@ -236,7 +234,7 @@ into a file and commit those changes atomically.  To do this, start by
 populating the file with the current raw XML config from the CIB.
 
 ----
-# pcs cluster cib drbd_cfg
+[root@pcmk-1 ~]# pcs cluster cib drbd_cfg
 ----
 
 Using the `pcs -f` option, make changes to the configuration saved
@@ -371,6 +369,8 @@ Colocation Constraints:
   WebSite with ClusterIP (score:INFINITY)
   WebFS with WebDataClone (score:INFINITY) (with-rsc-role:Master)
   WebSite with WebFS (score:INFINITY)
+----
+----
 [root@pcmk-1 ~]# pcs -f fs_cfg resource show
  ClusterIP	(ocf::heartbeat:IPaddr2):	Started 
  WebSite	(ocf::heartbeat:apache):	Started 

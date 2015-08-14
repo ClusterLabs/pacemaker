@@ -313,7 +313,7 @@ Notice that *pcmk-1* is *OFFLINE* for cluster purposes (its *PCSD* is still
 *Online*, allowing it to receive `pcs` commands, but it is not participating in
 the cluster).
 
-Also notice that *ClusterIP* is now running on pcmk-2 -- failover happened
+Also notice that *ClusterIP* is now running on *pcmk-2* -- failover happened
 automatically, and no errors are reported.
 
 [IMPORTANT]
@@ -355,7 +355,8 @@ using a different cluster shell).
 ====
 
 Now, simulate node recovery by restarting the cluster stack on *pcmk-1*, and
-check the cluster's status.
+check the cluster's status. (It may take a little while before the cluster
+gets going on the node, but it eventually will look like the below.)
 
 ----
 [root@pcmk-1 ~]# pcs cluster start pcmk-1
