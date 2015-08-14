@@ -46,11 +46,11 @@ Colocation Constraints:
 ----
 [root@pcmk-1 ~]# pcs status
 Cluster name: mycluster
-Last updated: Mon Dec 22 11:19:17 2014
-Last change: Mon Dec 22 11:03:52 2014
+Last updated: Fri Aug 14 12:05:37 2015
+Last change: Fri Aug 14 11:49:29 2015
 Stack: corosync
-Current DC: pcmk-2 (2) - partition with quorum
-Version: 1.1.12-a9c8177
+Current DC: pcmk-1 (1) - partition with quorum
+Version: 1.1.12-a14efad
 2 Nodes configured
 11 Resources configured
 
@@ -87,12 +87,11 @@ Daemon Status:
 ----
 [source,XML]
 ----
-<cib admin_epoch="0" cib-last-written="Mon Dec 22 11:03:52 2014" crm_feature_set="3.0.9" epoch="121" have-quorum="1" num_updates="49" validate-with="pacemaker-2.2" dc-uuid="2">
-  <configuration>
+<cib crm_feature_set="3.0.9" validate-with="pacemaker-2.3" epoch="51" num_updates="16" admin_epoch="0" cib-last-written="Fri Aug 14 11:49:29 2015" have-quorum="1" dc-uuid="1">
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
-        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.12-a9c8177"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.12-a14efad"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="mycluster"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1419129162"/>
@@ -318,9 +317,9 @@ Pacemaker Nodes:
 Cluster Properties:
  cluster-infrastructure: corosync
  cluster-name: mycluster
- dc-version: 1.1.12-a9c8177
+ dc-version: 1.1.12-a14efad
  have-watchdog: false
- last-lrm-refresh: 1419129162
+ last-lrm-refresh: 1439569053
  stonith-enabled: true
 ----
 

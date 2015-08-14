@@ -57,8 +57,9 @@ Commands:
     stonith     Configure fence devices
     constraint  Set resource constraints
     property    Set pacemaker properties
+    acl         Set pacemaker access control lists
     status      View cluster status
-    config      Print full cluster configuration
+    config      View and manage cluster configuration
 ----
 
 As you can see, the different aspects of cluster management are separated
@@ -72,8 +73,9 @@ is an example of all the options available under the status category.
 Usage: pcs status [commands]...
 View current cluster and resource status
 Commands:
-    [status]
-        View all information about the cluster and resources
+    [status] [--full]
+        View all information about the cluster and resources (--full provides
+        more details)
 
     resources
         View current status of cluster resources
@@ -106,7 +108,7 @@ installation, run:
 
 ----
 [root@pcmk-1 ~]# pacemakerd --features
-Pacemaker 1.1.12 (Build: a9c8177)
+Pacemaker 1.1.12 (Build: a14efad)
  Supporting v3.0.9:  generated-manpages agent-manpages ascii-docs publican-docs ncurses libqb-logging libqb-ipc upstart systemd nagios  corosync-native atomic-attrd acls
 ----
 

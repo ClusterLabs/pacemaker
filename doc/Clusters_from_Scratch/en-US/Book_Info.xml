@@ -14,8 +14,8 @@
 		changes (OS, pacemaker, corosync, pcs), and PUBSNUMBER for
 		simple textual changes (corrections, translations, etc.).
 	-->
-	<edition>8</edition>
-	<pubsnumber>1</pubsnumber>
+	<edition>9</edition>
+	<pubsnumber>0</pubsnumber>
 	<abstract>
 		<para>
 			The purpose of this document is to provide a start-to-finish guide to building an example active/passive cluster with Pacemaker and show how it can be converted to an active/active one.

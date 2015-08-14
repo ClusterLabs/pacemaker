@@ -43,11 +43,11 @@ Activate our new configuration, and see how the cluster responds:
 CIB updated
 [root@pcmk-1 ~]# pcs status
 Cluster name: mycluster
-Last updated: Sat Dec 20 21:53:44 2014
-Last change: Sat Dec 20 21:53:40 2014
+Last updated: Fri Aug 14 11:19:36 2015
+Last change: Fri Aug 14 11:19:28 2015
 Stack: corosync
 Current DC: pcmk-1 (1) - partition with quorum
-Version: 1.1.12-a9c8177
+Version: 1.1.12-a14efad
 2 Nodes configured
 8 Resources configured
 
@@ -264,11 +264,11 @@ Load our configuration to the cluster, and see how it responds.
 CIB updated
 [root@pcmk-1 ~]# pcs status
 Cluster name: mycluster
-Last updated: Sat Dec 20 22:05:48 2014
-Last change: Sat Dec 20 22:05:34 2014
+Last updated: Fri Aug 14 11:32:07 2015
+Last change: Fri Aug 14 11:32:04 2015
 Stack: corosync
 Current DC: pcmk-1 (1) - partition with quorum
-Version: 1.1.12-a9c8177
+Version: 1.1.12-a14efad
 2 Nodes configured
 9 Resources configured
 

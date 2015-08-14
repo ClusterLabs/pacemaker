@@ -62,6 +62,12 @@
 			  <author><firstname>Ken</firstname><surname>Gaillot</surname><email>kgaillot@redhat.com</email></author>
 			  <revdescription><simplelist><member>Minor corrections, plus use include file for intro</member></simplelist></revdescription>
 			</revision>
+			<revision>
+			  <revnumber>9-0</revnumber>
+			  <date>Fri Aug 14 2015</date>
+			  <author><firstname>Ken</firstname><surname>Gaillot</surname><email>kgaillot@redhat.com</email></author>
+			  <revdescription><simplelist><member>Update for CentOS 7.1 and leaving firewalld/SELinux enabled</member></simplelist></revdescription>
+			</revision>
 		</revhistory>
 	</simpara>
 </appendix>

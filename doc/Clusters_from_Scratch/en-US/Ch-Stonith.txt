@@ -134,7 +134,7 @@ Steps 7-10: Enable STONITH in the cluster:
 Cluster Properties:
  cluster-infrastructure: corosync
  cluster-name: mycluster
- dc-version: 1.1.12-a9c8177
+ dc-version: 1.1.12-a14efad
  have-watchdog: false
  stonith-enabled: true
 ----
