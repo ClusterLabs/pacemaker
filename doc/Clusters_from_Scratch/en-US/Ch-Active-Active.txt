@@ -9,7 +9,7 @@ multiple Primaries, we can continue to use it here.
 == Install Cluster Filesystem Software ==
 
 The only hitch is that we need to use a cluster-aware filesystem. The
-one we used earlier with DRBD, ext4, is not one of those. Both OCFS2
+one we used earlier with DRBD, xfs, is not one of those. Both OCFS2
 and GFS2 are supported; here, we will use GFS2.
 
 On both nodes, install the GFS2 command-line utilities and the
@@ -119,18 +119,18 @@ Otherwise, you will receive the message:
 
 -----
 [root@pcmk-2 ~]# mkfs.gfs2 -p lock_dlm -j 2 -t mycluster:web /dev/drbd1
-It appears to contain an existing filesystem (ext4)
+It appears to contain an existing filesystem (xfs)
 This will destroy any data on /dev/drbd1
 Are you sure you want to proceed? [y/n]y
 Device:                    /dev/drbd1
 Block size:                4096
 Device size:               1.00 GB (262127 blocks)
-Filesystem size:           1.00 GB (262124 blocks)
+Filesystem size:           1.00 GB (262126 blocks)
 Journals:                  2
-Resource groups:           3
+Resource groups:           5
 Locking protocol:          "lock_dlm"
 Lock table:                "mycluster:web"
-UUID:                      b2b30e6c-8890-33fa-a1ba-3c70edd4b5f0
+UUID:                      9a72c488-d8a7-24c9-ceee-add7a8ca52c2
 -----
 
 The `mkfs.gfs2` command required a number of additional parameters:
@@ -171,14 +171,14 @@ With the WebFS resource stopped, let's update the configuration.
 ----
 [root@pcmk-1 ~]# pcs resource show WebFS
  Resource: WebFS (class=ocf provider=heartbeat type=Filesystem)
-  Attributes: device=/dev/drbd1 directory=/var/www/html fstype=ext4 
-  Meta Attrs: target-role=Stopped 
+  Attributes: device=/dev/drbd1 directory=/var/www/html fstype=xfs
+  Meta Attrs: target-role=Stopped
   Operations: start interval=0s timeout=60 (WebFS-start-timeout-60)
               stop interval=0s timeout=60 (WebFS-stop-timeout-60)
               monitor interval=20 timeout=40 (WebFS-monitor-interval-20)
 ----
 
-The fstype option needs to be updated to *gfs2* instead of *ext4*.
+The fstype option needs to be updated to *gfs2* instead of *xfs*.
 
 ----
 [root@pcmk-1 ~]# pcs resource update WebFS fstype=gfs2
