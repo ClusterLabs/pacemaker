@@ -312,7 +312,8 @@ primary role) on *pcmk-1* and slave (DRBD's secondary role) on *pcmk-2*.
 ====
 The resource agent should load the DRBD module when needed if it's not already
 loaded. If that does not happen, configure your operating system to load the
-module at boot time. For Fedora 21, you would run this on both nodes:
+module at boot time. For &DISTRO; &DISTRO_VERSION;, you would run this on both
+nodes:
 ----
 # echo drbd >/etc/modules-load.d/drbd.conf
 ----

@@ -420,6 +420,6 @@ resource-stickiness: 100
 
 [NOTE]
 ======
-Earlier versions of pcs, such as the one shipped with Fedora 20,
-require that `rsc` be added after `resource` in the above commands.
+Older versions of `pcs` required that `rsc` be added after `resource` in the
+above commands.
 ======

@@ -144,11 +144,8 @@ to not having STONITH configured, which are OK at this point):
 
 [NOTE]
 ======
-Other operating systems will report startup errors in other locations.
-For example, on Fedora 19 and earlier, the command would be:
-----
-[root@pcmk-1 ~]# grep -i error /var/log/messages
-----
+Other operating systems may report startup errors in other locations,
+for example +/var/log/messages+.
 ======
 
 Repeat these checks on the other node. The results should be the same.

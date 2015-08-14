@@ -28,7 +28,7 @@ Since this is a simple example, we'll skip that step here.
 
 == Create Website Documents ==
 
-We need to create a page for Apache to serve. On Fedora, the
+We need to create a page for Apache to serve. On &DISTRO; &DISTRO_VERSION;, the
 default Apache document root is /var/www/html, so we'll create an index file
 there. For the moment, we will simplify things by serving a static site
 and manually synchronizing the data between the two nodes, so run this command
@@ -61,9 +61,8 @@ END
 
 [NOTE]
 ======
-If you are using a different operating system or an earlier version of Fedora,
-server-status may already be enabled or may be configurable in a different
-location.
+If you are using a different operating system, server-status may already be
+enabled or may be configurable in a different location.
 ======
 
 == Configure the Cluster ==

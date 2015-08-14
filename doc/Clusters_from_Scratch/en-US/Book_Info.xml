@@ -5,13 +5,13 @@
 ]>
 <bookinfo id="book-Clusters_from_Scratch-Clusters_from_Scratch">
 	<title>Clusters from Scratch</title>
-	<subtitle>Creating Active/Passive and Active/Active Clusters on Fedora</subtitle>
+	<subtitle>Step-by-Step Instructions for Building Your First High-Availability Cluster</subtitle>
 	<productname>Pacemaker</productname>
 	<productnumber>1.1</productnumber>
 	<!--
 		EDITION-PUBSNUMBER should match REVNUMBER in Revision_History.xml.
 		Increment EDITION when the syntax of the documented software
-		changes (Fedora, pacemaker, corosync, pcs), and PUBSNUMBER for
+		changes (OS, pacemaker, corosync, pcs), and PUBSNUMBER for
 		simple textual changes (corrections, translations, etc.).
 	-->
 	<edition>8</edition>
@@ -51,7 +51,7 @@
 			</orderedlist>
 		</para>
 		<para>
-			Given the graphical nature of the Fedora install process, a number of screenshots are included. However the guide is primarily composed of commands, the reasons for executing them and their expected outputs.
+			Given the graphical nature of the install process, a number of screenshots are included. However the guide is primarily composed of commands, the reasons for executing them and their expected outputs.
 		</para>
 	</abstract>
 	<corpauthor>

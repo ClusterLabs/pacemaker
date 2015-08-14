@@ -1,6 +1,6 @@
 = Installation =
 
-== Install the OS ==
+== Install &DISTRO; &DISTRO_VERSION; ==
 
 Detailed instructions for installing Fedora are available at
 http://docs.fedoraproject.org/en-US/Fedora/21/html/Installation_Guide/ in a number of
@@ -270,7 +270,7 @@ log out and back in again.
 
 == Repeat for Second Node ==
 
-Repeat the Installation steps so far, so that you have two Fedora
+Repeat the Installation steps so far, so that you have two
 nodes ready to have the cluster software installed.
 
 For the purposes of this document, the additional node is called
@@ -382,10 +382,8 @@ pcmk-2
 
 == Install the Cluster Software ==
 
-Fedora 17 and later comes with everything you need, so simply fire up a shell
-on both nodes and run the following to install pacemaker and command-line
-cluster management software:
-
+Fire up a shell on both nodes and run the following to install pacemaker, and while
+we're at it, some command-line tools to make our lives easier:
 ----
 # yum install -y pacemaker pcs psmisc
 ----
@@ -494,8 +492,7 @@ with the same password.
 
 [NOTE]
 ======
-Early versions of pcs, such as the one shipped with Fedora 20 and earlier,
-require that `--name` be omitted from the above command.
+Early versions of pcs required that `--name` be omitted from the above command.
 
 If using a different cluster shell such as crmsh rather than pcs, you must
 manually create a corosync.conf and copy it to all nodes.
