@@ -15,9 +15,37 @@ DRBD itself is included in the upstream kernel,
 footnote:[Since version 2.6.33]
 but we do need some utilities to use it effectively. On both nodes, run:
 
+DRBD will not be able to run under the default SELinux security policies.
+If you are familiar with SELinux, you can modify the policies in a more
+fine-grained manner, but here we will simply exempt DRBD processes from SELinux
+control:
 ----
 # yum install -y drbd-pacemaker drbd-udev
+# semanage permissive -a drbd_t
 ----
+
+We will configure DRBD to use port 7789, so allow that port from each host to
+the other:
+----
+[root@pcmk-1 ~]# firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.122.102" port port="7789" protocol="tcp" accept'
+success
+[root@pcmk-1 ~]# firewall-cmd --reload
+success
+----
+----
+[root@pcmk-2 ~]# firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.122.101" port port="7789" protocol="tcp" accept'
+success
+[root@pcmk-2 ~]# firewall-cmd --reload
+success
+----
+
+[NOTE]
+======
+In this example, we have only two nodes, and all network traffic is on the same LAN.
+In production, it is recommended to use a dedicated, isolated network for cluster-related traffic,
+so the firewall configuration would likely be different; one approach would be to
+add the dedicated network interfaces to the trusted zone.
+======
 
 == Allocate a Disk Volume for DRBD ==
 
@@ -214,6 +242,7 @@ options that are suitable for your application.
 ====
 
 Mount the newly created filesystem, populate it with our web document,
+give it the same SELinux policy as the web document root,
 then unmount it (the cluster will handle mounting and unmounting it later):
 
 ----
@@ -223,6 +252,7 @@ then unmount it (the cluster will handle mounting and unmounting it later):
   <body>My Test Site - DRBD</body>
  </html>
 END
+[root@pcmk-1 ~]# chcon -R --reference=/var/www/html /mnt
 [root@pcmk-1 ~]# umount /dev/drbd1
 ----
 

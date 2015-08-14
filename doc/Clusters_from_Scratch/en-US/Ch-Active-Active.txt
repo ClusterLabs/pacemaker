@@ -160,6 +160,7 @@ Now we can (re-)populate the new filesystem with data
 <body>My Test Site - GFS2</body>
 </html>
 END
+[root@pcmk-2 ~]# chcon -R --reference=/var/www/html /mnt
 [root@pcmk-2 ~]# umount /dev/drbd1
 [root@pcmk-2 ~]# drbdadm verify wwwdata
 -----

@@ -199,46 +199,6 @@ Apply any package updates released since your installation image was created:
 [root@pcmk-1 ~]# yum update
 ----
 
-=== Disable Security During Testing ===
-
-To simplify this guide and focus on the aspects directly connected to
-clustering, we will now disable the machine's firewall and SELinux
-installation.
-
-[WARNING]
-===========
-These actions create significant security issues and should not be performed on
-machines that will be exposed to the outside world.
-===========
-
-////
- TODO: Create an Appendix that deals with (at least) re-enabling the firewall.
-////
-
-----
-[root@pcmk-1 ~]# setenforce 0
-[root@pcmk-1 ~]# sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/selinux/config
-[root@pcmk-1 ~]# systemctl disable firewalld.service
-[root@pcmk-1 ~]# systemctl stop firewalld.service
-[root@pcmk-1 ~]# iptables --flush
-----
-
-[NOTE]
-===========
-If you are using Fedora 17 or earlier or are using the iptables
-service for your firewall, the commands would be:
-
-----
-[root@pcmk-1 ~]# setenforce 0
-[root@pcmk-1 ~]# sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/selinux/config
-[root@pcmk-1 ~]# systemctl disable iptables.service
-[root@pcmk-1 ~]# rm -f /etc/systemd/system/basic.target.wants/iptables.service
-[root@pcmk-1 ~]# systemctl stop iptables.service
-[root@pcmk-1 ~]# iptables --flush
-----
-===========
-
-
 === Use Short Node Names ===
 
 During installation, we filled in the machine's fully qualified domain
@@ -405,6 +365,38 @@ will differ from the examples used here.
 ===========
 
 == Configure the Cluster Software ==
+
+=== Allow cluster services through firewall ===
+
+On each node, allow cluster-related services through the local firewall:
+----
+# firewall-cmd --permanent --add-service=high-availability
+success
+# firewall-cmd --reload
+success
+----
+
+[NOTE]
+======
+If you are using iptables directly, or some other firewall solution besides
+firewalld, simply open the following ports, which can be used by various
+clustering components: TCP ports 2224, 3121, and 21064, and UDP port 5405.
+
+If you run into any problems during testing, you might want to disable
+the firewall and SELinux entirely until you have everything working.
+This may create significant security issues and should not be performed on
+machines that will be exposed to the outside world, but may be appropriate
+during development and testing on a protected host.
+
+To disable security measures:
+----
+[root@pcmk-1 ~]# setenforce 0
+[root@pcmk-1 ~]# sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/selinux/config
+[root@pcmk-1 ~]# systemctl disable firewalld.service
+[root@pcmk-1 ~]# systemctl stop firewalld.service
+[root@pcmk-1 ~]# iptables --flush
+----
+======
 
 === Enable pcs Daemon ===
 

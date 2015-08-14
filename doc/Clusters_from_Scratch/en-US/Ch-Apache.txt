@@ -13,6 +13,8 @@ the status of the Apache server.
 
 ----
 # yum install -y httpd wget
+# firewall-cmd --permanent --add-service=http
+# firewall-cmd --reload
 ----
 
 [IMPORTANT]
