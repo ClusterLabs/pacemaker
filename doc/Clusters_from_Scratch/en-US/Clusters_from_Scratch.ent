@@ -2,5 +2,5 @@
 <!ENTITY BOOKID "Clusters_from_Scratch">
 <!ENTITY YEAR "2015">
 <!ENTITY HOLDER "Andrew Beekhof">
-<!ENTITY DISTRO "Fedora">
-<!ENTITY DISTRO_VERSION "21">
+<!ENTITY DISTRO "CentOS">
+<!ENTITY DISTRO_VERSION "7.1">

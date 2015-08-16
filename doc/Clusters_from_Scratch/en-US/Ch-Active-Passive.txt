@@ -16,7 +16,7 @@ Last updated: Tue Dec 16 16:15:29 2014
 Last change: Tue Dec 16 15:49:47 2014
 Stack: corosync
 Current DC: pcmk-2 (2) - partition with quorum
-Version: 1.1.12-a9c8177
+Version: 1.1.12-a14efad
 2 Nodes configured
 0 Resources configured
 
@@ -34,12 +34,12 @@ configuration and status by using the `pcs cluster cib` command.
 ----
 [source,XML]
 ----
-<cib crm_feature_set="3.0.9" validate-with="pacemaker-2.2" epoch="5" num_updates="8" admin_epoch="0" cib-last-written="Tue Dec 16 15:49:47 2014" have-quorum="1" dc-uuid="2">
+<cib crm_feature_set="3.0.9" validate-with="pacemaker-2.3" epoch="5" num_updates="8" admin_epoch="0" cib-last-written="Tue Dec 16 15:49:47 2014" have-quorum="1" dc-uuid="2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
-        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.12-a9c8177"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.12-a14efad"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="mycluster"/>
       </cluster_property_set>
@@ -173,6 +173,7 @@ part of *ocf:heartbeat:IPaddr2*), run:
 ----
 [root@pcmk-1 ~]# pcs resource providers
 heartbeat
+openstack
 pacemaker
 ----
 
@@ -181,23 +182,19 @@ a specific OCF provider (the *IPaddr2* part of *ocf:heartbeat:IPaddr2*), run:
 
 ----
 [root@pcmk-1 ~]# pcs resource agents ocf:heartbeat
-AoEtarget
-AudibleAlarm
 CTDB
-ClusterMon
 Delay
 Dummy
+Filesystem
+IPaddr
+IPaddr2
 .
 . (skipping lots of resources to save space)
 .
-IPaddr2
-.
-.
-.
+rsyncd
+slapd
+symlink
 tomcat
-varnish
-vmware
-zabbixserver
 ----
 
 Now, verify that the IP resource has been added, and display the cluster's
@@ -210,7 +207,7 @@ Last updated: Tue Dec 16 17:44:40 2014
 Last change: Tue Dec 16 17:44:26 2014
 Stack: corosync
 Current DC: pcmk-1 (1) - partition with quorum
-Version: 1.1.12-a9c8177
+Version: 1.1.12-a14efad
 2 Nodes configured
 1 Resources configured
 
@@ -245,7 +242,7 @@ Last updated: Tue Dec 16 17:44:40 2014
 Last change: Tue Dec 16 17:44:26 2014
 Stack: corosync
 Current DC: pcmk-1 (1) - partition with quorum
-Version: 1.1.12-a9c8177
+Version: 1.1.12-a14efad
 2 Nodes configured
 1 Resources configured
 
@@ -287,7 +284,7 @@ Last updated: Wed Dec 17 10:30:56 2014
 Last change: Tue Dec 16 17:44:26 2014
 Stack: corosync
 Current DC: pcmk-2 (2) - partition with quorum
-Version: 1.1.12-a9c8177
+Version: 1.1.12-a14efad
 2 Nodes configured
 1 Resources configured
 
@@ -313,7 +310,7 @@ Notice that *pcmk-1* is *OFFLINE* for cluster purposes (its *PCSD* is still
 *Online*, allowing it to receive `pcs` commands, but it is not participating in
 the cluster).
 
-Also notice that *ClusterIP* is now running on pcmk-2 -- failover happened
+Also notice that *ClusterIP* is now running on *pcmk-2* -- failover happened
 automatically, and no errors are reported.
 
 [IMPORTANT]
@@ -355,7 +352,8 @@ using a different cluster shell).
 ====
 
 Now, simulate node recovery by restarting the cluster stack on *pcmk-1*, and
-check the cluster's status.
+check the cluster's status. (It may take a little while before the cluster
+gets going on the node, but it eventually will look like the below.)
 
 ----
 [root@pcmk-1 ~]# pcs cluster start pcmk-1
@@ -366,7 +364,7 @@ Last updated: Wed Dec 17 10:50:11 2014
 Last change: Tue Dec 16 17:44:26 2014
 Stack: corosync
 Current DC: pcmk-2 (2) - partition with quorum
-Version: 1.1.12-a9c8177
+Version: 1.1.12-a14efad
 2 Nodes configured
 1 Resources configured
 
@@ -420,6 +418,6 @@ resource-stickiness: 100
 
 [NOTE]
 ======
-Earlier versions of pcs, such as the one shipped with Fedora 20,
-require that `rsc` be added after `resource` in the above commands.
+Older versions of `pcs` required that `rsc` be added after `resource` in the
+above commands.
 ======

@@ -1,5 +1,5 @@
 [appendix]
-
+[[ap-corosync-conf]]
 == Sample Corosync Configuration  ==
 
 .Sample +corosync.conf+ for two-node cluster created by `pcs`.

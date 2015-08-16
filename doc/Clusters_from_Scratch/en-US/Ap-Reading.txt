@@ -6,7 +6,7 @@ http://www.clusterlabs.org/
 
 - SuSE has a comprehensive guide to cluster commands (though using the `crmsh` command-line
   shell rather than `pcs`) at:
-  http://www.suse.com/documentation/sle_ha/book_sleha/?page=/documentation/sle_ha/book_sleha/data/book_sleha.html
+  https://www.suse.com/documentation/sle_ha/book_sleha/data/book_sleha.html
 
 - Corosync
  http://www.corosync.org/

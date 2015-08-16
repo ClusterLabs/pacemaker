@@ -9,7 +9,7 @@ multiple Primaries, we can continue to use it here.
 == Install Cluster Filesystem Software ==
 
 The only hitch is that we need to use a cluster-aware filesystem. The
-one we used earlier with DRBD, ext4, is not one of those. Both OCFS2
+one we used earlier with DRBD, xfs, is not one of those. Both OCFS2
 and GFS2 are supported; here, we will use GFS2.
 
 On both nodes, install the GFS2 command-line utilities and the
@@ -43,11 +43,11 @@ Activate our new configuration, and see how the cluster responds:
 CIB updated
 [root@pcmk-1 ~]# pcs status
 Cluster name: mycluster
-Last updated: Sat Dec 20 21:53:44 2014
-Last change: Sat Dec 20 21:53:40 2014
+Last updated: Fri Aug 14 11:19:36 2015
+Last change: Fri Aug 14 11:19:28 2015
 Stack: corosync
 Current DC: pcmk-1 (1) - partition with quorum
-Version: 1.1.12-a9c8177
+Version: 1.1.12-a14efad
 2 Nodes configured
 8 Resources configured
 
@@ -119,18 +119,18 @@ Otherwise, you will receive the message:
 
 -----
 [root@pcmk-2 ~]# mkfs.gfs2 -p lock_dlm -j 2 -t mycluster:web /dev/drbd1
-It appears to contain an existing filesystem (ext4)
+It appears to contain an existing filesystem (xfs)
 This will destroy any data on /dev/drbd1
 Are you sure you want to proceed? [y/n]y
 Device:                    /dev/drbd1
 Block size:                4096
 Device size:               1.00 GB (262127 blocks)
-Filesystem size:           1.00 GB (262124 blocks)
+Filesystem size:           1.00 GB (262126 blocks)
 Journals:                  2
-Resource groups:           3
+Resource groups:           5
 Locking protocol:          "lock_dlm"
 Lock table:                "mycluster:web"
-UUID:                      b2b30e6c-8890-33fa-a1ba-3c70edd4b5f0
+UUID:                      9a72c488-d8a7-24c9-ceee-add7a8ca52c2
 -----
 
 The `mkfs.gfs2` command required a number of additional parameters:
@@ -160,6 +160,7 @@ Now we can (re-)populate the new filesystem with data
 <body>My Test Site - GFS2</body>
 </html>
 END
+[root@pcmk-2 ~]# chcon -R --reference=/var/www/html /mnt
 [root@pcmk-2 ~]# umount /dev/drbd1
 [root@pcmk-2 ~]# drbdadm verify wwwdata
 -----
@@ -171,14 +172,14 @@ With the WebFS resource stopped, let's update the configuration.
 ----
 [root@pcmk-1 ~]# pcs resource show WebFS
  Resource: WebFS (class=ocf provider=heartbeat type=Filesystem)
-  Attributes: device=/dev/drbd1 directory=/var/www/html fstype=ext4 
-  Meta Attrs: target-role=Stopped 
+  Attributes: device=/dev/drbd1 directory=/var/www/html fstype=xfs
+  Meta Attrs: target-role=Stopped
   Operations: start interval=0s timeout=60 (WebFS-start-timeout-60)
               stop interval=0s timeout=60 (WebFS-stop-timeout-60)
               monitor interval=20 timeout=40 (WebFS-monitor-interval-20)
 ----
 
-The fstype option needs to be updated to *gfs2* instead of *ext4*.
+The fstype option needs to be updated to *gfs2* instead of *xfs*.
 
 ----
 [root@pcmk-1 ~]# pcs resource update WebFS fstype=gfs2
@@ -196,6 +197,7 @@ and ordering constraints for it:
 ----
 [root@pcmk-1 ~]# pcs constraint colocation add WebFS with dlm-clone INFINITY
 [root@pcmk-1 ~]# pcs constraint order dlm-clone then WebFS
+Adding dlm-clone WebFS (kind: Mandatory) (Options: first-action=start then-action=start)
 ----
 
 == Clone the IP address ==
@@ -262,11 +264,11 @@ Load our configuration to the cluster, and see how it responds.
 CIB updated
 [root@pcmk-1 ~]# pcs status
 Cluster name: mycluster
-Last updated: Sat Dec 20 22:05:48 2014
-Last change: Sat Dec 20 22:05:34 2014
+Last updated: Fri Aug 14 11:32:07 2015
+Last change: Fri Aug 14 11:32:04 2015
 Stack: corosync
 Current DC: pcmk-1 (1) - partition with quorum
-Version: 1.1.12-a9c8177
+Version: 1.1.12-a14efad
 2 Nodes configured
 9 Resources configured
 

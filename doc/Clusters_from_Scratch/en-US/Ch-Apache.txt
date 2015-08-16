@@ -13,6 +13,8 @@ the status of the Apache server.
 
 ----
 # yum install -y httpd wget
+# firewall-cmd --permanent --add-service=http
+# firewall-cmd --reload
 ----
 
 [IMPORTANT]
@@ -28,7 +30,7 @@ Since this is a simple example, we'll skip that step here.
 
 == Create Website Documents ==
 
-We need to create a page for Apache to serve. On Fedora, the
+We need to create a page for Apache to serve. On &DISTRO; &DISTRO_VERSION;, the
 default Apache document root is /var/www/html, so we'll create an index file
 there. For the moment, we will simplify things by serving a static site
 and manually synchronizing the data between the two nodes, so run this command
@@ -61,9 +63,8 @@ END
 
 [NOTE]
 ======
-If you are using a different operating system or an earlier version of Fedora,
-server-status may already be enabled or may be configurable in a different
-location.
+If you are using a different operating system, server-status may already be
+enabled or may be configurable in a different location.
 ======
 
 == Configure the Cluster ==
@@ -112,7 +113,7 @@ Last updated: Wed Dec 17 12:40:41 2014
 Last change: Wed Dec 17 12:40:05 2014
 Stack: corosync
 Current DC: pcmk-2 (2) - partition with quorum
-Version: 1.1.12-a9c8177
+Version: 1.1.12-a14efad
 2 Nodes configured
 2 Resources configured
 
@@ -195,7 +196,7 @@ Last updated: Wed Dec 17 13:57:58 2014
 Last change: Wed Dec 17 13:57:22 2014
 Stack: corosync
 Current DC: pcmk-2 (2) - partition with quorum
-Version: 1.1.12-a9c8177
+Version: 1.1.12-a14efad
 2 Nodes configured
 2 Resources configured
 
@@ -274,7 +275,7 @@ Last updated: Wed Dec 17 14:11:49 2014
 Last change: Wed Dec 17 14:11:20 2014
 Stack: corosync
 Current DC: pcmk-2 (2) - partition with quorum
-Version: 1.1.12-a9c8177
+Version: 1.1.12-a14efad
 2 Nodes configured
 2 Resources configured
 
@@ -345,7 +346,7 @@ Last updated: Wed Dec 17 14:19:34 2014
 Last change: Wed Dec 17 14:18:37 2014
 Stack: corosync
 Current DC: pcmk-2 (2) - partition with quorum
-Version: 1.1.12-a9c8177
+Version: 1.1.12-a14efad
 2 Nodes configured
 2 Resources configured
 
@@ -406,7 +407,7 @@ Last updated: Wed Dec 17 14:25:21 2014
 Last change: Wed Dec 17 14:24:29 2014
 Stack: corosync
 Current DC: pcmk-2 (2) - partition with quorum
-Version: 1.1.12-a9c8177
+Version: 1.1.12-a14efad
 2 Nodes configured
 2 Resources configured
 

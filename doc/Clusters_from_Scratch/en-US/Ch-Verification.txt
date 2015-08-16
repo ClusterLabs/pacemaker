@@ -68,11 +68,13 @@ Next, check the membership and quorum APIs:
 
 ----
 [root@pcmk-1 ~]# corosync-cmapctl  | grep members 
+runtime.totem.pg.mrp.srp.members.1.config_version (u64) = 0
 runtime.totem.pg.mrp.srp.members.1.ip (str) = r(0) ip(192.168.122.101) 
 runtime.totem.pg.mrp.srp.members.1.join_count (u32) = 1
 runtime.totem.pg.mrp.srp.members.1.status (str) = joined
+runtime.totem.pg.mrp.srp.members.2.config_version (u64) = 0
 runtime.totem.pg.mrp.srp.members.2.ip (str) = r(0) ip(192.168.122.102) 
-runtime.totem.pg.mrp.srp.members.2.join_count (u32) = 1
+runtime.totem.pg.mrp.srp.members.2.join_count (u32) = 2
 runtime.totem.pg.mrp.srp.members.2.status (str) = joined
 
 [root@pcmk-1 ~]# pcs status corosync 
@@ -96,14 +98,14 @@ the necessary processes are running:
   PID TTY      STAT   TIME COMMAND
     2 ?        S      0:00 [kthreadd]
 ...lots of processes...
-28019 ?        Ssl    0:03 /usr/sbin/corosync
-28047 ?        Ss     0:00 /usr/sbin/pacemakerd -f
-28048 ?        Ss     0:00  \_ /usr/libexec/pacemaker/cib
-28049 ?        Ss     0:00  \_ /usr/libexec/pacemaker/stonithd
-28050 ?        Ss     0:00  \_ /usr/lib64/heartbeat/lrmd
-28051 ?        Ss     0:00  \_ /usr/libexec/pacemaker/attrd
-28052 ?        Ss     0:00  \_ /usr/libexec/pacemaker/pengine
-28053 ?        Ss     0:00  \_ /usr/libexec/pacemaker/crmd
+ 1362 ?        Ssl    0:35 corosync
+ 1379 ?        Ss     0:00 /usr/sbin/pacemakerd -f
+ 1380 ?        Ss     0:00  \_ /usr/libexec/pacemaker/cib
+ 1381 ?        Ss     0:00  \_ /usr/libexec/pacemaker/stonithd
+ 1382 ?        Ss     0:00  \_ /usr/libexec/pacemaker/lrmd
+ 1383 ?        Ss     0:00  \_ /usr/libexec/pacemaker/attrd
+ 1384 ?        Ss     0:00  \_ /usr/libexec/pacemaker/pengine
+ 1385 ?        Ss     0:00  \_ /usr/libexec/pacemaker/crmd
 ----
 
 If that looks OK, check the `pcs status` output:
@@ -116,7 +118,7 @@ Last updated: Tue Dec 16 16:15:29 2014
 Last change: Tue Dec 16 15:49:47 2014
 Stack: corosync
 Current DC: pcmk-2 (2) - partition with quorum
-Version: 1.1.12-a9c8177
+Version: 1.1.12-a14efad
 2 Nodes configured
 0 Resources configured
 
@@ -144,11 +146,8 @@ to not having STONITH configured, which are OK at this point):
 
 [NOTE]
 ======
-Other operating systems will report startup errors in other locations.
-For example, on Fedora 19 and earlier, the command would be:
-----
-[root@pcmk-1 ~]# grep -i error /var/log/messages
-----
+Other operating systems may report startup errors in other locations,
+for example +/var/log/messages+.
 ======
 
 Repeat these checks on the other node. The results should be the same.
