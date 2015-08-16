@@ -8,7 +8,6 @@ Copyright (C) 2008 Andrew Beekhof
 import os, string, warnings
 
 from cts.CTSvars import *
-from cts.CTS     import ClusterManager
 
 
 class CibBase:
@@ -16,7 +15,6 @@ class CibBase:
         self.tag = tag
         self.name = _id
         self.kwargs = kwargs
-        self.values = []
         self.children = []
         self.Factory = Factory
 
@@ -30,7 +28,7 @@ class CibBase:
         if value:
             self.kwargs[key] = value
         else:
-            self.values.append(key)
+            self.kwargs.pop(key, None)
 
 from cib_xml import *
 
@@ -133,16 +131,15 @@ class CIB11(ConfigBase):
         self.Factory.rsh(self.Factory.target, "HOME=/root cibadmin --empty %s > %s" % (self.version, self.Factory.tmpfile))
         #cib_base = self.cib_template % (self.feature_set, self.version, ''' remote-tls-port='9898' remote-clear-port='9999' ''')
 
-        nodelist = ""
-        self.num_nodes = 0
-        for node in self.CM.Env["nodes"]:
-            nodelist += node + " "
-            self.num_nodes = self.num_nodes + 1
+        self.num_nodes = len(self.CM.Env["nodes"])
 
         no_quorum = "stop"
         if self.num_nodes < 3:
             no_quorum = "ignore"
-            self.Factory.log("Cluster only has %d nodes, configuring: no-quroum-policy=ignore" % self.num_nodes)
+            self.Factory.log("Cluster only has %d nodes, configuring: no-quorum-policy=ignore" % self.num_nodes)
+
+        # We don't need a nodes section unless we add attributes
+        stn = None
 
         # Fencing resource
         # Define first so that the shell doesn't reject every update
@@ -170,22 +167,45 @@ class CIB11(ConfigBase):
             if True:
                 stf_nodes = []
                 stt_nodes = []
+                attr_nodes = []
 
                 # Create the levels
                 stl = FencingTopology(self.Factory)
                 for node in self.CM.Env["nodes"]:
+                    # Randomly assign node to a fencing method
                     ftype = self.CM.Env.RandomGen.choice(["levels-and", "levels-or ", "broadcast "])
-                    self.CM.log(" - Using %s fencing for node: %s" % (ftype, node))
-                    # for baremetal remote node tests
-                    stt_nodes.append("remote_%s" % node)
+
+                    # For levels-and, randomly choose targeting by node name or attribute
+                    by = ""
                     if ftype == "levels-and":
-                        stl.level(1, node, "FencingPass,Fencing")
+                        if self.CM.Env.RandomGen.choice([True, False]):
+                            attr_nodes.append(node)
+                            by = " (by attribute)"
+                        else:
+                            by = " (by name)"
+
+                    self.CM.log(" - Using %s fencing for node: %s%s" % (ftype, node, by))
+
+                    # for baremetal remote node tests (is this really necessary?)
+                    stt_nodes.append("remote_%s" % node)
+
+                    if ftype == "levels-and":
+                        if node not in attr_nodes:
+                            stl.level(1, node, "FencingPass,Fencing")
                         stt_nodes.append(node)
 
                     elif ftype == "levels-or ":
                         stl.level(1, node, "FencingFail")
                         stl.level(2, node, "Fencing")
                         stf_nodes.append(node)
+
+                # If any levels-and nodes were targeted by attribute,
+                # create the attributes and a level for the attribute.
+                if len(attr_nodes):
+                    stn = Nodes(self.Factory)
+                    for node in attr_nodes:
+                        stn[node] = { "cts-fencing" : "levels-and" }
+                    stl.level(1, "cts-fencing=levels-and", "FencingPass,Fencing")
 
                 # Create a Dummy agent that always passes for levels-and
                 if len(stt_nodes):
@@ -224,6 +244,10 @@ class CIB11(ConfigBase):
             o["ident-string"] = "Linux-HA TEST configuration file - REMOVEME!!"
 
         o.commit()
+
+        # Commit the nodes section if we defined one
+        if stn is not None:
+            stn.commit()
 
         # Add resources?
         if self.CM.Env["CIBResource"] == 1:
@@ -427,25 +451,28 @@ class ConfigFactoryItem:
         _kargs.update(kargs)
         return self._function(*_args,**_kargs)
 
-# Basic Sanity Testing
 if __name__ == '__main__':
-    import CTSlab
-    env = CTSlab.LabEnvironment()
-    env["nodes"] = []
-    env["nodes"].append("pcmk-1")
-    env["nodes"].append("pcmk-2")
-    env["nodes"].append("pcmk-3")
-    env["nodes"].append("pcmk-4")
+    """ Unit test (pass cluster node names as command line arguments) """
 
-    env["CIBResource"] = 1
-    env["IPBase"] = "fe80::1234:56:7890:1000"
-    env["DoStonith"] = 1
-    env["stonith-type"] = "fence_xvm"
-    env["stonith-params"] = "pcmk_arg_map=domain:uname"
+    import CTS
+    import CM_ais
+    import sys
 
-    manager = ClusterManager(env)
-    manager.cluster_monitor = False
+    if len(sys.argv) < 2:
+        print("Usage: %s <node> ..." % sys.argv[0])
+        sys.exit(1)
 
-    CibFactory = ConfigFactory(manager)
+    args = [
+        "--nodes", " ".join(sys.argv[1:]),
+        "--clobber-cib",
+        "--populate-resources",
+        "--stack", "corosync",
+        "--test-ip-base", "fe80::1234:56:7890:1000",
+        "--stonith", "rhcs",
+        "--stonith-args", "pcmk_arg_map=domain:uname"
+    ]
+    env = CTS.CtsLab(args)
+    cm = CM_ais.crm_mcp(env)
+    CibFactory = ConfigFactory(cm)
     cib = CibFactory.createConfig("pacemaker-1.1")
     print(cib.contents())

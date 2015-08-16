@@ -6,6 +6,7 @@ Copyright (C) 2008 Andrew Beekhof
 '''
 
 import sys
+import string
 
 from cts.CTSvars import *
 from cts.CIB     import CibBase
@@ -35,7 +36,11 @@ class XmlBase(CibBase):
         return text
 
     def _run(self, operation, xml, section="all", options=""):
-        self.Factory.debug("Writing out %s" % self.name)
+        if self.name:
+            label = self.name
+        else:
+            label = "<%s>" % self.tag
+        self.Factory.debug("Writing out %s" % label)
         fixed  = "HOME=/root CIB_file="+self.Factory.tmpfile
         fixed += " cibadmin --%s --scope %s %s --xml-text '%s'" % (operation, section, options, xml)
         rc = self.Factory.rsh(self.Factory.target, fixed)
@@ -44,12 +49,55 @@ class XmlBase(CibBase):
             sys.exit(1)
 
 
+class InstanceAttributes(XmlBase):
+    """ Create an <instance_attributes> section with name-value pairs """
+
+    def __init__(self, Factory, name, attrs):
+        XmlBase.__init__(self, Factory, "instance_attributes", name)
+
+        # Create an <nvpair> for each attribute
+        for attr in list(attrs.keys()):
+            self.add_child(XmlBase(Factory, "nvpair", "%s-%s" % (name, attr),
+                name=attr, value=attrs[attr]))
+
+
+class Node(XmlBase):
+    """ Create a <node> section with node attributes for one node """
+
+    def __init__(self, Factory, nodeid, uname, attrs):
+        XmlBase.__init__(self, Factory, "node", nodeid, uname=uname)
+        self.add_child(InstanceAttributes(Factory, "%s-1" % uname, attrs))
+
+
+class Nodes(XmlBase):
+    """ Create a <nodes> section """
+
+    def __init__(self, Factory):
+        XmlBase.__init__(self, Factory, "nodes", None)
+
+        # The schema requires a node ID when defining node attributes,
+        # but we don't know it, so we fake it and let the cluster fix it
+        self.next_nodeid = 1000
+
+    def __setitem__(self, key, value):
+        """ For "nodes[UNAME] = ATTRS" where ATTRS is a dictionary of attribute name/value pairs """
+
+        self.add_child(Node(self.Factory, self.next_nodeid, key, value))
+        self.next_nodeid = self.next_nodeid + 1
+
+    def commit(self):
+        self._run("modify", self.show(), "configuration", "--allow-create")
+
+
 class FencingTopology(XmlBase):
     def __init__(self, Factory):
         XmlBase.__init__(self, Factory, "fencing-topology", None)
 
-    def level(self, index, node, devices):
-        self.add_child(XmlBase(self.Factory, "fencing-level", "cts-%s.%d" % (node, index), target=node, index=index, devices=devices))
+    def level(self, index, target, devices):
+        # Generate XML ID (sanitizing target-by-attribute levels)
+        xml_id = "cts-%s.%d" % (string.replace(target, "=", "-"), index)
+
+        self.add_child(XmlBase(self.Factory, "fencing-level", xml_id, target=target, index=index, devices=devices))
 
     def commit(self):
         self._run("create", self.show(), "configuration", "--allow-create")

@@ -908,6 +908,52 @@ update_cib_stonith_devices(const char *event, xmlNode * msg)
     }
 }
 
+/* Needs to hold node name + attribute name + attribute value + 75 */
+#define XPATH_MAX 512
+
+/*
+ * \internal
+ * \brief Check whether a node has a specific attribute name/value
+ *
+ * \param[in] node    Name of node to check
+ * \param[in] nvpair  String of the form "name=value" specifying attribute
+ *
+ * \return TRUE if the locally cached CIB has the specified node attribute
+ */
+gboolean
+node_has_attr(const char *node, char *nvpair)
+{
+    const char *name, *value;
+    char *split = strchr(nvpair, '=');
+    char xpath[XPATH_MAX];
+    xmlNode *match;
+    int n;
+
+    CRM_CHECK((split != NULL) && (local_cib != NULL), return FALSE);
+
+    /* Split the nvpair into name and value */
+    name = nvpair;
+    *split = '\0';
+    value = split + 1;
+
+    /* Search for the node's attributes in the CIB. While the schema allows
+     * multiple sets of instance attributes, and allows instance attributes to
+     * use id-ref to reference values elsewhere, that is intended for resources,
+     * so we ignore that here.
+     */
+    n = snprintf(xpath, XPATH_MAX, "//" XML_CIB_TAG_NODES
+                 "/" XML_CIB_TAG_NODE "[@uname='%s']/" XML_TAG_ATTR_SETS
+                 "/" XML_CIB_TAG_NVPAIR "[@name='%s' and @value='%s']",
+                 node, name, value);
+    match = get_xpath_object(xpath, local_cib, LOG_TRACE);
+
+    /* Undo split */
+    *split = '=';
+
+    CRM_CHECK(n < XPATH_MAX, return FALSE);
+    return (match != NULL);
+}
+
 static void
 update_fencing_topology(const char *event, xmlNode * msg)
 {
@@ -1023,7 +1069,9 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         return;
     }
 
-    /* Maintain a local copy of the CIB so that we have full access to the device definitions and location constraints */
+    /* Maintain a local copy of the CIB so that we have full access
+     * to device definitions, location constraints, and node attributes
+     */
     if (local_cib != NULL) {
         int rc = pcmk_ok;
         xmlNode *patchset = NULL;

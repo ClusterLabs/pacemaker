@@ -1091,21 +1091,21 @@ free_topology_entry(gpointer data)
             g_list_free_full(tp->levels[lpc], free);
         }
     }
-    free(tp->node);
+    free(tp->target);
     free(tp);
 }
 
 /*!
  * \internal
- * \brief Register a STONITH level for a node
+ * \brief Register a STONITH level for a target
  *
- * Given an XML request specifying the node name, level index, and device IDs
- * for the level, this will create an entry for the node in the global topology
+ * Given an XML request specifying the target name, level index, and device IDs
+ * for the level, this will create an entry for the target in the global topology
  * table if one does not already exist, then append the specified device IDs to
  * the entry's device list for the specified level.
  *
  * \param[in]  msg   XML request for STONITH level registration
- * \param[out] desc  If not NULL, will be set to string representation ("NODE[LEVEL]")
+ * \param[out] desc  If not NULL, will be set to string representation ("TARGET[LEVEL]")
  *
  * \return pcmk_ok on success, -EINVAL if XML does not specify valid level index
  */
@@ -1113,45 +1113,49 @@ int
 stonith_level_register(xmlNode * msg, char **desc)
 {
     int id = 0;
-    int rc = pcmk_ok;
     xmlNode *child = NULL;
 
     xmlNode *level = get_xpath_object("//" F_STONITH_LEVEL, msg, LOG_ERR);
-    const char *node = crm_element_value(level, F_STONITH_TARGET);
-    stonith_topology_t *tp = g_hash_table_lookup(topology, node);
+    const char *target = crm_element_value(level, F_STONITH_TARGET);
+    stonith_topology_t *tp = g_hash_table_lookup(topology, target);
 
-    CRM_LOG_ASSERT(node != NULL);
+    CRM_LOG_ASSERT(target != NULL);
 
     crm_element_value_int(level, XML_ATTR_ID, &id);
     if (desc) {
-        *desc = crm_strdup_printf("%s[%d]", node, id);
+        *desc = crm_strdup_printf("%s[%d]", target, id);
     }
     if (id <= 0 || id >= ST_LEVEL_MAX) {
         return -EINVAL;
     }
 
+    /* Target-by-node-attribute requires the CIB, so disallow if standalone */
+    if (stand_alone && target && strchr(target, '=')) {
+        return -EINVAL;
+    }
+
     if (tp == NULL) {
         tp = calloc(1, sizeof(stonith_topology_t));
-        tp->node = strdup(node);
-        g_hash_table_replace(topology, tp->node, tp);
-        crm_trace("Added %s to the topology (%d active entries)", node,
-                  g_hash_table_size(topology));
+        tp->target = strdup(target);
+        g_hash_table_replace(topology, tp->target, tp);
+        crm_trace("Added %s to the topology (%d active entries)",
+                  target, g_hash_table_size(topology));
     }
 
     if (tp->levels[id] != NULL) {
-        crm_info("Adding to the existing %s[%d] topology entry (%d active entries)", node, id,
-                 count_active_levels(tp));
+        crm_info("Adding to the existing %s[%d] topology entry", target, id);
     }
 
     for (child = __xml_first_child(level); child != NULL; child = __xml_next(child)) {
         const char *device = ID(child);
 
-        crm_trace("Adding device '%s' for %s (%d)", device, node, id);
+        crm_trace("Adding device '%s' for %s[%d]", device, target, id);
         tp->levels[id] = g_list_append(tp->levels[id], strdup(device));
     }
 
-    crm_info("Node %s has %d active fencing levels", node, count_active_levels(tp));
-    return rc;
+    crm_info("Target %s has %d active fencing levels",
+             target, count_active_levels(tp));
+    return pcmk_ok;
 }
 
 int
@@ -1159,34 +1163,35 @@ stonith_level_remove(xmlNode * msg, char **desc)
 {
     int id = 0;
     xmlNode *level = get_xpath_object("//" F_STONITH_LEVEL, msg, LOG_ERR);
-    const char *node = crm_element_value(level, F_STONITH_TARGET);
-    stonith_topology_t *tp = g_hash_table_lookup(topology, node);
+    const char *target = crm_element_value(level, F_STONITH_TARGET);
+    stonith_topology_t *tp = g_hash_table_lookup(topology, target);
 
-    CRM_LOG_ASSERT(node != NULL);
+    CRM_LOG_ASSERT(target != NULL);
 
     if (desc) {
-        *desc = crm_strdup_printf("%s[%d]", node, id);
+        *desc = crm_strdup_printf("%s[%d]", target, id);
     }
     crm_element_value_int(level, XML_ATTR_ID, &id);
 
     if (tp == NULL) {
-        crm_info("Node %s not found (%d active entries)", node, g_hash_table_size(topology));
+        crm_info("Topology for %s not found (%d active entries)",
+                 target, g_hash_table_size(topology));
         return pcmk_ok;
 
     } else if (id < 0 || id >= ST_LEVEL_MAX) {
         return -EINVAL;
     }
 
-    if (id == 0 && g_hash_table_remove(topology, node)) {
+    if (id == 0 && g_hash_table_remove(topology, target)) {
         crm_info("Removed all %s related entries from the topology (%d active entries)",
-                 node, g_hash_table_size(topology));
+                 target, g_hash_table_size(topology));
 
     } else if (id > 0 && tp->levels[id] != NULL) {
         g_list_free_full(tp->levels[id], free);
         tp->levels[id] = NULL;
 
-        crm_info("Removed entry '%d' from %s's topology (%d active entries remaining)",
-                 id, node, count_active_levels(tp));
+        crm_info("Removed level '%d' from topology for %s (%d active levels remaining)",
+                 id, target, count_active_levels(tp));
     }
     return pcmk_ok;
 }
