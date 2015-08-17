@@ -399,9 +399,11 @@ cli_resource_delete_attribute(const char *rsc_id, const char *attr_set, const ch
                             &local_attr_id);
 
     if (rc == -ENXIO) {
+        free(lookup_id);
         return pcmk_ok;
 
     } else if (rc != pcmk_ok) {
+        free(lookup_id);
         return rc;
     }
 
@@ -424,6 +426,7 @@ cli_resource_delete_attribute(const char *rsc_id, const char *attr_set, const ch
                attr_name ? " name=" : "", attr_name ? attr_name : "");
     }
 
+    free(lookup_id);
     free_xml(xml_obj);
     free(local_attr_id);
     return rc;
