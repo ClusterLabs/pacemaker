@@ -74,12 +74,21 @@ for n in $CTS_node_list; do
 done
 
 if [ $test_ok -eq 0 ]; then
-    printf "\n\nThe ability to open key-based 'ssh' connections (as the user 'root') is required to use CTS.\n"
-    printf "  Please install one of your SSH public keys to root's account on all cluster nodes\n"
+    printf "\nThe ability to open key-based 'ssh' connections (as the user 'root') is required to use CTS.\n"
 
-    # todo - look for identities and guide the installation of one
-
-    exit 1
+    read -p " - Do you want this program to help you with such a setup? (yN)" auto_fix
+    if [ "$auto_fix" = "y" ]; then
+        # XXX are we picking the most suitable identity?
+        privKey=$(ssh-add -L | head -n1 | cut -d" " -f3)
+        sshCopyIdOpts="-o User=root"
+        [ -z "$privKey" ] || sshCopyIdOpts+=" -i \"${privKey}.pub\""
+        for n in $CTS_node_list; do
+            eval "ssh-copy-id $sshCopyIdOpts \"${n}\"" \
+                || die "Attempt to 'ssh-copy-id $sshCopyIdOpts \"$n\"' failed"
+        done
+    else
+        die "Please install one of your SSH public keys to root's account on all cluster nodes"
+    fi
 fi
 echo "OK"
 
