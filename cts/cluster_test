@@ -10,12 +10,12 @@ CTS_numtests=$1
 
 if [ "x$CTS_master" = "x" ]; then
     anyAsked=1
-    printf "This script should only be executed on the test master.\n"
-    printf "The test master will remotely execute the actions required by the tests and should not be part of the cluster itself.\n"
+    echo "This script should only be executed on the test master."
+    echo "The test master will remotely execute the actions required by the tests and should not be part of the cluster itself."
     
     read -p "Is this host intended to be the test master? (yN)" CTS_master
     if [ "x$CTS_master" != "xy" ]; then
-	printf "This script must be executed on the test master\n"
+	echo "This script must be executed on the test master"
 	exit 1
     fi
 fi
@@ -25,7 +25,7 @@ if [ "x$CTS_node_list" = "x" ]; then
     read -p "Please list your cluster nodes (eg. node1 node2 node3): " CTS_node_list
 
 else
-    printf "Beginning test of cluster: $CTS_node_list\n"
+    echo "Beginning test of cluster: $CTS_node_list"
 fi
 
 if [ "x$CTS_stack" = "x" ]; then
@@ -36,12 +36,12 @@ if [ "x$CTS_stack" = "x" ]; then
     fi
     
 else
-    printf "Using the $CTS_stack cluster stack\n"
+    echo "Using the $CTS_stack cluster stack"
 fi
 
 tmp=`echo ${CTS_node_list} | sed s/$HOSTNAME//`
 if [ "x${CTS_node_list}" != "x${tmp}" ]; then
-    printf "This script must be executed on the test master and the test master cannot be part of the cluster\n"
+    echo "This script must be executed on the test master and the test master cannot be part of the cluster"
     exit 1
 fi	
 
@@ -52,11 +52,11 @@ if [ -z $SSH_AUTH_SOCK ]; then
     ssh-agent > $agent_tmp
     . $agent_tmp
     rm $agent_tmp
-    printf " + Adding identities...\n"
+    echo " + Adding identities..."
     ssh-add
     rc=$?
     if [ $rc != 0 ]; then
-	printf " -- No identities added\n"
+	echo " -- No identities added"
 	printf "\nThe ability to open key-based 'ssh' connections (as the user 'root') is required to use CTS.\n"
 
 	read -p " - Do you want this program to help you create one? (yN)" auto_fix
@@ -64,12 +64,12 @@ if [ -z $SSH_AUTH_SOCK ]; then
 	    ssh-keygen -t dsa
 	    ssh-add
 	else
-	    printf "Please run 'ssh-keygen -t dsa' to create a new key\n"
+	    echo "Please run 'ssh-keygen -t dsa' to create a new key"
 	    exit 1
 	fi
     fi
 else
-    printf "OK\n"
+    echo "OK"
 fi
 
 test_ok=1
@@ -91,7 +91,7 @@ if [ $test_ok = 0 ]; then
 
     exit 1
 fi
-printf "OK\n"
+echo "OK"
 
 if [ -z $CTS_logfile ]; then
     anyAsked=1
@@ -102,7 +102,7 @@ if [ -z $CTS_logfile ]; then
 fi
 
 if [ ! -e $CTS_logfile ]; then
-    printf "$CTS_logfile doesn't exist\n"
+    echo "$CTS_logfile doesn't exist"
     exit 1
 fi
 
@@ -172,12 +172,12 @@ if [ "x$CTS_stonith" != "x" ]; then
     fi
 else
     cts_extra="$cts_extra --stonith 0"
-    printf " - Testing a cluster without STONITH is like a blunt pencil... pointless\n"
+    echo " - Testing a cluster without STONITH is like a blunt pencil... pointless"
 fi
 
 printf "\nAll set to go for $CTS_numtests iterations!\n"
 if [ $anyAsked = 0 ]; then
-    printf "+ To use a different configuration, remove ~/.cts and re-run cts (or edit it manually).\n"
+    echo "+ To use a different configuration, remove ~/.cts and re-run cts (or edit it manually)."
 fi
 
 echo Now paste the following command into this shell:
