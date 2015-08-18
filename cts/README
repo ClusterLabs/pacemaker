@@ -91,6 +91,10 @@ A complete command line might look like:
 
 For more options, use the --help option.
 
+NOTE: Perhaps more convenient way to compile a command line like above
+      is to use cluster_test script that, at least in the source repository,
+      sits in the same directory as this very file.
+
 To extract the result of a particular test, run:
 
     crm_report -T $test
