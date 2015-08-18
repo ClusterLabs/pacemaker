@@ -8,39 +8,35 @@ CTS_master=`uname -n`
 CTS_numtests=$1
 
 
-if [ "x$CTS_master" = "x" ]; then
+if [ -z "$CTS_master" ]; then
     anyAsked=1
     echo "This script should only be executed on the test master."
     echo "The test master will remotely execute the actions required by the tests and should not be part of the cluster itself."
     
     read -p "Is this host intended to be the test master? (yN)" CTS_master
-    if [ "x$CTS_master" != "xy" ]; then
+    if [ "$CTS_master" != "y" ]; then
 	echo "This script must be executed on the test master"
 	exit 1
     fi
 fi
 
-if [ "x$CTS_node_list" = "x" ]; then
+if [ -z "$CTS_node_list" ]; then
     anyAsked=1
     read -p "Please list your cluster nodes (eg. node1 node2 node3): " CTS_node_list
-
 else
     echo "Beginning test of cluster: $CTS_node_list"
 fi
 
-if [ "x$CTS_stack" = "x" ]; then
+if [ -z "$CTS_stack" ]; then
     anyAsked=1
     read -p "Which cluster stack are you using? ([corosync], openais, or heartbeat): " CTS_stack
-    if [ -z "$CTS_stack" ]; then
-	CTS_stack=corosync
-    fi
-    
+    [ -n "$CTS_stack" ] || CTS_stack=corosync
 else
     echo "Using the $CTS_stack cluster stack"
 fi
 
 tmp=`echo "${CTS_node_list}" | sed "s/$HOSTNAME//"`
-if [ "x${CTS_node_list}" != "x${tmp}" ]; then
+if [ "${CTS_node_list}" != "${tmp}" ]; then
     echo "This script must be executed on the test master and the test master cannot be part of the cluster"
     exit 1
 fi	
@@ -60,7 +56,7 @@ if [ -z "$SSH_AUTH_SOCK" ]; then
 	printf "\nThe ability to open key-based 'ssh' connections (as the user 'root') is required to use CTS.\n"
 
 	read -p " - Do you want this program to help you create one? (yN)" auto_fix
-	if [ "x$auto_fix" = "xy" ]; then
+	if [ "$auto_fix" = "y" ]; then
 	    ssh-keygen -t dsa
 	    ssh-add
 	else
@@ -96,9 +92,7 @@ echo "OK"
 if [ -z "$CTS_logfile" ]; then
     anyAsked=1
     read -p " + Where does/should syslog store logs from remote hosts? (/var/log/messages) " CTS_logfile
-    if [ "x$CTS_logfile" = "x" ]; then
-	CTS_logfile=/var/log/messages
-    fi
+    [ -n "$CTS_logfile" ] || CTS_logfile=/var/log/messages
 fi
 
 if [ ! -e "$CTS_logfile" ]; then
@@ -109,9 +103,7 @@ fi
 if [ -z "$CTS_logfacility" ]; then
     anyAsked=1
     read -p " + Which log facility does the cluster use? (daemon) " CTS_logfacility
-    if [ "x$CTS_logfacility" = "x" ]; then
-	CTS_logfacility=daemon
-    fi
+    [ -n "$CTS_logfacility" ] || CTS_logfacility=daemon
 fi
 
 if [ -z "$CTS_boot" ]; then
@@ -128,28 +120,22 @@ fi
 
 if [ -z "$CTS_numtests" ]; then
     read -p "+ How many test iterations should be performed? (500) " CTS_numtests
-    if [ -z "$CTS_numtests" ]; then
-	CTS_numtests=500
-    fi
+    [ -n "$CTS_numtests" ] || CTS_numtests=500
 fi
 
 if [ -z "$CTS_asked_once" ]; then
     anyAsked=1
     read -p "+ What type of STONITH agent do you use? (none) " CTS_stonith
-    if [ "x$CTS_stonith" != "x" ]; then
-	read -p "+ List any STONITH agent parameters (eq. device_host=switch.power.com): " CTS_stonith_args
-    fi
-
-    if [ -z "$CTS_adv" ]; then
-	read -p "+ (Advanced) Any extra CTS parameters? (none) " CTS_adv
-    fi
+    [ -z "$CTS_stonith" ] \
+        || read -p "+ List any STONITH agent parameters (eq. device_host=switch.power.com): " CTS_stonith_args
+    [ -n "$CTS_adv" ] \
+        || read -p "+ (Advanced) Any extra CTS parameters? (none) " CTS_adv
 fi
 
-if [ $anyAsked -eq 1 ]; then
-    read -p "+ Save values to ~/.cts for next time? (yN) " doSave
-fi
+[ $anyAsked -eq 0 ] \
+    || read -p "+ Save values to ~/.cts for next time? (yN) " doSave
 
-if [ "x$doSave" = "xy" ]; then
+if [ "$doSave" = "y" ]; then
     cat > ~/.cts <<-EOF
 	# CTS Test data
 	CTS_master="$CTS_master"
@@ -167,20 +153,18 @@ EOF
 fi
 
 cts_extra=""
-if [ "x$CTS_stonith" != "x" ]; then
+if [ -n "$CTS_stonith" ]; then
     cts_extra="$cts_extra --stonith-type $CTS_stonith"
-    if [ "x$CTS_stonith_args" != "x" ]; then
-	cts_extra="$cts_extra --stonitha-params \"$CTS_stonith_args\""
-    fi
+    [ -z "$CTS_stonith_args" ] \
+        || cts_extra="$cts_extra --stonitha-params \"$CTS_stonith_args\""
 else
     cts_extra="$cts_extra --stonith 0"
     echo " - Testing a cluster without STONITH is like a blunt pencil... pointless"
 fi
 
 printf "\nAll set to go for %d iterations!\n" "$CTS_numtests"
-if [ $anyAsked -eq 0 ]; then
-    echo "+ To use a different configuration, remove ~/.cts and re-run cts (or edit it manually)."
-fi
+[ $anyAsked -ne 0 ] \
+    || echo "+ To use a different configuration, remove ~/.cts and re-run cts (or edit it manually)."
 
 echo Now paste the following command into this shell:
 echo "python `dirname "$0"`/CTSlab.py -L \"$CTS_logfile\" --syslog-facility \"$CTS_logfacility\" --no-unsafe-tests --stack \"$CTS_stack\" $CTS_adv --at-boot \"$CTS_boot\" $cts_extra \"$CTS_numtests\" --nodes \"$CTS_node_list\""
