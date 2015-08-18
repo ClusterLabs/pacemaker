@@ -1011,6 +1011,7 @@ ha_set_tm_time(crm_time_t * target, struct tm *source)
         target->days = 1 + source->tm_yday;
     }
 
+    target->seconds = 0;
     if (source->tm_hour >= 0) {
         target->seconds += 60 * 60 * source->tm_hour;
     }
