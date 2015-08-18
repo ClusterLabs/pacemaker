@@ -78,7 +78,7 @@ for n in $CTS_node_list; do
     ssh -l root -o PasswordAuthentication=no -o ConnectTimeout=5 $n /bin/true
     rc=$?
     if [ $rc != 0 ]; then
-	printf "\n - connection to %s failed" "$n"
+	echo " - connection to $n failed"
 	test_ok=0
     fi
 done
