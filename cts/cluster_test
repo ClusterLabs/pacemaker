@@ -78,7 +78,7 @@ for n in $CTS_node_list; do
     ssh -l root -o PasswordAuthentication=no -o ConnectTimeout=5 $n /bin/true
     rc=$?
     if [ $rc != 0 ]; then
-	printf "\n - connection to $n failed"
+	printf "\n - connection to %s failed" "$n"
 	test_ok=0
     fi
 done
@@ -175,7 +175,7 @@ else
     echo " - Testing a cluster without STONITH is like a blunt pencil... pointless"
 fi
 
-printf "\nAll set to go for $CTS_numtests iterations!\n"
+printf "\nAll set to go for %d iterations!\n" "$CTS_numtests"
 if [ $anyAsked = 0 ]; then
     echo "+ To use a different configuration, remove ~/.cts and re-run cts (or edit it manually)."
 fi
