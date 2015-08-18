@@ -1,0 +1,96 @@
+Using the original execution date of: 2015-08-12 02:53:40Z
+
+Current cluster status:
+Online: [ bl460g8n3 bl460g8n4 ]
+Containers: [ pgsr01:prmDB1 ]
+
+ prmDB1	(ocf::heartbeat:VirtualDomain):	Started bl460g8n3
+ prmDB2	(ocf::heartbeat:VirtualDomain):	FAILED bl460g8n4
+ Resource Group: grpStonith1
+     prmStonith1-2	(stonith:external/ipmi):	Started bl460g8n4
+ Resource Group: grpStonith2
+     prmStonith2-2	(stonith:external/ipmi):	Started bl460g8n3
+ Resource Group: master-group
+     vip-master	(ocf::heartbeat:Dummy):	FAILED pgsr02
+     vip-rep	(ocf::heartbeat:Dummy):	FAILED pgsr02
+ Master/Slave Set: msPostgresql [pgsql]
+     Masters: [ pgsr01 ]
+     Stopped: [ bl460g8n3 bl460g8n4 ]
+
+Transition Summary:
+ * Stop    prmDB2	(bl460g8n4)
+ * Restart prmStonith1-2	(Started bl460g8n4)
+ * Restart prmStonith2-2	(Started bl460g8n3)
+ * Recover vip-master	(Started pgsr02 -> pgsr01)
+ * Recover vip-rep	(Started pgsr02 -> pgsr01)
+ * Demote  pgsql:0	(Master -> Stopped pgsr02)
+ * Stop    pgsr02	(bl460g8n4)
+
+Executing cluster transition:
+ * Pseudo action:   grpStonith1_stop_0
+ * Pseudo action:   prmStonith1-2_stop_0
+ * Pseudo action:   grpStonith2_stop_0
+ * Resource action: prmStonith2-2   stop on bl460g8n3
+ * Pseudo action:   msPostgresql_pre_notify_demote_0
+ * Resource action: pgsr02          stop on bl460g8n4
+ * Resource action: prmDB2          stop on bl460g8n4
+ * Pseudo action:   grpStonith1_stopped_0
+ * Pseudo action:   grpStonith1_start_0
+ * Resource action: prmStonith1-2   start on bl460g8n4
+ * Resource action: prmStonith1-2   monitor=3600000 on bl460g8n4
+ * Pseudo action:   grpStonith2_stopped_0
+ * Pseudo action:   grpStonith2_start_0
+ * Resource action: prmStonith2-2   start on bl460g8n3
+ * Resource action: prmStonith2-2   monitor=3600000 on bl460g8n3
+ * Pseudo action:   pgsql_post_notify_stop_0
+ * Resource action: pgsql           notify on pgsr01
+ * Pseudo action:   msPostgresql_confirmed-pre_notify_demote_0
+ * Pseudo action:   msPostgresql_demote_0
+ * Pseudo action:   grpStonith1_running_0
+ * Pseudo action:   grpStonith2_running_0
+ * Pseudo action:   pgsql_demote_0
+ * Pseudo action:   msPostgresql_demoted_0
+ * Pseudo action:   msPostgresql_post_notify_demoted_0
+ * Resource action: pgsql           notify on pgsr01
+ * Pseudo action:   msPostgresql_confirmed-post_notify_demoted_0
+ * Pseudo action:   msPostgresql_pre_notify_stop_0
+ * Pseudo action:   master-group_stop_0
+ * Pseudo action:   vip-rep_stop_0
+ * Resource action: pgsql           notify on pgsr01
+ * Pseudo action:   msPostgresql_confirmed-pre_notify_stop_0
+ * Pseudo action:   msPostgresql_stop_0
+ * Pseudo action:   vip-master_stop_0
+ * Pseudo action:   pgsql_stop_0
+ * Pseudo action:   msPostgresql_stopped_0
+ * Pseudo action:   master-group_stopped_0
+ * Pseudo action:   master-group_start_0
+ * Resource action: vip-master      start on pgsr01
+ * Resource action: vip-rep         start on pgsr01
+ * Pseudo action:   msPostgresql_post_notify_stopped_0
+ * Pseudo action:   master-group_running_0
+ * Resource action: vip-master      monitor=10000 on pgsr01
+ * Resource action: vip-rep         monitor=10000 on pgsr01
+ * Resource action: pgsql           notify on pgsr01
+ * Pseudo action:   msPostgresql_confirmed-post_notify_stopped_0
+ * Pseudo action:   pgsql_notified_0
+ * Resource action: pgsql           monitor=9000 on pgsr01
+ * Pseudo action:   all_stopped
+Using the original execution date of: 2015-08-12 02:53:40Z
+
+Revised cluster status:
+Online: [ bl460g8n3 bl460g8n4 ]
+Containers: [ pgsr01:prmDB1 ]
+
+ prmDB1	(ocf::heartbeat:VirtualDomain):	Started bl460g8n3
+ prmDB2	(ocf::heartbeat:VirtualDomain):	FAILED
+ Resource Group: grpStonith1
+     prmStonith1-2	(stonith:external/ipmi):	Started bl460g8n4
+ Resource Group: grpStonith2
+     prmStonith2-2	(stonith:external/ipmi):	Started bl460g8n3
+ Resource Group: master-group
+     vip-master	(ocf::heartbeat:Dummy):	FAILED[ pgsr02 pgsr01 ]
+     vip-rep	(ocf::heartbeat:Dummy):	FAILED[ pgsr02 pgsr01 ]
+ Master/Slave Set: msPostgresql [pgsql]
+     Masters: [ pgsr01 ]
+     Stopped: [ bl460g8n3 bl460g8n4 ]
+
