@@ -4,17 +4,16 @@ if [ -e ~/.cts ]; then
 fi
 anyAsked=0
 
-CTS_master=`uname -n`
 [ $# -lt 1 ] || CTS_numtests=$1
 
 
-if [ -z "$CTS_master" ]; then
+if [ -z "$CTS_asked_once" ]; then
     anyAsked=1
     echo "This script should only be executed on the test master."
     echo "The test master will remotely execute the actions required by the tests and should not be part of the cluster itself."
     
-    read -p "Is this host intended to be the test master? (yN)" CTS_master
-    if [ "$CTS_master" != "y" ]; then
+    read -p "Is this host intended to be the test master? (yN)" doUnderstand
+    if [ "$doUnderstand" != "y" ]; then
 	echo "This script must be executed on the test master"
 	exit 1
     fi
@@ -137,7 +136,6 @@ fi
 if [ "$doSave" = "y" ]; then
     cat > ~/.cts <<-EOF
 	# CTS Test data
-	CTS_master="$CTS_master"
 	CTS_stack="$CTS_stack"
 	CTS_node_list="$CTS_node_list"
 	CTS_logfile="$CTS_logfile"
