@@ -5,7 +5,7 @@ fi
 anyAsked=0
 
 CTS_master=`uname -n`
-CTS_numtests=$1
+[ $# -lt 1 ] || CTS_numtests=$1
 
 
 if [ -z "$CTS_master" ]; then
