@@ -55,7 +55,7 @@ if [ -z $SSH_AUTH_SOCK ]; then
     echo " + Adding identities..."
     ssh-add
     rc=$?
-    if [ $rc != 0 ]; then
+    if [ $rc -ne 0 ]; then
 	echo " -- No identities added"
 	printf "\nThe ability to open key-based 'ssh' connections (as the user 'root') is required to use CTS.\n"
 
@@ -77,13 +77,13 @@ printf "+ Testing ssh configuration... "
 for n in $CTS_node_list; do
     ssh -l root -o PasswordAuthentication=no -o ConnectTimeout=5 $n /bin/true
     rc=$?
-    if [ $rc != 0 ]; then
+    if [ $rc -ne 0 ]; then
 	echo " - connection to $n failed"
 	test_ok=0
     fi
 done
 
-if [ $test_ok = 0 ]; then
+if [ $test_ok -eq 0 ]; then
     printf "\n\nThe ability to open key-based 'ssh' connections (as the user 'root') is required to use CTS.\n"
     printf "  Please install one of your SSH public keys to root's account on all cluster nodes\n"
 
@@ -145,7 +145,7 @@ if [ -z $CTS_asked_once ]; then
     fi
 fi
 
-if [ $anyAsked = 1 ]; then
+if [ $anyAsked -eq 1 ]; then
     read -p "+ Save values to ~/.cts for next time? (yN) " doSave
 fi
 
@@ -178,7 +178,7 @@ else
 fi
 
 printf "\nAll set to go for %d iterations!\n" "$CTS_numtests"
-if [ $anyAsked = 0 ]; then
+if [ $anyAsked -eq 0 ]; then
     echo "+ To use a different configuration, remove ~/.cts and re-run cts (or edit it manually)."
 fi
 
