@@ -39,17 +39,17 @@ Transition Summary:
  * Restart lamaVM2	(Started lama3)
 
 Executing cluster transition:
- * Pseudo action:   lamaVM2-G4_stop_0
- * Pseudo action:   FAKE6-clone_stop_0
  * Resource action: lamaVM2         stop on lama3
  * Resource action: VM2             stop on lama3
+ * Pseudo action:   lamaVM2-G4_stop_0
  * Pseudo action:   FAKE4-IP_stop_0
- * Pseudo action:   FAKE6_stop_0
- * Pseudo action:   FAKE6-clone_stopped_0
- * Pseudo action:   FAKE6-clone_start_0
+ * Pseudo action:   FAKE6-clone_stop_0
  * Resource action: VM2             start on lama3
  * Resource action: VM2             monitor=10000 on lama3
  * Pseudo action:   FAKE4_stop_0
+ * Pseudo action:   FAKE6_stop_0
+ * Pseudo action:   FAKE6-clone_stopped_0
+ * Pseudo action:   FAKE6-clone_start_0
  * Resource action: lamaVM2         start on lama3
  * Resource action: lamaVM2         monitor=30000 on lama3
  * Resource action: FSlun3          monitor=10000 on lamaVM2

@@ -1406,6 +1406,23 @@ stage6(pe_working_set_t * data_set)
 
         /* remote-nodes associated with a container resource (such as a vm) are not fenced */
         if (is_container_remote_node(node)) {
+            /* Guest */
+            if (need_stonith
+                && node->details->remote_requires_reset
+                && pe_can_fence(data_set, node)) {
+                resource_t *container = node->details->remote_rsc->container;
+                char *key = stop_key(container);
+                GListPtr stop_list = find_actions(container->actions, key, NULL);
+
+                crm_info("Impliying node %s is down when container %s is stopped (%p)",
+                         node->details->uname, container->id, stop_list);
+                if(stop_list) {
+                    stonith_constraints(node, stop_list->data, data_set);
+                }
+
+                g_list_free(stop_list);
+                free(key);
+            }
             continue;
         }
 

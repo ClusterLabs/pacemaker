@@ -119,7 +119,11 @@
         <attributes CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="40" operation="stop" operation_key="VM2_stop_0" on_node="lama3" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="9">
     <action_set>
@@ -331,7 +335,11 @@
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="40" operation="stop" operation_key="VM2_stop_0" on_node="lama3" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="22" priority="1000000">
     <action_set>

@@ -697,7 +697,12 @@ stonith_constraints(node_t * node, action_t * stonith_op, pe_working_set_t * dat
         for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
             resource_t *rsc = (resource_t *) lpc->data;
 
-            rsc_stonith_ordering(rsc, stonith_op, data_set);
+            if(stonith_op->rsc == NULL) {
+                rsc_stonith_ordering(rsc, stonith_op, data_set);
+
+            } else if(stonith_op->rsc != rsc && stonith_op->rsc != rsc->container) {
+                rsc_stonith_ordering(rsc, stonith_op, data_set);
+            }
         }
     }
 

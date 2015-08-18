@@ -44,7 +44,7 @@ CRM_TRACE_INIT_DATA(pe_status);
 
 gboolean unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
                        enum action_fail_response *failed, pe_working_set_t * data_set);
-static gboolean determine_remote_online_status(node_t * this_node);
+static gboolean determine_remote_online_status(pe_working_set_t * data_set, node_t * this_node);
 
 static gboolean
 is_dangling_container_remote_node(node_t *node)
@@ -73,6 +73,8 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
         if (is_set(rsc->flags, pe_rsc_failed) == FALSE) {
             crm_warn("Remote node %s will be fenced by recovering container resource %s",
                 node->details->uname, rsc->id, reason);
+            /* node->details->unclean = TRUE; */
+            node->details->remote_requires_reset = TRUE;
             set_bit(rsc->flags, pe_rsc_failed);
         }
     } else if (is_dangling_container_remote_node(node)) {
@@ -1157,7 +1159,7 @@ unpack_remote_status(xmlNode * status, pe_working_set_t * data_set)
         if ((this_node == NULL) || (is_remote_node(this_node) == FALSE)) {
             continue;
         }
-        determine_remote_online_status(this_node);
+        determine_remote_online_status(data_set, this_node);
     }
 
     /* process attributes */
@@ -1366,7 +1368,7 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
 }
 
 static gboolean
-determine_remote_online_status(node_t * this_node)
+determine_remote_online_status(pe_working_set_t * data_set, node_t * this_node)
 {
     resource_t *rsc = this_node->details->remote_rsc;
     resource_t *container = NULL;
@@ -1393,13 +1395,21 @@ determine_remote_online_status(node_t * this_node)
     }
 
     /* Now check all the failure conditions. */
-    if (is_set(rsc->flags, pe_rsc_failed) ||
-        (rsc->role == RSC_ROLE_STOPPED) ||
-        (container && is_set(container->flags, pe_rsc_failed)) ||
-        (container && container->role == RSC_ROLE_STOPPED)) {
-
-        crm_trace("Remote node %s is set to OFFLINE. node is stopped or rsc failed.", this_node->details->id);
+    if(container && is_set(container->flags, pe_rsc_failed)) {
+        crm_trace("Remote node %s is set to UNCLEAN. rsc failed.", this_node->details->id);
         this_node->details->online = FALSE;
+        this_node->details->remote_requires_reset = TRUE;
+
+    } else if(is_set(rsc->flags, pe_rsc_failed)) {
+        crm_trace("Remote node %s is set to OFFLINE. rsc failed.", this_node->details->id);
+        this_node->details->online = FALSE;
+
+    } else if (rsc->role == RSC_ROLE_STOPPED
+        || (container && container->role == RSC_ROLE_STOPPED)) {
+
+        crm_trace("Remote node %s is set to OFFLINE. node is stopped.", this_node->details->id);
+        this_node->details->online = FALSE;
+        this_node->details->remote_requires_reset = FALSE;
     }
 
 remote_online_done:
@@ -3375,7 +3385,8 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
                 continue;
 
             } else if (is_remote_node(this_node)) {
-                determine_remote_online_status(this_node);
+                determine_remote_online_status(data_set, this_node);
+
             } else {
                 determine_online_status(node_state, this_node, data_set);
             }
