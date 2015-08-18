@@ -35,8 +35,7 @@ else
     echo "Using the $CTS_stack cluster stack"
 fi
 
-tmp=`echo "${CTS_node_list}" | sed "s/$HOSTNAME//"`
-if [ "${CTS_node_list}" != "${tmp}" ]; then
+if [ "${CTS_node_list}" != "${CTS_node_list/$HOSTNAME/}" ]; then
     echo "This script must be executed on the test master and the test master cannot be part of the cluster"
     exit 1
 fi	
