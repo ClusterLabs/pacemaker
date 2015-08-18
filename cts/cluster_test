@@ -6,6 +6,7 @@ anyAsked=0
 
 [ $# -lt 1 ] || CTS_numtests=$1
 
+die() { echo "$@"; exit 1; }
 
 if [ -z "$CTS_asked_once" ]; then
     anyAsked=1
@@ -13,10 +14,8 @@ if [ -z "$CTS_asked_once" ]; then
     echo "The test master will remotely execute the actions required by the tests and should not be part of the cluster itself."
     
     read -p "Is this host intended to be the test master? (yN)" doUnderstand
-    if [ "$doUnderstand" != "y" ]; then
-	echo "This script must be executed on the test master"
-	exit 1
-    fi
+    [ "$doUnderstand" = "y" ] \
+        || die "This script must be executed on the test master"
 fi
 
 if [ -z "$CTS_node_list" ]; then
@@ -34,10 +33,8 @@ else
     echo "Using the $CTS_stack cluster stack"
 fi
 
-if [ "${CTS_node_list}" != "${CTS_node_list/$HOSTNAME/}" ]; then
-    echo "This script must be executed on the test master and the test master cannot be part of the cluster"
-    exit 1
-fi	
+[ "${CTS_node_list}" = "${CTS_node_list/$HOSTNAME/}" ] \
+    || die "This script must be executed on the test master and the test master cannot be part of the cluster"
 
 printf "+ Bootstraping ssh... "
 if [ -z "$SSH_AUTH_SOCK" ]; then
@@ -58,8 +55,7 @@ if [ -z "$SSH_AUTH_SOCK" ]; then
 	    ssh-keygen -t dsa
 	    ssh-add
 	else
-	    echo "Please run 'ssh-keygen -t dsa' to create a new key"
-	    exit 1
+	    die "Please run 'ssh-keygen -t dsa' to create a new key"
 	fi
     fi
 else
@@ -93,10 +89,7 @@ if [ -z "$CTS_logfile" ]; then
     [ -n "$CTS_logfile" ] || CTS_logfile=/var/log/messages
 fi
 
-if [ ! -e "$CTS_logfile" ]; then
-    echo "$CTS_logfile doesn't exist"
-    exit 1
-fi
+[ -e "$CTS_logfile" ] || die "$CTS_logfile doesn't exist"
 
 if [ -z "$CTS_logfacility" ]; then
     anyAsked=1
