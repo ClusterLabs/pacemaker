@@ -31,7 +31,7 @@ fi
 if [ "x$CTS_stack" = "x" ]; then
     anyAsked=1
     read -p "Which cluster stack are you using? ([corosync], openais, or heartbeat): " CTS_stack
-    if [ -z $CTS_stack ]; then
+    if [ -z "$CTS_stack" ]; then
 	CTS_stack=corosync
     fi
     
@@ -39,19 +39,19 @@ else
     echo "Using the $CTS_stack cluster stack"
 fi
 
-tmp=`echo ${CTS_node_list} | sed s/$HOSTNAME//`
+tmp=`echo "${CTS_node_list}" | sed "s/$HOSTNAME//"`
 if [ "x${CTS_node_list}" != "x${tmp}" ]; then
     echo "This script must be executed on the test master and the test master cannot be part of the cluster"
     exit 1
 fi	
 
 printf "+ Bootstraping ssh... "
-if [ -z $SSH_AUTH_SOCK ]; then
+if [ -z "$SSH_AUTH_SOCK" ]; then
     printf "\n + Initializing SSH "
     agent_tmp=/tmp/.$$.ssh
     ssh-agent > $agent_tmp
-    . $agent_tmp
-    rm $agent_tmp
+    . "$agent_tmp"
+    rm "$agent_tmp"
     echo " + Adding identities..."
     ssh-add
     rc=$?
@@ -75,7 +75,7 @@ fi
 test_ok=1
 printf "+ Testing ssh configuration... "
 for n in $CTS_node_list; do
-    ssh -l root -o PasswordAuthentication=no -o ConnectTimeout=5 $n /bin/true
+    ssh -l root -o PasswordAuthentication=no -o ConnectTimeout=5 "$n" /bin/true
     rc=$?
     if [ $rc -ne 0 ]; then
 	echo " - connection to $n failed"
@@ -93,7 +93,7 @@ if [ $test_ok -eq 0 ]; then
 fi
 echo "OK"
 
-if [ -z $CTS_logfile ]; then
+if [ -z "$CTS_logfile" ]; then
     anyAsked=1
     read -p " + Where does/should syslog store logs from remote hosts? (/var/log/messages) " CTS_logfile
     if [ "x$CTS_logfile" = "x" ]; then
@@ -101,12 +101,12 @@ if [ -z $CTS_logfile ]; then
     fi
 fi
 
-if [ ! -e $CTS_logfile ]; then
+if [ ! -e "$CTS_logfile" ]; then
     echo "$CTS_logfile doesn't exist"
     exit 1
 fi
 
-if [ -z $CTS_logfacility ]; then
+if [ -z "$CTS_logfacility" ]; then
     anyAsked=1
     read -p " + Which log facility does the cluster use? (daemon) " CTS_logfacility
     if [ "x$CTS_logfacility" = "x" ]; then
@@ -114,9 +114,9 @@ if [ -z $CTS_logfacility ]; then
     fi
 fi
 
-if [ -z $CTS_boot ]; then
+if [ -z "$CTS_boot" ]; then
     read -p "+ Is the cluster software started automatically when a node boots? [yN] " CTS_boot
-    if [ -z $CTS_boot ]; then
+    if [ -z "$CTS_boot" ]; then
 	CTS_boot=0
     else
 	case $CTS_boot in
@@ -126,21 +126,21 @@ if [ -z $CTS_boot ]; then
     fi
 fi
 
-if [ -z $CTS_numtests ]; then
+if [ -z "$CTS_numtests" ]; then
     read -p "+ How many test iterations should be performed? (500) " CTS_numtests
-    if [ -z $CTS_numtests ]; then
+    if [ -z "$CTS_numtests" ]; then
 	CTS_numtests=500
     fi
 fi
 
-if [ -z $CTS_asked_once ]; then
+if [ -z "$CTS_asked_once" ]; then
     anyAsked=1
     read -p "+ What type of STONITH agent do you use? (none) " CTS_stonith
     if [ "x$CTS_stonith" != "x" ]; then
 	read -p "+ List any STONITH agent parameters (eq. device_host=switch.power.com): " CTS_stonith_args
     fi
 
-    if [ -z $CTS_adv ]; then
+    if [ -z "$CTS_adv" ]; then
 	read -p "+ (Advanced) Any extra CTS parameters? (none) " CTS_adv
     fi
 fi
@@ -183,4 +183,4 @@ if [ $anyAsked -eq 0 ]; then
 fi
 
 echo Now paste the following command into this shell:
-echo python "`dirname "$0"`"/CTSlab.py -L $CTS_logfile --syslog-facility $CTS_logfacility --no-unsafe-tests --stack $CTS_stack $CTS_adv --at-boot $CTS_boot $cts_extra $CTS_numtests --nodes \"$CTS_node_list\"
+echo "python `dirname "$0"`/CTSlab.py -L \"$CTS_logfile\" --syslog-facility \"$CTS_logfacility\" --no-unsafe-tests --stack \"$CTS_stack\" $CTS_adv --at-boot \"$CTS_boot\" $cts_extra \"$CTS_numtests\" --nodes \"$CTS_node_list\""
