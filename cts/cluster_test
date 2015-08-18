@@ -1,8 +1,8 @@
 #!/bin/bash
-anyAsked=0
 if [ -e ~/.cts ]; then
     . ~/.cts
 fi
+anyAsked=0
 
 CTS_master=`uname -n`
 CTS_numtests=$1
