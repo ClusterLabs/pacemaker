@@ -150,18 +150,20 @@ if [ $anyAsked = 1 ]; then
 fi
 
 if [ "x$doSave" = "xy" ]; then
-    echo "# CTS Test data" > ~/.cts
-    echo CTS_master=\"$CTS_master\" >> ~/.cts
-    echo CTS_stack=\"$CTS_stack\" >> ~/.cts
-    echo CTS_node_list=\"$CTS_node_list\" >> ~/.cts
-    echo CTS_logfile=\"$CTS_logfile\" >> ~/.cts
-    echo CTS_logport=$CTS_logport >> ~/.cts
-    echo CTS_logfacility=$CTS_logfacility >> ~/.cts
-    echo CTS_asked_once=1 >> ~/.cts
-    echo CTS_adv=\"$CTS_adv\" >> ~/.cts
-    echo CTS_stonith=$CTS_stonith >> ~/.cts
-    echo CTS_stonith_args=\"$CTS_stonith_args\" >> ~/.cts
-    echo CTS_boot=\"$CTS_boot\" >> ~/.cts
+    cat > ~/.cts <<-EOF
+	# CTS Test data
+	CTS_master="$CTS_master"
+	CTS_stack="$CTS_stack"
+	CTS_node_list="$CTS_node_list"
+	CTS_logfile="$CTS_logfile"
+	CTS_logport="$CTS_logport"
+	CTS_logfacility="$CTS_logfacility"
+	CTS_asked_once=1
+	CTS_adv="$CTS_adv"
+	CTS_stonith="$CTS_stonith"
+	CTS_stonith_args="$CTS_stonith_args"
+	CTS_boot="$CTS_boot"
+EOF
 fi
 
 cts_extra=""
