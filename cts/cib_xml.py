@@ -56,17 +56,17 @@ class InstanceAttributes(XmlBase):
         XmlBase.__init__(self, Factory, "instance_attributes", name)
 
         # Create an <nvpair> for each attribute
-        for attr in list(attrs.keys()):
+        for (attr, value) in attrs.items():
             self.add_child(XmlBase(Factory, "nvpair", "%s-%s" % (name, attr),
-                name=attr, value=attrs[attr]))
+                name=attr, value=value))
 
 
 class Node(XmlBase):
     """ Create a <node> section with node attributes for one node """
 
-    def __init__(self, Factory, nodeid, uname, attrs):
-        XmlBase.__init__(self, Factory, "node", nodeid, uname=uname)
-        self.add_child(InstanceAttributes(Factory, "%s-1" % uname, attrs))
+    def __init__(self, Factory, node_name, node_id, node_attrs):
+        XmlBase.__init__(self, Factory, "node", node_id, uname=node_name)
+        self.add_child(InstanceAttributes(Factory, "%s-1" % node_name, node_attrs))
 
 
 class Nodes(XmlBase):
@@ -75,15 +75,8 @@ class Nodes(XmlBase):
     def __init__(self, Factory):
         XmlBase.__init__(self, Factory, "nodes", None)
 
-        # The schema requires a node ID when defining node attributes,
-        # but we don't know it, so we fake it and let the cluster fix it
-        self.next_nodeid = 1000
-
-    def __setitem__(self, key, value):
-        """ For "nodes[UNAME] = ATTRS" where ATTRS is a dictionary of attribute name/value pairs """
-
-        self.add_child(Node(self.Factory, self.next_nodeid, key, value))
-        self.next_nodeid = self.next_nodeid + 1
+    def add_node(self, node_name, node_id, node_attrs):
+        self.add_child(Node(self.Factory, node_name, node_id, node_attrs))
 
     def commit(self):
         self._run("modify", self.show(), "configuration", "--allow-create")

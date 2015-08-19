@@ -108,6 +108,52 @@ class CIB11(ConfigBase):
         r.add_op("monitor", "5s")
         return r
 
+    def get_node_id(self, node_name):
+        """ Check the cluster configuration for a node ID. """
+
+        # We can't account for every possible configuration,
+        # so we only return a node ID if:
+        # * The node is specified in /etc/corosync/corosync.conf
+        #   with "ring0_addr:" equal to node_name and "nodeid:"
+        #   explicitly specified.
+        # * Or, the node is specified in /etc/cluster/cluster.conf
+        #   with name="node_name" nodeid="X"
+        # In all other cases, we return 0.
+        node_id = 0
+
+        # awkward command: use } as record separator
+        # so each corosync.conf "object" is one record;
+        # match the "node {" record that has "ring0_addr: node_name";
+        # then print the substring of that record after "nodeid:"
+        (rc, output) = self.Factory.rsh(self.Factory.target,
+            r"""awk -v RS="}" """
+            r"""'/^(\s*nodelist\s*{)?\s*node\s*{.*ring0_addr:\s*%s(\s+|$)/"""
+            r"""{gsub(/.*nodeid:\s*/,"");gsub(/\s+.*$/,"");print}'"""
+            r""" /etc/corosync/corosync.conf""" % node_name, None)
+        if rc == 0 and len(output) == 1:
+            try:
+                node_id = int(output[0])
+            except ValueError:
+                node_id = 0
+
+        # another awkward command: use < or > as record separator
+        # so each cluster.conf XML tag is one record;
+        # match the clusternode record that has name="node_name";
+        # then print the substring of that record for nodeid="X"
+        if node_id == 0:
+            (rc, output) = self.Factory.rsh(self.Factory.target,
+                r"""awk -v RS="[<>]" """
+                r"""'/^clusternode\s+.*name="%s".*/"""
+                r"""{gsub(/.*nodeid="/,"");gsub(/".*/,"");print}'"""
+                r""" /etc/cluster/cluster.conf""" % node_name, None)
+            if rc == 0 and len(output) == 1:
+                try:
+                    node_id = int(output[0])
+                except ValueError:
+                    node_id = 0
+
+        return node_id
+
     def install(self, target):
         old = self.Factory.tmpfile
 
@@ -167,7 +213,7 @@ class CIB11(ConfigBase):
             if True:
                 stf_nodes = []
                 stt_nodes = []
-                attr_nodes = []
+                attr_nodes = {}
 
                 # Create the levels
                 stl = FencingTopology(self.Factory)
@@ -179,8 +225,13 @@ class CIB11(ConfigBase):
                     by = ""
                     if ftype == "levels-and":
                         if self.CM.Env.RandomGen.choice([True, False]):
-                            attr_nodes.append(node)
-                            by = " (by attribute)"
+                            node_id = self.get_node_id(node)
+                            if node_id == 0:
+                                # We couldn't find a node ID, so revert to targeting by name
+                                by = " (by name)"
+                            else:
+                                attr_nodes[node] = node_id
+                                by = " (by attribute)"
                         else:
                             by = " (by name)"
 
@@ -201,10 +252,10 @@ class CIB11(ConfigBase):
 
                 # If any levels-and nodes were targeted by attribute,
                 # create the attributes and a level for the attribute.
-                if len(attr_nodes):
+                if attr_nodes:
                     stn = Nodes(self.Factory)
-                    for node in attr_nodes:
-                        stn[node] = { "cts-fencing" : "levels-and" }
+                    for (node_name, node_id) in attr_nodes.items():
+                        stn.add_node(node_name, node_id, { "cts-fencing" : "levels-and" })
                     stl.level(1, "cts-fencing=levels-and", "FencingPass,Fencing")
 
                 # Create a Dummy agent that always passes for levels-and
