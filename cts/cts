@@ -30,9 +30,6 @@ trace=""
 custom_log=""
 patterns="-e CTS:"
 
-# Note the quotes around `$TEMP': they are essential!
-#TEMP=`getopt -o t:ac:sSvpe:lwf:d  --long run,clean -n 'cts' -- "$@"`
-#eval set -- "$TEMP"
 
 helpmsg=$(cat <<EOF
 Usage: %s [options] {[{init|local-init|setup} [TARGET]] | [OTHER-CMDS]}
