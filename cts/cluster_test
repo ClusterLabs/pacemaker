@@ -13,7 +13,7 @@ if [ -z "$CTS_asked_once" ]; then
     echo "This script should only be executed on the test master."
     echo "The test master will remotely execute the actions required by the tests and should not be part of the cluster itself."
     
-    read -p "Is this host intended to be the test master? (yN)" doUnderstand
+    read -p "Is this host intended to be the test master? (yN) " doUnderstand
     [ "$doUnderstand" = "y" ] \
         || die "This script must be executed on the test master"
 fi
@@ -50,7 +50,7 @@ if [ -z "$SSH_AUTH_SOCK" ]; then
 	echo " -- No identities added"
 	printf "\nThe ability to open key-based 'ssh' connections (as the user 'root') is required to use CTS.\n"
 
-	read -p " - Do you want this program to help you create one? (yN)" auto_fix
+	read -p " - Do you want this program to help you create one? (yN) " auto_fix
 	if [ "$auto_fix" = "y" ]; then
 	    ssh-keygen -t dsa
 	    ssh-add
@@ -76,7 +76,7 @@ done
 if [ $test_ok -eq 0 ]; then
     printf "\nThe ability to open key-based 'ssh' connections (as the user 'root') is required to use CTS.\n"
 
-    read -p " - Do you want this program to help you with such a setup? (yN)" auto_fix
+    read -p " - Do you want this program to help you with such a setup? (yN) " auto_fix
     if [ "$auto_fix" = "y" ]; then
         # XXX are we picking the most suitable identity?
         privKey=$(ssh-add -L | head -n1 | cut -d" " -f3)
