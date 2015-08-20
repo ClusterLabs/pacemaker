@@ -194,6 +194,7 @@ case $cluster_name in
     read -p "Cluster name: " cluster_name
     read -p "Cluster hosts: " cluster_hosts
     read -p "Cluster log file: " cluster_log
+    cluster-helper add -g "$cluster_name" -w "$cluster_hosts"
     ;;
   *)
     cluster_hosts=`cluster-helper --list short -g $cluster_name`
