@@ -267,7 +267,7 @@ elif [ $boot = 1 ]; then
     exit $rc
 
 elif [ $run = 1 ]; then
-    $cts_root/CTSlab.py -r -c -g $cluster_name 500 $*
+    $cts_root/CTSlab.py -r -c -g $cluster_name 500 "$@"
     exit $?
 
 elif [ $clean = 1 ]; then
