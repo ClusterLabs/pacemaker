@@ -141,7 +141,7 @@ EOF
 	    ;;
 
 	--wget)
-	    files="cluster-helper cluster-clean"
+	    files="cluster-helper cluster-init cluster-clean"
 	    for f in $files; do
 		rm -f $cts_root/$f
 		echo "Downloading helper script $f from GitHub"
