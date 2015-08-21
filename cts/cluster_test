@@ -39,10 +39,7 @@ fi
 printf "+ Bootstraping ssh... "
 if [ -z "$SSH_AUTH_SOCK" ]; then
     printf "\n + Initializing SSH "
-    agent_tmp=/tmp/.$$.ssh
-    ssh-agent > $agent_tmp
-    . "$agent_tmp"
-    rm "$agent_tmp"
+    eval "$(ssh-agent)"
     echo " + Adding identities..."
     ssh-add
     rc=$?
