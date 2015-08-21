@@ -398,7 +398,7 @@
   + xml: Update xml validation to allow '<node type=remote />'
 
 
-* Thu Feb 13 2014 David Vossel <dvossel@redhat.com> Pacemaker-1.1.11-1
+* Thu Feb 13 2014 David Vossel <davidvossel@gmail.com> Pacemaker-1.1.11-1
 - Update source tarball to revision: 33f9d09
 - Changesets: 462
 - Diff:       147 files changed, 6810 insertions(+), 4057 deletions(-)
