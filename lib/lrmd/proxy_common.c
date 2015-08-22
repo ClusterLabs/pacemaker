@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 David Vossel <dvossel@redhat.com>
+ * Copyright (c) 2015 David Vossel <davidvossel@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
