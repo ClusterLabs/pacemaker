@@ -27,6 +27,11 @@
 				</listitem>
 				<listitem>
 					<para>
+						KVM for virtualization
+					</para>
+				</listitem>
+				<listitem>
+					<para>
 						libvirt to manage guest nodes
 					</para>
 				</listitem>
@@ -38,9 +43,16 @@
 				<listitem>
 					<para>
 						Pacemaker to perform resource management on host nodes
+				</listitem>
+				<listitem>
+					<para>
+						pcs as the cluster configuration toolset
 					</para>
 				</listitem>
 			</orderedlist>
+			The concepts are the same for other distributions,
+			virtualization platforms, toolsets, and messaging
+			layers, and should be easily adaptable.
 		</para>
 	</abstract>
 	<corpauthor>

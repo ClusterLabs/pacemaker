@@ -44,9 +44,13 @@ Baremetal remote-nodes are defined by a connection resource. That connection res
 
 ----
 # pcs resource describe remote
-  Resource options for: ocf:pacemaker:remote
-    server: Server location to connect to. This can be an ip address or hostname.
-   port: tcp port to connect to.
+ocf:pacemaker:remote - 
+
+ 
+
+Resource options:
+  server: Server location to connect to. This can be an ip address or hostname.
+  port: tcp port to connect to.
 ----
 
 When defining a remote node's connection resource, it is common and recommended

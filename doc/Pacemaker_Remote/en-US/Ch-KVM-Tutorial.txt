@@ -10,22 +10,18 @@ as possible.
 
 == Step 1: Setup the Host ==
 
-This tutorial was created using Fedora 20 on the host and guest nodes.  Anything that is capable of running libvirt and pacemaker v1.1.10 or greater will do though.  An installation guide for installing Fedora 20 can be found here, http://docs.fedoraproject.org/en-US/Fedora/20/html/Installation_Guide/.
-
-Fedora 20 (or similar distro) host preparation steps.
-
 === SElinux and Firewall ===
-In order to simply this tutorial we will disable the selinux and the firewall on the host.
-+WARNING:+ These actions will open a significant security threat to machines exposed to the outside world.
+
+In order to simplify this tutorial, we will disable SELinux and the local
+firewall on the host. This may create significant security issues and should
+not be performed on machines that will be exposed to the outside world, but may
+be appropriate during development and testing on a protected host.
 ----
 # setenforce 0
 # sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/selinux/config
-# systemctl disable iptables.service
-# systemctl disable ip6tables.service
-# rm '/etc/systemd/system/basic.target.wants/iptables.service'
-# rm '/etc/systemd/system/basic.target.wants/ip6tables.service'
-# systemctl stop iptables.service
-# systemctl stop ip6tables.service
+# systemctl disable firewalld.service
+# systemctl stop firewalld.service
+# iptables --flush
 ----
 
 === Install Cluster Software ===
@@ -39,11 +35,6 @@ In order to simply this tutorial we will disable the selinux and the firewall on
 Corosync handles pacemaker's cluster membership and messaging. The corosync config file is located in /etc/corosync/corosync.conf. That config file must be initialized with information about the cluster-nodes before pacemaker can start.
 
 To initialize the corosync config file, execute the following pcs command on both nodes filling in the information in <> with your nodes' information.
-----
-# pcs cluster setup --local mycluster <node1 ip or hostname> <node2 ip or hostname>
-----
-
-A recent syntax change in pcs may cause the above command to fail. If so try this alternative.
 ----
 # pcs cluster setup --force --local --name mycluster <node1 ip or hostname> <node2 ip or hostname>
 ----
@@ -107,6 +98,14 @@ Go ahead and stop the cluster for now after verifying everything is in order.
 
 reboot the host
 
+[NOTE]
+======
+While KVM is used in this example, any virtualization platform with a Pacemaker
+resource agent can be used to create a guest node. The resource agent needs
+only to support usual commands (start, stop, etc.); Pacemaker implements the
+*remote-node* meta-attribute, independent of the agent.
+======
+
 == Step2: Create the KVM guest ==
 
 I am not going to outline the installation steps required to create a kvm guest.  There are plenty of tutorials available elsewhere that do that.  I recommend using a Fedora 18 or greater distro as your guest as that is what I am testing this tutorial with.
@@ -161,7 +160,9 @@ To simplify the tutorial we'll go ahead and disable selinux on the guest.  We'll
 # firewall-cmd --add-port 3121/tcp --permanent
 ----
 
-If you still encounter connection issues just disable iptables and ipv6tables on the guest like we did on the host to guarantee you'll be able to contact the guest from the host.
+If you still encounter connection issues, just disable firewalld on the guest
+like we did on the host, to guarantee you'll be able to contact the guest from
+the host.
 
 At this point you should be able to ssh into the guest from the host.
 
@@ -208,7 +209,10 @@ Now start pacemaker_remote on the guest and verify the start was successful.
 
 === Verify Host Connection to Guest ===
 
-Before moving forward it's worth going ahead and verifying the host can contact the guest on port 3121. Here's a trick you can use. Connect using telnet from the host.  The connection will get destroyed, but how it is destroyed tells you whether it worked or not.
+Before moving forward, it's worth verifying that the host can contact the guest
+on port 3121. Here's a trick you can use. Connect using ssh from the host. The
+connection will get destroyed, but how it is destroyed tells you whether it
+worked or not.
 
 First add guest1 to the host machine's /etc/hosts file if you haven't already.  This is required unless you have dns setup in a way where guest1's address can be discovered.
 
@@ -218,20 +222,17 @@ First add guest1 to the host machine's /etc/hosts file if you haven't already.  
 END
 ----
 
-If running the telnet command on the host results in this output before disconnecting, the connection works.
+If running the ssh command on one of the cluster nodes results in this
+output before disconnecting, the connection works.
 ----
-# telnet guest1 3121
- Trying 192.168.122.10...
- Connected to guest1.
- Escape character is '^]'.
- Connection closed by foreign host.
+# ssh -p 3121 guest1
+ssh_exchange_identification: read: Connection reset by peer
 ----
 
 If you see this, the connection is not working.
 ----
-# telnet guest1 3121
-Trying 192.168.122.10...
-telnet: connect to address 192.168.122.10: No route to host
+# ssh -p 3121 guest1
+ssh: connect to host guest1 port 3121: No route to host
 ----
 
 Once you can successfully connect to the guest from the host, shutdown the guest.  Pacemaker will be managing the virtual machine from this point forward.
@@ -285,12 +286,12 @@ virtual machine.  This agent requires the virtual machine's XML config to be
 dumped to a file on disk.  To do this, pick out the name of the virtual machine
 you just created from the output of this list.
 
-----
+....
 # virsh list --all
  Id    Name                           State
-______________________________________________
+----------------------------------------------------
  -     guest1                         shut off
-----
+....
 
 In my case I named it guest1. Dump the xml to a file somewhere on the host using the following command.
 

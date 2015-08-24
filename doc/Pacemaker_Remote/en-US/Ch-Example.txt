@@ -19,8 +19,6 @@ dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1
 ----
 yum install pacemaker-remote resource-agents
 systemctl enable pacemaker_remote
-# If you just want to see this work, disable iptables and ip6tables on most distros.
-# You may have to put selinux in permissive mode as well for the time being.
 firewall-cmd --add-port 3121/tcp --permanent
 ----
 
