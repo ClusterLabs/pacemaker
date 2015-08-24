@@ -5,8 +5,14 @@
 ]>
 <bookinfo id="book-Pacemaker_Remote-Pacemaker_Remote">
 	<title>Pacemaker Remote</title>
-	<subtitle>Extending High Availablity into Virtual Nodes</subtitle>
-	<edition>1</edition>
+	<subtitle>Scaling High Availablity Clusters</subtitle>
+	<!--
+		EDITION-PUBSNUMBER should match REVNUMBER in Revision_History.xml.
+		Increment EDITION when the syntax of the documented software
+		changes (OS, pacemaker, corosync, pcs), and PUBSNUMBER for
+		simple textual changes (corrections, translations, etc.).
+	-->
+	<edition>4</edition>
 	<pubsnumber>0</pubsnumber>
 	<abstract>
 		<para>
@@ -22,7 +28,7 @@
 				</listitem>
 				<listitem>
 					<para>
-						Pacemaker Remote to perform resource management within virtual nodes
+						Pacemaker Remote to perform resource management within guest nodes and remote nodes
 					</para>
 				</listitem>
 				<listitem>
@@ -37,12 +43,13 @@
 				</listitem>
 				<listitem>
 					<para>
-						Corosync to provide messaging and membership services on the host nodes
+						Corosync to provide messaging and membership services on cluster nodes
 					</para>
 				</listitem>
 				<listitem>
 					<para>
-						Pacemaker to perform resource management on host nodes
+						Pacemaker to perform resource management on cluster nodes
+					</para>
 				</listitem>
 				<listitem>
 					<para>

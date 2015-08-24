@@ -1,4 +1,4 @@
-= KVM Walk-through =
+= Guest Node Walk-through =
 
 *What this tutorial is:* An in-depth walk-through of how to get Pacemaker to
 manage a KVM guest instance and integrate that guest into the cluster as a
@@ -8,7 +8,7 @@ guest node.
 here are meant to get users familiar with the concept of guest nodes as quickly
 as possible.
 
-== Step 1: Setup the Host ==
+== Configure the Physical Host ==
 
 === SElinux and Firewall ===
 
@@ -30,9 +30,12 @@ be appropriate during development and testing on a protected host.
 # yum install -y pacemaker corosync pcs resource-agents
 ----
 
-=== Setup Corosync ===
+=== Configure Corosync ===
 
-Corosync handles pacemaker's cluster membership and messaging. The corosync config file is located in /etc/corosync/corosync.conf. That config file must be initialized with information about the cluster-nodes before pacemaker can start.
+Corosync handles pacemaker's cluster membership and messaging. The corosync
+config file is located in /etc/corosync/corosync.conf. That config file must be
+initialized with information about the cluster nodes before pacemaker can
+start.
 
 To initialize the corosync config file, execute the following pcs command on both nodes filling in the information in <> with your nodes' information.
 ----
@@ -106,11 +109,14 @@ only to support usual commands (start, stop, etc.); Pacemaker implements the
 *remote-node* meta-attribute, independent of the agent.
 ======
 
-== Step2: Create the KVM guest ==
+== Configure the KVM guest ==
 
-I am not going to outline the installation steps required to create a kvm guest.  There are plenty of tutorials available elsewhere that do that.  I recommend using a Fedora 18 or greater distro as your guest as that is what I am testing this tutorial with.
+=== Create Guest ===
 
-=== Setup Guest Network ===
+I am not going to outline the installation steps required to create a KVM
+guest. There are plenty of tutorials available elsewhere that do that.
+
+=== Configure Guest Network ===
 
 Run the commands below to set up a static ip address (192.168.122.10) and hostname (guest1).
 
@@ -166,13 +172,14 @@ the host.
 
 At this point you should be able to ssh into the guest from the host.
 
-=== Setup Pacemaker Remote ===
+=== Configure pacemaker_remote ===
 
 On the 'host' machine, run these commands to generate an authkey and copy it to
 the /etc/pacemaker folder on both the host and guest.
 
 ----
-# mkdir /etc/pacemaker
+# mkdir -p --mode=0750 /etc/pacemaker
+# chgrp haclient /etc/pacemaker
 # dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1
 # scp -r /etc/pacemaker root@192.168.122.10:/etc/
 ----
@@ -237,7 +244,7 @@ ssh: connect to host guest1 port 3121: No route to host
 
 Once you can successfully connect to the guest from the host, shutdown the guest.  Pacemaker will be managing the virtual machine from this point forward.
 
-== Step3: Integrate KVM guest into Cluster. ==
+== Integrate Guest into Cluster ==
 
 Now the fun part, integrating the virtual machine you've just created into the cluster.  It is incredibly simple.
 
@@ -264,14 +271,15 @@ Version: 1.1.10
 Online: [ example-host ]
 ----
 
-Now enable the cluster to work without quorum or stonith.  This is required just for the sake of getting this tutorial to work with a single cluster-node.
+Now enable the cluster to work without quorum or stonith.  This is required
+just for the sake of getting this tutorial to work with a single cluster node.
 
 ----
 # pcs property set stonith-enabled=false
 # pcs property set no-quorum-policy=ignore
 ----
 
-=== Integrate KVM Guest as remote-node ===
+=== Integrate as Guest Node ===
 
 If you didn't already do this earlier in the verify host to guest connection section, add the KVM guest's ip to the host's /etc/hosts file so we can connect by hostname.  The command below will do that if you used the same ip address I used earlier.
 
@@ -328,7 +336,8 @@ Full list of resources:
 
 === Starting Resources on KVM Guest ===
 
-The commands below demonstrate how resources can be executed on both the remote-node and the cluster-node.
+The commands below demonstrate how resources can be executed on both the
+guest node and the cluster node.
 
 Create a few Dummy resources.  Dummy resources are real resource agents used just for testing purposes.  They actually execute on the host they are assigned to just like an apache server or database would, except their execution just means a file was created.  When the resource is stopped, that the file it created is removed.
 
@@ -379,9 +388,14 @@ Full list of resources:
  FAKE5	(ocf::pacemaker:Dummy):	Started example-host
 ----
 
-=== Testing Remote-node Recovery and Fencing ===
+=== Testing Recovery and Fencing ===
 
-Pacemaker's policy engine is smart enough to know fencing remote-nodes associated with a virtual machine means shutting off/rebooting the virtual machine.  No special configuration is necessary to make this happen.  If you are interested in testing this functionality out, trying stopping the guest's pacemaker_remote daemon.  This would be equivalent of abruptly terminating a cluster-node's corosync membership without properly shutting it down.
+Pacemaker's policy engine is smart enough to know fencing guest nodes
+associated with a virtual machine means shutting off/rebooting the virtual
+machine.  No special configuration is necessary to make this happen.  If you
+are interested in testing this functionality out, trying stopping the guest's
+pacemaker_remote daemon.  This would be equivalent of abruptly terminating a
+cluster node's corosync membership without properly shutting it down.
 
 ssh into the guest and run this command.
 
@@ -447,7 +461,7 @@ Failed actions:
     guest1_monitor_30000 (node=example-host, call=3, rc=7, status=complete): not running
 ----
 
-=== Accessing Cluster Tools from Remote-node ===
+=== Accessing Cluster Tools from Guest Node ===
 
 Besides allowing the cluster to manage resources on a guest node,
 pacemaker_remote has one other trick. The pacemaker_remote daemon allows

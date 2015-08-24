@@ -1,13 +1,23 @@
-= KVM Remote-node Quick Example =
+= Guest Node Quick Example =
 
-If you already know how to use pacemaker, you'll likely be able to grasp this new concept of remote-nodes by reading through this quick example without having to sort through all the detailed walk-through steps. Here are the key configuration ingredients that make this possible using libvirt and KVM virtual guests.  These steps strip everything down to the very basics.
+If you already know how to use Pacemaker, you'll likely be able to grasp this
+new concept of guest nodes by reading through this quick example without
+having to sort through all the detailed walk-through steps. Here are the key
+configuration ingredients that make this possible using libvirt and KVM virtual
+guests. These steps strip everything down to the very basics.
+(((guest node)))
+(((node,guest node)))
 
-== Mile High View of Configuration Steps ==
+== Mile-High View of Configuration Steps ==
 
-* +Put an authkey with this path, /etc/pacemaker/authkey, on every cluster-node and virtual machine+.  This secures remote communication and authentication.
+* Give each virtual machine that will be used as a guest node a static network
+  address and unique hostname.
 
-Run this command if you want to make a somewhat random authkey.
-
+* Put the same authentication key with the path +/etc/pacemaker/authkey+ on
+  every cluster node and virtual machine. This secures remote communication.
++
+Run this command if you want to make a somewhat random key:
++
 ----
 dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1
 ----
@@ -21,18 +31,25 @@ yum install pacemaker-remote resource-agents
 systemctl enable pacemaker_remote
 firewall-cmd --add-port 3121/tcp --permanent
 ----
++
+[NOTE]
+======
+If you just want to see this work, you may want to simply disable the local
+firewall and put SELinux in permissive mode while testing. This creates
+security risks and should not be done on a production machine exposed to the
+Internet, but can be appropriate for a protected test machine.
+======
 
-* +Give each virtual machine a static network address and unique hostname+
-
-* +Tell pacemaker to launch a virtual machine and that the virtual machine is a remote-node capable of running resources by using the "remote-node" meta-attribute.+
-
-with pcs
-
+* Create a Pacemaker resource to launch each virtual machine, using the
+  *remote-node* meta-attribute to let Pacemaker know this will be a
+  guest node capable of running resources.
++
 ----
-# pcs resource create vm-guest1 VirtualDomain hypervisor="qemu:///system" config="vm-guest1.xml" meta +remote-node=guest1+
+# pcs resource create vm-guest1 VirtualDomain hypervisor="qemu:///system" config="vm-guest1.xml" meta remote-node="guest1"
 ----
-
-raw xml
++
+The above command will create CIB XML similar to the following:
++
 [source,XML]
 ----
       <primitive class="ocf" id="vm-guest1" provider="heartbeat" type="VirtualDomain">
@@ -54,9 +71,16 @@ that this resource is a guest node with the hostname *guest1*. The cluster will
 attempt to contact the virtual machine's pacemaker_remote service at the
 hostname *guest1* after it launches.
 
-== What those steps just did ==
+[NOTE]
+======
+The ID of the resource creating the virtual machine (*vm-guest1* in the above
+example) 'must' be different from the virtual machine's uname (*guest1* in the
+above example). Pacemaker will create an implicit internal resource for the
+pacemaker_remote connection to the guest, named with the value of *remote-node*,
+so that value cannot be used as the name of any other resource.
+======
 
-Those steps just told pacemaker to launch a virtual machine called vm-guest1 and integrate that virtual machine as a remote-node called 'guest1'.
+== Using a Guest Node ==
 
 Guest nodes will show up in `crm_mon` output as normal:
 

@@ -1,6 +1,9 @@
 = Configuration Explained =
 
-The walk-through examples use some of these options, but don't explain exactly what they mean or do.  This section is meant to be the go-to resource for all the options available for configuring remote-nodes.
+The walk-through examples use some of these options, but don't explain exactly
+what they mean or do.  This section is meant to be the go-to resource for all
+the options available for configuring pacemaker_remote-based nodes.
+(((configuration)))
 
 == Resource Meta-Attributes for Guest Nodes ==
 
@@ -26,7 +29,8 @@ the hostname to use when connecting to pacemaker_remote on the VM. This value
 
 |remote-port
 |3121
-|Configure a custom port to use for the guest connection to pacemaker_remote.
+|The port on the virtual machine that the cluster will use to connect to
+pacemaker_remote.
 
 |remote-addr
 |'value of' +remote-node+
@@ -38,10 +42,14 @@ the hostname to use when connecting to pacemaker_remote on the VM. This value
 
 |=========================================================
 
-== Baremetal remote-node Options ==
+== Connection Resources for Remote Nodes ==
 
-Baremetal remote-nodes are defined by a connection resource. That connection resource has the following instance attributes that define where the baremetal remote-node is located on the network and how to communicate with that remote-node.  Descriptions of these options can be retrieved using the following pcs command.
+A remote node is defined by a connection resource. That connection resource
+has instance attributes that define where the remote node is located on the
+network and how to communicate with it.
 
+Descriptions of these instance attributes can be retrieved using the following
+`pcs` command:
 ----
 # pcs resource describe remote
 ocf:pacemaker:remote - 
@@ -63,12 +71,12 @@ Example defining a remote node with the hostname *remote1*:
 # pcs resource create remote1 remote
 ----
 
-Example, defining a baremetal remote-node to connect to a specific ip and port.
+Example defining a remote node to connect to a specific IP address and port:
 ----
 # pcs resource create remote1 remote server=192.168.122.200 port=8938
 ----
 
-== Host and Guest Authentication ==
+== Secure Communication ==
 
 Authentication and encryption of the connection between cluster nodes
 and nodes running pacemaker_remote is achieved using
@@ -76,8 +84,6 @@ with https://en.wikipedia.org/wiki/TLS-PSK[TLS-PSK] encryption/authentication
 over TCP (port 3121 by default). This means that both the cluster node and
 remote node must share the same private key. By default, this
 key is placed at +/etc/pacemaker/authkey+ on each node.
-
-== Pacemaker and pacemaker_remote Options ==
 
 You can change the default port and/or key location for Pacemaker and
 pacemaker_remote via environment variables. These environment variables can be
@@ -90,4 +96,3 @@ PCMK_authkey_location=/etc/pacemaker/authkey
 # Specify a custom port for Pacemaker Remote connections
 PCMK_remote_port=3121
 ----
-

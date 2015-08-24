@@ -1,4 +1,4 @@
-= Baremetal Walk-through =
+= Remote Node Walk-through =
 
 *What this tutorial is:* An in-depth walk-through of how to get Pacemaker to
 integrate a remote node into the cluster as a node capable of running cluster
@@ -8,11 +8,13 @@ resources.
 here are meant to get users familiar with the concept of remote nodes as
 quickly as possible.
 
-This tutorial requires three machines. Two machines to act as cluster-nodes and a third to act as the baremetal remote-node.
+This tutorial requires three machines: two to act as cluster nodes, and
+a third to act as the remote node.
 
+== Configure Remote Node ==
 
+=== Configure Firewall on Remote Node ===
 
-== SElinux and Firewall Considerations ==
 Allow cluster-related services through the local firewall:
 ----
 # firewall-cmd --permanent --add-service=high-availability
@@ -43,21 +45,29 @@ To disable security measures:
 ----
 ======
 
-== Setup Pacemaker Remote on Baremetal remote-node ==
+=== Configure pacemaker_remote on Remote Node ===
 
-On the baremetal remote-node machine run these commands to generate an authkey and copy it to the /etc/pacemaker folder.
-
+Install the pacemaker_remote daemon on the remote node.
 ----
-# mkdir /etc/pacemaker
+# yum install -y pacemaker-remote resource-agents pcs
+----
+
+Create a location for the shared authentication key:
+----
+# mkdir -p --mode=0750 /etc/pacemaker
+# chgrp haclient /etc/pacemaker
+----
+
+All nodes (both cluster nodes and remote nodes) must have the same
+authentication key installed for the communication to work correctly.
+If you already have a key on an existing node, copy it to the new
+remote node. Otherwise, create a new key, for example:
+----
 # dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1
 ----
 
-Make sure to distribute this key to both of the cluster-nodes as well.  All the nodes must have the same /etc/pacemaker/authkey installed for the communication to work correctly.
-
-Now install and start the pacemaker_remote daemon on the baremetal remote-node.
-
+Now start and enable the pacemaker_remote daemon on the remote node.
 ----
-# yum install -y pacemaker-remote resource-agents pcs
 # systemctl enable pacemaker_remote.service
 # systemctl start pacemaker_remote.service
 ----
@@ -80,7 +90,7 @@ Aug 21 15:21:20 remote1 pacemaker_remoted[21273]: notice: lrmd_init_remote_tls_s
 Aug 21 15:21:20 remote1 pacemaker_remoted[21273]: notice: bind_and_listen: Listening on address ::
 ----
 
-== Verify cluster-node Connection to baremetal-node ==
+== Verify Connection to Remote Node ==
 
 Before moving forward, it's worth verifying that the cluster nodes
 can contact the remote node on port 3121. Here's a trick you can use.
@@ -88,14 +98,15 @@ Connect using ssh from each of the cluster nodes. The connection will get
 destroyed, but how it is destroyed tells you whether it worked or not.
 
 First, add the remote node's hostname (we're using *remote1* in this tutorial)
-to the cluster-nodes' +/etc/hosts+ files if you haven't already. This
+to the cluster nodes' +/etc/hosts+ files if you haven't already. This
 is required unless you have DNS set up in a way where remote1's address can be
 discovered.
 
-Execute the following on each cluster-node, replacing the ip address with the actual ip address of the baremetal remote-node.
+Execute the following on each cluster node, replacing the IP address with the
+actual IP address of the remote node.
 ----
 # cat << END >> /etc/hosts
-192.168.122.10    remote1 
+192.168.122.10    remote1
 END
 ----
 
@@ -112,31 +123,48 @@ If you see this, the connection is not working.
 ssh: connect to host remote1 port 3121: No route to host
 ----
 
-Once you can successfully connect to the baremetal remote-node from the both cluster-nodes, move on to setting up pacemaker on the cluster-nodes.
+Once you can successfully connect to the remote node from the both
+cluster nodes, move on to setting up Pacemaker on the cluster nodes.
 
-== Install cluster-node Software ==
+== Configure Cluster Nodes ==
 
-On the two cluster-nodes install the following packages.
+=== Configure Firewall on Cluster Nodes ===
+
+On each cluster node, allow cluster-related services through the local
+firewall, following the same procedure as in <<_configure_firewall_on_remote_node>>.
+
+=== Install Pacemaker on Cluster Nodes ===
+
+On the two cluster nodes, install the following packages.
 
 ----
 # yum install -y pacemaker corosync pcs resource-agents
 ----
 
-== Setup Corosync on cluster-nodes ==
+=== Copy Authentication Key to Cluster Nodes ===
 
-Corosync handles pacemaker's cluster membership and messaging. The corosync config file is located in /etc/corosync/corosync.conf. That config file must be initialized with information about the two cluster-nodes before pacemaker can start.
-
-To initialize the corosync config file, execute the following pcs command on both nodes filling in the information in <> with your nodes' information.
+Create a location for the shared authentication key,
+and copy it from any existing node:
 ----
-# pcs cluster setup --local mycluster <node1 ip or hostname> <node2 ip or hostname>
+# mkdir -p --mode=0750 /etc/pacemaker
+# chgrp haclient /etc/pacemaker
+# scp remote1:/etc/pacemaker/authkey /etc/pacemaker/authkey
 ----
 
-A recent syntax change in pcs may cause the above command to fail. If so try this alternative.
+=== Configure Corosync on Cluster Nodes ===
+
+Corosync handles Pacemaker's cluster membership and messaging. The corosync
+config file is located in +/etc/corosync/corosync.conf+. That config file must be
+initialized with information about the two cluster nodes before pacemaker can
+start.
+
+To initialize the corosync config file, execute the following pcs command on
+both nodes, filling in the information in <> with your nodes' information.
 ----
 # pcs cluster setup --force --local --name mycluster <node1 ip or hostname> <node2 ip or hostname>
 ----
 
-== Start Pacemaker on cluster-nodes ==
+=== Start Pacemaker on Cluster Nodes ===
 
 Start the cluster stack on both cluster nodes using the following command.
 
@@ -169,7 +197,7 @@ Version: 1.1.12-a14efad
 0 Resources configured
 ----
 
-After about a minute you should see your two cluster-nodes come online.
+After about a minute, you should see your two cluster nodes come online.
 
 ----
 # pcs status
@@ -191,7 +219,7 @@ For the sake of this tutorial, we are going to disable stonith to avoid having t
 # pcs property set stonith-enabled=false
 ----
 
-== Integrate Baremetal remote-node into Cluster ==
+== Integrate Remote Node into Cluster ==
 
 Integrating a remote node into the cluster is achieved through the
 creation of a remote node connection resource. The remote node connection
@@ -209,7 +237,7 @@ Define the remote node connection resource to our remote node,
 # pcs resource create remote1 ocf:pacemaker:remote
 ----
 
-That's it.  After a moment you should see the remote-node come online.
+That's it.  After a moment you should see the remote node come online.
 
 ----
 Cluster name: mycluster
@@ -239,18 +267,30 @@ Daemon Status:
   pcsd: active/enabled
 ----
 
-== Starting Resources on baremetal remote-node ==
+== Starting Resources on Remote Node ==
 
-+"Warning: Never involve a remote-node connection resource in a resource group, colocation, or order constraint"+
+Once the remote node is integrated into the cluster, starting resources on a
+remote node is the exact same as on cluster nodes. Refer to the
+http://clusterlabs.org/doc/['Clusters from Scratch'] document for examples of
+resource creation.
 
-Once the baremetal remote-node is integrated into the cluster, starting resources on a baremetal remote-node is the exact same as the cluster nodes.  Refer to the Clusters from Scratch document for examples on resource creation. http://clusterlabs.org/doc/
+[WARNING]
+=========
+Never involve a remote node connection resource in a resource group,
+colocation constraint, or order constraint.
+=========
 
-== Fencing baremetal remote-nodes ==
+== Fencing Remote Nodes ==
 
-The cluster understands how to fence baremetal remote-nodes and can use standard fencing devices to do so.  No special considerations are required.  Note however that remote-nodes can never initiate a fencing action. Only cluster-nodes are capable of actually executing the fencing operation on another node.
+Remote nodes are fenced the same way as cluster nodes. No special
+considerations are required. Configure fencing resources for use with
+remote nodes the same as you would with cluster nodes.
 
-== Accessing Cluster Tools from a Baremetal remote-node ==
+Note, however, that remote nodes can never 'initiate' a fencing action. Only
+cluster nodes are capable of actually executing a fencing operation against
+another node.
 
+== Accessing Cluster Tools from a Remote Node ==
 
 Besides allowing the cluster to manage resources on a remote node,
 pacemaker_remote has one other trick. The pacemaker_remote daemon allows
