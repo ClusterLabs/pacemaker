@@ -21,23 +21,39 @@ The recent addition of the +pacemaker_remote+ service supported by +Pacemaker ve
 
 +LXC+ - A Linux Container defined by the libvirt-lxc Linux container driver. http://libvirt.org/drvlxc.html
 
-== Version Info ==
+== Support in Pacemaker Versions ==
 
-This feature is in ongoing development.
+It is recommended to run Pacemaker 1.1.12 or later when using pacemaker_remote
+due to important bug fixes. An overview of changes in pacemaker_remote
+capability by version:
 
-+Pacemaker v1.1.10+
+.1.1.13
+* Support for maintenance mode
+* Remote nodes can recover without being fenced when the cluster node
+  hosting their connection fails
+* Running pacemaker_remote within LXC environments is deprecated due to
+  newly added Pacemaker support for isolated resources
+* Bug fixes
 
-* Initial pacemaker_remote daemon and integration support.
-* Only supports pacemaker in KVM/LXC environments.
-* pacemaker_remote daemon unit test suite.
-* Known bugs include (These are likely resolved if you have received an 1.1.10.x point release): Errors when setting remote-node attributes, Failures when stopping orphaned (deleted from cib while running) remote-nodes, Fixes remote-node usage in asymmetric clusters.
+.1.1.12
+* Support for permanent node attributes
+* Support for migration
+* Bug fixes
 
-+Currently in Master github branch and scheduled for Pacemaker v1.1.11+
+.1.1.11
+* Support for IPv6
+* Support for remote nodes
+* Support for transient node attributes
+* Support for clusters with mixed endian architectures
+* Bug fixes
 
-* Baremetal remote-node support.
-* Improvements to scaling remote-node integration.  Performance testing here included 16 cluster nodes running 64 remote-nodes living in LXC containers. As part of this testing, several performance enhancements were introduced into the integration code.
-* CTS tests. RemoteLXC and RemoteBaremetal.  These two CTS tests allow us to perform automated verification of pacemaker_remote integration.
-* Fixes for known bugs in 1.1.10 release.
+.1.1.10
+* Bug fixes
+
+.1.1.9
+* Initial version to include pacemaker_remote
+* Limited to guest nodes in KVM/LXC environments using only IPv4;
+  all nodes' architectures must have same endianness
 
 == Virtual Machine Use Case ==
 The use of pacemaker_remote in virtual machines solves a deployment scenario that has traditionally been difficult to solve.
