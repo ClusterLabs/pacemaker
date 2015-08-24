@@ -8,14 +8,14 @@ If you already know how to use pacemaker, you'll likely be able to grasp this ne
 
 Run this command if you want to make a somewhat random authkey.
 
-[source,C]
 ----
 dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1
 ----
 
-* +Install pacemaker_remote packages on every virtual machine, enable pacemaker_remote on startup, and poke hole in firewall for tcp port 3121.+
-
-[source,C]
+* Install pacemaker_remote on every virtual machine, enabling it to start at
+  boot, and if a local firewall is used, allow the node to accept connections
+  on TCP port 3121.
++
 ----
 yum install pacemaker-remote resource-agents
 systemctl enable pacemaker_remote
@@ -30,7 +30,6 @@ firewall-cmd --add-port 3121/tcp --permanent
 
 with pcs
 
-[source,C]
 ----
 # pcs resource create vm-guest1 VirtualDomain hypervisor="qemu:///system" config="vm-guest1.xml" meta +remote-node=guest1+
 ----
@@ -52,15 +51,18 @@ raw xml
       </primitive>
 ----
 
-In the example above the meta-attribute 'remote-node=guest1' tells pacemaker that this resource is a remote-node with the hostname 'guest1' that is capable of being integrated into the cluster.  The cluster will attempt to contact the virtual machine's pacemaker_remote service at the hostname 'guest1' after it launches.
+In the example above, the meta-attribute *remote-node="guest1"* tells Pacemaker
+that this resource is a guest node with the hostname *guest1*. The cluster will
+attempt to contact the virtual machine's pacemaker_remote service at the
+hostname *guest1* after it launches.
 
 == What those steps just did ==
 
 Those steps just told pacemaker to launch a virtual machine called vm-guest1 and integrate that virtual machine as a remote-node called 'guest1'.
 
-Example crm_mon output after guest1 is integrated into cluster.
+Guest nodes will show up in `crm_mon` output as normal:
 
-[source,C]
+.Example `crm_mon` output after *guest1* is integrated into cluster
 ----
 Last updated: Wed Mar 13 13:52:39 2013
 Last change: Wed Mar 13 13:25:17 2013 via crmd on node1
@@ -75,17 +77,13 @@ Online: [ node1 guest1]
 vm-guest1     (ocf::heartbeat:VirtualDomain): Started node1
 ----
 
-Now, you could place a resource, such as a webserver on guest1.
-
-[source,C]
+Now, you could place a resource, such as a webserver, on *guest1*:
 ----
 # pcs resource create webserver apache params configfile=/etc/httpd/conf/httpd.conf op monitor interval=30s
 # pcs constraint webserver prefers guest1
 ----
 
-Now the crm_mon output would show a webserver launched on the guest1 remote-node.
-
-[source,C]
+Now, the crm_mon output would show:
 ----
 Last updated: Wed Mar 13 13:52:39 2013
 Last change: Wed Mar 13 13:25:17 2013 via crmd on node1
@@ -101,7 +99,10 @@ vm-guest1     (ocf::heartbeat:VirtualDomain): Started node1
 webserver     (ocf::heartbeat::apache):       Started guest1
 ----
 
-== Accessing Cluster from Remote-node ==
-
-It is worth noting that after 'guest1' is integrated into the cluster, all the pacemaker cli tools immediately become available to the remote node.  This means things like crm_mon, crm_resource, and crm_attribute will work natively on the remote-node as long as the connection between the remote-node and cluster-node exists.  This is particularly important for any master/slave resources executing on the remote-node that need access to crm_master to set the nodes transient attributes.
-
+It is worth noting that after *guest1* is integrated into the cluster, all the
+Pacemaker command-line tools immediately become available to the guest node.
+This means things like `crm_mon`, `crm_resource`, and `crm_attribute` will work
+natively on the guest node, as long as the connection between the guest node
+and a cluster node exists. This is particularly important for any master/slave
+resources executing on the guest node that need access to `crm_master` to set
+transient attributes.
