@@ -465,3 +465,17 @@ Besides just allowing the cluster to manage resources on a remote-node, pacemake
 
 Try it, run +crm_mon+ or +pcs status+ on the guest after pacemaker has integrated the remote-node into the cluster.  These tools just work.  These means resource agents such as master/slave resources which need access to tools like crm_master work seamlessly on the remote-nodes.
 
+[NOTE]
+======
+It is possible to run `pacemaker_remote` inside an LXC container instead of
+a virtual machine, following a similar process. This approach is deprecated
+since Pacemaker now has built-in support for managing containers and services
+inside containers.
+
+It can still be a useful alternative however, especially in testing scenarios,
+to simulate a large number of guest nodes. The *pacemaker-cts* packages includes
+a helpful script, +/usr/share/pacemaker/tests/cts/lxc_autogen.sh+, for generating
+libvirt XML files for LXC containers. The configuration is otherwise very similar
+to guest nodes; the *VirtualDomain* resource for a container will need the options
+*force_stop="true" hypervisor="lxc:///"*.
+======

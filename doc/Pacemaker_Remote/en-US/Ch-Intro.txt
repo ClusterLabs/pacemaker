@@ -1,8 +1,17 @@
 = Extending High Availability Cluster into Virtual Nodes =
 
 == Overview ==
-The recent addition of the +pacemaker_remote+ service supported by +Pacemaker version 1.1.10 and greater+ allows nodes not running the cluster stack (pacemaker+corosync) to integrate into the cluster and have the cluster manage their resources just as if they were a real cluster node.  This means that pacemaker clusters are now capable of managing both launching virtual environments (KVM/LXC) as well as launching the resources that live within those virtual environments without requiring the virtual environments to run pacemaker or corosync.
 
+In a basic Pacemaker high-availability
+cluster,footnote:[See the http://www.clusterlabs.org/doc/[Pacemaker
+documentation], especially 'Clusters From Scratch' and 'Pacemaker Explained',
+for basic information about high-availability using Pacemaker]
+each node runs the full cluster stack of corosync and all Pacemaker components.
+This allows great flexibility but limits scalability to around 16 nodes.
+
+To allow for scalability to dozens or even hundreds of nodes, Pacemaker
+allows nodes not running the full cluster stack to integrate into the cluster
+and have the cluster manage their resources as if they were a cluster node.
 
 == Terms ==
 +cluster-node+ - A node running the High Availability stack (pacemaker + corosync)
@@ -19,7 +28,6 @@ The recent addition of the +pacemaker_remote+ service supported by +Pacemaker ve
 
 +pacemaker_remote+ - A service daemon capable of performing remote application management within guest nodes (baremetal, kvm, and lxc) in both pacemaker cluster environments and standalone (non-cluster) environments. This service is an enhanced version of pacemaker's local resource manage daemon (LRMD) that is capable of managing and monitoring LSB, OCF, upstart, and systemd resources on a guest remotely.  It also allows for most of pacemaker's cli tools (crm_mon, crm_resource, crm_master, crm_attribute, ect..) to work natively on remote-nodes.
 
-+LXC+ - A Linux Container defined by the libvirt-lxc Linux container driver. http://libvirt.org/drvlxc.html
 
 == Support in Pacemaker Versions ==
 
@@ -84,11 +92,6 @@ With this deployment you would have 64 webservers and databases running on 64 vi
 
 Ultimately the primary advantage of baremetal remote-nodes over traditional nodes running the Corosync+Pacemaker stack is scalability.  There are likely some other use cases related to geographically distributed HA clusters that baremetal remote-nodes may serve a purpose in, but those use cases are not well understood at this point.  The only limitations baremetal remote-nodes have that cluster-nodes do not is the ability to take place in cluster quorum, and the ability to execute fencing agents via stonith. That is not to say however that fencing of a baremetal node works any differently than that of a normal cluster-node.  The Pacemaker policy engine understands how to fence baremetal remote-nodes. As long as a fencing device exists, the cluster is capable of ensuring baremetal nodes are fenced in the exact same way as normal cluster-nodes are fenced.
 
-== Linux Container Use Case ==
-
-+I want to isolate and limit the system resources (cpu, memory, filesystem) a cluster resource can consume without using virtual machines.+
-
-Using pacemaker_remote with Linux containers (libvirt-lxc) opens up some interesting possibilities for isolating resources in the cluster without the use of a hypervisor.  We now have the ability to both define a contained environment with cpu and memory utilization limits and then assign resources to that contained environment all managed from within pacemaker.  The LXC Walk-through section of this document outlines how pacemaker_remote can be used to bring Linux containers into the cluster as remote-nodes capable of executing resources.
 
 == Expanding the Cluster Stack ==
 

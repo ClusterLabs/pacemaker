@@ -2,12 +2,14 @@
 
 The walk-through examples use some of these options, but don't explain exactly what they mean or do.  This section is meant to be the go-to resource for all the options available for configuring remote-nodes.
 
-== Container remote-node Resource Options ==
+== Resource Meta-Attributes for Guest Nodes ==
 
-When configuring a virtual machine or lxc resource to act as a remote-node, these are the metadata options available to both enable the resource as a remote-node and define the connection parameters.
+When configuring a virtual machine to use as a guest node, these are the
+metadata options available to enable the resource as a guest node and
+define its connection parameters.
 
-.Metadata Options for configuring KVM/LXC resources as remote-nodes
-[width="95%",cols="1m,1,4<",options="header",align="center"]
+.Meta-attributes for configuring VM resources as guest nodes
+[width="95%",cols="2m,1,4<",options="header",align="center"]
 |=========================================================
 
 |Option

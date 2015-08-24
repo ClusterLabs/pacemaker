@@ -13,7 +13,7 @@
 			The document exists as both a reference and deployment guide for the Pacemaker Remote service.
 		</para>
 		<para>
-			The KVM and Linux Container walk-through tutorials will use:
+			The example commands in this document will use:
 			<orderedlist>
 				<listitem>
 					<para>
@@ -27,7 +27,7 @@
 				</listitem>
 				<listitem>
 					<para>
-						libvirt to manage KVM and LXC virtual nodes
+						libvirt to manage guest nodes
 					</para>
 				</listitem>
 				<listitem>
