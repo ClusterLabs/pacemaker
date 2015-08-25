@@ -38,7 +38,7 @@ Requirements
 * The exerciser needs to be able to resolve the machine names of the
   test cluster - either by DNS or by /etc/hosts.
 
-	
+
 Preparation
 -----------
 
@@ -55,7 +55,7 @@ NOTE: Do not run the cluster on the test exerciser machine.
 NOTE: Wherever machine names are mentioned in these configuration files,
 they must match the machines' `uname -n` name.  This may or may not match
 the machines' FQDN (fully qualified domain name) - it depends on how
-you (and your OS) have named the machines. 
+you (and your OS) have named the machines.
 
 
 Run CTS
@@ -67,33 +67,37 @@ Now assuming you did all this, what you need to do is run CTSlab.py:
 
 You must specify which nodes are part of the cluster with --nodes, e.g.:
 
-   --node "pcmk-1 pcmk-2 pcmk-3"
+    --node "pcmk-1 pcmk-2 pcmk-3"
 
 Most people will want to save the output with --outputfile, e.g.:
 
-   --outputfile ~/cts.log
+    --outputfile ~/cts.log
 
 Unless you want to test your pre-existing cluster configuration, you also want:
 
-   --clobber-cib
-   --populate-resources
-   --test-ip-base $IP    # e.g. --test-ip-base 192.168.9.100
+    --clobber-cib
+    --populate-resources
+    --test-ip-base $IP    # e.g. --test-ip-base 192.168.9.100
 
 and configure some sort of fencing:
 
-   --stonith $TYPE  # e.g. "--stonith rhcs" to use fence_xvm or "--stonith lha" to use external/ssh
+    --stonith $TYPE  # e.g. "--stonith rhcs" to use fence_xvm or "--stonith lha" to use external/ssh
 
 A complete command line might look like:
-  
-  python ./CTSlab.py --nodes "pcmk-1 pcmk-2 pcmk-3" --outputfile ~/cts.log \
-	 --clobber-cib --populate-resources --test-ip-base 192.168.9.100   \
-	 --stonith rhcs 50
+
+    python ./CTSlab.py --nodes "pcmk-1 pcmk-2 pcmk-3" --outputfile ~/cts.log \
+           --clobber-cib --populate-resources --test-ip-base 192.168.9.100   \
+           --stonith rhcs 50
 
 For more options, use the --help option.
 
+NOTE: Perhaps more convenient way to compile a command line like above
+      is to use cluster_test script that, at least in the source repository,
+      sits in the same directory as this very file.
+
 To extract the result of a particular test, run:
 
-  crm_report -T $test
+    crm_report -T $test
 
 
 Mini-HOWTO: Allow passwordless remote SSH connections
@@ -110,12 +114,12 @@ without requiring a password to be entered each time:
 
   If you don't already have a key, you can create one with:
 
-		ssh-keygen -t dsa
+    ssh-keygen -t dsa
 
 * From your test exerciser, authorize your SSH public key for root on all test
   machines (both the exerciser and the cluster test machines):
 
-	ssh-copy-id -i ~/.ssh/id_dsa.pub root@$MACHINE 
+    ssh-copy-id -i ~/.ssh/id_dsa.pub root@$MACHINE
 
   You will probably have to provide your password, and possibly say
   "yes" to some questions about accepting the identity of the test machines.
@@ -132,7 +136,7 @@ without requiring a password to be entered each time:
 * To test, try this command from the exerciser machine for each
   of your cluster machines, and for the exerciser machine itself.
 
-	ssh -l root $MACHINE
+    ssh -l root $MACHINE
 
   If this works without prompting for a password, you're in business.
   If not, look at the documentation for your version of ssh.
