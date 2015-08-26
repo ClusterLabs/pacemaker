@@ -366,15 +366,15 @@ services_set_op_pending(svc_action_t *op, DBusPendingCall *pending)
         if (pending) {
             crm_info("Lost pending %s DBus call (%p)", op->id, op->opaque->pending);
         } else {
-            crm_info("Done with pending %s DBus call (%p)", op->id, op->opaque->pending);
+            crm_trace("Done with pending %s DBus call (%p)", op->id, op->opaque->pending);
         }
         dbus_pending_call_unref(op->opaque->pending);
     }
     op->opaque->pending = pending;
     if (pending) {
-        crm_info("Updated pending %s DBus call (%p)", op->id, pending);
+        crm_trace("Updated pending %s DBus call (%p)", op->id, pending);
     } else {
-        crm_info("Cleared pending %s DBus call", op->id);
+        crm_trace("Cleared pending %s DBus call", op->id);
     }
 }
 #endif
