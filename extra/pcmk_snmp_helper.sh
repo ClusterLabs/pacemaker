@@ -26,9 +26,6 @@
 # primitive ClusterMon ocf:pacemaker:ClusterMon \
 #        params user="root" update="30" extra_options="-E /path/to/pcmk_snmp_helper.sh -e 192.168.1.2" \
 #        op monitor on-fail="restart" interval="10"
-#
-# clone ClusterMon-clone ClusterMon \
-#        meta target-role="Started"
 # ================================
 
 # The external agent is fed with environment variables allowing us to know
@@ -41,7 +38,7 @@
 if [[ ${CRM_notify_rc} != 0 && ${CRM_notify_task} == "monitor" ]] || [[ ${CRM_notify_task} != "monitor" ]] ; then
     # This trap is compliant with PACEMAKER MIB
     #  https://github.com/ClusterLabs/pacemaker/blob/master/extra/PCMK-MIB.txt
-    /usr/bin/snmptrap -v 2c -c public ${CRM_notify_recipient} "" PACEMAKER-MIB::pacemakerNotification \
+    /usr/bin/snmptrap -v 2c -c public ${CRM_notify_recipient} "" PACEMAKER-MIB::pacemakerNotificationTrap \
 	PACEMAKER-MIB::pacemakerNotificationNode s "${CRM_notify_node}" \
 	PACEMAKER-MIB::pacemakerNotificationResource s "${CRM_notify_rsc}" \
 	PACEMAKER-MIB::pacemakerNotificationOperation s "${CRM_notify_task}" \
