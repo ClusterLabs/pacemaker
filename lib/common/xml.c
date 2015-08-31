@@ -4275,6 +4275,7 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
             if(p_old != p_new) {
                 crm_info("%s.%s moved from %d to %d - %d",
                          new_child->name, ID(new_child), p_old, p_new);
+                __xml_node_dirty(new);
                 p->flags |= xpf_moved;
 
                 if(p_old > p_new) {

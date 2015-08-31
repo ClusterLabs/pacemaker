@@ -47,7 +47,7 @@
 			<revision>
 			  <revnumber>7-0</revnumber>
 			  <date>Fri Sept 14 2012</date>
-			  <author><firstname>David</firstname><surname>Vossel</surname><email>dvossel@redhat.com</email></author>
+			  <author><firstname>David</firstname><surname>Vossel</surname><email>davidvossel@gmail.com</email></author>
 			  <revdescription><simplelist><member>Updated for pcs</member></simplelist></revdescription>
 			</revision>
 			<revision>

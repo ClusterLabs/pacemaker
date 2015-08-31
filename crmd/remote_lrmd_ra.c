@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2013 David Vossel <dvossel@redhat.com>
+ * Copyright (C) 2013 David Vossel <davidvossel@gmail.com>
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
