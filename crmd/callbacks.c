@@ -126,6 +126,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         case crm_status_nstate:
             crm_info("%s is now %s (was %s)",
                      node->uname, state_text(node->state), state_text(data));
+
             if (safe_str_eq(data, node->state)) {
                 /* State did not change */
                 return;
@@ -147,7 +148,10 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                     }
                 }
             }
+
+            crmd_notify_node_event(node);
             break;
+
         case crm_status_processes:
             if (data) {
                 old = *(const uint32_t *)data;

@@ -180,6 +180,33 @@ check_quorum(const char *value)
 }
 
 gboolean
+check_script(const char *value)
+{
+    struct stat st;
+
+    if(safe_str_eq(value, "/dev/null")) {
+        return TRUE;
+    }
+
+    if(stat(value, &st) != 0) {
+        crm_err("Script %s does not exist", value);
+        return FALSE;
+    }
+
+    if(S_ISREG(st.st_mode) == 0) {
+        crm_err("Script %s is not a regular file", value);
+        return FALSE;
+    }
+
+    if( (st.st_mode & (S_IXUSR | S_IXGRP )) == 0) {
+        crm_err("Script %s is not executable", value);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+gboolean
 check_utilization(const char *value)
 {
     char *end = NULL;

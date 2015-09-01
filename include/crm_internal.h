@@ -127,6 +127,7 @@ gboolean check_timer(const char *value);
 gboolean check_boolean(const char *value);
 gboolean check_number(const char *value);
 gboolean check_quorum(const char *value);
+gboolean check_script(const char *value);
 gboolean check_utilization(const char *value);
 
 /* Shared PE/crmd functionality */

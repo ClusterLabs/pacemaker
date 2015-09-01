@@ -2415,6 +2415,8 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op, struct recurr
         free(prefix);
     }
 
+    crmd_notify_resource_op(lrm_state->node_name, op);
+
     if (op->rsc_deleted) {
         crm_info("Deletion of resource '%s' complete after %s", op->rsc_id, op_key);
         delete_rsc_entry(lrm_state, NULL, op->rsc_id, NULL, pcmk_ok, NULL);
