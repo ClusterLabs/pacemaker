@@ -468,10 +468,13 @@ pacemaker_remote has one other trick. The pacemaker_remote daemon allows
 nearly all the pacemaker tools (`crm_resource`, `crm_mon`, `crm_attribute`,
 `crm_master`, etc.) to work on guest nodes natively.
 
-Try it: Run `crm_mon` or `pcs status` on the guest after pacemaker has
+Try it: Run `crm_mon` on the guest after pacemaker has
 integrated the guest node into the cluster. These tools just work. This
 means resource agents such as master/slave resources which need access to tools
 like `crm_master` work seamlessly on the guest nodes.
+
+Higher-level command shells such as `pcs` may have partial support
+on guest nodes, but it is recommended to run them from a cluster node.
 
 [NOTE]
 ======

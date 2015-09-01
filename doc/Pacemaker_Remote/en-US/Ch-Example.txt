@@ -121,7 +121,7 @@ vm-guest1     (ocf::heartbeat:VirtualDomain): Started node1
 webserver     (ocf::heartbeat::apache):       Started guest1
 ----
 
-It is worth noting that after *guest1* is integrated into the cluster, all the
+It is worth noting that after *guest1* is integrated into the cluster, nearly all the
 Pacemaker command-line tools immediately become available to the guest node.
 This means things like `crm_mon`, `crm_resource`, and `crm_attribute` will work
 natively on the guest node, as long as the connection between the guest node

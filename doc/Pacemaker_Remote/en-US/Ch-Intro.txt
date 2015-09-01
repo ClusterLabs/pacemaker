@@ -18,7 +18,7 @@ and have the cluster manage their resources as if they were a cluster node.
 cluster node::
     A node running the full high-availability stack of corosync and all
     Pacemaker components. Cluster nodes may run cluster resources, run
-    Pacemaker command-line tools (`crm_mon`, `crm_resource` and so on),
+    all Pacemaker command-line tools (`crm_mon`, `crm_resource` and so on),
     execute fencing actions, count toward cluster quorum, and serve as the
     cluster's Designated Controller (DC).
 (((cluster node)))
@@ -27,7 +27,7 @@ cluster node::
 pacemaker_remote::
     A small service daemon that allows a host to be used as a Pacemaker node
     without running the full cluster stack. Nodes running pacemaker_remote
-    may run cluster resources and command-line tools, but cannot perform the
+    may run cluster resources and most command-line tools, but cannot perform
     other functions of full cluster nodes such as fencing execution, quorum
     voting or DC eligibility. The pacemaker_remote daemon is an enhanced
     version of Pacemaker's local resource management daemon (LRMD).
@@ -133,7 +133,7 @@ With pacemaker_remote:
 
 The key difference here between the guest nodes and the cluster nodes is that
 the guest nodes do not run the cluster stack. This means they will never become
-the DC, and they do not participate in quorum voting.
+the DC, initiate fencing actions or participate in quorum voting.
 
 On the other hand, this also means that they are not bound to the scalability
 limits associated with the cluster stack (no 16-node corosync member limits to
@@ -172,9 +172,10 @@ scalability. There are likely some other use cases related to geographically
 distributed HA clusters that remote nodes may serve a purpose in, but those use
 cases are not well understood at this point.
 
-The only limitations remote nodes have that cluster nodes do not is the ability
-to take place in cluster quorum, and the ability to execute fencing agents via
-stonith. That is not to say, however, that fencing of a remote node works any
+Like guest nodes, remote nodes will never become the DC, initiate
+fencing actions or participate in quorum voting.
+
+That is not to say, however, that fencing of a remote node works any
 differently than that of a cluster node. The Pacemaker policy engine
 understands how to fence remote nodes. As long as a fencing device exists, the
 cluster is capable of ensuring remote nodes are fenced in the exact same way as
