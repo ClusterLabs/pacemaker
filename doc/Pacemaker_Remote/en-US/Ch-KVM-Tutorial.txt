@@ -187,7 +187,7 @@ the /etc/pacemaker folder on both the host and guest.
 Now on the 'guest', install the pacemaker-remote package, and enable the daemon
 to run at startup.  In the commands below, you will notice the pacemaker
 package is also installed. It is not required; the only reason it is being
-installed for this tutorial is because it contains the a Dummy resource agent
+installed for this tutorial is because it contains the Dummy resource agent
 that we will use later for testing.
 
 ----
@@ -475,18 +475,3 @@ like `crm_master` work seamlessly on the guest nodes.
 
 Higher-level command shells such as `pcs` may have partial support
 on guest nodes, but it is recommended to run them from a cluster node.
-
-[NOTE]
-======
-It is possible to run `pacemaker_remote` inside an LXC container instead of
-a virtual machine, following a similar process. This approach is deprecated
-since Pacemaker now has built-in support for managing containers and services
-inside containers.
-
-It can still be a useful alternative however, especially in testing scenarios,
-to simulate a large number of guest nodes. The *pacemaker-cts* packages includes
-a helpful script, +/usr/share/pacemaker/tests/cts/lxc_autogen.sh+, for generating
-libvirt XML files for LXC containers. The configuration is otherwise very similar
-to guest nodes; the *VirtualDomain* resource for a container will need the options
-*force_stop="true" hypervisor="lxc:///"*.
-======
