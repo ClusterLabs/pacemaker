@@ -76,7 +76,7 @@ Example defining a remote node to connect to a specific IP address and port:
 # pcs resource create remote1 remote server=192.168.122.200 port=8938
 ----
 
-== Secure Communication ==
+== Environment Variables for Daemon Start-up ==
 
 Authentication and encryption of the connection between cluster nodes
 and nodes running pacemaker_remote is achieved using
@@ -96,3 +96,20 @@ PCMK_authkey_location=/etc/pacemaker/authkey
 # Specify a custom port for Pacemaker Remote connections
 PCMK_remote_port=3121
 ----
+
+== Removing Remote Nodes and Guest Nodes ==
+
+If the resource creating a guest node, or the *ocf:pacemaker:remote* resource
+creating a connection to a remote node, is removed from the configuration, the
+affected node will continue to show up in output as an offline node.
+
+If you want to get rid of that output, run (replacing $NODE_NAME appropriately):
+----
+# crm_node --force --remove $NODE_NAME
+----
+
+[WARNING]
+=========
+Be absolutely sure that the node's resource has been deleted from the
+configuration first.
+=========
