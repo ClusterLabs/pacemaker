@@ -50,7 +50,7 @@ crmd_enable_notifications(const char *script, const char *target)
     free(notify_target);
     notify_target = NULL;
 
-    if(safe_str_eq(script, "/dev/null")) {
+    if(script == NULL || safe_str_eq(script, "/dev/null")) {
         crm_notice("Notifications disabled");
         return;
     }
