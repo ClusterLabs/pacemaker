@@ -893,12 +893,12 @@ pe_cluster_option crmd_opts[] = {
 	  "  To ensure these changes take effect, we can optionally poll the cluster's status for changes."
         },
 
-	{ "notification-script", NULL, "string", NULL, "/dev/null", &check_script,
-          "Notification script to be called after significant cluster events",
-          "Full path to a script that will be invoked when resources start/stop/fail, fencing occurs or nodes join/leave the cluster.\n"
+	{ "notification-agent", NULL, "string", NULL, "/dev/null", &check_script,
+          "Notification script or tool to be called after significant cluster events",
+          "Full path to a script or binary that will be invoked when resources start/stop/fail, fencing occurs or nodes join/leave the cluster.\n"
           "Must exist on all nodes in the cluster."
         },
-	{ "notification-target", NULL, "string", NULL, "", NULL,
+	{ "notification-recipient", NULL, "string", NULL, "", NULL,
           "Destination for notifications (Optional)",
           "Where should the supplied script send notifications to.  Useful to avoid hard-coding this in the script."
         },
@@ -992,8 +992,8 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     verify_crmd_options(config_hash);
 
-    script = crmd_pref(config_hash, "notification-script");
-    value  = crmd_pref(config_hash, "notification-target");
+    script = crmd_pref(config_hash, "notification-agent");
+    value  = crmd_pref(config_hash, "notification-recipient");
     crmd_enable_notifications(script, value);
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
