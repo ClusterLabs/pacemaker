@@ -434,6 +434,21 @@ try_heartbeat(int command, enum cluster_type_e stack)
 #if SUPPORT_CMAN
 #  include <libcman.h>
 #  define MAX_NODES 256
+static bool valid_cman_name(const char *name, uint32_t nodeid) 
+{
+    bool rc = TRUE;
+
+    /* Yes, %d, because that's what CMAN does */
+    char *fakename = crm_strdup_printf("Node%d", nodeid);
+
+    if(crm_str_eq(fakename, name, TRUE)) {
+        rc = FALSE;
+        crm_notice("Ignoring inferred name from cman: %s", fakename);
+    }
+    free(fakename);
+    return rc;
+}
+
 static gboolean
 try_cman(int command, enum cluster_type_e stack)
 {
@@ -478,7 +493,10 @@ try_cman(int command, enum cluster_type_e stack)
             }
 
             for (lpc = 0; lpc < node_count; lpc++) {
-                if (command == 'l') {
+                if(valid_cman_name(cman_nodes[lpc].cn_name, cman_nodes[lpc].cn_nodeid) == FALSE) {
+                    /* Do not print */
+
+                } if (command == 'l') {
                     printf("%s ", cman_nodes[lpc].cn_name);
 
                 } else if (cman_nodes[lpc].cn_nodeid != 0 && cman_nodes[lpc].cn_member) {
