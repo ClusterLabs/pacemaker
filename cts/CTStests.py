@@ -2954,11 +2954,17 @@ class RemoteDriver(CTSTest):
         if self.remote_use_reconnect_interval == "true":
             self.debug("Cleaning up re-check interval")
             self.rsh(self.get_othernode(node), self.templates["ClearCheckInterval"])
+
         if self.remote_rsc_added == 1:
+
+            # Remove dummy resource added for remote node tests
             self.debug("Cleaning up dummy rsc put on remote node")
-            self.rsh(node, "crm_resource -U -r %s -N %s" % (self.remote_rsc, self.remote_node))
+            self.rsh(node, "crm_resource -U -r %s" % self.remote_rsc)
             self.del_rsc(node, self.remote_rsc)
+
         if self.remote_node_added == 1:
+
+            # Remove remote node's connection resource
             self.debug("Cleaning up remote node connection resource")
             self.rsh(node, "crm_resource -U -r %s" % (self.remote_node))
             self.del_rsc(node, self.remote_node)
@@ -2971,6 +2977,14 @@ class RemoteDriver(CTSTest):
             self.failed = 1
 
         self.stop_pcmk_remote(node)
+
+        self.debug("Waiting for the cluster to recover")
+        self.CM.cluster_stable()
+
+        if self.remote_node_added == 1:
+            # Remove remote node itself
+            self.debug("Cleaning up node entry for remote node")
+            self.rsh(self.get_othernode(node), "crm_node --force --remove %s" % self.remote_node)
 
     def setup_env(self, node):
 
