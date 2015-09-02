@@ -29,6 +29,7 @@ static const char *notify_keys[] =
 {
     "CRM_notify_recipient",
     "CRM_notify_node",
+    "CRM_notify_nodeid",
     "CRM_notify_rsc",
     "CRM_notify_task",
     "CRM_notify_interval",
@@ -83,12 +84,21 @@ set_notify_key(const char *name, const char *cvalue, char *value)
     free(value);
 }
 
+static void crmd_notify_complete(svc_action_t *op) 
+{
+    if(op->rc == 0) {
+        crm_info("Notification %d (%s) complete", op->sequence, op->agent);
+    } else {
+        crm_warn("Notification %d (%s) failed: %d", op->sequence, op->agent, op->rc);
+    }
+}
 
 static void
 send_notification(const char *kind)
 {
     int lpc;
-    pid_t pid;
+    svc_action_t *notify = NULL;
+    static int operations = 0;
 
     crm_debug("Sending '%s' notification to '%s' via '%s'", kind, notify_target, notify_script);
 
@@ -96,20 +106,20 @@ send_notification(const char *kind)
     set_notify_key("CRM_notify_kind", kind, NULL);
     set_notify_key("CRM_notify_version", VERSION, NULL);
 
-    pid = fork();
-    if (pid == -1) {
-        crm_perror(LOG_ERR, "notification failed");
+    notify = services_action_create_generic(notify_script, NULL);
+
+    notify->timeout = 300;
+    notify->standard = strdup("event");
+    notify->id = strdup(notify_script);
+    notify->agent = strdup(notify_script);
+    notify->sequence = ++operations;
+
+    if(services_action_async(notify, &crmd_notify_complete) == FALSE) {
+        services_action_free(notify);
     }
 
-    if (pid == 0) {
-        /* crm_debug("notification: I am the child. Executing the nofitication program."); */
-        execl(notify_script, notify_script, NULL);
-        exit(EXIT_FAILURE);
-
-    } else {
-        for(lpc = 0; lpc < DIMOF(notify_keys); lpc++) {
-            unsetenv(notify_keys[lpc]);
-        }
+    for(lpc = 0; lpc < DIMOF(notify_keys); lpc++) {
+        unsetenv(notify_keys[lpc]);
     }
 }
 
@@ -120,6 +130,7 @@ void crmd_notify_node_event(crm_node_t *node)
     }
 
     set_notify_key("CRM_notify_node", node->uname, NULL);
+    set_notify_key("CRM_notify_nodeid", NULL, crm_itoa(node->id));
     set_notify_key("CRM_notify_desc", node->state, NULL);
 
     send_notification("node");

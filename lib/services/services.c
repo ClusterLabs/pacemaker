@@ -598,7 +598,7 @@ action_async_helper(svc_action_t * op) {
     }
 
     /* keep track of ops that are in-flight to avoid collisions in the same namespace */
-    if (res) {
+    if (op->rsc && res) {
         inflight_ops = g_list_append(inflight_ops, op);
     }
 
@@ -622,7 +622,7 @@ services_action_async(svc_action_t * op, void (*action_callback) (svc_action_t *
         g_hash_table_replace(recurring_actions, op->id, op);
     }
 
-    if (is_op_blocked(op->rsc)) {
+    if (op->rsc && is_op_blocked(op->rsc)) {
         blocked_ops = g_list_append(blocked_ops, op);
         return TRUE;
     }
