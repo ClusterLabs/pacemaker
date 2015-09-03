@@ -494,7 +494,8 @@ try_cman(int command, enum cluster_type_e stack)
 
             for (lpc = 0; lpc < node_count; lpc++) {
                 if(valid_cman_name(cman_nodes[lpc].cn_name, cman_nodes[lpc].cn_nodeid) == FALSE) {
-                    /* Do not print */
+                    /* The name was invented, but we need to print something, make it the id instead */
+                    printf("%u ", cman_nodes[lpc].cn_nodeid);
 
                 } if (command == 'l') {
                     printf("%s ", cman_nodes[lpc].cn_name);
