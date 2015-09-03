@@ -901,7 +901,6 @@ mcp_cpg_membership(cpg_handle_t handle,
 static gboolean
 mcp_quorum_callback(unsigned long long seq, gboolean quorate)
 {
-    /* Nothing to do */
     pcmk_quorate = quorate;
     return TRUE;
 }
@@ -909,8 +908,23 @@ mcp_quorum_callback(unsigned long long seq, gboolean quorate)
 static void
 mcp_quorum_destroy(gpointer user_data)
 {
+    crm_info("connection lost");
+}
+
+#if SUPPORT_CMAN
+static gboolean
+mcp_cman_dispatch(unsigned long long seq, gboolean quorate)
+{
+    pcmk_quorate = quorate;
+    return TRUE;
+}
+
+static void
+mcp_cman_destroy(gpointer user_data)
+{
     crm_info("connection closed");
 }
+#endif
 
 int
 main(int argc, char **argv)
@@ -1121,6 +1135,12 @@ main(int argc, char **argv)
             rc = -ENOTCONN;
         }
     }
+
+#if SUPPORT_CMAN
+    if (rc == pcmk_ok && is_cman_cluster()) {
+        init_cman_connection(mcp_cman_dispatch, mcp_cman_destroy);
+    }
+#endif
 
     if(rc == pcmk_ok) {
         local_name = get_local_node_name();
