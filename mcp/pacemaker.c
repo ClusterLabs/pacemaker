@@ -35,6 +35,8 @@
 
 #include <dirent.h>
 #include <ctype.h>
+
+gboolean pcmk_quorate = FALSE;
 gboolean fatal_error = FALSE;
 GMainLoop *mainloop = NULL;
 
@@ -560,6 +562,10 @@ update_process_clients(crm_client_t *client)
     crm_node_t *node = NULL;
     xmlNode *update = create_xml_node(NULL, "nodes");
 
+    if (is_corosync_cluster()) {
+        crm_xml_add_int(update, "quorate", pcmk_quorate);
+    }
+
     g_hash_table_iter_init(&iter, crm_peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
         xmlNode *xml = create_xml_node(update, "node");
@@ -896,6 +902,7 @@ static gboolean
 mcp_quorum_callback(unsigned long long seq, gboolean quorate)
 {
     /* Nothing to do */
+    pcmk_quorate = quorate;
     return TRUE;
 }
 

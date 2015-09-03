@@ -243,8 +243,16 @@ node_mcp_dispatch(const char *buffer, ssize_t length, gpointer userdata)
         xmlNode *node = NULL;
         GListPtr nodes = NULL;
         GListPtr iter = NULL;
+        const char *quorate = crm_element_value(msg, "quorate");
 
         crm_log_xml_trace(msg, "message");
+        if (command == 'q' && quorate != NULL) {
+            fprintf(stdout, "%s\n", quorate);
+            crm_exit(pcmk_ok);
+
+        } else if(command == 'q') {
+            crm_exit(1);
+        }
 
         for (node = __xml_first_child(msg); node != NULL; node = __xml_next(node)) {
             crm_node_t *peer = calloc(1, sizeof(crm_node_t));
@@ -258,7 +266,7 @@ node_mcp_dispatch(const char *buffer, ssize_t length, gpointer userdata)
         for(iter = nodes; iter; iter = iter->next) {
             crm_node_t *peer = iter->data;
             if (command == 'l') {
-                fprintf(stdout, "%u %s %s\n", peer->id, peer->uname, peer->state);
+                fprintf(stdout, "%u %s %s\n", peer->id, peer->uname, peer->state?peer->state:"");
 
             } else if (command == 'p') {
                 if(safe_str_eq(peer->state, CRM_NODE_MEMBER)) {
@@ -310,12 +318,6 @@ try_pacemaker(int command, enum cluster_type_e stack)
             fprintf(stdout, "1\n");
             crm_exit(pcmk_ok);
 
-        case 'q':
-            /* Implement one day?
-             * Wouldn't be much for pacemakerd to track it and include in the poke reply
-             */
-            return FALSE;
-
         case 'R':
             {
                 int lpc = 0;
@@ -338,6 +340,7 @@ try_pacemaker(int command, enum cluster_type_e stack)
 
         case 'i':
         case 'l':
+        case 'q':
         case 'p':
             /* Go to pacemakerd */
             {
