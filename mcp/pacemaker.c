@@ -1108,6 +1108,8 @@ main(int argc, char **argv)
     cluster.cpg.cpg_deliver_fn = mcp_cpg_deliver;
     cluster.cpg.cpg_confchg_fn = mcp_cpg_membership;
 
+    crm_set_autoreap(FALSE);
+
     if(cluster_connect_cpg(&cluster) == FALSE) {
         crm_err("Couldn't connect to Corosync's CPG service");
         rc = -ENOPROTOOPT;
