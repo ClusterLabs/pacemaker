@@ -60,6 +60,9 @@ static struct crm_option long_options[] = {
 #if SUPPORT_COROSYNC
     {"openais",    0, 0, 'A', "\tOnly try connecting to an OpenAIS-based cluster"},
 #endif
+#ifdef SUPPORT_CS_QUORUM
+    {"corosync",   0, 0, 'C', "\tOnly try connecting to an Corosync-based cluster"},
+#endif
 #ifdef SUPPORT_HEARTBEAT
     {"heartbeat",  0, 0, 'H', "Only try connecting to a Heartbeat-based cluster"},
 #endif
@@ -221,6 +224,138 @@ int tools_remove_node_cache(const char *node, const char *target)
     free_xml(cmd);
     free(name);
     return rc > 0 ? 0 : rc;
+}
+
+static gint
+compare_node_uname(gconstpointer a, gconstpointer b)
+{
+    const crm_node_t *a_node = a;
+    const crm_node_t *b_node = b;
+    return strcmp(a_node->uname?a_node->uname:"", b_node->uname?b_node->uname:"");
+}
+
+static int
+node_mcp_dispatch(const char *buffer, ssize_t length, gpointer userdata)
+{
+    xmlNode *msg = string2xml(buffer);
+
+    if (msg) {
+        xmlNode *node = NULL;
+        GListPtr nodes = NULL;
+        GListPtr iter = NULL;
+
+        crm_log_xml_trace(msg, "message");
+
+        for (node = __xml_first_child(msg); node != NULL; node = __xml_next(node)) {
+            crm_node_t *peer = calloc(1, sizeof(crm_node_t));
+
+            nodes = g_list_insert_sorted(nodes, peer, compare_node_uname);
+            peer->uname = (char*)crm_element_value_copy(node, "uname");
+            peer->state = (char*)crm_element_value_copy(node, "state");
+            crm_element_value_int(node, "id", (int*)&peer->id);
+        }
+
+        for(iter = nodes; iter; iter = iter->next) {
+            crm_node_t *peer = iter->data;
+            if (command == 'l') {
+                fprintf(stdout, "%u %s %s\n", peer->id, peer->uname, peer->state);
+
+            } else if (command == 'p') {
+                if(safe_str_eq(peer->state, CRM_NODE_MEMBER)) {
+                    fprintf(stdout, "%s ", peer->uname);
+                }
+
+            } else if (command == 'i') {
+                if(safe_str_eq(peer->state, CRM_NODE_MEMBER)) {
+                    fprintf(stdout, "%u ", peer->id);
+                }
+            }
+        }
+
+        g_list_free_full(nodes, free);
+        free_xml(msg);
+
+        if (command == 'p') {
+            fprintf(stdout, "\n");
+        }
+
+        crm_exit(pcmk_ok);
+    }
+
+    return 0;
+}
+
+static void
+node_mcp_destroy(gpointer user_data)
+{
+    crm_exit(ENOTCONN);
+}
+
+static gboolean
+try_pacemaker(int command, enum cluster_type_e stack)
+{
+    struct ipc_client_callbacks node_callbacks = {
+        .dispatch = node_mcp_dispatch,
+        .destroy = node_mcp_destroy
+    };
+
+    if (stack == pcmk_cluster_heartbeat) {
+        /* Nothing to do for them */
+        return FALSE;
+    }
+
+    switch (command) {
+        case 'e':
+            /* Age only applies to heartbeat clusters */
+            fprintf(stdout, "1\n");
+            crm_exit(pcmk_ok);
+
+        case 'q':
+            /* Implement one day?
+             * Wouldn't be much for pacemakerd to track it and include in the poke reply
+             */
+            return FALSE;
+
+        case 'R':
+            {
+                int lpc = 0;
+                const char *daemons[] = {
+                    CRM_SYSTEM_CRMD,
+                    "stonith-ng",
+                    T_ATTRD,
+                    CRM_SYSTEM_MCP,
+                };
+
+                for(lpc = 0; lpc < DIMOF(daemons); lpc++) {
+                    if (tools_remove_node_cache(target_uname, daemons[lpc])) {
+                        crm_err("Failed to connect to %s to remove node '%s'", daemons[lpc], target_uname);
+                        crm_exit(pcmk_err_generic);
+                    }
+                }
+                crm_exit(pcmk_ok);
+            }
+            break;
+
+        case 'i':
+        case 'l':
+        case 'p':
+            /* Go to pacemakerd */
+            {
+                GMainLoop *amainloop = g_main_new(FALSE);
+                mainloop_io_t *ipc =
+                    mainloop_add_ipc_client(CRM_SYSTEM_MCP, G_PRIORITY_DEFAULT, 0, NULL, &node_callbacks);
+                if (ipc != NULL) {
+                    /* Sending anything will get us a list of nodes */
+                    xmlNode *poke = create_xml_node(NULL, "poke");
+
+                    crm_ipc_send(mainloop_get_ipc_client(ipc), poke, 0, 0, NULL);
+                    free_xml(poke);
+                    g_main_run(amainloop);
+                }
+            }
+            break;
+    }
+    return FALSE;
 }
 
 #if SUPPORT_HEARTBEAT
@@ -626,66 +761,6 @@ ais_membership_dispatch(cpg_handle_t handle,
 #  include <corosync/quorum.h>
 #  include <corosync/cpg.h>
 
-static gint
-compare_node_uname(gconstpointer a, gconstpointer b)
-{
-    const crm_node_t *a_node = a;
-    const crm_node_t *b_node = b;
-    return strcmp(a_node->uname?a_node->uname:"", b_node->uname?b_node->uname:"");
-}
-
-static int
-node_mcp_dispatch(const char *buffer, ssize_t length, gpointer userdata)
-{
-    xmlNode *msg = string2xml(buffer);
-
-    if (msg) {
-        xmlNode *node = NULL;
-        GListPtr nodes = NULL;
-        GListPtr iter = NULL;
-
-        crm_log_xml_trace(msg, "message");
-
-        for (node = __xml_first_child(msg); node != NULL; node = __xml_next(node)) {
-            crm_node_t *peer = calloc(1, sizeof(crm_node_t));
-
-            nodes = g_list_insert_sorted(nodes, peer, compare_node_uname);
-            peer->uname = (char*)crm_element_value_copy(node, "uname");
-            peer->state = (char*)crm_element_value_copy(node, "state");
-            crm_element_value_int(node, "id", (int*)&peer->id);
-        }
-
-        for(iter = nodes; iter; iter = iter->next) {
-            crm_node_t *peer = iter->data;
-            if (command == 'l') {
-                fprintf(stdout, "%u %s\n", peer->id, peer->uname);
-
-            } else if (command == 'p') {
-                if(safe_str_eq(peer->state, CRM_NODE_MEMBER)) {
-                    fprintf(stdout, "%s ", peer->uname);
-                }
-            }
-        }
-
-        g_list_free_full(nodes, free);
-        free_xml(msg);
-
-        if (command == 'p') {
-            fprintf(stdout, "\n");
-        }
-
-        crm_exit(pcmk_ok);
-    }
-
-    return 0;
-}
-
-static void
-node_mcp_destroy(gpointer user_data)
-{
-    crm_exit(ENOTCONN);
-}
-
 static gboolean
 try_corosync(int command, enum cluster_type_e stack)
 {
@@ -696,36 +771,7 @@ try_corosync(int command, enum cluster_type_e stack)
     cpg_handle_t c_handle = 0;
     quorum_handle_t q_handle = 0;
 
-    mainloop_io_t *ipc = NULL;
-    GMainLoop *amainloop = NULL;
-    const char *daemons[] = {
-            CRM_SYSTEM_CRMD,
-            "stonith-ng",
-            T_ATTRD,
-            CRM_SYSTEM_MCP,
-        };
-
-    struct ipc_client_callbacks node_callbacks = {
-        .dispatch = node_mcp_dispatch,
-        .destroy = node_mcp_destroy
-    };
-
     switch (command) {
-        case 'R':
-            for(rc = 0; rc < DIMOF(daemons); rc++) {
-                if (tools_remove_node_cache(target_uname, daemons[rc])) {
-                    crm_err("Failed to connect to %s to remove node '%s'", daemons[rc], target_uname);
-                    crm_exit(pcmk_err_generic);
-                }
-            }
-            crm_exit(pcmk_ok);
-            break;
-
-        case 'e':
-            /* Age makes no sense (yet) in an AIS cluster */
-            fprintf(stdout, "1\n");
-            crm_exit(pcmk_ok);
-
         case 'q':
             /* Go direct to the Quorum API */
             rc = quorum_initialize(&q_handle, NULL, &quorum_type);
@@ -766,21 +812,8 @@ try_corosync(int command, enum cluster_type_e stack)
             cpg_finalize(c_handle);
             crm_exit(pcmk_ok);
 
-        case 'l':
-        case 'p':
-            /* Go to pacemakerd */
-            amainloop = g_main_new(FALSE);
-            ipc =
-                mainloop_add_ipc_client(CRM_SYSTEM_MCP, G_PRIORITY_DEFAULT, 0, NULL,
-                                        &node_callbacks);
-            if (ipc != NULL) {
-                /* Sending anything will get us a list of nodes */
-                xmlNode *poke = create_xml_node(NULL, "poke");
-
-                crm_ipc_send(mainloop_get_ipc_client(ipc), poke, 0, 0, NULL);
-                free_xml(poke);
-                g_main_run(amainloop);
-            }
+        default:
+            try_pacemaker(command, stack);
             break;
     }
     return FALSE;
@@ -962,6 +995,8 @@ main(int argc, char **argv)
         try_heartbeat(command, try_stack);
     }
 #endif
+
+    try_pacemaker(command, try_stack);
 
     return (1);
 }
