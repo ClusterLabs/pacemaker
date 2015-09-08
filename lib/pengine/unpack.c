@@ -276,9 +276,13 @@ destroy_digest_cache(gpointer ptr)
     op_digest_cache_t *data = ptr;
 
     free_xml(data->params_all);
+    free_xml(data->params_secure);
     free_xml(data->params_restart);
+
     free(data->digest_all_calc);
     free(data->digest_restart_calc);
+    free(data->digest_secure_calc);
+
     free(data);
 }
 
