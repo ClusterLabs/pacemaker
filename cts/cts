@@ -61,7 +61,7 @@ trace-ls, tls           list traced functions
 trace-add, tadd FUNC    add a function to the list of traced ones
 trace-rm, trm FUNC      remove a function from the list of traced ones
 trace-set, tset FUNC    set function(s) as the only to be traced
-[0-9][0-9]|(f|fedora|r|rhel).*  specify target distro
+(f|fedora|r|rhel).*     specify target distro
 init, local-init        [local] initialize CTS environment
 --wget                  [local] download up-to-date CTS helpers
 --                      delimits tests that follow
@@ -95,22 +95,13 @@ while true; do
 	--setup|setup) setup=1; shift;;
 	trace-ls|tls) cmd=$1; shift;;
 	trace-add|tadd|trace-rm|trm|trace-set|tset) cmd=$1; trace=$2; shift; shift;;
-
-	[0-9][0-9]|rhel|r*[0-9]|f*[0-9][0-9])
-	    case $1 in
-		[0-9][0-9]|f*|fedora*)
-		    target="fedora-`echo $1 | sed -e s/fedora// -e s/-// -e s/f//`"
-		    ;;
-		r|rhel)
-		    target="rhel-7"
-		    ;;
-		r*|rhel*)
-		    target="rhel-`echo $1 | sed -e s/rhel// -e s/-// -e s/r//`"
-		    ;;
-		*) target=`rpm --eval fedora-%{fedora}`;;
-	    esac
-	    shift
-	    ;;
+	f*|fedora*)
+		target="fedora-`echo $1 | sed -e s/fedora// -e s/-// -e s/f//`"
+		shift;;
+	r|rhel) target="rhel-7"; shift;;
+	r*|rhel*)
+		target="rhel-`echo $1 | sed -e s/rhel// -e s/-// -e s/r//`"
+		shift;;
 	init|local-init)
 	    local_root=
 	    case $cts_root in
