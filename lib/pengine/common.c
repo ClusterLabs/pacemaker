@@ -108,6 +108,8 @@ pe_cluster_option pe_opts[] = {
 	  "How long to wait for the STONITH action (reboot,on,off) to complete", NULL },
 	{ XML_ATTR_HAVE_WATCHDOG, NULL, "boolean", NULL, "false", &check_boolean,
 	  "Enable watchdog integration", "Set automatically by the cluster if SBD is detected.  User configured values are ignored." },
+	{ "concurrent-fencing", NULL, "boolean", NULL, "false", &check_boolean,
+	  "Allow performing fencing operations in parallel", NULL },
 	{ "startup-fencing", "startup_fencing", "boolean", NULL, "true", &check_boolean,
 	  "STONITH unseen nodes", "Advanced Use Only!  Not using the default is very unsafe!" },
 

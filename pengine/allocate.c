@@ -1393,6 +1393,7 @@ stage6(pe_working_set_t * data_set)
     action_t *done = get_pseudo_op(STONITH_DONE, data_set);
     gboolean need_stonith = TRUE;
     GListPtr gIter = data_set->nodes;
+    GListPtr stonith_ops = NULL;
 
     crm_trace("Processing fencing and shutdown cases");
 
@@ -1421,11 +1422,15 @@ stage6(pe_working_set_t * data_set)
                 dc_down = stonith_op;
                 dc_fence = stonith_op;
 
-            } else {
+            } else if (is_set(data_set->flags, pe_flag_concurrent_fencing) == FALSE) {
                 if (last_stonith) {
                     order_actions(last_stonith, stonith_op, pe_order_optional);
                 }
                 last_stonith = stonith_op;
+
+            } else {
+                order_actions(stonith_op, done, pe_order_implies_then);
+                stonith_ops = g_list_append(stonith_ops, stonith_op);
             }
 
         } else if (node->details->online && node->details->shutdown &&
@@ -1490,8 +1495,21 @@ stage6(pe_working_set_t * data_set)
             order_actions(node_stop, dc_down, pe_order_optional);
         }
 
-        if (last_stonith && dc_down != last_stonith) {
-            order_actions(last_stonith, dc_down, pe_order_optional);
+        if (last_stonith) {
+            if (dc_down != last_stonith) {
+                order_actions(last_stonith, dc_down, pe_order_optional);
+            }
+
+        } else {
+            GListPtr gIter2 = NULL;
+
+            for (gIter2 = stonith_ops; gIter2 != NULL; gIter2 = gIter2->next) {
+                action_t *stonith_op = (action_t *) gIter2->data;
+
+                if (dc_down != stonith_op) {
+                    order_actions(stonith_op, dc_down, pe_order_optional);
+                }
+            }
         }
     }
 
@@ -1504,6 +1522,8 @@ stage6(pe_working_set_t * data_set)
     }
 
     order_actions(done, all_stopped, pe_order_implies_then);
+
+    g_list_free(stonith_ops);
     return TRUE;
 }
 
