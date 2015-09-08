@@ -795,8 +795,8 @@ crm_update_peer_expected(const char *source, crm_node_t * node, const char *expe
  *       called within a cache iteration if reaping is possible,
  *       otherwise reaping could invalidate the iterator.
  */
-crm_node_t *
-crm_update_peer_state(const char *source, crm_node_t * node, const char *state, int membership)
+static crm_node_t *
+crm_update_peer_state_iter(const char *source, crm_node_t * node, const char *state, int membership, GHashTableIter *iter)
 {
     gboolean is_member;
 
@@ -822,18 +822,30 @@ crm_update_peer_state(const char *source, crm_node_t * node, const char *state, 
         free(last);
 
         if (!is_member && crm_autoreap) {
-            if (status_type == crm_status_rstate) {
+            if(iter) {
+                crm_notice("Purged 1 peer with id=%u and/or uname=%s from the membership cache", node->id, node->uname);
+                g_hash_table_iter_remove(iter);
+
+            } else if (status_type == crm_status_rstate) {
                 crm_remote_peer_cache_remove(node->uname);
+
             } else {
                 reap_crm_member(node->id, node->uname);
             }
             node = NULL;
         }
+
     } else {
         crm_trace("%s: Node %s[%u] - state is unchanged (%s)", source, node->uname, node->id,
                   state);
     }
     return node;
+}
+
+crm_node_t *
+crm_update_peer_state(const char *source, crm_node_t * node, const char *state, int membership)
+{
+    return crm_update_peer_state_iter(source, node, state, membership, NULL);
 }
 
 /*!
@@ -853,26 +865,13 @@ crm_reap_unseen_nodes(uint64_t membership)
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *)&node)) {
         if (node->last_seen != membership) {
             if (node->state) {
-                /* crm_update_peer_state() cannot be called here, because that
-                 * might modify the peer cache, invalidating our iterator
+                /*
+                 * Calling crm_update_peer_state_iter() allows us to
+                 * remove the node from crm_peer_cache without
+                 * invalidating our iterator
                  */
-                if (safe_str_eq(node->state, CRM_NODE_LOST)) {
-                    crm_trace("Node %s[%u] - state is unchanged (%s)",
-                              node->uname, node->id, CRM_NODE_LOST);
-                } else {
-                    char *last = node->state;
+                crm_update_peer_state_iter(__FUNCTION__, node, CRM_NODE_LOST, membership, &iter);
 
-                    node->state = strdup(CRM_NODE_LOST);
-                    crm_notice("Node %s[%u] - state is now %s (was %s)",
-                               node->uname, node->id, CRM_NODE_LOST, last);
-                    if (crm_status_callback) {
-                        crm_status_callback(crm_status_nstate, node, last);
-                    }
-                    if (crm_autoreap) {
-                        g_hash_table_iter_remove(&iter);
-                    }
-                    free(last);
-                }
             } else {
                 crm_info("State of node %s[%u] is still unknown",
                          node->uname, node->id);
