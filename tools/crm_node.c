@@ -607,9 +607,7 @@ try_cman(int command, enum cluster_type_e stack)
 
     switch (command) {
         case 'R':
-            if (tools_remove_node_cache(target_uname, CRM_SYSTEM_CRMD)) {
-                crm_err("Failed to connect to "CRM_SYSTEM_CRMD" to remove node '%s'", target_uname);
-            }
+            try_pacemaker(command, stack);
             break;
 
         case 'e':
