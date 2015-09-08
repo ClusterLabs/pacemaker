@@ -34,8 +34,43 @@ patterns="-e CTS:"
 #TEMP=`getopt -o t:ac:sSvpe:lwf:d  --long run,clean -n 'cts' -- "$@"`
 #eval set -- "$TEMP"
 
+helpmsg=$(cat <<EOF
+Usage: %s [options] {[{init|local-init|setup} [TARGET]] | [OTHER-CMDS]}
+
+[--]help, -h            show help screen and exit
+-x                      turn on debugging
+-a                      show relevant screen sessions and exit
+-c,-g CLUSTER_NAME      set the cluster name
+-S                      show summary from the last CTS run
+-s                      show summary for the current log (see -l)
+-v                      increase verbosity
+-p                      (currently unused)
+-e PATTERN              grep pattern to apply when 'summary' or 'watch' requested
+-l                      print the filename of the log that would be operated on
+-w                      continous (filtered) monitoring of the log file
+-f,-sf FILE             show summary for the provided log
+-t TEST, [0-9]*         add a test to the working set
+[--]build               [???] request building Pacemaker
+[--]kill                request termination of cluster software
+[--]run                 request CTS run (passing remaining arguments through)
+[--]boot, start         request CTS run (with --boot option)
+[--]clean               request cleaning up after CTS run
+[--]install, --inst     request installing packages to get ready to run CTS
+[--]setup               request initialization to get ready to run CTS
+trace-ls, tls           list traced functions
+trace-add, tadd FUNC    add a function to the list of traced ones
+trace-rm, trm FUNC      remove a function from the list of traced ones
+trace-set, tset FUNC    set function(s) as the only to be traced
+[0-9][0-9]|(f|fedora|r|rhel).*  specify target distro
+init, local-init        [local] initialize CTS environment
+--wget                  [local] download up-to-date CTS helpers
+--                      delimits tests that follow
+EOF
+)
+
 while true; do
     case $1 in
+	-h|--help|help) printf "${helpmsg}\n" "$0"; exit;;
 	-x) set -x; shift;;
 	-a)
 	screen -ls | grep cts
