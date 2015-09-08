@@ -1095,6 +1095,42 @@ free_topology_entry(gpointer data)
     free(tp);
 }
 
+/*
+ * \internal
+ * \brief Check whether a string contains an attribute name/value separator
+ *
+ * A topology target may be specified either as a node name regular expression
+ * or as a node attribute name/value pair. Name/value pairs may be specified
+ * as either "name=value" or "name:value". If the given string contains an '='
+ * or a single ':', this function will return a pointer to it.
+ *
+ * \param[in] nvpair  String to check
+ *
+ * \return Pointer to separator if present, NULL otherwise
+ */
+static char *
+find_nvpair_separator(const char *nvpair)
+{
+    char *sep;
+
+    /* If we find an equals sign, return pointer to it */
+    sep = strchr(nvpair, '=');
+    if (sep != NULL) {
+        return sep;
+    }
+
+    /* If we find a colon, make sure there is only one (to distinguish
+     * nvpairs from IPv6 addresses), and return pointer to it if so.
+     */
+    sep = strchr(nvpair, ':');
+    if ((sep != NULL) && (strchr(sep, ':') == NULL)) {
+        return sep;
+    }
+
+    /* We didn't find a separator */
+    return NULL;
+}
+
 /*!
  * \internal
  * \brief Register a STONITH level for a target
@@ -1114,48 +1150,67 @@ stonith_level_register(xmlNode * msg, char **desc)
 {
     int id = 0;
     xmlNode *child = NULL;
-
     xmlNode *level = get_xpath_object("//" F_STONITH_LEVEL, msg, LOG_ERR);
-    const char *target = crm_element_value(level, F_STONITH_TARGET);
-    stonith_topology_t *tp = g_hash_table_lookup(topology, target);
+    char *target, *sep;
+    stonith_topology_t *tp;
 
-    CRM_LOG_ASSERT(target != NULL);
-
+    /* Parse target and level index from XML, and use to return a description */
+    target = crm_element_value_copy(level, F_STONITH_TARGET);
     crm_element_value_int(level, XML_ATTR_ID, &id);
     if (desc) {
         *desc = crm_strdup_printf("%s[%d]", target, id);
     }
-    if (id <= 0 || id >= ST_LEVEL_MAX) {
-        return -EINVAL;
+
+    /* Sanity-check arguments */
+    if ((target == NULL) || (id <= 0) || (id >= ST_LEVEL_MAX)) {
+        goto invalid_argument;
     }
 
-    /* Target-by-node-attribute requires the CIB, so disallow if standalone */
-    if (stand_alone && target && strchr(target, '=')) {
-        return -EINVAL;
+    /* Check whether level is targeting by node attribute */
+    sep = find_nvpair_separator(target);
+    if (sep != NULL) {
+        /* Target-by-attribute requires the CIB, so disallow if standalone */
+        if (stand_alone) {
+            goto invalid_argument;
+        }
+
+        /* Target-by-attribute can be specified using '=' or ':' as separator,
+         * but always use '=' internally to recognize it as the same target
+         */
+        *sep = '=';
     }
 
+    /* Find or create topology table entry */
+    tp = g_hash_table_lookup(topology, target);
     if (tp == NULL) {
         tp = calloc(1, sizeof(stonith_topology_t));
-        tp->target = strdup(target);
+        tp->target = target;
         g_hash_table_replace(topology, tp->target, tp);
         crm_trace("Added %s to the topology (%d active entries)",
                   target, g_hash_table_size(topology));
+    } else {
+        free(target);
     }
 
     if (tp->levels[id] != NULL) {
-        crm_info("Adding to the existing %s[%d] topology entry", target, id);
+        crm_info("Adding to the existing %s[%d] topology entry",
+                 tp->target, id);
     }
 
     for (child = __xml_first_child(level); child != NULL; child = __xml_next(child)) {
         const char *device = ID(child);
 
-        crm_trace("Adding device '%s' for %s[%d]", device, target, id);
+        crm_trace("Adding device '%s' for %s[%d]", device, tp->target, id);
         tp->levels[id] = g_list_append(tp->levels[id], strdup(device));
     }
 
     crm_info("Target %s has %d active fencing levels",
-             target, count_active_levels(tp));
+             tp->target, count_active_levels(tp));
     return pcmk_ok;
+
+invalid_argument:
+    free(target);
+    return -EINVAL;
 }
 
 int
@@ -1163,26 +1218,36 @@ stonith_level_remove(xmlNode * msg, char **desc)
 {
     int id = 0;
     xmlNode *level = get_xpath_object("//" F_STONITH_LEVEL, msg, LOG_ERR);
-    const char *target = crm_element_value(level, F_STONITH_TARGET);
-    stonith_topology_t *tp = g_hash_table_lookup(topology, target);
+    char *target, *sep;
+    stonith_topology_t *tp;
 
-    CRM_LOG_ASSERT(target != NULL);
-
+    /* Parse target and level index from XML, and use to return a description */
+    target = crm_element_value_copy(level, F_STONITH_TARGET);
+    crm_element_value_int(level, XML_ATTR_ID, &id);
     if (desc) {
         *desc = crm_strdup_printf("%s[%d]", target, id);
     }
-    crm_element_value_int(level, XML_ATTR_ID, &id);
 
-    if (tp == NULL) {
-        crm_info("Topology for %s not found (%d active entries)",
-                 target, g_hash_table_size(topology));
-        return pcmk_ok;
-
-    } else if (id < 0 || id >= ST_LEVEL_MAX) {
+    /* Sanity-check arguments; unlike registering, id==0 here means all */
+    if ((target == NULL) || (id < 0) || (id >= ST_LEVEL_MAX)) {
+        free(target);
         return -EINVAL;
     }
 
-    if (id == 0 && g_hash_table_remove(topology, target)) {
+    /* Target-by-attribute can be specified using '=' or ':' as separator,
+     * but always use '=' internally to recognize it as the same target
+     */
+    sep = find_nvpair_separator(target);
+    if (sep != NULL) {
+        *sep = '=';
+    }
+
+    tp = g_hash_table_lookup(topology, target);
+    if (tp == NULL) {
+        crm_info("Topology for %s not found (%d active entries)",
+                 target, g_hash_table_size(topology));
+
+    } else if (id == 0 && g_hash_table_remove(topology, target)) {
         crm_info("Removed all %s related entries from the topology (%d active entries)",
                  target, g_hash_table_size(topology));
 
@@ -1193,6 +1258,7 @@ stonith_level_remove(xmlNode * msg, char **desc)
         crm_info("Removed level '%d' from topology for %s (%d active levels remaining)",
                  id, target, count_active_levels(tp));
     }
+    free(target);
     return pcmk_ok;
 }
 

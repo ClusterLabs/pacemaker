@@ -1,71 +1,93 @@
 = Configuration Explained =
 
-The walk-through examples use some of these options, but don't explain exactly what they mean or do.  This section is meant to be the go-to resource for all the options available for configuring remote-nodes.
+The walk-through examples use some of these options, but don't explain exactly
+what they mean or do.  This section is meant to be the go-to resource for all
+the options available for configuring pacemaker_remote-based nodes.
+(((configuration)))
 
-== Container remote-node Resource Options ==
+== Resource Meta-Attributes for Guest Nodes ==
 
-When configuring a virtual machine or lxc resource to act as a remote-node, these are the metadata options available to both enable the resource as a remote-node and define the connection parameters.
+When configuring a virtual machine to use as a guest node, these are the
+metadata options available to enable the resource as a guest node and
+define its connection parameters.
 
-.Metadata Options for configuring KVM/LXC resources as remote-nodes
-[width="95%",cols="1m,1,4<",options="header",align="center"]
+.Meta-attributes for configuring VM resources as guest nodes
+[width="95%",cols="2m,1,4<",options="header",align="center"]
 |=========================================================
 
 |Option
 |Default
 |Description
 
-|+remote-node+
-|<none>
-|The name of the remote-node this resource defines.  This both enables the resource as a remote-node and defines the unique name used to identify the remote-node. If no other parameters are set, this value will also be assumed as the hostname to connect to at port 3121. +WARNING+ This value cannot overlap with any resource or node IDs.
+|remote-node
+|'none'
+|The node name of the guest node this resource defines. This both enables the
+resource as a guest node and defines the unique name used to identify the
+guest node. If no other parameters are set, this value will also be assumed as
+the hostname to use when connecting to pacemaker_remote on the VM. This value
+*must not* overlap with any resource or node IDs.
 
-|+remote-port+
+|remote-port
 |3121
-|Configure a custom port to use for the guest connection to pacemaker_remote.
+|The port on the virtual machine that the cluster will use to connect to
+pacemaker_remote.
 
-|+remote-addr+
-|+remote-node+ value used as hostname
-|The ip address or hostname to connect to if remote-node's name is not the hostname of the guest.
+|remote-addr
+|'value of' +remote-node+
+|The IP address or hostname to use when connecting to pacemaker_remote on the VM.
 
-|+remote-connect-timeout+
+|remote-connect-timeout
 |60s
 |How long before a pending guest connection will time out.
 
 |=========================================================
 
-== Baremetal remote-node Options ==
+== Connection Resources for Remote Nodes ==
 
-Baremetal remote-nodes are defined by a connection resource. That connection resource has the following instance attributes that define where the baremetal remote-node is located on the network and how to communicate with that remote-node.  Descriptions of these options can be retrieved using the following pcs command.
+A remote node is defined by a connection resource. That connection resource
+has instance attributes that define where the remote node is located on the
+network and how to communicate with it.
 
-[source,C]
+Descriptions of these instance attributes can be retrieved using the following
+`pcs` command:
 ----
 # pcs resource describe remote
-  Resource options for: ocf:pacemaker:remote
-    server: Server location to connect to. This can be an ip address or hostname.
-   port: tcp port to connect to.
+ocf:pacemaker:remote - 
+
+ 
+
+Resource options:
+  server: Server location to connect to. This can be an ip address or hostname.
+  port: tcp port to connect to.
 ----
 
-When defining a baremetal remote-node's connection resource, it is common and recommended to name the connection resource the same name as the baremeatal remote-node's hostname.  By default, if no "server" option is provided, the cluster will attempt to contact the remote-node using the resource name as the hostname.
+When defining a remote node's connection resource, it is common and recommended
+to name the connection resource the same as the remote node's hostname. By
+default, if no *server* option is provided, the cluster will attempt to contact
+the remote node using the resource name as the hostname.
 
-Example, defining a baremetal remote-node with the hostname "remote1"
-[source,C]
+Example defining a remote node with the hostname *remote1*:
 ----
 # pcs resource create remote1 remote
 ----
 
-Example, defining a baremetal remote-node to connect to a specific ip and port.
-[source,C]
+Example defining a remote node to connect to a specific IP address and port:
 ----
 # pcs resource create remote1 remote server=192.168.122.200 port=8938
 ----
 
-== Host and Guest Authentication ==
+== Environment Variables for Daemon Start-up ==
 
-Authentication and encryption of the connection between cluster-nodes (pacemaker) to remote-nodes (pacemaker_remote) is achieved using TLS with PSK encryption/authentication on +tcp port 3121+.  This means both the cluster-node and remote-node must share the same private key.   By default this +key must be placed at "/etc/pacemaker/authkey" on both cluster-nodes and remote-nodes+.
+Authentication and encryption of the connection between cluster nodes
+and nodes running pacemaker_remote is achieved using
+with https://en.wikipedia.org/wiki/TLS-PSK[TLS-PSK] encryption/authentication
+over TCP (port 3121 by default). This means that both the cluster node and
+remote node must share the same private key. By default, this
+key is placed at +/etc/pacemaker/authkey+ on each node.
 
-== Pacemaker and pacemaker_remote Options ==
-
-If you need to change the default port or authkey location for either pacemaker or pacemaker_remote, there are environment variables you can set that affect both of those daemons. These environment variables can be enabled by placing them in the /etc/sysconfig/pacemaker file.
-[source,C]
+You can change the default port and/or key location for Pacemaker and
+pacemaker_remote via environment variables. These environment variables can be
+enabled by placing them in the +/etc/sysconfig/pacemaker+ file.
 ----
 #==#==# Pacemaker Remote
 # Use a custom directory for finding the authkey.
@@ -75,3 +97,19 @@ PCMK_authkey_location=/etc/pacemaker/authkey
 PCMK_remote_port=3121
 ----
 
+== Removing Remote Nodes and Guest Nodes ==
+
+If the resource creating a guest node, or the *ocf:pacemaker:remote* resource
+creating a connection to a remote node, is removed from the configuration, the
+affected node will continue to show up in output as an offline node.
+
+If you want to get rid of that output, run (replacing $NODE_NAME appropriately):
+----
+# crm_node --force --remove $NODE_NAME
+----
+
+[WARNING]
+=========
+Be absolutely sure that the node's resource has been deleted from the
+configuration first.
+=========
