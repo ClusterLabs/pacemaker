@@ -127,9 +127,10 @@ class CIB11(ConfigBase):
         # then print the substring of that record after "nodeid:"
         (rc, output) = self.Factory.rsh(self.Factory.target,
             r"""awk -v RS="}" """
-            r"""'/^(\s*nodelist\s*{)?\s*node\s*{.*ring0_addr:\s*%s(\s+|$)/"""
+            r"""'/^(\s*nodelist\s*{)?\s*node\s*{.*(ring0_addr|name):\s*%s(\s+|$)/"""
             r"""{gsub(/.*nodeid:\s*/,"");gsub(/\s+.*$/,"");print}'"""
             r""" /etc/corosync/corosync.conf""" % node_name, None)
+
         if rc == 0 and len(output) == 1:
             try:
                 node_id = int(output[0])
@@ -146,6 +147,7 @@ class CIB11(ConfigBase):
                 r"""'/^clusternode\s+.*name="%s".*/"""
                 r"""{gsub(/.*nodeid="/,"");gsub(/".*/,"");print}'"""
                 r""" /etc/cluster/cluster.conf""" % node_name, None)
+
             if rc == 0 and len(output) == 1:
                 try:
                     node_id = int(output[0])
@@ -275,7 +277,7 @@ class CIB11(ConfigBase):
                     stn = Nodes(self.Factory)
                     for (node_name, node_id) in attr_nodes.items():
                         stn.add_node(node_name, node_id, { "cts-fencing" : "levels-and" })
-                    stl.level(1, "cts-fencing=levels-and", "FencingPass,Fencing")
+                    stl.level(1, None, "FencingPass,Fencing", "cts-fencing", "levels-and")
 
                 # Create a Dummy agent that always passes for levels-and
                 if len(stt_nodes):
@@ -447,7 +449,7 @@ class CIB12(CIB11):
 
 class CIB20(CIB11):
     feature_set = "3.0"
-    version = "pacemaker-2.0"
+    version = "pacemaker-2.4"
 
 #class HASI(CIB10):
 #    def add_resources(self):

@@ -699,35 +699,41 @@ set_op_device_list(remote_fencing_op_t * op, GListPtr devices)
 static gboolean
 topology_matches(const stonith_topology_t *tp, const char *node)
 {
+    regex_t r_patt;
+
     CRM_CHECK(node && tp && tp->target, return FALSE);
-    if (strchr(tp->target, '=')) {
-        /* This level targets by attribute, so tp->target is a NAME=VALUE pair
-         * of a permanent attribute applied to targeted nodes. The test below
-         * relies on the locally cached copy of the CIB, so if fencing needs to
-         * be done before the initial CIB is received or after a malformed CIB
-         * is received, then the topology will be unable to be used.
-         */
-        if (node_has_attr(node, tp->target)) {
-            crm_notice("Matched %s with %s by attribute", node, tp->target);
-            return TRUE;
-        }
-    } else {
-        /* This level targets by name, so tp->target is a regular expression
-         * matching names of nodes to be targeted.
-         */
-        regex_t r_patt;
-
-        if (regcomp(&r_patt, tp->target, REG_EXTENDED)) {
-            crm_info("Bad regex '%s' for fencing level", tp->target);
-        } else {
-            int status = regexec(&r_patt, node, 0, NULL, 0);
-
-            regfree(&r_patt);
-            if (status == 0) {
-                crm_notice("Matched %s with %s by name", node, tp->target);
+    switch(tp->kind) {
+        case 2:
+            /* This level targets by attribute, so tp->target is a NAME=VALUE pair
+             * of a permanent attribute applied to targeted nodes. The test below
+             * relies on the locally cached copy of the CIB, so if fencing needs to
+             * be done before the initial CIB is received or after a malformed CIB
+             * is received, then the topology will be unable to be used.
+             */
+            if (node_has_attr(node, tp->target_attribute, tp->target_value)) {
+                crm_notice("Matched %s with %s by attribute", node, tp->target);
                 return TRUE;
             }
-        }
+            break;
+        case 1:
+            /* This level targets by name, so tp->target is a regular expression
+             * matching names of nodes to be targeted.
+             */
+
+            if (regcomp(&r_patt, tp->target_pattern, REG_EXTENDED)) {
+                crm_info("Bad regex '%s' for fencing level", tp->target);
+            } else {
+                int status = regexec(&r_patt, node, 0, NULL, 0);
+
+                regfree(&r_patt);
+                if (status == 0) {
+                    crm_notice("Matched %s with %s by name", node, tp->target);
+                    return TRUE;
+                }
+            }
+            break;
+        case 0:
+            return safe_str_eq(tp->target, node);
     }
     crm_trace("No match for %s with %s", node, tp->target);
     return FALSE;

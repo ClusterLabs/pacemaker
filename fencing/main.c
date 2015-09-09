@@ -916,25 +916,19 @@ update_cib_stonith_devices(const char *event, xmlNode * msg)
  * \brief Check whether a node has a specific attribute name/value
  *
  * \param[in] node    Name of node to check
- * \param[in] nvpair  String of the form "name=value" specifying attribute
+ * \param[in] name    Name of an attribute to look for
+ * \param[in] value   The value the named attribute needs to be set to in order to be considered a match
  *
  * \return TRUE if the locally cached CIB has the specified node attribute
  */
 gboolean
-node_has_attr(const char *node, char *nvpair)
+node_has_attr(const char *node, const char *name, const char *value)
 {
-    const char *name, *value;
-    char *split = strchr(nvpair, '=');
     char xpath[XPATH_MAX];
     xmlNode *match;
     int n;
 
-    CRM_CHECK((split != NULL) && (local_cib != NULL), return FALSE);
-
-    /* Split the nvpair into name and value */
-    name = nvpair;
-    *split = '\0';
-    value = split + 1;
+    CRM_CHECK(local_cib != NULL, return FALSE);
 
     /* Search for the node's attributes in the CIB. While the schema allows
      * multiple sets of instance attributes, and allows instance attributes to
@@ -946,9 +940,6 @@ node_has_attr(const char *node, char *nvpair)
                  "/" XML_CIB_TAG_NVPAIR "[@name='%s' and @value='%s']",
                  node, name, value);
     match = get_xpath_object(xpath, local_cib, LOG_TRACE);
-
-    /* Undo split */
-    *split = '=';
 
     CRM_CHECK(n < XPATH_MAX, return FALSE);
     return (match != NULL);

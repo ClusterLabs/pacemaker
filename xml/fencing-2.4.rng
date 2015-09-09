@@ -21,6 +21,10 @@
       <choice>
 	<attribute name="target"><text/></attribute>
 	<attribute name="target-pattern"><text/></attribute>
+	<group>
+	  <attribute name="target-attribute"><text/></attribute>
+	  <attribute name="target-value"><text/></attribute>
+	</group>
       </choice>
       <attribute name="index"><data type="positiveInteger"/></attribute>
       <attribute name="devices">

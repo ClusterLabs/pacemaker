@@ -86,11 +86,19 @@ class FencingTopology(XmlBase):
     def __init__(self, Factory):
         XmlBase.__init__(self, Factory, "fencing-topology", None)
 
-    def level(self, index, target, devices):
+    def level(self, index, target, devices, target_attr=None, target_value=None):
         # Generate XML ID (sanitizing target-by-attribute levels)
-        xml_id = "cts-%s.%d" % (string.replace(target, "=", "-"), index)
 
-        self.add_child(XmlBase(self.Factory, "fencing-level", xml_id, target=target, index=index, devices=devices))
+        if target:
+            xml_id = "cts-%s.%d" % (target, index)
+            self.add_child(XmlBase(self.Factory, "fencing-level", xml_id, target=target, index=index, devices=devices))
+
+        else:
+            xml_id = "%s-%s.%d" % (target_attr, target_value, index)
+            child = XmlBase(self.Factory, "fencing-level", xml_id, index=index, devices=devices)
+            child["target-attribute"]=target_attr
+            child["target-value"]=target_value
+            self.add_child(child)
 
     def commit(self):
         self._run("create", self.show(), "configuration", "--allow-create")
