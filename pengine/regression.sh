@@ -537,6 +537,8 @@ do_test honor_stonith_rsc_order3 "cl#5056- Honor order constraint, stonith clone
 do_test honor_stonith_rsc_order4 "cl#5056- Honor order constraint, between two native stonith rscs."
 do_test probe-timeout "cl#5099 - Default probe timeout"
 
+do_test concurrent-fencing "Allow performing fencing operations in parallel"
+
 echo ""
 do_test systemhealth1  "System Health ()               #1"
 do_test systemhealth2  "System Health ()               #2"
