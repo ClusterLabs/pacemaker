@@ -94,4 +94,11 @@ pacemakerNotificationTargetReturnCode OBJECT-TYPE
         "The expected return code of the operation."
 ::= { pacemakerNotification 7 }
 
+pacemakerNotificationTrap NOTIFICATION-TYPE
+    OBJECTS     { pacemakerNotificationNode, pacemakerNotificationResource, pacemakerNotificationOperation, pacemakerNotificationDescription, pacemakerNotificationStatus, pacemakerNotificationReturnCode, pacemakerNotificationTargetReturnCode }
+    STATUS      current
+    DESCRIPTION
+        "Pacemaker notification trap"
+::= { pacemakerNotification 1 }
+
 END
