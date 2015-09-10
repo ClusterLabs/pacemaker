@@ -316,7 +316,7 @@ indexterm:[Resource,Option,priority]
 
 * +stopped:+ Force the resource to be stopped
 * +started:+ Allow the resource to be started (In the case of
-  <<s-resource-multistate,multi-state>> resources, they will not promoted to
+  <<s-resource-multistate,multi-state>> resources, they will not be promoted to
   master)
 * +master:+ Allow the resource to be started and, if appropriate, promoted
 indexterm:[target-role,Resource Option]
@@ -646,7 +646,7 @@ indexterm:[Action,Property,on-fail]
 |role
 |
 |This option only makes sense for recurring operations.  It restricts
- the operation to a specific role.  The truely paranoid can even
+ the operation to a specific role.  The truly paranoid can even
  specify +role=Stopped+ which allows the cluster to detect an admin
  that manually started cluster services.
  Allowed values: +Stopped+, +Started+, +Slave+, +Master+.
