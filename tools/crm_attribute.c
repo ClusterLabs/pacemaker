@@ -72,9 +72,9 @@ static struct crm_option long_options[] = {
 
     {"-spacer-",    0, 0, '-', "\nAdditional Options:"},
     {"node",        1, 0, 'N', "Set an attribute for the named node (instead of a cluster option).  See also: -l"},
-    {"type",        1, 0, 't', "Which part of the configuration to update/delete/query the option in."},
+    {"type",        1, 0, 't', "Which part of the configuration to update/delete/query the option in"},
     {"-spacer-",    0, 0, '-', "\t\t\tValid values: crm_config, rsc_defaults, op_defaults, tickets"},
-    {"lifetime",    1, 0, 'l', "Lifetime of the node attribute."},
+    {"lifetime",    1, 0, 'l', "Lifetime of the node attribute"},
     {"-spacer-",    0, 0, '-', "\t\t\tValid values: reboot, forever"},
     {"utilization", 0, 0, 'z', "Set an utilization attribute for the node."},
     {"set-name",    1, 0, 's', "(Advanced) The attribute set in which to place the value"},
@@ -94,13 +94,13 @@ static struct crm_option long_options[] = {
     {"attr-id",     1, 0, 'i', NULL, 1},
 
     {"-spacer-",	1, 0, '-', "\nExamples:", pcmk_option_paragraph},
-    {"-spacer-",	1, 0, '-', "Add a new attribute called 'location' with the value of 'office' for host 'myhost':", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', "Add a new node attribute called 'location' with the value of 'office' for host 'myhost':", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', " crm_attribute --node myhost --name location --update office", pcmk_option_example},
-    {"-spacer-",	1, 0, '-', "Query the value of the 'location' node attribute for host myhost:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', "Query the value of the 'location' node attribute for host 'myhost':", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', " crm_attribute --node myhost --name location --query", pcmk_option_example},
-    {"-spacer-",	1, 0, '-', "Change the value of the 'location' node attribute for host myhost:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', "Change the value of the 'location' node attribute for host 'myhost':", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', " crm_attribute --node myhost --name location --update backoffice", pcmk_option_example},
-    {"-spacer-",	1, 0, '-', "Delete the 'location' node attribute for the host myhost:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', "Delete the 'location' node attribute for host 'myhost':", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', " crm_attribute --node myhost --name location --delete", pcmk_option_example},
     {"-spacer-",	1, 0, '-', "Query the value of the cluster-delay cluster option:", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', " crm_attribute --type crm_config --name cluster-delay --query", pcmk_option_example},
@@ -125,7 +125,7 @@ main(int argc, char **argv)
     int is_remote_node = 0;
 
     crm_log_cli_init("crm_attribute");
-    crm_set_options(NULL, "command -n attribute [options]", long_options,
+    crm_set_options(NULL, "<command> -n <attribute> [options]", long_options,
                     "Manage node's attributes and cluster options."
                     "\n\nAllows node attributes and cluster options to be queried, modified and deleted.\n");
 
