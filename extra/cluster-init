@@ -94,8 +94,6 @@ host_input=""
 while true; do
     case "$1" in
 	-g) cluster=$2;
-	    dsh_group=`echo $cluster | sed s/[a-zA-Z]*//`
-	    host_input="-g $cluster"
 	    shift; shift;;
 	-w|--host)
 	    for h in $2; do
@@ -150,6 +148,16 @@ while true; do
     esac
 done
 
+if [ ! -z $cluster ]; then
+    host_input="-g $cluster"
+    # use the last digit present in the variable (if any)
+    dsh_group=`echo $cluster | sed 's/[^0-9]\+//g;s/.*\([0-9]\)$/\1/'`
+fi
+
+if [ -z $dsh_group ]; then
+    dsh_group=1
+fi
+
 if [ x = "x$host_input" -a x = "x$cluster" ]; then
     if [ -d $HOME/.dsh/group ]; then
         read -p "Please specify a dsh group you'd like to configure as a cluster? [] " -t 60 cluster
@@ -160,11 +168,6 @@ if [ x = "x$host_input" -a x = "x$cluster" ]; then
 	    host_input="$host_input -w $h";
 	done
     fi
-fi
-
-if [ ! -z $cluster ]; then
-    host_input="-g $cluster"
-    dsh_group=`echo $cluster | sed s/[a-zA-Z]*//`
 fi
 
 if [ -z "$host_input" ]; then
@@ -179,10 +182,6 @@ else
     host_list=`cluster-helper --list short $host_input`
 fi
 num_hosts=`echo $host_list | wc -w`
-
-if [ -z $dsh_group ]; then
-    dsh_group=1
-fi
 
 if [ $num_hosts -gt 9 ]; then
     cs_port=66

@@ -30,12 +30,44 @@ trace=""
 custom_log=""
 patterns="-e CTS:"
 
-# Note the quotes around `$TEMP': they are essential!
-#TEMP=`getopt -o t:ac:sSvpe:lwf:d  --long run,clean -n 'cts' -- "$@"`
-#eval set -- "$TEMP"
+
+helpmsg=$(cat <<EOF
+Usage: %s [options] {[{init|local-init|setup} [TARGET]] | [OTHER-CMDS]}
+
+[--]help, -h            show help screen and exit
+-x                      turn on debugging
+-a                      show relevant screen sessions and exit
+-c,-g CLUSTER_NAME      set the cluster name
+-S                      show summary from the last CTS run
+-s                      show summary for the current log (see -l)
+-v                      increase verbosity
+-p                      (currently unused)
+-e PATTERN              grep pattern to apply when 'summary' or 'watch' requested
+-l                      print the filename of the log that would be operated on
+-w                      continous (filtered) monitoring of the log file
+-f,-sf FILE             show summary for the provided log
+-t TEST, [0-9]*         add a test to the working set
+[--]build               [???] request building Pacemaker
+[--]kill                request termination of cluster software
+[--]run                 request CTS run (passing remaining arguments through)
+[--]boot, start         request CTS run (with --boot option)
+[--]clean               request cleaning up after CTS run
+[--]install, --inst     request installing packages to get ready to run CTS
+[--]setup               request initialization to get ready to run CTS
+trace-ls, tls           list traced functions
+trace-add, tadd FUNC    add a function to the list of traced ones
+trace-rm, trm FUNC      remove a function from the list of traced ones
+trace-set, tset FUNC    set function(s) as the only to be traced
+(f|fedora|r|rhel).*     specify target distro
+init, local-init        [local] initialize CTS environment
+--wget                  [local] download up-to-date CTS helpers
+--                      delimits tests that follow
+EOF
+)
 
 while true; do
     case $1 in
+	-h|--help|help) printf "${helpmsg}\n" "$0"; exit;;
 	-x) set -x; shift;;
 	-a)
 	screen -ls | grep cts
@@ -60,22 +92,13 @@ while true; do
 	--setup|setup) setup=1; shift;;
 	trace-ls|tls) cmd=$1; shift;;
 	trace-add|tadd|trace-rm|trm|trace-set|tset) cmd=$1; trace=$2; shift; shift;;
-
-	[0-9][0-9]|rhel|r*[0-9]|f*[0-9][0-9])
-	    case $1 in
-		[0-9][0-9]|f*|fedora*)
-		    target="fedora-`echo $1 | sed -e s/fedora// -e s/-// -e s/f//`"
-		    ;;
-		r|rhel)
-		    target="rhel-7"
-		    ;;
-		r*|rhel*)
-		    target="rhel-`echo $1 | sed -e s/rhel// -e s/-// -e s/r//`"
-		    ;;
-		*) target=`rpm --eval fedora-%{fedora}`;;
-	    esac
-	    shift
-	    ;;
+	f*|fedora*)
+		target="fedora-`echo $1 | sed -e s/fedora// -e s/-// -e s/f//`"
+		shift;;
+	r|rhel) target="rhel-7"; shift;;
+	r*|rhel*)
+		target="rhel-`echo $1 | sed -e s/rhel// -e s/-// -e s/r//`"
+		shift;;
 	init|local-init)
 	    local_root=
 	    case $cts_root in
@@ -115,7 +138,7 @@ EOF
 	    ;;
 
 	--wget)
-	    files="cluster-helper cluster-clean"
+	    files="cluster-helper cluster-init cluster-clean"
 	    for f in $files; do
 		rm -f $cts_root/$f
 		echo "Downloading helper script $f from GitHub"
@@ -164,14 +187,15 @@ fi
 
 
 case $cluster_name in
-  *)
-    cluster_hosts=`cluster-helper --list short -g $cluster_name`
-    cluster_log=~/cluster-$cluster_name.log;
-    ;;
   custom)
     read -p "Cluster name: " cluster_name
     read -p "Cluster hosts: " cluster_hosts
     read -p "Cluster log file: " cluster_log
+    cluster-helper add -g "$cluster_name" -w "$cluster_hosts"
+    ;;
+  *)
+    cluster_hosts=`cluster-helper --list short -g $cluster_name`
+    cluster_log=~/cluster-$cluster_name.log;
     ;;
 esac
 
@@ -240,7 +264,7 @@ elif [ $boot = 1 ]; then
     exit $rc
 
 elif [ $run = 1 ]; then
-    $cts_root/CTSlab.py -r -c -g $cluster_name 500 $*
+    $cts_root/CTSlab.py -r -c -g $cluster_name 500 "$@"
     exit $?
 
 elif [ $clean = 1 ]; then
