@@ -1405,6 +1405,16 @@ main(int argc, char **argv)
         printf("    <content type=\"time\" default=\"0s\"/>\n");
         printf("  </parameter>\n");
 
+        printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_ACTION_LIMIT);
+        printf
+            ("    <shortdesc lang=\"en\">The maximum number of actions can be performed in parallel on this device</shortdesc>\n");
+        printf
+            ("    <longdesc lang=\"en\">Pengine property concurrent-fencing=true needs to be configured first.\n"
+             "Then use this to specify the maximum number of actions can be performed in parallel on this device. -1 is unlimited.</longdesc>\n");
+        printf("    <content type=\"integer\" default=\"1\"/>\n");
+        printf("  </parameter>\n");
+
+
         for (lpc = 0; lpc < DIMOF(actions); lpc++) {
             printf("  <parameter name=\"pcmk_%s_action\" unique=\"0\">\n", actions[lpc]);
             printf

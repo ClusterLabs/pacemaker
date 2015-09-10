@@ -110,6 +110,7 @@ xmlNode *create_device_registration_xml(const char *id, const char *namespace, c
 #  define STONITH_ATTR_HOSTLIST  "pcmk_host_list"
 #  define STONITH_ATTR_HOSTCHECK "pcmk_host_check"
 #  define STONITH_ATTR_DELAY_MAX "pcmk_delay_max"
+#  define STONITH_ATTR_ACTION_LIMIT "pcmk_action_limit"
 
 #  define STONITH_ATTR_ACTION_OP   "action"
 
