@@ -232,7 +232,7 @@ main(int argc, char **argv)
     }
 
     if (type == NULL && dest_uname == NULL) {
-        /* we're updating cluster options - dont populate dest_node */
+        /* we're updating cluster options - don't populate dest_node */
         type = XML_CIB_TAG_CRMCONFIG;
 
     } else if (safe_str_eq(type, XML_CIB_TAG_CRMCONFIG)) {
@@ -321,7 +321,7 @@ main(int argc, char **argv)
     }
 
     if (rc == -EINVAL) {
-        printf("Please choose from one of the matches above and suppy the 'id' with --attr-id\n");
+        printf("Please choose from one of the matches above and supply the 'id' with --attr-id\n");
 
     } else if (rc != pcmk_ok) {
         fprintf(stderr, "Error performing operation: %s\n", pcmk_strerror(rc));
