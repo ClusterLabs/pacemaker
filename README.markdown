@@ -69,6 +69,10 @@ This is not meant to be an exhaustive list:
 * inkscape (documentation)
 * docbook-style-xsl (documentation)
 
+## Optional testing dependencies
+* valgrind (if running CTS valgrind tests)
+* systemd-python (if using CTS on cluster nodes running systemd)
+
 ## Source Control (GIT)
 
     git clone git://github.com/ClusterLabs/pacemaker.git

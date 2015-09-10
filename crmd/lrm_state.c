@@ -540,7 +540,6 @@ remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
             if (safe_str_eq(type, T_ATTRD)
                 && crm_element_value(request, F_ATTRD_HOST) == NULL) {
                 crm_xml_add(request, F_ATTRD_HOST, proxy->node_name);
-                crm_xml_add_int(request, F_ATTRD_HOST_ID, get_local_nodeid(0));
             }
 
             rc = crm_ipc_send(proxy->ipc, request, flags, 5000, NULL);

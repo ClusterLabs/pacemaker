@@ -190,20 +190,29 @@ class CIB11(ConfigBase):
         # Fencing resource
         # Define first so that the shell doesn't reject every update
         if self.CM.Env["DoFencing"]:
+
+            # Define the "real" fencing device
             st = Resource(self.Factory, "Fencing", ""+self.CM.Env["stonith-type"], "stonith")
+
             # Set a threshold for unreliable stonith devices such as the vmware one
             st.add_meta("migration-threshold", "5")
             st.add_op("monitor", "120s", timeout="120s")
             st.add_op("stop", "0", timeout="60s")
             st.add_op("start", "0", timeout="60s")
 
+            # For remote node tests, a cluster node is stopped and brought back up
+            # as a remote node with the name "remote_OLDNAME". To allow fencing
+            # devices to fence these nodes, create a list of all possible node names.
+            all_node_names = [ prefix+n for n in self.CM.Env["nodes"] for prefix in ('', 'remote_') ]
+
+            # Add all parameters specified by user
             entries = string.split(self.CM.Env["stonith-params"], ',')
             for entry in entries:
                 (name, value) = string.split(entry, '=')
-                if name == "hostlist" and value == "all":
-                    value = string.join(self.CM.Env["nodes"], " ")
-                elif name == "pcmk_host_list" and value == "all":
-                    value = string.join(self.CM.Env["nodes"], " ")
+
+                # Allow user to specify "all" as the node list, and expand it here
+                if name in [ "hostlist", "pcmk_host_list" ] and value == "all":
+                    value = string.join(all_node_names, " ")
 
                 st[name] = value
 
@@ -218,6 +227,9 @@ class CIB11(ConfigBase):
                 # Create the levels
                 stl = FencingTopology(self.Factory)
                 for node in self.CM.Env["nodes"]:
+                    # Remote node tests will rename the node
+                    remote_node = "remote_" + node
+
                     # Randomly assign node to a fencing method
                     ftype = self.CM.Env.RandomGen.choice(["levels-and", "levels-or ", "broadcast "])
 
@@ -237,18 +249,25 @@ class CIB11(ConfigBase):
 
                     self.CM.log(" - Using %s fencing for node: %s%s" % (ftype, node, by))
 
-                    # for baremetal remote node tests (is this really necessary?)
-                    stt_nodes.append("remote_%s" % node)
-
                     if ftype == "levels-and":
+                        # If targeting by name, add a topology level for this node
                         if node not in attr_nodes:
                             stl.level(1, node, "FencingPass,Fencing")
-                        stt_nodes.append(node)
+
+                        # Always target remote nodes by name, otherwise we would need to add
+                        # an attribute to the remote node only during remote tests (we don't
+                        # want nonexistent remote nodes showing up in the non-remote tests).
+                        # That complexity is not worth the effort.
+                        stl.level(1, remote_node, "FencingPass,Fencing")
+
+                        # Add the node (and its remote equivalent) to the list of levels-and nodes.
+                        stt_nodes.extend([node, remote_node])
 
                     elif ftype == "levels-or ":
-                        stl.level(1, node, "FencingFail")
-                        stl.level(2, node, "Fencing")
-                        stf_nodes.append(node)
+                        for n in [ node, remote_node ]:
+                            stl.level(1, n, "FencingFail")
+                            stl.level(2, n, "Fencing")
+                        stf_nodes.extend([node, remote_node])
 
                 # If any levels-and nodes were targeted by attribute,
                 # create the attributes and a level for the attribute.

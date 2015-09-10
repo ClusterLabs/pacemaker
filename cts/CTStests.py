@@ -2656,6 +2656,19 @@ class RemoteDriver(CTSTest):
         self.remote_use_reconnect_interval = self.Env.RandomGen.choice(["true","false"])
         self.cib_cmd = """cibadmin -C -o %s -X '%s' """
 
+    def fail(self, msg):
+        """ Mark test as failed. """
+
+        # TODO: It's a boolean. Use True/False.
+        self.failed = 1
+
+        # Always log the failure.
+        self.logger.log(msg)
+
+        # Use first failure as test status, as it's likely to be most useful.
+        if not self.fail_string:
+            self.fail_string = msg
+
     def get_othernode(self, node):
         for othernode in self.Env["nodes"]:
             if othernode == node:
@@ -2669,15 +2682,13 @@ class RemoteDriver(CTSTest):
         othernode = self.get_othernode(node)
         rc = self.rsh(othernode, "crm_resource -D -r %s -t primitive" % (rsc))
         if rc != 0:
-            self.fail_string = ("Removal of resource '%s' failed" % (rsc))
-            self.failed = 1
+            self.fail("Removal of resource '%s' failed" % rsc)
 
     def add_rsc(self, node, rsc_xml):
         othernode = self.get_othernode(node)
         rc = self.rsh(othernode, self.cib_cmd % ("resources", rsc_xml))
         if rc != 0:
-            self.fail_string = "resource creation failed"
-            self.failed = 1
+            self.fail("resource creation failed")
 
     def add_primitive_rsc(self, node):
         rsc_xml = """
@@ -2751,15 +2762,13 @@ class RemoteDriver(CTSTest):
         self.rsh(node, "crm_resource -D -r %s -t primitive" % (self.remote_node))
 
         if not self.stop(node):
-            self.failed = 1
-            self.fail_string = "Failed to shutdown cluster node %s" % (node)
+            self.fail("Failed to shutdown cluster node %s" % node)
             return
 
         self.start_pcmk_remote(node)
 
         if self.pcmk_started == 0:
-            self.failed = 1
-            self.fail_string = "Failed to start pacemaker_remote on node %s" % (node)
+            self.fail("Failed to start pacemaker_remote on node %s" % node)
             return
 
         # convert node to baremetal node now that it has shutdow the cluster stack
@@ -2775,8 +2784,7 @@ class RemoteDriver(CTSTest):
         watch.lookforall()
         self.log_timer("remoteMetalInit")
         if watch.unmatched:
-            self.fail_string = "Unmatched patterns: %s" % (repr(watch.unmatched))
-            self.failed = 1
+            self.fail("Unmatched patterns: %s" % watch.unmatched)
 
     def migrate_connection(self, node):
         if self.failed == 1:
@@ -2791,9 +2799,7 @@ class RemoteDriver(CTSTest):
 
         (rc, lines) = self.rsh(node, "crm_resource -M -r %s" % (self.remote_node), None)
         if rc != 0:
-            self.fail_string = "failed to move remote node connection resource"
-            self.logger.log(self.fail_string)
-            self.failed = 1
+            self.fail("failed to move remote node connection resource")
             return
 
         self.set_timer("remoteMetalMigrate")
@@ -2801,9 +2807,7 @@ class RemoteDriver(CTSTest):
         self.log_timer("remoteMetalMigrate")
 
         if watch.unmatched:
-            self.fail_string = "Unmatched patterns: %s" % (repr(watch.unmatched))
-            self.logger.log(self.fail_string)
-            self.failed = 1
+            self.fail("Unmatched patterns: %s" % watch.unmatched)
             return
 
     def fail_rsc(self, node):
@@ -2826,9 +2830,7 @@ class RemoteDriver(CTSTest):
         watch.lookforall()
         self.log_timer("remoteRscFail")
         if watch.unmatched:
-            self.fail_string = "Unmatched patterns during rsc fail: %s" % (repr(watch.unmatched))
-            self.logger.log(self.fail_string)
-            self.failed = 1
+            self.fail("Unmatched patterns during rsc fail: %s" % watch.unmatched)
 
     def fail_connection(self, node):
         if self.failed == 1:
@@ -2850,27 +2852,23 @@ class RemoteDriver(CTSTest):
         watch.lookforall()
         self.log_timer("remoteMetalFence")
         if watch.unmatched:
-            self.fail_string = "Unmatched patterns: %s" % (repr(watch.unmatched))
-            self.logger.log(self.fail_string)
-            self.failed = 1
+            self.fail("Unmatched patterns: %s" % watch.unmatched)
             return
 
         self.debug("Waiting for the remote node to come back up")
         self.CM.ns.WaitForNodeToComeUp(node, 120);
 
         pats = [ ]
-        watch = self.create_watch(pats, 200)
+        watch = self.create_watch(pats, 240)
         watch.setwatch()
         pats.append(self.templates["Pat:RscOpOK"] % (self.remote_node, "start"))
         if self.remote_rsc_added == 1:
-            pats.append(self.templates["Pat:RscOpOK"] % (self.remote_rsc, "monitor"))
+            pats.append(self.templates["Pat:RscRemoteOpOK"] % (self.remote_rsc, "start", self.remote_node))
 
         # start the remote node again watch it integrate back into cluster.
         self.start_pcmk_remote(node)
         if self.pcmk_started == 0:
-            self.failed = 1
-            self.fail_string = "Failed to start pacemaker_remote on node %s" % (node)
-            self.logger.log(self.fail_string)
+            self.fail("Failed to start pacemaker_remote on node %s" % node)
             return
 
         self.debug("Waiting for remote node to rejoin cluster after being fenced.")
@@ -2878,9 +2876,7 @@ class RemoteDriver(CTSTest):
         watch.lookforall()
         self.log_timer("remoteMetalRestart")
         if watch.unmatched:
-            self.fail_string = "Unmatched patterns: %s" % (repr(watch.unmatched))
-            self.failed = 1
-            self.logger.log(self.fail_string)
+            self.fail("Unmatched patterns: %s" % watch.unmatched)
             return
 
     def add_dummy_rsc(self, node):
@@ -2900,16 +2896,14 @@ class RemoteDriver(CTSTest):
         # force that rsc to prefer the remote node. 
         (rc, line) = self.CM.rsh(node, "crm_resource -M -r %s -N %s -f" % (self.remote_rsc, self.remote_node), None)
         if rc != 0:
-            self.fail_string = "Failed to place remote resource on remote node."
-            self.failed = 1
+            self.fail("Failed to place remote resource on remote node.")
             return
 
         self.set_timer("remoteMetalRsc")
         watch.lookforall()
         self.log_timer("remoteMetalRsc")
         if watch.unmatched:
-            self.fail_string = "Unmatched patterns: %s" % (repr(watch.unmatched))
-            self.failed = 1
+            self.fail("Unmatched patterns: %s" % watch.unmatched)
 
     def test_attributes(self, node):
         if self.failed == 1:
@@ -2919,20 +2913,17 @@ class RemoteDriver(CTSTest):
         # verifies the remote-node can edit it's own cib node section remotely.
         (rc, line) = self.CM.rsh(node, "crm_attribute -l forever -n testattr -v testval -N %s" % (self.remote_node), None)
         if rc != 0:
-            self.fail_string = "Failed to set remote-node attribute. rc:%s output:%s" % (rc, line)
-            self.failed = 1
+            self.fail("Failed to set remote-node attribute. rc:%s output:%s" % (rc, line))
             return
 
         (rc, line) = self.CM.rsh(node, "crm_attribute -l forever -n testattr -Q -N %s" % (self.remote_node), None)
         if rc != 0:
-            self.fail_string = "Failed to get remote-node attribute"
-            self.failed = 1
+            self.fail("Failed to get remote-node attribute")
             return
 
         (rc, line) = self.CM.rsh(node, "crm_attribute -l forever -n testattr -D -N %s" % (self.remote_node), None)
         if rc != 0:
-            self.fail_string = "Failed to delete remote-node attribute"
-            self.failed = 1
+            self.fail("Failed to delete remote-node attribute")
             return
 
     def cleanup_metal(self, node):
@@ -2954,11 +2945,17 @@ class RemoteDriver(CTSTest):
         if self.remote_use_reconnect_interval == "true":
             self.debug("Cleaning up re-check interval")
             self.rsh(self.get_othernode(node), self.templates["ClearCheckInterval"])
+
         if self.remote_rsc_added == 1:
+
+            # Remove dummy resource added for remote node tests
             self.debug("Cleaning up dummy rsc put on remote node")
-            self.rsh(node, "crm_resource -U -r %s -N %s" % (self.remote_rsc, self.remote_node))
+            self.rsh(node, "crm_resource -U -r %s" % self.remote_rsc)
             self.del_rsc(node, self.remote_rsc)
+
         if self.remote_node_added == 1:
+
+            # Remove remote node's connection resource
             self.debug("Cleaning up remote node connection resource")
             self.rsh(node, "crm_resource -U -r %s" % (self.remote_node))
             self.del_rsc(node, self.remote_node)
@@ -2967,10 +2964,17 @@ class RemoteDriver(CTSTest):
         self.log_timer("remoteMetalCleanup")
 
         if watch.unmatched:
-            self.fail_string = "Unmatched patterns: %s" % (repr(watch.unmatched))
-            self.failed = 1
+            self.fail("Unmatched patterns: %s" % watch.unmatched)
 
         self.stop_pcmk_remote(node)
+
+        self.debug("Waiting for the cluster to recover")
+        self.CM.cluster_stable()
+
+        if self.remote_node_added == 1:
+            # Remove remote node itself
+            self.debug("Cleaning up node entry for remote node")
+            self.rsh(self.get_othernode(node), "crm_node --force --remove %s" % self.remote_node)
 
     def setup_env(self, node):
 

@@ -247,11 +247,11 @@ crm_send_tls(gnutls_session_t * session, const char *buf, size_t len)
             break;
 
         } else if (rc < len) {
-            crm_debug("Only sent %d of %d bytes", rc, len);
+            crm_debug("Sent %d of %d bytes", rc, len);
             len -= rc;
             unsent += rc;
         } else {
-            crm_debug("Sent %d bytes", rc);
+            crm_trace("Sent all %d bytes", rc);
             break;
         }
     }
@@ -620,6 +620,10 @@ crm_remote_recv(crm_remote_t * remote, int total_timeout /*ms */ , int *disconne
         if (rc == 0) {
             crm_err("poll timed out (%d ms) while waiting to receive msg", remaining_timeout);
             return FALSE;
+
+        } else if (rc == -EAGAIN) {
+            crm_trace("waiting for remote connection data (up to %dms)",
+                      remaining_timeout);
 
         } else if(rc < 0) {
             crm_debug("poll() failed: %s (%d)", pcmk_strerror(rc), rc);
