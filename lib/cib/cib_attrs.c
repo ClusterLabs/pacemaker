@@ -86,6 +86,8 @@ find_nvpair_attr_delegate(cib_t * the_cib, const char *attr, const char *section
     }
 
     xpath_string = calloc(1, xpath_max);
+    CRM_CHECK(xpath_string != NULL, return -ENOMEM);
+
     offset += snprintf(xpath_string + offset, xpath_max - offset, "%.128s", get_object_path(section));
 
     if (safe_str_eq(node_type, XML_CIB_TAG_TICKETS)) {
