@@ -1867,7 +1867,7 @@
   + cib: Use single quotes so that the xpath queries for nvpairs will succeed
   + crmd: Always connect to stonithd when the TE starts and ensure we notice if it dies
   + crmd: Correctly handle a dead PE process
-  + crmd: Make sure async-failures cause the failcount to be incrimented
+  + crmd: Make sure async-failures cause the failcount to be incremented
   + pengine: Bug LF:1941 - Handle failed clone instance probes when clone-max < #nodes
   + pengine: Parse resource ordering sets correctly
   + pengine: Prevent use-of-NULL - order->rsc_rh will not always be non-NULL
@@ -1880,7 +1880,7 @@
   + Medium: ais: Spawn the PE from the ais plugin instead of the crmd
   + Medium: cib: By default, new configurations use the latest schema
   + Medium: cib: Clean up the CIB if it was already disconnected
-  + Medium: cib: Only incriment num_updates if something actually changed
+  + Medium: cib: Only increment num_updates if something actually changed
   + Medium: cib: Prevent use-after-free in client after abnormal termination of the CIB
   + Medium: Core: Fix memory leak in xpath searches
   + Medium: Core: Get more details regarding parser errors
@@ -2124,7 +2124,7 @@
 - Changes since Pacemaker-0.6.0
   + CIB: Ensure changes to top-level attributes (like admin_epoch) cause a disk write
   + CIB: Ensure the archived file hits the disk before returning
-  + CIB: Repair the ability to do 'atomic incriment' updates (value="value++")
+  + CIB: Repair the ability to do 'atomic increment' updates (value="value++")
   + crmd: Bug #7 - Connecting to the crmd immediately after startup causes use-of-NULL
   + Medium: CIB: Mask cib_diff_resync results from the caller - they do not need to know
   + Medium: crmd: Delay starting the IPC server until we are fully functional

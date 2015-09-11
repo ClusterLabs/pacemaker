@@ -37,7 +37,7 @@
 #  include <libxml/tree.h>
 #  include <libxml/xpath.h>
 
-/* Encryption costs a LOT, don't do it unless we're hitting message limits
+/* Compression costs a LOT, don't do it unless we're hitting message limits
  *
  * For now, use 256k as the lower size, which means we can have 4 big data fields
  *  before we hit heartbeat's message limit
