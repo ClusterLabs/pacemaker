@@ -301,7 +301,7 @@ find %{buildroot} -name '*.xsl' -type f -print0 | xargs -0 chmod a-x
 find %{buildroot} -name '*.rng' -type f -print0 | xargs -0 chmod a-x
 find %{buildroot} -name '*.dtd' -type f -print0 | xargs -0 chmod a-x
 
-# Dont package static libs
+# Don't package static libs
 find %{buildroot} -name '*.a' -type f -print0 | xargs -0 rm -f
 find %{buildroot} -name '*.la' -type f -print0 | xargs -0 rm -f
 

@@ -247,7 +247,7 @@ enum crmd_fsa_input {
  *
  *======================================*/
 
-         /* Dont do anything */
+         /* Don't do anything */
 #  define	A_NOTHING		0x0000000000000000ULL
 
 /* -- Startup actions -- */

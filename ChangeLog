@@ -1355,7 +1355,7 @@
 - Reference the new cluster-glue devel package name
 - Update the tarball from upstream to version c9120a53a6ae
   + pengine: Only prevent migration if the clone dependency is stopping/starting on the target node
-  + pengine: Bug 2160 - Dont shuffle clones due to colocation
+  + pengine: Bug 2160 - Don't shuffle clones due to colocation
   + pengine: New implementation of the resource migration (not stop/start) logic
   + Medium: Tools: crm_resource - Prevent use-of-NULL by requiring a resource name for the -A and -a options
   + Medium: pengine: Prevent use-of-NULL in find_first_action()
