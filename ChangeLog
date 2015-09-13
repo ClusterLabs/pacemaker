@@ -820,7 +820,7 @@
   + mcp: Set the HA_quorum_type env variable consistently with our corosync plugin
   + mcp: Shut down if one of our child processes can/should not be respawned
   + pengine: Bug cl#5000 - Ensure ordering is preserved when depending on partial sets
-  + pengine: Bug cl#5028 - Unmanaged services should block shutdown unless in maintainence mode
+  + pengine: Bug cl#5028 - Unmanaged services should block shutdown unless in maintenance mode
   + pengine: Bug cl#5038 - Prevent restart of anonymous clones when clone-max decreases
   + pengine: Bug cl#5007 - Fixes use of colocation constraints with multi-state resources
   + pengine: Bug cl#5014 - Prevent asymmetrical order constraints from causing resource stops
