@@ -206,7 +206,7 @@ spawn_child(crm_child_t * child)
         opts_default[0] = ais_strdup(child->command);;
 
         if (uid && initgroups(child->uid, gid) < 0) {
-            ais_perror("Cannot initalize groups for %s", child->uid);
+            ais_perror("Cannot initialize groups for %s", child->uid);
         }
 
         if (uid && setuid(uid) < 0) {
