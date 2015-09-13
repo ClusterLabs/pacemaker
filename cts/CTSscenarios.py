@@ -193,7 +193,7 @@ A partially set up scenario is torn down if it fails during setup.
         else:
             self.incr("failure")
             self.ClusterManager.statall()
-            did_run = 1  # Force the test count to be incrimented anyway so test extraction works
+            did_run = 1  # Force the test count to be incremented anyway so test extraction works
 
         self.audit(test.errorstoignore())
         return did_run
