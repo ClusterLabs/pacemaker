@@ -10,7 +10,7 @@
 # processname: pacemaker_remoted
 #
 ### BEGIN INIT INFO
-# Provides:		pacemaker_remoted
+# Provides:		pacemaker_remote
 # Required-Start:	$network $remote_fs
 # Should-Start:		$syslog
 # Required-Stop:	$network $remote_fs
