@@ -31,6 +31,6 @@ Version:      @PACKAGE_VERSION@
 Description:  Pacemaker cluster manager v@PACKAGE_SERIES@
 Requires:     
 Conflicts:    
-Cflags:       -I${includedir} -lcrmcommon
-Libs:         -L${libdir} 
+Cflags:       -I${includedir}
+Libs:         -L${libdir} -lcrmcommon
 Libs.private:
