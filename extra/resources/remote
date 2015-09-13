@@ -44,8 +44,14 @@ meta_data() {
 <?xml version="1.0"?>
 <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
 <resource-agent name="remote" version="0.1">
-<version>0.1</version>
-<shortdesc lang="en">remote resource agent</shortdesc>
+  <version>0.1</version>
+  <shortdesc lang="en">provide metadata for the remote connection agent</shortdesc>
+  <longdesc lang="en">
+This resource agent script only provides the metadata of the internal
+remote lrmd connection agent to announce its parameters.  All other
+operations are unsupported.  The actual functionality lives within the
+crmd component of pacemaker.
+  </longdesc>
   <parameters>
     <parameter name="server" unique="1">
     <longdesc lang="en">
