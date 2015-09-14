@@ -1,10 +1,6 @@
+# Pacemaker Cluster Test Suite (CTS)
 
-                        PACEMAKER
-                 CLUSTER TEST SUITE (CTS)
-
-
-Purpose
--------
+## Purpose
 
 CTS thoroughly exercises a pacemaker test cluster by running a randomized
 series of predefined tests on the cluster. CTS can be run against a
@@ -12,8 +8,7 @@ pre-existing cluster configuration or (more typically) overwrite the existing
 configuration with a test configuration.
 
 
-Requirements
-------------
+## Requirements
 
 * Three or more machines (one test exerciser and two or more test cluster
   machines).
@@ -41,8 +36,7 @@ Requirements
 * CTS is not guaranteed to run on all platforms that pacemaker itself does.
   It calls commands such as service that may not be provided by all OSes.
 	
-Preparation
------------
+## Preparation
 
 Install Pacemaker (including CTS) on all machines. These scripts are
 coordinated with particular versions of Pacemaker, so you need the same version
@@ -64,8 +58,7 @@ the machines' FQDN (fully qualified domain name) - it depends on how
 you (and your OS) have named the machines.
 
 
-Run CTS
--------
+## Run CTS
 
 Now assuming you did all this, what you need to do is run CTSlab.py:
 
@@ -87,13 +80,13 @@ Unless you want to test your pre-existing cluster configuration, you also want:
 
 and configure some sort of fencing:
 
-   --stonith $TYPE  # e.g. "--stonith xvm" to use fence_xvm or "--stonith lha" to use external/ssh
+    --stonith $TYPE  # e.g. "--stonith xvm" to use fence_xvm or "--stonith lha" to use external/ssh
 
 A complete command line might look like:
   
-  python ./CTSlab.py --nodes "pcmk-1 pcmk-2 pcmk-3" --outputfile ~/cts.log \
-	 --clobber-cib --populate-resources --test-ip-base 192.168.9.100   \
-	 --stonith xvm 50
+    python ./CTSlab.py --nodes "pcmk-1 pcmk-2 pcmk-3" --outputfile ~/cts.log \
+        --clobber-cib --populate-resources --test-ip-base 192.168.9.100   \
+        --stonith xvm 50
 
 For more options, use the --help option.
 
@@ -106,8 +99,9 @@ To extract the result of a particular test, run:
     crm_report -T $test
 
 
-Memory testing
---------------
+## Optional/advanced testing
+
+### Memory testing
 
 Pacemaker and CTS have various options for testing memory management. On the
 cluster nodes, pacemaker components will use various environment variables to
@@ -118,15 +112,15 @@ Valgrind is a program for detecting memory management problems (such as
 use-after-free errors). If you have valgrind installed, you can enable it by
 setting the following environment variables on all cluster nodes:
 
-  PCMK_valgrind_enabled=attrd,cib,crmd,lrmd,pengine,stonith-ng
-  VALGRIND_OPTS="--leak-check=full --trace-children=no --num-callers=25
-		--log-file=/var/lib/pacemaker/valgrind-%p
-		--suppressions=/usr/share/pacemaker/tests/valgrind-pcmk.suppressions
-		--gen-suppressions=all"
+    PCMK_valgrind_enabled=attrd,cib,crmd,lrmd,pengine,stonith-ng
+    VALGRIND_OPTS="--leak-check=full --trace-children=no --num-callers=25
+        --log-file=/var/lib/pacemaker/valgrind-%p
+        --suppressions=/usr/share/pacemaker/tests/valgrind-pcmk.suppressions
+        --gen-suppressions=all"
 
 and running CTS with these options:
 
-  --valgrind-tests --valgrind-procs="attrd cib crmd lrmd pengine stonith-ng"
+    --valgrind-tests --valgrind-procs="attrd cib crmd lrmd pengine stonith-ng"
 
 These options should only be set while specifically testing memory management,
 because they may slow down the cluster significantly, and they will disable
@@ -135,9 +129,7 @@ components rather than all of them as listed above.
 
 Valgrind will put a text file for each process in the location specified by
 valgrind's --log-file option. For explanations of the messages valgrind
-generates, see:
-
-  http://valgrind.org/docs/manual/mc-manual.html
+generates, see http://valgrind.org/docs/manual/mc-manual.html
 
 Separately, if you are using the GNU C library, the G_SLICE, MALLOC_PERTURB_,
 and MALLOC_CHECK_ environment variables can be set to affect the library's
@@ -155,21 +147,20 @@ value, and will set all newly freed bytes of memory to the bitwise inverse of
 the integer value. This helps catch uses of uninitialized or freed memory
 blocks that might otherwise go unnoticed. Example:
 
-  MALLOC_PERTURB_=221
+    MALLOC_PERTURB_=221
 
 If the MALLOC_CHECK_ environment variable is set, the C library will check for
 certain heap corruption errors. The most useful value in testing is 3, which
 will cause the library to print a message to stderr and abort execution.
 Example:
 
-  MALLOC_CHECK_=3
+    MALLOC_CHECK_=3
 
 Valgrind should be enabled for either all nodes or none, but the C library
 variables may be set differently on different nodes.
 
 
-Remote node testing
--------------------
+### Remote node testing
 
 If the pacemaker_remoted daemon is installed on all cluster nodes, CTS will
 enable remote node tests.
@@ -189,12 +180,39 @@ CTS will expand that to all cluster nodes and their "remote_" names.
 You may additionally need a pcmk_host_map argument to map the "remote_" names
 to the hostnames. Example:
 
-  --stonith xvm --stonith-args \
-  pcmk_arg_map=domain:uname,pcmk_host_list=all,pcmk_host_map=remote_pcmk-1:pcmk-1;remote_pcmk-2:pcmk-2
+    --stonith xvm --stonith-args \
+    pcmk_arg_map=domain:uname,pcmk_host_list=all,pcmk_host_map=remote_pcmk-1:pcmk-1;remote_pcmk-2:pcmk-2
+
+### Remote node testing with valgrind
+
+When running the remote node tests, the pacemaker components on the cluster
+nodes can be run under valgrind as described in the "Memory testing" section.
+However, pacemaker_remote cannot be run under valgrind that way, because it is
+started by the OS's regular boot system and not by pacemaker.
+
+Details vary by system, but the goal is to set the VALGRIND_OPTS environment
+variable and then start pacemaker_remoted by prefixing it with the path to
+valgrind.
+
+The init script and systemd service file provided with pacemaker_remote will
+load the pacemaker environment variables from the same location used by other
+pacemaker components, so VALGRIND_OPTS will be set correctly if using one of
+those.
+
+For an OS using systemd, you can override the ExecStart parameter to run
+valgrind. For example:
+
+    mkdir /etc/systemd/system/pacemaker_remote.service.d
+    cat >/etc/systemd/system/pacemaker_remote.service.d/valgrind.conf <<EOF
+    [Service]
+    ExecStart=
+    ExecStart=/usr/bin/valgrind /usr/sbin/pacemaker_remoted
+    EOF
 
 
-Mini-HOWTO: Allow passwordless remote SSH connections
------------------------------------------------------
+## Mini-HOWTOs
+
+### Allow passwordless remote SSH connections
 
 The CTS scripts run "ssh -l root" so you don't have to do any of your testing
 logged in as root on the test machine. Here is how to allow such connections
@@ -207,12 +225,12 @@ without requiring a password to be entered each time:
 
   If you don't already have a key, you can create one with:
 
-    ssh-keygen -t dsa
+      ssh-keygen -t dsa
 
 * From your test exerciser, authorize your SSH public key for root on all test
   machines (both the exerciser and the cluster test machines):
 
-    ssh-copy-id -i ~/.ssh/id_dsa.pub root@$MACHINE
+      ssh-copy-id -i ~/.ssh/id_dsa.pub root@$MACHINE
 
   You will probably have to provide your password, and possibly say
   "yes" to some questions about accepting the identity of the test machines.
@@ -229,7 +247,7 @@ without requiring a password to be entered each time:
 * To test, try this command from the exerciser machine for each
   of your cluster machines, and for the exerciser machine itself.
 
-    ssh -l root $MACHINE
+      ssh -l root $MACHINE
 
   If this works without prompting for a password, you're in business.
   If not, look at the documentation for your version of ssh.

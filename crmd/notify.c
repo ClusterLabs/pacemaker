@@ -141,7 +141,7 @@ crmd_notify_fencing_op(stonith_event_t * e)
 {
     char *desc = NULL;
 
-    if(notify_script) {
+    if (notify_script == NULL) {
         return;
     }
 
