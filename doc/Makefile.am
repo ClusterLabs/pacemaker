@@ -149,7 +149,7 @@ install-data-local: all-local
 	    for f in $$filelist; do							\
 		p=`echo $$f | sed s:publish/:: | sed s:Pacemaker/::`;			\
 		if [ -d $$f ]; then							\
-			$(INSTALL) -d 775 $(DESTDIR)$(docdir)/$$p;			\
+			$(INSTALL) -d -m 775 $(DESTDIR)$(docdir)/$$p;			\
 		else									\
 			$(INSTALL) -m 644 $$f $(DESTDIR)$(docdir)/$$p;			\
 		fi									\
