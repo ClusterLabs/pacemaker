@@ -183,6 +183,33 @@ to the hostnames. Example:
     --stonith xvm --stonith-args \
     pcmk_arg_map=domain:uname,pcmk_host_list=all,pcmk_host_map=remote_pcmk-1:pcmk-1;remote_pcmk-2:pcmk-2
 
+### Remote node testing with valgrind
+
+When running the remote node tests, the pacemaker components on the cluster
+nodes can be run under valgrind as described in the "Memory testing" section.
+However, pacemaker_remote cannot be run under valgrind that way, because it is
+started by the OS's regular boot system and not by pacemaker.
+
+Details vary by system, but the goal is to set the VALGRIND_OPTS environment
+variable and then start pacemaker_remoted by prefixing it with the path to
+valgrind.
+
+The init script and systemd service file provided with pacemaker_remote will
+load the pacemaker environment variables from the same location used by other
+pacemaker components, so VALGRIND_OPTS will be set correctly if using one of
+those.
+
+For an OS using systemd, you can override the ExecStart parameter to run
+valgrind. For example:
+
+    mkdir /etc/systemd/system/pacemaker_remote.service.d
+    cat >/etc/systemd/system/pacemaker_remote.service.d/valgrind.conf <<EOF
+    [Service]
+    ExecStart=
+    ExecStart=/usr/bin/valgrind /usr/sbin/pacemaker_remoted
+    EOF
+
+
 ## Mini-HOWTOs
 
 ### Allow passwordless remote SSH connections
