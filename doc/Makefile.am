@@ -23,7 +23,7 @@ helpdir		= $(datadir)/$(PACKAGE)
 
 ascii		= crm_fencing.txt acls.txt
 docbook		= Pacemaker_Explained Clusters_from_Scratch Pacemaker_Remote
-doc_DATA	= README.hb2openais $(ascii) $(generated_docs)
+doc_DATA	= $(ascii) $(generated_docs)
 
 # rsync destination for www targets
 RSYNC_DEST      = root@www.clusterlabs.org:/var/www/html/doc/
