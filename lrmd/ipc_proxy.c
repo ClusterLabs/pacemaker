@@ -223,9 +223,9 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     }
 
     CRM_CHECK(client != NULL, crm_err("Invalid client");
-              return FALSE);
+              free_xml(request); return FALSE);
     CRM_CHECK(client->id != NULL, crm_err("Invalid client: %p", client);
-              return FALSE);
+              free_xml(request); return FALSE);
 
     /* this ensures that synced request/responses happen over the event channel
      * in the crmd, allowing the crmd to process the messages async */
@@ -241,6 +241,7 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     crm_xml_add_int(msg, F_LRMD_IPC_MSG_FLAGS, flags);
     add_message_xml(msg, F_LRMD_IPC_MSG, request);
     lrmd_server_send_notify(ipc_proxy, msg);
+    free_xml(request);
     free_xml(msg);
 
     return 0;
