@@ -42,7 +42,7 @@ ctslib_PYTHON	=	__init__.py		\
 			remote.py		\
 			watcher.py
 
-cts_DATA	=	README cts.supp
+cts_DATA	=	README.md cts.supp
 
 cts_SCRIPTS	=	cts		\
 			CTSlab.py		\
