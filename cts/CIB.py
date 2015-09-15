@@ -309,8 +309,10 @@ class CIB11(ConfigBase):
         o["dc-deadtime"] = "5s"
         o["no-quorum-policy"] = no_quorum
         o["expected-quorum-votes"] = self.num_nodes
-        o["notification-agent"] = "/var/lib/pacemaker/notify.sh"
-        o["notification-recipient"] = "/var/lib/pacemaker/notify.log"
+
+        if self.Factory.rsh.exists_on_all(self.CM.Env["notification-agent"], self.CM.Env["nodes"]):
+            o["notification-agent"] = self.CM.Env["notification-agent"]
+            o["notification-recipient"] = self.CM.Env["notification-recipient"]
 
         if self.CM.Env["DoBSC"] == 1:
             o["ident-string"] = "Linux-HA TEST configuration file - REMOVEME!!"

@@ -57,6 +57,8 @@ class Environment:
         self["Stack"] = "corosync"
         self["stonith-type"] = "external/ssh"
         self["stonith-params"] = "hostlist=all,livedangerously=yes"
+        self["notification-agent"] = "/var/lib/pacemaker/notify.sh"
+        self["notification-recipient"] = "/var/lib/pacemaker/notify.log"
         self["loop-minutes"] = 60
         self["valgrind-prefix"] = None
         self["valgrind-procs"] = "attrd cib crmd lrmd pengine stonith-ng"
@@ -578,6 +580,14 @@ class Environment:
             elif args[i] == "--boot":
                 self["scenario"] = "boot"
 
+            elif args[i] == "--notification-agent":
+                self["notification-agent"] = args[i+1]
+                skipthis = 1
+
+            elif args[i] == "--notification-recipient":
+                self["notification-recipient"] = args[i+1]
+                skipthis = 1
+
             elif args[i] == "--valgrind-tests":
                 self["valgrind-tests"] = 1
 
@@ -658,6 +668,8 @@ class Environment:
         print("\t [--stonith-type type]")
         print("\t [--stonith-args name=value]")
         print("\t [--bsc]")
+        print("\t [--notification-agent path]  script to configure for Pacemaker notifications")
+        print("\t [--notification-recipient r] recipient to pass to notification agent")
         print("\t [--no-loop-tests]            dont run looping/time-based tests")
         print("\t [--no-unsafe-tests]          dont run tests that are unsafe for use with ocfs2/drbd")
         print("\t [--valgrind-tests]           include tests using valgrind")
