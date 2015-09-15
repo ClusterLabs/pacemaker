@@ -972,7 +972,7 @@ main(int argc, char **argv)
                 shutdown = TRUE;
                 break;
             case 'F':
-                printf("Pacemaker %s (Build: %s)\n Supporting v%s: %s\n", VERSION, BUILD_VERSION,
+                printf("Pacemaker %s (Build: %s)\n Supporting v%s: %s\n", PACEMAKER_VERSION, BUILD_VERSION,
                        CRM_FEATURE_SET, CRM_FEATURES);
                 crm_exit(pcmk_ok);
             default:
@@ -1039,7 +1039,7 @@ main(int argc, char **argv)
         crm_exit(ENODATA);
     }
 
-    crm_notice("Starting Pacemaker %s (Build: %s): %s", VERSION, BUILD_VERSION, CRM_FEATURES);
+    crm_notice("Starting Pacemaker %s (Build: %s): %s", PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
     mainloop = g_main_new(FALSE);
     sysrq_init();
 

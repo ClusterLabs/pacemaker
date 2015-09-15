@@ -201,7 +201,7 @@ static struct corosync_exec_handler pcmk_exec_service[] = {
  */
 /* *INDENT-OFF* */
 struct corosync_service_engine pcmk_service_handler = {
-    .name			= (char *)"Pacemaker Cluster Manager "PACKAGE_VERSION,
+    .name			= (char *)"Pacemaker Cluster Manager "PACEMAKER_VERSION,
     .id				= PCMK_SERVICE_ID,
     .private_data_size		= 0,
     .flow_control		= COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED,

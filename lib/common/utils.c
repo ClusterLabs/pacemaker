@@ -1603,13 +1603,13 @@ crm_help(char cmd, int exit_code)
     FILE *stream = (exit_code ? stderr : stdout);
 
     if (cmd == 'v' || cmd == '$') {
-        fprintf(stream, "Pacemaker %s\n", VERSION);
+        fprintf(stream, "Pacemaker %s\n", PACEMAKER_VERSION);
         fprintf(stream, "Written by Andrew Beekhof\n");
         goto out;
     }
 
     if (cmd == '!') {
-        fprintf(stream, "Pacemaker %s (Build: %s): %s\n", VERSION, BUILD_VERSION, CRM_FEATURES);
+        fprintf(stream, "Pacemaker %s (Build: %s): %s\n", PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
         goto out;
     }
 

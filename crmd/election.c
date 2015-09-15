@@ -215,7 +215,7 @@ do_dc_takeover(long long action,
     }
 
     update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
-                         "dc-version", VERSION "-" BUILD_VERSION, FALSE, NULL, NULL);
+                         "dc-version", PACEMAKER_VERSION "-" BUILD_VERSION, FALSE, NULL, NULL);
 
     update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
                          "cluster-infrastructure", cluster_type, FALSE, NULL, NULL);
