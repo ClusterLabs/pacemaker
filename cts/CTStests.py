@@ -2979,18 +2979,11 @@ class RemoteDriver(CTSTest):
     def setup_env(self, node):
 
         self.remote_node = "remote_%s" % (node)
-        sync_key = 0
 
         # we are assuming if all nodes have a key, that it is
         # the right key... If any node doesn't have a remote
         # key, we regenerate it everywhere.
-        for node in self.Env["nodes"]:
-            rc = self.rsh(node, "ls /etc/pacemaker/authkey")
-            if rc != 0:
-                sync_key = 1
-                break
-
-        if sync_key == 0:
+        if self.rsh.exists_on_all("/etc/pacemaker/authkey", self.Env["nodes"]):
             return
 
         # create key locally
