@@ -116,7 +116,7 @@ validate-all)	remote_unsupported;;
 usage|help)	remote_usage
 		exit $OCF_SUCCESS
 		;;
-*)		dummy_usage
+*)		remote_usage
 		exit $OCF_ERR_UNIMPLEMENTED
 		;;
 esac
