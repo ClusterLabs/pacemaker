@@ -1518,7 +1518,7 @@ cli_resource_move(const char *rsc_id, const char *host_name, cib_t * cib, pe_wor
     if(do_force && (cur_is_dest == FALSE)) {
         /* Ban the original location if possible */
         if(current) {
-            cli_resource_ban(rsc_id, current->details->uname, NULL, cib);
+            (void)cli_resource_ban(rsc_id, current->details->uname, NULL, cib);
 
         } else if(count > 1) {
             CMD_ERR("Resource '%s' is currently %s in %d locations.  One may now move one to %s",
