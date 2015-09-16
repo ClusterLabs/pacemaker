@@ -29,6 +29,7 @@
 #  include <stdbool.h>
 #  include <libxml/tree.h>
 
+#  include <crm/crm.h>  /* __likely */
 #  include <crm/lrmd.h>
 #  include <crm/common/logging.h>
 #  include <crm/common/io.h>
@@ -197,6 +198,66 @@ crm_set_bit(const char *function, const char *target, long long word, long long 
 
 #  define set_bit(word, bit) word = crm_set_bit(__FUNCTION__, NULL, word, bit)
 #  define clear_bit(word, bit) word = crm_clear_bit(__FUNCTION__, NULL, word, bit)
+
+/*!
+ * \internal
+ * \brief Non-negative \c input value pass-through, \c subst value otherwise
+ * \param _input[in], value for pass-through if non-negative
+ * \param _subst[in], value to be used otherwise
+ *
+ * \retval \c _input or \c subst depending on \c input value
+ */
+static inline int
+subst_negative(int input, int subst)
+{
+    return __likely(input >= 0) ? input : subst;
+}
+
+/*!
+ * \internal
+ * \brief Macro to be used instead of repeated \c snprintf in certain cases
+ * \param _str[inout], the string buffer of size >= \c _max
+ * \param _offset[in], how many bytes from the beginning of \c str to operate
+ * \param _max[in], sentinel to prevent overruns as size <= real \c _str size
+ *
+ * \retval bytesize intended for writing (!= written), 0 on subsequent overrun,
+ *         number of bytes to fill the buffer if \c _str is \c NULL
+ *         or when underlying \c snprintf returned negative value
+ *         (hence when variable behind \c _offset is used as an accumulator
+ *         starting at 0, incremented with values yielded from repeated
+ *         invocations of this macro for a given isolated use case [with
+ *         non-empty desired string production], "no overrun AND \c str OK
+ *         AND no \c snprintf error" is implied by ending up with
+ *         a value >[=] 0 and less than \c max)
+ *
+ * \warning Avoid using parameters with side effects (e.g., <tt>foo++</tt>).
+ *
+ * \parblock
+ * Proven pattern/idiom for using this macro in the context:
+ * \code{.c}
+ * static const int xpath_max = 1024;
+ * char *xpath = calloc(1, xpath_max);
+ * CRM_CHECK(xpath_string != NULL, return -ENOMEM);
+ * offset += crm_snprintf_offset(xpath, offset, xpath_max, "//%s", head);
+ * offset += crm_snprintf_offset(xpath, offset, xpath_max, "/%s", rest);
+ * // change to "offset >= 0" if an empty string production is OK
+ * CRM_LOG_ASSERT(offset > 0 && offset < xpath_max);
+ * \endcode
+ *
+ * Furthermore, there are several handful implications:
+ * - negative value is never returned
+ * - to distinguish \c snprintf error in case <tt>max - \c offset</tt>
+ *   is returned, check \c errno value (provided it was a priori reset)
+ * \endparblock
+ */
+#define crm_snprintf_offset(_str, _offset, _max, ...)                 \
+    (__likely(_max > _offset && _offset >= 0)                         \
+     ? (__likely(_str != NULL)                                        \
+        ? subst_negative(                                             \
+              snprintf(_str + _offset, _max - _offset, __VA_ARGS__),  \
+              _max - _offset)                                         \
+        : _max - _offset)                                             \
+     : 0)
 
 void g_hash_destroy_str(gpointer data);
 
