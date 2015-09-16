@@ -98,7 +98,7 @@ END
 }
 
 remote_unsupported() {
-	ocf_log info "This pacemaker version does not support the ocf:pacemaker:remote agent"
+	ocf_log info "The ocf:pacemaker:remote agent should not be directly invoked except for meta-data action"
 	return $OCF_ERR_GENERIC
 }
 
