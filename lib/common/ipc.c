@@ -753,7 +753,10 @@ pick_ipc_buffer(unsigned int max)
         const char *env = getenv("PCMK_ipc_buffer");
 
         if (env) {
-            global_max = crm_parse_int(env, "0");
+            int env_max = crm_parse_int(env, "0");
+
+            global_max = (env_max > 0)? env_max : MAX_MSG_SIZE;
+
         } else {
             global_max = MAX_MSG_SIZE;
         }
