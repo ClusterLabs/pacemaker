@@ -238,16 +238,12 @@ class CIB11(ConfigBase):
                     # For levels-and, randomly choose targeting by node name or attribute
                     by = ""
                     if ftype == "levels-and":
-                        if self.CM.Env.RandomGen.choice([True, False]):
-                            node_id = self.get_node_id(node)
-                            if node_id == 0:
-                                # We couldn't find a node ID, so revert to targeting by name
-                                by = " (by name)"
-                            else:
-                                attr_nodes[node] = node_id
-                                by = " (by attribute)"
-                        else:
+                        node_id = self.get_node_id(node)
+                        if node_id == 0 or self.CM.Env.RandomGen.choice([True, False]):
                             by = " (by name)"
+                        else:
+                            attr_nodes[node] = node_id
+                            by = " (by attribute)"
 
                     self.CM.log(" - Using %s fencing for node: %s%s" % (ftype, node, by))
 
