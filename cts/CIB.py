@@ -208,7 +208,11 @@ class CIB11(ConfigBase):
             # Add all parameters specified by user
             entries = string.split(self.CM.Env["stonith-params"], ',')
             for entry in entries:
-                (name, value) = string.split(entry, '=')
+                try:
+                    (name, value) = string.split(entry, '=', 1)
+                except ValueError:
+                    print("Warning: skipping invalid fencing parameter: %s" % entry)
+                    continue
 
                 # Allow user to specify "all" as the node list, and expand it here
                 if name in [ "hostlist", "pcmk_host_list" ] and value == "all":
