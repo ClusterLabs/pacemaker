@@ -393,35 +393,6 @@ do_stonith_notify(int options, const char *type, int result, xmlNode * data)
     crm_trace("Notify complete");
 }
 
-static stonith_key_value_t *
-parse_device_list(const char *devices)
-{
-    int lpc = 0;
-    int max = 0;
-    int last = 0;
-    stonith_key_value_t *output = NULL;
-
-    if (devices == NULL) {
-        return output;
-    }
-
-    max = strlen(devices);
-    for (lpc = 0; lpc <= max; lpc++) {
-        if (devices[lpc] == ',' || devices[lpc] == 0) {
-            char *line = NULL;
-
-            line = calloc(1, 2 + lpc - last);
-            snprintf(line, 1 + lpc - last, "%s", devices + last);
-            output = stonith_key_value_add(output, NULL, line);
-            free(line);
-
-            last = lpc + 1;
-        }
-    }
-
-    return output;
-}
-
 static void
 topology_remove_helper(const char *node, int level)
 {
@@ -431,8 +402,8 @@ topology_remove_helper(const char *node, int level)
     xmlNode *notify_data = create_xml_node(NULL, STONITH_OP_LEVEL_DEL);
 
     crm_xml_add(data, F_STONITH_ORIGIN, __FUNCTION__);
-    crm_xml_add_int(data, XML_ATTR_ID, level);
-    crm_xml_add(data, F_STONITH_TARGET, node);
+    crm_xml_add_int(data, XML_ATTR_STONITH_INDEX, level);
+    crm_xml_add(data, XML_ATTR_STONITH_TARGET, node);
 
     rc = stonith_level_remove(data, &desc);
 
@@ -440,26 +411,6 @@ topology_remove_helper(const char *node, int level)
     crm_xml_add_int(notify_data, F_STONITH_ACTIVE, g_hash_table_size(topology));
 
     do_stonith_notify(0, STONITH_OP_LEVEL_DEL, rc, notify_data);
-
-    free_xml(notify_data);
-    free_xml(data);
-    free(desc);
-}
-
-static void
-topology_register_helper(const char *node, int level, stonith_key_value_t * device_list)
-{
-    int rc;
-    char *desc = NULL;
-    xmlNode *notify_data = create_xml_node(NULL, STONITH_OP_LEVEL_ADD);
-    xmlNode *data = create_level_registration_xml(node, level, device_list);
-
-    rc = stonith_level_register(data, &desc);
-
-    crm_xml_add(notify_data, F_STONITH_DEVICE, desc);
-    crm_xml_add_int(notify_data, F_STONITH_ACTIVE, g_hash_table_size(topology));
-
-    do_stonith_notify(0, STONITH_OP_LEVEL_ADD, rc, notify_data);
 
     free_xml(notify_data);
     free_xml(data);
@@ -494,29 +445,36 @@ remove_cib_device(xmlXPathObjectPtr xpathObj)
 static void
 handle_topology_change(xmlNode *match, bool remove) 
 {
+    int rc;
+    char *desc = NULL;
+    xmlNode *notify_data = create_xml_node(NULL, STONITH_OP_LEVEL_ADD);
+
     CRM_LOG_ASSERT(match != NULL);
-    if(match) {
+    if(match == NULL) {
+        return;
+    }
+
+    crm_trace("Updating %s", ID(match));
+
+    if(remove) {
         int index = 0;
-        const char *target;
-        const char *dev_list;
-        stonith_key_value_t *devices = NULL;
+        char *key = stonith_level_key(match, -1);
 
         crm_element_value_int(match, XML_ATTR_STONITH_INDEX, &index);
-        target = crm_element_value(match, XML_ATTR_STONITH_TARGET);
-        if(target == NULL) {
-            target = crm_element_value(match, XML_ATTR_STONITH_TARGET_PATTERN);
-        }
-        dev_list = crm_element_value(match, XML_ATTR_STONITH_DEVICES);
-        devices = parse_device_list(dev_list);
-
-        crm_trace("Updating %s[%d] (%s) to %s", target, index, ID(match), dev_list);
-
-        if(remove) {
-            topology_remove_helper(target, index);
-        }
-        topology_register_helper(target, index, devices);
-        stonith_key_value_freeall(devices, 1, 1);
+        topology_remove_helper(key, index);
+        free(key);
     }
+
+    rc = stonith_level_register(match, &desc);
+    notify_data = create_xml_node(NULL, STONITH_OP_LEVEL_ADD);
+
+    crm_xml_add(notify_data, F_STONITH_DEVICE, desc);
+    crm_xml_add_int(notify_data, F_STONITH_ACTIVE, g_hash_table_size(topology));
+
+    do_stonith_notify(0, STONITH_OP_LEVEL_ADD, rc, notify_data);
+
+    free_xml(notify_data);
+    free(desc);
 }
 
 static void
@@ -531,11 +489,7 @@ remove_fencing_topology(xmlXPathObjectPtr xpathObj)
         if (match && crm_element_value(match, XML_DIFF_MARKER)) {
             /* Deletion */
             int index = 0;
-            const char *target = crm_element_value(match, XML_ATTR_STONITH_TARGET);
-
-            if(target == NULL) {
-                target = crm_element_value(match, XML_ATTR_STONITH_TARGET_PATTERN);
-            }
+            char *target = stonith_level_key(match, -1);
 
             crm_element_value_int(match, XML_ATTR_STONITH_INDEX, &index);
             if (target == NULL) {

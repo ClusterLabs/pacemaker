@@ -256,16 +256,26 @@ stonith_api_remove_level(stonith_t * st, int options, const char *node, int leve
 xmlNode *
 create_level_registration_xml(const char *node, int level, stonith_key_value_t * device_list)
 {
+    int len = 0;
+    char *list = NULL;
     xmlNode *data = create_xml_node(NULL, F_STONITH_LEVEL);
 
     crm_xml_add_int(data, XML_ATTR_ID, level);
-    crm_xml_add(data, F_STONITH_TARGET, node);
+    crm_xml_add_int(data, XML_ATTR_STONITH_INDEX, level);
+    crm_xml_add(data, XML_ATTR_STONITH_TARGET, node);
     crm_xml_add(data, F_STONITH_ORIGIN, __FUNCTION__);
 
     for (; device_list; device_list = device_list->next) {
-        xmlNode *dev = create_xml_node(data, F_STONITH_DEVICE);
 
-        crm_xml_add(dev, XML_ATTR_ID, device_list->value);
+        int adding = strlen(device_list->value);
+        if(list) {
+            adding++;                                      /* +1 space */
+        }
+
+        crm_trace("Adding %s (%dc) at offset %d", device_list->value, adding, len);
+        list = realloc_safe(list, len + adding + 1);       /* +1 EOS */
+        sprintf(list + len, "%s%s", len?" ":"", device_list->value);
+        len += adding;
     }
 
     return data;

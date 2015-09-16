@@ -171,46 +171,48 @@ typedef struct stonith_topology_s {
 
 } stonith_topology_t;
 
-extern long long get_stonith_flag(const char *name);
+long long get_stonith_flag(const char *name);
 
-extern void stonith_command(crm_client_t * client, uint32_t id, uint32_t flags,
+void stonith_command(crm_client_t * client, uint32_t id, uint32_t flags,
                             xmlNode * op_request, const char *remote_peer);
 
-extern int stonith_device_register(xmlNode * msg, const char **desc, gboolean from_cib);
+int stonith_device_register(xmlNode * msg, const char **desc, gboolean from_cib);
 
-extern int stonith_device_remove(const char *id, gboolean from_cib);
+int stonith_device_remove(const char *id, gboolean from_cib);
 
-extern int stonith_level_register(xmlNode * msg, char **desc);
+char *stonith_level_key(xmlNode * msg, int mode);
+int stonith_level_kind(xmlNode * msg);
+int stonith_level_register(xmlNode * msg, char **desc);
 
-extern int stonith_level_remove(xmlNode * msg, char **desc);
+int stonith_level_remove(xmlNode * msg, char **desc);
 
-extern stonith_topology_t *find_topology_for_host(const char *host);
+stonith_topology_t *find_topology_for_host(const char *host);
 
-extern void do_local_reply(xmlNode * notify_src, const char *client_id, gboolean sync_reply,
+void do_local_reply(xmlNode * notify_src, const char *client_id, gboolean sync_reply,
                            gboolean from_peer);
 
-extern xmlNode *stonith_construct_reply(xmlNode * request, const char *output, xmlNode * data,
+xmlNode *stonith_construct_reply(xmlNode * request, const char *output, xmlNode * data,
                                         int rc);
 
 void
  do_stonith_async_timeout_update(const char *client, const char *call_id, int timeout);
 
-extern void do_stonith_notify(int options, const char *type, int result, xmlNode * data);
+void do_stonith_notify(int options, const char *type, int result, xmlNode * data);
 
-extern remote_fencing_op_t *initiate_remote_stonith_op(crm_client_t * client, xmlNode * request,
+remote_fencing_op_t *initiate_remote_stonith_op(crm_client_t * client, xmlNode * request,
                                                        gboolean manual_ack);
 
-extern int process_remote_stonith_exec(xmlNode * msg);
+int process_remote_stonith_exec(xmlNode * msg);
 
-extern int process_remote_stonith_query(xmlNode * msg);
+int process_remote_stonith_query(xmlNode * msg);
 
-extern void *create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer);
+void *create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer);
 
-extern int stonith_fence_history(xmlNode * msg, xmlNode ** output);
+int stonith_fence_history(xmlNode * msg, xmlNode ** output);
 
-extern void free_device(gpointer data);
+void free_device(gpointer data);
 
-extern void free_topology_entry(gpointer data);
+void free_topology_entry(gpointer data);
 
 bool fencing_peer_active(crm_node_t *peer);
 
