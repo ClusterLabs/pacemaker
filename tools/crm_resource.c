@@ -247,6 +247,7 @@ main(int argc, char **argv)
     const char *prop_set = NULL;
     const char *rsc_long_cmd = NULL;
     const char *longname = NULL;
+    GHashTable *override_params = NULL;
 
     char *xml_file = NULL;
     crm_ipc_t *crmd_channel = NULL;
@@ -503,11 +504,35 @@ main(int argc, char **argv)
         }
     }
 
-    if (optind < argc && argv[optind] != NULL) {
+    if (optind < argc
+        && argv[optind] != NULL
+        && rsc_cmd == 0
+        && rsc_long_cmd) {
+
+        override_params = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+        while (optind < argc && argv[optind] != NULL) {
+            char *name = calloc(1, strlen(argv[optind]));
+            char *value = calloc(1, strlen(argv[optind]));
+            int rc = sscanf(argv[optind], "%[^=]=%s", name, value);
+
+            if(rc == 2) {
+                g_hash_table_replace(override_params, name, value);
+
+            } else {
+                CMD_ERR("Error parsing '%s' as a name=value pair for --%s", argv[optind], rsc_long_cmd);
+                free(value);
+                free(name);
+                argerr++;
+            }
+            optind++;
+        }
+
+    } else if (optind < argc && argv[optind] != NULL && rsc_cmd == 0) {
         CMD_ERR("non-option ARGV-elements: ");
         while (optind < argc && argv[optind] != NULL) {
-            CMD_ERR("%s ", argv[optind++]);
-            ++argerr;
+            CMD_ERR("[%d of %d] %s ", optind, argc, argv[optind]);
+            optind++;
+            argerr++;
         }
     }
 
@@ -516,7 +541,8 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', EX_USAGE);
+        CMD_ERR("Invalid option(s) supplied, use --help for valid usage");
+        return crm_exit(EX_USAGE);
     }
 
     our_pid = calloc(1, 11);
@@ -631,7 +657,7 @@ main(int argc, char **argv)
         rc = wait_till_stable(timeout_ms, cib_conn);
 
     } else if (rsc_cmd == 0 && rsc_long_cmd) { /* force-(stop|start|check) */
-        rc = cli_resource_execute(rsc_id, rsc_long_cmd, cib_conn, &data_set);
+        rc = cli_resource_execute(rsc_id, rsc_long_cmd, override_params, cib_conn, &data_set);
 
     } else if (rsc_cmd == 'A' || rsc_cmd == 'a') {
         GListPtr lpc = NULL;

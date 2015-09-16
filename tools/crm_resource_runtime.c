@@ -1297,7 +1297,7 @@ wait_till_stable(int timeout_ms, cib_t * cib)
 }
 
 int
-cli_resource_execute(const char *rsc_id, const char *rsc_action, cib_t * cib, pe_working_set_t *data_set)
+cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *override_hash, cib_t * cib, pe_working_set_t *data_set)
 {
     int rc = pcmk_ok;
     svc_action_t *op = NULL;
@@ -1358,6 +1358,18 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, cib_t * cib, pe
 
     if(do_trace) {
         setenv("OCF_TRACE_RA", "1", 1);
+    }
+
+    if(op && override_hash) {
+        GHashTableIter iter;
+        char *name = NULL;
+        char *value = NULL;
+
+        g_hash_table_iter_init(&iter, override_hash);
+        while (g_hash_table_iter_next(&iter, (gpointer *) & name, (gpointer *) & value)) {
+            printf("Overriding the cluser configuration for '%s' with '%s' = '%s'\n", rsc->id, name, value);
+            g_hash_table_replace(op->params, strdup(name), strdup(value));
+        }
     }
 
     if(op == NULL) {
