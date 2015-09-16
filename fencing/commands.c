@@ -1163,8 +1163,8 @@ stonith_level_register(xmlNode * msg, char **desc)
         tp->target_attribute = crm_element_value_copy(level, XML_ATTR_STONITH_TARGET_ATTRIBUTE);
 
         g_hash_table_replace(topology, tp->target, tp);
-        crm_trace("Added %s to the topology (%d active entries)",
-                  target, g_hash_table_size(topology));
+        crm_trace("Added %s (%d) to the topology (%d active entries)",
+                  target, mode, g_hash_table_size(topology));
     } else {
         free(target);
     }
@@ -2166,6 +2166,7 @@ check_alternate_host(const char *target)
 {
     const char *alternate_host = NULL;
 
+    crm_trace("Checking if we (%s) can fence %s", stonith_our_uname, target);
     if (find_topology_for_host(target) && safe_str_eq(target, stonith_our_uname)) {
         GHashTableIter gIter;
         crm_node_t *entry = NULL;

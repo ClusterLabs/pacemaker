@@ -733,6 +733,7 @@ topology_matches(const stonith_topology_t *tp, const char *node)
             }
             break;
         case 0:
+            crm_trace("Testing %s against %s", node, tp->target);
             return safe_str_eq(tp->target, node);
     }
     crm_trace("No match for %s with %s", node, tp->target);
@@ -742,21 +743,24 @@ topology_matches(const stonith_topology_t *tp, const char *node)
 stonith_topology_t *
 find_topology_for_host(const char *host) 
 {
+    GHashTableIter tIter;
     stonith_topology_t *tp = g_hash_table_lookup(topology, host);
 
-    if(tp == NULL) {
-        GHashTableIter tIter;
+    if(tp != NULL) {
+        crm_trace("Found %s for %s in %d entries", tp->target, host, g_hash_table_size(topology));
+        return tp;
+    }
 
-        crm_trace("Testing %d topologies for a match", g_hash_table_size(topology));
-        g_hash_table_iter_init(&tIter, topology);
-        while (g_hash_table_iter_next(&tIter, NULL, (gpointer *) & tp)) {
-            if (topology_matches(tp, host)) {
-                break;
-            }
-            tp = NULL;
+    g_hash_table_iter_init(&tIter, topology);
+    while (g_hash_table_iter_next(&tIter, NULL, (gpointer *) & tp)) {
+        if (topology_matches(tp, host)) {
+            crm_trace("Found %s for %s in %d entries", tp->target, host, g_hash_table_size(topology));
+            return tp;
         }
     }
-    return tp;
+
+    crm_trace("No matches for %s in %d topology entries", host, g_hash_table_size(topology));
+    return NULL;
 }
 
 /*!
