@@ -38,7 +38,7 @@ Add RecourceRecover testcase Zhao Kai <zhaokai@cn.ibm.com>
 #                Thank you.
 #
 
-import time, os, re, string, tempfile
+import time, os, re, string, subprocess, tempfile
 from stat import *
 from cts import CTS
 from cts.CTSaudits import *
@@ -980,7 +980,8 @@ class BandwidthTest(CTSTest):
         self.__setitem__("min",0)
         self.__setitem__("max",0)
         self.__setitem__("totalbandwidth",0)
-        self.tempfile = tempfile.mktemp(".cts")
+        (handle, self.tempfile) = tempfile.mkstemp(".cts")
+        os.close(handle)
         self.startall = SimulStartLite(cm)
 
     def __call__(self, node):
@@ -2987,12 +2988,20 @@ class RemoteDriver(CTSTest):
             return
 
         # create key locally
-        os.system("/usr/share/pacemaker/tests/cts/lxc_autogen.sh -k &> /dev/null")
+        (handle, keyfile) = tempfile.mkstemp(".cts")
+        os.close(handle)
+        devnull = open(os.devnull, 'wb')
+        subprocess.check_call(["dd", "if=/dev/urandom", "of=%s" % keyfile, "bs=4096", "count=1"],
+            stdout=devnull, stderr=devnull)
+        devnull.close()
 
         # sync key throughout the cluster
         for node in self.Env["nodes"]:
-            rc = self.rsh(node, "mkdir /etc/pacemaker")
-            self.rsh.cp("/etc/pacemaker/authkey", "%s:/etc/pacemaker/authkey" % (node))
+            self.rsh(node, "mkdir -p --mode=0750 /etc/pacemaker")
+            self.rsh.cp(keyfile, "root@%s:/etc/pacemaker/authkey" % node)
+            self.rsh(node, "chgrp haclient /etc/pacemaker /etc/pacemaker/authkey")
+            self.rsh(node, "chmod 0640 /etc/pacemaker/authkey")
+        os.unlink(keyfile)
 
     def is_applicable(self):
         if not self.is_applicable_common():
