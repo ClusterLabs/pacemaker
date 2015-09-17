@@ -213,15 +213,19 @@ cli_resource_update_attribute(const char *rsc_id, const char *attr_set, const ch
     }
 
     if (safe_str_eq(attr_set_type, XML_TAG_ATTR_SETS)) {
-        rc = find_resource_attr(cib, XML_ATTR_ID, uber_parent(rsc)->id, XML_TAG_META_SETS, attr_set, attr_id,
-                                attr_name, &local_attr_id);
-        if(rc == pcmk_ok && do_force == FALSE) {
-            if (BE_QUIET == FALSE) {
+        if (do_force == FALSE) {
+            rc = find_resource_attr(cib, XML_ATTR_ID, uber_parent(rsc)->id,
+                                    XML_TAG_META_SETS, attr_set, attr_id,
+                                    attr_name, &local_attr_id);
+            if ((rc == pcmk_ok) && (BE_QUIET == FALSE)) {
                 printf("WARNING: There is already a meta attribute for '%s' called '%s' (id=%s)\n",
                        uber_parent(rsc)->id, attr_name, local_attr_id);
                 printf("         Delete '%s' first or use --force to override\n", local_attr_id);
             }
-            return -ENOTUNIQ;
+            free(local_attr_id);
+            if (rc == pcmk_ok) {
+                return -ENOTUNIQ;
+            }
         }
 
     } else if(rsc->parent) {

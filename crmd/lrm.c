@@ -1648,7 +1648,7 @@ do_lrm_invoke(long long action,
             gboolean in_progress = FALSE;
 
             CRM_CHECK(params != NULL, crm_log_xml_warn(input->xml, "Bad command");
-                      return);
+                      lrmd_free_rsc_info(rsc); return);
 
             meta_key = crm_meta_name(XML_LRM_ATTR_INTERVAL);
             op_interval = crm_element_value(params, meta_key);
@@ -1663,9 +1663,9 @@ do_lrm_invoke(long long action,
             free(meta_key);
 
             CRM_CHECK(op_task != NULL, crm_log_xml_warn(input->xml, "Bad command");
-                      return);
+                      lrmd_free_rsc_info(rsc); return);
             CRM_CHECK(op_interval != NULL, crm_log_xml_warn(input->xml, "Bad command");
-                      return);
+                      lrmd_free_rsc_info(rsc); return);
 
             op_key = generate_op_key(rsc->id, op_task, crm_parse_int(op_interval, "0"));
 
@@ -1702,7 +1702,7 @@ do_lrm_invoke(long long action,
 
             free(op_key);
 
-        } else if (rsc != NULL && safe_str_eq(operation, CRMD_ACTION_DELETE)) {
+        } else if (safe_str_eq(operation, CRMD_ACTION_DELETE)) {
             gboolean unregister = TRUE;
 
 #if ENABLE_ACL
@@ -1725,6 +1725,7 @@ do_lrm_invoke(long long action,
                 }
                 send_direct_ack(from_host, from_sys, NULL, op, rsc->id);
                 lrmd_free_event(op);
+                lrmd_free_rsc_info(rsc);
                 return;
             }
 #endif
@@ -1734,7 +1735,7 @@ do_lrm_invoke(long long action,
 
             delete_resource(lrm_state, rsc->id, rsc, NULL, from_sys, from_host, user_name, input, unregister);
 
-        } else if (rsc != NULL) {
+        } else {
             do_lrm_rsc_op(lrm_state, rsc, operation, input->xml, input->msg);
         }
 
