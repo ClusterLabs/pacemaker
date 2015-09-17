@@ -237,13 +237,13 @@ indexterm:[Constraints,Ordering,then]
 |
 |How to enforce the constraint. Allowed values:
 
-* +optional:+ Just a suggestion. Only applies if both resources are
+* +Optional:+ Just a suggestion. Only applies if both resources are
   starting/stopping. Any change in state by the +first+ resource will have no
   effect on the +then+ resource.
-* +mandatory:+ Always. If 'first' is stopping or cannot be started,
+* +Mandatory:+ Always. If 'first' is stopping or cannot be started,
   'then' must be stopped. If 'first' is restarted, 'then' (if running)
   will be stopped beforehand and started afterward.
-* +serialize:+ Ensure that no two stop/start actions occur concurrently
+* +Serialize:+ Ensure that no two stop/start actions occur concurrently
   for the resources. 'First' and 'then' can start in either order,
   but one must complete starting before the other can be started. A typical use
   case is when resource start-up puts a high load on the host.
@@ -270,8 +270,8 @@ started:
 [source,XML]
 -------
 <constraints>
-<rsc_order id="order-1" first="IP" then="Webserver" kind="optional"/>
-<rsc_order id="order-2" first="Database" then="Webserver" kind="mandatory" />
+<rsc_order id="order-1" first="IP" then="Webserver" kind="Optional"/>
+<rsc_order id="order-2" first="Database" then="Webserver" kind="Mandatory" />
 </constraints>
 -------
 ======
