@@ -223,8 +223,9 @@ unsigned int get_crm_log_level(void);
  *       if CRM_XS is used inside fmt and will not show up in syslog.
  */
 #  define crm_perror(level, fmt, args...) do {				\
-	const char *err = strerror(errno);				\
-        if(level <= crm_log_level) {                                    \
+        const char *err = strerror(errno);                              \
+        /* cast to int makes coverity happy when level == 0 */          \
+        if (level <= (int)crm_log_level) {                              \
             fprintf(stderr, fmt ": %s (%d)\n" , ##args, err, errno);    \
         }                                                               \
         do_crm_log(level, fmt ": %s (%d)" , ##args, err, errno);        \
