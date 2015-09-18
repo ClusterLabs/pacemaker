@@ -103,67 +103,6 @@ sysrq_trigger(char t)
 }
 
 
-static pid_t
-pcmk_locate_proc_entry(const char *name) 
-{
-    DIR *dp;
-    struct dirent *entry;
-    struct stat statbuf;
-
-    dp = opendir("/proc");
-    if (!dp) {
-        /* no proc directory to search through */
-        crm_notice("Can not read /proc directory to track existing components");
-        return 0;
-    }
-
-    while ((entry = readdir(dp)) != NULL) {
-        char procpath[128];
-        char value[64];
-        char key[16];
-        FILE *file;
-        int pid;
-
-        strcpy(procpath, "/proc/");
-        /* strlen("/proc/") + strlen("/status") + 1 = 14
-         * 128 - 14 = 114 */
-        strncat(procpath, entry->d_name, 114);
-
-        if (lstat(procpath, &statbuf)) {
-            continue;
-        }
-        if (!S_ISDIR(statbuf.st_mode) || !isdigit(entry->d_name[0])) {
-            continue;
-        }
-
-        strcat(procpath, "/status");
-
-        file = fopen(procpath, "r");
-        if (!file) {
-            continue;
-        }
-        if (fscanf(file, "%15s%63s", key, value) != 2) {
-            fclose(file);
-            continue;
-        }
-        fclose(file);
-
-        pid = atoi(entry->d_name);
-        if (pid <= 0) {
-            continue;
-        }
-
-        if (safe_str_eq(name, value) && crm_pid_active(pid) == 1) {
-            crm_notice("Found %s at process %d", value, pid);
-            closedir(dp);
-            return pid;
-        }
-    }
-
-    closedir(dp);
-    return 0;
-}
-
 static void
 pcmk_panic_local(void) 
 {
@@ -189,7 +128,7 @@ pcmk_panic_local(void)
         union sigval signal_value;
 
         memset(&signal_value, 0, sizeof(signal_value));
-        ppid = pcmk_locate_proc_entry("pacemakerd");
+        ppid = crm_procfs_pid_of("pacemakerd");
         do_crm_log_always(LOG_EMERG, "Signaling pacemakerd(%d) to panic", ppid);
 
         if(ppid > 1 && sigqueue(ppid, SIGQUIT, signal_value) < 0) {
@@ -295,8 +234,8 @@ pcmk_locate_sbd(void)
 
     if(sbd_pid < 0) {
         /* Fall back to /proc for systems that support it */
-        sbd_pid = pcmk_locate_proc_entry("sbd");
-        crm_trace("SBD detected at pid=%d (proc)");
+        sbd_pid = crm_procfs_pid_of("sbd");
+        crm_trace("SBD detected at pid=%d (proc)", sbd_pid);
     }
 
     if(sbd_pid < 0) {

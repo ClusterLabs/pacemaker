@@ -104,67 +104,9 @@ int throttle_num_cores(void)
  */
 static char *find_cib_loadfile(void) 
 {
-    DIR *dp;
-    struct dirent *entry;
-    struct stat statbuf;
-    char *match = NULL;
-    char procpath[128];
-    char value[64];
-    char key[16];
+    int pid = crm_procfs_pid_of("cib");
 
-    dp = opendir("/proc");
-    if (!dp) {
-        /* no proc directory to search through */
-        crm_notice("Can not read /proc directory to track existing components");
-        return NULL;
-    }
-
-    /* Iterate through contents of /proc */
-    while ((entry = readdir(dp)) != NULL) {
-        FILE *file;
-        int pid;
-
-        /* We're only interested in entries whose name is a PID,
-         * so skip anything non-numeric or that is too long.
-         *
-         * 114 = 128 - strlen("/proc/") - strlen("/status") - 1
-         */
-        pid = atoi(entry->d_name);
-        if ((pid <= 0) || (strlen(entry->d_name) > 114)) {
-            continue;
-        }
-
-        /* We're only interested in subdirectories */
-        strcpy(procpath, "/proc/");
-        strcat(procpath, entry->d_name);
-        if (lstat(procpath, &statbuf) || !S_ISDIR(statbuf.st_mode)) {
-            continue;
-        }
-
-        /* Read the first entry ("Name:") from the process's status file.
-         * We could handle the valgrind case if we parsed the cmdline file
-         * instead, but that's more of a pain than it's worth.
-         */
-        strcat(procpath, "/status");
-        file = fopen(procpath, "r");
-        if (!file) {
-            continue;
-        }
-        if (fscanf(file, "%15s%63s", key, value) != 2) {
-            fclose(file);
-            continue;
-        }
-        fclose(file);
-
-        if (safe_str_eq("cib", value)) {
-            /* We found the CIB! */
-            match = crm_strdup_printf("/proc/%d/stat", pid);
-            break;
-        }
-    }
-
-    closedir(dp);
-    return match;
+    return pid? crm_strdup_printf("/proc/%d/stat", pid) : NULL;
 }
 
 static bool throttle_cib_load(float *load) 
