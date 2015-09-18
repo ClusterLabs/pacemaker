@@ -33,6 +33,7 @@
 #  include <crm/common/logging.h>
 #  include <crm/common/io.h>
 #  include <crm/common/ipcs.h>
+#  include <crm/common/procfs.h>
 
 /* Dynamic loading of libraries */
 void *find_library_function(void **handle, const char *lib, const char *fn, int fatal);
