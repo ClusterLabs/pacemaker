@@ -569,9 +569,12 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
         key = calloc(1, strlen(spec) + 1);
         node = calloc(1, strlen(spec) + 1);
         rc = sscanf(spec, "%[^@]@%[^=]=%d", key, node, &outcome);
-        CRM_CHECK(rc == 3,
-                  fprintf(stderr, "Invalid operation spec: %s.  Only found %d fields\n", spec, rc);
-                  continue);
+        if (rc != 3) {
+            fprintf(stderr, "Invalid operation spec: %s.  Only found %d fields\n", spec, rc);
+            free(key);
+            free(node);
+            continue;
+        }
 
         parse_op_key(key, &resource, &task, &interval);
 
