@@ -940,7 +940,7 @@ max_delay_for_resource(pe_working_set_t * data_set, resource_t *rsc)
 
             delay = max_delay_for_resource(data_set, child);
             if(delay > max_delay) {
-                double seconds = delay / 1000;
+                double seconds = delay / 1000.0;
                 crm_trace("Calculated new delay of %.1fs due to %s", seconds, child->id);
                 max_delay = delay;
             }
@@ -972,7 +972,7 @@ max_delay_in(pe_working_set_t * data_set, GList *resources)
         delay = max_delay_for_resource(data_set, rsc);
 
         if(delay > max_delay) {
-            double seconds = delay / 1000;
+            double seconds = delay / 1000.0;
             crm_trace("Calculated new delay of %.1fs due to %s", seconds, rsc->id);
             max_delay = delay;
         }
