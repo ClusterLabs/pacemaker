@@ -2318,9 +2318,10 @@ crm_md5sum(const char *buffer)
     char *digest = NULL;
     unsigned char raw_digest[MD5_DIGEST_SIZE];
 
-    if(buffer != NULL) {
-        len = strlen(buffer);
+    if (buffer == NULL) {
+        buffer = "";
     }
+    len = strlen(buffer);
 
     crm_trace("Beginning digest of %d bytes", len);
     digest = malloc(2 * MD5_DIGEST_SIZE + 1);
