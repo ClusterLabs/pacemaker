@@ -38,9 +38,9 @@ endif
 
 %.8:	% $(MAN8DEPS)
 	chmod a+x $(abs_builddir)/$<
-	$(PCMK_V) PATH=$$PATH:$(abs_builddir) $(abs_builddir)/$< --help
-	$(PCMK_V) PATH=$$PATH:$(abs_builddir) $(abs_builddir)/$< --version
-	$(AM_V_MAN)PATH=$$PATH:$(abs_builddir) $(HELP2MAN) --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(abs_builddir)/$<
+	$(PCMK_V)  PATH=$(abs_builddir):$$PATH $(abs_builddir)/$< --help
+	$(PCMK_V)  PATH=$(abs_builddir):$$PATH $(abs_builddir)/$< --version
+	$(AM_V_MAN)PATH=$(abs_builddir):$$PATH $(HELP2MAN) --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(abs_builddir)/$<
 
 %.xml:  %
 	$(AM_V_GEN)$(abs_builddir)/$< metadata > $@
