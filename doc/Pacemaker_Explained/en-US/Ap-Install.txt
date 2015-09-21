@@ -99,7 +99,7 @@ the cluster.
 ]
 and gives the cluster a unique name (+mycluster+ in these examples).
 
-The +node+ section lists the nodes in this cluser. (See <<s-node-name>>
+The +node+ section lists the nodes in this cluster. (See <<s-node-name>>
 for how this affects pacemaker.)
 
 The +quorum+ section defines how the cluster uses quorum.

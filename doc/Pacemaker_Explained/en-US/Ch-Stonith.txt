@@ -76,6 +76,9 @@ one set of meta-attributes and one set of instance attributes.  This
 can be revisited if it becomes a significant limitation for people.
 ===========
 
+See the table below or run `man stonithd` to see special instance attributes
+that may be set for any fencing resource, regardless of fence agent.
+
 .Properties of Fencing Resources
 [width="95%",cols="5m,2,3,10<a",options="header",align="center"]
 |=========================================================
@@ -129,6 +132,16 @@ can be revisited if it becomes a significant limitation for people.
 
 indexterm:[pcmk_host_check,Fencing]
 indexterm:[Fencing,Property,pcmk_host_check]
+
+|pcmk_delay_max
+|time
+|0s
+|Enable a random delay of up to the time specified before executing stonith
+actions. This is sometimes used in two-node clusters to ensure that the
+nodes don't fence each other at the same time.
+
+indexterm:[pcmk_delay_max,Fencing]
+indexterm:[Fencing,Property,pcmk_delay_max]
 
 |pcmk_host_argument
 |string
@@ -522,7 +535,8 @@ Simply create the individual devices as you normally would, then
 define one or more +fencing-level+ entries in the +fencing-topology+ section of
 the configuration.
 
-* Each fencing level is attempted in order of ascending +index+.
+* Each fencing level is attempted in order of ascending +index+. Allowed
+  indexes are 0 to 9.
 * If a device fails, processing terminates for the current level.
   No further devices in that level are exercised, and the next level is attempted instead.
 * If the operation succeeds for all the listed devices in a level, the level is deemed to have passed.
