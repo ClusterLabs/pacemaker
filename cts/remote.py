@@ -243,6 +243,16 @@ class RemoteExec:
 
         return rc
 
+    def exists_on_all(self, filename, hosts, test="r"):
+        """ Return True if specified file exists on all specified hosts. """
+
+        for host in hosts:
+            rc = self(host, "test -%s %s" % (test, filename)) 
+            if rc != 0:
+                return False
+        return True
+
+
 class RemoteFactory:
     # Class variables
     rsh = RemotePrimitives()
