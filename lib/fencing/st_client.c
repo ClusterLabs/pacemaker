@@ -278,6 +278,9 @@ create_level_registration_xml(const char *node, int level, stonith_key_value_t *
         len += adding;
     }
 
+    crm_xml_add(data, XML_ATTR_STONITH_DEVICES, list);
+
+    free(list);
     return data;
 }
 
