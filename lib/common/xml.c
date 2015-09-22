@@ -129,6 +129,7 @@ static inline bool TRACKING_CHANGES(xmlNode *xml)
         if(buffer && rc < 0) {                                          \
             crm_perror(LOG_ERR, "snprintf failed at offset %d", offset); \
             (buffer)[(offset)] = 0;                                     \
+            break;                                                      \
         } else if(rc >= ((max) - (offset))) {                           \
             char *tmp = NULL;                                           \
             (max) = QB_MAX(CHUNK_SIZE, (max) * 2);                      \
