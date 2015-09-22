@@ -20,9 +20,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="8" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="23" operation="start" operation_key="base-group:0_start_0"/>
       </trigger>
     </inputs>
@@ -35,9 +32,6 @@
       </rsc_op>
     </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="8" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
       <trigger>
         <rsc_op id="20" operation="start" operation_key="o2cb:0_start_0" on_node="hex-0" on_node_uuid="hex-0"/>
       </trigger>
@@ -54,9 +48,6 @@
       </rsc_op>
     </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="8" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
       <trigger>
         <rsc_op id="21" operation="start" operation_key="clvm:0_start_0" on_node="hex-0" on_node_uuid="hex-0"/>
       </trigger>
@@ -86,9 +77,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="8" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="31" operation="start" operation_key="base-group:1_start_0"/>
       </trigger>
     </inputs>
@@ -101,9 +89,6 @@
       </rsc_op>
     </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="8" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
       <trigger>
         <rsc_op id="27" operation="start" operation_key="dlm:1_start_0" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
@@ -121,9 +106,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="8" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-      <trigger>
         <rsc_op id="28" operation="start" operation_key="o2cb:1_start_0" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
       <trigger>
@@ -139,9 +121,6 @@
       </rsc_op>
     </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="8" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
       <trigger>
         <rsc_op id="29" operation="start" operation_key="clvm:1_start_0" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
@@ -165,7 +144,11 @@
         <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="240000" />
       </pseudo_event>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="11" operation="monitor" operation_key="vg1:1_monitor_0" on_node="hex-9" on_node_uuid="hex-9"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="11" priority="1000000">
     <action_set>

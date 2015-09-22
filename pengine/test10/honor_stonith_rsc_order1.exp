@@ -8,9 +8,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="8" operation="start" operation_key="S_CLONE_start_0"/>
       </trigger>
     </inputs>
@@ -46,6 +43,9 @@
       </pseudo_event>
     </action_set>
     <inputs>
+      <trigger>
+        <rsc_op id="4" operation="monitor" operation_key="S_A:0_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
+      </trigger>
       <trigger>
         <pseudo_event id="14" operation="running" operation_key="S_GROUP_running_0"/>
       </trigger>
@@ -83,7 +83,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="5" operation="monitor" operation_key="S_B_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
       </trigger>
       <trigger>
         <pseudo_event id="13" operation="start" operation_key="S_GROUP_start_0"/>
@@ -108,7 +108,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="6" operation="monitor" operation_key="A_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
       </trigger>
     </inputs>
   </synapse>

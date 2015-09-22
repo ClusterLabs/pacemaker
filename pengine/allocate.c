@@ -828,47 +828,6 @@ stage0(pe_working_set_t * data_set)
     return TRUE;
 }
 
-static void
-wait_for_probe(resource_t * rsc, const char *action, action_t * probe_complete,
-               pe_working_set_t * data_set)
-{
-    if (probe_complete == NULL) {
-        return;
-    }
-
-    if (rsc->children) {
-        GListPtr gIter = rsc->children;
-
-        for (; gIter != NULL; gIter = gIter->next) {
-            resource_t *child = (resource_t *) gIter->data;
-
-            wait_for_probe(child, action, probe_complete, data_set);
-        }
-
-    } else {
-        char *key = NULL;
-
-        if (safe_str_eq(action, RSC_STOP) && g_list_length(rsc->running_on) == 1) {
-            node_t *node = (node_t *) rsc->running_on->data;
-
-            /* Stop actions on nodes that are shutting down do not need to wait for probes to complete
-             * Doing so prevents node shutdown in the presence of nodes that are coming up
-             * The purpose of waiting is to not stop resources until we know for sure the
-             *  intended destination is able to take them
-             */
-            if (node && node->details->shutdown) {
-                crm_debug("Skipping %s before %s_%s_0 due to %s shutdown",
-                          probe_complete->uuid, rsc->id, action, node->details->uname);
-                return;
-            }
-        }
-
-        key = generate_op_key(rsc->id, action, 0);
-        custom_action_order(NULL, NULL, probe_complete, rsc, key, NULL,
-                            pe_order_optional, data_set);
-    }
-}
-
 /*
  * Check nodes for resources started outside of the LRM
  */
@@ -959,35 +918,9 @@ probe_resources(pe_working_set_t * data_set)
 
             if (rsc->cmds->create_probe(rsc, node, probe_node_complete, FALSE, data_set)) {
                 update_action_flags(probe_complete, pe_action_optional | pe_action_clear);
-                update_action_flags(probe_node_complete, pe_action_optional | pe_action_clear);
-
-                if (probe_cluster_nodes_complete
-                    && (rsc->is_remote_node || rsc_contains_remote_node(data_set, rsc))) {
-                    update_action_flags(probe_cluster_nodes_complete, pe_action_optional | pe_action_clear);
-                    /* allow remote connection resources and resources
-                     * containing remote connection resources to run after all
-                     * cluster nodes are probed */
-                    wait_for_probe(rsc, RSC_START, probe_cluster_nodes_complete, data_set);
-                } else {
-                    wait_for_probe(rsc, RSC_START, probe_complete, data_set);
-                }
             }
         }
     }
-
-    gIter = data_set->resources;
-    for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *rsc = (resource_t *) gIter->data;
-
-        if (rsc->is_remote_node || rsc_contains_remote_node(data_set, rsc)) {
-            /* allow remote connection resources and any resources containing
-             * remote connection resources to run after cluster nodes are probed.*/
-            wait_for_probe(rsc, RSC_STOP, probe_cluster_nodes_complete, data_set);
-        } else {
-            wait_for_probe(rsc, RSC_STOP, probe_complete, data_set);
-        }
-    }
-
     return TRUE;
 }
 
@@ -1255,6 +1188,41 @@ allocate_resources(pe_working_set_t * data_set)
     }
 }
 
+static void
+cleanup_orphans(resource_t * rsc, pe_working_set_t * data_set)
+{
+    GListPtr gIter = NULL;
+
+    if (is_set(data_set->flags, pe_flag_stop_rsc_orphans) == FALSE) {
+        return;
+    }
+
+    /* Don't recurse into ->children, those are just unallocated clone instances */
+    if(is_not_set(rsc->flags, pe_rsc_orphan)) {
+        return;
+    }
+
+    for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+        node_t *node = (node_t *) gIter->data;
+
+        if (node->details->online && get_failcount(node, rsc, NULL, data_set)) {
+            action_t *clear_op = NULL;
+
+            clear_op = custom_action(rsc, crm_concat(rsc->id, CRM_OP_CLEAR_FAILCOUNT, '_'),
+                                     CRM_OP_CLEAR_FAILCOUNT, node, FALSE, TRUE, data_set);
+
+            add_hash_param(clear_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
+            pe_rsc_info(rsc, "Clearing failcount (%d) for orphaned resource %s on %s (%s)",
+                        get_failcount(node, rsc, NULL, data_set), rsc->id, node->details->uname,
+                        clear_op->uuid);
+
+            custom_action_order(rsc, NULL, clear_op,
+                            rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
+                            pe_order_optional, data_set);
+        }
+    }
+}
+
 gboolean
 stage5(pe_working_set_t * data_set)
 {
@@ -1324,15 +1292,21 @@ stage5(pe_working_set_t * data_set)
          ptest[14637]: 2010/09/27_17:56:25 notice: TRACE: do_calculations: pengine.c:306 Processing fencing and shutdown cases
          ptest[14637]: 2010/09/27_17:56:25 notice: TRACE: do_calculations: pengine.c:313 Applying ordering constraints
          ptest[14637]: 2010/09/27_17:56:25 notice: TRACE: do_calculations: pengine.c:320 Create transition graph
-         */
+        */
 
         probe_resources(data_set);
     }
 
+    crm_trace("Handle orphans");
+
+    for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
+        resource_t *rsc = (resource_t *) gIter->data;
+        cleanup_orphans(rsc, data_set);
+    }
+
     crm_trace("Creating actions");
 
-    gIter = data_set->resources;
-    for (; gIter != NULL; gIter = gIter->next) {
+    for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
         resource_t *rsc = (resource_t *) gIter->data;
 
         rsc->cmds->create_actions(rsc, data_set);

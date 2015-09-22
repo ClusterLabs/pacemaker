@@ -32,11 +32,7 @@
         <attributes CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="3" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="3">
     <action_set>
@@ -47,7 +43,16 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="3" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="6" operation="monitor" operation_key="fake_monitor_0" on_node="18builder" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="9" operation="monitor" operation_key="fake_monitor_0" on_node="18node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="12" operation="monitor" operation_key="fake_monitor_0" on_node="18node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="15" operation="monitor" operation_key="fake_monitor_0" on_node="remote1" on_node_uuid="remote1" router_node="18builder"/>
       </trigger>
     </inputs>
   </synapse>
@@ -113,7 +118,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="4" operation="probe_nodes_complete" operation_key="probe_nodes_complete"/>
+        <rsc_op id="7" operation="monitor" operation_key="remote1_monitor_0" on_node="18builder" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="10" operation="monitor" operation_key="remote1_monitor_0" on_node="18node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="13" operation="monitor" operation_key="remote1_monitor_0" on_node="18node2" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
@@ -203,24 +214,6 @@
   </synapse>
   <synapse id="17">
     <action_set>
-      <pseudo_event id="4" operation="probe_nodes_complete" operation_key="probe_nodes_complete">
-        <attributes />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="5" operation="probe_complete" operation_key="probe_complete-18builder" on_node="18builder" on_node_uuid="5"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="8" operation="probe_complete" operation_key="probe_complete-18node1" on_node="18node1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="11" operation="probe_complete" operation_key="probe_complete-18node2" on_node="18node2" on_node_uuid="2"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="18">
-    <action_set>
       <pseudo_event id="3" operation="probe_complete" operation_key="probe_complete">
         <attributes />
       </pseudo_event>
@@ -231,7 +224,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="19">
+  <synapse id="18">
     <action_set>
       <pseudo_event id="2" operation="all_stopped" operation_key="all_stopped">
         <attributes />

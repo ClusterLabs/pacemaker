@@ -21,7 +21,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="4" operation="monitor" operation_key="ClusterIP_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
       </trigger>
     </inputs>
   </synapse>
@@ -56,7 +56,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="5" operation="monitor" operation_key="ClusterIP2_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
       </trigger>
       <trigger>
         <rsc_op id="6" operation="start" operation_key="ClusterIP_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>

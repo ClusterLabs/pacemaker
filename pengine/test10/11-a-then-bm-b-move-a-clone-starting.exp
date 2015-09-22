@@ -8,9 +8,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-      <trigger>
         <rsc_op id="6" operation="stop" operation_key="myclone_stop_0" internal_operation_key="myclone:0_stop_0" on_node="f20node1" on_node_uuid="1"/>
       </trigger>
       <trigger>
@@ -27,7 +24,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="5" operation="monitor" operation_key="myclone_monitor_0" internal_operation_key="myclone:0_monitor_0" on_node="f20node2" on_node_uuid="2"/>
       </trigger>
       <trigger>
         <pseudo_event id="10" operation="stop" operation_key="myclone-clone_stop_0"/>
@@ -93,6 +90,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <rsc_op id="5" operation="monitor" operation_key="myclone_monitor_0" internal_operation_key="myclone:0_monitor_0" on_node="f20node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="11" operation="stopped" operation_key="myclone-clone_stopped_0"/>
       </trigger>
     </inputs>
@@ -120,11 +120,7 @@
         <attributes CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="9" priority="1000000">
     <action_set>

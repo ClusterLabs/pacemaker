@@ -19,7 +19,5 @@ digraph "g" {
 "probe_complete c20.chepkov.lan" [ style=bold color="green" fontcolor="black" ]
 "probe_complete c21.chepkov.lan" -> "probe_complete" [ style = bold]
 "probe_complete c21.chepkov.lan" [ style=bold color="green" fontcolor="black" ]
-"probe_complete" -> "dummy2_stop_0 c20.chepkov.lan" [ style = bold]
-"probe_complete" -> "dummy3_stop_0 c21.chepkov.lan" [ style = bold]
 "probe_complete" [ style=bold color="green" fontcolor="orange" ]
 }

@@ -8,7 +8,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="6" operation="monitor" operation_key="stonith-1_monitor_0" on_node="dktest1sles10" on_node_uuid="c563f60c-45a8-439e-85dc-645f4ecc150d"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="10" operation="monitor" operation_key="stonith-1_monitor_0" on_node="dktest2sles10" on_node_uuid="6676c8d5-552e-4a86-a2ea-172e954f7342"/>
       </trigger>
     </inputs>
   </synapse>
@@ -78,9 +81,6 @@
      </action_set>
      <inputs>
        <trigger>
-        <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-      <trigger>
         <rsc_op id="12" operation="demote" operation_key="drbd1:0_demote_0" on_node="dktest2sles10" on_node_uuid="6676c8d5-552e-4a86-a2ea-172e954f7342"/>
       </trigger>
       <trigger>
@@ -138,9 +138,6 @@
        </rsc_op>
      </action_set>
      <inputs>
-       <trigger>
-        <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
        <trigger>
         <pseudo_event id="16" operation="start" operation_key="ms-drbd1_start_0"/>
        </trigger>
@@ -402,6 +399,9 @@
      </action_set>
      <inputs>
        <trigger>
+        <rsc_op id="7" operation="monitor" operation_key="drbd1:1_monitor_0" on_node="dktest1sles10" on_node_uuid="c563f60c-45a8-439e-85dc-645f4ecc150d"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="19" operation="notified" operation_key="ms-drbd1_confirmed-pre_notify_start_0"/>
        </trigger>
        <trigger>
@@ -421,7 +421,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="8" operation="monitor" operation_key="testip_monitor_0" on_node="dktest1sles10" on_node_uuid="c563f60c-45a8-439e-85dc-645f4ecc150d"/>
        </trigger>
      </inputs>
    </synapse>

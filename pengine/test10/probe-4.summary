@@ -25,11 +25,9 @@ Online: [ pcmk-1 pcmk-2 pcmk-3 ]
      Stopped: [ pcmk-4 ]
 
 Transition Summary:
- * Start   migrator	(pcmk-3)
+ * Start   migrator	(pcmk-3 - blocked)
 
 Executing cluster transition:
-Transition failed: terminated
-An invalid transition was produced
 
 Revised cluster status:
 Node pcmk-4: pending

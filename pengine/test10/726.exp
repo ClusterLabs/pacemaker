@@ -57,7 +57,16 @@
      </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="5" operation="monitor" operation_key="rsc_sgi2_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="15" operation="monitor" operation_key="rsc_sgi2_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="25" operation="monitor" operation_key="rsc_sgi2_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="33" operation="monitor" operation_key="rsc_sgi2_monitor_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a"/>
       </trigger>
     </inputs>
    </synapse>
@@ -119,7 +128,13 @@
      </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="6" operation="monitor" operation_key="rsc_ibm1_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="16" operation="monitor" operation_key="rsc_ibm1_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="26" operation="monitor" operation_key="rsc_ibm1_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947"/>
       </trigger>
       <trigger>
         <rsc_op id="42" operation="stop" operation_key="rsc_ibm1_stop_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a"/>
@@ -135,7 +150,13 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="6" operation="monitor" operation_key="rsc_ibm1_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="16" operation="monitor" operation_key="rsc_ibm1_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="26" operation="monitor" operation_key="rsc_ibm1_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947"/>
        </trigger>
      </inputs>
    </synapse>
@@ -188,7 +209,16 @@
      </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="7" operation="monitor" operation_key="rsc_test02_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="17" operation="monitor" operation_key="rsc_test02_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="27" operation="monitor" operation_key="rsc_test02_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="34" operation="monitor" operation_key="rsc_test02_monitor_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a"/>
       </trigger>
     </inputs>
    </synapse>
@@ -286,9 +316,6 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-       <trigger>
         <pseudo_event id="60" operation="start" operation_key="DoFencing_start_0"/>
        </trigger>
      </inputs>
@@ -332,9 +359,6 @@
       </rsc_op>
     </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
       <trigger>
         <pseudo_event id="60" operation="start" operation_key="DoFencing_start_0"/>
       </trigger>
@@ -389,9 +413,6 @@
      </action_set>
      <inputs>
        <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="60" operation="start" operation_key="DoFencing_start_0"/>
        </trigger>
      </inputs>
@@ -454,9 +475,6 @@
      </action_set>
      <inputs>
        <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="60" operation="start" operation_key="DoFencing_start_0"/>
        </trigger>
      </inputs>
@@ -527,7 +545,47 @@
         <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_timeout="20000" />
        </pseudo_event>
      </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="9" operation="monitor" operation_key="child_DoFencing:0_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="10" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="11" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="12" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="19" operation="monitor" operation_key="child_DoFencing:0_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="20" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="21" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="22" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="29" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="30" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="31" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="35" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="36" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a"/>
+      </trigger>
+    </inputs>
    </synapse>
   <synapse id="49" priority="1000000">
      <action_set>

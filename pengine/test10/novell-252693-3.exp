@@ -21,9 +21,6 @@
      </action_set>
      <inputs>
        <trigger>
-        <pseudo_event id="8" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-       <trigger>
         <pseudo_event id="21" operation="start" operation_key="stonithcloneset_start_0"/>
        </trigger>
      </inputs>
@@ -58,7 +55,11 @@
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="10" operation="monitor" operation_key="stonithclone:1_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
+      </trigger>
+    </inputs>
   </synapse>
    <synapse id="5">
      <action_set>
@@ -81,9 +82,6 @@
        </rsc_op>
      </action_set>
      <inputs>
-       <trigger>
-        <pseudo_event id="8" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
        <trigger>
         <pseudo_event id="29" operation="start" operation_key="evmsdcloneset_start_0"/>
        </trigger>
@@ -119,7 +117,11 @@
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
        </pseudo_event>
      </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="11" operation="monitor" operation_key="evmsdclone:1_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
+      </trigger>
+    </inputs>
    </synapse>
   <synapse id="10" priority="1000000">
      <action_set>
@@ -168,9 +170,6 @@
        </rsc_op>
      </action_set>
      <inputs>
-       <trigger>
-        <pseudo_event id="8" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
        <trigger>
         <pseudo_event id="36" operation="start" operation_key="evmscloneset_start_0"/>
        </trigger>
@@ -264,6 +263,9 @@
      </action_set>
      <inputs>
        <trigger>
+        <rsc_op id="12" operation="monitor" operation_key="evmsclone:1_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="30" operation="running" operation_key="evmsdcloneset_running_0"/>
        </trigger>
        <trigger>
@@ -325,9 +327,6 @@
         <rsc_op id="5" operation="stop" operation_key="imagestoreclone:0_stop_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117"/>
       </trigger>
       <trigger>
-        <pseudo_event id="8" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="52" operation="start" operation_key="imagestorecloneset_start_0"/>
        </trigger>
      </inputs>
@@ -350,7 +349,7 @@
      </action_set>
      <inputs>
        <trigger>
-        <pseudo_event id="8" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="13" operation="monitor" operation_key="imagestoreclone:0_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
       </trigger>
       <trigger>
         <pseudo_event id="58" operation="stop" operation_key="imagestorecloneset_stop_0"/>
@@ -395,9 +394,6 @@
      </action_set>
      <inputs>
        <trigger>
-        <pseudo_event id="8" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="52" operation="start" operation_key="imagestorecloneset_start_0"/>
        </trigger>
      </inputs>
@@ -562,6 +558,9 @@
      </action_set>
      <inputs>
        <trigger>
+        <rsc_op id="13" operation="monitor" operation_key="imagestoreclone:0_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="41" operation="notified" operation_key="evmscloneset_confirmed-post_notify_running_0"/>
        </trigger>
       <trigger>
@@ -635,9 +634,6 @@
        </rsc_op>
      </action_set>
      <inputs>
-       <trigger>
-        <pseudo_event id="8" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
        <trigger>
         <pseudo_event id="68" operation="start" operation_key="configstorecloneset_start_0"/>
        </trigger>
@@ -731,6 +727,9 @@
      </action_set>
      <inputs>
        <trigger>
+        <rsc_op id="14" operation="monitor" operation_key="configstoreclone:1_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="41" operation="notified" operation_key="evmscloneset_confirmed-post_notify_running_0"/>
        </trigger>
        <trigger>
@@ -791,7 +790,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="8" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="15" operation="monitor" operation_key="sles10_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
        </trigger>
        <trigger>
         <pseudo_event id="57" operation="notified" operation_key="imagestorecloneset_confirmed-post_notify_running_0"/>
@@ -816,7 +815,7 @@
      </action_set>
      <inputs>
        <trigger>
-        <pseudo_event id="8" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="15" operation="monitor" operation_key="sles10_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
        </trigger>
       <trigger>
         <rsc_op id="84" operation="migrate_from" operation_key="sles10_migrate_from_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>

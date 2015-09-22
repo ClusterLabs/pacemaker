@@ -22,11 +22,7 @@
         <attributes CRM_meta_timeout="120000" />
       </rsc_op>
     </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="2">
     <action_set>
@@ -62,11 +58,7 @@
         <attributes CRM_meta_timeout="120000" />
       </rsc_op>
     </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="6" priority="1000000">
     <action_set>

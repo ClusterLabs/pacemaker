@@ -759,9 +759,6 @@
      </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="18" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="227" operation="start" operation_key="CloneSet_start_0"/>
       </trigger>
     </inputs>
@@ -859,9 +856,6 @@
        </rsc_op>
      </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="18" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
       <trigger>
         <pseudo_event id="227" operation="start" operation_key="CloneSet_start_0"/>
       </trigger>
@@ -961,9 +955,6 @@
      </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="18" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="227" operation="start" operation_key="CloneSet_start_0"/>
       </trigger>
     </inputs>
@@ -1061,9 +1052,6 @@
        </rsc_op>
      </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="18" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
       <trigger>
         <pseudo_event id="227" operation="start" operation_key="CloneSet_start_0"/>
       </trigger>
@@ -1163,9 +1151,6 @@
      </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="18" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="227" operation="start" operation_key="CloneSet_start_0"/>
       </trigger>
     </inputs>
@@ -1263,9 +1248,6 @@
        </rsc_op>
      </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="18" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
       <trigger>
         <pseudo_event id="227" operation="start" operation_key="CloneSet_start_0"/>
       </trigger>
@@ -1365,9 +1347,6 @@
      </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="18" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="227" operation="start" operation_key="CloneSet_start_0"/>
       </trigger>
     </inputs>
@@ -1465,9 +1444,6 @@
        </rsc_op>
      </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="18" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
       <trigger>
         <pseudo_event id="227" operation="start" operation_key="CloneSet_start_0"/>
       </trigger>
@@ -1587,7 +1563,200 @@
         <attributes CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_timeout="20000" />
        </pseudo_event>
      </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="29" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="30" operation="monitor" operation_key="child_CloneSet:1_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="31" operation="monitor" operation_key="child_CloneSet:2_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="32" operation="monitor" operation_key="child_CloneSet:3_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="33" operation="monitor" operation_key="child_CloneSet:4_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="34" operation="monitor" operation_key="child_CloneSet:5_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="35" operation="monitor" operation_key="child_CloneSet:6_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="36" operation="monitor" operation_key="child_CloneSet:7_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="46" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="47" operation="monitor" operation_key="child_CloneSet:1_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="48" operation="monitor" operation_key="child_CloneSet:2_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="49" operation="monitor" operation_key="child_CloneSet:3_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="50" operation="monitor" operation_key="child_CloneSet:4_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="51" operation="monitor" operation_key="child_CloneSet:5_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="52" operation="monitor" operation_key="child_CloneSet:6_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="53" operation="monitor" operation_key="child_CloneSet:7_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="66" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="67" operation="monitor" operation_key="child_CloneSet:1_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="68" operation="monitor" operation_key="child_CloneSet:2_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="69" operation="monitor" operation_key="child_CloneSet:3_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="70" operation="monitor" operation_key="child_CloneSet:4_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="71" operation="monitor" operation_key="child_CloneSet:5_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="72" operation="monitor" operation_key="child_CloneSet:6_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="73" operation="monitor" operation_key="child_CloneSet:7_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="87" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="88" operation="monitor" operation_key="child_CloneSet:1_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="89" operation="monitor" operation_key="child_CloneSet:2_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="90" operation="monitor" operation_key="child_CloneSet:3_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="91" operation="monitor" operation_key="child_CloneSet:4_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="92" operation="monitor" operation_key="child_CloneSet:5_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="93" operation="monitor" operation_key="child_CloneSet:6_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="94" operation="monitor" operation_key="child_CloneSet:7_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="99" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="100" operation="monitor" operation_key="child_CloneSet:1_monitor_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="101" operation="monitor" operation_key="child_CloneSet:2_monitor_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="102" operation="monitor" operation_key="child_CloneSet:3_monitor_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="103" operation="monitor" operation_key="child_CloneSet:4_monitor_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="104" operation="monitor" operation_key="child_CloneSet:5_monitor_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="105" operation="monitor" operation_key="child_CloneSet:6_monitor_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="106" operation="monitor" operation_key="child_CloneSet:7_monitor_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="121" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="122" operation="monitor" operation_key="child_CloneSet:1_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="123" operation="monitor" operation_key="child_CloneSet:2_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="124" operation="monitor" operation_key="child_CloneSet:3_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="125" operation="monitor" operation_key="child_CloneSet:4_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="126" operation="monitor" operation_key="child_CloneSet:5_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="127" operation="monitor" operation_key="child_CloneSet:6_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="128" operation="monitor" operation_key="child_CloneSet:7_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="144" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="145" operation="monitor" operation_key="child_CloneSet:1_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="146" operation="monitor" operation_key="child_CloneSet:2_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="147" operation="monitor" operation_key="child_CloneSet:3_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="148" operation="monitor" operation_key="child_CloneSet:4_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="149" operation="monitor" operation_key="child_CloneSet:5_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="150" operation="monitor" operation_key="child_CloneSet:6_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="151" operation="monitor" operation_key="child_CloneSet:7_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="165" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="166" operation="monitor" operation_key="child_CloneSet:1_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="167" operation="monitor" operation_key="child_CloneSet:2_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="168" operation="monitor" operation_key="child_CloneSet:3_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="169" operation="monitor" operation_key="child_CloneSet:4_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="170" operation="monitor" operation_key="child_CloneSet:5_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="171" operation="monitor" operation_key="child_CloneSet:6_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="172" operation="monitor" operation_key="child_CloneSet:7_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="164" priority="1000000">
     <action_set>

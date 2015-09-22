@@ -21,9 +21,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="3" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="16" operation="start" operation_key="single-clone_start_0"/>
       </trigger>
     </inputs>
@@ -67,9 +64,6 @@
       </rsc_op>
     </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="3" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
       <trigger>
         <pseudo_event id="16" operation="start" operation_key="single-clone_start_0"/>
       </trigger>
@@ -117,7 +111,20 @@
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="5" operation="monitor" operation_key="single:0_monitor_0" on_node="rhel7-auto1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="6" operation="monitor" operation_key="single:1_monitor_0" on_node="rhel7-auto1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="8" operation="monitor" operation_key="single:0_monitor_0" on_node="rhel7-auto2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="9" operation="monitor" operation_key="single:1_monitor_0" on_node="rhel7-auto2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="10" priority="1000000">
     <action_set>

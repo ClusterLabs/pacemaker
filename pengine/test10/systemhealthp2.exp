@@ -30,7 +30,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="5" operation="monitor" operation_key="apache_1_monitor_0" on_node="hs21c" on_node_uuid="c97a3ee5-02d8-4fad-a9fb-a79ae2b35549"/>
       </trigger>
       <trigger>
         <pseudo_event id="11" operation="stonith_complete" operation_key="stonith_complete"/>
@@ -68,7 +68,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="6" operation="monitor" operation_key="nfs_1_monitor_0" on_node="hs21c" on_node_uuid="c97a3ee5-02d8-4fad-a9fb-a79ae2b35549"/>
       </trigger>
       <trigger>
         <pseudo_event id="11" operation="stonith_complete" operation_key="stonith_complete"/>

@@ -2661,6 +2661,7 @@ gboolean
 native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
                     gboolean force, pe_working_set_t * data_set)
 {
+    enum pe_ordering flags = pe_order_optional;
     char *key = NULL;
     action_t *probe = NULL;
     node_t *running = NULL;
@@ -2797,7 +2798,35 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         add_hash_param(probe->meta, XML_ATTR_TE_TARGET_RC, rc_master);
     }
 
-    pe_rsc_debug(rsc, "Probing %s on %s (%s)", rsc->id, node->details->uname, role2text(rsc->role));
+    crm_debug("Probing %s on %s (%s) %d %p", rsc->id, node->details->uname, role2text(rsc->role),
+              is_set(probe->flags, pe_action_runnable), rsc->running_on);
+
+    if(is_set(rsc->flags, pe_rsc_fence_device) && is_set(data_set->flags, pe_flag_enable_unfencing)) {
+        top = rsc;
+
+    } else if (top->variant < pe_clone) {
+        top = rsc;
+
+    } else {
+        crm_trace("Probing %s on %s (%s) as %s", rsc->id, node->details->uname, role2text(rsc->role), top->id);
+    }
+
+    if(is_not_set(probe->flags, pe_action_runnable) && rsc->running_on == NULL) {
+        /* Prevent the start from occuring if rsc isn't active, but
+         * don't cause it to stop if it was active already
+         */
+        flags |= pe_order_runnable_left;
+    }
+
+    custom_action_order(rsc, NULL, probe,
+                        top, generate_op_key(top->id, RSC_START, 0), NULL,
+                        flags, data_set);
+
+    if (node && node->details->shutdown == FALSE) {
+        custom_action_order(rsc, NULL, probe,
+                            rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
+                            pe_order_optional, data_set);
+    }
 
     if(is_set(rsc->flags, pe_rsc_fence_device) && is_set(data_set->flags, pe_flag_enable_unfencing)) {
         /* Normally rsc.start depends on probe complete which depends
@@ -2806,9 +2835,6 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
          *
          * So instead we explicitly order 'rsc.probe then rsc.start'
          */
-        custom_action_order(rsc, NULL, probe,
-                            rsc, generate_op_key(rsc->id, RSC_START, 0), NULL,
-                            pe_order_optional, data_set);
 
     } else {
         order_actions(probe, complete, pe_order_implies_then);

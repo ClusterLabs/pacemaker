@@ -55,28 +55,34 @@ Executing cluster transition:
  * Resource action: FAKE5           monitor on 18node2
  * Resource action: FAKE5           monitor on 18node1
  * Resource action: FAKECLONE1:0    monitor on 18node1
- * Pseudo action:   FAKECLONE1-clone_start_0
  * Resource action: FAKECLONE2:0    monitor on 18node3
  * Resource action: FAKECLONE2:1    monitor on 18node1
  * Resource action: FAKECLONE2:3    monitor on 18node4
- * Pseudo action:   FAKECLONE2-clone_start_0
  * Pseudo action:   FAKEGROUP_start_0
  * Resource action: FAKE6           monitor on 18node2
  * Resource action: FAKE6           monitor on 18node1
  * Resource action: FAKE7           monitor on 18node2
  * Resource action: FAKE7           monitor on 18node1
- * Pseudo action:   probe_nodes_complete
- * Resource action: remote1         start on 18node1
- * Resource action: FAKE5           monitor on remote1
- * Resource action: FAKECLONE1:1    monitor on remote1
- * Resource action: FAKECLONE2:4    monitor on remote1
- * Pseudo action:   probe_complete
  * Resource action: shooter         start on 18node2
- * Resource action: remote1         monitor=60000 on 18node1
+ * Resource action: remote1         start on 18node1
  * Resource action: FAKE1           start on 18node4
  * Resource action: FAKE2           start on 18node2
  * Resource action: FAKE3           start on 18node3
  * Resource action: FAKE4           start on 18node4
+ * Resource action: FAKE5           monitor on remote1
+ * Resource action: FAKECLONE1:1    monitor on remote1
+ * Pseudo action:   FAKECLONE1-clone_start_0
+ * Resource action: FAKECLONE2:4    monitor on remote1
+ * Pseudo action:   FAKECLONE2-clone_start_0
+ * Resource action: FAKE6           start on 18node1
+ * Resource action: FAKE7           start on 18node1
+ * Pseudo action:   probe_complete
+ * Resource action: shooter         monitor=60000 on 18node2
+ * Resource action: remote1         monitor=60000 on 18node1
+ * Resource action: FAKE1           monitor=60000 on 18node4
+ * Resource action: FAKE2           monitor=60000 on 18node2
+ * Resource action: FAKE3           monitor=60000 on 18node3
+ * Resource action: FAKE4           monitor=60000 on 18node4
  * Resource action: FAKE5           start on remote1
  * Resource action: FAKECLONE1:0    start on 18node1
  * Resource action: FAKECLONE1:1    start on remote1
@@ -87,13 +93,9 @@ Executing cluster transition:
  * Resource action: FAKECLONE2:3    start on 18node4
  * Resource action: FAKECLONE2:4    start on remote1
  * Pseudo action:   FAKECLONE2-clone_running_0
- * Resource action: FAKE6           start on 18node1
- * Resource action: FAKE7           start on 18node1
- * Resource action: shooter         monitor=60000 on 18node2
- * Resource action: FAKE1           monitor=60000 on 18node4
- * Resource action: FAKE2           monitor=60000 on 18node2
- * Resource action: FAKE3           monitor=60000 on 18node3
- * Resource action: FAKE4           monitor=60000 on 18node4
+ * Pseudo action:   FAKEGROUP_running_0
+ * Resource action: FAKE6           monitor=10000 on 18node1
+ * Resource action: FAKE7           monitor=10000 on 18node1
  * Resource action: FAKE5           monitor=60000 on remote1
  * Resource action: FAKECLONE1:0    monitor=60000 on 18node1
  * Resource action: FAKECLONE1:1    monitor=60000 on remote1
@@ -102,9 +104,6 @@ Executing cluster transition:
  * Resource action: FAKECLONE2:2    monitor=60000 on 18node2
  * Resource action: FAKECLONE2:3    monitor=60000 on 18node4
  * Resource action: FAKECLONE2:4    monitor=60000 on remote1
- * Pseudo action:   FAKEGROUP_running_0
- * Resource action: FAKE6           monitor=10000 on 18node1
- * Resource action: FAKE7           monitor=10000 on 18node1
 
 Revised cluster status:
 Online: [ 18node1 18node2 18node3 18node4 ]

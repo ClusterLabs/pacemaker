@@ -33,7 +33,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="5" operation="monitor" operation_key="rsc3_monitor_0" on_node="node2" on_node_uuid="node2"/>
       </trigger>
       <trigger>
         <rsc_op id="6" operation="stop" operation_key="rsc3_stop_0" on_node="node1" on_node_uuid="node1"/>
@@ -52,7 +52,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="5" operation="monitor" operation_key="rsc3_monitor_0" on_node="node2" on_node_uuid="node2"/>
        </trigger>
       <trigger>
         <rsc_op id="9" operation="migrate_from" operation_key="rsc3_migrate_from_0" on_node="node2" on_node_uuid="node2"/>

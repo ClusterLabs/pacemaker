@@ -8,7 +8,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="4" operation="monitor" operation_key="rsc1_monitor_0" on_node="node1" on_node_uuid="node1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="9" operation="monitor" operation_key="rsc1_monitor_0" on_node="node2" on_node_uuid="node2"/>
       </trigger>
     </inputs>
   </synapse>
@@ -39,7 +42,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="5" operation="monitor" operation_key="rsc2_monitor_0" on_node="node1" on_node_uuid="node1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="10" operation="monitor" operation_key="rsc2_monitor_0" on_node="node2" on_node_uuid="node2"/>
       </trigger>
       <trigger>
         <rsc_op id="13" operation="start" operation_key="rsc1_start_0" on_node="node1" on_node_uuid="node1"/>
@@ -73,7 +79,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="6" operation="monitor" operation_key="rsc3_monitor_0" on_node="node1" on_node_uuid="node1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="11" operation="monitor" operation_key="rsc3_monitor_0" on_node="node2" on_node_uuid="node2"/>
       </trigger>
       <trigger>
         <rsc_op id="13" operation="start" operation_key="rsc1_start_0" on_node="node1" on_node_uuid="node1"/>
@@ -107,7 +116,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="7" operation="monitor" operation_key="rsc4_monitor_0" on_node="node1" on_node_uuid="node1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="12" operation="monitor" operation_key="rsc4_monitor_0" on_node="node2" on_node_uuid="node2"/>
       </trigger>
       <trigger>
         <rsc_op id="13" operation="start" operation_key="rsc1_start_0" on_node="node1" on_node_uuid="node1"/>

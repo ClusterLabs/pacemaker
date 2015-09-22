@@ -35,7 +35,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="7" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="10" operation="monitor" operation_key="rsc_c001n08_monitor_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="14" operation="monitor" operation_key="rsc_c001n08_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="19" operation="monitor" operation_key="rsc_c001n08_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
       </trigger>
     </inputs>
   </synapse>

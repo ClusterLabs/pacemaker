@@ -21,7 +21,16 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="5" operation="monitor" operation_key="shooter_monitor_0" on_node="18node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="14" operation="monitor" operation_key="shooter_monitor_0" on_node="18node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="21" operation="monitor" operation_key="shooter_monitor_0" on_node="18node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="27" operation="monitor" operation_key="shooter_monitor_0" on_node="18node4" on_node_uuid="4"/>
       </trigger>
     </inputs>
   </synapse>
@@ -83,7 +92,16 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="3" operation="probe_nodes_complete" operation_key="probe_nodes_complete"/>
+        <rsc_op id="6" operation="monitor" operation_key="remote1_monitor_0" on_node="18node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="15" operation="monitor" operation_key="remote1_monitor_0" on_node="18node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="22" operation="monitor" operation_key="remote1_monitor_0" on_node="18node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="28" operation="monitor" operation_key="remote1_monitor_0" on_node="18node4" on_node_uuid="4"/>
       </trigger>
     </inputs>
   </synapse>
@@ -145,7 +163,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="29" operation="monitor" operation_key="FAKE1_monitor_0" on_node="18node4" on_node_uuid="4"/>
       </trigger>
     </inputs>
   </synapse>
@@ -180,7 +198,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="7" operation="monitor" operation_key="FAKE2_monitor_0" on_node="18node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="16" operation="monitor" operation_key="FAKE2_monitor_0" on_node="18node2" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
@@ -224,7 +245,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="23" operation="monitor" operation_key="FAKE3_monitor_0" on_node="18node3" on_node_uuid="3"/>
       </trigger>
     </inputs>
   </synapse>
@@ -259,7 +280,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="30" operation="monitor" operation_key="FAKE4_monitor_0" on_node="18node4" on_node_uuid="4"/>
       </trigger>
     </inputs>
   </synapse>
@@ -297,7 +318,19 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="8" operation="monitor" operation_key="FAKE5_monitor_0" on_node="18node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="17" operation="monitor" operation_key="FAKE5_monitor_0" on_node="18node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="24" operation="monitor" operation_key="FAKE5_monitor_0" on_node="18node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="31" operation="monitor" operation_key="FAKE5_monitor_0" on_node="18node4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="34" operation="monitor" operation_key="FAKE5_monitor_0" on_node="remote1" on_node_uuid="remote1" router_node="18node1"/>
       </trigger>
       <trigger>
         <rsc_op id="39" operation="start" operation_key="remote1_start_0" on_node="18node1" on_node_uuid="1"/>
@@ -375,9 +408,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="55" operation="start" operation_key="FAKECLONE1-clone_start_0"/>
       </trigger>
     </inputs>
@@ -415,9 +445,6 @@
       </rsc_op>
     </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
       <trigger>
         <rsc_op id="39" operation="start" operation_key="remote1_start_0" on_node="18node1" on_node_uuid="1"/>
       </trigger>
@@ -463,7 +490,14 @@
         <attributes CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="9" operation="monitor" operation_key="FAKECLONE1:0_monitor_0" on_node="18node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="35" operation="monitor" operation_key="FAKECLONE1:1_monitor_0" on_node="remote1" on_node_uuid="remote1" router_node="18node1"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="40">
     <action_set>
@@ -486,9 +520,6 @@
       </rsc_op>
     </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
       <trigger>
         <pseudo_event id="69" operation="start" operation_key="FAKECLONE2-clone_start_0"/>
       </trigger>
@@ -525,9 +556,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="69" operation="start" operation_key="FAKECLONE2-clone_start_0"/>
       </trigger>
     </inputs>
@@ -563,9 +591,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="69" operation="start" operation_key="FAKECLONE2-clone_start_0"/>
       </trigger>
     </inputs>
@@ -591,9 +616,6 @@
       </rsc_op>
     </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
       <trigger>
         <pseudo_event id="69" operation="start" operation_key="FAKECLONE2-clone_start_0"/>
       </trigger>
@@ -632,9 +654,6 @@
       </rsc_op>
     </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
       <trigger>
         <rsc_op id="39" operation="start" operation_key="remote1_start_0" on_node="18node1" on_node_uuid="1"/>
       </trigger>
@@ -689,7 +708,20 @@
         <attributes CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="10" operation="monitor" operation_key="FAKECLONE2:1_monitor_0" on_node="18node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="25" operation="monitor" operation_key="FAKECLONE2:0_monitor_0" on_node="18node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="32" operation="monitor" operation_key="FAKECLONE2:3_monitor_0" on_node="18node4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="36" operation="monitor" operation_key="FAKECLONE2:4_monitor_0" on_node="remote1" on_node_uuid="remote1" router_node="18node1"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="56">
     <action_set>
@@ -739,7 +771,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="11" operation="monitor" operation_key="FAKE6_monitor_0" on_node="18node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="18" operation="monitor" operation_key="FAKE6_monitor_0" on_node="18node2" on_node_uuid="2"/>
       </trigger>
       <trigger>
         <pseudo_event id="77" operation="start" operation_key="FAKEGROUP_start_0"/>
@@ -786,7 +821,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="12" operation="monitor" operation_key="FAKE7_monitor_0" on_node="18node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="19" operation="monitor" operation_key="FAKE7_monitor_0" on_node="18node2" on_node_uuid="2"/>
       </trigger>
       <trigger>
         <rsc_op id="73" operation="start" operation_key="FAKE6_start_0" on_node="18node1" on_node_uuid="1"/>
@@ -944,27 +982,6 @@
     </inputs>
   </synapse>
   <synapse id="71">
-    <action_set>
-      <pseudo_event id="3" operation="probe_nodes_complete" operation_key="probe_nodes_complete">
-        <attributes />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="4" operation="probe_complete" operation_key="probe_complete-18node1" on_node="18node1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="13" operation="probe_complete" operation_key="probe_complete-18node2" on_node="18node2" on_node_uuid="2"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="20" operation="probe_complete" operation_key="probe_complete-18node3" on_node="18node3" on_node_uuid="3"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="26" operation="probe_complete" operation_key="probe_complete-18node4" on_node="18node4" on_node_uuid="4"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="72">
     <action_set>
       <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete">
         <attributes />

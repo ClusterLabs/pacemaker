@@ -1,6 +1,4 @@
 Allocation scores:
-An invalid transition was produced
-Transition failed: terminated
 clone_color: Connectivity allocation score on pcmk-1: 0
 clone_color: Connectivity allocation score on pcmk-2: 0
 clone_color: Connectivity allocation score on pcmk-3: 0

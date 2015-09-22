@@ -79,26 +79,25 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="24" operation="clear_failcount" operation_key="container1_clear_failcount" on_node="18node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
         <rsc_op id="55" operation="stop" operation_key="lxc1_stop_0" on_node="18node2" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="7">
     <action_set>
-      <rsc_op id="20" operation="delete" operation_key="container1_delete_0" on_node="18node3" on_node_uuid="3">
+      <crm_event id="24" operation="clear_failcount" operation_key="container1_clear_failcount" on_node="18node2" on_node_uuid="2">
         <primitive id="container1" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_timeout="20000" />
-      </rsc_op>
+        <attributes CRM_meta_op_no_wait="true" CRM_meta_timeout="20000" />
+      </crm_event>
     </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="54" operation="stop" operation_key="container1_stop_0" on_node="18node2" on_node_uuid="2"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="8">
     <action_set>
-      <rsc_op id="18" operation="delete" operation_key="container1_delete_0" on_node="18node2" on_node_uuid="2">
+      <rsc_op id="17" operation="delete" operation_key="container1_delete_0" on_node="18node3" on_node_uuid="3">
         <primitive id="container1" class="ocf" provider="heartbeat" type="VirtualDomain"/>
         <attributes CRM_meta_timeout="20000" />
       </rsc_op>
@@ -111,7 +110,7 @@
   </synapse>
   <synapse id="9">
     <action_set>
-      <rsc_op id="16" operation="delete" operation_key="container1_delete_0" on_node="18node1" on_node_uuid="1">
+      <rsc_op id="15" operation="delete" operation_key="container1_delete_0" on_node="18node2" on_node_uuid="2">
         <primitive id="container1" class="ocf" provider="heartbeat" type="VirtualDomain"/>
         <attributes CRM_meta_timeout="20000" />
       </rsc_op>
@@ -124,12 +123,16 @@
   </synapse>
   <synapse id="10">
     <action_set>
-      <crm_event id="3" operation="clear_failcount" operation_key="container1_clear_failcount" on_node="18node2" on_node_uuid="2">
+      <rsc_op id="13" operation="delete" operation_key="container1_delete_0" on_node="18node1" on_node_uuid="1">
         <primitive id="container1" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_op_no_wait="true" CRM_meta_timeout="20000" />
-      </crm_event>
+        <attributes CRM_meta_timeout="20000" />
+      </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="54" operation="stop" operation_key="container1_stop_0" on_node="18node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="11">
     <action_set>
@@ -140,6 +143,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="25" operation="clear_failcount" operation_key="lxc1_clear_failcount" on_node="18node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
         <rsc_op id="38" operation="stop" operation_key="M_stop_0" internal_operation_key="M:4_stop_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node2"/>
       </trigger>
       <trigger>
@@ -149,20 +155,16 @@
   </synapse>
   <synapse id="12">
     <action_set>
-      <rsc_op id="21" operation="delete" operation_key="lxc1_delete_0" on_node="18node3" on_node_uuid="3">
+      <crm_event id="25" operation="clear_failcount" operation_key="lxc1_clear_failcount" on_node="18node2" on_node_uuid="2">
         <primitive id="lxc1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="container1" CRM_meta_timeout="20000" />
-      </rsc_op>
+        <attributes CRM_meta_container="container1" CRM_meta_op_no_wait="true" CRM_meta_timeout="20000" />
+      </crm_event>
     </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="55" operation="stop" operation_key="lxc1_stop_0" on_node="18node2" on_node_uuid="2"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="13">
     <action_set>
-      <rsc_op id="19" operation="delete" operation_key="lxc1_delete_0" on_node="18node2" on_node_uuid="2">
+      <rsc_op id="18" operation="delete" operation_key="lxc1_delete_0" on_node="18node3" on_node_uuid="3">
         <primitive id="lxc1" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_container="container1" CRM_meta_timeout="20000" />
       </rsc_op>
@@ -175,7 +177,7 @@
   </synapse>
   <synapse id="14">
     <action_set>
-      <rsc_op id="17" operation="delete" operation_key="lxc1_delete_0" on_node="18node1" on_node_uuid="1">
+      <rsc_op id="16" operation="delete" operation_key="lxc1_delete_0" on_node="18node2" on_node_uuid="2">
         <primitive id="lxc1" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_container="container1" CRM_meta_timeout="20000" />
       </rsc_op>
@@ -188,16 +190,20 @@
   </synapse>
   <synapse id="15">
     <action_set>
-      <crm_event id="4" operation="clear_failcount" operation_key="lxc1_clear_failcount" on_node="18node2" on_node_uuid="2">
+      <rsc_op id="14" operation="delete" operation_key="lxc1_delete_0" on_node="18node1" on_node_uuid="1">
         <primitive id="lxc1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="container1" CRM_meta_op_no_wait="true" CRM_meta_timeout="20000" />
-      </crm_event>
+        <attributes CRM_meta_container="container1" CRM_meta_timeout="20000" />
+      </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="55" operation="stop" operation_key="lxc1_stop_0" on_node="18node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="16">
     <action_set>
-      <pseudo_event id="15" operation="all_stopped" operation_key="all_stopped">
+      <pseudo_event id="12" operation="all_stopped" operation_key="all_stopped">
         <attributes />
       </pseudo_event>
     </action_set>

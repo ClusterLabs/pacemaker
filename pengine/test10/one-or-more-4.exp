@@ -8,7 +8,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="3" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="5" operation="monitor" operation_key="A_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
       </trigger>
     </inputs>
   </synapse>
@@ -30,7 +30,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="3" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="6" operation="monitor" operation_key="B_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
       </trigger>
       <trigger>
         <rsc_op id="9" operation="start" operation_key="A_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
@@ -55,7 +55,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="3" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="7" operation="monitor" operation_key="C_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
       </trigger>
       <trigger>
         <rsc_op id="9" operation="start" operation_key="A_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>

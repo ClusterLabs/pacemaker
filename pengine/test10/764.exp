@@ -8,7 +8,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="5" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="7" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad"/>
        </trigger>
      </inputs>
    </synapse>
@@ -30,7 +30,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="5" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="12" operation="monitor" operation_key="rsc_posic041_monitor_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596"/>
        </trigger>
      </inputs>
    </synapse>
@@ -52,7 +52,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="5" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="13" operation="monitor" operation_key="rsc_posic042_monitor_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596"/>
        </trigger>
      </inputs>
    </synapse>
@@ -74,7 +74,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="5" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="8" operation="monitor" operation_key="rsc_posic043_monitor_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad"/>
        </trigger>
      </inputs>
    </synapse>
@@ -96,7 +96,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="5" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="14" operation="monitor" operation_key="rsc_posic044_monitor_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596"/>
        </trigger>
      </inputs>
    </synapse>

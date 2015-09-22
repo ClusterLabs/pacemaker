@@ -14,8 +14,8 @@ Transition Summary:
 
 Executing cluster transition:
  * Resource action: myclone         monitor on f20node2
- * Pseudo action:   probe_complete
  * Resource action: vm              stop on f20node1
+ * Pseudo action:   probe_complete
  * Pseudo action:   myclone-clone_stop_0
  * Resource action: myclone         stop on f20node1
  * Pseudo action:   myclone-clone_stopped_0

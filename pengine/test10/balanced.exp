@@ -11,7 +11,10 @@
         <pseudo_event id="3" operation="load_stopped_host2" operation_key="load_stopped_host2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="6" operation="monitor" operation_key="rsc1_monitor_0" on_node="host1" on_node_uuid="host1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="9" operation="monitor" operation_key="rsc1_monitor_0" on_node="host2" on_node_uuid="host2"/>
       </trigger>
     </inputs>
   </synapse>
@@ -45,7 +48,10 @@
         <pseudo_event id="2" operation="load_stopped_host1" operation_key="load_stopped_host1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="7" operation="monitor" operation_key="rsc2_monitor_0" on_node="host1" on_node_uuid="host1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="10" operation="monitor" operation_key="rsc2_monitor_0" on_node="host2" on_node_uuid="host2"/>
       </trigger>
     </inputs>
   </synapse>

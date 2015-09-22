@@ -21,7 +21,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="4" operation="monitor" operation_key="prmIpPostgreSQLDB_monitor_0" on_node="rh5node2" on_node_uuid="fb62f5f4-015c-466a-8778-7b5c1c5639d6"/>
       </trigger>
       <trigger>
         <pseudo_event id="21" operation="stonith_complete" operation_key="stonith_complete"/>
@@ -76,9 +76,6 @@
         <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped"/>
       </trigger>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="9" operation="start" operation_key="grpStonith:0_start_0"/>
       </trigger>
     </inputs>
@@ -113,7 +110,11 @@
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="5" operation="monitor" operation_key="prmStonith:0_monitor_0" on_node="rh5node2" on_node_uuid="fb62f5f4-015c-466a-8778-7b5c1c5639d6"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="9">
     <action_set>

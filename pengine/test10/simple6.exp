@@ -8,7 +8,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="4" operation="monitor" operation_key="rsc2_monitor_0" on_node="node1" on_node_uuid="node1"/>
        </trigger>
       <trigger>
         <rsc_op id="6" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="node1"/>
@@ -31,11 +31,7 @@
         <attributes CRM_meta_timeout="20000"  priority="1.0"/>
        </rsc_op>
      </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-    </inputs>
+    <inputs/>
    </synapse>
   <synapse id="3" priority="1000000">
      <action_set>

@@ -8,7 +8,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="4" operation="probe_nodes_complete" operation_key="probe_nodes_complete"/>
+        <rsc_op id="6" operation="monitor" operation_key="container1_monitor_0" on_node="18node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="10" operation="monitor" operation_key="container1_monitor_0" on_node="18node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="14" operation="monitor" operation_key="container1_monitor_0" on_node="18node3" on_node_uuid="3"/>
       </trigger>
     </inputs>
   </synapse>
@@ -48,7 +54,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="4" operation="probe_nodes_complete" operation_key="probe_nodes_complete"/>
+        <rsc_op id="7" operation="monitor" operation_key="container2_monitor_0" on_node="18node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="11" operation="monitor" operation_key="container2_monitor_0" on_node="18node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="15" operation="monitor" operation_key="container2_monitor_0" on_node="18node3" on_node_uuid="3"/>
       </trigger>
     </inputs>
   </synapse>
@@ -110,9 +122,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="3" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="22" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:0_stop_0"/>
       </trigger>
       <trigger>
@@ -131,7 +140,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="3" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="8" operation="monitor" operation_key="lxc-ms_monitor_0" internal_operation_key="lxc-ms:0_monitor_0" on_node="18node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="12" operation="monitor" operation_key="lxc-ms_monitor_0" internal_operation_key="lxc-ms:0_monitor_0" on_node="18node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="16" operation="monitor" operation_key="lxc-ms_monitor_0" internal_operation_key="lxc-ms:0_monitor_0" on_node="18node3" on_node_uuid="3"/>
       </trigger>
       <trigger>
         <rsc_op id="21" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
@@ -209,9 +224,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="3" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="25" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:1_stop_0"/>
       </trigger>
       <trigger>
@@ -229,9 +241,6 @@
       </pseudo_event>
     </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="3" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
       <trigger>
         <pseudo_event id="30" operation="stop" operation_key="lxc-ms-master_stop_0"/>
       </trigger>
@@ -345,6 +354,15 @@
       </pseudo_event>
     </action_set>
     <inputs>
+      <trigger>
+        <rsc_op id="8" operation="monitor" operation_key="lxc-ms_monitor_0" internal_operation_key="lxc-ms:0_monitor_0" on_node="18node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="12" operation="monitor" operation_key="lxc-ms_monitor_0" internal_operation_key="lxc-ms:0_monitor_0" on_node="18node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="16" operation="monitor" operation_key="lxc-ms_monitor_0" internal_operation_key="lxc-ms:0_monitor_0" on_node="18node3" on_node_uuid="3"/>
+      </trigger>
       <trigger>
         <pseudo_event id="31" operation="stopped" operation_key="lxc-ms-master_stopped_0"/>
       </trigger>
@@ -461,31 +479,13 @@
   </synapse>
   <synapse id="33">
     <action_set>
-      <pseudo_event id="4" operation="probe_nodes_complete" operation_key="probe_nodes_complete">
-        <attributes />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="5" operation="probe_complete" operation_key="probe_complete-18node1" on_node="18node1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="9" operation="probe_complete" operation_key="probe_complete-18node2" on_node="18node2" on_node_uuid="2"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="13" operation="probe_complete" operation_key="probe_complete-18node3" on_node="18node3" on_node_uuid="3"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="34">
-    <action_set>
       <pseudo_event id="3" operation="probe_complete" operation_key="probe_complete">
         <attributes />
       </pseudo_event>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="35">
+  <synapse id="34">
     <action_set>
       <pseudo_event id="2" operation="all_stopped" operation_key="all_stopped">
         <attributes />

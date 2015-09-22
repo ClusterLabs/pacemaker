@@ -15,6 +15,8 @@ Executing cluster transition:
  * Resource action: DcIPaddr        monitor on c001n08
  * Resource action: DcIPaddr        monitor on c001n03
  * Resource action: DcIPaddr        monitor on c001n01
+ * Resource action: DcIPaddr        reload on c001n02
+ * Resource action: DcIPaddr        monitor=5000 on c001n02
  * Resource action: rsc_c001n08     monitor on c001n03
  * Resource action: rsc_c001n08     monitor on c001n02
  * Resource action: rsc_c001n08     monitor on c001n01
@@ -31,8 +33,6 @@ Executing cluster transition:
  * Resource action: rsc_c001n01     monitor on c001n03
  * Resource action: rsc_c001n01     monitor on c001n02
  * Pseudo action:   probe_complete
- * Resource action: DcIPaddr        reload on c001n02
- * Resource action: DcIPaddr        monitor=5000 on c001n02
 
 Revised cluster status:
 Online: [ c001n01 c001n02 c001n03 c001n08 ]

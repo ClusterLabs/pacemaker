@@ -22,8 +22,12 @@ force_local=0
 VALGRIND_CMD=""
 diff_opts="--ignore-all-space --ignore-blank-lines -u -N"
 
-test_home=`dirname $0`
-test_name=`basename $0`
+if [ "x$0" = "x-bash" ]; then 
+    test_home=@abs_top_builddir@/pengine
+else
+    test_home=`dirname $0`
+    test_name=`basename $0`
+fi
 
 function info() {
     printf "$*\n"

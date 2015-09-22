@@ -30,7 +30,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="5" operation="monitor" operation_key="extip_1_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
        </trigger>
      </inputs>
    </synapse>
@@ -65,7 +65,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="6" operation="monitor" operation_key="extip_2_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
        </trigger>
      </inputs>
    </synapse>
@@ -109,7 +109,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="8" operation="monitor" operation_key="intip_1_master_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
        </trigger>
      </inputs>
    </synapse>
@@ -144,7 +144,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="9" operation="monitor" operation_key="intip_2_slave_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
        </trigger>
      </inputs>
    </synapse>
@@ -178,9 +178,6 @@
        </rsc_op>
      </action_set>
      <inputs>
-       <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
        <trigger>
         <pseudo_event id="30" operation="start" operation_key="ms_drbd_www_start_0"/>
        </trigger>
@@ -268,6 +265,9 @@
      </action_set>
      <inputs>
        <trigger>
+        <rsc_op id="10" operation="monitor" operation_key="drbd_www:0_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+      </trigger>
+      <trigger>
         <rsc_op id="25" operation="start" operation_key="intip_1_master_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
        </trigger>
        <trigger>
@@ -335,9 +335,6 @@
        </rsc_op>
      </action_set>
      <inputs>
-       <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
        <trigger>
         <pseudo_event id="71" operation="start" operation_key="ms_drbd_mysql_start_0"/>
        </trigger>
@@ -425,6 +422,9 @@
      </action_set>
      <inputs>
        <trigger>
+        <rsc_op id="15" operation="monitor" operation_key="drbd_mysql:0_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+      </trigger>
+      <trigger>
         <rsc_op id="25" operation="start" operation_key="intip_1_master_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
        </trigger>
        <trigger>

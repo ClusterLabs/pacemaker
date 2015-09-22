@@ -8,6 +8,9 @@
      </action_set>
      <inputs>
        <trigger>
+        <rsc_op id="15" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="va1" on_node_uuid="b8f81462-2d65-42bf-bbb1-70db0ea29e5b"/>
+      </trigger>
+      <trigger>
          <pseudo_event id="51" operation="stop" operation_key="DoFencing_stop_0"/>
        </trigger>
      </inputs>

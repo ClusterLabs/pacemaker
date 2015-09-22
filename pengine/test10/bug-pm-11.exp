@@ -35,9 +35,6 @@
      </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="12" operation="start" operation_key="group:0_start_0"/>
       </trigger>
     </inputs>
@@ -136,9 +133,6 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-       <trigger>
         <pseudo_event id="26" operation="start" operation_key="group:1_start_0"/>
        </trigger>
      </inputs>
@@ -209,7 +203,20 @@
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
        </pseudo_event>
      </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="4" operation="monitor" operation_key="stateful-2:0_monitor_0" on_node="node-a" on_node_uuid="babfee4b-9c89-4df2-8ccb-3de2a3587d8d"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="5" operation="monitor" operation_key="stateful-2:1_monitor_0" on_node="node-a" on_node_uuid="babfee4b-9c89-4df2-8ccb-3de2a3587d8d"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="7" operation="monitor" operation_key="stateful-2:0_monitor_0" on_node="node-b" on_node_uuid="9b262633-815c-4e5e-8f63-76486cab9ad2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="8" operation="monitor" operation_key="stateful-2:1_monitor_0" on_node="node-b" on_node_uuid="9b262633-815c-4e5e-8f63-76486cab9ad2"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="17" priority="1000000">
     <action_set>

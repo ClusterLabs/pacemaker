@@ -21,9 +21,6 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="35" operation="start" operation_key="configstorecloneset_start_0"/>
        </trigger>
      </inputs>
@@ -58,9 +55,6 @@
        </rsc_op>
      </action_set>
      <inputs>
-       <trigger>
-         <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
        <trigger>
          <pseudo_event id="35" operation="start" operation_key="configstorecloneset_start_0"/>
        </trigger>
@@ -154,6 +148,12 @@
      </action_set>
      <inputs>
        <trigger>
+        <rsc_op id="6" operation="monitor" operation_key="configstoreclone:0_monitor_0" on_node="x32c47" on_node_uuid="a1dbc8cc-4d33-41e7-a75a-cd4f93b26410"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="8" operation="monitor" operation_key="configstoreclone:1_monitor_0" on_node="x32c48" on_node_uuid="ca93fea5-67c9-473d-9ce0-7ed7fb823872"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="38" operation="notified" operation_key="configstorecloneset_confirmed-pre_notify_start_0"/>
        </trigger>
     </inputs>

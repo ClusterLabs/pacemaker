@@ -8,7 +8,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="4" operation="monitor" operation_key="S_A_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
       </trigger>
       <trigger>
         <pseudo_event id="11" operation="running" operation_key="MIXED_GROUP_running_0"/>
@@ -59,7 +59,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="5" operation="monitor" operation_key="A_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
       </trigger>
       <trigger>
         <pseudo_event id="10" operation="start" operation_key="MIXED_GROUP_start_0"/>
@@ -84,7 +84,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="6" operation="monitor" operation_key="S_B_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
       </trigger>
       <trigger>
         <rsc_op id="8" operation="start" operation_key="A_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>

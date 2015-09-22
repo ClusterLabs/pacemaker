@@ -8,7 +8,16 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="4" operation="monitor" operation_key="Dummy_monitor_0" on_node="puma1" on_node_uuid="puma1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="6" operation="monitor" operation_key="Dummy_monitor_0" on_node="puma2" on_node_uuid="puma2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="8" operation="monitor" operation_key="Dummy_monitor_0" on_node="puma3" on_node_uuid="puma3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="10" operation="monitor" operation_key="Dummy_monitor_0" on_node="puma4" on_node_uuid="puma4"/>
       </trigger>
     </inputs>
   </synapse>

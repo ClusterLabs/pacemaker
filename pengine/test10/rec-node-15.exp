@@ -11,7 +11,10 @@
         <pseudo_event id="7" operation="all_stopped" operation_key="all_stopped"/>
       </trigger>
       <trigger>
-        <pseudo_event id="8" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="10" operation="monitor" operation_key="stonith-1_monitor_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="12" operation="monitor" operation_key="stonith-1_monitor_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
       </trigger>
     </inputs>
   </synapse>
@@ -136,9 +139,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="8" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-      <trigger>
         <rsc_op id="27" operation="stop" operation_key="LVM_12_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
       </trigger>
       <trigger>
@@ -190,9 +190,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="8" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-      <trigger>
         <rsc_op id="30" operation="stop" operation_key="Filesystem_13_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
       </trigger>
       <trigger>
@@ -243,9 +240,6 @@
       </rsc_op>
     </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="8" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
       <trigger>
         <pseudo_event id="35" operation="stop" operation_key="app02_stop_0"/>
       </trigger>

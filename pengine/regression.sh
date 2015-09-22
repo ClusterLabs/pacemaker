@@ -114,7 +114,7 @@ do_test probe-0 "Probe (anon clone)"
 do_test probe-1 "Pending Probe"
 do_test probe-2 "Correctly re-probe cloned groups"
 do_test probe-3 "Probe (pending node)"
-do_test probe-4 "Probe (pending node + stopped resource)" --rc 4
+do_test probe-4 "Probe (pending node + stopped resource)"
 do_test standby "Standby"
 do_test comments "Comments"
 
@@ -484,7 +484,7 @@ do_test stonith-0 "Stonith loop - 1"
 do_test stonith-1 "Stonith loop - 2"
 do_test stonith-2 "Stonith loop - 3"
 do_test stonith-3 "Stonith startup"
-do_test stonith-4 "Stonith node state" --rc 4
+do_test stonith-4 "Stonith node state"
 do_test bug-1572-1 "Recovery of groups depending on master/slave"
 do_test bug-1572-2 "Recovery of groups depending on master/slave when the master is never re-promoted"
 do_test bug-1685 "Depends-on-master ordering"

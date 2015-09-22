@@ -26,9 +26,6 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-       <trigger>
         <rsc_op id="14" operation="stop" operation_key="child_rsc1:2_stop_0" on_node="node1" on_node_uuid="uuid1"/>
       </trigger>
       <trigger>
@@ -45,7 +42,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="7" operation="monitor" operation_key="child_rsc1:2_monitor_0" on_node="node2" on_node_uuid="uuid2"/>
        </trigger>
        <trigger>
         <pseudo_event id="21" operation="stop" operation_key="rsc1_stop_0"/>
@@ -70,9 +67,6 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-       <trigger>
         <rsc_op id="16" operation="stop" operation_key="child_rsc1:3_stop_0" on_node="node1" on_node_uuid="uuid1"/>
       </trigger>
       <trigger>
@@ -89,7 +83,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="8" operation="monitor" operation_key="child_rsc1:3_monitor_0" on_node="node2" on_node_uuid="uuid2"/>
        </trigger>
        <trigger>
         <pseudo_event id="21" operation="stop" operation_key="rsc1_stop_0"/>
@@ -114,7 +108,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="9" operation="monitor" operation_key="child_rsc1:4_monitor_0" on_node="node2" on_node_uuid="uuid2"/>
        </trigger>
        <trigger>
          <pseudo_event id="21" operation="stop" operation_key="rsc1_stop_0"/>
@@ -185,6 +179,21 @@
     </action_set>
     <inputs>
        <trigger>
+        <rsc_op id="5" operation="monitor" operation_key="child_rsc1:0_monitor_0" on_node="node2" on_node_uuid="uuid2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="6" operation="monitor" operation_key="child_rsc1:1_monitor_0" on_node="node2" on_node_uuid="uuid2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="7" operation="monitor" operation_key="child_rsc1:2_monitor_0" on_node="node2" on_node_uuid="uuid2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="8" operation="monitor" operation_key="child_rsc1:3_monitor_0" on_node="node2" on_node_uuid="uuid2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="9" operation="monitor" operation_key="child_rsc1:4_monitor_0" on_node="node2" on_node_uuid="uuid2"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="22" operation="stopped" operation_key="rsc1_stopped_0"/>
        </trigger>
      </inputs>

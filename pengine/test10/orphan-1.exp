@@ -141,11 +141,7 @@
         <attributes CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="8" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-    </inputs>
+    <inputs/>
    </synapse>
   <synapse id="16">
      <action_set>

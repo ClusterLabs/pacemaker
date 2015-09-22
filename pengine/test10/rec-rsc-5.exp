@@ -11,7 +11,7 @@
         <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped"/>
       </trigger>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="4" operation="monitor" operation_key="stonith-1_monitor_0" on_node="node1" on_node_uuid="uuid1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -33,7 +33,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="5" operation="monitor" operation_key="rsc1_monitor_0" on_node="node1" on_node_uuid="uuid1"/>
       </trigger>
       <trigger>
         <pseudo_event id="8" operation="stop" operation_key="rsc1_stop_0"/>
@@ -51,7 +51,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="5" operation="monitor" operation_key="rsc1_monitor_0" on_node="node1" on_node_uuid="uuid1"/>
       </trigger>
       <trigger>
         <crm_event id="13" operation="stonith" operation_key="stonith-node2-reboot" on_node="node2" on_node_uuid="uuid2"/>
@@ -76,7 +76,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="6" operation="monitor" operation_key="rsc2_monitor_0" on_node="node1" on_node_uuid="uuid1"/>
       </trigger>
       <trigger>
         <pseudo_event id="10" operation="stop" operation_key="rsc2_stop_0"/>
@@ -94,7 +94,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="6" operation="monitor" operation_key="rsc2_monitor_0" on_node="node1" on_node_uuid="uuid1"/>
       </trigger>
       <trigger>
         <crm_event id="13" operation="stonith" operation_key="stonith-node2-reboot" on_node="node2" on_node_uuid="uuid2"/>

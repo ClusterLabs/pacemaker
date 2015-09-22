@@ -11,7 +11,7 @@
         <pseudo_event id="1" operation="one-or-more:require-all-set-1" operation_key="one-or-more:require-all-set-1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="6" operation="monitor" operation_key="A_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
       </trigger>
     </inputs>
   </synapse>
@@ -33,7 +33,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="7" operation="monitor" operation_key="B_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
       </trigger>
     </inputs>
   </synapse>
@@ -73,7 +73,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="10" operation="monitor" operation_key="E_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
       </trigger>
       <trigger>
         <rsc_op id="12" operation="start" operation_key="A_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
@@ -101,7 +101,7 @@
         <pseudo_event id="2" operation="one-or-more:require-all-set-3" operation_key="one-or-more:require-all-set-3"/>
       </trigger>
       <trigger>
-        <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="11" operation="monitor" operation_key="F_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
       </trigger>
     </inputs>
   </synapse>
