@@ -344,7 +344,7 @@ static int
 find_ticket_state(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_state_xml)
 {
     int offset = 0;
-    static int xpath_max = 1024;
+    static const int xpath_max = 1024;
     int rc = pcmk_ok;
     xmlNode *xml_search = NULL;
 

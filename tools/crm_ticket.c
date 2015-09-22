@@ -154,7 +154,7 @@ static int
 find_ticket_state(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_state_xml)
 {
     int offset = 0;
-    static int xpath_max = 1024;
+    static const int xpath_max = 1024;
     int rc = pcmk_ok;
     xmlNode *xml_search = NULL;
 
@@ -198,7 +198,7 @@ static int
 find_ticket_constraints(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_cons_xml)
 {
     int offset = 0;
-    static int xpath_max = 1024;
+    static const int xpath_max = 1024;
     int rc = pcmk_ok;
     xmlNode *xml_search = NULL;
 
@@ -285,7 +285,7 @@ find_ticket_state_attr_legacy(cib_t * the_cib, const char *attr, const char *tic
                               const char *attr_name, char **value)
 {
     int offset = 0;
-    static int xpath_max = 1024;
+    static const int xpath_max = 1024;
     int rc = pcmk_ok;
     xmlNode *xml_search = NULL;
 
@@ -432,7 +432,7 @@ ticket_warning(const char *ticket_id, const char *action)
 {
     gboolean rc = FALSE;
     int offset = 0;
-    static int text_max = 1024;
+    static const int text_max = 1024;
 
     char *warning = NULL;
     const char *word = NULL;

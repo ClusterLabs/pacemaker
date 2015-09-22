@@ -118,7 +118,7 @@ find_resource_attr(cib_t * the_cib, const char *attr, const char *rsc, const cha
                    const char *set_name, const char *attr_id, const char *attr_name, char **value)
 {
     int offset = 0;
-    static int xpath_max = 1024;
+    static const int xpath_max = 1024;
     int rc = pcmk_ok;
     xmlNode *xml_search = NULL;
     char *xpath_string = NULL;

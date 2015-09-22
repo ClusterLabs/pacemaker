@@ -5917,7 +5917,8 @@ expand_idref(xmlNode * input, xmlNode * top)
     ref = crm_element_value(result, XML_ATTR_IDREF);
 
     if (ref != NULL) {
-        int xpath_max = 512, offset = 0;
+        static const int xpath_max = 512;
+        int offset = 0;
 
         xpath_string = calloc(1, xpath_max);
 

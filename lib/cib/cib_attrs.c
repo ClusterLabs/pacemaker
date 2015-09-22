@@ -57,7 +57,7 @@ find_nvpair_attr_delegate(cib_t * the_cib, const char *attr, const char *section
                           char **value, const char *user_name)
 {
     int offset = 0;
-    static int xpath_max = 1024;
+    static const int xpath_max = 1024;
     int rc = pcmk_ok;
 
     char *xpath_string = NULL;

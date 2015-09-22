@@ -425,7 +425,8 @@ crm_time_as_string(crm_time_t * date_time, int flags)
     CRM_CHECK(dt != NULL, return NULL);
     if (flags & crm_time_log_duration) {
         uint h = 0, m = 0, s = 0;
-        int offset = 0, max = 128;
+        int offset = 0;
+        static const int max = 128;
 
         date_s = calloc(1, max+1);
         crm_time_get_sec(dt->seconds, &h, &m, &s);

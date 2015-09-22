@@ -1651,7 +1651,7 @@ lsb_get_metadata(const char *type, char **output)
     char *s_dscrpt = NULL;
     char *xml_l_dscrpt = NULL;
     int offset = 0;
-    int max = 2048;
+    static const int max = 2048;
     char description[max];
 
     if(type[0] == '/') {

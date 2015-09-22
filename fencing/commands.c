@@ -663,7 +663,7 @@ is_nodeid_required(xmlNode * xml)
 static char *
 add_action(char *actions, const char *action)
 {
-    static size_t len = 256;
+    static const size_t len = 256;
     int offset = 0;
 
     if (actions == NULL) {
