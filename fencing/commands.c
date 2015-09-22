@@ -1209,7 +1209,7 @@ stonith_level_register(xmlNode * level, char **desc)
     }
 
     /* Sanity-check arguments */
-    if (mode > 3 || (id <= 0) || (id >= ST_LEVEL_MAX)) {
+    if (mode >= 3 || (id <= 0) || (id >= ST_LEVEL_MAX)) {
         free(target);
         crm_trace("Could not add %s[%d] (%d) to the topology (%d active entries)", target, id, mode, g_hash_table_size(topology));
         crm_log_xml_err(level, "Bad topology");
@@ -1259,6 +1259,7 @@ stonith_level_remove(xmlNode * level, char **desc)
     stonith_topology_t *tp;
     char *target = stonith_level_key(level, -1);
 
+    crm_element_value_int(level, XML_ATTR_ID, &id);
     if (desc) {
         *desc = crm_strdup_printf("%s[%d]", target, id);
     }
