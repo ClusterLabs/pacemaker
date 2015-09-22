@@ -204,7 +204,7 @@ static inline bool TRACKING_CHANGES(xmlNode *xml)
         } else if(rc >= ((max) - (offset))) {                           \
             char *tmp = NULL;                                           \
             (max) = QB_MAX(CHUNK_SIZE, (max) * 2);                      \
-            tmp = realloc_safe((buffer), (max) + 1);                         \
+            tmp = realloc_safe((buffer), (max));                        \
             CRM_ASSERT(tmp);                                            \
             (buffer) = tmp;                                             \
         } else {                                                        \
@@ -221,7 +221,7 @@ insert_prefix(int options, char **buffer, int *offset, int *max, int depth)
 
         if ((*buffer) == NULL || spaces >= ((*max) - (*offset))) {
             (*max) = QB_MAX(CHUNK_SIZE, (*max) * 2);
-            (*buffer) = realloc_safe((*buffer), (*max) + 1);
+            (*buffer) = realloc_safe((*buffer), (*max));
         }
         memset((*buffer) + (*offset), ' ', spaces);
         (*offset) += spaces;

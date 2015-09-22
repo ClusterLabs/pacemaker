@@ -428,7 +428,7 @@ crm_time_as_string(crm_time_t * date_time, int flags)
         int offset = 0;
         static const int max = 128;
 
-        date_s = calloc(1, max+1);
+        date_s = calloc(1, max);
         crm_time_get_sec(dt->seconds, &h, &m, &s);
 
         if (date_s == NULL) {
@@ -468,13 +468,13 @@ crm_time_as_string(crm_time_t * date_time, int flags)
         } else if (flags & crm_time_seconds) {
             unsigned long long s = crm_time_get_seconds(date_time);
 
-            snprintf(date_s, 31, "%lld", s); /* Durations may not be +ve */
+            snprintf(date_s, 32, "%lld", s); /* Durations may not be +ve */
             goto done;
 
         } else if (flags & crm_time_epoch) {
             unsigned long long s = crm_time_get_seconds_since_epoch(date_time);
 
-            snprintf(date_s, 31, "%lld", s); /* Durations may not be +ve */
+            snprintf(date_s, 32, "%lld", s); /* Durations may not be +ve */
             goto done;
 
         } else if (flags & crm_time_weeks) {
@@ -482,7 +482,7 @@ crm_time_as_string(crm_time_t * date_time, int flags)
             uint y, w, d;
 
             if (crm_time_get_isoweek(dt, &y, &w, &d)) {
-                snprintf(date_s, 31, "%d-W%.2d-%d", y, w, d);
+                snprintf(date_s, 32, "%d-W%.2d-%d", y, w, d);
             }
 
         } else if (flags & crm_time_ordinal) {
@@ -490,7 +490,7 @@ crm_time_as_string(crm_time_t * date_time, int flags)
             uint y, d;
 
             if (crm_time_get_ordinal(dt, &y, &d)) {
-                snprintf(date_s, 31, "%d-%.3d", y, d);
+                snprintf(date_s, 32, "%d-%.3d", y, d);
             }
 
         } else {
@@ -498,7 +498,7 @@ crm_time_as_string(crm_time_t * date_time, int flags)
             uint y, m, d;
 
             if (crm_time_get_gregorian(dt, &y, &m, &d)) {
-                snprintf(date_s, 31, "%.4d-%.2d-%.2d", y, m, d);
+                snprintf(date_s, 32, "%.4d-%.2d-%.2d", y, m, d);
             }
         }
     }
@@ -512,7 +512,7 @@ crm_time_as_string(crm_time_t * date_time, int flags)
         }
 
         if (crm_time_get_timeofday(dt, &h, &m, &s)) {
-            snprintf(time_s, 31, "%.2d:%.2d:%.2d", h, m, s);
+            snprintf(time_s, 32, "%.2d:%.2d:%.2d", h, m, s);
         }
 
         if (dt->offset != 0) {
@@ -522,10 +522,10 @@ crm_time_as_string(crm_time_t * date_time, int flags)
         offset_s = calloc(1, 32);
         if ((flags & crm_time_log_with_timezone) == 0 || dt->offset == 0) {
             crm_trace("flags %6x %6x", flags, crm_time_log_with_timezone);
-            snprintf(offset_s, 31, "Z");
+            snprintf(offset_s, 32, "Z");
 
         } else {
-            snprintf(offset_s, 31, " %c%.2d:%.2d", dt->offset < 0 ? '-' : '+', h, m);
+            snprintf(offset_s, 32, " %c%.2d:%.2d", dt->offset < 0 ? '-' : '+', h, m);
         }
     }
 
