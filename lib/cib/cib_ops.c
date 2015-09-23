@@ -610,6 +610,7 @@ cib_config_changed(xmlNode * last, xmlNode * next, xmlNode ** diff)
     int lpc = 0, max = 0;
     gboolean config_changes = FALSE;
     xmlXPathObject *xpathObj = NULL;
+    int format = 1;
 
     CRM_ASSERT(diff != NULL);
 
@@ -620,6 +621,10 @@ cib_config_changed(xmlNode * last, xmlNode * next, xmlNode ** diff)
     if (*diff == NULL) {
         goto done;
     }
+
+    crm_element_value_int(*diff, "format", &format);
+    /* This function only applies to v1 diffs. */
+    CRM_LOG_ASSERT(format == 1);
 
     xpathObj = xpath_search(*diff, "//" XML_CIB_TAG_CONFIGURATION);
     if (numXpathResults(xpathObj) > 0) {
