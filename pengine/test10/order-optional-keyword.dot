@@ -1,4 +1,3 @@
 digraph "g" {
-"probe_complete node1" [ style=bold color="green" fontcolor="black" ]
 "rsc1_start_0 node1" [ style=bold color="green" fontcolor="black" ]
 }

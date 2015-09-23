@@ -17,7 +17,6 @@ Executing cluster transition:
  * Resource action: B               monitor on fc16-builder
  * Resource action: C               monitor on fc16-builder
  * Resource action: D               monitor on fc16-builder
- * Pseudo action:   probe_complete
  * Resource action: A               start on fc16-builder
 
 Revised cluster status:

@@ -30,7 +30,6 @@ Transition Summary:
 Executing cluster transition:
  * Resource action: vg1:1           monitor on hex-9
  * Pseudo action:   base-clone_start_0
- * Pseudo action:   probe_complete
  * Pseudo action:   load_stopped_hex-9
  * Pseudo action:   load_stopped_hex-8
  * Pseudo action:   load_stopped_hex-7

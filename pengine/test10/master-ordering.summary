@@ -45,7 +45,6 @@ Executing cluster transition:
  * Resource action: drbd_mysql:0    monitor on webcluster01
  * Pseudo action:   ms_drbd_mysql_pre_notify_start_0
  * Resource action: fs_mysql        monitor on webcluster01
- * Pseudo action:   probe_complete
  * Resource action: extip_1         start on webcluster01
  * Resource action: extip_2         start on webcluster01
  * Resource action: intip_1_master  start on webcluster01

@@ -23,7 +23,6 @@ Executing cluster transition:
  * Resource action: bottom:0        monitor on dom0-01
  * Resource action: bottom:1        monitor on dom0-02
  * Pseudo action:   clone-bottom_start_0
- * Pseudo action:   probe_complete
  * Pseudo action:   dom0-iscsi1:1_start_0
  * Resource action: dom0-iscsi1-cnx1:1 start on dom0-01
  * Resource action: bottom:0        start on dom0-01

@@ -17,7 +17,6 @@ Executing cluster transition:
  * Resource action: single:1        monitor on rhel7-auto2
  * Resource action: single:1        monitor on rhel7-auto1
  * Pseudo action:   single-clone_start_0
- * Pseudo action:   probe_complete
  * Resource action: single:0        start on rhel7-auto2
  * Resource action: single:1        start on rhel7-auto1
  * Pseudo action:   single-clone_running_0

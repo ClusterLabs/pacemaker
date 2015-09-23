@@ -20,7 +20,6 @@ Executing cluster transition:
  * Resource action: A:0             monitor on rhel7-auto2
  * Resource action: A:1             monitor on rhel7-auto1
  * Pseudo action:   A-clone_start_0
- * Pseudo action:   probe_complete
  * Resource action: A:0             start on rhel7-auto2
  * Resource action: A:1             start on rhel7-auto1
  * Pseudo action:   A-clone_running_0

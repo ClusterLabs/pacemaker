@@ -9,7 +9,6 @@ Transition Summary:
 
 Executing cluster transition:
  * Resource action: DcIPaddr        monitor on c001n05
- * Pseudo action:   probe_complete
  * Resource action: DcIPaddr        start on c001n05
  * Resource action: DcIPaddr        monitor=5000 on c001n05
 

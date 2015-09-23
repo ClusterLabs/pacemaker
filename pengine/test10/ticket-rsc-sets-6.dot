@@ -7,8 +7,6 @@ digraph "g" {
 "ms5_promote_0" -> "rsc5:1_promote_0 node1" [ style = bold]
 "ms5_promote_0" [ style=bold color="green" fontcolor="orange" ]
 "ms5_promoted_0" [ style=bold color="green" fontcolor="orange" ]
-"probe_complete node1" [ style=bold color="green" fontcolor="black" ]
-"probe_complete node2" [ style=bold color="green" fontcolor="black" ]
 "rsc4:0_monitor_5000 node2" [ style=bold color="green" fontcolor="black" ]
 "rsc4:0_start_0 node2" -> "clone4_running_0" [ style = bold]
 "rsc4:0_start_0 node2" -> "rsc4:0_monitor_5000 node2" [ style = bold]

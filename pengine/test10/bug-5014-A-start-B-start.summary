@@ -12,7 +12,6 @@ Transition Summary:
 Executing cluster transition:
  * Resource action: ClusterIP       monitor on fc16-builder
  * Resource action: ClusterIP2      monitor on fc16-builder
- * Pseudo action:   probe_complete
  * Resource action: ClusterIP       start on fc16-builder
  * Resource action: ClusterIP2      start on fc16-builder
  * Resource action: ClusterIP       monitor=30000 on fc16-builder

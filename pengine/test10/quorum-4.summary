@@ -11,7 +11,6 @@ Transition Summary:
 
 Executing cluster transition:
  * Resource action: child_DoFencing monitor on hadev2
- * Pseudo action:   probe_complete
  * Resource action: child_DoFencing start on hadev2
  * Resource action: child_DoFencing monitor=5000 on hadev2
 

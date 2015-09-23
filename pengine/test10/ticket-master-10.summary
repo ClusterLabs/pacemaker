@@ -14,7 +14,6 @@ Executing cluster transition:
  * Resource action: rsc1:0          monitor on node2
  * Resource action: rsc1:1          monitor on node1
  * Pseudo action:   ms1_start_0
- * Pseudo action:   probe_complete
  * Resource action: rsc1:0          start on node2
  * Resource action: rsc1:1          start on node1
  * Pseudo action:   ms1_running_0

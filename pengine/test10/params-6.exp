@@ -1,7 +1,7 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0">
     <action_set>
-      <rsc_op id="335" operation="monitor" operation_key="vd01-b.cdev.ttc.prague.cz.vds-ok.com-vm_monitor_10000" on_node="v03-b" on_node_uuid="v03-b">
+      <rsc_op id="331" operation="monitor" operation_key="vd01-b.cdev.ttc.prague.cz.vds-ok.com-vm_monitor_10000" on_node="v03-b" on_node_uuid="v03-b">
         <primitive id="vd01-b.cdev.ttc.prague.cz.vds-ok.com-vm" class="ocf" provider="vds-ok" type="VirtualDomain"/>
         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="30000" arch="x86_64" blkio_weight="100" bootdev="network"  devices="netif:0,bridge,vlan1,00:16:3e:80:1f:d9,10.5.4.65;memballon;console;graphics;watchdog;" domain_name="vd01-b.cdev.ttc.prague.cz.vds-ok.com" domain_uuid="1d64858e-35e8-4be5-95c4-00d8a7801fd9" fencing_method="qpid" force_stop="1" host_role_needed="" hypervisor="qemu:///system" mem_mb="2048" migration_transport="tls" schedinfo_weight="20" vcpu_num="1" vcpu_policy="share"/>
       </rsc_op>
@@ -10,7 +10,7 @@
   </synapse>
   <synapse id="1">
     <action_set>
-      <rsc_op id="340" operation="monitor" operation_key="vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm_monitor_10000" on_node="v03-b" on_node_uuid="v03-b">
+      <rsc_op id="336" operation="monitor" operation_key="vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm_monitor_10000" on_node="v03-b" on_node_uuid="v03-b">
         <primitive id="vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm" class="ocf" provider="vds-ok" type="VirtualDomain"/>
         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="30000" arch="x86_64" blkio_weight="100" bootdev="network"  devices="netif:0,bridge,vlan1,00:16:3e:ef:13:04,10.5.4.67;memballon;console;graphics;watchdog;" domain_name="vd01-d.cdev.ttc.prague.cz.vds-ok.com" domain_uuid="570d45ea-24e0-46d9-b63c-6a398bef1304" fencing_method="qpid" force_stop="1" host_role_needed="" hypervisor="qemu:///system" mem_mb="2048" migration_transport="tls" schedinfo_weight="20" vcpu_num="1" vcpu_policy="share"/>
       </rsc_op>

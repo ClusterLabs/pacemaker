@@ -68,7 +68,6 @@ Executing cluster transition:
  * Resource action: lsb-dummy       monitor on rhel7-node3
  * Resource action: lsb-dummy       monitor on rhel7-node2
  * Resource action: lsb-dummy       monitor on rhel7-node1
- * Pseudo action:   probe_complete
  * Resource action: Fencing         start on rhel7-node1
  * Resource action: FencingPass     start on rhel7-node2
  * Resource action: rsc_rhel7-node1 start on rhel7-node1

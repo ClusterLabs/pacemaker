@@ -24,7 +24,6 @@ Executing cluster transition:
  * Pseudo action:   group_nfs_stop_0
  * Resource action: resource_ipaddr1_single monitor on power720-1
  * Resource action: resource_nfsserver_single monitor on power720-1
- * Pseudo action:   probe_complete
  * Resource action: export_home_ocfs2:1 notify on power720-2
  * Pseudo action:   export_home_ocfs2_clone_set_confirmed-pre_notify_start_0
  * Pseudo action:   export_home_ocfs2_clone_set_start_0

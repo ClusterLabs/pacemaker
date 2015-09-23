@@ -1,30 +1,14 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0" priority="1">
     <action_set>
-      <rsc_op id="9" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="node1">
+      <rsc_op id="6" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="node1">
         <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="1" priority="1000000">
-    <action_set>
-      <rsc_op id="6" operation="probe_complete" operation_key="probe_complete-node2" on_node="node2" on_node_uuid="node2">
-        <attributes CRM_meta_op_no_wait="true" />
-      </rsc_op>
-    </action_set>
-    <inputs/>
-  </synapse>
-  <synapse id="2" priority="1000000">
-    <action_set>
-      <rsc_op id="5" operation="probe_complete" operation_key="probe_complete-node1" on_node="node1" on_node_uuid="node1">
-        <attributes CRM_meta_op_no_wait="true" />
-      </rsc_op>
-    </action_set>
-    <inputs/>
-  </synapse>
-  <synapse id="3">
+  <synapse id="1">
     <action_set>
       <pseudo_event id="3" operation="load_stopped_node1" operation_key="load_stopped_node1">
         <attributes />
@@ -32,11 +16,11 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="9" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="node1"/>
+        <rsc_op id="6" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="node1"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="4">
+  <synapse id="2">
     <action_set>
       <pseudo_event id="2" operation="load_stopped_node2" operation_key="load_stopped_node2">
         <attributes />
@@ -44,7 +28,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="5">
+  <synapse id="3">
     <action_set>
       <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped">
         <attributes />
@@ -52,7 +36,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="9" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="node1"/>
+        <rsc_op id="6" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="node1"/>
       </trigger>
     </inputs>
   </synapse>

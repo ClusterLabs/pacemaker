@@ -1,7 +1,7 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0">
     <action_set>
-      <rsc_op id="7" operation="stop" operation_key="A_stop_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
+      <rsc_op id="5" operation="stop" operation_key="A_stop_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="A" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_timeout="20000" allow-migrate="1"  state="anywhere" target-role="started"/>
       </rsc_op>
@@ -26,7 +26,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="7" operation="stop" operation_key="A_stop_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
+        <rsc_op id="5" operation="stop" operation_key="A_stop_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
       </trigger>
     </inputs>
   </synapse>
@@ -51,7 +51,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="7" operation="stop" operation_key="A_stop_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
+        <rsc_op id="5" operation="stop" operation_key="A_stop_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
       </trigger>
     </inputs>
   </synapse>

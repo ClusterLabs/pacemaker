@@ -21,7 +21,6 @@ Executing cluster transition:
  * Resource action: dummy:0         monitor on alice.demo
  * Resource action: dummy:1         monitor on bob.demo
  * Pseudo action:   cl_dummy_start_0
- * Pseudo action:   probe_complete
  * Resource action: dummy1          start on bob.demo
  * Resource action: dummy2          start on alice.demo
  * Resource action: dummy:0         start on alice.demo

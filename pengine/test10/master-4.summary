@@ -59,7 +59,6 @@ Executing cluster transition:
  * Resource action: ocf_msdummy:7   monitor on c001n03
  * Resource action: ocf_msdummy:7   monitor on c001n01
  * Pseudo action:   master_rsc_1_promote_0
- * Pseudo action:   probe_complete
  * Resource action: ocf_msdummy:0   promote on c001n08
  * Pseudo action:   master_rsc_1_promoted_0
  * Resource action: ocf_msdummy:0   monitor=6000 on c001n08

@@ -80,7 +80,4 @@
 "pcmk_remote3_stop_0 pcmk1" -> "all_stopped" [ style = bold]
 "pcmk_remote3_stop_0 pcmk1" -> "pcmk_remote3_start_0 pcmk2" [ style = bold]
 "pcmk_remote3_stop_0 pcmk1" [ style=bold color="green" fontcolor="black"]
-"probe_complete pcmk_remote1" [ style=bold color="green" fontcolor="black"]
-"probe_complete pcmk_remote2" [ style=bold color="green" fontcolor="black"]
-"probe_complete pcmk_remote4" [ style=bold color="green" fontcolor="black"]
 }

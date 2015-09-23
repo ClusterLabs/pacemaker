@@ -17,7 +17,6 @@ Executing cluster transition:
  * Resource action: A:0             monitor on fc16-builder
  * Resource action: S_B:0           monitor on fc16-builder
  * Pseudo action:   S_CLONE2_start_0
- * Pseudo action:   probe_complete
  * Pseudo action:   MIXED_GROUP:0_start_0
  * Resource action: A:0             start on fc16-builder
  * Resource action: S_B:0           start on fc16-builder

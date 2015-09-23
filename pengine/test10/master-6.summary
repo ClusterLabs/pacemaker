@@ -54,7 +54,6 @@ Executing cluster transition:
  * Resource action: ocf_msdummy:7   monitor on c001n08
  * Resource action: ocf_msdummy:7   monitor on c001n03
  * Resource action: ocf_msdummy:7   monitor on c001n02
- * Pseudo action:   probe_complete
 
 Revised cluster status:
 Online: [ c001n01 c001n02 c001n03 c001n08 ]

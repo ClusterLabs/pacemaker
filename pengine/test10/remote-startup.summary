@@ -26,7 +26,6 @@ Executing cluster transition:
  * Resource action: shooter         monitor=60000 on 18node1
  * Resource action: fake            monitor on remote1
  * Resource action: remote1         monitor=60000 on 18builder
- * Pseudo action:   probe_complete
  * Resource action: fake            start on 18node2
 
 Revised cluster status:

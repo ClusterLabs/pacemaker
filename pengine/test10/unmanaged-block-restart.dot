@@ -12,7 +12,6 @@ digraph "g" {
 "group1_stop_0" [ style=bold color="green" fontcolor="orange"]
 "group1_stopped_0" -> "group1_start_0" [ style = dashed]
 "group1_stopped_0" [ style=dashed color="red" fontcolor="orange"]
-"probe_complete yingying.site" [ style=bold color="green" fontcolor="black"]
 "rsc1_monitor_10000 yingying.site" [ style=bold color="green" fontcolor="black"]
 "rsc1_start_0 yingying.site" -> "group1_running_0" [ style = dashed]
 "rsc1_start_0 yingying.site" -> "rsc1_monitor_10000 yingying.site" [ style = bold]

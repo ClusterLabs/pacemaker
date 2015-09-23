@@ -14,7 +14,6 @@ Transition Summary:
 Executing cluster transition:
  * Resource action: container1      monitor on node2
  * Resource action: container1      monitor on node1
- * Pseudo action:   probe_complete
  * Resource action: container1      start on node1
  * Resource action: rsc1            start on node1
  * Resource action: rsc2            start on node1

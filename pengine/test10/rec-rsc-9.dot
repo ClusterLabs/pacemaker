@@ -21,7 +21,6 @@
 "foo_stopped_0" -> "bar_stop_0" [ style = bold]
 "foo_stopped_0" -> "foo_start_0" [ style = bold]
 "foo_stopped_0" [ style=bold color="green" fontcolor="orange" ]
-"probe_complete node1" [ style=bold color="green" fontcolor="black" ]
 "rsc1_start_0 node1" [ style=bold color="green" fontcolor="black" ]
 "rsc1_stop_0 node1" -> "all_stopped" [ style = bold]
 "rsc1_stop_0 node1" -> "bar_stop_0" [ style = bold]

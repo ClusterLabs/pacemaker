@@ -21,7 +21,6 @@ Executing cluster transition:
  * Resource action: stateful-2:1    monitor on node-b
  * Resource action: stateful-2:1    monitor on node-a
  * Pseudo action:   ms-sf_start_0
- * Pseudo action:   probe_complete
  * Pseudo action:   group:0_start_0
  * Resource action: stateful-2:0    start on node-b
  * Pseudo action:   group:1_start_0

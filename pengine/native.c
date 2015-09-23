@@ -935,27 +935,17 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
         add_hash_param(stopped_mon->meta, XML_ATTR_TE_TARGET_RC, rc_inactive);
         free(rc_inactive);
 
-        probe_complete_ops = find_actions(data_set->actions, CRM_OP_PROBED, NULL);
-        for (local_gIter = probe_complete_ops; local_gIter != NULL; local_gIter = local_gIter->next) {
-            action_t *probe_complete = (action_t *) local_gIter->data;
+        if (is_set(rsc->flags, pe_rsc_managed)) {
+            char *probe_key = generate_op_key(rsc->id, CRMD_ACTION_STATUS, 0);
+            GListPtr probes = find_actions(rsc->actions, probe_key, stop_node);
+            GListPtr pIter = NULL;
 
-            if (probe_complete->node == NULL) {
-                if (is_set(probe_complete->flags, pe_action_optional) == FALSE) {
-                    probe_is_optional = FALSE;
-                }
+            free(probe_key);
+            for (pIter = probes; pIter != NULL; pIter = pIter->next) {
+                action_t *probe = (action_t *) pIter->data;
 
-                if (is_set(probe_complete->flags, pe_action_runnable) == FALSE) {
-                    crm_debug("%s\t   %s (cancelled : probe un-runnable)",
-                              crm_str(stop_node_uname), stopped_mon->uuid);
-                    update_action_flags(stopped_mon, pe_action_runnable | pe_action_clear);
-                }
-
-                if (is_set(rsc->flags, pe_rsc_managed)) {
-                    custom_action_order(NULL, NULL, probe_complete,
-                                        NULL, strdup(key), stopped_mon,
-                                        pe_order_optional, data_set);
-                }
-                break;
+                order_actions(probe, stopped_mon, pe_order_runnable_left);
+                crm_trace("%s then %s on %s\n", probe->uuid, stopped_mon->uuid, stop_node->details->uname);
             }
         }
 

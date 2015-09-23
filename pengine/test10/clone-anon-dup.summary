@@ -18,7 +18,6 @@ Executing cluster transition:
  * Resource action: stonith-1       monitor on wc02
  * Resource action: stonith-1       monitor on wc01
  * Pseudo action:   clone_webservice_stop_0
- * Pseudo action:   probe_complete
  * Resource action: stonith-1       start on wc01
  * Pseudo action:   group_webservice:2_stop_0
  * Resource action: apache2:0       stop on wc02

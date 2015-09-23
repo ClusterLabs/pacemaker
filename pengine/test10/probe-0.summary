@@ -17,7 +17,6 @@ Executing cluster transition:
  * Resource action: configstoreclone:0 monitor on x32c47
  * Resource action: configstoreclone:1 monitor on x32c48
  * Pseudo action:   configstorecloneset_pre_notify_start_0
- * Pseudo action:   probe_complete
  * Pseudo action:   configstorecloneset_confirmed-pre_notify_start_0
  * Pseudo action:   configstorecloneset_start_0
  * Resource action: configstoreclone:0 start on x32c47

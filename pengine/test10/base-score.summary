@@ -12,7 +12,6 @@ Executing cluster transition:
  * Resource action: Dummy           monitor on puma3
  * Resource action: Dummy           monitor on puma2
  * Resource action: Dummy           monitor on puma1
- * Pseudo action:   probe_complete
  * Resource action: Dummy           start on puma1
 
 Revised cluster status:

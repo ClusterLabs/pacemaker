@@ -31,7 +31,6 @@ Executing cluster transition:
  * Resource action: rsc6            monitor on node2
  * Resource action: rsc7            monitor on node2
  * Resource action: rsc8            monitor on node2
- * Pseudo action:   probe_complete
  * Resource action: rsc5            stop on node1
  * Resource action: rsc8            stop on node1
  * Resource action: rsc4            stop on node1

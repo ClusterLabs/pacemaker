@@ -44,7 +44,4 @@ digraph "g" {
 "clone-3_start_0" -> "clone-3_running_0" [ style = bold]
 "clone-3_start_0" [ style=bold color="green" fontcolor="orange"]
 "dummy_start_0 pcmk-1" [ style=bold color="green" fontcolor="black"]
-"probe_complete pcmk-1" [ style=bold color="green" fontcolor="black"]
-"probe_complete pcmk-2" [ style=bold color="green" fontcolor="black"]
-"probe_complete pcmk-3" [ style=bold color="green" fontcolor="black"]
 }

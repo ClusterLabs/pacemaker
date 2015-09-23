@@ -59,7 +59,6 @@ Executing cluster transition:
  * Pseudo action:   master_rsc_1_demote_0
  * Fencing c001n01 (reboot)
  * Pseudo action:   stonith_complete
- * Pseudo action:   probe_complete
  * Pseudo action:   DcIPaddr_stop_0
  * Resource action: heartbeat_192.168.100.182 stop on c001n03
  * Resource action: lsb_dummy       start on c001n08

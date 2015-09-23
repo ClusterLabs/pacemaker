@@ -55,7 +55,6 @@ Executing cluster transition:
  * Pseudo action:   DoFencing_start_0
  * Fencing c001n02 (reboot)
  * Pseudo action:   stonith_complete
- * Pseudo action:   probe_complete
  * Pseudo action:   all_stopped
  * Resource action: DcIPaddr        start on c001n08
  * Resource action: rsc_c001n08     start on c001n08

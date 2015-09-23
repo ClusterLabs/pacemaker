@@ -8,8 +8,6 @@ digraph "g" {
 "ms1_start_0" -> "rsc1:0_start_0 node2" [ style = bold]
 "ms1_start_0" -> "rsc1:1_start_0 node1" [ style = bold]
 "ms1_start_0" [ style=bold color="green" fontcolor="orange" ]
-"probe_complete node1" [ style=bold color="green" fontcolor="black" ]
-"probe_complete node2" [ style=bold color="green" fontcolor="black" ]
 "rsc1:0_start_0 node2" -> "ms1_running_0" [ style = bold]
 "rsc1:0_start_0 node2" [ style=bold color="green" fontcolor="black" ]
 "rsc1:1_promote_0 node1" -> "ms1_promoted_0" [ style = bold]

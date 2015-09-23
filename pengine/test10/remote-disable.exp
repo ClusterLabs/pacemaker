@@ -1,20 +1,20 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0">
     <action_set>
-      <rsc_op id="15" operation="stop" operation_key="remote1_stop_0" on_node="18builder" on_node_uuid="5">
+      <rsc_op id="10" operation="stop" operation_key="remote1_stop_0" on_node="18builder" on_node_uuid="5">
         <primitive id="remote1" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="18" operation="stop" operation_key="FAKE2_stop_0" on_node="remote1" on_node_uuid="remote1" router_node="18builder"/>
+        <rsc_op id="13" operation="stop" operation_key="FAKE2_stop_0" on_node="remote1" on_node_uuid="remote1" router_node="18builder"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="1">
     <action_set>
-      <rsc_op id="18" operation="stop" operation_key="FAKE2_stop_0" on_node="remote1" on_node_uuid="remote1" router_node="18builder">
+      <rsc_op id="13" operation="stop" operation_key="FAKE2_stop_0" on_node="remote1" on_node_uuid="remote1" router_node="18builder">
         <primitive id="FAKE2" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_timeout="20000" />
       </rsc_op>
@@ -29,10 +29,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="15" operation="stop" operation_key="remote1_stop_0" on_node="18builder" on_node_uuid="5"/>
+        <rsc_op id="10" operation="stop" operation_key="remote1_stop_0" on_node="18builder" on_node_uuid="5"/>
       </trigger>
       <trigger>
-        <rsc_op id="18" operation="stop" operation_key="FAKE2_stop_0" on_node="remote1" on_node_uuid="remote1" router_node="18builder"/>
+        <rsc_op id="13" operation="stop" operation_key="FAKE2_stop_0" on_node="remote1" on_node_uuid="remote1" router_node="18builder"/>
       </trigger>
     </inputs>
   </synapse>

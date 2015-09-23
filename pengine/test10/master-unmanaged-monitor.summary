@@ -38,7 +38,6 @@ Executing cluster transition:
  * Resource action: stateful-1:0    monitor on pcmk-1
  * Resource action: stateful-1:0    monitor=16000 on pcmk-3
  * Resource action: stateful-1:0    monitor=15000 on pcmk-4
- * Pseudo action:   probe_complete
 
 Revised cluster status:
 Online: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]

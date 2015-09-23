@@ -76,7 +76,6 @@ Executing cluster transition:
  * Pseudo action:   FAKECLONE2-clone_start_0
  * Resource action: FAKE6           start on 18node1
  * Resource action: FAKE7           start on 18node1
- * Pseudo action:   probe_complete
  * Resource action: shooter         monitor=60000 on 18node2
  * Resource action: remote1         monitor=60000 on 18node1
  * Resource action: FAKE1           monitor=60000 on 18node4

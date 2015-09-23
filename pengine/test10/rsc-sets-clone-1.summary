@@ -43,7 +43,6 @@ Executing cluster transition:
  * Pseudo action:   baseclone_start_0
  * Resource action: nfs1:0          monitor on sys3
  * Resource action: stonithsys2     monitor on sys3
- * Pseudo action:   probe_complete
  * Pseudo action:   load_stopped_sys3
  * Pseudo action:   load_stopped_sys2
  * Resource action: stonithsys3     stop on sys2

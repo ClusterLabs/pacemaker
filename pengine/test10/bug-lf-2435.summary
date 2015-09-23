@@ -18,7 +18,6 @@ Executing cluster transition:
  * Resource action: dummy4          monitor on c20.chepkov.lan
  * Resource action: dummy4          monitor on c19.chepkov.lan
  * Resource action: dummy3          stop on c21.chepkov.lan
- * Pseudo action:   probe_complete
  * Pseudo action:   all_stopped
  * Resource action: dummy2          start on c21.chepkov.lan
 

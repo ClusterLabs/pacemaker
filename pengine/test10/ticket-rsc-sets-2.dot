@@ -12,8 +12,6 @@ digraph "g" {
 "ms5_promote_0" -> "rsc5:1_promote_0 node1" [ style = bold]
 "ms5_promote_0" [ style=bold color="green" fontcolor="orange" ]
 "ms5_promoted_0" [ style=bold color="green" fontcolor="orange" ]
-"probe_complete node1" [ style=bold color="green" fontcolor="black" ]
-"probe_complete node2" [ style=bold color="green" fontcolor="black" ]
 "rsc1_monitor_10000 node2" [ style=bold color="green" fontcolor="black" ]
 "rsc1_start_0 node2" -> "rsc1_monitor_10000 node2" [ style = bold]
 "rsc1_start_0 node2" [ style=bold color="green" fontcolor="black" ]

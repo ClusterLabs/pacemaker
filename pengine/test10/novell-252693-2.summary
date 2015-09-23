@@ -39,7 +39,6 @@ Executing cluster transition:
  * Resource action: configstoreclone:1 monitor on node1
  * Pseudo action:   configstorecloneset_pre_notify_start_0
  * Resource action: sles10          monitor on node1
- * Pseudo action:   probe_complete
  * Resource action: stonithclone:1  start on node1
  * Pseudo action:   stonithcloneset_running_0
  * Resource action: evmsdclone:1    start on node1

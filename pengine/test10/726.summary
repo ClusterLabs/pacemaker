@@ -54,7 +54,6 @@ Executing cluster transition:
  * Resource action: child_DoFencing:3 monitor on sgi2
  * Resource action: child_DoFencing:3 monitor on ibm1
  * Pseudo action:   DoFencing_start_0
- * Pseudo action:   probe_complete
  * Resource action: rsc_sgi2        start on sgi2
  * Resource action: rsc_ibm1        stop on test03
  * Resource action: rsc_test02      start on test02

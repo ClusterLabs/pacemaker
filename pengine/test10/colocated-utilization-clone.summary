@@ -37,7 +37,6 @@ Executing cluster transition:
  * Resource action: rsc5            monitor on node3
  * Resource action: rsc5            monitor on node2
  * Resource action: rsc5            monitor on node1
- * Pseudo action:   probe_complete
  * Pseudo action:   load_stopped_node1
  * Pseudo action:   load_stopped_node3
  * Pseudo action:   load_stopped_node2

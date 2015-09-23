@@ -15,7 +15,6 @@ Executing cluster transition:
  * Resource action: ClusterIP:0     monitor on fc16-builder
  * Pseudo action:   clone1_start_0
  * Resource action: ClusterIP2:0    monitor on fc16-builder
- * Pseudo action:   probe_complete
  * Resource action: ClusterIP:0     start on fc16-builder
  * Pseudo action:   clone1_running_0
  * Pseudo action:   clone2_start_0

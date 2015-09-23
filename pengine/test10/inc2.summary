@@ -21,7 +21,6 @@ Executing cluster transition:
  * Resource action: child_rsc1:3    monitor on node2
  * Resource action: child_rsc1:4    monitor on node2
  * Pseudo action:   rsc1_stop_0
- * Pseudo action:   probe_complete
  * Resource action: child_rsc1:2    stop on node1
  * Resource action: child_rsc1:3    stop on node1
  * Resource action: child_rsc1:4    stop on node1

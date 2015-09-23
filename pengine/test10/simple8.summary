@@ -16,7 +16,6 @@ Executing cluster transition:
  * Resource action: rsc4            monitor on node2
  * Resource action: rsc1            monitor on node2
  * Resource action: rsc2            monitor on node2
- * Pseudo action:   probe_complete
 
 Revised cluster status:
 Online: [ node1 node2 ]

@@ -32,7 +32,6 @@ Executing cluster transition:
  * Resource action: child_DoFencing:1 monitor on posic043
  * Resource action: child_DoFencing:2 monitor on posic041
  * Resource action: child_DoFencing:3 monitor on posic041
- * Pseudo action:   probe_complete
  * Resource action: DcIPaddr        stop on posic043
  * Resource action: rsc_posic041    stop on posic041
  * Resource action: rsc_posic042    stop on posic041

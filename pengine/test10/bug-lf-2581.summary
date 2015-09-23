@@ -30,7 +30,6 @@ Executing cluster transition:
  * Resource action: C-2             monitor on queen
  * Resource action: stonith-l2network:1 monitor on queen
  * Pseudo action:   stonith-l2network-set_start_0
- * Pseudo action:   probe_complete
  * Pseudo action:   AZ-group:1_start_0
  * Resource action: A:1             start on queen
  * Resource action: Z:1             start on queen

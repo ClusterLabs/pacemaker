@@ -30,7 +30,4 @@ digraph "g" {
 "dummy_stop_0 pcmk-1" -> "clone-3_stop_0" [ style = bold]
 "dummy_stop_0 pcmk-1" -> "dummy_start_0 pcmk-1" [ style = bold]
 "dummy_stop_0 pcmk-1" [ style=bold color="green" fontcolor="black"]
-"probe_complete pcmk-1" [ style=bold color="green" fontcolor="black"]
-"probe_complete pcmk-2" [ style=bold color="green" fontcolor="black"]
-"probe_complete pcmk-3" [ style=bold color="green" fontcolor="black"]
 }

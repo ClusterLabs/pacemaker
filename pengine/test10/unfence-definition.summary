@@ -26,7 +26,6 @@ Executing cluster transition:
  * Pseudo action:   clvmd-clone_stop_0
  * Fencing virt-4 (reboot)
  * Pseudo action:   stonith_complete
- * Pseudo action:   probe_complete
  * Resource action: clvmd           stop on virt-1
  * Pseudo action:   clvmd-clone_stopped_0
  * Pseudo action:   dlm-clone_stop_0

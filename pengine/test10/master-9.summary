@@ -62,7 +62,6 @@ Executing cluster transition:
  * Resource action: ocf_msdummy:6   monitor on ibm1
  * Resource action: ocf_msdummy:7   monitor on va1
  * Resource action: ocf_msdummy:7   monitor on ibm1
- * Pseudo action:   probe_complete
  * Resource action: child_DoFencing:1 stop on ibm1
  * Pseudo action:   DoFencing_stopped_0
  * Cluster action:  do_shutdown on ibm1

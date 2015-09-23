@@ -24,7 +24,6 @@ Executing cluster transition:
  * Resource action: S_C             monitor on fc16-builder
  * Resource action: S_D             monitor on fc16-builder
  * Resource action: A               monitor on fc16-builder
- * Pseudo action:   probe_complete
  * Resource action: S_B             start on fc16-builder
  * Resource action: S_C             start on fc16-builder
  * Resource action: S_D             start on fc16-builder

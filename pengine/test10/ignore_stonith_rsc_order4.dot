@@ -1,6 +1,5 @@
  digraph "g" {
 "A:0_monitor_0 fc16-builder" -> "S_CLONE2_start_0" [ style = bold]
-"A:0_monitor_0 fc16-builder" -> "probe_complete fc16-builder" [ style = bold]
 "A:0_monitor_0 fc16-builder" [ style=bold color="green" fontcolor="black"]
 "A:0_start_0 fc16-builder" -> "MIXED_GROUP:0_running_0" [ style = bold]
 "A:0_start_0 fc16-builder" -> "S_B:0_start_0 fc16-builder" [ style = bold]
@@ -12,12 +11,10 @@
 "MIXED_GROUP:0_start_0" -> "S_B:0_start_0 fc16-builder" [ style = bold]
 "MIXED_GROUP:0_start_0" [ style=bold color="green" fontcolor="orange"]
 "S_A:0_monitor_0 fc16-builder" -> "S_CLONE_start_0" [ style = bold]
-"S_A:0_monitor_0 fc16-builder" -> "probe_complete fc16-builder" [ style = bold]
 "S_A:0_monitor_0 fc16-builder" [ style=bold color="green" fontcolor="black"]
 "S_A:0_start_0 fc16-builder" -> "S_CLONE_running_0" [ style = bold]
 "S_A:0_start_0 fc16-builder" [ style=bold color="green" fontcolor="black"]
 "S_B:0_monitor_0 fc16-builder" -> "S_CLONE2_start_0" [ style = bold]
-"S_B:0_monitor_0 fc16-builder" -> "probe_complete fc16-builder" [ style = bold]
 "S_B:0_monitor_0 fc16-builder" [ style=bold color="green" fontcolor="black"]
 "S_B:0_start_0 fc16-builder" -> "MIXED_GROUP:0_running_0" [ style = bold]
 "S_B:0_start_0 fc16-builder" [ style=bold color="green" fontcolor="black"]
@@ -30,7 +27,4 @@
 "S_CLONE_start_0" -> "S_A:0_start_0 fc16-builder" [ style = bold]
 "S_CLONE_start_0" -> "S_CLONE_running_0" [ style = bold]
 "S_CLONE_start_0" [ style=bold color="green" fontcolor="orange"]
-"probe_complete fc16-builder" -> "probe_complete" [ style = bold]
-"probe_complete fc16-builder" [ style=bold color="green" fontcolor="black"]
-"probe_complete" [ style=bold color="green" fontcolor="orange"]
 }

@@ -23,8 +23,6 @@ digraph "g" {
 "container1_stop_0 node1" -> "container-group_stopped_0" [ style = bold]
 "container1_stop_0 node1" -> "container1_start_0 node1" [ style = bold]
 "container1_stop_0 node1" [ style=bold color="green" fontcolor="black"]
-"probe_complete node1" [ style=bold color="green" fontcolor="black"]
-"probe_complete node2" [ style=bold color="green" fontcolor="black"]
 "rsc1_monitor_10000 node1" [ style=bold color="green" fontcolor="black"]
 "rsc1_start_0 node1" -> "container-group_running_0" [ style = bold]
 "rsc1_start_0 node1" -> "rsc1_monitor_10000 node1" [ style = bold]

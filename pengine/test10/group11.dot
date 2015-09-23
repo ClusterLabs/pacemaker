@@ -10,7 +10,6 @@ digraph "g" {
 "group1_stop_0" [ style=bold color="green" fontcolor="orange" ]
 "group1_stopped_0" -> "group1_start_0" [ style = bold]
 "group1_stopped_0" [ style=bold color="green" fontcolor="orange" ]
-"probe_complete node1" [ style=bold color="green" fontcolor="black" ]
 "rsc2_stop_0 node1" -> "all_stopped" [ style = bold]
 "rsc2_stop_0 node1" -> "group1_stopped_0" [ style = bold]
 "rsc2_stop_0 node1" [ style=bold color="green" fontcolor="black" ]

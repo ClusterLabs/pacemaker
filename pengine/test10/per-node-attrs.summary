@@ -11,7 +11,6 @@ Executing cluster transition:
  * Resource action: dummy           monitor on pcmk-3
  * Resource action: dummy           monitor on pcmk-2
  * Resource action: dummy           monitor on pcmk-1
- * Pseudo action:   probe_complete
  * Resource action: dummy           start on pcmk-1
 
 Revised cluster status:

@@ -24,7 +24,6 @@ Executing cluster transition:
  * Resource action: s0:0            monitor on hex-13
  * Resource action: s0:1            monitor on hex-14
  * Pseudo action:   ms0_start_0
- * Pseudo action:   probe_complete
  * Resource action: fencing-sbd     start on hex-14
  * Resource action: s0:0            start on hex-13
  * Resource action: s0:1            start on hex-14

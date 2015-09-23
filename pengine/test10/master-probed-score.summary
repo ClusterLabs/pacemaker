@@ -140,7 +140,6 @@ Executing cluster transition:
  * Resource action: KVM-guest       monitor on hypatia-corosync.nevis.columbia.edu
  * Resource action: Proxy           monitor on orestes-corosync.nevis.columbia.edu
  * Resource action: Proxy           monitor on hypatia-corosync.nevis.columbia.edu
- * Pseudo action:   probe_complete
  * Pseudo action:   AdminClone_confirmed-pre_notify_start_0
  * Pseudo action:   AdminClone_start_0
  * Resource action: AdminDrbd:0     start on hypatia-corosync.nevis.columbia.edu

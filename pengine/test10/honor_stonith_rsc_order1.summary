@@ -18,7 +18,6 @@ Executing cluster transition:
  * Pseudo action:   S_GROUP_start_0
  * Resource action: S_B             monitor on fc16-builder
  * Resource action: A               monitor on fc16-builder
- * Pseudo action:   probe_complete
  * Resource action: S_B             start on fc16-builder
  * Resource action: A               start on fc16-builder
  * Pseudo action:   S_GROUP_running_0

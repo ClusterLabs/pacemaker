@@ -13,7 +13,6 @@ Executing cluster transition:
  * Resource action: drbd0:0         monitor on mysql-01
  * Resource action: drbd0:1         monitor on mysql-02
  * Pseudo action:   ms-drbd0_start_0
- * Pseudo action:   probe_complete
  * Resource action: drbd0:0         start on mysql-01
  * Resource action: drbd0:1         start on mysql-02
  * Pseudo action:   ms-drbd0_running_0

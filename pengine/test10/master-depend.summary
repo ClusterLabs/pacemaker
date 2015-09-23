@@ -28,7 +28,6 @@ Executing cluster transition:
  * Resource action: vmnci37         monitor on vbox4
  * Resource action: vmnci38         monitor on vbox4
  * Resource action: vmnci55         monitor on vbox4
- * Pseudo action:   probe_complete
  * Pseudo action:   drbd_confirmed-pre_notify_start_0
  * Pseudo action:   drbd_start_0
  * Resource action: cman:0          start on vbox4

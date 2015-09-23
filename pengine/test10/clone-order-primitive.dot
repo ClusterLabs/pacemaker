@@ -8,10 +8,6 @@ digraph "g" {
 "cups_lsb:0_start_0 pcw2058.see.ed.ac.uk" [ style=bold color="green" fontcolor="black" ]
 "cups_lsb:1_start_0 pcw2059.see.ed.ac.uk" -> "cups_clone_running_0" [ style = bold]
 "cups_lsb:1_start_0 pcw2059.see.ed.ac.uk" [ style=bold color="green" fontcolor="black" ]
-"probe_complete pcw2058.see.ed.ac.uk" [ style=bold color="green" fontcolor="black" ]
-"probe_complete pcw2059.see.ed.ac.uk" [ style=bold color="green" fontcolor="black" ]
-"probe_complete pcw2688.see.ed.ac.uk" [ style=bold color="green" fontcolor="black" ]
-"probe_complete pcw2709.see.ed.ac.uk" [ style=bold color="green" fontcolor="black" ]
 "smb_lsb_start_0 pcw2688.see.ed.ac.uk" -> "cups_clone_start_0" [ style = bold]
 "smb_lsb_start_0 pcw2688.see.ed.ac.uk" [ style=bold color="green" fontcolor="black" ]
 }
