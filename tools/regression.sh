@@ -52,7 +52,7 @@ while test "$done" = "0"; do
 	-V|--verbose) verbose=1; shift;;
 	-v|--valgrind)
 	    export G_SLICE=always-malloc
-	    VALGRIND_CMD="valgrind -q --gen-suppressions=all --show-reachable=no --leak-check=full --trace-children=no --time-stamp=yes --num-callers=20 --suppressions=/usr/share/pacemaker/tests/valgrind-pcmk.suppressions"
+	    VALGRIND_CMD="valgrind -q --gen-suppressions=all --show-reachable=no --leak-check=full --trace-children=no --time-stamp=yes --num-callers=20 --partial-loads-ok=yes --suppressions=/usr/share/pacemaker/tests/valgrind-pcmk.suppressions"
 	    shift;;
 	-x) set -x; shift;;
 	-s) do_save=1; shift;;
