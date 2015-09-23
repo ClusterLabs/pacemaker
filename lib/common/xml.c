@@ -193,26 +193,42 @@ static inline bool TRACKING_CHANGES(xmlNode *xml)
     return FALSE;
 }
 
-#define buffer_print(buffer, max, offset, fmt, args...) do {            \
-        int rc = (max);                                                 \
-        if(buffer) {                                                    \
-            rc = snprintf((buffer) + (offset), (max) - (offset), fmt, ##args); \
-        }                                                               \
-        if(buffer && rc < 0) {                                          \
-            crm_perror(LOG_ERR, "snprintf failed at offset %d", offset); \
-            (buffer)[(offset)] = 0;                                     \
-            break;                                                      \
-        } else if(rc >= ((max) - (offset))) {                           \
-            char *tmp = NULL;                                           \
-            (max) = QB_MAX(CHUNK_SIZE, (max) * 2);                      \
-            tmp = realloc_safe((buffer), (max));                        \
-            CRM_ASSERT(tmp);                                            \
-            (buffer) = tmp;                                             \
-        } else {                                                        \
-            offset += rc;                                               \
-            break;                                                      \
-        }                                                               \
-    } while(1);
+/*!
+ * \internal
+ * \brief Macro implementing inflatable variant of \c snprintf
+ * \param str[inout], the string buffer of size >= \c _max
+ * \param offset[inout], how many bytes from the beginning of \c str to operate
+ * \param max[inout], sentinel to prevent overruns as size <= \c _str size
+ *
+ * \warning Avoid using parameters with side effects (e.g., <tt>foo++</tt>).
+ *
+ * \parblock
+ * Only serious failure occurs when either underlying \c snprintf
+ * fails or when \c max < \c offset (implying unhandled error
+ * prior to invoking this macro).
+ * \endparblock
+ */
+#define buffer_print(buffer, max, offset, fmt, args...) do {              \
+        int errno_backup = errno, rc;                                     \
+        errno = 0;                                                        \
+        rc = crm_snprintf_offset(buffer, offset, max, fmt, ##args);       \
+        if (rc == max - offset && errno) {                                \
+            crm_perror(LOG_ERR, "snprintf failed at offset %d", offset);  \
+            (buffer)[offset] = 0;                                         \
+        } else if(rc >= max - offset) {                                   \
+            char *tmp = NULL;                                             \
+            max = QB_MAX(CHUNK_SIZE, (max) * 2);                          \
+            tmp = realloc_safe(buffer, max);                              \
+            CRM_ASSERT(tmp);                                              \
+            buffer = tmp;                                                 \
+            rc = -1;  /*distinct value from crm_snprintf_offset range*/   \
+        } else {                                                          \
+            offset += rc;                                                 \
+        }                                                                 \
+        errno = errno_backup;                                             \
+        if (rc >= 0)                                                      \
+            break;                                                        \
+    } while(1)
 
 static void
 insert_prefix(int options, char **buffer, int *offset, int *max, int depth)
