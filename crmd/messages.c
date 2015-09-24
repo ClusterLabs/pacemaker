@@ -805,8 +805,8 @@ handle_request(xmlNode * stored_msg, enum crmd_fsa_cause cause)
         crm_notice("Current ping state: %s", fsa_state2string(fsa_state));
 
         msg = create_reply(stored_msg, ping);
-        if(msg) {
-            relay_message(msg, TRUE);
+        if (msg) {
+            (void)relay_message(msg, TRUE);
         }
 
         free_xml(ping);

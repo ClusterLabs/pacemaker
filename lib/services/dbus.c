@@ -142,7 +142,7 @@ DBusMessage *pcmk_dbus_send_recv(DBusMessage *msg, DBusConnection *connection, D
         reply = dbus_pending_call_steal_reply(pending);
     }
 
-    pcmk_dbus_find_error(method, pending, reply, error);
+    (void)pcmk_dbus_find_error(method, pending, reply, error);
 
     if(pending) {
         /* free the pending message handle */

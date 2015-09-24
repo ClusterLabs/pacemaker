@@ -2382,11 +2382,12 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
 
                 crm_notice("Forwarding complex self fencing request to peer %s", alternate_host);
 
-                if (client) {
+                if (client->id) {
                     client_id = client->id;
                 } else {
                     client_id = crm_element_value(request, F_STONITH_CLIENTID);
                 }
+
                 /* Create a record of it, otherwise call_id will be 0 if we need to notify of failures */
                 create_remote_stonith_op(client_id, request, FALSE);
 

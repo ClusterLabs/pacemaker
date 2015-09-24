@@ -182,7 +182,11 @@ const char *crm_element_value_const(const xmlNode * data, const char *name);
 xmlNode *get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level);
 xmlNode *get_xpath_object_relative(const char *xpath, xmlNode * xml_obj, int error_level);
 
-#  define crm_element_name(xml) (xml)?(const char *)(xml)->name:NULL
+static inline const char *
+crm_element_name(xmlNode *xml)
+{
+    return xml? (const char *)(xml->name) : NULL;
+}
 
 const char *crm_element_value(xmlNode * data, const char *name);
 

@@ -394,8 +394,8 @@ cib_remote_signon(cib_t * cib, const char *name, enum cib_conn_type type)
         if(rc == 0) {
             fprintf(stderr, "Password: ");
             private->passwd = calloc(1, 1024);
-            rc = scanf("%s", private->passwd);
-            fprintf(stdout, "\n");
+            rc = scanf("%1023s", private->passwd);
+            fprintf(stderr, "\n");
         }
 
         /* fprintf(stderr, "entered: '%s'\n", buffer); */

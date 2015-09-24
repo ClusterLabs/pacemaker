@@ -424,17 +424,25 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
 
     /* Write the CIB digest to a temporary file */
     fd = mkstemp(tmp_digest);
+    if (fd < 0) {
+        crm_perror(LOG_ERR, "Could not create temporary file for CIB digest");
+        exit_rc = pcmk_err_cib_save;
+        goto cleanup;
+    }
     if (cib_do_chown && (fchown(fd, cib_file_owner, cib_file_group) < 0)) {
         crm_perror(LOG_ERR, "Couldn't protect temporary file %s for writing CIB",
                    tmp_cib);
         exit_rc = pcmk_err_cib_save;
+        close(fd);
         goto cleanup;
     }
-    if ((fd < 0) || (crm_write_sync(fd, digest) < 0)) {
+    if (crm_write_sync(fd, digest) < 0) {
         crm_perror(LOG_ERR, "Could not write digest to file %s", tmp_digest);
         exit_rc = pcmk_err_cib_save;
+        close(fd);
         goto cleanup;
     }
+    close(fd);
     crm_debug("Wrote digest %s to disk", digest);
 
     /* Verify that what we wrote is sane */

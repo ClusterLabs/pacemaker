@@ -1945,6 +1945,46 @@ __add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * patch)
     }
 }
 
+/*
+ * \internal
+ * \brief Find additions or removals in a patch set
+ *
+ * \param[in]     patchset   XML of patch
+ * \param[in]     format     Patch version
+ * \param[in]     added      TRUE if looking for additions, FALSE if removals
+ * \param[in/out] patch_node Will be set to node if found
+ *
+ * \return TRUE if format is valid, FALSE if invalid
+ */
+static bool
+find_patch_xml_node(xmlNode *patchset, int format, bool added,
+                    xmlNode **patch_node)
+{
+    xmlNode *cib_node;
+    const char *label;
+
+    switch(format) {
+        case 1:
+            label = added? "diff-added" : "diff-removed";
+            *patch_node = find_xml_node(patchset, label, FALSE);
+            cib_node = find_xml_node(*patch_node, "cib", FALSE);
+            if (cib_node != NULL) {
+                *patch_node = cib_node;
+            }
+            break;
+        case 2:
+            label = added? "target" : "source";
+            *patch_node = find_xml_node(patchset, "version", FALSE);
+            *patch_node = find_xml_node(*patch_node, label, FALSE);
+            break;
+        default:
+            crm_warn("Unknown patch format: %d", format);
+            *patch_node = NULL;
+            return FALSE;
+    }
+    return TRUE;
+}
+
 bool xml_patch_versions(xmlNode *patchset, int add[3], int del[3])
 {
     int lpc = 0;
@@ -1959,24 +1999,11 @@ bool xml_patch_versions(xmlNode *patchset, int add[3], int del[3])
 
 
     crm_element_value_int(patchset, "format", &format);
-    switch(format) {
-        case 1:
-            tmp = find_xml_node(patchset, "diff-removed", FALSE);
-            tmp = find_xml_node(tmp, "cib", FALSE);
-            if(tmp == NULL) {
-                /* Revert to the diff-removed line */
-                tmp = find_xml_node(patchset, "diff-removed", FALSE);
-            }
-            break;
-        case 2:
-            tmp = find_xml_node(patchset, "version", FALSE);
-            tmp = find_xml_node(tmp, "source", FALSE);
-            break;
-        default:
-            crm_warn("Unknown patch format: %d", format);
-            return -EINVAL;
-    }
 
+    /* Process removals */
+    if (!find_patch_xml_node(patchset, format, FALSE, &tmp)) {
+        return -EINVAL;
+    }
     if (tmp) {
         for(lpc = 0; lpc < DIMOF(vfields); lpc++) {
             crm_element_value_int(tmp, vfields[lpc], &(del[lpc]));
@@ -1984,24 +2011,10 @@ bool xml_patch_versions(xmlNode *patchset, int add[3], int del[3])
         }
     }
 
-    switch(format) {
-        case 1:
-            tmp = find_xml_node(patchset, "diff-added", FALSE);
-            tmp = find_xml_node(tmp, "cib", FALSE);
-            if(tmp == NULL) {
-                /* Revert to the diff-added line */
-                tmp = find_xml_node(patchset, "diff-added", FALSE);
-            }
-            break;
-        case 2:
-            tmp = find_xml_node(patchset, "version", FALSE);
-            tmp = find_xml_node(tmp, "target", FALSE);
-            break;
-        default:
-            crm_warn("Unknown patch format: %d", format);
-            return -EINVAL;
+    /* Process additions */
+    if (!find_patch_xml_node(patchset, format, TRUE, &tmp)) {
+        return -EINVAL;
     }
-
     if (tmp) {
         for(lpc = 0; lpc < DIMOF(vfields); lpc++) {
             crm_element_value_int(tmp, vfields[lpc], &(add[lpc]));
