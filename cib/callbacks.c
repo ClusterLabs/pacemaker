@@ -1256,10 +1256,17 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
                             current_cib, &result_cib, cib_diff, &output);
 
         if (manage_counters == FALSE) {
+            int format = 1;
             /* Legacy code
              * If the diff is NULL at this point, its because nothing changed
              */
-            config_changed = cib_config_changed(NULL, NULL, cib_diff);
+            if (*cib_diff) {
+                crm_element_value_int(*cib_diff, "format", &format);
+            }
+
+            if (format == 1) {
+                config_changed = cib_config_changed(NULL, NULL, cib_diff);
+            }
         }
 
         /* Always write to disk for replace ops,
