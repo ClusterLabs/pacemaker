@@ -1486,7 +1486,7 @@ route_ais_message(const AIS_Message * msg, gboolean local_origin)
     }
 
     if (check_message_sanity(mutable, mutable->data) == FALSE) {
-        /* Dont send this message to anyone */
+        /* Don't send this message to anyone */
         rc = 1;
         goto bail;
     }

@@ -2228,11 +2228,11 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t * rsc, lrmd_event_data
             const char *remote_node = g_hash_table_lookup(op->params, CRM_META"_remote_node");
 
             if (remote_node) {
-                /* A container for a remote-node has started, initalize remote-node's status */
+                /* A container for a remote-node has started, initialize remote-node's status */
                 crm_info("Initalizing lrm status for container remote-node %s. Container successfully started.", remote_node);
                 remote_node_clear_status(remote_node, call_opt);
             } else if (container == FALSE && safe_str_eq(rsc->type, "remote") && safe_str_eq(rsc->provider, "pacemaker")) {
-                /* baremetal remote node connection resource has started, initalize remote-node's status */
+                /* baremetal remote node connection resource has started, initialize remote-node's status */
                 crm_info("Initializing lrm status for baremetal remote-node %s", rsc->id);
                 remote_node_clear_status(rsc->id, call_opt);
             }

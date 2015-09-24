@@ -343,7 +343,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
             pe_rsc_trace(rsc, "Resource %s doesn't know how to reload", rsc->id);
 
             /* Re-send the start/demote/promote op
-             * Recurring ops will be detected independantly
+             * Recurring ops will be detected independently
              */
             custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
         }
@@ -1457,7 +1457,7 @@ stage6(pe_working_set_t * data_set)
 }
 
 /*
- * Determin the sets of independant actions and the correct order for the
+ * Determin the sets of independent actions and the correct order for the
  *  actions in each set.
  *
  * Mark dependencies of un-runnable actions un-runnable
@@ -1823,7 +1823,7 @@ order_probes(pe_working_set_t * data_set)
          *
          *   B.probe -> B.stop -> A.stop -> A.start -> B.probe
          *
-         * We could kill the 'B.probe -> B.stop' dependancy, but that
+         * We could kill the 'B.probe -> B.stop' dependency, but that
          * could mean stopping B "too" soon, because B.start must wait
          * for the probes to complete.
          *

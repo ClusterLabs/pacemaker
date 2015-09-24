@@ -470,7 +470,7 @@ update_action(action_t * then)
         then->runnable_before = 0;
 
         /* for backwards compatibility with previous options that use
-         * the 'requires_any' flag, initalize required to 1 if it is
+         * the 'requires_any' flag, initialize required to 1 if it is
          * not set. */ 
         if (then->required_runnable_before == 0) {
             then->required_runnable_before = 1;
