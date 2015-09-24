@@ -1062,8 +1062,8 @@ lrmd_tls_set_key(gnutls_datum_t * key)
         crm_debug("Using custom authkey location %s", specific_location);
         return 0;
 
-    } else {
-        crm_err("No lrmd remote key found at %s, trying default locations", specific_location);
+    } else if (specific_location) {
+        crm_err("No valid lrmd remote key found at %s, trying default location", specific_location);
     }
 
     if (set_key(key, DEFAULT_REMOTE_KEY_LOCATION) != 0) {
@@ -1071,7 +1071,7 @@ lrmd_tls_set_key(gnutls_datum_t * key)
     }
 
     if (rc) {
-        crm_err("No lrmd remote key found at %s", DEFAULT_REMOTE_KEY_LOCATION);
+        crm_err("No valid lrmd remote key found at %s", DEFAULT_REMOTE_KEY_LOCATION);
         return -1;
     }
 
