@@ -2123,6 +2123,18 @@ cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *use
     }
 }
 
+/*
+ * \internal
+ * \brief Initialize status section for a newly started pacemaker_remote node
+ *
+ * Clear the XML_NODE_IS_FENCED flag in the CIB status section for a remote node
+ * or guest node (intended to be called when the node starts). If the node ever
+ * needs to be fenced, this flag will allow various actions to determine whether
+ * the fencing has happened yet.
+ *
+ * \param[in] node_name  Name of new remote node
+ * \param[in] call_opt   Call options to pass to CIB update method
+ */
 static void
 remote_node_init_status(const char *node_name, int call_opt)
 {
@@ -2133,9 +2145,22 @@ remote_node_init_status(const char *node_name, int call_opt)
     state = simple_remote_node_status(node_name, update,__FUNCTION__);
     crm_xml_add(state, XML_NODE_IS_FENCED, "0");
 
+    /* TODO: Consider forcing a synchronous or asynchronous call here.
+     * In practice, it's currently always async, the benefit of which is
+     * quicker startup. The argument for sync is to close the tiny window
+     * in which the remote connection could drop immediately after connecting,
+     * and fencing might not happen because it appears to already have been.
+     */
     fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, call_id, NULL);
-    if (call_id != pcmk_ok) {
-        crm_debug("Failed to init status section for remote-node %s", node_name);
+    if (call_id < 0) {
+        /* TODO: Return an error code on failure, and handle it somehow.
+         * If this fails, later actions could mistakenly think the node has
+         * already been fenced, thus preventing actual fencing, or allowing
+         * recurring monitor failures to be cleared too soon.
+         */
+        crm_perror(LOG_WARNING,
+                   "Initializing status for pacemaker_remote node %s in CIB",
+                   node_name);
     }
     free_xml(update);
 }
