@@ -398,8 +398,6 @@ exit 0
 ###########################################################
 %defattr(-,root,root)
 
-%exclude %{_datadir}/pacemaker/tests
-
 %config(noreplace) %{_sysconfdir}/sysconfig/pacemaker
 %config(noreplace) %{_sysconfdir}/logrotate.d/pacemaker
 %{_sbindir}/pacemakerd
@@ -410,10 +408,6 @@ exit 0
 %{_initrddir}/pacemaker
 %endif
 
-%exclude %{_datadir}/pacemaker/report.common
-%exclude %{_datadir}/pacemaker/report.collector
-%{_datadir}/pacemaker
-%{_datadir}/snmp/mibs/PCMK-MIB.txt
 %exclude %{_libexecdir}/pacemaker/lrmd_test
 %exclude %{_sbindir}/pacemaker_remoted
 %{_libexecdir}/pacemaker/*
@@ -488,8 +482,10 @@ exit 0
 %{_sbindir}/crm_simulate
 %{_sbindir}/crm_report
 %{_sbindir}/crm_ticket
-%{_datadir}/pacemaker/report.common
-%{_datadir}/pacemaker/report.collector
+%exclude %{_datadir}/pacemaker/tests
+%{_datadir}/pacemaker
+%{_datadir}/snmp/mibs/PCMK-MIB.txt
+
 %doc %{_mandir}/man8/*
 %exclude %{_mandir}/man8/attrd_updater.*
 %exclude %{_mandir}/man8/crm_attribute.*
