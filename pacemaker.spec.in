@@ -399,7 +399,6 @@ exit 0
 %defattr(-,root,root)
 
 %config(noreplace) %{_sysconfdir}/sysconfig/pacemaker
-%config(noreplace) %{_sysconfdir}/logrotate.d/pacemaker
 %{_sbindir}/pacemakerd
 
 %if %{defined _unitdir}
@@ -458,6 +457,7 @@ exit 0
 %files cli
 %defattr(-,root,root)
 
+%config(noreplace) %{_sysconfdir}/logrotate.d/pacemaker
 %config(noreplace) %{_sysconfdir}/sysconfig/crm_mon
 
 %if %{defined _unitdir}
