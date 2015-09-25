@@ -245,7 +245,11 @@ stonith_api_remove_level(stonith_t * st, int options, const char *node, int leve
 
     data = create_xml_node(NULL, F_STONITH_LEVEL);
     crm_xml_add(data, F_STONITH_ORIGIN, __FUNCTION__);
+
+    /* Current versions use XML_ATTR_STONITH_TARGET, older F_STONITH_TARGET */
+    crm_xml_add(data, XML_ATTR_STONITH_TARGET, node);
     crm_xml_add(data, F_STONITH_TARGET, node);
+
     crm_xml_add_int(data, XML_ATTR_ID, level);
     rc = stonith_send_command(st, STONITH_OP_LEVEL_DEL, data, NULL, options, 0);
     free_xml(data);
