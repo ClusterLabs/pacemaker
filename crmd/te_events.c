@@ -264,7 +264,7 @@ process_remote_node_action(crm_action_t *action, xmlNode *event)
         return;
     } else if (action->confirmed == FALSE) {
         return;
-    } else if (!action->failed || safe_str_neq(crm_element_value(action->xml, XML_LRM_ATTR_TASK), "start")) {
+    } else if (!action->failed && safe_str_neq(crm_element_value(action->xml, XML_LRM_ATTR_TASK), "start")) {
         /* we only care about failed remote nodes, or remote nodes that have just come online. */
         return;
     }
