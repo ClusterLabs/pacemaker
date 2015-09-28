@@ -214,6 +214,7 @@ main(int argc, char **argv)
 
     crm_xml_init(); /* Sets buffer allocation strategy */
     crm_log_cli_init("cibadmin");
+    set_crm_log_level(LOG_CRIT);
     crm_set_options(NULL, "command [options] [data]", long_options,
                     "Provides direct access to the cluster configuration."
                     "\n\nAllows the configuration, or sections of it, to be queried, modified, replaced and deleted."
