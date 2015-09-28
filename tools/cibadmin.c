@@ -213,7 +213,7 @@ main(int argc, char **argv)
     int option_index = 0;
 
     crm_xml_init(); /* Sets buffer allocation strategy */
-    crm_log_preinit(NULL, argc, argv);
+    crm_log_cli_init("cibadmin");
     crm_set_options(NULL, "command [options] [data]", long_options,
                     "Provides direct access to the cluster configuration."
                     "\n\nAllows the configuration, or sections of it, to be queried, modified, replaced and deleted."
@@ -286,6 +286,7 @@ main(int argc, char **argv)
                 break;
             case 'B':
                 cib_action = CIB_OP_BUMP;
+                crm_log_args(argc, argv);
                 break;
             case 'V':
                 command_options = command_options | cib_verbose;
@@ -303,13 +304,16 @@ main(int argc, char **argv)
             case 'X':
                 crm_trace("Option %c => %s", flag, optarg);
                 admin_input_xml = optarg;
+                crm_log_args(argc, argv);
                 break;
             case 'x':
                 crm_trace("Option %c => %s", flag, optarg);
                 admin_input_file = optarg;
+                crm_log_args(argc, argv);
                 break;
             case 'p':
                 admin_input_stdin = TRUE;
+                crm_log_args(argc, argv);
                 break;
             case 'N':
             case 'h':
@@ -334,6 +338,7 @@ main(int argc, char **argv)
             case 'f':
                 force_flag = TRUE;
                 command_options |= cib_quorum_override;
+                crm_log_args(argc, argv);
                 break;
             case 'a':
                 output = createEmptyCib(1);
@@ -355,7 +360,6 @@ main(int argc, char **argv)
         quiet = FALSE;
     }
 
-    crm_log_init(NULL, LOG_CRIT, FALSE, FALSE, argc, argv, quiet);
     while (bump_log_num > 0) {
         crm_bump_log_level(argc, argv);
         bump_log_num--;

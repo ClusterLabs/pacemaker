@@ -146,11 +146,15 @@ main(int argc, char **argv)
             case '?':
                 crm_help(flag, EX_OK);
                 break;
-            case 'D':
             case 'G':
+                command = flag;
+                attr_value = optarg;
+                break;
+            case 'D':
             case 'v':
                 command = flag;
                 attr_value = optarg;
+                crm_log_args(argc, argv);
                 break;
             case 'q':
             case 'Q':

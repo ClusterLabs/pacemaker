@@ -304,6 +304,7 @@ main(int argc, char **argv)
                     || safe_str_eq("force-check",   longname)) {
                     rsc_cmd = flag;
                     rsc_long_cmd = longname;
+                    crm_log_args(argc, argv);
 
                 } else if (safe_str_eq("list-ocf-providers", longname)
                            || safe_str_eq("list-ocf-alternatives", longname)
@@ -433,6 +434,7 @@ main(int argc, char **argv)
                 break;
             case 'f':
                 do_force = TRUE;
+                crm_log_args(argc, argv);
                 break;
             case 'i':
                 prop_id = optarg;
@@ -452,41 +454,55 @@ main(int argc, char **argv)
             case 'T':
                 timeout_ms = crm_get_msec(optarg);
                 break;
+
             case 'C':
             case 'R':
             case 'P':
-                rsc_cmd = 'C';
+                crm_log_args(argc, argv);
                 require_resource = FALSE;
                 require_crmd = TRUE;
+                rsc_cmd = 'C';
                 break;
+
             case 'F':
-                rsc_cmd = flag;
+                crm_log_args(argc, argv);
                 require_crmd = TRUE;
+                rsc_cmd = flag;
                 break;
+
+            case 'U':
+            case 'B':
+            case 'M':
+            case 'D':
+                crm_log_args(argc, argv);
+                rsc_cmd = flag;
+                break;
+
             case 'L':
             case 'c':
             case 'l':
             case 'q':
             case 'w':
-            case 'D':
             case 'W':
-            case 'M':
-            case 'U':
-            case 'B':
             case 'O':
             case 'o':
             case 'A':
             case 'a':
                 rsc_cmd = flag;
                 break;
+
             case 'j':
                 print_pending = TRUE;
                 break;
             case 'p':
-            case 'g':
             case 'd':
             case 'S':
+                crm_log_args(argc, argv);
+                prop_name = optarg;
+                rsc_cmd = flag;
+                break;
             case 'G':
+            case 'g':
                 prop_name = optarg;
                 rsc_cmd = flag;
                 break;

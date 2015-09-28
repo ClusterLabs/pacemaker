@@ -150,6 +150,7 @@ main(int argc, char **argv)
             case 'v':
                 command = flag;
                 attr_value = optarg;
+                crm_log_args(argc, argv); /* Too much? */
                 break;
             default:
                 ++argerr;
