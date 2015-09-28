@@ -247,74 +247,92 @@ status_from_rc(crm_action_t * action, int orig_status, int rc, int target_rc)
     return PCMK_LRM_OP_ERROR;
 }
 
+/*
+ * \internal
+ * \brief Trigger proper follow-up if an action affects a remote node's status
+ *
+ * This function checks whether an action resulted in a remote node being newly
+ * failed (in which case it fails pending actions for the node) or re-integrated
+ * into the cluster (in which case it aborts the transition, to trigger resource
+ * placement).
+ *
+ * \param[in] action
+ * \param[in] event
+ */
 static void
 process_remote_node_action(crm_action_t *action, xmlNode *event)
 {
-    xmlNode *child = NULL;
+    xmlNode *primitive = NULL;
+    const char *op, *remote_id;
+    gboolean is_start_action;
+    crm_node_t *remote_peer;
 
-    /* The whole point of this function is to detect when a remote-node
-     * is integrated into the cluster or has failed, and properly abort
-     * the transition so resources can be placed on the new node or fail
-     * all pending actions on a lost node.
-     */
+    /* This function should be called only for confirmed actions */
+    CRM_CHECK(action->confirmed == TRUE, return);
 
-    if (crm_remote_peer_cache_size() == 0) {
-        return;
-    } else if (action->type != action_type_rsc) {
-        return;
-    } else if (action->confirmed == FALSE) {
-        return;
-    } else if (!action->failed && safe_str_neq(crm_element_value(action->xml, XML_LRM_ATTR_TASK), "start")) {
-        /* we only care about failed remote nodes, or remote nodes that have just come online. */
+    /* Don't bother unless this action affected a resource */
+    if (action->type != action_type_rsc) {
         return;
     }
 
-    for (child = __xml_first_child(action->xml); child != NULL; child = __xml_next(child)) {
-        const char *provider;
-        const char *type;
-        const char *rsc;
-        const char *action_type;
-        crm_node_t *remote_peer;
+    /* Don't bother unless this cluster has had remote nodes */
+    if (crm_remote_peer_cache_size() == 0) {
+        return;
+    }
 
-        if (safe_str_neq(crm_element_name(child), XML_CIB_TAG_RESOURCE)) {
-            continue;
+    op = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+    is_start_action = safe_str_eq(op, "start");
+
+    /* We only care about remote nodes that have either failed or started */
+    if (!action->failed && !is_start_action) {
+        return;
+    }
+
+    /* Look for an ocf:pacemaker:remote primitive in the action XML */
+    primitive = get_xpath_object("//" XML_CIB_TAG_RESOURCE
+                                 "[@" XML_AGENT_ATTR_PROVIDER "='pacemaker']"
+                                 "[@" XML_ATTR_TYPE "='remote']",
+                                 action->xml, LOG_TRACE);
+    if (primitive == NULL) {
+        return;
+    }
+
+    remote_id = ID(primitive);
+    CRM_CHECK(remote_id != NULL, return);
+
+    /* Make sure this is a remote node we've seen before */
+    remote_peer = crm_get_peer_full(0, remote_id, CRM_GET_PEER_REMOTE);
+    if (remote_peer == NULL) {
+        return;
+    }
+
+    if (action->failed) {
+
+        /* Ignore failed probes; they don't indicate connection failure */
+        if (safe_str_eq(op, "monitor") && (action->interval == 0)) {
+            return;
         }
 
-        provider = crm_element_value(child, XML_AGENT_ATTR_PROVIDER);
-        type = crm_element_value(child, XML_ATTR_TYPE);
-        rsc = ID(child);
-        action_type = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+        /* A remote node connection failed, so cancel any in-flight operations
+         * occurring on that remote node since those actions will timeout,
+         * and there's no point in waiting for that.
+         */
+        fail_incompletable_actions(transition_graph, remote_id);
 
-        if (safe_str_neq(provider, "pacemaker") || safe_str_neq(type, "remote") || rsc == NULL) {
-            break;
-        }
+    } else if (is_start_action) {
 
-        remote_peer = crm_get_peer_full(0, rsc, CRM_GET_PEER_REMOTE);
-        if (remote_peer == NULL) {
-            break;
-        }
-
-        /* if a remote node connection failed, and this failure is not related to a probe
-         * action, make sure to cancel any in-flight operations occurring on that remote node
-         * since those actions will timeout. we don't want to wait around for the timeouts */
-        if (action->failed &&
-            !(safe_str_eq(action_type, "monitor") && action->interval == 0)) {
-
-            /* the rsc id is actually the remote node id. we want to mark all
-             * in-flight actions on a failed remote node as incompletable */
-            fail_incompletable_actions(transition_graph, rsc);
-
-        } else if (!action->failed &&
-                   safe_str_eq(remote_peer->state, CRM_NODE_LOST) &&
-                   safe_str_eq(action_type, "start")) {
-            /* A remote node will be placed in the "lost" state after
-             * it has been successfully fenced.  After successfully connecting
-             * to a remote-node after being fenced, we need to abort the transition
-             * so resources can be placed on the newly integrated remote-node */
+        /* This is broken because remote peers' state is permanently
+         * CRM_NODE_MEMBER. TODO: set to CRM_NODE_LOST on failure/fencing,
+         * and set back to CRM_NODE_MEMBER on recovery (maybe here).
+         */
+        if (safe_str_eq(remote_peer->state, CRM_NODE_LOST)) {
+            /* A remote node will be placed in the "lost" state after it has
+             * been successfully fenced. After successfully connecting to a
+             * remote node after being fenced, we need to abort the transition
+             * so resources can be placed on the newly integrated remote node.
+             */
             abort_transition(INFINITY, tg_restart, "Remote-node re-discovered.", event);
         }
-
-        return;
     }
 }
 
