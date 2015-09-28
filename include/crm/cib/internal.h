@@ -181,6 +181,25 @@ int cib_process_upgrade(const char *op, int options, const char *section, xmlNod
                         xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                         xmlNode ** answer);
 
+/*!
+ * \internal
+ * \brief Core function to manipulate with/query CIB/XML per xpath + arguments
+ * \param[in] op, the operation to be performed:
+ *                <tt>CIB_OP_{CREATE,DELETE,MODIFY,QUERY,REPLACE}</tt>
+ * \param[in] options, ORed flags per relevant \c cib_call_options enumeration:
+ *                     <tt>cib_{multiple,no_children,xpath_address}</tt>
+ * \param[in] section, xpath defining place of interest in
+ *                     <tt>{existing,result}_cib</tt>
+ * \param[in] req, UNUSED
+ * \param[in] input, the input operand for
+ *                   <tt>CIB_OP_{CREATE,MODIFY,REPLACE}</tt>
+ * \param[in] existing_cib, the input operand (CIB) for \c CIB_OP_QUERY
+ * \param[inout] result_cib, the operand and result for
+ *                           <tt>CIB_OP_{CREATE,DELETE,MODIFY,REPLACE}</tt>
+ * \param[out] answer, the result for \c CIB_OP_QUERY, structured per \c options
+ *
+ * \retval \c pcmk_ok (0) for success, different value for failure
+ */
 int cib_process_xpath(const char *op, int options, const char *section, xmlNode * req,
                       xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                       xmlNode ** answer);
