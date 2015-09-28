@@ -278,7 +278,7 @@ create_level_registration_xml(const char *node, int level, stonith_key_value_t *
 
         crm_trace("Adding %s (%dc) at offset %d", device_list->value, adding, len);
         list = realloc_safe(list, len + adding + 1);       /* +1 EOS */
-        sprintf(list + len, "%s%s", len?" ":"", device_list->value);
+        sprintf(list + len, "%s%s", len?",":"", device_list->value);
         len += adding;
     }
 
