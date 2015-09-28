@@ -1192,9 +1192,10 @@ parse_device_list(const char *devices)
  * \return pcmk_ok on success, -EINVAL if XML does not specify valid level index
  */
 int
-stonith_level_register(xmlNode * level, char **desc)
+stonith_level_register(xmlNode *msg, char **desc)
 {
     int id = 0;
+    xmlNode *level = get_xpath_object("//" F_STONITH_LEVEL, msg, LOG_ERR);
     int mode = stonith_level_kind(level);
     char *target = stonith_level_key(level, mode);
 
@@ -1253,10 +1254,11 @@ stonith_level_register(xmlNode * level, char **desc)
 }
 
 int
-stonith_level_remove(xmlNode * level, char **desc)
+stonith_level_remove(xmlNode *msg, char **desc)
 {
     int id = 0;
     stonith_topology_t *tp;
+    xmlNode *level = get_xpath_object("//" F_STONITH_LEVEL, msg, LOG_ERR);
     char *target = stonith_level_key(level, -1);
 
     crm_element_value_int(level, XML_ATTR_ID, &id);

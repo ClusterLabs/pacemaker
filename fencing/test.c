@@ -270,11 +270,6 @@ run_standard_test(void)
     single_test(st->cmds->fence(st, st_opts, "false_1_node1", "on", 1, 0),
                 "Unfence false_1_node1", 1, -ENODEV);
 
-    /* Confirm that targeting by attribute is rejected in standalone mode */
-    params = stonith_key_value_add(params, NULL, "test-id");
-    single_test(st->cmds->register_level(st, st_opts, "a=b", 1, params),
-                "Attempt to register a level by attribute", 0, -EINVAL);
-
     /* Confirm that an invalid level index is rejected */
     single_test(st->cmds->register_level(st, st_opts, "node1", 999, params),
                 "Attempt to register an invalid level index", 0, -EINVAL);
