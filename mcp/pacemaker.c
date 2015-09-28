@@ -375,7 +375,7 @@ pcmk_shutdown_worker(gpointer user_data)
     int lpc = 0;
 
     if (phase == 0) {
-        crm_notice("Shuting down Pacemaker");
+        crm_notice("Shutting down Pacemaker");
         phase = max;
 
         /* Add a second, more frequent, check to speed up shutdown */

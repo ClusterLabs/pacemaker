@@ -1101,7 +1101,7 @@ pcmk_shutdown(void)
     }
 
     if (phase == 0) {
-        ais_notice("Shuting down Pacemaker");
+        ais_notice("Shutting down Pacemaker");
         phase = max;
     }
 
