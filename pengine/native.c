@@ -940,13 +940,15 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
             GListPtr probes = find_actions(rsc->actions, probe_key, stop_node);
             GListPtr pIter = NULL;
 
-            free(probe_key);
             for (pIter = probes; pIter != NULL; pIter = pIter->next) {
                 action_t *probe = (action_t *) pIter->data;
 
                 order_actions(probe, stopped_mon, pe_order_runnable_left);
                 crm_trace("%s then %s on %s\n", probe->uuid, stopped_mon->uuid, stop_node->details->uname);
             }
+
+            g_list_free(probes);
+            free(probe_key);
         }
 
         if (probe_complete_ops) {
