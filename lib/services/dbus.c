@@ -287,6 +287,7 @@ pcmk_dbus_lookup_result(DBusMessage *reply, struct db_getall_data *data)
                             data->callback(name.str, value.str, data->userdata);
 
                         } else {
+                            free(output);
                             output = strdup(value.str);
                         }
 
@@ -322,12 +323,14 @@ static void
 pcmk_dbus_lookup_cb(DBusPendingCall *pending, void *user_data)
 {
     DBusMessage *reply = NULL;
+    char *value = NULL;
 
     if(pending) {
         reply = dbus_pending_call_steal_reply(pending);
     }
 
-    pcmk_dbus_lookup_result(reply, user_data);
+    value = pcmk_dbus_lookup_result(reply, user_data);
+    free(value);
 
     if(reply) {
         dbus_message_unref(reply);

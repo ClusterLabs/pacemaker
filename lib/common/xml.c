@@ -3700,11 +3700,10 @@ log_data_element(int log_level, const char *file, const char *function, int line
         for (a_child = __xml_first_child(data); a_child != NULL; a_child = __xml_next(a_child)) {
             log_data_element(log_level, file, function, line, prefix, a_child, depth + 1, options);
         }
-        return;
+    } else {
+        __xml_log_element(log_level, file, function, line, prefix, data, depth,
+                          options|xml_log_option_open|xml_log_option_close|xml_log_option_children);
     }
-
-    __xml_log_element(log_level, file, function, line,
-                      prefix, data, depth, options|xml_log_option_open|xml_log_option_close|xml_log_option_children);
     free(prefix_m);
 }
 

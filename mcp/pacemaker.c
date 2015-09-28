@@ -719,8 +719,8 @@ find_and_track_existing_processes(void)
 {
     DIR *dp;
     struct dirent *entry;
-    struct stat statbuf;
     int start_tracker = 0;
+    char entry_name[64];
 
     dp = opendir("/proc");
     if (!dp) {
@@ -730,43 +730,13 @@ find_and_track_existing_processes(void)
     }
 
     while ((entry = readdir(dp)) != NULL) {
-        char procpath[128];
-        char value[64];
-        char key[16];
-        FILE *file;
         int pid;
         int max = SIZEOF(pcmk_children);
         int i;
 
-        strcpy(procpath, "/proc/");
-        /* strlen("/proc/") + strlen("/status") + 1 = 14
-         * 128 - 14 = 114 */
-        strncat(procpath, entry->d_name, 114);
-
-        if (lstat(procpath, &statbuf)) {
+        if (crm_procfs_process_info(entry, entry_name, &pid) < 0) {
             continue;
         }
-        if (!S_ISDIR(statbuf.st_mode) || !isdigit(entry->d_name[0])) {
-            continue;
-        }
-
-        strcat(procpath, "/status");
-
-        file = fopen(procpath, "r");
-        if (!file) {
-            continue;
-        }
-        if (fscanf(file, "%15s%63s", key, value) != 2) {
-            fclose(file);
-            continue;
-        }
-        fclose(file);
-
-        pid = atoi(entry->d_name);
-        if (pid <= 0) {
-            continue;
-        }
-
         for (i = 0; i < max; i++) {
             const char *name = pcmk_children[i].name;
 
@@ -776,14 +746,12 @@ find_and_track_existing_processes(void)
             if (pcmk_children[i].flag == crm_proc_stonith_ng) {
                 name = "stonithd";
             }
-            if (safe_str_eq(name, value)) {
-                if (crm_pid_active(pid) != 1) {
-                    continue;
-                }
-                crm_notice("Tracking existing %s process (pid=%d)", value, pid);
+            if (safe_str_eq(entry_name, name) && (crm_pid_active(pid) == 1)) {
+                crm_notice("Tracking existing %s process (pid=%d)", name, pid);
                 pcmk_children[i].pid = pid;
                 pcmk_children[i].active_before_startup = TRUE;
                 start_tracker = 1;
+                break;
             }
         }
     }

@@ -1615,13 +1615,25 @@ stonith_get_metadata(const char *provider, const char *type, char **output)
         }                                       \
     } while(0)
 
-#define lsb_meta_helper_get_value(buffer, ptr, keyword)                 \
-    do {                                                                \
-        if (!ptr && !strncasecmp(buffer, keyword, strlen(keyword))) {   \
-            (ptr) = (char *)xmlEncodeEntitiesReentrant(NULL, BAD_CAST buffer+strlen(keyword)); \
-            continue;                                                   \
-        }                                                               \
-    } while(0)
+/*
+ * \internal
+ * \brief Grab an LSB header value
+ *
+ * \param[in]     line    Line read from LSB init script
+ * \param[in/out] value   If not set, will be set to XML-safe copy of value
+ * \param[in]     prefix  Set value if line starts with this pattern
+ *
+ * \return TRUE if value was set, FALSE otherwise
+ */
+static inline gboolean
+lsb_meta_helper_get_value(const char *line, char **value, const char *prefix)
+{
+    if (!*value && !strncasecmp(line, prefix, strlen(prefix))) {
+        *value = (char *)xmlEncodeEntitiesReentrant(NULL, BAD_CAST line+strlen(prefix));
+        return TRUE;
+    }
+    return FALSE;
+}
 
 static int
 lsb_get_metadata(const char *type, char **output)
@@ -1657,14 +1669,30 @@ lsb_get_metadata(const char *type, char **output)
     while (fgets(buffer, sizeof(buffer), fp)) {
 
         /* Now suppose each of the following eight arguments contain only one line */
-        lsb_meta_helper_get_value(buffer, provides, PROVIDES);
-        lsb_meta_helper_get_value(buffer, req_start, REQ_START);
-        lsb_meta_helper_get_value(buffer, req_stop, REQ_STOP);
-        lsb_meta_helper_get_value(buffer, shld_start, SHLD_START);
-        lsb_meta_helper_get_value(buffer, shld_stop, SHLD_STOP);
-        lsb_meta_helper_get_value(buffer, dflt_start, DFLT_START);
-        lsb_meta_helper_get_value(buffer, dflt_stop, DFLT_STOP);
-        lsb_meta_helper_get_value(buffer, s_dscrpt, SHORT_DSCR);
+        if (lsb_meta_helper_get_value(buffer, &provides, PROVIDES)) {
+            continue;
+        }
+        if (lsb_meta_helper_get_value(buffer, &req_start, REQ_START)) {
+            continue;
+        }
+        if (lsb_meta_helper_get_value(buffer, &req_stop, REQ_STOP)) {
+            continue;
+        }
+        if (lsb_meta_helper_get_value(buffer, &shld_start, SHLD_START)) {
+            continue;
+        }
+        if (lsb_meta_helper_get_value(buffer, &shld_stop, SHLD_STOP)) {
+            continue;
+        }
+        if (lsb_meta_helper_get_value(buffer, &dflt_start, DFLT_START)) {
+            continue;
+        }
+        if (lsb_meta_helper_get_value(buffer, &dflt_stop, DFLT_STOP)) {
+            continue;
+        }
+        if (lsb_meta_helper_get_value(buffer, &s_dscrpt, SHORT_DSCR)) {
+            continue;
+        }
 
         /* Long description may cross multiple lines */
         if (offset == 0 && (0 == strncasecmp(buffer, DESCRIPTION, strlen(DESCRIPTION)))) {

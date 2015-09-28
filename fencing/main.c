@@ -752,11 +752,17 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
             char *search = NULL;
             char *mutable = strdup(xpath);
 
-            rsc_id = strstr(mutable, "primitive[@id=\'") + strlen("primitive[@id=\'");
-            search = strchr(rsc_id, '\'');
-            search[0] = 0;
-
-            stonith_device_remove(rsc_id, TRUE);
+            rsc_id = strstr(mutable, "primitive[@id=\'");
+            if (rsc_id != NULL) {
+                rsc_id += strlen("primitive[@id=\'");
+                search = strchr(rsc_id, '\'');
+            }
+            if (search != NULL) {
+                *search = 0;
+                stonith_device_remove(rsc_id, TRUE);
+            } else {
+                crm_warn("Ignoring malformed CIB update (resource deletion)");
+            }
             free(mutable);
 
         } else if(strstr(xpath, "/"XML_CIB_TAG_RESOURCES)) {
