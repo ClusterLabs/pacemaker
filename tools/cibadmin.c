@@ -186,7 +186,7 @@ print_xml_output(xmlNode * xml)
                 print_xml_output(child);
             }
 
-        } else {
+        } else if (id) {
             printf("%s\n", id);
         }
 
