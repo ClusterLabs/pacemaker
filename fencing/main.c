@@ -398,7 +398,7 @@ topology_remove_helper(const char *node, int level)
 {
     int rc;
     char *desc = NULL;
-    xmlNode *data = create_xml_node(NULL, F_STONITH_LEVEL);
+    xmlNode *data = create_xml_node(NULL, XML_TAG_FENCING_LEVEL);
     xmlNode *notify_data = create_xml_node(NULL, STONITH_OP_LEVEL_DEL);
 
     crm_xml_add(data, F_STONITH_ORIGIN, __FUNCTION__);
