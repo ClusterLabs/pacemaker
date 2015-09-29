@@ -394,25 +394,46 @@ do_stonith_notify(int options, const char *type, int result, xmlNode * data)
 }
 
 static void
+do_stonith_notify_config(int options, const char *op, int rc,
+                         const char *desc, int active)
+{
+    xmlNode *notify_data = create_xml_node(NULL, op);
+
+    CRM_CHECK(notify_data != NULL, return);
+
+    crm_xml_add(notify_data, F_STONITH_DEVICE, desc);
+    crm_xml_add_int(notify_data, F_STONITH_ACTIVE, active);
+
+    do_stonith_notify(options, op, rc, notify_data);
+    free_xml(notify_data);
+}
+
+void
+do_stonith_notify_device(int options, const char *op, int rc, const char *desc)
+{
+    do_stonith_notify_config(options, op, rc, desc, g_hash_table_size(device_list));
+}
+
+void
+do_stonith_notify_level(int options, const char *op, int rc, const char *desc)
+{
+    do_stonith_notify_config(options, op, rc, desc, g_hash_table_size(topology));
+}
+
+static void
 topology_remove_helper(const char *node, int level)
 {
     int rc;
     char *desc = NULL;
     xmlNode *data = create_xml_node(NULL, XML_TAG_FENCING_LEVEL);
-    xmlNode *notify_data = create_xml_node(NULL, STONITH_OP_LEVEL_DEL);
 
     crm_xml_add(data, F_STONITH_ORIGIN, __FUNCTION__);
     crm_xml_add_int(data, XML_ATTR_STONITH_INDEX, level);
     crm_xml_add(data, XML_ATTR_STONITH_TARGET, node);
 
     rc = stonith_level_remove(data, &desc);
+    do_stonith_notify_level(0, STONITH_OP_LEVEL_DEL, rc, desc);
 
-    crm_xml_add(notify_data, F_STONITH_DEVICE, desc);
-    crm_xml_add_int(notify_data, F_STONITH_ACTIVE, g_hash_table_size(topology));
-
-    do_stonith_notify(0, STONITH_OP_LEVEL_DEL, rc, notify_data);
-
-    free_xml(notify_data);
     free_xml(data);
     free(desc);
 }
@@ -447,13 +468,8 @@ handle_topology_change(xmlNode *match, bool remove)
 {
     int rc;
     char *desc = NULL;
-    xmlNode *notify_data = create_xml_node(NULL, STONITH_OP_LEVEL_ADD);
 
-    CRM_LOG_ASSERT(match != NULL);
-    if(match == NULL) {
-        return;
-    }
-
+    CRM_CHECK(match != NULL, return);
     crm_trace("Updating %s", ID(match));
 
     if(remove) {
@@ -466,14 +482,8 @@ handle_topology_change(xmlNode *match, bool remove)
     }
 
     rc = stonith_level_register(match, &desc);
-    notify_data = create_xml_node(NULL, STONITH_OP_LEVEL_ADD);
+    do_stonith_notify_level(0, STONITH_OP_LEVEL_ADD, rc, desc);
 
-    crm_xml_add(notify_data, F_STONITH_DEVICE, desc);
-    crm_xml_add_int(notify_data, F_STONITH_ACTIVE, g_hash_table_size(topology));
-
-    do_stonith_notify(0, STONITH_OP_LEVEL_ADD, rc, notify_data);
-
-    free_xml(notify_data);
     free(desc);
 }
 
