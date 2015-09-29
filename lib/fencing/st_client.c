@@ -238,17 +238,28 @@ stonith_api_remove_device(stonith_t * st, int call_options, const char *name)
 }
 
 static int
-stonith_api_remove_level(stonith_t * st, int options, const char *node, int level)
+stonith_api_remove_level_full(stonith_t *st, int options,
+                              const char *node, const char *pattern,
+                              const char *attr, const char *value, int level)
 {
     int rc = 0;
     xmlNode *data = NULL;
 
+    CRM_CHECK(node || pattern || (attr && value), return -EINVAL);
+
     data = create_xml_node(NULL, XML_TAG_FENCING_LEVEL);
     crm_xml_add(data, F_STONITH_ORIGIN, __FUNCTION__);
 
-    /* Current versions use XML_ATTR_STONITH_TARGET, older F_STONITH_TARGET */
-    crm_xml_add(data, XML_ATTR_STONITH_TARGET, node);
-    crm_xml_add(data, F_STONITH_TARGET, node);
+    if (node) {
+        crm_xml_add(data, XML_ATTR_STONITH_TARGET, node);
+
+    } else if (pattern) {
+        crm_xml_add(data, XML_ATTR_STONITH_TARGET_PATTERN, pattern);
+
+    } else {
+        crm_xml_add(data, XML_ATTR_STONITH_TARGET_ATTRIBUTE, attr);
+        crm_xml_add(data, XML_ATTR_STONITH_TARGET_VALUE, value);
+    }
 
     crm_xml_add_int(data, XML_ATTR_ID, level);
     rc = stonith_send_command(st, STONITH_OP_LEVEL_DEL, data, NULL, options, 0);
@@ -257,17 +268,56 @@ stonith_api_remove_level(stonith_t * st, int options, const char *node, int leve
     return rc;
 }
 
+static int
+stonith_api_remove_level(stonith_t * st, int options, const char *node, int level)
+{
+    return stonith_api_remove_level_full(st, options, node,
+                                         NULL, NULL, NULL, level);
+}
+
+/*
+ * \internal
+ * \brief Create XML for stonithd topology level registration request
+ *
+ * \param[in] node        If not NULL, target level by this node name
+ * \param[in] pattern     If not NULL, target by node name using this regex
+ * \param[in] attr        If not NULL, target by this node attribute
+ * \param[in] value       If not NULL, target by this node attribute value
+ * \param[in] level       Index number of level to register
+ * \param[in] device_list List of devices in level
+ *
+ * \return Newly allocated XML tree on success, NULL otherwise
+ *
+ * \note The caller should set only one of node, pattern or attr/value.
+ */
 xmlNode *
-create_level_registration_xml(const char *node, int level, stonith_key_value_t * device_list)
+create_level_registration_xml(const char *node, const char *pattern,
+                              const char *attr, const char *value,
+                              int level, stonith_key_value_t *device_list)
 {
     int len = 0;
     char *list = NULL;
-    xmlNode *data = create_xml_node(NULL, XML_TAG_FENCING_LEVEL);
+    xmlNode *data;
 
+    CRM_CHECK(node || pattern || (attr && value), return NULL);
+
+    data = create_xml_node(NULL, XML_TAG_FENCING_LEVEL);
+    CRM_CHECK(data, return NULL);
+
+    crm_xml_add(data, F_STONITH_ORIGIN, __FUNCTION__);
     crm_xml_add_int(data, XML_ATTR_ID, level);
     crm_xml_add_int(data, XML_ATTR_STONITH_INDEX, level);
-    crm_xml_add(data, XML_ATTR_STONITH_TARGET, node);
-    crm_xml_add(data, F_STONITH_ORIGIN, __FUNCTION__);
+
+    if (node) {
+        crm_xml_add(data, XML_ATTR_STONITH_TARGET, node);
+
+    } else if (pattern) {
+        crm_xml_add(data, XML_ATTR_STONITH_TARGET_PATTERN, pattern);
+
+    } else {
+        crm_xml_add(data, XML_ATTR_STONITH_TARGET_ATTRIBUTE, attr);
+        crm_xml_add(data, XML_ATTR_STONITH_TARGET_VALUE, value);
+    }
 
     for (; device_list; device_list = device_list->next) {
 
@@ -278,6 +328,7 @@ create_level_registration_xml(const char *node, int level, stonith_key_value_t *
 
         crm_trace("Adding %s (%dc) at offset %d", device_list->value, adding, len);
         list = realloc_safe(list, len + adding + 1);       /* +1 EOS */
+        CRM_CHECK(list != NULL, free_xml(data); return NULL);
         sprintf(list + len, "%s%s", len?",":"", device_list->value);
         len += adding;
     }
@@ -289,16 +340,28 @@ create_level_registration_xml(const char *node, int level, stonith_key_value_t *
 }
 
 static int
-stonith_api_register_level(stonith_t * st, int options, const char *node, int level,
-                           stonith_key_value_t * device_list)
+stonith_api_register_level_full(stonith_t * st, int options, const char *node,
+                                const char *pattern,
+                                const char *attr, const char *value,
+                                int level, stonith_key_value_t *device_list)
 {
     int rc = 0;
-    xmlNode *data = create_level_registration_xml(node, level, device_list);
+    xmlNode *data = create_level_registration_xml(node, pattern, attr, value,
+                                                  level, device_list);
+    CRM_CHECK(data != NULL, return -EINVAL);
 
     rc = stonith_send_command(st, STONITH_OP_LEVEL_ADD, data, NULL, options, 0);
     free_xml(data);
 
     return rc;
+}
+
+static int
+stonith_api_register_level(stonith_t * st, int options, const char *node, int level,
+                           stonith_key_value_t * device_list)
+{
+    return stonith_api_register_level_full(st, options, node, NULL, NULL, NULL,
+                                           level, device_list);
 }
 
 static void
@@ -2356,8 +2419,10 @@ stonith_api_new(void)
     new_stonith->cmds->remove_device   = stonith_api_remove_device;
     new_stonith->cmds->register_device = stonith_api_register_device;
 
-    new_stonith->cmds->remove_level    = stonith_api_remove_level;
-    new_stonith->cmds->register_level  = stonith_api_register_level;
+    new_stonith->cmds->remove_level          = stonith_api_remove_level;
+    new_stonith->cmds->remove_level_full     = stonith_api_remove_level_full;
+    new_stonith->cmds->register_level        = stonith_api_register_level;
+    new_stonith->cmds->register_level_full   = stonith_api_register_level_full;
 
     new_stonith->cmds->remove_callback       = stonith_api_del_callback;
     new_stonith->cmds->register_callback     = stonith_api_add_callback;
