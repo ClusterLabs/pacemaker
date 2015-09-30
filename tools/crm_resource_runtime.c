@@ -217,7 +217,7 @@ cli_resource_update_attribute(const char *rsc_id, const char *attr_set, const ch
             rc = find_resource_attr(cib, XML_ATTR_ID, uber_parent(rsc)->id,
                                     XML_TAG_META_SETS, attr_set, attr_id,
                                     attr_name, &local_attr_id);
-            if ((rc == pcmk_ok) && (BE_QUIET == FALSE)) {
+            if (rc == pcmk_ok && BE_QUIET == FALSE) {
                 printf("WARNING: There is already a meta attribute for '%s' called '%s' (id=%s)\n",
                        uber_parent(rsc)->id, attr_name, local_attr_id);
                 printf("         Delete '%s' first or use --force to override\n", local_attr_id);
@@ -228,7 +228,7 @@ cli_resource_update_attribute(const char *rsc_id, const char *attr_set, const ch
             }
         }
 
-    } else if(rsc->parent) {
+    } else if(rsc->parent && do_force == FALSE) {
 
         switch(rsc->parent->variant) {
             case pe_group:
@@ -238,13 +238,40 @@ cli_resource_update_attribute(const char *rsc_id, const char *attr_set, const ch
                 break;
             case pe_master:
             case pe_clone:
-                rsc = rsc->parent;
-                if (BE_QUIET == FALSE) {
-                    printf("Updating '%s' for '%s'...\n", rsc->id, rsc_id);
+
+                rc = find_resource_attr(cib, XML_ATTR_ID, rsc_id, attr_set_type, attr_set, attr_id, attr_name, &local_attr_id);
+                free(local_attr_id);
+
+                if(rc != pcmk_ok) {
+                    rsc = rsc->parent;
+                    if (BE_QUIET == FALSE) {
+                        printf("Updating '%s' on '%s', the parent of '%s'\n", attr_name, rsc->id, rsc_id);
+                    }
                 }
                 break;
             default:
                 break;
+        }
+
+    } else if (rsc->parent && BE_QUIET == FALSE) {
+        printf("Forcing update of '%s' for '%s' instead of '%s'\n", attr_name, rsc_id, rsc->parent->id);
+
+    } else if(rsc->parent == NULL && rsc->children) {
+        resource_t *child = rsc->children->data;
+
+        if(child->variant == pe_native) {
+            lookup_id = clone_strip(child->id); /* Could be a cloned group! */
+            rc = find_resource_attr(cib, XML_ATTR_ID, lookup_id, attr_set_type, attr_set, attr_id, attr_name, &local_attr_id);
+
+            if(rc == pcmk_ok) {
+                rsc = child;
+                if (BE_QUIET == FALSE) {
+                    printf("A value for '%s' already exists in child '%s', updating that instead of '%s'\n", attr_name, lookup_id, rsc_id);
+                }
+            }
+
+            free(local_attr_id);
+            free(lookup_id);
         }
     }
 
