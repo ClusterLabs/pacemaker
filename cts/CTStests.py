@@ -1693,6 +1693,19 @@ class Reattach(CTSTest):
         self.stopall = SimulStopLite(cm)
         self.is_unsafe = 0 # Handled by canrunnow()
 
+    def _is_managed(self, node):
+        is_managed = self.rsh(node, "crm_attribute -t rsc_defaults -n is-managed -Q -G -d true", 1)
+        is_managed = is_managed[:-1] # Strip off the newline
+        return is_managed == "true"
+
+    def _set_unmanaged(self, node):
+        self.debug("Disable resource management")
+        self.rsh(node, "crm_attribute -t rsc_defaults -n is-managed -v false")
+
+    def _set_managed(self, node):
+        self.debug("Re-enable resource management")
+        self.rsh(node, "crm_attribute -t rsc_defaults -n is-managed -D")
+
     def setup(self, node):
         attempt = 0
         if not self.startall(None):
@@ -1717,17 +1730,11 @@ class Reattach(CTSTest):
         start = StartTest(self.CM)
         start(node)
 
-        is_managed = self.rsh(node, "crm_attribute -Q -G -t crm_config -n is-managed-default -d true", 1)
-        is_managed = is_managed[:-1] # Strip off the newline
-        if is_managed != "true":
-            self.logger.log("Attempting to re-enable resource management on %s (%s)" % (node, is_managed))
-            managed = self.create_watch(["is-managed-default"], 60)
-            managed.setwatch()
-
-            self.rsh(node, "crm_attribute -V -D -n is-managed-default")
-
-            if not managed.lookforall():
-                self.logger.log("Patterns not found: " + repr(managed.unmatched))
+        if not self._is_managed(node):
+            self.logger.log("Attempting to re-enable resource management on %s" % node)
+            self._set_managed(node)
+            self.CM.cluster_stable()
+            if not self._is_managed(node):
                 self.logger.log("Could not re-enable resource management")
                 return 0
 
@@ -1744,11 +1751,12 @@ class Reattach(CTSTest):
         self.incr("calls")
 
         pats = []
-        managed = self.create_watch(["is-managed-default"], 60)
+        # Conveniently, pengine will display this message when disabling management,
+        # even if fencing is not enabled, so we can rely on it.
+        managed = self.create_watch(["Delaying fencing operations"], 60)
         managed.setwatch()
 
-        self.debug("Disable resource management")
-        self.rsh(node, "crm_attribute -V -n is-managed-default -v false")
+        self._set_unmanaged(node)
 
         if not managed.lookforall():
             self.logger.log("Patterns not found: " + repr(managed.unmatched))
@@ -1767,37 +1775,28 @@ class Reattach(CTSTest):
         self.debug("Shutting down the cluster")
         ret = self.stopall(None)
         if not ret:
-            self.debug("Re-enable resource management")
-            self.rsh(node, "crm_attribute -V -D -n is-managed-default")
+            self._set_managed(node)
             return self.failure("Couldn't shut down the cluster")
 
         self.debug("Bringing the cluster back up")
         ret = self.startall(None)
         time.sleep(5) # allow ping to update the CIB
         if not ret:
-            self.debug("Re-enable resource management")
-            self.rsh(node, "crm_attribute -V -D -n is-managed-default")
+            self._set_managed(node)
             return self.failure("Couldn't restart the cluster")
 
         if self.local_badnews("ResourceActivity:", watch):
-            self.debug("Re-enable resource management")
-            self.rsh(node, "crm_attribute -V -D -n is-managed-default")
+            self._set_managed(node)
             return self.failure("Resources stopped or started during cluster restart")
 
         watch = self.create_watch(pats, 60, "StartupActivity")
         watch.setwatch()
 
-        managed = self.create_watch(["is-managed-default"], 60)
-        managed.setwatch()
-
-        self.debug("Re-enable resource management")
-        self.rsh(node, "crm_attribute -V -D -n is-managed-default")
-
-        if not managed.lookforall():
-            self.logger.log("Patterns not found: " + repr(managed.unmatched))
-            return self.failure("Resource management not enabled")
-
+        # Re-enable resource management (and verify it happened).
+        self._set_managed(node)
         self.CM.cluster_stable()
+        if not self._is_managed(node):
+            return self.failure("Could not re-enable resource management")
 
         # Ignore actions for STONITH resources
         ignore = []
