@@ -1195,14 +1195,27 @@ int
 stonith_level_register(xmlNode *msg, char **desc)
 {
     int id = 0;
-    xmlNode *level = get_xpath_object("//" F_STONITH_LEVEL, msg, LOG_ERR);
-    int mode = stonith_level_kind(level);
-    char *target = stonith_level_key(level, mode);
+    xmlNode *level;
+    int mode;
+    char *target;
 
     stonith_topology_t *tp;
     stonith_key_value_t *dIter = NULL;
     stonith_key_value_t *devices = NULL;
 
+    /* Allow the XML here to point to the level tag directly, or wrapped in
+     * another tag. If directly, don't search by xpath, because it might give
+     * multiple hits (e.g. if the XML is the CIB).
+     */
+    if (safe_str_eq(TYPE(msg), XML_TAG_FENCING_LEVEL)) {
+        level = msg;
+    } else {
+        level = get_xpath_object("//" XML_TAG_FENCING_LEVEL, msg, LOG_ERR);
+    }
+    CRM_CHECK(level != NULL, return -EINVAL);
+
+    mode = stonith_level_kind(level);
+    target = stonith_level_key(level, mode);
     crm_element_value_int(level, XML_ATTR_STONITH_INDEX, &id);
 
     if (desc) {
@@ -1258,9 +1271,14 @@ stonith_level_remove(xmlNode *msg, char **desc)
 {
     int id = 0;
     stonith_topology_t *tp;
-    xmlNode *level = get_xpath_object("//" F_STONITH_LEVEL, msg, LOG_ERR);
-    char *target = stonith_level_key(level, -1);
+    char *target;
 
+    /* Unlike additions, removal requests should always have one level tag */
+    xmlNode *level = get_xpath_object("//" XML_TAG_FENCING_LEVEL, msg, LOG_ERR);
+
+    CRM_CHECK(level != NULL, return -EINVAL);
+
+    target = stonith_level_key(level, -1);
     crm_element_value_int(level, XML_ATTR_ID, &id);
     if (desc) {
         *desc = crm_strdup_printf("%s[%d]", target, id);
@@ -1268,6 +1286,7 @@ stonith_level_remove(xmlNode *msg, char **desc)
 
     /* Sanity-check arguments */
     if (id >= ST_LEVEL_MAX) {
+        free(target);
         return -EINVAL;
     }
 

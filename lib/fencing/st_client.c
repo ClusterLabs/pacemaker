@@ -243,7 +243,7 @@ stonith_api_remove_level(stonith_t * st, int options, const char *node, int leve
     int rc = 0;
     xmlNode *data = NULL;
 
-    data = create_xml_node(NULL, F_STONITH_LEVEL);
+    data = create_xml_node(NULL, XML_TAG_FENCING_LEVEL);
     crm_xml_add(data, F_STONITH_ORIGIN, __FUNCTION__);
 
     /* Current versions use XML_ATTR_STONITH_TARGET, older F_STONITH_TARGET */
@@ -262,7 +262,7 @@ create_level_registration_xml(const char *node, int level, stonith_key_value_t *
 {
     int len = 0;
     char *list = NULL;
-    xmlNode *data = create_xml_node(NULL, F_STONITH_LEVEL);
+    xmlNode *data = create_xml_node(NULL, XML_TAG_FENCING_LEVEL);
 
     crm_xml_add_int(data, XML_ATTR_ID, level);
     crm_xml_add_int(data, XML_ATTR_STONITH_INDEX, level);
