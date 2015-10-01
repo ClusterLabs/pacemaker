@@ -55,6 +55,11 @@ AC_ARG_WITH(pkg-name,
 
 dnl Older distros may need: AM_INIT_AUTOMAKE($PACKAGE_NAME, $PACKAGE_VERSION)
 AM_INIT_AUTOMAKE
+dnl older automake's default of ARFLAGS=cru is noisy on newer binutils;
+dnl we don't really need the 'u' even in older toolchains.  Then there is
+dnl older libtool, which spelled it AR_FLAGS
+m4_divert_text([DEFAULTS], [: "${ARFLAGS=cr} ${AR_FLAGS=cr}"])
+
 AC_DEFINE_UNQUOTED(PACEMAKER_VERSION, "$PACKAGE_VERSION", Current pacemaker version)
 
 PACKAGE_SERIES=`echo $PACKAGE_VERSION | awk -F. '{ print $1"."$2 }'`
