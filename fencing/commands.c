@@ -673,9 +673,10 @@ add_action(char *actions, const char *action)
     }
 
     if (offset > 0) {
-        offset += snprintf(actions+offset, len-offset, " ");
+        offset += crm_snprintf_offset(actions, offset, len, " ");
     }
-    offset += snprintf(actions+offset, len-offset, "%s", action);
+    offset += crm_snprintf_offset(actions, offset, len, "%s", action);
+    CRM_LOG_ASSERT(offset >= 0 && offset < len);  /* offset == 0 possible */
 
     return actions;
 }

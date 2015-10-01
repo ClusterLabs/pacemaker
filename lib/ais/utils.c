@@ -411,22 +411,23 @@ append_member(char *data, crm_node_t * node)
     }
     data = realloc_safe(data, size);
 
-    offset += snprintf(data + offset, size - offset, "<node id=\"%u\" ", node->id);
+    offset += crm_snprintf_offset(data, offset, size, "<node id=\"%u\" ", node->id);
     if (node->uname) {
-        offset += snprintf(data + offset, size - offset, "uname=\"%s\" ", node->uname);
+        offset += crm_snprintf_offset(data, offset, size, "uname=\"%s\" ", node->uname);
     }
-    offset += snprintf(data + offset, size - offset, "state=\"%s\" ", node->state);
-    offset += snprintf(data + offset, size - offset, "born=\"" U64T "\" ", node->born);
-    offset += snprintf(data + offset, size - offset, "seen=\"" U64T "\" ", node->last_seen);
-    offset += snprintf(data + offset, size - offset, "votes=\"%d\" ", node->votes);
-    offset += snprintf(data + offset, size - offset, "processes=\"%u\" ", node->processes);
+    offset += crm_snprintf_offset(data, offset, size, "state=\"%s\" ", node->state);
+    offset += crm_snprintf_offset(data, offset, size, "born=\"" U64T "\" ", node->born);
+    offset += crm_snprintf_offset(data, offset, size, "seen=\"" U64T "\" ", node->last_seen);
+    offset += crm_snprintf_offset(data, offset, size, "votes=\"%d\" ", node->votes);
+    offset += crm_snprintf_offset(data, offset, size, "processes=\"%u\" ", node->processes);
     if (node->addr) {
-        offset += snprintf(data + offset, size - offset, "addr=\"%s\" ", node->addr);
+        offset += crm_snprintf_offset(data, offset, size, "addr=\"%s\" ", node->addr);
     }
     if (node->version) {
-        offset += snprintf(data + offset, size - offset, "version=\"%s\" ", node->version);
+        offset += crm_snprintf_offset(data, offset, size, "version=\"%s\" ", node->version);
     }
-    offset += snprintf(data + offset, size - offset, "/>");
+    offset += crm_snprintf_offset(data, offset, size, "/>");
+    CRM_LOG_ASSERT(offset > 0 && offset < len);
 
     return data;
 }

@@ -2323,29 +2323,30 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
     int offset = 0;
     char xpath[STATUS_PATH_MAX];
 
-    offset += snprintf(xpath + offset, STATUS_PATH_MAX - offset, "//node_state[@uname='%s']", node);
+    offset += crm_snprintf_offset(xpath, offset, STATUS_PATH_MAX,
+                                  "//node_state[@uname='%s']", node);
     offset +=
-        snprintf(xpath + offset, STATUS_PATH_MAX - offset, "//" XML_LRM_TAG_RESOURCE "[@id='%s']",
-                 resource);
+        crm_snprintf_offset(xpath, offset, STATUS_PATH_MAX,
+                            "//" XML_LRM_TAG_RESOURCE "[@id='%s']", resource);
 
     /* Need to check against transition_magic too? */
     if (source && safe_str_eq(op, CRMD_ACTION_MIGRATE)) {
         offset +=
-            snprintf(xpath + offset, STATUS_PATH_MAX - offset,
-                     "/" XML_LRM_TAG_RSC_OP "[@operation='%s' and @migrate_target='%s']", op,
-                     source);
+            crm_snprintf_offset(xpath, offset, STATUS_PATH_MAX,
+                                "/" XML_LRM_TAG_RSC_OP "[@operation='%s' and @migrate_target='%s']",
+                                op, source);
     } else if (source && safe_str_eq(op, CRMD_ACTION_MIGRATED)) {
         offset +=
-            snprintf(xpath + offset, STATUS_PATH_MAX - offset,
-                     "/" XML_LRM_TAG_RSC_OP "[@operation='%s' and @migrate_source='%s']", op,
-                     source);
+            crm_snprintf_offset(xpath, offset, STATUS_PATH_MAX,
+                                "/" XML_LRM_TAG_RSC_OP "[@operation='%s' and @migrate_source='%s']",
+                                op, source);
     } else {
         offset +=
-            snprintf(xpath + offset, STATUS_PATH_MAX - offset,
-                     "/" XML_LRM_TAG_RSC_OP "[@operation='%s']", op);
+            crm_snprintf_offset(xpath, offset, STATUS_PATH_MAX,
+                                "/" XML_LRM_TAG_RSC_OP "[@operation='%s']", op);
     }
 
-    CRM_LOG_ASSERT(offset > 0);
+    CRM_LOG_ASSERT(offset > 0 && offset < STATUS_PATH_MAX);
     return get_xpath_object(xpath, data_set->input, LOG_DEBUG);
 }
 

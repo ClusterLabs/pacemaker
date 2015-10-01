@@ -436,27 +436,35 @@ crm_time_as_string(crm_time_t * date_time, int flags)
         }
 
         if(dt->years) {
-            offset += snprintf(date_s+offset, max-offset, "%4d year%s ", dt->years, dt->years>1?"s":"");
+            offset += crm_snprintf_offset(date_s, offset, max,
+                                          "%4d year%s ", dt->years, dt->years>1?"s":"");
         }
         if(dt->months) {
-            offset += snprintf(date_s+offset, max-offset, "%2d month%s ", dt->months, dt->months>1?"s":"");
+            offset += crm_snprintf_offset(date_s, offset, max,
+                                          "%2d month%s ", dt->months, dt->months>1?"s":"");
         }
         if(dt->days) {
-            offset += snprintf(date_s+offset, max-offset, "%2d day%s ", dt->days, dt->days>1?"s":"");
+            offset += crm_snprintf_offset(date_s, offset, max,
+                                          "%2d day%s ", dt->days, dt->days>1?"s":"");
         }
         if(dt->seconds) {
-            offset += snprintf(date_s+offset, max-offset, "%d seconds ( ", dt->seconds);
+            offset += crm_snprintf_offset(date_s, offset, max,
+                                          "%d seconds ( ", dt->seconds);
             if(h) {
-                offset += snprintf(date_s+offset, max-offset, "%d hour%s ", h, h>1?"s":"");
+                offset += crm_snprintf_offset(date_s, offset, max,
+                                              "%d hour%s ", h, h>1?"s":"");
             }
             if(m) {
-                offset += snprintf(date_s+offset, max-offset, "%d minute%s ", m, m>1?"s":"");
+                offset += crm_snprintf_offset(date_s, offset, max,
+                                              "%d minute%s ", m, m>1?"s":"");
             }
             if(s) {
-                offset += snprintf(date_s+offset, max-offset, "%d second%s ", s, s>1?"s":"");
+                offset += crm_snprintf_offset(date_s, offset, max,
+                                              "%d second%s ", s, s>1?"s":"");
             }
-            offset += snprintf(date_s+offset, max-offset, ")");
+            offset += crm_snprintf_offset(date_s, offset, max, ")");
         }
+        CRM_LOG_ASSERT(offset > 0 && offset < max);  /* offset == 0 possible */
         goto done;
     }
 

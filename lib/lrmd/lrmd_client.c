@@ -1704,8 +1704,7 @@ lsb_get_metadata(const char *type, char **output)
             while (fgets(buffer, sizeof(buffer), fp)) {
                 if (!strncmp(buffer, "#  ", 3) || !strncmp(buffer, "#\t", 2)) {
                     buffer[0] = ' ';
-                    offset += snprintf(description+offset, max-offset, "%s", buffer);
-
+                    offset += crm_snprintf_offset(description, offset, max, "%s", buffer);
                 } else {
                     fputs(buffer, fp);
                     break;      /* Long description ends */

@@ -478,22 +478,22 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
     }
 
     if(pre_text) {
-        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", pre_text);
+        offset += crm_snprintf_offset(buffer, offset, LINE_MAX, "%s", pre_text);
     }
-    offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", rsc_printable_id(rsc));
-    offset += snprintf(buffer + offset, LINE_MAX - offset, "\t(%s", class);
+    offset += crm_snprintf_offset(buffer, offset, LINE_MAX, "%s", rsc_printable_id(rsc));
+    offset += crm_snprintf_offset(buffer, offset, LINE_MAX, "\t(%s", class);
     if (safe_str_eq(class, "ocf")) {
         const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
-        offset += snprintf(buffer + offset, LINE_MAX - offset, "::%s", prov);
+        offset += crm_snprintf_offset(buffer, offset, LINE_MAX, "::%s", prov);
     }
-    offset += snprintf(buffer + offset, LINE_MAX - offset, ":%s):\t", kind);
+    offset += crm_snprintf_offset(buffer, offset, LINE_MAX, ":%s):\t", kind);
     if(is_set(rsc->flags, pe_rsc_orphan)) {
-        offset += snprintf(buffer + offset, LINE_MAX - offset, " ORPHANED ");
+        offset += crm_snprintf_offset(buffer, offset, LINE_MAX, " ORPHANED ");
     }
     if(rsc->role > RSC_ROLE_SLAVE && is_set(rsc->flags, pe_rsc_failed)) {
-        offset += snprintf(buffer + offset, LINE_MAX - offset, "FAILED %s", role2text(rsc->role));
+        offset += crm_snprintf_offset(buffer, offset, LINE_MAX, "FAILED %s", role2text(rsc->role));
     } else if(is_set(rsc->flags, pe_rsc_failed)) {
-        offset += snprintf(buffer + offset, LINE_MAX - offset, "FAILED");
+        offset += crm_snprintf_offset(buffer, offset, LINE_MAX, "FAILED");
     } else {
         const char *rsc_state = NULL;
 
@@ -515,17 +515,18 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
 		target_role_e == RSC_ROLE_STOPPED ||
                 safe_str_neq(target_role, rsc_state)))
             {
-                offset += snprintf(buffer + offset, LINE_MAX - offset, "(target-role:%s) ", target_role);
+                offset += crm_snprintf_offset(buffer, offset, LINE_MAX,
+                                              "(target-role:%s) ", target_role);
             }
         }
-        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", rsc_state);
+        offset += crm_snprintf_offset(buffer, offset, LINE_MAX, "%s", rsc_state);
     }
 
     if(node) {
-        offset += snprintf(buffer + offset, LINE_MAX - offset, " %s", node->details->uname);
+        offset += crm_snprintf_offset(buffer, offset, LINE_MAX, " %s", node->details->uname);
 
         if (node->details->online == FALSE && node->details->unclean) {
-            offset += snprintf(buffer + offset, LINE_MAX - offset, " (UNCLEAN)");
+            offset += crm_snprintf_offset(buffer, offset, LINE_MAX, " (UNCLEAN)");
         }
     }
 
@@ -533,25 +534,25 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
         const char *pending_task = native_pending_task(rsc);
 
         if (pending_task) {
-            offset += snprintf(buffer + offset, LINE_MAX - offset, " (%s)", pending_task);
+            offset += crm_snprintf_offset(buffer, offset, LINE_MAX, " (%s)", pending_task);
         }
     }
 
     if(is_not_set(rsc->flags, pe_rsc_managed)) {
-        offset += snprintf(buffer + offset, LINE_MAX - offset, " (unmanaged)");
+        offset += crm_snprintf_offset(buffer, offset, LINE_MAX, " (unmanaged)");
     }
     if(is_set(rsc->flags, pe_rsc_failure_ignored)) {
-        offset += snprintf(buffer + offset, LINE_MAX - offset, " (failure ignored)");
+        offset += crm_snprintf_offset(buffer, offset, LINE_MAX, " (failure ignored)");
     }
 
     if ((options & pe_print_rsconly) || g_list_length(rsc->running_on) > 1) {
         const char *desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
         if(desc) {
-            offset += snprintf(buffer + offset, LINE_MAX - offset, " %s", desc);
+            offset += crm_snprintf_offset(buffer, offset, LINE_MAX, " %s", desc);
         }
     }
 
-    CRM_LOG_ASSERT(offset > 0);
+    CRM_LOG_ASSERT(offset > 0 && offset < LINE_MAX);
     status_print("%s", buffer);
 
 #if CURSES_ENABLED
@@ -738,13 +739,13 @@ get_rscs_brief(GListPtr rsc_list, GHashTable * rsc_table, GHashTable * active_ta
             continue;
         }
 
-        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", class);
+        offset += crm_snprintf_offset(buffer, offset, LINE_MAX, "%s", class);
         if (safe_str_eq(class, "ocf")) {
             const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
-            offset += snprintf(buffer + offset, LINE_MAX - offset, "::%s", prov);
+            offset += crm_snprintf_offset(buffer, offset, LINE_MAX, "::%s", prov);
         }
-        offset += snprintf(buffer + offset, LINE_MAX - offset, ":%s", kind);
-        CRM_LOG_ASSERT(offset > 0);
+        offset += crm_snprintf_offset(buffer, offset, LINE_MAX, ":%s", kind);
+        CRM_LOG_ASSERT(offset > 0 && offset < LINE_MAX);
 
         if (rsc_table) {
             rsc_counter = g_hash_table_lookup(rsc_table, buffer);

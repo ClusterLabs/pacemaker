@@ -354,13 +354,13 @@ find_ticket_state(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_stat
     *ticket_state_xml = NULL;
 
     xpath_string = calloc(1, xpath_max);
-    offset += snprintf(xpath_string + offset, xpath_max - offset, "%s", "/cib/status/tickets");
+    offset += crm_snprintf_offset(xpath_string, offset, xpath_max, "%s", "/cib/status/tickets");
 
     if (ticket_id) {
-        offset += snprintf(xpath_string + offset, xpath_max - offset, "/%s[@id=\"%s\"]",
-                           XML_CIB_TAG_TICKET_STATE, ticket_id);
+        offset += crm_snprintf_offset(xpath_string, offset, xpath_max,
+                                      "/%s[@id=\"%s\"]", XML_CIB_TAG_TICKET_STATE, ticket_id);
     }
-    CRM_LOG_ASSERT(offset > 0);
+    CRM_LOG_ASSERT(offset > 0 && offset < xpath_max);
     rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
                               cib_sync_call | cib_scope_local | cib_xpath);
 
