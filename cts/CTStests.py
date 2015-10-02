@@ -2637,12 +2637,11 @@ class RemoteLXC(CTSTest):
 AllTestClasses.append(RemoteLXC)
 
 
-###################################################################
 class RemoteDriver(CTSTest):
-###################################################################
+
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name = "RemoteDriver"
+        self.name = self.__class__.__name__
         self.is_docker_unsafe = 1
         self.start = StartTest(cm)
         self.startall = SimulStartLite(cm)
@@ -3013,6 +3012,21 @@ class RemoteDriver(CTSTest):
         return True
 
     def __call__(self, node):
+        return self.failure("This base class is not meant to be called directly.")
+
+    def errorstoignore(self):
+        '''Return list of errors which should be ignored'''
+        return [ """is running on remote.*which isn't allowed""",
+                 """Connection terminated""",
+                 """Failed to send remote""",
+                ]
+
+# RemoteDriver is just a base class for other tests, so it is not added to AllTestClasses
+
+
+class RemoteBasic(RemoteDriver):
+
+    def __call__(self, node):
         '''Perform the 'RemoteBaremetal' test. '''
         self.incr("calls")
 
@@ -3033,65 +3047,9 @@ class RemoteDriver(CTSTest):
 
         return self.success()
 
-    def errorstoignore(self):
-        '''Return list of errors which should be ignored'''
-        return [ """is running on remote.*which isn't allowed""",
-                 """Connection terminated""",
-                 """Failed to send remote""",
-                ]
-
-# Remote driver is called by other tests.
-
-###################################################################
-class RemoteBasic(CTSTest):
-###################################################################
-    def __init__(self, cm):
-        CTSTest.__init__(self,cm)
-        self.name = "RemoteBasic"
-        self.start = StartTest(cm)
-        self.startall = SimulStartLite(cm)
-        self.driver = RemoteDriver(cm)
-        self.is_docker_unsafe = 1
-
-    def __call__(self, node):
-        '''Perform the 'RemoteBaremetal' test. '''
-        self.incr("calls")
-
-        ret = self.startall(None)
-        if not ret:
-            return self.failure("Setup failed, start all nodes failed.")
-
-        self.driver.setup_env(node)
-        self.driver.start_metal(node)
-        self.driver.add_dummy_rsc(node)
-        self.driver.test_attributes(node)
-        self.driver.cleanup_metal(node)
-
-        self.debug("Waiting for the cluster to recover")
-        self.CM.cluster_stable()
-        if self.driver.failed == 1:
-            return self.failure(self.driver.fail_string)
-
-        return self.success()
-
-    def is_applicable(self):
-        return self.driver.is_applicable()
-
-    def errorstoignore(self):
-        return self.driver.errorstoignore()
-
 AllTestClasses.append(RemoteBasic)
 
-###################################################################
-class RemoteStonithd(CTSTest):
-###################################################################
-    def __init__(self, cm):
-        CTSTest.__init__(self,cm)
-        self.name = "RemoteStonithd"
-        self.start = StartTest(cm)
-        self.startall = SimulStartLite(cm)
-        self.driver = RemoteDriver(cm)
-        self.is_docker_unsafe = 1
+class RemoteStonithd(RemoteDriver):
 
     def __call__(self, node):
         '''Perform the 'RemoteStonithd' test. '''
@@ -3101,22 +3059,22 @@ class RemoteStonithd(CTSTest):
         if not ret:
             return self.failure("Setup failed, start all nodes failed.")
 
-        self.driver.setup_env(node)
-        self.driver.start_metal(node)
-        self.driver.add_dummy_rsc(node)
+        self.setup_env(node)
+        self.start_metal(node)
+        self.add_dummy_rsc(node)
 
-        self.driver.fail_connection(node)
-        self.driver.cleanup_metal(node)
+        self.fail_connection(node)
+        self.cleanup_metal(node)
 
         self.debug("Waiting for the cluster to recover")
         self.CM.cluster_stable()
-        if self.driver.failed == 1:
-            return self.failure(self.driver.fail_string)
+        if self.failed == 1:
+            return self.failure(self.fail_string)
 
         return self.success()
 
     def is_applicable(self):
-        if not self.driver.is_applicable():
+        if not RemoteDriver.is_applicable(self):
             return False
 
         if "DoFencing" in self.Env.keys():
@@ -3133,21 +3091,13 @@ class RemoteStonithd(CTSTest):
             r"error.*: Resource .*ocf::.* is active on 2 nodes attempting recovery",
         ]
 
-        ignore_pats.extend(self.driver.errorstoignore())
+        ignore_pats.extend(RemoteDriver.errorstoignore(self))
         return ignore_pats
 
 AllTestClasses.append(RemoteStonithd)
 
-###################################################################
-class RemoteMigrate(CTSTest):
-###################################################################
-    def __init__(self, cm):
-        CTSTest.__init__(self,cm)
-        self.name = "RemoteMigrate"
-        self.start = StartTest(cm)
-        self.startall = SimulStartLite(cm)
-        self.driver = RemoteDriver(cm)
-        self.is_docker_unsafe = 1
+
+class RemoteMigrate(RemoteDriver):
 
     def __call__(self, node):
         '''Perform the 'RemoteMigrate' test. '''
@@ -3157,40 +3107,23 @@ class RemoteMigrate(CTSTest):
         if not ret:
             return self.failure("Setup failed, start all nodes failed.")
 
-        self.driver.setup_env(node)
-        self.driver.start_metal(node)
-        self.driver.add_dummy_rsc(node)
-        self.driver.migrate_connection(node)
-        self.driver.cleanup_metal(node)
+        self.setup_env(node)
+        self.start_metal(node)
+        self.add_dummy_rsc(node)
+        self.migrate_connection(node)
+        self.cleanup_metal(node)
 
         self.debug("Waiting for the cluster to recover")
         self.CM.cluster_stable()
-        if self.driver.failed == 1:
-            return self.failure(self.driver.fail_string)
+        if self.failed == 1:
+            return self.failure(self.fail_string)
 
         return self.success()
-
-    def is_applicable(self):
-        return self.driver.is_applicable()
-
-    def errorstoignore(self):
-        return self.driver.errorstoignore()
 
 AllTestClasses.append(RemoteMigrate)
 
 
-###################################################################
-class RemoteRscFailure(CTSTest):
-###################################################################
-    def __init__(self, cm):
-
-        # fail a rsc on a remote node, verify recovery.
-        CTSTest.__init__(self,cm)
-        self.name = "RemoteRscFailure"
-        self.start = StartTest(cm)
-        self.startall = SimulStartLite(cm)
-        self.driver = RemoteDriver(cm)
-        self.is_docker_unsafe = 1
+class RemoteRscFailure(RemoteDriver):
 
     def __call__(self, node):
         '''Perform the 'RemoteRscFailure' test. '''
@@ -3200,34 +3133,31 @@ class RemoteRscFailure(CTSTest):
         if not ret:
             return self.failure("Setup failed, start all nodes failed.")
 
-        self.driver.setup_env(node)
-        self.driver.start_metal(node)
-        self.driver.add_dummy_rsc(node)
+        self.setup_env(node)
+        self.start_metal(node)
+        self.add_dummy_rsc(node)
 
         # This is an important step. We are migrating the connection
         # before failing the resource. This verifies that the migration
         # has properly maintained control over the remote-node.
-        self.driver.migrate_connection(node)
+        self.migrate_connection(node)
 
-        self.driver.fail_rsc(node)
-        self.driver.cleanup_metal(node)
+        self.fail_rsc(node)
+        self.cleanup_metal(node)
 
         self.debug("Waiting for the cluster to recover")
         self.CM.cluster_stable()
-        if self.driver.failed == 1:
-            return self.failure(self.driver.fail_string)
+        if self.failed == 1:
+            return self.failure(self.fail_string)
 
         return self.success()
-
-    def is_applicable(self):
-        return self.driver.is_applicable()
 
     def errorstoignore(self):
         ignore_pats = [
             r"pengine.*: Recover remote-rsc\s*\(.*\)",
         ]
 
-        ignore_pats.extend(self.driver.errorstoignore())
+        ignore_pats.extend(RemoteDriver.errorstoignore(self))
         return ignore_pats
 
 AllTestClasses.append(RemoteRscFailure)
