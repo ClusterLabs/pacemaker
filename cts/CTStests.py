@@ -2646,20 +2646,22 @@ class RemoteDriver(CTSTest):
         self.start = StartTest(cm)
         self.startall = SimulStartLite(cm)
         self.stop = StopTest(cm)
+        self.remote_rsc = "remote-rsc"
+        self.cib_cmd = """cibadmin -C -o %s -X '%s' """
+        self.reset()
+
+    def reset(self):
         self.pcmk_started = 0
-        self.failed = 0
+        self.failed = False
         self.fail_string = ""
         self.remote_node_added = 0
         self.remote_rsc_added = 0
-        self.remote_rsc = "remote-rsc"
-        self.remote_use_reconnect_interval = self.Env.RandomGen.choice(["true","false"])
-        self.cib_cmd = """cibadmin -C -o %s -X '%s' """
+        self.remote_use_reconnect_interval = self.Env.RandomGen.choice([True,False])
 
     def fail(self, msg):
         """ Mark test as failed. """
 
-        # TODO: It's a boolean. Use True/False.
-        self.failed = 1
+        self.failed = True
 
         # Always log the failure.
         self.logger.log(msg)
@@ -2698,11 +2700,11 @@ class RemoteDriver(CTSTest):
     <meta_attributes id="remote-meta_attributes"/>
 </primitive>""" % (self.remote_rsc)
         self.add_rsc(node, rsc_xml)
-        if self.failed == 0:
+        if not self.failed:
             self.remote_rsc_added = 1
 
     def add_connection_rsc(self, node):
-        if self.remote_use_reconnect_interval == "true":
+        if self.remote_use_reconnect_interval:
             # use reconnect interval and make sure to set cluster-recheck-interval as well.
             rsc_xml = """
 <primitive class="ocf" id="%s" provider="pacemaker" type="remote">
@@ -2732,7 +2734,7 @@ class RemoteDriver(CTSTest):
 </primitive>""" % (self.remote_node, node)
 
         self.add_rsc(node, rsc_xml)
-        if self.failed == 0:
+        if not self.failed:
             self.remote_node_added = 1
 
     def stop_pcmk_remote(self, node):
@@ -2786,7 +2788,7 @@ class RemoteDriver(CTSTest):
             self.fail("Unmatched patterns: %s" % watch.unmatched)
 
     def migrate_connection(self, node):
-        if self.failed == 1:
+        if self.failed:
             return
 
         pats = [ ]
@@ -2810,7 +2812,7 @@ class RemoteDriver(CTSTest):
             return
 
     def fail_rsc(self, node):
-        if self.failed == 1:
+        if self.failed:
             return
 
         watchpats = [ ]
@@ -2832,7 +2834,7 @@ class RemoteDriver(CTSTest):
             self.fail("Unmatched patterns during rsc fail: %s" % watch.unmatched)
 
     def fail_connection(self, node):
-        if self.failed == 1:
+        if self.failed:
             return
 
         watchpats = [ ]
@@ -2879,7 +2881,7 @@ class RemoteDriver(CTSTest):
             return
 
     def add_dummy_rsc(self, node):
-        if self.failed == 1:
+        if self.failed:
             return
 
         # verify we can put a resource on the remote node
@@ -2905,7 +2907,7 @@ class RemoteDriver(CTSTest):
             self.fail("Unmatched patterns: %s" % watch.unmatched)
 
     def test_attributes(self, node):
-        if self.failed == 1:
+        if self.failed:
             return
 
         # This verifies permanent attributes can be set on a remote-node. It also
@@ -2941,7 +2943,7 @@ class RemoteDriver(CTSTest):
 
         self.set_timer("remoteMetalCleanup")
 
-        if self.remote_use_reconnect_interval == "true":
+        if self.remote_use_reconnect_interval:
             self.debug("Cleaning up re-check interval")
             self.rsh(self.get_othernode(node), self.templates["ClearCheckInterval"])
 
@@ -3011,6 +3013,18 @@ class RemoteDriver(CTSTest):
                 return False
         return True
 
+    def start_new_test(self, node):
+        self.incr("calls")
+        self.reset()
+
+        ret = self.startall(None)
+        if not ret:
+            return self.failure("Setup failed, start all nodes failed.")
+
+        self.setup_env(node)
+        self.start_metal(node)
+        self.add_dummy_rsc(node)
+
     def __call__(self, node):
         return self.failure("This base class is not meant to be called directly.")
 
@@ -3028,21 +3042,14 @@ class RemoteBasic(RemoteDriver):
 
     def __call__(self, node):
         '''Perform the 'RemoteBaremetal' test. '''
-        self.incr("calls")
 
-        ret = self.startall(None)
-        if not ret:
-            return self.failure("Setup failed, start all nodes failed.")
-
-        self.setup_env(node)
-        self.start_metal(node)
-        self.add_dummy_rsc(node)
+        self.start_new_test(node)
         self.test_attributes(node)
         self.cleanup_metal(node)
 
         self.debug("Waiting for the cluster to recover")
         self.CM.cluster_stable()
-        if self.failed == 1:
+        if self.failed:
             return self.failure(self.fail_string)
 
         return self.success()
@@ -3053,22 +3060,14 @@ class RemoteStonithd(RemoteDriver):
 
     def __call__(self, node):
         '''Perform the 'RemoteStonithd' test. '''
-        self.incr("calls")
 
-        ret = self.startall(None)
-        if not ret:
-            return self.failure("Setup failed, start all nodes failed.")
-
-        self.setup_env(node)
-        self.start_metal(node)
-        self.add_dummy_rsc(node)
-
+        self.start_new_test(node)
         self.fail_connection(node)
         self.cleanup_metal(node)
 
         self.debug("Waiting for the cluster to recover")
         self.CM.cluster_stable()
-        if self.failed == 1:
+        if self.failed:
             return self.failure(self.fail_string)
 
         return self.success()
@@ -3101,21 +3100,14 @@ class RemoteMigrate(RemoteDriver):
 
     def __call__(self, node):
         '''Perform the 'RemoteMigrate' test. '''
-        self.incr("calls")
 
-        ret = self.startall(None)
-        if not ret:
-            return self.failure("Setup failed, start all nodes failed.")
-
-        self.setup_env(node)
-        self.start_metal(node)
-        self.add_dummy_rsc(node)
+        self.start_new_test(node)
         self.migrate_connection(node)
         self.cleanup_metal(node)
 
         self.debug("Waiting for the cluster to recover")
         self.CM.cluster_stable()
-        if self.failed == 1:
+        if self.failed:
             return self.failure(self.fail_string)
 
         return self.success()
@@ -3127,15 +3119,8 @@ class RemoteRscFailure(RemoteDriver):
 
     def __call__(self, node):
         '''Perform the 'RemoteRscFailure' test. '''
-        self.incr("calls")
 
-        ret = self.startall(None)
-        if not ret:
-            return self.failure("Setup failed, start all nodes failed.")
-
-        self.setup_env(node)
-        self.start_metal(node)
-        self.add_dummy_rsc(node)
+        self.start_new_test(node)
 
         # This is an important step. We are migrating the connection
         # before failing the resource. This verifies that the migration
@@ -3147,7 +3132,7 @@ class RemoteRscFailure(RemoteDriver):
 
         self.debug("Waiting for the cluster to recover")
         self.CM.cluster_stable()
-        if self.failed == 1:
+        if self.failed:
             return self.failure(self.fail_string)
 
         return self.success()
