@@ -51,9 +51,6 @@ LAST_RC		?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr |
 LAST_RELEASE	?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | grep -v rc | head -n 1)
 NEXT_RELEASE	?= $(shell echo $(LAST_RELEASE) | awk -F. '/[0-9]+\./{$$3+=1;OFS=".";print $$1,$$2,$$3}')
 
-beekhof:
-	echo $(LAST_RELEASE) $(NEXT_RELEASE)
-
 BUILD_COUNTER	?= build.counter
 LAST_COUNT      = $(shell test ! -e $(BUILD_COUNTER) && echo 0; test -e $(BUILD_COUNTER) && cat $(BUILD_COUNTER))
 COUNT           = $(shell expr 1 + $(LAST_COUNT))
@@ -61,7 +58,7 @@ COUNT           = $(shell expr 1 + $(LAST_COUNT))
 SPECVERSION	?= $(COUNT)
 
 init:
-	./autogen.sh
+	./autogen.sh init
 
 export:
 	rm -f $(PACKAGE)-dirty.tar.* $(PACKAGE)-tip.tar.* $(PACKAGE)-HEAD.tar.*

@@ -30,8 +30,14 @@ if [ -f config.log ]; then
     last=`grep --color=never "$.*configure" config.log | tail -n 1 | sed s:.*configure:./configure: | sed s:--no-create::`
     echo "  $last"
     eval $last
+
+elif [ "x$1" = xinit -a -e `which rpm` ]; then
+    cmd="./__configure.rpm"
+    rpm --eval %{configure} | grep -v program-prefix | sed 's/\t/    /' > $cmd
+    sh $cmd
+    make
+
 else
-    echo Now run ./configure
     echo "Now run configure with any arguments (eg. --prefix) specific to your system"
     if [ -e `which rpm` ]; then
 	echo "Suggested invocation:"
