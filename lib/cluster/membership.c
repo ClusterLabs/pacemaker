@@ -32,8 +32,33 @@
 #include <crm/msg_xml.h>
 #include <crm/stonith-ng.h>
 
+/* The peer cache remembers cluster nodes that have been seen.
+ * This is managed mostly automatically by libcluster, based on
+ * cluster membership events.
+ *
+ * Because cluster nodes can have conflicting names or UUIDs,
+ * the hash table key is a uniquely generated ID.
+ */
 GHashTable *crm_peer_cache = NULL;
+
+/*
+ * The remote peer cache tracks pacemaker_remote nodes. While the
+ * value has the same type as the peer cache's, it is tracked separately for
+ * three reasons: pacemaker_remote nodes can't have conflicting names or UUIDs,
+ * so the name (which is also the UUID) is used as the hash table key; there
+ * is no equivalent of membership events, so management is not automatic; and
+ * most users of the peer cache need to exclude pacemaker_remote nodes.
+ *
+ * That said, using a single cache would be more logical and less error-prone,
+ * so it would be a good idea to merge them one day.
+ *
+ * libcluster provides two avenues for populating the cache:
+ * crm_remote_peer_get(), crm_remote_peer_cache_add() and
+ * crm_remote_peer_cache_remove() directly manage it,
+ * while crm_remote_peer_cache_refresh() populates it via the CIB.
+ */
 GHashTable *crm_remote_peer_cache = NULL;
+
 unsigned long long crm_peer_seq = 0;
 gboolean crm_have_quorum = FALSE;
 static gboolean crm_autoreap  = TRUE;
@@ -47,21 +72,69 @@ crm_remote_peer_cache_size(void)
     return g_hash_table_size(crm_remote_peer_cache);
 }
 
+/*!
+ * \brief Get a remote node peer cache entry, creating it if necessary
+ *
+ * \param[in] node_name  Name of remote node
+ *
+ * \return Cache entry for node on success, NULL (and set errno) otherwise
+ *
+ * \note When creating a new entry, this will leave the node state undetermined,
+ *       so the caller should also call crm_update_peer_state() if the state is
+ *       known.
+ */
+crm_node_t *
+crm_remote_peer_get(const char *node_name)
+{
+    crm_node_t *node;
+
+    if (node_name == NULL) {
+        errno = -EINVAL;
+        return NULL;
+    }
+
+    /* Return existing cache entry if one exists */
+    node = g_hash_table_lookup(crm_remote_peer_cache, node_name);
+    if (node) {
+        return node;
+    }
+
+    /* Allocate a new entry */
+    node = calloc(1, sizeof(crm_node_t));
+    if (node == NULL) {
+        return NULL;
+    }
+
+    /* Populate the essential information */
+    node->flags = crm_remote_node;
+    node->uuid = strdup(node_name);
+    if (node->uuid == NULL) {
+        free(node);
+        errno = -ENOMEM;
+        return NULL;
+    }
+
+    /* Add the new entry to the cache */
+    g_hash_table_replace(crm_remote_peer_cache, node->uuid, node);
+    crm_trace("added %s to remote cache", node_name);
+
+    /* Update the entry's uname, ensuring peer status callbacks are called */
+    crm_update_peer_uname(node, node_name);
+    return node;
+}
+
+/*!
+ * \brief Add a node to the remote peer cache
+ *
+ * \param[in] node_name  Name of remote node
+ *
+ * \note This is a legacy convenience wrapper for crm_remote_peer_get()
+ *       for callers that don't need the cache entry returned.
+ */
 void
 crm_remote_peer_cache_add(const char *node_name)
 {
-    crm_node_t *node = g_hash_table_lookup(crm_remote_peer_cache, node_name);
-
-    if (node == NULL) {
-            crm_trace("added %s to remote cache", node_name);
-            node = calloc(1, sizeof(crm_node_t));
-            node->flags = crm_remote_node;
-            CRM_ASSERT(node);
-            node->uname = strdup(node_name);
-            node->uuid = strdup(node_name);
-            node->state = strdup(CRM_NODE_MEMBER);
-            g_hash_table_replace(crm_remote_peer_cache, node->uname, node);
-    }
+    CRM_ASSERT(crm_remote_peer_get(node_name) != NULL);
 }
 
 void
@@ -90,14 +163,9 @@ remote_cache_refresh_helper(xmlNode *cib, const char *xpath, const char *field)
         }
 
         if (remote) {
-            crm_trace("added %s to remote cache", remote);
-            node = calloc(1, sizeof(crm_node_t));
-            node->flags = crm_remote_node;
+            node = crm_remote_peer_get(remote);
             CRM_ASSERT(node);
-            node->uname = strdup(remote);
-            node->uuid = strdup(remote);
-            node->state = strdup(CRM_NODE_MEMBER);
-            g_hash_table_replace(crm_remote_peer_cache, node->uname, node);
+            crm_update_peer_state(__FUNCTION__, node, CRM_NODE_MEMBER, 0);
         }
     }
     freeXpathObject(xpathObj);
