@@ -1043,6 +1043,12 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
     pe_working_set_t data_set;
 
     if(resource_is_running_on(rsc, host) == FALSE) {
+        const char *id = rsc->clone_name?rsc->clone_name:rsc->id;
+        if(host) {
+            printf("%s is not running on %s and so cannot be restarted\n", id, host);
+        } else {
+            printf("%s is not running anywhere and so cannot be restarted\n", id);
+        }
         return -ENXIO;
     }
 
