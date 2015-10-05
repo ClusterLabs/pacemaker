@@ -1205,6 +1205,7 @@ fi
 
 AC_DEFINE_UNQUOTED(SUPPORT_UPSTART, $HAVE_upstart, Support upstart based system services)
 AM_CONDITIONAL(BUILD_UPSTART, test $HAVE_upstart = 1)
+AC_SUBST(SUPPORT_UPSTART)
 
 if
     $PKGCONFIG --exists systemd
@@ -1224,6 +1225,7 @@ fi
 
 AC_DEFINE_UNQUOTED(SUPPORT_SYSTEMD, $HAVE_systemd, Support systemd based system services)
 AM_CONDITIONAL(BUILD_SYSTEMD, test $HAVE_systemd = 1)
+AC_SUBST(SUPPORT_SYSTEMD)
 
 case $SUPPORT_NAGIOS in
      1|yes|true|try)
@@ -1402,6 +1404,7 @@ AC_DEFINE_UNQUOTED(HAVE_ATOMIC_ATTRD, $BUILD_ATOMIC_ATTRD, Support the new atomi
 
 AC_SUBST(SUPPORT_CMAN)
 AC_SUBST(SUPPORT_CS)
+AC_SUBST(SUPPORT_PLUGIN)
 
 dnl
 dnl    Cluster stack - Sanity
