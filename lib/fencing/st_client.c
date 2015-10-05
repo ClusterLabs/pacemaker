@@ -1499,8 +1499,13 @@ get_stonith_provider(const char *agent, const char *provider)
 #endif
     }
 
-    crm_err("No such device: %s", agent);
-    return NULL;
+    if (safe_str_eq(provider, "internal")) {
+        return provider;
+
+    } else {
+        crm_err("No such device: %s", agent);
+        return NULL;
+    }
 }
 
 static gint
