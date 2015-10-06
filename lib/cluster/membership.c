@@ -103,24 +103,40 @@ remote_cache_refresh_helper(xmlNode *cib, const char *xpath, const char *field)
     freeXpathObject(xpathObj);
 }
 
+/* search string to find CIB resources entries for guest nodes */
+#define XPATH_GUEST_NODE_CONFIG \
+    "//" XML_TAG_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE \
+    "//" XML_TAG_META_SETS "//" XML_CIB_TAG_NVPAIR \
+    "[@name='" XML_RSC_ATTR_REMOTE_NODE "']"
+
+/* search string to find CIB resources entries for remote nodes */
+#define XPATH_REMOTE_NODE_CONFIG \
+    "//" XML_TAG_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE \
+    "[@type='remote'][@provider='pacemaker']"
+
+/* search string to find CIB node status entries for pacemaker_remote nodes */
+#define XPATH_REMOTE_NODE_STATUS \
+    "//" XML_TAG_CIB "//" XML_CIB_TAG_STATUS "//" XML_CIB_TAG_STATE \
+    "[@" XML_NODE_IS_REMOTE "='true']"
+
+/*!
+ * \brief Repopulate the remote peer cache based on CIB XML
+ *
+ * \param[in] xmlNode  CIB XML to parse
+ */
 void crm_remote_peer_cache_refresh(xmlNode *cib)
 {
-    const char *xpath = NULL;
-
     g_hash_table_remove_all(crm_remote_peer_cache);
 
     /* remote nodes associated with a cluster resource */
-    xpath = "//" XML_TAG_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE "//" XML_TAG_META_SETS "//" XML_CIB_TAG_NVPAIR "[@name='remote-node']";
-    remote_cache_refresh_helper(cib, xpath, "value");
+    remote_cache_refresh_helper(cib, XPATH_GUEST_NODE_CONFIG, "value");
 
     /* baremetal nodes defined by connection resources*/
-    xpath = "//" XML_TAG_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE "[@type='remote'][@provider='pacemaker']";
-    remote_cache_refresh_helper(cib, xpath, "id");
+    remote_cache_refresh_helper(cib, XPATH_REMOTE_NODE_CONFIG, "id");
 
     /* baremetal nodes we have seen in the config that may or may not have connection
      * resources associated with them anymore */
-    xpath = "//" XML_TAG_CIB "//" XML_CIB_TAG_STATUS "//" XML_CIB_TAG_STATE "[@remote_node='true']";
-    remote_cache_refresh_helper(cib, xpath, "id");
+    remote_cache_refresh_helper(cib, XPATH_REMOTE_NODE_STATUS, "id");
 }
 
 gboolean
