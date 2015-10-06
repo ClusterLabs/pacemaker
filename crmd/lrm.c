@@ -831,27 +831,21 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
     return FALSE;
 }
 
-xmlNode *
-do_lrm_query_internal(lrm_state_t * lrm_state, gboolean is_replace)
+static xmlNode *
+do_lrm_query_internal(lrm_state_t *lrm_state, int update_flags)
 {
     xmlNode *xml_state = NULL;
     xmlNode *xml_data = NULL;
     xmlNode *rsc_list = NULL;
     const char *uuid = NULL;
 
-    if (safe_str_eq(lrm_state->node_name, fsa_our_uname)) {
+    if (lrm_state_is_local(lrm_state)) {
         crm_node_t *peer = crm_get_peer(0, lrm_state->node_name);
-        xml_state = do_update_node_cib(peer, node_update_cluster|node_update_peer, NULL, __FUNCTION__);
-        /* The next two lines shouldn't be necessary for newer DCs */
-        crm_xml_add(xml_state, XML_NODE_JOIN_STATE, CRMD_JOINSTATE_MEMBER);
-        crm_xml_add(xml_state, XML_NODE_EXPECTED, CRMD_JOINSTATE_MEMBER);
+        xml_state = do_update_node_cib(peer, update_flags, NULL, __FUNCTION__);
         uuid = fsa_our_uuid;
 
     } else {
-        xml_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
-        crm_xml_add(xml_state, XML_NODE_IS_REMOTE, "true");
-        crm_xml_add(xml_state, XML_ATTR_ID, lrm_state->node_name);
-        crm_xml_add(xml_state, XML_ATTR_UNAME, lrm_state->node_name);
+        xml_state = simple_remote_node_status(lrm_state->node_name, NULL, __FUNCTION__);
         uuid = lrm_state->node_name;
     }
 
@@ -871,12 +865,23 @@ xmlNode *
 do_lrm_query(gboolean is_replace, const char *node_name)
 {
     lrm_state_t *lrm_state = lrm_state_find(node_name);
+    xmlNode *xml_state;
 
     if (!lrm_state) {
         crm_err("Could not query lrm state for lrmd node %s", node_name);
         return NULL;
     }
-    return do_lrm_query_internal(lrm_state, is_replace);
+    xml_state = do_lrm_query_internal(lrm_state,
+                                      node_update_cluster|node_update_peer);
+
+    /* In case this function is called to generate a join confirmation to
+     * send to the DC, force the current and expected join state to member.
+     * This isn't necessary for newer DCs but is backward compatible.
+     */
+    crm_xml_add(xml_state, XML_NODE_JOIN_STATE, CRMD_JOINSTATE_MEMBER);
+    crm_xml_add(xml_state, XML_NODE_EXPECTED, CRMD_JOINSTATE_MEMBER);
+
+    return xml_state;
 }
 
 static void
@@ -1541,7 +1546,7 @@ do_lrm_invoke(long long action,
 
     if (safe_str_eq(crm_op, CRM_OP_LRM_REFRESH)) {
         int rc = pcmk_ok;
-        xmlNode *fragment = do_lrm_query_internal(lrm_state, TRUE);
+        xmlNode *fragment = do_lrm_query_internal(lrm_state, node_update_all);
 
         fsa_cib_update(XML_CIB_TAG_STATUS, fragment, cib_quorum_override, rc, user_name);
         crm_info("Forced a local LRM refresh: call=%d", rc);
@@ -1562,7 +1567,7 @@ do_lrm_invoke(long long action,
         free_xml(fragment);
 
     } else if (safe_str_eq(crm_op, CRM_OP_LRM_QUERY)) {
-        xmlNode *data = do_lrm_query_internal(lrm_state, FALSE);
+        xmlNode *data = do_lrm_query_internal(lrm_state, node_update_all);
         xmlNode *reply = create_reply(input->msg, data);
 
         if (relay_message(reply, TRUE) == FALSE) {
