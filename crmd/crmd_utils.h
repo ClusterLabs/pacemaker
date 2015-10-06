@@ -67,6 +67,7 @@ enum node_update_flags {
     node_update_peer = 0x0020,
     node_update_join = 0x0040,
     node_update_expected = 0x0100,
+    node_update_all = node_update_cluster|node_update_peer|node_update_join|node_update_expected,
 };
 
 gboolean crm_timer_stop(fsa_timer_t * timer);
