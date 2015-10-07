@@ -71,7 +71,7 @@ crm_remote_peer_cache_remove(const char *node_name)
 }
 
 static void
-remote_cache_refresh_helper(xmlNode *cib, const char *xpath, const char *field, int flags)
+remote_cache_refresh_helper(xmlNode *cib, const char *xpath, const char *field)
 {
     const char *remote = NULL;
     crm_node_t *node = NULL;
@@ -92,7 +92,7 @@ remote_cache_refresh_helper(xmlNode *cib, const char *xpath, const char *field, 
         if (remote) {
             crm_trace("added %s to remote cache", remote);
             node = calloc(1, sizeof(crm_node_t));
-            node->flags = flags;
+            node->flags = crm_remote_node;
             CRM_ASSERT(node);
             node->uname = strdup(remote);
             node->uuid = strdup(remote);
@@ -111,16 +111,16 @@ void crm_remote_peer_cache_refresh(xmlNode *cib)
 
     /* remote nodes associated with a cluster resource */
     xpath = "//" XML_TAG_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE "//" XML_TAG_META_SETS "//" XML_CIB_TAG_NVPAIR "[@name='remote-node']";
-    remote_cache_refresh_helper(cib, xpath, "value", crm_remote_node | crm_remote_container);
+    remote_cache_refresh_helper(cib, xpath, "value");
 
     /* baremetal nodes defined by connection resources*/
     xpath = "//" XML_TAG_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE "[@type='remote'][@provider='pacemaker']";
-    remote_cache_refresh_helper(cib, xpath, "id", crm_remote_node | crm_remote_baremetal);
+    remote_cache_refresh_helper(cib, xpath, "id");
 
     /* baremetal nodes we have seen in the config that may or may not have connection
      * resources associated with them anymore */
     xpath = "//" XML_TAG_CIB "//" XML_CIB_TAG_STATUS "//" XML_CIB_TAG_STATE "[@remote_node='true']";
-    remote_cache_refresh_helper(cib, xpath, "id", crm_remote_node | crm_remote_baremetal);
+    remote_cache_refresh_helper(cib, xpath, "id");
 }
 
 gboolean

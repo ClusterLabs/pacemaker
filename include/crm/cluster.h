@@ -59,9 +59,9 @@ enum crm_node_flags
 {
     /* node is not a cluster node and should not be considered for cluster membership */
     crm_remote_node          = 0x0001,
-    /* This node is a remote node living within a container resource */
+
+    /* deprecated (not used by cluster) */
     crm_remote_container     = 0x0002,
-    /* This node is a bare metal remote-node */
     crm_remote_baremetal     = 0x0004,
 };
 /* *INDENT-ON* */
