@@ -143,32 +143,89 @@ crm_remote_peer_cache_remove(const char *node_name)
     g_hash_table_remove(crm_remote_peer_cache, node_name);
 }
 
-static void
-remote_cache_refresh_helper(xmlNode *cib, const char *xpath, const char *field)
+/*!
+ * \internal
+ * \brief Return node status based on a CIB status entry
+ *
+ * \param[in] node_state  XML of node state
+ *
+ * \return CRM_NODE_LOST if XML_NODE_IN_CLUSTER is false in node_state,
+ *         CRM_NODE_MEMBER otherwise
+ * \note Unlike most boolean XML attributes, this one defaults to true, for
+ *       backward compatibility with older crmd versions that don't set it.
+ */
+static const char *
+remote_state_from_cib(xmlNode *node_state)
 {
-    const char *remote = NULL;
-    crm_node_t *node = NULL;
-    xmlXPathObjectPtr xpathObj = NULL;
-    int max = 0;
-    int lpc = 0;
+    const char *status;
 
-    xpathObj = xpath_search(cib, xpath);
-    max = numXpathResults(xpathObj);
-    for (lpc = 0; lpc < max; lpc++) {
-        xmlNode *xml = getXpathResult(xpathObj, lpc);
+    status = crm_element_value(node_state, XML_NODE_IN_CLUSTER);
+    if (status && !crm_is_true(status)) {
+        status = CRM_NODE_LOST;
+    } else {
+        status = CRM_NODE_MEMBER;
+    }
+    return status;
+}
 
-        CRM_LOG_ASSERT(xml != NULL);
-        if(xml != NULL) {
-            remote = crm_element_value(xml, field);
+/* user data for looping through remote node xpath searches */
+struct refresh_data {
+    const char *field;  /* XML attribute to check for node name */
+    gboolean has_state; /* whether to update node state based on XML */
+};
+
+/*!
+ * \internal
+ * \brief Process one pacemaker_remote node xpath search result
+ *
+ * \param[in] result     XML search result
+ * \param[in] user_data  what to look for in the XML
+ */
+static void
+remote_cache_refresh_helper(xmlNode *result, void *user_data)
+{
+    struct refresh_data *data = user_data;
+    const char *remote = crm_element_value(result, data->field);
+    const char *state = NULL;
+    crm_node_t *node;
+
+    CRM_CHECK(remote != NULL, return);
+
+    /* Determine node's state, if the result has it */
+    if (data->has_state) {
+        state = remote_state_from_cib(result);
+    }
+
+    /* Check whether cache already has entry for node */
+    node = g_hash_table_lookup(crm_remote_peer_cache, remote);
+
+    if (node == NULL) {
+        /* Node is not in cache, so add a new entry for it */
+        node = crm_remote_peer_get(remote);
+        CRM_ASSERT(node);
+        if (state) {
+            crm_update_peer_state(__FUNCTION__, node, state, 0);
         }
 
-        if (remote) {
-            node = crm_remote_peer_get(remote);
-            CRM_ASSERT(node);
-            crm_update_peer_state(__FUNCTION__, node, CRM_NODE_MEMBER, 0);
+    } else if (is_set(node->flags, crm_node_dirty)) {
+        /* Node is in cache and hasn't been updated already, so mark it clean */
+        clear_bit(node->flags, crm_node_dirty);
+        if (state) {
+            crm_update_peer_state(__FUNCTION__, node, state, 0);
         }
     }
-    freeXpathObject(xpathObj);
+}
+
+static void
+mark_dirty(gpointer key, gpointer value, gpointer user_data)
+{
+    set_bit(((crm_node_t*)value)->flags, crm_node_dirty);
+}
+
+static gboolean
+is_dirty(gpointer key, gpointer value, gpointer user_data)
+{
+    return is_set(((crm_node_t*)value)->flags, crm_node_dirty);
 }
 
 /* search string to find CIB resources entries for guest nodes */
@@ -192,19 +249,40 @@ remote_cache_refresh_helper(xmlNode *cib, const char *xpath, const char *field)
  *
  * \param[in] xmlNode  CIB XML to parse
  */
-void crm_remote_peer_cache_refresh(xmlNode *cib)
+void
+crm_remote_peer_cache_refresh(xmlNode *cib)
 {
-    g_hash_table_remove_all(crm_remote_peer_cache);
+    struct refresh_data data;
 
-    /* remote nodes associated with a cluster resource */
-    remote_cache_refresh_helper(cib, XPATH_GUEST_NODE_CONFIG, "value");
+    /* First, we mark all existing cache entries as dirty,
+     * so that later we can remove any that weren't in the CIB.
+     * We don't empty the cache, because we need to detect changes in state.
+     */
+    g_hash_table_foreach(crm_remote_peer_cache, mark_dirty, NULL);
 
-    /* baremetal nodes defined by connection resources*/
-    remote_cache_refresh_helper(cib, XPATH_REMOTE_NODE_CONFIG, "id");
+    /* Look for guest nodes and remote nodes in the status section */
+    data.field = "id";
+    data.has_state = TRUE;
+    crm_foreach_xpath_result(cib, XPATH_REMOTE_NODE_STATUS,
+                             remote_cache_refresh_helper, &data);
 
-    /* baremetal nodes we have seen in the config that may or may not have connection
-     * resources associated with them anymore */
-    remote_cache_refresh_helper(cib, XPATH_REMOTE_NODE_STATUS, "id");
+    /* Look for guest nodes and remote nodes in the configuration section,
+     * because they may have just been added and not have a status entry yet.
+     * In that case, the cached node state will be left NULL, so that the
+     * peer status callback isn't called until we're sure the node started
+     * successfully.
+     */
+    data.field = "value";
+    data.has_state = FALSE;
+    crm_foreach_xpath_result(cib, XPATH_GUEST_NODE_CONFIG,
+                             remote_cache_refresh_helper, &data);
+    data.field = "id";
+    data.has_state = FALSE;
+    crm_foreach_xpath_result(cib, XPATH_REMOTE_NODE_CONFIG,
+                             remote_cache_refresh_helper, &data);
+
+    /* Remove all old cache entries that weren't seen in the CIB */
+    g_hash_table_foreach_remove(crm_remote_peer_cache, is_dirty, NULL);
 }
 
 gboolean

@@ -63,6 +63,9 @@ enum crm_node_flags
     /* deprecated (not used by cluster) */
     crm_remote_container     = 0x0002,
     crm_remote_baremetal     = 0x0004,
+
+    /* node's cache entry is dirty */
+    crm_node_dirty           = 0x0010,
 };
 /* *INDENT-ON* */
 
