@@ -163,6 +163,37 @@ xpath_search(xmlNode * xml_top, const char *path)
     return xpathObj;
 }
 
+/*!
+ * \brief Run a supplied function for each result of an xpath search
+ *
+ * \param[in] xml            XML to search
+ * \param[in] xpath          XPath search string
+ * \param[in] helper         Function to call for each result
+ * \param[in/out] user_data  Data to pass to supplied function
+ *
+ * \note The helper function will be passed the XML node of the result,
+ *       and the supplied user_data. This function does not otherwise
+ *       use user_data.
+ */
+void
+crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
+                         void (*helper)(xmlNode*, void*), void *user_data)
+{
+    xmlXPathObjectPtr xpathObj = xpath_search(xml, xpath);
+    int nresults = numXpathResults(xpathObj);
+    int i;
+
+    for (i = 0; i < nresults; i++) {
+        xmlNode *result = getXpathResult(xpathObj, i);
+
+        CRM_LOG_ASSERT(result != NULL);
+        if (result) {
+            (*helper)(result, user_data);
+        }
+    }
+    freeXpathObject(xpathObj);
+}
+
 xmlNode *
 get_xpath_object_relative(const char *xpath, xmlNode * xml_obj, int error_level)
 {

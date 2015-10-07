@@ -252,6 +252,8 @@ xmlNode *first_named_child(xmlNode * parent, const char *name);
 
 xmlNode *sorted_xml(xmlNode * input, xmlNode * parent, gboolean recursive);
 xmlXPathObjectPtr xpath_search(xmlNode * xml_top, const char *path);
+void crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
+                              void (*helper)(xmlNode*, void*), void *user_data);
 gboolean cli_config_update(xmlNode ** xml, int *best_version, gboolean to_logs);
 xmlNode *expand_idref(xmlNode * input, xmlNode * top);
 
