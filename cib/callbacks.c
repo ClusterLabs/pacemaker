@@ -1006,13 +1006,19 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
     if (needs_forward) {
         const char *host = crm_element_value(request, F_CIB_HOST);
         const char *section = crm_element_value(request, F_CIB_SECTION);
+        int log_level = LOG_INFO;
 
-        crm_info("Forwarding %s operation for section %s to %s (origin=%s/%s/%s)",
-                 op,
-                 section ? section : "'all'",
-                 host ? host : "master",
-                 originator ? originator : "local",
-                 client_name, call_id);
+        if (safe_str_eq(op, CRM_OP_NOOP)) {
+            log_level = LOG_DEBUG;
+        }
+
+        do_crm_log(log_level,
+                   "Forwarding %s operation for section %s to %s (origin=%s/%s/%s)",
+                   op,
+                   section ? section : "'all'",
+                   host ? host : "master",
+                   originator ? originator : "local",
+                   client_name, call_id);
 
         forward_request(request, cib_client, call_options);
         return;
