@@ -49,6 +49,11 @@ crm_update_peer_join(const char *source, crm_node_t * node, enum crm_join_phase 
         return;
     }
 
+    /* Remote nodes do not participate in joins */
+    if (is_set(node->flags, crm_remote_node)) {
+        return;
+    }
+
     last = node->join;
 
     if(phase == last) {

@@ -680,7 +680,7 @@ crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t see
  *
  * \return NULL if any node was reaped from peer caches, value of node otherwise
  *
- * \note If this function returns TRUE, the supplied node object was likely
+ * \note If this function returns NULL, the supplied node object was likely
  *       freed and should not be used again. This function should not be
  *       called within a cache iteration if reaping is possible, otherwise
  *       reaping could invalidate the iterator.
@@ -693,6 +693,11 @@ crm_update_peer_proc(const char *source, crm_node_t * node, uint32_t flag, const
 
     CRM_CHECK(node != NULL, crm_err("%s: Could not set %s to %s for NULL",
                                     source, peer2text(flag), status); return NULL);
+
+    /* Pacemaker doesn't spawn processes on remote nodes */
+    if (is_set(node->flags, crm_remote_node)) {
+        return node;
+    }
 
     last = node->processes;
     if (status == NULL) {
@@ -762,6 +767,11 @@ crm_update_peer_expected(const char *source, crm_node_t * node, const char *expe
 
     CRM_CHECK(node != NULL, crm_err("%s: Could not set 'expected' to %s", source, expected);
               return);
+
+    /* Remote nodes don't participate in joins */
+    if (is_set(node->flags, crm_remote_node)) {
+        return;
+    }
 
     last = node->expected;
     if (expected != NULL && safe_str_neq(node->expected, expected)) {
