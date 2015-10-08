@@ -537,6 +537,7 @@ error: unpack_resources:	Resource start-up disabled since no STONITH resources h
 error: unpack_resources:	Either configure some or disable STONITH with the stonith-enabled option
 error: unpack_resources:	NOTE: Clusters with shared data need STONITH to ensure data integrity
 __xml_acl_post_process:	Creation of nvpair=dummy-meta_attributes-target-role is allowed
+
 Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attributes name=target-role=Stopped
 =#=#=#= Current cib after: niceguy: Create a resource meta attribute =#=#=#=
 <cib epoch="10" num_updates="0" admin_epoch="0">
@@ -704,6 +705,7 @@ error: unpack_resources:	Resource start-up disabled since no STONITH resources h
 error: unpack_resources:	Either configure some or disable STONITH with the stonith-enabled option
 error: unpack_resources:	NOTE: Clusters with shared data need STONITH to ensure data integrity
 __xml_acl_post_process:	Creation of nvpair=dummy-meta_attributes-target-role is allowed
+
 Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attributes name=target-role=Started
 =#=#=#= Current cib after: niceguy: Create a resource meta attribute =#=#=#=
 <cib epoch="12" num_updates="0" admin_epoch="0">
@@ -1602,6 +1604,7 @@ error: unpack_resources:	Resource start-up disabled since no STONITH resources h
 error: unpack_resources:	Either configure some or disable STONITH with the stonith-enabled option
 error: unpack_resources:	NOTE: Clusters with shared data need STONITH to ensure data integrity
 __xml_acl_post_process:	Creation of nvpair=dummy-meta_attributes-target-role is allowed
+
 Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attributes name=target-role=Stopped
 =#=#=#= Current cib after: niceguy: Create a resource meta attribute =#=#=#=
 <cib epoch="11" num_updates="0" admin_epoch="0">
@@ -1796,6 +1799,7 @@ error: unpack_resources:	Resource start-up disabled since no STONITH resources h
 error: unpack_resources:	Either configure some or disable STONITH with the stonith-enabled option
 error: unpack_resources:	NOTE: Clusters with shared data need STONITH to ensure data integrity
 __xml_acl_post_process:	Creation of nvpair=dummy-meta_attributes-target-role is allowed
+
 Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attributes name=target-role=Started
 =#=#=#= Current cib after: niceguy: Create a resource meta attribute =#=#=#=
 <cib epoch="13" num_updates="0" admin_epoch="0">
