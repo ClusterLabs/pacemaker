@@ -172,24 +172,12 @@ do_dc_takeover(long long action,
 {
     int rc = pcmk_ok;
     xmlNode *cib = NULL;
-    GListPtr gIter = NULL;
     const char *cluster_type = name_for_cluster_type(get_cluster_type());
     const char *watchdog = NULL;
 
     crm_info("Taking over DC status for this partition");
     set_bit(fsa_input_register, R_THE_DC);
-
-    for (gIter = stonith_cleanup_list; gIter != NULL; gIter = gIter->next) {
-        char *target = gIter->data;
-        crm_node_t *target_node = crm_get_peer(0, target);
-        const char *uuid = crm_peer_uuid(target_node);
-
-        crm_notice("Marking %s, target of a previous stonith action, as clean", target);
-        send_stonith_update(NULL, target, uuid);
-        free(target);
-    }
-    g_list_free(stonith_cleanup_list);
-    stonith_cleanup_list = NULL;
+    execute_stonith_cleanup();
 
 #if SUPPORT_COROSYNC
     if (is_classic_ais_cluster()) {

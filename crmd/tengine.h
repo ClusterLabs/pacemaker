@@ -23,9 +23,14 @@
 #  include <crm/stonith-ng.h>
 #  include <crm/services.h>
 extern stonith_t *stonith_api;
-extern GListPtr stonith_cleanup_list;
 extern void send_stonith_update(crm_action_t * stonith_action, const char *target,
                                 const char *uuid);
+
+/* stonith cleanup list */
+void add_stonith_cleanup(const char *target);
+void remove_stonith_cleanup(const char *target);
+void purge_stonith_cleanup(void);
+void execute_stonith_cleanup(void);
 
 /* tengine */
 extern crm_action_t *match_down_event(int rc, const char *target, const char *filter, bool quiet);
