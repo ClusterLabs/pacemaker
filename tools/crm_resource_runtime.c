@@ -123,8 +123,9 @@ find_resource_attr(cib_t * the_cib, const char *attr, const char *rsc, const cha
     xmlNode *xml_search = NULL;
     char *xpath_string = NULL;
 
-    CRM_ASSERT(value != NULL);
-    *value = NULL;
+    if(value) {
+        *value = NULL;
+    }
 
     if(the_cib == NULL) {
         return -ENOTCONN;
@@ -176,7 +177,7 @@ find_resource_attr(cib_t * the_cib, const char *attr, const char *rsc, const cha
                    crm_element_value(child, XML_NVPAIR_ATTR_VALUE), ID(child));
         }
 
-    } else {
+    } else if(value) {
         const char *tmp = crm_element_value(xml_search, attr);
 
         if (tmp) {
@@ -198,8 +199,10 @@ find_matching_attr_resource(resource_t * rsc, const char * rsc_id, const char * 
     char *lookup_id = NULL;
     char *local_attr_id = NULL;
 
-    if(rsc->parent && do_force == FALSE) {
+    if(do_force == TRUE) {
+        return rsc;
 
+    } else if(rsc->parent) {
         switch(rsc->parent->variant) {
             case pe_group:
                 if (BE_QUIET == FALSE) {
@@ -268,6 +271,13 @@ cli_resource_update_attribute(const char *rsc_id, const char *attr_set, const ch
 
     if (rsc == NULL) {
         return -ENXIO;
+    }
+
+    if(attr_id == NULL
+       && do_force == FALSE
+       && pcmk_ok != find_resource_attr(
+           cib, XML_ATTR_ID, uber_parent(rsc)->id, NULL, NULL, NULL, attr_name, NULL)) {
+        printf("\n");
     }
 
     if (safe_str_eq(attr_set_type, XML_TAG_ATTR_SETS)) {
@@ -417,6 +427,13 @@ cli_resource_delete_attribute(const char *rsc_id, const char *attr_set, const ch
 
     if (rsc == NULL) {
         return -ENXIO;
+    }
+
+    if(attr_id == NULL
+       && do_force == FALSE
+       && find_resource_attr(
+           cib, XML_ATTR_ID, uber_parent(rsc)->id, NULL, NULL, NULL, attr_name, NULL) != pcmk_ok) {
+        printf("\n");
     }
 
     if(safe_str_eq(attr_set_type, XML_TAG_META_SETS)) {
