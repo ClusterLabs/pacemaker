@@ -837,20 +837,15 @@ do_lrm_query_internal(lrm_state_t *lrm_state, int update_flags)
     xmlNode *xml_state = NULL;
     xmlNode *xml_data = NULL;
     xmlNode *rsc_list = NULL;
-    const char *uuid = NULL;
+    crm_node_t *peer = NULL;
 
-    if (lrm_state_is_local(lrm_state)) {
-        crm_node_t *peer = crm_get_peer(0, lrm_state->node_name);
-        xml_state = do_update_node_cib(peer, update_flags, NULL, __FUNCTION__);
-        uuid = fsa_our_uuid;
+    peer = crm_get_peer_full(0, lrm_state->node_name, CRM_GET_PEER_ANY);
+    CRM_CHECK(peer != NULL, return NULL);
 
-    } else {
-        xml_state = simple_remote_node_status(lrm_state->node_name, NULL, __FUNCTION__);
-        uuid = lrm_state->node_name;
-    }
+    xml_state = do_update_node_cib(peer, update_flags, NULL, __FUNCTION__);
 
     xml_data = create_xml_node(xml_state, XML_CIB_TAG_LRM);
-    crm_xml_add(xml_data, XML_ATTR_ID, uuid);
+    crm_xml_add(xml_data, XML_ATTR_ID, peer->uuid);
     rsc_list = create_xml_node(xml_data, XML_LRM_TAG_RESOURCES);
 
     /* Build a list of active (not always running) resources */
