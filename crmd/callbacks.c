@@ -133,7 +133,9 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
 
             } else if(safe_str_eq(CRM_NODE_MEMBER, node->state)) {
                 appeared = TRUE;
-                remove_stonith_cleanup(node->uname);
+                if (!is_set(node->flags, crm_remote_node)) {
+                    remove_stonith_cleanup(node->uname);
+                }
             }
 
             crmd_notify_node_event(node);

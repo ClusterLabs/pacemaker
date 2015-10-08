@@ -340,7 +340,9 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
             }
 
             /* Assume it was our leader if we dont currently have one */
-        } else if (fsa_our_dc == NULL || safe_str_eq(fsa_our_dc, st_event->target)) {
+        } else if (((fsa_our_dc == NULL) || safe_str_eq(fsa_our_dc, st_event->target))
+            && !is_set(peer->flags, crm_remote_node)) {
+
             crm_notice("Target %s our leader %s (recorded: %s)",
                        fsa_our_dc ? "was" : "may have been", st_event->target,
                        fsa_our_dc ? fsa_our_dc : "<unset>");
