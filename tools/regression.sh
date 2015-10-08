@@ -295,7 +295,73 @@ function test_tools() {
     desc="Clear implicit constraints for dummy on node2"
     cmd="crm_resource -r dummy -U -N node2"
     test_assert 0
- }
+
+    desc="Drop the status section"
+    cmd="cibadmin -R -o status --xml-text '<status/>'"
+    test_assert 0 0
+    
+    desc="Create a clone"
+    cmd="cibadmin -C -o resources --xml-text '<clone id=\"test-clone\"><primitive id=\"test-primitive\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/></clone>'"
+    test_assert 0 0
+
+    desc="Create a resource meta attribute"
+    cmd="crm_resource -r test-primitive --meta -p is-managed -v false"
+    test_assert 0
+
+    desc="Create a resource meta attribute in the primitive"
+    cmd="crm_resource -r test-primitive --meta -p is-managed -v false --force"
+    test_assert 0
+
+    desc="Update resource meta attribute with duplicates"
+    cmd="crm_resource -r test-clone --meta -p is-managed -v true"
+    test_assert 0
+
+    desc="Update resource meta attribute with duplicates (force clone)"
+    cmd="crm_resource -r test-clone --meta -p is-managed -v true --force"
+    test_assert 0
+
+    desc="Update child resource meta attribute with duplicates"
+    cmd="crm_resource -r test-primitive --meta -p is-managed -v false"
+    test_assert 0
+
+    desc="Delete resource meta attribute with duplicates"
+    cmd="crm_resource -r test-clone --meta -d is-managed"
+    test_assert 0
+
+    desc="Delete resource meta attribute in parent"
+    cmd="crm_resource -r test-primitive --meta -d is-managed"
+    test_assert 0
+
+    desc="Create a resource meta attribute in the primitive"
+    cmd="crm_resource -r test-primitive --meta -p is-managed -v false --force"
+    test_assert 0
+
+    desc="Update existing resource meta attribute"
+    cmd="crm_resource -r test-clone --meta -p is-managed -v true"
+    test_assert 0
+    
+    desc="Create a resource meta attribute in the parent"
+    cmd="crm_resource -r test-clone --meta -p is-managed -v true --force"
+    test_assert 0
+
+    desc="Copy resources"
+    cmd="cibadmin -Q -o resources > /tmp/$$.resources.xml"
+    test_assert 0 0
+
+    desc="Delete resource paremt meta attribute (force)"
+    cmd="crm_resource -r test-clone --meta -d is-managed --force"
+    test_assert 0
+
+    desc="Restore duplicates"
+    cmd="cibadmin -R -o resources --xml-file /tmp/$$.resources.xml"
+    test_assert 0
+
+    desc="Delete resource child meta attribute"
+    cmd="crm_resource -r test-primitive --meta -d is-managed"
+    test_assert 0
+
+    rm -f /tmp/$$.existing.xml /tmp/$$.resources.xml
+}
 
 function test_dates() {
     desc="2014-01-01 00:30:00 - 1 Hour"

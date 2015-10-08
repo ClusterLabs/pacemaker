@@ -626,6 +626,7 @@ Deleted nodes attribute: id=nodes-node1-standby name=standby
 =#=#=#= End test: Create a resource - OK (0) =#=#=#=
 * Passed: cibadmin       - Create a resource
 =#=#=#= Begin test: Create a resource meta attribute =#=#=#=
+
 Set 'dummy' option: id=dummy-meta_attributes-is-managed set=dummy-meta_attributes name=is-managed=false
 =#=#=#= Current cib after: Create a resource meta attribute =#=#=#=
 <cib epoch="15" num_updates="0" admin_epoch="1">
@@ -729,6 +730,7 @@ Deleted 'dummy' option: id=dummy-meta_attributes-is-managed name=is-managed
 =#=#=#= End test: Remove a resource meta attribute - OK (0) =#=#=#=
 * Passed: crm_resource   - Remove a resource meta attribute
 =#=#=#= Begin test: Create a resource attribute =#=#=#=
+
 Set 'dummy' option: id=dummy-instance_attributes-delay set=dummy-instance_attributes name=delay=10s
 =#=#=#= Current cib after: Create a resource attribute =#=#=#=
 <cib epoch="17" num_updates="0" admin_epoch="1">
@@ -2263,3 +2265,652 @@ Online: [ node1 node2 node3 ]
 </cib>
 =#=#=#= End test: Clear implicit constraints for dummy on node2 - OK (0) =#=#=#=
 * Passed: crm_resource   - Clear implicit constraints for dummy on node2
+=#=#=#= Begin test: Drop the status section =#=#=#=
+=#=#=#= End test: Drop the status section - OK (0) =#=#=#=
+* Passed: cibadmin       - Drop the status section
+=#=#=#= Begin test: Create a clone =#=#=#=
+=#=#=#= End test: Create a clone - OK (0) =#=#=#=
+* Passed: cibadmin       - Create a clone
+=#=#=#= Begin test: Create a resource meta attribute =#=#=#=
+
+Performing update of 'is-managed' on 'test-clone', the parent of 'test-primitive'
+Set 'test-clone' option: id=test-clone-meta_attributes-is-managed set=test-clone-meta_attributes name=is-managed=false
+=#=#=#= Current cib after: Create a resource meta attribute =#=#=#=
+<cib epoch="29" num_updates="0" admin_epoch="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+      <primitive id="Fence" class="stonith" type="fence_true"/>
+      <clone id="test-clone">
+        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy"/>
+        <meta_attributes id="test-clone-meta_attributes">
+          <nvpair id="test-clone-meta_attributes-is-managed" name="is-managed" value="false"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Create a resource meta attribute - OK (0) =#=#=#=
+* Passed: crm_resource   - Create a resource meta attribute
+=#=#=#= Begin test: Create a resource meta attribute in the primitive =#=#=#=
+Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed set=test-primitive-meta_attributes name=is-managed=false
+=#=#=#= Current cib after: Create a resource meta attribute in the primitive =#=#=#=
+<cib epoch="30" num_updates="0" admin_epoch="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+      <primitive id="Fence" class="stonith" type="fence_true"/>
+      <clone id="test-clone">
+        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
+          <meta_attributes id="test-primitive-meta_attributes">
+            <nvpair id="test-primitive-meta_attributes-is-managed" name="is-managed" value="false"/>
+          </meta_attributes>
+        </primitive>
+        <meta_attributes id="test-clone-meta_attributes">
+          <nvpair id="test-clone-meta_attributes-is-managed" name="is-managed" value="false"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Create a resource meta attribute in the primitive - OK (0) =#=#=#=
+* Passed: crm_resource   - Create a resource meta attribute in the primitive
+=#=#=#= Begin test: Update resource meta attribute with duplicates =#=#=#=
+Multiple attributes match name=is-managed
+  Value: false 	(id=test-primitive-meta_attributes-is-managed)
+  Value: false 	(id=test-clone-meta_attributes-is-managed)
+
+A value for 'is-managed' already exists in child 'test-primitive', performing update on that instead of 'test-clone'
+Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed=true
+=#=#=#= Current cib after: Update resource meta attribute with duplicates =#=#=#=
+<cib epoch="31" num_updates="0" admin_epoch="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+      <primitive id="Fence" class="stonith" type="fence_true"/>
+      <clone id="test-clone">
+        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
+          <meta_attributes id="test-primitive-meta_attributes">
+            <nvpair id="test-primitive-meta_attributes-is-managed" name="is-managed" value="true"/>
+          </meta_attributes>
+        </primitive>
+        <meta_attributes id="test-clone-meta_attributes">
+          <nvpair id="test-clone-meta_attributes-is-managed" name="is-managed" value="false"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Update resource meta attribute with duplicates - OK (0) =#=#=#=
+* Passed: crm_resource   - Update resource meta attribute with duplicates
+=#=#=#= Begin test: Update resource meta attribute with duplicates (force clone) =#=#=#=
+Set 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-managed=true
+=#=#=#= Current cib after: Update resource meta attribute with duplicates (force clone) =#=#=#=
+<cib epoch="32" num_updates="0" admin_epoch="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+      <primitive id="Fence" class="stonith" type="fence_true"/>
+      <clone id="test-clone">
+        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
+          <meta_attributes id="test-primitive-meta_attributes">
+            <nvpair id="test-primitive-meta_attributes-is-managed" name="is-managed" value="true"/>
+          </meta_attributes>
+        </primitive>
+        <meta_attributes id="test-clone-meta_attributes">
+          <nvpair id="test-clone-meta_attributes-is-managed" name="is-managed" value="true"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Update resource meta attribute with duplicates (force clone) - OK (0) =#=#=#=
+* Passed: crm_resource   - Update resource meta attribute with duplicates (force clone)
+=#=#=#= Begin test: Update child resource meta attribute with duplicates =#=#=#=
+Multiple attributes match name=is-managed
+  Value: true 	(id=test-primitive-meta_attributes-is-managed)
+  Value: true 	(id=test-clone-meta_attributes-is-managed)
+
+Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed=false
+=#=#=#= Current cib after: Update child resource meta attribute with duplicates =#=#=#=
+<cib epoch="33" num_updates="0" admin_epoch="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+      <primitive id="Fence" class="stonith" type="fence_true"/>
+      <clone id="test-clone">
+        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
+          <meta_attributes id="test-primitive-meta_attributes">
+            <nvpair id="test-primitive-meta_attributes-is-managed" name="is-managed" value="false"/>
+          </meta_attributes>
+        </primitive>
+        <meta_attributes id="test-clone-meta_attributes">
+          <nvpair id="test-clone-meta_attributes-is-managed" name="is-managed" value="true"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Update child resource meta attribute with duplicates - OK (0) =#=#=#=
+* Passed: crm_resource   - Update child resource meta attribute with duplicates
+=#=#=#= Begin test: Delete resource meta attribute with duplicates =#=#=#=
+Multiple attributes match name=is-managed
+  Value: false 	(id=test-primitive-meta_attributes-is-managed)
+  Value: true 	(id=test-clone-meta_attributes-is-managed)
+
+A value for 'is-managed' already exists in child 'test-primitive', performing delete on that instead of 'test-clone'
+Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed
+=#=#=#= Current cib after: Delete resource meta attribute with duplicates =#=#=#=
+<cib epoch="34" num_updates="0" admin_epoch="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+      <primitive id="Fence" class="stonith" type="fence_true"/>
+      <clone id="test-clone">
+        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
+          <meta_attributes id="test-primitive-meta_attributes"/>
+        </primitive>
+        <meta_attributes id="test-clone-meta_attributes">
+          <nvpair id="test-clone-meta_attributes-is-managed" name="is-managed" value="true"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Delete resource meta attribute with duplicates - OK (0) =#=#=#=
+* Passed: crm_resource   - Delete resource meta attribute with duplicates
+=#=#=#= Begin test: Delete resource meta attribute in parent =#=#=#=
+Performing delete of 'is-managed' on 'test-clone', the parent of 'test-primitive'
+Deleted 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-managed
+=#=#=#= Current cib after: Delete resource meta attribute in parent =#=#=#=
+<cib epoch="35" num_updates="0" admin_epoch="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+      <primitive id="Fence" class="stonith" type="fence_true"/>
+      <clone id="test-clone">
+        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
+          <meta_attributes id="test-primitive-meta_attributes"/>
+        </primitive>
+        <meta_attributes id="test-clone-meta_attributes"/>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Delete resource meta attribute in parent - OK (0) =#=#=#=
+* Passed: crm_resource   - Delete resource meta attribute in parent
+=#=#=#= Begin test: Create a resource meta attribute in the primitive =#=#=#=
+Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed set=test-primitive-meta_attributes name=is-managed=false
+=#=#=#= Current cib after: Create a resource meta attribute in the primitive =#=#=#=
+<cib epoch="36" num_updates="0" admin_epoch="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+      <primitive id="Fence" class="stonith" type="fence_true"/>
+      <clone id="test-clone">
+        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
+          <meta_attributes id="test-primitive-meta_attributes">
+            <nvpair id="test-primitive-meta_attributes-is-managed" name="is-managed" value="false"/>
+          </meta_attributes>
+        </primitive>
+        <meta_attributes id="test-clone-meta_attributes"/>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Create a resource meta attribute in the primitive - OK (0) =#=#=#=
+* Passed: crm_resource   - Create a resource meta attribute in the primitive
+=#=#=#= Begin test: Update existing resource meta attribute =#=#=#=
+A value for 'is-managed' already exists in child 'test-primitive', performing update on that instead of 'test-clone'
+Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed=true
+=#=#=#= Current cib after: Update existing resource meta attribute =#=#=#=
+<cib epoch="37" num_updates="0" admin_epoch="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+      <primitive id="Fence" class="stonith" type="fence_true"/>
+      <clone id="test-clone">
+        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
+          <meta_attributes id="test-primitive-meta_attributes">
+            <nvpair id="test-primitive-meta_attributes-is-managed" name="is-managed" value="true"/>
+          </meta_attributes>
+        </primitive>
+        <meta_attributes id="test-clone-meta_attributes"/>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Update existing resource meta attribute - OK (0) =#=#=#=
+* Passed: crm_resource   - Update existing resource meta attribute
+=#=#=#= Begin test: Create a resource meta attribute in the parent =#=#=#=
+Set 'test-clone' option: id=test-clone-meta_attributes-is-managed set=test-clone-meta_attributes name=is-managed=true
+=#=#=#= Current cib after: Create a resource meta attribute in the parent =#=#=#=
+<cib epoch="38" num_updates="0" admin_epoch="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+      <primitive id="Fence" class="stonith" type="fence_true"/>
+      <clone id="test-clone">
+        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
+          <meta_attributes id="test-primitive-meta_attributes">
+            <nvpair id="test-primitive-meta_attributes-is-managed" name="is-managed" value="true"/>
+          </meta_attributes>
+        </primitive>
+        <meta_attributes id="test-clone-meta_attributes">
+          <nvpair id="test-clone-meta_attributes-is-managed" name="is-managed" value="true"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Create a resource meta attribute in the parent - OK (0) =#=#=#=
+* Passed: crm_resource   - Create a resource meta attribute in the parent
+=#=#=#= Begin test: Copy resources =#=#=#=
+=#=#=#= End test: Copy resources - OK (0) =#=#=#=
+* Passed: cibadmin       - Copy resources
+=#=#=#= Begin test: Delete resource paremt meta attribute (force) =#=#=#=
+Deleted 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-managed
+=#=#=#= Current cib after: Delete resource paremt meta attribute (force) =#=#=#=
+<cib epoch="39" num_updates="0" admin_epoch="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+      <primitive id="Fence" class="stonith" type="fence_true"/>
+      <clone id="test-clone">
+        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
+          <meta_attributes id="test-primitive-meta_attributes">
+            <nvpair id="test-primitive-meta_attributes-is-managed" name="is-managed" value="true"/>
+          </meta_attributes>
+        </primitive>
+        <meta_attributes id="test-clone-meta_attributes"/>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Delete resource paremt meta attribute (force) - OK (0) =#=#=#=
+* Passed: crm_resource   - Delete resource paremt meta attribute (force)
+=#=#=#= Begin test: Restore duplicates =#=#=#=
+=#=#=#= Current cib after: Restore duplicates =#=#=#=
+<cib epoch="40" num_updates="0" admin_epoch="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+      <primitive id="Fence" class="stonith" type="fence_true"/>
+      <clone id="test-clone">
+        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
+          <meta_attributes id="test-primitive-meta_attributes">
+            <nvpair id="test-primitive-meta_attributes-is-managed" name="is-managed" value="true"/>
+          </meta_attributes>
+        </primitive>
+        <meta_attributes id="test-clone-meta_attributes">
+          <nvpair id="test-clone-meta_attributes-is-managed" name="is-managed" value="true"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Restore duplicates - OK (0) =#=#=#=
+* Passed: cibadmin       - Restore duplicates
+=#=#=#= Begin test: Delete resource child meta attribute =#=#=#=
+Multiple attributes match name=is-managed
+  Value: true 	(id=test-primitive-meta_attributes-is-managed)
+  Value: true 	(id=test-clone-meta_attributes-is-managed)
+
+Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed
+=#=#=#= Current cib after: Delete resource child meta attribute =#=#=#=
+<cib epoch="41" num_updates="0" admin_epoch="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+      <primitive id="Fence" class="stonith" type="fence_true"/>
+      <clone id="test-clone">
+        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
+          <meta_attributes id="test-primitive-meta_attributes"/>
+        </primitive>
+        <meta_attributes id="test-clone-meta_attributes">
+          <nvpair id="test-clone-meta_attributes-is-managed" name="is-managed" value="true"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Delete resource child meta attribute - OK (0) =#=#=#=
+* Passed: crm_resource   - Delete resource child meta attribute
