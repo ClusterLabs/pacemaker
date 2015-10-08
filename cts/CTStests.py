@@ -1693,6 +1693,19 @@ class Reattach(CTSTest):
         self.stopall = SimulStopLite(cm)
         self.is_unsafe = 0 # Handled by canrunnow()
 
+    def _is_managed(self, node):
+        is_managed = self.rsh(node, "crm_attribute -t rsc_defaults -n is-managed -Q -G -d true", 1)
+        is_managed = is_managed[:-1] # Strip off the newline
+        return is_managed == "true"
+
+    def _set_unmanaged(self, node):
+        self.debug("Disable resource management")
+        self.rsh(node, "crm_attribute -t rsc_defaults -n is-managed -v false")
+
+    def _set_managed(self, node):
+        self.debug("Re-enable resource management")
+        self.rsh(node, "crm_attribute -t rsc_defaults -n is-managed -D")
+
     def setup(self, node):
         attempt = 0
         if not self.startall(None):
@@ -1717,17 +1730,11 @@ class Reattach(CTSTest):
         start = StartTest(self.CM)
         start(node)
 
-        is_managed = self.rsh(node, "crm_attribute -Q -G -t crm_config -n is-managed-default -d true", 1)
-        is_managed = is_managed[:-1] # Strip off the newline
-        if is_managed != "true":
-            self.logger.log("Attempting to re-enable resource management on %s (%s)" % (node, is_managed))
-            managed = self.create_watch(["is-managed-default"], 60)
-            managed.setwatch()
-
-            self.rsh(node, "crm_attribute -V -D -n is-managed-default")
-
-            if not managed.lookforall():
-                self.logger.log("Patterns not found: " + repr(managed.unmatched))
+        if not self._is_managed(node):
+            self.logger.log("Attempting to re-enable resource management on %s" % node)
+            self._set_managed(node)
+            self.CM.cluster_stable()
+            if not self._is_managed(node):
                 self.logger.log("Could not re-enable resource management")
                 return 0
 
@@ -1744,11 +1751,12 @@ class Reattach(CTSTest):
         self.incr("calls")
 
         pats = []
-        managed = self.create_watch(["is-managed-default"], 60)
+        # Conveniently, pengine will display this message when disabling management,
+        # even if fencing is not enabled, so we can rely on it.
+        managed = self.create_watch(["Delaying fencing operations"], 60)
         managed.setwatch()
 
-        self.debug("Disable resource management")
-        self.rsh(node, "crm_attribute -V -n is-managed-default -v false")
+        self._set_unmanaged(node)
 
         if not managed.lookforall():
             self.logger.log("Patterns not found: " + repr(managed.unmatched))
@@ -1767,37 +1775,28 @@ class Reattach(CTSTest):
         self.debug("Shutting down the cluster")
         ret = self.stopall(None)
         if not ret:
-            self.debug("Re-enable resource management")
-            self.rsh(node, "crm_attribute -V -D -n is-managed-default")
+            self._set_managed(node)
             return self.failure("Couldn't shut down the cluster")
 
         self.debug("Bringing the cluster back up")
         ret = self.startall(None)
         time.sleep(5) # allow ping to update the CIB
         if not ret:
-            self.debug("Re-enable resource management")
-            self.rsh(node, "crm_attribute -V -D -n is-managed-default")
+            self._set_managed(node)
             return self.failure("Couldn't restart the cluster")
 
         if self.local_badnews("ResourceActivity:", watch):
-            self.debug("Re-enable resource management")
-            self.rsh(node, "crm_attribute -V -D -n is-managed-default")
+            self._set_managed(node)
             return self.failure("Resources stopped or started during cluster restart")
 
         watch = self.create_watch(pats, 60, "StartupActivity")
         watch.setwatch()
 
-        managed = self.create_watch(["is-managed-default"], 60)
-        managed.setwatch()
-
-        self.debug("Re-enable resource management")
-        self.rsh(node, "crm_attribute -V -D -n is-managed-default")
-
-        if not managed.lookforall():
-            self.logger.log("Patterns not found: " + repr(managed.unmatched))
-            return self.failure("Resource management not enabled")
-
+        # Re-enable resource management (and verify it happened).
+        self._set_managed(node)
         self.CM.cluster_stable()
+        if not self._is_managed(node):
+            return self.failure("Could not re-enable resource management")
 
         # Ignore actions for STONITH resources
         ignore = []
@@ -2638,30 +2637,31 @@ class RemoteLXC(CTSTest):
 AllTestClasses.append(RemoteLXC)
 
 
-###################################################################
 class RemoteDriver(CTSTest):
-###################################################################
+
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name = "RemoteDriver"
+        self.name = self.__class__.__name__
         self.is_docker_unsafe = 1
         self.start = StartTest(cm)
         self.startall = SimulStartLite(cm)
         self.stop = StopTest(cm)
+        self.remote_rsc = "remote-rsc"
+        self.cib_cmd = """cibadmin -C -o %s -X '%s' """
+        self.reset()
+
+    def reset(self):
         self.pcmk_started = 0
-        self.failed = 0
+        self.failed = False
         self.fail_string = ""
         self.remote_node_added = 0
         self.remote_rsc_added = 0
-        self.remote_rsc = "remote-rsc"
-        self.remote_use_reconnect_interval = self.Env.RandomGen.choice(["true","false"])
-        self.cib_cmd = """cibadmin -C -o %s -X '%s' """
+        self.remote_use_reconnect_interval = self.Env.RandomGen.choice([True,False])
 
     def fail(self, msg):
         """ Mark test as failed. """
 
-        # TODO: It's a boolean. Use True/False.
-        self.failed = 1
+        self.failed = True
 
         # Always log the failure.
         self.logger.log(msg)
@@ -2700,11 +2700,11 @@ class RemoteDriver(CTSTest):
     <meta_attributes id="remote-meta_attributes"/>
 </primitive>""" % (self.remote_rsc)
         self.add_rsc(node, rsc_xml)
-        if self.failed == 0:
+        if not self.failed:
             self.remote_rsc_added = 1
 
     def add_connection_rsc(self, node):
-        if self.remote_use_reconnect_interval == "true":
+        if self.remote_use_reconnect_interval:
             # use reconnect interval and make sure to set cluster-recheck-interval as well.
             rsc_xml = """
 <primitive class="ocf" id="%s" provider="pacemaker" type="remote">
@@ -2734,7 +2734,7 @@ class RemoteDriver(CTSTest):
 </primitive>""" % (self.remote_node, node)
 
         self.add_rsc(node, rsc_xml)
-        if self.failed == 0:
+        if not self.failed:
             self.remote_node_added = 1
 
     def stop_pcmk_remote(self, node):
@@ -2788,7 +2788,7 @@ class RemoteDriver(CTSTest):
             self.fail("Unmatched patterns: %s" % watch.unmatched)
 
     def migrate_connection(self, node):
-        if self.failed == 1:
+        if self.failed:
             return
 
         pats = [ ]
@@ -2812,7 +2812,7 @@ class RemoteDriver(CTSTest):
             return
 
     def fail_rsc(self, node):
-        if self.failed == 1:
+        if self.failed:
             return
 
         watchpats = [ ]
@@ -2834,7 +2834,7 @@ class RemoteDriver(CTSTest):
             self.fail("Unmatched patterns during rsc fail: %s" % watch.unmatched)
 
     def fail_connection(self, node):
-        if self.failed == 1:
+        if self.failed:
             return
 
         watchpats = [ ]
@@ -2881,7 +2881,7 @@ class RemoteDriver(CTSTest):
             return
 
     def add_dummy_rsc(self, node):
-        if self.failed == 1:
+        if self.failed:
             return
 
         # verify we can put a resource on the remote node
@@ -2907,7 +2907,7 @@ class RemoteDriver(CTSTest):
             self.fail("Unmatched patterns: %s" % watch.unmatched)
 
     def test_attributes(self, node):
-        if self.failed == 1:
+        if self.failed:
             return
 
         # This verifies permanent attributes can be set on a remote-node. It also
@@ -2943,7 +2943,7 @@ class RemoteDriver(CTSTest):
 
         self.set_timer("remoteMetalCleanup")
 
-        if self.remote_use_reconnect_interval == "true":
+        if self.remote_use_reconnect_interval:
             self.debug("Cleaning up re-check interval")
             self.rsh(self.get_othernode(node), self.templates["ClearCheckInterval"])
 
@@ -3013,9 +3013,9 @@ class RemoteDriver(CTSTest):
                 return False
         return True
 
-    def __call__(self, node):
-        '''Perform the 'RemoteBaremetal' test. '''
+    def start_new_test(self, node):
         self.incr("calls")
+        self.reset()
 
         ret = self.startall(None)
         if not ret:
@@ -3024,15 +3024,9 @@ class RemoteDriver(CTSTest):
         self.setup_env(node)
         self.start_metal(node)
         self.add_dummy_rsc(node)
-        self.test_attributes(node)
-        self.cleanup_metal(node)
 
-        self.debug("Waiting for the cluster to recover")
-        self.CM.cluster_stable()
-        if self.failed == 1:
-            return self.failure(self.fail_string)
-
-        return self.success()
+    def __call__(self, node):
+        return self.failure("This base class is not meant to be called directly.")
 
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
@@ -3041,83 +3035,45 @@ class RemoteDriver(CTSTest):
                  """Failed to send remote""",
                 ]
 
-# Remote driver is called by other tests.
+# RemoteDriver is just a base class for other tests, so it is not added to AllTestClasses
 
-###################################################################
-class RemoteBasic(CTSTest):
-###################################################################
-    def __init__(self, cm):
-        CTSTest.__init__(self,cm)
-        self.name = "RemoteBasic"
-        self.start = StartTest(cm)
-        self.startall = SimulStartLite(cm)
-        self.driver = RemoteDriver(cm)
-        self.is_docker_unsafe = 1
+
+class RemoteBasic(RemoteDriver):
 
     def __call__(self, node):
         '''Perform the 'RemoteBaremetal' test. '''
-        self.incr("calls")
 
-        ret = self.startall(None)
-        if not ret:
-            return self.failure("Setup failed, start all nodes failed.")
-
-        self.driver.setup_env(node)
-        self.driver.start_metal(node)
-        self.driver.add_dummy_rsc(node)
-        self.driver.test_attributes(node)
-        self.driver.cleanup_metal(node)
+        self.start_new_test(node)
+        self.test_attributes(node)
+        self.cleanup_metal(node)
 
         self.debug("Waiting for the cluster to recover")
         self.CM.cluster_stable()
-        if self.driver.failed == 1:
-            return self.failure(self.driver.fail_string)
+        if self.failed:
+            return self.failure(self.fail_string)
 
         return self.success()
-
-    def is_applicable(self):
-        return self.driver.is_applicable()
-
-    def errorstoignore(self):
-        return self.driver.errorstoignore()
 
 AllTestClasses.append(RemoteBasic)
 
-###################################################################
-class RemoteStonithd(CTSTest):
-###################################################################
-    def __init__(self, cm):
-        CTSTest.__init__(self,cm)
-        self.name = "RemoteStonithd"
-        self.start = StartTest(cm)
-        self.startall = SimulStartLite(cm)
-        self.driver = RemoteDriver(cm)
-        self.is_docker_unsafe = 1
+class RemoteStonithd(RemoteDriver):
 
     def __call__(self, node):
         '''Perform the 'RemoteStonithd' test. '''
-        self.incr("calls")
 
-        ret = self.startall(None)
-        if not ret:
-            return self.failure("Setup failed, start all nodes failed.")
-
-        self.driver.setup_env(node)
-        self.driver.start_metal(node)
-        self.driver.add_dummy_rsc(node)
-
-        self.driver.fail_connection(node)
-        self.driver.cleanup_metal(node)
+        self.start_new_test(node)
+        self.fail_connection(node)
+        self.cleanup_metal(node)
 
         self.debug("Waiting for the cluster to recover")
         self.CM.cluster_stable()
-        if self.driver.failed == 1:
-            return self.failure(self.driver.fail_string)
+        if self.failed:
+            return self.failure(self.fail_string)
 
         return self.success()
 
     def is_applicable(self):
-        if not self.driver.is_applicable():
+        if not RemoteDriver.is_applicable(self):
             return False
 
         if "DoFencing" in self.Env.keys():
@@ -3134,101 +3090,59 @@ class RemoteStonithd(CTSTest):
             r"error.*: Resource .*ocf::.* is active on 2 nodes attempting recovery",
         ]
 
-        ignore_pats.extend(self.driver.errorstoignore())
+        ignore_pats.extend(RemoteDriver.errorstoignore(self))
         return ignore_pats
 
 AllTestClasses.append(RemoteStonithd)
 
-###################################################################
-class RemoteMigrate(CTSTest):
-###################################################################
-    def __init__(self, cm):
-        CTSTest.__init__(self,cm)
-        self.name = "RemoteMigrate"
-        self.start = StartTest(cm)
-        self.startall = SimulStartLite(cm)
-        self.driver = RemoteDriver(cm)
-        self.is_docker_unsafe = 1
+
+class RemoteMigrate(RemoteDriver):
 
     def __call__(self, node):
         '''Perform the 'RemoteMigrate' test. '''
-        self.incr("calls")
 
-        ret = self.startall(None)
-        if not ret:
-            return self.failure("Setup failed, start all nodes failed.")
-
-        self.driver.setup_env(node)
-        self.driver.start_metal(node)
-        self.driver.add_dummy_rsc(node)
-        self.driver.migrate_connection(node)
-        self.driver.cleanup_metal(node)
+        self.start_new_test(node)
+        self.migrate_connection(node)
+        self.cleanup_metal(node)
 
         self.debug("Waiting for the cluster to recover")
         self.CM.cluster_stable()
-        if self.driver.failed == 1:
-            return self.failure(self.driver.fail_string)
+        if self.failed:
+            return self.failure(self.fail_string)
 
         return self.success()
-
-    def is_applicable(self):
-        return self.driver.is_applicable()
-
-    def errorstoignore(self):
-        return self.driver.errorstoignore()
 
 AllTestClasses.append(RemoteMigrate)
 
 
-###################################################################
-class RemoteRscFailure(CTSTest):
-###################################################################
-    def __init__(self, cm):
-
-        # fail a rsc on a remote node, verify recovery.
-        CTSTest.__init__(self,cm)
-        self.name = "RemoteRscFailure"
-        self.start = StartTest(cm)
-        self.startall = SimulStartLite(cm)
-        self.driver = RemoteDriver(cm)
-        self.is_docker_unsafe = 1
+class RemoteRscFailure(RemoteDriver):
 
     def __call__(self, node):
         '''Perform the 'RemoteRscFailure' test. '''
-        self.incr("calls")
 
-        ret = self.startall(None)
-        if not ret:
-            return self.failure("Setup failed, start all nodes failed.")
-
-        self.driver.setup_env(node)
-        self.driver.start_metal(node)
-        self.driver.add_dummy_rsc(node)
+        self.start_new_test(node)
 
         # This is an important step. We are migrating the connection
         # before failing the resource. This verifies that the migration
         # has properly maintained control over the remote-node.
-        self.driver.migrate_connection(node)
+        self.migrate_connection(node)
 
-        self.driver.fail_rsc(node)
-        self.driver.cleanup_metal(node)
+        self.fail_rsc(node)
+        self.cleanup_metal(node)
 
         self.debug("Waiting for the cluster to recover")
         self.CM.cluster_stable()
-        if self.driver.failed == 1:
-            return self.failure(self.driver.fail_string)
+        if self.failed:
+            return self.failure(self.fail_string)
 
         return self.success()
-
-    def is_applicable(self):
-        return self.driver.is_applicable()
 
     def errorstoignore(self):
         ignore_pats = [
             r"pengine.*: Recover remote-rsc\s*\(.*\)",
         ]
 
-        ignore_pats.extend(self.driver.errorstoignore())
+        ignore_pats.extend(RemoteDriver.errorstoignore(self))
         return ignore_pats
 
 AllTestClasses.append(RemoteRscFailure)
