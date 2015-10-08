@@ -190,6 +190,64 @@ find_resource_attr(cib_t * the_cib, const char *attr, const char *rsc, const cha
     return rc;
 }
 
+static resource_t *
+find_matching_attr_resource(resource_t * rsc, const char * rsc_id, const char * attr_set, const char * attr_id,
+                            const char * attr_name, cib_t * cib, const char * cmd)
+{
+    int rc = pcmk_ok;
+    char *lookup_id = NULL;
+    char *local_attr_id = NULL;
+
+    if(rsc->parent && do_force == FALSE) {
+
+        switch(rsc->parent->variant) {
+            case pe_group:
+                if (BE_QUIET == FALSE) {
+                    printf("Performing %s of '%s' for '%s' will not apply to its peers in '%s'\n", cmd, attr_name, rsc_id, rsc->parent->id);
+                }
+                break;
+            case pe_master:
+            case pe_clone:
+
+                rc = find_resource_attr(cib, XML_ATTR_ID, rsc_id, attr_set_type, attr_set, attr_id, attr_name, &local_attr_id);
+                free(local_attr_id);
+
+                if(rc != pcmk_ok) {
+                    rsc = rsc->parent;
+                    if (BE_QUIET == FALSE) {
+                        printf("Performing %s of '%s' on '%s', the parent of '%s'\n", cmd, attr_name, rsc->id, rsc_id);
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+
+    } else if (rsc->parent && BE_QUIET == FALSE) {
+        printf("Forcing %s of '%s' for '%s' instead of '%s'\n", cmd, attr_name, rsc_id, rsc->parent->id);
+
+    } else if(rsc->parent == NULL && rsc->children) {
+        resource_t *child = rsc->children->data;
+
+        if(child->variant == pe_native) {
+            lookup_id = clone_strip(child->id); /* Could be a cloned group! */
+            rc = find_resource_attr(cib, XML_ATTR_ID, lookup_id, attr_set_type, attr_set, attr_id, attr_name, &local_attr_id);
+
+            if(rc == pcmk_ok) {
+                rsc = child;
+                if (BE_QUIET == FALSE) {
+                    printf("A value for '%s' already exists in child '%s', performing %s on that instead of '%s'\n", attr_name, lookup_id, cmd, rsc_id);
+                }
+            }
+
+            free(local_attr_id);
+            free(lookup_id);
+        }
+    }
+
+    return rsc;
+}
+
 int
 cli_resource_update_attribute(const char *rsc_id, const char *attr_set, const char *attr_id,
                   const char *attr_name, const char *attr_value, bool recursive,
@@ -228,51 +286,8 @@ cli_resource_update_attribute(const char *rsc_id, const char *attr_set, const ch
             }
         }
 
-    } else if(rsc->parent && do_force == FALSE) {
-
-        switch(rsc->parent->variant) {
-            case pe_group:
-                if (BE_QUIET == FALSE) {
-                    printf("Updating '%s' for '%s' will not apply to its peers in '%s'\n", attr_name, rsc_id, rsc->parent->id);
-                }
-                break;
-            case pe_master:
-            case pe_clone:
-
-                rc = find_resource_attr(cib, XML_ATTR_ID, rsc_id, attr_set_type, attr_set, attr_id, attr_name, &local_attr_id);
-                free(local_attr_id);
-
-                if(rc != pcmk_ok) {
-                    rsc = rsc->parent;
-                    if (BE_QUIET == FALSE) {
-                        printf("Updating '%s' on '%s', the parent of '%s'\n", attr_name, rsc->id, rsc_id);
-                    }
-                }
-                break;
-            default:
-                break;
-        }
-
-    } else if (rsc->parent && BE_QUIET == FALSE) {
-        printf("Forcing update of '%s' for '%s' instead of '%s'\n", attr_name, rsc_id, rsc->parent->id);
-
-    } else if(rsc->parent == NULL && rsc->children) {
-        resource_t *child = rsc->children->data;
-
-        if(child->variant == pe_native) {
-            lookup_id = clone_strip(child->id); /* Could be a cloned group! */
-            rc = find_resource_attr(cib, XML_ATTR_ID, lookup_id, attr_set_type, attr_set, attr_id, attr_name, &local_attr_id);
-
-            if(rc == pcmk_ok) {
-                rsc = child;
-                if (BE_QUIET == FALSE) {
-                    printf("A value for '%s' already exists in child '%s', updating that instead of '%s'\n", attr_name, lookup_id, rsc_id);
-                }
-            }
-
-            free(local_attr_id);
-            free(lookup_id);
-        }
+    } else {
+        rsc = find_matching_attr_resource(rsc, rsc_id, attr_set, attr_id, attr_name, cib, "update");
     }
 
     lookup_id = clone_strip(rsc->id); /* Could be a cloned group! */
@@ -404,25 +419,8 @@ cli_resource_delete_attribute(const char *rsc_id, const char *attr_set, const ch
         return -ENXIO;
     }
 
-    if(rsc->parent && safe_str_eq(attr_set_type, XML_TAG_META_SETS)) {
-
-        switch(rsc->parent->variant) {
-            case pe_group:
-                if (BE_QUIET == FALSE) {
-                    printf("Removing '%s' for '%s' will not apply to its peers in '%s'\n", attr_name, rsc_id, rsc->parent->id);
-                }
-                break;
-            case pe_master:
-            case pe_clone:
-                rsc = rsc->parent;
-                if (BE_QUIET == FALSE) {
-                    printf("Removing '%s' from '%s' for '%s'...\n", attr_name, rsc->id, rsc_id);
-                }
-                break;
-            default:
-                break;
-        }
-
+    if(safe_str_eq(attr_set_type, XML_TAG_META_SETS)) {
+        rsc = find_matching_attr_resource(rsc, rsc_id, attr_set, attr_id, attr_name, cib, "delete");
     }
 
     lookup_id = clone_strip(rsc->id);
