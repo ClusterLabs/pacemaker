@@ -787,13 +787,13 @@ crm_update_peer_expected(const char *source, crm_node_t * node, const char *expe
  * \param[in] node        Node object to update
  * \param[in] state       Node's new state
  * \param[in] membership  Node's new membership ID
+ * \param[in] iter        If not NULL, pointer to node's peer cache iterator
  *
  * \return NULL if any node was reaped, value of node otherwise
  *
  * \note If this function returns NULL, the supplied node object was likely
- *       freed and should not be used again. This function should not be
- *       called within a cache iteration if reaping is possible,
- *       otherwise reaping could invalidate the iterator.
+ *       freed and should not be used again. This function may be called from
+ *       within a peer cache iteration if the iterator is supplied.
  */
 static crm_node_t *
 crm_update_peer_state_iter(const char *source, crm_node_t * node, const char *state, int membership, GHashTableIter *iter)
@@ -821,13 +821,14 @@ crm_update_peer_state_iter(const char *source, crm_node_t * node, const char *st
         }
         free(last);
 
-        if (!is_member && crm_autoreap) {
+        if (crm_autoreap && !is_member && !is_set(node->flags, crm_remote_node)) {
+            /* We only autoreap from the peer cache, not the remote peer cache,
+             * because the latter should be managed only by
+             * crm_remote_peer_cache_refresh().
+             */
             if(iter) {
                 crm_notice("Purged 1 peer with id=%u and/or uname=%s from the membership cache", node->id, node->uname);
                 g_hash_table_iter_remove(iter);
-
-            } else if (status_type == crm_status_rstate) {
-                crm_remote_peer_cache_remove(node->uname);
 
             } else {
                 reap_crm_member(node->id, node->uname);
@@ -842,6 +843,21 @@ crm_update_peer_state_iter(const char *source, crm_node_t * node, const char *st
     return node;
 }
 
+/*!
+ * \brief Update a node's state and membership information
+ *
+ * \param[in] source      Caller's function name (for log messages)
+ * \param[in] node        Node object to update
+ * \param[in] state       Node's new state
+ * \param[in] membership  Node's new membership ID
+ *
+ * \return NULL if any node was reaped, value of node otherwise
+ *
+ * \note If this function returns NULL, the supplied node object was likely
+ *       freed and should not be used again. This function should not be
+ *       called within a cache iteration if reaping is possible,
+ *       otherwise reaping could invalidate the iterator.
+ */
 crm_node_t *
 crm_update_peer_state(const char *source, crm_node_t * node, const char *state, int membership)
 {
