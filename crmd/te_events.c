@@ -395,6 +395,11 @@ get_cancel_action(const char *id, const char *node)
  * \return Matching event if found, NULL otherwise
  *
  * \note "Down" events are CRM_OP_FENCE and CRM_OP_SHUTDOWN.
+ * \todo This should detect normal pacemaker_remote node stop events,
+ *       where action->type is action_type_rsc,
+ *       XML_LRM_ATTR_TASK is CRMD_ACTION_STOP,
+ *       and the affected resource creates a remote node that matches target.
+ *       Then, peer_update_callback() could ignore these.
  */
 crm_action_t *
 match_down_event(int id, const char *target, const char *filter, bool quiet)

@@ -107,13 +107,14 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
     uint32_t old = 0;
     uint32_t changed = 0;
     bool appeared = FALSE;
+    bool is_remote = is_set(node->flags, crm_remote_node);
     const char *status = NULL;
 
     /* Crmd waits to receive some information from the membership layer before
      * declaring itself operational. If this is being called for a cluster node,
      * indicate that we have it.
      */
-    if (!is_set(node->flags, crm_remote_node)) {
+    if (!is_remote) {
         set_bit(fsa_input_register, R_PEER_DATA);
     }
 
@@ -126,21 +127,21 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             /* If we've never seen the node, then it also wont be in the status section */
             crm_info("%s is now %s", node->uname, state_text(node->state));
             return;
+
         case crm_status_rstate:
-            crm_info("Remote node %s is now %s (was %s)",
-                     node->uname, state_text(node->state), state_text(data));
-            /* Keep going */
         case crm_status_nstate:
-            crm_info("%s is now %s (was %s)",
+            /* This callback should not be called unless the state actually
+             * changed, but here's a failsafe just in case.
+             */
+            CRM_CHECK(safe_str_neq(data, node->state), return);
+
+            crm_info("%s node %s is now %s (was %s)",
+                     (is_remote? "Remote" : "Cluster"),
                      node->uname, state_text(node->state), state_text(data));
 
-            if (safe_str_eq(data, node->state)) {
-                /* State did not change */
-                return;
-
-            } else if(safe_str_eq(CRM_NODE_MEMBER, node->state)) {
+            if (safe_str_eq(CRM_NODE_MEMBER, node->state)) {
                 appeared = TRUE;
-                if (!is_set(node->flags, crm_remote_node)) {
+                if (!is_remote) {
                     remove_stonith_cleanup(node->uname);
                 }
             }
@@ -197,7 +198,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
     if (AM_I_DC) {
         xmlNode *update = NULL;
         int flags = node_update_peer;
-        gboolean alive = crm_is_peer_active(node);
+        gboolean alive = is_remote? appeared : crm_is_peer_active(node);
         crm_action_t *down = match_down_event(0, node->uuid, NULL, appeared);
 
         crm_trace("Alive=%d, appear=%d, down=%p", alive, appeared, down);
@@ -220,30 +221,56 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 /* down->confirmed = TRUE; Only stonith-ng returning should imply completion */
                 stop_te_timer(down->timer);
 
-                flags |= node_update_join | node_update_expected;
-                crmd_peer_down(node, FALSE);
-                check_join_state(fsa_state, __FUNCTION__);
+                if (!is_remote) {
+                    flags |= node_update_join | node_update_expected;
+                    crmd_peer_down(node, FALSE);
+                    check_join_state(fsa_state, __FUNCTION__);
+                }
 
                 update_graph(transition_graph, down);
                 trigger_graph();
 
             } else {
-                crm_trace("Other %p", down);
+                crm_trace("Node %s came up, was expected %s (op %d)",
+                          node->uname, task, down->id);
             }
 
         } else if (appeared == FALSE) {
+            /* match_down_event() doesn't match resource stop events for
+             * pacemaker_remote nodes, so normal pacemaker_remote node stops
+             * will come here and get ugly log messages, but otherwise be OK.
+             * We can't skip this entirely for pacemaker_remote nodes,
+             * because monitor failures will also end up here.
+             */
             crm_notice("Stonith/shutdown of %s not matched", node->uname);
 
-            crm_update_peer_join(__FUNCTION__, node, crm_join_none);
-            check_join_state(fsa_state, __FUNCTION__);
+            if (!is_remote) {
+                crm_update_peer_join(__FUNCTION__, node, crm_join_none);
+                check_join_state(fsa_state, __FUNCTION__);
+            }
 
             abort_transition(INFINITY, tg_restart, "Node failure", NULL);
             fail_incompletable_actions(transition_graph, node->uuid);
 
         } else {
-            crm_trace("Other %p", down);
+            crm_trace("Node %s came up, was not expected to be down",
+                      node->uname);
         }
 
+        if (is_remote) {
+            /* A pacemaker_remote node won't have its cluster status updated
+             * in the CIB by membership-layer callbacks, so do it here.
+             */
+            flags |= node_update_cluster;
+
+            /* Trigger resource placement on newly integrated nodes */
+            if (appeared) {
+                abort_transition(INFINITY, tg_restart,
+                                 "pacemaker_remote node integrated", NULL);
+            }
+        }
+
+        /* Update the CIB node state */
         update = do_update_node_cib(node, flags, NULL, __FUNCTION__);
         fsa_cib_anon_update(XML_CIB_TAG_STATUS, update,
                             cib_scope_local | cib_quorum_override | cib_can_create);
