@@ -457,6 +457,7 @@ crm_node_t *crm_update_peer_proc(const char *source, crm_node_t * peer,
 crm_node_t *crm_update_peer_state(const char *source, crm_node_t * node,
                                   const char *state, int membership);
 
+void crm_update_peer_uname(crm_node_t *node, const char *uname);
 void crm_update_peer_expected(const char *source, crm_node_t * node, const char *expected);
 void crm_reap_unseen_nodes(uint64_t ring_id);
 
