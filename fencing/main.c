@@ -1233,7 +1233,7 @@ struct qb_ipcs_service_handlers ipc_callbacks = {
 static void
 st_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
 {
-    if (type != crm_status_processes) {
+    if ((type != crm_status_processes) && !is_set(node->flags, crm_remote_node)) {
         /*
          * This is a hack until we can send to a nodeid and/or we fix node name lookups
          * These messages are ignored in stonith_peer_callback()
