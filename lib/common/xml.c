@@ -587,6 +587,7 @@ pcmkRegisterNode(xmlNodePtr node)
             break;
         case XML_TEXT_NODE:
         case XML_DTD_NODE:
+        case XML_CDATA_SECTION_NODE:
             break;
         default:
             /* Ignore */
