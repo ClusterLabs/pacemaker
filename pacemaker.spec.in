@@ -414,13 +414,11 @@ exit 0
 %{_sbindir}/crm_attribute
 %{_sbindir}/crm_master
 %{_sbindir}/crm_node
-%{_sbindir}/attrd_updater
 %{_sbindir}/fence_legacy
 %{_sbindir}/fence_pcmk
 %{_sbindir}/stonith_admin
 
 %doc %{_mandir}/man7/*
-%doc %{_mandir}/man8/attrd_updater.*
 %doc %{_mandir}/man8/crm_attribute.*
 %doc %{_mandir}/man8/crm_node.*
 %doc %{_mandir}/man8/crm_master.*
@@ -468,6 +466,7 @@ exit 0
 %config(noreplace) %{_sysconfdir}/init/crm_mon.conf
 %endif
 
+%{_sbindir}/attrd_updater
 %{_sbindir}/cibadmin
 %{_sbindir}/crm_diff
 %{_sbindir}/crm_error
@@ -487,7 +486,6 @@ exit 0
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
 
 %doc %{_mandir}/man8/*
-%exclude %{_mandir}/man8/attrd_updater.*
 %exclude %{_mandir}/man8/crm_attribute.*
 %exclude %{_mandir}/man8/crm_node.*
 %exclude %{_mandir}/man8/crm_master.*
