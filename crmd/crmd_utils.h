@@ -67,16 +67,13 @@ enum node_update_flags {
     node_update_peer = 0x0020,
     node_update_join = 0x0040,
     node_update_expected = 0x0100,
+    node_update_all = node_update_cluster|node_update_peer|node_update_join|node_update_expected,
 };
 
 gboolean crm_timer_stop(fsa_timer_t * timer);
 gboolean crm_timer_start(fsa_timer_t * timer);
 gboolean crm_timer_popped(gpointer data);
 gboolean is_timer_started(fsa_timer_t * timer);
-
-xmlNode *create_node_state(const char *uname, const char *in_cluster,
-                           const char *is_peer, const char *join_state,
-                           const char *exp_state, gboolean clear_shutdown, const char *src);
 
 int crmd_exit(int rc);
 int crmd_fast_exit(int rc);

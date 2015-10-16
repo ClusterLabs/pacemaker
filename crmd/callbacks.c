@@ -109,7 +109,14 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
     bool appeared = FALSE;
     const char *status = NULL;
 
-    set_bit(fsa_input_register, R_PEER_DATA);
+    /* Crmd waits to receive some information from the membership layer before
+     * declaring itself operational. If this is being called for a cluster node,
+     * indicate that we have it.
+     */
+    if (!is_set(node->flags, crm_remote_node)) {
+        set_bit(fsa_input_register, R_PEER_DATA);
+    }
+
     if (node->uname == NULL) {
         return;
     }
@@ -132,20 +139,9 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 return;
 
             } else if(safe_str_eq(CRM_NODE_MEMBER, node->state)) {
-                GListPtr gIter = stonith_cleanup_list;
-
                 appeared = TRUE;
-
-                while (gIter != NULL) {
-                    GListPtr tmp = gIter;
-                    char *target = tmp->data;
-
-                    gIter = gIter->next;
-                    if(safe_str_eq(node->uname, target)) {
-                        crm_trace("Removing %s from the cleanup list", target);
-                        stonith_cleanup_list = g_list_delete_link(stonith_cleanup_list, tmp);
-                        free(target);
-                    }
+                if (!is_set(node->flags, crm_remote_node)) {
+                    remove_stonith_cleanup(node->uname);
                 }
             }
 

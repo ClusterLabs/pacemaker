@@ -73,8 +73,6 @@ struct pending_deletion_op_s {
     ha_msg_input_t *input;
 };
 
-xmlNode *do_lrm_query_internal(lrm_state_t * lrm_state, gboolean is_replace);
-
 /*!
  * \brief Is this the local ipc connection to the lrmd
  */

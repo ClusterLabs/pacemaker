@@ -418,9 +418,15 @@ found_remote_node_xpath(cib_t *the_cib, const char *xpath)
 static int
 get_remote_node_uuid(cib_t * the_cib, const char *uname, char **uuid)
 {
-#define CONTAINER_REMOTE_NODE_XPATH "//" XML_CIB_TAG_NVPAIR "[@name='remote-node'][@value='%s']"
+#define CONTAINER_REMOTE_NODE_XPATH "//" XML_CIB_TAG_NVPAIR \
+    "[@name='" XML_RSC_ATTR_REMOTE_NODE "'][@value='%s']"
+
 #define BAREMETAL_REMOTE_NODE_XPATH "//" XML_CIB_TAG_RESOURCE "[@type='remote'][@provider='pacemaker'][@id='%s']"
-#define ORPHAN_REMOTE_NODE_XPATH "//" XML_CIB_TAG_STATUS "//" XML_CIB_TAG_STATE "[@id='%s'][@remote_node='true']"
+
+#define ORPHAN_REMOTE_NODE_XPATH \
+    "//" XML_CIB_TAG_STATUS "//" XML_CIB_TAG_STATE \
+    "[@" XML_ATTR_UUID "='%s'][@" XML_NODE_IS_REMOTE "='true']"
+
     int len = 128 + strlen(uname);
     int rc = pcmk_ok;
     char *xpath_string = calloc(1, len);

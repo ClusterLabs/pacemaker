@@ -540,8 +540,7 @@ do_state_transition(long long actions,
     }
 
     if (cur_state == S_FINALIZE_JOIN && next_state == S_POLICY_ENGINE) {
-        populate_cib_nodes(node_update_quick | node_update_cluster | node_update_peer |
-                           node_update_join | node_update_expected, __FUNCTION__);
+        populate_cib_nodes(node_update_quick|node_update_all, __FUNCTION__);
     }
 
     switch (next_state) {
@@ -554,18 +553,8 @@ do_state_transition(long long actions,
             break;
         case S_NOT_DC:
             election_trigger->counter = 0;
-            if (stonith_cleanup_list) {
-                GListPtr gIter = NULL;
+            purge_stonith_cleanup();
 
-                for (gIter = stonith_cleanup_list; gIter != NULL; gIter = gIter->next) {
-                    char *target = gIter->data;
-
-                    crm_info("Purging %s from stonith cleanup list", target);
-                    free(target);
-                }
-                g_list_free(stonith_cleanup_list);
-                stonith_cleanup_list = NULL;
-            }
             if (is_set(fsa_input_register, R_SHUTDOWN)) {
                 crm_info("(Re)Issuing shutdown request now" " that we have a new DC");
                 set_bit(tmp, A_SHUTDOWN_REQ);

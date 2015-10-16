@@ -31,7 +31,96 @@
 #include <crm/fencing/internal.h>
 
 crm_trigger_t *stonith_reconnect = NULL;
-GListPtr stonith_cleanup_list = NULL;
+
+/*
+ * stonith cleanup list
+ *
+ * If the DC is shot, proper notifications might not go out.
+ * The stonith cleanup list allows the cluster to (re-)send
+ * notifications once a new DC is elected.
+ */
+
+static GListPtr stonith_cleanup_list = NULL;
+
+/*!
+ * \internal
+ * \brief Add a node to the stonith cleanup list
+ *
+ * \param[in] target  Name of node to add
+ */
+void
+add_stonith_cleanup(const char *target) {
+    stonith_cleanup_list = g_list_append(stonith_cleanup_list, strdup(target));
+}
+
+/*!
+ * \internal
+ * \brief Remove a node from the stonith cleanup list
+ *
+ * \param[in] Name of node to remove
+ */
+void
+remove_stonith_cleanup(const char *target)
+{
+    GListPtr iter = stonith_cleanup_list;
+
+    while (iter != NULL) {
+        GListPtr tmp = iter;
+        char *iter_name = tmp->data;
+
+        iter = iter->next;
+        if (safe_str_eq(target, iter_name)) {
+            crm_trace("Removing %s from the cleanup list", iter_name);
+            stonith_cleanup_list = g_list_delete_link(stonith_cleanup_list, tmp);
+            free(iter_name);
+        }
+    }
+}
+
+/*!
+ * \internal
+ * \brief Purge all entries from the stonith cleanup list
+ */
+void
+purge_stonith_cleanup()
+{
+    if (stonith_cleanup_list) {
+        GListPtr iter = NULL;
+
+        for (iter = stonith_cleanup_list; iter != NULL; iter = iter->next) {
+            char *target = iter->data;
+
+            crm_info("Purging %s from stonith cleanup list", target);
+            free(target);
+        }
+        g_list_free(stonith_cleanup_list);
+        stonith_cleanup_list = NULL;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Send stonith updates for all entries in cleanup list, then purge it
+ */
+void
+execute_stonith_cleanup()
+{
+    GListPtr iter;
+
+    for (iter = stonith_cleanup_list; iter != NULL; iter = iter->next) {
+        char *target = iter->data;
+        crm_node_t *target_node = crm_get_peer(0, target);
+        const char *uuid = crm_peer_uuid(target_node);
+
+        crm_notice("Marking %s, target of a previous stonith action, as clean", target);
+        send_stonith_update(NULL, target, uuid);
+        free(target);
+    }
+    g_list_free(stonith_cleanup_list);
+    stonith_cleanup_list = NULL;
+}
+
+/* end stonith cleanup list functions */
 
 static gboolean
 fail_incompletable_stonith(crm_graph_t * graph)
@@ -251,7 +340,9 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
             }
 
             /* Assume it was our leader if we dont currently have one */
-        } else if (fsa_our_dc == NULL || safe_str_eq(fsa_our_dc, st_event->target)) {
+        } else if (((fsa_our_dc == NULL) || safe_str_eq(fsa_our_dc, st_event->target))
+            && !is_set(peer->flags, crm_remote_node)) {
+
             crm_notice("Target %s our leader %s (recorded: %s)",
                        fsa_our_dc ? "was" : "may have been", st_event->target,
                        fsa_our_dc ? fsa_our_dc : "<unset>");
@@ -263,8 +354,7 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
             if (we_are_executioner) {
                 send_stonith_update(NULL, st_event->target, uuid);
             }
-            stonith_cleanup_list = g_list_append(stonith_cleanup_list, strdup(st_event->target));
-
+            add_stonith_cleanup(st_event->target);
         }
 
         crmd_peer_down(peer, TRUE);
