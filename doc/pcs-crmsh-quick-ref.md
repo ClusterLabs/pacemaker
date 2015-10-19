@@ -166,6 +166,19 @@ pcs treats STONITH devices separately.
     crmsh # crm resource param ClusterIP set clusterip_hash=sourceip
     pcs   # pcs resource update ClusterIP clusterip_hash=sourceip
 
+crmsh also has an `edit` command which edits the simplified CIB syntax
+(same commands as the command line) via a configurable text editor.
+
+    crmsh # crm configure edit ClusterIP
+
+Using the interactive shell mode of crmsh, multiple changes can be
+edited and verified before committing to the live configuration.
+
+    crmsh # crm configure
+    crmsh # edit
+    crmsh # verify
+    crmsh # commit
+
 ## Delete parameters for a given resource
 
     crmsh # crm resource param ClusterIP delete nic
@@ -235,11 +248,40 @@ A resource can also be moved away from a given node:
     pcs   # pcs resource ban Website pcmk-2
 
 Remember that moving a resource sets a stickyness to -INF to a given node until unmoved    
-Also, pcs deals with constraints differently. These can be manipulated by the command above as well as the following and others
 
-    crmsh #
+## Resource tracing
+
+    crmsh # crm resource trace Website
+    pcs   #
+
+## Clear fail counts
+
+    crmsh # crm resource cleanup Website
+    pcs   #
+
+## Edit fail counts
+
+    crmsh # crm resource failcount Website show pcmk-1
+    crmsh # crm resource failcount Website set pcmk-1 100
+    pcs   #
+
+## Handling configuration elements by type
+
+pcs deals with constraints differently. These can be manipulated by the command above as well as the following and others
+
     pcs   # pcs constraint list --full
     pcs   # pcs constraint remove cli-ban-Website-on-pcmk-1
+
+Removing a constraint in crmsh uses the same command as removing a
+resource.
+
+    crmsh # crm configure remove cli-ban-Website-on-pcmk-1
+
+The `show` and `edit` commands in crmsh can be used to manage
+resources and constraints by type:
+
+    crmsh # crm configure show type:primitive
+    crmsh # crm configure edit type:colocation
 
 ## Create a clone
 
@@ -275,3 +317,32 @@ Also, pcs deals with constraints differently. These can be manipulated by the co
     pcs   # pcs -f drbd_cfg resource master WebDataClone WebData master-max=1 master-node-max=1 \
             clone-max=2 clone-node-max=1 notify=true
     pcs   # pcs cluster push cib drbd_cfg
+
+## Template creation
+
+Create a resource template based on a list of primitives of the same
+type
+
+    crmsh # crm configure assist template ClusterIP AdminIP
+
+## Log analysis
+
+Display information about recent cluster events
+
+    crmsh # crm history
+    crmsh # peinputs
+    crmsh # transition pe-input-10
+    crmsh # transition log pe-input-10
+
+## Configuration scripts
+
+Create and apply multiple-step cluster configurations including
+configuration of cluster resources
+
+    crmsh # crm script show apache
+    crmsh # crm script run apache \
+        id=WebSite \
+        install=true \
+        virtual-ip:ip=192.168.0.15 \
+        database:id=WebData \
+        database:install=true
