@@ -231,7 +231,7 @@ With roles:
 
 A resource can also be moved away from a given node:
 
-    crmsh #
+    crmsh # crm resource ban Website pcmk-2
     pcs   # pcs resource ban Website pcmk-2
 
 Remember that moving a resource sets a stickyness to -INF to a given node until unmoved    
