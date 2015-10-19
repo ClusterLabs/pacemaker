@@ -139,6 +139,7 @@ enum crm_ais_msg_types {
 enum crm_get_peer_flags {
     CRM_GET_PEER_CLUSTER   = 0x0001,
     CRM_GET_PEER_REMOTE    = 0x0002,
+    CRM_GET_PEER_ANY       = CRM_GET_PEER_CLUSTER|CRM_GET_PEER_REMOTE,
 };
 /* *INDENT-ON* */
 
