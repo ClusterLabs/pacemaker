@@ -132,7 +132,7 @@ properties; some of them will be further specified later.
 
 The basic algorithm can be summarized as follows:
 
-a) Every partition elects a "Designated Coordinator"; this node will
+a) Every partition elects a "Designated Controller"; this node will
 activate special logic to coordinate the recovery and administrative
 actions on all nodes in the cluster.
 
@@ -143,7 +143,7 @@ referred to as "Cluster Information Base".
 
 b) Whenever a cluster event occurs, be it an adminstrative request, a node
 failure by membership services or a resource failure reported by a
-participating LRM, it is forwarded to the "Designated Coordinator".
+participating LRM, it is forwarded to the "Designated Controller".
 
 b1) For administrative requests, the DC arbitates whether or not they will be
 accepted into the CIB and serializes these updates. ie, policy changes which
@@ -188,7 +188,7 @@ This meets the requirements listed as follows:
   participating nodes.
 
   Local nodes are only required to know their own state; whenever the
-  coordinator fails, the necessary state can simply be reconstructed by the
+  controller fails, the necessary state can simply be reconstructed by the
   DC.
   
 - An event can be anything from a failed node or a request to add a new policy
@@ -268,11 +268,11 @@ with:
   - Administrative commands
   - Fencing functionality
   
-Only one node is running the "Designated Coordinator" CRM at any given time in
+Only one node is running the "Designated Controller" CRM at any given time in
 any given partition.  All other nodes forward their input to this node only,
 and will relay its decisions to the local LRM.
 
-The coordinator is a "primus inter pares"; in theory, any CRM can act in this
+The controller is a "primus inter pares"; in theory, any CRM can act in this
 fashion, but the arbitation algorithm will distinguish a designated node.
 
 4.1. How to deal with failure of the designated CRM
