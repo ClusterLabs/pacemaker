@@ -95,14 +95,14 @@ Description:
       http://www.cs.indiana.edu/cgi-bin/techreports/TRNNN.cgi?trnum=TR521
 
       Loosly known as the Bully Algorithm, its major points are:
-      - Election is initiated by any node (N) notices that the coordinator
+      - Election is initiated by any node (N) notices that the controller
 	is no longer responding
       - Concurrent multiple elections are possible
       - Algorithm
 	  + N sends ELECTION messages to all nodes that occur earlier in
 	  the CCM's membership list.
-	  + If no one responds, N wins and becomes coordinator
-	  + N sends out COORDINATOR messages to all other nodes in the
+	  + If no one responds, N wins and becomes controller
+	  + N sends out CONTROLLER messages to all other nodes in the
 	  partition
 	  + If one of higher-ups answers, it takes over. N is done.
       
