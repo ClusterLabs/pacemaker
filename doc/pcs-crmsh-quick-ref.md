@@ -51,9 +51,10 @@
     crmsh # crm configure show xml
     pcs   # pcs cluster cib
 
-crmsh can show a simplified (non-xml) syntax as well
+To show a simplified (non-xml) syntax
 
     crmsh # crm configure show
+    pcs   # pcs config
     
 ## Display the current status
 
@@ -260,18 +261,16 @@ Remember that moving a resource sets a stickyness to -INF to a given node until 
 ## Resource tracing
 
     crmsh # crm resource trace Website
-    pcs   #
 
 ## Clear fail counts
 
     crmsh # crm resource cleanup Website
-    pcs   #
+    pcs   # pcs resource cleanup Website
 
 ## Edit fail counts
 
     crmsh # crm resource failcount Website show pcmk-1
     crmsh # crm resource failcount Website set pcmk-1 100
-    pcs   #
 
 ## Handling configuration elements by type
 
@@ -301,9 +300,9 @@ resources and constraints by type:
     crmsh # crm configure ms WebDataClone WebData \
             meta master-max=1 master-node-max=1 \
             clone-max=2 clone-node-max=1 notify=true
-    pcs   # resource master WebDataClone WebData \
-            master-max=1 master-node-max=1 clone-max=2 clone-node-max=1 \
-            notify=true
+    pcs   # pcs resource master WebDataClone WebData \
+            master-max=1 master-node-max=1 \
+            clone-max=2 clone-node-max=1 notify=true
 
 # Other operations
 
