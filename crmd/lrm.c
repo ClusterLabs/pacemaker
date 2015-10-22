@@ -2123,59 +2123,6 @@ cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *use
     }
 }
 
-/*
- * \internal
- * \brief Initialize status section for a newly started pacemaker_remote node
- *
- * Clear the XML_NODE_IS_FENCED flag in the CIB status section for a remote node
- * or guest node (intended to be called when the node starts). If the node ever
- * needs to be fenced, this flag will allow various actions to determine whether
- * the fencing has happened yet.
- *
- * \param[in] node_name  Name of new remote node
- * \param[in] call_opt   Call options to pass to CIB update method
- */
-static void
-remote_node_init_status(const char *node_name, int call_opt)
-{
-    int call_id = 0;
-    xmlNode *update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
-    xmlNode *state;
-
-    state = simple_remote_node_status(node_name, update,__FUNCTION__);
-    crm_xml_add(state, XML_NODE_IS_FENCED, "0");
-
-    /* TODO: Consider forcing a synchronous or asynchronous call here.
-     * In practice, it's currently always async, the benefit of which is
-     * quicker startup. The argument for sync is to close the tiny window
-     * in which the remote connection could drop immediately after connecting,
-     * and fencing might not happen because it appears to already have been.
-     */
-    fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, call_id, NULL);
-    if (call_id < 0) {
-        /* TODO: Return an error code on failure, and handle it somehow.
-         * If this fails, later actions could mistakenly think the node has
-         * already been fenced, thus preventing actual fencing, or allowing
-         * recurring monitor failures to be cleared too soon.
-         */
-        crm_perror(LOG_WARNING,
-                   "Initializing status for pacemaker_remote node %s in CIB",
-                   node_name);
-    }
-    free_xml(update);
-}
-
-static void
-remote_node_clear_status(const char *node_name, int call_opt)
-{
-    if (node_name == NULL) {
-        return;
-    }
-    remote_node_init_status(node_name, call_opt);
-    erase_status_tag(node_name, XML_CIB_TAG_LRM, call_opt);
-    erase_status_tag(node_name, XML_TAG_TRANSIENT_NODEATTRS, call_opt);
-}
-
 static int
 do_update_resource(const char *node_name, lrmd_rsc_info_t * rsc, lrmd_event_data_t * op)
 {
@@ -2239,24 +2186,6 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t * rsc, lrmd_event_data
         if (container) {
             crm_trace("Resource %s is a part of container resource %s", op->rsc_id, container);
             crm_xml_add(iter, XML_RSC_ATTR_CONTAINER, container);
-        }
-
-        CRM_CHECK(rsc->type != NULL, crm_err("Resource %s has no value for type", op->rsc_id));
-        CRM_CHECK(rsc->class != NULL, crm_err("Resource %s has no value for class", op->rsc_id));
-
-        /* check to see if we need to initialize remote-node related status sections */
-        if (safe_str_eq(op->op_type, "start") && op->rc == 0 && op->op_status == PCMK_LRM_OP_DONE) {
-            const char *remote_node = g_hash_table_lookup(op->params, CRM_META"_remote_node");
-
-            if (remote_node) {
-                /* A container for a remote-node has started, initialize remote-node's status */
-                crm_info("Initalizing lrm status for container remote-node %s. Container successfully started.", remote_node);
-                remote_node_clear_status(remote_node, call_opt);
-            } else if (container == FALSE && safe_str_eq(rsc->type, "remote") && safe_str_eq(rsc->provider, "pacemaker")) {
-                /* baremetal remote node connection resource has started, initialize remote-node's status */
-                crm_info("Initializing lrm status for baremetal remote-node %s", rsc->id);
-                remote_node_clear_status(rsc->id, call_opt);
-            }
         }
 
     } else {

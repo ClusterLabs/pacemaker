@@ -162,10 +162,91 @@ start_delay_helper(gpointer data)
     return FALSE;
 }
 
+/*!
+ * \internal
+ * \brief Handle cluster communication related to pacemaker_remote node joining
+ *
+ * \param[in] node_name  Name of newly integrated pacemaker_remote node
+ */
+static void
+remote_node_up(const char *node_name)
+{
+    int call_opt, call_id = 0;
+    xmlNode *update, *state;
+    crm_node_t *node;
+
+    CRM_CHECK(node_name != NULL, return);
+    crm_info("Announcing pacemaker_remote node %s", node_name);
+
+    /* Clear node's operation history and transient attributes */
+    call_opt = crmd_cib_smart_opt();
+    erase_status_tag(node_name, XML_CIB_TAG_LRM, call_opt);
+    erase_status_tag(node_name, XML_TAG_TRANSIENT_NODEATTRS, call_opt);
+
+    /* Clear node's probed attribute */
+    update_attrd(node_name, CRM_OP_PROBED, NULL, NULL, TRUE);
+
+    /* Ensure node is in the remote peer cache with member status */
+    node = crm_remote_peer_get(node_name);
+    CRM_CHECK(node != NULL, return);
+    crm_update_peer_state(__FUNCTION__, node, CRM_NODE_MEMBER, 0);
+
+    /* pacemaker_remote nodes don't participate in the membership layer,
+     * so cluster nodes don't automatically get notified when they come and go.
+     * We send a cluster message to the DC, and update the CIB node state entry,
+     * so the DC will get it sooner (via message) or later (via CIB refresh),
+     * and any other interested parties can query the CIB.
+     */
+    send_remote_state_message(node_name, TRUE);
+
+    update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
+    state = do_update_node_cib(node, node_update_cluster, update, __FUNCTION__);
+
+    /* Clear the XML_NODE_IS_FENCED flag in the node state. If the node ever
+     * needs to be fenced, this flag will allow various actions to determine
+     * whether the fencing has happened yet.
+     */
+    crm_xml_add(state, XML_NODE_IS_FENCED, "0");
+
+    /* TODO: If the remote connection drops, and this (async) CIB update either
+     * failed or has not yet completed, later actions could mistakenly think the
+     * node has already been fenced (if the XML_NODE_IS_FENCED attribute was
+     * previously set, because it won't have been cleared). This could prevent
+     * actual fencing or allow recurring monitor failures to be cleared too
+     * soon. Ideally, we wouldn't rely on the CIB for the fenced status.
+     */
+    fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, call_id, NULL);
+    if (call_id < 0) {
+        crm_perror(LOG_WARNING, "%s CIB node state setup", node_name);
+    }
+    free_xml(update);
+}
+
+/*!
+ * \internal
+ * \brief Handle effects of a remote RA command on node state
+ *
+ * \param[in] cmd  Completed remote RA command
+ */
+static void
+check_remote_node_state(remote_ra_cmd_t *cmd)
+{
+    /* Only successful actions can change node state */
+    if (cmd->rc != PCMK_OCF_OK) {
+        return;
+    }
+
+    if (safe_str_eq(cmd->action, "start")) {
+        remote_node_up(cmd->rsc_id);
+    }
+}
+
 static void
 report_remote_ra_result(remote_ra_cmd_t * cmd)
 {
     lrmd_event_data_t op = { 0, };
+
+    check_remote_node_state(cmd);
 
     op.type = lrmd_event_exec_complete;
     op.rsc_id = cmd->rsc_id;
@@ -308,19 +389,6 @@ monitor_timeout_cb(gpointer data)
     return FALSE;
 }
 
-xmlNode *
-simple_remote_node_status(const char *node_name, xmlNode * parent, const char *source)
-{
-    xmlNode *state = create_xml_node(parent, XML_CIB_TAG_STATE);
-
-    crm_xml_add(state, XML_NODE_IS_REMOTE, "true");
-    crm_xml_add(state, XML_ATTR_UUID,  node_name);
-    crm_xml_add(state, XML_ATTR_UNAME, node_name);
-    crm_xml_add(state, XML_ATTR_ORIGIN, source);
-
-    return state;
-}
-
 void
 remote_lrm_op_callback(lrmd_event_data_t * op)
 {
@@ -402,11 +470,6 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
             cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
 
         } else {
-
-            if (safe_str_eq(cmd->action, "start")) {
-                /* clear PROBED value if it happens to be set after start completes. */
-                update_attrd(lrm_state->node_name, CRM_OP_PROBED, NULL, NULL, TRUE);
-            }
             lrm_state_reset_tables(lrm_state);
             cmd->rc = PCMK_OCF_OK;
             cmd->op_status = PCMK_LRM_OP_DONE;
