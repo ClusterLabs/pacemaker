@@ -267,7 +267,7 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
     }
 
     if (is_set(call_options, cib_sync_call)) {
-        CRM_ASSERT(flags & crm_ipc_client_response);
+        CRM_LOG_ASSERT(flags & crm_ipc_client_response);
         CRM_LOG_ASSERT(cib_client->request_id == 0);    /* This means the client has two synchronous events in-flight */
         cib_client->request_id = id;    /* Reply only to the last one */
     }
@@ -286,7 +286,7 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
     crm_xml_add(op_request, F_CIB_CLIENTNAME, cib_client->name);
 
 #if ENABLE_ACL
-    CRM_ASSERT(cib_client->user != NULL);
+    CRM_LOG_ASSERT(cib_client->user != NULL);
     crm_acl_get_set_user(op_request, F_CIB_USER, cib_client->user);
 #endif
 
