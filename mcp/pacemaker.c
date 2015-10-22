@@ -699,7 +699,7 @@ check_active_before_startup_processes(gpointer user_data)
                 continue;
             } else if (start_seq != pcmk_children[lpc].start_seq) {
                 continue;
-            } else if (crm_pid_active(pcmk_children[lpc].pid) != 1) {
+            } else if (crm_pid_active(pcmk_children[lpc].pid, pcmk_children[lpc].name) != 1) {
                 crm_notice("Process %s terminated (pid=%d)",
                            pcmk_children[lpc].name, pcmk_children[lpc].pid);
                 pcmk_process_exit(&(pcmk_children[lpc]));
@@ -746,7 +746,7 @@ find_and_track_existing_processes(void)
             if (pcmk_children[i].flag == crm_proc_stonith_ng) {
                 name = "stonithd";
             }
-            if (safe_str_eq(entry_name, name) && (crm_pid_active(pid) == 1)) {
+            if (safe_str_eq(entry_name, name) && (crm_pid_active(pid, NULL) == 1)) {
                 crm_notice("Tracking existing %s process (pid=%d)", name, pid);
                 pcmk_children[i].pid = pid;
                 pcmk_children[i].active_before_startup = TRUE;

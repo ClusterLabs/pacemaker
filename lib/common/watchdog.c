@@ -215,6 +215,7 @@ pid_t
 pcmk_locate_sbd(void)
 {
     char *pidfile = NULL;
+    char *sbd_path = NULL;
 
     if(sbd_pid > 1) {
         return sbd_pid;
@@ -222,10 +223,11 @@ pcmk_locate_sbd(void)
 
     /* Look for the pid file */
     pidfile = crm_strdup_printf("%s/sbd.pid", HA_STATE_DIR);
+    sbd_path = crm_strdup_printf("%s/sbd", SBINDIR);
 
     /* Read the pid file */
     if(pidfile) {
-        int rc = crm_pidfile_inuse(pidfile, 1);
+        int rc = crm_pidfile_inuse(pidfile, 1, sbd_path);
         if(rc < pcmk_ok && rc != -ENOENT) {
             sbd_pid = crm_read_pidfile(pidfile);
             crm_trace("SBD detected at pid=%d (file)");
@@ -243,5 +245,7 @@ pcmk_locate_sbd(void)
     }
 
     free(pidfile);
+    free(sbd_path);
+
     return sbd_pid;
 }

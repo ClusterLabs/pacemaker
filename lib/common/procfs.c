@@ -130,7 +130,7 @@ crm_procfs_pid_of(const char *name)
     while ((entry = readdir(dp)) != NULL) {
         if ((crm_procfs_process_info(entry, entry_name, &pid) == 0)
             && safe_str_eq(entry_name, name)
-            && (crm_pid_active(pid) == 1)) {
+            && (crm_pid_active(pid, NULL) == 1)) {
 
             crm_info("Found %s active as process %d", name, pid);
             break;
