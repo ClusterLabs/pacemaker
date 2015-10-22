@@ -116,6 +116,7 @@ extern struct crm_subsystem_s *pe_subsystem;
 
 /* these two should be moved elsewhere... */
 extern void do_update_cib_nodes(gboolean overwrite, const char *caller);
+int crmd_cib_smart_opt(void);
 
 #  define AM_I_DC is_set(fsa_input_register, R_THE_DC)
 #  define AM_I_OPERATIONAL (is_set(fsa_input_register, R_STARTING)==FALSE)
