@@ -1322,17 +1322,23 @@ free_rsc(gpointer data)
     lrmd_rsc_t *rsc = data;
     int is_stonith = safe_str_eq(rsc->class, "stonith");
 
-    for (gIter = rsc->pending_ops; gIter != NULL; gIter = gIter->next) {
+    gIter = rsc->pending_ops;
+    while (gIter != NULL) {
+        GListPtr next = gIter->next;
         lrmd_cmd_t *cmd = gIter->data;
 
         /* command was never executed */
         cmd->lrmd_op_status = PCMK_LRM_OP_CANCELLED;
         cmd_finalize(cmd, NULL);
+
+        gIter = next;
     }
     /* frees list, but not list elements. */
     g_list_free(rsc->pending_ops);
 
-    for (gIter = rsc->recurring_ops; gIter != NULL; gIter = gIter->next) {
+    gIter = rsc->recurring_ops;
+    while (gIter != NULL) {
+        GListPtr next = gIter->next;
         lrmd_cmd_t *cmd = gIter->data;
 
         if (is_stonith) {
@@ -1350,6 +1356,8 @@ free_rsc(gpointer data)
              * even if we are waiting for the cancel result */
             services_action_cancel(rsc->rsc_id, normalize_action_name(rsc, cmd->action), cmd->interval);
         }
+
+        gIter = next;
     }
     /* frees list, but not list elements. */
     g_list_free(rsc->recurring_ops);
