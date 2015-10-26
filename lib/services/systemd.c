@@ -78,6 +78,14 @@ systemd_init(void)
     static int need_init = 1;
     /* http://dbus.freedesktop.org/doc/api/html/group__DBusConnection.html */
 
+    if (systemd_proxy
+        && dbus_connection_get_is_connected(systemd_proxy) == FALSE) {
+        crm_warn("Connection to System DBus is closed. Reconnecting...");
+        pcmk_dbus_disconnect(systemd_proxy);
+        systemd_proxy = NULL;
+        need_init = 1;
+    }
+
     if (need_init) {
         need_init = 0;
         systemd_proxy = pcmk_dbus_connect();
