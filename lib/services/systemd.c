@@ -648,10 +648,16 @@ systemd_timeout_callback(gpointer p)
     return FALSE;
 }
 
+/* For an asynchronous 'op', returns FALSE if 'op' should be free'd by the caller */
+/* For a synchronous 'op', returns FALSE if 'op' fails */
 gboolean
-systemd_unit_exec(svc_action_t * op)
+systemd_unit_exec(svc_action_t * op, gboolean * inflight)
 {
     char *unit = NULL;
+
+    if (inflight) {
+        *inflight = FALSE;
+    }
 
     CRM_ASSERT(op);
     CRM_ASSERT(systemd_init());
@@ -665,7 +671,7 @@ systemd_unit_exec(svc_action_t * op)
         op->rc = PCMK_OCF_OK;
 
         if (op->synchronous == FALSE) {
-            operation_finalize(op);
+            return operation_finalize(op);
         }
         return TRUE;
     }
@@ -675,6 +681,9 @@ systemd_unit_exec(svc_action_t * op)
 
     if (op->synchronous == FALSE) {
         op->opaque->timerid = g_timeout_add(op->timeout + 5000, systemd_timeout_callback, op);
+        if (inflight) {
+            *inflight = TRUE;
+        }
         return TRUE;
     }
 
