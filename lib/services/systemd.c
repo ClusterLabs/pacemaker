@@ -529,9 +529,10 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
         } else if (pending) {
             services_set_op_pending(op, pending);
             return TRUE;
-        }
 
-        return FALSE;
+        } else {
+            return operation_finalize(op);
+        }
 
     } else if (g_strcmp0(method, "start") == 0) {
         FILE *file_strm = NULL;
@@ -611,8 +612,10 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
         if(pending) {
             services_set_op_pending(op, pending);
             return TRUE;
+
+        } else {
+            return operation_finalize(op);
         }
-        return FALSE;
 
     } else {
         DBusError error;
@@ -680,11 +683,16 @@ systemd_unit_exec(svc_action_t * op, gboolean * inflight)
     free(unit);
 
     if (op->synchronous == FALSE) {
-        op->opaque->timerid = g_timeout_add(op->timeout + 5000, systemd_timeout_callback, op);
-        if (inflight) {
-            *inflight = TRUE;
+        if (op->opaque->pending) {
+            op->opaque->timerid = g_timeout_add(op->timeout + 5000, systemd_timeout_callback, op);
+            if (inflight) {
+                *inflight = TRUE;
+            }
+            return TRUE;
+
+        } else {
+            return operation_finalize(op);
         }
-        return TRUE;
     }
 
     return op->rc == PCMK_OCF_OK;

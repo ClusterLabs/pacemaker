@@ -176,7 +176,7 @@ DBusPendingCall* pcmk_dbus_send(DBusMessage *msg, DBusConnection *connection,
         return NULL;
 
     } else if (pending == NULL) {
-        crm_err("No pending call found for %s", method);
+        crm_err("No pending call found for %s: Connection to System DBus may be closed", method);
         return NULL;
     }
 
