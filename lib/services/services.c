@@ -599,7 +599,7 @@ action_async_helper(svc_action_t * op) {
     }
 
     /* keep track of ops that are in-flight to avoid collisions in the same namespace */
-    if (op->rsc && inflight) {
+    if (inflight && op->rsc) {
         inflight_ops = g_list_append(inflight_ops, op);
     }
 
