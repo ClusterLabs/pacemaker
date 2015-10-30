@@ -163,14 +163,40 @@ systemd_daemon_reload(int timeout)
     return TRUE;
 }
 
+static bool
+systemd_mask_error(svc_action_t *op, const char *error)
+{
+    crm_trace("Could not issue %s for %s: %s", op->action, op->rsc, error);
+    if(strstr(error, "org.freedesktop.systemd1.InvalidName")
+       || strstr(error, "org.freedesktop.systemd1.LoadFailed")
+       || strstr(error, "org.freedesktop.systemd1.NoSuchUnit")) {
+
+        if (safe_str_eq(op->action, "stop")) {
+            crm_trace("Masking %s failure for %s: unknown services are stopped", op->action, op->rsc);
+            op->rc = PCMK_OCF_OK;
+            return TRUE;
+
+        } else {
+            crm_trace("Mapping %s failure for %s: unknown services are not installed", op->action, op->rsc);
+            op->rc = PCMK_OCF_NOT_INSTALLED;
+            op->status = PCMK_LRM_OP_NOT_INSTALLED;
+            return FALSE;
+        }
+    }
+
+    return FALSE;
+}
+
 static const char *
 systemd_loadunit_result(DBusMessage *reply, svc_action_t * op)
 {
     const char *path = NULL;
+    DBusError error;
 
-    if(pcmk_dbus_find_error("LoadUnit", (void*)&path, reply, NULL)) {
-        if(op) {
-            crm_warn("No unit found for %s", op->rsc);
+    if(pcmk_dbus_find_error("LoadUnit", (void*)&path, reply, &error)) {
+        if(op && !systemd_mask_error(op, error.name)) {
+            crm_err("Could not find unit %s for %s: LoadUnit error '%s'",
+                    op->agent, op->id, error.name);
         }
 
     } else if(pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH, __FUNCTION__, __LINE__)) {
@@ -180,7 +206,12 @@ systemd_loadunit_result(DBusMessage *reply, svc_action_t * op)
     }
 
     if(op) {
-        systemd_unit_exec_with_unit(op, path);
+        if (path) {
+            systemd_unit_exec_with_unit(op, path);
+
+        } else if (op->synchronous == FALSE) {
+            operation_finalize(op);
+        }
     }
 
     return path;
@@ -403,29 +434,6 @@ systemd_unit_metadata(const char *name, int timeout)
     return meta;
 }
 
-static bool
-systemd_mask_error(svc_action_t *op, const char *error)
-{
-    crm_trace("Could not issue %s for %s: %s", op->action, op->rsc, error);
-    if(strstr(error, "org.freedesktop.systemd1.InvalidName")
-       || strstr(error, "org.freedesktop.systemd1.LoadFailed")
-       || strstr(error, "org.freedesktop.systemd1.NoSuchUnit")) {
-
-        if (safe_str_eq(op->action, "stop")) {
-            crm_trace("Masking %s failure for %s: unknown services are stopped", op->action, op->rsc);
-            op->rc = PCMK_OCF_OK;
-
-        } else {
-            crm_trace("Mapping %s failure for %s: unknown services are not installed", op->action, op->rsc);
-            op->rc = PCMK_OCF_NOT_INSTALLED;
-            op->status = PCMK_LRM_OP_NOT_INSTALLED;
-        }
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
 static void
 systemd_exec_result(DBusMessage *reply, svc_action_t *op)
 {
@@ -515,12 +523,7 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
     DBusMessage *msg = NULL;
     DBusMessage *reply = NULL;
 
-    if (unit == NULL) {
-        crm_debug("Could not obtain unit named '%s'", op->agent);
-        op->rc = PCMK_OCF_NOT_INSTALLED;
-        op->status = PCMK_LRM_OP_NOT_INSTALLED;
-        goto cleanup;
-    }
+    CRM_ASSERT(unit);
 
     if (safe_str_eq(op->action, "monitor") || safe_str_eq(method, "status")) {
         DBusPendingCall *pending = NULL;
@@ -640,8 +643,7 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
 
   cleanup:
     if (op->synchronous == FALSE) {
-        operation_finalize(op);
-        return TRUE;
+        return operation_finalize(op);
     }
 
     return op->rc == PCMK_OCF_OK;
