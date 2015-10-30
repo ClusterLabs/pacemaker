@@ -406,13 +406,14 @@ systemd_mask_error(svc_action_t *op, const char *error)
         if (safe_str_eq(op->action, "stop")) {
             crm_trace("Masking %s failure for %s: unknown services are stopped", op->action, op->rsc);
             op->rc = PCMK_OCF_OK;
+            return TRUE;
 
         } else {
             crm_trace("Mapping %s failure for %s: unknown services are not installed", op->action, op->rsc);
             op->rc = PCMK_OCF_NOT_INSTALLED;
             op->status = PCMK_LRM_OP_NOT_INSTALLED;
+            return FALSE;
         }
-        return TRUE;
     }
 
     return FALSE;
