@@ -78,6 +78,14 @@ systemd_init(void)
     static int need_init = 1;
     /* http://dbus.freedesktop.org/doc/api/html/group__DBusConnection.html */
 
+    if (systemd_proxy
+        && dbus_connection_get_is_connected(systemd_proxy) == FALSE) {
+        crm_warn("Connection to System DBus is closed. Reconnecting...");
+        pcmk_dbus_disconnect(systemd_proxy);
+        systemd_proxy = NULL;
+        need_init = 1;
+    }
+
     if (need_init) {
         need_init = 0;
         systemd_proxy = pcmk_dbus_connect();
@@ -529,9 +537,10 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
         } else if (pending) {
             services_set_op_pending(op, pending);
             return TRUE;
-        }
 
-        return FALSE;
+        } else {
+            return operation_finalize(op);
+        }
 
     } else if (g_strcmp0(method, "start") == 0) {
         FILE *file_strm = NULL;
@@ -611,8 +620,10 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
         if(pending) {
             services_set_op_pending(op, pending);
             return TRUE;
+
+        } else {
+            return operation_finalize(op);
         }
-        return FALSE;
 
     } else {
         DBusError error;
@@ -648,10 +659,16 @@ systemd_timeout_callback(gpointer p)
     return FALSE;
 }
 
+/* For an asynchronous 'op', returns FALSE if 'op' should be free'd by the caller */
+/* For a synchronous 'op', returns FALSE if 'op' fails */
 gboolean
-systemd_unit_exec(svc_action_t * op)
+systemd_unit_exec(svc_action_t * op, gboolean * inflight)
 {
     char *unit = NULL;
+
+    if (inflight) {
+        *inflight = FALSE;
+    }
 
     CRM_ASSERT(op);
     CRM_ASSERT(systemd_init());
@@ -665,7 +682,7 @@ systemd_unit_exec(svc_action_t * op)
         op->rc = PCMK_OCF_OK;
 
         if (op->synchronous == FALSE) {
-            operation_finalize(op);
+            return operation_finalize(op);
         }
         return TRUE;
     }
@@ -674,8 +691,16 @@ systemd_unit_exec(svc_action_t * op)
     free(unit);
 
     if (op->synchronous == FALSE) {
-        op->opaque->timerid = g_timeout_add(op->timeout + 5000, systemd_timeout_callback, op);
-        return TRUE;
+        if (op->opaque->pending) {
+            op->opaque->timerid = g_timeout_add(op->timeout + 5000, systemd_timeout_callback, op);
+            if (inflight) {
+                *inflight = TRUE;
+            }
+            return TRUE;
+
+        } else {
+            return operation_finalize(op);
+        }
     }
 
     return op->rc == PCMK_OCF_OK;
