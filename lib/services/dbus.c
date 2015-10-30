@@ -100,8 +100,10 @@ pcmk_dbus_find_error(const char *method, DBusPendingCall* pending, DBusMessage *
         }
     }
 
-    if(ret && (error.name || error.message)) {
-        *ret = error;
+    if(error.name || error.message) {
+        if (ret) {
+            *ret = error;
+        }
         return TRUE;
     }
 
