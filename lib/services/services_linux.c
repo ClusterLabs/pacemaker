@@ -592,17 +592,13 @@ action_synced_wait(svc_action_t * op, sigset_t mask)
 /* For an asynchronous 'op', returns FALSE if 'op' should be free'd by the caller */
 /* For a synchronous 'op', returns FALSE if 'op' fails */
 gboolean
-services_os_action_execute(svc_action_t * op, gboolean synchronous, gboolean * inflight)
+services_os_action_execute(svc_action_t * op, gboolean synchronous)
 {
     int stdout_fd[2];
     int stderr_fd[2];
     sigset_t mask;
     sigset_t old_mask;
     struct stat st;
-
-    if (inflight) {
-        *inflight = FALSE;
-    }
 
     if (pipe(stdout_fd) < 0) {
         crm_err("pipe() failed");
@@ -708,9 +704,7 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous, gboolean * i
                                                      G_PRIORITY_LOW,
                                                      op->opaque->stderr_fd, op, &stderr_callbacks);
 
-        if (inflight) {
-            *inflight = TRUE;
-        }
+        services_add_inflight_op(op);
     }
 
     return TRUE;
