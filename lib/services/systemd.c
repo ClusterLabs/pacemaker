@@ -662,13 +662,9 @@ systemd_timeout_callback(gpointer p)
 /* For an asynchronous 'op', returns FALSE if 'op' should be free'd by the caller */
 /* For a synchronous 'op', returns FALSE if 'op' fails */
 gboolean
-systemd_unit_exec(svc_action_t * op, gboolean * inflight)
+systemd_unit_exec(svc_action_t * op)
 {
     char *unit = NULL;
-
-    if (inflight) {
-        *inflight = FALSE;
-    }
 
     CRM_ASSERT(op);
     CRM_ASSERT(systemd_init());
@@ -693,9 +689,7 @@ systemd_unit_exec(svc_action_t * op, gboolean * inflight)
     if (op->synchronous == FALSE) {
         if (op->opaque->pending) {
             op->opaque->timerid = g_timeout_add(op->timeout + 5000, systemd_timeout_callback, op);
-            if (inflight) {
-                *inflight = TRUE;
-            }
+            services_add_inflight_op(op);
             return TRUE;
 
         } else {

@@ -582,28 +582,38 @@ handle_duplicate_recurring(svc_action_t * op, void (*action_callback) (svc_actio
 }
 
 static gboolean
-action_async_helper(svc_action_t * op) {
-    gboolean res = FALSE;
-    gboolean inflight = FALSE;
-
+action_async_helper(svc_action_t * op)
+{
     if (op->standard && strcasecmp(op->standard, "upstart") == 0) {
 #if SUPPORT_UPSTART
-        res = upstart_job_exec(op, FALSE, &inflight);
+        return upstart_job_exec(op, FALSE);
 #endif
     } else if (op->standard && strcasecmp(op->standard, "systemd") == 0) {
 #if SUPPORT_SYSTEMD
-        res =  systemd_unit_exec(op, &inflight);
+        return systemd_unit_exec(op);
 #endif
     } else {
-        res = services_os_action_execute(op, FALSE, &inflight);
+        return services_os_action_execute(op, FALSE);
     }
+    /* The 'op' has probably been freed if the execution functions return TRUE. */
+    /* Avoid using the 'op' in here. */
+
+    return FALSE;
+}
+
+void
+services_add_inflight_op(svc_action_t * op)
+{
+    if (op == NULL) {
+        return;
+    }
+
+    CRM_ASSERT(op->synchronous == FALSE);
 
     /* keep track of ops that are in-flight to avoid collisions in the same namespace */
-    if (inflight && op->rsc) {
+    if (op->rsc) {
         inflight_ops = g_list_append(inflight_ops, op);
     }
-
-    return res;
 }
 
 gboolean
@@ -704,14 +714,14 @@ services_action_sync(svc_action_t * op)
     op->synchronous = true;
     if (op->standard && strcasecmp(op->standard, "upstart") == 0) {
 #if SUPPORT_UPSTART
-        rc = upstart_job_exec(op, TRUE, NULL);
+        rc = upstart_job_exec(op, TRUE);
 #endif
     } else if (op->standard && strcasecmp(op->standard, "systemd") == 0) {
 #if SUPPORT_SYSTEMD
-        rc = systemd_unit_exec(op, NULL);
+        rc = systemd_unit_exec(op);
 #endif
     } else {
-        rc = services_os_action_execute(op, TRUE, NULL);
+        rc = services_os_action_execute(op, TRUE);
     }
     crm_trace(" > %s_%s_%d: %s = %d", op->rsc, op->action, op->interval, op->opaque->exec, op->rc);
     if (op->stdout_data) {

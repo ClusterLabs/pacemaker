@@ -44,7 +44,7 @@ struct svc_action_private_s {
 
 GList *services_os_get_directory_list(const char *root, gboolean files, gboolean executable);
 
-gboolean services_os_action_execute(svc_action_t * op, gboolean synchronous, gboolean * inflight);
+gboolean services_os_action_execute(svc_action_t * op, gboolean synchronous);
 
 GList *resources_os_list_lsb_agents(void);
 
@@ -58,6 +58,8 @@ gboolean cancel_recurring_action(svc_action_t * op);
 
 gboolean recurring_action_timer(gpointer data);
 gboolean operation_finalize(svc_action_t * op);
+
+void services_add_inflight_op(svc_action_t *op);
 
 void handle_blocked_ops(void);
 
