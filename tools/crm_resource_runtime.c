@@ -601,7 +601,8 @@ cli_resource_delete(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_
             resource_t *child = (resource_t *) lpc->data;
 
             rc = cli_resource_delete(cib_conn, crmd_channel, host_uname, child, data_set);
-            if(rc != pcmk_ok || is_not_set(rsc->flags, pe_rsc_unique)) {
+            if(rc != pcmk_ok
+               || (rsc->variant >= pe_clone && is_not_set(rsc->flags, pe_rsc_unique))) {
                 return rc;
             }
         }
