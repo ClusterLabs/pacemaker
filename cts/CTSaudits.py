@@ -180,7 +180,11 @@ class DiskAudit(ClusterAudit):
                         self.CM.log("CRIT: Out of log disk space on %s (%d%% / %dMb)"
                                     % (node, used_percent, remaining_mb))
                         result = None
-                        answer = raw_input('Continue? [nY] ')
+                        try:
+                            answer = raw_input('Continue? [nY]')
+                        except EOFError, e:
+                            answer = "Y"
+
                         if answer and answer == "n":
                             raise ValueError("Disk full on %s" % (node))
                             ret = 0
