@@ -150,7 +150,6 @@ resources_action_create(const char *name, const char *standard, const char *prov
 
     op = calloc(1, sizeof(svc_action_t));
     op->opaque = calloc(1, sizeof(svc_action_private_t));
-    op->opaque->pending = NULL;
     op->rsc = strdup(name);
     op->action = strdup(action);
     op->interval = interval;
@@ -337,7 +336,6 @@ services_action_create_generic(const char *exec, const char *args[])
 
     op->opaque->exec = strdup(exec);
     op->opaque->args[0] = strdup(exec);
-    op->opaque->pending = NULL;
 
     for (cur_arg = 1; args && args[cur_arg - 1]; cur_arg++) {
         op->opaque->args[cur_arg] = strdup(args[cur_arg - 1]);
