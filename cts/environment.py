@@ -72,6 +72,7 @@ class Environment:
         self["scenario"] = "random"
         self["stats"] = 0
         self["docker"] = 0
+        self["continue"] = 0
 
         self.RandomGen = random.Random()
         self.logger = LogFactory()
@@ -349,7 +350,8 @@ class Environment:
             elif args[i] == "--docker":
                 self["docker"] = 1
                 RemoteFactory().enable_docker()
-
+            elif args[i] == "--yes" or args[i] == "-y":
+                self["continue"] = 1
             elif args[i] == "--stonith" or args[i] == "--fencing":
                 skipthis=1
                 if args[i+1] == "1" or args[i+1] == "yes":
@@ -680,6 +682,7 @@ class Environment:
         print("\t [--docker]                   Indicates nodes are docker nodes.")
         print("\t [--seed random_seed]")
         print("\t [--set option=value]")
+        print("\t [--yes | -y]                 continue to run cts when there is an interaction whether to continue running pacemaker-cts")
         print("\t ")
         print("\t Example: ")
         print("\t    python sys.argv[0] -g virt1 --stack cs -r --stonith ssh --schema pacemaker-1.0 500")
