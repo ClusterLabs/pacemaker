@@ -3786,8 +3786,7 @@ dump_xml_element(xmlNode * data, int options, char **buffer, int *offset, int *m
 
     if (data->children) {
         xmlNode *xChild = NULL;
-
-        for (xChild = __xml_first_child(data); xChild != NULL; xChild = __xml_next(xChild)) {
+        for(xChild = data->children; xChild != NULL; xChild = xChild->next) {
             crm_xml_dump(xChild, options, buffer, offset, max, depth + 1);
         }
 
@@ -3799,6 +3798,33 @@ dump_xml_element(xmlNode * data, int options, char **buffer, int *offset, int *m
         }
     }
 }
+
+static void
+dump_xml_text(xmlNode * data, int options, char **buffer, int *offset, int *max, int depth)
+{
+    CRM_ASSERT(max != NULL);
+    CRM_ASSERT(offset != NULL);
+    CRM_ASSERT(buffer != NULL);
+
+    if (data == NULL) {
+        crm_trace("Nothing to dump");
+        return;
+    }
+
+    if (*buffer == NULL) {
+        *offset = 0;
+        *max = 0;
+    }
+
+    insert_prefix(options, buffer, offset, max, depth);
+
+    buffer_print(*buffer, *max, *offset, "%s", data->content);
+
+    if (options & xml_log_option_formatted) {
+        buffer_print(*buffer, *max, *offset, "\n");
+    }
+}
+
 
 static void
 dump_xml_comment(xmlNode * data, int options, char **buffer, int *offset, int *max, int depth)
@@ -3895,7 +3921,10 @@ crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, 
             dump_xml_element(data, options, buffer, offset, max, depth);
             break;
         case XML_TEXT_NODE:
-            /* Ignore */
+            /* if option xml_log_option_text is enabled, then dump XML_TEXT_NODE */
+            if (options & xml_log_option_text) {
+                dump_xml_text(data, options, buffer, offset, max, depth);
+            }
             return;
         case XML_COMMENT_NODE:
             dump_xml_comment(data, options, buffer, offset, max, depth);
@@ -3932,6 +3961,16 @@ void
 crm_buffer_add_char(char **buffer, int *offset, int *max, char c)
 {
     buffer_print(*buffer, *max, *offset, "%c", c);
+}
+
+char *
+dump_xml_formatted_with_text(xmlNode * an_xml_node)
+{
+    char *buffer = NULL;
+    int offset = 0, max = 0;
+
+    crm_xml_dump(an_xml_node, xml_log_option_formatted|xml_log_option_text, &buffer, &offset, &max, 0);
+    return buffer;
 }
 
 char *
