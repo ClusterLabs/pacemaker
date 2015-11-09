@@ -378,6 +378,19 @@ sparingly, say once every couple of hours. The probability that
 within those few hours there will be a need for a fencing
 operation and that the power switch would fail is usually low.
 
+=== What happens when the monitoring of a fence device fails?
+
+The resource will show up as failed in "pcs status/crm_mon" output, just like
+any regular resource. The cluster will try to run it on another node (if
+constraints allow it), eventually giving up when it fails repeatedly.
+
+This will not affect the operation of the cluster, until a node needs to be
+fenced. If no other fencing devices are available, the fence operation will
+fail, and the cluster will refuse to run services.
+
+For planned maintenance work, it is possible to unmanage the fencing resource
+beforehand.
+
 == Odd plugins
 
 Apart from plugins which handle real devices, some stonith
