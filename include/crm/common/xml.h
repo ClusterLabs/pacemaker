@@ -101,6 +101,24 @@ const char *crm_xml_replace(xmlNode * node, const char *name, const char *value)
 
 const char *crm_xml_add_int(xmlNode * node, const char *name, int value);
 
+/*!
+ * \brief Add a boolean attribute to an XML object
+ *
+ * Add an attribute with the value XML_BOOLEAN_TRUE or XML_BOOLEAN_FALSE
+ * as appropriate to an XML object.
+ *
+ * \param[in/out] node   XML object to add attribute to
+ * \param[in]     name   Name of attribute to add
+ * \param[in]     value  Boolean whose value will be tested
+ *
+ * \return Pointer to newly created XML attribute's content, or NULL on error
+ */
+static inline const char *
+crm_xml_add_boolean(xmlNode *node, const char *name, gboolean value)
+{
+    return crm_xml_add(node, name, (value? "true" : "false"));
+}
+
 /*
  * Unlink the node and set its doc pointer to NULL so free_xml()
  * will act appropriately
