@@ -511,13 +511,11 @@ match_down_event(int id, const char *target, const char *filter, bool quiet)
         }
 
         if (match != NULL) {
-            /* stop this event's timer if it had one */
             break;
         }
     }
 
     if (match != NULL) {
-        /* stop this event's timer if it had one */
         crm_debug("Match found for action %d: %s on %s", id,
                   crm_element_value(match->xml, XML_LRM_ATTR_TASK_KEY), target);
 
