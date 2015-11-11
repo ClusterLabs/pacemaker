@@ -1169,7 +1169,7 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
 
         freeXpathObject(xpathObj);
         free(buffer);
-        buffer = dump_xml_formatted(xml);
+        buffer = dump_xml_formatted_with_text(xml);
         free_xml(xml);
         if (!buffer) {
             return -EINVAL;
