@@ -654,6 +654,31 @@ handle_failcount_op(xmlNode * stored_msg)
     return I_NULL;
 }
 
+/*!
+ * \brief Handle a CRM_OP_REMOTE_STATE message by updating remote peer cache
+ *
+ * \param[in] msg  Message XML
+ *
+ * \return Next FSA input
+ */
+static enum crmd_fsa_input
+handle_remote_state(xmlNode *msg)
+{
+    const char *remote_uname = ID(msg);
+    const char *remote_is_up = crm_element_value(msg, XML_NODE_IN_CLUSTER);
+    crm_node_t *remote_peer;
+
+    CRM_CHECK(remote_uname && remote_is_up, return I_NULL);
+
+    remote_peer = crm_remote_peer_get(remote_uname);
+    CRM_CHECK(remote_peer, return I_NULL);
+
+    crm_update_peer_state(__FUNCTION__, remote_peer,
+                          strcmp(remote_is_up, XML_BOOLEAN_TRUE)?
+                          CRM_NODE_LOST : CRM_NODE_MEMBER, 0);
+    return I_NULL;
+}
+
 enum crmd_fsa_input
 handle_request(xmlNode * stored_msg, enum crmd_fsa_cause cause)
 {
@@ -710,6 +735,10 @@ handle_request(xmlNode * stored_msg, enum crmd_fsa_cause cause)
             /* a slave wants to shut down */
             /* create cib fragment and add to message */
             return handle_shutdown_request(stored_msg);
+
+        } else if (strcmp(op, CRM_OP_REMOTE_STATE) == 0) {
+            /* a remote connection host is letting us know the node state */
+            return handle_remote_state(stored_msg);
         }
     }
 
@@ -980,3 +1009,35 @@ delete_ha_msg_input(ha_msg_input_t * orig)
     free_xml(orig->msg);
     free(orig);
 }
+
+/*!
+ * \internal
+ * \brief Notify the DC of a remote node state change
+ *
+ * \param[in] node_name  Node's name
+ * \param[in] node_up    TRUE if node is up, FALSE if down
+ */
+void
+send_remote_state_message(const char *node_name, gboolean node_up)
+{
+    /* If we don't have a DC, or the message fails, we have a failsafe:
+     * the DC will eventually pick up the change via the CIB node state.
+     * The message allows it to happen sooner if possible.
+     */
+    if (fsa_our_dc) {
+        xmlNode *msg = create_request(CRM_OP_REMOTE_STATE, NULL, fsa_our_dc,
+                                      CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
+
+        crm_info("Notifying DC %s of pacemaker_remote node %s %s",
+                 fsa_our_dc, node_name, (node_up? "coming up" : "going down"));
+        crm_xml_add(msg, XML_ATTR_ID, node_name);
+        crm_xml_add_boolean(msg, XML_NODE_IN_CLUSTER, node_up);
+        send_cluster_message(crm_get_peer(0, fsa_our_dc), crm_msg_crmd, msg,
+                             TRUE);
+        free_xml(msg);
+    } else {
+        crm_debug("No DC to notify of pacemaker_remote node %s %s",
+                  node_name, (node_up? "coming up" : "going down"));
+    }
+}
+
