@@ -2194,15 +2194,10 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t * rsc, lrmd_event_data
 */
     int rc = pcmk_ok;
     xmlNode *update, *iter = NULL;
-    int call_opt = cib_quorum_override;
+    int call_opt = crmd_cib_smart_opt();
     const char *uuid = NULL;
 
     CRM_CHECK(op != NULL, return 0);
-
-    if (fsa_state == S_ELECTION || fsa_state == S_PENDING) {
-        crm_info("Sending update to local CIB in state: %s", fsa_state2string(fsa_state));
-        call_opt |= cib_scope_local;
-    }
 
     iter = create_xml_node(iter, XML_CIB_TAG_STATUS);
     update = iter;

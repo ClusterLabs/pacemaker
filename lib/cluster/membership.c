@@ -563,27 +563,8 @@ crm_get_peer(unsigned int id, const char *uname)
         node->id = id;
     }
 
-    if(uname && node->uname == NULL) {
-        int lpc, len = strlen(uname);
-
-        for (lpc = 0; lpc < len; lpc++) {
-            if (uname[lpc] >= 'A' && uname[lpc] <= 'Z') {
-                crm_warn("Node names with capitals are discouraged, consider changing '%s' to something else",
-                         uname);
-                break;
-            }
-        }
-
-        node->uname = strdup(uname);
-        if (crm_status_callback) {
-            crm_status_callback(crm_status_uname, node, NULL);
-        }
-
-#if SUPPORT_COROSYNC
-        if (is_openais_cluster()) {
-            crm_remove_conflicting_peer(node);
-        }
-#endif
+    if (uname && (node->uname == NULL)) {
+        crm_update_peer_uname(node, uname);
     }
 
     if(node->uuid == NULL) {
@@ -683,6 +664,43 @@ crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t see
 #endif
 
     return node;
+}
+
+/*!
+ * \internal
+ * \brief Update a node's uname
+ *
+ * \param[in] node        Node object to update
+ * \param[in] uname       New name to set
+ *
+ * \note This function should not be called within a peer cache iteration,
+ *       because in some cases it can remove conflicting cache entries,
+ *       which would invalidate the iterator.
+ */
+void
+crm_update_peer_uname(crm_node_t *node, const char *uname)
+{
+    int i, len = strlen(uname);
+
+    for (i = 0; i < len; i++) {
+        if (uname[i] >= 'A' && uname[i] <= 'Z') {
+            crm_warn("Node names with capitals are discouraged, consider changing '%s'",
+                     uname);
+            break;
+        }
+    }
+
+    free(node->uname);
+    node->uname = strdup(uname);
+    if (crm_status_callback) {
+        crm_status_callback(crm_status_uname, node, NULL);
+    }
+
+#if SUPPORT_COROSYNC
+    if (is_openais_cluster() && !is_set(node->flags, crm_remote_node)) {
+        crm_remove_conflicting_peer(node);
+    }
+#endif
 }
 
 /*!

@@ -239,3 +239,20 @@ do_cib_control(long long action,
         }
     }
 }
+
+/*!
+ * \internal
+ * \brief Get CIB call options to use local scope if master unavailable
+ *
+ * \return CIB call options
+ */
+int crmd_cib_smart_opt()
+{
+    int call_opt = cib_quorum_override;
+
+    if (fsa_state == S_ELECTION || fsa_state == S_PENDING) {
+        crm_info("Sending update to local CIB in state: %s", fsa_state2string(fsa_state));
+        call_opt |= cib_scope_local;
+    }
+    return call_opt;
+}
