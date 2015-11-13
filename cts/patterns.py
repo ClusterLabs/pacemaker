@@ -458,16 +458,16 @@ class crm_cman(crm_cs_v0):
             "EpochCmd"      : "crm_node -e --cman",
             "QuorumCmd"      : "crm_node -q --cman",
             "PartitionCmd"    : "crm_node -p --cman",
+        })
 
+        self.search.update({
             "Pat:We_stopped"   : "%s.*Unloading all Corosync service engines",
             "Pat:They_stopped" : "%s\W.*crmd.*Node %s\[.*state is now lost",
             "Pat:They_dead"    : "crmd.*Node %s\[.*state is now lost",
 
             "Pat:ChildKilled"  : "%s\W.*pacemakerd.*The %s process .* terminated with signal 9",
             "Pat:ChildRespawn" : "%s\W.*pacemakerd.*Respawning failed child process: %s",
-        })
 
-        self.search.update({
             "Pat:PacemakerUp"  : "%s\W.*pacemakerd.*Starting Pacemaker",
         })
 
