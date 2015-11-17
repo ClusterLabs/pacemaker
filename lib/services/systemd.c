@@ -442,7 +442,7 @@ systemd_exec_result(DBusMessage *reply, svc_action_t *op)
 
         /* ignore "already started" or "not running" errors */
         if (!systemd_mask_error(op, error.name)) {
-            crm_err("Could not issue %s for %s: %s (%s)", op->action, op->rsc, error.message);
+            crm_err("Could not issue %s for %s: %s", op->action, op->rsc, error.message);
         }
 
     } else {
