@@ -1,6 +1,6 @@
 #
 # Example for SNMP : OPTIONS="-d -S <snmp manager address> -W -p <pid file>"
-#    OPTIONS="-d -S 192.168.40.2 -W -p /tmp/ClusterMon-upstart.pid"
+#    OPTIONS="-d -S 192.168.40.2 -W -p /var/run/ClusterMon-upstart.pid"
 #
 # Please refer to a help and a manual for the detailed option.
 #
