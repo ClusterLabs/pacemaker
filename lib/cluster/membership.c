@@ -140,7 +140,9 @@ crm_remote_peer_cache_add(const char *node_name)
 void
 crm_remote_peer_cache_remove(const char *node_name)
 {
-    g_hash_table_remove(crm_remote_peer_cache, node_name);
+    if (g_hash_table_remove(crm_remote_peer_cache, node_name)) {
+        crm_trace("removed %s from remote peer cache", node_name);
+    }
 }
 
 /*!

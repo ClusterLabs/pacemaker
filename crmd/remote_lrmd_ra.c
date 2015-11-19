@@ -224,6 +224,41 @@ remote_node_up(const char *node_name)
 
 /*!
  * \internal
+ * \brief Handle cluster communication related to pacemaker_remote node leaving
+ *
+ * \param[in] node_name  Name of lost node
+ */
+static void
+remote_node_down(const char *node_name)
+{
+    xmlNode *update;
+    int call_id = 0;
+    int call_opt = crmd_cib_smart_opt();
+    crm_node_t *node;
+
+    /* Clear all node attributes */
+    update_attrd_remote_node_removed(node_name, NULL);
+
+    /* Ensure node is in the remote peer cache with lost state */
+    node = crm_remote_peer_get(node_name);
+    CRM_CHECK(node != NULL, return);
+    crm_update_peer_state(__FUNCTION__, node, CRM_NODE_LOST, 0);
+
+    /* Notify DC */
+    send_remote_state_message(node_name, FALSE);
+
+    /* Update CIB node state */
+    update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
+    do_update_node_cib(node, node_update_cluster, update, __FUNCTION__);
+    fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, call_id, NULL);
+    if (call_id < 0) {
+        crm_perror(LOG_ERR, "%s CIB node state update", node_name);
+    }
+    free_xml(update);
+}
+
+/*!
+ * \internal
  * \brief Handle effects of a remote RA command on node state
  *
  * \param[in] cmd  Completed remote RA command
@@ -238,6 +273,23 @@ check_remote_node_state(remote_ra_cmd_t *cmd)
 
     if (safe_str_eq(cmd->action, "start")) {
         remote_node_up(cmd->rsc_id);
+
+    } else if (safe_str_eq(cmd->action, "stop")) {
+        lrm_state_t *lrm_state = lrm_state_find(cmd->rsc_id);
+        remote_ra_data_t *ra_data = lrm_state? lrm_state->remote_ra_data : NULL;
+
+        if (ra_data) {
+            if (ra_data->migrate_status != takeover_complete) {
+                /* Stop means down if we didn't successfully migrate elsewhere */
+                remote_node_down(cmd->rsc_id);
+            } else if (AM_I_DC == FALSE) {
+                /* Only the connection host and DC track node state,
+                 * so if the connection migrated elsewhere and we aren't DC,
+                 * un-cache the node, so we don't have stale info
+                 */
+                crm_remote_peer_cache_remove(cmd->rsc_id);
+            }
+        }
     }
 }
 
@@ -543,8 +595,6 @@ handle_remote_ra_stop(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd)
     ra_data = lrm_state->remote_ra_data;
 
     if (ra_data->migrate_status != takeover_complete) {
-        /* only clear the status if this stop is not apart of a successful migration */
-        update_attrd_remote_node_removed(lrm_state->node_name, NULL);
         /* delete pending ops when ever the remote connection is intentionally stopped */
         g_hash_table_remove_all(lrm_state->pending_ops);
     } else {
