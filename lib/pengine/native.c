@@ -90,6 +90,21 @@ native_add_running(resource_t * rsc, node_t * node, pe_working_set_t * data_set)
             case recovery_block:
                 clear_bit(rsc->flags, pe_rsc_managed);
                 set_bit(rsc->flags, pe_rsc_block);
+
+                /* If the group that the resource belongs to is configured with multiple-active=block, */
+                /* block the whole group. */
+                if (rsc->parent
+                    && rsc->parent->variant == pe_group
+                    && rsc->parent->recovery_type == recovery_block) {
+                    GListPtr gIter = rsc->parent->children;
+
+                    for (; gIter != NULL; gIter = gIter->next) {
+                        resource_t *child = (resource_t *) gIter->data;
+
+                        clear_bit(child->flags, pe_rsc_managed);
+                        set_bit(child->flags, pe_rsc_block);
+                    }
+                }
                 break;
         }
         crm_debug("%s is active on %d nodes including %s: %s",
