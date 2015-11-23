@@ -734,6 +734,7 @@ tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
             te_action_confirmed(action);
             if (action->sent_update == FALSE && safe_str_neq("on", op)) {
                 send_stonith_update(action, target, uuid);
+                action->sent_update = TRUE;
             }
         }
         st_fail_count_reset(target);

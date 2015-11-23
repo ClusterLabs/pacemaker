@@ -209,19 +209,11 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         if (down) {
             const char *task = crm_element_value(down->xml, XML_LRM_ATTR_TASK);
 
-            if (alive && safe_str_eq(task, CRM_OP_FENCE)) {
-                crm_info("Node return implies stonith of %s (action %d) completed", node->uname,
-                         down->id);
+            if (safe_str_eq(task, CRM_OP_FENCE)) {
 
-                st_fail_count_reset(node->uname);
-
-                erase_status_tag(node->uname, XML_CIB_TAG_LRM, cib_scope_local);
-                erase_status_tag(node->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
-                /* down->confirmed = TRUE; Only stonith-ng returning should imply completion */
-                down->sent_update = TRUE;       /* Prevent tengine_stonith_callback() from calling send_stonith_update() */
-
-            } else if (safe_str_eq(task, CRM_OP_FENCE)) {
-                crm_trace("Waiting for stonithd to report the fencing of %s is complete", node->uname); /* via tengine_stonith_callback() */
+                /* tengine_stonith_callback() confirms fence actions */
+                crm_trace("Updating CIB %s stonithd reported fencing of %s complete",
+                          (down->confirmed? "after" : "before"), node->uname);
 
             } else if (alive == FALSE) {
                 crm_notice("%s of %s (op %d) is complete", task, node->uname, down->id);
