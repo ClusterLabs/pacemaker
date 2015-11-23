@@ -26,6 +26,7 @@
 #include <sys/utsname.h>
 
 #include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 #include <fcntl.h>
 
@@ -69,10 +70,10 @@ static struct crm_option long_options[] = {
     {"deregister",  1, 0, 'D', "De-register the named stonith device"},
 
     {"register-level",    1, 0, 'r',
-     "Register a stonith level for the named target (a node name\n\t"
-     "pattern, or a node attribute NAME=VALUE pair).\n\t"
-     "Requires: --index, one or more --device entries"},
-    {"deregister-level",  1, 0, 'd', "De-register a stonith level for the named target. Requires: --index"},
+     "Register a stonith level for the named target, specified as one of:\n\t"
+     "NAME, @PATTERN, or ATTR=VALUE. Requires: --index, one or more --device entries"},
+    {"deregister-level",  1, 0, 'd', "De-register a stonith level for the named target\n\t"
+     "Target is specified as for --register-level. Requires: --index"},
 
     {"-spacer-",    0, 0, '-', ""},
     {"-spacer-",    0, 0, '-', "Options and modifiers:"},
@@ -209,6 +210,35 @@ mainloop_fencing(stonith_t * st, const char *target, const char *action, int tim
     return async_fence_data.rc;
 }
 
+static int
+handle_level(stonith_t *st, char *target, int fence_level,
+             stonith_key_value_t *devices, bool added)
+{
+    char *node = NULL;
+    char *pattern = NULL;
+    char *name = NULL;
+    char *value = strchr(target, '=');
+
+    /* Determine if targeting by attribute, node name pattern or node name */
+    if (value != NULL)  {
+        name = target;
+        *value++ = '\0';
+    } else if (*target == '@') {
+        pattern = target + 1;
+    } else {
+        node = target;
+    }
+
+    /* Register or unregister level as appropriate */
+    if (added) {
+        return st->cmds->register_level_full(st, st_opts, node, pattern,
+                                             name, value, fence_level,
+                                             devices);
+    }
+    return st->cmds->remove_level_full(st, st_opts, node, pattern,
+                                       name, value, fence_level);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -226,9 +256,9 @@ main(int argc, char **argv)
 
     char *name = NULL;
     char *value = NULL;
+    char *target = NULL;
     const char *agent = NULL;
     const char *device = NULL;
-    const char *target = NULL;
     const char *longname = NULL;
 
     char action = 0;
@@ -420,11 +450,9 @@ main(int argc, char **argv)
         case 'D':
             rc = st->cmds->remove_device(st, st_opts, device);
             break;
-        case 'r':
-            rc = st->cmds->register_level(st, st_opts, target, fence_level, devices);
-            break;
         case 'd':
-            rc = st->cmds->remove_level(st, st_opts, target, fence_level);
+        case 'r':
+            rc = handle_level(st, target, fence_level, devices, action == 'r');
             break;
         case 'M':
             if (agent == NULL) {

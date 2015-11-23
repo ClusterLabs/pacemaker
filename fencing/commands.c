@@ -2428,53 +2428,29 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
 
     } else if (crm_str_eq(op, STONITH_OP_DEVICE_ADD, TRUE)) {
         const char *id = NULL;
-        xmlNode *notify_data = create_xml_node(NULL, op);
 
         rc = stonith_device_register(request, &id, FALSE);
-
-        crm_xml_add(notify_data, F_STONITH_DEVICE, id);
-        crm_xml_add_int(notify_data, F_STONITH_ACTIVE, g_hash_table_size(device_list));
-
-        do_stonith_notify(call_options, op, rc, notify_data);
-        free_xml(notify_data);
+        do_stonith_notify_device(call_options, op, rc, id);
 
     } else if (crm_str_eq(op, STONITH_OP_DEVICE_DEL, TRUE)) {
         xmlNode *dev = get_xpath_object("//" F_STONITH_DEVICE, request, LOG_ERR);
         const char *id = crm_element_value(dev, XML_ATTR_ID);
-        xmlNode *notify_data = create_xml_node(NULL, op);
 
         rc = stonith_device_remove(id, FALSE);
-
-        crm_xml_add(notify_data, F_STONITH_DEVICE, id);
-        crm_xml_add_int(notify_data, F_STONITH_ACTIVE, g_hash_table_size(device_list));
-
-        do_stonith_notify(call_options, op, rc, notify_data);
-        free_xml(notify_data);
+        do_stonith_notify_device(call_options, op, rc, id);
 
     } else if (crm_str_eq(op, STONITH_OP_LEVEL_ADD, TRUE)) {
         char *id = NULL;
-        xmlNode *notify_data = create_xml_node(NULL, op);
 
         rc = stonith_level_register(request, &id);
-
-        crm_xml_add(notify_data, F_STONITH_DEVICE, id);
-        crm_xml_add_int(notify_data, F_STONITH_ACTIVE, g_hash_table_size(topology));
-
-        do_stonith_notify(call_options, op, rc, notify_data);
-        free_xml(notify_data);
+        do_stonith_notify_level(call_options, op, rc, id);
         free(id);
 
     } else if (crm_str_eq(op, STONITH_OP_LEVEL_DEL, TRUE)) {
         char *id = NULL;
-        xmlNode *notify_data = create_xml_node(NULL, op);
 
         rc = stonith_level_remove(request, &id);
-
-        crm_xml_add(notify_data, F_STONITH_DEVICE, id);
-        crm_xml_add_int(notify_data, F_STONITH_ACTIVE, g_hash_table_size(topology));
-
-        do_stonith_notify(call_options, op, rc, notify_data);
-        free_xml(notify_data);
+        do_stonith_notify_level(call_options, op, rc, id);
 
     } else if (crm_str_eq(op, STONITH_OP_CONFIRM, TRUE)) {
         async_command_t *cmd = create_async_command(request);

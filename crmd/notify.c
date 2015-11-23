@@ -108,7 +108,7 @@ send_notification(const char *kind)
 
     notify = services_action_create_generic(notify_script, NULL);
 
-    notify->timeout = 300;
+    notify->timeout = CRMD_NOTIFY_TIMEOUT_MS;
     notify->standard = strdup("event");
     notify->id = strdup(notify_script);
     notify->agent = strdup(notify_script);
