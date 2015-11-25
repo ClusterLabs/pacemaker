@@ -81,7 +81,7 @@ The number by which to multiply the number of connected ping nodes by
 
 <parameter name="host_list" unique="0" required="1">
 <longdesc lang="en">
-The list of ping nodes to count.
+A space separated list of ping nodes to count.
 </longdesc>
 <shortdesc lang="en">Host list</shortdesc>
 <content type="string" default=""/>
