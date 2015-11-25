@@ -229,6 +229,9 @@ Summary:       Test framework for cluster-related technologies like Pacemaker
 Group:         System Environment/Daemons
 Requires:      python
 Requires:      %{name}-libs = %{version}-%{release}
+%if %{defined systemd_requires}
+Requires:      systemd-python
+%endif
 
 %description   cts
 Test framework for cluster-related technologies like Pacemaker
