@@ -71,7 +71,7 @@ all_opt = {
 	"action" : {
 		"getopt" : "o:",
 		"longopt" : "action",
-		"help" : "-o, --action=[action]          Action: status, reboot (default), off or on",
+		"help" : "-o, --action=[action]          Action: status, list, reboot (default), off or on",
 		"required" : "1",
 		"shortdesc" : "Fencing Action",
 		"default" : "reboot",
@@ -104,6 +104,13 @@ all_opt = {
 		"help" : "-U, --uuid                     UUID of the VM to fence.",
 		"required" : "0",
 		"shortdesc" : "The UUID of the virtual machine to fence.",
+		"order" : 1},
+	"mock_dynamic_hosts" : {
+		"getopt" : "H:",
+		"longopt" : "mock_dynamic_hosts",
+		"help" : "-H, --mock_dynamic_hosts=[hostlist]         List of hosts we can fence.",
+		"required" : "0",
+		"shortdesc" : "A list of hosts we can fence.",
 		"order" : 1}
 }
 
@@ -122,6 +129,7 @@ def show_docs(options, docs = None):
 		sys.exit(0)
 
 	if options.has_key("-o") and options["-o"].lower() == "metadata":
+		sys.stderr.write("asked for fence_dummy metadata\n")
 		metadata(device_opt, options, docs)
 		sys.exit(0)
 
@@ -201,7 +209,8 @@ def metadata(avail_opt, options, docs):
 
 	print "\t<action name=\"status\" />"
 	print "\t<action name=\"monitor\" />"
-	print "\t<action name=\"metadata\" />"	
+	print "\t<action name=\"metadata\" />"
+	print "\t<action name=\"list\" />"
 	print "</actions>"
 	print "</resource-agent>"
 
@@ -321,18 +330,26 @@ def main():
     # random sleep for testing
     if options.has_key("-f"):
         val = int(options["-f"])
-        sys.stderr.write("delay sleep for %d seconds" % val)
+        sys.stderr.write("delay sleep for %d seconds\n" % val)
         time.sleep(val)
 
     if options.has_key("-R"):
         val = int(options["-R"])
         ran = random.randint(1, val)
-        sys.stderr.write("random sleep for %d seconds" % ran)
+        sys.stderr.write("random sleep for %d seconds\n" % ran)
         time.sleep(ran)
 
     if options.has_key("-o") and (options["-o"] == "monitor"):
+        sys.stderr.write("fence_dummy monitor called\n")
         sys.exit(0)
     
+    if options.has_key("-o") and (options["-o"] == "list"):
+        sys.stderr.write("fence_dummy action (list) called\n")
+        if options.has_key("-H"):
+            print options["-H"]
+        else:
+            sys.stderr.write("were asked for hostlist but attribute mock_dynamic_hosts wasn't set\n")
+
     if options.has_key("-M"):
         if options["-M"] == "pass":
             sys.exit(0)
