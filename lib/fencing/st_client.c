@@ -61,6 +61,7 @@ struct stonith_action_s {
 
     /*! internal async track data */
     int fd_stdout;
+    int fd_stderr;
     int last_timeout_signo;
 
     /*! internal timing information */
@@ -633,6 +634,10 @@ stonith_action_clear_tracking_data(stonith_action_t * action)
         close(action->fd_stdout);
         action->fd_stdout = 0;
     }
+    if (action->fd_stderr) {
+        close(action->fd_stderr);
+        action->fd_stderr = 0;
+    }
     free(action->output);
     action->output = NULL;
     action->rc = 0;
@@ -689,33 +694,41 @@ stonith_action_create(const char *agent,
 
 #define READ_MAX 500
 static char *
-read_output(int fd)
+read_output(int fd_stdout, int fd_stderr)
 {
     char buffer[READ_MAX];
     char *output = NULL;
-    int len = 0;
-    int more = 0;
+    int fd[2] = {fd_stdout, fd_stderr};
+    int i, len, more;
 
-    if (!fd) {
-        return NULL;
-    }
+    for (i = 0; i < 2; i++) {
+        len = 0;
+        more = 0;
 
-    do {
-        errno = 0;
-        memset(&buffer, 0, READ_MAX);
-        more = read(fd, buffer, READ_MAX - 1);
-
-        if (more > 0) {
-            buffer[more] = 0; /* Make sure its nul-terminated for logging
-                              * 'more' is always less than our buffer size
-                              */
-            crm_trace("Got %d more bytes: %.200s...", more, buffer);
-            output = realloc_safe(output, len + more + 1);
-            snprintf(output + len, more + 1, "%s", buffer);
-            len += more;
+        if (!fd[i]) {
+            continue;
         }
 
-    } while (more == (READ_MAX - 1) || (more < 0 && errno == EINTR));
+        do {
+            errno = 0;
+            memset(&buffer, 0, READ_MAX);
+            more = read(fd[i], buffer, READ_MAX - 1);
+
+            if (more > 0) {
+                buffer[more] = 0; /* Make sure its nul-terminated for logging
+                                   * 'more' is always less than our buffer size
+                                   */
+                crm_trace("Got %d more bytes via %s: %.200s...", more,
+                          (i==0)?"stdout":"stderr", buffer);
+                if (i == 0) {
+                    output = realloc_safe(output, len + more + 1);
+                    snprintf(output + len, more + 1, "%s", buffer);
+                    len += more;
+                }
+            }
+
+        } while (more == (READ_MAX - 1) || (more < 0 && errno == EINTR));
+    }
 
     return output;
 }
@@ -769,7 +782,7 @@ stonith_action_async_done(mainloop_child_t * p, pid_t pid, int core, int signo, 
                   pid, action->action, exitcode);
     }
 
-    action->output = read_output(action->fd_stdout);
+    action->output = read_output(action->fd_stdout, action->fd_stderr);
 
     if (action->rc != pcmk_ok && update_remaining_timeout(action)) {
         int rc = internal_stonith_action_execute(action);
@@ -793,8 +806,10 @@ internal_stonith_action_execute(stonith_action_t * action)
     int total = 0;
     int p_read_fd, p_write_fd;  /* parent read/write file descriptors */
     int c_read_fd, c_write_fd;  /* child read/write file descriptors */
+    int c_stderr_fd, p_stderr_fd; /* parent/child side file descriptors for stderr */
     int fd1[2];
     int fd2[2];
+    int fd3[2];
     int is_retry = 0;
 
     /* clear any previous tracking data */
@@ -811,7 +826,7 @@ internal_stonith_action_execute(stonith_action_t * action)
         is_retry = 1;
     }
 
-    c_read_fd = c_write_fd = p_read_fd = p_write_fd = -1;
+    c_read_fd = c_write_fd = p_read_fd = p_write_fd = c_stderr_fd = p_stderr_fd = -1;
 
     if (action->args == NULL || action->agent == NULL)
         goto fail;
@@ -826,6 +841,11 @@ internal_stonith_action_execute(stonith_action_t * action)
         goto fail;
     c_read_fd = fd2[0];
     p_write_fd = fd2[1];
+
+    if (pipe(fd3))
+        goto fail;
+    p_stderr_fd = fd3[0];
+    c_stderr_fd = fd3[1];
 
     crm_debug("forking");
     pid = fork();
@@ -844,17 +864,19 @@ internal_stonith_action_execute(stonith_action_t * action)
             goto fail;
         close(2);
         /* coverity[leaked_handle] False positive */
-        if (dup(c_write_fd) < 0)
+        if (dup(c_stderr_fd) < 0)
             goto fail;
         close(0);
         /* coverity[leaked_handle] False positive */
         if (dup(c_read_fd) < 0)
             goto fail;
 
-        /* keep c_write_fd open so parent can report all errors. */
+        /* keep c_stderr_fd open so parent can report all errors. */
+        /* keep c_write_fd open so hostlist can be sent to parent. */
         close(c_read_fd);
         close(p_read_fd);
         close(p_write_fd);
+        close(p_stderr_fd);
 
         /* keep retries from executing out of control */
         if (is_retry) {
@@ -869,6 +891,11 @@ internal_stonith_action_execute(stonith_action_t * action)
     ret = fcntl(p_read_fd, F_SETFL, fcntl(p_read_fd, F_GETFL, 0) | O_NONBLOCK);
     if (ret < 0) {
         crm_perror(LOG_NOTICE, "Could not change the output of %s to be non-blocking",
+                   action->agent);
+    }
+    ret = fcntl(p_stderr_fd, F_SETFL, fcntl(p_stderr_fd, F_GETFL, 0) | O_NONBLOCK);
+    if (ret < 0) {
+        crm_perror(LOG_NOTICE, "Could not change the stderr of %s to be non-blocking",
                    action->agent);
     }
 
@@ -894,6 +921,7 @@ internal_stonith_action_execute(stonith_action_t * action)
     /* async */
     if (action->async) {
         action->fd_stdout = p_read_fd;
+        action->fd_stderr = p_stderr_fd;
         mainloop_child_add(pid, 0/* Move the timeout here? */, action->action, action, stonith_action_async_done);
         crm_trace("Op: %s on %s, pid: %d, timeout: %ds", action->action, action->agent, pid,
                   action->remaining_timeout);
@@ -910,6 +938,7 @@ internal_stonith_action_execute(stonith_action_t * action)
 
         close(c_write_fd);
         close(c_read_fd);
+        close(c_stderr_fd);
         return 0;
 
     } else {
@@ -948,7 +977,7 @@ internal_stonith_action_execute(stonith_action_t * action)
             crm_err("Waited for %d, got %d", pid, p);
         }
 
-        action->output = read_output(p_read_fd);
+        action->output = read_output(p_read_fd, p_stderr_fd);
 
         action->rc = -ECONNABORTED;
         rc = action->rc;
@@ -977,12 +1006,18 @@ internal_stonith_action_execute(stonith_action_t * action)
     if (p_write_fd >= 0) {
         close(p_write_fd);
     }
+    if (p_stderr_fd >= 0) {
+        close(p_stderr_fd);
+    }
 
     if (c_read_fd >= 0) {
         close(c_read_fd);
     }
     if (c_write_fd >= 0) {
         close(c_write_fd);
+    }
+    if (c_stderr_fd >= 0) {
+        close(c_stderr_fd);
     }
 
     return rc;
