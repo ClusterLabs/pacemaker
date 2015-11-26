@@ -228,7 +228,14 @@ controld_monitor() {
     killall -0 ${OCF_RESKEY_daemon} >/dev/null 2>&1 ; rc=$?
 
     case $rc in
-      0) rc=$OCF_SUCCESS;;
+      0) dlm_tool ls | grep -q "wait fencing"
+         if [ $? -eq 0 ]; then
+             ocf_log err "DLM status is: wait fencing"
+             rc=$OCF_ERR_GENERIC
+         else
+             rc=$OCF_SUCCESS
+         fi
+         ;;
       1) rc=$OCF_NOT_RUNNING;;
       *) rc=$OCF_ERR_GENERIC;;
     esac
