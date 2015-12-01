@@ -1450,15 +1450,15 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
         if (device) {
             timeout_one = TIMEOUT_MULTIPLY_FACTOR *
                           get_device_timeout(op, peer, device);
-            crm_info("Requesting that %s perform op %s %s with %s for %s (%ds)", peer->host,
-                     op->action, op->target, device, op->client_name, timeout_one);
+            crm_info("Requesting that '%s' perform op '%s %s' with '%s' for %s (%ds)", peer->host,
+                     op->target, op->action, device, op->client_name, timeout_one);
             crm_xml_add(remote_op, F_STONITH_DEVICE, device);
             crm_xml_add(remote_op, F_STONITH_MODE, "slave");
 
         } else {
             timeout_one = TIMEOUT_MULTIPLY_FACTOR * get_peer_timeout(op, peer);
-            crm_info("Requesting that %s perform op %s %s for %s (%ds, %ds)",
-                     peer->host, op->action, op->target, op->client_name, timeout_one, stonith_watchdog_timeout_ms);
+            crm_info("Requesting that '%s' perform op '%s %s' for %s (%ds, %ds)",
+                     peer->host, op->target, op->action, op->client_name, timeout_one, stonith_watchdog_timeout_ms);
             crm_xml_add(remote_op, F_STONITH_MODE, "smart");
 
         }
@@ -1934,8 +1934,8 @@ process_remote_stonith_exec(xmlNode * msg)
     if (is_set(op->call_options, st_opt_topology)) {
         const char *device = crm_element_value(msg, F_STONITH_DEVICE);
 
-        crm_notice("Call to %s for %s on behalf of %s@%s: %s (%d)",
-                   device, op->target, op->client_name, op->originator,
+        crm_notice("Call to %s for '%s %s' on behalf of %s@%s: %s (%d)",
+                   device, op->target, op->action, op->client_name, op->originator,
                    pcmk_strerror(rc), rc);
 
         /* We own the op, and it is complete. broadcast the result to all nodes
