@@ -136,11 +136,12 @@ resources_action_create(const char *name, const char *standard, const char *prov
         goto return_error;
     }
 
-    if (safe_str_eq(action, "monitor") && (
+    gboolean safe_standard_test = safe_str_eq(standard, "lsb") || safe_str_eq(standard, "service");    
 #if SUPPORT_HEARTBEAT
-        safe_str_eq(standard, "heartbeat") ||
+    safe_standard_test = safe_str_eq(standard, "heartbeat") || safe_standard_test;
 #endif
-        safe_str_eq(standard, "lsb") || safe_str_eq(standard, "service"))) {
+
+    if (safe_str_eq(action, "monitor") && (safe_standard_test)) {
         action = "status";
     }
 
