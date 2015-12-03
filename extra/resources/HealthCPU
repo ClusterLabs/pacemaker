@@ -136,7 +136,7 @@ dummy_monitor() {
 	
 	if [ -f ${OCF_RESKEY_state} ]; then
 
-	  IDLE=`top -b -n2 | grep Cpu | tail -1 | awk -F",|\.[0-9]%id" '{ print $4 }'`
+	  IDLE=`top -b -n2 | grep Cpu | tail -1 | awk -F",|.[0-9][ %]id" '{ print $4 }'`
 	  # echo "System idle: " $IDLE
 	  # echo "$OCF_RESKEY_red_limit"
 	  # echo $OCF_RESKEY_yellow_limit
