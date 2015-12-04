@@ -2472,6 +2472,9 @@ class SimulStartLite(CTSTest):
 
             node_list = self.CM.fencing_cleanup(self.name, stonith)
 
+            if node_list == None:
+                return self.failure("Cluster did not stabilize")
+
             # Remove node_list messages from watch.unmatched
             for node in node_list:
                 self.logger.debug("Dealing with stonith operations for %s" % repr(node_list))
