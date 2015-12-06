@@ -82,7 +82,14 @@ send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
     }
 
     crmd_peer_down(peer, TRUE);
-    node_state = do_update_node_cib(peer, node_update_all, NULL, __FUNCTION__);
+
+    /* Generate a node state update for the CIB.
+     * We rely on the membership layer to do node_update_cluster,
+     * and the peer status callback to do node_update_peer,
+     * because the node might rejoin before we get the stonith result.
+     */
+    node_state = do_update_node_cib(peer, node_update_join|node_update_expected,
+                                    NULL, __FUNCTION__);
 
     /* we have to mark whether or not remote nodes have already been fenced */
     if (peer->flags & crm_remote_node) {
