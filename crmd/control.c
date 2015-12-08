@@ -893,6 +893,8 @@ pe_cluster_option crmd_opts[] = {
 	  "  To ensure these changes take effect, we can optionally poll the cluster's status for changes."
         },
 
+#ifdef RHEL7_COMPAT
+    /* this interface is expected to change but was released in RHEL 7 */
 	{ "notification-agent", NULL, "string", NULL, "/dev/null", &check_script,
           "Notification script or tool to be called after significant cluster events",
           "Full path to a script or binary that will be invoked when resources start/stop/fail, fencing occurs or nodes join/leave the cluster.\n"
@@ -902,6 +904,7 @@ pe_cluster_option crmd_opts[] = {
           "Destination for notifications (Optional)",
           "Where should the supplied script send notifications to.  Useful to avoid hard-coding this in the script."
         },
+#endif
 
 	{ "load-threshold", NULL, "percentage", NULL, "80%", &check_utilization,
 	  "The maximum amount of system resources that should be used by nodes in the cluster",
@@ -992,9 +995,11 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     verify_crmd_options(config_hash);
 
+#ifdef RHEL7_COMPAT
     script = crmd_pref(config_hash, "notification-agent");
     value  = crmd_pref(config_hash, "notification-recipient");
     crmd_enable_notifications(script, value);
+#endif
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
     election_trigger->period_ms = crm_get_msec(value);
