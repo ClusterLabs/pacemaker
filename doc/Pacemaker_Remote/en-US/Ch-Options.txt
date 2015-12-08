@@ -52,13 +52,19 @@ Descriptions of these instance attributes can be retrieved using the following
 `pcs` command:
 ----
 # pcs resource describe remote
-ocf:pacemaker:remote - 
-
- 
+ocf:pacemaker:remote - remote resource agent
 
 Resource options:
   server: Server location to connect to. This can be an ip address or hostname.
   port: tcp port to connect to.
+  reconnect_interval: Time in seconds to wait before attempting to reconnect to
+		      a remote node after an active connection to the remote
+		      node has been severed. This wait is recurring. If
+		      reconnect fails after the wait period, a new reconnect
+		      attempt will be made after observing the wait time. When
+		      this option is in use, pacemaker will keep attempting to
+		      reach out and connect to the remote node indefinitely
+                      after each wait interval.
 ----
 
 When defining a remote node's connection resource, it is common and recommended

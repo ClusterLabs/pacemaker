@@ -1,4 +1,69 @@
 
+* Tue Dec 08 2015 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.14-rc1-1
+- Update source tarball to revision: 7cd6dcf
+- Changesets: 656
+- Diff:       169 files changed, 13014 insertions(+), 7579 deletions(-)
+
+- Features added since Pacemaker-1.1.13
+  + crm_resource: Indicate common reasons why a resource may not start after a cleanup
+  + crm_resource: New --force-promote and --force-demote options for debugging
+  + fencing: Support targeting fencing topologies by node name pattern or node attribute
+  + fencing: Remap sequential topology reboots to all-off-then-all-on
+  + pengine: Allow guest remote nodes using containers/vms to be nested in a group resource
+  + pengine: Allow resources to start and stop as soon as their state is known on all nodes
+  + pengine: Include a list of all and available nodes with clone notifications
+  + pengine: Addition of the clone resource clone-min metadata option
+  + pengine: Support of multiple-active=block for resource groups
+  + remote: reconnect_interval option for remote nodes to delay reconnect after fence
+
+- Changes since Pacemaker-1.1.13
+  + fix multiple memory issues (leaks, use-after-free, double free, use-of-NULL) in components and tools
+  + cib: Do not terminate due to badly behaving clients
+  + cman: handle corosync-invented node names of the form Node{id} for peers not in its node list
+  + controld: replace bashism
+  + crm_node: Display node state with -l and quorum status with -q, if available
+  + crmd: resources would sometimes be restarted when only non-unique parameters changed
+  + crmd: fence remote node after connection failure only once
+  + crmd: handle resources named the same as cluster nodes
+  + crmd: Pre-emptively fail in-flight actions when lrmd connections fail
+  + crmd: Record actions in the CIB as failed if we cannot execute them
+  + crm_report: Enable password sanitizing by default
+  + crm_report: Allow log file discovery to be disabled
+  + crm_resource: Allow the resource configuration to be modified for --force-{check,start,..} calls
+  + crm_resource: Compensate for -C and -p being called with the child resource for clones
+  + crm_resource: Correctly clean up all children for anonymous cloned groups
+  + crm_resource: Correctly clean up failcounts for inactive anonymous clones
+  + crm_resource: Correctly observe --force when deleting and updating attributes
+  + crm_shadow: Fix "crm_shadow --diff"
+  + crm_simulate: Prevent segfault on arches with 64bit time_t
+  + fencing: ensure "required"/"automatic" only apply to "on" actions
+  + fencing: Return a provider for the internal fencing agent "#watchdog" instead of logging an error
+  + fencing: ignore stderr output of fence agents (often used for debug messages)
+  + libcib: potential user input overflow
+  + libcluster: overhaul peer cache management
+  + log: make syslog less noisy
+  + lrmd: cancel currently pending STONITH op if stonithd connection is lost
+  + lrmd: Finalize all pending and recurring operations when cleaning up a resource
+  + pengine: Bug cl#5247 - Imply resources running on a container are stopped when the container is stopped
+  + pengine: cl#5235 - Prevent graph loops that can be introduced by "load_stopped -> migrate_to" ordering
+  + pengine: Correctly bypass fencing for resources that do not require it
+  + pengine: do not timeout remote node recurring monitor op failure until after fencing
+  + pengine: Ensure recurring monitor operations are cancelled when clone instances are de-allocated
+  + pengine: fixes segfault in pengine when fencing remote node
+  + pengine: properly handle blocked clone actions
+  + pengine: ensure failed actions that occurred in node shutdown are displayed
+  + remote: Correctly display the usage of the ocf:pacemaker:remote resource agent
+  + remote: do not fail operations because of a migration
+  + remote: enable reloads for select remote connection options
+  + resources: allow for top output with or without percent sign in HealthCPU
+  + resources: Prevent an error message on stopping "Dummy" resource
+  + systemd: Prevent segfault when logging failed operations
+  + systemd: Reconnect to System DBus if the connection is closed
+  + systemd: set systemd resources' timeout values higher than systemd's own default
+  + tools: Do not send command lines to syslog
+  + upstart: Ensure pending structs are correctly unreferenced
+
+
 * Wed Jun 24 2015 Andrew Beekhof <andrew@beekhof.net> Pacemaker-1.1.13-1
 - Update source tarball to revision: 2a1847e
 - Changesets: 750
