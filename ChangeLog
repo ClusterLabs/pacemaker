@@ -1,3 +1,10 @@
+* Tue Dec 08 2015 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.14-rc2-1
+- Update source tarball to revision: ce830a7
+- Changesets: 1
+- Diff:       1 file changed, 2 insertions(+)
+
+- Changes since Pacemaker-1.1.14-rc1
+  + crmd: ensure compilation works with built-in notifications disabled
 
 * Tue Dec 08 2015 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.14-rc1-1
 - Update source tarball to revision: 7cd6dcf
