@@ -760,8 +760,13 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
         } else if(safe_str_eq(op, "delete") && strstr(xpath, XML_CIB_TAG_RESOURCE)) {
             const char *rsc_id = NULL;
             char *search = NULL;
-            char *mutable = strdup(xpath);
+            char *mutable = NULL;
 
+            if (strstr(xpath, XML_TAG_ATTR_SETS)) {
+                needs_update = TRUE;
+                break;
+            } 
+            mutable = strdup(xpath);
             rsc_id = strstr(mutable, "primitive[@id=\'");
             if (rsc_id != NULL) {
                 rsc_id += strlen("primitive[@id=\'");
