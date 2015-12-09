@@ -966,7 +966,9 @@ crmd_pref(GHashTable * options, const char *name)
 static void
 config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
+#ifdef RHEL7_COMPAT
     const char *script = NULL;
+#endif
     const char *value = NULL;
     GHashTable *config_hash = NULL;
     crm_time_t *now = crm_time_new(NULL);
