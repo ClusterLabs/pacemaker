@@ -25,6 +25,8 @@
 /* Timeout to use before killing a notification script (in milliseconds) */
 #  define CRMD_NOTIFY_TIMEOUT_MS (300000)
 
+void crmd_notify_clenaup(void);
+gboolean crmd_notify_trigger(gpointer user_data);
 void crmd_enable_notifications(const char *script, const char *target);
 void crmd_notify_node_event(crm_node_t *node);
 void crmd_notify_fencing_op(stonith_event_t * e);
