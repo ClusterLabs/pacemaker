@@ -1314,7 +1314,7 @@ crm_pidfile_inuse(const char *filename, long mypid, const char *daemon)
 }
 
 static int
-crm_lock_pidfile(const char *name, const char *filename)
+crm_lock_pidfile(const char *filename, const char *name)
 {
     long mypid = 0;
     int fd = 0, rc = 0;
