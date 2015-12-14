@@ -1,3 +1,11 @@
+* Mon Dec 14 2015 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.14-rc3-1
+- Update source tarball to revision: 97ada31
+- Changesets: 7
+- Diff:       2 files changed, 7 insertions(+), 2 deletions(-)
+
+- Changes since Pacemaker-1.1.14-rc2
+  + stonithd: fix issue where deleting a fence device attribute can delete the device
+
 * Tue Dec 08 2015 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.14-rc2-1
 - Update source tarball to revision: ce830a7
 - Changesets: 1
