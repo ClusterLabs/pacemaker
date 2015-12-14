@@ -287,7 +287,7 @@ www:	all global doxygen
 summary:
 	@printf "\n* `date +"%a %b %d %Y"` `git config user.name` <`git config user.email`> $(NEXT_RELEASE)-1"
 	@printf "\n- Update source tarball to revision: `git log --pretty=format:%h -n 1`"
-	@printf "\n- Changesets: `git log --pretty=format:'%h' $(LAST_RELEASE)..HEAD | wc -l`"
+	@printf "\n- Changesets: `git log --pretty=oneline $(LAST_RELEASE)..HEAD | wc -l`"
 	@printf "\n- Diff:      "
 	@git diff -r $(LAST_RELEASE)..HEAD --stat include lib mcp pengine/*.c pengine/*.h  cib crmd fencing lrmd tools xml | tail -n 1
 

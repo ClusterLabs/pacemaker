@@ -1,5 +1,5 @@
 # Control file for the Travis autobuilder
-# http://docs.travis-ci.com/user/build-configuration/
+# https://docs.travis-ci.com/user/customizing-the-build/
 
 language: c
 compiler:
@@ -65,6 +65,7 @@ notifications:
   email:
     recipients:
       - andrew@beekhof.net
+
 # whitelist
 branches:
   only:
