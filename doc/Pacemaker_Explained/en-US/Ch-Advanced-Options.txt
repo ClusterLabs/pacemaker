@@ -244,6 +244,10 @@ it again on the same node. However if a resource fails repeatedly,
 it is possible that there is an underlying problem on that node, and you
 might desire trying a different node in such a case.
 
+indexterm:[migration-threshold]
+indexterm:[failure-timeout]
+indexterm:[start-failure-is-fatal]
+
 Pacemaker allows you to set your preference via the +migration-threshold+
 resource option.
 footnote:[
@@ -272,8 +276,9 @@ minute.
 There are two exceptions to the migration threshold concept:
 when a resource either fails to start or fails to stop.
 
-Start failures cause the failcount to be set to +INFINITY+ and thus always
-cause the resource to move immediately.
+If the cluster property +start-failure-is-fatal+ is set to +true+ (which is the
+default), start failures cause the failcount to be set to +INFINITY+ and thus
+always cause the resource to move immediately.
 
 Stop failures are slightly different and crucial.  If a resource fails
 to stop and STONITH is enabled, then the cluster will fence the node
