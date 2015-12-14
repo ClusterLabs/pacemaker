@@ -41,6 +41,13 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+/* Enable support for built-in notifications
+ *
+ * The interface is expected to change significantly, and this will be defined
+ * in the upstream master branch only until a new design is finalized.
+ */
+#define RHEL7_COMPAT
+
 qb_ipcs_service_t *ipcs = NULL;
 
 extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
