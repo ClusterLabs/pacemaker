@@ -41,6 +41,13 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+/* Enable support for built-in notifications
+ *
+ * The interface is expected to change significantly, and this will be defined
+ * in the upstream master branch only until a new design is finalized.
+ */
+#define RHEL7_COMPAT
+
 qb_ipcs_service_t *ipcs = NULL;
 
 extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
@@ -893,6 +900,8 @@ pe_cluster_option crmd_opts[] = {
 	  "  To ensure these changes take effect, we can optionally poll the cluster's status for changes."
         },
 
+#ifdef RHEL7_COMPAT
+    /* this interface is expected to change but was released in RHEL 7 */
 	{ "notification-agent", NULL, "string", NULL, "/dev/null", &check_script,
           "Notification script or tool to be called after significant cluster events",
           "Full path to a script or binary that will be invoked when resources start/stop/fail, fencing occurs or nodes join/leave the cluster.\n"
@@ -902,6 +911,7 @@ pe_cluster_option crmd_opts[] = {
           "Destination for notifications (Optional)",
           "Where should the supplied script send notifications to.  Useful to avoid hard-coding this in the script."
         },
+#endif
 
 	{ "load-threshold", NULL, "percentage", NULL, "80%", &check_utilization,
 	  "The maximum amount of system resources that should be used by nodes in the cluster",
@@ -963,7 +973,9 @@ crmd_pref(GHashTable * options, const char *name)
 static void
 config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
+#ifdef RHEL7_COMPAT
     const char *script = NULL;
+#endif
     const char *value = NULL;
     GHashTable *config_hash = NULL;
     crm_time_t *now = crm_time_new(NULL);
@@ -992,9 +1004,11 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     verify_crmd_options(config_hash);
 
+#ifdef RHEL7_COMPAT
     script = crmd_pref(config_hash, "notification-agent");
     value  = crmd_pref(config_hash, "notification-recipient");
     crmd_enable_notifications(script, value);
+#endif
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
     election_trigger->period_ms = crm_get_msec(value);

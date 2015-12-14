@@ -238,29 +238,44 @@ indexterm:[Constraints,Ordering,id]
 
 |first
 |
-|The name of a resource that must be started before the +then+
- resource is allowed to.
+|Name of the resource that the +then+ resource depends on
 indexterm:[first,Ordering Constraints]
 indexterm:[Constraints,Ordering,first]
 
 |then
 |
-|The name of a resource. This resource will start after the +first+ resource.
+|Name of the dependent resource
 indexterm:[then,Ordering Constraints]
 indexterm:[Constraints,Ordering,then]
+
+|first-action
+|start
+|The action that the +first+ resource must complete before +then-action+
+ can be initiated for the +then+ resource.  Allowed values: +start+,
+ +stop+, +promote+, +demote+.
+ indexterm:[first-action,Ordering Constraints]
+ indexterm:[Constraints,Ordering,first-action]
+
+|then-action
+|value of +first-action+
+|The action that the +then+ resource can execute only after the
+ +first-action+ on the +first+ resource has completed.  Allowed
+ values: +start+, +stop+, +promote+, +demote+.
+ indexterm:[then-action,Ordering Constraints]
+ indexterm:[Constraints,Ordering,then-action]
 
 |kind
 |
 |How to enforce the constraint. Allowed values:
 
 * +Optional:+ Just a suggestion. Only applies if both resources are
-  starting/stopping. Any change in state by the +first+ resource will have no
-  effect on the +then+ resource.
-* +Mandatory:+ Always. If 'first' is stopping or cannot be started,
-  'then' must be stopped. If 'first' is restarted, 'then' (if running)
-  will be stopped beforehand and started afterward.
+  executing the specified actions. Any change in state by the +first+ resource
+  will have no effect on the +then+ resource.
+* +Mandatory:+ Always. If +first+ does not perform +first-action+, +then+ will
+  not be allowed to performed +then-action+. If +first+ is restarted, +then+
+  (if running) will be stopped beforehand and started afterward.
 * +Serialize:+ Ensure that no two stop/start actions occur concurrently
-  for the resources. 'First' and 'then' can start in either order,
+  for the resources. +First+ and +then+ can start in either order,
   but one must complete starting before the other can be started. A typical use
   case is when resource start-up puts a high load on the host.
 
@@ -269,11 +284,15 @@ indexterm:[Constraints,Ordering,kind]
 
 |symmetrical
 |TRUE
-|If true, stop the resources in the reverse order.
+|If true, the reverse of the constraint applies for the opposite action (for
+ example, if B starts after A starts, then B stops before A stops).
 indexterm:[symmetrical,Ordering Constraints]
 indexterm:[Ordering Constraints,symmetrical]
 
 |=========================================================
+
++Promote+ and +demote+ apply to the master role of
+<<s-resource-multistate,multi-state>> resources.
 
 === Optional and mandatory ordering ===
 

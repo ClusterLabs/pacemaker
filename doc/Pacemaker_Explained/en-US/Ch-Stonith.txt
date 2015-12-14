@@ -550,7 +550,7 @@ Some possible uses of topologies include:
 * Initiate a kdump and then poweroff the node
 
 .Properties of Fencing Levels
-[width="95%",cols="1m,6<",options="header",align="center"]
+[width="95%",cols="1m,3<",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -562,9 +562,21 @@ Some possible uses of topologies include:
  indexterm:[Fencing,fencing-level,id]
 
 |target
-|The node to which this level applies
+|The name of a single node to which this level applies
  indexterm:[target,fencing-level]
  indexterm:[Fencing,fencing-level,target]
+
+|target-pattern
+|A regular expression matching the names of nodes to which this level applies
+'(since 1.1.14)'
+ indexterm:[target-pattern,fencing-level]
+ indexterm:[Fencing,fencing-level,target-pattern]
+
+|target-attribute
+|The name of a node attribute that is set for nodes to which this level applies
+'(since 1.1.14)'
+ indexterm:[target-attribute,fencing-level]
+ indexterm:[Fencing,fencing-level,target-attribute]
 
 |index
 |The order in which to attempt the levels.
@@ -871,3 +883,10 @@ be logged but ignored.
 When a reboot operation is remapped, any action-specific timeout for the
 remapped action will be used (for example, +pcmk_off_timeout+ will be used when
 executing the +off+ command, not +pcmk_reboot_timeout+).
+
+[NOTE]
+====
+In Pacemaker versions 1.1.13 and earlier, reboots will not be remapped in the
+second case. To achieve the same effect, separate fencing devices for off and
+on actions must be configured.
+====

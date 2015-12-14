@@ -185,9 +185,10 @@ Should deleted actions be cancelled?
 | start-failure-is-fatal | TRUE |
 indexterm:[start-failure-is-fatal,Cluster Option]
 indexterm:[Cluster,Option,start-failure-is-fatal]
-Should a failure to start be treated as fatal for a resource?
-If FALSE, the cluster will instead use the resource's
-+failcount+ and value for +migration-threshold+ (see <<s-failure-migration>>).
+Should a failure to start a resource on a particular node prevent further start
+attempts on that node? If FALSE, the cluster will decide whether to try
+starting on the same node again based on the resource's current failure count
+and +migration-threshold+ (see <<s-failure-migration>>).
 
 | enable-startup-probes | TRUE |
 indexterm:[enable-startup-probes,Cluster Option]
