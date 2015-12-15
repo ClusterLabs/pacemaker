@@ -123,6 +123,7 @@ struct timer_rec_s {
 typedef int (*stonith_op_t) (const char *, int, const char *, xmlNode *,
                              xmlNode *, xmlNode *, xmlNode **, xmlNode **);
 
+#if HAVE_STONITH_STONITH_H
 static const char META_TEMPLATE[] =
     "<?xml version=\"1.0\"?>\n"
     "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
@@ -142,6 +143,7 @@ static const char META_TEMPLATE[] =
     "  </actions>\n"
     "  <special tag=\"heartbeat\">\n"
     "    <version>2.0</version>\n" "  </special>\n" "</resource-agent>\n";
+#endif
 
 bool stonith_dispatch(stonith_t * st);
 int stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata);
