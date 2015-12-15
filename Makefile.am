@@ -29,7 +29,6 @@ SUBDIRS	= $(CORE) cts extra doc
 doc_DATA = AUTHORS COPYING COPYING.LIB
 noinst_PROGRAMS = scratch
 
-AUTOMAKE_OPTIONS = foreign
 ACLOCAL_AMFLAGS  = -I m4
 
 testdir			= $(datadir)/$(PACKAGE)/tests/

@@ -23,7 +23,7 @@
 # Run this to generate all the initial makefiles, etc.
 
 # Unset GREP_OPTIONS as any coloring can mess up the AC_CONFIG_AUX_DIR matching patterns
-GREP_OPTIONS= autoreconf -visf  -Wno-portability
+GREP_OPTIONS= autoreconf -visf
 
 if [ -f config.log ]; then
     echo Now re-running ./configure with the previous arguments
