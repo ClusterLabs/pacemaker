@@ -29,6 +29,7 @@
 #  include <glib.h>
 #  include <stdbool.h>
 
+#  undef INFINITY
 #  undef MIN
 #  undef MAX
 #  include <string.h>

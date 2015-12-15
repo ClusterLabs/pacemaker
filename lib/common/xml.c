@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <math.h>
 #include <crm_internal.h>
 #include <sys/param.h>
 #include <stdio.h>
@@ -30,7 +31,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <ctype.h>
-#include <math.h>
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
