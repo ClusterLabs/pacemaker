@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 base=$1; shift
 target=$1; shift
