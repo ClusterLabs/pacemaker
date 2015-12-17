@@ -12,7 +12,7 @@
 		changes (OS, pacemaker, corosync, pcs), and PUBSNUMBER for
 		simple textual changes (corrections, translations, etc.).
 	-->
-	<edition>4</edition>
+	<edition>5</edition>
 	<pubsnumber>0</pubsnumber>
 	<abstract>
 		<para>

@@ -215,6 +215,13 @@ Options inherited from <<s-resource-options,primitive>> resources:
  indexterm:[clone-node-max,Clone Option]
  indexterm:[Clone,Option,clone-node-max]
   
+|clone-min
+|1
+|Require at least this number of clone instances to be runnable before allowing
+resources depending on the clone to be runnable '(since 1.1.14)'
+ indexterm:[clone-min,Clone Option]
+ indexterm:[Clone,Option,clone-min]
+
 |notify
 |true
 |When stopping or starting a copy of the clone, tell all the other
@@ -582,12 +589,13 @@ location constraints.  These constraints are written no differently from
 those for primitive resources except that the master's +id+ is used.
 
 When considering multi-state resources in constraints, for most
-purposes it is sufficient to treat them as clones.  The exception is
-when the +rsc-role+ and/or +with-rsc-role+ fields (for colocation
-constraints) and +first-action+ and/or +then-action+ fields (for
-ordering constraints) are used.
+purposes it is sufficient to treat them as clones. The exception is
+that the +first-action+ and/or +then-action+ fields for ordering constraints
+may be set to +promote+ or +demote+ to constrain the master role,
+and colocation constraints may contain +rsc-role+ and/or +with-rsc-role+
+fields.
           
-.Additional constraint options relevant to multi-state resources
+.Additional colocation constraint options for multi-state resources
 [width="95%",cols="1m,1,3<",options="header",align="center"]
 |=========================================================
 
@@ -610,24 +618,6 @@ ordering constraints) are used.
  +master+, +slave+.
  indexterm:[with-rsc-role,Ordering Constraints]
  indexterm:[Constraints,Ordering,with-rsc-role]
-
-|first-action
-|start
-|An additional attribute of ordering constraints that specifies the
- action that the +first+ resource must complete before executing the
- specified action for the +then+ resource.  Allowed values: +start+,
- +stop+, +promote+, +demote+.
- indexterm:[first-action,Ordering Constraints]
- indexterm:[Constraints,Ordering,first-action]
-
-|then-action
-|value of +first-action+
-|An additional attribute of ordering constraints that specifies the
- action that the +then+ resource can only execute after the
- +first-action+ on the +first+ resource has completed.  Allowed
- values: +start+, +stop+, +promote+, +demote+.
- indexterm:[then-action,Ordering Constraints]
- indexterm:[Constraints,Ordering,then-action]
 
 |=========================================================
 
