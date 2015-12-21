@@ -1950,7 +1950,7 @@
     Changesets:      184
     Diff:            513 files changed, 43408 insertions(+), 43783 deletions(-)
 - Changes since 0.7.0-19
-  + Fix compilation when GNUTLS isnt found
+  + Fix compilation when GNUTLS isn't found
   + admin: Fix use-after-free in crm_mon
   + Build: Remove testing code that prevented heartbeat-only builds
   + cib: Use single quotes so that the xpath queries for nvpairs will succeed
