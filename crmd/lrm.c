@@ -2287,7 +2287,7 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t * rsc, lrmd_event_data
      *   we get shot for having resources "running" when the really weren't
      *
      * the alternative however means blocking here for too long, which
-     * isnt acceptable
+     * isn't acceptable
      */
     fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, rc, NULL);
 
