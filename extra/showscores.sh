@@ -34,7 +34,7 @@ fi
 tmpfile=/tmp/dkshowscorestmpfiledk
 tmpfile2=/tmp/dkshowscorestmpfile2dk
 
-#doesnt work in ais clusters
+#doesn't work in ais clusters
 if ! ps -ef|grep -q -w aisexec; then
 	if [ `crmadmin -D | cut -d' ' -f4` != `uname -n|tr "[:upper:]" "[:lower:]"` ] 
 		then echo "Warning: Script is not running on DC. This will be slow."
@@ -83,7 +83,7 @@ get_stickiness() {
 	# get meta attribute resource_failure_stickiness
 	if ! migrationthreshold=`crm_resource -g migration-threshold -r $res --meta -Q 2>/dev/null`
 	then
-		# if that doesnt exist, use the default value
+		# if that doesn't exist, use the default value
 		migrationthreshold="$default_migrationthreshold"
 	fi	
 }

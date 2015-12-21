@@ -2657,7 +2657,7 @@ unpack_rsc_op_failure(resource_t *rsc, node_t *node, int rc, xmlNode *xml_op, en
             }
         }
         crm_warn("Making sure %s doesn't come up again", fail_rsc->id);
-        /* make sure it doesnt come up again */
+        /* make sure it doesn't come up again */
         g_hash_table_destroy(fail_rsc->allowed_nodes);
         fail_rsc->allowed_nodes = node_hash_from_list(data_set->nodes);
         g_hash_table_foreach(fail_rsc->allowed_nodes, set_node_score, &score);

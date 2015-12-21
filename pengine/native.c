@@ -468,7 +468,7 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     print_resource(LOG_DEBUG_2, "Allocating: ", rsc, FALSE);
     if (rsc->next_role == RSC_ROLE_STOPPED) {
         pe_rsc_trace(rsc, "Making sure %s doesn't get allocated", rsc->id);
-        /* make sure it doesnt come up again */
+        /* make sure it doesn't come up again */
         resource_location(rsc, NULL, -INFINITY, XML_RSC_ATTR_TARGET_ROLE, data_set);
 
     } else if(rsc->next_role > rsc->role

@@ -512,7 +512,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
                        action->uuid, action->node->details->uname);
 
         } else if (action->needs == rsc_req_nothing) {
-            pe_rsc_trace(rsc, "Action %s doesnt require anything", action->uuid);
+            pe_rsc_trace(rsc, "Action %s does not require anything", action->uuid);
             pe_set_action_bit(action, pe_action_runnable);
 #if 0
             /*
@@ -1353,7 +1353,7 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
     crm_element_value_const_int(xml_b, XML_LRM_ATTR_CALLID, &b_call_id);
 
     if (a_call_id == -1 && b_call_id == -1) {
-        /* both are pending ops so it doesnt matter since
+        /* both are pending ops so it doesn't matter since
          *   stops are never pending
          */
         sort_return(0, "pending");
@@ -1413,7 +1413,7 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
             /*
              * some of the logic in here may be redundant...
              *
-             * if the UUID from the TE doesnt match then one better
+             * if the UUID from the TE doesn't match then one better
              *   be a pending operation.
              * pending operations dont survive between elections and joins
              *   because we query the LRM directly

@@ -76,7 +76,7 @@ native_add_running(resource_t * rsc, node_t * node, pe_working_set_t * data_set)
                     GHashTableIter gIter;
                     node_t *local_node = NULL;
 
-                    /* make sure it doesnt come up again */
+                    /* make sure it doesn't come up again */
                     g_hash_table_destroy(rsc->allowed_nodes);
                     rsc->allowed_nodes = node_hash_from_list(data_set->nodes);
                     g_hash_table_iter_init(&gIter, rsc->allowed_nodes);
