@@ -42,34 +42,46 @@ static qb_ipcs_service_t *crmd_ipcs = NULL;
 static qb_ipcs_service_t *stonith_ipcs = NULL;
 
 /* ipc providers == crmd clients connecting from cluster nodes */
-GHashTable *ipc_providers;
+static GHashTable *ipc_providers = NULL;
 /* ipc clients == things like cibadmin, crm_resource, connecting locally */
-GHashTable *ipc_clients;
+static GHashTable *ipc_clients = NULL;
+
+/*!
+ * \internal
+ * \brief Get an IPC proxy provider
+ *
+ * \return Pointer to a provider if one exists, NULL otherwise
+ *
+ * \note Grab the first provider available; any provider will work, and usually
+ *       there will be only one. These are client connections originating from a
+ *       cluster node's crmd.
+ */
+crm_client_t *
+ipc_proxy_get_provider()
+{
+    if (ipc_providers) {
+        GHashTableIter iter;
+        gpointer key = NULL;
+        gpointer value = NULL;
+
+        g_hash_table_iter_init(&iter, ipc_providers);
+        if (g_hash_table_iter_next(&iter, &key, &value)) {
+            return (crm_client_t*)value;
+        }
+    }
+    return NULL;
+}
 
 static int32_t
 ipc_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid, const char *ipc_channel)
 {
-    void *key = NULL;
-    void *value = NULL;
     crm_client_t *client;
-    crm_client_t *ipc_proxy = NULL;
-    GHashTableIter iter;
+    crm_client_t *ipc_proxy = ipc_proxy_get_provider();
     xmlNode *msg;
 
     crm_trace("Connection %p on channel %s", c, ipc_channel);
 
-    if (g_hash_table_size(ipc_providers) == 0) {
-        crm_err("No ipc providers available for uid %d gid %d", uid, gid);
-        return -EREMOTEIO;
-    }
-
-    g_hash_table_iter_init(&iter, ipc_providers);
-    if (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
-        /* grab the first provider available, any provider in this
-         * table will work. Usually there will only be one. These are
-         * lrmd client connections originating for a cluster node's crmd. */
-        ipc_proxy = value;
-    } else {
+    if (ipc_proxy == NULL) {
         crm_err("No ipc providers available for uid %d gid %d", uid, gid);
         return -EREMOTEIO;
     }

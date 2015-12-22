@@ -103,6 +103,7 @@ void ipc_proxy_cleanup(void);
 void ipc_proxy_add_provider(crm_client_t *client);
 void ipc_proxy_remove_provider(crm_client_t *client);
 void ipc_proxy_forward_client(crm_client_t *client, xmlNode *xml);
+crm_client_t *ipc_proxy_get_provider(void);
 #endif
 
 #endif
