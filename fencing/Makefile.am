@@ -72,3 +72,5 @@ stonithd_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(CRYPTOLIB) $(CLUSTERLIBS)
 
 CFLAGS			= $(CFLAGS_COPY:-Werror=)
+
+CLEANFILES = $(man7_MANS) $(man8_MANS)
