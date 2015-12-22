@@ -231,9 +231,23 @@ void
 lrmd_shutdown(int nsig)
 {
     crm_info("Terminating with  %d clients", crm_hash_table_size(client_connections));
+
+    if (stonith_api) {
+        stonith_api->cmds->remove_notification(stonith_api, T_STONITH_NOTIFY_DISCONNECT);
+        stonith_api->cmds->disconnect(stonith_api);
+        stonith_api_delete(stonith_api);
+    }
     if (ipcs) {
         mainloop_del_ipc_server(ipcs);
     }
+
+#ifdef ENABLE_PCMK_REMOTE
+    lrmd_tls_server_destroy();
+    ipc_proxy_cleanup();
+#endif
+
+    crm_client_cleanup();
+    g_hash_table_destroy(rsc_list);
     crm_exit(pcmk_ok);
 }
 
@@ -255,7 +269,6 @@ static struct crm_option long_options[] = {
 int
 main(int argc, char **argv)
 {
-    int rc = 0;
     int flag = 0;
     int index = 0;
     const char *option = NULL;
@@ -349,19 +362,7 @@ main(int argc, char **argv)
     crm_info("Starting");
     g_main_run(mainloop);
 
-    mainloop_del_ipc_server(ipcs);
-#ifdef ENABLE_PCMK_REMOTE
-    lrmd_tls_server_destroy();
-    ipc_proxy_cleanup();
-#endif
-    crm_client_cleanup();
-
-    g_hash_table_destroy(rsc_list);
-
-    if (stonith_api) {
-        stonith_api->cmds->disconnect(stonith_api);
-        stonith_api_delete(stonith_api);
-    }
-
-    return rc;
+    /* should never get here */
+    lrmd_shutdown(SIGTERM);
+    return pcmk_ok;
 }
