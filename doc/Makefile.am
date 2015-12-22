@@ -38,9 +38,10 @@ DOCBOOK_LANGS   := en-US
 DOTs = $(wildcard */en-US/images/*.dot)
 SVG = $(wildcard */en-US/images/pcmk-*.svg) $(DOTs:%.dot=%.svg)
 
-PNGS = $(SVG:%.svg=%-small.png) $(SVG:%.svg=%.png)  $(SVG:%.svg=%-large.png) 	\
+generated_PNGS = $(SVG:%.svg=%-small.png) $(SVG:%.svg=%.png)  $(SVG:%.svg=%-large.png) 	\
 	Pacemaker_Explained/en-US/images/Policy-Engine-big.png  \
-	Pacemaker_Explained/en-US/images/Policy-Engine-small.png \
+	Pacemaker_Explained/en-US/images/Policy-Engine-small.png
+PNGS = $(generated_PNGS) \
 	Pacemaker_Remote/en-US/images/pcmk-ha-cluster-stack.png \
 	Pacemaker_Remote/en-US/images/pcmk-ha-remote-stack.png
 
@@ -200,6 +201,6 @@ if BUILD_DOCBOOK
 endif
 
 clean-local:
-	-rm -rf $(generated_docs) $(generated_mans) $(docbook_build) ../xsl
+	-rm -rf $(generated_docs) $(generated_mans) $(docbook_build) ../xsl $(generated_PNGS)
 	-rm -rf $(SHARED_XML) $(CFS_XML) $(PE_XML) $(PR_XML)
 	for book in $(docbook); do rm -rf $$book/tmp $$book/publish; done
