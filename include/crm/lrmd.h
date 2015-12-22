@@ -90,6 +90,12 @@ typedef struct lrmd_key_value_s {
 #define LRMD_OP_POKE              "lrmd_rsc_poke"
 #define LRMD_OP_NEW_CLIENT        "lrmd_rsc_new_client"
 
+#define LRMD_IPC_OP_NEW           "new"
+#define LRMD_IPC_OP_DESTROY       "destroy"
+#define LRMD_IPC_OP_EVENT         "event"
+#define LRMD_IPC_OP_REQUEST       "request"
+#define LRMD_IPC_OP_RESPONSE      "response"
+
 #define F_LRMD_IPC_OP           "lrmd_ipc_op"
 #define F_LRMD_IPC_IPC_SERVER   "lrmd_ipc_server"
 #define F_LRMD_IPC_SESSION      "lrmd_ipc_session"

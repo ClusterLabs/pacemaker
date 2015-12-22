@@ -39,7 +39,7 @@ remote_proxy_notify_destroy(lrmd_t *lrmd, const char *session_id)
 {
     /* sending to the remote node that an ipc connection has been destroyed */
     xmlNode *msg = create_xml_node(NULL, T_LRMD_IPC_PROXY);
-    crm_xml_add(msg, F_LRMD_IPC_OP, "destroy");
+    crm_xml_add(msg, F_LRMD_IPC_OP, LRMD_IPC_OP_DESTROY);
     crm_xml_add(msg, F_LRMD_IPC_SESSION, session_id);
     lrmd_internal_proxy_send(lrmd, msg);
     free_xml(msg);
@@ -50,7 +50,7 @@ remote_proxy_relay_event(lrmd_t *lrmd, const char *session_id, xmlNode *msg)
 {
     /* sending to the remote node an event msg. */
     xmlNode *event = create_xml_node(NULL, T_LRMD_IPC_PROXY);
-    crm_xml_add(event, F_LRMD_IPC_OP, "event");
+    crm_xml_add(event, F_LRMD_IPC_OP, LRMD_IPC_OP_EVENT);
     crm_xml_add(event, F_LRMD_IPC_SESSION, session_id);
     add_message_xml(event, F_LRMD_IPC_MSG, msg);
     crm_log_xml_explicit(event, "EventForProxy");
@@ -63,7 +63,7 @@ remote_proxy_relay_response(lrmd_t *lrmd, const char *session_id, xmlNode *msg, 
 {
     /* sending to the remote node a response msg. */
     xmlNode *response = create_xml_node(NULL, T_LRMD_IPC_PROXY);
-    crm_xml_add(response, F_LRMD_IPC_OP, "response");
+    crm_xml_add(response, F_LRMD_IPC_OP, LRMD_IPC_OP_RESPONSE);
     crm_xml_add(response, F_LRMD_IPC_SESSION, session_id);
     crm_xml_add_int(response, F_LRMD_IPC_MSG_ID, msg_id);
     add_message_xml(response, F_LRMD_IPC_MSG, msg);

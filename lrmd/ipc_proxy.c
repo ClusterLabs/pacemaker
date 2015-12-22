@@ -101,7 +101,7 @@ ipc_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid, const char *ipc
     g_hash_table_insert(ipc_clients, client->id, client);
 
     msg = create_xml_node(NULL, T_LRMD_IPC_PROXY);
-    crm_xml_add(msg, F_LRMD_IPC_OP, "new");
+    crm_xml_add(msg, F_LRMD_IPC_OP, LRMD_IPC_OP_NEW);
     crm_xml_add(msg, F_LRMD_IPC_IPC_SERVER, ipc_channel);
     crm_xml_add(msg, F_LRMD_IPC_SESSION, client->id);
     lrmd_server_send_notify(ipc_proxy, msg);
@@ -157,7 +157,7 @@ ipc_proxy_forward_client(crm_client_t *ipc_proxy, xmlNode *xml)
 
     if (ipc_client == NULL) {
         xmlNode *msg = create_xml_node(NULL, T_LRMD_IPC_PROXY);
-        crm_xml_add(msg, F_LRMD_IPC_OP, "destroy");
+        crm_xml_add(msg, F_LRMD_IPC_OP, LRMD_IPC_OP_DESTROY);
         crm_xml_add(msg, F_LRMD_IPC_SESSION, session);
         lrmd_server_send_notify(ipc_proxy, msg);
         free_xml(msg);
@@ -176,11 +176,11 @@ ipc_proxy_forward_client(crm_client_t *ipc_proxy, xmlNode *xml)
      * and forwarding it to connection 1.
      */
 
-    if (safe_str_eq(msg_type, "event")) {
+    if (safe_str_eq(msg_type, LRMD_IPC_OP_EVENT)) {
         crm_trace("Sending event to %s", ipc_client->id);
         rc = crm_ipcs_send(ipc_client, 0, msg, crm_ipc_server_event);
 
-    } else if (safe_str_eq(msg_type, "response")) {
+    } else if (safe_str_eq(msg_type, LRMD_IPC_OP_RESPONSE)) {
         int msg_id = 0;
 
         crm_element_value_int(xml, F_LRMD_IPC_MSG_ID, &msg_id);
@@ -190,7 +190,7 @@ ipc_proxy_forward_client(crm_client_t *ipc_proxy, xmlNode *xml)
         CRM_LOG_ASSERT(msg_id == ipc_client->request_id);
         ipc_client->request_id = 0;
 
-    } else if (safe_str_eq(msg_type, "destroy")) {
+    } else if (safe_str_eq(msg_type, LRMD_IPC_OP_DESTROY)) {
         qb_ipcs_disconnect(ipc_client->ipcs);
 
     } else {
@@ -245,7 +245,7 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     client->request_id = id;
 
     msg = create_xml_node(NULL, T_LRMD_IPC_PROXY);
-    crm_xml_add(msg, F_LRMD_IPC_OP, "request");
+    crm_xml_add(msg, F_LRMD_IPC_OP, LRMD_IPC_OP_REQUEST);
     crm_xml_add(msg, F_LRMD_IPC_SESSION, client->id);
     crm_xml_add(msg, F_LRMD_IPC_CLIENT, crm_client_name(client));
     crm_xml_add(msg, F_LRMD_IPC_USER, client->user);
@@ -275,7 +275,7 @@ ipc_proxy_closed(qb_ipcs_connection_t * c)
 
     if (ipc_proxy) {
         xmlNode *msg = create_xml_node(NULL, T_LRMD_IPC_PROXY);
-        crm_xml_add(msg, F_LRMD_IPC_OP, "destroy");
+        crm_xml_add(msg, F_LRMD_IPC_OP, LRMD_IPC_OP_DESTROY);
         crm_xml_add(msg, F_LRMD_IPC_SESSION, client->id);
         lrmd_server_send_notify(ipc_proxy, msg);
         free_xml(msg);
