@@ -371,6 +371,7 @@ crmd_exit(int rc)
     mainloop_destroy_trigger(stonith_reconnect); stonith_reconnect = NULL;
     mainloop_destroy_trigger(transition_trigger); transition_trigger = NULL;
 
+    crmd_notify_clenaup();
     crm_client_cleanup();
     crm_peer_destroy();
 
