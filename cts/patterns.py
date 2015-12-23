@@ -176,7 +176,7 @@ class crm_cs_v0(BasePatterns):
             "Pat:ChildRespawn" : "%s\W.*corosync.*Respawning failed child process: %s",
 
             "Pat:InfraUp"      : "%s\W.*corosync.*Initializing transport",
-            "Pat:PacemakerUp"  : "%s\W.*pacemakerd.*Starting Pacemaker",
+            "Pat:PacemakerUp"  : "%s\W.*corosync.*CRM: Initialized",
         })
 
         self.ignore = self.ignore + [
@@ -418,6 +418,8 @@ class crm_mcp(crm_cs_v0):
             "Pat:ChildExit"    : "The .* process exited",
             "Pat:ChildKilled"  : "%s\W.*pacemakerd.*The %s process .* terminated with signal 9",
             "Pat:ChildRespawn" : "%s\W.*pacemakerd.*Respawning failed child process: %s",
+
+            "Pat:PacemakerUp"  : "%s\W.*pacemakerd.*Starting Pacemaker",
         })
 
 #        if self.Env["have_systemd"]:
@@ -456,14 +458,19 @@ class crm_cman(crm_cs_v0):
             "EpochCmd"      : "crm_node -e --cman",
             "QuorumCmd"      : "crm_node -q --cman",
             "PartitionCmd"    : "crm_node -p --cman",
+        })
 
+        self.search.update({
             "Pat:We_stopped"   : "%s.*Unloading all Corosync service engines",
             "Pat:They_stopped" : "%s\W.*crmd.*Node %s\[.*state is now lost",
             "Pat:They_dead"    : "crmd.*Node %s\[.*state is now lost",
 
             "Pat:ChildKilled"  : "%s\W.*pacemakerd.*The %s process .* terminated with signal 9",
             "Pat:ChildRespawn" : "%s\W.*pacemakerd.*Respawning failed child process: %s",
+
+            "Pat:PacemakerUp"  : "%s\W.*pacemakerd.*Starting Pacemaker",
         })
+
 
 
 class PatternSelector:

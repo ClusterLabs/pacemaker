@@ -66,7 +66,7 @@ in Pacemaker clusters:
   cluster having any awareness of the services running inside the virtual
   machine. The virtual machine is 'opaque' to the cluster.
 * A virtual machine can be a cluster resource, and run pacemaker_remote
-  to make it a a guest node, allowing the cluster to manage services
+  to make it a guest node, allowing the cluster to manage services
   inside it. The virtual machine is 'transparent' to the cluster.
 ======
 

@@ -145,7 +145,7 @@ main(int argc, char **argv)
         date_time = crm_time_new(NULL);
 
         if (date_time == NULL) {
-            fprintf(stderr, "Internal error: couldnt determin 'now' !\n");
+            fprintf(stderr, "Internal error: couldn't determine 'now'!\n");
             crm_help('?', 1);
         }
         crm_time_log(LOG_TRACE, "Current date/time", date_time,

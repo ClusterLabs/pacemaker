@@ -176,7 +176,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     /* fsa_dump_queue(LOG_DEBUG_2); */
 
     if (old_len == g_list_length(fsa_message_queue)) {
-        crm_err("Couldnt add message to the queue");
+        crm_err("Couldn't add message to the queue");
     }
 
     if (fsa_source && input != I_WAIT_FOR_EVENT) {
@@ -697,8 +697,8 @@ handle_request(xmlNode * stored_msg, enum crmd_fsa_cause cause)
                 return I_STOP;
 
             } else if (dc_match) {
-                crm_err("We didnt ask to be shut down, yet our"
-                        " TE is telling us too." " Better get out now!");
+                crm_err("We didn't ask to be shut down, yet our"
+                        " TE is telling us to. Better get out now!");
                 return I_TERMINATE;
 
             } else if (fsa_state != S_STOPPING) {
@@ -779,7 +779,7 @@ handle_request(xmlNode * stored_msg, enum crmd_fsa_cause cause)
 
         if (dc_match || fsa_our_dc == NULL) {
             if (is_set(fsa_input_register, R_SHUTDOWN) == FALSE) {
-                crm_err("We didn't ask to be shut down, yet our" " DC is telling us too.");
+                crm_err("We didn't ask to be shut down, yet our DC is telling us to.");
                 set_bit(fsa_input_register, R_STAYDOWN);
                 return I_STOP;
             }
@@ -881,7 +881,7 @@ enum crmd_fsa_input
 handle_shutdown_request(xmlNode * stored_msg)
 {
     /* handle here to avoid potential version issues
-     *   where the shutdown message/proceedure may have
+     *   where the shutdown message/procedure may have
      *   been changed in later versions.
      *
      * This way the DC is always in control of the shutdown

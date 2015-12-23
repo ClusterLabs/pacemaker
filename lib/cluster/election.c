@@ -333,7 +333,7 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
     static time_t expires = 0;
     static time_t last_election_loss = 0;
 
-    /* if the membership copy is NULL we REALLY shouldnt be voting
+    /* if the membership copy is NULL we REALLY shouldn't be voting
      * the question is how we managed to get here.
      */
 
@@ -456,7 +456,7 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
         } else {
             reason = "Host name";
             CRM_ASSERT(strcasecmp(e->uname, from) < 0);
-/* cant happen...
+/* can't happen...
  *	} else if(strcasecmp(e->uname, from) == 0) {
  *
  */

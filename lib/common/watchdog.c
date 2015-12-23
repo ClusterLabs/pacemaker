@@ -20,7 +20,6 @@
 #include <crm_internal.h>
 
 #include <sched.h>
-#include <syscall.h>
 #include <sys/ioctl.h>
 #include <sys/reboot.h>
 

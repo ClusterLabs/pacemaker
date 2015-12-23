@@ -275,7 +275,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     value = crm_element_value(root, name);
     if (value == NULL) {
         crm_warn("No value for %s was specified in the configuration.", name);
-        crm_warn("The reccomended course of action is to shutdown,"
+        crm_warn("The recommended course of action is to shutdown,"
                  " run crm_verify and fix any errors it reports.");
         crm_warn("We will default to zero and continue but may get"
                  " confused about which configuration to use if"
