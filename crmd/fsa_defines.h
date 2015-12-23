@@ -38,8 +38,7 @@ enum crmd_fsa_state {
                                  * the CIB
                                  */
     S_NOT_DC,                   /* we are in crmd/slave mode */
-    S_POLICY_ENGINE,            /* Determin the next stable state of the cluster
-                                 */
+    S_POLICY_ENGINE,            /* Determine next stable state of the cluster */
     S_RECOVERY,                 /* Something bad happened, check everything is ok
                                  * before continuing and attempt to recover if
                                  * required
@@ -108,7 +107,7 @@ Description:
       
       Once the election is complete, if we are the DC, we enter the
       S_INTEGRATION state which is a DC-in-waiting style state.  We are
-      the DC, but we shouldnt do anything yet because we may not have an
+      the DC, but we shouldn't do anything yet because we may not have an
       up-to-date picture of the cluster.  There may of course be times
       when this fails, so we should go back to the S_RECOVERY stage and
       check everything is ok.  We may also end up here if a new node came
@@ -213,7 +212,7 @@ enum crmd_fsa_input {
                                  */
 
     I_WAIT_FOR_EVENT,           /* we may be waiting for an async task to "happen"
-                                 * and until it does, we cant do anything else
+                                 * and until it does, we can't do anything else
                                  */
 
     I_DC_HEARTBEAT,             /* The DC is telling us that it is alive and well */
@@ -240,9 +239,9 @@ enum crmd_fsa_input {
  * Some of the actions below will always occur together for now, but I can
  * forsee that this may not always be the case.  So I've spilt them up so
  * that if they ever do need to be called independantly in the future, it
- * wont be a problem. 
+ * won't be a problem.
  *
- * For example, separating A_LRM_CONNECT from A_STARTUP might be useful 
+ * For example, separating A_LRM_CONNECT from A_STARTUP might be useful
  * if we ever try to recover from a faulty or disconnected LRM.
  *
  *======================================*/
@@ -339,12 +338,12 @@ enum crmd_fsa_input {
 #  define	A_CIB_STOP		0x0000040000000000ULL
 
 /* -- Transition Engine actions -- */
-        /* Attempt to reach the newly  calculated cluster state.  This is 
+        /* Attempt to reach the newly  calculated cluster state.  This is
          * only called once per transition (except if it is asked to
          * stop the transition or start a new one).
-         * Once given a cluster state to reach, the TE will determin
+         * Once given a cluster state to reach, the TE will determine
          * tasks that can be performed in parallel, execute them, wait
-         * for replies and then determin the next set until the new
+         * for replies and then determine the next set until the new
          * state is reached or no further tasks can be taken.
          */
 #  define	A_TE_INVOKE		0x0000100000000000ULL
@@ -456,7 +455,7 @@ enum crmd_fsa_input {
                                            awaiting completion? */
 #  define	R_RESP_PEND	0x08000000ULL
                                         /* Do we have clients waiting on a
-                                           response? if so perhaps we shouldnt
+                                           response? if so perhaps we shouldn't
                                            stop yet */
 
 #  define R_IN_TRANSITION	0x10000000ULL

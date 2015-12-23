@@ -1957,7 +1957,7 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char * c
 
     task = op->op_type;
     /* remap the task name under various scenarios
-     * this makes life easier for the PE when its trying determin the current state
+     * this makes life easier for the PE when trying determine the current state
      */
     if (crm_str_eq(task, "reload", TRUE)) {
         if (op->op_status == PCMK_LRM_OP_DONE) {

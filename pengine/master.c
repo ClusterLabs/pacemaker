@@ -207,7 +207,7 @@ can_be_master(resource_t * rsc)
         return NULL;
 
     } else if (can_run_resources(node) == FALSE) {
-        crm_trace("Node cant run any resources: %s", node->details->uname);
+        crm_trace("Node can't run any resources: %s", node->details->uname);
         return NULL;
     }
 

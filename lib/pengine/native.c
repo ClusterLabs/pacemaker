@@ -58,7 +58,7 @@ native_add_running(resource_t * rsc, node_t * node, pe_working_set_t * data_set)
     if (is_not_set(rsc->flags, pe_rsc_managed)) {
         resource_t *p = rsc->parent;
 
-        pe_rsc_info(rsc, "resource %s isnt managed", rsc->id);
+        pe_rsc_info(rsc, "resource %s isn't managed", rsc->id);
         resource_location(rsc, node, INFINITY, "not_managed_default", data_set);
 
         while(p && node->details->online) {

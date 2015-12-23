@@ -319,7 +319,7 @@ do_work(void)
         crm_exit(rc);
 
     } else if (DO_RESET) {
-        /* tell dest_node to initiate the shutdown proceedure
+        /* tell dest_node to initiate the shutdown procedure
          *
          * if dest_node is NULL, the request will be sent to the
          *   local node
