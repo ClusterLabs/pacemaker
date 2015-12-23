@@ -80,7 +80,9 @@ void process_lrmd_message(crm_client_t * client, uint32_t id, xmlNode * request)
 
 void free_rsc(gpointer data);
 
-void lrmd_shutdown(int nsig);
+void handle_shutdown_ack(void);
+
+void lrmd_client_destroy(crm_client_t *client);
 
 void client_disconnect_cleanup(const char *client_id);
 

@@ -40,6 +40,16 @@ static qb_ipcs_service_t *ipcs = NULL;
 stonith_t *stonith_api = NULL;
 int lrmd_call_id = 0;
 
+#ifdef ENABLE_PCMK_REMOTE
+/* whether shutdown request has been sent */
+static volatile sig_atomic_t shutting_down = FALSE;
+
+/* timer for waiting for acknowledgment of shutdown request */
+static volatile guint shutdown_ack_timer = 0;
+
+static gboolean lrmd_exit(gpointer data);
+#endif
+
 static void
 stonith_connection_destroy_cb(stonith_t * st, stonith_event_t * e)
 {
@@ -151,6 +161,27 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     return 0;
 }
 
+/*!
+ * \internal
+ * \brief Free a client connection, and exit if appropriate
+ *
+ * \param[in] client  Client connection to free
+ */
+void
+lrmd_client_destroy(crm_client_t *client)
+{
+    crm_client_destroy(client);
+
+#ifdef ENABLE_PCMK_REMOTE
+    /* If we were waiting to shut down, we can now safely do so
+     * if there are no more proxied IPC providers
+     */
+    if (shutting_down && (ipc_proxy_get_provider() == NULL)) {
+        lrmd_exit(NULL);
+    }
+#endif
+}
+
 static int32_t
 lrmd_ipc_closed(qb_ipcs_connection_t * c)
 {
@@ -165,7 +196,7 @@ lrmd_ipc_closed(qb_ipcs_connection_t * c)
 #ifdef ENABLE_PCMK_REMOTE
     ipc_proxy_remove_provider(client);
 #endif
-    crm_client_destroy(client);
+    lrmd_client_destroy(client);
     return 0;
 }
 
@@ -227,8 +258,17 @@ lrmd_server_send_notify(crm_client_t * client, xmlNode * msg)
     return -1;
 }
 
-void
-lrmd_shutdown(int nsig)
+/*!
+ * \internal
+ * \brief Clean up and exit immediately
+ *
+ * \param[in] data  Ignored
+ *
+ * \return Doesn't return
+ * \note   This can be used as a timer callback.
+ */
+static gboolean
+lrmd_exit(gpointer data)
 {
     crm_info("Terminating with  %d clients", crm_hash_table_size(client_connections));
 
@@ -249,6 +289,79 @@ lrmd_shutdown(int nsig)
     crm_client_cleanup();
     g_hash_table_destroy(rsc_list);
     crm_exit(pcmk_ok);
+    return FALSE;
+}
+
+/*!
+ * \internal
+ * \brief Request cluster shutdown if appropriate, otherwise exit immediately
+ *
+ * \param[in] nsig  Signal that caused invocation (ignored)
+ */
+static void
+lrmd_shutdown(int nsig)
+{
+#ifdef ENABLE_PCMK_REMOTE
+    crm_client_t *ipc_proxy = ipc_proxy_get_provider();
+
+    /* If there are active proxied IPC providers, then we may be running
+     * resources, so notify the cluster that we wish to shut down.
+     */
+    if (ipc_proxy) {
+        if (shutting_down) {
+            crm_trace("Shutdown already in progress");
+            return;
+        }
+
+        crm_info("Sending shutdown request to cluster");
+        if (ipc_proxy_shutdown_req(ipc_proxy) < 0) {
+            crm_crit("Shutdown request failed, exiting immediately");
+
+        } else {
+            /* We requested a shutdown. Now, we need to wait for an
+             * acknowledgement from the proxy host (which ensures the proxy host
+             * supports shutdown requests), then wait for all proxy hosts to
+             * disconnect (which ensures that all resources have been stopped).
+             */
+            shutting_down = TRUE;
+
+            /* Stop accepting new proxy connections */
+            lrmd_tls_server_destroy();
+
+            /* Older crmd versions will never acknowledge our request, so set a
+             * fairly short timeout to exit quickly in that case. If we get the
+             * ack, we'll defuse this timer.
+             */
+            shutdown_ack_timer = g_timeout_add_seconds(20, lrmd_exit, NULL);
+
+            /* Currently, we let the OS kill us if the clients don't disconnect
+             * in a reasonable time. We could instead set a long timer here
+             * (shorter than what the OS is likely to use) and exit immediately
+             * if it pops.
+             */
+            return;
+        }
+    }
+#endif
+    lrmd_exit(NULL);
+}
+
+/*!
+ * \internal
+ * \brief Defuse short exit timer if shutting down
+ */
+void handle_shutdown_ack()
+{
+#ifdef ENABLE_PCMK_REMOTE
+    if (shutting_down) {
+        crm_info("Received shutdown ack");
+        if (shutdown_ack_timer > 0) {
+            g_source_remove(shutdown_ack_timer);
+        }
+        return;
+    }
+#endif
+    crm_debug("Ignoring unexpected shutdown ack");
 }
 
 /* *INDENT-OFF* */
@@ -363,6 +476,6 @@ main(int argc, char **argv)
     g_main_run(mainloop);
 
     /* should never get here */
-    lrmd_shutdown(SIGTERM);
+    lrmd_exit(NULL);
     return pcmk_ok;
 }
