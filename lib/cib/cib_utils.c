@@ -123,7 +123,7 @@ get_cib_copy(cib_t * cib)
         return NULL;
 
     } else if (rc != pcmk_ok) {
-        crm_err("Couldnt retrieve the CIB");
+        crm_err("Couldn't retrieve the CIB");
         free_xml(xml_cib);
         return NULL;
 

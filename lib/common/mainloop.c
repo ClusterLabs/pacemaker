@@ -68,7 +68,7 @@ crm_trigger_prepare(GSource * source, gint * timeout)
      * This means mainloop's poll() will block until an event for one
      * of these sources occurs - any /other/ type of source, such as
      * this one or g_idle_*, that doesn't use g_source_add_poll() is
-     * S-O-L and wont be processed until there is something fd-based
+     * S-O-L and won't be processed until there is something fd-based
      * happens.
      *
      * Luckily the timeout we can set here affects all sources and

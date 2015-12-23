@@ -540,7 +540,8 @@ check_actions(pe_working_set_t * data_set)
 
             /* Still need to check actions for a maintenance node to cancel existing monitor operations */
             } else if (can_run_resources(node) == FALSE && node->details->maintenance == FALSE) {
-                crm_trace("Skipping param check for %s: cant run resources", node->details->uname);
+                crm_trace("Skipping param check for %s: can't run resources",
+                          node->details->uname);
                 continue;
             }
 
@@ -1346,7 +1347,7 @@ stage6(pe_working_set_t * data_set)
                 char *key = stop_key(container);
                 GListPtr stop_list = find_actions(container->actions, key, NULL);
 
-                crm_info("Impliying node %s is down when container %s is stopped (%p)",
+                crm_info("Implying node %s is down when container %s is stopped (%p)",
                          node->details->uname, container->id, stop_list);
                 if(stop_list) {
                     stonith_constraints(node, stop_list->data, data_set);
@@ -1457,7 +1458,7 @@ stage6(pe_working_set_t * data_set)
 }
 
 /*
- * Determin the sets of independent actions and the correct order for the
+ * Determine the sets of independent actions and the correct order for the
  *  actions in each set.
  *
  * Mark dependencies of un-runnable actions un-runnable

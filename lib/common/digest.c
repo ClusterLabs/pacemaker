@@ -108,7 +108,7 @@ calculate_xml_digest_v2(xmlNode * source, gboolean do_filter)
     if (do_filter && BEST_EFFORT_STATUS) {
         /* Exclude the status calculation from the digest
          *
-         * This doesn't mean it wont be sync'd, we just wont be paranoid
+         * This doesn't mean it won't be sync'd, we just won't be paranoid
          * about it being an _exact_ copy
          *
          * We don't need it to be exact, since we throw it away and regenerate

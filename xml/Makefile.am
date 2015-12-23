@@ -30,7 +30,7 @@ RNGdir			= $(dtddir)
 # Sorted list of available numeric RNG versions,
 # extracted from filenames like NAME-MAJOR[.MINOR][.MINOR-MINOR].rng
 RNG_numeric_versions    = $(shell ls -1 *.rng \
-			  | sed -n -e 's/^.*-\([0-9.]\+\).rng$$/\1/p' \
+			  | sed -E -n -e 's/^.*-([0-9.]+).rng$$/\1/p' \
 			  | sort -u -t. -k 1,1n -k 2,2n -k 3,3n)
 
 # The highest numeric version
