@@ -90,7 +90,7 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
     /* allocation order:
      *  - active instances
      *  - instances running on nodes with the least copies
-     *  - active instances on nodes that cant support them or are to be fenced
+     *  - active instances on nodes that can't support them or are to be fenced
      *  - failed instances
      *  - inactive instances
      */

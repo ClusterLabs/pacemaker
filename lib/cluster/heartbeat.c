@@ -109,7 +109,7 @@ convert_ha_field(xmlNode * parent, void *msg_v, int lpc)
             uncompressed = realloc_safe(uncompressed, size);
             memset(uncompressed, 0, size);
             used = size - 1;    /* always leave room for a trailing '\0'
-                                 * BZ2_bzBuffToBuffDecompress wont say anything if
+                                 * BZ2_bzBuffToBuffDecompress won't say anything if
                                  * the uncompressed data is exactly 'size' bytes
                                  */
 
@@ -408,7 +408,7 @@ send_ha_message(ll_cluster_t * hb_conn, xmlNode * xml, const char *node, gboolea
     HA_Message *msg = convert_xml_message(xml);
 
     if (msg == NULL) {
-        crm_err("cant send NULL message");
+        crm_err("can't send NULL message");
         all_is_good = FALSE;
 
     } else if (hb_conn == NULL) {

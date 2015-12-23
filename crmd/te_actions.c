@@ -725,7 +725,7 @@ notify_crmd(crm_graph_t * graph)
                 event = I_STOP;
 
             } else {
-                crm_err("We didn't ask to be shut down, yet our" " PE is telling us too.");
+                crm_err("We didn't ask to be shut down, yet our PE is telling us to.");
                 event = I_TERMINATE;
             }
     }

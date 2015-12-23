@@ -1071,7 +1071,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         crm_trace("Re-requesting the full cib");
         rc = cib_api->cmds->query(cib_api, NULL, &local_cib, cib_scope_local | cib_sync_call);
         if(rc != pcmk_ok) {
-            crm_err("Couldnt retrieve the CIB: %s (%d)", pcmk_strerror(rc), rc);
+            crm_err("Couldn't retrieve the CIB: %s (%d)", pcmk_strerror(rc), rc);
             return;
         }
         CRM_ASSERT(local_cib != NULL);

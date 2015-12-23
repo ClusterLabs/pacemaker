@@ -3094,7 +3094,7 @@ decompress_file(const char *filename)
     buffer[length] = '\0';
 
     if (rc != BZ_STREAM_END) {
-        crm_err("Couldnt read compressed xml from file");
+        crm_err("Couldn't read compressed xml from file");
         free(buffer);
         buffer = NULL;
     }
@@ -4271,7 +4271,7 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
             char *value = crm_element_value_copy(new, name);
 
             crm_trace("Created %s@%s=%s", new->name, name, value);
-            /* Remove plus create wont work as it will modify the relative attribute ordering */
+            /* Remove plus create won't work as it will modify the relative attribute ordering */
             if(__xml_acl_check(new, name, xpf_acl_write)) {
                 crm_attr_dirty(prop);
             } else {
@@ -4725,12 +4725,12 @@ add_xml_comment(xmlNode * parent, xmlNode * target, xmlNode * update)
 
     if (target == NULL) {
         target = find_xml_comment(parent, update);
-    } 
-    
+    }
+
     if (target == NULL) {
         add_node_copy(parent, update);
 
-    /* We wont reach here currently */
+    /* We won't reach here currently */
     } else if (safe_str_neq((const char *)target->content, (const char *)update->content)) {
         xmlFree(target->content);
         target->content = xmlStrdup(update->content);

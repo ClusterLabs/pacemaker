@@ -1,3 +1,12 @@
+* Wed Dec 23 2015 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.14-rc4-1
+- Update source tarball to revision: 5f8a298
+- Changesets: 18
+- Diff:       27 files changed, 56 insertions(+), 53 deletions(-)
+
+- Changes since Pacemaker-1.1.14-rc3
+  + improved support for building on FreeBSD
+  + libcrmcommon: when caching attrd connection, cache connection flags too
+
 * Mon Dec 14 2015 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.14-rc3-1
 - Update source tarball to revision: 97ada31
 - Changesets: 7
