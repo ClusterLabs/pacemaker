@@ -1747,11 +1747,11 @@ attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const cha
 {
     int rc = -ENOTCONN;
     int max = 5;
-    enum crm_ipc_flags flags = crm_ipc_flags_none;
     xmlNode *update = create_xml_node(NULL, __FUNCTION__);
 
     static gboolean connected = TRUE;
     static crm_ipc_t *local_ipc = NULL;
+    static enum crm_ipc_flags flags = crm_ipc_flags_none;
 
     if (ipc == NULL && local_ipc == NULL) {
         local_ipc = crm_ipc_new(T_ATTRD, 0);
