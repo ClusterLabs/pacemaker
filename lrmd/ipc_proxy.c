@@ -152,9 +152,19 @@ ipc_proxy_forward_client(crm_client_t *ipc_proxy, xmlNode *xml)
     const char *session = crm_element_value(xml, F_LRMD_IPC_SESSION);
     const char *msg_type = crm_element_value(xml, F_LRMD_IPC_OP);
     xmlNode *msg = get_message_xml(xml, F_LRMD_IPC_MSG);
-    crm_client_t *ipc_client = crm_client_get_by_id(session);
+    crm_client_t *ipc_client;
     int rc = 0;
 
+    /* If the IPC provider is acknowledging our shutdown request,
+     * defuse the short exit timer to give the cluster time to
+     * stop any resources we're running.
+     */
+    if (safe_str_eq(msg_type, LRMD_IPC_OP_SHUTDOWN_ACK)) {
+        handle_shutdown_ack();
+        return;
+    }
+
+    ipc_client = crm_client_get_by_id(session);
     if (ipc_client == NULL) {
         xmlNode *msg = create_xml_node(NULL, T_LRMD_IPC_PROXY);
         crm_xml_add(msg, F_LRMD_IPC_OP, LRMD_IPC_OP_DESTROY);
