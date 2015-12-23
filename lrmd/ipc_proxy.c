@@ -259,6 +259,30 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     return 0;
 }
 
+/*!
+ * \internal
+ * \brief Notify a proxy provider that we wish to shut down
+ *
+ * \return 0 on success, -1 on error
+ */
+int
+ipc_proxy_shutdown_req(crm_client_t *ipc_proxy)
+{
+    xmlNode *msg = create_xml_node(NULL, T_LRMD_IPC_PROXY);
+    int rc;
+
+    crm_xml_add(msg, F_LRMD_IPC_OP, LRMD_IPC_OP_SHUTDOWN_REQ);
+
+    /* We don't really have a session, but crmd needs this attribute
+     * to recognize this as proxy communication.
+     */
+    crm_xml_add(msg, F_LRMD_IPC_SESSION, "0");
+
+    rc = (lrmd_server_send_notify(ipc_proxy, msg) < 0)? -1 : 0;
+    free_xml(msg);
+    return rc;
+}
+
 static int32_t
 ipc_proxy_closed(qb_ipcs_connection_t * c)
 {

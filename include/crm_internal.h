@@ -380,6 +380,7 @@ typedef struct remote_proxy_s {
 
 } remote_proxy_t;
 void remote_proxy_notify_destroy(lrmd_t *lrmd, const char *session_id);
+void remote_proxy_ack_shutdown(lrmd_t *lrmd);
 void remote_proxy_relay_event(lrmd_t *lrmd, const char *session_id, xmlNode *msg);
 void remote_proxy_relay_response(lrmd_t *lrmd, const char *session_id, xmlNode *msg, int msg_id);
 void remote_proxy_end_session(const char *session);

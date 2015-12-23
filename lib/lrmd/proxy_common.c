@@ -45,6 +45,20 @@ remote_proxy_notify_destroy(lrmd_t *lrmd, const char *session_id)
     free_xml(msg);
 }
 
+/*!
+ * \brief Send an acknowledgment of a remote proxy shutdown request.
+ *
+ * \param[in] lrmd  Connection to proxy
+ */
+void
+remote_proxy_ack_shutdown(lrmd_t *lrmd)
+{
+    xmlNode *msg = create_xml_node(NULL, T_LRMD_IPC_PROXY);
+    crm_xml_add(msg, F_LRMD_IPC_OP, LRMD_IPC_OP_SHUTDOWN_ACK);
+    lrmd_internal_proxy_send(lrmd, msg);
+    free_xml(msg);
+}
+
 void
 remote_proxy_relay_event(lrmd_t *lrmd, const char *session_id, xmlNode *msg)
 {
