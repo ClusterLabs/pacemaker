@@ -478,6 +478,13 @@ remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
     CRM_CHECK(op != NULL, return);
     CRM_CHECK(session != NULL, return);
 
+    if (safe_str_eq(op, LRMD_IPC_OP_SHUTDOWN_REQ)) {
+        crm_warn("Graceful proxy shutdown not yet supported");
+        /* TODO: uncomment this, then put node in standby: */
+        /* remote_proxy_ack_shutdown(lrmd); */
+        return;
+    }
+
     crm_element_value_int(msg, F_LRMD_IPC_MSG_ID, &msg_id);
 
     /* This is msg from remote ipc client going to real ipc server */
