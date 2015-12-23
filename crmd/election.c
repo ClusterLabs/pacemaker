@@ -241,7 +241,7 @@ do_dc_release(long long action,
         crm_info("DC role released");
 #if 0
         if (are there errors) {
-            /* we cant stay up if not healthy */
+            /* we can't stay up if not healthy */
             /* or perhaps I_ERROR and go to S_RECOVER? */
             result = I_SHUTDOWN;
         }

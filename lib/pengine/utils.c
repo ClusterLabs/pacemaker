@@ -517,7 +517,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
 #if 0
             /*
              * No point checking this
-             * - if we dont have quorum we cant stonith anyway
+             * - if we dont have quorum we can't stonith anyway
              */
         } else if (action->needs == rsc_req_stonith) {
             crm_trace("Action %s requires only stonith", action->uuid);
@@ -1403,8 +1403,8 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
         if(!decode_transition_magic(b_magic, &b_uuid, &b_id, &dummy, &dummy, &dummy, &dummy)) {
             sort_return(0, "bad magic b");
         }
-        /* try and determin the relative age of the operation...
-         * some pending operations (ie. a start) may have been supuerceeded
+        /* try to determine the relative age of the operation...
+         * some pending operations (ie. a start) may have been superseded
          *   by a subsequent stop
          *
          * [a|b]_id == -1 means its a shutdown operation and _always_ comes last
@@ -1640,7 +1640,7 @@ get_failcount_full(node_t * node, resource_t * rsc, time_t *last_failure,
         free(key);
 
         /* This block is still relevant once we omit anonymous instance numbers
-         * because stopped clones wont have clone_name set
+         * because stopped clones won't have clone_name set
          */
     } else if (is_not_set(rsc->flags, pe_rsc_unique)) {
         search.rsc = uber_parent(rsc);

@@ -1318,7 +1318,9 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
 
     if (this_node->details->shutdown) {
         crm_debug("%s is shutting down", this_node->details->uname);
-        online = crm_is_true(is_peer);  /* Slightly different criteria since we cant shut down a dead peer */
+
+        /* Slightly different criteria since we can't shut down a dead peer */
+        online = crm_is_true(is_peer);
 
     } else if (in_cluster == NULL) {
         pe_fence_node(data_set, this_node, "because the peer has not been seen by the cluster");
@@ -2691,7 +2693,7 @@ determine_op_status(
     }
 
     /* we could clean this up significantly except for old LRMs and CRMs that
-     * didnt include target_rc and liked to remap status
+     * didn't include target_rc and liked to remap status
      */
     switch (rc) {
         case PCMK_OCF_OK:

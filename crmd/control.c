@@ -196,7 +196,7 @@ do_shutdown(long long action,
     }
 
     if (stonith_api) {
-        /* Prevent it from comming up again */
+        /* Prevent it from coming up again */
         clear_bit(fsa_input_register, R_ST_REQUIRED);
 
         crm_info("Disconnecting STONITH...");
@@ -1140,7 +1140,7 @@ crm_shutdown(int nsig)
                 shutdown_escalation_timer->period_ms = msec;
             }
 
-            /* cant rely on this... */
+            /* can't rely on this... */
             crm_notice("Requesting shutdown, upper limit is %dms",
                        shutdown_escalation_timer->period_ms);
             crm_timer_start(shutdown_escalation_timer);
