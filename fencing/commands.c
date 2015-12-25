@@ -1279,7 +1279,7 @@ stonith_level_remove(xmlNode *msg, char **desc)
     CRM_CHECK(level != NULL, return -EINVAL);
 
     target = stonith_level_key(level, -1);
-    crm_element_value_int(level, XML_ATTR_ID, &id);
+    crm_element_value_int(level, XML_ATTR_STONITH_INDEX, &id);
     if (desc) {
         *desc = crm_strdup_printf("%s[%d]", target, id);
     }
