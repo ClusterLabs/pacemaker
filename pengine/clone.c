@@ -411,7 +411,7 @@ color_instance(resource_t * rsc, node_t * prefer, gboolean all_coloc, pe_working
         return NULL;
     }
 
-    /* Only include positive colocation preferences of dependant resources
+    /* Only include positive colocation preferences of dependent resources
      * if not every node will get a copy of the clone
      */
     append_parent_colocation(rsc->parent, rsc, all_coloc);
