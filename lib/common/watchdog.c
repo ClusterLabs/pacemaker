@@ -140,7 +140,11 @@ pcmk_panic_local(void)
 
     /* We're either pacemakerd, or a pacemaker daemon running as root */
 
-    sysrq_trigger('b');
+    if (strcmp("crash", getenv("PCMK_panic_action")) == 0) {
+        sysrq_trigger('c');
+    } else {
+        sysrq_trigger('b');
+    }
     /* reboot(RB_HALT_SYSTEM); rc = errno; */
     reboot(RB_AUTOBOOT);
     rc = errno;
