@@ -439,7 +439,7 @@ crm_remote_parse_buffer(crm_remote_t * remote)
  * \internal
  * \brief Determine if a remote session has data to read
  *
- * \retval 0, timeout occured.
+ * \retval 0, timeout occurred.
  * \retval positive, data is ready to be read
  * \retval negative, session has ended
  */
