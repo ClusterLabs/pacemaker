@@ -61,3 +61,5 @@ lrmd_test_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/pengine/libpengine.la
 
 noinst_HEADERS  = lrmd_private.h
+
+CLEANFILES = $(man8_MANS)

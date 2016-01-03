@@ -143,11 +143,10 @@ ipmiservicelogd_CFLAGS	= $(OPENIPMI_SERVICELOG_CFLAGS) $(SERVICELOG_CFLAGS)
 ipmiservicelogd_LDFLAGS	= $(top_builddir)/lib/common/libcrmcommon.la $(OPENIPMI_SERVICELOG_LIBS) $(SERVICELOG_LIBS)
 endif
 
-clean-generic:
-	rm -f *.log *.debug *.xml *~
-
 install-exec-local:
 
 uninstall-local:
 
 .PHONY: install-exec-hook
+
+CLEANFILES = $(man8_MANS)
