@@ -1417,7 +1417,7 @@ crm_str_eq(const char *a, const char *b, gboolean use_case)
     if (use_case) {
         return g_strcmp0(a, b) == 0;
 
-        /* TODO - Figure out which calls, if any, really need to be case independant */
+        /* TODO - Figure out which calls, if any, really need to be case independent */
     } else if (a == b) {
         return TRUE;
 

@@ -1446,7 +1446,7 @@ class ComponentFail(CTSTest):
                     if r.rclass == "stonith":
                         self.okerrpatterns.append(self.templates["Pat:Fencing_recover"] % r.id)
 
-        # supply a copy so self.patterns doesnt end up empty
+        # supply a copy so self.patterns doesn't end up empty
         tmpPats = []
         tmpPats.extend(self.patterns)
         self.patterns.extend(chosen.badnews_ignore)

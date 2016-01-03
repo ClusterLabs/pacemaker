@@ -160,7 +160,7 @@ cib_cleanup_none(int options, xmlNode ** data, xmlNode ** output)
 static int
 cib_cleanup_sync(int options, xmlNode ** data, xmlNode ** output)
 {
-    /* data is non-NULL but doesnt need to be free'd */
+    /* data is non-NULL but doesn't need to be free'd */
     CRM_LOG_ASSERT(*data == NULL);
     CRM_LOG_ASSERT(*output == NULL);
     return pcmk_ok;
