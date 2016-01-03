@@ -504,7 +504,7 @@ get_rsc_metadata(const char *type, const char *rclass, const char *provider, boo
 
     if(metadata == NULL) {
         rc = lrm_state_get_metadata(lrm_state, rclass, provider, type, &metadata, 0);
-        crm_trace("Retreived live metadata for %s: %s (%d)", key, pcmk_strerror(rc), rc);
+        crm_trace("Retrieved live metadata for %s: %s (%d)", key, pcmk_strerror(rc), rc);
         if(rc == pcmk_ok) {
             CRM_LOG_ASSERT(metadata != NULL);
             g_hash_table_insert(metadata_hash, key, metadata);
