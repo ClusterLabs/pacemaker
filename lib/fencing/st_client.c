@@ -286,7 +286,7 @@ stonith_api_remove_level_full(stonith_t *st, int options,
         crm_xml_add(data, XML_ATTR_STONITH_TARGET_VALUE, value);
     }
 
-    crm_xml_add_int(data, XML_ATTR_ID, level);
+    crm_xml_add_int(data, XML_ATTR_STONITH_INDEX, level);
     rc = stonith_send_command(st, STONITH_OP_LEVEL_DEL, data, NULL, options, 0);
     free_xml(data);
 
