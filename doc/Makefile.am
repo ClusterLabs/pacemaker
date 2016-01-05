@@ -38,9 +38,10 @@ DOCBOOK_LANGS   := en-US
 DOTs = $(wildcard */en-US/images/*.dot)
 SVG = $(wildcard */en-US/images/pcmk-*.svg) $(DOTs:%.dot=%.svg)
 
-PNGS = $(SVG:%.svg=%-small.png) $(SVG:%.svg=%.png)  $(SVG:%.svg=%-large.png) 	\
+generated_PNGS = $(SVG:%.svg=%-small.png) $(SVG:%.svg=%.png)  $(SVG:%.svg=%-large.png) 	\
 	Pacemaker_Explained/en-US/images/Policy-Engine-big.png  \
-	Pacemaker_Explained/en-US/images/Policy-Engine-small.png \
+	Pacemaker_Explained/en-US/images/Policy-Engine-small.png
+PNGS = $(generated_PNGS) \
 	Pacemaker_Remote/en-US/images/pcmk-ha-cluster-stack.png \
 	Pacemaker_Remote/en-US/images/pcmk-ha-remote-stack.png
 
@@ -73,6 +74,10 @@ EXTRA_DIST	= $(docbook:%=%.xml)
 %.html: %.txt
 	$(AM_V_ASCII)$(ASCIIDOC) --unsafe --backend=xhtml11 $<
 
+# publican-clusterlabs/xsl/html-single.xsl imports that of Publican
+# through this link during the build
+../xsl:
+	ln -s /usr/share/publican/xsl "$@"
 
 SHARED_TXT=$(wildcard shared/en-US/*.txt)
 SHARED_XML=$(SHARED_TXT:%.txt=%.xml)
@@ -87,10 +92,10 @@ $(CFS_XML): $(CFS_SHARED_XML)
 
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
-Clusters_from_Scratch.build: $(PNGS) $(wildcard Clusters_from_Scratch/en-US/*.xml) $(CFS_XML) $(CFS_SHARED_XML)
+Clusters_from_Scratch.build: $(PNGS) $(wildcard Clusters_from_Scratch/en-US/*.xml) $(CFS_XML) $(CFS_SHARED_XML) ../xsl
 	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/*
-	$(AM_V_PUB)cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) $(PCMK_quiet)
+	$(AM_V_PUB)cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) $(PCMK_quiet) --brand_dir=../publican-clusterlabs
 	rm -rf $(@:%.build=%)/tmp
 	touch $@
 
@@ -104,10 +109,10 @@ $(PE_XML): $(PE_SHARED_XML)
 
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
-Pacemaker_Explained.build: $(PNGS) $(wildcard Pacemaker_Explained/en-US/*.xml) $(PE_XML) $(PE_SHARED_XML)
+Pacemaker_Explained.build: $(PNGS) $(wildcard Pacemaker_Explained/en-US/*.xml) $(PE_XML) $(PE_SHARED_XML) ../xsl
 	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/*
-	$(AM_V_PUB)cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) $(PCMK_quiet)
+	$(AM_V_PUB)cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) $(PCMK_quiet) --brand_dir=../publican-clusterlabs
 	rm -rf $(@:%.build=%)/tmp
 	touch $@
 
@@ -117,10 +122,10 @@ PR_XML=$(PR_TXT:%.txt=%.xml)
 
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
-Pacemaker_Remote.build: $(PNGS) $(wildcard Pacemaker_Remote/en-US/*.xml) $(PR_XML)
+Pacemaker_Remote.build: $(PNGS) $(wildcard Pacemaker_Remote/en-US/*.xml) $(PR_XML) ../xsl
 	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/*
-	$(AM_V_PUB)cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) $(PCMK_quiet)
+	$(AM_V_PUB)cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) $(PCMK_quiet) --brand_dir=../publican-clusterlabs
 	rm -rf $(@:%.build=%)/tmp
 	touch $@
 
@@ -196,6 +201,6 @@ if BUILD_DOCBOOK
 endif
 
 clean-local:
-	-rm -rf $(generated_docs) $(generated_mans) $(docbook_build)
+	-rm -rf $(generated_docs) $(generated_mans) $(docbook_build) ../xsl $(generated_PNGS)
 	-rm -rf $(SHARED_XML) $(CFS_XML) $(PE_XML) $(PR_XML)
 	for book in $(docbook); do rm -rf $$book/tmp $$book/publish; done

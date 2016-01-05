@@ -163,6 +163,7 @@ compat_reports
 .ABI-build
 abi_dumps
 logs
+xsl
 
 *.patch
 *.diff
