@@ -783,6 +783,9 @@ stonith_action_async_done(mainloop_child_t * p, pid_t pid, int core, int signo, 
         action->timer_sigkill = 0;
     }
 
+    action->output = read_output(action->fd_stdout);
+    action->error = read_output(action->fd_stderr);
+
     if (action->last_timeout_signo) {
         action->rc = -ETIME;
         crm_notice("Child process %d performing action '%s' timed out with signal %d",
@@ -794,13 +797,28 @@ stonith_action_async_done(mainloop_child_t * p, pid_t pid, int core, int signo, 
                    pid, action->action, signo);
 
     } else {
-        action->rc = exitcode;
         crm_debug("Child process %d performing action '%s' exited with rc %d",
                   pid, action->action, exitcode);
-    }
+        if (exitcode > 0) {
+            /* Try to provide a useful error code based on the fence agent's
+             * error output.
+             */
+            if (action->error == NULL) {
+                exitcode = -ENODATA;
 
-    action->output = read_output(action->fd_stdout);
-    action->error = read_output(action->fd_stderr);
+            } else if (strstr(action->error, "imed out")) {
+                /* Some agents have their own internal timeouts */
+                exitcode = -ETIMEDOUT;
+
+            } else if (strstr(action->error, "Unrecognised action")) {
+                exitcode = -EOPNOTSUPP;
+
+            } else {
+                exitcode = -pcmk_err_generic;
+            }
+        }
+        action->rc = exitcode;
+    }
 
     log_action(action, pid);
 

@@ -1975,22 +1975,6 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
         goto done;
     }
 
-    if (rc > 0) {
-        /* Try to provide _something_ useful */
-        if(output == NULL) {
-            rc = -ENODATA;
-
-        } else if(strstr(output, "imed out")) {
-            rc = -ETIMEDOUT;
-
-        } else if(strstr(output, "Unrecognised action")) {
-            rc = -EOPNOTSUPP;
-
-        } else {
-            rc = -pcmk_err_generic;
-        }
-    }
-
     stonith_send_async_reply(cmd, output, rc, pid);
 
     if (rc != 0) {
