@@ -1279,7 +1279,7 @@ stonith_level_remove(xmlNode *msg, char **desc)
     CRM_CHECK(level != NULL, return -EINVAL);
 
     target = stonith_level_key(level, -1);
-    crm_element_value_int(level, XML_ATTR_ID, &id);
+    crm_element_value_int(level, XML_ATTR_STONITH_INDEX, &id);
     if (desc) {
         *desc = crm_strdup_printf("%s[%d]", target, id);
     }
@@ -1973,22 +1973,6 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
         /* Prevent cmd from being freed */
         cmd = NULL;
         goto done;
-    }
-
-    if (rc > 0) {
-        /* Try to provide _something_ useful */
-        if(output == NULL) {
-            rc = -ENODATA;
-
-        } else if(strstr(output, "imed out")) {
-            rc = -ETIMEDOUT;
-
-        } else if(strstr(output, "Unrecognised action")) {
-            rc = -EOPNOTSUPP;
-
-        } else {
-            rc = -pcmk_err_generic;
-        }
     }
 
     stonith_send_async_reply(cmd, output, rc, pid);
