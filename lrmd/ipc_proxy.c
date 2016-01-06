@@ -42,34 +42,46 @@ static qb_ipcs_service_t *crmd_ipcs = NULL;
 static qb_ipcs_service_t *stonith_ipcs = NULL;
 
 /* ipc providers == crmd clients connecting from cluster nodes */
-GHashTable *ipc_providers;
+static GHashTable *ipc_providers = NULL;
 /* ipc clients == things like cibadmin, crm_resource, connecting locally */
-GHashTable *ipc_clients;
+static GHashTable *ipc_clients = NULL;
+
+/*!
+ * \internal
+ * \brief Get an IPC proxy provider
+ *
+ * \return Pointer to a provider if one exists, NULL otherwise
+ *
+ * \note Grab the first provider available; any provider will work, and usually
+ *       there will be only one. These are client connections originating from a
+ *       cluster node's crmd.
+ */
+crm_client_t *
+ipc_proxy_get_provider()
+{
+    if (ipc_providers) {
+        GHashTableIter iter;
+        gpointer key = NULL;
+        gpointer value = NULL;
+
+        g_hash_table_iter_init(&iter, ipc_providers);
+        if (g_hash_table_iter_next(&iter, &key, &value)) {
+            return (crm_client_t*)value;
+        }
+    }
+    return NULL;
+}
 
 static int32_t
 ipc_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid, const char *ipc_channel)
 {
-    void *key = NULL;
-    void *value = NULL;
     crm_client_t *client;
-    crm_client_t *ipc_proxy = NULL;
-    GHashTableIter iter;
+    crm_client_t *ipc_proxy = ipc_proxy_get_provider();
     xmlNode *msg;
 
     crm_trace("Connection %p on channel %s", c, ipc_channel);
 
-    if (g_hash_table_size(ipc_providers) == 0) {
-        crm_err("No ipc providers available for uid %d gid %d", uid, gid);
-        return -EREMOTEIO;
-    }
-
-    g_hash_table_iter_init(&iter, ipc_providers);
-    if (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
-        /* grab the first provider available, any provider in this
-         * table will work. Usually there will only be one. These are
-         * lrmd client connections originating for a cluster node's crmd. */
-        ipc_proxy = value;
-    } else {
+    if (ipc_proxy == NULL) {
         crm_err("No ipc providers available for uid %d gid %d", uid, gid);
         return -EREMOTEIO;
     }
@@ -89,7 +101,7 @@ ipc_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid, const char *ipc
     g_hash_table_insert(ipc_clients, client->id, client);
 
     msg = create_xml_node(NULL, T_LRMD_IPC_PROXY);
-    crm_xml_add(msg, F_LRMD_IPC_OP, "new");
+    crm_xml_add(msg, F_LRMD_IPC_OP, LRMD_IPC_OP_NEW);
     crm_xml_add(msg, F_LRMD_IPC_IPC_SERVER, ipc_channel);
     crm_xml_add(msg, F_LRMD_IPC_SESSION, client->id);
     lrmd_server_send_notify(ipc_proxy, msg);
@@ -140,12 +152,22 @@ ipc_proxy_forward_client(crm_client_t *ipc_proxy, xmlNode *xml)
     const char *session = crm_element_value(xml, F_LRMD_IPC_SESSION);
     const char *msg_type = crm_element_value(xml, F_LRMD_IPC_OP);
     xmlNode *msg = get_message_xml(xml, F_LRMD_IPC_MSG);
-    crm_client_t *ipc_client = crm_client_get_by_id(session);
+    crm_client_t *ipc_client;
     int rc = 0;
 
+    /* If the IPC provider is acknowledging our shutdown request,
+     * defuse the short exit timer to give the cluster time to
+     * stop any resources we're running.
+     */
+    if (safe_str_eq(msg_type, LRMD_IPC_OP_SHUTDOWN_ACK)) {
+        handle_shutdown_ack();
+        return;
+    }
+
+    ipc_client = crm_client_get_by_id(session);
     if (ipc_client == NULL) {
         xmlNode *msg = create_xml_node(NULL, T_LRMD_IPC_PROXY);
-        crm_xml_add(msg, F_LRMD_IPC_OP, "destroy");
+        crm_xml_add(msg, F_LRMD_IPC_OP, LRMD_IPC_OP_DESTROY);
         crm_xml_add(msg, F_LRMD_IPC_SESSION, session);
         lrmd_server_send_notify(ipc_proxy, msg);
         free_xml(msg);
@@ -164,11 +186,11 @@ ipc_proxy_forward_client(crm_client_t *ipc_proxy, xmlNode *xml)
      * and forwarding it to connection 1.
      */
 
-    if (safe_str_eq(msg_type, "event")) {
+    if (safe_str_eq(msg_type, LRMD_IPC_OP_EVENT)) {
         crm_trace("Sending event to %s", ipc_client->id);
         rc = crm_ipcs_send(ipc_client, 0, msg, crm_ipc_server_event);
 
-    } else if (safe_str_eq(msg_type, "response")) {
+    } else if (safe_str_eq(msg_type, LRMD_IPC_OP_RESPONSE)) {
         int msg_id = 0;
 
         crm_element_value_int(xml, F_LRMD_IPC_MSG_ID, &msg_id);
@@ -178,7 +200,7 @@ ipc_proxy_forward_client(crm_client_t *ipc_proxy, xmlNode *xml)
         CRM_LOG_ASSERT(msg_id == ipc_client->request_id);
         ipc_client->request_id = 0;
 
-    } else if (safe_str_eq(msg_type, "destroy")) {
+    } else if (safe_str_eq(msg_type, LRMD_IPC_OP_DESTROY)) {
         qb_ipcs_disconnect(ipc_client->ipcs);
 
     } else {
@@ -233,7 +255,7 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     client->request_id = id;
 
     msg = create_xml_node(NULL, T_LRMD_IPC_PROXY);
-    crm_xml_add(msg, F_LRMD_IPC_OP, "request");
+    crm_xml_add(msg, F_LRMD_IPC_OP, LRMD_IPC_OP_REQUEST);
     crm_xml_add(msg, F_LRMD_IPC_SESSION, client->id);
     crm_xml_add(msg, F_LRMD_IPC_CLIENT, crm_client_name(client));
     crm_xml_add(msg, F_LRMD_IPC_USER, client->user);
@@ -245,6 +267,30 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     free_xml(msg);
 
     return 0;
+}
+
+/*!
+ * \internal
+ * \brief Notify a proxy provider that we wish to shut down
+ *
+ * \return 0 on success, -1 on error
+ */
+int
+ipc_proxy_shutdown_req(crm_client_t *ipc_proxy)
+{
+    xmlNode *msg = create_xml_node(NULL, T_LRMD_IPC_PROXY);
+    int rc;
+
+    crm_xml_add(msg, F_LRMD_IPC_OP, LRMD_IPC_OP_SHUTDOWN_REQ);
+
+    /* We don't really have a session, but crmd needs this attribute
+     * to recognize this as proxy communication.
+     */
+    crm_xml_add(msg, F_LRMD_IPC_SESSION, "0");
+
+    rc = (lrmd_server_send_notify(ipc_proxy, msg) < 0)? -1 : 0;
+    free_xml(msg);
+    return rc;
 }
 
 static int32_t
@@ -263,7 +309,7 @@ ipc_proxy_closed(qb_ipcs_connection_t * c)
 
     if (ipc_proxy) {
         xmlNode *msg = create_xml_node(NULL, T_LRMD_IPC_PROXY);
-        crm_xml_add(msg, F_LRMD_IPC_OP, "destroy");
+        crm_xml_add(msg, F_LRMD_IPC_OP, LRMD_IPC_OP_DESTROY);
         crm_xml_add(msg, F_LRMD_IPC_SESSION, client->id);
         lrmd_server_send_notify(ipc_proxy, msg);
         free_xml(msg);

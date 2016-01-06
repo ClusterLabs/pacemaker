@@ -24,7 +24,6 @@
 #  define DAEMON_DEBUG DEVEL_DIR"/"SYS_NAME".debug"
 
 extern GMainLoop *crmd_mainloop;
-extern GHashTable *ipc_clients;
 extern bool no_quorum_suicide_escalation;
 
 extern void crmd_metadata(void);

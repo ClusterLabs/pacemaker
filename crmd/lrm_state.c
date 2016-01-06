@@ -478,10 +478,17 @@ remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
     CRM_CHECK(op != NULL, return);
     CRM_CHECK(session != NULL, return);
 
+    if (safe_str_eq(op, LRMD_IPC_OP_SHUTDOWN_REQ)) {
+        crm_warn("Graceful proxy shutdown not yet supported");
+        /* TODO: uncomment this, then put node in standby: */
+        /* remote_proxy_ack_shutdown(lrmd); */
+        return;
+    }
+
     crm_element_value_int(msg, F_LRMD_IPC_MSG_ID, &msg_id);
 
     /* This is msg from remote ipc client going to real ipc server */
-    if (safe_str_eq(op, "new")) {
+    if (safe_str_eq(op, LRMD_IPC_OP_NEW)) {
         const char *channel = crm_element_value(msg, F_LRMD_IPC_IPC_SERVER);
 
         CRM_CHECK(channel != NULL, return);
@@ -490,10 +497,10 @@ remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
             remote_proxy_notify_destroy(lrmd, session);
         }
         crm_trace("new remote proxy client established to %s, session id %s", channel, session);
-    } else if (safe_str_eq(op, "destroy")) {
+    } else if (safe_str_eq(op, LRMD_IPC_OP_DESTROY)) {
         remote_proxy_end_session(session);
 
-    } else if (safe_str_eq(op, "request")) {
+    } else if (safe_str_eq(op, LRMD_IPC_OP_REQUEST)) {
         int flags = 0;
         xmlNode *request = get_message_xml(msg, F_LRMD_IPC_MSG);
         const char *name = crm_element_value(msg, F_LRMD_IPC_CLIENT);

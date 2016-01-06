@@ -2764,6 +2764,14 @@ class RemoteDriver(CTSTest):
                 self.pcmk_started = 1
                 break
 
+    def kill_pcmk_remote(self, node):
+        """ Simulate a Pacemaker Remote daemon failure. """
+
+        # We kill the process to prevent a graceful stop,
+        # then stop it to prevent the OS from restarting it.
+        self.rsh(node, "killall -9 pacemaker_remoted")
+        self.stop_pcmk_remote(node)
+
     def start_metal(self, node):
         pcmk_started = 0
 
@@ -2855,7 +2863,7 @@ class RemoteDriver(CTSTest):
 
         # force stop the pcmk remote daemon. this will result in fencing
         self.debug("Force stopped active remote node")
-        self.stop_pcmk_remote(node)
+        self.kill_pcmk_remote(node)
 
         self.debug("Waiting for remote node to be fenced.")
         self.set_timer("remoteMetalFence")
@@ -3093,8 +3101,8 @@ class RemoteStonithd(RemoteDriver):
     def errorstoignore(self):
         ignore_pats = [
             r"Unexpected disconnect on remote-node",
-            r"crmd.*: error.*: Operation remote_.*_monitor",
-            r"pengine.*: Recover remote_.*\s*\(.*\)",
+            r"crmd.*:\s+error.*: Operation remote_.*_monitor",
+            r"pengine.*:\s+Recover remote_.*\s*\(.*\)",
             r"Calculated Transition .* /var/lib/pacemaker/pengine/pe-error",
             r"error.*: Resource .*ocf::.* is active on 2 nodes attempting recovery",
         ]

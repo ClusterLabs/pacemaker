@@ -163,8 +163,7 @@ lrmd_remote_client_destroy(gpointer user_data)
         close(csock);
     }
 
-    crm_client_destroy(client);
-
+    lrmd_client_destroy(client);
     return;
 }
 
