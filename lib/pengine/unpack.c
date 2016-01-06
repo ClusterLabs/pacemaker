@@ -1145,6 +1145,8 @@ unpack_remote_status(xmlNode * status, pe_working_set_t * data_set)
 {
     const char *id = NULL;
     const char *uname = NULL;
+    const char *shutdown = NULL;
+
     GListPtr gIter = NULL;
 
     xmlNode *state = NULL;
@@ -1190,6 +1192,15 @@ unpack_remote_status(xmlNode * status, pe_working_set_t * data_set)
         attrs = find_xml_node(state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
         add_node_attrs(attrs, this_node, TRUE, data_set);
 
+        shutdown = g_hash_table_lookup(this_node->details->attrs, XML_CIB_ATTR_SHUTDOWN);
+        if (shutdown != NULL && safe_str_neq("0", shutdown)) {
+            resource_t *rsc = this_node->details->remote_rsc;
+
+            crm_info("Node %s is shutting down", this_node->details->uname);
+            this_node->details->shutdown = TRUE;
+            rsc->next_role = RSC_ROLE_STOPPED;
+        }
+ 
         if (crm_is_true(g_hash_table_lookup(this_node->details->attrs, "standby"))) {
             crm_info("Node %s is in standby-mode", this_node->details->uname);
             this_node->details->standby = TRUE;
