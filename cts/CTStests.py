@@ -3093,8 +3093,8 @@ class RemoteStonithd(RemoteDriver):
     def errorstoignore(self):
         ignore_pats = [
             r"Unexpected disconnect on remote-node",
-            r"crmd.*: error.*: Operation remote_.*_monitor",
-            r"pengine.*: Recover remote_.*\s*\(.*\)",
+            r"crmd.*:\s+error.*: Operation remote_.*_monitor",
+            r"pengine.*:\s+Recover remote_.*\s*\(.*\)",
             r"Calculated Transition .* /var/lib/pacemaker/pengine/pe-error",
             r"error.*: Resource .*ocf::.* is active on 2 nodes attempting recovery",
         ]
