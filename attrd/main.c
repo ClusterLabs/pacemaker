@@ -226,6 +226,11 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 
     op = crm_element_value(xml, F_ATTRD_TASK);
 
+    if (client->name == NULL) {
+        const char *value = crm_element_value(xml, F_ORIG);
+        client->name = crm_strdup_printf("%s.%d", value?value:"unknown", client->pid);
+    }
+
     if (safe_str_eq(op, ATTRD_OP_PEER_REMOVE)) {
         attrd_send_ack(client, id, flags);
         attrd_client_peer_remove(client->name, xml);
