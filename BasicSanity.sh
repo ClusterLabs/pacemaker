@@ -17,11 +17,35 @@ function error() {
     printf "      * ERROR:   $*\n"
 }
 
+function run_as_root() {
+    CMD="$1"
+    shift
+    ARGS="$@"
+
+    # Test might not be executable if run from source directory
+    chmod a+x $CMD
+
+    CMD="$CMD $ARGS $verbose"
+
+    if [ $EUID -eq 0 ]; then
+        $CMD
+
+    elif [ -z $TRAVIS ]; then
+        # sudo doesn't work in builtbot, su doesn't work in travis
+        echo "Enter the root password..."
+        su root -c "$CMD"
+
+    else
+        echo "Enter the root password if prompted..."
+        sudo -- $CMD
+    fi
+}
+
 info "Test home is:\t$test_home"
 
 while true ; do
     case "$1" in
-        all) tests="pengine cli lrmd fencing"; shift;;
+        all) tests="$tests pengine cli lrmd fencing"; shift;;
         pengine|lrmd|pacemaker_remote|fencing|cli) tests="$tests $1"; shift;;
         -V|--verbose) verbose="-V"; shift;;
         -v|--valgrind) valgrind="-v"; shift;;
@@ -40,36 +64,22 @@ for t in $tests; do
     info "Executing the $t regression tests"
     info "============================================================"
     if [ -e $test_home/$t/regression.py ]; then
-        # Fencing, lrmd need root access
-        chmod a+x $test_home/$t/regression.py
-        echo "Enter the root password..."
-	# sudo doesn't work in builtbot, su doesn't work in travis
-	if [ x$TRAVIS = x ]; then
-            su root -c "$test_home/$t/regression.py $verbose"
-	else
-            sudo -- $test_home/$t/regression.py $verbose
-	fi
+        # fencing, lrmd need root access
+        run_as_root $test_home/$t/regression.py
         rc=$?
 
     elif [ $t == "pacemaker_remote" ] && [ -e $test_home/lrmd/regression.py ]; then
         # pacemaker_remote
-        chmod a+x $test_home/lrmd/regression.py
-        echo "Enter the root password..."
-	# sudo doesn't work in builtbot, su doesn't work in travis
-	if [ x$TRAVIS = x ]; then
-            su root -c "$test_home/$t/regression.py -R $verbose"
-	else
-            sudo -- $test_home/$t/regression.py -R $verbose
-	fi
+        run_as_root $test_home/lrmd/regression.py -R
         rc=$?
 
-    elif [ -e $test_home/$t ]; then
+    elif [ -e $test_home/$t/regression.sh ]; then
         # pengine, cli
 	$test_home/$t/regression.sh $verbose $valgrind
         rc=$?
 
     elif [ $t = cli -a -e $test_home/tools ]; then
-        # Running cli tests from the source tree
+        # cli when run from the source tree
 	t=tools
 	$test_home/$t/regression.sh $verbose $valgrind
         rc=$?
