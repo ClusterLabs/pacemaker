@@ -14,41 +14,45 @@ IMPORTS
 ;
 
 pacemaker MODULE-IDENTITY
-    LAST-UPDATED "200901051115Z"
+    LAST-UPDATED "201601052100Z"
     ORGANIZATION "www.clusterlabs.org"
     CONTACT-INFO    
-	 "name:		Michael Schwartzkopff
-          email:	pacemaker@oss.clusterlabs.org"
-    DESCRIPTION
-	"MIB objects for the pacemaker cluster manager implementation"
-    REVISION     "200910051115Z"
-    DESCRIPTION
-	"First draft"
-    REVISION     "200910062115Z"
-    DESCRIPTION
-        "Corrections after feedback from beekhof"
+        "name:  Andrew Beekhof
+        email:  users@clusterlabs.org"
+    DESCRIPTION "MIB objects for the Pacemaker cluster manager implementation"
+
+    REVISION    "201601052100Z"
+    DESCRIPTION "Add pacemakerTrap and pacemakerNotificationTrap"
+
+    REVISION    "200910062115Z"
+    DESCRIPTION "Corrections after feedback from beekhof"
+
+    REVISION    "200910051115Z"
+    DESCRIPTION "First draft"
+
     ::= { enterprises 32723 }
 
 --
 -- top level structure
 --
-pacemakerNotification OBJECT IDENTIFIER ::= { pacemaker 1 }
+pacemakerNotification   OBJECT IDENTIFIER ::= { pacemaker 1 }
+pacemakerTrap           OBJECT IDENTIFIER ::= { pacemaker 2 }
 
 --
 --  pacemaker Notifications
 --
 
 pacemakerNotificationNode OBJECT-TYPE
-    SYNTAX	OCTET STRING (SIZE(1..64))
-    MAX-ACCESS	accessible-for-notify
-    STATUS	current
+    SYNTAX      OCTET STRING (SIZE(1..64))
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
     DESCRIPTION
-	"The node on which the status change happened."      
+        "The node on which the status change happened."      
 ::= { pacemakerNotification 1 }
 
 pacemakerNotificationResource OBJECT-TYPE
-    SYNTAX	OCTET STRING (SIZE(1..256))
-    MAX-ACCESS accessible-for-notify
+    SYNTAX      OCTET STRING (SIZE(1..256))
+    MAX-ACCESS  accessible-for-notify
     STATUS      current
     DESCRIPTION
         "The name of the resource that changed the status."
@@ -56,7 +60,7 @@ pacemakerNotificationResource OBJECT-TYPE
 
 pacemakerNotificationOperation OBJECT-TYPE
     SYNTAX      OCTET STRING (SIZE(1..64))
-    MAX-ACCESS accessible-for-notify
+    MAX-ACCESS  accessible-for-notify
     STATUS      current
     DESCRIPTION
         "The operation that caused the status change."
@@ -64,7 +68,7 @@ pacemakerNotificationOperation OBJECT-TYPE
 
 pacemakerNotificationDescription OBJECT-TYPE
     SYNTAX      OCTET STRING (SIZE(1..256))
-    MAX-ACCESS accessible-for-notify
+    MAX-ACCESS  accessible-for-notify
     STATUS      current
     DESCRIPTION
         "The textual output relevant error code of the operation (if any) that caused the status change."
@@ -72,7 +76,7 @@ pacemakerNotificationDescription OBJECT-TYPE
 
 pacemakerNotificationStatus OBJECT-TYPE
     SYNTAX      Integer32
-    MAX-ACCESS accessible-for-notify
+    MAX-ACCESS  accessible-for-notify
     STATUS      current
     DESCRIPTION
         "The numerical representation of the status of the operation."
@@ -80,7 +84,7 @@ pacemakerNotificationStatus OBJECT-TYPE
 
 pacemakerNotificationReturnCode OBJECT-TYPE
     SYNTAX      Integer32
-    MAX-ACCESS accessible-for-notify
+    MAX-ACCESS  accessible-for-notify
     STATUS      current
     DESCRIPTION
         "The return code of the operation."
@@ -88,17 +92,29 @@ pacemakerNotificationReturnCode OBJECT-TYPE
 
 pacemakerNotificationTargetReturnCode OBJECT-TYPE
     SYNTAX      Integer32
-    MAX-ACCESS accessible-for-notify
+    MAX-ACCESS  accessible-for-notify
     STATUS      current
     DESCRIPTION
         "The expected return code of the operation."
 ::= { pacemakerNotification 7 }
 
+--
+--  pacemaker Traps
+--
+
 pacemakerNotificationTrap NOTIFICATION-TYPE
-    OBJECTS     { pacemakerNotificationNode, pacemakerNotificationResource, pacemakerNotificationOperation, pacemakerNotificationDescription, pacemakerNotificationStatus, pacemakerNotificationReturnCode, pacemakerNotificationTargetReturnCode }
+    OBJECTS {
+        pacemakerNotificationNode,
+        pacemakerNotificationResource,
+        pacemakerNotificationOperation,
+        pacemakerNotificationDescription,
+        pacemakerNotificationStatus,
+        pacemakerNotificationReturnCode,
+        pacemakerNotificationTargetReturnCode
+    }
     STATUS      current
     DESCRIPTION
         "Pacemaker notification trap"
-::= { pacemakerNotification 1 }
+::= { pacemakerTrap 1 }
 
 END

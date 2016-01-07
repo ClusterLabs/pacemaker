@@ -82,5 +82,5 @@ install-exec-local:
 
 uninstall-local:
 
-clean-generic:
-	rm -f test10/*.pe.*
+clean-local:
+	rm -f test10/*.pe.* $(man7_MANS)

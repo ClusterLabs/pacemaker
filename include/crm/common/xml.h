@@ -64,7 +64,7 @@ xmlDoc *getDocPtr(xmlNode * node);
 
 /*
  * Replacement function for xmlCopyPropList which at the very least,
- * doesnt work the way *I* would expect it to.
+ * doesn't work the way *I* would expect it to.
  *
  * Copy all the attributes/properties from src into target.
  *

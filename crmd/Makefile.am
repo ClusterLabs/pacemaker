@@ -52,9 +52,6 @@ if BUILD_XML_HELP
 man7_MANS =	crmd.7
 endif
 
-clean-generic:
-	rm -f *.log *.debug *.xml *~
-
 graphs:	fsa_inputs.png fsa_inputs_by_action.png fsa_actions_by_state.png
 
 %.png: %.dot
@@ -62,3 +59,5 @@ graphs:	fsa_inputs.png fsa_inputs_by_action.png fsa_actions_by_state.png
 
 %.dot : fsa_matrix.h make_dot.pl
 	perl $(top_srcdir)/crmd/make_dot.pl $(top_srcdir)/crmd/fsa_matrix.h $(top_builddir)/crmd
+
+CLEANFILES = $(man7_MANS)

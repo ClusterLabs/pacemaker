@@ -592,7 +592,7 @@ update_action(action_t * then)
         if (changed & pe_graph_updated_first) {
             GListPtr lpc2 = NULL;
 
-            crm_trace("Updated %s (first %s %s %s), processing dependants ",
+            crm_trace("Updated %s (first %s %s %s), processing dependents ",
                       first->uuid,
                       is_set(first->flags, pe_action_optional) ? "optional" : "required",
                       is_set(first->flags, pe_action_runnable) ? "runnable" : "unrunnable",
@@ -617,7 +617,7 @@ update_action(action_t * then)
     }
 
     if (changed & pe_graph_updated_then) {
-        crm_trace("Updated %s (then %s %s %s), processing dependants ",
+        crm_trace("Updated %s (then %s %s %s), processing dependents ",
                   then->uuid,
                   is_set(then->flags, pe_action_optional) ? "optional" : "required",
                   is_set(then->flags, pe_action_runnable) ? "runnable" : "unrunnable",
