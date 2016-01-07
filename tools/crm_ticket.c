@@ -154,7 +154,7 @@ static int
 find_ticket_state(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_state_xml)
 {
     int offset = 0;
-    static int xpath_max = 1024;
+    static const int xpath_max = 1024;
     int rc = pcmk_ok;
     xmlNode *xml_search = NULL;
 
@@ -164,14 +164,14 @@ find_ticket_state(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_stat
     *ticket_state_xml = NULL;
 
     xpath_string = calloc(1, xpath_max);
-    offset += snprintf(xpath_string + offset, xpath_max - offset, "%s", "/cib/status/tickets");
+    offset += crm_snprintf_offset(xpath_string, offset, xpath_max, "%s", "/cib/status/tickets");
 
     if (ticket_id) {
-        offset += snprintf(xpath_string + offset, xpath_max - offset, "/%s[@id=\"%s\"]",
-                           XML_CIB_TAG_TICKET_STATE, ticket_id);
+        offset += crm_snprintf_offset(xpath_string, offset, xpath_max,
+                                      "/%s[@id=\"%s\"]", XML_CIB_TAG_TICKET_STATE, ticket_id);
     }
 
-    CRM_LOG_ASSERT(offset > 0);
+    CRM_LOG_ASSERT(offset > 0 && offset < xpath_max);
     rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
                               cib_sync_call | cib_scope_local | cib_xpath);
 
@@ -198,7 +198,7 @@ static int
 find_ticket_constraints(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_cons_xml)
 {
     int offset = 0;
-    static int xpath_max = 1024;
+    static const int xpath_max = 1024;
     int rc = pcmk_ok;
     xmlNode *xml_search = NULL;
 
@@ -209,15 +209,16 @@ find_ticket_constraints(cib_t * the_cib, const char *ticket_id, xmlNode ** ticke
 
     xpath_string = calloc(1, xpath_max);
     offset +=
-        snprintf(xpath_string + offset, xpath_max - offset, "%s/%s",
-                 get_object_path(XML_CIB_TAG_CONSTRAINTS), XML_CONS_TAG_RSC_TICKET);
+        crm_snprintf_offset(xpath_string, offset, xpath_max, "%s/%s",
+                            get_object_path(XML_CIB_TAG_CONSTRAINTS),
+                            XML_CONS_TAG_RSC_TICKET);
 
     if (ticket_id) {
-        offset += snprintf(xpath_string + offset, xpath_max - offset, "[@ticket=\"%s\"]",
-                           ticket_id);
+        offset += crm_snprintf_offset(xpath_string, offset, xpath_max,
+                                      "[@ticket=\"%s\"]", ticket_id);
     }
 
-    CRM_LOG_ASSERT(offset > 0);
+    CRM_LOG_ASSERT(offset > 0 && offset < xpath_max);
     rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
                               cib_sync_call | cib_scope_local | cib_xpath);
 
@@ -285,7 +286,7 @@ find_ticket_state_attr_legacy(cib_t * the_cib, const char *attr, const char *tic
                               const char *attr_name, char **value)
 {
     int offset = 0;
-    static int xpath_max = 1024;
+    static const int xpath_max = 1024;
     int rc = pcmk_ok;
     xmlNode *xml_search = NULL;
 
@@ -295,18 +296,21 @@ find_ticket_state_attr_legacy(cib_t * the_cib, const char *attr, const char *tic
     *value = NULL;
 
     xpath_string = calloc(1, xpath_max);
-    offset += snprintf(xpath_string + offset, xpath_max - offset, "%s", "/cib/status/tickets");
+    offset += crm_snprintf_offset(xpath_string, offset, xpath_max,
+                                  "%s", "/cib/status/tickets");
 
     if (set_type) {
-        offset += snprintf(xpath_string + offset, xpath_max - offset, "/%s", set_type);
+        offset += crm_snprintf_offset(xpath_string, offset, xpath_max, "/%s", set_type);
         if (set_name) {
-            offset += snprintf(xpath_string + offset, xpath_max - offset, "[@id=\"%s\"]", set_name);
+            offset += crm_snprintf_offset(xpath_string, offset, xpath_max,
+                                          "[@id=\"%s\"]", set_name);
         }
     }
 
-    offset += snprintf(xpath_string + offset, xpath_max - offset, "//nvpair[");
+    offset += crm_snprintf_offset(xpath_string, offset, xpath_max, "//nvpair[");
     if (attr_id) {
-        offset += snprintf(xpath_string + offset, xpath_max - offset, "@id=\"%s\"", attr_id);
+        offset += crm_snprintf_offset(xpath_string, offset, xpath_max,
+                                      "@id=\"%s\"", attr_id);
     }
 
     if (attr_name) {
@@ -321,14 +325,15 @@ find_ticket_state_attr_legacy(cib_t * the_cib, const char *attr, const char *tic
         long_key = crm_concat(attr_prefix, ticket_id, '-');
 
         if (attr_id) {
-            offset += snprintf(xpath_string + offset, xpath_max - offset, " and ");
+            offset += crm_snprintf_offset(xpath_string, offset, xpath_max, " and ");
         }
-        offset += snprintf(xpath_string + offset, xpath_max - offset, "@name=\"%s\"", long_key);
+        offset += crm_snprintf_offset(xpath_string, offset, xpath_max,
+                                      "@name=\"%s\"", long_key);
 
         free(long_key);
     }
-    offset += snprintf(xpath_string + offset, xpath_max - offset, "]");
-    CRM_LOG_ASSERT(offset > 0);
+    offset += crm_snprintf_offset(xpath_string, offset, xpath_max, "]");
+    CRM_LOG_ASSERT(offset > 0 && offset < xpath_max);
 
     rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
                               cib_sync_call | cib_scope_local | cib_xpath);
@@ -432,41 +437,41 @@ ticket_warning(const char *ticket_id, const char *action)
 {
     gboolean rc = FALSE;
     int offset = 0;
-    static int text_max = 1024;
+    static const int text_max = 1024;
 
     char *warning = NULL;
     const char *word = NULL;
 
     warning = calloc(1, text_max);
     if (safe_str_eq(action, "grant")) {
-        offset += snprintf(warning + offset, text_max - offset,
-                           "This command cannot help you verify whether '%s' has been already granted elsewhere.\n",
-                           ticket_id);
+        offset += crm_snprintf_offset(warning, offset, text_max,
+                                      "This command cannot help you verify whether '%s' has been already granted elsewhere.\n",
+                                      ticket_id);
         word = "to";
 
     } else {
-        offset += snprintf(warning + offset, text_max - offset,
-                           "Revoking '%s' can trigger the specified 'loss-policy'(s) relating to '%s'.\n\n",
-                           ticket_id, ticket_id);
+        offset += crm_snprintf_offset(warning, offset, text_max,
+                                      "Revoking '%s' can trigger the specified 'loss-policy'(s) relating to '%s'.\n\n",
+                                      ticket_id, ticket_id);
 
-        offset += snprintf(warning + offset, text_max - offset,
-                           "You can check that with:\ncrm_ticket --ticket %s --constraints\n\n",
-                           ticket_id);
+        offset += crm_snprintf_offset(warning, offset, text_max,
+                                      "You can check that with:\ncrm_ticket --ticket %s --constraints\n\n",
+                                      ticket_id);
 
-        offset += snprintf(warning + offset, text_max - offset,
-                           "Otherwise before revoking '%s', you may want to make '%s' standby with:\ncrm_ticket --ticket %s --standby\n\n",
-                           ticket_id, ticket_id, ticket_id);
+        offset += crm_snprintf_offset(warning, offset, text_max,
+                                      "Otherwise before revoking '%s', you may want to make '%s' standby with:\ncrm_ticket --ticket %s --standby\n\n",
+                                      ticket_id, ticket_id, ticket_id);
         word = "from";
     }
 
-    offset += snprintf(warning + offset, text_max - offset,
-                       "If you really want to %s '%s' %s this site now, and you know what you are doing,\n",
-                       action, ticket_id, word);
+    offset += crm_snprintf_offset(warning, offset, text_max,
+                                  "If you really want to %s '%s' %s this site now, and you know what you are doing,\n",
+                                  action, ticket_id, word);
 
-    offset += snprintf(warning + offset, text_max - offset, 
-                       "please specify --force.");
+    offset += crm_snprintf_offset(warning, offset, text_max,
+                                  "please specify --force.");
 
-    CRM_LOG_ASSERT(offset > 0);
+    CRM_LOG_ASSERT(offset > 0 && offset < text_max);
     fprintf(stdout, "%s\n", warning);
 
     free(warning);

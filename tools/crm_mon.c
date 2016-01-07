@@ -3529,26 +3529,32 @@ send_smtp_trap(const char *node, const char *rsc, const char *task, int target_r
              rsc, node, desc);
 
     len = 0;
-    len += snprintf(crm_mail_body + len, BODY_MAX - len, "\r\n%s\r\n", crm_mail_prefix);
-    len += snprintf(crm_mail_body + len, BODY_MAX - len, "====\r\n\r\n");
+    len += crm_snprintf_offset(crm_mail_body, len, BODY_MAX, "\r\n%s\r\n", crm_mail_prefix);
+    len += crm_snprintf_offset(crm_mail_body, len, BODY_MAX, "====\r\n\r\n");
     if (rc == target_rc) {
-        len += snprintf(crm_mail_body + len, BODY_MAX - len,
-                        "Completed operation %s for resource %s on %s\r\n", task, rsc, node);
+        len += crm_snprintf_offset(crm_mail_body, len, BODY_MAX,
+                                   "Completed operation %s for resource %s on %s\r\n",
+                                   task, rsc, node);
     } else {
-        len += snprintf(crm_mail_body + len, BODY_MAX - len,
-                        "Operation %s for resource %s on %s failed: %s\r\n", task, rsc, node, desc);
+        len += crm_snprintf_offset(crm_mail_body, len, BODY_MAX,
+                                   "Operation %s for resource %s on %s failed: %s\r\n",
+                                   task, rsc, node, desc);
     }
 
-    len += snprintf(crm_mail_body + len, BODY_MAX - len, "\r\nDetails:\r\n");
-    len += snprintf(crm_mail_body + len, BODY_MAX - len,
-                    "\toperation status: (%d) %s\r\n", status, services_lrm_status_str(status));
+    len += crm_snprintf_offset(crm_mail_body, len, BODY_MAX, "\r\nDetails:\r\n");
+    len += crm_snprintf_offset(crm_mail_body, len, BODY_MAX,
+                               "\toperation status: (%d) %s\r\n", status,
+                               services_lrm_status_str(status));
     if (status == PCMK_LRM_OP_DONE) {
-        len += snprintf(crm_mail_body + len, BODY_MAX - len,
-                        "\tscript returned: (%d) %s\r\n", rc, services_ocf_exitcode_str(rc));
-        len += snprintf(crm_mail_body + len, BODY_MAX - len,
-                        "\texpected return value: (%d) %s\r\n", target_rc,
-                        services_ocf_exitcode_str(target_rc));
+        len += crm_snprintf_offset(crm_mail_body, len, BODY_MAX,
+                                   "\tscript returned: (%d) %s\r\n", rc,
+                                   services_ocf_exitcode_str(rc));
+        len += crm_snprintf_offset(crm_mail_body, len, BODY_MAX,
+                                   "\texpected return value: (%d) %s\r\n",
+                                   target_rc,
+                                   services_ocf_exitcode_str(target_rc));
     }
+    CRM_LOG_ASSERT(len > 0 && len < BODY_MAX);
 
     auth_client_init();
     session = smtp_create_session();

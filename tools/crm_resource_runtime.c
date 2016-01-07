@@ -18,6 +18,7 @@
  */
 
 #include <crm_resource.h>
+#include <crm_internal.h>  /* crm_snprintf_offset */
 
 bool do_trace = FALSE;
 bool do_force = FALSE;
@@ -118,7 +119,7 @@ find_resource_attr(cib_t * the_cib, const char *attr, const char *rsc, const cha
                    const char *set_name, const char *attr_id, const char *attr_name, char **value)
 {
     int offset = 0;
-    static int xpath_max = 1024;
+    static const int xpath_max = 1024;
     int rc = pcmk_ok;
     xmlNode *xml_search = NULL;
     char *xpath_string = NULL;
@@ -133,30 +134,34 @@ find_resource_attr(cib_t * the_cib, const char *attr, const char *rsc, const cha
 
     xpath_string = calloc(1, xpath_max);
     offset +=
-        snprintf(xpath_string + offset, xpath_max - offset, "%s", get_object_path("resources"));
+        crm_snprintf_offset(xpath_string, offset, xpath_max,
+                            "%s", get_object_path("resources"));
 
-    offset += snprintf(xpath_string + offset, xpath_max - offset, "//*[@id=\"%s\"]", rsc);
+    offset += crm_snprintf_offset(xpath_string, offset, xpath_max, "//*[@id=\"%s\"]", rsc);
 
     if (set_type) {
-        offset += snprintf(xpath_string + offset, xpath_max - offset, "/%s", set_type);
+        offset += crm_snprintf_offset(xpath_string, offset, xpath_max, "/%s", set_type);
         if (set_name) {
-            offset += snprintf(xpath_string + offset, xpath_max - offset, "[@id=\"%s\"]", set_name);
+            offset += crm_snprintf_offset(xpath_string, offset, xpath_max,
+                                          "[@id=\"%s\"]", set_name);
         }
     }
 
-    offset += snprintf(xpath_string + offset, xpath_max - offset, "//nvpair[");
+    offset += crm_snprintf_offset(xpath_string, offset, xpath_max, "//nvpair[");
     if (attr_id) {
-        offset += snprintf(xpath_string + offset, xpath_max - offset, "@id=\"%s\"", attr_id);
+        offset += crm_snprintf_offset(xpath_string, offset, xpath_max,
+                                      "@id=\"%s\"", attr_id);
     }
 
     if (attr_name) {
         if (attr_id) {
-            offset += snprintf(xpath_string + offset, xpath_max - offset, " and ");
+            offset += crm_snprintf_offset(xpath_string, offset, xpath_max, " and ");
         }
-        offset += snprintf(xpath_string + offset, xpath_max - offset, "@name=\"%s\"", attr_name);
+        offset += crm_snprintf_offset(xpath_string, offset, xpath_max,
+                                      "@name=\"%s\"", attr_name);
     }
-    offset += snprintf(xpath_string + offset, xpath_max - offset, "]");
-    CRM_LOG_ASSERT(offset > 0);
+    offset += crm_snprintf_offset(xpath_string, offset, xpath_max, "]");
+    CRM_LOG_ASSERT(offset > 0 && offset < xpath_max);
 
     rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
                               cib_sync_call | cib_scope_local | cib_xpath);

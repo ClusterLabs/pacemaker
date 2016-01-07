@@ -197,23 +197,26 @@ set_format_string(int method, const char *daemon)
 
         if (uname(&res) == 0) {
             offset +=
-                snprintf(fmt + offset, FMT_MAX - offset, "%%t [%d] %s %10s: ", getpid(),
-                         res.nodename, daemon);
+                crm_snprintf_offset(fmt, offset, FMT_MAX,
+                                    "%%t [%d] %s %10s: ", getpid(), res.nodename, daemon);
         } else {
-            offset += snprintf(fmt + offset, FMT_MAX - offset, "%%t [%d] %10s: ", getpid(), daemon);
+            offset += crm_snprintf_offset(fmt, offset, FMT_MAX,
+                                          "%%t [%d] %10s: ", getpid(), daemon);
         }
     }
 
     if (method == QB_LOG_SYSLOG) {
-        offset += snprintf(fmt + offset, FMT_MAX - offset, "%%g %%-7p: %%b");
+        offset += crm_snprintf_offset(fmt, offset, FMT_MAX, "%%g %%-7p: %%b");
         crm_extended_logging(method, QB_FALSE);
     } else if (crm_tracing_enabled()) {
-        offset += snprintf(fmt + offset, FMT_MAX - offset, "(%%-12f:%%5l %%g) %%-7p: %%n:\t%%b");
+        offset += crm_snprintf_offset(fmt, offset, FMT_MAX,
+                                      "(%%-12f:%%5l %%g) %%-7p: %%n:\t%%b");
     } else {
-        offset += snprintf(fmt + offset, FMT_MAX - offset, "%%g %%-7p: %%n:\t%%b");
+        offset += crm_snprintf_offset(fmt, offset, FMT_MAX,
+                                      "%%g %%-7p: %%n:\t%%b");
     }
 
-    CRM_LOG_ASSERT(offset > 0);
+    CRM_LOG_ASSERT(offset > 0 && offset < FMT_MAX);
     qb_log_format_set(method, fmt);
 }
 

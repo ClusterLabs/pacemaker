@@ -589,7 +589,7 @@ main(int argc, char **argv)
     rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
     if (rc != pcmk_ok) {
         CMD_ERR("Error signing on to the CIB service: %s", pcmk_strerror(rc));
-        return crm_exit(rc);
+        goto bail;
     }
 
     /* Populate working set from XML file if specified or CIB query otherwise */
@@ -959,7 +959,8 @@ main(int argc, char **argv)
             if (node && is_remote_node(node)) {
                 if (node->details->remote_rsc == NULL || node->details->remote_rsc->running_on == NULL) {
                     CMD_ERR("No lrmd connection detected to remote node %s", host_uname);
-                    return -ENXIO;
+                    rc = -ENXIO;
+                    goto bail;
                 }
                 node = node->details->remote_rsc->running_on->data;
                 router_node = node->details->uname;
@@ -1029,6 +1030,8 @@ main(int argc, char **argv)
     }
 
   bail:
+
+    free(our_pid);
 
     if (data_set.input != NULL) {
         cleanup_alloc_calculations(&data_set);

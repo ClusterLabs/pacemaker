@@ -193,25 +193,42 @@ static inline bool TRACKING_CHANGES(xmlNode *xml)
     return FALSE;
 }
 
-#define buffer_print(buffer, max, offset, fmt, args...) do {            \
-        int rc = (max);                                                 \
-        if(buffer) {                                                    \
-            rc = snprintf((buffer) + (offset), (max) - (offset), fmt, ##args); \
-        }                                                               \
-        if(buffer && rc < 0) {                                          \
-            crm_perror(LOG_ERR, "snprintf failed at offset %d", offset); \
-            (buffer)[(offset)] = 0;                                     \
-        } else if(rc >= ((max) - (offset))) {                           \
-            char *tmp = NULL;                                           \
-            (max) = QB_MAX(CHUNK_SIZE, (max) * 2);                      \
-            tmp = realloc_safe((buffer), (max) + 1);                         \
-            CRM_ASSERT(tmp);                                            \
-            (buffer) = tmp;                                             \
-        } else {                                                        \
-            offset += rc;                                               \
-            break;                                                      \
-        }                                                               \
-    } while(1);
+/*!
+ * \internal
+ * \brief Macro implementing inflatable variant of \c snprintf
+ * \param str[inout], the string buffer of size >= \c _max
+ * \param offset[inout], how many bytes from the beginning of \c str to operate
+ * \param max[inout], sentinel to prevent overruns as size <= \c _str size
+ *
+ * \warning Avoid using parameters with side effects (e.g., <tt>foo++</tt>).
+ *
+ * \parblock
+ * Only serious failure occurs when either underlying \c snprintf
+ * fails or when \c max < \c offset (implying unhandled error
+ * prior to invoking this macro).
+ * \endparblock
+ */
+#define buffer_print(buffer, max, offset, fmt, args...) do {              \
+        int errno_backup = errno, rc;                                     \
+        errno = 0;                                                        \
+        rc = crm_snprintf_offset(buffer, offset, max, fmt, ##args);       \
+        if (rc == max - offset && errno) {                                \
+            crm_perror(LOG_ERR, "snprintf failed at offset %d", offset);  \
+            (buffer)[offset] = 0;                                         \
+        } else if(rc >= max - offset) {                                   \
+            char *tmp = NULL;                                             \
+            max = QB_MAX(CHUNK_SIZE, (max) * 2);                          \
+            tmp = realloc_safe(buffer, max);                              \
+            CRM_ASSERT(tmp);                                              \
+            buffer = tmp;                                                 \
+            rc = -1;  /*distinct value from crm_snprintf_offset range*/   \
+        } else {                                                          \
+            offset += rc;                                                 \
+        }                                                                 \
+        errno = errno_backup;                                             \
+        if (rc >= 0)                                                      \
+            break;                                                        \
+    } while(1)
 
 static void
 insert_prefix(int options, char **buffer, int *offset, int *max, int depth)
@@ -221,7 +238,7 @@ insert_prefix(int options, char **buffer, int *offset, int *max, int depth)
 
         if ((*buffer) == NULL || spaces >= ((*max) - (*offset))) {
             (*max) = QB_MAX(CHUNK_SIZE, (*max) * 2);
-            (*buffer) = realloc_safe((*buffer), (*max) + 1);
+            (*buffer) = realloc_safe((*buffer), (*max));
         }
         memset((*buffer) + (*offset), ' ', spaces);
         (*offset) += spaces;
@@ -650,32 +667,32 @@ __xml_acl_create(xmlNode * xml, xmlNode *target, enum xml_private_flags mode)
             char buffer[XML_BUFFER_SIZE];
 
             if(tag) {
-                offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "//%s", tag);
+                offset += crm_snprintf_offset(buffer, offset, XML_BUFFER_SIZE, "//%s", tag);
             } else {
-                offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "//*");
+                offset += crm_snprintf_offset(buffer, offset, XML_BUFFER_SIZE, "//*");
             }
 
             if(ref || attr) {
-                offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "[");
+                offset += crm_snprintf_offset(buffer, offset, XML_BUFFER_SIZE, "[");
             }
 
             if(ref) {
-                offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "@id='%s'", ref);
+                offset += crm_snprintf_offset(buffer, offset, XML_BUFFER_SIZE, "@id='%s'", ref);
             }
 
             if(ref && attr) {
-                offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, " and ");
+                offset += crm_snprintf_offset(buffer, offset, XML_BUFFER_SIZE, " and ");
             }
 
             if(attr) {
-                offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "@%s", attr);
+                offset += crm_snprintf_offset(buffer, offset, XML_BUFFER_SIZE, "@%s", attr);
             }
 
             if(ref || attr) {
-                offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "]");
+                offset += crm_snprintf_offset(buffer, offset, XML_BUFFER_SIZE, "]");
             }
 
-            CRM_LOG_ASSERT(offset > 0);
+            CRM_LOG_ASSERT(offset > 0 && offset < XML_BUFFER_SIZE);
             acl->xpath = strdup(buffer);
             crm_trace("Built xpath: %s", acl->xpath);
         }
@@ -1714,21 +1731,26 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode * patchset)
                         const char *value = crm_element_value(child, "value");
 
                         if(o_set > 0) {
-                            o_set += snprintf(buffer_set + o_set, XML_BUFFER_SIZE - o_set, ", ");
+                            o_set += crm_snprintf_offset(buffer_set, o_set, XML_BUFFER_SIZE, ", ");
                         }
-                        o_set += snprintf(buffer_set + o_set, XML_BUFFER_SIZE - o_set, "@%s=%s", name, value);
+                        o_set += crm_snprintf_offset(buffer_set, o_set, XML_BUFFER_SIZE,
+                                                     "@%s=%s", name, value);
 
                     } else if(strcmp(op, "unset") == 0) {
                         if(o_unset > 0) {
-                            o_unset += snprintf(buffer_unset + o_unset, XML_BUFFER_SIZE - o_unset, ", ");
+                            o_unset += crm_snprintf_offset(buffer_unset, o_unset, XML_BUFFER_SIZE,
+                                                           ", ");
                         }
-                        o_unset += snprintf(buffer_unset + o_unset, XML_BUFFER_SIZE - o_unset, "@%s", name);
+                        o_unset += crm_snprintf_offset(buffer_unset, o_unset, XML_BUFFER_SIZE,
+                                                       "@%s", name);
                     }
                 }
-                if(o_set) {
+                if(o_set > 0) {
+                    CRM_LOG_ASSERT(o_set < XML_BUFFER_SIZE);  /* offset > 0 checked */
                     do_crm_log_alias(log_level, __FILE__, function, __LINE__, "+  %s:  %s", xpath, buffer_set);
                 }
-                if(o_unset) {
+                if(o_unset > 0) {
+                    CRM_LOG_ASSERT(o_unset < XML_BUFFER_SIZE);  /* offset > 0 checked */
                     do_crm_log_alias(log_level, __FILE__, function, __LINE__, "-- %s:  %s", xpath, buffer_unset);
                 }
 
@@ -2651,9 +2673,9 @@ __xml_acl_check(xmlNode *xml, const char *name, enum xml_private_flags mode)
 
             offset = __get_prefix(NULL, xml, buffer, offset);
             if(name) {
-                offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "[@%s]", name);
+                offset += crm_snprintf_offset(buffer, offset, XML_BUFFER_SIZE, "[@%s]", name);
             }
-            CRM_LOG_ASSERT(offset > 0);
+            CRM_LOG_ASSERT(offset > 0 && offset < XML_BUFFER_SIZE);
 
             /* Walk the tree upwards looking for xml_acl_* flags
              * - Creating an attribute requires write permissions for the node
@@ -2824,10 +2846,13 @@ __get_prefix(const char *prefix, xmlNode *xml, char *buffer, int offset)
     }
 
     if(id) {
-        offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "/%s[@id='%s']", (const char *)xml->name, id);
+        offset += crm_snprintf_offset(buffer, offset, XML_BUFFER_SIZE,
+                                      "/%s[@id='%s']", (const char *)xml->name, id);
     } else if(xml->name) {
-        offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "/%s", (const char *)xml->name);
+        offset += crm_snprintf_offset(buffer, offset, XML_BUFFER_SIZE,
+                                      "/%s", (const char *)xml->name);
     }
+    CRM_LOG_ASSERT(offset >= 0 && offset < XML_BUFFER_SIZE);  /* offset == 0 possible? */
 
     return offset;
 }
@@ -5814,12 +5839,13 @@ expand_idref(xmlNode * input, xmlNode * top)
     ref = crm_element_value(result, XML_ATTR_IDREF);
 
     if (ref != NULL) {
-        int xpath_max = 512, offset = 0;
+        static const int xpath_max = 512;
+        int offset = 0;
 
         xpath_string = calloc(1, xpath_max);
 
-        offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s[@id='%s']", tag, ref);
-        CRM_LOG_ASSERT(offset > 0);
+        offset += crm_snprintf_offset(xpath_string, offset, xpath_max, "//%s[@id='%s']", tag, ref);
+        CRM_LOG_ASSERT(offset > 0 && offset < xpath_max);
 
         result = get_xpath_object(xpath_string, top, LOG_ERR);
         if (result == NULL) {
