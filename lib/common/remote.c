@@ -383,9 +383,6 @@ crm_remote_parse_buffer(crm_remote_t * remote)
         return NULL;
     }
 
-    /* take ownership of the buffer */
-    remote->buffer_offset = 0;
-
     /* Support compression on the receiving end now, in case we ever want to add it later */
     if (header->payload_compressed) {
         int rc = 0;
@@ -420,6 +417,9 @@ crm_remote_parse_buffer(crm_remote_t * remote)
         remote->buffer = uncompressed;
         header = crm_remote_header(remote);
     }
+
+    /* take ownership of the buffer */
+    remote->buffer_offset = 0;
 
     CRM_LOG_ASSERT(remote->buffer[sizeof(struct crm_remote_header_v0) + header->payload_uncompressed - 1] == 0);
 
