@@ -378,14 +378,10 @@ main(int argc, char **argv)
                     char *provider = strchr (optarg, ':');
                     lrmd_t *lrmd_conn = lrmd_api_new();
 
-                    if (!provider) {
-                        rc = lrmd_conn->cmds->list_agents(lrmd_conn, &list, optarg, NULL);
-                        provider = "*";
-
-                    } else {
+                    if (provider) {
                         *provider++ = 0;
-                        rc = lrmd_conn->cmds->list_agents(lrmd_conn, &list, optarg, provider);
                     }
+                    rc = lrmd_conn->cmds->list_agents(lrmd_conn, &list, optarg, provider);
 
                     if (rc > 0) {
                         rc = 0;
@@ -396,8 +392,8 @@ main(int argc, char **argv)
                         lrmd_list_freeall(list);
                         rc = 0;
                     } else {
-                        fprintf(stderr, "No agents found for standard=%s, provider=%s\n", optarg,
-                                provider);
+                        fprintf(stderr, "No agents found for standard=%s, provider=%s\n",
+                                optarg, (provider? provider : "*"));
                         rc = -1;
                     }
                     lrmd_api_delete(lrmd_conn);
