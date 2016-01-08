@@ -282,7 +282,7 @@
 }
 
 {
-   glib - this isnt funny anymore
+   glib - this is not funny anymore
    Memcheck:Leak
    fun:malloc
    fun:realloc

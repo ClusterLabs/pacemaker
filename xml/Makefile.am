@@ -125,5 +125,4 @@ sync:
 	git rm -f $(wildcard *-next.rng)
 	make pacemaker-next.rng
 
-clean:
-	rm -f $(RNG_generated)
+CLEANFILES = $(RNG_generated)

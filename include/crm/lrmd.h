@@ -143,7 +143,7 @@ bool lrmd_dispatch(lrmd_t * lrmd);
  * \brief Poll for a specified timeout period to determine if a message
  *        is ready for dispatch.
  * \retval 1 msg is ready
- * \retval 0 timeout occured
+ * \retval 0 timeout occurred
  * \retval negative error code
  */
 int lrmd_poll(lrmd_t * lrmd, int timeout);

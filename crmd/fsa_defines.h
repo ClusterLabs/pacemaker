@@ -238,7 +238,7 @@ enum crmd_fsa_input {
  *
  * Some of the actions below will always occur together for now, but I can
  * forsee that this may not always be the case.  So I've spilt them up so
- * that if they ever do need to be called independantly in the future, it
+ * that if they ever do need to be called independently in the future, it
  * won't be a problem.
  *
  * For example, separating A_LRM_CONNECT from A_STARTUP might be useful

@@ -504,7 +504,7 @@ get_rsc_metadata(const char *type, const char *rclass, const char *provider, boo
 
     if(metadata == NULL) {
         rc = lrm_state_get_metadata(lrm_state, rclass, provider, type, &metadata, 0);
-        crm_trace("Retreived live metadata for %s: %s (%d)", key, pcmk_strerror(rc), rc);
+        crm_trace("Retrieved live metadata for %s: %s (%d)", key, pcmk_strerror(rc), rc);
         if(rc == pcmk_ok) {
             CRM_LOG_ASSERT(metadata != NULL);
             g_hash_table_insert(metadata_hash, key, metadata);
@@ -2287,7 +2287,7 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t * rsc, lrmd_event_data
      *   we get shot for having resources "running" when the really weren't
      *
      * the alternative however means blocking here for too long, which
-     * isnt acceptable
+     * isn't acceptable
      */
     fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, rc, NULL);
 

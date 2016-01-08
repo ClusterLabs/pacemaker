@@ -1,3 +1,13 @@
+* Thu Jan 07 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.14-rc5-1
+- Update source tarball to revision: 3453803
+- Changesets: 22
+- Diff:       25 files changed, 80 insertions(+), 80 deletions(-)
+
+- Changes since Pacemaker-1.1.14-rc4
+  + update SNMP MIB
+  + fix various misspellings in log messages
+  + fencing: use multiple topology levels properly
+
 * Wed Dec 23 2015 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.14-rc4-1
 - Update source tarball to revision: 5f8a298
 - Changesets: 18
@@ -1950,7 +1960,7 @@
     Changesets:      184
     Diff:            513 files changed, 43408 insertions(+), 43783 deletions(-)
 - Changes since 0.7.0-19
-  + Fix compilation when GNUTLS isnt found
+  + Fix compilation when GNUTLS isn't found
   + admin: Fix use-after-free in crm_mon
   + Build: Remove testing code that prevented heartbeat-only builds
   + cib: Use single quotes so that the xpath queries for nvpairs will succeed

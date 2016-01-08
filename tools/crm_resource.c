@@ -375,19 +375,13 @@ main(int argc, char **argv)
                 } else if (safe_str_eq("list-agents", longname)) {
                     lrmd_list_t *list = NULL;
                     lrmd_list_t *iter = NULL;
-                    char standard[512];
-                    char provider[512];
+                    char *provider = strchr (optarg, ':');
                     lrmd_t *lrmd_conn = lrmd_api_new();
 
-                    rc = sscanf(optarg, "%[^:]:%s", standard, provider);
-                    if (rc == 1) {
-                        rc = lrmd_conn->cmds->list_agents(lrmd_conn, &list, optarg, NULL);
-                        provider[0] = '*';
-                        provider[1] = 0;
-
-                    } else if (rc == 2) {
-                        rc = lrmd_conn->cmds->list_agents(lrmd_conn, &list, standard, provider);
+                    if (provider) {
+                        *provider++ = 0;
                     }
+                    rc = lrmd_conn->cmds->list_agents(lrmd_conn, &list, optarg, provider);
 
                     if (rc > 0) {
                         rc = 0;
@@ -398,8 +392,8 @@ main(int argc, char **argv)
                         lrmd_list_freeall(list);
                         rc = 0;
                     } else {
-                        fprintf(stderr, "No agents found for standard=%s, provider=%s\n", standard,
-                                provider);
+                        fprintf(stderr, "No agents found for standard=%s, provider=%s\n",
+                                optarg, (provider? provider : "*"));
                         rc = -1;
                     }
                     lrmd_api_delete(lrmd_conn);

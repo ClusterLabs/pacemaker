@@ -465,6 +465,7 @@ class Tests:
                 test.add_expected_fail_cmd("stonith_admin", "-F node3 -t 2", 194)
                 test.add_stonith_log_pattern("remote op timeout set to 6")
             else:
+                # 55 = (unsigned char)-201 (-pcmk_err_generic)
                 test.add_expected_fail_cmd("stonith_admin", "-F node3 -t 2", 55)
 
             test.add_stonith_log_pattern("for host 'node3' with device 'false1' returned: ")
@@ -672,6 +673,7 @@ class Tests:
             test = self.new_test("%s_monitor_timeout" % test_type["prefix"],
                     "Verify monitor uses duration of timeout period given.", test_type["use_cpg"])
             test.add_cmd("stonith_admin", "-R true1  -a fence_dummy_monitor_fail -o \"pcmk_host_list=node3\"")
+            # 195 = (unsigned char)-61 (-ENODATA)
             test.add_expected_fail_cmd("stonith_admin", "-Q true1 -t 5", 195)
             test.add_stonith_log_pattern("Attempt 2 to execute")
 
@@ -680,6 +682,7 @@ class Tests:
             test = self.new_test("%s_monitor_timeout_max_retries" % test_type["prefix"],
                     "Verify monitor retries until max retry value or timeout is hit.", test_type["use_cpg"])
             test.add_cmd("stonith_admin", "-R true1  -a fence_dummy_monitor_fail -o \"pcmk_host_list=node3\"")
+            # 195 = (unsigned char)-61 (-ENODATA)
             test.add_expected_fail_cmd("stonith_admin", "-Q true1 -t 15",195)
             test.add_stonith_log_pattern("Attempted to execute agent fence_dummy_monitor_fail (list) the maximum number of times")
 
@@ -915,8 +918,8 @@ class Tests:
         test.add_stonith_log_pattern("Remapping multiple-device reboot of node_fake")
         # timeout should be sum of off timeouts (1+2=3), not reboot timeouts (10+20=30)
         test.add_stonith_log_pattern("remote op timeout set to 3 for fencing of node node_fake")
-        test.add_stonith_log_pattern("perform op off node_fake with true1")
-        test.add_stonith_log_pattern("perform op off node_fake with true2")
+        test.add_stonith_log_pattern("perform op 'node_fake off' with 'true1'")
+        test.add_stonith_log_pattern("perform op 'node_fake off' with 'true2'")
         test.add_stonith_log_pattern("Remapped off of node_fake complete, remapping to on")
         # fence_dummy sets "on" as an on_target action
         test.add_stonith_log_pattern("Ignoring true1 'on' failure (no capable peers) for node_fake")
@@ -934,11 +937,11 @@ class Tests:
         test.add_cmd("stonith_admin", "-r node_fake -i 1 -v true1 -v true2")
         test.add_cmd("stonith_admin", "-B node_fake -t 5")
         test.add_stonith_log_pattern("Remapping multiple-device reboot of node_fake")
-        test.add_stonith_log_pattern("perform op off node_fake with true1")
-        test.add_stonith_log_pattern("perform op off node_fake with true2")
+        test.add_stonith_log_pattern("perform op 'node_fake off' with 'true1'")
+        test.add_stonith_log_pattern("perform op 'node_fake off' with 'true2'")
         test.add_stonith_log_pattern("Remapped off of node_fake complete, remapping to on")
         test.add_stonith_log_pattern("Undoing remap of reboot of node_fake")
-        test.add_stonith_negative_log_pattern("perform op on node_fake with")
+        test.add_stonith_negative_log_pattern("perform op 'node_fake on' with")
         test.add_stonith_negative_log_pattern("'on' failure")
 
         test = self.new_test("cpg_remap_complex_1",
@@ -949,10 +952,10 @@ class Tests:
         test.add_cmd("stonith_admin", "-r node_fake -i 1 -v false1")
         test.add_cmd("stonith_admin", "-r node_fake -i 2 -v true1 -v true2")
         test.add_cmd("stonith_admin", "-B node_fake -t 5")
-        test.add_stonith_log_pattern("perform op reboot node_fake with false1")
+        test.add_stonith_log_pattern("perform op 'node_fake reboot' with 'false1'")
         test.add_stonith_log_pattern("Remapping multiple-device reboot of node_fake")
-        test.add_stonith_log_pattern("perform op off node_fake with true1")
-        test.add_stonith_log_pattern("perform op off node_fake with true2")
+        test.add_stonith_log_pattern("perform op 'node_fake off' with 'true1'")
+        test.add_stonith_log_pattern("perform op 'node_fake off' with 'true2'")
         test.add_stonith_log_pattern("Remapped off of node_fake complete, remapping to on")
         test.add_stonith_log_pattern("Ignoring true1 'on' failure (no capable peers) for node_fake")
         test.add_stonith_log_pattern("Ignoring true2 'on' failure (no capable peers) for node_fake")
@@ -969,13 +972,13 @@ class Tests:
         test.add_cmd("stonith_admin", "-r node_fake -i 2 -v true1 -v false2 -v true3")
         test.add_cmd("stonith_admin", "-r node_fake -i 3 -v true2")
         test.add_cmd("stonith_admin", "-B node_fake -t 5")
-        test.add_stonith_log_pattern("perform op reboot node_fake with false1")
+        test.add_stonith_log_pattern("perform op 'node_fake reboot' with 'false1'")
         test.add_stonith_log_pattern("Remapping multiple-device reboot of node_fake")
-        test.add_stonith_log_pattern("perform op off node_fake with true1")
-        test.add_stonith_log_pattern("perform op off node_fake with false2")
+        test.add_stonith_log_pattern("perform op 'node_fake off' with 'true1'")
+        test.add_stonith_log_pattern("perform op 'node_fake off' with 'false2'")
         test.add_stonith_log_pattern("Attempted to execute agent fence_dummy (off) the maximum number of times")
         test.add_stonith_log_pattern("Undoing remap of reboot of node_fake")
-        test.add_stonith_log_pattern("perform op reboot node_fake with true2")
+        test.add_stonith_log_pattern("perform op 'node_fake reboot' with 'true2'")
         test.add_stonith_negative_log_pattern("node_fake with true3")
 
     def setup_environment(self, use_corosync):
