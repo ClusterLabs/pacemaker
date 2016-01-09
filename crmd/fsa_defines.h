@@ -237,7 +237,7 @@ enum crmd_fsa_input {
  * actions
  *
  * Some of the actions below will always occur together for now, but I can
- * forsee that this may not always be the case.  So I've spilt them up so
+ * foresee that this may not always be the case.  So I've split them up so
  * that if they ever do need to be called independently in the future, it
  * won't be a problem.
  *
