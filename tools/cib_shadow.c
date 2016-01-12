@@ -78,7 +78,7 @@ shadow_setup(char *name, gboolean do_switch)
         if (strstr(shell, "bash")) {
             execl(shell, shell, "--norc", "--noprofile", NULL);
         } else {
-            execl(shell, shell, "--noprofile", NULL);
+            execl(shell, shell, NULL);
         }
 
     } else if (do_switch) {
