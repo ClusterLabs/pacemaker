@@ -900,6 +900,8 @@ action_complete(svc_action_t * action)
             /* Ok, so this is the follow up monitor action to check if start actually completed */
             if(cmd->lrmd_op_status == PCMK_LRM_OP_DONE && cmd->exec_rc == PCMK_OCF_PENDING) {
                 goagain = true;
+            } else if(cmd->exec_rc == PCMK_OCF_OK && safe_str_eq(cmd->real_action, "stop")) {
+                goagain = true;
 
             } else {
 #ifdef HAVE_SYS_TIMEB_H
