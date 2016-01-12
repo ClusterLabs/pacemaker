@@ -150,16 +150,13 @@ systemd_daemon_reload(int timeout)
 {
     static unsigned int reload_count = 0;
     const char *method = "Reload";
-
+    DBusMessage *msg = systemd_new_method(BUS_NAME".Manager", method);
 
     reload_count++;
-    if(reload_count % 10 == 0) {
-        DBusMessage *msg = systemd_new_method(BUS_NAME".Manager", method);
+    CRM_ASSERT(msg != NULL);
+    pcmk_dbus_send(msg, systemd_proxy, systemd_daemon_reload_complete, GUINT_TO_POINTER(reload_count), timeout);
+    dbus_message_unref(msg);
 
-        CRM_ASSERT(msg != NULL);
-        pcmk_dbus_send(msg, systemd_proxy, systemd_daemon_reload_complete, GUINT_TO_POINTER(reload_count), timeout);
-        dbus_message_unref(msg);
-    }
     return TRUE;
 }
 
