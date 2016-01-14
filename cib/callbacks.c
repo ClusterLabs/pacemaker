@@ -74,6 +74,7 @@ int cib_process_command(xmlNode * request, xmlNode ** reply,
 gboolean cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size,
                              gboolean privileged);
 
+#if !SUPPORT_PLUGIN
 static gboolean cib_read_legacy_mode(void)
 {
     static gboolean init = TRUE;
@@ -89,17 +90,18 @@ static gboolean cib_read_legacy_mode(void)
 
     return legacy;
 }
+#endif
 
 gboolean cib_legacy_mode(void)
 {
 #if SUPPORT_PLUGIN
     return TRUE;
-#endif
-
+#else
     if(cib_read_legacy_mode()) {
         return TRUE;
     }
     return legacy_mode;
+#endif
 }
 
 
