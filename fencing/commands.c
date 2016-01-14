@@ -1224,8 +1224,8 @@ stonith_level_register(xmlNode *msg, char **desc)
 
     /* Sanity-check arguments */
     if (mode >= 3 || (id <= 0) || (id >= ST_LEVEL_MAX)) {
-        free(target);
         crm_trace("Could not add %s[%d] (%d) to the topology (%d active entries)", target, id, mode, g_hash_table_size(topology));
+        free(target);
         crm_log_xml_err(level, "Bad topology");
         return -EINVAL;
     }
