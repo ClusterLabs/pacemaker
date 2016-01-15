@@ -1,56 +1,22 @@
-* Thu Jan 07 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.14-rc5-1
-- Update source tarball to revision: 3453803
-- Changesets: 22
-- Diff:       25 files changed, 80 insertions(+), 80 deletions(-)
-
-- Changes since Pacemaker-1.1.14-rc4
-  + update SNMP MIB
-  + fix various misspellings in log messages
-  + fencing: use multiple topology levels properly
-
-* Wed Dec 23 2015 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.14-rc4-1
-- Update source tarball to revision: 5f8a298
-- Changesets: 18
-- Diff:       27 files changed, 56 insertions(+), 53 deletions(-)
-
-- Changes since Pacemaker-1.1.14-rc3
-  + improved support for building on FreeBSD
-  + libcrmcommon: when caching attrd connection, cache connection flags too
-
-* Mon Dec 14 2015 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.14-rc3-1
-- Update source tarball to revision: 97ada31
-- Changesets: 7
-- Diff:       2 files changed, 7 insertions(+), 2 deletions(-)
-
-- Changes since Pacemaker-1.1.14-rc2
-  + stonithd: fix issue where deleting a fence device attribute can delete the device
-
-* Tue Dec 08 2015 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.14-rc2-1
-- Update source tarball to revision: ce830a7
-- Changesets: 1
-- Diff:       1 file changed, 2 insertions(+)
-
-- Changes since Pacemaker-1.1.14-rc1
-  + crmd: ensure compilation works with built-in notifications disabled
-
-* Tue Dec 08 2015 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.14-rc1-1
-- Update source tarball to revision: 7cd6dcf
-- Changesets: 656
-- Diff:       169 files changed, 13014 insertions(+), 7579 deletions(-)
+* Thu Jan 14 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.14-1
+- Update source tarball to revision: f0b585a
+- Changesets: 724
+- Diff:        179 files changed, 13142 insertions(+), 7695 deletions(-)
 
 - Features added since Pacemaker-1.1.13
   + crm_resource: Indicate common reasons why a resource may not start after a cleanup
   + crm_resource: New --force-promote and --force-demote options for debugging
   + fencing: Support targeting fencing topologies by node name pattern or node attribute
   + fencing: Remap sequential topology reboots to all-off-then-all-on
-  + pengine: Allow guest remote nodes using containers/vms to be nested in a group resource
   + pengine: Allow resources to start and stop as soon as their state is known on all nodes
   + pengine: Include a list of all and available nodes with clone notifications
   + pengine: Addition of the clone resource clone-min metadata option
   + pengine: Support of multiple-active=block for resource groups
+  + remote: Resources that create guest nodes can be included in a group resource
   + remote: reconnect_interval option for remote nodes to delay reconnect after fence
 
 - Changes since Pacemaker-1.1.13
+  + improve support for building on FreeBSD and Debian
   + fix multiple memory issues (leaks, use-after-free, double free, use-of-NULL) in components and tools
   + cib: Do not terminate due to badly behaving clients
   + cman: handle corosync-invented node names of the form Node{id} for peers not in its node list
@@ -73,9 +39,11 @@
   + fencing: ensure "required"/"automatic" only apply to "on" actions
   + fencing: Return a provider for the internal fencing agent "#watchdog" instead of logging an error
   + fencing: ignore stderr output of fence agents (often used for debug messages)
+  + fencing: fix issue where deleting a fence device attribute can delete the device
   + libcib: potential user input overflow
   + libcluster: overhaul peer cache management
   + log: make syslog less noisy
+  + log: fix various misspellings in log messages
   + lrmd: cancel currently pending STONITH op if stonithd connection is lost
   + lrmd: Finalize all pending and recurring operations when cleaning up a resource
   + pengine: Bug cl#5247 - Imply resources running on a container are stopped when the container is stopped
@@ -95,6 +63,7 @@
   + systemd: Reconnect to System DBus if the connection is closed
   + systemd: set systemd resources' timeout values higher than systemd's own default
   + tools: Do not send command lines to syslog
+  + tools: update SNMP MIB
   + upstart: Ensure pending structs are correctly unreferenced
 
 
