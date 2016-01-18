@@ -943,7 +943,7 @@ dnl Check for printw() prototype compatibility
 if test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual && cc_supports_flag -Werror; then
     AC_MSG_CHECKING(whether printw() requires argument of "const char *")
     ac_save_LIBS=$LIBS
-    LIBS="$CURSESLIBS  $LIBS"
+    LIBS="$CURSESLIBS"
     ac_save_CFLAGS=$CFLAGS
     CFLAGS="-Wcast-qual -Werror"
 
