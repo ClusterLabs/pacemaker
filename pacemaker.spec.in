@@ -418,7 +418,12 @@ exit 0
 %{_sbindir}/fence_pcmk
 %{_sbindir}/stonith_admin
 
-%doc %{_mandir}/man7/*
+%doc %{_mandir}/man7/crmd.*
+%doc %{_mandir}/man7/pengine.*
+%doc %{_mandir}/man7/stonithd.*
+%doc %{_mandir}/man7/ocf_pacemaker_controld.*
+%doc %{_mandir}/man7/ocf_pacemaker_o2cb.*
+%doc %{_mandir}/man7/ocf_pacemaker_remote.*
 %doc %{_mandir}/man8/crm_attribute.*
 %doc %{_mandir}/man8/crm_node.*
 %doc %{_mandir}/man8/crm_master.*
@@ -436,9 +441,9 @@ exit 0
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/cores
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/pengine
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/blackbox
-%dir /usr/lib/ocf
-%dir /usr/lib/ocf/resource.d
-/usr/lib/ocf/resource.d/pacemaker
+/usr/lib/ocf/resource.d/pacemaker/controld
+/usr/lib/ocf/resource.d/pacemaker/o2cb
+/usr/lib/ocf/resource.d/pacemaker/remote
 /usr/lib/ocf/resource.d/.isolation
 
 %if "%{?cs_version}" != "UNKNOWN"
@@ -485,6 +490,21 @@ exit 0
 %{_datadir}/pacemaker
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
 
+%exclude /usr/lib/ocf/resource.d/pacemaker/controld
+%exclude /usr/lib/ocf/resource.d/pacemaker/o2cb
+%exclude /usr/lib/ocf/resource.d/pacemaker/remote
+
+%dir /usr/lib/ocf
+%dir /usr/lib/ocf/resource.d
+/usr/lib/ocf/resource.d/pacemaker
+
+%doc %{_mandir}/man7/*
+%exclude %{_mandir}/man7/crmd.*
+%exclude %{_mandir}/man7/pengine.*
+%exclude %{_mandir}/man7/stonithd.*
+%exclude %{_mandir}/man7/ocf_pacemaker_controld.*
+%exclude %{_mandir}/man7/ocf_pacemaker_o2cb.*
+%exclude %{_mandir}/man7/ocf_pacemaker_remote.*
 %doc %{_mandir}/man8/*
 %exclude %{_mandir}/man8/crm_attribute.*
 %exclude %{_mandir}/man8/crm_node.*
