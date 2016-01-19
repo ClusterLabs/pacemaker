@@ -42,7 +42,6 @@ This is not meant to be an exhaustive list:
 * libxml2-devel
 * libxslt-devel 
 * python-devel
-* gcc-c++
 * bzip2-devel
 * gnutls-devel
 * pam-devel
