@@ -401,10 +401,7 @@ exit 0
 ###########################################################
 %defattr(-,root,root)
 
-%exclude %{_datadir}/pacemaker/tests
-
 %config(noreplace) %{_sysconfdir}/sysconfig/pacemaker
-%config(noreplace) %{_sysconfdir}/logrotate.d/pacemaker
 %{_sbindir}/pacemakerd
 
 %if %{defined _unitdir}
@@ -413,10 +410,6 @@ exit 0
 %{_initrddir}/pacemaker
 %endif
 
-%exclude %{_datadir}/pacemaker/report.common
-%exclude %{_datadir}/pacemaker/report.collector
-%{_datadir}/pacemaker
-%{_datadir}/snmp/mibs/PCMK-MIB.txt
 %exclude %{_libexecdir}/pacemaker/lrmd_test
 %exclude %{_sbindir}/pacemaker_remoted
 %{_libexecdir}/pacemaker/*
@@ -424,13 +417,16 @@ exit 0
 %{_sbindir}/crm_attribute
 %{_sbindir}/crm_master
 %{_sbindir}/crm_node
-%{_sbindir}/attrd_updater
 %{_sbindir}/fence_legacy
 %{_sbindir}/fence_pcmk
 %{_sbindir}/stonith_admin
 
-%doc %{_mandir}/man7/*
-%doc %{_mandir}/man8/attrd_updater.*
+%doc %{_mandir}/man7/crmd.*
+%doc %{_mandir}/man7/pengine.*
+%doc %{_mandir}/man7/stonithd.*
+%doc %{_mandir}/man7/ocf_pacemaker_controld.*
+%doc %{_mandir}/man7/ocf_pacemaker_o2cb.*
+%doc %{_mandir}/man7/ocf_pacemaker_remote.*
 %doc %{_mandir}/man8/crm_attribute.*
 %doc %{_mandir}/man8/crm_node.*
 %doc %{_mandir}/man8/crm_master.*
@@ -448,9 +444,9 @@ exit 0
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/cores
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/pengine
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/blackbox
-%dir /usr/lib/ocf
-%dir /usr/lib/ocf/resource.d
-/usr/lib/ocf/resource.d/pacemaker
+/usr/lib/ocf/resource.d/pacemaker/controld
+/usr/lib/ocf/resource.d/pacemaker/o2cb
+/usr/lib/ocf/resource.d/pacemaker/remote
 /usr/lib/ocf/resource.d/.isolation
 
 %if "%{?cs_version}" != "UNKNOWN"
@@ -467,6 +463,7 @@ exit 0
 %files cli
 %defattr(-,root,root)
 
+%config(noreplace) %{_sysconfdir}/logrotate.d/pacemaker
 %config(noreplace) %{_sysconfdir}/sysconfig/crm_mon
 
 %if %{defined _unitdir}
@@ -477,6 +474,7 @@ exit 0
 %config(noreplace) %{_sysconfdir}/init/crm_mon.conf
 %endif
 
+%{_sbindir}/attrd_updater
 %{_sbindir}/cibadmin
 %{_sbindir}/crm_diff
 %{_sbindir}/crm_error
@@ -491,10 +489,26 @@ exit 0
 %{_sbindir}/crm_simulate
 %{_sbindir}/crm_report
 %{_sbindir}/crm_ticket
-%{_datadir}/pacemaker/report.common
-%{_datadir}/pacemaker/report.collector
+%exclude %{_datadir}/pacemaker/tests
+%{_datadir}/pacemaker
+%{_datadir}/snmp/mibs/PCMK-MIB.txt
+
+%exclude /usr/lib/ocf/resource.d/pacemaker/controld
+%exclude /usr/lib/ocf/resource.d/pacemaker/o2cb
+%exclude /usr/lib/ocf/resource.d/pacemaker/remote
+
+%dir /usr/lib/ocf
+%dir /usr/lib/ocf/resource.d
+/usr/lib/ocf/resource.d/pacemaker
+
+%doc %{_mandir}/man7/*
+%exclude %{_mandir}/man7/crmd.*
+%exclude %{_mandir}/man7/pengine.*
+%exclude %{_mandir}/man7/stonithd.*
+%exclude %{_mandir}/man7/ocf_pacemaker_controld.*
+%exclude %{_mandir}/man7/ocf_pacemaker_o2cb.*
+%exclude %{_mandir}/man7/ocf_pacemaker_remote.*
 %doc %{_mandir}/man8/*
-%exclude %{_mandir}/man8/attrd_updater.*
 %exclude %{_mandir}/man8/crm_attribute.*
 %exclude %{_mandir}/man8/crm_node.*
 %exclude %{_mandir}/man8/crm_master.*
