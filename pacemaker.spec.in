@@ -60,7 +60,7 @@ License:       GPLv2+ and LGPLv2+
 Url:           http://www.clusterlabs.org
 Group:         System Environment/Daemons
 
-Source0:        https://github.com/%{github_owner}/%{name}/archive/%{commit}/%{name}-%{commit}.tar.gz
+Source0:       https://github.com/%{github_owner}/%{name}/archive/%{commit}/%{name}-%{commit}.tar.gz
 BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 AutoReqProv:   on
 Requires:      python
@@ -339,7 +339,7 @@ rm -rf %{buildroot}
 %systemd_preun pacemaker.service
 
 %postun
-%systemd_postun_with_restart pacemaker.service 
+%systemd_postun_with_restart pacemaker.service
 
 %post remote
 %systemd_post pacemaker_remote.service
@@ -348,7 +348,7 @@ rm -rf %{buildroot}
 %systemd_preun pacemaker_remote.service
 
 %postun remote
-%systemd_postun_with_restart pacemaker_remote.service 
+%systemd_postun_with_restart pacemaker_remote.service
 
 %post cli
 %systemd_post crm_mon.service
