@@ -37,11 +37,10 @@ This is not meant to be an exhaustive list:
 * libtool-ltdl-devel
 * libuuid-devel
 * pkgconfig
-* python
+* python (or python-devel if that's preferred as a build dependency)
 * glib2-devel
 * libxml2-devel
 * libxslt-devel 
-* python-devel
 * bzip2-devel
 * gnutls-devel
 * pam-devel
