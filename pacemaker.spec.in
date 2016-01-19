@@ -16,6 +16,9 @@
 # It has to be eventually decided whether to use Python2 or Python3
 %global py_site    %{?python_sitearch}%{!?python_sitearch:%(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")}
 
+# https://fedoraproject.org/wiki/EPEL:Packaging?rd=Packaging:EPEL#The_.25license_tag
+%{!?_licensedir:%global license %doc}
+
 # Conditionals
 # Invoke "rpmbuild --without <feature>" or "rpmbuild --with <feature>"
 # to disable or enable specific features
@@ -440,7 +443,7 @@ exit 0
 %doc %{_mandir}/man8/pacemakerd.*
 %doc %{_mandir}/man8/stonith_admin.*
 
-%doc COPYING
+%license COPYING
 %doc AUTHORS
 %doc ChangeLog
 
@@ -505,7 +508,7 @@ exit 0
 %exclude %{_mandir}/man8/pacemaker_remoted.*
 %exclude %{_mandir}/man8/stonith_admin.*
 
-%doc COPYING
+%license COPYING
 %doc AUTHORS
 %doc ChangeLog
 
@@ -521,13 +524,13 @@ exit 0
 %{_libdir}/libpengine.so.*
 %{_libdir}/libstonithd.so.*
 %{_libdir}/libtransitioner.so.*
-%doc COPYING.LIB
+%license COPYING.LIB
 %doc AUTHORS
 
 %files -n %{name}-cluster-libs
 %defattr(-,root,root)
 %{_libdir}/libcrmcluster.so.*
-%doc COPYING.LIB
+%license COPYING.LIB
 %doc AUTHORS
 
 %files remote
@@ -542,7 +545,7 @@ exit 0
 
 %{_sbindir}/pacemaker_remoted
 %{_mandir}/man8/pacemaker_remoted.*
-%doc COPYING.LIB
+%license COPYING.LIB
 %doc AUTHORS
 
 %files doc
@@ -554,7 +557,7 @@ exit 0
 %{py_site}/cts
 %{_datadir}/pacemaker/tests/cts
 %{_libexecdir}/pacemaker/lrmd_test
-%doc COPYING.LIB
+%license COPYING.LIB
 %doc AUTHORS
 
 %files -n %{name}-libs-devel
@@ -567,7 +570,7 @@ exit 0
 %{_var}/lib/pacemaker/gcov
 %endif
 %{_libdir}/pkgconfig/*.pc
-%doc COPYING.LIB
+%license COPYING.LIB
 %doc AUTHORS
 
 %changelog
