@@ -545,7 +545,7 @@ exit 0
 
 %{_sbindir}/pacemaker_remoted
 %{_mandir}/man8/pacemaker_remoted.*
-%license COPYING.LIB
+%license COPYING
 %doc AUTHORS
 
 %files doc
@@ -557,7 +557,7 @@ exit 0
 %{py_site}/cts
 %{_datadir}/pacemaker/tests/cts
 %{_libexecdir}/pacemaker/lrmd_test
-%license COPYING.LIB
+%license COPYING
 %doc AUTHORS
 
 %files -n %{name}-libs-devel
