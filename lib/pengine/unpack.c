@@ -168,6 +168,10 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     data_set->stonith_action = pe_pref(data_set->config_hash, "stonith-action");
     crm_trace("STONITH will %s nodes", data_set->stonith_action);
 
+    set_config_flag(data_set, "concurrent-fencing", pe_flag_concurrent_fencing);
+    crm_debug("Concurrent fencing is %s",
+              is_set(data_set->flags, pe_flag_concurrent_fencing) ? "enabled" : "disabled");
+
     set_config_flag(data_set, "stop-all-resources", pe_flag_stop_everything);
     crm_debug("Stop all active resources: %s",
               is_set(data_set->flags, pe_flag_stop_everything) ? "true" : "false");

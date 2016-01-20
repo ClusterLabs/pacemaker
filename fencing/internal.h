@@ -34,7 +34,7 @@ typedef struct stonith_device_s {
     /* whether the cluster should automatically unfence nodes with the device */
     gboolean automatic_unfencing;
     guint priority;
-    guint active_pid;
+    GListPtr active_pids;
 
     enum st_device_flags flags;
 
