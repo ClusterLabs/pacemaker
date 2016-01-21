@@ -270,6 +270,22 @@ get_action_limit(stonith_device_t * device)
     return action_limit;
 }
 
+static void
+device_add_active_pid(stonith_device_t * device, GPid pid)
+{
+    CRM_CHECK(device != NULL, return);
+
+    device->active_pids = g_list_append(device->active_pids, GINT_TO_POINTER(pid));
+}
+
+static void
+device_remove_active_pid(stonith_device_t * device, GPid pid)
+{
+    CRM_CHECK(device != NULL, return);
+
+    device->active_pids = g_list_remove(device->active_pids, GINT_TO_POINTER(pid));
+}
+
 static gboolean
 stonith_device_execute(stonith_device_t * device)
 {
@@ -363,7 +379,7 @@ stonith_device_execute(stonith_device_t * device)
         crm_debug("Operation %s%s%s on %s now running with pid=%d, timeout=%ds",
                   cmd->action, cmd->victim ? " for node " : "", cmd->victim ? cmd->victim : "",
                   device->id, exec_rc, cmd->timeout);
-        device->active_pids = g_list_append(device->active_pids, GINT_TO_POINTER(exec_rc));
+        device_add_active_pid(device, exec_rc);
 
     } else {
         crm_warn("Operation %s%s%s on %s failed: %s (%d)",
@@ -897,7 +913,7 @@ status_search_cb(GPid pid, int rc, const char *output, gpointer user_data)
         return;
     }
 
-    dev->active_pids = g_list_remove(dev->active_pids, GINT_TO_POINTER(pid));
+    device_remove_active_pid(dev, pid);
     mainloop_set_trigger(dev->work);
 
     if (rc == 1 /* unknown */ ) {
@@ -934,7 +950,7 @@ dynamic_list_search_cb(GPid pid, int rc, const char *output, gpointer user_data)
         return;
     }
 
-    dev->active_pids = g_list_remove(dev->active_pids, GINT_TO_POINTER(pid));
+    device_remove_active_pid(dev, pid);
     mainloop_set_trigger(dev->work);
 
     /* If we successfully got the targets earlier, don't disable. */
@@ -1910,7 +1926,7 @@ unfence_cb(GPid pid, int rc, const char *output, gpointer user_data)
     log_operation(cmd, rc, pid, NULL, output);
 
     if(dev) {
-        dev->active_pids = g_list_remove(dev->active_pids, GINT_TO_POINTER(pid));
+        device_remove_active_pid(dev, pid);
         mainloop_set_trigger(dev->work);
     } else {
         crm_trace("Device %s does not exist", cmd->device);
@@ -1955,7 +1971,7 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
     /* The device is ready to do something else now */
     device = g_hash_table_lookup(device_list, cmd->device);
     if (device) {
-        device->active_pids = g_list_remove(device->active_pids, GINT_TO_POINTER(pid));
+        device_remove_active_pid(device, pid);
         if (rc == pcmk_ok &&
             (safe_str_eq(cmd->action, "list") ||
              safe_str_eq(cmd->action, "monitor") || safe_str_eq(cmd->action, "status"))) {
