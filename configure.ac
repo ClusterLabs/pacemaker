@@ -1075,7 +1075,7 @@ fi
 
 if test $HAVE_GLUE = 1; then
    dnl On Debian, AC_CHECK_LIBS fail if a library has any unresolved symbols
-   dnl So check for all the depenancies (so they're added to LIBS) before checking for -lplumb
+   dnl So check for all the dependencies (so they're added to LIBS) before checking for -lplumb
    AC_CHECK_LIB(pils, PILLoadPlugin)
    AC_CHECK_LIB(plumb, G_main_add_IPC_Channel)
 fi
