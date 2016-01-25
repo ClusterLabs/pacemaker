@@ -315,7 +315,7 @@ do_test a-demote-then-b-migrate "A demote then B stop. migrate B"
 #echo ""
 #do_test complex1 "Complex	"
 
-do_test bug-lf-2422 "Dependancy on partially active group - stop ocfs:*"
+do_test bug-lf-2422 "Dependency on partially active group - stop ocfs:*"
 
 echo ""
 do_test clone-anon-probe-1 "Probe the correct (anonymous) clone instance for each node"
