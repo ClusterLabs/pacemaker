@@ -2270,7 +2270,8 @@ find_library_function(void **handle, const char *lib, const char *fn, gboolean f
     }
 
     a_function = dlsym(*handle, fn);
-    if ((error = dlerror()) != NULL) {
+    if (a_function == NULL) {
+        error = dlerror();
         crm_err("%sCould not find %s in %s: %s", fatal ? "Fatal: " : "", fn, lib, error);
         if (fatal) {
             crm_exit(DAEMON_RESPAWN_STOP);

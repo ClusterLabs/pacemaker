@@ -747,22 +747,22 @@ struct crm_ipc_s {
 static unsigned int
 pick_ipc_buffer(unsigned int max)
 {
+    const char *env;
     static unsigned int global_max = 0;
 
-    if(global_max == 0) {
-        const char *env = getenv("PCMK_ipc_buffer");
+    if (global_max != 0)
+        return global_max;
 
-        if (env) {
-            int env_max = crm_parse_int(env, "0");
+    env = getenv("PCMK_ipc_buffer");
+    if (env) {
+        int env_max = crm_parse_int(env, "0");
 
-            global_max = (env_max > 0)? env_max : MAX_MSG_SIZE;
-
-        } else {
-            global_max = MAX_MSG_SIZE;
-        }
+        global_max = QB_MAX(MIN_MSG_SIZE, env_max);
+    } else {
+        global_max = QB_MAX(MAX_MSG_SIZE, max);
     }
 
-    return QB_MAX(max, global_max);
+    return global_max;
 }
 
 crm_ipc_t *
