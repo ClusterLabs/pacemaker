@@ -62,6 +62,7 @@ enum pe_find {
 #  define pe_flag_stonith_enabled	0x00000010ULL
 #  define pe_flag_have_stonith_resource	0x00000020ULL
 #  define pe_flag_enable_unfencing	0x00000040ULL
+#  define pe_flag_concurrent_fencing	0x00000080ULL
 
 #  define pe_flag_stop_rsc_orphans	0x00000100ULL
 #  define pe_flag_stop_action_orphans	0x00000200ULL

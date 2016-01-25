@@ -252,6 +252,40 @@ create_async_command(xmlNode * msg)
     return cmd;
 }
 
+static int
+get_action_limit(stonith_device_t * device)
+{
+    const char *value = NULL;
+    int action_limit = 1;
+
+    value = g_hash_table_lookup(device->params, STONITH_ATTR_ACTION_LIMIT);
+    if (value) {
+       action_limit = crm_parse_int(value, "1");
+       if (action_limit == 0) {
+           /* pcmk_action_limit should not be 0. Enforce it to be 1. */
+           action_limit = 1;
+       }
+    }
+
+    return action_limit;
+}
+
+static void
+device_add_active_pid(stonith_device_t * device, GPid pid)
+{
+    CRM_CHECK(device != NULL, return);
+
+    device->active_pids = g_list_append(device->active_pids, GINT_TO_POINTER(pid));
+}
+
+static void
+device_remove_active_pid(stonith_device_t * device, GPid pid)
+{
+    CRM_CHECK(device != NULL, return);
+
+    device->active_pids = g_list_remove(device->active_pids, GINT_TO_POINTER(pid));
+}
+
 static gboolean
 stonith_device_execute(stonith_device_t * device)
 {
@@ -259,11 +293,16 @@ stonith_device_execute(stonith_device_t * device)
     const char *action_str = NULL;
     async_command_t *cmd = NULL;
     stonith_action_t *action = NULL;
+    guint active_pids = 0;
+    int action_limit = 0;
 
     CRM_CHECK(device != NULL, return FALSE);
 
-    if (device->active_pid) {
-        crm_trace("%s is still active with pid %u", device->id, device->active_pid);
+    active_pids = g_list_length(device->active_pids);
+    action_limit = get_action_limit(device);
+    if (action_limit > -1 && active_pids >= action_limit) {
+        crm_trace("%s is over its action limit of %d (%u active pid%s)",
+                  device->id, action_limit, active_pids, active_pids > 1 ? "s" : "");
         return TRUE;
     }
 
@@ -340,7 +379,7 @@ stonith_device_execute(stonith_device_t * device)
         crm_debug("Operation %s%s%s on %s now running with pid=%d, timeout=%ds",
                   cmd->action, cmd->victim ? " for node " : "", cmd->victim ? cmd->victim : "",
                   device->id, exec_rc, cmd->timeout);
-        device->active_pid = exec_rc;
+        device_add_active_pid(device, exec_rc);
 
     } else {
         crm_warn("Operation %s%s%s on %s failed: %s (%d)",
@@ -431,6 +470,7 @@ free_device(gpointer data)
         free_async_command(cmd);
     }
     g_list_free(device->pending_ops);
+    g_list_free(device->active_pids);
 
     g_list_free_full(device->targets, free);
 
@@ -873,7 +913,7 @@ status_search_cb(GPid pid, int rc, const char *output, gpointer user_data)
         return;
     }
 
-    dev->active_pid = 0;
+    device_remove_active_pid(dev, pid);
     mainloop_set_trigger(dev->work);
 
     if (rc == 1 /* unknown */ ) {
@@ -910,7 +950,7 @@ dynamic_list_search_cb(GPid pid, int rc, const char *output, gpointer user_data)
         return;
     }
 
-    dev->active_pid = 0;
+    device_remove_active_pid(dev, pid);
     mainloop_set_trigger(dev->work);
 
     /* If we successfully got the targets earlier, don't disable. */
@@ -1224,8 +1264,8 @@ stonith_level_register(xmlNode *msg, char **desc)
 
     /* Sanity-check arguments */
     if (mode >= 3 || (id <= 0) || (id >= ST_LEVEL_MAX)) {
-        free(target);
         crm_trace("Could not add %s[%d] (%d) to the topology (%d active entries)", target, id, mode, g_hash_table_size(topology));
+        free(target);
         crm_log_xml_err(level, "Bad topology");
         return -EINVAL;
     }
@@ -1886,7 +1926,7 @@ unfence_cb(GPid pid, int rc, const char *output, gpointer user_data)
     log_operation(cmd, rc, pid, NULL, output);
 
     if(dev) {
-        dev->active_pid = 0;
+        device_remove_active_pid(dev, pid);
         mainloop_set_trigger(dev->work);
     } else {
         crm_trace("Device %s does not exist", cmd->device);
@@ -1931,7 +1971,7 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
     /* The device is ready to do something else now */
     device = g_hash_table_lookup(device_list, cmd->device);
     if (device) {
-        device->active_pid = 0;
+        device_remove_active_pid(device, pid);
         if (rc == pcmk_ok &&
             (safe_str_eq(cmd->action, "list") ||
              safe_str_eq(cmd->action, "monitor") || safe_str_eq(cmd->action, "status"))) {

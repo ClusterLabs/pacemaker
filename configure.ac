@@ -378,7 +378,7 @@ AC_SUBST(INITDIR)
 AC_MSG_NOTICE(Sanitizing libdir: ${libdir})
 case $libdir in
   dnl For consistency with Heartbeat, map NONE->$prefix
-  *prefix*|NONE)
+  prefix|NONE)
     AC_MSG_CHECKING(which lib directory to use)
     for aDir in lib64 lib
     do
@@ -941,12 +941,18 @@ fi
 
 dnl Check for printw() prototype compatibility
 if test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual && cc_supports_flag -Werror; then
-    AC_MSG_CHECKING(whether printw() requires argument of "const char *")
     ac_save_LIBS=$LIBS
-    LIBS="$CURSESLIBS  $LIBS"
+    LIBS="$CURSESLIBS"
     ac_save_CFLAGS=$CFLAGS
     CFLAGS="-Wcast-qual -Werror"
+    # avoid broken test because of hardened build environment in Fedora 23+
+    # - https://fedoraproject.org/wiki/Changes/Harden_All_Packages
+    # - https://bugzilla.redhat.com/1297985
+    if cc_supports_flag -fPIC; then
+        CFLAGS="$CFLAGS -fPIC"
+    fi
 
+    AC_MSG_CHECKING(whether printw() requires argument of "const char *")
     AC_LINK_IFELSE(
 	    [AC_LANG_PROGRAM(
 	      [
