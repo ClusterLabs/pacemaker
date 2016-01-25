@@ -48,6 +48,8 @@ SSH-based "devices" sometimes used during testing) is inappropriate.
 
 . Create the fencing resource: +pcs -f stonith_cfg stonith create pass:[<replaceable>stonith_id
   stonith_device_type &#91;stonith_device_options&#93;</replaceable>]+
+  
+  If the any flags that do not take arguments, such as `--ssl` should be passed as `ssl=1`
 
 . Enable STONITH in the cluster: `pcs -f stonith_cfg property set stonith-enabled=true`
 
