@@ -92,7 +92,7 @@ to set the +remote-tls-port+ (encrypted) or +remote-clear-port+
 By default, recurring actions are scheduled relative to when the
 resource started.  So if your resource was last started at 14:32 and
 you have a backup set to be performed every 24 hours, then the backup
-will always run at in the middle of the business day -- hardly
+will always run in the middle of the business day -- hardly
 desirable.
 
 To specify a date and time that the operation should be relative to, set
