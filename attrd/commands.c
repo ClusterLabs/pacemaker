@@ -634,6 +634,22 @@ static attribute_value_t *
 attrd_lookup_or_create_value(GHashTable *values, const char *host, xmlNode *xml)
 {
     attribute_value_t *v = g_hash_table_lookup(values, host);
+    int is_remote = 0;
+
+    crm_element_value_int(xml, F_ATTRD_IS_REMOTE, &is_remote);
+    if (is_remote) {
+        /* If we previously assumed this node was an unseen cluster node,
+         * remove its entry from the cluster peer cache.
+         */
+        crm_node_t *dup = crm_find_peer(0, host);
+
+        if (dup && (dup->uuid == NULL)) {
+            reap_crm_member(0, host);
+        }
+
+        /* Ensure this host is in the remote peer cache */
+        crm_remote_peer_cache_add(host);
+    }
 
     if (v == NULL) {
         v = calloc(1, sizeof(attribute_value_t));
@@ -642,11 +658,7 @@ attrd_lookup_or_create_value(GHashTable *values, const char *host, xmlNode *xml)
         v->nodename = strdup(host);
         CRM_ASSERT(v->nodename != NULL);
 
-        crm_element_value_int(xml, F_ATTRD_IS_REMOTE, &v->is_remote);
-        if (v->is_remote == TRUE) {
-            crm_remote_peer_cache_add(host);
-        }
-
+        v->is_remote = is_remote;
         g_hash_table_replace(values, v->nodename, v);
     }
     return(v);
