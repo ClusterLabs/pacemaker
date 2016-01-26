@@ -488,7 +488,7 @@ remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
         crm_notice("Graceful proxy shutdown of %s", lrm_state->node_name);
 
         now_s = crm_itoa(now);
-        update_attrd(lrm_state->node_name, XML_CIB_ATTR_SHUTDOWN, now_s, NULL, FALSE);
+        update_attrd(lrm_state->node_name, XML_CIB_ATTR_SHUTDOWN, now_s, NULL, TRUE);
         free(now_s);
 
         remote_proxy_ack_shutdown(lrmd);
