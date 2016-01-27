@@ -628,7 +628,7 @@ process_graph_event(xmlNode * event, const char *event_node)
     } else {
         if (update_failcount(event, event_node, rc, target_rc,
                              (transition_num == -1), ignore_failures)) {
-            /* Turns out this wasn't an lrm status refresh update aferall */
+            /* Turns out this wasn't an lrm status refresh update afterall */
             stop_early = FALSE;
             desc = "failed";
         }
