@@ -1280,9 +1280,10 @@ clone_update_actions_interleave(action_t * first, action_t * then, node_t * node
             CRM_CHECK(first_action != NULL || is_set(first_child->flags, pe_rsc_orphan),
                       crm_err("No action found for %s in %s (first)", first_task, first_child->id));
 
+            /* We're only interested if 'then' is neither stopping nor being demoted */ 
             if (then_action == NULL && is_not_set(then_child->flags, pe_rsc_orphan)
-                && crm_str_eq(then->task, RSC_STOP, TRUE) == FALSE
-                && crm_str_eq(then->task, RSC_DEMOTED, TRUE) == FALSE) {
+                && crm_str_eq(then->task, RSC_STOP, TRUE) == FALSE 
+                && crm_str_eq(then->task, RSC_DEMOTE, TRUE) == FALSE) {
                 crm_err("Internal error: No action found for %s in %s (then)", then->task,
                         then_child->id);
             }
