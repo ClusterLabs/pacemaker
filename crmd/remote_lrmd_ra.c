@@ -1025,3 +1025,24 @@ remote_ra_exec(lrm_state_t * lrm_state, const char *rsc_id, const char *action, 
     lrmd_key_value_freeall(params);
     return rc;
 }
+
+/*!
+ * \internal
+ * \brief Immediately fail all monitors of a remote node, if proxied here
+ *
+ * \param[in] node_name  Name of pacemaker_remote node
+ */
+void
+remote_ra_fail(const char *node_name)
+{
+    lrm_state_t *lrm_state = lrm_state_find(node_name);
+
+    if (lrm_state && lrm_state_is_connected(lrm_state)) {
+        remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
+
+        crm_info("Failing monitors on pacemaker_remote node %s", node_name);
+        ra_data->recurring_cmds = fail_all_monitor_cmds(ra_data->recurring_cmds);
+        ra_data->cmds = fail_all_monitor_cmds(ra_data->cmds);
+    }
+}
+
