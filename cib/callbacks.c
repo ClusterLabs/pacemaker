@@ -1018,7 +1018,7 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
                    "Forwarding %s operation for section %s to %s (origin=%s/%s/%s)",
                    op,
                    section ? section : "'all'",
-                   host ? host : "master",
+                   host ? host : cib_legacy_mode() ? "master" : "all",
                    originator ? originator : "local",
                    client_name, call_id);
 
@@ -1286,8 +1286,12 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     }
 
     if (rc == pcmk_ok && is_not_set(call_options, cib_dryrun)) {
+        crm_trace("Activating %d %s %s", is_set(call_options, cib_zero_copy),
+                  crm_element_value(current_cib, XML_ATTR_NUMUPDATES),
+                  crm_element_value(result_cib, XML_ATTR_NUMUPDATES));
         if(is_not_set(call_options, cib_zero_copy)) {
             rc = activateCibXml(result_cib, config_changed, op);
+            crm_trace("Activated %d %s", rc, crm_element_value(current_cib, XML_ATTR_NUMUPDATES));
         }
 
         if (rc == pcmk_ok && cib_internal_config_changed(*cib_diff)) {
@@ -1326,6 +1330,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         output = result_cib;
 
     } else {
+        crm_trace("Not activating %d %d %s", rc, is_set(call_options, cib_dryrun), crm_element_value(result_cib, XML_ATTR_NUMUPDATES));
         if(is_not_set(call_options, cib_zero_copy)) {
             free_xml(result_cib);
         }
@@ -1334,7 +1339,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     if ((call_options & cib_inhibit_notify) == 0) {
         const char *client = crm_element_value(request, F_CIB_CLIENTNAME);
 
-        crm_trace("Sending notifications");
+        crm_trace("Sending notifications %d", is_set(call_options, cib_dryrun));
         cib_diff_notify(call_options, client, call_id, op, input, rc, *cib_diff);
     }
 
