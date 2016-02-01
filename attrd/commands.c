@@ -669,14 +669,27 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
 {
     bool changed = FALSE;
     attribute_value_t *v = NULL;
+    int dampen = 0;
 
     const char *attr = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
     const char *value = crm_element_value(xml, F_ATTRD_VALUE);
+    const char *dvalue = crm_element_value(xml, F_ATTRD_DAMPEN);
 
     attribute_t *a = g_hash_table_lookup(attributes, attr);
 
     if(a == NULL) {
         a = create_attribute(xml);
+    } else {
+        dampen = crm_get_msec(dvalue);
+        if (dampen > 0) {
+                if (a->timeout_ms != dampen) {
+                        mainloop_timer_stop(a->timer);
+                        mainloop_timer_del(a->timer);
+                        a->timeout_ms = dampen;
+                        a->timer = mainloop_timer_add(a->id, a->timeout_ms, FALSE, attribute_timer_cb, a);
+                        crm_trace("Update attribute %s with delay %dms (%s)", a->id, dampen, dvalue);
+                }
+        }
     }
 
     if(host == NULL) {
