@@ -655,7 +655,7 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
 
     if (start != NULL) {
         pe_rsc_trace(rsc, "Marking %s %s due to %s",
-                     key, is_set(start->flags, pe_action_optional) ? "optional" : "manditory",
+                     key, is_set(start->flags, pe_action_optional) ? "optional" : "mandatory",
                      start->uuid);
         is_optional = (rsc->cmds->action_flags(start, NULL) & pe_action_optional);
     } else {
@@ -667,7 +667,7 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
     possible_matches = find_actions_exact(rsc->actions, key, node);
     if (possible_matches == NULL) {
         is_optional = FALSE;
-        pe_rsc_trace(rsc, "Marking %s manditory: not active", key);
+        pe_rsc_trace(rsc, "Marking %s mandatory: not active", key);
 
     } else {
         GListPtr gIter = NULL;
@@ -919,7 +919,7 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
         /* start a monitor for an already stopped resource */
         possible_matches = find_actions_exact(rsc->actions, key, stop_node);
         if (possible_matches == NULL) {
-            pe_rsc_trace(rsc, "Marking %s manditory on %s: not active", key,
+            pe_rsc_trace(rsc, "Marking %s mandatory on %s: not active", key,
                          crm_str(stop_node_uname));
             is_optional = FALSE;
         } else {

@@ -317,7 +317,7 @@ group_rsc_colocation_lh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
         return;
 
     } else if (constraint->score >= INFINITY) {
-        crm_config_err("%s: Cannot perform manditory colocation"
+        crm_config_err("%s: Cannot perform mandatory colocation"
                        " between non-colocated group and %s", rsc_lh->id, rsc_rh->id);
         return;
     }
@@ -358,7 +358,7 @@ group_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
         return;
 
     } else if (constraint->score >= INFINITY) {
-        crm_config_err("%s: Cannot perform manditory colocation with"
+        crm_config_err("%s: Cannot perform mandatory colocation with"
                        " non-colocated group: %s", rsc_lh->id, rsc_rh->id);
         return;
     }
@@ -387,7 +387,7 @@ group_action_flags(action_t * action, node_t * node)
 
             if (is_set(flags, pe_action_optional)
                 && is_set(child_flags, pe_action_optional) == FALSE) {
-                pe_rsc_trace(action->rsc, "%s is manditory because of %s", action->uuid,
+                pe_rsc_trace(action->rsc, "%s is mandatory because of %s", action->uuid,
                              child_action->uuid);
                 clear_bit(flags, pe_action_optional);
                 pe_clear_action_bit(action, pe_action_optional);
