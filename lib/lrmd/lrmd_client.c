@@ -1359,6 +1359,7 @@ lrmd_tls_disconnect(lrmd_t * lrmd)
 
     } else if (native->sock) {
         close(native->sock);
+        native->sock = 0;
     }
 
     if (native->pending_notify) {
