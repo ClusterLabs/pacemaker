@@ -274,6 +274,13 @@ check_remote_node_state(remote_ra_cmd_t *cmd)
     if (safe_str_eq(cmd->action, "start")) {
         remote_node_up(cmd->rsc_id);
 
+    } else if (safe_str_eq(cmd->action, "migrate_from")) {
+        /* Ensure node is in this host's remote peer cache */
+        crm_node_t *node = crm_remote_peer_get(cmd->rsc_id);
+
+        CRM_CHECK(node != NULL, return);
+        crm_update_peer_state(__FUNCTION__, node, CRM_NODE_MEMBER, 0);
+
     } else if (safe_str_eq(cmd->action, "stop")) {
         lrm_state_t *lrm_state = lrm_state_find(cmd->rsc_id);
         remote_ra_data_t *ra_data = lrm_state? lrm_state->remote_ra_data : NULL;
