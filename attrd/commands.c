@@ -680,15 +680,23 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
     if(a == NULL) {
         a = create_attribute(xml);
     } else {
-        dampen = crm_get_msec(dvalue);
-        if (dampen > 0) {
+        if (dvalue) {
+            dampen = crm_get_msec(dvalue);	
+            if (dampen >= 0) {
                 if (a->timeout_ms != dampen) {
-                        mainloop_timer_stop(a->timer);
-                        mainloop_timer_del(a->timer);
-                        a->timeout_ms = dampen;
+                    mainloop_timer_stop(a->timer);
+                    mainloop_timer_del(a->timer);
+                    a->timeout_ms = dampen;
+
+                    if (dampen > 0) {
                         a->timer = mainloop_timer_add(a->id, a->timeout_ms, FALSE, attribute_timer_cb, a);
                         crm_trace("Update attribute %s with delay %dms (%s)", a->id, dampen, dvalue);
+                     } else {
+                        a->timer = NULL;
+                        crm_trace("Update attribute %s with not delay", a->id);
+                    }
                 }
+            }
         }
     }
 
