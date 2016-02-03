@@ -44,6 +44,13 @@ RNG_last		?= $(shell ls -1 *.rng \
 
 # A sorted list of all RNG versions (numeric and "next")
 RNG_versions		= next $(RNG_numeric_versions)
+RNG_version_pairs	= $(join \
+			    ${RNG_numeric_versions},$(addprefix \
+			      -,$(wordlist \
+			        2,$(words ${RNG_numeric_versions}),${RNG_numeric_versions} \
+			      ) next \
+			    ) \
+			  )
 
 RNG_generated		= pacemaker.rng $(foreach base,$(RNG_versions),pacemaker-$(base).rng) versions.rng
 
@@ -120,6 +127,18 @@ diff:
 	-for rng in $(files_max); do echo "### $${rng}"; diff -u `$(top_srcdir)/xml/best-match.sh $${rng} $(RNG_last)` $${rng}-$(RNG_max).rng; done
 	echo -e "\n\n\n#  Comparing changes since: $(RNG_max)"
 	-for rng in $(files_next); do echo "### $${rng}"; diff -u `$(top_srcdir)/xml/best-match.sh $${rng} $(RNG_max)` $${rng}-next.rng; done
+
+# diff fails with ec=2 if no predecessor is found
+fulldiff:
+	@echo "#  Comparing all changes across all the subsequent increments"
+	@for p in ${RNG_version_pairs}; do \
+	   set `echo "$$p" | tr '-' ' '`; echo "### *-$$1.rng vs. predecessor"; \
+	   for v in *-$$2.rng; do \
+	     echo "#### $${v} vs. predecessor"; b=`echo "$${v}" | cut -d'-' -f1`; \
+	     diff -u `$(top_srcdir)/xml/best-match.sh $${b} $$1` "$${v}" 2>/dev/null; \
+	     test $$? -le 1 || echo "##### $${v} has no predecessor"; \
+	   done; \
+	 done
 
 sync:
 	git rm -f $(wildcard *-next.rng)
