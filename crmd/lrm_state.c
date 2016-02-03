@@ -238,7 +238,8 @@ lrm_state_init_local(void)
     proxy_table =
         g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, NULL, remote_proxy_free);
     if (!proxy_table) {
-         g_hash_table_destroy(lrm_state_table);
+        g_hash_table_destroy(lrm_state_table);
+        lrm_state_table = NULL;
         return FALSE;
     }
 
