@@ -1336,7 +1336,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         }
     }
 
-    if ((call_options & cib_inhibit_notify) == 0) {
+    if ((call_options & (cib_inhibit_notify|cib_dryrun)) == 0) {
         const char *client = crm_element_value(request, F_CIB_CLIENTNAME);
 
         crm_trace("Sending notifications %d", is_set(call_options, cib_dryrun));

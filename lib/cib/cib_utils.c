@@ -304,7 +304,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     const char *user = crm_element_value(req, F_CIB_USER);
     bool with_digest = FALSE;
 
-    crm_trace("Begin %s%s op", is_query ? "read-only " : "", op);
+    crm_trace("Begin %s%s%s op", is_set(call_options, cib_dryrun)?"dry-run of ":"", is_query ? "read-only " : "", op);
 
     CRM_CHECK(output != NULL, return -ENOMSG);
     CRM_CHECK(result_cib != NULL, return -ENOMSG);
