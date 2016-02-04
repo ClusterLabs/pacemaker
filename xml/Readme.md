@@ -49,3 +49,5 @@ New features will not be available until the admin
 From the source directory, run `make -C xml diff` to see the changes
 in the current schema (compared to the previous ones) and also the
 pending changes in `pacemaker-next`.
+Alternatively, if the intention is to grok the overall historical schema
+evolution, use `make -C xml fulldiff`.
