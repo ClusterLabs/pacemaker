@@ -132,7 +132,7 @@ diff:
 fulldiff:
 	@echo "#  Comparing all changes across all the subsequent increments"
 	@for p in ${RNG_version_pairs}; do \
-	   set `echo "$$p" | tr '-' ' '`; echo "### *-$$1.rng vs. predecessor"; \
+	   set `echo "$$p" | tr '-' ' '`; echo "### *-$$2.rng vs. predecessor"; \
 	   for v in *-$$2.rng; do \
 	     echo "#### $${v} vs. predecessor"; b=`echo "$${v}" | cut -d'-' -f1`; \
 	     diff -u `$(top_srcdir)/xml/best-match.sh $${b} $$1` "$${v}" 2>/dev/null; \
