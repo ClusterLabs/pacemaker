@@ -128,17 +128,43 @@ diff:
 	echo -e "\n\n\n#  Comparing changes since: $(RNG_max)"
 	-for rng in $(files_next); do echo "### $${rng}"; diff -u `$(top_srcdir)/xml/best-match.sh $${rng} $(RNG_max)` $${rng}-next.rng; done
 
-# diff fails with ec=2 if no predecessor is found
+# diff fails with ec=2 if no predecessor is found;
+# this uses '=' GNU extension to sed, if that's not available,
+# one can use: hline=`echo "$${p}" | grep -Fn "$${hunk}" | cut -d: -f1`;
+# XXX: use line information from hunk to avoid "not detected" for ambiguity
 fulldiff:
 	@echo "#  Comparing all changes across all the subsequent increments"
 	@for p in ${RNG_version_pairs}; do \
-	   set `echo "$$p" | tr '-' ' '`; echo "### *-$$2.rng vs. predecessor"; \
-	   for v in *-$$2.rng; do \
-	     echo "#### $${v} vs. predecessor"; b=`echo "$${v}" | cut -d'-' -f1`; \
-	     diff -u `$(top_srcdir)/xml/best-match.sh $${b} $$1` "$${v}" 2>/dev/null; \
-	     test $$? -le 1 || echo "##### $${v} has no predecessor"; \
-	   done; \
-	 done
+	  set `echo "$$p" | tr '-' ' '`; \
+	  echo "### *-$$2.rng vs. predecessor"; \
+	  for v in *-$$2.rng; do \
+	    echo "#### $${v} vs. predecessor"; b=`echo "$${v}" | cut -d- -f1`; \
+	    old=`$(top_srcdir)/xml/best-match.sh $${b} $$1`; \
+	    p=`diff -u "$${old}" "$${v}" 2>/dev/null`; \
+	    case $$? in \
+	    1) echo "$${p}" | sed -n -e '/^@@ /!d;=;p' \
+	       -e ':l;n;/^\([- ]\|+.*<[^ />]\+\([^/>]\+="ID\|>$$\)\)/bl;s/^[+ ]\(.*\)/\1/p' \
+	       | while read hline; do \
+	           read h && read i || break; \
+	           iline=`grep -Fn "$${i}" "$${v}" | cut -d: -f1`; \
+	           ctxt="(not detected)"; \
+	           if test `echo "$${iline}" | wc -l` -eq 1; then \
+	             ctxt=`{ sed -n -e "1,$$(($${iline}-1))p" "$${v}"; \
+	                     echo "<inject id=\"GOAL\"/>$${i}"; \
+	                     sed -n -e "$$(($${iline}+1)),$$ p" "$${v}"; \
+	                   } | xsltproc --param skip 1 context-of.xsl -`; \
+	           fi; \
+	           echo "$${p}" | sed -n -e "$$(($${hline}-2)),$${hline}!d" \
+	             -e '/^\(+++\|---\)/p'; \
+	           echo "$${h} context: $${ctxt}"; \
+	           echo "$${p}" | sed -n -e "1,$${hline}d" \
+	             -e '/^\(---\|@@ \)/be;p;d;:e;n;be'; \
+	           done; \
+	       ;; \
+	    2) echo "##### $${v} has no predecessor";; \
+	    esac; \
+	  done; \
+	done
 
 sync:
 	git rm -f $(wildcard *-next.rng)
