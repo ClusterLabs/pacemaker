@@ -96,11 +96,12 @@ indexterm:[Constraints,Location,score]
 |resource-discovery
 |always
 |Whether Pacemaker should perform resource discovery
-on this node for the specified resource. Limiting resource discovery to
-a subset of nodes the resource is physically capable of running on
-can significantly boost performance when a large set of nodes are present.
-When pacemaker_remote is in use to expand the node count into the hundreds of
-nodes range, this option should be considered.
+ on this node for the specified resource. Limiting resource discovery to
+ a subset of nodes the resource is physically capable of running on
+ can significantly boost performance when a large set of nodes are present.
+ When pacemaker_remote is in use to expand the node count into the hundreds of
+ nodes range, this option should be considered.
+ '(since 1.1.13)'
 
 * +always:+ Always perform resource discovery for the specified resource on this node.
 * +never:+ Never perform resource discovery for the specified resource on this node.
@@ -555,8 +556,8 @@ Those sets can be expressed, +(A and B) then \(C) then (D) then (E and F)+.
 Say for example we want to change the first set, +(A and B)+, to use "OR" logic
 so the sets look like this: +(A or B) then \(C) then (D) then (E and F)+.
 This functionality can be achieved through the use of the +require-all+
-option.  This option defaults to TRUE which is why the
-"AND" logic is used by default.  Setting +require-all=false+ means only one
+option '(since 1.1.13)'.  This option defaults to TRUE which is why
+the "AND" logic is used by default.  Setting +require-all=false+ means only one
 resource in the set needs to be started before continuing on to the next set.
 
 Note that the +require-all=false+ option only makes sense to use in conjunction
