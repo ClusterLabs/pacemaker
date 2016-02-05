@@ -108,14 +108,14 @@ pacemaker-%.rng: $(RNG_files) best-match.sh Makefile.am
 	echo "<grammar xmlns='http://relaxng.org/ns/structure/1.0' datatypeLibrary='http://www.w3.org/2001/XMLSchema-datatypes'>" >> $@
 	echo "  <start>" >> $@
 	echo "    <element name='cib'>" >> $@
-	$(top_srcdir)/xml/best-match.sh cib $(*) $(@) "      "
+	./best-match.sh cib $(*) $(@) "      "
 	echo "      <element name='configuration'>" >> $@
 	echo "        <interleave>" >> $@
-	for rng in $(RNG_cfg_base); do $(top_srcdir)/xml/best-match.sh $$rng $(*) $(@) "          " || :; done
+	for rng in $(RNG_cfg_base); do ./best-match.sh $$rng $(*) $(@) "          " || :; done
 	echo "        </interleave>" >> $@
 	echo "      </element>" >> $@
 	echo "      <element name='status'>" >> $@
-	$(top_srcdir)/xml/best-match.sh status $(*) $(@) "        "
+	./best-match.sh status $(*) $(@) "        "
 	echo "      </element>" >> $@
 	echo "    </element>" >> $@
 	echo "  </start>" >> $@
@@ -131,7 +131,7 @@ version_diff = \
 	  echo "\#\#\# *-$$2.rng vs. predecessor"; \
 	  for v in *-$$2.rng; do \
 	    echo "\#\#\#\# $${v} vs. predecessor"; b=`echo "$${v}" | cut -d- -f1`; \
-	    old=`$(top_srcdir)/xml/best-match.sh $${b} $$1`; \
+	    old=`./best-match.sh $${b} $$1`; \
 	    p=`diff -u "$${old}" "$${v}" 2>/dev/null`; \
 	    case $$? in \
 	    1) echo "$${p}" | sed -n -e '/^@@ /!d;=;p' \
