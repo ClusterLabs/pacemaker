@@ -6,7 +6,7 @@ destination=$1; shift
 prefix=$1; shift
 
 best="0.0"
-candidates=$(ls -1 "${base}"-*.rng 2>/dev/null)
+candidates=$(ls -1 "${base}.rng" "${base}"-*.rng 2>/dev/null)
 for rng in ${candidates}; do
     case ${rng} in
         ${base}-${target}.rng)
@@ -17,7 +17,12 @@ for rng in ${candidates}; do
             : skipping ${rng}
             ;;
         *)
-            v=$(echo ${rng} | sed -e "s/${base}-//" -e 's/.rng//')
+            if [ "${rng}" = "${base}.rng" ]; then
+                # special case for nvset.rng, no -0.1 around anyway
+                v=0.1
+            else
+                v=$(echo ${rng} | sed -e "s/${base}-//" -e 's/.rng//')
+            fi
             : comparing ${v} with ${target}
 
             echo | awk -v n1="${v}" -v n2="${best}" '{if (n1>n2) printf ("true"); else printf ("false");}' |  grep -q "true"
@@ -39,10 +44,15 @@ done
 
 [ "${best}" != "0.0" ]; ec=$?
 if [ ${ec} -eq 0 ]; then
-    if [ "x${destination}" = "x" ]; then
-        echo "${base}-${best}.rng"
+    if [ "${best}" = "0.1" ]; then
+        found=${base}.rng
     else
-        echo "${prefix}<externalRef href=\"${base}-${best}.rng\"/>" >> "${destination}"
+        found=${base}-${best}.rng
+    fi
+    if [ "x${destination}" = "x" ]; then
+        echo "${found}"
+    else
+        echo "${prefix}<externalRef href=\"${found}\"/>" >> "${destination}"
     fi
 fi
 ret () { return $1; }; ret ${ec}
