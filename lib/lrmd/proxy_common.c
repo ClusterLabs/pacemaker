@@ -97,7 +97,6 @@ remote_proxy_end_session(const char *session)
 
     if (proxy->source) {
         mainloop_del_ipc_client(proxy->source);
-        proxy->source = NULL;
     }
 }
 
