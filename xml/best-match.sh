@@ -37,10 +37,12 @@ for rng in ${candidates}; do
     esac
 done
 
-if [ "${best}" != "0.0" ]; then
+[ "${best}" != "0.0" ]; ec=$?
+if [ ${ec} -eq 0 ]; then
     if [ "x${destination}" = "x" ]; then
         echo "${base}-${best}.rng"
     else
         echo "${prefix}<externalRef href=\"${base}-${best}.rng\"/>" >> "${destination}"
     fi
 fi
+ret () { return $1; }; ret ${ec}

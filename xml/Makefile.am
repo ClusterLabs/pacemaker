@@ -111,7 +111,7 @@ pacemaker-%.rng: $(RNG_files) best-match.sh Makefile.am
 	$(top_srcdir)/xml/best-match.sh cib $(*) $(@) "      "
 	echo "      <element name='configuration'>" >> $@
 	echo "        <interleave>" >> $@
-	for rng in $(RNG_cfg_base); do $(top_srcdir)/xml/best-match.sh $$rng $(*) $(@) "          "; done
+	for rng in $(RNG_cfg_base); do $(top_srcdir)/xml/best-match.sh $$rng $(*) $(@) "          " || :; done
 	echo "        </interleave>" >> $@
 	echo "      </element>" >> $@
 	echo "      <element name='status'>" >> $@
