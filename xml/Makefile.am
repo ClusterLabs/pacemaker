@@ -67,8 +67,6 @@ RNG_SCRIPTS		= $(RNG_files) $(RNG_generated) $(RNG_extra)
 
 EXTRA_DIST		= best-match.sh
 
-best_match		= $(shell $(top_srcdir)/xml/best-match.sh $(1) $(2))
-
 versions:
 	echo "Max: $(RNG_max)"
 	echo "Available: $(RNG_versions)"
@@ -158,11 +156,11 @@ version_diff = \
 	  done; \
 	done
 
-diff:
+diff: best-match.sh
 	@echo "#  Comparing changes in + since $(RNG_max)"
 	$(call version_diff,${RNG_version_pairs_last})
 
-fulldiff:
+fulldiff: best-match.sh
 	@echo "#  Comparing all changes across all the subsequent increments"
 	$(call version_diff,${RNG_version_pairs})
 
