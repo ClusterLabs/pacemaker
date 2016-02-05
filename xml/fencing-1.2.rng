@@ -18,10 +18,7 @@
   <define name="element-level">
     <element name="fencing-level">
       <attribute name="id"><data type="ID"/></attribute>
-      <choice>
-	<attribute name="target"><text/></attribute>
-	<attribute name="target-pattern"><text/></attribute>
-      </choice>
+      <attribute name="target"><text/></attribute>
       <attribute name="index"><data type="positiveInteger"/></attribute>
       <attribute name="devices">
 	<data type="string">
