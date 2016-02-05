@@ -338,7 +338,7 @@ indexterm:[Resource,Option,target-role]
 |requires
 |fencing (unless +stonith-enabled+ is +false+ or +class+ is
 +stonith+, in which case it defaults to quorum)
-|Conditions under which the resource can be started ('Since 1.1.8')
+|Conditions under which the resource can be started '(since 1.1.8)'
 Allowed values:
 
 * +nothing:+ can always be started
@@ -347,9 +347,11 @@ Allowed values:
 * +fencing:+ The cluster can only start this resource if a majority
   of the configured nodes are active _and_ any failed or unknown nodes
   have been powered off
-* +unfencing:+ The cluster can only start this resource if a majority
+* +unfencing:+
+  The cluster can only start this resource if a majority
   of the configured nodes are active _and_ any failed or unknown nodes
   have been powered off _and_ only on nodes that have been 'unfenced'
+  '(since 1.1.9)'
 
 indexterm:[requires,Resource Option]
 indexterm:[Resource,Option,requires]
