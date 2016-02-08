@@ -63,7 +63,7 @@ RNG_extra		= crm_mon.rng
 
 RNG_SCRIPTS		= $(RNG_files) $(RNG_generated) $(RNG_extra)
 
-EXTRA_DIST		= best-match.sh
+EXTRA_DIST		= best-match.sh Reference.md
 
 best_match		= $(shell $(top_srcdir)/xml/best-match.sh $(1) $(2))
 
