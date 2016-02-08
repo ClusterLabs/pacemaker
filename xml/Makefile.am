@@ -142,7 +142,7 @@ version_diff = \
 	             ctxt=`{ sed -n -e "1,$$(($${iline}-1))p" "$${v}"; \
 	                     echo "<inject id=\"GOAL\"/>$${i}"; \
 	                     sed -n -e "$$(($${iline}+1)),$$ p" "$${v}"; \
-	                   } | xsltproc --param skip 1 context-of.xsl -`; \
+	                   } | $(XSLTPROC) --param skip 1 context-of.xsl -`; \
 	           fi; \
 	           echo "$${p}" | sed -n -e "$$(($${hline}-2)),$${hline}!d" \
 	             -e '/^\(+++\|---\)/p'; \
