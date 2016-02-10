@@ -240,7 +240,8 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
              * pacemaker_remote nodes, so normal pacemaker_remote node stops
              * will come here and get ugly log messages, but otherwise be OK.
              * We can't skip this entirely for pacemaker_remote nodes,
-             * because monitor failures will also end up here.
+             * because recurring monitor failures will also end up here
+             * when the cluster recovers the connection resource.
              */
             crm_notice("Stonith/shutdown of %s not matched", node->uname);
 

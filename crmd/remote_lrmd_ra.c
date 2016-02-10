@@ -275,7 +275,13 @@ check_remote_node_state(remote_ra_cmd_t *cmd)
         remote_node_up(cmd->rsc_id);
 
     } else if (safe_str_eq(cmd->action, "migrate_from")) {
-        /* Ensure node is in this host's remote peer cache */
+        /* After a successful migration, we don't need to do remote_node_up()
+         * because the DC already knows the node is up, and we don't want to
+         * clear LRM history etc. We do need to add the remote node to this
+         * host's remote peer cache, because (unless it happens to be DC)
+         * it hasn't been tracking the remote node, and other code relies on
+         * the cache to distinguish remote nodes from unseen cluster nodes.
+         */
         crm_node_t *node = crm_remote_peer_get(cmd->rsc_id);
 
         CRM_CHECK(node != NULL, return);
@@ -298,6 +304,16 @@ check_remote_node_state(remote_ra_cmd_t *cmd)
             }
         }
     }
+
+    /* We don't do anything for successful monitors, which is correct for
+     * routine recurring monitors, and for monitors on nodes where the
+     * connection isn't supposed to be (the cluster will stop the connection in
+     * that case). However, if the initial probe finds the connection already
+     * active on the node where we want it, we probably should do
+     * remote_node_up(). Unfortunately, we can't distinguish that case here.
+     * Given that connections have to be initiated by the cluster, the chance of
+     * that should be close to zero.
+     */
 }
 
 static void

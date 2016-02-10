@@ -360,6 +360,8 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
 
         /* If the target is a remote node, and we host its connection,
          * immediately fail all monitors so it can be recovered quickly.
+         * The connection won't necessarily drop when a remote node is fenced,
+         * so the failure might not otherwise be detected until the next poke.
          */
         if (is_set(peer->flags, crm_remote_node)) {
             remote_ra_fail(st_event->target);
