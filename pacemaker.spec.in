@@ -443,11 +443,8 @@ exit 0
 %doc AUTHORS
 %doc ChangeLog
 
-%dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/cib
-%dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/cores
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/pengine
-%dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/blackbox
 /usr/lib/ocf/resource.d/pacemaker/controld
 /usr/lib/ocf/resource.d/pacemaker/o2cb
 /usr/lib/ocf/resource.d/pacemaker/remote
@@ -525,6 +522,10 @@ exit 0
 %license COPYING
 %doc AUTHORS
 %doc ChangeLog
+
+%dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker
+%dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/blackbox
+%dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/cores
 
 %files -n %{name}-libs
 %defattr(-,root,root)
