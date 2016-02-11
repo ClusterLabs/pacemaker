@@ -938,7 +938,7 @@ pe_cluster_option crmd_opts[] = {
           "Delay cluster recovery for the configured interval to allow for additional/related events to occur.\n"
           "Useful if your configuration is sensitive to the order in which ping updates arrive."
         },
-	{ "stonith-watchdog-timeout", NULL, "time", NULL, NULL, &check_timer,
+	{ "stonith-watchdog-timeout", NULL, "time", NULL, NULL, &check_sbd_timeout,
 	  "How long to wait before we can assume nodes are safely down", NULL
         },
 	{ "no-quorum-policy", "no_quorum_policy", "enum", "stop, freeze, ignore, suicide", "stop", &check_quorum, NULL, NULL },
@@ -1025,16 +1025,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     sbd_timeout = crm_get_msec(value);
 
     value = crmd_pref(config_hash, "stonith-watchdog-timeout");
-    st_timeout = crm_get_msec(value);
-
-    if(st_timeout > 0 && !daemon_option_enabled(crm_system_name, "watchdog")) {
-        do_crm_log_always(LOG_EMERG, "Shutting down pacemaker, no watchdog device configured");
-        crmd_exit(DAEMON_RESPAWN_STOP);
-
-    } else if(!daemon_option_enabled(crm_system_name, "watchdog")) {
-        crm_trace("Watchdog disabled");
-
-    } else if(value == NULL && sbd_timeout > 0) {
+    if(value == NULL && sbd_timeout > 0) {
         char *timeout = NULL;
 
         st_timeout = 2 * sbd_timeout / 1000;
@@ -1044,14 +1035,6 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
                              "stonith-watchdog-timeout", timeout, FALSE, NULL, NULL);
         free(timeout);
-
-    } else if(st_timeout <= 0) {
-        crm_notice("Watchdog enabled but stonith-watchdog-timeout is disabled");
-
-    } else if(st_timeout < sbd_timeout) {
-        do_crm_log_always(LOG_EMERG, "Shutting down pacemaker, stonith-watchdog-timeout (%ldms) is too short (must be greater than %ldms)",
-                          st_timeout, sbd_timeout);
-        crmd_exit(DAEMON_RESPAWN_STOP);
     }
 
     value = crmd_pref(config_hash, "no-quorum-policy");
