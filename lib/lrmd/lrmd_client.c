@@ -881,6 +881,25 @@ lrmd_api_poke_connection(lrmd_t * lrmd)
     return rc < 0 ? rc : pcmk_ok;
 }
 
+int
+remote_proxy_check(lrmd_t * lrmd, GHashTable *hash)
+{
+    int rc;
+    const char *value;
+    lrmd_private_t *native = lrmd->private;
+    xmlNode *data = create_xml_node(NULL, F_LRMD_OPERATION);
+
+    crm_xml_add(data, F_LRMD_ORIGIN, __FUNCTION__);
+
+    value = g_hash_table_lookup(hash, "stonith-watchdog-timeout");
+    crm_xml_add(data, F_LRMD_WATCHDOG, value);
+
+    rc = lrmd_send_command(lrmd, LRMD_OP_CHECK, data, NULL, 0, 0, native->type == CRM_CLIENT_IPC ? TRUE : FALSE);
+    free_xml(data);
+
+    return rc < 0 ? rc : pcmk_ok;
+}
+
 static int
 lrmd_handshake(lrmd_t * lrmd, const char *name)
 {

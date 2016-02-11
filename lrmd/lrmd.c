@@ -1686,6 +1686,9 @@ process_lrmd_message(crm_client_t * client, uint32_t id, xmlNode * request)
     } else if (crm_str_eq(op, LRMD_OP_POKE, TRUE)) {
         do_notify = 1;
         do_reply = 1;
+    } else if (crm_str_eq(op, LRMD_OP_CHECK, TRUE)) {
+        const char *timeout = crm_element_value(request, F_LRMD_WATCHDOG);
+        check_sbd_timeout(timeout);
     } else {
         rc = -EOPNOTSUPP;
         do_reply = 1;

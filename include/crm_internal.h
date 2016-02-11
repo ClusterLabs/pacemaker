@@ -130,6 +130,7 @@ gboolean check_number(const char *value);
 gboolean check_quorum(const char *value);
 gboolean check_script(const char *value);
 gboolean check_utilization(const char *value);
+gboolean check_sbd_timeout(const char *value);
 
 /* Shared PE/crmd functionality */
 void filter_action_parameters(xmlNode * param_set, const char *version);
@@ -385,5 +386,6 @@ void remote_proxy_relay_event(lrmd_t *lrmd, const char *session_id, xmlNode *msg
 void remote_proxy_relay_response(lrmd_t *lrmd, const char *session_id, xmlNode *msg, int msg_id);
 void remote_proxy_end_session(const char *session);
 void remote_proxy_free(gpointer data);
+int  remote_proxy_check(lrmd_t * lrmd, GHashTable *hash);
 
 #endif                          /* CRM_INTERNAL__H */

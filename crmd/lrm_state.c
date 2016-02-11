@@ -19,12 +19,14 @@
 #include <crm_internal.h>
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
+#include <crm/common/iso8601.h>
 
 #include <crmd.h>
 #include <crmd_fsa.h>
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
 #include <crmd_lrm.h>
+#include <crm/pengine/rules.h>
 
 GHashTable *lrm_state_table = NULL;
 extern GHashTable *proxy_table;
@@ -464,6 +466,35 @@ crmd_proxy_dispatch(const char *session, xmlNode *msg)
 }
 
 static void
+remote_config_check(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
+{
+    if (rc != pcmk_ok) {
+        crm_err("Query resulted in an error: %s", pcmk_strerror(rc));
+
+        if (rc == -EACCES || rc == -pcmk_err_schema_validation) {
+            crm_err("The cluster is mis-configured - shutting down and staying down");
+        }
+
+    } else {
+        lrmd_t * lrmd = (lrmd_t *)user_data;
+        crm_time_t *now = crm_time_new(NULL);
+        GHashTable *config_hash = g_hash_table_new_full(
+            crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+
+        crm_debug("Call %d : Parsing CIB options", call_id);
+        
+        unpack_instance_attributes(
+            output, output, XML_CIB_TAG_PROPSET, NULL, config_hash, CIB_OPTIONS_FIRST, FALSE, now);
+
+        /* Now send it to the remote peer */
+        remote_proxy_check(lrmd, config_hash);
+
+        g_hash_table_destroy(config_hash);
+        crm_time_free(now);
+    }
+}
+
+static void
 remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 {
     lrm_state_t *lrm_state = userdata;
@@ -495,6 +526,7 @@ remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
         return;
 
     } else if (safe_str_eq(op, LRMD_IPC_OP_NEW)) {
+        int rc;
         const char *channel = crm_element_value(msg, F_LRMD_IPC_IPC_SERVER);
 
         CRM_CHECK(channel != NULL, return);
@@ -503,6 +535,11 @@ remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
             remote_proxy_notify_destroy(lrmd, session);
         }
         crm_trace("new remote proxy client established to %s, session id %s", channel, session);
+
+        /* Look up stonith-watchdog-timeout and send to the remote peer for validation */
+        rc = fsa_cib_conn->cmds->query(fsa_cib_conn, XML_CIB_TAG_CRMCONFIG, NULL, cib_scope_local);
+        fsa_cib_conn->cmds->register_callback_full(fsa_cib_conn, rc, 10, FALSE, lrmd, "remote_config_check", remote_config_check, NULL);
+        
     } else if (safe_str_eq(op, LRMD_IPC_OP_DESTROY)) {
         remote_proxy_end_session(session);
 
