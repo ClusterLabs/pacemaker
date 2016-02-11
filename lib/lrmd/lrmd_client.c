@@ -109,6 +109,7 @@ typedef struct lrmd_private_s {
     /* Internal IPC proxy msg passing for remote guests */
     void (*proxy_callback)(lrmd_t *lrmd, void *userdata, xmlNode *msg);
     void *proxy_callback_userdata;
+    char *peer_version;
 } lrmd_private_t;
 
 static lrmd_list_t *
@@ -907,6 +908,7 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
         crm_err("Did not receive registration reply");
         rc = -EPROTO;
     } else {
+        const char *version = crm_element_value(reply, F_LRMD_PROTOCOL_VERSION);
         const char *msg_type = crm_element_value(reply, F_LRMD_OPERATION);
         const char *tmp_ticket = crm_element_value(reply, F_LRMD_CLIENTID);
 
@@ -914,7 +916,7 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
 
         if (rc == -EPROTO) {
             crm_err("LRMD protocol mismatch client version %s, server version %s",
-                LRMD_PROTOCOL_VERSION, crm_element_value(reply, F_LRMD_PROTOCOL_VERSION));
+                LRMD_PROTOCOL_VERSION, version);
             crm_log_xml_err(reply, "Protocol Error");
 
         } else if (safe_str_neq(msg_type, CRM_OP_REGISTER)) {
@@ -928,6 +930,7 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
         } else {
             crm_trace("Obtained registration token: %s", tmp_ticket);
             native->token = strdup(tmp_ticket);
+            native->peer_version = strdup(version?version:"1.0"); /* Included since 1.1 */
             rc = pcmk_ok;
         }
     }

@@ -35,7 +35,7 @@ typedef struct lrmd_key_value_s {
     struct lrmd_key_value_s *next;
 } lrmd_key_value_t;
 
-#define LRMD_PROTOCOL_VERSION "1.0"
+#define LRMD_PROTOCOL_VERSION "1.1"
 
 /* *INDENT-OFF* */
 #define DEFAULT_REMOTE_KEY_LOCATION "/etc/pacemaker/authkey"
