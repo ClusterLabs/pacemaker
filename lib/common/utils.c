@@ -138,7 +138,7 @@ check_sbd_timeout(const char *value)
     long st_timeout = crm_get_msec(value);
 
     if(st_timeout > 0 && !daemon_option_enabled(crm_system_name, "watchdog")) {
-        do_crm_log_always(LOG_EMERG, "Shutting down: no watchdog device configured");
+        do_crm_log_always(LOG_EMERG, "Shutting down: no watchdog device configured: %s: %s", value, daemon_option("watchdog"));
         crm_exit(DAEMON_RESPAWN_STOP);
 
     } else if(!daemon_option_enabled(crm_system_name, "watchdog")) {

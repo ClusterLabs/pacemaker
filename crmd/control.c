@@ -1025,12 +1025,12 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     sbd_timeout = crm_get_msec(value);
 
     value = crmd_pref(config_hash, "stonith-watchdog-timeout");
-    if(value == NULL && sbd_timeout > 0) {
+    if(value == NULL && sbd_timeout > 0 && pcmk_locate_sbd()) {
         char *timeout = NULL;
 
         st_timeout = 2 * sbd_timeout / 1000;
         timeout = crm_strdup_printf("%lds", st_timeout);
-        crm_notice("Setting stonith-watchdog-timeout=%s", timeout);
+        crm_notice("Detected SBD running, setting stonith-watchdog-timeout=%s", timeout);
 
         update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
                              "stonith-watchdog-timeout", timeout, FALSE, NULL, NULL);
