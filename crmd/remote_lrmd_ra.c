@@ -162,10 +162,166 @@ start_delay_helper(gpointer data)
     return FALSE;
 }
 
+/*!
+ * \internal
+ * \brief Handle cluster communication related to pacemaker_remote node joining
+ *
+ * \param[in] node_name  Name of newly integrated pacemaker_remote node
+ */
+static void
+remote_node_up(const char *node_name)
+{
+    int call_opt, call_id = 0;
+    xmlNode *update, *state;
+    crm_node_t *node;
+
+    CRM_CHECK(node_name != NULL, return);
+    crm_info("Announcing pacemaker_remote node %s", node_name);
+
+    /* Clear node's operation history and transient attributes */
+    call_opt = crmd_cib_smart_opt();
+    erase_status_tag(node_name, XML_CIB_TAG_LRM, call_opt);
+    erase_status_tag(node_name, XML_TAG_TRANSIENT_NODEATTRS, call_opt);
+
+    /* Clear node's probed attribute */
+    update_attrd(node_name, CRM_OP_PROBED, NULL, NULL, TRUE);
+
+    /* Ensure node is in the remote peer cache with member status */
+    node = crm_remote_peer_get(node_name);
+    CRM_CHECK(node != NULL, return);
+    crm_update_peer_state(__FUNCTION__, node, CRM_NODE_MEMBER, 0);
+
+    /* pacemaker_remote nodes don't participate in the membership layer,
+     * so cluster nodes don't automatically get notified when they come and go.
+     * We send a cluster message to the DC, and update the CIB node state entry,
+     * so the DC will get it sooner (via message) or later (via CIB refresh),
+     * and any other interested parties can query the CIB.
+     */
+    send_remote_state_message(node_name, TRUE);
+
+    update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
+    state = do_update_node_cib(node, node_update_cluster, update, __FUNCTION__);
+
+    /* Clear the XML_NODE_IS_FENCED flag in the node state. If the node ever
+     * needs to be fenced, this flag will allow various actions to determine
+     * whether the fencing has happened yet.
+     */
+    crm_xml_add(state, XML_NODE_IS_FENCED, "0");
+
+    /* TODO: If the remote connection drops, and this (async) CIB update either
+     * failed or has not yet completed, later actions could mistakenly think the
+     * node has already been fenced (if the XML_NODE_IS_FENCED attribute was
+     * previously set, because it won't have been cleared). This could prevent
+     * actual fencing or allow recurring monitor failures to be cleared too
+     * soon. Ideally, we wouldn't rely on the CIB for the fenced status.
+     */
+    fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, call_id, NULL);
+    if (call_id < 0) {
+        crm_perror(LOG_WARNING, "%s CIB node state setup", node_name);
+    }
+    free_xml(update);
+}
+
+/*!
+ * \internal
+ * \brief Handle cluster communication related to pacemaker_remote node leaving
+ *
+ * \param[in] node_name  Name of lost node
+ */
+static void
+remote_node_down(const char *node_name)
+{
+    xmlNode *update;
+    int call_id = 0;
+    int call_opt = crmd_cib_smart_opt();
+    crm_node_t *node;
+
+    /* Clear all node attributes */
+    update_attrd_remote_node_removed(node_name, NULL);
+
+    /* Ensure node is in the remote peer cache with lost state */
+    node = crm_remote_peer_get(node_name);
+    CRM_CHECK(node != NULL, return);
+    crm_update_peer_state(__FUNCTION__, node, CRM_NODE_LOST, 0);
+
+    /* Notify DC */
+    send_remote_state_message(node_name, FALSE);
+
+    /* Update CIB node state */
+    update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
+    do_update_node_cib(node, node_update_cluster, update, __FUNCTION__);
+    fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, call_id, NULL);
+    if (call_id < 0) {
+        crm_perror(LOG_ERR, "%s CIB node state update", node_name);
+    }
+    free_xml(update);
+}
+
+/*!
+ * \internal
+ * \brief Handle effects of a remote RA command on node state
+ *
+ * \param[in] cmd  Completed remote RA command
+ */
+static void
+check_remote_node_state(remote_ra_cmd_t *cmd)
+{
+    /* Only successful actions can change node state */
+    if (cmd->rc != PCMK_OCF_OK) {
+        return;
+    }
+
+    if (safe_str_eq(cmd->action, "start")) {
+        remote_node_up(cmd->rsc_id);
+
+    } else if (safe_str_eq(cmd->action, "migrate_from")) {
+        /* After a successful migration, we don't need to do remote_node_up()
+         * because the DC already knows the node is up, and we don't want to
+         * clear LRM history etc. We do need to add the remote node to this
+         * host's remote peer cache, because (unless it happens to be DC)
+         * it hasn't been tracking the remote node, and other code relies on
+         * the cache to distinguish remote nodes from unseen cluster nodes.
+         */
+        crm_node_t *node = crm_remote_peer_get(cmd->rsc_id);
+
+        CRM_CHECK(node != NULL, return);
+        crm_update_peer_state(__FUNCTION__, node, CRM_NODE_MEMBER, 0);
+
+    } else if (safe_str_eq(cmd->action, "stop")) {
+        lrm_state_t *lrm_state = lrm_state_find(cmd->rsc_id);
+        remote_ra_data_t *ra_data = lrm_state? lrm_state->remote_ra_data : NULL;
+
+        if (ra_data) {
+            if (ra_data->migrate_status != takeover_complete) {
+                /* Stop means down if we didn't successfully migrate elsewhere */
+                remote_node_down(cmd->rsc_id);
+            } else if (AM_I_DC == FALSE) {
+                /* Only the connection host and DC track node state,
+                 * so if the connection migrated elsewhere and we aren't DC,
+                 * un-cache the node, so we don't have stale info
+                 */
+                crm_remote_peer_cache_remove(cmd->rsc_id);
+            }
+        }
+    }
+
+    /* We don't do anything for successful monitors, which is correct for
+     * routine recurring monitors, and for monitors on nodes where the
+     * connection isn't supposed to be (the cluster will stop the connection in
+     * that case). However, if the initial probe finds the connection already
+     * active on the node where we want it, we probably should do
+     * remote_node_up(). Unfortunately, we can't distinguish that case here.
+     * Given that connections have to be initiated by the cluster, the chance of
+     * that should be close to zero.
+     */
+}
+
 static void
 report_remote_ra_result(remote_ra_cmd_t * cmd)
 {
     lrmd_event_data_t op = { 0, };
+
+    check_remote_node_state(cmd);
 
     op.type = lrmd_event_exec_complete;
     op.rsc_id = cmd->rsc_id;
@@ -308,19 +464,6 @@ monitor_timeout_cb(gpointer data)
     return FALSE;
 }
 
-xmlNode *
-simple_remote_node_status(const char *node_name, xmlNode * parent, const char *source)
-{
-    xmlNode *state = create_xml_node(parent, XML_CIB_TAG_STATE);
-
-    crm_xml_add(state, XML_NODE_IS_REMOTE, "true");
-    crm_xml_add(state, XML_ATTR_UUID,  node_name);
-    crm_xml_add(state, XML_ATTR_UNAME, node_name);
-    crm_xml_add(state, XML_ATTR_ORIGIN, source);
-
-    return state;
-}
-
 void
 remote_lrm_op_callback(lrmd_event_data_t * op)
 {
@@ -402,11 +545,6 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
             cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
 
         } else {
-
-            if (safe_str_eq(cmd->action, "start")) {
-                /* clear PROBED value if it happens to be set after start completes. */
-                update_attrd(lrm_state->node_name, CRM_OP_PROBED, NULL, NULL, TRUE);
-            }
             lrm_state_reset_tables(lrm_state);
             cmd->rc = PCMK_OCF_OK;
             cmd->op_status = PCMK_LRM_OP_DONE;
@@ -480,8 +618,6 @@ handle_remote_ra_stop(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd)
     ra_data = lrm_state->remote_ra_data;
 
     if (ra_data->migrate_status != takeover_complete) {
-        /* only clear the status if this stop is not apart of a successful migration */
-        update_attrd_remote_node_removed(lrm_state->node_name, NULL);
         /* delete pending ops when ever the remote connection is intentionally stopped */
         g_hash_table_remove_all(lrm_state->pending_ops);
     } else {
@@ -905,3 +1041,24 @@ remote_ra_exec(lrm_state_t * lrm_state, const char *rsc_id, const char *action, 
     lrmd_key_value_freeall(params);
     return rc;
 }
+
+/*!
+ * \internal
+ * \brief Immediately fail all monitors of a remote node, if proxied here
+ *
+ * \param[in] node_name  Name of pacemaker_remote node
+ */
+void
+remote_ra_fail(const char *node_name)
+{
+    lrm_state_t *lrm_state = lrm_state_find(node_name);
+
+    if (lrm_state && lrm_state_is_connected(lrm_state)) {
+        remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
+
+        crm_info("Failing monitors on pacemaker_remote node %s", node_name);
+        ra_data->recurring_cmds = fail_all_monitor_cmds(ra_data->recurring_cmds);
+        ra_data->cmds = fail_all_monitor_cmds(ra_data->cmds);
+    }
+}
+

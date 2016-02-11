@@ -111,4 +111,6 @@ extern enum crmd_fsa_input handle_message(xmlNode * stored_msg, enum crmd_fsa_ca
 
 extern ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t * orig);
 
+void send_remote_state_message(const char *node_name, gboolean node_up);
+
 #endif

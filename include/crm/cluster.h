@@ -63,6 +63,9 @@ enum crm_node_flags
     /* deprecated (not used by cluster) */
     crm_remote_container     = 0x0002,
     crm_remote_baremetal     = 0x0004,
+
+    /* node's cache entry is dirty */
+    crm_node_dirty           = 0x0010,
 };
 /* *INDENT-ON* */
 
@@ -152,6 +155,7 @@ int crm_remote_peer_cache_size(void);
 /* Initialize and refresh the remote peer cache from a cib config */
 void crm_remote_peer_cache_refresh(xmlNode *cib);
 void crm_remote_peer_cache_add(const char *node_name);
+crm_node_t *crm_remote_peer_get(const char *node_name);
 void crm_remote_peer_cache_remove(const char *node_name);
 
 /* allows filtering of remote and cluster nodes using crm_get_peer_flags */

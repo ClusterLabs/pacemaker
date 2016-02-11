@@ -132,6 +132,7 @@ extern char *crm_system_name;
 #  define CRM_OP_NODES_PROBED	"probe_nodes_complete"
 #  define CRM_OP_REPROBE		"probe_again"
 #  define CRM_OP_CLEAR_FAILCOUNT  "clear_failcount"
+#  define CRM_OP_REMOTE_STATE     "remote_state"
 #  define CRM_OP_RELAXED_SET  "one-or-more"
 #  define CRM_OP_RELAXED_CLONE  "clone-one-or-more"
 #  define CRM_OP_RM_NODE_CACHE "rm_node_cache"
