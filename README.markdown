@@ -70,6 +70,10 @@ This is not meant to be an exhaustive list:
 ## Optional testing dependencies
 * valgrind (if running CTS valgrind tests)
 * systemd-python (if using CTS on cluster nodes running systemd)
+* rsync (if running CTS container tests)
+* libvirt-daemon-driver-lxc (if running CTS container tests)
+* libvirt-daemon-lxc (if running CTS container tests)
+* libvirt-login-shell (if running CTS container tests)
 
 ## Source Control (GIT)
 

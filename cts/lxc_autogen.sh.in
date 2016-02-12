@@ -16,6 +16,7 @@ add_master=0
 verify=0
 working_dir="@CRM_CONFIG_CTS@/lxc"
 curdir=$(pwd)
+run_dirs="/run /var/run /usr/var/run"
 
 function helptext() {
 	echo "lxc_autogen.sh - A tool for generating libvirt lxc containers for testing purposes."
@@ -124,12 +125,14 @@ set_network()
 </network>
 END
 
-	ls restore_default.xml > /dev/null 2>&1
-	if [ $? -ne 0 ]; then
-		virsh net-dumpxml default > restore_default.xml
+	virsh net-info default >/dev/null 2>&1
+	if [ $? -eq 0 ]; then
+		if [ ! -f restore_default.xml ]; then
+			virsh net-dumpxml default > restore_default.xml
+		fi
+		virsh net-destroy default
+		virsh net-undefine default
 	fi
-	virsh net-destroy default
-	virsh net-undefine default
 	virsh net-define cur_network.xml
 	virsh net-start default
 	virsh net-autostart default
@@ -153,8 +156,9 @@ generate()
 	for (( c=1; c <= $containers; c++ ))
 	do
 		rm -rf lxc$c-filesystem
-		mkdir -p lxc$c-filesystem/var/run/
-		mkdir -p lxc$c-filesystem/usr/var/run
+		for dir in $run_dirs; do
+			mkdir -p lxc$c-filesystem/$dir
+		done
 		rm -f lxc$c.xml
 
 		suffix=$((10 + $c))
@@ -179,14 +183,16 @@ generate()
         <source usage='150528'/>
         <target dir='/dev/shm'/>
     </filesystem>
+END
+		for dir in $run_dirs; do
+			cat << END >> lxc$c.xml
     <filesystem type='mount'>
-      <source dir='$working_dir/lxc$c-filesystem/var/run'/>
-      <target dir='/var/run'/>
+      <source dir='$working_dir/lxc$c-filesystem/$dir'/>
+      <target dir='$dir'/>
     </filesystem>
-    <filesystem type='mount'>
-      <source dir='$working_dir/lxc$c-filesystem/usr/var/run'/>
-      <target dir='/usr/var/run'/>
-    </filesystem>
+END
+		done
+		cat << END >> lxc$c.xml
     <interface type='network'>
       <mac address='52:54:$(($RANDOM % 9))$(($RANDOM % 9)):$(($RANDOM % 9))$(($RANDOM % 9)):$(($RANDOM % 9))$(($RANDOM % 9)):$(($RANDOM % 9))$(($RANDOM % 9))'/>
       <source network='default'/>
@@ -216,7 +222,8 @@ END
 		cat << END >> lxc$c-filesystem/launch-helper
 #!/bin/bash
 ip -f inet addr add $prefix.$subnet.$suffix/24 dev eth0
-route add 0.0.0.0 gw $addr.1 eth0
+ip link set eth0 up
+ip route add default via $addr.1
 hostname lxc$c
 df > $working_dir/lxc$c-filesystem/disk_usage.txt
 export PCMK_debugfile=/var/log/pacemaker_remote_lxc$c.log
@@ -262,7 +269,7 @@ apply_cib_master()
 	cibadmin -B
 	unset CIB_file
 
-	cibadmin --replace --xml-file cur.cib
+	cibadmin --replace -o configuration --xml-file cur.cib
 	rm -f cur.cib
 }
 
@@ -298,7 +305,7 @@ apply_cib_entries()
 
 	unset CIB_file
 
-	cibadmin --replace --xml-file cur.cib
+	cibadmin --replace -o configuration --xml-file cur.cib
 	rm -f cur.cib
 }
 
@@ -332,8 +339,17 @@ restore_cib()
 	cibadmin -B
 	unset CIB_file
 
-	cibadmin --replace --xml-file cur.cib
+	cibadmin --replace -o configuration --xml-file cur.cib
 	rm -f  cur.cib 
+
+	# Allow the cluster to stabilize before continuing
+	crm_resource --wait
+
+	# Purge nodes from caches and CIB status section
+	for tmp in $(ls lxc*.xml); do
+		tmp=$(echo $tmp | sed -e 's/\.xml//g')
+		crm_node --force --remove $tmp
+	done
 }
 
 restore_libvirt()
@@ -347,10 +363,9 @@ restore_libvirt()
 		echo "$tmp destroyed"
 	done
 
-	ls restore_default.xml > /dev/null 2>&1
-	if [ $? -eq 0 ]; then
-		virsh net-destroy default > /dev/null 2>&1
-		virsh net-undefine default > /dev/null 2>&1
+	virsh net-destroy default > /dev/null 2>&1
+	virsh net-undefine default > /dev/null 2>&1
+	if [ -f restore_default.xml ]; then
 		virsh net-define restore_default.xml
 		virsh net-start default
 		if [ $? -eq 0 ]; then
