@@ -1038,7 +1038,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     }
 
     value = crmd_pref(config_hash, "no-quorum-policy");
-    if (safe_str_eq(value, "suicide") && daemon_option_enabled(crm_system_name, "watchdog")) {
+    if (safe_str_eq(value, "suicide") && pcmk_locate_sbd()) {
         no_quorum_suicide_escalation = TRUE;
     }
 

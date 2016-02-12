@@ -137,29 +137,22 @@ check_sbd_timeout(const char *value)
     long sbd_timeout = crm_get_msec(env_value);
     long st_timeout = crm_get_msec(value);
 
-    if(st_timeout > 0 && !daemon_option_enabled(crm_system_name, "watchdog")) {
-        do_crm_log_always(LOG_EMERG, "Shutting down: no watchdog device configured: %s: %s", value, daemon_option("watchdog"));
-        crm_exit(DAEMON_RESPAWN_STOP);
-
-    } else if(!daemon_option_enabled(crm_system_name, "watchdog")) {
-        crm_trace("Watchdog disabled");
-        return TRUE;
-
-    } else if(value == NULL && sbd_timeout > 0) {
-        /* Control.c on the host will set this, for now accept it */
-        return TRUE;
-
-    } else if(st_timeout <= 0) {
+    if(value == NULL || st_timeout <= 0) {
         crm_notice("Watchdog enabled but stonith-watchdog-timeout is disabled");
-        return TRUE;
+
+    } else if(pcmk_locate_sbd() == 0) {
+        do_crm_log_always(LOG_EMERG, "Shutting down: stonith-watchdog-timeout is configured (%ldms) but SBD is not active", st_timeout);
+        crm_exit(DAEMON_RESPAWN_STOP);
+        return FALSE;
 
     } else if(st_timeout < sbd_timeout) {
         do_crm_log_always(LOG_EMERG, "Shutting down: stonith-watchdog-timeout (%ldms) is too short (must be greater than %ldms)",
                           st_timeout, sbd_timeout);
         crm_exit(DAEMON_RESPAWN_STOP);
+        return FALSE;
     }
 
-    return FALSE;    
+    return TRUE;
 }
 
 
