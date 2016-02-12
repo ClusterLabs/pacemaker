@@ -245,28 +245,23 @@ without requiring a password to be entered each time:
 * On your test exerciser, create an SSH key if you do not already have one.
   Most commonly, SSH keys will be in your ~/.ssh directory, with the
   private key file not having an extension, and the public key file
-  named the same with the extension ".pub" (for example, ~/.ssh/id_dsa.pub).
+  named the same with the extension ".pub" (for example, ~/.ssh/id_rsa.pub).
 
   If you don't already have a key, you can create one with:
 
-      ssh-keygen -t dsa
+      ssh-keygen -t rsa
 
 * From your test exerciser, authorize your SSH public key for root on all test
   machines (both the exerciser and the cluster test machines):
 
-      ssh-copy-id -i ~/.ssh/id_dsa.pub root@$MACHINE
+      ssh-copy-id -i ~/.ssh/id_rsa.pub root@$MACHINE
 
   You will probably have to provide your password, and possibly say
   "yes" to some questions about accepting the identity of the test machines.
 
-  The above assumes you have a DSA SSH key in the specified location;
-  if you have some other type of key (RSA, ECDSA, etc.), use its file name
+  The above assumes you have a RSA SSH key in the specified location;
+  if you have some other type of key (DSA, ECDSA, etc.), use its file name
   in the -i option above.
-
-  If you have an old version of SSH that doesn't have ssh-copy-id,
-  you can take the single line out of your public key file
-  (e.g. ~/.ssh/identity.pub or ~/.ssh/id_dsa.pub) and manually add it to
-  root's ~/.ssh/authorized_keys file on each test machine.
 
 * To test, try this command from the exerciser machine for each
   of your cluster machines, and for the exerciser machine itself.
