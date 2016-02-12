@@ -675,7 +675,7 @@ handle_remote_state(xmlNode *msg)
 
     crm_update_peer_state(__FUNCTION__, remote_peer,
                           crm_is_true(remote_is_up)?
-                          CRM_NODE_LOST : CRM_NODE_MEMBER, 0);
+                          CRM_NODE_MEMBER : CRM_NODE_LOST, 0);
     return I_NULL;
 }
 
