@@ -1274,15 +1274,22 @@ crm_pid_active(long pid, const char *daemon)
 
 #define	LOCKSTRLEN	11
 
-int
+long
 crm_read_pidfile(const char *filename)
 {
     int fd;
-    long pid = -1;
+    struct stat sbuf;
+    long pid = -ENOENT;
     char buf[LOCKSTRLEN + 1];
 
     if ((fd = open(filename, O_RDONLY)) < 0) {
         goto bail;
+    }
+
+    if (fstat(fd, &sbuf) >= 0 && sbuf.st_size < LOCKSTRLEN) {
+        sleep(2);           /* if someone was about to create one,
+                             * give'm a sec to do so
+                             */
     }
 
     if (read(fd, buf, sizeof(buf)) < 1) {
@@ -1292,6 +1299,8 @@ crm_read_pidfile(const char *filename)
     if (sscanf(buf, "%lu", &pid) > 0) {
         if (pid <= 0) {
             pid = -ESRCH;
+        } else {
+            crm_trace("Got pid %lu from %s\n", pid, filename);
         }
     }
 
@@ -1302,46 +1311,31 @@ crm_read_pidfile(const char *filename)
     return pid;
 }
 
-int
+long
 crm_pidfile_inuse(const char *filename, long mypid, const char *daemon)
 {
-    long pid = 0;
-    struct stat sbuf;
-    char buf[LOCKSTRLEN + 1];
-    int rc = -ENOENT, fd = 0;
+    long pid = crm_read_pidfile(filename);
 
-    if ((fd = open(filename, O_RDONLY)) >= 0) {
-        if (fstat(fd, &sbuf) >= 0 && sbuf.st_size < LOCKSTRLEN) {
-            sleep(2);           /* if someone was about to create one,
-                                 * give'm a sec to do so
-                                 */
-        }
-        if (read(fd, buf, sizeof(buf)) > 0) {
-            if (sscanf(buf, "%lu", &pid) > 0) {
-                crm_trace("Got pid %lu from %s\n", pid, filename);
-                if (pid <= 1) {
-                    /* Invalid pid */
-                    rc = -ENOENT;
-                    unlink(filename);
+    if (pid < 2) {
+        /* Invalid pid */
+        pid = -ENOENT;
+        unlink(filename);
 
-                } else if (mypid && pid == mypid) {
-                    /* In use by us */
-                    rc = pcmk_ok;
+    } else if (mypid && pid == mypid) {
+        /* In use by us */
+        pid = pcmk_ok;
 
-                } else if (crm_pid_active(pid, daemon) == FALSE) {
-                    /* Contains a stale value */
-                    unlink(filename);
-                    rc = -ENOENT;
+    } else if (crm_pid_active(pid, daemon) == FALSE) {
+        /* Contains a stale value */
+        unlink(filename);
+        pid = -ENOENT;
 
-                } else if (mypid && pid != mypid) {
-                    /* locked by existing process - give up */
-                    rc = -EEXIST;
-                }
-            }
-        }
-        close(fd);
+    } else if (mypid && pid != mypid) {
+        /* locked by existing process - give up */
+        pid = -EEXIST;
     }
-    return rc;
+
+    return pid;
 }
 
 static int

@@ -264,8 +264,8 @@ void strip_text_nodes(xmlNode * xml);
 void pcmk_panic(const char *origin);
 void sysrq_init(void);
 pid_t pcmk_locate_sbd(void);
-int crm_pidfile_inuse(const char *filename, long mypid, const char *daemon);
-int crm_read_pidfile(const char *filename);
+long crm_pidfile_inuse(const char *filename, long mypid, const char *daemon);
+long crm_read_pidfile(const char *filename);
 
 #  define crm_config_err(fmt...) { crm_config_error = TRUE; crm_err(fmt); }
 #  define crm_config_warn(fmt...) { crm_config_warning = TRUE; crm_warn(fmt); }
