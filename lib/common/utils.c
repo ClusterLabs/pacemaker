@@ -1245,10 +1245,14 @@ crm_pid_active(long pid, const char *daemon)
         snprintf(proc_path, sizeof(proc_path), "/proc/%lu/exe", pid);
 
         rc = readlink(proc_path, exe_path, PATH_MAX - 1);
-        if (rc < 0) {
+        if (rc < 0 && errno == EACCES) {
+            crm_perror(LOG_INFO, "Could not read from %s", proc_path);
+            return 1;
+        } else if (rc < 0) {
             crm_perror(LOG_ERR, "Could not read from %s", proc_path);
             return 0;
         }
+        
 
         exe_path[rc] = 0;
 
@@ -1799,7 +1803,7 @@ attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const cha
     }
 
     crm_xml_add(update, F_TYPE, T_ATTRD);
-    crm_xml_add(update, F_ORIG, crm_system_name);
+    crm_xml_add(update, F_ORIG, crm_system_name?crm_system_name:"unknown");
 
     if (name == NULL && command == 'U') {
         command = 'R';
