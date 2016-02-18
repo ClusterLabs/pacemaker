@@ -2641,6 +2641,7 @@ class RemoteLXC(CTSTest):
             r"Resource lxc-ms .* is active on 2 nodes attempting recovery",
             r"Unknown operation: fail",
             r"(ERROR|error): sending stonithRA op to stonithd failed.",
+            r"VirtualDomain.*ERROR: Unable to determine emulator",
         ]
 
 AllTestClasses.append(RemoteLXC)

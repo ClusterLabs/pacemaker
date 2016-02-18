@@ -1645,7 +1645,7 @@
   + crmd: If there are no nodes to finalize, start an election.
   + crmd: If there are no nodes to welcome, start an election.
   + crmd: Prevent node attribute loss by detecting attrd disconnections immediately
-  + crmd: Prevent node re-probe loops by ensuring manditory actions always complete
+  + crmd: Prevent node re-probe loops by ensuring mandatory actions always complete
   + pengine: Bug 2005 - Fix startup ordering of cloned stonith groups
   + pengine: Bug 2006 - Correctly reprobe cloned groups
   + pengine: Bug BNC:465484 - Fix the no-quorum-policy=suicide option
@@ -2092,7 +2092,7 @@
   + cib: Correctly detect configuration changes - num_updates does not count
   + pengine: Apply stickiness values to the whole group, not the individual resources
   + pengine: Bug N:385265 - Ensure groups are migrated instead of remaining partially active on the current node
-  + pengine: Bug N:396293 - Enforce manditory group restarts due to ordering constraints
+  + pengine: Bug N:396293 - Enforce mandatory group restarts due to ordering constraints
   + pengine: Correctly recover master instances found active on more than one node
   + pengine: Fix memory leaks reported by Valgrind
   + Medium: Admin: crm_mon - Misc improvements from Satomi Taniguchi

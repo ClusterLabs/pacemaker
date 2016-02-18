@@ -26,6 +26,7 @@
 #include <crm/common/xml.h>
 #include <tengine.h>
 #include <crmd_fsa.h>
+#include <crmd_lrm.h>
 #include <crmd_messages.h>
 #include <throttle.h>
 #include <crm/fencing/internal.h>
@@ -355,6 +356,15 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
                 send_stonith_update(NULL, st_event->target, uuid);
             }
             add_stonith_cleanup(st_event->target);
+        }
+
+        /* If the target is a remote node, and we host its connection,
+         * immediately fail all monitors so it can be recovered quickly.
+         * The connection won't necessarily drop when a remote node is fenced,
+         * so the failure might not otherwise be detected until the next poke.
+         */
+        if (is_set(peer->flags, crm_remote_node)) {
+            remote_ra_fail(st_event->target);
         }
 
         crmd_peer_down(peer, TRUE);

@@ -361,6 +361,16 @@ get_node_name(uint32_t nodeid)
     return name;
 }
 
+/*!
+ * \brief Get the node name corresponding to a node UUID
+ *
+ * \param[in] uuid  UUID of desired node
+ *
+ * \return name of desired node
+ *
+ * \note This relies on the remote peer cache being populated with all
+ *       remote nodes in the cluster, so callers should maintain that cache.
+ */
 const char *
 crm_peer_uname(const char *uuid)
 {
@@ -384,6 +394,7 @@ crm_peer_uname(const char *uuid)
             break;
         }
     }
+    node = NULL;
 
 #if SUPPORT_COROSYNC
     if (is_openais_cluster()) {

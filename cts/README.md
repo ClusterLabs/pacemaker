@@ -209,6 +209,30 @@ valgrind. For example:
     ExecStart=/usr/bin/valgrind /usr/sbin/pacemaker_remoted
     EOF
 
+### Container testing
+
+If the --container-tests option is given to CTS, it will enable
+testing of LXC resources (currently only the RemoteLXC test,
+which starts a remote node using an LXC container).
+
+The container tests have additional package dependencies (see the toplevel
+README). Also, SELinux must be enabled (in either permissive or enforcing mode),
+libvirtd must be enabled and running, and root must be able to ssh without a
+password between all cluster nodes (not just from the test machine). Before
+running the tests, you can verify your environment with:
+
+    /usr/share/pacemaker/tests/cts/lxc_autogen.sh -v
+
+LXC tests will create two containers with hardcoded parameters: a NAT'ed bridge
+named virbr0 using the IP network 192.168.123.0/24 will be created on the
+cluster node hosting the containers; the host will be assigned
+52:54:00:A8:12:35 as the MAC address and 192.168.123.1 as the IP address.
+Each container will be assigned a random MAC address starting with 52:54:,
+the IP address 192.168.123.11 or 192.168.123.12, the hostname lxc1 or lxc2
+(which will be added to the host's /etc/hosts file), and 196MB RAM.
+
+The test will revert all of the configuration when it is done.
+
 
 ## Mini-HOWTOs
 
@@ -221,28 +245,23 @@ without requiring a password to be entered each time:
 * On your test exerciser, create an SSH key if you do not already have one.
   Most commonly, SSH keys will be in your ~/.ssh directory, with the
   private key file not having an extension, and the public key file
-  named the same with the extension ".pub" (for example, ~/.ssh/id_dsa.pub).
+  named the same with the extension ".pub" (for example, ~/.ssh/id_rsa.pub).
 
   If you don't already have a key, you can create one with:
 
-      ssh-keygen -t dsa
+      ssh-keygen -t rsa
 
 * From your test exerciser, authorize your SSH public key for root on all test
   machines (both the exerciser and the cluster test machines):
 
-      ssh-copy-id -i ~/.ssh/id_dsa.pub root@$MACHINE
+      ssh-copy-id -i ~/.ssh/id_rsa.pub root@$MACHINE
 
   You will probably have to provide your password, and possibly say
   "yes" to some questions about accepting the identity of the test machines.
 
-  The above assumes you have a DSA SSH key in the specified location;
-  if you have some other type of key (RSA, ECDSA, etc.), use its file name
+  The above assumes you have a RSA SSH key in the specified location;
+  if you have some other type of key (DSA, ECDSA, etc.), use its file name
   in the -i option above.
-
-  If you have an old version of SSH that doesn't have ssh-copy-id,
-  you can take the single line out of your public key file
-  (e.g. ~/.ssh/identity.pub or ~/.ssh/id_dsa.pub) and manually add it to
-  root's ~/.ssh/authorized_keys file on each test machine.
 
 * To test, try this command from the exerciser machine for each
   of your cluster machines, and for the exerciser machine itself.

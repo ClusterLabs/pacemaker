@@ -240,7 +240,8 @@ lrm_state_init_local(void)
     proxy_table =
         g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, NULL, remote_proxy_free);
     if (!proxy_table) {
-         g_hash_table_destroy(lrm_state_table);
+        g_hash_table_destroy(lrm_state_table);
+        lrm_state_table = NULL;
         return FALSE;
     }
 
@@ -288,6 +289,45 @@ lrm_state_get_list(void)
     return g_hash_table_get_values(lrm_state_table);
 }
 
+static remote_proxy_t *
+find_connected_proxy_by_node(const char * node_name)
+{
+    GHashTableIter gIter;
+    remote_proxy_t *proxy = NULL;
+
+    CRM_CHECK(proxy_table != NULL, return NULL);
+
+    g_hash_table_iter_init(&gIter, proxy_table);
+
+    while (g_hash_table_iter_next(&gIter, NULL, (gpointer *) &proxy)) {
+        if (proxy->source
+            && safe_str_eq(node_name, proxy->node_name)) {
+            return proxy;
+        }
+    }
+
+    return NULL;
+}
+
+static void
+remote_proxy_disconnect_by_node(const char * node_name)
+{
+    remote_proxy_t *proxy = NULL;
+
+    CRM_CHECK(proxy_table != NULL, return);
+
+    while ((proxy = find_connected_proxy_by_node(node_name)) != NULL) {
+        /* mainloop_del_ipc_client() eventually calls remote_proxy_disconnected()
+         * , which removes the entry from proxy_table.
+         * Do not do this in a g_hash_table_iter_next() loop. */
+        if (proxy->source) {
+            mainloop_del_ipc_client(proxy->source);
+        }
+    }
+
+    return;
+}
+
 void
 lrm_state_disconnect(lrm_state_t * lrm_state)
 {
@@ -297,6 +337,9 @@ lrm_state_disconnect(lrm_state_t * lrm_state)
         return;
     }
     crm_trace("Disconnecting %s", lrm_state->node_name);
+
+    remote_proxy_disconnect_by_node(lrm_state->node_name);
+
     ((lrmd_t *) lrm_state->conn)->cmds->disconnect(lrm_state->conn);
 
     if (is_not_set(fsa_input_register, R_SHUTDOWN)) {

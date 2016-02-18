@@ -1193,7 +1193,7 @@ clone_action_flags(action_t * action, node_t * node)
 
             if (is_set(flags, pe_action_optional)
                 && is_set(child_flags, pe_action_optional) == FALSE) {
-                pe_rsc_trace(child, "%s is manditory because of %s", action->uuid,
+                pe_rsc_trace(child, "%s is mandatory because of %s", action->uuid,
                              child_action->uuid);
                 flags = crm_clear_bit(__FUNCTION__, action->rsc->id, flags, pe_action_optional);
                 pe_clear_action_bit(action, pe_action_optional);
