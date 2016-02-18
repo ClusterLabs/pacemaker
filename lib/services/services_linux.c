@@ -728,6 +728,7 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
             }
 
             action_launch_child(op);
+            CRM_ASSERT(0);  /* action_launch_child is effectively noreturn */
     }
 
     /* Only the parent reaches here */
