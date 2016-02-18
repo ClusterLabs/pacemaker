@@ -979,8 +979,6 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     const char *value = NULL;
     GHashTable *config_hash = NULL;
     crm_time_t *now = crm_time_new(NULL);
-    long st_timeout = 0;
-    long sbd_timeout = 0;
 
     if (rc != pcmk_ok) {
         fsa_data_t *msg_data = NULL;
@@ -1019,22 +1017,6 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     value = crmd_pref(config_hash, "load-threshold");
     if(value) {
         throttle_load_target = strtof(value, NULL) / 100;
-    }
-
-    value = getenv("SBD_WATCHDOG_TIMEOUT");
-    sbd_timeout = crm_get_msec(value);
-
-    value = crmd_pref(config_hash, "stonith-watchdog-timeout");
-    if(value == NULL && sbd_timeout > 0 && pcmk_locate_sbd()) {
-        char *timeout = NULL;
-
-        st_timeout = 2 * sbd_timeout / 1000;
-        timeout = crm_strdup_printf("%lds", st_timeout);
-        crm_notice("Detected SBD running, setting stonith-watchdog-timeout=%s", timeout);
-
-        update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
-                             "stonith-watchdog-timeout", timeout, FALSE, NULL, NULL);
-        free(timeout);
     }
 
     value = crmd_pref(config_hash, "no-quorum-policy");
