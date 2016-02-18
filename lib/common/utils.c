@@ -138,7 +138,7 @@ check_sbd_timeout(const char *value)
     long st_timeout = crm_get_msec(value);
 
     if(value == NULL || st_timeout <= 0) {
-        crm_notice("Watchdog enabled but stonith-watchdog-timeout is disabled");
+        crm_notice("Watchdog may be enabled but stonith-watchdog-timeout is disabled: %s", value);
 
     } else if(pcmk_locate_sbd() == 0) {
         do_crm_log_always(LOG_EMERG, "Shutting down: stonith-watchdog-timeout is configured (%ldms) but SBD is not active", st_timeout);
@@ -152,6 +152,7 @@ check_sbd_timeout(const char *value)
         return FALSE;
     }
 
+    crm_info("Watchdog functionality is consistent: %s delay exceeds timeout of %s", value, env_value);
     return TRUE;
 }
 
