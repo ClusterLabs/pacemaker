@@ -4,6 +4,7 @@ Description=Pacemaker High Availability Cluster Manager
 After=dbus.service
 After=basic.target
 After=syslog.service
+After=rsyslog.service
 After=network.target
 After=corosync.service
 
