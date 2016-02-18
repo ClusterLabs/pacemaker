@@ -492,8 +492,11 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
         if (ra_data->migrate_status == expect_takeover) {
             ra_data->migrate_status = takeover_complete;
         } else {
-            crm_err("Unexpected pacemaker_remote client takeover. Disconnecting");
-            lrm_state_disconnect(lrm_state);
+            crm_err("Unexpected pacemaker_remote client takeover for %s. Disconnecting", op->remote_nodename);
+            /* In this case, lrmd_tls_connection_destroy() will be called under the control of mainloop. */
+            /* Do not free lrm_state->conn yet. */
+            /* It'll be freed in the following stop action. */
+            lrm_state_disconnect_only(lrm_state);
         }
         return;
     }

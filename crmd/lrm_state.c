@@ -327,7 +327,7 @@ remote_proxy_disconnect_by_node(const char * node_name)
 }
 
 void
-lrm_state_disconnect(lrm_state_t * lrm_state)
+lrm_state_disconnect_only(lrm_state_t * lrm_state)
 {
     int removed = 0;
 
@@ -344,6 +344,16 @@ lrm_state_disconnect(lrm_state_t * lrm_state)
         removed = g_hash_table_foreach_remove(lrm_state->pending_ops, fail_pending_op, lrm_state);
         crm_trace("Synthesized %d operation failures for %s", removed, lrm_state->node_name);
     }
+}
+
+void
+lrm_state_disconnect(lrm_state_t * lrm_state)
+{
+    if (!lrm_state->conn) {
+        return;
+    }
+
+    lrm_state_disconnect_only(lrm_state);
 
     lrmd_api_delete(lrm_state->conn);
     lrm_state->conn = NULL;
