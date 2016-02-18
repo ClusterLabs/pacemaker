@@ -185,13 +185,37 @@ lrmd_auth_timeout_cb(gpointer data)
     return FALSE;
 }
 
+/* Convert a struct sockaddr address to a string, IPv4 and IPv6: */
+
+static char *
+get_ip_str(const struct sockaddr * sa, char * s, size_t maxlen)
+{
+    switch(sa->sa_family) {
+        case AF_INET:
+            inet_ntop(AF_INET, &(((struct sockaddr_in *)sa)->sin_addr),
+                      s, maxlen);
+            break;
+
+        case AF_INET6:
+            inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)sa)->sin6_addr),
+                      s, maxlen);
+            break;
+
+        default:
+            strncpy(s, "Unknown AF", maxlen);
+            return NULL;
+    }
+
+    return s;
+}
+
 static int
 lrmd_remote_listen(gpointer data)
 {
     int csock = 0;
     int flag = 0;
-    unsigned laddr;
-    struct sockaddr_in addr;
+    unsigned laddr = 0;
+    struct sockaddr addr;
     gnutls_session_t *session = NULL;
     crm_client_t *new_client = NULL;
 
@@ -200,11 +224,32 @@ lrmd_remote_listen(gpointer data)
         .destroy = lrmd_remote_client_destroy,
     };
 
-    /* accept the connection */
     laddr = sizeof(addr);
     memset(&addr, 0, sizeof(addr));
-    csock = accept(ssock, (struct sockaddr *)&addr, &laddr);
-    crm_debug("New remote connection from %s", inet_ntoa(addr.sin_addr));
+    getsockname(ssock, &addr, &laddr);
+
+    /* accept the connection */
+
+    if (addr.sa_family == AF_INET6) {
+        struct sockaddr_in6 sa;
+        char addr_str[INET6_ADDRSTRLEN];
+
+        laddr = sizeof(sa);
+        memset(&sa, 0, sizeof(sa));
+        csock = accept(ssock, &sa, &laddr);
+        get_ip_str((struct sockaddr *)&sa, addr_str, INET6_ADDRSTRLEN);
+        crm_info("New remote connection from %s", addr_str);
+
+    } else {
+        struct sockaddr_in sa;
+        char addr_str[INET_ADDRSTRLEN];
+
+        laddr = sizeof(sa);
+        memset(&sa, 0, sizeof(sa));
+        csock = accept(ssock, &sa, &laddr);
+        get_ip_str((struct sockaddr *)&sa, addr_str, INET_ADDRSTRLEN);
+        crm_info("New remote connection from %s", addr_str);
+    }
 
     if (csock == -1) {
         crm_err("accept socket failed");
