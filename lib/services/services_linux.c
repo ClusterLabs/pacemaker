@@ -638,14 +638,6 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
 }
 #endif
 
-    if (pipe(stdout_fd) < 0) {
-        crm_err("pipe() failed");
-    }
-
-    if (pipe(stderr_fd) < 0) {
-        crm_err("pipe() failed");
-    }
-
     /* Fail fast */
     if(stat(op->opaque->exec, &st) != 0) {
         int rc = errno;
@@ -655,6 +647,14 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
             return operation_finalize(op);
         }
         return FALSE;
+    }
+
+    if (pipe(stdout_fd) < 0) {
+        crm_err("pipe() failed");
+    }
+
+    if (pipe(stderr_fd) < 0) {
+        crm_err("pipe() failed");
     }
 
     if (synchronous) {
