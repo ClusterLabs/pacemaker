@@ -60,7 +60,12 @@ Name:          pacemaker
 Summary:       Scalable High-Availability cluster resource manager
 Version:       1.1.14
 Release:       %{pcmk_release}%{?dist}
+%if %{defined _unitdir}
 License:       GPLv2+ and LGPLv2+
+%else
+# initscript is Revised BSD
+License:       GPLv2+ and LGPLv2+ and BSD
+%endif
 Url:           http://www.clusterlabs.org
 Group:         System Environment/Daemons
 
@@ -191,7 +196,12 @@ The %{name}-cluster-libs package contains cluster-aware shared
 libraries needed for nodes that will form part of the cluster nodes.
 
 %package remote
+%if %{defined _unitdir}
 License:       GPLv2+ and LGPLv2+
+%else
+# initscript is Revised BSD
+License:       GPLv2+ and LGPLv2+ and BSD
+%endif
 Summary:       Pacemaker remote daemon for non-cluster nodes
 Group:         System Environment/Daemons
 Requires:      %{name}-libs = %{version}-%{release}
