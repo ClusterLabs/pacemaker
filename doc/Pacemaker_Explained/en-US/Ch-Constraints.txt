@@ -9,10 +9,9 @@ Practically everything from moving a resource to deciding which
 resource to stop in a degraded cluster is achieved by manipulating
 scores in some way.
 
-Scores are calculated on a per-resource basis, and any node with a
-negative score for a resource can't run that resource.  After
-calculating the scores for a resource, the cluster then chooses the
-node with the highest one.
+Scores are calculated per resource and node. Any node with a
+negative score for a resource can't run that resource. The cluster
+places a resource on the node with the highest score for it.
 
 === Infinity Math ===
 
@@ -43,11 +42,13 @@ the score (possibly as part of a custom resource agent).
 
 indexterm:[Location Constraints]
 indexterm:[Resource,Constraints,Location]
-There are two alternative strategies for specifying which nodes a
-resources can run on.  One way is to say that by default they can run
-anywhere and then create location constraints for nodes that are not
-allowed.  The other option is to have nodes "opt-in" --  to start with
-nothing able to run anywhere and selectively enable allowed nodes.
+'Location constraints' tell the cluster which nodes a resource can run on.
+
+There are two alternative strategies. One way is to say that, by default,
+resources can run anywhere, and then the location constraints specify nodes
+that are not allowed (an 'opt-out' cluster). The other way is to start with
+nothing able to run anywhere, and use location constraints to selectively
+enable allowed nodes (an 'opt-in' cluster).
 
 Whether you should choose opt-in or opt-out depends on your
 personal preference and the make-up of your cluster.  If most of your
@@ -58,7 +59,7 @@ configuration might be simpler.
 
 === Location Properties ===
 
-.Properties for Simple Location Constraints
+.Properties of a rsc_location Constraint
 [width="95%",cols="2m,1,5<a",options="header",align="center"]
 |=========================================================
 
@@ -88,19 +89,21 @@ indexterm:[Constraints,Location,node]
 |
 |Positive values indicate the resource should run on this
  node. Negative values indicate the resource should not run on this node.
-
-Values of \+/- +INFINITY+ change "should"/"should not" to "must"/"must not".
+ Values of \+/- +INFINITY+ change "should"/"should not" to "must"/"must not".
 indexterm:[score,Location Constraints]
 indexterm:[Constraints,Location,score]
 
 |resource-discovery
 |always
-|Whether Pacemaker should perform resource discovery
-on this node for the specified resource. Limiting resource discovery to
-a subset of nodes the resource is physically capable of running on
-can significantly boost performance when a large set of nodes are present.
-When pacemaker_remote is in use to expand the node count into the hundreds of
-nodes range, this option should be considered.
+|Whether Pacemaker should perform resource discovery (that is, check whether
+ the resource is already running) for this resource on this node. This should
+ normally be left as the default, so that rogue instances of a service can be
+ stopped when they are running where they are not supposed to be. However,
+ there are two situations where disabling resource discovery is a good idea:
+ when a service is not installed on a node, discovery might return an error;
+ and when Pacemaker Remote is used to scale a cluster to hundreds of nodes,
+ limiting resource discovery to allowed nodes can significantly boost
+ performance.
 
 * +always:+ Always perform resource discovery for the specified resource on this node.
 * +never:+ Never perform resource discovery for the specified resource on this node.
@@ -108,9 +111,9 @@ nodes range, this option should be considered.
   required.
 * +exclusive:+ Perform resource discovery for the specified resource only on
   this node (and other nodes similarly marked as exclusive). Multiple location
-  constraints using 'exclusive' discovery for the same resource across
+  constraints using exclusive discovery for the same resource across
   different nodes creates a subset of nodes resource-discovery is exclusive to.
-  If a resource is marked for 'exclusive' discovery on one or more nodes, that
+  If a resource is marked for exclusive discovery on one or more nodes, that
   resource is only allowed to be placed within that subset of nodes.
 
 indexterm:[Resource Discovery,Location Constraints]
