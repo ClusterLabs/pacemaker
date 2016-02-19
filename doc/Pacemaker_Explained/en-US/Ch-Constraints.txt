@@ -211,21 +211,22 @@ indexterm:[Resource,Constraints,Ordering]
 indexterm:[Resource,Start Order]
 indexterm:[Ordering Constraints]
 
-The way to specify the order in which resources should start is by
-creating +rsc_order+ constraints.
+'Ordering constraints' tell the cluster the order in which resources should
+start.
 
 [IMPORTANT]
 ====
 Ordering constraints affect 'only' the ordering of resources;
-they do not require that the resources be placed on the
+they do 'not' require that the resources be placed on the
 same node. If you want resources to be started on the same node
-'and' in a specific order, you need an ordering constraint 'and'
-a location constraint (see <<s-resource-colocation>>).
+'and' in a specific order, you need both an ordering constraint 'and'
+a colocation constraint (see <<s-resource-colocation>>), or
+alternatively, a group (see <<group-resources>>).
 ====
 
 === Ordering Properties ===
 
-.Properties of an Ordering Constraint
+.Properties of a rsc_order Constraint
 [width="95%",cols="1m,1,4<a",options="header",align="center"]
 |=========================================================
 
@@ -483,14 +484,47 @@ constraints:
 -------
 ======
 
+While the set-based format is not less verbose, it is significantly
+easier to get right and maintain.
+
 [WARNING]
 =========
-Always pay attention to how your tools expose this functionality.
-In some tools +create set A B+ is *NOT* equivalent to +create A then B+.
+If you use a higher-level tool, pay attention to how it exposes this
+functionality. Depending on the tool, creating a set +A B+ may be equivalent to
++A then B+, or +B then A+.
 =========
 
-While the set-based format is not less verbose, it is significantly
-easier to get right and maintain.  It can also be expanded to allow
+.Properties of a resource_set
+[width="95%",cols="2m,1,5<a",options="header",align="center"]
+|=========================================================
+
+|Field
+|Default
+|Description
+
+|id
+|
+|A unique name for the set
+indexterm:[id,Resource Sets]
+indexterm:[Constraints,Resource Sets,id]
+
+|sequential
+|true
+|Whether the members of the set must be acted on in order
+indexterm:[sequential,Resource Sets]
+indexterm:[Constraints,Resource Sets,sequential]
+
+|require-all
+|true
+|Whether all members of the set must be active before continuing
+indexterm:[require-all,Resource Sets]
+indexterm:[Constraints,Resource Sets,require-all]
+
+|=========================================================
+  
+=== Ordering Multiple Sets ===
+
+The syntax can be expanded to allow
 ordered sets of (un)ordered resources.  In the example below, +A+
 and +B+ can both start in parallel, as can +C+ and +D+,
 however +C+ and +D+ can only start once _both_ +A+ _and_
@@ -548,6 +582,11 @@ limit to the number of sets that can be specified.
 .Visual representation of the start order for the three sets defined above
 image::images/three-sets.png["Three ordered sets",width="16cm",height="7.5cm",align="center"]
 
+[IMPORTANT]
+====
+An ordered set with +sequential=false+ makes sense only if there is another
+set in the constraint. Otherwise, the constraint has no effect.
+====
 
 === Resource Set OR Logic ===
 
@@ -561,11 +600,6 @@ This functionality can be achieved through the use of the +require-all+
 option.  This option defaults to TRUE which is why the
 "AND" logic is used by default.  Setting +require-all=false+ means only one
 resource in the set needs to be started before continuing on to the next set.
-
-Note that the +require-all=false+ option only makes sense to use in conjunction
-with unordered sets, +sequential=false+.  Think of it like this, +sequential=false+
-modifies the set to be an unordered set that uses "AND" logic by default, by adding
-+require-all=false+ the unordered set's "AND" logic is flipped to "OR" logic.
 
 .Resource Set "OR" logic: Three ordered sets, where the first set is internally unordered with "OR" logic
 ======
@@ -590,6 +624,13 @@ modifies the set to be an unordered set that uses "AND" logic by default, by add
 -------
 ======
 
+[IMPORTANT]
+====
+An ordered set with +require-all=false+ makes sense only in conjunction with
++sequential=false+. Think of it like this: +sequential=false+ modifies the set
+to be an unordered set using "AND" logic by default, and adding
++require-all=false+ flips the unordered set's "AND" logic to "OR" logic.
+====
 
 [[s-resource-sets-colocation]]
 == Colocating Sets of Resources ==
