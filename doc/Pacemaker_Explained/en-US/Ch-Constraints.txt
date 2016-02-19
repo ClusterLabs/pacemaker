@@ -325,14 +325,12 @@ if they both need to be stopped.
 
 indexterm:[Resource,Constraints,Colocation]
 indexterm:[Resource,Location Relative to other Resources]
-When the location of one resource depends on the location of another
-one, we call this colocation.
+'Colocation constraints' tell the cluster that the location of one resource
+depends on the location of another one.
 
 Colocation has an important side-effect: it affects the order in which
-resources are assigned to a node.
-footnote:['Not' the order in which they are started. For that, see
-<<s-resource-ordering>>.]
-Think about it: You can't place A relative to B unless you know where B is.
+resources are assigned to a node. Think about it: You can't place A relative to
+B unless you know where B is.
 footnote:[
 While the human brain is sophisticated enough to read the constraint
 in any order and choose the correct one depending on the situation,
@@ -349,9 +347,18 @@ deciding which node to choose for B.
 For a detailed look at exactly how this occurs, see
 http://clusterlabs.org/doc/Colocation_Explained.pdf[Colocation Explained].
 
+[IMPORTANT]
+====
+Colocation constraints affect 'only' the placement of resources; they do 'not'
+require that the resources be started in a particular order. If you want
+resources to be started on the same node 'and' in a specific order, you need
+both an ordering constraint (see <<s-resource-ordering>>) 'and' a colocation
+constraint, or alternatively, a group (see <<group-resources>>).
+====
+
 === Colocation Properties ===
 
-.Properties of a Colocation Constraint
+.Properties of a rsc_colocation Constraint
 [width="95%",cols="2m,5<",options="header",align="center"]
 |=========================================================
 
@@ -651,9 +658,9 @@ combinations grow. An example of this approach:
 [source,XML]
 -------
 <constraints>
-    <rsc_colocation id="coloc-1" rsc="A" with-rsc="B" score="INFINITY"/>
-    <rsc_colocation id="coloc-2" rsc="B" with-rsc="C" score="INFINITY"/>
-    <rsc_colocation id="coloc-3" rsc="C" with-rsc="D" score="INFINITY"/>
+    <rsc_colocation id="coloc-1" rsc="D" with-rsc="C" score="INFINITY"/>
+    <rsc_colocation id="coloc-2" rsc="C" with-rsc="B" score="INFINITY"/>
+    <rsc_colocation id="coloc-3" rsc="B" with-rsc="A" score="INFINITY"/>
 </constraints>
 -------
 ======
@@ -661,8 +668,8 @@ combinations grow. An example of this approach:
 To make things easier, we allow an alternate form of colocation
 constraints using +resource_set+. As with the chained version, a
 resource that can't be active prevents any resource that must be
-colocated with it from being active.  For example, if +C+ is not
-able to run, then both +B+ and by inference +A+ must also remain
+colocated with it from being active.  For example, if +B+ is not
+able to run, then both +C+ and by inference +D+ must also remain
 stopped. Here is an example +resource_set+:
 
 .Equivalent colocation chain expressed using +resource_set+
@@ -684,8 +691,9 @@ stopped. Here is an example +resource_set+:
 
 [WARNING]
 =========
-Always pay attention to how your tools expose this functionality.
-In some tools +create set A B+ is 'not' equivalent to +create A with B+.
+If you use a higher-level tool, pay attention to how it exposes this
+functionality. Depending on the tool, creating a set +A B+ may be equivalent to
++A with B+, or +B with A+.
 =========
 
 This notation can also be used to tell the cluster
@@ -694,7 +702,7 @@ have no dependencies on each other. In this scenario, unlike the
 previous, +B+ 'would' be allowed to remain active even if +A+ or +C+ (or
 both) were inactive.
 
-.Using colocation sets to specify a common peer
+.Using colocated sets to specify a common peer
 ======
 [source,XML]
 -------
@@ -712,6 +720,12 @@ both) were inactive.
 </constraints>
 -------
 ======
+
+[IMPORTANT]
+====
+A colocated set with +sequential=false+ makes sense only if there is another
+set in the constraint. Otherwise, the constraint has no effect.
+====
 
 There is no inherent limit to the number and size of the sets used.
 The only thing that matters is that in order for any member of one set
@@ -747,3 +761,8 @@ must be in using the set's +role+ attribute.
 
 .Visual representation of a colocation chain where the members of the middle set have no inter-dependencies
 image::images/three-sets-complex.png["Colocation chain",width="16cm",height="9cm",align="center"]
+
+[NOTE]
+====
+Unlike ordered sets, colocated sets do not use the +require-all+ option.
+====
