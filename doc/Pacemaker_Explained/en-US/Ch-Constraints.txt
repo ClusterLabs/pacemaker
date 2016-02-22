@@ -100,9 +100,10 @@ indexterm:[Constraints,Location,score]
  normally be left as the default, so that rogue instances of a service can be
  stopped when they are running where they are not supposed to be. However,
  there are two situations where disabling resource discovery is a good idea:
- when a service is not installed on a node, discovery might return an error;
- and when Pacemaker Remote is used to scale a cluster to hundreds of nodes,
- limiting resource discovery to allowed nodes can significantly boost
+ when a service is not installed on a node, discovery might return an error
+ (properly written OCF agents will not, so this is usually only seen with other
+ agent types); and when Pacemaker Remote is used to scale a cluster to hundreds
+ of nodes, limiting resource discovery to allowed nodes can significantly boost
  performance.
 
 * +always:+ Always perform resource discovery for the specified resource on this node.
@@ -110,16 +111,25 @@ indexterm:[Constraints,Location,score]
   This option should generally be used with a -INFINITY score, although that is not strictly
   required.
 * +exclusive:+ Perform resource discovery for the specified resource only on
-  this node (and other nodes similarly marked as exclusive). Multiple location
-  constraints using exclusive discovery for the same resource across
+  this node (and other nodes similarly marked as +exclusive+). Multiple location
+  constraints using +exclusive+ discovery for the same resource across
   different nodes creates a subset of nodes resource-discovery is exclusive to.
-  If a resource is marked for exclusive discovery on one or more nodes, that
+  If a resource is marked for +exclusive+ discovery on one or more nodes, that
   resource is only allowed to be placed within that subset of nodes.
 
 indexterm:[Resource Discovery,Location Constraints]
 indexterm:[Constraints,Location,Resource Discovery]
 
 |=========================================================
+
+[WARNING]
+=========
+Setting resource-discovery to +never+ or +exclusive+ removes Pacemaker's
+ability to detect and stop unwanted instances of a service running
+where it's not supposed to be. It is up to the system administrator (you!)
+to make sure that the service can 'never' be active on nodes without
+resource-discovery (such as by leaving the relevant software uninstalled).
+=========
 
 === Asymmetrical "Opt-In" Clusters ===
 indexterm:[Asymmetrical Opt-In Clusters]
@@ -448,6 +458,81 @@ mandatory.
 <rsc_colocation id="colocate-maybe" rsc="A" with-rsc="B" score="500"/>
 ====
 
+[[s-resource-sets]]
+== Resource Sets ==
+
+'Resource sets' allow multiple resources to be affected by a single constraint.
+
+.A set of 3 resources
+====
+[source,XML]
+----
+<resource_set id="resource-set-example">
+   <resource_ref id="A"/>
+   <resource_ref id="B"/>
+   <resource_ref id="C"/>
+</resource_set>
+----
+====
+
+Resource sets are valid inside +rsc_location+,
++rsc_order+ (see <<s-resource-sets-ordering>>),
++rsc_colocation+ (see <<s-resource-sets-colocation>>),
+and +rsc_ticket+ (see <<s-ticket-constraints>>) constraints.
+
+A resource set has a number of properties that can be set,
+though not all have an effect in all contexts.
+
+.Properties of a resource_set
+[width="95%",cols="2m,1,5<a",options="header",align="center"]
+|=========================================================
+
+|Field
+|Default
+|Description
+
+|id
+|
+|A unique name for the set
+indexterm:[id,Resource Sets]
+indexterm:[Constraints,Resource Sets,id]
+
+|sequential
+|true
+|Whether the members of the set must be acted on in order.
+ Meaningful within +rsc_order+ and +rsc_colocation+.
+indexterm:[sequential,Resource Sets]
+indexterm:[Constraints,Resource Sets,sequential]
+
+|require-all
+|true
+|Whether all members of the set must be active before continuing.
+ Meaningful within +rsc_order+.
+indexterm:[require-all,Resource Sets]
+indexterm:[Constraints,Resource Sets,require-all]
+
+|role
+|
+|Limit the effect of the constraint to the specified role.
+ Meaningful within +rsc_location+, +rsc_colocation+ and +rsc_ticket+.
+indexterm:[role,Resource Sets]
+indexterm:[Constraints,Resource Sets,role]
+
+|action
+|
+|Limit the effect of the constraint to the specified action.
+ Meaningful within +rsc_order+.
+indexterm:[action,Resource Sets]
+indexterm:[Constraints,Resource Sets,action]
+
+|score
+|
+|'Advanced use only.' Use a specific score for this set within the constraint.
+indexterm:[score,Resource Sets]
+indexterm:[Constraints,Resource Sets,score]
+
+|=========================================================
+  
 [[s-resource-sets-ordering]]
 == Ordering Sets of Resources ==
 
@@ -471,8 +556,8 @@ image::images/resource-set.png["Ordered set",width="16cm",height="2.5cm",align="
 
 === Ordered Set ===
 
-To simplify this situation, there is an alternate format for ordering
-constraints:
+To simplify this situation, resource sets (see <<s-resource-sets>>) can be used
+within ordering constraints:
 
 .A chain of ordered resources expressed as a set
 ======
@@ -494,41 +579,13 @@ constraints:
 While the set-based format is not less verbose, it is significantly
 easier to get right and maintain.
 
-[WARNING]
+[IMPORTANT]
 =========
 If you use a higher-level tool, pay attention to how it exposes this
 functionality. Depending on the tool, creating a set +A B+ may be equivalent to
 +A then B+, or +B then A+.
 =========
 
-.Properties of a resource_set
-[width="95%",cols="2m,1,5<a",options="header",align="center"]
-|=========================================================
-
-|Field
-|Default
-|Description
-
-|id
-|
-|A unique name for the set
-indexterm:[id,Resource Sets]
-indexterm:[Constraints,Resource Sets,id]
-
-|sequential
-|true
-|Whether the members of the set must be acted on in order
-indexterm:[sequential,Resource Sets]
-indexterm:[Constraints,Resource Sets,sequential]
-
-|require-all
-|true
-|Whether all members of the set must be active before continuing
-indexterm:[require-all,Resource Sets]
-indexterm:[Constraints,Resource Sets,require-all]
-
-|=========================================================
-  
 === Ordering Multiple Sets ===
 
 The syntax can be expanded to allow
@@ -665,8 +722,8 @@ combinations grow. An example of this approach:
 -------
 ======
 
-To make things easier, we allow an alternate form of colocation
-constraints using +resource_set+. As with the chained version, a
+To make things easier, resource sets (see <<s-resource-sets>>) can be used
+within colocation constraints. As with the chained version, a
 resource that can't be active prevents any resource that must be
 colocated with it from being active.  For example, if +B+ is not
 able to run, then both +C+ and by inference +D+ must also remain
@@ -689,7 +746,7 @@ stopped. Here is an example +resource_set+:
 -------
 ======
 
-[WARNING]
+[IMPORTANT]
 =========
 If you use a higher-level tool, pay attention to how it exposes this
 functionality. Depending on the tool, creating a set +A B+ may be equivalent to

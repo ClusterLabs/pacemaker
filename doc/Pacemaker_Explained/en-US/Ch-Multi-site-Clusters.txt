@@ -160,7 +160,8 @@ demoted to slave mode if +ticketA+ is revoked:
 ====
 
 You can create multiple `rsc_ticket` constraints to let multiple resources
-depend on the same ticket. However, `rsc_ticket` also supports resource sets,
+depend on the same ticket. However, `rsc_ticket` also supports resource sets
+(see <<s-resource-sets>>),
 so one can easily list all the resources in one `rsc_ticket` constraint instead.
 
 .Ticket constraint for multiple resources
