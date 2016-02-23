@@ -65,7 +65,7 @@ RNG_extra		= crm_mon.rng
 
 RNG_SCRIPTS		= $(RNG_files) $(RNG_generated) $(RNG_extra)
 
-EXTRA_DIST		= best-match.sh
+EXTRA_DIST		= best-match.sh Reference.md
 
 versions:
 	echo "Max: $(RNG_max)"
