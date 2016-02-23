@@ -123,6 +123,7 @@ lrm_state_t *lrm_state_find_or_create(const char *node_name);
  * Regular resources go to the lrmd, and remote connection resources are
  * handled locally in the crmd.
  */
+void lrm_state_disconnect_only(lrm_state_t * lrm_state);
 void lrm_state_disconnect(lrm_state_t * lrm_state);
 int lrm_state_ipc_connect(lrm_state_t * lrm_state);
 int lrm_state_remote_connect_async(lrm_state_t * lrm_state, const char *server, int port,
