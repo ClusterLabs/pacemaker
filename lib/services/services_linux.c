@@ -638,18 +638,37 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
 }
 #endif
 
-    if (pipe(stdout_fd) < 0) {
-        crm_err("pipe() failed");
-    }
-
-    if (pipe(stderr_fd) < 0) {
-        crm_err("pipe() failed");
-    }
-
     /* Fail fast */
     if(stat(op->opaque->exec, &st) != 0) {
         int rc = errno;
         crm_warn("Cannot execute '%s': %s (%d)", op->opaque->exec, pcmk_strerror(rc), rc);
+        services_handle_exec_error(op, rc);
+        if (!synchronous) {
+            return operation_finalize(op);
+        }
+        return FALSE;
+    }
+
+    if (pipe(stdout_fd) < 0) {
+        int rc = errno;
+
+        crm_err("pipe(stdout_fd) failed. '%s': %s (%d)", op->opaque->exec, pcmk_strerror(rc), rc);
+
+        services_handle_exec_error(op, rc);
+        if (!synchronous) {
+            return operation_finalize(op);
+        }
+        return FALSE;
+    }
+
+    if (pipe(stderr_fd) < 0) {
+        int rc = errno;
+
+        close(stdout_fd[0]);
+        close(stdout_fd[1]);
+
+        crm_err("pipe(stderr_fd) failed. '%s': %s (%d)", op->opaque->exec, pcmk_strerror(rc), rc);
+
         services_handle_exec_error(op, rc);
         if (!synchronous) {
             return operation_finalize(op);
