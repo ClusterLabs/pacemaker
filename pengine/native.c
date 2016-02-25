@@ -2814,7 +2814,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
                         top, generate_op_key(top->id, RSC_START, 0), NULL,
                         flags, data_set);
 
-    if (node && node->details->shutdown == FALSE) {
+    if (node->details->shutdown == FALSE) {
         custom_action_order(rsc, NULL, probe,
                             rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
                             pe_order_optional, data_set);
