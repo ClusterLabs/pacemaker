@@ -18,10 +18,10 @@
 MAINTAINERCLEANFILES    = Makefile.in
 
 dtddir			= $(CRM_DTD_DIRECTORY)
-dtd_SCRIPTS		= crm.dtd crm-transitional.dtd
+dtd_DATA		= crm.dtd crm-transitional.dtd
 
 xsltdir			= $(dtddir)
-xslt_SCRIPTS		= upgrade06.xsl upgrade-*.xsl
+xslt_DATA		= upgrade06.xsl upgrade-*.xsl
 
 RNGdir			= $(dtddir)
 
@@ -63,7 +63,7 @@ RNG_files	 	= $(foreach base,$(RNG_base),$(wildcard $(base)*.rng))
 # List of non-Pacemaker RNGs
 RNG_extra		= crm_mon.rng
 
-RNG_SCRIPTS		= $(RNG_files) $(RNG_generated) $(RNG_extra)
+RNG_DATA		= $(RNG_files) $(RNG_generated) $(RNG_extra)
 
 EXTRA_DIST		= best-match.sh
 
