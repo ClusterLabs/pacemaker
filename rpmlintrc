@@ -33,3 +33,6 @@ addFilter("W: hidden-file-or-dir /usr/lib/ocf/resource.d/.isolation")
 
 # rpmlint doesn't like logrotate script being in pacemaker-cli package
 addFilter("E: incoherent-logrotate-file /etc/logrotate.d/pacemaker")
+
+# buildbot builds the not-yet-released version
+addFilter("W: incoherent-version-in-changelog")
