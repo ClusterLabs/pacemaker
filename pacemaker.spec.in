@@ -243,8 +243,18 @@ Summary:       Test framework for cluster-related technologies like Pacemaker
 Group:         System Environment/Daemons
 Requires:      python
 Requires:      %{name}-libs = %{version}-%{release}
+
+# systemd python bindings are separate package in some distros
 %if %{defined systemd_requires}
+
+%if 0%{?fedora} > 20
 Requires:      systemd-python
+%endif
+
+%if 0%{?rhel} > 6
+Requires:      systemd-python
+%endif
+
 %endif
 
 %description   cts
