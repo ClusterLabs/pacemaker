@@ -352,7 +352,8 @@ static inline void *realloc_safe(void *ptr, size_t size)
 {
     void *ret = realloc(ptr, size);
 
-    if(ret == NULL) {
+    if (ret == NULL) {
+        free(ptr); /* make coverity happy */
         abort();
     }
 
