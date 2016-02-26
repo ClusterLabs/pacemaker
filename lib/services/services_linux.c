@@ -89,7 +89,8 @@ svc_read_output(int fd, svc_action_t * op, bool is_stderr)
         crm_trace("Reading %s stdout into offset %d", op->id, len);
 
     } else {
-        crm_trace("Reading %s %s", op->id, is_stderr?"stderr":"stdout", len);
+        crm_trace("Reading %s %s into offset %d", op->id,
+                  is_stderr ? "stderr" : "stdout", len);
     }
 
     do {

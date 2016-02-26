@@ -494,11 +494,12 @@ crm_ipcs_flush_events(crm_client_t * c)
         sent++;
         header = event[0].iov_base;
         if (header->size_compressed) {
-            crm_trace("Event %d to %p[%d] (%d compressed bytes) sent",
+            crm_trace("Event %d to %p[%u] (%zd compressed bytes) sent",
                       header->qb.id, c->ipcs, c->pid, rc);
         } else {
-            crm_trace("Event %d to %p[%d] (%d bytes) sent: %.120s",
-                      header->qb.id, c->ipcs, c->pid, rc, event[1].iov_base);
+            crm_trace("Event %d to %p[%u] (%zd bytes) sent: %.120s",
+                      header->qb.id, c->ipcs, c->pid, rc,
+                      (const char *) event[1].iov_base);
         }
 
         c->event_queue = g_list_remove(c->event_queue, event);
@@ -509,16 +510,16 @@ crm_ipcs_flush_events(crm_client_t * c)
 
     queue_len -= sent;
     if (sent > 0 || c->event_queue) {
-        crm_trace("Sent %d events (%d remaining) for %p[%d]: %s (%d)",
+        crm_trace("Sent %d events (%d remaining) for %p[%u]: %s (%zd)",
                   sent, queue_len, c->ipcs, c->pid, pcmk_strerror(rc < 0 ? rc : 0), rc);
     }
 
     if (c->event_queue) {
         if (queue_len % 100 == 0 && queue_len > 99) {
-            crm_warn("Event queue for %p[%d] has grown to %d", c->ipcs, c->pid, queue_len);
+            crm_warn("Event queue for %p[%u] has grown to %d", c->ipcs, c->pid, queue_len);
 
         } else if (queue_len > 500) {
-            crm_err("Evicting slow client %p[%d]: event queue reached %d entries",
+            crm_err("Evicting slow client %p[%u]: event queue reached %d entries",
                     c->ipcs, c->pid, queue_len);
             qb_ipcs_disconnect(c->ipcs);
             return rc;
@@ -631,13 +632,13 @@ crm_ipcs_sendv(crm_client_t * c, struct iovec * iov, enum crm_ipc_flags flags)
         header->qb.id = id++;   /* We don't really use it, but doesn't hurt to set one */
 
         if (flags & crm_ipc_server_free) {
-            crm_trace("Sending the original to %p[%d]", c->ipcs, c->pid);
+            crm_trace("Sending the original to %p[%u]", c->ipcs, c->pid);
             c->event_queue = g_list_append(c->event_queue, iov);
 
         } else {
             struct iovec *iov_copy = calloc(2, sizeof(struct iovec));
 
-            crm_trace("Sending a copy to %p[%d]", c->ipcs, c->pid);
+            crm_trace("Sending a copy to %p[%u]", c->ipcs, c->pid);
             iov_copy[0].iov_len = iov[0].iov_len;
             iov_copy[0].iov_base = malloc(iov[0].iov_len);
             memcpy(iov_copy[0].iov_base, iov[0].iov_base, iov[0].iov_len);
@@ -654,11 +655,11 @@ crm_ipcs_sendv(crm_client_t * c, struct iovec * iov, enum crm_ipc_flags flags)
 
         rc = qb_ipcs_response_sendv(c->ipcs, iov, 2);
         if (rc < header->qb.size) {
-            crm_notice("Response %d to %p[%d] (%u bytes) failed: %s (%d)",
+            crm_notice("Response %d to %p[%u] (%d bytes) failed: %s (%d)",
                        header->qb.id, c->ipcs, c->pid, header->qb.size, pcmk_strerror(rc), rc);
 
         } else {
-            crm_trace("Response %d sent, %d bytes to %p[%d]", header->qb.id, rc, c->ipcs, c->pid);
+            crm_trace("Response %d sent, %zd bytes to %p[%u]", header->qb.id, rc, c->ipcs, c->pid);
         }
 
         if (flags & crm_ipc_server_free) {
@@ -699,7 +700,7 @@ crm_ipcs_send(crm_client_t * c, uint32_t request, xmlNode * message,
 
     } else {
         free(iov);
-        crm_notice("Message to %p[%d] failed: %s (%d)",
+        crm_notice("Message to %p[%u] failed: %s (%d)",
                    c->ipcs, c->pid, pcmk_strerror(rc), rc);
     }
 
@@ -828,7 +829,7 @@ void
 crm_ipc_close(crm_ipc_t * client)
 {
     if (client) {
-        crm_trace("Disconnecting %s IPC connection %p (%p.%p)", client->name, client, client->ipc);
+        crm_trace("Disconnecting %s IPC connection %p (%p)", client->name, client, client->ipc);
 
         if (client->ipc) {
             qb_ipcc_connection_t *ipc = client->ipc;

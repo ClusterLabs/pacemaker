@@ -1768,7 +1768,7 @@ lsb_get_metadata(const char *type, char **output)
     lsb_meta_helper_free_value(dflt_start);
     lsb_meta_helper_free_value(dflt_stop);
 
-    crm_trace("Created fake metadata: %d", strlen(*output));
+    crm_trace("Created fake metadata: %zu", strlen(*output));
     return pcmk_ok;
 }
 

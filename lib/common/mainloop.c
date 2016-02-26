@@ -656,7 +656,8 @@ mainloop_gio_callback(GIOChannel * gio, GIOCondition condition, gpointer data)
                 } else if (client->dispatch_fn_ipc) {
                     const char *buffer = crm_ipc_buffer(client->ipc);
 
-                    crm_trace("New message from %s[%p] = %d", client->name, client, rc, condition);
+                    crm_trace("New message from %s[%p] = %ld (%d)",
+                              client->name, client, rc, condition);
                     if (client->dispatch_fn_ipc(buffer, rc, client->userdata) < 0) {
                         crm_trace("Connection to %s no longer required", client->name);
                         keep = FALSE;

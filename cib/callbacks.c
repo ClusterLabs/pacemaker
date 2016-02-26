@@ -1088,7 +1088,8 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
 
         finished = time(NULL);
         if (finished - now > 3) {
-            crm_trace("%s operation took %ds to complete", op, finished - now);
+            /* XXX converting time_t in a non-portable way */
+            crm_trace("%s operation took %jds to complete", op, finished - now);
             crm_write_blackbox(0, NULL);
         }
 

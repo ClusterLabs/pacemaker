@@ -215,10 +215,13 @@ static bool throttle_cib_load(float *load)
             *load = (delta_utime + delta_stime); /* Cast to a float before division */
             *load /= ticks_per_s;
             *load /= elapsed;
-            crm_debug("cib load: %f (%lu ticks in %ds)", *load, delta_utime + delta_stime, elapsed);
+            /* XXX converting time_t in a non-portable way */
+            crm_debug("cib load: %f (%lu ticks in %jds)", *load,
+                      delta_utime + delta_stime, elapsed);
 
         } else {
-            crm_debug("Init %lu + %lu ticks at %d (%lu tps)", utime, stime, now, ticks_per_s);
+            /* XXX converting time_t in a non-portable way */
+            crm_debug("Init %lu + %lu ticks at %jd (%lu tps)", utime, stime, now, ticks_per_s);
         }
 
         last_call = now;

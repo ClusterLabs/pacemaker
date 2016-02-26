@@ -518,7 +518,7 @@ static dbus_bool_t
 pcmk_dbus_timeout_add(DBusTimeout *timeout, void *data){
     guint id = g_timeout_add(dbus_timeout_get_interval(timeout), pcmk_dbus_timeout_dispatch, timeout);
 
-    crm_trace("Adding timeout %p (%ld)", timeout, dbus_timeout_get_interval(timeout));
+    crm_trace("Adding timeout %p (%d)", timeout, dbus_timeout_get_interval(timeout));
 
     if(id) {
         dbus_timeout_set_data(timeout, GUINT_TO_POINTER(id), NULL);
