@@ -516,7 +516,7 @@ update_action(action_t * then)
             first = rsc_expand_action(first);
         }
         if (first != other->action) {
-            crm_trace("Ordering %s afer %s instead of %s", then->uuid, first->uuid,
+            crm_trace("Ordering %s after %s instead of %s", then->uuid, first->uuid,
                       other->action->uuid);
         }
 
