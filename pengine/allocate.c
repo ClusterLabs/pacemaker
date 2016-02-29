@@ -324,7 +324,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
 
 #if 0
             /* Always reload/restart the entire resource */
-            ReloadRsc(rsc, data_set);
+            ReloadRsc(rsc, active_node, data_set);
 #else
             /* Re-sending the recurring op is sufficient - the old one will be cancelled automatically */
             op = custom_action(rsc, key, task, active_node, TRUE, TRUE, data_set);
@@ -336,9 +336,6 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
 
             /* Reload this resource */
             ReloadRsc(rsc, active_node, data_set);
-
-            /* Create these for now, it keeps the action IDs the same in the regression outputs */
-            custom_action(rsc, key, task, NULL, TRUE, TRUE, data_set);
 
         } else {
             pe_rsc_trace(rsc, "Resource %s doesn't know how to reload", rsc->id);
