@@ -1237,6 +1237,144 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
     return rc;
 }
 
+static int
+add_no_digest_op(xmlNode ** status_xml, resource_t * rsc, node_t * node, const char * cmd)
+{
+    int rc = pcmk_ok;
+    xmlNode *node_state = NULL;
+    xmlNode *lrm = NULL;
+    xmlNode *lrm_resources = NULL;
+    xmlNode *lrm_resource = NULL;
+    xmlNode *lrm_rsc_op = NULL;
+    const char *rsc_id = rsc->clone_name ? rsc->clone_name : rsc->id;
+    char *op_id = NULL;
+
+    if (*status_xml == NULL) {
+        *status_xml = create_xml_node(NULL, XML_CIB_TAG_STATUS);
+    }
+
+    node_state = find_entity(*status_xml, XML_CIB_TAG_STATE, node->details->id);
+    if (node_state == NULL) {
+        node_state = create_xml_node(*status_xml, XML_CIB_TAG_STATE);
+
+        crm_xml_add(node_state, XML_ATTR_UUID, node->details->id);
+    }
+
+    lrm = find_entity(node_state, XML_CIB_TAG_LRM, node->details->id);
+    if (lrm == NULL) {
+        lrm = create_xml_node(node_state, XML_CIB_TAG_LRM);
+
+        crm_xml_add(lrm, XML_ATTR_ID, node->details->id);
+    }
+
+    lrm_resources = find_entity(lrm, XML_LRM_TAG_RESOURCES, NULL);
+    if (lrm_resources == NULL) {
+        lrm_resources = create_xml_node(lrm, XML_LRM_TAG_RESOURCES);
+    }
+
+    lrm_resource = find_entity(lrm_resources, XML_LRM_TAG_RESOURCE, rsc_id);
+    if (lrm_resource == NULL) {
+        lrm_resource = create_xml_node(lrm_resources, XML_LRM_TAG_RESOURCE);
+
+        crm_xml_add(lrm_resource, XML_ATTR_ID, rsc_id);
+    }
+
+    op_id = generate_op_key(rsc_id, "last", 0);
+    lrm_rsc_op = find_entity(lrm_resource, XML_LRM_TAG_RSC_OP, op_id);
+    if (lrm_rsc_op == NULL) {
+        lrm_rsc_op = create_xml_node(lrm_resource, XML_LRM_TAG_RSC_OP);
+
+        crm_xml_add(lrm_rsc_op, XML_ATTR_ID, op_id);
+    }
+
+    free(op_id);
+
+    if (safe_str_eq(cmd, "reload")) {
+        crm_xml_add(lrm_rsc_op, XML_LRM_ATTR_OP_DIGEST, "");
+
+    } else {
+        CMD_ERR("Unknown action %s for %s", cmd, rsc_id);
+        return -EINVAL;
+    }
+    crm_xml_add(lrm_rsc_op, XML_ATTR_ORIGIN, __FUNCTION__);
+
+    return rc;
+}
+
+static int
+create_no_digest_ops(xmlNode ** status_xml, resource_t * rsc, node_t * node, const char * cmd)
+{
+    int rc = pcmk_ok;
+    GListPtr lpc = NULL;
+    gboolean match = FALSE;
+
+    for (lpc = rsc->children; lpc != NULL; lpc = lpc->next) {
+        resource_t *child = lpc->data;
+
+        rc = create_no_digest_ops(status_xml, child, node, cmd);
+        if (rc != pcmk_ok) {
+            return rc;
+        }
+    }
+
+    if (rsc->variant != pe_native) {
+        return rc;
+    }
+
+    for (lpc = rsc->running_on; lpc != NULL; lpc = lpc->next) {
+        node_t *current = lpc->data;
+
+        if (node == NULL || node->details == current->details) {
+            add_no_digest_op(status_xml, rsc, current, cmd);
+
+            if (node) {
+                match = TRUE;
+                break;
+            }
+        }
+    }
+
+    if (node && match == FALSE) {
+        CMD_ERR("Resource '%s' no %sed: it's not running on %s",
+                rsc->id, cmd, node->details->uname);
+        return -EINVAL;
+    }
+
+    return rc;
+}
+
+static int
+clean_op_digest(resource_t * rsc, node_t * node, const char * cmd, cib_t * cib_conn)
+{
+    int rc = pcmk_ok;
+    xmlNode *status_xml = NULL;
+
+    rc = create_no_digest_ops(&status_xml, rsc, node, cmd);
+    if (rc == pcmk_ok) {
+        crm_log_xml_notice(status_xml, "Modify");
+        rc = cib_conn->cmds->update(cib_conn, XML_CIB_TAG_STATUS, status_xml, cib_options);
+    }
+
+    free_xml(status_xml);
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Reload a resource (on a particular host if requested).
+ *
+ * \param[in] rsc        The resource to reload
+ * \param[in] node       The node to reload the resource on (or NULL for all)
+ * \param[in] cib_conn   Connection to the CIB for modifying/checking resource
+ *
+ * \return pcmk_ok on success, -errno on failure (exits on certain failures)
+ */
+int
+cli_resource_reload(resource_t * rsc, node_t * node, cib_t * cib_conn)
+{
+    return clean_op_digest(rsc, node, "reload", cib_conn);
+}
+
 #define action_is_pending(action) \
     ((is_set((action)->flags, pe_action_optional) == FALSE) \
     && (is_set((action)->flags, pe_action_runnable) == TRUE) \

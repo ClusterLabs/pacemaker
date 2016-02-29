@@ -168,6 +168,7 @@ static struct crm_option long_options[] = {
     {"delete",     0, 0, 'D', "\t\t(Advanced) Delete a resource from the CIB"},
     {"fail",       0, 0, 'F', "\t\t(Advanced) Tell the cluster this resource has failed"},
     {"restart",    0, 0,  0,  "\t\t(Advanced) Tell the cluster to restart this resource and anything that depends on it"},
+    {"reload",     0, 0,  0,  "\t\t(Advanced) Tell the cluster to reload this resource"},
     {"wait",       0, 0,  0,  "\t\t(Advanced) Wait until the cluster settles into a stable state"},
     {"force-demote",0,0,  0,  "\t(Advanced) Bypass the cluster and demote a resource on the local node. Additional detail with -V"},
     {"force-stop", 0, 0,  0,  "\t(Advanced) Bypass the cluster and stop a resource on the local node. Additional detail with -V"},
@@ -297,6 +298,7 @@ main(int argc, char **argv)
 
                 } else if (
                     safe_str_eq("restart", longname)
+                    || safe_str_eq("reload", longname)
                     || safe_str_eq("force-demote",  longname)
                     || safe_str_eq("force-stop",    longname)
                     || safe_str_eq("force-start",   longname)
@@ -662,6 +664,34 @@ main(int argc, char **argv)
         resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
 
         rc = cli_resource_restart(rsc, host_uname, timeout_ms, cib_conn);
+
+    } else if (rsc_cmd == 0 && rsc_long_cmd && safe_str_eq(rsc_long_cmd, "reload")) {
+        resource_t *rsc = NULL;
+        node_t *node = NULL;
+
+        rc = -ENXIO;
+        if (rsc_id == NULL) {
+            CMD_ERR("Must supply a resource id with -r");
+            goto bail;
+        }
+
+        rsc = pe_find_resource(data_set.resources, rsc_id);
+
+        rc = -EINVAL;
+        if (rsc == NULL) {
+            CMD_ERR("Resource '%s' not reloaded: unknown", rsc_id);
+            goto bail;
+        }
+
+        if (host_uname) {
+            node = pe_find_node(data_set.nodes, host_uname);
+            if (node == NULL) {
+                CMD_ERR("Unknown node: %s", host_uname);
+                goto bail;
+            }
+        }
+
+        rc = cli_resource_reload(rsc, node, cib_conn);
 
     } else if (rsc_cmd == 0 && rsc_long_cmd && safe_str_eq(rsc_long_cmd, "wait")) {
         rc = wait_till_stable(timeout_ms, cib_conn);
