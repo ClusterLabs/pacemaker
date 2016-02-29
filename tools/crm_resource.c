@@ -659,7 +659,21 @@ main(int argc, char **argv)
         }
 
     } else if (rsc_cmd == 0 && rsc_long_cmd && safe_str_eq(rsc_long_cmd, "restart")) {
-        resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
+        resource_t *rsc = NULL;
+
+        rc = -ENXIO;
+        if (rsc_id == NULL) {
+            CMD_ERR("Must supply a resource id with -r");
+            goto bail;
+        }
+
+        rsc = pe_find_resource(data_set.resources, rsc_id);
+
+        rc = -EINVAL;
+        if (rsc == NULL) {
+            CMD_ERR("Resource '%s' not restarted: unknown", rsc_id);
+            goto bail;
+        }
 
         rc = cli_resource_restart(rsc, host_uname, timeout_ms, cib_conn);
 
