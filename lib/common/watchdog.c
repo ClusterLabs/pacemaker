@@ -189,12 +189,13 @@ pcmk_panic(const char *origin)
         panic_cs = qb_log_callsite_get(__func__, __FILE__, "panic-delay", LOG_TRACE, __LINE__, crm_trace_nonlog);
     }
 
-    pcmk_locate_sbd();
+    /* Ensure sbd_pid is set */
+    (void)pcmk_locate_sbd();
 
     if (panic_cs && panic_cs->targets) {
         /* getppid() == 1 means our original parent no longer exists */
         do_crm_log_always(LOG_EMERG,
-                          "Shutting down instead of panicing the node: origin=%s, sbd=%d, parent=%d",
+                          "Shutting down instead of panicking the node: origin=%s, sbd=%d, parent=%d",
                           origin, sbd_pid, getppid());
         crm_exit(DAEMON_RESPAWN_STOP);
         return;
@@ -205,7 +206,7 @@ pcmk_panic(const char *origin)
         pcmk_panic_sbd();
 
     } else {
-        do_crm_log_always(LOG_EMERG, "Panicing the system directly: %s", origin);
+        do_crm_log_always(LOG_EMERG, "Panicking the system directly: %s", origin);
         pcmk_panic_local();
     }
 }

@@ -455,11 +455,12 @@ te_update_diff(const char *event, xmlNode * msg)
                 *key = '\0';
                 key = strrchr(mutable_key, '\'');
             }
-            if (key++ == NULL) {
+            if (key == NULL) {
                 crm_warn("Ignoring malformed CIB update (resource deletion)");
                 free(mutable_key);
                 continue;
             }
+            ++key;
 
             node_uuid = extract_node_uuid(xpath);
             cancel = get_cancel_action(key, node_uuid);

@@ -765,7 +765,7 @@ apply_system_health(pe_working_set_t * data_set)
         /* Requires the admin to configure the rsc_location constaints for
          * processing the stored health scores
          */
-        /* TODO: Check for the existance of appropriate node health constraints */
+        /* TODO: Check for the existence of appropriate node health constraints */
         return TRUE;
 
     } else {
@@ -981,7 +981,7 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
     int r1_weight = -INFINITY;
     int r2_weight = -INFINITY;
 
-    const char *reason = "existance";
+    const char *reason = "existence";
 
     const GListPtr nodes = (GListPtr) data;
     resource_t *resource1 = (resource_t *) convert_const_pointer(a);

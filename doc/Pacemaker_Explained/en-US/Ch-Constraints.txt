@@ -9,10 +9,9 @@ Practically everything from moving a resource to deciding which
 resource to stop in a degraded cluster is achieved by manipulating
 scores in some way.
 
-Scores are calculated on a per-resource basis, and any node with a
-negative score for a resource can't run that resource.  After
-calculating the scores for a resource, the cluster then chooses the
-node with the highest one.
+Scores are calculated per resource and node. Any node with a
+negative score for a resource can't run that resource. The cluster
+places a resource on the node with the highest score for it.
 
 === Infinity Math ===
 
@@ -43,11 +42,13 @@ the score (possibly as part of a custom resource agent).
 
 indexterm:[Location Constraints]
 indexterm:[Resource,Constraints,Location]
-There are two alternative strategies for specifying which nodes a
-resources can run on.  One way is to say that by default they can run
-anywhere and then create location constraints for nodes that are not
-allowed.  The other option is to have nodes "opt-in" --  to start with
-nothing able to run anywhere and selectively enable allowed nodes.
+'Location constraints' tell the cluster which nodes a resource can run on.
+
+There are two alternative strategies. One way is to say that, by default,
+resources can run anywhere, and then the location constraints specify nodes
+that are not allowed (an 'opt-out' cluster). The other way is to start with
+nothing able to run anywhere, and use location constraints to selectively
+enable allowed nodes (an 'opt-in' cluster).
 
 Whether you should choose opt-in or opt-out depends on your
 personal preference and the make-up of your cluster.  If most of your
@@ -58,7 +59,7 @@ configuration might be simpler.
 
 === Location Properties ===
 
-.Properties for Simple Location Constraints
+.Properties of a rsc_location Constraint
 [width="95%",cols="2m,1,5<a",options="header",align="center"]
 |=========================================================
 
@@ -88,35 +89,47 @@ indexterm:[Constraints,Location,node]
 |
 |Positive values indicate the resource should run on this
  node. Negative values indicate the resource should not run on this node.
-
-Values of \+/- +INFINITY+ change "should"/"should not" to "must"/"must not".
+ Values of \+/- +INFINITY+ change "should"/"should not" to "must"/"must not".
 indexterm:[score,Location Constraints]
 indexterm:[Constraints,Location,score]
 
 |resource-discovery
 |always
-|Whether Pacemaker should perform resource discovery
-on this node for the specified resource. Limiting resource discovery to
-a subset of nodes the resource is physically capable of running on
-can significantly boost performance when a large set of nodes are present.
-When pacemaker_remote is in use to expand the node count into the hundreds of
-nodes range, this option should be considered.
+|Whether Pacemaker should perform resource discovery (that is, check whether
+ the resource is already running) for this resource on this node. This should
+ normally be left as the default, so that rogue instances of a service can be
+ stopped when they are running where they are not supposed to be. However,
+ there are two situations where disabling resource discovery is a good idea:
+ when a service is not installed on a node, discovery might return an error
+ (properly written OCF agents will not, so this is usually only seen with other
+ agent types); and when Pacemaker Remote is used to scale a cluster to hundreds
+ of nodes, limiting resource discovery to allowed nodes can significantly boost
+ performance.
 
 * +always:+ Always perform resource discovery for the specified resource on this node.
 * +never:+ Never perform resource discovery for the specified resource on this node.
   This option should generally be used with a -INFINITY score, although that is not strictly
   required.
 * +exclusive:+ Perform resource discovery for the specified resource only on
-  this node (and other nodes similarly marked as exclusive). Multiple location
-  constraints using 'exclusive' discovery for the same resource across
+  this node (and other nodes similarly marked as +exclusive+). Multiple location
+  constraints using +exclusive+ discovery for the same resource across
   different nodes creates a subset of nodes resource-discovery is exclusive to.
-  If a resource is marked for 'exclusive' discovery on one or more nodes, that
+  If a resource is marked for +exclusive+ discovery on one or more nodes, that
   resource is only allowed to be placed within that subset of nodes.
 
 indexterm:[Resource Discovery,Location Constraints]
 indexterm:[Constraints,Location,Resource Discovery]
 
 |=========================================================
+
+[WARNING]
+=========
+Setting resource-discovery to +never+ or +exclusive+ removes Pacemaker's
+ability to detect and stop unwanted instances of a service running
+where it's not supposed to be. It is up to the system administrator (you!)
+to make sure that the service can 'never' be active on nodes without
+resource-discovery (such as by leaving the relevant software uninstalled).
+=========
 
 === Asymmetrical "Opt-In" Clusters ===
 indexterm:[Asymmetrical Opt-In Clusters]
@@ -208,21 +221,22 @@ indexterm:[Resource,Constraints,Ordering]
 indexterm:[Resource,Start Order]
 indexterm:[Ordering Constraints]
 
-The way to specify the order in which resources should start is by
-creating +rsc_order+ constraints.
+'Ordering constraints' tell the cluster the order in which resources should
+start.
 
 [IMPORTANT]
 ====
 Ordering constraints affect 'only' the ordering of resources;
-they do not require that the resources be placed on the
+they do 'not' require that the resources be placed on the
 same node. If you want resources to be started on the same node
-'and' in a specific order, you need an ordering constraint 'and'
-a location constraint (see <<s-resource-colocation>>).
+'and' in a specific order, you need both an ordering constraint 'and'
+a colocation constraint (see <<s-resource-colocation>>), or
+alternatively, a group (see <<group-resources>>).
 ====
 
 === Ordering Properties ===
 
-.Properties of an Ordering Constraint
+.Properties of a rsc_order Constraint
 [width="95%",cols="1m,1,4<a",options="header",align="center"]
 |=========================================================
 
@@ -321,14 +335,12 @@ if they both need to be stopped.
 
 indexterm:[Resource,Constraints,Colocation]
 indexterm:[Resource,Location Relative to other Resources]
-When the location of one resource depends on the location of another
-one, we call this colocation.
+'Colocation constraints' tell the cluster that the location of one resource
+depends on the location of another one.
 
 Colocation has an important side-effect: it affects the order in which
-resources are assigned to a node.
-footnote:['Not' the order in which they are started. For that, see
-<<s-resource-ordering>>.]
-Think about it: You can't place A relative to B unless you know where B is.
+resources are assigned to a node. Think about it: You can't place A relative to
+B unless you know where B is.
 footnote:[
 While the human brain is sophisticated enough to read the constraint
 in any order and choose the correct one depending on the situation,
@@ -345,9 +357,18 @@ deciding which node to choose for B.
 For a detailed look at exactly how this occurs, see
 http://clusterlabs.org/doc/Colocation_Explained.pdf[Colocation Explained].
 
+[IMPORTANT]
+====
+Colocation constraints affect 'only' the placement of resources; they do 'not'
+require that the resources be started in a particular order. If you want
+resources to be started on the same node 'and' in a specific order, you need
+both an ordering constraint (see <<s-resource-ordering>>) 'and' a colocation
+constraint, or alternatively, a group (see <<group-resources>>).
+====
+
 === Colocation Properties ===
 
-.Properties of a Colocation Constraint
+.Properties of a rsc_colocation Constraint
 [width="95%",cols="2m,5<",options="header",align="center"]
 |=========================================================
 
@@ -437,6 +458,81 @@ mandatory.
 <rsc_colocation id="colocate-maybe" rsc="A" with-rsc="B" score="500"/>
 ====
 
+[[s-resource-sets]]
+== Resource Sets ==
+
+'Resource sets' allow multiple resources to be affected by a single constraint.
+
+.A set of 3 resources
+====
+[source,XML]
+----
+<resource_set id="resource-set-example">
+   <resource_ref id="A"/>
+   <resource_ref id="B"/>
+   <resource_ref id="C"/>
+</resource_set>
+----
+====
+
+Resource sets are valid inside +rsc_location+,
++rsc_order+ (see <<s-resource-sets-ordering>>),
++rsc_colocation+ (see <<s-resource-sets-colocation>>),
+and +rsc_ticket+ (see <<s-ticket-constraints>>) constraints.
+
+A resource set has a number of properties that can be set,
+though not all have an effect in all contexts.
+
+.Properties of a resource_set
+[width="95%",cols="2m,1,5<a",options="header",align="center"]
+|=========================================================
+
+|Field
+|Default
+|Description
+
+|id
+|
+|A unique name for the set
+indexterm:[id,Resource Sets]
+indexterm:[Constraints,Resource Sets,id]
+
+|sequential
+|true
+|Whether the members of the set must be acted on in order.
+ Meaningful within +rsc_order+ and +rsc_colocation+.
+indexterm:[sequential,Resource Sets]
+indexterm:[Constraints,Resource Sets,sequential]
+
+|require-all
+|true
+|Whether all members of the set must be active before continuing.
+ Meaningful within +rsc_order+.
+indexterm:[require-all,Resource Sets]
+indexterm:[Constraints,Resource Sets,require-all]
+
+|role
+|
+|Limit the effect of the constraint to the specified role.
+ Meaningful within +rsc_location+, +rsc_colocation+ and +rsc_ticket+.
+indexterm:[role,Resource Sets]
+indexterm:[Constraints,Resource Sets,role]
+
+|action
+|
+|Limit the effect of the constraint to the specified action.
+ Meaningful within +rsc_order+.
+indexterm:[action,Resource Sets]
+indexterm:[Constraints,Resource Sets,action]
+
+|score
+|
+|'Advanced use only.' Use a specific score for this set within the constraint.
+indexterm:[score,Resource Sets]
+indexterm:[Constraints,Resource Sets,score]
+
+|=========================================================
+  
 [[s-resource-sets-ordering]]
 == Ordering Sets of Resources ==
 
@@ -460,8 +556,8 @@ image::images/resource-set.png["Ordered set",width="16cm",height="2.5cm",align="
 
 === Ordered Set ===
 
-To simplify this situation, there is an alternate format for ordering
-constraints:
+To simplify this situation, resource sets (see <<s-resource-sets>>) can be used
+within ordering constraints:
 
 .A chain of ordered resources expressed as a set
 ======
@@ -480,14 +576,19 @@ constraints:
 -------
 ======
 
-[WARNING]
+While the set-based format is not less verbose, it is significantly
+easier to get right and maintain.
+
+[IMPORTANT]
 =========
-Always pay attention to how your tools expose this functionality.
-In some tools +create set A B+ is *NOT* equivalent to +create A then B+.
+If you use a higher-level tool, pay attention to how it exposes this
+functionality. Depending on the tool, creating a set +A B+ may be equivalent to
++A then B+, or +B then A+.
 =========
 
-While the set-based format is not less verbose, it is significantly
-easier to get right and maintain.  It can also be expanded to allow
+=== Ordering Multiple Sets ===
+
+The syntax can be expanded to allow
 ordered sets of (un)ordered resources.  In the example below, +A+
 and +B+ can both start in parallel, as can +C+ and +D+,
 however +C+ and +D+ can only start once _both_ +A+ _and_
@@ -545,6 +646,11 @@ limit to the number of sets that can be specified.
 .Visual representation of the start order for the three sets defined above
 image::images/three-sets.png["Three ordered sets",width="16cm",height="7.5cm",align="center"]
 
+[IMPORTANT]
+====
+An ordered set with +sequential=false+ makes sense only if there is another
+set in the constraint. Otherwise, the constraint has no effect.
+====
 
 === Resource Set OR Logic ===
 
@@ -558,11 +664,6 @@ This functionality can be achieved through the use of the +require-all+
 option.  This option defaults to TRUE which is why the
 "AND" logic is used by default.  Setting +require-all=false+ means only one
 resource in the set needs to be started before continuing on to the next set.
-
-Note that the +require-all=false+ option only makes sense to use in conjunction
-with unordered sets, +sequential=false+.  Think of it like this, +sequential=false+
-modifies the set to be an unordered set that uses "AND" logic by default, by adding
-+require-all=false+ the unordered set's "AND" logic is flipped to "OR" logic.
 
 .Resource Set "OR" logic: Three ordered sets, where the first set is internally unordered with "OR" logic
 ======
@@ -587,6 +688,13 @@ modifies the set to be an unordered set that uses "AND" logic by default, by add
 -------
 ======
 
+[IMPORTANT]
+====
+An ordered set with +require-all=false+ makes sense only in conjunction with
++sequential=false+. Think of it like this: +sequential=false+ modifies the set
+to be an unordered set using "AND" logic by default, and adding
++require-all=false+ flips the unordered set's "AND" logic to "OR" logic.
+====
 
 [[s-resource-sets-colocation]]
 == Colocating Sets of Resources ==
@@ -607,18 +715,18 @@ combinations grow. An example of this approach:
 [source,XML]
 -------
 <constraints>
-    <rsc_colocation id="coloc-1" rsc="A" with-rsc="B" score="INFINITY"/>
-    <rsc_colocation id="coloc-2" rsc="B" with-rsc="C" score="INFINITY"/>
-    <rsc_colocation id="coloc-3" rsc="C" with-rsc="D" score="INFINITY"/>
+    <rsc_colocation id="coloc-1" rsc="D" with-rsc="C" score="INFINITY"/>
+    <rsc_colocation id="coloc-2" rsc="C" with-rsc="B" score="INFINITY"/>
+    <rsc_colocation id="coloc-3" rsc="B" with-rsc="A" score="INFINITY"/>
 </constraints>
 -------
 ======
 
-To make things easier, we allow an alternate form of colocation
-constraints using +resource_set+. As with the chained version, a
+To make things easier, resource sets (see <<s-resource-sets>>) can be used
+within colocation constraints. As with the chained version, a
 resource that can't be active prevents any resource that must be
-colocated with it from being active.  For example, if +C+ is not
-able to run, then both +B+ and by inference +A+ must also remain
+colocated with it from being active.  For example, if +B+ is not
+able to run, then both +C+ and by inference +D+ must also remain
 stopped. Here is an example +resource_set+:
 
 .Equivalent colocation chain expressed using +resource_set+
@@ -638,10 +746,11 @@ stopped. Here is an example +resource_set+:
 -------
 ======
 
-[WARNING]
+[IMPORTANT]
 =========
-Always pay attention to how your tools expose this functionality.
-In some tools +create set A B+ is 'not' equivalent to +create A with B+.
+If you use a higher-level tool, pay attention to how it exposes this
+functionality. Depending on the tool, creating a set +A B+ may be equivalent to
++A with B+, or +B with A+.
 =========
 
 This notation can also be used to tell the cluster
@@ -650,7 +759,7 @@ have no dependencies on each other. In this scenario, unlike the
 previous, +B+ 'would' be allowed to remain active even if +A+ or +C+ (or
 both) were inactive.
 
-.Using colocation sets to specify a common peer
+.Using colocated sets to specify a common peer
 ======
 [source,XML]
 -------
@@ -668,6 +777,12 @@ both) were inactive.
 </constraints>
 -------
 ======
+
+[IMPORTANT]
+====
+A colocated set with +sequential=false+ makes sense only if there is another
+set in the constraint. Otherwise, the constraint has no effect.
+====
 
 There is no inherent limit to the number and size of the sets used.
 The only thing that matters is that in order for any member of one set
@@ -703,3 +818,8 @@ must be in using the set's +role+ attribute.
 
 .Visual representation of a colocation chain where the members of the middle set have no inter-dependencies
 image::images/three-sets-complex.png["Colocation chain",width="16cm",height="9cm",align="center"]
+
+[NOTE]
+====
+Unlike ordered sets, colocated sets do not use the +require-all+ option.
+====
