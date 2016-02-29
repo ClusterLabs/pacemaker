@@ -336,6 +336,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
 
             /* Reload this resource */
             ReloadRsc(rsc, active_node, data_set);
+            free(key);
 
         } else {
             pe_rsc_trace(rsc, "Resource %s doesn't know how to reload", rsc->id);
