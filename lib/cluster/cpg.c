@@ -456,9 +456,9 @@ cluster_connect_cpg(crm_cluster_t *cluster)
     cluster->group.value[0] = 0;
 
     /* group.value is char[128] */
-    strncpy(cluster->group.value, crm_system_name, 127);
+    strncpy(cluster->group.value, crm_system_name?crm_system_name:"unknown", 127);
     cluster->group.value[127] = 0;
-    cluster->group.length = 1 + QB_MIN(127, strlen(crm_system_name));
+    cluster->group.length = 1 + QB_MIN(127, strlen(cluster->group.value));
 
     cs_repeat(retries, 30, rc = cpg_initialize(&handle, &cpg_callbacks));
     if (rc != CS_OK) {
