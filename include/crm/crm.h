@@ -145,6 +145,7 @@ extern char *crm_system_name;
 #  define CRMD_ACTION_DELETE		"delete"
 #  define CRMD_ACTION_CANCEL		"cancel"
 
+#  define CRMD_ACTION_RELOAD		"reload"
 #  define CRMD_ACTION_MIGRATE		"migrate_to"
 #  define CRMD_ACTION_MIGRATED		"migrate_from"
 

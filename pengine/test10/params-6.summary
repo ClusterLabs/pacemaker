@@ -186,11 +186,11 @@ Transition Summary:
 Executing cluster transition:
  * Resource action: vd01-b.cdev.ttc.prague.cz.vds-ok.com-vm monitor=10000 on v03-b
  * Resource action: vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm monitor=10000 on v03-b
+ * Resource action: c5-x64-devel.vds-ok.com-vm reload on v03-a
+ * Resource action: c5-x64-devel.vds-ok.com-vm monitor=10000 on v03-a
  * Pseudo action:   load_stopped_mgmt01
  * Pseudo action:   load_stopped_v03-b
  * Pseudo action:   load_stopped_v03-a
- * Resource action: c5-x64-devel.vds-ok.com-vm reload on v03-a
- * Resource action: c5-x64-devel.vds-ok.com-vm monitor=10000 on v03-a
 
 Revised cluster status:
 Online: [ mgmt01 v03-a v03-b ]

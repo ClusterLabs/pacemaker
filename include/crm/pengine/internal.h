@@ -179,6 +179,7 @@ extern action_t *custom_action(resource_t * rsc, char *key, const char *task, no
 		rsc, stop_key(rsc), CRMD_ACTION_STOP, node,		\
 		optional, TRUE, data_set);
 
+#  define reload_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_RELOAD, 0)
 #  define start_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_START, 0)
 #  define start_action(rsc, node, optional) custom_action(		\
 		rsc, start_key(rsc), CRMD_ACTION_START, node,		\

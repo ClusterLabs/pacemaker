@@ -1,7 +1,7 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0">
     <action_set>
-      <crm_event id="4" operation="clear_failcount" operation_key="A_clear_failcount_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
+      <crm_event id="5" operation="clear_failcount" operation_key="A_clear_failcount_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="A" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_timeout="20000" allow-migrate="1" />
       </crm_event>

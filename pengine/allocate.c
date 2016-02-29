@@ -36,6 +36,8 @@ CRM_TRACE_INIT_DATA(pe_allocate);
 
 void set_alloc_actions(pe_working_set_t * data_set);
 void migrate_reload_madness(pe_working_set_t * data_set);
+extern void ReloadRsc(resource_t * rsc, node_t *node, pe_working_set_t * data_set);
+extern gboolean DeleteRsc(resource_t * rsc, node_t * node, gboolean optional, pe_working_set_t * data_set);
 
 resource_alloc_functions_t resource_class_alloc_functions[] = {
     {
@@ -322,8 +324,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
 
 #if 0
             /* Always reload/restart the entire resource */
-            op = custom_action(rsc, start_key(rsc), RSC_START, NULL, FALSE, TRUE, data_set);
-            update_action_flags(op, pe_action_allow_reload_conversion);
+            ReloadRsc(rsc, data_set);
 #else
             /* Re-sending the recurring op is sufficient - the old one will be cancelled automatically */
             op = custom_action(rsc, key, task, active_node, TRUE, TRUE, data_set);
@@ -333,8 +334,8 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
         } else if (digest_restart && rsc->isolation_wrapper == NULL && (uber_parent(rsc))->isolation_wrapper == NULL) {
             pe_rsc_trace(rsc, "Reloading '%s' action for resource %s", task, rsc->id);
 
-            /* Allow this resource to reload - unless something else causes a full restart */
-            set_bit(rsc->flags, pe_rsc_try_reload);
+            /* Reload this resource */
+            ReloadRsc(rsc, active_node, data_set);
 
             /* Create these for now, it keeps the action IDs the same in the regression outputs */
             custom_action(rsc, key, task, NULL, TRUE, TRUE, data_set);
@@ -352,8 +353,6 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
     return did_change;
 }
 
-extern gboolean DeleteRsc(resource_t * rsc, node_t * node, gboolean optional,
-                          pe_working_set_t * data_set);
 
 static void
 check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_working_set_t * data_set)
@@ -1989,7 +1988,6 @@ stage7(pe_working_set_t * data_set)
     for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
         resource_t *rsc = (resource_t *) gIter->data;
 
-        rsc_reload(rsc, data_set);
         LogActions(rsc, data_set, FALSE);
     }
     return TRUE;

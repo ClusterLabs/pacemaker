@@ -48,6 +48,7 @@ void RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
 void pe_post_notify(resource_t * rsc, node_t * node, action_t * op,
                     notify_data_t * n_data, pe_working_set_t * data_set);
 
+void ReloadRsc(resource_t * rsc, node_t *node, pe_working_set_t * data_set);
 gboolean DeleteRsc(resource_t * rsc, node_t * node, gboolean optional, pe_working_set_t * data_set);
 gboolean StopRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set);
 gboolean StartRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set);
@@ -771,6 +772,10 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
 
     if (node == NULL || is_set(rsc->flags, pe_rsc_managed)) {
         custom_action_order(rsc, start_key(rsc), NULL,
+                            NULL, strdup(key), mon,
+                            pe_order_implies_then | pe_order_runnable_left, data_set);
+
+        custom_action_order(rsc, reload_key(rsc), NULL,
                             NULL, strdup(key), mon,
                             pe_order_implies_then | pe_order_runnable_left, data_set);
 
@@ -2814,6 +2819,11 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
                         top, generate_op_key(top->id, RSC_START, 0), NULL,
                         flags, data_set);
 
+    /* Before any reloads, if they exist */
+    custom_action_order(rsc, NULL, probe,
+                        top, reload_key(rsc), NULL,
+                        pe_order_optional, data_set);
+    
     if (node && node->details->shutdown == FALSE) {
         custom_action_order(rsc, NULL, probe,
                             rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
@@ -3135,92 +3145,54 @@ get_first_named_action(resource_t * rsc, const char *action, gboolean only_valid
     return a;
 }
 
-static void
-ReloadRsc(resource_t * rsc, action_t * stop, action_t * start, pe_working_set_t * data_set)
-{
-    action_t *action = NULL;
-    action_t *rewrite = NULL;
-
-    if (is_not_set(rsc->flags, pe_rsc_try_reload)) {
-        return;
-
-    } else if (is_not_set(stop->flags, pe_action_optional)) {
-        pe_rsc_trace(rsc, "%s: stop action", rsc->id);
-        return;
-
-    } else if (is_not_set(start->flags, pe_action_optional)) {
-        pe_rsc_trace(rsc, "%s: start action", rsc->id);
-        return;
-    }
-
-    pe_rsc_trace(rsc, "%s on %s", rsc->id, stop->node->details->uname);
-
-    action = get_first_named_action(rsc, RSC_PROMOTE, TRUE, NULL);
-    if (action && is_set(action->flags, pe_action_optional) == FALSE) {
-        update_action_flags(action, pe_action_pseudo);
-    }
-
-    action = get_first_named_action(rsc, RSC_DEMOTE, TRUE, NULL);
-    if (action && is_set(action->flags, pe_action_optional) == FALSE) {
-        rewrite = action;
-        update_action_flags(stop, pe_action_pseudo);
-
-    } else {
-        rewrite = start;
-    }
-
-    pe_rsc_info(rsc, "Rewriting %s of %s on %s as a reload",
-                rewrite->task, rsc->id, stop->node->details->uname);
-    set_bit(rsc->flags, pe_rsc_reload);
-    update_action_flags(rewrite, pe_action_optional | pe_action_clear);
-
-    free(rewrite->uuid);
-    free(rewrite->task);
-    rewrite->task = strdup("reload");
-    rewrite->uuid = generate_op_key(rsc->id, rewrite->task, 0);
-}
-
 void
-rsc_reload(resource_t * rsc, pe_working_set_t * data_set)
+ReloadRsc(resource_t * rsc, node_t *node, pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
-    action_t *stop = NULL;
-    action_t *start = NULL;
-
-    if(is_set(rsc->flags, pe_rsc_munging)) {
-        return;
-    }
-    set_bit(rsc->flags, pe_rsc_munging);
+    action_t *other = NULL;
+    action_t *reload = NULL;
 
     if (rsc->children) {
         for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
             resource_t *child_rsc = (resource_t *) gIter->data;
 
-            rsc_reload(child_rsc, data_set);
+            ReloadRsc(child_rsc, node, data_set);
         }
         return;
 
     } else if (rsc->variant > pe_native) {
+        /* Complex resource with no children */
+        return;
+
+    } else if (is_not_set(rsc->flags, pe_rsc_managed)) {
+        pe_rsc_trace(rsc, "%s: unmanaged", rsc->id);
+        return;
+
+    } else if (is_set(rsc->flags, pe_rsc_failed) || is_set(rsc->flags, pe_rsc_start_pending)) {
+        pe_rsc_trace(rsc, "%s: general resource state: flags=0x%.16llx", rsc->id, rsc->flags);
+        stop_action(rsc, node, FALSE); /* Force a full restart, overkill? */
+        return;
+
+    } else if (node == NULL) {
+        pe_rsc_trace(rsc, "%s: not active", rsc->id);
         return;
     }
 
     pe_rsc_trace(rsc, "Processing %s", rsc->id);
+    set_bit(rsc->flags, pe_rsc_reload);
+    
+    reload = custom_action(
+        rsc, reload_key(rsc), CRMD_ACTION_RELOAD, node, FALSE, TRUE, data_set);
 
-    stop =
-        get_first_named_action(rsc, RSC_STOP, TRUE,
-                               rsc->running_on ? rsc->running_on->data : NULL);
-    start = get_first_named_action(rsc, RSC_START, TRUE, NULL);
-
-    if (is_not_set(rsc->flags, pe_rsc_managed)
-        || is_set(rsc->flags, pe_rsc_failed)
-        || is_set(rsc->flags, pe_rsc_start_pending)
-        || rsc->next_role < RSC_ROLE_STARTED) {
-        pe_rsc_trace(rsc, "%s: general resource state: flags=0x%.16llx", rsc->id, rsc->flags);
-        return;
+    /* stop = stop_action(rsc, node, optional); */
+    other = get_first_named_action(rsc, RSC_STOP, TRUE, node);
+    if (other != NULL) {
+        order_actions(reload, other, pe_order_optional);
     }
 
-    if (stop != NULL && is_set(stop->flags, pe_action_optional) && is_set(rsc->flags, pe_rsc_try_reload)) {
-        ReloadRsc(rsc, stop, start, data_set);
+    other = get_first_named_action(rsc, RSC_DEMOTE, TRUE, node);
+    if (other != NULL) {
+        order_actions(reload, other, pe_order_optional);
     }
 }
 
