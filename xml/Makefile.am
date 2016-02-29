@@ -27,10 +27,17 @@ RNGdir			= $(dtddir)
 
 # See Readme.md for details on updating schema files
 
+# GNU sed supports -r for extended regular expressions;
+# BSD sed supports -E for the same. Some, but not all, implementations
+# of each support the other's argument for compatibility.
+# Here, we pick r if it's supported, E otherwise.
+# If your sed doesn't support either, you can't install RNGs. Sorry.
+SED_ERE = $(shell echo 1 | sed -r 's/1/r/' 2>/dev/null || echo E)
+
 # Sorted list of available numeric RNG versions,
 # extracted from filenames like NAME-MAJOR[.MINOR][.MINOR-MINOR].rng
 RNG_numeric_versions    = $(shell ls -1 *.rng \
-			  | sed -E -n -e 's/^.*-([0-9.]+).rng$$/\1/p' \
+			  | sed -$(SED_ERE) -n -e 's/^.*-([0-9.]+).rng$$/\1/p' \
 			  | sort -u -t. -k 1,1n -k 2,2n -k 3,3n)
 
 # The highest numeric version
@@ -68,8 +75,8 @@ RNG_SCRIPTS		= $(RNG_files) $(RNG_generated) $(RNG_extra)
 EXTRA_DIST		= best-match.sh
 
 versions:
-	echo "Max: $(RNG_max)"
-	echo "Available: $(RNG_versions)"
+	@echo "Max: $(RNG_max)"
+	@echo "Available: $(RNG_versions)"
 
 versions.rng: Makefile.am
 	echo "  RNG      $@"
