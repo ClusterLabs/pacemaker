@@ -583,6 +583,26 @@ profile_all(const char *dir)
     return lpc;
 }
 
+static int
+count_resources(pe_working_set_t * data_set, resource_t * rsc)
+{
+    int count = 0;
+    GListPtr gIter = NULL;
+
+    if (rsc == NULL) {
+        gIter = data_set->resources;
+    } else if (rsc->children) {
+        gIter = rsc->children;
+    } else {
+        return is_not_set(rsc->flags, pe_rsc_orphan);
+    }
+
+    for (; gIter != NULL; gIter = gIter->next) {
+        count += count_resources(data_set, gIter->data);
+    }
+    return count;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -797,6 +817,17 @@ main(int argc, char **argv)
 
     if (quiet == FALSE) {
         int options = print_pending ? pe_print_pending : 0;
+
+        if(is_set(data_set.flags, pe_flag_maintenance_mode)) {
+            quiet_log("\n              *** Resource management is DISABLED ***");
+            quiet_log("\n  The cluster will not attempt to start, stop or recover services");
+            quiet_log("\n");
+        }
+
+        if(data_set.disabled_resources || data_set.blocked_resources) {
+            quiet_log("%d of %d resources DISABLED and %d BLOCKED from being started due to failures\n",
+                      data_set.disabled_resources, count_resources(&data_set, NULL), data_set.blocked_resources);
+        }
 
         quiet_log("\nCurrent cluster status:\n");
         print_cluster_status(&data_set, options);

@@ -123,6 +123,9 @@ typedef struct pe_working_set_s {
     const char *localhost;
     GHashTable *tags;
 
+    int blocked_resources;
+    int disabled_resources;
+
 } pe_working_set_t;
 
 struct node_shared_s {

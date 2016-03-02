@@ -290,13 +290,17 @@ clone_active(resource_t * rsc, gboolean all)
 }
 
 static void
-short_print(char *list, const char *prefix, const char *type, long options, void *print_data)
+short_print(char *list, const char *prefix, const char *type, const char *suffix, long options, void *print_data)
 {
+    if(suffix == NULL) {
+        suffix = "";
+    }
+
     if (list) {
         if (options & pe_print_html) {
             status_print("<li>");
         }
-        status_print("%s%s: [%s ]", prefix, type, list);
+        status_print("%s%s: [%s ]%s", prefix, type, list, suffix);
 
         if (options & pe_print_html) {
             status_print("</li>\n");
@@ -365,6 +369,21 @@ bool is_set_recursive(resource_t * rsc, long long flag, bool any)
         return TRUE;
     }
     return FALSE;
+}
+
+static enum rsc_role_e
+configured_role(resource_t * rsc)
+{
+    const char *target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
+
+    if(target_role == NULL) {
+        target_role = g_hash_table_lookup(((resource_t*)rsc->children->data)->meta, XML_RSC_ATTR_TARGET_ROLE);
+    }
+
+    if(target_role) {
+        return text2role(target_role);
+    }
+    return RSC_ROLE_UNKNOWN;
 }
 
 void
@@ -492,7 +511,7 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
 	active_instances++;
     }
 
-    short_print(list_text, child_text, "Masters", options, print_data);
+    short_print(list_text, child_text, "Masters", NULL, options, print_data);
     g_list_free(master_list);
     free(list_text);
     list_text = NULL;
@@ -506,16 +525,33 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
 	active_instances++;
     }
 
-    short_print(list_text, child_text, rsc->variant == pe_master ? "Slaves" : "Started", options,
-                print_data);
+    if(rsc->variant == pe_master) {
+        enum rsc_role_e role = configured_role(rsc);
+
+        if(role > RSC_ROLE_STOPPED && role < RSC_ROLE_MASTER) {
+            short_print(list_text, child_text, "Slaves (target-role)", NULL, options, print_data);
+        } else {
+            short_print(list_text, child_text, "Slaves", NULL, options, print_data);
+        }
+
+    } else {
+        short_print(list_text, child_text, "Started", NULL, options, print_data);
+    }
+
     g_list_free(started_list);
     free(list_text);
     list_text = NULL;
 
     if (is_not_set(options, pe_print_clone_active)) {
-        /* Stopped */
+        const char *state = "Stopped";
+        enum rsc_role_e role = configured_role(rsc);
+
+        if (role == RSC_ROLE_STOPPED) {
+            state = "Stopped (disabled)";
+        }
+
         if (is_not_set(rsc->flags, pe_rsc_unique)
-        && (clone_data->clone_max > active_instances)) {
+            && (clone_data->clone_max > active_instances)) {
 
             GListPtr nIter;
             GListPtr list = g_hash_table_get_values(rsc->allowed_nodes);
@@ -540,7 +576,8 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
             }
             g_list_free(list);
         }
-        short_print(stopped_list, child_text, "Stopped", options, print_data);
+
+        short_print(stopped_list, child_text, state, NULL, options, print_data);
         free(stopped_list);
     }
 

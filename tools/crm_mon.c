@@ -2277,13 +2277,27 @@ print_cluster_counts(FILE *stream, pe_working_set_t *data_set, const char *stack
     switch (output_format) {
         case mon_output_plain:
         case mon_output_console:
-            print_as("%d node%s and %d resource%s configured",
-                     nnodes, s_if_plural(nnodes),
-                     nresources, s_if_plural(nresources));
+
             if (stack_s && strstr(stack_s, "classic openais") != NULL) {
                 print_as(", %s expected votes", quorum_votes);
             }
+
+            if(is_set(data_set->flags, pe_flag_maintenance_mode)) {
+                print_as("\n              *** Resource management is DISABLED ***");
+                print_as("\n  The cluster will not attempt to start, stop or recover services");
+                print_as("\n");
+            }
+
+            print_as("\n%d node%s and %d resource%s configured",
+                     nnodes, s_if_plural(nnodes),
+                     nresources, s_if_plural(nresources));
+            if(data_set->disabled_resources || data_set->blocked_resources) {
+                print_as(": %d resource%s DISABLED and %d BLOCKED from being started due to failures",
+                         data_set->disabled_resources, s_if_plural(data_set->disabled_resources),
+                         data_set->blocked_resources);
+            }
             print_as("\n\n");
+
             break;
 
         case mon_output_html:
@@ -2412,14 +2426,6 @@ print_cluster_summary(FILE *stream, pe_working_set_t *data_set)
     const char *stack_s = get_cluster_stack(data_set);
     gboolean header_printed = FALSE;
 
-    if (show & mon_show_times) {
-        if (header_printed == FALSE) {
-            print_cluster_summary_header(stream);
-            header_printed = TRUE;
-        }
-        print_cluster_times(stream, data_set);
-    }
-
     if (show & mon_show_stack) {
         if (header_printed == FALSE) {
             print_cluster_summary_header(stream);
@@ -2437,7 +2443,18 @@ print_cluster_summary(FILE *stream, pe_working_set_t *data_set)
         print_cluster_dc(stream, data_set);
     }
 
-    if (show & mon_show_count) {
+    if (show & mon_show_times) {
+        if (header_printed == FALSE) {
+            print_cluster_summary_header(stream);
+            header_printed = TRUE;
+        }
+        print_cluster_times(stream, data_set);
+    }
+
+    if (is_set(data_set->flags, pe_flag_maintenance_mode)
+        || data_set->disabled_resources
+        || data_set->blocked_resources
+        || is_set(show, mon_show_count)) {
         if (header_printed == FALSE) {
             print_cluster_summary_header(stream);
             header_printed = TRUE;
