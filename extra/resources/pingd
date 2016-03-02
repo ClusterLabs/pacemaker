@@ -89,7 +89,7 @@ It records (in the CIB) the current number of ping nodes (specified in the 'host
 <parameter name="pidfile" unique="0">
 <longdesc lang="en">PID file</longdesc>
 <shortdesc lang="en">PID file</shortdesc>
-<content type="string" default="$HA_VARRUN/pingd-${OCF_RESOURCE_INSTANCE}" />
+<content type="string" default="${HA_VARRUN%%1}/pingd-${OCF_RESOURCE_INSTANCE}" />
 </parameter>
 
 

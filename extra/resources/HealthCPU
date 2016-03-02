@@ -62,7 +62,7 @@ Systhem health agent that measures the CPU idling and updates the #health-cpu at
 Location to store the resource state in.
 </longdesc>
 <shortdesc lang="en">State file</shortdesc>
-<content type="string" default="${HA_VARRUN}/health-cpu-${OCF_RESOURCE_INSTANCE}.state" />
+<content type="string" default="${HA_VARRUN%%/}/health-cpu-${OCF_RESOURCE_INSTANCE}.state" />
 </parameter>
 
 <parameter name="yellow_limit" unique="1">
@@ -180,16 +180,16 @@ dummy_validate() {
 }
 
 : ${OCF_RESKEY_CRM_meta_interval=0}
-: ${OCF_RESKEY_CRM_meta_globally_unique:="true"}
+: ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
 
 if [ "x$OCF_RESKEY_state" = "x" ]; then
     if [ ${OCF_RESKEY_CRM_meta_globally_unique} = "false" ]; then
-	state="${HA_VARRUN}/Dummy-${OCF_RESOURCE_INSTANCE}.state"
+	state="${HA_VARRUN%%/}/Dummy-${OCF_RESOURCE_INSTANCE}.state"
 	
 	# Strip off the trailing clone marker
 	OCF_RESKEY_state=`echo $state | sed s/:[0-9][0-9]*\.state/.state/`
     else 
-	OCF_RESKEY_state="${HA_VARRUN}/Dummy-${OCF_RESOURCE_INSTANCE}.state"
+	OCF_RESKEY_state="${HA_VARRUN%%/}/Dummy-${OCF_RESOURCE_INSTANCE}.state"
     fi
 fi
 

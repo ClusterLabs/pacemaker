@@ -52,7 +52,7 @@ Every time the monitor action is run, this resource agent records (in the CIB) t
 <parameter name="pidfile" unique="0">
 <longdesc lang="en">PID file</longdesc>
 <shortdesc lang="en">PID file</shortdesc>
-<content type="string" default="$HA_VARRUN/ping-${OCF_RESOURCE_INSTANCE}" />
+<content type="string" default="${HA_VARRUN%%/}/ping-${OCF_RESOURCE_INSTANCE}" />
 </parameter>
 
 <parameter name="dampen" unique="0">
@@ -317,7 +317,7 @@ ping_update() {
 : ${OCF_RESKEY_use_fping:="1"}
 
 : ${OCF_RESKEY_CRM_meta_timeout:="20000"}
-: ${OCF_RESKEY_CRM_meta_globally_unique:="true"}
+: ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
 
 integer=`echo ${OCF_RESKEY_timeout} | egrep -o '[0-9]*'`
 case ${OCF_RESKEY_timeout} in
@@ -345,9 +345,9 @@ elif [ ${OCF_RESKEY_timeout} -gt 1000 ]; then
 fi
 
 if [ ${OCF_RESKEY_CRM_meta_globally_unique} = "false" ]; then
-    : ${OCF_RESKEY_pidfile:="$HA_VARRUN/ping-${OCF_RESKEY_name}"}
+    : ${OCF_RESKEY_pidfile:="${HA_VARRUN%%/}/ping-${OCF_RESKEY_name}"}
 else 
-    : ${OCF_RESKEY_pidfile:="$HA_VARRUN/ping-${OCF_RESOURCE_INSTANCE}"}
+    : ${OCF_RESKEY_pidfile:="${HA_VARRUN%%/}/ping-${OCF_RESOURCE_INSTANCE}"}
 fi
 
 attrd_options='-q'
