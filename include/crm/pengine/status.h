@@ -296,6 +296,8 @@ struct resource_s {
     const char *isolation_wrapper;
     gboolean exclusive_discover;
     int remote_reconnect_interval;
+
+    pe_working_set_t *cluster;
 };
 
 struct pe_action_s {
