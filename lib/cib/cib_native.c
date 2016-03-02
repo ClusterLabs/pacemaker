@@ -406,7 +406,7 @@ cib_native_perform_op_delegate(cib_t * cib, const char *op, const char *host, co
     if (reply_id == cib->call_id) {
         xmlNode *tmp = get_message_xml(op_reply, F_CIB_CALLDATA);
 
-        crm_trace("Syncronous reply %d received", reply_id);
+        crm_trace("Synchronous reply %d received", reply_id);
         if (crm_element_value_int(op_reply, F_CIB_RC, &rc) != 0) {
             rc = -EPROTO;
         }

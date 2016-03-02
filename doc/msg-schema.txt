@@ -23,7 +23,7 @@ Key points from the diagram:
   and are thus subject to existing HA client security is available.
 - The RPC layer allows the cluster to be controled from non-member 
   hosts (subject to RPC security which is available for free).
-- The option of syncronous or asynchronous RPC calls will be provided. 
+- The option of synchronous or asynchronous RPC calls will be provided.
   This will probably be in the form of a flag sent as part of the 
   function call.
 
