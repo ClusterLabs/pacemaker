@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 #
 # HealthSMART OCF RA. Checks the S.M.A.R.T. status of all given
