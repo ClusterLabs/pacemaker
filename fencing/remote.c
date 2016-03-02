@@ -1309,7 +1309,7 @@ report_timeout_period(remote_fencing_op_t * op, int op_timeout)
     const char *call_id = NULL;
 
     if (op->call_options & st_opt_sync_call) {
-        /* There is no reason to report the timeout for a syncronous call. It
+        /* There is no reason to report the timeout for a synchronous call. It
          * is impossible to use the reported timeout to do anything when the client
          * is blocking for the response.  This update is only important for
          * async calls that require a callback to report the results in. */

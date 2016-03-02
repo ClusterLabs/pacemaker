@@ -2196,7 +2196,7 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t * rsc, lrmd_event_data
 
     crm_log_xml_trace(update, __FUNCTION__);
 
-    /* make it an asyncronous call and be done with it
+    /* make it an asynchronous call and be done with it
      *
      * Best case:
      *   the resource state will be discovered during
