@@ -180,7 +180,7 @@ dummy_validate() {
 }
 
 : ${OCF_RESKEY_CRM_meta_interval=0}
-: ${OCF_RESKEY_CRM_meta_globally_unique:="true"}
+: ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
 
 if [ "x$OCF_RESKEY_state" = "x" ]; then
     if [ ${OCF_RESKEY_CRM_meta_globally_unique} = "false" ]; then
