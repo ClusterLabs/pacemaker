@@ -2881,7 +2881,7 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
         digest_data = rsc_action_digest_cmp(rsc, xml_op, node, data_set);
 
         if (digest_data->rc == RSC_DIGEST_UNKNOWN) {
-            crm_trace("rsc op %s on node %s does not have a op digest to compare against", rsc->id,
+            crm_trace("rsc op %s on node %s does not have a op digest to compare against",
                       key, node->details->id);
         } else if (digest_data->rc != RSC_DIGEST_MATCH) {
             clear_failcount = 1;

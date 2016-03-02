@@ -601,7 +601,7 @@ build_parameter_list(lrmd_event_data_t *op, xmlNode *metadata, xmlNode *result,
             if(result && accept) {
                 value = g_hash_table_lookup(op->params, name);
                 if(value != NULL) {
-                    crm_trace("Adding attr to the xml result", name, target?"":"not ", criteria);
+                    crm_trace("Adding %s attr to the xml result", name);
                     crm_xml_add(result, name, value);
                 }
             }
@@ -1928,7 +1928,8 @@ stop_recurring_action_by_rsc(gpointer key, gpointer value, gpointer user_data)
     struct recurring_op_s *op = (struct recurring_op_s *)value;
 
     if (op->interval != 0 && crm_str_eq(op->rsc_id, event->rsc->id, TRUE)) {
-        crm_debug("Cancelling op %d for %s (%s)", op->call_id, op->rsc_id, key);
+        crm_debug("Cancelling op %d for %s (%s)", op->call_id, op->rsc_id,
+                  (const char *) key);
         remove = !cancel_op(event->lrm_state, event->rsc->id, key, op->call_id, FALSE);
     }
 

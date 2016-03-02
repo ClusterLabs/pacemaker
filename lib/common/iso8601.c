@@ -28,10 +28,12 @@
  *
  */
 
+#include <limits.h>
+#include <ctype.h>
+#include <time.h>
+
 #include <crm_internal.h>
 #include <crm/crm.h>
-#include <time.h>
-#include <ctype.h>
 #include <crm/common/iso8601.h>
 
 /*
@@ -979,7 +981,8 @@ crm_time_parse_period(const char *period_str)
 void
 crm_time_set(crm_time_t * target, crm_time_t * source)
 {
-    crm_trace("target=%p, source=%p, offset=%d", target, source);
+    crm_trace("target=%p, source=%p, offset=%d", target, source,
+              source ? source->offset : INT_MAX);
 
     CRM_CHECK(target != NULL && source != NULL, return);
 

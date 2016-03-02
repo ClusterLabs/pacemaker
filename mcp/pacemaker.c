@@ -828,7 +828,7 @@ mcp_cpg_deliver(cpg_handle_t handle,
     const char *task = crm_element_value(xml, F_CRM_TASK);
 
     crm_trace("Received CPG message (%s): %.200s",
-              (task? task : "process list"), msg);
+              (task? task : "process list"), (const char *) msg);
 
     if (task == NULL) {
         if (nodeid == local_nodeid) {

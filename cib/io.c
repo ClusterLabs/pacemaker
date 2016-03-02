@@ -183,7 +183,8 @@ static int cib_archive_sort(const struct dirent ** a, const struct dirent **b)
         rc = -1;
     }
 
-    crm_trace("%s (%u) vs. %s (%u) : %d", a[0]->d_name, a_age, b[0]->d_name, b_age, rc);
+    /* XXX converting time_t in a non-portable way */
+    crm_trace("%s (%jd) vs. %s (%jd) : %d", a[0]->d_name, a_age, b[0]->d_name, b_age, rc);
     return rc;
 }
 

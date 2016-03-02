@@ -166,7 +166,7 @@ crm_cs_flush(gpointer data)
 
         sent++;
         last_sent++;
-        crm_trace("CPG message sent, size=%d", iov->iov_len);
+        crm_trace("CPG message sent, size=%zu", iov->iov_len);
 
         cs_message_queue = g_list_remove(cs_message_queue, iov);
         free(iov->iov_base);
@@ -175,10 +175,10 @@ crm_cs_flush(gpointer data)
 
     queue_len -= sent;
     if (sent > 1 || cs_message_queue) {
-        crm_info("Sent %d CPG messages  (%d remaining, last=%u): %s (%d)",
+        crm_info("Sent %d CPG messages  (%d remaining, last=%u): %s (%zd)",
                  sent, queue_len, last_sent, ais_error2text(rc), rc);
     } else {
-        crm_trace("Sent %d CPG messages  (%d remaining, last=%u): %s (%d)",
+        crm_trace("Sent %d CPG messages  (%d remaining, last=%u): %s (%zd)",
                   sent, queue_len, last_sent, ais_error2text(rc), rc);
     }
 
@@ -200,7 +200,7 @@ send_cpg_iov(struct iovec * iov)
     static unsigned int queued = 0;
 
     queued++;
-    crm_trace("Queueing CPG message %u (%d bytes)", queued, iov->iov_len);
+    crm_trace("Queueing CPG message %u (%zu bytes)", queued, iov->iov_len);
     cs_message_queue = g_list_append(cs_message_queue, iov);
     crm_cs_flush(&pcmk_cpg_handle);
     return TRUE;
@@ -623,10 +623,10 @@ send_cluster_text(int class, const char *data,
     iov->iov_len = msg->header.size;
 
     if (msg->compressed_size) {
-        crm_trace("Queueing CPG message %u to %s (%d bytes, %d bytes compressed payload): %.200s",
+        crm_trace("Queueing CPG message %u to %s (%zu bytes, %u bytes compressed payload): %.200s",
                   msg->id, target, iov->iov_len, msg->compressed_size, data);
     } else {
-        crm_trace("Queueing CPG message %u to %s (%d bytes, %d bytes payload): %.200s",
+        crm_trace("Queueing CPG message %u to %s (%zu bytes, %u bytes payload): %.200s",
                   msg->id, target, iov->iov_len, msg->size, data);
     }
     free(target);

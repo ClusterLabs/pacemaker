@@ -44,6 +44,10 @@ libcrmcommon_la_LDFLAGS	= -version-info 8:0:5
 libcrmcommon_la_LIBADD  = @LIBADD_DL@ $(GNUTLSLIBS) -lm
 libcrmcommon_la_SOURCES += $(top_builddir)/lib/gnu/md5.c
 
+# XXX recursive makefiles do not work well with sibling-dirs dependencies
+$(top_builddir)/lib/gnu/.deps/md5.Plo:
+	$(MAKE) -C $(top_builddir)/lib/gnu md5.lo
+
 clean-generic:
 	rm -f *.log *.debug *.xml *~
 
