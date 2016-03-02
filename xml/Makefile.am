@@ -23,6 +23,8 @@ dtd_DATA		= crm.dtd crm-transitional.dtd
 xsltdir			= $(dtddir)
 xslt_DATA		= upgrade06.xsl upgrade-*.xsl
 
+noinst_DATA		= context-of.xsl
+
 RNGdir			= $(dtddir)
 
 # See Readme.md for details on updating schema files
