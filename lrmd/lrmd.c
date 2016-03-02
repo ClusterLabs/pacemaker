@@ -1698,8 +1698,8 @@ process_lrmd_message(crm_client_t * client, uint32_t id, xmlNode * request)
         crm_log_xml_warn(request, "UnknownOp");
     }
 
-    crm_debug("Processed %s operation from %s: rc=%d, reply=%d, notify=%d, exit=%d",
-              op, client->id, rc, do_reply, do_notify, exit);
+    crm_debug("Processed %s operation from %s: rc=%d, reply=%d, notify=%d",
+              op, client->id, rc, do_reply, do_notify);
 
     if (do_reply) {
         send_reply(client, rc, id, call_id);

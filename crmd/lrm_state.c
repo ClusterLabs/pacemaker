@@ -75,7 +75,7 @@ fail_pending_op(gpointer key, gpointer value, gpointer user_data)
 
     crm_trace("Pre-emptively failing %s_%s_%d on %s (call=%s, %s)",
               op->rsc_id, op->op_type, op->interval,
-              lrm_state->node_name, key, op->user_data);
+              lrm_state->node_name, (char*)key, op->user_data);
 
     event.type = lrmd_event_exec_complete;
     event.rsc_id = op->rsc_id;

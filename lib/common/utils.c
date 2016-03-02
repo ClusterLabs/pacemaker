@@ -2072,7 +2072,7 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char * c
 
     if (compare_version("2.1", caller_version) <= 0) {
         if (op->t_run || op->t_rcchange || op->exec_time || op->queue_time) {
-            crm_trace("Timing data (%s_%s_%d): last=%lu change=%lu exec=%lu queue=%lu",
+            crm_trace("Timing data (%s_%s_%d): last=%u change=%u exec=%u queue=%u",
                       op->rsc_id, op->op_type, op->interval,
                       op->t_run, op->t_rcchange, op->exec_time, op->queue_time);
 

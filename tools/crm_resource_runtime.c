@@ -838,7 +838,7 @@ static void dump_list(GList *items, const char *tag)
     GList *item = NULL;
 
     for (item = items; item != NULL; item = item->next) {
-        crm_trace("%s[%d]: %s", tag, lpc, item->data);
+        crm_trace("%s[%d]: %s", tag, lpc, (char*)item->data);
         lpc++;
     }
 }
