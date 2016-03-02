@@ -1,3 +1,4 @@
+4 of 25 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ hex-0 hex-7 hex-8 hex-9 ]
@@ -12,7 +13,7 @@ Online: [ hex-0 hex-7 hex-8 hex-9 ]
  Clone Set: fs1-clone [ocfs2-1]
      Stopped: [ hex-0 hex-7 hex-8 hex-9 ]
  Clone Set: dlm-clone [dlm]
-     Stopped: [ hex-0 hex-7 hex-8 hex-9 ]
+     Stopped (disabled): [ hex-0 hex-7 hex-8 hex-9 ]
  Clone Set: clvm-clone [clvm]
      Stopped: [ hex-0 hex-7 hex-8 hex-9 ]
 
@@ -35,7 +36,7 @@ Online: [ hex-0 hex-7 hex-8 hex-9 ]
  Clone Set: fs1-clone [ocfs2-1]
      Stopped: [ hex-0 hex-7 hex-8 hex-9 ]
  Clone Set: dlm-clone [dlm]
-     Stopped: [ hex-0 hex-7 hex-8 hex-9 ]
+     Stopped (disabled): [ hex-0 hex-7 hex-8 hex-9 ]
  Clone Set: clvm-clone [clvm]
      Stopped: [ hex-0 hex-7 hex-8 hex-9 ]
 

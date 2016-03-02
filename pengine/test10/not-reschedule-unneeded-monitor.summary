@@ -1,3 +1,4 @@
+1 of 11 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ castor kimball ]
@@ -7,7 +8,7 @@ Online: [ castor kimball ]
      Started: [ castor kimball ]
  Clone Set: c-vm-fs [vm1]
      Started: [ castor kimball ]
- xen-f	(ocf::heartbeat:VirtualDomain):	(target-role:Stopped) Stopped 
+ xen-f	(ocf::heartbeat:VirtualDomain):	Stopped ( disabled ) 
  sle12-kvm	(ocf::heartbeat:VirtualDomain):	FAILED castor 
  Clone Set: cl_sgdisk [sgdisk]
      Started: [ castor kimball ]
@@ -29,7 +30,7 @@ Online: [ castor kimball ]
      Started: [ castor kimball ]
  Clone Set: c-vm-fs [vm1]
      Started: [ castor kimball ]
- xen-f	(ocf::heartbeat:VirtualDomain):	(target-role:Stopped) Stopped 
+ xen-f	(ocf::heartbeat:VirtualDomain):	Stopped ( disabled ) 
  sle12-kvm	(ocf::heartbeat:VirtualDomain):	Started kimball 
  Clone Set: cl_sgdisk [sgdisk]
      Started: [ castor kimball ]

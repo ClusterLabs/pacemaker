@@ -1,11 +1,12 @@
+6 of 3 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ yingying.site ]
 
  Resource Group: group1
-     rsc1	(ocf::pacemaker:Dummy):	(target-role:Stopped) Started yingying.site 
-     rsc2	(ocf::pacemaker:Dummy):	FAILED yingying.site (unmanaged) 
-     rsc3	(ocf::heartbeat:Dummy):	(target-role:Stopped) Stopped 
+     rsc1	(ocf::pacemaker:Dummy):	Started yingying.site ( disabled ) 
+     rsc2	(ocf::pacemaker:Dummy):	FAILED yingying.site ( disabled, blocked ) 
+     rsc3	(ocf::heartbeat:Dummy):	Stopped ( disabled ) 
 
 Transition Summary:
  * Stop    rsc1	(yingying.site - blocked)
@@ -17,7 +18,7 @@ Revised cluster status:
 Online: [ yingying.site ]
 
  Resource Group: group1
-     rsc1	(ocf::pacemaker:Dummy):	(target-role:Stopped) Started yingying.site 
-     rsc2	(ocf::pacemaker:Dummy):	FAILED yingying.site (unmanaged) 
-     rsc3	(ocf::heartbeat:Dummy):	(target-role:Stopped) Stopped 
+     rsc1	(ocf::pacemaker:Dummy):	Started yingying.site ( disabled ) 
+     rsc2	(ocf::pacemaker:Dummy):	FAILED yingying.site ( disabled, blocked ) 
+     rsc3	(ocf::heartbeat:Dummy):	Stopped ( disabled ) 
 

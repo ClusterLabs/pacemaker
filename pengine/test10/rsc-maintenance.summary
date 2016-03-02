@@ -1,10 +1,11 @@
+4 of 4 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ node1 node2 ]
 
  Resource Group: group1
-     rsc1	(ocf::pacemaker:Dummy):	(target-role:Stopped) Started node1 (unmanaged) 
-     rsc2	(ocf::pacemaker:Dummy):	(target-role:Stopped) Started node1 (unmanaged) 
+     rsc1	(ocf::pacemaker:Dummy):	Started node1 ( disabled, unmanaged ) 
+     rsc2	(ocf::pacemaker:Dummy):	Started node1 ( disabled, unmanaged ) 
  Resource Group: group2
      rsc3	(ocf::pacemaker:Dummy):	Started node2 
      rsc4	(ocf::pacemaker:Dummy):	Started node2 
@@ -19,8 +20,8 @@ Revised cluster status:
 Online: [ node1 node2 ]
 
  Resource Group: group1
-     rsc1	(ocf::pacemaker:Dummy):	(target-role:Stopped) Started node1 (unmanaged) 
-     rsc2	(ocf::pacemaker:Dummy):	(target-role:Stopped) Started node1 (unmanaged) 
+     rsc1	(ocf::pacemaker:Dummy):	Started node1 ( disabled, unmanaged ) 
+     rsc2	(ocf::pacemaker:Dummy):	Started node1 ( disabled, unmanaged ) 
  Resource Group: group2
      rsc3	(ocf::pacemaker:Dummy):	Started node2 
      rsc4	(ocf::pacemaker:Dummy):	Started node2 

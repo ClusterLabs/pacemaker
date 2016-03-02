@@ -1,9 +1,10 @@
+2 of 15 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ alice.demo bob.demo ]
 
  Master/Slave Set: ms_drbd_nfsexport [res_drbd_nfsexport]
-     Stopped: [ alice.demo bob.demo ]
+     Stopped (disabled): [ alice.demo bob.demo ]
  Resource Group: rg_nfs
      res_fs_nfsexport	(ocf::heartbeat:Filesystem):	Stopped 
      res_ip_nfs	(ocf::heartbeat:IPaddr2):	Stopped 
@@ -42,7 +43,7 @@ Revised cluster status:
 Online: [ alice.demo bob.demo ]
 
  Master/Slave Set: ms_drbd_nfsexport [res_drbd_nfsexport]
-     Stopped: [ alice.demo bob.demo ]
+     Stopped (disabled): [ alice.demo bob.demo ]
  Resource Group: rg_nfs
      res_fs_nfsexport	(ocf::heartbeat:Filesystem):	Stopped 
      res_ip_nfs	(ocf::heartbeat:IPaddr2):	Stopped 

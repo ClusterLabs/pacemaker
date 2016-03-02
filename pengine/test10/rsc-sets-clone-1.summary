@@ -1,18 +1,19 @@
+5 of 24 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ sys2 sys3 ]
 
  vm1	(ocf::heartbeat:Xen):	Started sys2
- vm2	(ocf::heartbeat:Xen):	(target-role:stopped) Stopped 
- vm3	(ocf::heartbeat:Xen):	(target-role:stopped) Stopped 
- vm4	(ocf::heartbeat:Xen):	(target-role:stopped) Stopped 
+ vm2	(ocf::heartbeat:Xen):	Stopped ( disabled ) 
+ vm3	(ocf::heartbeat:Xen):	Stopped ( disabled ) 
+ vm4	(ocf::heartbeat:Xen):	Stopped ( disabled ) 
  stonithsys2	(stonith:external/ipmi):	Stopped 
  stonithsys3	(stonith:external/ipmi):	Started sys2
  Clone Set: baseclone [basegrp]
      Started: [ sys2 ]
      Stopped: [ sys3 ]
  Clone Set: fs1 [nfs1]
-     Stopped: [ sys2 sys3 ]
+     Stopped (disabled): [ sys2 sys3 ]
 
 Transition Summary:
  * Restart stonithsys3	(Started sys2)
@@ -71,13 +72,13 @@ Revised cluster status:
 Online: [ sys2 sys3 ]
 
  vm1	(ocf::heartbeat:Xen):	Started sys2
- vm2	(ocf::heartbeat:Xen):	(target-role:stopped) Stopped 
- vm3	(ocf::heartbeat:Xen):	(target-role:stopped) Stopped 
- vm4	(ocf::heartbeat:Xen):	(target-role:stopped) Stopped 
+ vm2	(ocf::heartbeat:Xen):	Stopped ( disabled ) 
+ vm3	(ocf::heartbeat:Xen):	Stopped ( disabled ) 
+ vm4	(ocf::heartbeat:Xen):	Stopped ( disabled ) 
  stonithsys2	(stonith:external/ipmi):	Started sys3
  stonithsys3	(stonith:external/ipmi):	Started sys2
  Clone Set: baseclone [basegrp]
      Started: [ sys2 sys3 ]
  Clone Set: fs1 [nfs1]
-     Stopped: [ sys2 sys3 ]
+     Stopped (disabled): [ sys2 sys3 ]
 

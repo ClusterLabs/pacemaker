@@ -1,3 +1,4 @@
+4 of 35 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Node hex-1: standby
@@ -17,9 +18,9 @@ Node hex-3: OFFLINE (standby)
  Clone Set: fs2 [fs-ocfs-2]
      Stopped: [ hex-1 hex-2 hex-3 ]
  Master/Slave Set: ms-r0 [drbd-r0]
-     Stopped: [ hex-1 hex-2 hex-3 ]
+     Stopped (disabled): [ hex-1 hex-2 hex-3 ]
  Master/Slave Set: ms-r1 [drbd-r1]
-     Stopped: [ hex-1 hex-2 hex-3 ]
+     Stopped (disabled): [ hex-1 hex-2 hex-3 ]
  Resource Group: md0-group
      md0	(ocf::heartbeat:Raid1):	Stopped 
      vg-md0	(ocf::heartbeat:LVM):	Stopped 
@@ -61,9 +62,9 @@ Node hex-3: OFFLINE (standby)
  Clone Set: fs2 [fs-ocfs-2]
      Stopped: [ hex-1 hex-2 hex-3 ]
  Master/Slave Set: ms-r0 [drbd-r0]
-     Stopped: [ hex-1 hex-2 hex-3 ]
+     Stopped (disabled): [ hex-1 hex-2 hex-3 ]
  Master/Slave Set: ms-r1 [drbd-r1]
-     Stopped: [ hex-1 hex-2 hex-3 ]
+     Stopped (disabled): [ hex-1 hex-2 hex-3 ]
  Resource Group: md0-group
      md0	(ocf::heartbeat:Raid1):	Stopped 
      vg-md0	(ocf::heartbeat:LVM):	Stopped 

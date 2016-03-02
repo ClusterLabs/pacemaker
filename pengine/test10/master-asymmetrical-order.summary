@@ -1,3 +1,4 @@
+2 of 4 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ node1 node2 ]
@@ -27,7 +28,7 @@ Revised cluster status:
 Online: [ node1 node2 ]
 
  Master/Slave Set: ms1 [rsc1]
-     Stopped: [ node1 node2 ]
+     Stopped (disabled): [ node1 node2 ]
  Master/Slave Set: ms2 [rsc2]
      Masters: [ node2 ]
      Slaves: [ node1 ]

@@ -1,3 +1,4 @@
+1 of 11 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ node1 node2 ]
@@ -12,7 +13,7 @@ Online: [ node1 node2 ]
      Started: [ node1 node2 ]
  Clone Set: configstorecloneset [configstoreclone]
      Started: [ node1 node2 ]
- sles10	(ocf::heartbeat:Xen):	(target-role:stopped) Started node2 
+ sles10	(ocf::heartbeat:Xen):	Started node2 ( disabled ) 
 
 Transition Summary:
  * Stop    sles10	(node2)
@@ -34,5 +35,5 @@ Online: [ node1 node2 ]
      Started: [ node1 node2 ]
  Clone Set: configstorecloneset [configstoreclone]
      Started: [ node1 node2 ]
- sles10	(ocf::heartbeat:Xen):	(target-role:stopped) Stopped 
+ sles10	(ocf::heartbeat:Xen):	Stopped ( disabled ) 
 

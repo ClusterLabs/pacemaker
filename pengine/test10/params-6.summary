@@ -1,17 +1,18 @@
+90 of 337 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ mgmt01 v03-a v03-b ]
 
- stonith-v02-a	(stonith:fence_ipmilan):	(target-role:Stopped) Stopped 
- stonith-v02-b	(stonith:fence_ipmilan):	(target-role:Stopped) Stopped 
- stonith-v02-c	(stonith:fence_ipmilan):	(target-role:Stopped) Stopped 
- stonith-v02-d	(stonith:fence_ipmilan):	(target-role:Stopped) Stopped 
+ stonith-v02-a	(stonith:fence_ipmilan):	Stopped ( disabled ) 
+ stonith-v02-b	(stonith:fence_ipmilan):	Stopped ( disabled ) 
+ stonith-v02-c	(stonith:fence_ipmilan):	Stopped ( disabled ) 
+ stonith-v02-d	(stonith:fence_ipmilan):	Stopped ( disabled ) 
  stonith-mgmt01	(stonith:fence_xvm):	Started v03-a
  stonith-mgmt02	(stonith:meatware):	Started v03-a
- stonith-v03-c	(stonith:fence_ipmilan):	(target-role:Stopped) Stopped 
+ stonith-v03-c	(stonith:fence_ipmilan):	Stopped ( disabled ) 
  stonith-v03-a	(stonith:fence_ipmilan):	Started v03-b
  stonith-v03-b	(stonith:fence_ipmilan):	Started mgmt01
- stonith-v03-d	(stonith:fence_ipmilan):	(target-role:Stopped) Stopped 
+ stonith-v03-d	(stonith:fence_ipmilan):	Stopped ( disabled ) 
  Clone Set: cl-clvmd [clvmd]
      Started: [ mgmt01 v03-a v03-b ]
  Clone Set: cl-dlm [dlm]
@@ -77,7 +78,7 @@ Online: [ mgmt01 v03-a v03-b ]
  Clone Set: cl-vds-ok-pool-1-pool [vds-ok-pool-1-pool]
      Started: [ v03-a v03-b ]
      Stopped: [ mgmt01 ]
- git.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
+ git.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
  Clone Set: cl-libvirt-qpid [libvirt-qpid]
      Started: [ v03-a v03-b ]
      Stopped: [ mgmt01 ]
@@ -85,100 +86,100 @@ Online: [ mgmt01 v03-a v03-b ]
  vd01-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-b
  vd01-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-a
  vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-b
- vd02-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vd02-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vd02-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vd02-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vd03-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vd03-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vd03-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vd03-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vd04-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vd04-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vd04-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vd04-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
+ vd02-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vd02-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vd02-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vd02-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vd03-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vd03-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vd03-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vd03-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vd04-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vd04-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vd04-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vd04-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
  f13-x64-devel.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-a
  eu2.ca-pages.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-b
- zakaz.transferrus.ru-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
+ zakaz.transferrus.ru-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
  Clone Set: cl-vlan200-if [vlan200-if]
      Started: [ v03-a v03-b ]
      Stopped: [ mgmt01 ]
- anbriz-gw-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- anbriz-work-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
+ anbriz-gw-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ anbriz-work-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
  lenny-x32-devel-vm	(ocf::vds-ok:VirtualDomain):	Started v03-a
- vptest1.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest2.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest3.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest4.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest5.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest6.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest7.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest8.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest9.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest10.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest11.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest12.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest13.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest14.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest15.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest16.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest17.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest18.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest19.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest20.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest21.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest22.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest23.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest24.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest25.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest26.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest27.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest28.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest29.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest30.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest31.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest32.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest33.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest34.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest35.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest36.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest37.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest38.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest39.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest40.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest41.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest42.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest43.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest44.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest45.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest46.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest47.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest48.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest49.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest50.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest51.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest52.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest53.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest54.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest55.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest56.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest57.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest58.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest59.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest60.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
+ vptest1.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest2.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest3.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest4.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest5.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest6.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest7.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest8.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest9.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest10.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest11.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest12.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest13.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest14.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest15.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest16.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest17.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest18.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest19.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest20.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest21.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest22.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest23.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest24.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest25.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest26.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest27.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest28.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest29.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest30.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest31.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest32.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest33.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest34.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest35.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest36.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest37.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest38.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest39.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest40.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest41.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest42.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest43.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest44.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest45.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest46.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest47.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest48.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest49.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest50.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest51.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest52.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest53.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest54.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest55.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest56.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest57.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest58.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest59.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest60.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
  sl6-x64-devel.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-b
- dist.express-consult.org-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- eu1.ca-pages.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- gotin-bbb-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- maxb-c55-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- metae.ru-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- rodovoepomestie.ru-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- ubuntu9.10-gotin-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
+ dist.express-consult.org-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ eu1.ca-pages.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ gotin-bbb-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ maxb-c55-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ metae.ru-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ rodovoepomestie.ru-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ ubuntu9.10-gotin-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
  c5-x64-devel.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-a
  Clone Set: cl-mcast-test-net [mcast-test-net]
      Started: [ v03-a v03-b ]
      Stopped: [ mgmt01 ]
- dist.fly-uni.org-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
+ dist.fly-uni.org-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
 
 Transition Summary:
  * Reload  c5-x64-devel.vds-ok.com-vm	(Started v03-a)
@@ -195,16 +196,16 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ mgmt01 v03-a v03-b ]
 
- stonith-v02-a	(stonith:fence_ipmilan):	(target-role:Stopped) Stopped 
- stonith-v02-b	(stonith:fence_ipmilan):	(target-role:Stopped) Stopped 
- stonith-v02-c	(stonith:fence_ipmilan):	(target-role:Stopped) Stopped 
- stonith-v02-d	(stonith:fence_ipmilan):	(target-role:Stopped) Stopped 
+ stonith-v02-a	(stonith:fence_ipmilan):	Stopped ( disabled ) 
+ stonith-v02-b	(stonith:fence_ipmilan):	Stopped ( disabled ) 
+ stonith-v02-c	(stonith:fence_ipmilan):	Stopped ( disabled ) 
+ stonith-v02-d	(stonith:fence_ipmilan):	Stopped ( disabled ) 
  stonith-mgmt01	(stonith:fence_xvm):	Started v03-a
  stonith-mgmt02	(stonith:meatware):	Started v03-a
- stonith-v03-c	(stonith:fence_ipmilan):	(target-role:Stopped) Stopped 
+ stonith-v03-c	(stonith:fence_ipmilan):	Stopped ( disabled ) 
  stonith-v03-a	(stonith:fence_ipmilan):	Started v03-b
  stonith-v03-b	(stonith:fence_ipmilan):	Started mgmt01
- stonith-v03-d	(stonith:fence_ipmilan):	(target-role:Stopped) Stopped 
+ stonith-v03-d	(stonith:fence_ipmilan):	Stopped ( disabled ) 
  Clone Set: cl-clvmd [clvmd]
      Started: [ mgmt01 v03-a v03-b ]
  Clone Set: cl-dlm [dlm]
@@ -270,7 +271,7 @@ Online: [ mgmt01 v03-a v03-b ]
  Clone Set: cl-vds-ok-pool-1-pool [vds-ok-pool-1-pool]
      Started: [ v03-a v03-b ]
      Stopped: [ mgmt01 ]
- git.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
+ git.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
  Clone Set: cl-libvirt-qpid [libvirt-qpid]
      Started: [ v03-a v03-b ]
      Stopped: [ mgmt01 ]
@@ -278,98 +279,98 @@ Online: [ mgmt01 v03-a v03-b ]
  vd01-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-b
  vd01-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-a
  vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-b
- vd02-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vd02-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vd02-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vd02-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vd03-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vd03-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vd03-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vd03-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vd04-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vd04-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vd04-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vd04-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
+ vd02-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vd02-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vd02-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vd02-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vd03-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vd03-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vd03-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vd03-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vd04-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vd04-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vd04-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vd04-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
  f13-x64-devel.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-a
  eu2.ca-pages.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-b
- zakaz.transferrus.ru-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
+ zakaz.transferrus.ru-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
  Clone Set: cl-vlan200-if [vlan200-if]
      Started: [ v03-a v03-b ]
      Stopped: [ mgmt01 ]
- anbriz-gw-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- anbriz-work-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
+ anbriz-gw-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ anbriz-work-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
  lenny-x32-devel-vm	(ocf::vds-ok:VirtualDomain):	Started v03-a
- vptest1.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest2.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest3.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest4.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest5.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest6.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest7.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest8.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest9.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest10.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest11.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest12.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest13.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest14.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest15.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest16.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest17.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest18.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest19.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest20.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest21.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest22.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest23.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest24.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest25.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest26.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest27.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest28.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest29.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest30.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest31.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest32.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest33.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest34.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest35.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest36.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest37.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest38.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest39.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest40.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest41.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest42.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest43.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest44.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest45.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest46.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest47.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest48.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest49.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest50.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest51.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest52.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest53.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest54.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest55.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest56.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest57.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest58.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest59.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- vptest60.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
+ vptest1.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest2.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest3.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest4.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest5.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest6.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest7.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest8.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest9.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest10.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest11.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest12.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest13.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest14.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest15.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest16.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest17.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest18.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest19.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest20.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest21.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest22.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest23.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest24.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest25.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest26.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest27.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest28.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest29.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest30.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest31.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest32.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest33.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest34.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest35.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest36.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest37.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest38.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest39.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest40.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest41.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest42.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest43.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest44.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest45.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest46.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest47.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest48.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest49.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest50.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest51.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest52.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest53.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest54.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest55.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest56.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest57.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest58.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest59.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ vptest60.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
  sl6-x64-devel.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-b
- dist.express-consult.org-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- eu1.ca-pages.com-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- gotin-bbb-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- maxb-c55-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- metae.ru-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- rodovoepomestie.ru-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
- ubuntu9.10-gotin-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
+ dist.express-consult.org-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ eu1.ca-pages.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ gotin-bbb-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ maxb-c55-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ metae.ru-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ rodovoepomestie.ru-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
+ ubuntu9.10-gotin-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
  c5-x64-devel.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-a
  Clone Set: cl-mcast-test-net [mcast-test-net]
      Started: [ v03-a v03-b ]
      Stopped: [ mgmt01 ]
- dist.fly-uni.org-vm	(ocf::vds-ok:VirtualDomain):	(target-role:Stopped) Stopped 
+ dist.fly-uni.org-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
 

@@ -1,3 +1,4 @@
+2 of 20 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ rhos4-node3 rhos4-node4 ]
@@ -78,7 +79,7 @@ Online: [ rhos4-node3 rhos4-node4 ]
      mysql-fs	(ocf::heartbeat:Filesystem):	Started rhos4-node3 
      mysql-db	(ocf::heartbeat:mysql):	Started rhos4-node3 
  Clone Set: qpidd-clone [qpidd]
-     Stopped: [ rhos4-node3 rhos4-node4 ]
+     Stopped (disabled): [ rhos4-node3 rhos4-node4 ]
  Clone Set: keystone-clone [keystone]
      Stopped: [ rhos4-node3 rhos4-node4 ]
  Clone Set: glance-clone [glance]

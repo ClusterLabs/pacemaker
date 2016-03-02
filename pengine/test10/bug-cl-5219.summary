@@ -1,8 +1,9 @@
+1 of 9 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ ha1.test.anchor.net.au ha2.test.anchor.net.au ]
 
- child1-service	(ocf::pacemaker:Dummy):	(target-role:Stopped) Started ha2.test.anchor.net.au 
+ child1-service	(ocf::pacemaker:Dummy):	Started ha2.test.anchor.net.au ( disabled ) 
  child2-service	(ocf::pacemaker:Dummy):	Started ha2.test.anchor.net.au 
  parent-service	(ocf::pacemaker:Dummy):	Started ha2.test.anchor.net.au 
  Master/Slave Set: child1 [stateful-child1]
@@ -25,7 +26,7 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ ha1.test.anchor.net.au ha2.test.anchor.net.au ]
 
- child1-service	(ocf::pacemaker:Dummy):	(target-role:Stopped) Stopped 
+ child1-service	(ocf::pacemaker:Dummy):	Stopped ( disabled ) 
  child2-service	(ocf::pacemaker:Dummy):	Started ha2.test.anchor.net.au 
  parent-service	(ocf::pacemaker:Dummy):	Started ha2.test.anchor.net.au 
  Master/Slave Set: child1 [stateful-child1]

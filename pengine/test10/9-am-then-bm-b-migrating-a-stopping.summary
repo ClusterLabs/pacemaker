@@ -1,8 +1,9 @@
+1 of 2 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ 18node1 18node2 18node3 ]
 
- A	(ocf::heartbeat:Dummy):	(target-role:Stopped) Started 18node1 
+ A	(ocf::heartbeat:Dummy):	Started 18node1 ( disabled ) 
  B	(ocf::heartbeat:Dummy):	Started 18node2 
 
 Transition Summary:
@@ -17,6 +18,6 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ 18node1 18node2 18node3 ]
 
- A	(ocf::heartbeat:Dummy):	(target-role:Stopped) Stopped 
+ A	(ocf::heartbeat:Dummy):	Stopped ( disabled ) 
  B	(ocf::heartbeat:Dummy):	Stopped 
 

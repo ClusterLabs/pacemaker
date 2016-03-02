@@ -1,10 +1,11 @@
+1 of 5 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Node node2: UNCLEAN (online)
 Online: [ node1 ]
 
  rsc_stonith	(stonith:null):	Started node1
- rsc1	(ocf::pacemaker:Dummy):	FAILED node2 
+ rsc1	(ocf::pacemaker:Dummy):	FAILED node2 ( disabled ) 
  rsc2	(ocf::pacemaker:Dummy):	Started node2
  Master/Slave Set: ms3 [rsc3]
      Masters: [ node2 ]
@@ -35,7 +36,7 @@ Online: [ node1 ]
 OFFLINE: [ node2 ]
 
  rsc_stonith	(stonith:null):	Started node1
- rsc1	(ocf::pacemaker:Dummy):	(target-role:Stopped) Stopped 
+ rsc1	(ocf::pacemaker:Dummy):	Stopped ( disabled ) 
  rsc2	(ocf::pacemaker:Dummy):	Started node1
  Master/Slave Set: ms3 [rsc3]
      Slaves: [ node1 ]
