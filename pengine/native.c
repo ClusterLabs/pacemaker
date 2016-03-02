@@ -1263,8 +1263,7 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     /* Required steps from this role to the next */
     while (role != rsc->next_role) {
         next_role = rsc_state_matrix[role][rsc->next_role];
-        pe_rsc_trace(rsc, "Role: Executing: %s->%s = (%s)", role2text(role),
-                     role2text(rsc->next_role), role2text(next_role), rsc->id);
+        pe_rsc_trace(rsc, "Role: Executing: %s->%s = (%s)", role2text(role), role2text(next_role), rsc->id);
         if (rsc_action_matrix[role][next_role] (rsc, chosen, FALSE, data_set) == FALSE) {
             break;
         }
@@ -1825,7 +1824,7 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
     enum pe_action_flags then_flags = then->flags;
     enum pe_action_flags first_flags = first->flags;
 
-    crm_trace(   "Testing %s on %s (0x%.6x) with %s 0x%.6x %x %x",
+    crm_trace(   "Testing %s on %s (0x%.6x) with %s 0x%.6x",
                  first->uuid, first->node ? first->node->details->uname : "[none]",
                  first->flags, then->uuid, then->flags);
 

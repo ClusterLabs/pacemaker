@@ -436,7 +436,7 @@ cib_handle_remote_msg(crm_client_t * client, xmlNode * command)
         value = crm_element_value(command, F_CIB_CALLBACK_TOKEN);
         if (value != NULL) {
             client->userdata = strdup(value);
-            crm_trace("Callback channel for %s is %s", client->id, client->userdata);
+            crm_trace("Callback channel for %s is %s", client->id, (char*)client->userdata);
 
         } else {
             client->userdata = strdup(client->id);

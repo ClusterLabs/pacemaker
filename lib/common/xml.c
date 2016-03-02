@@ -907,7 +907,7 @@ __xml_purge_attributes(xmlNode *xml)
     xml_private_t *p = xml->_private;
 
     if(__xml_acl_mode_test(p->flags, xpf_acl_read)) {
-        crm_trace("%s is readable", crm_element_name(xml), ID(xml));
+        crm_trace("%s[@id=%s] is readable", crm_element_name(xml), ID(xml));
         return TRUE;
     }
 
@@ -2426,7 +2426,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
                 save_xml_to_file(patchset,"PatchDigest:diff", NULL);
 
             } else {
-                crm_trace("%p %0.6x", digest_cs, digest_cs ? digest_cs->targets : 0);
+                crm_trace("%p %.6x", digest_cs, digest_cs ? digest_cs->targets : 0);
             }
 
         } else {
@@ -4160,7 +4160,7 @@ apply_xml_diff(xmlNode * old, xmlNode * diff, xmlNode ** new)
             crm_info("Digest mis-match: expected %s, calculated %s", digest, new_digest);
             result = FALSE;
 
-            crm_trace("%p %0.6x", digest_cs, digest_cs ? digest_cs->targets : 0);
+            crm_trace("%p %.6x", digest_cs, digest_cs ? digest_cs->targets : 0);
             if (digest_cs && digest_cs->targets) {
                 save_xml_to_file(old, "diff:original", NULL);
                 save_xml_to_file(diff, "diff:input", NULL);
