@@ -1818,6 +1818,14 @@ attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const cha
         case 'R':
             crm_xml_add(update, F_ATTRD_TASK, ATTRD_OP_REFRESH);
             break;
+        case 'E':
+            crm_xml_add(update, F_ATTRD_TASK, ATTRD_OP_UPDATE_VALUE_AND_DAMPEN);
+            crm_xml_add(update, F_ATTRD_ATTRIBUTE, name);
+            break;
+        case 'F':
+            crm_xml_add(update, F_ATTRD_TASK, ATTRD_OP_UPDATE_ONLY_DAMPEN);
+            crm_xml_add(update, F_ATTRD_ATTRIBUTE, name);
+            break;
         case 'Q':
             crm_xml_add(update, F_ATTRD_TASK, ATTRD_OP_QUERY);
             crm_xml_add(update, F_ATTRD_ATTRIBUTE, name);
