@@ -337,7 +337,7 @@ static void abort_unless_down(const char *xpath, const char *op, xmlNode *change
         return;
     }
 
-    down = match_down_event(0, node_uuid, NULL, FALSE);
+    down = match_down_event(node_uuid, FALSE);
     if(down == NULL || down->executed == false) {
         crm_trace("Not expecting %s to be down (%s)", node_uuid, xpath);
         abort_transition(INFINITY, tg_restart, reason, change);

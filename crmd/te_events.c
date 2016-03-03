@@ -387,9 +387,7 @@ get_cancel_action(const char *id, const char *node)
 /*!
  * \brief Find a transition event that would have made a specified node down
  *
- * \param[in] id      If nonzero, also consider this action ID a match
  * \param[in] target  UUID of node to match
- * \param[in] filter  If not NULL, only match CRM actions of this type
  * \param[in] quiet   If FALSE, log a warning if no match found
  *
  * \return Matching event if found, NULL otherwise
@@ -402,7 +400,7 @@ get_cancel_action(const char *id, const char *node)
  *       Then, peer_update_callback() could ignore these.
  */
 crm_action_t *
-match_down_event(int id, const char *target, const char *filter, bool quiet)
+match_down_event(const char *target, bool quiet)
 {
     const char *this_action = NULL;
     const char *this_node = NULL;
@@ -420,17 +418,9 @@ match_down_event(int id, const char *target, const char *filter, bool quiet)
         for (; gIter2 != NULL; gIter2 = gIter2->next) {
             crm_action_t *action = (crm_action_t *) gIter2->data;
 
-            if (id > 0 && action->id == id) {
-                match = action;
-                break;
-            }
-
             this_action = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
 
             if (action->type != action_type_crm) {
-                continue;
-
-            } else if (filter != NULL && safe_str_neq(this_action, filter)) {
                 continue;
 
             } else if (safe_str_neq(this_action, CRM_OP_FENCE)
@@ -451,7 +441,6 @@ match_down_event(int id, const char *target, const char *filter, bool quiet)
             }
 
             match = action;
-            id = action->id;
             break;
         }
 
@@ -461,11 +450,8 @@ match_down_event(int id, const char *target, const char *filter, bool quiet)
     }
 
     if (match != NULL) {
-        crm_debug("Match found for action %d: %s on %s", id,
+        crm_debug("Match found for action %d: %s on %s", match->id,
                   crm_element_value(match->xml, XML_LRM_ATTR_TASK_KEY), target);
-
-    } else if (id > 0) {
-        crm_err("No match for action %d", id);
 
     } else if(quiet == FALSE) {
         crm_warn("No match for shutdown action on %s", target);

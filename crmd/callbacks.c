@@ -199,7 +199,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         xmlNode *update = NULL;
         int flags = node_update_peer;
         gboolean alive = is_remote? appeared : crm_is_peer_active(node);
-        crm_action_t *down = match_down_event(0, node->uuid, NULL, appeared);
+        crm_action_t *down = match_down_event(node->uuid, appeared);
 
         crm_trace("Alive=%d, appear=%d, down=%p", alive, appeared, down);
 
