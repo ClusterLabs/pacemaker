@@ -450,11 +450,12 @@ match_down_event(const char *target, bool quiet)
     }
 
     if (match != NULL) {
-        crm_debug("Match found for action %d: %s on %s", match->id,
-                  crm_element_value(match->xml, XML_LRM_ATTR_TASK_KEY), target);
+        crm_debug("Shutdown action found for node %s: action %d (%s)",
+                  target, match->id,
+                  crm_element_value(match->xml, XML_LRM_ATTR_TASK_KEY));
 
     } else if(quiet == FALSE) {
-        crm_warn("No match for shutdown action on %s", target);
+        crm_warn("No reason to expect node %s to be down", target);
     }
 
     return match;
