@@ -659,11 +659,11 @@ if [ $SEARCH_LOGS = 1 ]; then
 	fatal "Logfile discovery disabled, try specifying --logfile /some/path"
     fi
 
-elif [ -z "$extra_logs" ]; then
+elif [ -z "$EXTRA_LOGS" ]; then
    fatal "Could not determine the location of your cluster logs, try specifying --logfile /some/path"
 
 else
-    logfiles="$extra_logs"
+    logfiles="$EXTRA_LOGS"
 fi
 
 debug "Config: $cluster $cluster_cf $logd_cf $logfiles"
