@@ -484,6 +484,12 @@ get_cluster_node_uuid(cib_t * the_cib, const char *uname, char **uuid)
 
     for (a_child = __xml_first_child(xml_obj); a_child != NULL; a_child = __xml_next(a_child)) {
         if (crm_str_eq((const char *)a_child->name, XML_CIB_TAG_NODE, TRUE)) {
+            const char *node_type = crm_element_value(a_child, XML_ATTR_TYPE);
+            /* Only if it's a cluster node */
+            if (safe_str_eq(node_type, "remote")) {
+                continue;
+            }
+
             child_name = crm_element_value(a_child, XML_ATTR_UNAME);
             if (safe_str_eq(uname, child_name)) {
                 child_name = ID(a_child);
@@ -507,6 +513,10 @@ query_node_uuid(cib_t * the_cib, const char *uname, char **uuid, int *is_remote_
 
     CRM_ASSERT(uname != NULL);
     CRM_ASSERT(uuid != NULL);
+
+    if (is_remote_node) {
+        *is_remote_node = FALSE;
+    }
 
     rc = get_cluster_node_uuid(the_cib, uname, uuid);
     if (rc != pcmk_ok) {
