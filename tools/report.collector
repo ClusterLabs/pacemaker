@@ -579,7 +579,7 @@ get_logfiles() {
 	    fi
 	    ;;
 	*) debug "Unknown cluster type: $cf_type"
-	   echo "/var/log/messages"
+	   echo "/var/log/pacemaker.log"
 	   ;;
     esac
 
@@ -737,6 +737,7 @@ for l in $logfiles $EXTRA_LOGS; do
 	# We already have it
 	continue
     fi
+
     dumplogset "$l" $LOG_START $LOG_END > "$b"
     echo "Log patterns $REPORT_TARGET:"  > $ANALYSIS_F
     cat $b | grep -f $pattfile >> $ANALYSIS_F
