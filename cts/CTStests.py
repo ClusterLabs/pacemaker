@@ -2550,7 +2550,7 @@ class RemoteLXC(CTSTest):
     def start_lxc_simple(self, node):
 
         # restore any artifacts laying around from a previous test.
-        self.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -R &>/dev/null")
+        self.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -s -R &>/dev/null")
 
         # generate the containers, put them in the config, add some resources to them
         pats = [ ]
@@ -2576,13 +2576,7 @@ class RemoteLXC(CTSTest):
         # as best as possible 
         if self.failed == 1:
             # restore libvirt and cib
-            self.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -R &>/dev/null")
-            self.rsh(node, "crm_resource -C -r container1 &>/dev/null")
-            self.rsh(node, "crm_resource -C -r container2 &>/dev/null")
-            self.rsh(node, "crm_resource -C -r lxc1 &>/dev/null")
-            self.rsh(node, "crm_resource -C -r lxc2 &>/dev/null")
-            self.rsh(node, "crm_resource -C -r lxc-ms &>/dev/null")
-            time.sleep(20)
+            self.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -s -R &>/dev/null")
             return
 
         watch = self.create_watch(pats, 120)
@@ -2601,7 +2595,7 @@ class RemoteLXC(CTSTest):
             self.failed = 1
 
         # cleanup libvirt
-        self.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -R &>/dev/null")
+        self.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -s -R &>/dev/null")
 
     def __call__(self, node):
         '''Perform the 'RemoteLXC' test. '''
