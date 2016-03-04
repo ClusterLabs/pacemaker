@@ -384,6 +384,10 @@ get_cancel_action(const char *id, const char *node)
     return NULL;
 }
 
+/* downed nodes are listed like: <downed> <node id="UUID1" /> ... </downed> */
+#define XPATH_DOWNED "//" XML_GRAPH_TAG_DOWNED \
+                     "/" XML_CIB_TAG_NODE "[@" XML_ATTR_UUID "='%s']"
+
 /*!
  * \brief Find a transition event that would have made a specified node down
  *
@@ -391,63 +395,34 @@ get_cancel_action(const char *id, const char *node)
  * \param[in] quiet   If FALSE, log a warning if no match found
  *
  * \return Matching event if found, NULL otherwise
- *
- * \note "Down" events are CRM_OP_FENCE and CRM_OP_SHUTDOWN.
- * \todo This should detect normal pacemaker_remote node stop events,
- *       where action->type is action_type_rsc,
- *       XML_LRM_ATTR_TASK is CRMD_ACTION_STOP,
- *       and the affected resource creates a remote node that matches target.
- *       Then, peer_update_callback() could ignore these.
  */
 crm_action_t *
 match_down_event(const char *target, bool quiet)
 {
-    const char *this_action = NULL;
-    const char *this_node = NULL;
     crm_action_t *match = NULL;
+    xmlXPathObjectPtr xpath_ret = NULL;
+    GListPtr gIter, gIter2;
 
-    GListPtr gIter = NULL;
-    GListPtr gIter2 = NULL;
+    char *xpath = crm_strdup_printf(XPATH_DOWNED, target);
 
-    gIter = transition_graph->synapses;
-    for (; gIter != NULL; gIter = gIter->next) {
-        synapse_t *synapse = (synapse_t *) gIter->data;
+    for (gIter = transition_graph->synapses;
+         gIter != NULL && match == NULL;
+         gIter = gIter->next) {
 
-        /* lookup event */
-        gIter2 = synapse->actions;
-        for (; gIter2 != NULL; gIter2 = gIter2->next) {
-            crm_action_t *action = (crm_action_t *) gIter2->data;
+        for (gIter2 = ((synapse_t*)gIter->data)->actions;
+             gIter2 != NULL && match == NULL;
+             gIter2 = gIter2->next) {
 
-            this_action = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
-
-            if (action->type != action_type_crm) {
-                continue;
-
-            } else if (safe_str_neq(this_action, CRM_OP_FENCE)
-                       && safe_str_neq(this_action, CRM_OP_SHUTDOWN)) {
-                continue;
+            match = (crm_action_t*)gIter2->data;
+            xpath_ret = xpath_search(match->xml, xpath);
+            if (numXpathResults(xpath_ret) < 1) {
+                match = NULL;
             }
-
-            this_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
-
-            if (this_node == NULL) {
-                crm_log_xml_err(action->xml, "No node uuid");
-            }
-
-            if (safe_str_neq(this_node, target)) {
-                crm_trace("Action %d node %s is not a match for %s",
-                          action->id, this_node, target);
-                continue;
-            }
-
-            match = action;
-            break;
-        }
-
-        if (match != NULL) {
-            break;
+            freeXpathObject(xpath_ret);
         }
     }
+
+    free(xpath);
 
     if (match != NULL) {
         crm_debug("Shutdown action found for node %s: action %d (%s)",

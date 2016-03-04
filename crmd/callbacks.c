@@ -217,9 +217,9 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 crm_trace("Updating CIB %s stonithd reported fencing of %s complete",
                           (down->confirmed? "after" : "before"), node->uname);
 
-            } else if (alive == FALSE) {
+            } else if ((alive == FALSE) && safe_str_eq(task, CRM_OP_SHUTDOWN)) {
                 crm_notice("%s of %s (op %d) is complete", task, node->uname, down->id);
-                /* down->confirmed = TRUE; Only stonith-ng returning should imply completion */
+                /* down->confirmed = TRUE; */
                 stop_te_timer(down->timer);
 
                 if (!is_remote) {
@@ -232,18 +232,11 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 trigger_graph();
 
             } else {
-                crm_trace("Node %s came up, was expected %s (op %d)",
-                          node->uname, task, down->id);
+                crm_trace("Node %s is %salive, was expected to %s (op %d)",
+                          node->uname, (alive? "" : "not "), task, down->id);
             }
 
         } else if (appeared == FALSE) {
-            /* match_down_event() doesn't match resource stop events for
-             * pacemaker_remote nodes, so normal pacemaker_remote node stops
-             * will come here and get ugly log messages, but otherwise be OK.
-             * We can't skip this entirely for pacemaker_remote nodes,
-             * because recurring monitor failures will also end up here
-             * when the cluster recovers the connection resource.
-             */
             crm_notice("Stonith/shutdown of %s not matched", node->uname);
 
             if (!is_remote) {
