@@ -253,17 +253,19 @@
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
 #  define XML_CIB_ATTR_STONITH	    	"stonith"
 
+/* LRM is a bit of a misnomer here; the crmd and pengine use these to track
+ * actions, which usually but not always are LRM operations
+ */
 #  define XML_LRM_ATTR_INTERVAL		"interval"
 #  define XML_LRM_ATTR_TASK		"operation"
 #  define XML_LRM_ATTR_TASK_KEY		"operation_key"
 #  define XML_LRM_ATTR_TARGET		"on_node"
-/*! used for remote nodes.
- *  For remote nodes the action is routed to the 'on_node'
- *  node location, and then from there if 'exec_on' is set
- *  the host will execute the action on the remote node
- *  it controls. */
-#  define XML_LRM_ATTR_ROUTER_NODE  "router_node"
 #  define XML_LRM_ATTR_TARGET_UUID	"on_node_uuid"
+/*! Actions to be executed on Pacemaker Remote nodes are routed through
+ *  crmd on the cluster node hosting the remote connection. That cluster node
+ *  is considered the router node for the action.
+ */
+#  define XML_LRM_ATTR_ROUTER_NODE  "router_node"
 #  define XML_LRM_ATTR_RSCID		"rsc-id"
 #  define XML_LRM_ATTR_OPSTATUS		"op-status"
 #  define XML_LRM_ATTR_RC		"rc-code"
@@ -287,6 +289,7 @@
 #  define XML_GRAPH_TAG_RSC_OP		"rsc_op"
 #  define XML_GRAPH_TAG_PSEUDO_EVENT	"pseudo_event"
 #  define XML_GRAPH_TAG_CRM_EVENT	"crm_event"
+#  define XML_GRAPH_TAG_DOWNED            "downed"
 
 #  define XML_TAG_RULE			"rule"
 #  define XML_RULE_ATTR_SCORE		"score"
