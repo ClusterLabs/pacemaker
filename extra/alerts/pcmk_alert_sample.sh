@@ -21,9 +21,14 @@ if [ -z $CRM_notify_version ]; then
     exit 0
 fi
 
+tstamp=`printf "%04d. " "$CRM_notify_node_sequence"`
+if [ ! -z $CRM_notify_timestamp ]; then
+    tstamp="${tstamp} $CRM_notify_timestamp (`date "+%H:%M:%S.%06N"`): " 
+fi
+
 case $CRM_notify_kind in
     node)
-	echo "Node '${CRM_notify_node}' is now '${CRM_notify_desc}'" >> ${CRM_notify_recipient}
+	echo "${tstamp}Node '${CRM_notify_node}' is now '${CRM_notify_desc}'" >> ${CRM_notify_recipient}
 	;;
     fencing)
 	# Other keys:
@@ -32,7 +37,7 @@ case $CRM_notify_kind in
 	# CRM_notify_task
 	# CRM_notify_rc
 	#
-	echo "Fencing ${CRM_notify_desc}" >> ${CRM_notify_recipient}
+	echo "${tstamp}Fencing ${CRM_notify_desc}" >> ${CRM_notify_recipient}
 	;;
     resource)
 	# Other keys:
@@ -56,12 +61,12 @@ case $CRM_notify_kind in
 	case ${CRM_notify_desc} in
 	    Cancelled) ;;
 	    *)
-		echo "Resource operation '${CRM_notify_task}${CRM_notify_interval}' for '${CRM_notify_rsc}' on '${CRM_notify_node}': ${CRM_notify_desc}${CRM_notify_target_rc}" >> ${CRM_notify_recipient}
+		echo "${tstamp}Resource operation '${CRM_notify_task}${CRM_notify_interval}' for '${CRM_notify_rsc}' on '${CRM_notify_node}': ${CRM_notify_desc}${CRM_notify_target_rc}" >> ${CRM_notify_recipient}
 		;;
 	esac
 	;;
     *)
-        echo "Unhandled $CRM_notify_kind notification" >> ${CRM_notify_recipient}
+        echo "${tstamp}Unhandled $CRM_notify_kind notification" >> ${CRM_notify_recipient}
 	env | grep CRM_notify >> ${CRM_notify_recipient}
         ;;
 

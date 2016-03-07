@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" 
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+      <ref name="element-alerts"/>
+  </start>
+
+  <define name="element-alerts">
+    <optional>
+    <element name="alerts">
+      <zeroOrMore>
+        <element name="alert">
+          <attribute name="id"><data type="ID"/></attribute>
+          <optional>
+            <attribute name="description"><text/></attribute>
+          </optional>
+          <!-- path to the script called for alert -->
+          <attribute name="path"><text/></attribute>
+          <ref name="element-alert-extra"/>
+          <zeroOrMore>
+            <element name="recipient">
+              <attribute name="id"><data type="ID"/></attribute>
+              <optional>
+                <attribute name="description"><text/></attribute>
+              </optional>
+              <attribute name="value"><text/></attribute>
+              <ref name="element-alert-extra"/>
+            </element>
+          </zeroOrMore>
+        </element>
+      </zeroOrMore>
+    </element>
+    </optional>
+  </define>
+
+  <define name="element-alert-extra">
+      <zeroOrMore>
+        <choice>
+          <element name="meta_attributes">
+            <externalRef href="nvset-1.3.rng"/>
+          </element>
+          <element name="instance_attributes">
+            <externalRef href="nvset-1.3.rng"/>
+          </element>
+        </choice>
+      </zeroOrMore>
+  </define>
+
+</grammar>
