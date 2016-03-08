@@ -24,5 +24,7 @@ gboolean is_container_remote_node(node_t *node);
 gboolean is_remote_node(node_t *node);
 gboolean is_rsc_baremetal_remote_node(resource_t *rsc, pe_working_set_t * data_set);
 resource_t * rsc_contains_remote_node(pe_working_set_t * data_set, resource_t *rsc);
+void pe_foreach_guest_node(const pe_working_set_t *data_set, const node_t *host,
+                           void (*helper)(const node_t*, void*), void *user_data);
 
 #endif

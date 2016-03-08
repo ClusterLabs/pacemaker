@@ -99,3 +99,35 @@ xml_contains_remote_node(xmlNode *xml)
     }
     return FALSE;
 }
+
+/*!
+ * \internal
+ * \brief Execute a supplied function for each guest node running on a host
+ *
+ * \param[in]     data_set   Working set for cluster
+ * \param[in]     host       Host node to check
+ * \param[in]     helper     Function to call for each guest node
+ * \param[in/out] user_data  Pointer to pass to helper function
+ */
+void
+pe_foreach_guest_node(const pe_working_set_t *data_set, const node_t *host,
+                      void (*helper)(const node_t*, void*), void *user_data)
+{
+    GListPtr iter;
+
+    CRM_CHECK(data_set && host && host->details && helper, return);
+    if (!is_set(data_set->flags, pe_flag_have_remote_nodes)) {
+        return;
+    }
+    for (iter = host->details->running_rsc; iter != NULL; iter = iter->next) {
+        resource_t *rsc = (resource_t *) iter->data;
+
+        if (rsc->is_remote_node && (rsc->container != NULL)) {
+            node_t *guest_node = pe_find_node(data_set->nodes, rsc->id);
+
+            if (guest_node) {
+                (*helper)(guest_node, user_data);
+            }
+        }
+    }
+}
