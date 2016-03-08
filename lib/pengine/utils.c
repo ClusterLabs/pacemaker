@@ -63,7 +63,7 @@ bool pe_can_fence(pe_working_set_t * data_set, node_t *node)
 }
 
 node_t *
-node_copy(node_t * this_node)
+node_copy(const node_t *this_node)
 {
     node_t *new_node = NULL;
 
@@ -1191,7 +1191,7 @@ find_first_action(GListPtr input, const char *uuid, const char *task, node_t * o
 }
 
 GListPtr
-find_actions(GListPtr input, const char *key, node_t * on_node)
+find_actions(GListPtr input, const char *key, const node_t *on_node)
 {
     GListPtr gIter = input;
     GListPtr result = NULL;

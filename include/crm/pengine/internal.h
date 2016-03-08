@@ -104,7 +104,7 @@ void common_free(resource_t * rsc);
 
 extern pe_working_set_t *pe_dataset;
 
-extern node_t *node_copy(node_t * this_node);
+extern node_t *node_copy(const node_t *this_node);
 extern time_t get_effective_time(pe_working_set_t * data_set);
 extern int get_failcount(node_t * node, resource_t * rsc, time_t *last_failure,
                          pe_working_set_t * data_set);
@@ -216,7 +216,7 @@ extern action_t *find_first_action(GListPtr input, const char *uuid, const char 
 extern enum action_tasks get_complex_task(resource_t * rsc, const char *name,
                                           gboolean allow_non_atomic);
 
-extern GListPtr find_actions(GListPtr input, const char *key, node_t * on_node);
+extern GListPtr find_actions(GListPtr input, const char *key, const node_t *on_node);
 extern GListPtr find_actions_exact(GListPtr input, const char *key, node_t * on_node);
 extern GListPtr find_recurring_actions(GListPtr input, node_t * not_on_node);
 
