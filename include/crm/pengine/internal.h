@@ -18,6 +18,7 @@
 #ifndef PE_INTERNAL__H
 #  define PE_INTERNAL__H
 #  include <crm/pengine/status.h>
+#  include <crm/pengine/remote.h>
 
 #  define pe_rsc_info(rsc, fmt, args...)  crm_log_tag(LOG_INFO,  rsc ? rsc->id : "<NULL>", fmt, ##args)
 #  define pe_rsc_debug(rsc, fmt, args...) crm_log_tag(LOG_DEBUG, rsc ? rsc->id : "<NULL>", fmt, ##args)
@@ -272,11 +273,6 @@ void trigger_unfencing(
 
 void set_bit_recursive(resource_t * rsc, unsigned long long flag);
 void clear_bit_recursive(resource_t * rsc, unsigned long long flag);
-gboolean xml_contains_remote_node(xmlNode *xml);
-gboolean is_baremetal_remote_node(node_t *node);
-gboolean is_container_remote_node(node_t *node);
-gboolean is_remote_node(node_t *node);
-resource_t * rsc_contains_remote_node(pe_working_set_t * data_set, resource_t *rsc);
 
 gboolean add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref);
 
