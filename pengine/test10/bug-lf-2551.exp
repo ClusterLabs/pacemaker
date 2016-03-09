@@ -497,6 +497,9 @@
     <action_set>
       <crm_event id="245" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9">
         <attributes CRM_meta_on_node="hex-9" CRM_meta_on_node_uuid="hex-9" CRM_meta_probe_complete="true" CRM_meta_standby="off" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="hex-9"/>
+        </downed>
       </crm_event>
     </action_set>
     <inputs/>

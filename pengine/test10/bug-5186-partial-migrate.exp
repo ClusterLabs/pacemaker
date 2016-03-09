@@ -354,6 +354,9 @@
     <action_set>
       <crm_event id="72" operation="stonith" operation_key="stonith-bl460g1n7-reboot" on_node="bl460g1n7" on_node_uuid="3232261593">
         <attributes CRM_meta_default_ping_set="100" CRM_meta_diskcheck_status="normal" CRM_meta_diskcheck_status_internal="normal" CRM_meta_on_node="bl460g1n7" CRM_meta_on_node_uuid="3232261593" CRM_meta_probe_complete="true" CRM_meta_ringnumber_0="192.168.101.217 is UP" CRM_meta_ringnumber_1="192.168.102.217 is UP" CRM_meta_shutdown="0" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="3232261593"/>
+        </downed>
       </crm_event>
     </action_set>
     <inputs/>

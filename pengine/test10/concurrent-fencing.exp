@@ -3,6 +3,9 @@
     <action_set>
       <crm_event id="5" operation="stonith" operation_key="stonith-node3-reboot" on_node="node3" on_node_uuid="uuid3">
         <attributes CRM_meta_on_node="node3" CRM_meta_on_node_uuid="uuid3" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="uuid3"/>
+        </downed>
       </crm_event>
     </action_set>
     <inputs/>
@@ -11,6 +14,9 @@
     <action_set>
       <crm_event id="4" operation="stonith" operation_key="stonith-node2-reboot" on_node="node2" on_node_uuid="uuid2">
         <attributes CRM_meta_on_node="node2" CRM_meta_on_node_uuid="uuid2" CRM_meta_op_no_wait="true" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="uuid2"/>
+        </downed>
       </crm_event>
     </action_set>
     <inputs>
@@ -26,6 +32,9 @@
     <action_set>
       <crm_event id="3" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="uuid1">
         <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="uuid1" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="uuid1"/>
+        </downed>
       </crm_event>
     </action_set>
     <inputs/>

@@ -239,6 +239,9 @@
       <rsc_op id="108" operation="stop" operation_key="lxc1_stop_0" on_node="rhel7-1" on_node_uuid="1">
         <primitive id="lxc1" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_container="container1" CRM_meta_timeout="90000" />
+        <downed>
+          <node id="lxc1"/>
+        </downed>
       </rsc_op>
     </action_set>
     <inputs>

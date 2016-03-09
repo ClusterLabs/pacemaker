@@ -260,6 +260,9 @@
     <action_set>
       <crm_event id="49" operation="stonith" operation_key="stonith-c001n02-reboot" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
         <attributes CRM_meta_on_node="c001n02" CRM_meta_on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" CRM_meta_probe_complete="true" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+        </downed>
       </crm_event>
     </action_set>
     <inputs/>
