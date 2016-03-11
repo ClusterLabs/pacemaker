@@ -171,6 +171,8 @@ create_attribute(xmlNode *xml)
     if(dampen > 0) {
         a->timeout_ms = dampen;
         a->timer = mainloop_timer_add(a->id, a->timeout_ms, FALSE, attribute_timer_cb, a);
+    } else if (dampen < 0) {
+	crm_warn("Ignoring invalid delay %s for attribute %s", value, a->id);
     }
 
     g_hash_table_replace(attributes, a->id, a);
