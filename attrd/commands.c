@@ -527,7 +527,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
         }
     }
 
-    if (safe_str_eq(op, ATTRD_OP_UPDATE)) {
+    if (safe_str_eq(op, ATTRD_OP_UPDATE) || safe_str_eq(op, ATTRD_OP_UPDATE_VALUE_AND_DAMPEN) || safe_str_eq(op, ATTRD_OP_UPDATE_ONLY_DAMPEN)) {
         attrd_peer_update(peer, xml, host, FALSE);
 
     } else if (safe_str_eq(op, ATTRD_OP_SYNC)) {
@@ -671,14 +671,41 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
 {
     bool changed = FALSE;
     attribute_value_t *v = NULL;
+    int dampen = 0;
 
+    const char *op = crm_element_value(xml, F_ATTRD_TASK);
     const char *attr = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
     const char *value = crm_element_value(xml, F_ATTRD_VALUE);
+    const char *dvalue = crm_element_value(xml, F_ATTRD_DAMPEN);
 
     attribute_t *a = g_hash_table_lookup(attributes, attr);
 
     if(a == NULL) {
-        a = create_attribute(xml);
+        if (safe_str_eq(op, ATTRD_OP_UPDATE) || safe_str_eq(op, ATTRD_OP_UPDATE_VALUE_AND_DAMPEN)) {
+            a = create_attribute(xml);
+        }
+    } else {
+        if (safe_str_eq(op, ATTRD_OP_UPDATE_VALUE_AND_DAMPEN) || safe_str_eq(op, ATTRD_OP_UPDATE_ONLY_DAMPEN)) {
+            if (dvalue) {
+                dampen = crm_get_msec(dvalue); 
+                if (dampen >= 0) {
+                    if (a->timeout_ms != dampen) {
+                        mainloop_timer_stop(a->timer);
+                        mainloop_timer_del(a->timer);
+                        a->timeout_ms = dampen;
+                        if (dampen > 0) {
+                            a->timer = mainloop_timer_add(a->id, a->timeout_ms, FALSE, attribute_timer_cb, a);
+                            crm_info("Update attribute %s with delay %dms (%s)", a->id, dampen, dvalue);
+                        } else {
+                            a->timer = NULL;
+                            crm_info("Update attribute %s with not delay", a->id);
+                        }
+                        //if dampen is changed, attrd writes in a current value immediately.
+                        write_or_elect_attribute(a);
+                    }
+                } 
+            }
+        }
     }
 
     if(host == NULL) {
@@ -713,14 +740,18 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
         free_xml(sync);
 
     } else if(safe_str_neq(v->current, value)) {
-        crm_info("Setting %s[%s]: %s -> %s from %s", attr, host, v->current, value, peer->uname);
-        free(v->current);
-        if(value) {
-            v->current = strdup(value);
+        if (safe_str_eq(op, ATTRD_OP_UPDATE) || safe_str_eq(op, ATTRD_OP_UPDATE_VALUE_AND_DAMPEN)) {
+            crm_info("Setting %s[%s]: %s -> %s from %s", attr, host, v->current, value, peer->uname);
+            free(v->current);
+            if(value) {
+                v->current = strdup(value);
+            } else {
+                v->current = NULL;
+            }
+            changed = TRUE;
         } else {
-            v->current = NULL;
+            crm_trace("Unchanged %s[%s] from %s.(ATTRD_OP_UPDATE_ONLY_DAMPEN)", attr, host, peer->uname);
         }
-        changed = TRUE;
 
     } else {
         crm_trace("Unchanged %s[%s] from %s is %s", attr, host, peer->uname, value);
