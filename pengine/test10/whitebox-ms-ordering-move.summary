@@ -1,0 +1,86 @@
+
+Current cluster status:
+Online: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
+Containers: [ lxc1:container1 lxc2:container2 ]
+
+ Fencing	(stonith:fence_xvm):	Started rhel7-3 
+ FencingPass	(stonith:fence_dummy):	Started rhel7-4 
+ FencingFail	(stonith:fence_dummy):	Started rhel7-5 
+ rsc_rhel7-1	(ocf::heartbeat:IPaddr2):	Started rhel7-1 
+ rsc_rhel7-2	(ocf::heartbeat:IPaddr2):	Started rhel7-2 
+ rsc_rhel7-3	(ocf::heartbeat:IPaddr2):	Started rhel7-3 
+ rsc_rhel7-4	(ocf::heartbeat:IPaddr2):	Started rhel7-4 
+ rsc_rhel7-5	(ocf::heartbeat:IPaddr2):	Started rhel7-5 
+ migrator	(ocf::pacemaker:Dummy):	Started rhel7-4 
+ Clone Set: Connectivity [ping-1]
+     Started: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
+     Stopped: [ lxc1 lxc2 ]
+ Master/Slave Set: master-1 [stateful-1]
+     Masters: [ rhel7-3 ]
+     Slaves: [ rhel7-1 rhel7-2 rhel7-4 rhel7-5 ]
+ Resource Group: group-1
+     r192.168.122.207	(ocf::heartbeat:IPaddr2):	Started rhel7-3 
+     petulant	(service:DummySD):	Started rhel7-3 
+     r192.168.122.208	(ocf::heartbeat:IPaddr2):	Started rhel7-3 
+ lsb-dummy	(lsb:/usr/share/pacemaker/tests/cts/LSBDummy):	Started rhel7-3 
+ container1	(ocf::heartbeat:VirtualDomain):	Started rhel7-1 
+ container2	(ocf::heartbeat:VirtualDomain):	Started rhel7-1 
+ Master/Slave Set: lxc-ms-master [lxc-ms]
+     Masters: [ lxc1 ]
+     Slaves: [ lxc2 ]
+
+Transition Summary:
+ * Move    container1	(Started rhel7-1 -> rhel7-2)
+ * Restart lxc-ms:0	(Master lxc1)
+ * Move    lxc1	(Started rhel7-1 -> rhel7-2)
+
+Executing cluster transition:
+ * Pseudo action:   lxc-ms-master_demote_0
+ * Resource action: lxc-ms          demote on lxc1
+ * Pseudo action:   lxc-ms-master_demoted_0
+ * Pseudo action:   lxc-ms-master_stop_0
+ * Resource action: lxc-ms          stop on lxc1
+ * Pseudo action:   lxc-ms-master_stopped_0
+ * Pseudo action:   lxc-ms-master_start_0
+ * Resource action: lxc1            stop on rhel7-1
+ * Resource action: container1      stop on rhel7-1
+ * Pseudo action:   all_stopped
+ * Resource action: container1      start on rhel7-2
+ * Resource action: lxc1            start on rhel7-2
+ * Resource action: lxc-ms          start on lxc1
+ * Pseudo action:   lxc-ms-master_running_0
+ * Resource action: lxc1            monitor=30000 on rhel7-2
+ * Pseudo action:   lxc-ms-master_promote_0
+ * Resource action: lxc-ms          promote on lxc1
+ * Pseudo action:   lxc-ms-master_promoted_0
+
+Revised cluster status:
+Online: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
+Containers: [ lxc1:container1 lxc2:container2 ]
+
+ Fencing	(stonith:fence_xvm):	Started rhel7-3 
+ FencingPass	(stonith:fence_dummy):	Started rhel7-4 
+ FencingFail	(stonith:fence_dummy):	Started rhel7-5 
+ rsc_rhel7-1	(ocf::heartbeat:IPaddr2):	Started rhel7-1 
+ rsc_rhel7-2	(ocf::heartbeat:IPaddr2):	Started rhel7-2 
+ rsc_rhel7-3	(ocf::heartbeat:IPaddr2):	Started rhel7-3 
+ rsc_rhel7-4	(ocf::heartbeat:IPaddr2):	Started rhel7-4 
+ rsc_rhel7-5	(ocf::heartbeat:IPaddr2):	Started rhel7-5 
+ migrator	(ocf::pacemaker:Dummy):	Started rhel7-4 
+ Clone Set: Connectivity [ping-1]
+     Started: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
+     Stopped: [ lxc1 lxc2 ]
+ Master/Slave Set: master-1 [stateful-1]
+     Masters: [ rhel7-3 ]
+     Slaves: [ rhel7-1 rhel7-2 rhel7-4 rhel7-5 ]
+ Resource Group: group-1
+     r192.168.122.207	(ocf::heartbeat:IPaddr2):	Started rhel7-3 
+     petulant	(service:DummySD):	Started rhel7-3 
+     r192.168.122.208	(ocf::heartbeat:IPaddr2):	Started rhel7-3 
+ lsb-dummy	(lsb:/usr/share/pacemaker/tests/cts/LSBDummy):	Started rhel7-3 
+ container1	(ocf::heartbeat:VirtualDomain):	Started rhel7-2 
+ container2	(ocf::heartbeat:VirtualDomain):	Started rhel7-1 
+ Master/Slave Set: lxc-ms-master [lxc-ms]
+     Masters: [ lxc1 ]
+     Slaves: [ lxc2 ]
+
