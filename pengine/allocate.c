@@ -1726,16 +1726,18 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
                     NULL,
                     pe_order_preserve | pe_order_implies_first,
                     data_set);
-            } else {
+            }
 
-                custom_action_order(remote_rsc,
-                    generate_op_key(remote_rsc->id, RSC_START, 0),
-                    NULL,
-                    action->rsc,
-                    NULL,
-                    action,
-                    pe_order_preserve | pe_order_implies_then | pe_order_runnable_left,
-                    data_set);
+            if(container && is_set(container->flags, pe_rsc_failed)) {
+                /* Just like a stop, the demote is implied by the
+                 * container having failed/stopped
+                 *
+                 * If we really wanted to we would order the demote
+                 * after the stop, IFF the containers current role was
+                 * stopped (otherwise we re-introduce an ordering
+                 * loop)
+                 */
+                pe_set_action_bit(action, pe_action_pseudo);
             }
 
         } else if (safe_str_eq(action->task, "stop") &&
