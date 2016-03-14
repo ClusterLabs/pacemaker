@@ -239,6 +239,14 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         attrd_send_ack(client, id, flags);
         attrd_client_update(xml);
 
+    } else if (safe_str_eq(op, ATTRD_OP_UPDATE_BOTH)) {
+        attrd_send_ack(client, id, flags);
+        attrd_client_update(xml);
+
+    } else if (safe_str_eq(op, ATTRD_OP_UPDATE_DELAY)) {
+        attrd_send_ack(client, id, flags);
+        attrd_client_update(xml);
+  
     } else if (safe_str_eq(op, ATTRD_OP_REFRESH)) {
         attrd_send_ack(client, id, flags);
         attrd_client_refresh();
