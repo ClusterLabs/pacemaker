@@ -1277,20 +1277,37 @@ clone_update_actions_interleave(action_t * first, action_t * then, node_t * node
             first_action = find_first_action(first_child->actions, NULL, first_task, node);
             then_action = find_first_action(then_child->actions, NULL, then->task, node);
 
-            CRM_CHECK(first_action != NULL || is_set(first_child->flags, pe_rsc_orphan),
-                      crm_err("No action found for %s in %s (first)", first_task, first_child->id));
+            if (first_action == NULL) {
+                if (is_not_set(first_child->flags, pe_rsc_orphan)
+                    && crm_str_eq(first_task, RSC_STOP, TRUE) == FALSE
+                    && crm_str_eq(first_task, RSC_DEMOTE, TRUE) == FALSE) {
+                    crm_err("Internal error: No action found for %s in %s (first)",
+                            first_task, first_child->id);
 
-            /* We're only interested if 'then' is neither stopping nor being demoted */ 
-            if (then_action == NULL && is_not_set(then_child->flags, pe_rsc_orphan)
-                && crm_str_eq(then->task, RSC_STOP, TRUE) == FALSE 
-                && crm_str_eq(then->task, RSC_DEMOTE, TRUE) == FALSE) {
-                crm_err("Internal error: No action found for %s in %s (then)", then->task,
-                        then_child->id);
-            }
-
-            if (first_action == NULL || then_action == NULL) {
+                } else {
+                    crm_trace("No action found for %s in %s%s (first)",
+                              first_task, first_child->id,
+                              is_set(first_child->flags, pe_rsc_orphan) ? " (ORPHAN)" : "");
+                }
                 continue;
             }
+
+            /* We're only interested if 'then' is neither stopping nor being demoted */ 
+            if (then_action == NULL) {
+                if (is_not_set(then_child->flags, pe_rsc_orphan)
+                    && crm_str_eq(then->task, RSC_STOP, TRUE) == FALSE
+                    && crm_str_eq(then->task, RSC_DEMOTE, TRUE) == FALSE) {
+                    crm_err("Internal error: No action found for %s in %s (then)",
+                            then->task, then_child->id);
+
+                } else {
+                    crm_trace("No action found for %s in %s%s (then)",
+                              then->task, then_child->id,
+                              is_set(then_child->flags, pe_rsc_orphan) ? " (ORPHAN)" : "");
+                }
+                continue;
+            }
+
             if (order_actions(first_action, then_action, type)) {
                 crm_debug("Created constraint for %s -> %s", first_action->uuid, then_action->uuid);
                 changed |= (pe_graph_updated_first | pe_graph_updated_then);
