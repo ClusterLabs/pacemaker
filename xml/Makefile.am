@@ -114,9 +114,11 @@ pacemaker-%.rng: $(RNG_files) best-match.sh Makefile.am
 	for rng in $(RNG_cfg_base); do ./best-match.sh $$rng $(*) $(@) "          " || :; done
 	echo "        </interleave>" >> $@
 	echo "      </element>" >> $@
-	echo "      <element name='status'>" >> $@
-	./best-match.sh status $(*) $(@) "        "
-	echo "      </element>" >> $@
+	echo "      <optional>" >> $@
+	echo "        <element name='status'>" >> $@
+	./best-match.sh status $(*) $(@) "          "
+	echo "        </element>" >> $@
+	echo "      </optional>" >> $@
 	echo "    </element>" >> $@
 	echo "  </start>" >> $@
 	echo "</grammar>" >> $@
