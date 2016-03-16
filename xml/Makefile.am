@@ -75,28 +75,28 @@ versions:
 
 versions.rng: Makefile.am
 	echo "  RNG      $@"
-	echo "<?xml version='1.0' encoding='UTF-8'?>" > $@
-	echo "<grammar xmlns='http://relaxng.org/ns/structure/1.0' datatypeLibrary='http://www.w3.org/2001/XMLSchema-datatypes'>" >> $@
-	echo "  <start>" >> $@
-	echo "   <interleave>" >> $@
-	echo "    <optional>" >> $@
-	echo "      <attribute name='validate-with'>" >> $@
-	echo "        <choice>" >> $@
-	echo "          <value>none</value>" >> $@
-	echo "          <value>pacemaker-0.6</value>" >> $@
-	echo "          <value>transitional-0.6</value>" >> $@
-	echo "          <value>pacemaker-0.7</value>" >> $@
-	echo "          <value>pacemaker-1.1</value>" >> $@
+	echo '<?xml version="1.0" encoding="UTF-8"?>' > $@
+	echo '<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">' >> $@
+	echo '  <start>' >> $@
+	echo '   <interleave>' >> $@
+	echo '    <optional>' >> $@
+	echo '      <attribute name="validate-with">' >> $@
+	echo '        <choice>' >> $@
+	echo '          <value>none</value>' >> $@
+	echo '          <value>pacemaker-0.6</value>' >> $@
+	echo '          <value>transitional-0.6</value>' >> $@
+	echo '          <value>pacemaker-0.7</value>' >> $@
+	echo '          <value>pacemaker-1.1</value>' >> $@
 	for rng in $(RNG_versions); do echo "          <value>pacemaker-$$rng</value>" >> $@; done
-	echo "        </choice>" >> $@
-	echo "      </attribute>" >> $@
-	echo "    </optional>" >> $@
-	echo "    <attribute name='admin_epoch'><data type='nonNegativeInteger'/></attribute>" >> $@
-	echo "    <attribute name='epoch'><data type='nonNegativeInteger'/></attribute>" >> $@
-	echo "    <attribute name='num_updates'><data type='nonNegativeInteger'/></attribute>" >> $@
-	echo "   </interleave>" >> $@
-	echo "  </start>" >> $@
-	echo "</grammar>" >> $@
+	echo '        </choice>' >> $@
+	echo '      </attribute>' >> $@
+	echo '    </optional>' >> $@
+	echo '    <attribute name="admin_epoch"><data type="nonNegativeInteger"/></attribute>' >> $@
+	echo '    <attribute name="epoch"><data type="nonNegativeInteger"/></attribute>' >> $@
+	echo '    <attribute name="num_updates"><data type="nonNegativeInteger"/></attribute>' >> $@
+	echo '   </interleave>' >> $@
+	echo '  </start>' >> $@
+	echo '</grammar>' >> $@
 
 pacemaker.rng: pacemaker-$(RNG_max).rng
 	echo "  RNG      $@"
@@ -104,22 +104,24 @@ pacemaker.rng: pacemaker-$(RNG_max).rng
 
 pacemaker-%.rng: $(RNG_files) best-match.sh Makefile.am 
 	echo "  RNG      $@"
-	echo "<?xml version='1.0' encoding='UTF-8'?>" > $@
-	echo "<grammar xmlns='http://relaxng.org/ns/structure/1.0' datatypeLibrary='http://www.w3.org/2001/XMLSchema-datatypes'>" >> $@
-	echo "  <start>" >> $@
-	echo "    <element name='cib'>" >> $@
+	echo '<?xml version="1.0" encoding="UTF-8"?>' > $@
+	echo '<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">' >> $@
+	echo '  <start>' >> $@
+	echo '    <element name="cib">' >> $@
 	./best-match.sh cib $(*) $(@) "      "
-	echo "      <element name='configuration'>" >> $@
-	echo "        <interleave>" >> $@
+	echo '      <element name="configuration">' >> $@
+	echo '        <interleave>' >> $@
 	for rng in $(RNG_cfg_base); do ./best-match.sh $$rng $(*) $(@) "          " || :; done
-	echo "        </interleave>" >> $@
-	echo "      </element>" >> $@
-	echo "      <element name='status'>" >> $@
-	./best-match.sh status $(*) $(@) "        "
-	echo "      </element>" >> $@
-	echo "    </element>" >> $@
-	echo "  </start>" >> $@
-	echo "</grammar>" >> $@
+	echo '        </interleave>' >> $@
+	echo '      </element>' >> $@
+	echo '      <optional>' >> $@
+	echo '        <element name="status">' >> $@
+	./best-match.sh status $(*) $(@) "          "
+	echo '        </element>' >> $@
+	echo '      </optional>' >> $@
+	echo '    </element>' >> $@
+	echo '  </start>' >> $@
+	echo '</grammar>' >> $@
 
 # diff fails with ec=2 if no predecessor is found;
 # this uses '=' GNU extension to sed, if that's not available,
