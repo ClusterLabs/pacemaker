@@ -374,8 +374,10 @@ main(int argc, char **argv)
 
     election_fini(writer);
     crm_client_disconnect_all(ipcs);
-    qb_ipcs_destroy(ipcs);
-    g_hash_table_destroy(attributes);
+    if (ipcs) {
+        qb_ipcs_destroy(ipcs);
+        g_hash_table_destroy(attributes);
+    }
 
     if (the_cib) {
         the_cib->cmds->signoff(the_cib);
