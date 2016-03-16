@@ -687,36 +687,41 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
             crm_warn("Update error (attribute %s not found)", attr);
             return;
         }
-    } else {
-        if (safe_str_eq(op, ATTRD_OP_UPDATE_BOTH) || safe_str_eq(op, ATTRD_OP_UPDATE_DELAY)) {
-            if (dvalue) {
-                dampen = crm_get_msec(dvalue); 
-                if (dampen >= 0) {
-                    if (a->timeout_ms != dampen) {
-                        mainloop_timer_stop(a->timer);
-                        mainloop_timer_del(a->timer);
-                        a->timeout_ms = dampen;
-                        if (dampen > 0) {
-                            a->timer = mainloop_timer_add(a->id, a->timeout_ms, FALSE, attribute_timer_cb, a);
-                            crm_info("Update attribute %s with delay %dms (%s)", a->id, dampen, dvalue);
-                        } else {
-                            a->timer = NULL;
-                            crm_info("Update attribute %s with not delay", a->id);
-                        }
-                        //if dampen is changed, attrd writes in a current value immediately.
-                        write_or_elect_attribute(a);
-                        if (safe_str_eq(op, ATTRD_OP_UPDATE_DELAY)) {
-                            return;
-                        }
+    }
+    
+    if (safe_str_eq(op, ATTRD_OP_UPDATE_BOTH) || safe_str_eq(op, ATTRD_OP_UPDATE_DELAY)) {
+        if (dvalue) {
+            dampen = crm_get_msec(dvalue); 
+            if (dampen >= 0) {
+                if (a->timeout_ms != dampen) {
+                    mainloop_timer_stop(a->timer);
+                    mainloop_timer_del(a->timer);
+                    a->timeout_ms = dampen;
+                    if (dampen > 0) {
+                        a->timer = mainloop_timer_add(a->id, a->timeout_ms, FALSE, attribute_timer_cb, a);
+                        crm_info("Update attribute %s with delay %dms (%s)", a->id, dampen, dvalue);
+                    } else {
+                        a->timer = NULL;
+                        crm_info("Update attribute %s with not delay", a->id);
+                    }
+                    //if dampen is changed, attrd writes in a current value immediately.
+                    write_or_elect_attribute(a);
+                    if (safe_str_eq(op, ATTRD_OP_UPDATE_DELAY)) {
+                        return;
                     }
                 } else {
-                    crm_warn("Update error (A positive number is necessary for delay parameter. attribute %s : %dms (%s))", a->id, dampen, dvalue);
-                    return;
+                    if (safe_str_eq(op, ATTRD_OP_UPDATE_DELAY)) {
+                        crm_trace("Unchanged attribute %s with delay %dms (%s).(ATTRD_OP_UPDATE_DELAY)", a->id, dampen, dvalue);
+                        return;
+                    }
                 }
             } else {
-                crm_warn("Update error (delay parameter is necessary for the update of the attribute %s)", a->id);
+                crm_warn("Update error (A positive number is necessary for delay parameter. attribute %s : %dms (%s))", a->id, dampen, dvalue);
                 return;
             }
+        } else {
+            crm_warn("Update error (delay parameter is necessary for the update of the attribute %s)", a->id);
+            return;
         }
     }
 
@@ -752,18 +757,14 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
         free_xml(sync);
 
     } else if(safe_str_neq(v->current, value)) {
-        if (safe_str_eq(op, ATTRD_OP_UPDATE) || safe_str_eq(op, ATTRD_OP_UPDATE_BOTH)) {
-            crm_info("Setting %s[%s]: %s -> %s from %s", attr, host, v->current, value, peer->uname);
-            free(v->current);
-            if(value) {
-                v->current = strdup(value);
-            } else {
-                v->current = NULL;
-            }
-            changed = TRUE;
+        crm_info("Setting %s[%s]: %s -> %s from %s", attr, host, v->current, value, peer->uname);
+        free(v->current);
+        if(value) {
+            v->current = strdup(value);
         } else {
-             crm_trace("Unchanged %s[%s] from %s.(ATTRD_OP_UPDATE_DELAY)", attr, host, peer->uname);
+            v->current = NULL;
         }
+        changed = TRUE;
     } else {
         crm_trace("Unchanged %s[%s] from %s is %s", attr, host, peer->uname, value);
     }
