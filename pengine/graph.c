@@ -774,13 +774,101 @@ get_router_node(action_t *action)
     return router_node;
 }
 
+/*!
+ * \internal
+ * \brief Add an XML node tag for a specified ID
+ *
+ * \param[in]     id      Node UUID to add
+ * \param[in,out] xml     Parent XML tag to add to
+ */
+static void
+add_node_to_xml_by_id(const char *id, xmlNode *xml)
+{
+    xmlNode *node_xml;
+
+    node_xml = create_xml_node(xml, XML_CIB_TAG_NODE);
+    crm_xml_add(node_xml, XML_ATTR_UUID, id);
+}
+
+/*!
+ * \internal
+ * \brief Add an XML node tag for a specified node
+ *
+ * \param[in]     node  Node to add
+ * \param[in/out] xml   XML to add node to
+ */
+static void
+add_node_to_xml(const node_t *node, void *xml)
+{
+    add_node_to_xml_by_id(node->details->id, (xmlNode *) xml);
+}
+
+/*!
+ * \internal
+ * \brief Add XML with nodes that an action is expected to bring down
+ *
+ * If a specified action is expected to bring any nodes down, add an XML block
+ * with their UUIDs. When a node is lost, this allows the crmd to determine
+ * whether it was expected.
+ *
+ * \param[in,out] xml       Parent XML tag to add to
+ * \param[in]     action    Action to check for downed nodes
+ * \param[in]     data_set  Working set for cluster
+ */
+static void
+add_downed_nodes(xmlNode *xml, const action_t *action,
+                 const pe_working_set_t *data_set)
+{
+    CRM_CHECK(xml && action && action->node && data_set, return);
+
+    if (safe_str_eq(action->task, CRM_OP_SHUTDOWN)) {
+
+        /* Shutdown makes the action's node down */
+        xmlNode *downed = create_xml_node(xml, XML_GRAPH_TAG_DOWNED);
+        add_node_to_xml_by_id(action->node->details->id, downed);
+
+    } else if (safe_str_eq(action->task, CRM_OP_FENCE)) {
+
+        /* Fencing makes the action's node and any hosted guest nodes down */
+        const char *fence = g_hash_table_lookup(action->meta, "stonith_action");
+
+        if (safe_str_eq(fence, "off") || safe_str_eq(fence, "reboot")) {
+            xmlNode *downed = create_xml_node(xml, XML_GRAPH_TAG_DOWNED);
+            add_node_to_xml_by_id(action->node->details->id, downed);
+            pe_foreach_guest_node(data_set, action->node, add_node_to_xml, downed);
+        }
+
+    } else if (action->rsc && action->rsc->is_remote_node
+               && safe_str_eq(action->task, CRMD_ACTION_STOP)) {
+
+        /* Stopping a remote connection resource makes connected node down,
+         * unless it's part of a migration
+         */
+        GListPtr iter;
+        action_t *input;
+        gboolean migrating = FALSE;
+
+        for (iter = action->actions_before; iter != NULL; iter = iter->next) {
+            input = ((action_wrapper_t *) iter->data)->action;
+            if (input->rsc && safe_str_eq(action->rsc->id, input->rsc->id)
+               && safe_str_eq(input->task, CRMD_ACTION_MIGRATED)) {
+                migrating = TRUE;
+                break;
+            }
+        }
+        if (!migrating) {
+            xmlNode *downed = create_xml_node(xml, XML_GRAPH_TAG_DOWNED);
+            add_node_to_xml_by_id(action->rsc->id, downed);
+        }
+    }
+}
+
 static xmlNode *
 action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
 {
     gboolean needs_node_info = TRUE;
     xmlNode *action_xml = NULL;
     xmlNode *args_xml = NULL;
-    char *action_id_s = NULL;
 
     if (action == NULL) {
         return NULL;
@@ -788,7 +876,6 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
 
     if (safe_str_eq(action->task, CRM_OP_FENCE)) {
         action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
-/* 		needs_node_info = FALSE; */
 
     } else if (safe_str_eq(action->task, CRM_OP_SHUTDOWN)) {
         action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
@@ -810,9 +897,7 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
         action_xml = create_xml_node(NULL, XML_GRAPH_TAG_RSC_OP);
     }
 
-    action_id_s = crm_itoa(action->id);
-    crm_xml_add(action_xml, XML_ATTR_ID, action_id_s);
-    free(action_id_s);
+    crm_xml_add_int(action_xml, XML_ATTR_ID, action->id);
 
     crm_xml_add(action_xml, XML_LRM_ATTR_TASK, action->task);
     if (action->rsc != NULL && action->rsc->clone_name != NULL) {
@@ -854,10 +939,12 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
         }
     }
 
+    /* No details if this action is only being listed in the inputs section */
     if (as_input) {
         return action_xml;
     }
 
+    /* List affected resource */
     if (action->rsc) {
         if (is_set(action->flags, pe_action_pseudo) == FALSE) {
             int lpc = 0;
@@ -925,6 +1012,7 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
         }
     }
 
+    /* List any attributes in effect */
     args_xml = create_xml_node(NULL, XML_TAG_ATTRS);
     crm_xml_add(args_xml, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
 
@@ -962,9 +1050,14 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
     }
 
     sorted_xml(args_xml, action_xml, FALSE);
-    crm_log_xml_trace(action_xml, "dumped action");
     free_xml(args_xml);
 
+    /* List any nodes this action is expected to make down */
+    if (needs_node_info && (action->node != NULL)) {
+        add_downed_nodes(action_xml, action, data_set);
+    }
+
+    crm_log_xml_trace(action_xml, "dumped action");
     return action_xml;
 }
 

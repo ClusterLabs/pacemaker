@@ -29,6 +29,9 @@
     <action_set>
       <crm_event id="96" operation="stonith" operation_key="stonith-sles-5-reboot" on_node="sles-5" on_node_uuid="434915c6-7b40-4d30-95ff-dc0ff3dc005a">
         <attributes CRM_meta_on_node="sles-5" CRM_meta_on_node_uuid="434915c6-7b40-4d30-95ff-dc0ff3dc005a" CRM_meta_standby="off" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="434915c6-7b40-4d30-95ff-dc0ff3dc005a"/>
+        </downed>
       </crm_event>
     </action_set>
     <inputs/>

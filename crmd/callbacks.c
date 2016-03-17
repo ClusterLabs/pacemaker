@@ -199,9 +199,10 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         xmlNode *update = NULL;
         int flags = node_update_peer;
         gboolean alive = is_remote? appeared : crm_is_peer_active(node);
-        crm_action_t *down = match_down_event(0, node->uuid, NULL, appeared);
+        crm_action_t *down = match_down_event(node->uuid, appeared);
 
-        crm_trace("Alive=%d, appear=%d, down=%p", alive, appeared, down);
+        crm_trace("Alive=%d, appeared=%d, down=%d",
+                  alive, appeared, (down? down->id : -1));
 
         if (alive && type == crm_status_processes) {
             register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
@@ -216,9 +217,9 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 crm_trace("Updating CIB %s stonithd reported fencing of %s complete",
                           (down->confirmed? "after" : "before"), node->uname);
 
-            } else if (alive == FALSE) {
+            } else if ((alive == FALSE) && safe_str_eq(task, CRM_OP_SHUTDOWN)) {
                 crm_notice("%s of %s (op %d) is complete", task, node->uname, down->id);
-                /* down->confirmed = TRUE; Only stonith-ng returning should imply completion */
+                /* down->confirmed = TRUE; */
                 stop_te_timer(down->timer);
 
                 if (!is_remote) {
@@ -231,18 +232,11 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 trigger_graph();
 
             } else {
-                crm_trace("Node %s came up, was expected %s (op %d)",
-                          node->uname, task, down->id);
+                crm_trace("Node %s is %salive, was expected to %s (op %d)",
+                          node->uname, (alive? "" : "not "), task, down->id);
             }
 
         } else if (appeared == FALSE) {
-            /* match_down_event() doesn't match resource stop events for
-             * pacemaker_remote nodes, so normal pacemaker_remote node stops
-             * will come here and get ugly log messages, but otherwise be OK.
-             * We can't skip this entirely for pacemaker_remote nodes,
-             * because recurring monitor failures will also end up here
-             * when the cluster recovers the connection resource.
-             */
             crm_notice("Stonith/shutdown of %s not matched", node->uname);
 
             if (!is_remote) {

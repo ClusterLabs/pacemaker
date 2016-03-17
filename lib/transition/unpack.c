@@ -32,7 +32,6 @@ static crm_action_t *
 unpack_action(synapse_t * parent, xmlNode * xml_action)
 {
     crm_action_t *action = NULL;
-    xmlNode *action_copy = NULL;
     const char *value = crm_element_value(xml_action, XML_ATTR_ID);
 
     if (value == NULL) {
@@ -41,28 +40,25 @@ unpack_action(synapse_t * parent, xmlNode * xml_action)
         return NULL;
     }
 
-    action_copy = copy_xml(xml_action);
     action = calloc(1, sizeof(crm_action_t));
-    if (action == NULL) {
-        return NULL;
-    }
+    CRM_CHECK(action != NULL, return NULL);
 
     action->id = crm_parse_int(value, NULL);
     action->type = action_type_rsc;
-    action->xml = action_copy;
+    action->xml = copy_xml(xml_action);
     action->synapse = parent;
 
-    if (safe_str_eq(crm_element_name(action_copy), XML_GRAPH_TAG_RSC_OP)) {
+    if (safe_str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_RSC_OP)) {
         action->type = action_type_rsc;
 
-    } else if (safe_str_eq(crm_element_name(action_copy), XML_GRAPH_TAG_PSEUDO_EVENT)) {
+    } else if (safe_str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_PSEUDO_EVENT)) {
         action->type = action_type_pseudo;
 
-    } else if (safe_str_eq(crm_element_name(action_copy), XML_GRAPH_TAG_CRM_EVENT)) {
+    } else if (safe_str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_CRM_EVENT)) {
         action->type = action_type_crm;
     }
 
-    action->params = xml2list(action_copy);
+    action->params = xml2list(action->xml);
 
     value = g_hash_table_lookup(action->params, "CRM_meta_timeout");
     if (value != NULL) {

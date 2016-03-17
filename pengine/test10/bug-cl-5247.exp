@@ -661,6 +661,9 @@
       <rsc_op id="66" operation="stop" operation_key="pgsr02_stop_0" on_node="bl460g8n4" on_node_uuid="3232261400">
         <primitive id="pgsr02" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_container="prmDB2" CRM_meta_timeout="20000" />
+        <downed>
+          <node id="pgsr02"/>
+        </downed>
       </rsc_op>
     </action_set>
     <inputs/>

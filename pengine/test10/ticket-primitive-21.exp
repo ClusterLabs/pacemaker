@@ -15,6 +15,9 @@
     <action_set>
       <crm_event id="7" operation="stonith" operation_key="stonith-node2-reboot" on_node="node2" on_node_uuid="node2">
         <attributes CRM_meta_on_node="node2" CRM_meta_on_node_uuid="node2" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="node2"/>
+        </downed>
       </crm_event>
     </action_set>
     <inputs/>

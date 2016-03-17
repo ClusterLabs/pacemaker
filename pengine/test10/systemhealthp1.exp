@@ -3,6 +3,9 @@
     <action_set>
       <crm_event id="4" operation="stonith" operation_key="stonith-hs21d-reboot" on_node="hs21d" on_node_uuid="737318c6-0f92-4592-9754-45967d45aff7">
         <attributes CRM_meta_on_node="hs21d" CRM_meta_on_node_uuid="737318c6-0f92-4592-9754-45967d45aff7" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="737318c6-0f92-4592-9754-45967d45aff7"/>
+        </downed>
       </crm_event>
     </action_set>
     <inputs/>
@@ -11,6 +14,9 @@
     <action_set>
       <crm_event id="3" operation="stonith" operation_key="stonith-hs21c-reboot" on_node="hs21c" on_node_uuid="c97a3ee5-02d8-4fad-a9fb-a79ae2b35549">
         <attributes CRM_meta_on_node="hs21c" CRM_meta_on_node_uuid="c97a3ee5-02d8-4fad-a9fb-a79ae2b35549" CRM_meta_op_no_wait="true" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="c97a3ee5-02d8-4fad-a9fb-a79ae2b35549"/>
+        </downed>
       </crm_event>
     </action_set>
     <inputs>

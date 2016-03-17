@@ -12,6 +12,9 @@
      <action_set>
       <crm_event id="4" operation="do_shutdown" operation_key="do_shutdown-node1" on_node="node1" on_node_uuid="node1">
         <attributes CRM_meta_op_no_wait="true" />
+        <downed>
+          <node id="node1"/>
+        </downed>
       </crm_event>
      </action_set>
      <inputs>

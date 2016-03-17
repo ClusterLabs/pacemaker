@@ -327,6 +327,9 @@
     <action_set>
       <crm_event id="54" operation="do_shutdown" operation_key="do_shutdown-pcmk-4" on_node="pcmk-4" on_node_uuid="104">
         <attributes CRM_meta_op_no_wait="true" />
+        <downed>
+          <node id="104"/>
+        </downed>
       </crm_event>
     </action_set>
     <inputs>
@@ -345,6 +348,9 @@
     <action_set>
       <crm_event id="53" operation="do_shutdown" operation_key="do_shutdown-pcmk-3" on_node="pcmk-3" on_node_uuid="103">
         <attributes CRM_meta_op_no_wait="true" />
+        <downed>
+          <node id="103"/>
+        </downed>
       </crm_event>
     </action_set>
     <inputs>
@@ -357,6 +363,9 @@
     <action_set>
       <crm_event id="52" operation="do_shutdown" operation_key="do_shutdown-pcmk-2" on_node="pcmk-2" on_node_uuid="102">
         <attributes CRM_meta_op_no_wait="true" />
+        <downed>
+          <node id="102"/>
+        </downed>
       </crm_event>
     </action_set>
     <inputs>
@@ -387,6 +396,9 @@
     <action_set>
       <crm_event id="51" operation="do_shutdown" operation_key="do_shutdown-pcmk-1" on_node="pcmk-1" on_node_uuid="101">
         <attributes CRM_meta_op_no_wait="true" />
+        <downed>
+          <node id="101"/>
+        </downed>
       </crm_event>
     </action_set>
     <inputs>

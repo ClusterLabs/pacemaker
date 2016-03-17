@@ -553,6 +553,9 @@
     <action_set>
       <crm_event id="76" operation="do_shutdown" operation_key="do_shutdown-node1" on_node="node1" on_node_uuid="3d8227f0-31dd-4801-b0db-987909d4a321">
         <attributes CRM_meta_op_no_wait="true" />
+        <downed>
+          <node id="3d8227f0-31dd-4801-b0db-987909d4a321"/>
+        </downed>
       </crm_event>
      </action_set>
      <inputs>

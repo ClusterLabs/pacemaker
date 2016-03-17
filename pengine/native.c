@@ -2885,37 +2885,46 @@ native_start_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set
     }
 }
 
+/* User data to pass to guest node iterator */
+struct action_list_s {
+    GListPtr search_list; /* list of actions to search */
+    GListPtr result_list; /* list of matching actions for this node */
+    const char *key;      /* action key to match */
+};
+
+/*!
+ * \internal
+ * \brief Prepend a node's actions matching a key to a list
+ *
+ * \param[in]     node  Guest node
+ * \param[in/out] data   User data
+ */
+static void prepend_node_actions(const node_t *node, void *data)
+{
+    GListPtr actions;
+    struct action_list_s *info = (struct action_list_s *) data;
+
+    actions = find_actions(info->search_list, info->key, node);
+    info->result_list = g_list_concat(actions, info->result_list);
+}
+
 static GListPtr
 find_fence_target_node_actions(GListPtr search_list, const char *key, node_t *fence_target, pe_working_set_t *data_set)
 {
-    GListPtr gIter = NULL;
-    GListPtr result_list = find_actions(search_list, key, fence_target);
+    struct action_list_s action_list;
 
-    /* find stop actions for this rsc on any container nodes running on
-     * the fencing target node */
-    for (gIter = fence_target->details->running_rsc; gIter != NULL; gIter = gIter->next) { 
-        GListPtr iter = NULL;
-        GListPtr tmp_list = NULL;
-        resource_t *tmp_rsc = (resource_t *) gIter->data;
-        node_t *container_node = NULL;
+    /* Actions on the target that match the key are implied by the fencing */
+    action_list.search_list = search_list;
+    action_list.result_list = find_actions(search_list, key, fence_target);
+    action_list.key = key;
 
-        /* found a container node that lives on the host node
-         * that is getting fenced. Find stop for our rsc that live on
-         * the container node as well. These stop operations are also
-         * implied by fencing of the host cluster node. */
-        if (tmp_rsc->is_remote_node && tmp_rsc->container != NULL) {
-            container_node = pe_find_node(data_set->nodes, tmp_rsc->id);
-        }
-        if (container_node) {
-            tmp_list = find_actions(search_list, key, container_node);
-        }
-        for (iter = tmp_list; iter != NULL; iter = iter->next) { 
-            result_list = g_list_prepend(result_list, (action_t *) iter->data);
-        }
-        g_list_free(tmp_list);
-    }
+    /*
+     * If the target is a host for any guest nodes, actions on those nodes
+     * that match the key are also implied by the fencing.
+     */
+    pe_foreach_guest_node(data_set, fence_target, prepend_node_actions, &action_list);
 
-    return result_list;
+    return action_list.result_list;
 }
 
 static void

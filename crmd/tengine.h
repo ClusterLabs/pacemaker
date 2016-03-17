@@ -33,7 +33,7 @@ void purge_stonith_cleanup(void);
 void execute_stonith_cleanup(void);
 
 /* tengine */
-extern crm_action_t *match_down_event(int rc, const char *target, const char *filter, bool quiet);
+extern crm_action_t *match_down_event(const char *target, bool quiet);
 extern crm_action_t *get_cancel_action(const char *id, const char *node);
 
 extern gboolean cib_action_update(crm_action_t * action, int status, int op_rc);

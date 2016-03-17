@@ -15,6 +15,9 @@
     <action_set>
       <crm_event id="4" operation="stonith" operation_key="stonith-rhel7-alt4-reboot" on_node="rhel7-alt4" on_node_uuid="rhel7-alt4">
         <attributes CRM_meta_last_failure_fake="1411503989" CRM_meta_on_node="rhel7-alt4" CRM_meta_on_node_uuid="rhel7-alt4" CRM_meta_probe_complete="true" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="rhel7-alt4"/>
+        </downed>
       </crm_event>
     </action_set>
     <inputs/>

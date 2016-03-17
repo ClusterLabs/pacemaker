@@ -35,7 +35,6 @@ void unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * contain
                       pe_working_set_t * data_set);
 static xmlNode *find_rsc_op_entry_helper(resource_t * rsc, const char *key,
                                          gboolean include_disabled);
-static gboolean is_rsc_baremetal_remote_node(resource_t *rsc, pe_working_set_t * data_set);
 
 bool pe_can_fence(pe_working_set_t * data_set, node_t *node)
 {
@@ -64,7 +63,7 @@ bool pe_can_fence(pe_working_set_t * data_set, node_t *node)
 }
 
 node_t *
-node_copy(node_t * this_node)
+node_copy(const node_t *this_node)
 {
     node_t *new_node = NULL;
 
@@ -803,7 +802,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
         action->on_fail = action_fail_restart_container;
         value = "restart container (and possibly migrate) (default)";
 
-    /* for barmetal remote nodes, ensure that any failure that results in
+    /* for baremetal remote nodes, ensure that any failure that results in
      * dropping an active connection to a remote node results in fencing of
      * the remote node.
      *
@@ -1192,7 +1191,7 @@ find_first_action(GListPtr input, const char *uuid, const char *task, node_t * o
 }
 
 GListPtr
-find_actions(GListPtr input, const char *key, node_t * on_node)
+find_actions(GListPtr input, const char *key, const node_t *on_node)
 {
     GListPtr gIter = input;
     GListPtr result = NULL;
@@ -2018,85 +2017,6 @@ const char *rsc_printable_id(resource_t *rsc)
         return ID(rsc->xml);
     }
     return rsc->id;
-}
-
-gboolean
-is_rsc_baremetal_remote_node(resource_t *rsc, pe_working_set_t * data_set)
-{
-    node_t *node;
-
-    if (rsc == NULL) {
-        return FALSE;
-    } else if (rsc->is_remote_node == FALSE) {
-        return FALSE;
-    }
-
-    node = pe_find_node(data_set->nodes, rsc->id);
-    if (node == NULL) {
-        return FALSE;
-    }
-
-    return is_baremetal_remote_node(node);
-}
-
-gboolean
-is_baremetal_remote_node(node_t *node)
-{
-    if (is_remote_node(node) && (node->details->remote_rsc == FALSE || node->details->remote_rsc->container == FALSE)) {
-        return TRUE;
-    }
-    return FALSE;
-}
-
-gboolean
-is_container_remote_node(node_t *node)
-{
-    if (is_remote_node(node) && (node->details->remote_rsc && node->details->remote_rsc->container)) {
-        return TRUE;
-    }
-    return FALSE;
-}
-
-gboolean
-is_remote_node(node_t *node)
-{
-    if (node && node->details->type == node_remote) {
-        return TRUE;
-    }
-    return FALSE;
-}
-
-resource_t *
-rsc_contains_remote_node(pe_working_set_t * data_set, resource_t *rsc)
-{
-    if (is_set(data_set->flags, pe_flag_have_remote_nodes) == FALSE) {
-        return NULL;
-    }
-
-    if (rsc->fillers) {
-        GListPtr gIter = NULL;
-        for (gIter = rsc->fillers; gIter != NULL; gIter = gIter->next) {
-            resource_t *filler = (resource_t *) gIter->data;
-
-            if (filler->is_remote_node) {
-                return filler;
-            }
-        }
-    }
-    return NULL;
-}
-
-gboolean
-xml_contains_remote_node(xmlNode *xml)
-{
-    const char *class = crm_element_value(xml, XML_AGENT_ATTR_CLASS);
-    const char *provider = crm_element_value(xml, XML_AGENT_ATTR_PROVIDER);
-    const char *agent = crm_element_value(xml, XML_ATTR_TYPE);
-
-    if (safe_str_eq(agent, "remote") && safe_str_eq(provider, "pacemaker") && safe_str_eq(class, "ocf")) {
-        return TRUE;
-    }
-    return FALSE;
 }
 
 void

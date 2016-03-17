@@ -195,6 +195,9 @@
      <action_set>
       <crm_event id="63" operation="do_shutdown" operation_key="do_shutdown-ibm1" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
         <attributes CRM_meta_op_no_wait="true" />
+        <downed>
+          <node id="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
+        </downed>
       </crm_event>
      </action_set>
      <inputs>

@@ -631,6 +631,9 @@
     <action_set>
       <crm_event id="93" operation="stonith" operation_key="stonith-pcmk-4-reboot" on_node="pcmk-4" on_node_uuid="pcmk-4">
         <attributes CRM_meta_connected="1" CRM_meta_on_node="pcmk-4" CRM_meta_on_node_uuid="pcmk-4" CRM_meta_op_no_wait="true" CRM_meta_probe_complete="true" CRM_meta_standby="off" CRM_meta_stonith_action="reboot" CRM_meta_terminate="1" />
+        <downed>
+          <node id="pcmk-4"/>
+        </downed>
       </crm_event>
     </action_set>
     <inputs/>

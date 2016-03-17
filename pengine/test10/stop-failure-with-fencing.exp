@@ -54,6 +54,9 @@
     <action_set>
       <crm_event id="20" operation="stonith" operation_key="stonith-pcmk-2-reboot" on_node="pcmk-2" on_node_uuid="102">
         <attributes CRM_meta_fail_count_clvm="INFINITY" CRM_meta_last_failure_clvm="1371014555" CRM_meta_on_node="pcmk-2" CRM_meta_on_node_uuid="102" CRM_meta_probe_complete="true" CRM_meta_shutdown="1371014551" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="102"/>
+        </downed>
       </crm_event>
     </action_set>
     <inputs/>
