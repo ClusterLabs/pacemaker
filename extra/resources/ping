@@ -291,7 +291,7 @@ ping_update() {
     fi
 
     score=`expr $active \* $OCF_RESKEY_multiplier`
-    attrd_updater -n $OCF_RESKEY_name -v $score -d $OCF_RESKEY_dampen $attrd_options
+    attrd_updater -n $OCF_RESKEY_name -B $score -d $OCF_RESKEY_dampen $attrd_options
     rc=$?
     case $rc in 
 	0) ping_conditional_log debug "Updated $OCF_RESKEY_name = $score" ;;

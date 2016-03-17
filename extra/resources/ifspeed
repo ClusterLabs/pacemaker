@@ -396,7 +396,7 @@ update() {
     local speed=$( iface_get_speed ${OCF_RESKEY_iface} )
 
     : $(( score = speed * ${OCF_RESKEY_weight_base} / 1000 ))
-    attrd_updater -n ${OCF_RESKEY_name} -v ${score} -d ${OCF_RESKEY_dampen} ${attrd_options}
+    attrd_updater -n ${OCF_RESKEY_name} -B ${score} -d ${OCF_RESKEY_dampen} ${attrd_options}
     rc=$?
     case ${rc} in
         0)

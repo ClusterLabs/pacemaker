@@ -146,7 +146,7 @@ UpdateStat() {
     name=$1; shift
     value="$*"
     printf "%s:\t%s\n" "$name" "$value"
-    ${HA_SBIN_DIR}/attrd_updater ${OCF_RESKEY_delay} -S status -n $name -v "$value"
+    ${HA_SBIN_DIR}/attrd_updater ${OCF_RESKEY_delay} -S status -n $name -B "$value"
 }
 
 SysInfoStats() {
@@ -328,6 +328,8 @@ fi
 : ${OCF_RESKEY_clone:="0"}
 if [ x != x${OCF_RESKEY_delay} ]; then
     OCF_RESKEY_delay="-d ${OCF_RESKEY_delay}"
+else 
+    OCF_RESKEY_delay="-d 0"
 fi
 MIN_FREE=""
 if [ -n "$OCF_RESKEY_min_disk_free" ]; then
