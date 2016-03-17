@@ -291,6 +291,8 @@ long crm_read_pidfile(const char *filename);
 /* attrd operations */
 #  define ATTRD_OP_PEER_REMOVE   "peer-remove"
 #  define ATTRD_OP_UPDATE        "update"
+#  define ATTRD_OP_UPDATE_BOTH   "update-both"
+#  define ATTRD_OP_UPDATE_DELAY  "update-delay"
 #  define ATTRD_OP_QUERY         "query"
 #  define ATTRD_OP_REFRESH       "refresh"
 #  define ATTRD_OP_FLUSH         "flush"
