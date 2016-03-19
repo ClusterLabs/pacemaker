@@ -1040,6 +1040,8 @@ if test x${enable_no_stack} = xyes; then
 fi
 
 PKG_CHECK_MODULES(libqb, libqb >= 0.13, HAVE_libqb=1)
+CPPFLAGS="$libqb_CFLAGS $CPPFLAGS"
+LIBS="$libqb_LIBS $LIBS"
 AC_CHECK_HEADERS(qb/qbipc_common.h)
 AC_CHECK_LIB(qb, qb_ipcs_connection_auth_set)
 
@@ -1048,7 +1050,6 @@ PCMK_FEATURES="$PCMK_FEATURES libqb-logging libqb-ipc"
 
 AC_CHECK_FUNCS(qb_ipcs_connection_get_buffer_size, AC_DEFINE(HAVE_IPCS_GET_BUFFER_SIZE,  1, [Have qb_ipcc_get_buffer_size function]))
 
-LIBS="$LIBS $libqb_LIBS"
 
 AC_CHECK_HEADERS(heartbeat/hb_config.h)
 AC_CHECK_HEADERS(heartbeat/glue_config.h)
