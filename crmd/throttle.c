@@ -389,7 +389,7 @@ throttle_mode(void)
     unsigned int blocked = 0;
     enum throttle_state_e mode = throttle_none;
 
-#ifdef ON_SOLARIS
+#if defined(ON_BSD) || defined(ON_SOLARIS)
     return throttle_none;
 #endif
 
