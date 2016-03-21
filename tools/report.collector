@@ -728,7 +728,8 @@ for p in $LOG_PATTERNS; do
 done > $pattfile
 
 for l in $logfiles $EXTRA_LOGS; do
-    b=`basename $l`
+    b="$(basename $l).extract.txt"
+
     if [ ! -f "$l" ]; then
 	# Not a file
 	continue
@@ -739,8 +740,10 @@ for l in $logfiles $EXTRA_LOGS; do
     fi
 
     dumplogset "$l" $LOG_START $LOG_END > "$b"
+    sanitize "$b"
+
     echo "Log patterns $REPORT_TARGET:"  > $ANALYSIS_F
-    cat $b | grep -f $pattfile >> $ANALYSIS_F
+    grep -f "$pattfile" "$b" >> $ANALYSIS_F
 done
 
 which journalctl > /dev/null 2>&1
@@ -769,12 +772,12 @@ done
 
 # Parse for events
 for l in $logfiles $EXTRA_LOGS; do
-    node_events `basename $l` > $EVENTS_F
+    b="$(basename $l).extract.txt"
+    node_events "$b" > $EVENTS_F
 
     # Link the first logfile to a standard name if it doesn't yet exist
-    f=`basename $l`
-    if [ -e $f -a ! -e $HALOG_F ]; then
-	ln -s $f $HALOG_F
+    if [ -e "$b" -a ! -e "$HALOG_F" ]; then
+	ln -s "$b" "$HALOG_F"
     fi
 done
 
