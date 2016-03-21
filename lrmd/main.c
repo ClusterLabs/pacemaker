@@ -309,7 +309,7 @@ lrmd_shutdown(int nsig)
      */
     if (ipc_proxy) {
         if (shutting_down) {
-            crm_trace("Shutdown already in progress");
+            crm_notice("Waiting for cluster to stop resources before exiting");
             return;
         }
 
