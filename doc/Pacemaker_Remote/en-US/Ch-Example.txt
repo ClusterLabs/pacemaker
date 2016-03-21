@@ -102,7 +102,7 @@ vm-guest1     (ocf::heartbeat:VirtualDomain): Started node1
 Now, you could place a resource, such as a webserver, on *guest1*:
 ----
 # pcs resource create webserver apache params configfile=/etc/httpd/conf/httpd.conf op monitor interval=30s
-# pcs constraint webserver prefers guest1
+# pcs constraint location webserver prefers guest1
 ----
 
 Now, the crm_mon output would show:
