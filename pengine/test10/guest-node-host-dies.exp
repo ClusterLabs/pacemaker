@@ -1,7 +1,7 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0">
     <action_set>
-      <rsc_op id="5" operation="stop" operation_key="Fencing_stop_0" on_node="rhel7-4" on_node_uuid="5">
+      <rsc_op id="4" operation="stop" operation_key="Fencing_stop_0" on_node="rhel7-4" on_node_uuid="5">
         <primitive id="Fencing" class="stonith" type="fence_xvm"/>
         <attributes CRM_meta_name="stop" CRM_meta_timeout="60000"  delay="0" multicast_address="239.255.100.100" pcmk_arg_map="domain:uname" pcmk_host_list="rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5"/>
       </rsc_op>
@@ -10,14 +10,17 @@
   </synapse>
   <synapse id="1">
     <action_set>
-      <rsc_op id="4" operation="start" operation_key="Fencing_start_0" on_node="rhel7-4" on_node_uuid="5">
+      <rsc_op id="3" operation="start" operation_key="Fencing_start_0" on_node="rhel7-4" on_node_uuid="5">
         <primitive id="Fencing" class="stonith" type="fence_xvm"/>
         <attributes CRM_meta_name="start" CRM_meta_timeout="60000"  delay="0" multicast_address="239.255.100.100" pcmk_arg_map="domain:uname" pcmk_host_list="rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="5" operation="stop" operation_key="Fencing_stop_0" on_node="rhel7-4" on_node_uuid="5"/>
+        <pseudo_event id="2" operation="all_stopped" operation_key="all_stopped"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="4" operation="stop" operation_key="Fencing_stop_0" on_node="rhel7-4" on_node_uuid="5"/>
       </trigger>
     </inputs>
   </synapse>
@@ -30,33 +33,33 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="4" operation="start" operation_key="Fencing_start_0" on_node="rhel7-4" on_node_uuid="5"/>
+        <rsc_op id="3" operation="start" operation_key="Fencing_start_0" on_node="rhel7-4" on_node_uuid="5"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="3">
     <action_set>
-      <rsc_op id="8" operation="monitor" operation_key="rsc_rhel7-1_monitor_5000" on_node="rhel7-5" on_node_uuid="3">
+      <rsc_op id="7" operation="monitor" operation_key="rsc_rhel7-1_monitor_5000" on_node="rhel7-5" on_node_uuid="3">
         <primitive id="rsc_rhel7-1" class="ocf" provider="heartbeat" type="IPaddr2"/>
         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" cidr_netmask="32"  ip="192.168.122.202"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="7" operation="start" operation_key="rsc_rhel7-1_start_0" on_node="rhel7-5" on_node_uuid="3"/>
+        <rsc_op id="6" operation="start" operation_key="rsc_rhel7-1_start_0" on_node="rhel7-5" on_node_uuid="3"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="4">
     <action_set>
-      <rsc_op id="7" operation="start" operation_key="rsc_rhel7-1_start_0" on_node="rhel7-5" on_node_uuid="3">
+      <rsc_op id="6" operation="start" operation_key="rsc_rhel7-1_start_0" on_node="rhel7-5" on_node_uuid="3">
         <primitive id="rsc_rhel7-1" class="ocf" provider="heartbeat" type="IPaddr2"/>
         <attributes CRM_meta_timeout="20000" cidr_netmask="32"  ip="192.168.122.202"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="6" operation="stop" operation_key="rsc_rhel7-1_stop_0"/>
+        <pseudo_event id="5" operation="stop" operation_key="rsc_rhel7-1_stop_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="33" operation="stonith_complete" operation_key="stonith_complete"/>
@@ -65,26 +68,26 @@
   </synapse>
   <synapse id="5">
     <action_set>
-      <pseudo_event id="6" operation="stop" operation_key="rsc_rhel7-1_stop_0">
+      <pseudo_event id="5" operation="stop" operation_key="rsc_rhel7-1_stop_0">
         <attributes CRM_meta_timeout="20000" cidr_netmask="32"  ip="192.168.122.202"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="34" operation="stonith" operation_key="stonith-rhel7-1-reboot" on_node="rhel7-1" on_node_uuid="1"/>
+        <crm_event id="36" operation="stonith" operation_key="stonith-rhel7-1-reboot" on_node="rhel7-1" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="6">
     <action_set>
-      <rsc_op id="10" operation="start" operation_key="container1_start_0" on_node="rhel7-2" on_node_uuid="2">
+      <rsc_op id="9" operation="start" operation_key="container1_start_0" on_node="rhel7-2" on_node_uuid="2">
         <primitive id="container1" class="ocf" provider="heartbeat" type="VirtualDomain"/>
         <attributes CRM_meta_remote_node="lxc1" CRM_meta_timeout="20000" config="/var/lib/pacemaker/cts/lxc/lxc1.xml"  force_stop="true" hypervisor="lxc:///"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="9" operation="stop" operation_key="container1_stop_0"/>
+        <pseudo_event id="8" operation="stop" operation_key="container1_stop_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="33" operation="stonith_complete" operation_key="stonith_complete"/>
@@ -93,7 +96,7 @@
   </synapse>
   <synapse id="7">
     <action_set>
-      <pseudo_event id="9" operation="stop" operation_key="container1_stop_0">
+      <pseudo_event id="8" operation="stop" operation_key="container1_stop_0">
         <attributes CRM_meta_remote_node="lxc1" CRM_meta_timeout="20000" config="/var/lib/pacemaker/cts/lxc/lxc1.xml"  force_stop="true" hypervisor="lxc:///"/>
       </pseudo_event>
     </action_set>
@@ -102,20 +105,20 @@
         <pseudo_event id="27" operation="stop" operation_key="lxc1_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="34" operation="stonith" operation_key="stonith-rhel7-1-reboot" on_node="rhel7-1" on_node_uuid="1"/>
+        <crm_event id="36" operation="stonith" operation_key="stonith-rhel7-1-reboot" on_node="rhel7-1" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="8">
     <action_set>
-      <rsc_op id="12" operation="start" operation_key="container2_start_0" on_node="rhel7-3" on_node_uuid="4">
+      <rsc_op id="11" operation="start" operation_key="container2_start_0" on_node="rhel7-3" on_node_uuid="4">
         <primitive id="container2" class="ocf" provider="heartbeat" type="VirtualDomain"/>
         <attributes CRM_meta_remote_node="lxc2" CRM_meta_timeout="20000" config="/var/lib/pacemaker/cts/lxc/lxc2.xml"  force_stop="true" hypervisor="lxc:///"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="11" operation="stop" operation_key="container2_stop_0"/>
+        <pseudo_event id="10" operation="stop" operation_key="container2_stop_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="33" operation="stonith_complete" operation_key="stonith_complete"/>
@@ -124,7 +127,7 @@
   </synapse>
   <synapse id="9">
     <action_set>
-      <pseudo_event id="11" operation="stop" operation_key="container2_stop_0">
+      <pseudo_event id="10" operation="stop" operation_key="container2_stop_0">
         <attributes CRM_meta_remote_node="lxc2" CRM_meta_timeout="20000" config="/var/lib/pacemaker/cts/lxc/lxc2.xml"  force_stop="true" hypervisor="lxc:///"/>
       </pseudo_event>
     </action_set>
@@ -133,23 +136,23 @@
         <pseudo_event id="30" operation="stop" operation_key="lxc2_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="34" operation="stonith" operation_key="stonith-rhel7-1-reboot" on_node="rhel7-1" on_node_uuid="1"/>
+        <crm_event id="36" operation="stonith" operation_key="stonith-rhel7-1-reboot" on_node="rhel7-1" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="10">
     <action_set>
-      <rsc_op id="16" operation="promote" operation_key="lxc-ms_promote_0" internal_operation_key="lxc-ms:0_promote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="rhel7-2">
+      <rsc_op id="15" operation="promote" operation_key="lxc-ms_promote_0" internal_operation_key="lxc-ms:0_promote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="rhel7-2">
         <primitive id="lxc-ms" long-id="lxc-ms:0" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="13" operation="start" operation_key="lxc-ms_start_0" internal_operation_key="lxc-ms:0_start_0" on_node="lxc1" on_node_uuid="lxc1" router_node="rhel7-2"/>
+        <pseudo_event id="12" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="14" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="rhel7-1"/>
+        <rsc_op id="14" operation="start" operation_key="lxc-ms_start_0" internal_operation_key="lxc-ms:0_start_0" on_node="lxc1" on_node_uuid="lxc1" router_node="rhel7-2"/>
       </trigger>
       <trigger>
         <pseudo_event id="23" operation="promote" operation_key="lxc-ms-master_promote_0"/>
@@ -164,45 +167,14 @@
   </synapse>
   <synapse id="11">
     <action_set>
-      <pseudo_event id="15" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:0_stop_0">
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="14" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="rhel7-1"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="21" operation="stop" operation_key="lxc-ms-master_stop_0"/>
-      </trigger>
-      <trigger>
-        <crm_event id="34" operation="stonith" operation_key="stonith-rhel7-1-reboot" on_node="rhel7-1" on_node_uuid="1"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="12">
-    <action_set>
-      <rsc_op id="14" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="rhel7-1">
+      <rsc_op id="14" operation="start" operation_key="lxc-ms_start_0" internal_operation_key="lxc-ms:0_start_0" on_node="lxc1" on_node_uuid="lxc1" router_node="rhel7-2">
         <primitive id="lxc-ms" long-id="lxc-ms:0" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="25" operation="demote" operation_key="lxc-ms-master_demote_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="13">
-    <action_set>
-      <rsc_op id="13" operation="start" operation_key="lxc-ms_start_0" internal_operation_key="lxc-ms:0_start_0" on_node="lxc1" on_node_uuid="lxc1" router_node="rhel7-2">
-        <primitive id="lxc-ms" long-id="lxc-ms:0" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="15" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:0_stop_0"/>
+        <pseudo_event id="13" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:0_stop_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="19" operation="start" operation_key="lxc-ms-master_start_0"/>
@@ -215,18 +187,52 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="14">
+  <synapse id="12">
     <action_set>
-      <pseudo_event id="18" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:1_stop_0">
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      <pseudo_event id="13" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:0_stop_0">
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
+        <pseudo_event id="12" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="21" operation="stop" operation_key="lxc-ms-master_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="34" operation="stonith" operation_key="stonith-rhel7-1-reboot" on_node="rhel7-1" on_node_uuid="1"/>
+        <pseudo_event id="34" operation="stonith" operation_key="stonith-lxc1-reboot" on_node="lxc1" on_node_uuid="lxc1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="13">
+    <action_set>
+      <pseudo_event id="12" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0">
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="25" operation="demote" operation_key="lxc-ms-master_demote_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="34" operation="stonith" operation_key="stonith-lxc1-reboot" on_node="lxc1" on_node_uuid="lxc1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="14">
+    <action_set>
+      <rsc_op id="18" operation="monitor" operation_key="lxc-ms_monitor_10000" internal_operation_key="lxc-ms:1_monitor_10000" on_node="lxc2" on_node_uuid="lxc2" router_node="rhel7-3">
+        <primitive id="lxc-ms" long-id="lxc-ms:1" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="17" operation="start" operation_key="lxc-ms_start_0" internal_operation_key="lxc-ms:1_start_0" on_node="lxc2" on_node_uuid="lxc2" router_node="rhel7-3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="31" operation="start" operation_key="lxc2_start_0" on_node="rhel7-3" on_node_uuid="4"/>
       </trigger>
     </inputs>
   </synapse>
@@ -239,7 +245,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="18" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:1_stop_0"/>
+        <pseudo_event id="16" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:1_stop_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="19" operation="start" operation_key="lxc-ms-master_start_0"/>
@@ -254,17 +260,16 @@
   </synapse>
   <synapse id="16">
     <action_set>
-      <rsc_op id="2" operation="monitor" operation_key="lxc-ms_monitor_10000" internal_operation_key="lxc-ms:1_monitor_10000" on_node="lxc2" on_node_uuid="lxc2" router_node="rhel7-3">
-        <primitive id="lxc-ms" long-id="lxc-ms:1" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000" />
-      </rsc_op>
+      <pseudo_event id="16" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:1_stop_0">
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="17" operation="start" operation_key="lxc-ms_start_0" internal_operation_key="lxc-ms:1_start_0" on_node="lxc2" on_node_uuid="lxc2" router_node="rhel7-3"/>
+        <pseudo_event id="21" operation="stop" operation_key="lxc-ms-master_stop_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="31" operation="start" operation_key="lxc2_start_0" on_node="rhel7-3" on_node_uuid="4"/>
+        <pseudo_event id="35" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2"/>
       </trigger>
     </inputs>
   </synapse>
@@ -276,7 +281,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="14" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="rhel7-1"/>
+        <pseudo_event id="12" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="25" operation="demote" operation_key="lxc-ms-master_demote_0"/>
@@ -299,7 +304,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="16" operation="promote" operation_key="lxc-ms_promote_0" internal_operation_key="lxc-ms:0_promote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="rhel7-2"/>
+        <rsc_op id="15" operation="promote" operation_key="lxc-ms_promote_0" internal_operation_key="lxc-ms:0_promote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="rhel7-2"/>
       </trigger>
     </inputs>
   </synapse>
@@ -329,10 +334,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="15" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:0_stop_0"/>
+        <pseudo_event id="13" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:0_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="18" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:1_stop_0"/>
+        <pseudo_event id="16" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:1_stop_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="21" operation="stop" operation_key="lxc-ms-master_stop_0"/>
@@ -350,7 +355,10 @@
         <pseudo_event id="26" operation="demoted" operation_key="lxc-ms-master_demoted_0"/>
       </trigger>
       <trigger>
-        <crm_event id="34" operation="stonith" operation_key="stonith-rhel7-1-reboot" on_node="rhel7-1" on_node_uuid="1"/>
+        <pseudo_event id="34" operation="stonith" operation_key="stonith-lxc1-reboot" on_node="lxc1" on_node_uuid="lxc1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="35" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2"/>
       </trigger>
     </inputs>
   </synapse>
@@ -362,7 +370,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="13" operation="start" operation_key="lxc-ms_start_0" internal_operation_key="lxc-ms:0_start_0" on_node="lxc1" on_node_uuid="lxc1" router_node="rhel7-2"/>
+        <rsc_op id="14" operation="start" operation_key="lxc-ms_start_0" internal_operation_key="lxc-ms:0_start_0" on_node="lxc1" on_node_uuid="lxc1" router_node="rhel7-2"/>
       </trigger>
       <trigger>
         <rsc_op id="17" operation="start" operation_key="lxc-ms_start_0" internal_operation_key="lxc-ms:1_start_0" on_node="lxc2" on_node_uuid="lxc2" router_node="rhel7-3"/>
@@ -409,7 +417,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="10" operation="start" operation_key="container1_start_0" on_node="rhel7-2" on_node_uuid="2"/>
+        <rsc_op id="9" operation="start" operation_key="container1_start_0" on_node="rhel7-2" on_node_uuid="2"/>
       </trigger>
       <trigger>
         <pseudo_event id="27" operation="stop" operation_key="lxc1_stop_0"/>
@@ -427,7 +435,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="34" operation="stonith" operation_key="stonith-rhel7-1-reboot" on_node="rhel7-1" on_node_uuid="1"/>
+        <crm_event id="36" operation="stonith" operation_key="stonith-rhel7-1-reboot" on_node="rhel7-1" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -453,7 +461,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="12" operation="start" operation_key="container2_start_0" on_node="rhel7-3" on_node_uuid="4"/>
+        <rsc_op id="11" operation="start" operation_key="container2_start_0" on_node="rhel7-3" on_node_uuid="4"/>
       </trigger>
       <trigger>
         <pseudo_event id="30" operation="stop" operation_key="lxc2_stop_0"/>
@@ -471,13 +479,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="34" operation="stonith" operation_key="stonith-rhel7-1-reboot" on_node="rhel7-1" on_node_uuid="1"/>
+        <crm_event id="36" operation="stonith" operation_key="stonith-rhel7-1-reboot" on_node="rhel7-1" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="31">
     <action_set>
-      <crm_event id="34" operation="stonith" operation_key="stonith-rhel7-1-reboot" on_node="rhel7-1" on_node_uuid="1">
+      <crm_event id="36" operation="stonith" operation_key="stonith-rhel7-1-reboot" on_node="rhel7-1" on_node_uuid="1">
         <attributes CRM_meta_connected="1" CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_shutdown="0" CRM_meta_stonith_action="reboot" />
         <downed>
           <node id="1"/>
@@ -490,40 +498,76 @@
   </synapse>
   <synapse id="32">
     <action_set>
+      <pseudo_event id="35" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2">
+        <attributes CRM_meta_master_lxc_ms="5" CRM_meta_on_node="lxc2" CRM_meta_on_node_uuid="lxc2" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="lxc2"/>
+        </downed>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="10" operation="stop" operation_key="container2_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="33">
+    <action_set>
+      <pseudo_event id="34" operation="stonith" operation_key="stonith-lxc1-reboot" on_node="lxc1" on_node_uuid="lxc1">
+        <attributes CRM_meta_last_failure_lxc_ms="1458766329" CRM_meta_master_lxc_ms="10" CRM_meta_on_node="lxc1" CRM_meta_on_node_uuid="lxc1" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="lxc1"/>
+        </downed>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="8" operation="stop" operation_key="container1_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="34">
+    <action_set>
       <pseudo_event id="33" operation="stonith_complete" operation_key="stonith_complete">
         <attributes />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="34" operation="stonith" operation_key="stonith-rhel7-1-reboot" on_node="rhel7-1" on_node_uuid="1"/>
+        <pseudo_event id="34" operation="stonith" operation_key="stonith-lxc1-reboot" on_node="lxc1" on_node_uuid="lxc1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="35" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2"/>
+      </trigger>
+      <trigger>
+        <crm_event id="36" operation="stonith" operation_key="stonith-rhel7-1-reboot" on_node="rhel7-1" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="33">
+  <synapse id="35">
     <action_set>
-      <pseudo_event id="3" operation="all_stopped" operation_key="all_stopped">
+      <pseudo_event id="2" operation="all_stopped" operation_key="all_stopped">
         <attributes />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="5" operation="stop" operation_key="Fencing_stop_0" on_node="rhel7-4" on_node_uuid="5"/>
+        <rsc_op id="4" operation="stop" operation_key="Fencing_stop_0" on_node="rhel7-4" on_node_uuid="5"/>
       </trigger>
       <trigger>
-        <pseudo_event id="6" operation="stop" operation_key="rsc_rhel7-1_stop_0"/>
+        <pseudo_event id="5" operation="stop" operation_key="rsc_rhel7-1_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="9" operation="stop" operation_key="container1_stop_0"/>
+        <pseudo_event id="8" operation="stop" operation_key="container1_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="11" operation="stop" operation_key="container2_stop_0"/>
+        <pseudo_event id="10" operation="stop" operation_key="container2_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="15" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:0_stop_0"/>
+        <pseudo_event id="13" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:0_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="18" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:1_stop_0"/>
+        <pseudo_event id="16" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:1_stop_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="27" operation="stop" operation_key="lxc1_stop_0"/>
