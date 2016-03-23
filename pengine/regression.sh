@@ -817,6 +817,7 @@ do_test whitebox-unexpectedly-running "Recover container nodes the cluster did n
 do_test whitebox-migrate1 "Migrate both container and connection resource"
 do_test whitebox-imply-stop-on-fence "imply stop action on container node rsc when host node is fenced"
 do_test whitebox-nested-group "Verify guest remote-node works nested in a group"
+do_test guest-node-host-dies "Verify guest node is recovered if host goes away"
 
 echo ""
 do_test remote-startup-probes  "Baremetal remote-node startup probes"
