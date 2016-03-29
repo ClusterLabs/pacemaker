@@ -142,7 +142,6 @@ Enables to use default attrd_updater verbose logging on every call.
 <actions>
 <action name="start"   timeout="60" />
 <action name="stop"    timeout="20" />
-<action name="reload"  timeout="100" />
 <action name="monitor" depth="0"  timeout="60" interval="10"/>
 <action name="meta-data"  timeout="5" />
 <action name="validate-all"  timeout="30" />
@@ -291,7 +290,11 @@ ping_update() {
     fi
 
     score=`expr $active \* $OCF_RESKEY_multiplier`
-    attrd_updater -n $OCF_RESKEY_name -B $score -d $OCF_RESKEY_dampen $attrd_options
+    if [ "$__OCF_ACTION" = "start" ] ; then
+        attrd_updater -n $OCF_RESKEY_name -B $score -d $OCF_RESKEY_dampen $attrd_options
+    else
+        attrd_updater -n $OCF_RESKEY_name -v $score -d $OCF_RESKEY_dampen $attrd_options
+    fi
     rc=$?
     case $rc in 
 	0) ping_conditional_log debug "Updated $OCF_RESKEY_name = $score" ;;
@@ -372,7 +375,6 @@ meta-data)	meta_data
 start)		ping_start;;
 stop)		ping_stop;;
 monitor)	ping_monitor;;
-reload)		ping_start;;
 validate-all)	ping_validate;;
 usage|help)	ping_usage
 		exit $OCF_SUCCESS

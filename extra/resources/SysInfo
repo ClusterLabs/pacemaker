@@ -146,7 +146,11 @@ UpdateStat() {
     name=$1; shift
     value="$*"
     printf "%s:\t%s\n" "$name" "$value"
-    ${HA_SBIN_DIR}/attrd_updater ${OCF_RESKEY_delay} -S status -n $name -B "$value"
+    if [ "$__OCF_ACTION" = "start" ] ; then
+        ${HA_SBIN_DIR}/attrd_updater ${OCF_RESKEY_delay} -S status -n $name -B "$value"
+    else 
+        ${HA_SBIN_DIR}/attrd_updater ${OCF_RESKEY_delay} -S status -n $name -v "$value"
+    fi
 }
 
 SysInfoStats() {
