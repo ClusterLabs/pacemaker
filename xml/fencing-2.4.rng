@@ -10,7 +10,7 @@
   <define name="element-stonith">
     <element name="fencing-topology">
       <zeroOrMore>
-	<ref name="element-level"/>
+        <ref name="element-level"/>
       </zeroOrMore>
     </element>
   </define>
@@ -19,18 +19,18 @@
     <element name="fencing-level">
       <attribute name="id"><data type="ID"/></attribute>
       <choice>
-	<attribute name="target"><text/></attribute>
-	<attribute name="target-pattern"><text/></attribute>
-	<group>
-	  <attribute name="target-attribute"><text/></attribute>
-	  <attribute name="target-value"><text/></attribute>
-	</group>
+        <attribute name="target"><text/></attribute>
+        <attribute name="target-pattern"><text/></attribute>
+        <group>
+          <attribute name="target-attribute"><text/></attribute>
+          <attribute name="target-value"><text/></attribute>
+        </group>
       </choice>
       <attribute name="index"><data type="positiveInteger"/></attribute>
       <attribute name="devices">
-	<data type="string">
+        <data type="string">
           <param name="pattern">([a-zA-Z0-9_\.\-]+)(,[a-zA-Z0-9_\.\-]+)*</param>
-	</data>
+        </data>
       </attribute>
     </element>
   </define>

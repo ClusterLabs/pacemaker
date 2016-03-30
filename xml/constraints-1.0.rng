@@ -8,11 +8,11 @@
   <define name="element-constraints">
     <element name="constraints">
       <zeroOrMore>
-	<choice>
-	  <ref name="element-location"/>
-	  <ref name="element-colocation"/>
-	  <ref name="element-order"/>
-	</choice>
+        <choice>
+          <ref name="element-location"/>
+          <ref name="element-colocation"/>
+          <ref name="element-order"/>
+        </choice>
       </zeroOrMore>
     </element>
   </define>
@@ -22,16 +22,16 @@
       <attribute name="id"><data type="ID"/></attribute>
       <attribute name="rsc"><data type="IDREF"/></attribute>
       <choice>
-	<group>
-	  <externalRef href="score.rng"/>
-	  <attribute name="node"><text/></attribute>
-	</group>
-	<oneOrMore>
-	  <externalRef href="rule.rng"/>
-	</oneOrMore>
+        <group>
+          <externalRef href="score.rng"/>
+          <attribute name="node"><text/></attribute>
+        </group>
+        <oneOrMore>
+          <externalRef href="rule.rng"/>
+        </oneOrMore>
       </choice>
       <optional>
-	<ref name="element-lifetime"/>
+        <ref name="element-lifetime"/>
       </optional>
     </element>
   </define>
@@ -39,31 +39,31 @@
   <define name="element-resource-set">
     <element name="resource_set">
       <choice>
-	<attribute name="id-ref"><data type="IDREF"/></attribute>
-	<group>
-	  <attribute name="id"><data type="ID"/></attribute>
-	  <optional>
-	    <attribute name="sequential"><data type="boolean"/></attribute>
-	  </optional>
-	  <optional>
-	    <attribute name="action">
-	      <ref name="attribute-actions"/>
-	    </attribute>
-	  </optional>
-	  <optional>
-	    <attribute name="role">
-	      <ref name="attribute-roles"/>
-	    </attribute>
-	  </optional>
-	  <optional>
-	    <externalRef href="score.rng"/>
-	  </optional>
-	  <oneOrMore>
-	    <element name="resource_ref">
-	      <attribute name="id"><data type="IDREF"/></attribute>
-	    </element>
-	  </oneOrMore>
-	</group>
+        <attribute name="id-ref"><data type="IDREF"/></attribute>
+        <group>
+          <attribute name="id"><data type="ID"/></attribute>
+          <optional>
+            <attribute name="sequential"><data type="boolean"/></attribute>
+          </optional>
+          <optional>
+            <attribute name="action">
+              <ref name="attribute-actions"/>
+            </attribute>
+          </optional>
+          <optional>
+            <attribute name="role">
+              <ref name="attribute-roles"/>
+            </attribute>
+          </optional>
+          <optional>
+            <externalRef href="score.rng"/>
+          </optional>
+          <oneOrMore>
+            <element name="resource_ref">
+              <attribute name="id"><data type="IDREF"/></attribute>
+            </element>
+          </oneOrMore>
+        </group>
       </choice>
     </element>
   </define>
@@ -72,36 +72,36 @@
     <element name="rsc_colocation">
       <attribute name="id"><data type="ID"/></attribute>
       <optional>
-	<choice>
-	  <externalRef href="score.rng"/>
-	  <attribute name="score-attribute"><text/></attribute>
-	  <attribute name="score-attribute-mangle"><text/></attribute>
-	</choice>
+        <choice>
+          <externalRef href="score.rng"/>
+          <attribute name="score-attribute"><text/></attribute>
+          <attribute name="score-attribute-mangle"><text/></attribute>
+        </choice>
       </optional>
       <optional>
-	<ref name="element-lifetime"/>
+        <ref name="element-lifetime"/>
       </optional>
       <choice>
-	<oneOrMore>
-	  <ref name="element-resource-set"/>
-	</oneOrMore>
-	<group>
-	  <attribute name="rsc"><data type="IDREF"/></attribute>
-	  <attribute name="with-rsc"><data type="IDREF"/></attribute>
-	  <optional>
-	    <attribute name="node-attribute"><text/></attribute>
-	  </optional>
-	  <optional>
-	    <attribute name="rsc-role">
-	      <ref name="attribute-roles"/>
-	    </attribute>
-	  </optional>
-	  <optional>
-	    <attribute name="with-rsc-role">
-	      <ref name="attribute-roles"/>
-	    </attribute>
-	  </optional>
-	</group>
+        <oneOrMore>
+          <ref name="element-resource-set"/>
+        </oneOrMore>
+        <group>
+          <attribute name="rsc"><data type="IDREF"/></attribute>
+          <attribute name="with-rsc"><data type="IDREF"/></attribute>
+          <optional>
+            <attribute name="node-attribute"><text/></attribute>
+          </optional>
+          <optional>
+            <attribute name="rsc-role">
+              <ref name="attribute-roles"/>
+            </attribute>
+          </optional>
+          <optional>
+            <attribute name="with-rsc-role">
+              <ref name="attribute-roles"/>
+            </attribute>
+          </optional>
+        </group>
       </choice>
     </element>
   </define>
@@ -110,37 +110,37 @@
     <element name="rsc_order">
       <attribute name="id"><data type="ID"/></attribute>
       <optional>
-	<ref name="element-lifetime"/>
+        <ref name="element-lifetime"/>
       </optional>
       <optional>
-	<attribute name="symmetrical"><data type="boolean"/></attribute>
+        <attribute name="symmetrical"><data type="boolean"/></attribute>
       </optional>
       <optional>
-	<choice>
-	  <externalRef href="score.rng"/>
-	  <attribute name="kind">
-	    <ref name="order-types"/>
-	  </attribute>
-	</choice>
+        <choice>
+          <externalRef href="score.rng"/>
+          <attribute name="kind">
+            <ref name="order-types"/>
+          </attribute>
+        </choice>
       </optional>
       <choice>
-	<oneOrMore>
-	  <ref name="element-resource-set"/>
-	</oneOrMore>
-	<group>
-	  <attribute name="first"><data type="IDREF"/></attribute>
-	  <attribute name="then"><data type="IDREF"/></attribute>
-	  <optional>
-	    <attribute name="first-action">
-	      <ref name="attribute-actions"/>
-	    </attribute>
-	  </optional>
-	  <optional>
-	    <attribute name="then-action">
-	      <ref name="attribute-actions"/>
-	    </attribute>
-	  </optional>
-	</group>
+        <oneOrMore>
+          <ref name="element-resource-set"/>
+        </oneOrMore>
+        <group>
+          <attribute name="first"><data type="IDREF"/></attribute>
+          <attribute name="then"><data type="IDREF"/></attribute>
+          <optional>
+            <attribute name="first-action">
+              <ref name="attribute-actions"/>
+            </attribute>
+          </optional>
+          <optional>
+            <attribute name="then-action">
+              <ref name="attribute-actions"/>
+            </attribute>
+          </optional>
+        </group>
       </choice>
     </element>
   </define>
@@ -174,7 +174,7 @@
   <define name="element-lifetime">
     <element name="lifetime">
       <oneOrMore>
-	<externalRef href="rule.rng"/>
+        <externalRef href="rule.rng"/>
       </oneOrMore>
     </element>
   </define>

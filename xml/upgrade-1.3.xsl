@@ -22,10 +22,10 @@
     </xsl:if>
     <xsl:if test="not(@ref)">
       <xsl:if test="@tag">
-	<xsl:attribute name="object-type"><xsl:value-of select="@tag"/></xsl:attribute>
-	<xsl:if test="@attribute">
-	  <xsl:attribute name="attribute"><xsl:value-of select="@attribute"/></xsl:attribute>
-	</xsl:if>
+        <xsl:attribute name="object-type"><xsl:value-of select="@tag"/></xsl:attribute>
+        <xsl:if test="@attribute">
+          <xsl:attribute name="attribute"><xsl:value-of select="@attribute"/></xsl:attribute>
+        </xsl:if>
       </xsl:if>
     </xsl:if>
 
@@ -53,10 +53,10 @@
 
     <xsl:if test="count(deny|read|write)" > 
       <xsl:element name="role">
-	<xsl:attribute name="id">
-	  <xsl:text>auto-</xsl:text>
-	  <xsl:value-of select="@id"/>
-	</xsl:attribute>
+        <xsl:attribute name="id">
+          <xsl:text>auto-</xsl:text>
+          <xsl:value-of select="@id"/>
+        </xsl:attribute>
       </xsl:element>
     </xsl:if>
 
@@ -65,16 +65,16 @@
   <xsl:if test="count(deny|read|write)" > 
     <xsl:element name="acl_role">
       <xsl:attribute name="id">
-	<xsl:text>auto-</xsl:text>
-	<xsl:value-of select="@id"/>
+        <xsl:text>auto-</xsl:text>
+        <xsl:value-of select="@id"/>
       </xsl:attribute>
       <xsl:for-each select="node()"> 
-	<xsl:choose>
-	  <xsl:when test="starts-with(name(), 'role_ref')"/>
-	  <xsl:otherwise>
-	    <xsl:apply-templates select="."/>
-	  </xsl:otherwise>
-	</xsl:choose>
+        <xsl:choose>
+          <xsl:when test="starts-with(name(), 'role_ref')"/>
+          <xsl:otherwise>
+            <xsl:apply-templates select="."/>
+          </xsl:otherwise>
+        </xsl:choose>
       </xsl:for-each>
     </xsl:element>
   </xsl:if>

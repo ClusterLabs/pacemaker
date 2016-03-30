@@ -13,29 +13,29 @@
     <attribute name="id"><data type="ID"/></attribute>
     <interleave>
       <optional>
-	<externalRef href="rule.rng"/>
+        <externalRef href="rule.rng"/>
       </optional>
-	<zeroOrMore>
-	  <element name="nvpair">
-	    <choice>
-	      <group>
-	        <attribute name="id-ref"><data type="IDREF"/></attribute>
-	        <optional>
-	          <attribute name="name"><text/></attribute>
-	        </optional>
-	      </group>
-	      <group>
-	        <attribute name="id"><data type="ID"/></attribute>
-	        <attribute name="name"><text/></attribute>
-	        <optional>
-	          <attribute name="value"><text/></attribute>
-	        </optional>
-	      </group>
-	    </choice>
-	  </element>
-	</zeroOrMore>
+        <zeroOrMore>
+          <element name="nvpair">
+            <choice>
+              <group>
+                <attribute name="id-ref"><data type="IDREF"/></attribute>
+                <optional>
+                  <attribute name="name"><text/></attribute>
+                </optional>
+              </group>
+              <group>
+                <attribute name="id"><data type="ID"/></attribute>
+                <attribute name="name"><text/></attribute>
+                <optional>
+                  <attribute name="value"><text/></attribute>
+                </optional>
+              </group>
+            </choice>
+          </element>
+        </zeroOrMore>
       <optional>
-	<externalRef href="score.rng"/>
+        <externalRef href="score.rng"/>
       </optional>
     </interleave>
    </group>

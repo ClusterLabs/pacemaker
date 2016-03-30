@@ -35,9 +35,9 @@
   <info>
     <author>
       <personname>
-	<firstname>Andrew</firstname>
-	<surname>Beekhof</surname>
-	<email>andrew@beekhof.net</email>
+        <firstname>Andrew</firstname>
+        <surname>Beekhof</surname>
+        <email>andrew@beekhof.net</email>
       </personname>
     </author>
   </info>
@@ -52,12 +52,12 @@
   <refnamediv>
     <refname>
       <xsl:choose>
-	<xsl:when test="$man.name = 'NA'">
-	  <xsl:value-of select="concat($command.prefix, @name)"/>
-	</xsl:when>
-	<xsl:otherwise>
-	  <xsl:value-of select="$man.name"/>
-	</xsl:otherwise>
+        <xsl:when test="$man.name = 'NA'">
+          <xsl:value-of select="concat($command.prefix, @name)"/>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:value-of select="$man.name"/>
+        </xsl:otherwise>
       </xsl:choose>
     </refname>
     <refpurpose><xsl:apply-templates select="shortdesc"/></refpurpose>
@@ -172,37 +172,37 @@
       <xsl:text> = </xsl:text>
       <xsl:value-of select="content/@type"/>
       <xsl:if test="content/@default">
-	<xsl:text> [</xsl:text>
-	<xsl:value-of select="content/@default"/>
-	<xsl:text>]</xsl:text>
+        <xsl:text> [</xsl:text>
+        <xsl:value-of select="content/@default"/>
+        <xsl:text>]</xsl:text>
       </xsl:if>
     </term>
     <xsl:text>&#10;</xsl:text>
     <xsl:choose>
       <xsl:when test="longdesc/text() = shortdesc/text()">
-	<listitem>
-	  <para>
-	    <xsl:value-of select="shortdesc/text()"/>
-	  </para>
-	</listitem>
+        <listitem>
+          <para>
+            <xsl:value-of select="shortdesc/text()"/>
+          </para>
+        </listitem>
       </xsl:when>
       <xsl:otherwise>
-	<listitem>
-	  <para>
-	    <xsl:value-of select="shortdesc/text()"/>
-	  </para>
-	  <para>
-	    <xsl:value-of select="longdesc/text()"/>
-	  </para>
-	</listitem>
+        <listitem>
+          <para>
+            <xsl:value-of select="shortdesc/text()"/>
+          </para>
+          <para>
+            <xsl:value-of select="longdesc/text()"/>
+          </para>
+        </listitem>
       </xsl:otherwise>
     </xsl:choose>
     <!--xsl:if test="longdesc">
       <xsl:if test="longdesc != shortdesc">
-	<listitem>
-	  <xsl:text>&#10;</xsl:text>
-	  <xsl:apply-templates select="longdesc" mode="parameters"/>
-	</listitem>
+        <listitem>
+          <xsl:text>&#10;</xsl:text>
+          <xsl:apply-templates select="longdesc" mode="parameters"/>
+        </listitem>
       </xsl:if>
     </xsl:if-->
     <xsl:text>&#10;</xsl:text>
