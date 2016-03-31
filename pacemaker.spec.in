@@ -8,6 +8,7 @@
 # "pcmkversion" macro to "Pacemaker-" (will yield a tag per the convention)
 %global commit HEAD
 %global shortcommit %(c=%{commit}; [ ${c} = Pacemaker-%{pcmkversion} ] && echo %{pcmkversion} || echo ${c:0:7})
+%global post_release %([ %{commit} = Pacemaker-%{pcmkversion} ]; echo $?)
 %global github_owner ClusterLabs
 
 # Turn off the auto compilation of python files not in the site-packages directory
@@ -56,7 +57,11 @@
 %if %{with pre_release}
 %global pcmk_release 0.%{specversion}.%{shortcommit}.git
 %else
+%if 0%{post_release}
+%global pcmk_release %{specversion}.%{shortcommit}.git
+%else
 %global pcmk_release %{specversion}
+%endif
 %endif
 
 Name:          pacemaker
