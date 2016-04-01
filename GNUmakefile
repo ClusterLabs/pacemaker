@@ -24,7 +24,7 @@ PACKAGE		?= pacemaker
 
 # Force 'make dist' to be consistent with 'make export'
 distdir			= $(PACKAGE)-$(TAG)
-TARFILE			= $(distdir).tar.gz
+TARFILE			= $(PACKAGE)-$(SHORTTAG).tar.gz
 DIST_ARCHIVES		= $(TARFILE)
 
 RPM_ROOT	= $(shell pwd)
@@ -44,6 +44,9 @@ ARCH    ?= $(shell test -e /etc/fedora-release && rpm --eval %{_arch})
 MOCK_CFG ?= $(shell test -e /etc/fedora-release && echo fedora-$(F)-$(ARCH))
 DISTRO  ?= $(shell test -e /etc/SuSE-release && echo suse; echo fedora)
 TAG     ?= $(shell git log --pretty="format:%H" -n 1)
+lparen = (
+rparen = )
+SHORTTAG ?= $(shell case $(TAG) in Pacemaker-*$(rparen) echo $(TAG);; *$(rparen) git log --pretty="format:%h" -n 1;; esac)
 WITH    ?= --without doc
 #WITH    ?= --without=doc --with=gcov
 
@@ -151,10 +154,11 @@ srpm-%:	export $(PACKAGE)-%.spec
 	sed -i 's/global\ commit.*/global\ commit\ $(TAG)/' $(PACKAGE).spec
 	case "$(WITH)" in 	\
 	  *pre_release*)	\
-	    sed -i 's/global\ pcmk_release.*/global\ pcmk_release\ 0.%{specversion}.%{shortcommit}.git/' $(PACKAGE).spec;	\
-	    sed -i 's/Version:.*/Version:\ $(shell echo $(NEXT_RELEASE) | sed -e s:Pacemaker-:: -e s:-.*::)/' $(PACKAGE).spec;;	\
+	    sed -i 's/^\(%global pcmk_release \).*/\10.%{specversion}.%{shortcommit}.git/' $(PACKAGE).spec;	\
+	    sed -i 's/^\(%global pcmkversion \).*/\1$(shell echo $(NEXT_RELEASE) | sed -e s:Pacemaker-:: -e s:-.*::)/' $(PACKAGE).spec;;	\
 	  *)			\
-	    sed -i 's/Version:.*/Version:\ $(shell git describe --tags $(TAG) | sed -e s:Pacemaker-:: -e s:-.*::)/' $(PACKAGE).spec;;\
+	    [ "$(TAG)" = "$(SHORTTAG)" ] || sed -i 's/^\(%global pcmk_release \).*/\1%{specversion}.%{shortcommit}.git/' $(PACKAGE).spec;	\
+	    sed -i 's/^\(%global pcmkversion \).*/\1$(shell git describe --tags $(TAG) | sed -e s:Pacemaker-:: -e s:-.*::)/' $(PACKAGE).spec;;\
 	esac
 	rpmbuild -bs --define "dist .$*" $(RPM_OPTS) $(PACKAGE).spec
 

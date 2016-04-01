@@ -3,8 +3,12 @@
 %global pcmk_docdir %{_docdir}/%{name}
 
 %global specversion 1
+%global pcmkversion 1.1.14
+# set following to the actual commit or, for final release, concatenate
+# "pcmkversion" macro to "Pacemaker-" (will yield a tag per the convention)
 %global commit HEAD
-%global shortcommit %(c=%{commit}; echo ${c:0:7})
+%global shortcommit %(c=%{commit}; [ ${c} = Pacemaker-%{pcmkversion} ] && echo %{pcmkversion} || echo ${c:0:7})
+%global post_release %([ %{commit} = Pacemaker-%{pcmkversion} ]; echo $?)
 %global github_owner ClusterLabs
 
 # Turn off the auto compilation of python files not in the site-packages directory
@@ -53,12 +57,16 @@
 %if %{with pre_release}
 %global pcmk_release 0.%{specversion}.%{shortcommit}.git
 %else
+%if 0%{post_release}
+%global pcmk_release %{specversion}.%{shortcommit}.git
+%else
 %global pcmk_release %{specversion}
+%endif
 %endif
 
 Name:          pacemaker
 Summary:       Scalable High-Availability cluster resource manager
-Version:       1.1.14
+Version:       %{pcmkversion}
 Release:       %{pcmk_release}%{?dist}
 %if %{defined _unitdir}
 License:       GPLv2+ and LGPLv2+
@@ -69,7 +77,7 @@ License:       GPLv2+ and LGPLv2+ and BSD
 Url:           http://www.clusterlabs.org
 Group:         System Environment/Daemons
 
-Source0:       https://github.com/%{github_owner}/%{name}/archive/%{commit}/%{name}-%{commit}.tar.gz
+Source0:       https://github.com/%{github_owner}/%{name}/archive/%{commit}/%{name}-%{shortcommit}.tar.gz
 BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 AutoReqProv:   on
 Requires:      python
