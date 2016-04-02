@@ -171,6 +171,20 @@ SysInfoStats() {
 	    cpu_type=`system_profiler SPHardwareDataType | awk -F': ' '/^CPU Type/ {print $2; exit}'`
 	    cpu_speed=`system_profiler SPHardwareDataType | awk -F': ' '/^CPU Speed/ {print $2; exit}'`
 	    cpu_cores=`system_profiler SPHardwareDataType | awk -F': ' '/^Number Of/ {print $2; exit}'`
+	    cpu_load=`uptime | awk '{ print $10 }'`
+	;;
+	"FreeBSD")
+	    cpu_type=`sysctl -in hw.model`
+	    cpu_speed=`sysctl -in dev.cpu.0.freq`
+	    cpu_cores=`sysctl -in hw.ncpu`
+	    cpu_load=`sysctl -in vm.loadavg | awk '{ print $4 }'`
+
+	    free_pages=`sysctl -in vm.stats.vm.v_free_count`
+	    page_count=`sysctl -in vm.stats.vm.v_page_count`
+	    page_size=`sysctl -in vm.stats.vm.v_page_size`
+
+	    mem=`expr $free_pages \* $page_size / 1024 / 1024`M
+	    mem_total=`expr $page_count \* $page_size / 1024 / 1024`M
 	;;
 	"Linux")
 	    if [ -f /proc/cpuinfo ]; then
@@ -178,6 +192,7 @@ SysInfoStats() {
 		cpu_speed=`awk -F': ' '/bogomips/ {print $2; exit}' /proc/cpuinfo`
 		cpu_cores=`grep "^processor" /proc/cpuinfo | wc -l`
 	    fi
+	    cpu_load=`uptime | awk '{ print $10 }'`
 
 	    if [ -f /proc/meminfo ]; then
 	        # meminfo results are in kB
@@ -206,9 +221,9 @@ SysInfoStats() {
 	UpdateStat cpu_cores "$cpu_cores"
     fi
 
-    loads=`uptime`
-    load15=`echo ${loads} | awk '{print $10}'`
-    UpdateStat cpu_load $load15
+    if [ x != x"$cpu_load" ]; then
+	UpdateStat cpu_load "$cpu_load"
+    fi
 
     if [ ! -z "$mem" ]; then
         # Massage the memory values
