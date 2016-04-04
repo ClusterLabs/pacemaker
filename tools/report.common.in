@@ -711,8 +711,8 @@ get_cluster_type() {
     then
 	tool=`pickfirst corosync-objctl corosync-cmapctl`
 	case $tool in
-	    *objctl) quorum=`$tool -a | grep quorum.provider | sed s/.*=//`;;
-	    *cmapctl) quorum=`$tool | grep quorum.provider | sed s/.*=//`;;
+	    *objctl) quorum=`$tool -a | grep quorum.provider | sed 's/.*=\s*//'`;;
+	    *cmapctl) quorum=`$tool | grep quorum.provider | sed 's/.*=\s*//'`;;
 	esac
 	if [ x"$quorum" = x"quorum_cman" ]; then
 	    stack="cman"
