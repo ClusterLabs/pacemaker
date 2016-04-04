@@ -803,3 +803,5 @@ t=`get_time "12:00"`
 if [ "$t" = "" ]; then
 	fatal "please install the perl Date::Parse module (perl-DateTime-Format-DateParse on Fedora/Red Hat)"
 fi
+
+# vim: set expandtab tabstop=8 softtabstop=4 shiftwidth=4 textwidth=80:

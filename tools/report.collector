@@ -792,3 +792,5 @@ elif [ "$REPORT_MASTER" != "$REPORT_TARGET" ]; then
 	rm -rf $REPORT_HOME
     fi
 fi
+
+# vim: set expandtab tabstop=8 softtabstop=4 shiftwidth=4 textwidth=80:

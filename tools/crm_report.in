@@ -161,7 +161,7 @@ collect_data() {
     fi
 
     for node in $nodes; do
-	cat<<EOF>$l_base/.env
+	cat <<EOF >$l_base/.env
 LABEL="$label"
 REPORT_HOME="$r_base"
 REPORT_MASTER="$host"
@@ -179,7 +179,7 @@ maxdepth=$maxdepth
 EOF
 
 	if [ $host = $node ]; then
-	    cat<<EOF>>$l_base/.env
+	    cat <<EOF >>$l_base/.env
 REPORT_HOME="$l_base"
 EOF
 	    cat $l_base/.env $report_data/report.common $report_data/report.collector > $l_base/collector
@@ -479,3 +479,5 @@ elif [ "x$start_time" != "x" ]; then
 else
     fatal "Not sure what to do, no tests or time ranges to extract"
 fi
+
+# vim: set expandtab tabstop=8 softtabstop=4 shiftwidth=4 textwidth=80:
