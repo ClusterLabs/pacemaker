@@ -2936,6 +2936,7 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
 
     action_t *start = NULL;
     resource_t *top = uber_parent(rsc);
+    node_t *target = stonith_op->node;
 
     key = start_key(rsc);
     action_list = find_actions(rsc->actions, key, NULL);
@@ -2947,7 +2948,8 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
     free(key);
 
     key = stop_key(rsc);
-    action_list = find_fence_target_node_actions(rsc->actions, key, stonith_op->node, data_set);
+    action_list = find_fence_target_node_actions(rsc->actions, key, target,
+                                                 data_set);
     free(key);
 
     /* add the stonith OP as a stop pre-req and the mark the stop
@@ -2957,17 +2959,12 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
     for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
 
-        if (action->node->details->online
-            && action->node->details->unclean == FALSE && is_set(rsc->flags, pe_rsc_failed)) {
-            continue;
-        }
-
         if (is_set(rsc->flags, pe_rsc_failed)) {
-            crm_notice("Stop of failed resource %s is"
-                       " implicit after %s is fenced", rsc->id, action->node->details->uname);
+            crm_notice("Stop of failed resource %s is implicit after %s is fenced",
+                       rsc->id, target->details->uname);
         } else {
             crm_info("%s is implicit after %s is fenced",
-                     action->uuid, action->node->details->uname);
+                     action->uuid, target->details->uname);
         }
 
         /* the stop would never complete and is
@@ -2981,7 +2978,7 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
             enum pe_ordering flags = pe_order_optional;
             action_t *parent_stop = find_first_action(top->actions, NULL, RSC_STOP, NULL);
 
-            if(stonith_op->node->details->remote_rsc) {
+            if (target->details->remote_rsc) {
                 flags |= pe_order_preserve;
             }
             order_actions(stonith_op, action, flags);
@@ -3056,7 +3053,8 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
     g_list_free(action_list);
 
     key = demote_key(rsc);
-    action_list = find_fence_target_node_actions(rsc->actions, key, stonith_op->node, data_set);
+    action_list = find_fence_target_node_actions(rsc->actions, key, target,
+                                                 data_set);
     free(key);
 
     for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
@@ -3064,17 +3062,19 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
 
         if (action->node->details->online == FALSE || action->node->details->unclean == TRUE
             || is_set(rsc->flags, pe_rsc_failed)) {
+
             if (is_set(rsc->flags, pe_rsc_failed)) {
-                pe_rsc_info(rsc, "Demote of failed resource %s is"
-                            " implict after %s is fenced", rsc->id, action->node->details->uname);
+                pe_rsc_info(rsc,
+                            "Demote of failed resource %s is implicit after %s is fenced",
+                            rsc->id, target->details->uname);
             } else {
                 pe_rsc_info(rsc, "%s is implicit after %s is fenced",
-                            action->uuid, action->node->details->uname);
+                            action->uuid, target->details->uname);
             }
-            /* the stop would never complete and is
-             * now implied by the stonith operation
+
+            /* The demote would never complete and is now implied by the
+             * fencing, so convert it into a pseudo-action.
              */
-            crm_trace("here - 1");
             update_action_flags(action, pe_action_pseudo);
             update_action_flags(action, pe_action_runnable);
 
