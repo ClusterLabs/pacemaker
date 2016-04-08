@@ -314,7 +314,7 @@ distro() {
     if
 	which lsb_release >/dev/null 2>&1
     then
-	lsb_release -d
+	lsb_release -d | sed -e 's/^Description:\s*//'
 	debug "Using lsb_release for distribution info"
 	return
     fi
@@ -349,10 +349,11 @@ pkg_ver() {
     debug "The package manager is: $pkg_mgr"
     echo "The package manager is: $pkg_mgr"
 
-    # for Linux .deb based systems
+    echo "Installed packages:"
     case $pkg_mgr in
 	deb)
 	    dpkg-query -f '${Package} ${Version} ${Architecture}\n' -W | sort
+            echo
 	    for pkg in $*; do
 		if dpkg-query -W $pkg 2>/dev/null ; then
 		    debug "Verifying installation of: $pkg"
@@ -363,6 +364,7 @@ pkg_ver() {
 	    ;;
 	rpm)
 	    rpm -qa --qf '%{name} %{version}-%{release} - %{distribution} %{arch}\n' | sort
+            echo
 	    for pkg in $*; do
 		if rpm -q $pkg >/dev/null 2>&1 ; then
 		    debug "Verifying installation of: $pkg"
@@ -441,21 +443,22 @@ sys_info() {
 	echo "Distribution: `distro`"
     fi
 
-    cibadmin --version 2>&1
+    echo
+    cibadmin --version 2>&1 | head -1
     cibadmin -! 2>&1
-    case $1 in
+    case $cluster in
 	openais)
-	    : echo "openais version: how?"
+	    echo openais # version: how?
 	    ;;
 	cman)
-	    cman_tool -V
-	    /usr/sbin/corosync -v 2>&1
+	    cman_tool -V 2>&1 | head -1
+	    /usr/sbin/corosync -v 2>&1 | head -1
 	    ;;
 	corosync)
-	    /usr/sbin/corosync -v 2>&1
+	    /usr/sbin/corosync -v 2>&1 | head -1
 	    ;;
 	heartbeat)
-	    heartbeat version: `$CRM_DAEMON_DIR/heartbeat -V`  2>&1
+	    echo heartbeat $($CRM_DAEMON_DIR/heartbeat -V 2>&1)
 	    ;;
     esac
 
@@ -465,6 +468,7 @@ sys_info() {
     # Resource agents version hash
     echo "resource-agents: `grep 'Build version:' /usr/lib/ocf/resource.d/heartbeat/.ocf-shellfuncs`"
 
+    echo
     pkg_ver $*
 }
 

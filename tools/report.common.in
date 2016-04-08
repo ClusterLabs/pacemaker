@@ -53,8 +53,11 @@ stonith		te_fence_node|stonith-ng.*log_oper.*report|stonithd.*(requests|(Succeed
 start_stop	sutdown.decision|Starting.heartbeat|Corosync.Cluster.Engine|corosync.*Initializing.transport|Executive.Service.RELEASE|crm_shutdown:.Requesting.shutdown|pcmk_shutdown:.Shutdown.complete
 "
 
-PACKAGES="pacemaker pacemaker-libs libpacemaker3
-pacemaker-pygui pacemaker-pymgmt pymgmt-client
+# superset of all packages of interest on all distros
+# (the package manager will be used to validate the installation
+# of any of these packages that are installed)
+PACKAGES="pacemaker pacemaker-libs pacemaker-cluster-libs libpacemaker3
+pacemaker-remote pacemaker-pygui pacemaker-pymgmt pymgmt-client
 openais libopenais2 libopenais3 corosync libcorosync4
 resource-agents cluster-glue-libs cluster-glue libglue2 ldirectord
 heartbeat heartbeat-common heartbeat-resources libheartbeat2
