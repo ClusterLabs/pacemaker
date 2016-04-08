@@ -96,8 +96,9 @@ log() {
 debug() {
     if [ $verbose -gt 0 ]; then
 	log "Debug: $*"
+    else
+        record "Debug: $*"
     fi
-    record "Debug: $*"
 }
 
 info() {
