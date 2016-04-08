@@ -615,17 +615,21 @@ get_logfiles() {
     sleep 2 # Give syslog time to catch up in case its busy
     findmsg 1 "$msg"
 
-    # Initial pacemakerd logs and tracing might also go to a file (other than the syslog log file)
-    findmsg 3 "Starting Pacemaker"
+    # Look for detail logs:
 
-    # Make sure we get something from the Policy Engine
-    findmsg 3 "Calculated Transition"
+    # - initial pacemakerd logs and tracing might go to a different file
+    pattern="Starting Pacemaker"
 
-    # These patterns look for cib and lrmd updates
-    # Helpful on non-DC nodes or when the cluster has been up for a long time
-    findmsg 3 cib_perform_op
-    findmsg 3 process_lrm_event
+    # - make sure we get something from the Policy Engine
+    pattern="$pattern\\|Calculated Transition"
 
+    # - cib and lrmd updates (helpful on non-DC nodes or when the cluster has been up for a long time)
+    pattern="$pattern\\|cib_perform_op\\|process_lrm_event"
+
+    # - pacemaker_remote might use a different file
+    pattern="$pattern\\|pacemaker_remoted:"
+
+    findmsg 3 "$pattern"
 }
 
 essential_files() {
