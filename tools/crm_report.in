@@ -380,9 +380,7 @@ getnodes() {
 
     cluster_cf=`find_cluster_cf $cluster`
     # 1. Live
-    if
-	ps -ef | egrep -qs "[c]ib"
-    then
+    if is_running cib; then
 	debug "Querying CIB for nodes"
 	cibadmin -Ql -o nodes | awk '
 	  /uname/ {

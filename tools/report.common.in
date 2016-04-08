@@ -114,6 +114,10 @@ fatal() {
     exit 1
 }
 
+is_running() {
+    ps -ef | egrep -qs $(echo "$1" | sed -e 's/^\(.\)/[\1]/')
+}
+
 detect_host() {
     if [ -z "$maxdepth" ]; then
         depth="-maxdepth 5"
@@ -710,9 +714,7 @@ pickfirst() {
 # and existence of configuration files
 #
 get_cluster_type() {
-    if
-	ps -ef | egrep -qs '[c]orosync'
-    then
+    if is_running corosync; then
 	tool=`pickfirst corosync-objctl corosync-cmapctl`
 	case $tool in
 	    *objctl) quorum=`$tool -a | grep quorum.provider | sed 's/.*=\s*//'`;;
@@ -724,10 +726,9 @@ get_cluster_type() {
 	    stack="corosync"
 	fi
 
-    elif
-	ps -ef | egrep -qs '[a]isexec'
-    then
+    elif is_running aisexec; then
 	stack="openais"
+
     elif
 	ps -ef | grep -v -e grep -e "eartbeat/[clasp]" | egrep -qs '[h]eartbeat'
     then

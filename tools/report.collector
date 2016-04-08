@@ -210,6 +210,11 @@ getbt() {
     done
 }
 
+dump_status_and_config() {
+    crm_mon -1 2>&1 | grep -v '^Last upd' > $target/$CRM_MON_F
+    cibadmin -Ql 2>/dev/null > $target/${CIB_F}.live
+}
+
 getconfig() {
     cluster=$1; shift;
     target=$1; shift;
@@ -220,13 +225,12 @@ getconfig() {
 	fi
     done
 
-    crm_uuid -r > $target/$HB_UUID_F 2>&1
+    if which crm_uuid >/dev/null 2>&1; then
+        crm_uuid -r > $target/$HB_UUID_F 2>&1
+    fi
 
-    if
-	ps -ef | egrep -qs [c]rmd
-    then
-	crm_mon -1 2>&1 | grep -v '^Last upd' > $target/$CRM_MON_F
-	cibadmin -Ql 2>/dev/null > $target/${CIB_F}.live
+    if is_running crmd; then
+        dump_status_and_config
 	case $cluster in
 	    cman)             crm_node -p --cman > $target/$MEMBERSHIP_F 2>&1;;
 	    corosync|openais) crm_node -p --openais > $target/$MEMBERSHIP_F 2>&1;;
@@ -234,13 +238,22 @@ getconfig() {
 	    *) 	              crm_node -p > $target/$MEMBERSHIP_F 2>&1;;
 	esac
 	echo "$host" > $target/RUNNING
+
+    elif is_running pacemaker_remoted; then
+        dump_status_and_config
+        echo "$host" > $target/RUNNING
+
     else
 	echo "$host" > $target/STOPPED
     fi
 
     if [ -f "$target/$CIB_F" ]; then
 	crm_verify -V -x $target/$CIB_F >$target/$CRM_VERIFY_F 2>&1
-	CIB_file=$target/$CIB_F crm configure show >$target/$CIB_TXT_F 2>&1
+        if which crm >/dev/null 2>&1 ; then
+            CIB_file=$target/$CIB_F crm configure show >$target/$CIB_TXT_F 2>&1
+        elif which pcs >/dev/null 2>&1 ; then
+            pcs config -f $target/$CIB_F >$target/$CIB_TXT_F 2>&1
+        fi
     fi
 }
 
@@ -495,9 +508,7 @@ sys_stats() {
 
 dlm_dump() {
     if which dlm_tool >/dev/null 2>&1 ; then
-      if
-	ps -ef | egrep -qs '[d]lm_controld'
-      then
+      if is_running dlm_controld; then
 	echo "--- Lockspace overview:"
 	dlm_tool ls -n
 
@@ -682,9 +693,7 @@ getblackboxes  $LOG_START $LOG_END $REPORT_HOME/$REPORT_TARGET
 
 case $cluster in
     cman|corosync)
-	if
-	    ps -ef | egrep -qs '[c]orosync'
-	then
+	if is_running corosync; then
 	    corosync-blackbox &> corosync-blackbox-live.txt
 	fi
 #	corosync-fplay > corosync-blackbox.txt
