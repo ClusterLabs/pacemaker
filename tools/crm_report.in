@@ -20,7 +20,7 @@
 
 # Note the quotes around `$TEMP': they are essential!
 TEMP=`getopt				\
-    -o hv?xl:f:t:n:T:Lp:c:dSACHu:D:MVse:	\
+    -o hv?xl:f:t:n:T:L:p:c:dSACHu:D:MVse:	\
     --long help,cts:,cts-log:,dest:,node:,nodes:,from:,to:,sos-mode,logfile:,as-directory,single-node,cluster:,user:,max-depth:,version,features,rsh:	\
     -n 'crm_report' -- "$@"`
 eval set -- "$TEMP"
