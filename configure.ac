@@ -312,7 +312,7 @@ AC_ARG_WITH(coverage,
 
 PUBLICAN_BRAND="common"
 AC_ARG_WITH(brand,
-    [  --with-brand=brand  Brand to use for generated documentation [$PUBLICAN_BRAND]],
+    [  --with-brand=brand  Brand to use for generated documentation (set empty for no docs) [$PUBLICAN_BRAND]],
     [ PUBLICAN_BRAND="$withval" ])
 AC_SUBST(PUBLICAN_BRAND)
 
@@ -606,8 +606,13 @@ fi
 AM_CONDITIONAL(BUILD_STONITH_CONFIG, test $SUPPORT_STONITH_CONFIG = 1)
 AC_DEFINE_UNQUOTED(SUPPORT_STONITH_CONFIG, $SUPPORT_STONITH_CONFIG, Support a stand-alone stonith config file in addition to the CIB)
 
-AM_CONDITIONAL(BUILD_DOCBOOK, test x"${PUBLICAN}" != x"" -a x"${INKSCAPE}" != x"")
-if test x"${PUBLICAN}" != x"" -a x"${INKSCAPE}" != x""; then
+AM_CONDITIONAL([BUILD_DOCBOOK],
+               [test x"${PUBLICAN_BRAND}" != x"" \
+                && test x"${PUBLICAN}" != x"" \
+                && test x"${INKSCAPE}" != x""])
+if test x"${PUBLICAN_BRAND}" != x"" \
+   && test x"${PUBLICAN}" != x"" \
+   && test x"${INKSCAPE}" != x""; then
    AC_MSG_NOTICE(Enabling publican)
    PCMK_FEATURES="$PCMK_FEATURES publican-docs"
 fi
