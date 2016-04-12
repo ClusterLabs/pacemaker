@@ -410,7 +410,7 @@ getbacktraces() {
 
 	# Make a copy of them in case we need more data later
 	# Luckily they compress well
-	mkdir cores &> /dev/null
+	mkdir cores >/dev/null 2>&1
 	cp -a $flist cores/
 	shrink cores
 	rm -rf cores
@@ -439,7 +439,7 @@ getblackboxes() {
 
     for bb in $flist; do
         bb_short=`basename $bb`
-	qb-blackbox $bb &> $3/${bb_short}.blackbox
+	qb-blackbox $bb > $3/${bb_short}.blackbox 2>&1
 	info "Extracting contents of blackbox: $bb_short"
     done
 }
@@ -694,7 +694,7 @@ getblackboxes  $LOG_START $LOG_END $REPORT_HOME/$REPORT_TARGET
 case $cluster in
     cman|corosync)
 	if is_running corosync; then
-	    corosync-blackbox &> corosync-blackbox-live.txt
+	    corosync-blackbox >corosync-blackbox-live.txt 2>&1
 	fi
 #	corosync-fplay > corosync-blackbox.txt
 
