@@ -72,6 +72,16 @@ kernel-default kernel-pae kernel-xen
 glibc
 "
 
+# Potential locations of system log files
+SYSLOGS="
+    /var/log/*
+    /var/logs/*
+    /var/syslog/*
+    /var/adm/*
+    /var/log/ha/*
+    /var/log/cluster/*
+"
+
 #
 # keep the user posted
 #
@@ -336,34 +346,58 @@ linetime() {
     get_time "$t"
 }
 
-# Find pattern in a logfile somewhere
-# Return $max ordered results by age (newest first)
+#
+# findmsg <max> <pattern>
+#
+# Print the names of up to <max> system logs that contain <pattern>,
+# ordered by most recently modified.
+#
 findmsg() {
-	max=$1
-	pattern=$2
-	logfiles=""
-	syslogdirs="/var/log /var/logs /var/syslog /var/adm /var/log/ha /var/log/cluster"
+    max=$1
+    pattern="$2"
+    found=0
 
-	for d in $syslogdirs; do
-	    if [ -d $d ]; then
-		files=`find $d -type f -maxdepth 1`
-		for f in $files; do
-		    local cat=`find_decompressor $f`
-		    $cat $f | grep -l -e "$pattern"
-		    if [ $? = 0 ]; then
-		        logfiles="$logfiles $f"
-		    fi
-		done
-	    fi
-	done 2>/dev/null
+    # List all potential system logs ordered by most recently modified.
+    candidates=$(ls -1td $SYSLOGS 2>/dev/null)
+    if [ -z "$candidates" ]; then
+        debug "No system logs found to search for pattern \'$pattern\'"
+        return
+    fi
 
-	if [ "x$logfiles" != "x" ]; then
-	    list=`ls -t $logfiles | head -n $max | tr '\n' ' '`
-	    echo $list
-	    debug "Pattern \'$pattern\' found in: [ $list ]"
-	else
-	    debug "Pattern \'$pattern\' not found anywhere"
-	fi
+    # Portable way to handle files with spaces in their names.
+    SAVE_IFS=$IFS
+    IFS="
+"
+
+    # Check each log file for matches.
+    logfiles=""
+    for f in $candidates; do
+        local cat=$(find_decompressor "$f")
+        $cat "$f" 2>/dev/null | grep -q -e "$pattern"
+        if [ $? -eq 0 ]; then
+
+            # Add this file to the list of hits
+            # (using newline as separator to handle spaces in names).
+            if [ -z "$logfiles" ]; then
+                logfiles="$f"
+            else
+                logfiles="$logfiles
+$f"
+            fi
+
+            # If we have enough hits, print them and return.
+            found=$(($found+1))
+            if [ $found -ge $max ]; then
+                debug "Pattern \'$pattern\' found in: [ $logfiles ]"
+                IFS=$SAVE_IFS
+                echo "$logfiles"
+                return
+            fi
+        fi
+    done 2>/dev/null
+    IFS=$SAVE_IFS
+
+    debug "Pattern \'$pattern\' not found in any system logs"
 }
 
 node_events() {
@@ -489,16 +523,14 @@ dumplog() {
 #
 
 find_decompressor() {
-	if echo $1 | grep -qs 'bz2$'; then
-		echo "bzip2 -dc"
-	elif echo $1 | grep -qs 'gz$'; then
-		echo "gzip -dc"
-	elif echo $1 | grep -qs 'xz$'; then
-		echo "xz -dc"
-	else
-		echo "cat"
-	fi
+    case $1 in
+        *bz2) echo "bzip2 -dc" ;;
+        *gz)  echo "gzip -dc" ;;
+        *xz)  echo "xz -dc" ;;
+        *)    echo "cat" ;;
+    esac
 }
+
 #
 # check if the log contains a piece of our segment
 #
