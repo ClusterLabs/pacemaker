@@ -365,67 +365,84 @@ do_cts() {
     done
 }
 
+node_names_from_xml() {
+    awk '
+      /uname/ {
+            for( i=1; i<=NF; i++ )
+                    if( $i~/^uname=/ ) {
+                            sub("uname=.","",$i);
+                            sub("\".*","",$i);
+                            print $i;
+                            next;
+                    }
+      }
+    ' | tr '\n' ' '
+}
+
 getnodes() {
-    if [ -z $1 ]; then
-	cluster=`get_cluster_type`
-    elif [ $1 = any ]; then
-        cluster=`get_cluster_type`
-    else
-	cluster=$1
-    fi
+    cluster="$1"
 
-    if [ -z $HA_STATE_DIR ]; then
-	HA_STATE_DIR=/var/lib/heartbeat
-    fi
-
-    cluster_cf=`find_cluster_cf $cluster`
-    # 1. Live
-    if is_running cib; then
+    # 1. Live (cluster nodes or Pacemaker Remote nodes)
+    # TODO: This will not detect Pacemaker Remote nodes unless they
+    # have ever had a permanent node attribute set, because it only
+    # searches the nodes section. It should also search the config
+    # for resources that create Pacemaker Remote nodes.
+    cib_nodes=$(cibadmin -Ql -o nodes 2>/dev/null)
+    if [ $? -eq 0 ]; then
 	debug "Querying CIB for nodes"
-	cibadmin -Ql -o nodes | awk '
-	  /uname/ {
-		for( i=1; i<=NF; i++ )
-			if( $i~/^uname=/ ) {
-				sub("uname=.","",$i);
-				sub("\".*","",$i);
-				print $i;
-				next;
-			}
-	  }
-	' | tr '\n' ' '
+        echo "$cib_nodes" | node_names_from_xml
+        return
+    fi
+
     # 2. Saved
-    elif [ -f @CRM_CONFIG_DIR@/cib.xml ]; then
+    if [ -f "@CRM_CONFIG_DIR@/cib.xml" ]; then
 	debug "Querying on-disk CIB for nodes"
-	grep "node " @CRM_CONFIG_DIR@/cib.xml | awk '
-	  /uname/ {
-		for( i=1; i<=NF; i++ )
-			if( $i~/^uname=/ ) {
-				sub("uname=.","",$i);
-				sub("\".*","",$i);
-				print $i;
-				next;
-			}
-	  }
-	' | tr '\n' ' '
+        grep "node " "@CRM_CONFIG_DIR@/cib.xml" | node_names_from_xml
+        return
+    fi
 
     # 3. hostcache
-    elif [ -f $HA_STATE_DIR/hostcache ]; then
+    if [ -z "$HA_STATE_DIR" ]; then
+        HA_STATE_DIR=/var/lib/heartbeat
+    fi
+    if [ -f "$HA_STATE_DIR/hostcache" ]; then
 	debug "Reading nodes from $HA_STATE_DIR/hostcache"
-	awk '{print $1}' $HA_STATE_DIR/hostcache
+        awk '{print $1}' "$HA_STATE_DIR/hostcache"
+        return
+    fi
 
     # 4. ha.cf
-    elif [ "x$cluster" = "xheartbeat" ]; then
+    if [ "x$cluster" = "xheartbeat" ]; then
+        cluster_cf=$(find_cluster_cf $cluster)
 	debug "Reading nodes from $cluster_cf"
-	getcfvar $cluster node $cluster_cf
+        getcfvar $cluster node "$cluster_cf"
+        return
+    fi
 
     # 5. logs
-    else
-	# Look in the logs...
-	logfile=`findmsg 1 "crm_update_peer"`
-	debug "Reading nodes from $logfile"
-	if [ ! -z "$logfile" ]; then
-	    grep crm_update_peer: $logfile | sed s/.*crm_update_peer// | sed s/://g | awk '{print $2}' | grep -v "(null)" | sort -u | tr '\n' ' '
-	fi
+    # TODO: This has multiple issues:
+    # * It looks for messages from crm_update_peer(), which is used only by
+    #   heartbeat and legacy plugin clusters; it should work with CMAN and
+    #   corosync2 clusters as well.
+    # * It does a findmsg for "crm_update_peer" (which will hit
+    #   "crm_update_peer_proc" etc.), but then greps for "crm_update_peer:".
+    # * It always uses grep, even though $logfile might be compressed.
+    #   For this reason and efficiency, it would nice if findmsg could
+    #   optionally print the matches instead of the file names.
+    # * It would be nice to skip this step for Pacemaker Remote nodes since their
+    #   logs will not have node names, but it is nontrivial to know that.
+    #   Cluster nodes generally won't get here, but stopped Pacemaker Remote
+    #   nodes will.
+    logfile=$(findmsg 1 "crm_update_peer")
+    debug "Looking for nodes in $logfile"
+    if [ ! -z "$logfile" ]; then
+        grep crm_update_peer: "$logfile" \
+            | sed s/.*crm_update_peer// \
+            | sed s/://g \
+            | awk '{print $2}' \
+            | grep -v "(null)" \
+            | sort -u \
+            | tr '\n' ' '
     fi
 }
 
@@ -449,13 +466,19 @@ elif [ "x$start_time" != "x" ]; then
 	log ""
     fi
 
-    if [ -z "$nodes" ]; then
-	nodes=`getnodes $cluster`
-	log "Calculated node list: $nodes"
+    # If user didn't specify a cluster stack, make a best guess if possible.
+    if [ -z "$cluster" ] || [ "$cluster" = "any" ]; then
+        cluster=$(get_cluster_type)
     fi
 
+    # If user didn't specify node(s), make a best guess if possible.
     if [ -z "$nodes" ]; then
-	fatal "Cannot determine node list, please specify manually with --nodes"
+	nodes=`getnodes $cluster`
+        if [ -n "$nodes" ]; then
+            log "Calculated node list: $nodes"
+        else
+            fatal "Cannot determine nodes; specify --nodes or --single-node"
+        fi
     fi
 
     if
