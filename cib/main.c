@@ -485,14 +485,16 @@ cib_init(void)
     }
 
     if (stand_alone == FALSE) {
+        if (is_openais_cluster()) {
+            crm_set_status_callback(&cib_peer_update_callback);
+        }
+
         if (crm_cluster_connect(&crm_cluster) == FALSE) {
             crm_crit("Cannot sign in to the cluster... terminating");
             crm_exit(DAEMON_RESPAWN_STOP);
         }
         cib_our_uname = crm_cluster.uname;
-        if (is_openais_cluster()) {
-            crm_set_status_callback(&cib_peer_update_callback);
-        }
+
 #if SUPPORT_HEARTBEAT
         if (is_heartbeat_cluster()) {
 

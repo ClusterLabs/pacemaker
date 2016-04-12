@@ -1450,6 +1450,8 @@ main(int argc, char **argv)
 #endif
         }
 
+        crm_set_status_callback(&st_peer_update_callback);
+
         if (crm_cluster_connect(&cluster) == FALSE) {
             crm_crit("Cannot sign in to the cluster... terminating");
             crm_exit(DAEMON_RESPAWN_STOP);
@@ -1486,7 +1488,6 @@ main(int argc, char **argv)
         stonith_our_uname = strdup("localhost");
     }
 
-    crm_set_status_callback(&st_peer_update_callback);
 
     device_list = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_device);
 
