@@ -194,6 +194,18 @@ detect_cib_dir() {
     fi
 }
 
+detect_state_dir() {
+    if [ -n "$CRM_CONFIG_DIR" ]; then
+        # Assume new layout
+        # $local_state_dir/lib/pacemaker/(cib,pengine,blackbox,cores)
+        dirname "$CRM_CONFIG_DIR"
+
+    # Pacemaker Remote nodes might not have a CRM_CONFIG_DIR
+    elif [ -d "$local_state_dir/lib/pacemaker" ]; then
+        echo $local_state_dir/lib/pacemaker
+    fi
+}
+
 detect_host() {
     local_state_dir=@localstatedir@
 
@@ -213,10 +225,7 @@ detect_host() {
 
     CRM_DAEMON_DIR=$(detect_daemon_dir)
     CRM_CONFIG_DIR=$(detect_cib_dir)
-
-    # Assume new layout
-    # $local_state_dir/lib/pacemaker/(cib,pengine,blackbox,cores)
-    config_root=`dirname $CRM_CONFIG_DIR`
+    config_root=$(detect_state_dir)
 
     # Older versions had none
     BLACKBOX_DIR=$config_root/blackbox
