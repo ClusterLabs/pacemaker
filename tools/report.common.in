@@ -138,6 +138,12 @@ has_remoted() {
     return 1
 }
 
+# found_dir <description> <dirname>
+found_dir() {
+    echo "$2"
+    info "Pacemaker $1 found in: $2"
+}
+
 detect_daemon_dir() {
     info "Searching for where Pacemaker daemons live... this may take a while"
 
@@ -147,16 +153,14 @@ detect_daemon_dir() {
         # pacemaker and pacemaker-cts packages can install to daemon directory,
         # so check for a file from each
         if [ -e $d/pengine ] || [ -e $d/lrmd_test ]; then
-            echo $d
-            info "Found: $d"
+            found_dir "daemons" "$d"
             return
         fi
     done
 
     for f in $(find / -maxdepth $maxdepth -type f -name pengine -o -name lrmd_test); do
         d=$(dirname "$f")
-        echo $d
-        info "Found: $d"
+        found_dir "daemons" "$d"
         return
     done
 
@@ -170,9 +174,8 @@ detect_daemon_dir() {
 
 detect_cib_dir() {
     for d in $local_state_dir/lib/{pacemaker/cib,heartbeat/crm}; do
-        if [ -f "$d/cib.xml" ]; then
-            echo $d
-            info "Pacemaker config files located in: $d"
+        if [ "-f $d/cib.xml" ]; then
+            found_dir "config files" "$d"
             return
         fi
     done
@@ -181,8 +184,7 @@ detect_cib_dir() {
     # TODO: What about false positives where someone copied the CIB?
     for f in $(find / -maxdepth $maxdepth -type f -name cib.xml); do
         d=$(dirname $f)
-        echo $d
-        info "Pacemaker config files located in: $d"
+        found_dir "config files" "$d"
         return
     done
 
@@ -203,6 +205,28 @@ detect_state_dir() {
     # Pacemaker Remote nodes might not have a CRM_CONFIG_DIR
     elif [ -d "$local_state_dir/lib/pacemaker" ]; then
         echo $local_state_dir/lib/pacemaker
+    fi
+}
+
+detect_pe_dir() {
+    config_root="$1"
+
+    d="$config_root/pengine"
+    if [ -d "$d" ]; then
+        found_dir "policy engine inputs" "$d"
+        return
+    fi
+
+    info "Searching for where Pacemaker keeps Policy Engine inputs... this may take a while"
+    for d in $(find / -maxdepth $maxdepth -type d -name pengine); do
+        found_dir "policy engine inputs" "$d"
+        return
+    done
+
+    if has_remoted; then
+        info "Not found (this appears to be a Pacemaker Remote node)"
+    else
+        fatal "Pacemaker policy engine inputs not found (nonstandard installation?)"
     fi
 }
 
@@ -231,20 +255,7 @@ detect_host() {
     BLACKBOX_DIR=$config_root/blackbox
     debug "Pacemaker blackboxes (if any) located in: $BLACKBOX_DIR"
 
-    PE_STATE_DIR=$config_root/pengine
-    if [ ! -d $PE_STATE_DIR ]; then
-	info "Detecting where Pacemaker keeps Policy Engine inputs... this may take a while"
-	for d in `find / -maxdepth $maxdepth -type d -name pengine`; do
-	    PE_STATE_DIR=$d
-	    break
-	done
-	info "Found: $PE_STATE_DIR"
-    fi
-    if [ -z $PE_STATE_DIR ]; then
-	fatal "Non-standard Pacemaker installation: Policy Engine directory not found"
-    else
-	debug "PE files located in: $PE_STATE_DIR"
-    fi
+    PE_STATE_DIR=$(detect_pe_dir "$config_root")
 
     HA_STATE_DIR=$local_state_dir/lib/heartbeat
     debug "Assuming Heartbeat state files, if any, are located in: $HA_STATE_DIR"

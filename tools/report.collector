@@ -423,12 +423,14 @@ getbacktraces() {
 }
 
 getpeinputs() {
-    flist=$(
-	find_files $PE_STATE_DIR $1 $2 | sed "s,`dirname $PE_STATE_DIR`/,,g"
-    )
-    if [ "$flist" ]; then
-	(cd `dirname $PE_STATE_DIR` && tar cf - $flist) | (cd $3 && tar xf -)
-	debug "found `echo $flist | wc -w` pengine input files in $PE_STATE_DIR"
+    if [ -n "$PE_STATE_DIR" ]; then
+        flist=$(
+            find_files "$PE_STATE_DIR" "$1" "$2" | sed "s,`dirname $PE_STATE_DIR`/,,g"
+        )
+        if [ "$flist" ]; then
+            (cd $(dirname "$PE_STATE_DIR") && tar cf - $flist) | (cd "$3" && tar xf -)
+            debug "found `echo $flist | wc -w` pengine input files in $PE_STATE_DIR"
+        fi
     fi
 }
 
