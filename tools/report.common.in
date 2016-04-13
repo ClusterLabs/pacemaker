@@ -128,6 +128,16 @@ is_running() {
     ps -ef | egrep -qs $(echo "$1" | sed -e 's/^\(.\)/[\1]/')
 }
 
+has_remoted() {
+    # TODO: the binary might be elsewhere
+    if which pacemaker_remoted >/dev/null 2>&1; then
+        return 0
+    elif [ -x "@sbindir@/pacemaker_remoted" ]; then
+        return 0
+    fi
+    return 1
+}
+
 detect_daemon_dir() {
     info "Searching for where Pacemaker daemons live... this may take a while"
 
@@ -151,11 +161,36 @@ detect_daemon_dir() {
     done
 
     # Pacemaker Remote nodes don't need to install daemons
-    # TODO: pacemaker_remoted might not be on path
-    if which pacemaker_remoted >/dev/null 2>&1; then
+    if has_remoted; then
         info "Not found (this appears to be a Pacemaker Remote node)"
     else
         fatal "Pacemaker daemons not found (nonstandard installation?)"
+    fi
+}
+
+detect_cib_dir() {
+    for d in $local_state_dir/lib/{pacemaker/cib,heartbeat/crm}; do
+        if [ -f "$d/cib.xml" ]; then
+            echo $d
+            info "Pacemaker config files located in: $d"
+            return
+        fi
+    done
+
+    info "Searching for where Pacemaker keeps config information... this may take a while"
+    # TODO: What about false positives where someone copied the CIB?
+    for f in $(find / -maxdepth $maxdepth -type f -name cib.xml); do
+        d=$(dirname $f)
+        echo $d
+        info "Pacemaker config files located in: $d"
+        return
+    done
+
+    # Pacemaker Remote nodes don't need a CIB
+    if has_remoted; then
+        info "Not found (this appears to be a Pacemaker Remote node)"
+    else
+        warning "Pacemaker config not found (nonstandard installation?)"
     fi
 }
 
@@ -177,28 +212,7 @@ detect_host() {
     debug "Pacemaker runtime data located in: $CRM_STATE_DIR"
 
     CRM_DAEMON_DIR=$(detect_daemon_dir)
-
-    CRM_CONFIG_DIR=
-    for d in pacemaker/cib heartbeat/crm; do
-	if [ -f $local_state_dir/lib/$d/cib.xml ]; then
-	    CRM_CONFIG_DIR=$local_state_dir/lib/$d
-	    break
-	fi
-    done
-
-    if [ ! -d $CRM_CONFIG_DIR ]; then
-        info "Detecting where Pacemaker keeps config information... this may take a while"
-	for f in `find / -maxdepth $maxdepth -type f -name cib.xml`; do
-	    CRM_CONFIG_DIR=`dirname $f`
-	    break
-	done
-	info "Found: $CRM_CONFIG_DIR"
-    fi
-    if [ -z $CRM_CONFIG_DIR ]; then
-	warning "Non-standard Pacemaker installation: config not found"
-    else
-	debug "Pacemaker config files located in: $CRM_CONFIG_DIR"
-    fi
+    CRM_CONFIG_DIR=$(detect_cib_dir)
 
     # Assume new layout
     # $local_state_dir/lib/pacemaker/(cib,pengine,blackbox,cores)
