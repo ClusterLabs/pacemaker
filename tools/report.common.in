@@ -778,8 +778,13 @@ get_cluster_type() {
     elif [ -f /etc/ais/openais.conf ]; then
 	stack="openais"
 
+    elif [ -f /etc/ha.d/ha.cf ]; then
+        stack="heartbeat"
+
     else
-	stack="heartbeat"
+        # We still don't know. This might be a Pacemaker Remote node,
+        # or the configuration might be in a nonstandard location.
+        stack="any"
     fi
 
     debug "Detected the '$stack' cluster stack"
@@ -825,6 +830,10 @@ find_cluster_cf() {
 	    if [ -f $cf ]; then
 		echo "$cf"
 	    fi
+	    ;;
+	any)
+	    # Cluster type is undetermined. Don't complain, because this
+	    # might be a Pacemaker Remote node.
 	    ;;
 	*)
 	    warning "Unknown cluster type: $1"

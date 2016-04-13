@@ -566,47 +566,48 @@ get_logfiles() {
     facility_var="logfacility"
 
     if [ -f "$cf_logd" ]; then
+	# TODO: this call is broken, it expects args
 	if uselogd; then
 	    cf_file="$cf_logd"
 	    cf_type="logd"
 	fi
     fi
 
-    debug "Reading $cf_type log settings"
     case $cf_type in
 	cman|openais|corosync)
-	    debug "Reading log settings from $cf_file"
-	    if iscfvartrue $cf_type to_syslog $cf_file; then
-		facility_var=syslog_facility
-	    fi
-	    if iscfvartrue $cf_type to_logfile $cf_file; then
-		logfile=`getcfvar $cf_type logfile $cf_file`
-	    fi
+            if [ -f "$cf_file" ]; then
+                debug "Reading $cf_type log settings from $cf_file"
+                if iscfvartrue $cf_type to_syslog "$cf_file"; then
+                    facility_var=syslog_facility
+                fi
+                if iscfvartrue $cf_type to_logfile "$cf_file"; then
+                    logfile=$(getcfvar $cf_type logfile "$cf_file")
+                fi
+            fi
 	    ;;
 	heartbeat|logd)
-	    debug "Reading log settings from $cf_file"
-	    if
-		iscfvartrue $cf_type debug $cf_file
-	    then
-		logfile=`getcfvar $cf_type debugfile $cf_file`
-	    else
-		logfile=`getcfvar $cf_type logfile $cf_file`
-	    fi
+            if [ -f "$cf_file" ]; then
+                debug "Reading $cf_type log settings from $cf_file"
+                if iscfvartrue $cf_type debug "$cf_file"; then
+                    logfile=$(getcfvar $cf_type debugfile "$cf_file")
+                else
+                    logfile=$(getcfvar $cf_type logfile "$cf_file")
+                fi
+            fi
 	    ;;
-	*) debug "Unknown cluster type: $cf_type"
-	   echo "/var/log/pacemaker.log"
-	   ;;
     esac
 
-    if [ "x$logfile" != "x" -a -f "$logfile" ]; then
+    if [ -z "$logfile" ]; then
+        logfile="/var/log/pacemaker.log"
+        debug "Log settings not found for cluster type $cf_type, assuming $logfile"
+    fi
+    if [ -f "$logfile" ]; then
 	echo $logfile
     fi
+
     if [ "x$facility" = x ]; then
 	facility=`getcfvar $cf_type $facility_var $cf_file`
 	[ "" = "$facility" ] && facility="daemon"
-    fi
-    if [ "x$facility" = x ]; then
-	facility="daemon"
     fi
 
     # Always include system logs (if we can find them)
@@ -668,7 +669,10 @@ esac
 
 logd_cf=`findlogdcf`
 cluster_cf=`find_cluster_cf $cluster`
-if [ -z $cluster_cf ]; then
+
+# If cluster stack is still "any", this might be a Pacemaker Remote node,
+# so don't complain in that case.
+if [ -z "$cluster_cf" ] && [ $cluster != "any" ]; then
    warning "Could not determine the location of your cluster configuration"
 fi
 
@@ -685,7 +689,7 @@ else
     logfiles="$EXTRA_LOGS"
 fi
 
-debug "Config: $cluster $cluster_cf $logd_cf $logfiles"
+debug "Config: $cluster ($cluster_cf $logd_cf) $logfiles"
 
 sys_info $cluster $PACKAGES > $SYSINFO_F
 essential_files $cluster | check_perms  > $PERMISSIONS_F 2>&1
@@ -698,16 +702,15 @@ getblackboxes  $LOG_START $LOG_END $REPORT_HOME/$REPORT_TARGET
 case $cluster in
     cman|corosync)
 	if is_running corosync; then
-	    corosync-blackbox >corosync-blackbox-live.txt 2>&1
+            corosync-blackbox >corosync-blackbox-live.txt 2>&1
+#           corosync-fplay > corosync-blackbox.txt
+            tool=`pickfirst corosync-objctl corosync-cmapctl`
+            case $tool in
+                *objctl)  $tool -a > corosync.dump  2>/dev/null;;
+                *cmapctl) $tool    > corosync.dump  2>/dev/null;;
+            esac
+            corosync-quorumtool -s -i > corosync.quorum 2>&1
 	fi
-#	corosync-fplay > corosync-blackbox.txt
-
-	tool=`pickfirst corosync-objctl corosync-cmapctl`
-	case $tool in
-	    *objctl)  $tool -a > corosync.dump  2>/dev/null;;
-	    *cmapctl) $tool    > corosync.dump  2>/dev/null;;
-	esac
-	corosync-quorumtool -s -i > corosync.quorum 2>&1
 	;;
 esac
 
