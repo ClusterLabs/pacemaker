@@ -133,10 +133,13 @@ chk_id() {
 
 check_perms() {
     while read type f p uid gid; do
-	[ -$type $f ] || {
-	    echo "$f wrong type or doesn't exist"
-	    continue
-	}
+        if [ ! -e "$f" ]; then
+            echo "$f doesn't exist"
+            continue
+        elif [ ! -$type "$f" ]; then
+            echo "$f has wrong type"
+            continue
+        fi
 	n_uid=`num_id passwd $uid`
 	chk_id "$uid" "$n_uid" || continue
 	n_gid=`num_id group $gid`
