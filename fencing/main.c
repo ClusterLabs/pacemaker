@@ -62,6 +62,8 @@ gboolean stonith_shutdown_flag = FALSE;
 qb_ipcs_service_t *ipcs = NULL;
 xmlNode *local_cib = NULL;
 
+GHashTable *known_peer_names = NULL;
+
 static cib_t *cib_api = NULL;
 static void *cib_library = NULL;
 
@@ -1171,6 +1173,10 @@ stonith_cleanup(void)
     if (ipcs) {
         qb_ipcs_destroy(ipcs);
     }
+
+    g_hash_table_destroy(known_peer_names);
+    known_peer_names = NULL;
+
     crm_peer_destroy();
     crm_client_cleanup();
     free(stonith_our_uname);
@@ -1250,11 +1256,17 @@ static void
 st_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
 {
     if ((type != crm_status_processes) && !is_set(node->flags, crm_remote_node)) {
+        xmlNode *query = NULL;
+
+        if (node->id && node->uname) {
+            g_hash_table_insert(known_peer_names, GUINT_TO_POINTER(node->id), strdup(node->uname));
+        }
+
         /*
          * This is a hack until we can send to a nodeid and/or we fix node name lookups
          * These messages are ignored in stonith_peer_callback()
          */
-        xmlNode *query = create_xml_node(NULL, "stonith_command");
+        query = create_xml_node(NULL, "stonith_command");
 
         crm_xml_add(query, F_XML_TAGNAME, "stonith_command");
         crm_xml_add(query, F_TYPE, T_STONITH_NG);
@@ -1434,6 +1446,7 @@ main(int argc, char **argv)
     mainloop_add_signal(SIGTERM, stonith_shutdown);
 
     crm_peer_init();
+    known_peer_names = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, free);
 
     if (stand_alone == FALSE) {
 #if SUPPORT_HEARTBEAT

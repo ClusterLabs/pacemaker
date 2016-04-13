@@ -235,8 +235,12 @@ schedule_internal_command(const char *origin,
                           void (*done_cb) (GPid pid, int rc, const char *output,
                                            gpointer user_data));
 
+char *stonith_get_peer_name(unsigned int nodeid);
+
 extern char *stonith_our_uname;
 extern gboolean stand_alone;
 extern GHashTable *device_list;
 extern GHashTable *topology;
 extern long stonith_watchdog_timeout_ms;
+
+extern GHashTable *known_peer_names;
