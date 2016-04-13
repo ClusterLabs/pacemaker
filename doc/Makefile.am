@@ -95,7 +95,7 @@ $(CFS_XML): $(CFS_SHARED_XML)
 Clusters_from_Scratch.build: $(PNGS) $(wildcard Clusters_from_Scratch/en-US/*.xml) $(CFS_XML) $(CFS_SHARED_XML) ../xsl
 	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/*
-	$(AM_V_PUB)cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) $(PCMK_quiet) --brand_dir=../publican-clusterlabs
+	$(AM_V_PUB)cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) --brand_dir=../publican-clusterlabs $(PCMK_quiet)
 	rm -rf $(@:%.build=%)/tmp
 	touch $@
 
@@ -112,7 +112,7 @@ $(PE_XML): $(PE_SHARED_XML)
 Pacemaker_Explained.build: $(PNGS) $(wildcard Pacemaker_Explained/en-US/*.xml) $(PE_XML) $(PE_SHARED_XML) ../xsl
 	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/*
-	$(AM_V_PUB)cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) $(PCMK_quiet) --brand_dir=../publican-clusterlabs
+	$(AM_V_PUB)cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) --brand_dir=../publican-clusterlabs $(PCMK_quiet)
 	rm -rf $(@:%.build=%)/tmp
 	touch $@
 
@@ -125,7 +125,7 @@ PR_XML=$(PR_TXT:%.txt=%.xml)
 Pacemaker_Remote.build: $(PNGS) $(wildcard Pacemaker_Remote/en-US/*.xml) $(PR_XML) ../xsl
 	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/*
-	$(AM_V_PUB)cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) $(PCMK_quiet) --brand_dir=../publican-clusterlabs
+	$(AM_V_PUB)cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) --brand_dir=../publican-clusterlabs $(PCMK_quiet)
 	rm -rf $(@:%.build=%)/tmp
 	touch $@
 
