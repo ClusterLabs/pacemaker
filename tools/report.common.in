@@ -128,20 +128,45 @@ is_running() {
     ps -ef | egrep -qs $(echo "$1" | sed -e 's/^\(.\)/[\1]/')
 }
 
-detect_host() {
-    if [ -z "$maxdepth" ]; then
-        depth="-maxdepth 5"
-    else
-        depth="-maxdepth $maxdepth"
-    fi
+detect_daemon_dir() {
+    info "Searching for where Pacemaker daemons live... this may take a while"
 
+    for d in \
+        {/usr,/usr/local,/opt/local,@exec_prefix@}/{libexec,lib64,lib}/{pacemaker,heartbeat}
+    do
+        # pacemaker and pacemaker-cts packages can install to daemon directory,
+        # so check for a file from each
+        if [ -e $d/pengine ] || [ -e $d/lrmd_test ]; then
+            echo $d
+            info "Found: $d"
+            return
+        fi
+    done
+
+    for f in $(find / -maxdepth $maxdepth -type f -name pengine -o -name lrmd_test); do
+        d=$(dirname "$f")
+        echo $d
+        info "Found: $d"
+        return
+    done
+
+    # Pacemaker Remote nodes don't need to install daemons
+    # TODO: pacemaker_remoted might not be on path
+    if which pacemaker_remoted >/dev/null 2>&1; then
+        info "Not found (this appears to be a Pacemaker Remote node)"
+    else
+        fatal "Pacemaker daemons not found (nonstandard installation?)"
+    fi
+}
+
+detect_host() {
     local_state_dir=@localstatedir@
 
     if [ -d $local_state_dir/run ]; then
 	CRM_STATE_DIR=$local_state_dir/run/crm
     else
         info "Searching for where Pacemaker keeps runtime data... this may take a while"
-	for d in `find / $depth -type d -name run`; do
+	for d in `find / -maxdepth $maxdepth -type d -name run`; do
 	    local_state_dir=`dirname $d`
 	    CRM_STATE_DIR=$d/crm
 	    break
@@ -151,33 +176,7 @@ detect_host() {
     debug "Machine runtime directory: $local_state_dir"
     debug "Pacemaker runtime data located in: $CRM_STATE_DIR"
 
-    CRM_DAEMON_DIR=
-    for p in /usr /usr/local /opt/local @exec_prefix@; do
-	for d in libexec lib64 lib; do
-	    if [ -e $p/$d/pacemaker/pengine ]; then
-		CRM_DAEMON_DIR=$p/$d/pacemaker
-		break
-	    elif [ -e $p/$d/heartbeat/pengine ]; then
-		CRM_DAEMON_DIR=$p/$d/heartbeat
-		break
-	    fi
-	done
-    done
-
-    if [ ! -d $CRM_DAEMON_DIR ]; then
-        info "Searching for where Pacemaker daemons live... this may take a while"
-	for f in `find / $depth -type f -name pengine`; do
-	    CRM_DAEMON_DIR=`dirname $f`
-	    break
-	done
-	info "Found: $CRM_DAEMON_DIR"
-    fi
-
-    if [ -z $CRM_DAEMON_DIR ]; then
-	fatal "Non-standard Pacemaker installation: daemons not found"
-    else
-	debug "Pacemaker daemons located under: $CRM_DAEMON_DIR"
-    fi
+    CRM_DAEMON_DIR=$(detect_daemon_dir)
 
     CRM_CONFIG_DIR=
     for d in pacemaker/cib heartbeat/crm; do
@@ -189,7 +188,7 @@ detect_host() {
 
     if [ ! -d $CRM_CONFIG_DIR ]; then
         info "Detecting where Pacemaker keeps config information... this may take a while"
-	for f in `find / $depth -type f -name cib.xml`; do
+	for f in `find / -maxdepth $maxdepth -type f -name cib.xml`; do
 	    CRM_CONFIG_DIR=`dirname $f`
 	    break
 	done
@@ -212,7 +211,7 @@ detect_host() {
     PE_STATE_DIR=$config_root/pengine
     if [ ! -d $PE_STATE_DIR ]; then
 	info "Detecting where Pacemaker keeps Policy Engine inputs... this may take a while"
-	for d in `find / $depth -type d -name pengine`; do
+	for d in `find / -maxdepth $maxdepth -type d -name pengine`; do
 	    PE_STATE_DIR=$d
 	    break
 	done
@@ -810,7 +809,7 @@ find_cluster_cf() {
 	    done
 	    if [ -z "$best_file" ]; then
 		debug "Looking for corosync configuration file. This may take a while..."
-		for f in `find / $depth -type f -name corosync.conf`; do
+		for f in `find / -maxdepth $maxdepth -type f -name corosync.conf`; do
 		    best_file=$f
 		    break
 		done

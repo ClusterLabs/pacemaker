@@ -34,6 +34,7 @@ cluster="any"
 ssh_user="root"
 search_logs=1
 report_data=`dirname $0`
+maxdepth=5
 
 extra_logs=""
 sanitize_patterns="passw.*"
