@@ -25,6 +25,7 @@ TEMP=`getopt				\
     -n 'crm_report' -- "$@"`
 eval set -- "$TEMP"
 
+progname=$(basename "$0")
 rsh="ssh -T"
 times=""
 tests=""
@@ -41,12 +42,11 @@ sanitize_patterns="passw.*"
 log_patterns="CRIT: ERROR:"
 
 usage() {
-
 cat<<EOF
-crm_report - Create a tarball containing everything needed when reporting cluster problems
+$progname - Create a tarball containing everything needed when reporting cluster problems
 
 
-Usage: `basename $0` --from date-time [--to date-time] [additional options] [dest]
+Usage: $progname --from date-time [--to date-time] [additional options] [dest]
 
 Options:
   -V			increase verbosity
@@ -76,16 +76,24 @@ Options:
   --dest       		a custom destination directory/file
   dest			a custom destination directory/file
 
+$progname works best when run from a cluster node on a running cluster,
+but can be run from a stopped cluster node or a Pacemaker Remote node.
+
+If neither --nodes nor --single-node is given, $progname will guess the
+node list, but may have trouble detecting Pacemaker Remote nodes.
+Unless --single-node is given, the node names (whether specified by --nodes
+or detected automatically) must be resolvable and reachable via ssh.
+
 Examples:
-   crm_report -f "2011-12-14 13:05:00" unexplained-apache-failure
-   crm_report -f 2011-12-14 -t 2011-12-15 something-that-took-multiple-days
-   crm_report -f 13:05:00   -t 13:12:00   brief-outage
+   $progname -f "2011-12-14 13:05:00" unexplained-apache-failure
+   $progname -f 2011-12-14 -t 2011-12-15 something-that-took-multiple-days
+   $progname -f 13:05:00   -t 13:12:00   brief-outage
 EOF
 }
 
 case "$1" in
-    -v|--version)   echo "@VERSION@ - @BUILD_VERSION@"; exit 0;;
-    --features)     echo "@VERSION@ - @BUILD_VERSION@: @PCMK_FEATURES@"; exit 0;;
+    -v|--version)   echo "$progname @VERSION@-@BUILD_VERSION@"; exit 0;;
+    --features)     echo "@VERSION@-@BUILD_VERSION@: @PCMK_FEATURES@"; exit 0;;
     --|-h|--help) usage; exit 0;;
 esac
 
