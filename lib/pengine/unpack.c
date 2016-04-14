@@ -42,7 +42,7 @@ CRM_TRACE_INIT_DATA(pe_status);
 	}								\
     } while(0)
 
-gboolean unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
+gboolean unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last_failure,
                        enum action_fail_response *failed, pe_working_set_t * data_set);
 static gboolean determine_remote_online_status(pe_working_set_t * data_set, node_t * this_node);
 
@@ -2140,6 +2140,7 @@ unpack_lrm_rsc_state(node_t * node, xmlNode * rsc_entry, pe_working_set_t * data
 
     xmlNode *migrate_op = NULL;
     xmlNode *rsc_op = NULL;
+    xmlNode *last_failure = NULL;
 
     enum action_fail_response on_fail = FALSE;
     enum rsc_role_e saved_role = RSC_ROLE_UNKNOWN;
@@ -2183,7 +2184,7 @@ unpack_lrm_rsc_state(node_t * node, xmlNode * rsc_entry, pe_working_set_t * data
             migrate_op = rsc_op;
         }
 
-        unpack_rsc_op(rsc, node, rsc_op, &on_fail, data_set);
+        unpack_rsc_op(rsc, node, rsc_op, &last_failure, &on_fail, data_set);
     }
 
     /* create active recurring operations as optional */
@@ -2567,7 +2568,8 @@ static const char *get_op_key(xmlNode *xml_op)
 }
 
 static void
-unpack_rsc_op_failure(resource_t *rsc, node_t *node, int rc, xmlNode *xml_op, enum action_fail_response *on_fail, pe_working_set_t * data_set) 
+unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op, xmlNode ** last_failure,
+                      enum action_fail_response * on_fail, pe_working_set_t * data_set)
 {
     int interval = 0;
     bool is_probe = FALSE;
@@ -2578,6 +2580,9 @@ unpack_rsc_op_failure(resource_t *rsc, node_t *node, int rc, xmlNode *xml_op, en
     const char *op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
 
     CRM_ASSERT(rsc);
+
+    *last_failure = xml_op;
+
     crm_element_value_int(xml_op, XML_LRM_ATTR_INTERVAL, &interval);
     if(interval == 0 && safe_str_eq(task, CRMD_ACTION_STATUS)) {
         is_probe = TRUE;
@@ -2945,12 +2950,14 @@ get_action_on_fail(resource_t *rsc, const char *key, const char *task, pe_workin
 }
 
 static void
-update_resource_state(resource_t *rsc, node_t * node, xmlNode * xml_op, const char *task, int rc,
-                      enum action_fail_response *on_fail, pe_working_set_t * data_set) 
+update_resource_state(resource_t * rsc, node_t * node, xmlNode * xml_op, const char * task, int rc,
+                      xmlNode * last_failure, enum action_fail_response * on_fail, pe_working_set_t * data_set)
 {
     gboolean clear_past_failure = FALSE;
 
     CRM_ASSERT(rsc);
+    CRM_ASSERT(xml_op);
+
     if (rc == PCMK_OCF_NOT_RUNNING) {
         clear_past_failure = TRUE;
 
@@ -2958,7 +2965,15 @@ update_resource_state(resource_t *rsc, node_t * node, xmlNode * xml_op, const ch
         rsc->role = RSC_ROLE_STOPPED;
 
     } else if (safe_str_eq(task, CRMD_ACTION_STATUS)) {
-        clear_past_failure = TRUE;
+        if (last_failure) {
+            const char *op_key = get_op_key(xml_op);
+            const char *last_failure_key = get_op_key(last_failure);
+
+            if (safe_str_eq(op_key, last_failure_key)) {
+                clear_past_failure = TRUE;
+            }
+        }
+
         if (rsc->role < RSC_ROLE_STARTED) {
             set_active(rsc);
         }
@@ -2987,7 +3002,6 @@ update_resource_state(resource_t *rsc, node_t * node, xmlNode * xml_op, const ch
         unpack_rsc_migration(rsc, node, xml_op, data_set);
 
     } else if (rsc->role < RSC_ROLE_STARTED) {
-        /* migrate_to and migrate_from will land here */
         pe_rsc_trace(rsc, "%s active on %s", rsc->id, node->details->uname);
         set_active(rsc);
     }
@@ -3025,7 +3039,7 @@ update_resource_state(resource_t *rsc, node_t * node, xmlNode * xml_op, const ch
 }
 
 gboolean
-unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
+unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last_failure,
               enum action_fail_response * on_fail, pe_working_set_t * data_set)
 {
     int task_id = 0;
@@ -3176,7 +3190,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
 
         case PCMK_LRM_OP_DONE:
             pe_rsc_trace(rsc, "%s/%s completed on %s", rsc->id, task, node->details->uname);
-            update_resource_state(rsc, node, xml_op, task, rc, on_fail, data_set);
+            update_resource_state(rsc, node, xml_op, task, rc, *last_failure, on_fail, data_set);
             break;
 
         case PCMK_LRM_OP_NOT_INSTALLED:
@@ -3189,7 +3203,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
                 *on_fail = action_fail_migrate;
             }
             resource_location(parent, node, -INFINITY, "hard-error", data_set);
-            unpack_rsc_op_failure(rsc, node, rc, xml_op, on_fail, data_set);
+            unpack_rsc_op_failure(rsc, node, rc, xml_op, last_failure, on_fail, data_set);
             break;
 
         case PCMK_LRM_OP_ERROR:
@@ -3206,7 +3220,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
                 crm_warn("Pretending the failure of %s (rc=%d) on %s succeeded",
                          task_key, rc, node->details->uname);
 
-                update_resource_state(rsc, node, xml_op, task, target_rc, on_fail, data_set);
+                update_resource_state(rsc, node, xml_op, task, target_rc, *last_failure, on_fail, data_set);
                 crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
                 set_bit(rsc->flags, pe_rsc_failure_ignored);
 
@@ -3217,7 +3231,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
                 }
 
             } else {
-                unpack_rsc_op_failure(rsc, node, rc, xml_op, on_fail, data_set);
+                unpack_rsc_op_failure(rsc, node, rc, xml_op, last_failure, on_fail, data_set);
 
                 if(status == PCMK_LRM_OP_ERROR_HARD) {
                     do_crm_log(rc != PCMK_OCF_NOT_INSTALLED?LOG_ERR:LOG_NOTICE,
