@@ -613,7 +613,7 @@ AM_CONDITIONAL([BUILD_DOCBOOK],
 if test x"${PUBLICAN_BRAND}" != x"" \
    && test x"${PUBLICAN}" != x"" \
    && test x"${INKSCAPE}" != x""; then
-   AC_MSG_NOTICE(Enabling publican)
+   AC_MSG_NOTICE([Enabling Publican-generated documentation using ${PUBLICAN_BRAND} brand])
    PCMK_FEATURES="$PCMK_FEATURES publican-docs"
 fi
 
