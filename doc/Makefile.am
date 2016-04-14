@@ -108,15 +108,27 @@ CFS_XML=$(CFS_TXT:%.txt=%.xml)
 
 $(CFS_XML): $(CFS_SHARED_XML)
 
+PUBLICAN_INTREE_DEPS =
+if PUBLICAN_INTREE_BRAND
+PUBLICAN_INTREE_DEPS += publican-catalog
+endif
+
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
-Clusters_from_Scratch.build: $(PNGS) $(wildcard Clusters_from_Scratch/en-US/*.xml) $(CFS_XML) $(CFS_SHARED_XML) publican-catalog
+Clusters_from_Scratch.build: $(PNGS) $(wildcard Clusters_from_Scratch/en-US/*.xml) $(CFS_XML) $(CFS_SHARED_XML) $(PUBLICAN_INTREE_DEPS)
 	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/*
+if PUBLICAN_INTREE_BRAND
 	$(AM_V_PUB)cd $(@:%.build=%) \
 	&& RPM_BUILD_DIR="" XML_CATALOG_FILES="$(CURDIR)/publican-catalog" \
 	   $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) --brand_dir=../publican-clusterlabs \
 	   $(PCMK_quiet)
+else
+	$(AM_V_PUB)cd $(@:%.build=%) \
+	&& RPM_BUILD_DIR="" \
+	   $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) \
+	   $(PCMK_quiet)
+endif
 	rm -rf $(@:%.build=%)/tmp
 	touch $@
 
@@ -130,13 +142,20 @@ $(PE_XML): $(PE_SHARED_XML)
 
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
-Pacemaker_Explained.build: $(PNGS) $(wildcard Pacemaker_Explained/en-US/*.xml) $(PE_XML) $(PE_SHARED_XML) publican-catalog
+Pacemaker_Explained.build: $(PNGS) $(wildcard Pacemaker_Explained/en-US/*.xml) $(PE_XML) $(PE_SHARED_XML) $(PUBLICAN_INTREE_DEPS)
 	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/*
+if PUBLICAN_INTREE_BRAND
 	$(AM_V_PUB)cd $(@:%.build=%) \
 	&& RPM_BUILD_DIR="" XML_CATALOG_FILES="$(CURDIR)/publican-catalog" \
 	   $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) --brand_dir=../publican-clusterlabs \
 	   $(PCMK_quiet)
+else
+	$(AM_V_PUB)cd $(@:%.build=%) \
+	&& RPM_BUILD_DIR="" \
+	   $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) \
+	   $(PCMK_quiet)
+endif
 	rm -rf $(@:%.build=%)/tmp
 	touch $@
 
@@ -146,13 +165,20 @@ PR_XML=$(PR_TXT:%.txt=%.xml)
 
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
-Pacemaker_Remote.build: $(PNGS) $(wildcard Pacemaker_Remote/en-US/*.xml) $(PR_XML) publican-catalog
+Pacemaker_Remote.build: $(PNGS) $(wildcard Pacemaker_Remote/en-US/*.xml) $(PR_XML) $(PUBLICAN_INTREE_DEPS)
 	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/*
+if PUBLICAN_INTREE_BRAND
 	$(AM_V_PUB)cd $(@:%.build=%) \
 	&& RPM_BUILD_DIR="" XML_CATALOG_FILES="$(CURDIR)/publican-catalog" \
 	   $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) --brand_dir=../publican-clusterlabs \
 	   $(PCMK_quiet)
+else
+	$(AM_V_PUB)cd $(@:%.build=%) \
+	&& RPM_BUILD_DIR="" \
+	   $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) \
+	   $(PCMK_quiet)
+endif
 	rm -rf $(@:%.build=%)/tmp
 	touch $@
 
