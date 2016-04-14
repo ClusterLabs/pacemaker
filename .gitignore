@@ -108,6 +108,7 @@ doc/Clusters_from_Scratch.txt
 doc/Pacemaker_Explained.txt
 doc/acls.html
 doc/crm_fencing.html
+doc/publican-catalog*
 fencing/stonith-test
 fencing/stonith_admin
 fencing/stonithd
@@ -163,7 +164,6 @@ compat_reports
 .ABI-build
 abi_dumps
 logs
-xsl
 
 *.patch
 *.diff

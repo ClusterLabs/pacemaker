@@ -74,10 +74,28 @@ EXTRA_DIST	= $(docbook:%=%.xml)
 %.html: %.txt
 	$(AM_V_ASCII)$(ASCIIDOC) --unsafe --backend=xhtml11 $<
 
-# publican-clusterlabs/xsl/html-single.xsl imports that of Publican
-# through this link during the build
-../xsl:
-	ln -s /usr/share/publican/xsl "$@"
+# publican-clusterlabs/xsl/{html,html-single,pdf}.xsl refer to URIs
+# requiring Internet access, hence we shadow that with a XML catalog-based
+# redirect to local files brought with Publican installation;
+# this is what newer Publican normally does with the system-wide catalog
+# upon its installation, but let's provide a compatibility for older
+# or badly installed instances (via adding the created file into
+# XML_CATALOG_FILES for libxml2 backing Publican as a fallback);
+# note that nextCatalog arrangement needed so as to overcome
+# https://rt.cpan.org/Public/Bug/Display.html?id=113781
+publican-catalog-fallback:
+	@exec >$@-t \
+	&& echo '<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">' \
+	&& echo '<rewriteURI uriStartString="https://fedorahosted.org/released/publican/xsl/docbook4/" rewritePrefix="file:///usr/share/publican/xsl/"/>' \
+	&& echo '</catalog>'
+	$(AM_V_GEN)mv $@-t $@
+publican-catalog: publican-catalog-fallback
+	@exec >$@-t \
+	&& echo '<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">' \
+	&& echo '<nextCatalog catalog="file:///etc/xml/catalog"/>' \
+	&& echo '<nextCatalog catalog="file://$(CURDIR)/$<"/>' \
+	&& echo '</catalog>'
+	$(AM_V_GEN)mv $@-t $@
 
 SHARED_TXT=$(wildcard shared/en-US/*.txt)
 SHARED_XML=$(SHARED_TXT:%.txt=%.xml)
@@ -92,10 +110,13 @@ $(CFS_XML): $(CFS_SHARED_XML)
 
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
-Clusters_from_Scratch.build: $(PNGS) $(wildcard Clusters_from_Scratch/en-US/*.xml) $(CFS_XML) $(CFS_SHARED_XML) ../xsl
+Clusters_from_Scratch.build: $(PNGS) $(wildcard Clusters_from_Scratch/en-US/*.xml) $(CFS_XML) $(CFS_SHARED_XML) publican-catalog
 	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/*
-	$(AM_V_PUB)cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) --brand_dir=../publican-clusterlabs $(PCMK_quiet)
+	$(AM_V_PUB)cd $(@:%.build=%) \
+	&& RPM_BUILD_DIR="" XML_CATALOG_FILES="$(CURDIR)/publican-catalog" \
+	   $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) --brand_dir=../publican-clusterlabs \
+	   $(PCMK_quiet)
 	rm -rf $(@:%.build=%)/tmp
 	touch $@
 
@@ -109,10 +130,13 @@ $(PE_XML): $(PE_SHARED_XML)
 
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
-Pacemaker_Explained.build: $(PNGS) $(wildcard Pacemaker_Explained/en-US/*.xml) $(PE_XML) $(PE_SHARED_XML) ../xsl
+Pacemaker_Explained.build: $(PNGS) $(wildcard Pacemaker_Explained/en-US/*.xml) $(PE_XML) $(PE_SHARED_XML) publican-catalog
 	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/*
-	$(AM_V_PUB)cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) --brand_dir=../publican-clusterlabs $(PCMK_quiet)
+	$(AM_V_PUB)cd $(@:%.build=%) \
+	&& RPM_BUILD_DIR="" XML_CATALOG_FILES="$(CURDIR)/publican-catalog" \
+	   $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) --brand_dir=../publican-clusterlabs \
+	   $(PCMK_quiet)
 	rm -rf $(@:%.build=%)/tmp
 	touch $@
 
@@ -122,10 +146,13 @@ PR_XML=$(PR_TXT:%.txt=%.xml)
 
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
-Pacemaker_Remote.build: $(PNGS) $(wildcard Pacemaker_Remote/en-US/*.xml) $(PR_XML) ../xsl
+Pacemaker_Remote.build: $(PNGS) $(wildcard Pacemaker_Remote/en-US/*.xml) $(PR_XML) publican-catalog
 	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/*
-	$(AM_V_PUB)cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) --brand_dir=../publican-clusterlabs $(PCMK_quiet)
+	$(AM_V_PUB)cd $(@:%.build=%) \
+	&& RPM_BUILD_DIR="" XML_CATALOG_FILES="$(CURDIR)/publican-catalog" \
+	   $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) --brand_dir=../publican-clusterlabs \
+	   $(PCMK_quiet)
 	rm -rf $(@:%.build=%)/tmp
 	touch $@
 
@@ -201,6 +228,7 @@ if BUILD_DOCBOOK
 endif
 
 clean-local:
-	-rm -rf $(generated_docs) $(generated_mans) $(docbook_build) ../xsl $(generated_PNGS)
+	-rm -rf $(generated_docs) $(generated_mans) $(docbook_build) $(generated_PNGS)
 	-rm -rf $(SHARED_XML) $(CFS_XML) $(PE_XML) $(PR_XML)
+	-rm -rf  publican-catalog-fallback publican-catalog
 	for book in $(docbook); do rm -rf $$book/tmp $$book/publish; done
