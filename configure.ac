@@ -312,8 +312,8 @@ AC_ARG_WITH(coverage,
 
 PUBLICAN_BRAND="common"
 AC_ARG_WITH(brand,
-    [  --with-brand=brand  Brand to use for generated documentation [$PUBLICAN_BRAND]],
-    [ PUBLICAN_BRAND="$withval" ])
+    [  --with-brand=brand  Brand to use for generated documentation (set empty for no docs) [$PUBLICAN_BRAND]],
+    [ test x"$withval" = x"no" || PUBLICAN_BRAND="$withval" ])
 AC_SUBST(PUBLICAN_BRAND)
 
 ASCIIDOC_CLI_TYPE="pcs"
@@ -606,11 +606,31 @@ fi
 AM_CONDITIONAL(BUILD_STONITH_CONFIG, test $SUPPORT_STONITH_CONFIG = 1)
 AC_DEFINE_UNQUOTED(SUPPORT_STONITH_CONFIG, $SUPPORT_STONITH_CONFIG, Support a stand-alone stonith config file in addition to the CIB)
 
-AM_CONDITIONAL(BUILD_DOCBOOK, test x"${PUBLICAN}" != x"" -a x"${INKSCAPE}" != x"")
-if test x"${PUBLICAN}" != x"" -a x"${INKSCAPE}" != x""; then
-   AC_MSG_NOTICE(Enabling publican)
+publican_intree_brand=no
+if test x"${PUBLICAN_BRAND}" != x"" \
+   && test x"${PUBLICAN}" != x"" \
+   && test x"${INKSCAPE}" != x""; then
+   dnl special handling for clusterlabs brand (possibly in-tree version used)
+   test "${PUBLICAN_BRAND}" != "clusterlabs" \
+      || test -d /usr/share/publican/Common_Content/clusterlabs
+   if test $? -ne 0; then
+      dnl Unknown option: brand_dir vs. Option brand_dir requires an argument
+      if ${PUBLICAN} build --brand_dir 2>&1 | grep -Eq 'brand_dir$'; then
+         AC_MSG_WARN([Cannot use in-tree clusterlabs brand, resorting to common])
+         PUBLICAN_BRAND=common
+      else
+         publican_intree_brand=yes
+      fi
+   fi
+   AC_MSG_NOTICE([Enabling Publican-generated documentation using ${PUBLICAN_BRAND} brand])
    PCMK_FEATURES="$PCMK_FEATURES publican-docs"
 fi
+AM_CONDITIONAL([BUILD_DOCBOOK],
+               [test x"${PUBLICAN_BRAND}" != x"" \
+                && test x"${PUBLICAN}" != x"" \
+                && test x"${INKSCAPE}" != x""])
+AM_CONDITIONAL([PUBLICAN_INTREE_BRAND],
+               [test x"${publican_intree_brand}" = x"yes"])
 
 dnl ========================================================================
 dnl checks for library functions to replace them
