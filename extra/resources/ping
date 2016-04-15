@@ -353,20 +353,20 @@ else
     : ${OCF_RESKEY_pidfile:="${HA_VARRUN%%/}/ping-${OCF_RESOURCE_INSTANCE}"}
 fi
 
+# Check the debug option
+case "${OCF_RESKEY_debug}" in
+    true|True|TRUE|1)    OCF_RESKEY_debug=true;;
+    false|False|FALSE|0) OCF_RESKEY_debug=false;;
+    *)
+        ocf_log warn "Value for 'debug' is incorrect. Please specify 'true' or 'false' not: ${OCF_RESKEY_debug}"
+        OCF_RESKEY_debug=false
+        ;;
+esac
+
 attrd_options='-q'
-if ocf_is_true ${OCF_RESKEY_debug} ; then
+if [ ${OCF_RESKEY_debug} = "true" ]; then
     attrd_options=''
 fi
-
-# Check the debug option    
-    case "${OCF_RESKEY_debug}" in
-	true|True|TRUE|1)    OCF_RESKEY_debug=true;;
-	false|False|FALSE|0) OCF_RESKEY_debug=false;;
-	*)
-            ocf_log warn "Value for 'debug' is incorrect. Please specify 'true' or 'false' not: ${OCF_RESKEY_debug}"
-	    OCF_RESKEY_debug=false
-	    ;;
-    esac
 
 case $__OCF_ACTION in
 meta-data)	meta_data
