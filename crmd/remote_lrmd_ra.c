@@ -226,14 +226,20 @@ remote_node_up(const char *node_name)
     free_xml(update);
 }
 
+enum down_opts {
+    DOWN_KEEP_LRM,
+    DOWN_ERASE_LRM
+};
+
 /*!
  * \internal
  * \brief Handle cluster communication related to pacemaker_remote node leaving
  *
  * \param[in] node_name  Name of lost node
+ * \param[in] opts       Whether to keep or erase LRM history
  */
 static void
-remote_node_down(const char *node_name)
+remote_node_down(const char *node_name, const enum down_opts opts)
 {
     xmlNode *update;
     int call_id = 0;
@@ -245,6 +251,14 @@ remote_node_down(const char *node_name)
 
     /* Purge node's transient attributes */
     erase_status_tag(node_name, XML_TAG_TRANSIENT_NODEATTRS, call_opt);
+
+    /* Normally, the LRM operation history should be kept until the node comes
+     * back up. However, after a successful fence, we want to clear it, so we
+     * don't think resources are still running on the node.
+     */
+    if (opts == DOWN_ERASE_LRM) {
+        erase_status_tag(node_name, XML_CIB_TAG_LRM, call_opt);
+    }
 
     /* Ensure node is in the remote peer cache with lost state */
     node = crm_remote_peer_get(node_name);
@@ -301,7 +315,7 @@ check_remote_node_state(remote_ra_cmd_t *cmd)
         if (ra_data) {
             if (ra_data->migrate_status != takeover_complete) {
                 /* Stop means down if we didn't successfully migrate elsewhere */
-                remote_node_down(cmd->rsc_id);
+                remote_node_down(cmd->rsc_id, DOWN_KEEP_LRM);
             } else if (AM_I_DC == FALSE) {
                 /* Only the connection host and DC track node state,
                  * so if the connection migrated elsewhere and we aren't DC,
@@ -1072,3 +1086,57 @@ remote_ra_fail(const char *node_name)
     }
 }
 
+/* A guest node fencing implied by host fencing looks like:
+ *
+ *  <pseudo_event id="103" operation="stonith" operation_key="stonith-lxc1-off"
+ *                on_node="lxc1" on_node_uuid="lxc1">
+ *     <attributes CRM_meta_master_lxc_ms="10" CRM_meta_on_node="lxc1"
+ *                 CRM_meta_on_node_uuid="lxc1" CRM_meta_stonith_action="off"
+ *                 crm_feature_set="3.0.12"/>
+ *     <downed>
+ *       <node id="lxc1"/>
+ *     </downed>
+ *  </pseudo_event>
+ */
+#define XPATH_PSEUDO_FENCE "//" XML_GRAPH_TAG_PSEUDO_EVENT \
+    "[@" XML_LRM_ATTR_TASK "='stonith']/" XML_GRAPH_TAG_DOWNED \
+    "/" XML_CIB_TAG_NODE
+
+/*!
+ * \internal
+ * \brief Check a pseudo-action for Pacemaker Remote node side effects
+ *
+ * \param[in] xml  XML of pseudo-action to check
+ */
+void
+remote_ra_process_pseudo(xmlNode *xml)
+{
+    xmlXPathObjectPtr search = xpath_search(xml, XPATH_PSEUDO_FENCE);
+
+    if (numXpathResults(search) == 1) {
+        xmlNode *result = getXpathResult(search, 0);
+
+        /* Normally, we handle the necessary side effects of a guest node stop
+         * action when reporting the remote agent's result. However, if the stop
+         * is implied due to fencing, it will be a fencing pseudo-event, and
+         * there won't be a result to report. Handle that case here.
+         *
+         * This will result in a duplicate call to remote_node_down() if the
+         * guest stop was real instead of implied, but that shouldn't hurt.
+         *
+         * There is still one corner case that isn't handled: if a guest node
+         * isn't running any resources when its host is fenced, it will appear
+         * to be cleanly stopped, so there will be no pseudo-fence, and our
+         * peer cache state will be incorrect unless and until the guest is
+         * recovered.
+         */
+        if (result) {
+            const char *remote = ID(result);
+
+            if (remote) {
+                remote_node_down(remote, DOWN_ERASE_LRM);
+            }
+        }
+    }
+    freeXpathObject(search);
+}
