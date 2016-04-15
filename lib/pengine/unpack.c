@@ -71,7 +71,7 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
     if (is_container_remote_node(node)) {
         resource_t *rsc = node->details->remote_rsc->container;
         if (is_set(rsc->flags, pe_rsc_failed) == FALSE) {
-            crm_warn("Remote node %s will be fenced by recovering container resource %s",
+            crm_warn("Remote node %s will be fenced by recovering container resource %s %s",
                 node->details->uname, rsc->id, reason);
             /* node->details->unclean = TRUE; */
             node->details->remote_requires_reset = TRUE;
@@ -1839,21 +1839,24 @@ process_rsc_state(resource_t * rsc, node_t * node,
         }
     }
 
+    /* If a managed resource is believed to be running, but node is down ... */
     if (rsc->role > RSC_ROLE_STOPPED
         && node->details->online == FALSE && is_set(rsc->flags, pe_rsc_managed)) {
 
         char *reason = NULL;
         gboolean should_fence = FALSE;
 
-        /* if this is a remote_node living in a container, fence the container
-         * by recovering it. Mark the resource as unmanaged. Once the container
-         * and remote connenction are re-established, the status section will
-         * get reset in the crmd freeing up this resource to run again once we
-         * are sure we know the resources state. */
+        /* If this is a guest node, fence it (regardless of whether fencing is
+         * enabled, because guest node fencing is done by recovery of the
+         * container resource rather than by stonithd). Mark the resource
+         * we're processing as failed. When the guest comes back up, its
+         * operation history in the CIB will be cleared, freeing the affected
+         * resource to run again once we are sure we know its state.
+         */
         if (is_container_remote_node(node)) {
             set_bit(rsc->flags, pe_rsc_failed);
-
             should_fence = TRUE;
+
         } else if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
             if (is_baremetal_remote_node(node) && node->details->remote_rsc && is_not_set(node->details->remote_rsc->flags, pe_rsc_failed)) {
                 /* setting unseen = true means that fencing of the remote node will
