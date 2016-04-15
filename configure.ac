@@ -313,7 +313,7 @@ AC_ARG_WITH(coverage,
 PUBLICAN_BRAND="common"
 AC_ARG_WITH(brand,
     [  --with-brand=brand  Brand to use for generated documentation (set empty for no docs) [$PUBLICAN_BRAND]],
-    [ PUBLICAN_BRAND="$withval" ])
+    [ test x"$withval" = x"no" || PUBLICAN_BRAND="$withval" ])
 AC_SUBST(PUBLICAN_BRAND)
 
 ASCIIDOC_CLI_TYPE="pcs"
