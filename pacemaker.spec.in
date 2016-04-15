@@ -298,7 +298,8 @@ docdir=%{pcmk_docdir} %{configure}                 \
         %{?with_profiling:   --with-profiling}     \
         %{?with_coverage:    --with-coverage}      \
         %{!?with_cman:       --without-cman}       \
-        --without-heartbeat			   \
+        --without-heartbeat                        \
+        %{!?with_doc:        --with-brand=}        \
         --with-initdir=%{_initrddir}               \
         --localstatedir=%{_var}                    \
         --with-version=%{version}-%{release}
