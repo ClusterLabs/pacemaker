@@ -2902,48 +2902,6 @@ native_start_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set
     }
 }
 
-/* User data to pass to guest node iterator */
-struct action_list_s {
-    GListPtr search_list; /* list of actions to search */
-    GListPtr result_list; /* list of matching actions for this node */
-    const char *key;      /* action key to match */
-};
-
-/*!
- * \internal
- * \brief Prepend a node's actions matching a key to a list
- *
- * \param[in]     node  Guest node
- * \param[in/out] data   User data
- */
-static void prepend_node_actions(const node_t *node, void *data)
-{
-    GListPtr actions;
-    struct action_list_s *info = (struct action_list_s *) data;
-
-    actions = find_actions(info->search_list, info->key, node);
-    info->result_list = g_list_concat(actions, info->result_list);
-}
-
-static GListPtr
-find_fence_target_node_actions(GListPtr search_list, const char *key, node_t *fence_target, pe_working_set_t *data_set)
-{
-    struct action_list_s action_list;
-
-    /* Actions on the target that match the key are implied by the fencing */
-    action_list.search_list = search_list;
-    action_list.result_list = find_actions(search_list, key, fence_target);
-    action_list.key = key;
-
-    /*
-     * If the target is a host for any guest nodes, actions on those nodes
-     * that match the key are also implied by the fencing.
-     */
-    pe_foreach_guest_node(data_set, fence_target, prepend_node_actions, &action_list);
-
-    return action_list.result_list;
-}
-
 static void
 native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_t * data_set)
 {
@@ -2963,8 +2921,7 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
 
     /* Get a list of stop actions potentially implied by the fencing */
     key = stop_key(rsc);
-    action_list = find_fence_target_node_actions(rsc->actions, key, target,
-                                                 data_set);
+    action_list = find_actions(rsc->actions, key, target);
     free(key);
 
     for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
@@ -3061,8 +3018,7 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
 
     /* Get a list of demote actions potentially implied by the fencing */
     key = demote_key(rsc);
-    action_list = find_fence_target_node_actions(rsc->actions, key, target,
-                                                 data_set);
+    action_list = find_actions(rsc->actions, key, target);
     free(key);
 
     for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
