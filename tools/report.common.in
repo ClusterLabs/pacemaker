@@ -53,8 +53,11 @@ stonith		te_fence_node|stonith-ng.*log_oper.*report|stonithd.*(requests|(Succeed
 start_stop	sutdown.decision|Starting.heartbeat|Corosync.Cluster.Engine|corosync.*Initializing.transport|Executive.Service.RELEASE|crm_shutdown:.Requesting.shutdown|pcmk_shutdown:.Shutdown.complete
 "
 
-PACKAGES="pacemaker pacemaker-libs libpacemaker3
-pacemaker-pygui pacemaker-pymgmt pymgmt-client
+# superset of all packages of interest on all distros
+# (the package manager will be used to validate the installation
+# of any of these packages that are installed)
+PACKAGES="pacemaker pacemaker-libs pacemaker-cluster-libs libpacemaker3
+pacemaker-remote pacemaker-pygui pacemaker-pymgmt pymgmt-client
 openais libopenais2 libopenais3 corosync libcorosync4
 resource-agents cluster-glue-libs cluster-glue libglue2 ldirectord
 heartbeat heartbeat-common heartbeat-resources libheartbeat2
@@ -67,6 +70,16 @@ libdlm libdlm2 libdlm3
 hawk ruby lighttpd
 kernel-default kernel-pae kernel-xen
 glibc
+"
+
+# Potential locations of system log files
+SYSLOGS="
+    /var/log/*
+    /var/logs/*
+    /var/syslog/*
+    /var/adm/*
+    /var/log/ha/*
+    /var/log/cluster/*
 "
 
 #
@@ -93,8 +106,9 @@ log() {
 debug() {
     if [ $verbose -gt 0 ]; then
 	log "Debug: $*"
+    else
+        record "Debug: $*"
     fi
-    record "Debug: $*"
 }
 
 info() {
@@ -110,20 +124,120 @@ fatal() {
     exit 1
 }
 
-detect_host() {
-    if [ -z "$maxdepth" ]; then
-        depth="-maxdepth 5"
+is_running() {
+    ps -ef | egrep -qs $(echo "$1" | sed -e 's/^\(.\)/[\1]/')
+}
+
+has_remoted() {
+    # TODO: the binary might be elsewhere
+    if which pacemaker_remoted >/dev/null 2>&1; then
+        return 0
+    elif [ -x "@sbindir@/pacemaker_remoted" ]; then
+        return 0
+    fi
+    return 1
+}
+
+# found_dir <description> <dirname>
+found_dir() {
+    echo "$2"
+    info "Pacemaker $1 found in: $2"
+}
+
+detect_daemon_dir() {
+    info "Searching for where Pacemaker daemons live... this may take a while"
+
+    for d in \
+        {/usr,/usr/local,/opt/local,@exec_prefix@}/{libexec,lib64,lib}/{pacemaker,heartbeat}
+    do
+        # pacemaker and pacemaker-cts packages can install to daemon directory,
+        # so check for a file from each
+        if [ -e $d/pengine ] || [ -e $d/lrmd_test ]; then
+            found_dir "daemons" "$d"
+            return
+        fi
+    done
+
+    for f in $(find / -maxdepth $maxdepth -type f -name pengine -o -name lrmd_test); do
+        d=$(dirname "$f")
+        found_dir "daemons" "$d"
+        return
+    done
+
+    # Pacemaker Remote nodes don't need to install daemons
+    if has_remoted; then
+        info "Not found (this appears to be a Pacemaker Remote node)"
     else
-        depth="-maxdepth $maxdepth"
+        fatal "Pacemaker daemons not found (nonstandard installation?)"
+    fi
+}
+
+detect_cib_dir() {
+    for d in $local_state_dir/lib/{pacemaker/cib,heartbeat/crm}; do
+        if [ "-f $d/cib.xml" ]; then
+            found_dir "config files" "$d"
+            return
+        fi
+    done
+
+    info "Searching for where Pacemaker keeps config information... this may take a while"
+    # TODO: What about false positives where someone copied the CIB?
+    for f in $(find / -maxdepth $maxdepth -type f -name cib.xml); do
+        d=$(dirname $f)
+        found_dir "config files" "$d"
+        return
+    done
+
+    # Pacemaker Remote nodes don't need a CIB
+    if has_remoted; then
+        info "Not found (this appears to be a Pacemaker Remote node)"
+    else
+        warning "Pacemaker config not found (nonstandard installation?)"
+    fi
+}
+
+detect_state_dir() {
+    if [ -n "$CRM_CONFIG_DIR" ]; then
+        # Assume new layout
+        # $local_state_dir/lib/pacemaker/(cib,pengine,blackbox,cores)
+        dirname "$CRM_CONFIG_DIR"
+
+    # Pacemaker Remote nodes might not have a CRM_CONFIG_DIR
+    elif [ -d "$local_state_dir/lib/pacemaker" ]; then
+        echo $local_state_dir/lib/pacemaker
+    fi
+}
+
+detect_pe_dir() {
+    config_root="$1"
+
+    d="$config_root/pengine"
+    if [ -d "$d" ]; then
+        found_dir "policy engine inputs" "$d"
+        return
     fi
 
+    info "Searching for where Pacemaker keeps Policy Engine inputs... this may take a while"
+    for d in $(find / -maxdepth $maxdepth -type d -name pengine); do
+        found_dir "policy engine inputs" "$d"
+        return
+    done
+
+    if has_remoted; then
+        info "Not found (this appears to be a Pacemaker Remote node)"
+    else
+        fatal "Pacemaker policy engine inputs not found (nonstandard installation?)"
+    fi
+}
+
+detect_host() {
     local_state_dir=@localstatedir@
 
     if [ -d $local_state_dir/run ]; then
 	CRM_STATE_DIR=$local_state_dir/run/crm
     else
         info "Searching for where Pacemaker keeps runtime data... this may take a while"
-	for d in `find / $depth -type d -name run`; do
+	for d in `find / -maxdepth $maxdepth -type d -name run`; do
 	    local_state_dir=`dirname $d`
 	    CRM_STATE_DIR=$d/crm
 	    break
@@ -133,78 +247,15 @@ detect_host() {
     debug "Machine runtime directory: $local_state_dir"
     debug "Pacemaker runtime data located in: $CRM_STATE_DIR"
 
-    CRM_DAEMON_DIR=
-    for p in /usr /usr/local /opt/local @exec_prefix@; do
-	for d in libexec lib64 lib; do
-	    if [ -e $p/$d/pacemaker/pengine ]; then
-		CRM_DAEMON_DIR=$p/$d/pacemaker
-		break
-	    elif [ -e $p/$d/heartbeat/pengine ]; then
-		CRM_DAEMON_DIR=$p/$d/heartbeat
-		break
-	    fi
-	done
-    done
-
-    if [ ! -d $CRM_DAEMON_DIR ]; then
-        info "Searching for where Pacemaker daemons live... this may take a while"
-	for f in `find / $depth -type f -name pengine`; do
-	    CRM_DAEMON_DIR=`dirname $f`
-	    break
-	done
-	info "Found: $CRM_DAEMON_DIR"
-    fi
-
-    if [ -z $CRM_DAEMON_DIR ]; then
-	fatal "Non-standard Pacemaker installation: daemons not found"
-    else
-	debug "Pacemaker daemons located under: $CRM_DAEMON_DIR"
-    fi
-
-    CRM_CONFIG_DIR=
-    for d in pacemaker/cib heartbeat/crm; do
-	if [ -f $local_state_dir/lib/$d/cib.xml ]; then
-	    CRM_CONFIG_DIR=$local_state_dir/lib/$d
-	    break
-	fi
-    done
-
-    if [ ! -d $CRM_CONFIG_DIR ]; then
-        info "Detecting where Pacemaker keeps config information... this may take a while"
-	for f in `find / $depth -type f -name cib.xml`; do
-	    CRM_CONFIG_DIR=`dirname $f`
-	    break
-	done
-	info "Found: $CRM_CONFIG_DIR"
-    fi
-    if [ -z $CRM_CONFIG_DIR ]; then
-	warning "Non-standard Pacemaker installation: config not found"
-    else
-	debug "Pacemaker config files located in: $CRM_CONFIG_DIR"
-    fi
-
-    # Assume new layout
-    # $local_state_dir/lib/pacemaker/(cib,pengine,blackbox,cores)
-    config_root=`dirname $CRM_CONFIG_DIR`
+    CRM_DAEMON_DIR=$(detect_daemon_dir)
+    CRM_CONFIG_DIR=$(detect_cib_dir)
+    config_root=$(detect_state_dir)
 
     # Older versions had none
     BLACKBOX_DIR=$config_root/blackbox
     debug "Pacemaker blackboxes (if any) located in: $BLACKBOX_DIR"
 
-    PE_STATE_DIR=$config_root/pengine
-    if [ ! -d $PE_STATE_DIR ]; then
-	info "Detecting where Pacemaker keeps Policy Engine inputs... this may take a while"
-	for d in `find / $depth -type d -name pengine`; do
-	    PE_STATE_DIR=$d
-	    break
-	done
-	info "Found: $PE_STATE_DIR"
-    fi
-    if [ -z $PE_STATE_DIR ]; then
-	fatal "Non-standard Pacemaker installation: Policy Engine directory not found"
-    else
-	debug "PE files located in: $PE_STATE_DIR"
-    fi
+    PE_STATE_DIR=$(detect_pe_dir "$config_root")
 
     HA_STATE_DIR=$local_state_dir/lib/heartbeat
     debug "Assuming Heartbeat state files, if any, are located in: $HA_STATE_DIR"
@@ -328,34 +379,58 @@ linetime() {
     get_time "$t"
 }
 
-# Find pattern in a logfile somewhere
-# Return $max ordered results by age (newest first)
+#
+# findmsg <max> <pattern>
+#
+# Print the names of up to <max> system logs that contain <pattern>,
+# ordered by most recently modified.
+#
 findmsg() {
-	max=$1
-	pattern=$2
-	logfiles=""
-	syslogdirs="/var/log /var/logs /var/syslog /var/adm /var/log/ha /var/log/cluster"
+    max=$1
+    pattern="$2"
+    found=0
 
-	for d in $syslogdirs; do
-	    if [ -d $d ]; then
-		files=`find $d -type f -maxdepth 1`
-		for f in $files; do
-		    local cat=`find_decompressor $f`
-		    $cat $f | grep -l -e "$pattern"
-		    if [ $? = 0 ]; then
-		        logfiles="$logfiles $f"
-		    fi
-		done
-	    fi
-	done 2>/dev/null
+    # List all potential system logs ordered by most recently modified.
+    candidates=$(ls -1td $SYSLOGS 2>/dev/null)
+    if [ -z "$candidates" ]; then
+        debug "No system logs found to search for pattern \'$pattern\'"
+        return
+    fi
 
-	if [ "x$logfiles" != "x" ]; then
-	    list=`ls -t $logfiles | head -n $max | tr '\n' ' '`
-	    echo $list
-	    debug "Pattern \'$pattern\' found in: [ $list ]"
-	else
-	    debug "Pattern \'$pattern\' not found anywhere"
-	fi
+    # Portable way to handle files with spaces in their names.
+    SAVE_IFS=$IFS
+    IFS="
+"
+
+    # Check each log file for matches.
+    logfiles=""
+    for f in $candidates; do
+        local cat=$(find_decompressor "$f")
+        $cat "$f" 2>/dev/null | grep -q -e "$pattern"
+        if [ $? -eq 0 ]; then
+
+            # Add this file to the list of hits
+            # (using newline as separator to handle spaces in names).
+            if [ -z "$logfiles" ]; then
+                logfiles="$f"
+            else
+                logfiles="$logfiles
+$f"
+            fi
+
+            # If we have enough hits, print them and return.
+            found=$(($found+1))
+            if [ $found -ge $max ]; then
+                debug "Pattern \'$pattern\' found in: [ $logfiles ]"
+                IFS=$SAVE_IFS
+                echo "$logfiles"
+                return
+            fi
+        fi
+    done 2>/dev/null
+    IFS=$SAVE_IFS
+
+    debug "Pattern \'$pattern\' not found in any system logs"
 }
 
 node_events() {
@@ -481,16 +556,14 @@ dumplog() {
 #
 
 find_decompressor() {
-	if echo $1 | grep -qs 'bz2$'; then
-		echo "bzip2 -dc"
-	elif echo $1 | grep -qs 'gz$'; then
-		echo "gzip -dc"
-	elif echo $1 | grep -qs 'xz$'; then
-		echo "xz -dc"
-	else
-		echo "cat"
-	fi
+    case $1 in
+        *bz2) echo "bzip2 -dc" ;;
+        *gz)  echo "gzip -dc" ;;
+        *xz)  echo "xz -dc" ;;
+        *)    echo "cat" ;;
+    esac
 }
+
 #
 # check if the log contains a piece of our segment
 #
@@ -706,13 +779,11 @@ pickfirst() {
 # and existence of configuration files
 #
 get_cluster_type() {
-    if
-	ps -ef | egrep -qs '[c]orosync'
-    then
+    if is_running corosync; then
 	tool=`pickfirst corosync-objctl corosync-cmapctl`
 	case $tool in
-	    *objctl) quorum=`$tool -a | grep quorum.provider | sed s/.*=//`;;
-	    *cmapctl) quorum=`$tool | grep quorum.provider | sed s/.*=//`;;
+	    *objctl) quorum=`$tool -a | grep quorum.provider | sed 's/.*=\s*//'`;;
+	    *cmapctl) quorum=`$tool | grep quorum.provider | sed 's/.*=\s*//'`;;
 	esac
 	if [ x"$quorum" = x"quorum_cman" ]; then
 	    stack="cman"
@@ -720,10 +791,9 @@ get_cluster_type() {
 	    stack="corosync"
 	fi
 
-    elif
-	ps -ef | egrep -qs '[a]isexec'
-    then
+    elif is_running aisexec; then
 	stack="openais"
+
     elif
 	ps -ef | grep -v -e grep -e "eartbeat/[clasp]" | egrep -qs '[h]eartbeat'
     then
@@ -741,8 +811,13 @@ get_cluster_type() {
     elif [ -f /etc/ais/openais.conf ]; then
 	stack="openais"
 
+    elif [ -f /etc/ha.d/ha.cf ]; then
+        stack="heartbeat"
+
     else
-	stack="heartbeat"
+        # We still don't know. This might be a Pacemaker Remote node,
+        # or the configuration might be in a nonstandard location.
+        stack="any"
     fi
 
     debug "Detected the '$stack' cluster stack"
@@ -768,7 +843,7 @@ find_cluster_cf() {
 	    done
 	    if [ -z "$best_file" ]; then
 		debug "Looking for corosync configuration file. This may take a while..."
-		for f in `find / $depth -type f -name corosync.conf`; do
+		for f in `find / -maxdepth $maxdepth -type f -name corosync.conf`; do
 		    best_file=$f
 		    break
 		done
@@ -789,6 +864,10 @@ find_cluster_cf() {
 		echo "$cf"
 	    fi
 	    ;;
+	any)
+	    # Cluster type is undetermined. Don't complain, because this
+	    # might be a Pacemaker Remote node.
+	    ;;
 	*)
 	    warning "Unknown cluster type: $1"
 	    ;;
@@ -803,3 +882,5 @@ t=`get_time "12:00"`
 if [ "$t" = "" ]; then
 	fatal "please install the perl Date::Parse module (perl-DateTime-Format-DateParse on Fedora/Red Hat)"
 fi
+
+# vim: set expandtab tabstop=8 softtabstop=4 shiftwidth=4 textwidth=80:

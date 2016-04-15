@@ -133,10 +133,13 @@ chk_id() {
 
 check_perms() {
     while read type f p uid gid; do
-	[ -$type $f ] || {
-	    echo "$f wrong type or doesn't exist"
-	    continue
-	}
+        if [ ! -e "$f" ]; then
+            echo "$f doesn't exist"
+            continue
+        elif [ ! -$type "$f" ]; then
+            echo "$f has wrong type"
+            continue
+        fi
 	n_uid=`num_id passwd $uid`
 	chk_id "$uid" "$n_uid" || continue
 	n_gid=`num_id group $gid`
@@ -210,6 +213,11 @@ getbt() {
     done
 }
 
+dump_status_and_config() {
+    crm_mon -1 2>&1 | grep -v '^Last upd' > $target/$CRM_MON_F
+    cibadmin -Ql 2>/dev/null > $target/${CIB_F}.live
+}
+
 getconfig() {
     cluster=$1; shift;
     target=$1; shift;
@@ -220,13 +228,12 @@ getconfig() {
 	fi
     done
 
-    crm_uuid -r > $target/$HB_UUID_F 2>&1
+    if which crm_uuid >/dev/null 2>&1; then
+        crm_uuid -r > $target/$HB_UUID_F 2>&1
+    fi
 
-    if
-	ps -ef | egrep -qs [c]rmd
-    then
-	crm_mon -1 2>&1 | grep -v '^Last upd' > $target/$CRM_MON_F
-	cibadmin -Ql 2>/dev/null > $target/${CIB_F}.live
+    if is_running crmd; then
+        dump_status_and_config
 	case $cluster in
 	    cman)             crm_node -p --cman > $target/$MEMBERSHIP_F 2>&1;;
 	    corosync|openais) crm_node -p --openais > $target/$MEMBERSHIP_F 2>&1;;
@@ -234,13 +241,22 @@ getconfig() {
 	    *) 	              crm_node -p > $target/$MEMBERSHIP_F 2>&1;;
 	esac
 	echo "$host" > $target/RUNNING
+
+    elif is_running pacemaker_remoted; then
+        dump_status_and_config
+        echo "$host" > $target/RUNNING
+
     else
 	echo "$host" > $target/STOPPED
     fi
 
     if [ -f "$target/$CIB_F" ]; then
 	crm_verify -V -x $target/$CIB_F >$target/$CRM_VERIFY_F 2>&1
-	CIB_file=$target/$CIB_F crm configure show >$target/$CIB_TXT_F 2>&1
+        if which crm >/dev/null 2>&1 ; then
+            CIB_file=$target/$CIB_F crm configure show >$target/$CIB_TXT_F 2>&1
+        elif which pcs >/dev/null 2>&1 ; then
+            pcs config -f $target/$CIB_F >$target/$CIB_TXT_F 2>&1
+        fi
     fi
 }
 
@@ -314,7 +330,7 @@ distro() {
     if
 	which lsb_release >/dev/null 2>&1
     then
-	lsb_release -d
+	lsb_release -d | sed -e 's/^Description:\s*//'
 	debug "Using lsb_release for distribution info"
 	return
     fi
@@ -349,10 +365,11 @@ pkg_ver() {
     debug "The package manager is: $pkg_mgr"
     echo "The package manager is: $pkg_mgr"
 
-    # for Linux .deb based systems
+    echo "Installed packages:"
     case $pkg_mgr in
 	deb)
 	    dpkg-query -f '${Package} ${Version} ${Architecture}\n' -W | sort
+            echo
 	    for pkg in $*; do
 		if dpkg-query -W $pkg 2>/dev/null ; then
 		    debug "Verifying installation of: $pkg"
@@ -363,6 +380,7 @@ pkg_ver() {
 	    ;;
 	rpm)
 	    rpm -qa --qf '%{name} %{version}-%{release} - %{distribution} %{arch}\n' | sort
+            echo
 	    for pkg in $*; do
 		if rpm -q $pkg >/dev/null 2>&1 ; then
 		    debug "Verifying installation of: $pkg"
@@ -395,7 +413,7 @@ getbacktraces() {
 
 	# Make a copy of them in case we need more data later
 	# Luckily they compress well
-	mkdir cores &> /dev/null
+	mkdir cores >/dev/null 2>&1
 	cp -a $flist cores/
 	shrink cores
 	rm -rf cores
@@ -408,12 +426,14 @@ getbacktraces() {
 }
 
 getpeinputs() {
-    flist=$(
-	find_files $PE_STATE_DIR $1 $2 | sed "s,`dirname $PE_STATE_DIR`/,,g"
-    )
-    if [ "$flist" ]; then
-	(cd `dirname $PE_STATE_DIR` && tar cf - $flist) | (cd $3 && tar xf -)
-	debug "found `echo $flist | wc -w` pengine input files in $PE_STATE_DIR"
+    if [ -n "$PE_STATE_DIR" ]; then
+        flist=$(
+            find_files "$PE_STATE_DIR" "$1" "$2" | sed "s,`dirname $PE_STATE_DIR`/,,g"
+        )
+        if [ "$flist" ]; then
+            (cd $(dirname "$PE_STATE_DIR") && tar cf - $flist) | (cd "$3" && tar xf -)
+            debug "found `echo $flist | wc -w` pengine input files in $PE_STATE_DIR"
+        fi
     fi
 }
 
@@ -424,7 +444,7 @@ getblackboxes() {
 
     for bb in $flist; do
         bb_short=`basename $bb`
-	qb-blackbox $bb &> $3/${bb_short}.blackbox
+	qb-blackbox $bb > $3/${bb_short}.blackbox 2>&1
 	info "Extracting contents of blackbox: $bb_short"
     done
 }
@@ -441,21 +461,22 @@ sys_info() {
 	echo "Distribution: `distro`"
     fi
 
-    cibadmin --version 2>&1
+    echo
+    cibadmin --version 2>&1 | head -1
     cibadmin -! 2>&1
-    case $1 in
+    case $cluster in
 	openais)
-	    : echo "openais version: how?"
+	    echo openais # version: how?
 	    ;;
 	cman)
-	    cman_tool -V
-	    /usr/sbin/corosync -v 2>&1
+	    cman_tool -V 2>&1 | head -1
+	    /usr/sbin/corosync -v 2>&1 | head -1
 	    ;;
 	corosync)
-	    /usr/sbin/corosync -v 2>&1
+	    /usr/sbin/corosync -v 2>&1 | head -1
 	    ;;
 	heartbeat)
-	    heartbeat version: `$CRM_DAEMON_DIR/heartbeat -V`  2>&1
+	    echo heartbeat $($CRM_DAEMON_DIR/heartbeat -V 2>&1)
 	    ;;
     esac
 
@@ -465,6 +486,7 @@ sys_info() {
     # Resource agents version hash
     echo "resource-agents: `grep 'Build version:' /usr/lib/ocf/resource.d/heartbeat/.ocf-shellfuncs`"
 
+    echo
     pkg_ver $*
 }
 
@@ -491,9 +513,7 @@ sys_stats() {
 
 dlm_dump() {
     if which dlm_tool >/dev/null 2>&1 ; then
-      if
-	ps -ef | egrep -qs '[d]lm_controld'
-      then
+      if is_running dlm_controld; then
 	echo "--- Lockspace overview:"
 	dlm_tool ls -n
 
@@ -551,47 +571,48 @@ get_logfiles() {
     facility_var="logfacility"
 
     if [ -f "$cf_logd" ]; then
+	# TODO: this call is broken, it expects args
 	if uselogd; then
 	    cf_file="$cf_logd"
 	    cf_type="logd"
 	fi
     fi
 
-    debug "Reading $cf_type log settings"
     case $cf_type in
 	cman|openais|corosync)
-	    debug "Reading log settings from $cf_file"
-	    if iscfvartrue $cf_type to_syslog $cf_file; then
-		facility_var=syslog_facility
-	    fi
-	    if iscfvartrue $cf_type to_logfile $cf_file; then
-		logfile=`getcfvar $cf_type logfile $cf_file`
-	    fi
+            if [ -f "$cf_file" ]; then
+                debug "Reading $cf_type log settings from $cf_file"
+                if iscfvartrue $cf_type to_syslog "$cf_file"; then
+                    facility_var=syslog_facility
+                fi
+                if iscfvartrue $cf_type to_logfile "$cf_file"; then
+                    logfile=$(getcfvar $cf_type logfile "$cf_file")
+                fi
+            fi
 	    ;;
 	heartbeat|logd)
-	    debug "Reading log settings from $cf_file"
-	    if
-		iscfvartrue $cf_type debug $cf_file
-	    then
-		logfile=`getcfvar $cf_type debugfile $cf_file`
-	    else
-		logfile=`getcfvar $cf_type logfile $cf_file`
-	    fi
+            if [ -f "$cf_file" ]; then
+                debug "Reading $cf_type log settings from $cf_file"
+                if iscfvartrue $cf_type debug "$cf_file"; then
+                    logfile=$(getcfvar $cf_type debugfile "$cf_file")
+                else
+                    logfile=$(getcfvar $cf_type logfile "$cf_file")
+                fi
+            fi
 	    ;;
-	*) debug "Unknown cluster type: $cf_type"
-	   echo "/var/log/pacemaker.log"
-	   ;;
     esac
 
-    if [ "x$logfile" != "x" -a -f "$logfile" ]; then
+    if [ -z "$logfile" ]; then
+        logfile="/var/log/pacemaker.log"
+        debug "Log settings not found for cluster type $cf_type, assuming $logfile"
+    fi
+    if [ -f "$logfile" ]; then
 	echo $logfile
     fi
+
     if [ "x$facility" = x ]; then
 	facility=`getcfvar $cf_type $facility_var $cf_file`
 	[ "" = "$facility" ] && facility="daemon"
-    fi
-    if [ "x$facility" = x ]; then
-	facility="daemon"
     fi
 
     # Always include system logs (if we can find them)
@@ -600,17 +621,21 @@ get_logfiles() {
     sleep 2 # Give syslog time to catch up in case its busy
     findmsg 1 "$msg"
 
-    # Initial pacemakerd logs and tracing might also go to a file (other than the syslog log file)
-    findmsg 3 "Starting Pacemaker"
+    # Look for detail logs:
 
-    # Make sure we get something from the Policy Engine
-    findmsg 3 "Calculated Transition"
+    # - initial pacemakerd logs and tracing might go to a different file
+    pattern="Starting Pacemaker"
 
-    # These patterns look for cib and lrmd updates
-    # Helpful on non-DC nodes or when the cluster has been up for a long time
-    findmsg 3 cib_perform_op
-    findmsg 3 process_lrm_event
+    # - make sure we get something from the Policy Engine
+    pattern="$pattern\\|Calculated Transition"
 
+    # - cib and lrmd updates (helpful on non-DC nodes or when the cluster has been up for a long time)
+    pattern="$pattern\\|cib_perform_op\\|process_lrm_event"
+
+    # - pacemaker_remote might use a different file
+    pattern="$pattern\\|pacemaker_remoted:"
+
+    findmsg 3 "$pattern"
 }
 
 essential_files() {
@@ -649,7 +674,10 @@ esac
 
 logd_cf=`findlogdcf`
 cluster_cf=`find_cluster_cf $cluster`
-if [ -z $cluster_cf ]; then
+
+# If cluster stack is still "any", this might be a Pacemaker Remote node,
+# so don't complain in that case.
+if [ -z "$cluster_cf" ] && [ $cluster != "any" ]; then
    warning "Could not determine the location of your cluster configuration"
 fi
 
@@ -666,7 +694,7 @@ else
     logfiles="$EXTRA_LOGS"
 fi
 
-debug "Config: $cluster $cluster_cf $logd_cf $logfiles"
+debug "Config: $cluster ($cluster_cf $logd_cf) $logfiles"
 
 sys_info $cluster $PACKAGES > $SYSINFO_F
 essential_files $cluster | check_perms  > $PERMISSIONS_F 2>&1
@@ -678,19 +706,16 @@ getblackboxes  $LOG_START $LOG_END $REPORT_HOME/$REPORT_TARGET
 
 case $cluster in
     cman|corosync)
-	if
-	    ps -ef | egrep -qs '[c]orosync'
-	then
-	    corosync-blackbox &> corosync-blackbox-live.txt
+	if is_running corosync; then
+            corosync-blackbox >corosync-blackbox-live.txt 2>&1
+#           corosync-fplay > corosync-blackbox.txt
+            tool=`pickfirst corosync-objctl corosync-cmapctl`
+            case $tool in
+                *objctl)  $tool -a > corosync.dump  2>/dev/null;;
+                *cmapctl) $tool    > corosync.dump  2>/dev/null;;
+            esac
+            corosync-quorumtool -s -i > corosync.quorum 2>&1
 	fi
-#	corosync-fplay > corosync-blackbox.txt
-
-	tool=`pickfirst corosync-objctl corosync-cmapctl`
-	case $tool in
-	    *objctl)  $tool -a > corosync.dump  2>/dev/null;;
-	    *cmapctl) $tool    > corosync.dump  2>/dev/null;;
-	esac
-	corosync-quorumtool -s -i > corosync.quorum 2>&1
 	;;
 esac
 
@@ -792,3 +817,5 @@ elif [ "$REPORT_MASTER" != "$REPORT_TARGET" ]; then
 	rm -rf $REPORT_HOME
     fi
 fi
+
+# vim: set expandtab tabstop=8 softtabstop=4 shiftwidth=4 textwidth=80:
