@@ -1,0 +1,11 @@
+digraph "g" {
+"Dummy-test2_monitor_10000 dhcp180" [ style=bold color="green" fontcolor="black"]
+"Dummy-test2_monitor_30000 dhcp180" [ style=bold color="green" fontcolor="black"]
+"Dummy-test2_start_0 dhcp180" -> "Dummy-test2_monitor_10000 dhcp180" [ style = bold]
+"Dummy-test2_start_0 dhcp180" -> "Dummy-test2_monitor_30000 dhcp180" [ style = bold]
+"Dummy-test2_start_0 dhcp180" [ style=bold color="green" fontcolor="black"]
+"Dummy-test2_stop_0 dhcp180" -> "Dummy-test2_start_0 dhcp180" [ style = bold]
+"Dummy-test2_stop_0 dhcp180" -> "all_stopped" [ style = bold]
+"Dummy-test2_stop_0 dhcp180" [ style=bold color="green" fontcolor="black"]
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+}

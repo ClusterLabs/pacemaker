@@ -227,6 +227,7 @@ do_test stop-failure-no-quorum "Stop failure without quorum"
 do_test stop-failure-no-fencing "Stop failure without fencing available"
 do_test stop-failure-with-fencing "Stop failure with fencing available"
 do_test multiple-active-block-group "Support of multiple-active=block for resource groups"
+do_test multiple-monitor-one-failed "Consider resource failed if any of the configured monitor operations failed"
 
 echo ""
 do_test quorum-1 "No quorum - ignore"
