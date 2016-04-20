@@ -218,6 +218,15 @@ ping_validate() {
 	exit $OCF_ERR_CONFIGURED
     fi
 
+    # For fping allow only same IP versions or hostnames
+    if use_fping; then
+        hosts_family
+        if [ $? -eq 99 ]; then
+            ocf_log err "host_list can contain only host with same IP versions for fping"
+            exit $OCF_ERR_CONFIGURED
+        fi
+    fi
+
     check_binary ping
 
     return $OCF_SUCCESS
@@ -225,6 +234,13 @@ ping_validate() {
 
 
 fping_check() {
+    p_exe=fping
+    hosts_family
+    case $? in
+        6) p_exe=fping6 ;;
+        99) ocf_log err "Ambiguous IP versions in host_list: '$OCF_RESKEY_host_list'"; exit $OCF_ERR_CONFIGURED;;
+    esac
+
     active=0
     f_out=`mktemp`
     f_err=`mktemp`
@@ -232,7 +248,7 @@ fping_check() {
     n=$OCF_RESKEY_attempts
     timeout=`expr $OCF_RESKEY_timeout \* 1000 / $OCF_RESKEY_attempts`
 
-    cmd="fping -r $OCF_RESKEY_attempts -t $timeout -B 1.0 $OCF_RESKEY_options $OCF_RESKEY_host_list"
+    cmd="$p_exe -r $OCF_RESKEY_attempts -t $timeout -B 1.0 $OCF_RESKEY_options $OCF_RESKEY_host_list"
     $cmd>$f_out 2>$f_err; rc=$?
     active=`grep alive $f_out|wc -l`
 
@@ -281,7 +297,7 @@ ping_check() {
 
 ping_update() {
     
-    if ocf_is_true "$OCF_RESKEY_use_fping" && have_binary fping; then
+    if use_fping; then
 	fping_check
 	active=$?
     else
@@ -309,6 +325,39 @@ ping_update() {
         return 1
     fi
     return 0
+}
+
+use_fping() {
+    ocf_is_true "$OCF_RESKEY_use_fping" && have_binary fping;
+}
+
+# return values:
+#     4 IPv4
+#     6 IPv6
+#     0 indefinite (i.e. hostname)
+host_family() {
+    case $1 in
+	*[0-9].*[0-9].*[0-9].*[0-9]) return 4 ;;
+	*:*) return 6 ;;
+	*) return 0 ;;
+    esac
+}
+
+# return values same as host_family plus
+#     99 ambiguous families
+hosts_family() {
+    # For fping allow only same IP versions or hostnames
+    family=0
+    for host in $OCF_RESKEY_host_list; do
+        host_family $host
+        f=$?        
+        if [ $family -ne 0 -a $f -ne 0 -a $f -ne $family ] ; then
+            family=99
+            break
+        fi
+        [ $f -ne 0 ] && family=$f
+    done
+    return $family
 }
 
 : ${OCF_RESKEY_name:="pingd"}
