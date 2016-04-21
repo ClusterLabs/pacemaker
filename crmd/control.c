@@ -1061,6 +1061,35 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         fsa_cluster_name = strdup(value);
     }
 
+#if 0
+    {
+        int sub_call_id;
+
+        sub_call_id = fsa_cib_conn->cmds->query(fsa_cib_conn, 
+            "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION
+            "/" XML_CIB_TAG_NOTIFICATIONS "/" XML_CIB_TAG_NOTIFY, NULL,
+            cib_scope_local | cib_xpath);
+
+        fsa_register_cib_callback(sub_call_id, FALSE, NULL,
+                                  notifications_query_callback);
+
+        crm_trace("Querying the CIB for notifications ... call %d", sub_call_id);
+    }
+#endif
+
+    {
+        xmlNode *cib_object = NULL;
+        int rc;
+
+        rc = fsa_cib_conn->cmds->query(fsa_cib_conn, 
+            "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION
+            "/" XML_CIB_TAG_NOTIFICATIONS "/" XML_CIB_TAG_NOTIFY, &cib_object,
+            cib_scope_local | cib_xpath | cib_sync_call);
+
+        notifications_query_callback(msg, call_id, rc, cib_object, user_data);
+        free_xml(cib_object);
+    }
+
     set_bit(fsa_input_register, R_READ_CONFIG);
     crm_trace("Triggering FSA: %s", __FUNCTION__);
     mainloop_set_trigger(fsa_source);

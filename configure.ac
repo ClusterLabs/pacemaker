@@ -1737,6 +1737,36 @@ if test "$GCC" != yes; then
 else
         CFLAGS="$CFLAGS -ggdb"
 
+dnl when we don't have diagnostic push / pull we can't explicitely disable
+dnl checking for nonliteral formats in the places where they occur on purpose
+dnl thus we disable nonliteral format checking globally as we are aborting
+dnl on warnings. 
+dnl what makes the things really ugly is that nonliteral format checking is 
+dnl obviously available as an extra switch in very modern gcc but for older
+dnl gcc this is part of -Wformat=2 
+dnl so if we have push/pull we can enable -Wformat=2 -Wformat-nonliteral
+dnl if we don't have push/pull but -Wformat-nonliteral we can enable -Wformat=2
+dnl otherwise none of both
+
+        gcc_diagnostic_push_pull=no
+        SAVED_CFLAGS="$CFLAGS"
+        CFLAGS="$CFLAGS -Werror"
+        AC_MSG_CHECKING([for gcc diagnostic push / pull])
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#pragma GCC diagnostic push
+#pragma GCC diagnostic pop
+        ]])], [
+                AC_MSG_RESULT([yes])
+                gcc_diagnostic_push_pull=yes
+        ], AC_MSG_RESULT([no]))
+        CFLAGS="$SAVED_CFLAGS"
+
+        if cc_supports_flag "-Wformat-nonliteral"; then
+                gcc_format_nonliteral=yes
+        else
+                gcc_format_nonliteral=no
+        fi
+        
 	# We had to eliminate -Wnested-externs because of libtool changes
         EXTRA_FLAGS="-fgnu89-inline
 		-Wall
@@ -1746,9 +1776,7 @@ else
 		-Wdeclaration-after-statement
 		-Wendif-labels
 		-Wfloat-equal
-		-Wformat=2
 		-Wformat-security
-		-Wformat-nonliteral
 		-Wmissing-prototypes
 		-Wmissing-declarations
 		-Wnested-externs
@@ -1759,6 +1787,19 @@ else
 		-Wwrite-strings
 		-Wunused-but-set-variable
 		-Wunsigned-char"
+
+        if test "x$gcc_diagnostic_push_pull" = "xyes"; then
+                AC_DEFINE([GCC_FORMAT_NONLITERAL_CHECKING_ENABLED], [],
+			[gcc can complain about nonliterals in format])
+                EXTRA_FLAGS="$EXTRA_FLAGS
+                        -Wformat=2 
+                        -Wformat-nonliteral"
+        else
+                if test "x$gcc_format_nonliteral" = "xyes"; then
+                        EXTRA_FLAGS="$EXTRA_FLAGS
+                        -Wformat=2"
+                fi
+        fi
 
 # Additional warnings it might be nice to enable one day
 #		-Wshadow

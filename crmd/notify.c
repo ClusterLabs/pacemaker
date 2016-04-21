@@ -19,121 +19,709 @@
 #include <crm_internal.h>
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
+#include <crm/pengine/rules.h>
 #include "notify.h"
+#include "crmd_messages.h"
 
 char *notify_script = NULL;
 char *notify_target = NULL;
+GListPtr notify_list = NULL;
 
+typedef struct {
+    char *name;
+    char *value;
+} envvar_t;
 
-static const char *notify_keys[] = 
-{
-    "CRM_notify_recipient",
-    "CRM_notify_node",
-    "CRM_notify_nodeid",
-    "CRM_notify_rsc",
-    "CRM_notify_task",
-    "CRM_notify_interval",
-    "CRM_notify_desc",
-    "CRM_notify_status",
-    "CRM_notify_target_rc",
-    "CRM_notify_rc",
-    "CRM_notify_kind",
-    "CRM_notify_version",
+typedef struct {
+    char *id;
+    char *path;
+    int timeout;
+    char *tstamp_format;
+    char *recipient;
+    GListPtr envvars;
+} notify_entry_t;
+
+enum notify_keys_e{
+    CRM_notify_recipient = 0,
+    CRM_notify_node,
+    CRM_notify_nodeid,
+    CRM_notify_rsc,
+    CRM_notify_task,
+    CRM_notify_interval,
+    CRM_notify_desc,
+    CRM_notify_status,
+    CRM_notify_target_rc,
+    CRM_notify_rc,
+    CRM_notify_kind,
+    CRM_notify_version,
+    CRM_notify_node_sequence,
+    CRM_notify_timestamp
 };
 
+/*
+ * to allow script compatibility we can have more than one
+ * set of environment variables
+ */
+
+static const char *notify_keys[][3] =
+{
+    [CRM_notify_recipient]     = {"CRM_notify_recipient",     "CRM_alert_recipient",     NULL},
+    [CRM_notify_node]          = {"CRM_notify_node",          "CRM_alert_node",          NULL},
+    [CRM_notify_nodeid]        = {"CRM_notify_nodeid",        "CRM_alert_nodeid",        NULL},
+    [CRM_notify_rsc]           = {"CRM_notify_rsc",           "CRM_alert_rsc",           NULL},
+    [CRM_notify_task]          = {"CRM_notify_task",          "CRM_alert_task",          NULL},
+    [CRM_notify_interval]      = {"CRM_notify_interval",      "CRM_alert_interval",      NULL},
+    [CRM_notify_desc]          = {"CRM_notify_desc",          "CRM_alert_desc",          NULL},
+    [CRM_notify_status]        = {"CRM_notify_status",        "CRM_alert_status",        NULL},
+    [CRM_notify_target_rc]     = {"CRM_notify_target_rc",     "CRM_alert_target_rc",     NULL},
+    [CRM_notify_rc]            = {"CRM_notify_rc",            "CRM_alert_rc",            NULL},
+    [CRM_notify_kind]          = {"CRM_notify_kind",          "CRM_alert_kind",          NULL},
+    [CRM_notify_version]       = {"CRM_notify_version",       "CRM_alert_version",       NULL},
+    [CRM_notify_node_sequence] = {"CRM_notify_node_sequence", "CRM_alert_node_sequence", NULL},
+    [CRM_notify_timestamp]     = {"CRM_notify_timestamp",     "CRM_alert_timestamp",     NULL}
+};
+
+/*
+ * higher accuracy time stuff to be generalized and moved to
+ * e.g. lib/common/utils.c|iso8601.c
+ */
+
+#include <time.h>
+#include <sys/time.h>
+#include <ctype.h>
+#include <crm/common/iso8601.h>
+
+typedef struct crm_time_us crm_time_hr_t;
+crm_time_hr_t *crm_time_hr_convert(crm_time_hr_t *target, crm_time_t *dt);
+void crm_time_set_hr_dt(crm_time_t *target, crm_time_hr_t *hr_dt);
+crm_time_hr_t *crm_time_timeval_hr_convert(crm_time_hr_t *target,
+                                           struct timeval *tv);
+crm_time_hr_t *crm_time_hr_new(const char *date_time);
+void crm_time_hr_free(crm_time_hr_t * hr_dt);
+char *crm_time_format_hr(const char *format, crm_time_hr_t * hr_dt);
+
+crm_time_t *parse_date(const char *date_str); /* in iso8601.c global but
+                                                 not in header */
+
+struct crm_time_us {
+    int years;
+    int months;                 /* Only for durations */
+    int days;
+    int seconds;
+    int offset;                 /* Seconds */
+    bool duration;
+    int useconds;
+};
+
+struct crm_time_s {
+    int years;
+    int months;                 /* Only for durations */
+    int days;
+    int seconds;
+    int offset;                 /* Seconds */
+    bool duration;
+};
+
+
+
+static void
+ha_get_tm_time( struct tm *target, crm_time_t *source)
+{
+    *target = (struct tm) {
+        .tm_year = source->years - 1900,
+        .tm_yday = source->days - 1,
+        .tm_sec = source->seconds % 60,
+        .tm_min = ( source->seconds / 60 ) % 60,
+        .tm_hour = source->seconds / 60 / 60,
+
+#if defined(HAVE_STRUCT_TM_TM_GMTOFF)
+        .tm_gmtoff = source->offset
+#endif
+    };
+}
+
+crm_time_hr_t *
+crm_time_hr_convert(crm_time_hr_t *target, crm_time_t *dt)
+{
+    crm_time_hr_t *hr_dt = NULL;
+
+    if (dt) {
+        hr_dt = target?target:calloc(1, sizeof(crm_time_hr_t));
+        if (hr_dt) {
+            *hr_dt = (crm_time_hr_t) {
+                .years = dt->years,
+                .months = dt->months,
+                .days = dt->days,
+                .seconds = dt->seconds,
+                .offset = dt->offset,
+                .duration = dt->duration
+            };
+        }
+    }
+
+    return hr_dt;
+}
+
+void
+crm_time_set_hr_dt(crm_time_t *target, crm_time_hr_t *hr_dt)
+{
+    CRM_ASSERT((hr_dt) && (target));
+    *target = (crm_time_t) {
+        .years = hr_dt->years,
+        .months = hr_dt->months,
+        .days = hr_dt->days,
+        .seconds = hr_dt->seconds,
+        .offset = hr_dt->offset,
+        .duration = hr_dt->duration
+    };
+}
+
+crm_time_hr_t *
+crm_time_timeval_hr_convert(crm_time_hr_t *target, struct timeval *tv)
+{
+    crm_time_t dt;
+    crm_time_hr_t *ret;
+
+    crm_time_set_timet(&dt, &tv->tv_sec);
+    ret = crm_time_hr_convert(target, &dt);
+    if (ret) {
+        ret->useconds = tv->tv_usec;
+    }
+    return ret;
+}
+
+crm_time_hr_t *
+crm_time_hr_new(const char *date_time)
+{
+    crm_time_hr_t *hr_dt = NULL;
+    struct timeval tv_now;
+
+    if (!date_time) {
+        if (gettimeofday(&tv_now, NULL) == 0) {
+            hr_dt = crm_time_timeval_hr_convert(NULL, &tv_now);
+        }
+    } else {
+        crm_time_t *dt;
+
+        dt = parse_date(date_time);
+        hr_dt = crm_time_hr_convert(NULL, dt);
+        crm_time_free(dt);
+    }
+    return hr_dt;
+}
+
+void
+crm_time_hr_free(crm_time_hr_t * hr_dt)
+{
+    free(hr_dt);
+}
+
+char *
+crm_time_format_hr(const char *format, crm_time_hr_t * hr_dt)
+{
+    const char *mark_s;
+    int max = 128, scanned_pos = 0, printed_pos = 0, fmt_pos = 0,
+        date_len = 0, nano_digits, fmt_len;
+    char nano_s[10], date_s[max+1], nanofmt_s[5] = "%", *tmp_fmt_s;
+    struct tm tm;
+    crm_time_t dt;
+
+    if (!format) {
+        return NULL;
+    }
+    crm_time_set_hr_dt(&dt, hr_dt);
+    ha_get_tm_time(&tm, &dt);
+    sprintf(nano_s, "%06d000", hr_dt->useconds);
+
+    while ((format[scanned_pos]) != '\0') {
+        fmt_len = 0;
+        mark_s = strchr(&format[scanned_pos], '%');
+        if (mark_s) {
+            fmt_pos = mark_s - format;
+            fmt_len = 1;
+            while ((format[fmt_pos+fmt_len] != '\0') &&
+                (format[fmt_pos+fmt_len] >= '0') &&
+                (format[fmt_pos+fmt_len] <= '9')) {
+                fmt_len++;
+            }
+            scanned_pos = fmt_pos + fmt_len + 1;
+            if (format[fmt_pos+fmt_len] == 'N') {
+                nano_digits = atoi(&format[fmt_pos+1]);
+                nano_digits = (nano_digits > 6)?6:nano_digits;
+                nano_digits = (nano_digits < 0)?0:nano_digits;
+                sprintf(&nanofmt_s[1], ".%ds", nano_digits);
+            } else {
+                if (format[fmt_pos+fmt_len] != 0) {
+                    continue;
+                }
+                fmt_pos = scanned_pos; /* print till end */
+            }
+        } else {
+            scanned_pos = strlen(format);
+            fmt_pos = scanned_pos; /* print till end */
+        }
+        tmp_fmt_s = strndup(&format[printed_pos], fmt_pos - printed_pos);
+#ifdef GCC_FORMAT_NONLITERAL_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#endif
+        date_len += strftime(&date_s[date_len], max-date_len, tmp_fmt_s, &tm);
+#ifdef GCC_FORMAT_NONLITERAL_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
+        printed_pos = scanned_pos;
+        free(tmp_fmt_s);
+        if (nano_digits) {
+#ifdef GCC_FORMAT_NONLITERAL_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#endif
+            date_len += snprintf(&date_s[date_len], max-date_len,
+                                 nanofmt_s, nano_s);
+#ifdef GCC_FORMAT_NONLITERAL_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
+            nano_digits = 0;
+        }
+    }
+
+    return (date_len == 0)?NULL:strdup(date_s);
+}
+
+/*
+ * end of possibly generic time-handling stuff
+ */
+
+
+/*
+ * syncronize local data with cib
+ */
+
+static void
+free_envvar_entry(envvar_t *entry)
+{
+    free(entry->name);
+    free(entry->value);
+    free(entry);
+}
+
+static void
+free_notify_list_entry(notify_entry_t *entry)
+{
+    free(entry->id);
+    free(entry->path);
+    free(entry->tstamp_format);
+    free(entry->recipient);
+    if (entry->envvars) {
+        g_list_free_full(entry->envvars,
+                         (GDestroyNotify) free_envvar_entry);
+    }
+    free(entry);
+}
+
+static void
+free_notify_list()
+{
+    if (notify_list) {
+        g_list_free_full(notify_list, (GDestroyNotify) free_notify_list_entry);
+        notify_list = NULL;
+    }
+}
+
+static gpointer
+copy_envvar_entry(envvar_t * src,
+                  gpointer data)
+{
+    envvar_t *dst = calloc(1, sizeof(envvar_t));
+
+    CRM_ASSERT(dst);
+    dst->name = strdup(src->name);
+    dst->value = src->value?strdup(src->value):NULL;
+    return (gpointer) dst;
+}
+
+static GListPtr
+add_dup_envvar(GListPtr envvar_list,
+               envvar_t *entry)
+{
+    return g_list_prepend(envvar_list, copy_envvar_entry(entry, NULL));
+}
+
+static GListPtr
+drop_envvars(GListPtr envvar_list, int count)
+{
+    int i;
+
+    for (i = 0;
+         (envvar_list) && ((count < 0) || (i < count));
+         i++) {
+        free_envvar_entry((envvar_t *) g_list_first(envvar_list)->data);
+        envvar_list = g_list_delete_link(envvar_list,
+                                         g_list_first(envvar_list));
+    }
+    return envvar_list;
+}
+
+static GListPtr
+copy_envvar_list_remove_dupes(GListPtr src)
+{
+    GListPtr dst = NULL, ls, ld;
+
+    /* we are adding to the front so variable dupes coming via
+     * recipient-section have got precedence over those in the
+     * global section - we don't expect that many variables here
+     * that it pays off to go for a hash-table to make dupe elimination
+     * more efficient - maybe later when we might decide to do more
+     * with the variables than cycling through them
+     */
+
+    for (ls = g_list_first(src); ls; ls = g_list_next(ls)) {
+        for (ld = g_list_first(dst); ld; ld = g_list_next(ld)) {
+            if (!strcmp(((envvar_t *)(ls->data))->name,
+                        ((envvar_t *)(ld->data))->name)) {
+                break;
+            }
+        }
+        if (!ld) {
+            dst = g_list_prepend(dst,
+                    copy_envvar_entry((envvar_t *)(ls->data), NULL));
+        }
+    }
+
+    return dst;
+}
+
+static void
+add_dup_notify_list_entry(notify_entry_t *entry)
+{
+    notify_entry_t *new_entry =
+        (notify_entry_t *) calloc(1, sizeof(notify_entry_t));
+
+    CRM_ASSERT(new_entry);
+    *new_entry = (notify_entry_t) {
+        .id = strdup(entry->id),
+        .path = strdup(entry->path),
+        .timeout = entry->timeout,
+        .tstamp_format = entry->tstamp_format?strdup(entry->tstamp_format):NULL,
+        .recipient = entry->recipient?strdup(entry->recipient):NULL,
+        .envvars = entry->envvars?
+            copy_envvar_list_remove_dupes(entry->envvars)
+            :NULL
+    };
+    notify_list = g_list_prepend(notify_list, new_entry);
+}
+
+static GListPtr
+get_envvars_from_cib(xmlNode *basenode, GListPtr list, int *count)
+{
+    xmlNode *envvar;
+    xmlNode *pair;
+
+    if ((!basenode) ||
+        (!(envvar = first_named_child(basenode, XML_TAG_ATTR_SETS)))) {
+        return list;
+    }
+
+    for (pair = first_named_child(envvar, XML_CIB_TAG_NVPAIR);
+         pair; pair = __xml_next(pair)) {
+
+        envvar_t envvar_entry = (envvar_t) {
+            .name = (char *) crm_element_value(pair, XML_NVPAIR_ATTR_NAME),
+            .value = (char *) crm_element_value(pair, XML_NVPAIR_ATTR_VALUE)
+        };
+        crm_trace("Found environment variable %s = '%s'", envvar_entry.name,
+                  envvar_entry.value?envvar_entry.value:"");
+        (*count)++;
+        list = add_dup_envvar(list, &envvar_entry);
+    }
+
+    return list;
+}
+
+static GHashTable *
+get_meta_attrs_from_cib(xmlNode *basenode, notify_entry_t *entry)
+{
+    GHashTable *config_hash =
+        g_hash_table_new_full(crm_str_hash, g_str_equal,
+                              g_hash_destroy_str, g_hash_destroy_str);
+    crm_time_t *now = crm_time_new(NULL);
+    const char *value = NULL;
+
+    unpack_instance_attributes(basenode, basenode, XML_TAG_META_SETS, NULL,
+                               config_hash, NULL, FALSE, now);
+
+    value = g_hash_table_lookup(config_hash, XML_NOTIFY_ATTR_TIMEOUT);
+    if (value) {
+        entry->timeout = crm_get_msec(value);
+        crm_trace("Found timeout %dmsec", entry->timeout);
+    }
+    value = g_hash_table_lookup(config_hash, XML_NOTIFY_ATTR_TSTAMP_FORMAT);
+    if (value) {
+        entry->tstamp_format = (char *) value;
+        crm_trace("Found timestamp format string '%s'", value);
+    }
+
+    crm_time_free(now);
+    return config_hash; /* keep hash as long as strings are needed */
+}
+
+void
+notifications_query_callback(xmlNode * msg, int call_id, int rc,
+                             xmlNode * output, void *user_data)
+{
+    xmlNode *notify = output;
+    notify_entry_t entry;
+
+    free_notify_list();
+
+    if (rc != pcmk_ok) {
+        crm_info("No optional alerts section in cib");
+
+        if (notify_script) {
+            entry = (notify_entry_t) {
+                .id = (char *) "legacy_notification",
+                .path = notify_script,
+                .timeout = CRMD_NOTIFY_DEFAULT_TIMEOUT_MS,
+                .recipient = notify_target
+            };
+            add_dup_notify_list_entry(&entry);
+            crm_info("Legacy Notifications enabled");
+        }
+
+        return;
+    } else {
+        crm_info("We have an alerts section in the cib");
+
+        if (notify_script) {
+            crm_warn("Cib contains configuration for Legacy Notifications "
+                     "which is overruled by alerts section");
+        }
+    }
+
+    if ((notify) &&
+        (crm_element_name(notify)) &&
+        (strcmp(crm_element_name(notify), XML_CIB_TAG_NOTIFY) != 0)) {
+        notify = first_named_child(notify, XML_CIB_TAG_NOTIFY);
+    }
+
+    for (; notify; notify = __xml_next(notify)) {
+        xmlNode *recipient;
+        int recipients = 0, envvars = 0;
+        GHashTable *config_hash = NULL;
+
+        entry = (notify_entry_t) {
+            .id = (char *) crm_element_value(notify, XML_ATTR_ID),
+            .path = (char *) crm_element_value(notify, XML_NOTIFY_ATTR_PATH),
+            .timeout = CRMD_NOTIFY_DEFAULT_TIMEOUT_MS
+        };
+
+        entry.envvars =
+            get_envvars_from_cib(notify,
+                                 entry.envvars,
+                                 &envvars);
+
+        config_hash =
+            get_meta_attrs_from_cib(notify, &entry);
+
+        crm_debug("Found notification: id=%s, path=%s, timeout=%d, "
+                   "tstamp_format=%s, %d additional environment variables",
+                   entry.id, entry.path, entry.timeout,
+                   entry.tstamp_format, envvars);
+
+        for (recipient = first_named_child(notify,
+                                           XML_CIB_TAG_NOTIFY_RECIPIENT);
+             recipient; recipient = __xml_next(recipient)) {
+            int envvars_added = 0;
+
+            entry.recipient = (char *) crm_element_value(recipient,
+                                                XML_NOTIFY_ATTR_REC_VALUE);
+            recipients++;
+
+            entry.envvars =
+                get_envvars_from_cib(recipient,
+                                     entry.envvars,
+                                     &envvars_added);
+
+            {
+                notify_entry_t recipient_entry = entry;
+                GHashTable *config_hash =
+                    get_meta_attrs_from_cib(recipient,
+                                            &recipient_entry);
+
+                add_dup_notify_list_entry(&recipient_entry);
+
+                crm_debug("Notification has recipient: id=%s, value=%s, "
+                          "%d additional environment variables",
+                          crm_element_value(recipient, XML_ATTR_ID),
+                          recipient_entry.recipient, envvars_added);
+
+                g_hash_table_destroy(config_hash);
+            }
+
+            entry.envvars =
+                drop_envvars(entry.envvars, envvars_added);
+        }
+
+        if (recipients == 0) {
+            add_dup_notify_list_entry(&entry);
+        }
+
+        drop_envvars(entry.envvars, -1);
+        g_hash_table_destroy(config_hash);
+    }
+}
+
+/*
+ * end of synchronization of local data with cib
+ */
 
 void
 crmd_enable_notifications(const char *script, const char *target)
 {
     free(notify_script);
-    notify_script = NULL;
+    notify_script = ((script) &&
+                     (strcmp(script,"/dev/null")))?strdup(script):NULL;
 
     free(notify_target);
-    notify_target = NULL;
-
-    if(script == NULL || safe_str_eq(script, "/dev/null")) {
-        crm_notice("Notifications disabled");
-        return;
-    }
-
-    notify_script = strdup(script);
-    notify_target = strdup(target);
-    crm_notice("Notifications enabled");
+    notify_target = (target != NULL)?strdup(target):NULL;
 }
 
 static void
-set_notify_key(const char *name, const char *cvalue, char *value)
+set_notify_key(enum notify_keys_e name, const char *cvalue, char *value)
 {
-    int lpc;
-    bool found = 0;
+    const char **key;
 
-    if(cvalue == NULL) {
+    if(!cvalue) {
         cvalue = value;
     }
 
-    for(lpc = 0; lpc < DIMOF(notify_keys); lpc++) {
-        if(safe_str_eq(name, notify_keys[lpc])) {
-            found = 1;
-            crm_trace("Setting notify key %s = '%s'", name, cvalue);
-            setenv(name, cvalue, 1);
-            break;
+    for(key = notify_keys[name]; *key; key++) {
+        crm_trace("Setting notify key %s = '%s'", *key, cvalue);
+        if (cvalue) {
+            setenv(*key, cvalue, 1);
+        } else {
+            unsetenv(*key);
         }
     }
 
-    CRM_ASSERT(found != 0);
     free(value);
 }
 
-static void crmd_notify_complete(svc_action_t *op) 
+static void
+unset_notify_keys()
+{
+    const char **key;
+    enum notify_keys_e name;
+
+    for(name = 0; name < DIMOF(notify_keys); name++) {
+        for(key = notify_keys[name]; *key; key++) {
+            crm_trace("Unsetting notify key %s", *key);
+            unsetenv(*key);
+        }
+    }
+}
+
+static void
+set_envvar_list(GListPtr envvars)
+{
+    GListPtr l;
+
+    for (l = g_list_first(envvars); l; l = g_list_next(l)) {
+        envvar_t *entry = (envvar_t *)(l->data);
+
+        crm_trace("Setting environment variable %s = '%s'", entry->name,
+                  entry->value?entry->value:"");
+        if (entry->value) {
+            setenv(entry->name, entry->value, 1);
+        } else {
+            unsetenv(entry->name);
+        }
+    }
+}
+
+static void
+unset_envvar_list(GListPtr envvars)
+{
+        GListPtr l;
+
+    for (l = g_list_first(envvars); l; l = g_list_next(l)) {
+        envvar_t *entry = (envvar_t *)(l->data);
+
+        crm_trace("Unsetting environment variable %s", entry->name);
+        unsetenv(entry->name);
+    }
+}
+
+static void
+crmd_notify_complete(svc_action_t *op)
 {
     if(op->rc == 0) {
         crm_info("Notification %d (%s) complete", op->sequence, op->agent);
     } else {
-        crm_warn("Notification %d (%s) failed: %d", op->sequence, op->agent, op->rc);
+        crm_warn("Notification %d (%s) failed: %d", op->sequence, op->agent,
+                 op->rc);
     }
 }
 
 static void
-send_notification(const char *kind)
+send_notifications(const char *kind)
 {
-    int lpc;
     svc_action_t *notify = NULL;
     static int operations = 0;
+    GListPtr l;
+    crm_time_hr_t *now = crm_time_hr_new(NULL);
 
-    crm_debug("Sending '%s' notification to '%s' via '%s'", kind, notify_target, notify_script);
+    set_notify_key(CRM_notify_kind, kind, NULL);
+    set_notify_key(CRM_notify_version, VERSION, NULL);
 
-    set_notify_key("CRM_notify_recipient", notify_target, NULL);
-    set_notify_key("CRM_notify_kind", kind, NULL);
-    set_notify_key("CRM_notify_version", VERSION, NULL);
+    for (l = g_list_first(notify_list); l; l = g_list_next(l)) {
+        notify_entry_t *entry = (notify_entry_t *)(l->data);
+        char *timestamp = crm_time_format_hr(entry->tstamp_format, now);
 
-    notify = services_action_create_generic(notify_script, NULL);
+        operations++;
+        crm_debug("Sending '%s' notification to '%s' via '%s'", kind,
+                  entry->recipient, entry->path);
+        set_notify_key(CRM_notify_recipient, entry->recipient, NULL);
+        set_notify_key(CRM_notify_node_sequence, crm_itoa(operations), NULL);
+        set_notify_key(CRM_notify_timestamp, timestamp, NULL);
 
-    notify->timeout = CRMD_NOTIFY_TIMEOUT_MS;
-    notify->standard = strdup("event");
-    notify->id = strdup(notify_script);
-    notify->agent = strdup(notify_script);
-    notify->sequence = ++operations;
+        notify = services_action_create_generic(entry->path, NULL);
 
-    if(services_action_async(notify, &crmd_notify_complete) == FALSE) {
-        services_action_free(notify);
+        notify->timeout = entry->timeout;
+        notify->standard = strdup("event");
+        notify->id = strdup(entry->id);
+        notify->agent = strdup(entry->path);
+        notify->sequence = operations;
+
+        set_envvar_list(entry->envvars);
+
+        if(services_action_async(notify, &crmd_notify_complete) == FALSE) {
+            services_action_free(notify);
+        }
+
+        unset_envvar_list(entry->envvars);
+
+        free(timestamp);
     }
 
-    for(lpc = 0; lpc < DIMOF(notify_keys); lpc++) {
-        unsetenv(notify_keys[lpc]);
+    unset_notify_keys();
+    if (now) {
+        free(now);
     }
 }
 
-void crmd_notify_node_event(crm_node_t *node)
+void
+crmd_notify_node_event(crm_node_t *node)
 {
-    if(notify_script == NULL) {
+    if(!notify_list) {
         return;
     }
 
-    set_notify_key("CRM_notify_node", node->uname, NULL);
-    set_notify_key("CRM_notify_nodeid", NULL, crm_itoa(node->id));
-    set_notify_key("CRM_notify_desc", node->state, NULL);
+    set_notify_key(CRM_notify_node, node->uname, NULL);
+    set_notify_key(CRM_notify_nodeid, NULL, crm_itoa(node->id));
+    set_notify_key(CRM_notify_desc, node->state, NULL);
 
-    send_notification("node");
+    send_notifications("node");
 }
 
 void
@@ -141,20 +729,21 @@ crmd_notify_fencing_op(stonith_event_t * e)
 {
     char *desc = NULL;
 
-    if (notify_script == NULL) {
+    if (!notify_list) {
         return;
     }
 
-    desc = crm_strdup_printf("Operation %s requested by %s for peer %s: %s (ref=%s)",
-                                   e->operation, e->origin, e->target, pcmk_strerror(e->result),
-                                   e->id);
+    desc = crm_strdup_printf(
+        "Operation %s requested by %s for peer %s: %s (ref=%s)",
+        e->operation, e->origin, e->target, pcmk_strerror(e->result),
+        e->id);
 
-    set_notify_key("CRM_notify_node", e->target, NULL);
-    set_notify_key("CRM_notify_task", e->operation, NULL);
-    set_notify_key("CRM_notify_desc", NULL, desc);
-    set_notify_key("CRM_notify_rc", NULL, crm_itoa(e->result));
+    set_notify_key(CRM_notify_node, e->target, NULL);
+    set_notify_key(CRM_notify_task, e->operation, NULL);
+    set_notify_key(CRM_notify_desc, NULL, desc);
+    set_notify_key(CRM_notify_rc, NULL, crm_itoa(e->result));
 
-    send_notification("fencing");
+    send_notifications("fencing");
 }
 
 void
@@ -162,12 +751,13 @@ crmd_notify_resource_op(const char *node, lrmd_event_data_t * op)
 {
     int target_rc = 0;
 
-    if(notify_script == NULL) {
+    if(!notify_list) {
         return;
     }
 
     target_rc = rsc_op_expected_rc(op);
-    if(op->interval == 0 && target_rc == op->rc && safe_str_eq(op->op_type, RSC_STATUS)) {
+    if(op->interval == 0 && target_rc == op->rc &&
+       safe_str_eq(op->op_type, RSC_STATUS)) {
         /* Leave it up to the script if they want to notify for
          * 'failed' probes, only swallow ones for which the result was
          * unexpected.
@@ -178,22 +768,23 @@ crmd_notify_resource_op(const char *node, lrmd_event_data_t * op)
         return;
     }
 
-    set_notify_key("CRM_notify_node", node, NULL);
+    set_notify_key(CRM_notify_node, node, NULL);
 
-    set_notify_key("CRM_notify_rsc", op->rsc_id, NULL);
-    set_notify_key("CRM_notify_task", op->op_type, NULL);
-    set_notify_key("CRM_notify_interval", NULL, crm_itoa(op->interval));
+    set_notify_key(CRM_notify_rsc, op->rsc_id, NULL);
+    set_notify_key(CRM_notify_task, op->op_type, NULL);
+    set_notify_key(CRM_notify_interval, NULL, crm_itoa(op->interval));
 
-    set_notify_key("CRM_notify_target_rc", NULL, crm_itoa(target_rc));
-    set_notify_key("CRM_notify_status", NULL, crm_itoa(op->op_status));
-    set_notify_key("CRM_notify_rc", NULL, crm_itoa(op->rc));
+    set_notify_key(CRM_notify_target_rc, NULL, crm_itoa(target_rc));
+    set_notify_key(CRM_notify_status, NULL, crm_itoa(op->op_status));
+    set_notify_key(CRM_notify_rc, NULL, crm_itoa(op->rc));
 
     if(op->op_status == PCMK_LRM_OP_DONE) {
-        set_notify_key("CRM_notify_desc", services_ocf_exitcode_str(op->rc), NULL);
+        set_notify_key(CRM_notify_desc,
+                       services_ocf_exitcode_str(op->rc), NULL);
     } else {
-        set_notify_key("CRM_notify_desc", services_lrm_status_str(op->op_status), NULL);
+        set_notify_key(CRM_notify_desc,
+                       services_lrm_status_str(op->op_status), NULL);
     }
 
-    send_notification("resource");
+    send_notifications("resource");
 }
-
