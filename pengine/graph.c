@@ -683,33 +683,33 @@ shutdown_constraints(node_t * node, action_t * shutdown_op, pe_working_set_t * d
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Order all actions appropriately relative to a fencing operation
+ *
+ * Ensure start operations of affected resources are ordered after fencing,
+ * imply stop and demote operations of affected resources by marking them as
+ * pseudo-actions, etc.
+ *
+ * \param[in]     node        Node to be fenced
+ * \param[in]     stonith_op  Fencing operation
+ * \param[in/out] data_set    Working set of cluster
+ */
 gboolean
 stonith_constraints(node_t * node, action_t * stonith_op, pe_working_set_t * data_set)
 {
+    GListPtr r = NULL;
+
     CRM_CHECK(stonith_op != NULL, return FALSE);
+    for (r = data_set->resources; r != NULL; r = r->next) {
+        resource_t *rsc = (resource_t *) r->data;
 
-    /*
-     * Make sure the stonith OP occurs before we start any shared resources
-     */
-    if (stonith_op != NULL) {
-        GListPtr lpc = NULL;
+        if ((stonith_op->rsc == NULL)
+            || ((stonith_op->rsc != rsc) && (stonith_op->rsc != rsc->container))) {
 
-        for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
-            resource_t *rsc = (resource_t *) lpc->data;
-
-            if(stonith_op->rsc == NULL) {
-                rsc_stonith_ordering(rsc, stonith_op, data_set);
-
-            } else if(stonith_op->rsc != rsc && stonith_op->rsc != rsc->container) {
-                rsc_stonith_ordering(rsc, stonith_op, data_set);
-            }
+            rsc_stonith_ordering(rsc, stonith_op, data_set);
         }
     }
-
-    /* add the stonith OP as a stop pre-req and the mark the stop
-     * as a pseudo op - since its now redundant
-     */
-
     return TRUE;
 }
 
