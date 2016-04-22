@@ -41,13 +41,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-/* Enable support for built-in notifications
- *
- * The interface is expected to change significantly, and this will be defined
- * in the upstream master branch only until a new design is finalized.
- */
-#define RHEL7_COMPAT
-
 qb_ipcs_service_t *ipcs = NULL;
 
 extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
@@ -901,7 +894,11 @@ pe_cluster_option crmd_opts[] = {
         },
 
 #ifdef RHEL7_COMPAT
-    /* this interface is expected to change but was released in RHEL 7 */
+    /* These options were superseded by the alerts feature and now are just an
+     * alternate interface to it. It was never released upstream, but was
+     * released in RHEL 7, so we allow it to be enabled at compile-time by
+     * defining RHEL7_COMPAT.
+     */
 	{ "notification-agent", NULL, "string", NULL, "/dev/null", &check_script,
           "Notification script or tool to be called after significant cluster events",
           "Full path to a script or binary that will be invoked when resources start/stop/fail, fencing occurs or nodes join/leave the cluster.\n"

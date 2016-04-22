@@ -1,3 +1,35 @@
+* Fri Apr 22 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.15-rc1
+- Update source tarball to revision: f7dfcf8
+- Changesets: 301
+- Diff:       188 files changed, 5526 insertions(+), 3307 deletions(-)
+
+- Features added since Pacemaker-1.1.14
+  + Event-driven alerts allow scripts to be called after significant events
+  + Move some files from pacemaker package to pacemaker-cli for cleaner pacemaker-remote dependencies
+  + fencing: Simplify watchdog integration
+  + fencing: Support concurrent fencing actions via new pcmk_action_limit option
+  + remote: pacemaker_remote may be stopped without disabling resource first
+  + remote: Report integration status of Pacemaker Remote nodes in CIB node_state
+  + tools: crm_mon now reports why resources are not starting
+  + tools: crm_report now obscures passwords in logfiles
+  + tools: attrd_updater --update-both/--update-delay options allow changing dampening value
+
+- Changes since Pacemaker-1.1.14
+  + Fix multiple memory issues (leaks, use-after-free) in daemons and libraries
+  + cib: Fix regression to restore support for compressed CIB larger than 1MB
+  + crmd: Fix regression so that fenced unseen nodes do not remain unclean
+  + fencing: Allow fencing by node ID (e.g. by DLM) even if node left cluster
+  + lrmd: Fix potential issues when cluster is stopped via systemd shutdown
+  + pacemakerd: Properly respawn stonithd if it fails
+  + pengine: Fix regression with multiple monitor levels that could ignore failure
+  + remote: Allow remote nodes to have node attributes even with legacy attrd
+  + remote: Recover from remote node fencing more quickly
+  + remote: Place resources on newly rejoined remote nodes more quickly
+  + resources: ping agent can now use fping6 for IPv6 hosts
+  + tools: crm_report is now more efficient and handles Pacemaker Remote nodes better
+  + tools: Prevent crm_resource segfault when --resource is not supplied with --restart
+  + tools: crm_shadow --display option now works
+
 * Thu Jan 14 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.14-1
 - Update source tarball to revision: f0b585a
 - Changesets: 724
