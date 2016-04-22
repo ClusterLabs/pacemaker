@@ -312,10 +312,6 @@ class CIB11(ConfigBase):
         o["no-quorum-policy"] = no_quorum
         o["expected-quorum-votes"] = self.num_nodes
 
-        if self.Factory.rsh.exists_on_all(self.CM.Env["notification-agent"], self.CM.Env["nodes"]):
-            o["notification-agent"] = self.CM.Env["notification-agent"]
-            o["notification-recipient"] = self.CM.Env["notification-recipient"]
-
         if self.CM.Env["DoBSC"] == 1:
             o["ident-string"] = "Linux-HA TEST configuration file - REMOVEME!!"
 
@@ -324,6 +320,13 @@ class CIB11(ConfigBase):
         # Commit the nodes section if we defined one
         if stn is not None:
             stn.commit()
+
+        # Add an alerts section if possible
+        if self.Factory.rsh.exists_on_all(self.CM.Env["notification-agent"], self.CM.Env["nodes"]):
+            alerts = Alerts(self.Factory)
+            alerts.add_alert(self.CM.Env["notification-agent"],
+                             self.CM.Env["notification-recipient"])
+            alerts.commit()
 
         # Add resources?
         if self.CM.Env["CIBResource"] == 1:
@@ -451,7 +454,7 @@ class CIB12(CIB11):
 
 class CIB20(CIB11):
     feature_set = "3.0"
-    version = "pacemaker-2.4"
+    version = "pacemaker-2.5"
 
 #class HASI(CIB10):
 #    def add_resources(self):
