@@ -40,7 +40,7 @@ if BUILD_CIBSECRETS
 libcrmcommon_la_SOURCES	+= cib_secrets.c
 endif
 
-libcrmcommon_la_LDFLAGS	= -version-info 8:0:5
+libcrmcommon_la_LDFLAGS	= -version-info 9:0:6
 libcrmcommon_la_LIBADD  = @LIBADD_DL@ $(GNUTLSLIBS) -lm
 libcrmcommon_la_SOURCES += $(top_builddir)/lib/gnu/md5.c
 
