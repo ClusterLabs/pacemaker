@@ -117,6 +117,25 @@ class Option(XmlBase):
         self._run("modify", self.show(), "crm_config", "--allow-create")
 
 
+class Alerts(XmlBase):
+    def __init__(self, Factory):
+        XmlBase.__init__(self, Factory, "alerts", None)
+        self.alert_count = 0
+
+    def add_alert(self, path, recipient):
+        self.alert_count = self.alert_count + 1
+        alert = XmlBase(self.Factory, "alert", "alert-%d" % self.alert_count,
+                        path=path)
+        recipient1 = XmlBase(self.Factory, "recipient",
+                             "alert-%d-recipient-1" % self.alert_count,
+                             value=recipient)
+        alert.add_child(recipient1)
+        self.add_child(alert)
+
+    def commit(self):
+        self._run("modify", self.show(), "configuration", "--allow-create")
+
+
 class Expression(XmlBase):
     def __init__(self, Factory, name, attr, op, value=None):
         XmlBase.__init__(self, Factory, "expression", name, attribute=attr, operation=op)
