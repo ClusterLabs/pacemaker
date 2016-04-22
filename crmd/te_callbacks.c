@@ -337,7 +337,7 @@ static void abort_unless_down(const char *xpath, const char *op, xmlNode *change
         return;
     }
 
-    down = match_down_event(0, node_uuid, NULL, FALSE);
+    down = match_down_event(node_uuid, FALSE);
     if(down == NULL || down->executed == false) {
         crm_trace("Not expecting %s to be down (%s)", node_uuid, xpath);
         abort_transition(INFINITY, tg_restart, reason, change);
@@ -455,11 +455,12 @@ te_update_diff(const char *event, xmlNode * msg)
                 *key = '\0';
                 key = strrchr(mutable_key, '\'');
             }
-            if (key++ == NULL) {
+            if (key == NULL) {
                 crm_warn("Ignoring malformed CIB update (resource deletion)");
                 free(mutable_key);
                 continue;
             }
+            ++key;
 
             node_uuid = extract_node_uuid(xpath);
             cancel = get_cancel_action(key, node_uuid);

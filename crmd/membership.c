@@ -134,16 +134,17 @@ do_update_node_cib(crm_node_t * node, int flags, xmlNode * parent, const char *s
     const char *value = NULL;
     xmlNode *node_state;
 
-    if (is_set(node->flags, crm_remote_node)) {
-        return simple_remote_node_status(node->uname, parent, source);
-    }
-
     if (!node->state) {
         crm_info("Node update for %s cancelled: no state, not seen yet", node->uname);
        return NULL;
     }
 
     node_state = create_xml_node(parent, XML_CIB_TAG_STATE);
+
+    if (is_set(node->flags, crm_remote_node)) {
+        crm_xml_add(node_state, XML_NODE_IS_REMOTE, XML_BOOLEAN_TRUE);
+    }
+
     set_uuid(node_state, XML_ATTR_UUID, node);
 
     if (crm_element_value(node_state, XML_ATTR_UUID) == NULL) {
@@ -154,36 +155,32 @@ do_update_node_cib(crm_node_t * node, int flags, xmlNode * parent, const char *s
 
     crm_xml_add(node_state, XML_ATTR_UNAME, node->uname);
 
-    if (flags & node_update_cluster) {
-        if (safe_str_eq(node->state, CRM_NODE_MEMBER)) {
-            value = XML_BOOLEAN_YES;
-        } else if (node->state) {
-            value = XML_BOOLEAN_NO;
-        } else {
-            value = NULL;
-        }
-        crm_xml_add(node_state, XML_NODE_IN_CLUSTER, value);
+    if ((flags & node_update_cluster) && node->state) {
+        crm_xml_add_boolean(node_state, XML_NODE_IN_CLUSTER,
+                            safe_str_eq(node->state, CRM_NODE_MEMBER));
     }
 
-    if (flags & node_update_peer) {
-        value = OFFLINESTATUS;
-        if (node->processes & proc_flags) {
-            value = ONLINESTATUS;
+    if (!is_set(node->flags, crm_remote_node)) {
+        if (flags & node_update_peer) {
+            value = OFFLINESTATUS;
+            if (node->processes & proc_flags) {
+                value = ONLINESTATUS;
+            }
+            crm_xml_add(node_state, XML_NODE_IS_PEER, value);
         }
-        crm_xml_add(node_state, XML_NODE_IS_PEER, value);
-    }
 
-    if (flags & node_update_join) {
-        if(node->join <= crm_join_none) {
-            value = CRMD_JOINSTATE_DOWN;
-        } else {
-            value = CRMD_JOINSTATE_MEMBER;
+        if (flags & node_update_join) {
+            if (node->join <= crm_join_none) {
+                value = CRMD_JOINSTATE_DOWN;
+            } else {
+                value = CRMD_JOINSTATE_MEMBER;
+            }
+            crm_xml_add(node_state, XML_NODE_JOIN_STATE, value);
         }
-        crm_xml_add(node_state, XML_NODE_JOIN_STATE, value);
-    }
 
-    if (flags & node_update_expected) {
-        crm_xml_add(node_state, XML_NODE_EXPECTED, node->expected);
+        if (flags & node_update_expected) {
+            crm_xml_add(node_state, XML_NODE_EXPECTED, node->expected);
+        }
     }
 
     crm_xml_add(node_state, XML_ATTR_ORIGIN, source);

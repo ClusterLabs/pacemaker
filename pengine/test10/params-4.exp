@@ -96,7 +96,7 @@
    </synapse>
   <synapse id="9">
      <action_set>
-      <rsc_op id="28" operation="monitor" operation_key="rsc_c001n02_monitor_6000" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+      <rsc_op id="29" operation="monitor" operation_key="rsc_c001n02_monitor_6000" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
         <primitive id="rsc_c001n02" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_interval="6000" CRM_meta_name="monitor" CRM_meta_timeout="20000"  ip="127.0.0.12"/>
        </rsc_op>

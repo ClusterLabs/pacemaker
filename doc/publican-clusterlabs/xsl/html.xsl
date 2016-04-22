@@ -19,7 +19,7 @@
 
 <xsl:import href="http://docbook.sourceforge.net/release/xsl/current/fo/docbook.xsl"/>
 <xsl:import href="http://docbook.sourceforge.net/release/xsl/current/fo/graphics.xsl"/>
-<xsl:import href="../../../xsl/html.xsl"/>
+<xsl:import href="https://fedorahosted.org/released/publican/xsl/docbook4/html.xsl"/>
 <xsl:import href="common.xsl"/>
 
 <xsl:template name="user.head.content">

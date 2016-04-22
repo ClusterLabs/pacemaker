@@ -1,10 +1,11 @@
+3 of 4 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ frigg odin ]
 
  Master/Slave Set: ms_drbd [drbd0]
      Masters: [ frigg ]
-     Slaves: [ odin ]
+     Slaves (target-role): [ odin ]
  Resource Group: group
      IPaddr0	(ocf::heartbeat:IPaddr):	Stopped 
      MailTo	(ocf::heartbeat:MailTo):	Stopped 
@@ -53,7 +54,7 @@ Online: [ frigg odin ]
 
  Master/Slave Set: ms_drbd [drbd0]
      Masters: [ odin ]
-     Slaves: [ frigg ]
+     Slaves (target-role): [ frigg ]
  Resource Group: group
      IPaddr0	(ocf::heartbeat:IPaddr):	Started odin
      MailTo	(ocf::heartbeat:MailTo):	Started odin

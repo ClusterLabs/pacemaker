@@ -78,6 +78,9 @@
       <rsc_op id="89" operation="stop" operation_key="lxc1_stop_0" on_node="18node1" on_node_uuid="1">
         <primitive id="lxc1" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_container="container1" CRM_meta_timeout="90000" />
+        <downed>
+          <node id="lxc1"/>
+        </downed>
       </rsc_op>
     </action_set>
     <inputs>
@@ -231,6 +234,9 @@
       <rsc_op id="94" operation="stop" operation_key="lxc2_stop_0" on_node="18node1" on_node_uuid="1">
         <primitive id="lxc2" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_container="container2" CRM_meta_timeout="90000" />
+        <downed>
+          <node id="lxc2"/>
+        </downed>
       </rsc_op>
     </action_set>
     <inputs>

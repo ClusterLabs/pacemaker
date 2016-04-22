@@ -8,25 +8,25 @@
   <define name="element-nodes">
     <element name="nodes">
       <zeroOrMore>
-	<element name="node">
-	  <attribute name="id"><text/></attribute>
-	  <attribute name="uname"><text/></attribute>
-	  <attribute name="type">
-	    <choice>
-	      <value>normal</value>
-	      <value>member</value>
-	      <value>ping</value>
-	    </choice>
-	  </attribute>
-	  <optional>
-	    <attribute name="description"><text/></attribute>
-	  </optional>
-	  <zeroOrMore>
-	    <element name="instance_attributes">
-	      <externalRef href="nvset.rng"/>
-	    </element>
-	  </zeroOrMore>
-	</element>
+        <element name="node">
+          <attribute name="id"><text/></attribute>
+          <attribute name="uname"><text/></attribute>
+          <attribute name="type">
+            <choice>
+              <value>normal</value>
+              <value>member</value>
+              <value>ping</value>
+            </choice>
+          </attribute>
+          <optional>
+            <attribute name="description"><text/></attribute>
+          </optional>
+          <zeroOrMore>
+            <element name="instance_attributes">
+              <externalRef href="nvset.rng"/>
+            </element>
+          </zeroOrMore>
+        </element>
       </zeroOrMore>
     </element>
   </define>

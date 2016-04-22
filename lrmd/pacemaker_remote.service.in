@@ -9,11 +9,14 @@ WantedBy=multi-user.target
 Type=simple
 KillMode=process
 NotifyAccess=none
-EnvironmentFile=-/etc/sysconfig/pacemaker
+EnvironmentFile=-@sysconfdir@/sysconfig/pacemaker
+EnvironmentFile=-@sysconfdir@/sysconfig/sbd
 
 ExecStart=@sbindir@/pacemaker_remoted
 
-TimeoutStopSec=30s
+# Pacemaker Remote can exit only after all managed services have shut down;
+# an HA database could conceivably take even longer than this 
+TimeoutStopSec=30min
 TimeoutStartSec=30s
 
 # Restart options include: no, on-success, on-failure, on-abort or always

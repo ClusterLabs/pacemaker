@@ -2550,7 +2550,7 @@ class RemoteLXC(CTSTest):
     def start_lxc_simple(self, node):
 
         # restore any artifacts laying around from a previous test.
-        self.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -R &>/dev/null")
+        self.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -s -R &>/dev/null")
 
         # generate the containers, put them in the config, add some resources to them
         pats = [ ]
@@ -2576,13 +2576,7 @@ class RemoteLXC(CTSTest):
         # as best as possible 
         if self.failed == 1:
             # restore libvirt and cib
-            self.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -R &>/dev/null")
-            self.rsh(node, "crm_resource -C -r container1 &>/dev/null")
-            self.rsh(node, "crm_resource -C -r container2 &>/dev/null")
-            self.rsh(node, "crm_resource -C -r lxc1 &>/dev/null")
-            self.rsh(node, "crm_resource -C -r lxc2 &>/dev/null")
-            self.rsh(node, "crm_resource -C -r lxc-ms &>/dev/null")
-            time.sleep(20)
+            self.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -s -R &>/dev/null")
             return
 
         watch = self.create_watch(pats, 120)
@@ -2601,7 +2595,7 @@ class RemoteLXC(CTSTest):
             self.failed = 1
 
         # cleanup libvirt
-        self.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -R &>/dev/null")
+        self.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -s -R &>/dev/null")
 
     def __call__(self, node):
         '''Perform the 'RemoteLXC' test. '''
@@ -2641,6 +2635,7 @@ class RemoteLXC(CTSTest):
             r"Resource lxc-ms .* is active on 2 nodes attempting recovery",
             r"Unknown operation: fail",
             r"(ERROR|error): sending stonithRA op to stonithd failed.",
+            r"VirtualDomain.*ERROR: Unable to determine emulator",
         ]
 
 AllTestClasses.append(RemoteLXC)
@@ -2764,6 +2759,14 @@ class RemoteDriver(CTSTest):
                 self.pcmk_started = 1
                 break
 
+    def kill_pcmk_remote(self, node):
+        """ Simulate a Pacemaker Remote daemon failure. """
+
+        # We kill the process to prevent a graceful stop,
+        # then stop it to prevent the OS from restarting it.
+        self.rsh(node, "killall -9 pacemaker_remoted")
+        self.stop_pcmk_remote(node)
+
     def start_metal(self, node):
         pcmk_started = 0
 
@@ -2855,7 +2858,7 @@ class RemoteDriver(CTSTest):
 
         # force stop the pcmk remote daemon. this will result in fencing
         self.debug("Force stopped active remote node")
-        self.stop_pcmk_remote(node)
+        self.kill_pcmk_remote(node)
 
         self.debug("Waiting for remote node to be fenced.")
         self.set_timer("remoteMetalFence")

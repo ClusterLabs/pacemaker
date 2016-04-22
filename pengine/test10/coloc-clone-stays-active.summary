@@ -1,3 +1,4 @@
+50 of 87 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ s01-0 s01-1 ]
@@ -18,18 +19,18 @@ Online: [ s01-0 s01-1 ]
      vip-238	(ocf::heartbeat:IPaddr2):	Started s01-1
  Master/Slave Set: ms-drbd-pool-0 [drbd-pool-0]
      Masters: [ s01-0 ]
-     Slaves: [ s01-1 ]
+     Slaves (target-role): [ s01-1 ]
  Master/Slave Set: ms-drbd-pool-1 [drbd-pool-1]
      Masters: [ s01-1 ]
-     Slaves: [ s01-0 ]
+     Slaves (target-role): [ s01-0 ]
  Master/Slave Set: ms-iscsi-pool-0-vips-fw [iscsi-pool-0-vips-fw]
      Masters: [ s01-0 ]
-     Slaves: [ s01-1 ]
+     Slaves (target-role): [ s01-1 ]
  Master/Slave Set: ms-iscsi-pool-1-vips-fw [iscsi-pool-1-vips-fw]
      Masters: [ s01-1 ]
-     Slaves: [ s01-0 ]
+     Slaves (target-role): [ s01-0 ]
  Clone Set: cl-o2cb [o2cb]
-     Stopped: [ s01-0 s01-1 ]
+     Stopped (disabled): [ s01-0 s01-1 ]
  Master/Slave Set: ms-drbd-s01-service [drbd-s01-service]
      Masters: [ s01-0 s01-1 ]
  Clone Set: cl-s01-service-fs [s01-service-fs]
@@ -37,10 +38,10 @@ Online: [ s01-0 s01-1 ]
  Clone Set: cl-ietd [ietd]
      Started: [ s01-0 s01-1 ]
  Clone Set: cl-dhcpd [dhcpd]
-     Stopped: [ s01-0 s01-1 ]
+     Stopped (disabled): [ s01-0 s01-1 ]
  Resource Group: http-server
      vip-233	(ocf::heartbeat:IPaddr2):	Started s01-0
-     nginx	(lsb:nginx):	(target-role:Stopped) Stopped 
+     nginx	(lsb:nginx):	Stopped ( disabled ) 
  Master/Slave Set: ms-drbd-s01-logs [drbd-s01-logs]
      Masters: [ s01-0 s01-1 ]
  Clone Set: cl-s01-logs-fs [s01-logs-fs]
@@ -58,22 +59,22 @@ Online: [ s01-0 s01-1 ]
  Clone Set: connected-outer [ping-bmc-and-switch]
      Started: [ s01-0 s01-1 ]
  Resource Group: iscsi-vds-dom0-stateless-0-target-all
-     iscsi-vds-dom0-stateless-0-target	(ocf::vds-ok:iSCSITarget):	(target-role:Stopped) Stopped 
-     iscsi-vds-dom0-stateless-0-lun-1	(ocf::vds-ok:iSCSILogicalUnit):	(target-role:Stopped) Stopped 
+     iscsi-vds-dom0-stateless-0-target	(ocf::vds-ok:iSCSITarget):	Stopped ( disabled ) 
+     iscsi-vds-dom0-stateless-0-lun-1	(ocf::vds-ok:iSCSILogicalUnit):	Stopped ( disabled ) 
  Resource Group: iscsi-vds-dom0-stateless-0-vips
      vip-227	(ocf::heartbeat:IPaddr2):	Stopped 
      vip-228	(ocf::heartbeat:IPaddr2):	Stopped 
  Master/Slave Set: ms-drbd-vds-dom0-stateless-0 [drbd-vds-dom0-stateless-0]
      Masters: [ s01-0 ]
-     Slaves: [ s01-1 ]
+     Slaves (target-role): [ s01-1 ]
  Master/Slave Set: ms-iscsi-vds-dom0-stateless-0-vips-fw [iscsi-vds-dom0-stateless-0-vips-fw]
-     Slaves: [ s01-0 s01-1 ]
+     Slaves (target-role): [ s01-0 s01-1 ]
  Clone Set: cl-dlm [dlm]
      Started: [ s01-0 s01-1 ]
  Master/Slave Set: ms-drbd-vds-tftpboot [drbd-vds-tftpboot]
      Masters: [ s01-0 s01-1 ]
  Clone Set: cl-vds-tftpboot-fs [vds-tftpboot-fs]
-     Stopped: [ s01-0 s01-1 ]
+     Stopped (disabled): [ s01-0 s01-1 ]
  Clone Set: cl-gfs2 [gfs2]
      Started: [ s01-0 s01-1 ]
  Master/Slave Set: ms-drbd-vds-http [drbd-vds-http]
@@ -126,18 +127,18 @@ Online: [ s01-0 s01-1 ]
      vip-238	(ocf::heartbeat:IPaddr2):	Started s01-1
  Master/Slave Set: ms-drbd-pool-0 [drbd-pool-0]
      Masters: [ s01-0 ]
-     Slaves: [ s01-1 ]
+     Slaves (target-role): [ s01-1 ]
  Master/Slave Set: ms-drbd-pool-1 [drbd-pool-1]
      Masters: [ s01-1 ]
-     Slaves: [ s01-0 ]
+     Slaves (target-role): [ s01-0 ]
  Master/Slave Set: ms-iscsi-pool-0-vips-fw [iscsi-pool-0-vips-fw]
      Masters: [ s01-0 ]
-     Slaves: [ s01-1 ]
+     Slaves (target-role): [ s01-1 ]
  Master/Slave Set: ms-iscsi-pool-1-vips-fw [iscsi-pool-1-vips-fw]
      Masters: [ s01-1 ]
-     Slaves: [ s01-0 ]
+     Slaves (target-role): [ s01-0 ]
  Clone Set: cl-o2cb [o2cb]
-     Stopped: [ s01-0 s01-1 ]
+     Stopped (disabled): [ s01-0 s01-1 ]
  Master/Slave Set: ms-drbd-s01-service [drbd-s01-service]
      Masters: [ s01-0 s01-1 ]
  Clone Set: cl-s01-service-fs [s01-service-fs]
@@ -145,10 +146,10 @@ Online: [ s01-0 s01-1 ]
  Clone Set: cl-ietd [ietd]
      Started: [ s01-0 s01-1 ]
  Clone Set: cl-dhcpd [dhcpd]
-     Stopped: [ s01-0 s01-1 ]
+     Stopped (disabled): [ s01-0 s01-1 ]
  Resource Group: http-server
      vip-233	(ocf::heartbeat:IPaddr2):	Started s01-0
-     nginx	(lsb:nginx):	(target-role:Stopped) Stopped 
+     nginx	(lsb:nginx):	Stopped ( disabled ) 
  Master/Slave Set: ms-drbd-s01-logs [drbd-s01-logs]
      Masters: [ s01-0 s01-1 ]
  Clone Set: cl-s01-logs-fs [s01-logs-fs]
@@ -166,22 +167,22 @@ Online: [ s01-0 s01-1 ]
  Clone Set: connected-outer [ping-bmc-and-switch]
      Started: [ s01-0 s01-1 ]
  Resource Group: iscsi-vds-dom0-stateless-0-target-all
-     iscsi-vds-dom0-stateless-0-target	(ocf::vds-ok:iSCSITarget):	(target-role:Stopped) Stopped 
-     iscsi-vds-dom0-stateless-0-lun-1	(ocf::vds-ok:iSCSILogicalUnit):	(target-role:Stopped) Stopped 
+     iscsi-vds-dom0-stateless-0-target	(ocf::vds-ok:iSCSITarget):	Stopped ( disabled ) 
+     iscsi-vds-dom0-stateless-0-lun-1	(ocf::vds-ok:iSCSILogicalUnit):	Stopped ( disabled ) 
  Resource Group: iscsi-vds-dom0-stateless-0-vips
      vip-227	(ocf::heartbeat:IPaddr2):	Stopped 
      vip-228	(ocf::heartbeat:IPaddr2):	Stopped 
  Master/Slave Set: ms-drbd-vds-dom0-stateless-0 [drbd-vds-dom0-stateless-0]
      Masters: [ s01-0 ]
-     Slaves: [ s01-1 ]
+     Slaves (target-role): [ s01-1 ]
  Master/Slave Set: ms-iscsi-vds-dom0-stateless-0-vips-fw [iscsi-vds-dom0-stateless-0-vips-fw]
-     Slaves: [ s01-0 s01-1 ]
+     Slaves (target-role): [ s01-0 s01-1 ]
  Clone Set: cl-dlm [dlm]
      Started: [ s01-0 s01-1 ]
  Master/Slave Set: ms-drbd-vds-tftpboot [drbd-vds-tftpboot]
      Masters: [ s01-0 s01-1 ]
  Clone Set: cl-vds-tftpboot-fs [vds-tftpboot-fs]
-     Stopped: [ s01-0 s01-1 ]
+     Stopped (disabled): [ s01-0 s01-1 ]
  Clone Set: cl-gfs2 [gfs2]
      Started: [ s01-0 s01-1 ]
  Master/Slave Set: ms-drbd-vds-http [drbd-vds-http]

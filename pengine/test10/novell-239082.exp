@@ -456,6 +456,9 @@
      <action_set>
       <crm_event id="34" operation="do_shutdown" operation_key="do_shutdown-xen-1" on_node="xen-1" on_node_uuid="00aaa02f-110f-44e6-9a9d-af93827bfdb9">
         <attributes CRM_meta_op_no_wait="true" />
+        <downed>
+          <node id="00aaa02f-110f-44e6-9a9d-af93827bfdb9"/>
+        </downed>
       </crm_event>
      </action_set>
      <inputs>

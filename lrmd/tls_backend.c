@@ -79,6 +79,9 @@ lrmd_remote_client_msg(gpointer data)
                 g_source_remove(client->remote->auth_timeout);
             }
             client->remote->auth_timeout = 0;
+
+            /* Alert other clients of the new connection */
+            notify_of_new_client(client);
         }
         return 0;
     }
@@ -163,8 +166,7 @@ lrmd_remote_client_destroy(gpointer user_data)
         close(csock);
     }
 
-    crm_client_destroy(client);
-
+    lrmd_client_destroy(client);
     return;
 }
 
@@ -186,13 +188,38 @@ lrmd_auth_timeout_cb(gpointer data)
     return FALSE;
 }
 
+/* Convert a struct sockaddr address to a string, IPv4 and IPv6: */
+
+static char *
+get_ip_str(const struct sockaddr_storage * sa, char * s, size_t maxlen)
+{
+    switch(((struct sockaddr *)sa)->sa_family) {
+        case AF_INET:
+            inet_ntop(AF_INET, &(((struct sockaddr_in *)sa)->sin_addr),
+                      s, maxlen);
+            break;
+
+        case AF_INET6:
+            inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)sa)->sin6_addr),
+                      s, maxlen);
+            break;
+
+        default:
+            strncpy(s, "Unknown AF", maxlen);
+            return NULL;
+    }
+
+    return s;
+}
+
 static int
 lrmd_remote_listen(gpointer data)
 {
     int csock = 0;
     int flag = 0;
-    unsigned laddr;
-    struct sockaddr_in addr;
+    unsigned laddr = 0;
+    struct sockaddr_storage addr;
+    char addr_str[INET6_ADDRSTRLEN];
     gnutls_session_t *session = NULL;
     crm_client_t *new_client = NULL;
 
@@ -205,7 +232,9 @@ lrmd_remote_listen(gpointer data)
     laddr = sizeof(addr);
     memset(&addr, 0, sizeof(addr));
     csock = accept(ssock, (struct sockaddr *)&addr, &laddr);
-    crm_debug("New remote connection from %s", inet_ntoa(addr.sin_addr));
+
+    get_ip_str(&addr, addr_str, INET6_ADDRSTRLEN);
+    crm_info("New remote connection from %s", addr_str);
 
     if (csock == -1) {
         crm_err("accept socket failed");
@@ -245,8 +274,6 @@ lrmd_remote_listen(gpointer data)
                         &lrmd_remote_fd_cb);
     g_hash_table_insert(client_connections, new_client->id, new_client);
 
-    /* Alert other clients of the new connection */
-    notify_of_new_client(new_client);
     return TRUE;
 }
 

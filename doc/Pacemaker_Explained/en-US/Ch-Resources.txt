@@ -519,7 +519,7 @@ but moderate. The minimum timeouts should never be below 10 seconds.
 Location to store the resource state in.
 </longdesc>
 <shortdesc lang="en">State file</shortdesc>
-<content type="string" default="/var/run//Dummy-{OCF_RESOURCE_INSTANCE}.state" />
+<content type="string" default="/var/run/Dummy-default.state" />
 </parameter>
 
 <parameter name="fake" unique="0">
@@ -611,6 +611,8 @@ you need to add a +monitor+ operation to the resource's definition.
 |interval
 |0
 |How frequently (in seconds) to perform the operation. A value of 0 means never.
+ A positive value defines a 'recurring action', which is typically used with
+ <<s-resource-monitoring,monitor>>.
  indexterm:[interval,Action Property]
  indexterm:[Action,Property,interval]
 
@@ -637,8 +639,12 @@ indexterm:[Action,Property,on-fail]
 
 |enabled
 |TRUE
-|If +false+, the operation is treated as if it does not exist. Allowed
- values: +true+, +false+
+|If +false+, ignore this operation definition.  This is typically used to pause
+ a particular recurring monitor operation;  for instance, it can complement
+ the respective resource being unmanaged (+is-managed=false+), as this alone
+ will <<s-monitoring-unmanaged,not block any configured monitoring>>.
+ Disabling the operation does not suppress all actions of the given type.
+ Allowed values: +true+, +false+.
  indexterm:[enabled,Action Property]
  indexterm:[Action,Property,enabled]
 
@@ -662,6 +668,7 @@ indexterm:[Action,Property,on-fail]
 
 |=========================================================
 
+[[s-resource-monitoring]]
 === Monitoring Resources for Failure ===
 
 When Pacemaker first starts a resource, it runs one-time monitor operations
@@ -684,6 +691,7 @@ it thinks 'should' be running the resource, and the second monitor on any nodes
 that it thinks 'should not' be running the resource (for the truly paranoid,
 who want to know when an administrator manually starts a service by mistake).
 
+[[s-monitoring-unmanaged]]
 === Monitoring Resources When Administration is Disabled ===
 
 Recurring monitor operations behave differently under various administrative

@@ -699,11 +699,18 @@ check_active_before_startup_processes(gpointer user_data)
                 continue;
             } else if (start_seq != pcmk_children[lpc].start_seq) {
                 continue;
-            } else if (crm_pid_active(pcmk_children[lpc].pid, pcmk_children[lpc].name) != 1) {
-                crm_notice("Process %s terminated (pid=%d)",
-                           pcmk_children[lpc].name, pcmk_children[lpc].pid);
-                pcmk_process_exit(&(pcmk_children[lpc]));
-                continue;
+            } else {
+                const char *name = pcmk_children[lpc].name;
+                if (pcmk_children[lpc].flag == crm_proc_stonith_ng) {
+                    name = "stonithd";
+                }
+
+                if (crm_pid_active(pcmk_children[lpc].pid, name) != 1) {
+                    crm_notice("Process %s terminated (pid=%d)",
+                           name, pcmk_children[lpc].pid);
+                    pcmk_process_exit(&(pcmk_children[lpc]));
+                    continue;
+                }
             }
             /* at least one of the processes found at startup
              * is still going, so keep this recurring timer around */
@@ -821,7 +828,7 @@ mcp_cpg_deliver(cpg_handle_t handle,
     const char *task = crm_element_value(xml, F_CRM_TASK);
 
     crm_trace("Received CPG message (%s): %.200s",
-              (task? task : "process list"), msg);
+              (task? task : "process list"), (char*)msg);
 
     if (task == NULL) {
         if (nodeid == local_nodeid) {

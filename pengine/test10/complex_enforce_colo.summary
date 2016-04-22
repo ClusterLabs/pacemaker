@@ -1,3 +1,4 @@
+3 of 132 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
@@ -378,7 +379,7 @@ Online: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
  Clone Set: mongodb-clone [mongodb]
      Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
  Clone Set: keystone-clone [keystone]
-     Stopped: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
+     Stopped (disabled): [ rhos6-node1 rhos6-node2 rhos6-node3 ]
  Clone Set: glance-fs-clone [glance-fs]
      Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
  Clone Set: glance-registry-clone [glance-registry]

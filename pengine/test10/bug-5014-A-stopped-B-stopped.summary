@@ -1,8 +1,9 @@
+1 of 2 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ fc16-builder ]
 
- ClusterIP	(ocf::heartbeat:IPaddr2):	(target-role:Stopped) Stopped 
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Stopped ( disabled ) 
  ClusterIP2	(ocf::heartbeat:IPaddr2):	Stopped 
 
 Transition Summary:
@@ -15,6 +16,6 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ fc16-builder ]
 
- ClusterIP	(ocf::heartbeat:IPaddr2):	(target-role:Stopped) Stopped 
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Stopped ( disabled ) 
  ClusterIP2	(ocf::heartbeat:IPaddr2):	Stopped 
 

@@ -189,12 +189,13 @@ pcmk_panic(const char *origin)
         panic_cs = qb_log_callsite_get(__func__, __FILE__, "panic-delay", LOG_TRACE, __LINE__, crm_trace_nonlog);
     }
 
-    pcmk_locate_sbd();
+    /* Ensure sbd_pid is set */
+    (void)pcmk_locate_sbd();
 
     if (panic_cs && panic_cs->targets) {
         /* getppid() == 1 means our original parent no longer exists */
         do_crm_log_always(LOG_EMERG,
-                          "Shutting down instead of panicing the node: origin=%s, sbd=%d, parent=%d",
+                          "Shutting down instead of panicking the node: origin=%s, sbd=%d, parent=%d",
                           origin, sbd_pid, getppid());
         crm_exit(DAEMON_RESPAWN_STOP);
         return;
@@ -205,7 +206,7 @@ pcmk_panic(const char *origin)
         pcmk_panic_sbd();
 
     } else {
-        do_crm_log_always(LOG_EMERG, "Panicing the system directly: %s", origin);
+        do_crm_log_always(LOG_EMERG, "Panicking the system directly: %s", origin);
         pcmk_panic_local();
     }
 }
@@ -225,15 +226,13 @@ pcmk_locate_sbd(void)
     sbd_path = crm_strdup_printf("%s/sbd", SBINDIR);
 
     /* Read the pid file */
-    if(pidfile) {
-        int rc = crm_pidfile_inuse(pidfile, 1, sbd_path);
-        if(rc < pcmk_ok && rc != -ENOENT) {
-            sbd_pid = crm_read_pidfile(pidfile);
-            crm_trace("SBD detected at pid=%d (file)");
-        }
-    }
+    CRM_ASSERT(pidfile);
 
-    if(sbd_pid < 0) {
+    sbd_pid = crm_pidfile_inuse(pidfile, 0, sbd_path);
+    if(sbd_pid > 0) {
+        crm_trace("SBD detected at pid=%d (file)", sbd_pid);
+
+    } else {
         /* Fall back to /proc for systems that support it */
         sbd_pid = crm_procfs_pid_of("sbd");
         crm_trace("SBD detected at pid=%d (proc)", sbd_pid);
@@ -241,6 +240,7 @@ pcmk_locate_sbd(void)
 
     if(sbd_pid < 0) {
         sbd_pid = 0;
+        crm_trace("SBD not detected");
     }
 
     free(pidfile);

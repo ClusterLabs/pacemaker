@@ -4,6 +4,9 @@
       <rsc_op id="4" operation="stop" operation_key="c7auto4_stop_0" on_node="c7auto1" on_node_uuid="1">
         <primitive id="c7auto4" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_name="stop" CRM_meta_timeout="60000"  reconnect_interval="1m"/>
+        <downed>
+          <node id="c7auto4"/>
+        </downed>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -53,6 +56,9 @@
     <action_set>
       <crm_event id="23" operation="stonith" operation_key="stonith-c7auto4-reboot" on_node="c7auto4" on_node_uuid="c7auto4">
         <attributes CRM_meta_on_node="c7auto4" CRM_meta_on_node_uuid="c7auto4" CRM_meta_probe_complete="true" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="c7auto4"/>
+        </downed>
       </crm_event>
     </action_set>
     <inputs/>

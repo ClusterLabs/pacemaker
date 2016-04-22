@@ -19,12 +19,14 @@
 #include <crm_internal.h>
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
+#include <crm/common/iso8601.h>
 
 #include <crmd.h>
 #include <crmd_fsa.h>
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
 #include <crmd_lrm.h>
+#include <crm/pengine/rules.h>
 
 GHashTable *lrm_state_table = NULL;
 extern GHashTable *proxy_table;
@@ -73,7 +75,7 @@ fail_pending_op(gpointer key, gpointer value, gpointer user_data)
 
     crm_trace("Pre-emptively failing %s_%s_%d on %s (call=%s, %s)",
               op->rsc_id, op->op_type, op->interval,
-              lrm_state->node_name, key, op->user_data);
+              lrm_state->node_name, (char*)key, op->user_data);
 
     event.type = lrmd_event_exec_complete;
     event.rsc_id = op->rsc_id;
@@ -238,7 +240,8 @@ lrm_state_init_local(void)
     proxy_table =
         g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, NULL, remote_proxy_free);
     if (!proxy_table) {
-         g_hash_table_destroy(lrm_state_table);
+        g_hash_table_destroy(lrm_state_table);
+        lrm_state_table = NULL;
         return FALSE;
     }
 
@@ -286,8 +289,47 @@ lrm_state_get_list(void)
     return g_hash_table_get_values(lrm_state_table);
 }
 
+static remote_proxy_t *
+find_connected_proxy_by_node(const char * node_name)
+{
+    GHashTableIter gIter;
+    remote_proxy_t *proxy = NULL;
+
+    CRM_CHECK(proxy_table != NULL, return NULL);
+
+    g_hash_table_iter_init(&gIter, proxy_table);
+
+    while (g_hash_table_iter_next(&gIter, NULL, (gpointer *) &proxy)) {
+        if (proxy->source
+            && safe_str_eq(node_name, proxy->node_name)) {
+            return proxy;
+        }
+    }
+
+    return NULL;
+}
+
+static void
+remote_proxy_disconnect_by_node(const char * node_name)
+{
+    remote_proxy_t *proxy = NULL;
+
+    CRM_CHECK(proxy_table != NULL, return);
+
+    while ((proxy = find_connected_proxy_by_node(node_name)) != NULL) {
+        /* mainloop_del_ipc_client() eventually calls remote_proxy_disconnected()
+         * , which removes the entry from proxy_table.
+         * Do not do this in a g_hash_table_iter_next() loop. */
+        if (proxy->source) {
+            mainloop_del_ipc_client(proxy->source);
+        }
+    }
+
+    return;
+}
+
 void
-lrm_state_disconnect(lrm_state_t * lrm_state)
+lrm_state_disconnect_only(lrm_state_t * lrm_state)
 {
     int removed = 0;
 
@@ -295,12 +337,25 @@ lrm_state_disconnect(lrm_state_t * lrm_state)
         return;
     }
     crm_trace("Disconnecting %s", lrm_state->node_name);
+
+    remote_proxy_disconnect_by_node(lrm_state->node_name);
+
     ((lrmd_t *) lrm_state->conn)->cmds->disconnect(lrm_state->conn);
 
     if (is_not_set(fsa_input_register, R_SHUTDOWN)) {
         removed = g_hash_table_foreach_remove(lrm_state->pending_ops, fail_pending_op, lrm_state);
         crm_trace("Synthesized %d operation failures for %s", removed, lrm_state->node_name);
     }
+}
+
+void
+lrm_state_disconnect(lrm_state_t * lrm_state)
+{
+    if (!lrm_state->conn) {
+        return;
+    }
+
+    lrm_state_disconnect_only(lrm_state);
 
     lrmd_api_delete(lrm_state->conn);
     lrm_state->conn = NULL;
@@ -464,6 +519,35 @@ crmd_proxy_dispatch(const char *session, xmlNode *msg)
 }
 
 static void
+remote_config_check(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
+{
+    if (rc != pcmk_ok) {
+        crm_err("Query resulted in an error: %s", pcmk_strerror(rc));
+
+        if (rc == -EACCES || rc == -pcmk_err_schema_validation) {
+            crm_err("The cluster is mis-configured - shutting down and staying down");
+        }
+
+    } else {
+        lrmd_t * lrmd = (lrmd_t *)user_data;
+        crm_time_t *now = crm_time_new(NULL);
+        GHashTable *config_hash = g_hash_table_new_full(
+            crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+
+        crm_debug("Call %d : Parsing CIB options", call_id);
+        
+        unpack_instance_attributes(
+            output, output, XML_CIB_TAG_PROPSET, NULL, config_hash, CIB_OPTIONS_FIRST, FALSE, now);
+
+        /* Now send it to the remote peer */
+        remote_proxy_check(lrmd, config_hash);
+
+        g_hash_table_destroy(config_hash);
+        crm_time_free(now);
+    }
+}
+
+static void
 remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 {
     lrm_state_t *lrm_state = userdata;
@@ -479,9 +563,23 @@ remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
     CRM_CHECK(session != NULL, return);
 
     crm_element_value_int(msg, F_LRMD_IPC_MSG_ID, &msg_id);
-
     /* This is msg from remote ipc client going to real ipc server */
-    if (safe_str_eq(op, "new")) {
+
+    if (safe_str_eq(op, LRMD_IPC_OP_SHUTDOWN_REQ)) {
+        char *now_s = NULL;
+        time_t now = time(NULL);
+
+        crm_notice("Graceful proxy shutdown of %s", lrm_state->node_name);
+
+        now_s = crm_itoa(now);
+        update_attrd(lrm_state->node_name, XML_CIB_ATTR_SHUTDOWN, now_s, NULL, TRUE);
+        free(now_s);
+
+        remote_proxy_ack_shutdown(lrmd);
+        return;
+
+    } else if (safe_str_eq(op, LRMD_IPC_OP_NEW)) {
+        int rc;
         const char *channel = crm_element_value(msg, F_LRMD_IPC_IPC_SERVER);
 
         CRM_CHECK(channel != NULL, return);
@@ -490,10 +588,15 @@ remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
             remote_proxy_notify_destroy(lrmd, session);
         }
         crm_trace("new remote proxy client established to %s, session id %s", channel, session);
-    } else if (safe_str_eq(op, "destroy")) {
+
+        /* Look up stonith-watchdog-timeout and send to the remote peer for validation */
+        rc = fsa_cib_conn->cmds->query(fsa_cib_conn, XML_CIB_TAG_CRMCONFIG, NULL, cib_scope_local);
+        fsa_cib_conn->cmds->register_callback_full(fsa_cib_conn, rc, 10, FALSE, lrmd, "remote_config_check", remote_config_check, NULL);
+        
+    } else if (safe_str_eq(op, LRMD_IPC_OP_DESTROY)) {
         remote_proxy_end_session(session);
 
-    } else if (safe_str_eq(op, "request")) {
+    } else if (safe_str_eq(op, LRMD_IPC_OP_REQUEST)) {
         int flags = 0;
         xmlNode *request = get_message_xml(msg, F_LRMD_IPC_MSG);
         const char *name = crm_element_value(msg, F_LRMD_IPC_CLIENT);

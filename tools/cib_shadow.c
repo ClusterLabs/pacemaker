@@ -78,7 +78,7 @@ shadow_setup(char *name, gboolean do_switch)
         if (strstr(shell, "bash")) {
             execl(shell, shell, "--norc", "--noprofile", NULL);
         } else {
-            execl(shell, shell, "--noprofile", NULL);
+            execl(shell, shell, NULL);
         }
 
     } else if (do_switch) {
@@ -409,7 +409,7 @@ main(int argc, char **argv)
         rc = 0;
         goto done;
 
-    } else if (command == 'P') {
+    } else if (command == 'p') {
         /* display the current contents */
         char *output_s = NULL;
         xmlNode *output = filename2xml(shadow_file);

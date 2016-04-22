@@ -404,6 +404,11 @@
     <action_set>
       <crm_event id="60" operation="stonith" operation_key="stonith-kiff-01-reboot" on_node="kiff-01" on_node_uuid="1">
         <attributes CRM_meta_on_node="kiff-01" CRM_meta_on_node_uuid="1" CRM_meta_probe_complete="true" CRM_meta_shutdown="0" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="1"/>
+          <node id="lxc-01_kiff-01"/>
+          <node id="lxc-02_kiff-01"/>
+        </downed>
       </crm_event>
     </action_set>
     <inputs/>

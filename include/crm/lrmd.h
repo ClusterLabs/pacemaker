@@ -35,7 +35,7 @@ typedef struct lrmd_key_value_s {
     struct lrmd_key_value_s *next;
 } lrmd_key_value_t;
 
-#define LRMD_PROTOCOL_VERSION "1.0"
+#define LRMD_PROTOCOL_VERSION "1.1"
 
 /* *INDENT-OFF* */
 #define DEFAULT_REMOTE_KEY_LOCATION "/etc/pacemaker/authkey"
@@ -59,6 +59,7 @@ typedef struct lrmd_key_value_s {
 #define F_LRMD_EXEC_RC          "lrmd_exec_rc"
 #define F_LRMD_OP_STATUS        "lrmd_exec_op_status"
 #define F_LRMD_TIMEOUT          "lrmd_timeout"
+#define F_LRMD_WATCHDOG         "lrmd_watchdog"
 #define F_LRMD_CLASS            "lrmd_class"
 #define F_LRMD_PROVIDER         "lrmd_provider"
 #define F_LRMD_TYPE             "lrmd_type"
@@ -89,6 +90,15 @@ typedef struct lrmd_key_value_s {
 #define LRMD_OP_RSC_METADATA      "lrmd_rsc_metadata"
 #define LRMD_OP_POKE              "lrmd_rsc_poke"
 #define LRMD_OP_NEW_CLIENT        "lrmd_rsc_new_client"
+#define LRMD_OP_CHECK             "lrmd_check"
+
+#define LRMD_IPC_OP_NEW           "new"
+#define LRMD_IPC_OP_DESTROY       "destroy"
+#define LRMD_IPC_OP_EVENT         "event"
+#define LRMD_IPC_OP_REQUEST       "request"
+#define LRMD_IPC_OP_RESPONSE      "response"
+#define LRMD_IPC_OP_SHUTDOWN_REQ  "shutdown_req"
+#define LRMD_IPC_OP_SHUTDOWN_ACK  "shutdown_ack"
 
 #define F_LRMD_IPC_OP           "lrmd_ipc_op"
 #define F_LRMD_IPC_IPC_SERVER   "lrmd_ipc_server"

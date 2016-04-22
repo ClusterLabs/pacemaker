@@ -177,9 +177,9 @@ query and replace just that section to avoid modifying any others.
 .Safely using an editor to modify only the resources section
 ======
 --------
-# cibadmin --query --obj_type resources > tmp.xml
+# cibadmin --query --scope resources > tmp.xml
 # vi tmp.xml
-# cibadmin --replace --obj_type resources --xml-file tmp.xml
+# cibadmin --replace --scope resources --xml-file tmp.xml
 --------
 ======
 

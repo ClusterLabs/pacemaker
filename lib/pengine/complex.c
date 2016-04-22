@@ -408,6 +408,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     }
 
     *rsc = calloc(1, sizeof(resource_t));
+    (*rsc)->cluster = data_set;
 
     if (expanded_xml) {
         crm_log_xml_trace(expanded_xml, "Expanded resource...");

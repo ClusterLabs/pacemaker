@@ -20,7 +20,12 @@ dnl     checks for library functions
 dnl     checks for system services
 
 m4_include([version.m4])
-AC_INIT([pacemaker], VERSION_NUMBER, pacemaker@oss.clusterlabs.org,pacemaker,http://clusterlabs.org)
+AC_INIT([pacemaker], VERSION_NUMBER, [pacemaker@oss.clusterlabs.org],
+        [pacemaker], PCMK_URL)
+dnl Workaround autoconf < 2.64
+if test x"${PACKAGE_URL}" = x""; then
+	AC_SUBST([PACKAGE_URL], PCMK_URL)
+fi
 
 PCMK_FEATURES=""
 HB_PKG=heartbeat
@@ -307,8 +312,8 @@ AC_ARG_WITH(coverage,
 
 PUBLICAN_BRAND="common"
 AC_ARG_WITH(brand,
-    [  --with-brand=brand  Brand to use for generated documentation [$PUBLICAN_BRAND]],
-    [ PUBLICAN_BRAND="$withval" ])
+    [  --with-brand=brand  Brand to use for generated documentation (set empty for no docs) [$PUBLICAN_BRAND]],
+    [ test x"$withval" = x"no" || PUBLICAN_BRAND="$withval" ])
 AC_SUBST(PUBLICAN_BRAND)
 
 ASCIIDOC_CLI_TYPE="pcs"
@@ -601,11 +606,31 @@ fi
 AM_CONDITIONAL(BUILD_STONITH_CONFIG, test $SUPPORT_STONITH_CONFIG = 1)
 AC_DEFINE_UNQUOTED(SUPPORT_STONITH_CONFIG, $SUPPORT_STONITH_CONFIG, Support a stand-alone stonith config file in addition to the CIB)
 
-AM_CONDITIONAL(BUILD_DOCBOOK, test x"${PUBLICAN}" != x"" -a x"${INKSCAPE}" != x"")
-if test x"${PUBLICAN}" != x"" -a x"${INKSCAPE}" != x""; then
-   AC_MSG_NOTICE(Enabling publican)
+publican_intree_brand=no
+if test x"${PUBLICAN_BRAND}" != x"" \
+   && test x"${PUBLICAN}" != x"" \
+   && test x"${INKSCAPE}" != x""; then
+   dnl special handling for clusterlabs brand (possibly in-tree version used)
+   test "${PUBLICAN_BRAND}" != "clusterlabs" \
+      || test -d /usr/share/publican/Common_Content/clusterlabs
+   if test $? -ne 0; then
+      dnl Unknown option: brand_dir vs. Option brand_dir requires an argument
+      if ${PUBLICAN} build --brand_dir 2>&1 | grep -Eq 'brand_dir$'; then
+         AC_MSG_WARN([Cannot use in-tree clusterlabs brand, resorting to common])
+         PUBLICAN_BRAND=common
+      else
+         publican_intree_brand=yes
+      fi
+   fi
+   AC_MSG_NOTICE([Enabling Publican-generated documentation using ${PUBLICAN_BRAND} brand])
    PCMK_FEATURES="$PCMK_FEATURES publican-docs"
 fi
+AM_CONDITIONAL([BUILD_DOCBOOK],
+               [test x"${PUBLICAN_BRAND}" != x"" \
+                && test x"${PUBLICAN}" != x"" \
+                && test x"${INKSCAPE}" != x""])
+AM_CONDITIONAL([PUBLICAN_INTREE_BRAND],
+               [test x"${publican_intree_brand}" = x"yes"])
 
 dnl ========================================================================
 dnl checks for library functions to replace them
@@ -941,12 +966,18 @@ fi
 
 dnl Check for printw() prototype compatibility
 if test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual && cc_supports_flag -Werror; then
-    AC_MSG_CHECKING(whether printw() requires argument of "const char *")
     ac_save_LIBS=$LIBS
-    LIBS="$CURSESLIBS  $LIBS"
+    LIBS="$CURSESLIBS"
     ac_save_CFLAGS=$CFLAGS
     CFLAGS="-Wcast-qual -Werror"
+    # avoid broken test because of hardened build environment in Fedora 23+
+    # - https://fedoraproject.org/wiki/Changes/Harden_All_Packages
+    # - https://bugzilla.redhat.com/1297985
+    if cc_supports_flag -fPIC; then
+        CFLAGS="$CFLAGS -fPIC"
+    fi
 
+    AC_MSG_CHECKING(whether printw() requires argument of "const char *")
     AC_LINK_IFELSE(
 	    [AC_LANG_PROGRAM(
 	      [
@@ -1028,22 +1059,16 @@ if test x${enable_no_stack} = xyes; then
     SUPPORT_CS=no
 fi
 
-SAVE_CPPFLAGS="$CPPFLAGS"
-SAVE_LIBS="$LIBS"
-PKG_CHECK_MODULES(libqb, libqb >= 0.13, HAVE_libqb=1, HAVE_libqb=0)
-CPPFLAGS="$CPPFLAGS $libqb_CFLAGS"
-LIBS="$LIBS $libqb_LIBS"
+PKG_CHECK_MODULES(libqb, libqb >= 0.13, HAVE_libqb=1)
+CPPFLAGS="$libqb_CFLAGS $CPPFLAGS"
+LIBS="$libqb_LIBS $LIBS"
 AC_CHECK_HEADERS(qb/qbipc_common.h)
 AC_CHECK_LIB(qb, qb_ipcs_connection_auth_set)
-CPPFLAGS="$SAVE_CPPFLAGS"
-LIBS="$SAVE_LIBS"
 
-LIBQB_LOG=1
 PCMK_FEATURES="$PCMK_FEATURES libqb-logging libqb-ipc"
 
 AC_CHECK_FUNCS(qb_ipcs_connection_get_buffer_size, AC_DEFINE(HAVE_IPCS_GET_BUFFER_SIZE,  1, [Have qb_ipcc_get_buffer_size function]))
 
-LIBS="$LIBS $libqb_LIBS"
 
 AC_CHECK_HEADERS(heartbeat/hb_config.h)
 AC_CHECK_HEADERS(heartbeat/glue_config.h)
@@ -1069,7 +1094,7 @@ fi
 
 if test $HAVE_GLUE = 1; then
    dnl On Debian, AC_CHECK_LIBS fail if a library has any unresolved symbols
-   dnl So check for all the depenancies (so they're added to LIBS) before checking for -lplumb
+   dnl So check for all the dependencies (so they're added to LIBS) before checking for -lplumb
    AC_CHECK_LIB(pils, PILLoadPlugin)
    AC_CHECK_LIB(plumb, G_main_add_IPC_Channel)
 fi
@@ -1712,6 +1737,36 @@ if test "$GCC" != yes; then
 else
         CFLAGS="$CFLAGS -ggdb"
 
+dnl when we don't have diagnostic push / pull we can't explicitely disable
+dnl checking for nonliteral formats in the places where they occur on purpose
+dnl thus we disable nonliteral format checking globally as we are aborting
+dnl on warnings. 
+dnl what makes the things really ugly is that nonliteral format checking is 
+dnl obviously available as an extra switch in very modern gcc but for older
+dnl gcc this is part of -Wformat=2 
+dnl so if we have push/pull we can enable -Wformat=2 -Wformat-nonliteral
+dnl if we don't have push/pull but -Wformat-nonliteral we can enable -Wformat=2
+dnl otherwise none of both
+
+        gcc_diagnostic_push_pull=no
+        SAVED_CFLAGS="$CFLAGS"
+        CFLAGS="$CFLAGS -Werror"
+        AC_MSG_CHECKING([for gcc diagnostic push / pull])
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#pragma GCC diagnostic push
+#pragma GCC diagnostic pop
+        ]])], [
+                AC_MSG_RESULT([yes])
+                gcc_diagnostic_push_pull=yes
+        ], AC_MSG_RESULT([no]))
+        CFLAGS="$SAVED_CFLAGS"
+
+        if cc_supports_flag "-Wformat-nonliteral"; then
+                gcc_format_nonliteral=yes
+        else
+                gcc_format_nonliteral=no
+        fi
+        
 	# We had to eliminate -Wnested-externs because of libtool changes
         EXTRA_FLAGS="-fgnu89-inline
 		-Wall
@@ -1721,9 +1776,7 @@ else
 		-Wdeclaration-after-statement
 		-Wendif-labels
 		-Wfloat-equal
-		-Wformat=2
 		-Wformat-security
-		-Wformat-nonliteral
 		-Wmissing-prototypes
 		-Wmissing-declarations
 		-Wnested-externs
@@ -1734,6 +1787,19 @@ else
 		-Wwrite-strings
 		-Wunused-but-set-variable
 		-Wunsigned-char"
+
+        if test "x$gcc_diagnostic_push_pull" = "xyes"; then
+                AC_DEFINE([GCC_FORMAT_NONLITERAL_CHECKING_ENABLED], [],
+			[gcc can complain about nonliterals in format])
+                EXTRA_FLAGS="$EXTRA_FLAGS
+                        -Wformat=2 
+                        -Wformat-nonliteral"
+        else
+                if test "x$gcc_format_nonliteral" = "xyes"; then
+                        EXTRA_FLAGS="$EXTRA_FLAGS
+                        -Wformat=2"
+                fi
+        fi
 
 # Additional warnings it might be nice to enable one day
 #		-Wshadow

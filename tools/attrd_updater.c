@@ -45,6 +45,8 @@ static struct crm_option long_options[] = {
     {"-spacer-",1, 0, '-', "\nCommands:"},
     {"update",  1, 0, 'U', "Update the attribute's value in attrd.  If this causes the value to change, it will also be updated in the cluster configuration"},
 #ifdef HAVE_ATOMIC_ATTRD
+    {"update-both", 1, 0, 'B', "Update the attribute's value and time to wait (dampening) in attrd. If this causes the value or dampening to change, the attribute will also be written to the cluster configuration, so be aware that repeatedly changing the dampening reduces its effectiveness."},
+    {"update-delay", 0, 0, 'Y', "Update the attribute's dampening in attrd (requires -d/--delay). If this causes the dampening to change, the attribute will also be written to the cluster configuration, so be aware that repeatedly changing the dampening reduces its effectiveness."},
     {"query",   0, 0, 'Q', "\tQuery the attribute's value from attrd"},
 #endif
     {"delete",  0, 0, 'D', "\tDelete the attribute in attrd.  If a value was previously set, it will also be removed from the cluster configuration"},
@@ -142,6 +144,11 @@ main(int argc, char **argv)
             case 'q':
                 break;
 #ifdef HAVE_ATOMIC_ATTRD
+            case 'Y':
+                command = flag;
+                crm_log_args(argc, argv); /* Too much? */
+                break;
+            case 'B':
             case 'Q':
 #endif
             case 'R':

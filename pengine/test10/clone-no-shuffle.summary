@@ -1,3 +1,4 @@
+2 of 4 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ dktest1sles10 dktest2sles10 ]
@@ -54,7 +55,7 @@ Online: [ dktest1sles10 dktest2sles10 ]
 
  stonith-1	(stonith:dummy):	Started dktest1sles10
  Master/Slave Set: ms-drbd1 [drbd1]
-     Slaves: [ dktest1sles10 ]
+     Slaves (target-role): [ dktest1sles10 ]
      Stopped: [ dktest2sles10 ]
  testip	(ocf::heartbeat:IPaddr2):	Stopped 
 

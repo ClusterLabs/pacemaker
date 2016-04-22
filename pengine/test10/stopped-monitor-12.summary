@@ -1,8 +1,9 @@
+1 of 1 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ node1 node2 ]
 
- rsc1	(ocf::pacemaker:Dummy):	FAILED (unmanaged) [ node1 node2 ]
+ rsc1	(ocf::pacemaker:Dummy):	FAILED ( disabled, unmanaged ) [ node1 node2 ]
 
 Transition Summary:
 
@@ -11,5 +12,5 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ node1 node2 ]
 
- rsc1	(ocf::pacemaker:Dummy):	FAILED (unmanaged) [ node1 node2 ]
+ rsc1	(ocf::pacemaker:Dummy):	FAILED ( disabled, unmanaged ) [ node1 node2 ]
 

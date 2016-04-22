@@ -395,6 +395,9 @@
     <action_set>
       <crm_event id="30" operation="stonith" operation_key="stonith-virt-4-reboot" on_node="virt-4" on_node_uuid="4">
         <attributes CRM_meta_on_node="virt-4" CRM_meta_on_node_uuid="4" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="4"/>
+        </downed>
       </crm_event>
     </action_set>
     <inputs/>

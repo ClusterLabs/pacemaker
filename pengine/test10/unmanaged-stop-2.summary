@@ -1,9 +1,10 @@
+1 of 2 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ yingying.site ]
 
- rsc1	(ocf::pacemaker:Dummy):	(target-role:Stopped) Started yingying.site 
- rsc2	(ocf::pacemaker:Dummy):	FAILED yingying.site (unmanaged) 
+ rsc1	(ocf::pacemaker:Dummy):	Started yingying.site ( disabled ) 
+ rsc2	(ocf::pacemaker:Dummy):	FAILED yingying.site ( blocked ) 
 
 Transition Summary:
  * Stop    rsc1	(yingying.site - blocked)
@@ -13,6 +14,6 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ yingying.site ]
 
- rsc1	(ocf::pacemaker:Dummy):	(target-role:Stopped) Started yingying.site 
- rsc2	(ocf::pacemaker:Dummy):	FAILED yingying.site (unmanaged) 
+ rsc1	(ocf::pacemaker:Dummy):	Started yingying.site ( disabled ) 
+ rsc2	(ocf::pacemaker:Dummy):	FAILED yingying.site ( blocked ) 
 

@@ -80,7 +80,9 @@ void process_lrmd_message(crm_client_t * client, uint32_t id, xmlNode * request)
 
 void free_rsc(gpointer data);
 
-void lrmd_shutdown(int nsig);
+void handle_shutdown_ack(void);
+
+void lrmd_client_destroy(crm_client_t *client);
 
 void client_disconnect_cleanup(const char *client_id);
 
@@ -103,6 +105,8 @@ void ipc_proxy_cleanup(void);
 void ipc_proxy_add_provider(crm_client_t *client);
 void ipc_proxy_remove_provider(crm_client_t *client);
 void ipc_proxy_forward_client(crm_client_t *client, xmlNode *xml);
+crm_client_t *ipc_proxy_get_provider(void);
+int ipc_proxy_shutdown_req(crm_client_t *ipc_proxy);
 #endif
 
 #endif

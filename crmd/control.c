@@ -41,6 +41,13 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+/* Enable support for built-in notifications
+ *
+ * The interface is expected to change significantly, and this will be defined
+ * in the upstream master branch only until a new design is finalized.
+ */
+#define RHEL7_COMPAT
+
 qb_ipcs_service_t *ipcs = NULL;
 
 extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
@@ -931,7 +938,7 @@ pe_cluster_option crmd_opts[] = {
           "Delay cluster recovery for the configured interval to allow for additional/related events to occur.\n"
           "Useful if your configuration is sensitive to the order in which ping updates arrive."
         },
-	{ "stonith-watchdog-timeout", NULL, "time", NULL, NULL, &check_timer,
+	{ "stonith-watchdog-timeout", NULL, "time", NULL, NULL, &check_sbd_timeout,
 	  "How long to wait before we can assume nodes are safely down", NULL
         },
 	{ "no-quorum-policy", "no_quorum_policy", "enum", "stop, freeze, ignore, suicide", "stop", &check_quorum, NULL, NULL },
@@ -972,8 +979,6 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     const char *value = NULL;
     GHashTable *config_hash = NULL;
     crm_time_t *now = crm_time_new(NULL);
-    long st_timeout = 0;
-    long sbd_timeout = 0;
 
     if (rc != pcmk_ok) {
         fsa_data_t *msg_data = NULL;
@@ -1014,41 +1019,8 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         throttle_load_target = strtof(value, NULL) / 100;
     }
 
-    value = getenv("SBD_WATCHDOG_TIMEOUT");
-    sbd_timeout = crm_get_msec(value);
-
-    value = crmd_pref(config_hash, "stonith-watchdog-timeout");
-    st_timeout = crm_get_msec(value);
-
-    if(st_timeout > 0 && !daemon_option_enabled(crm_system_name, "watchdog")) {
-        do_crm_log_always(LOG_EMERG, "Shutting down pacemaker, no watchdog device configured");
-        crmd_exit(DAEMON_RESPAWN_STOP);
-
-    } else if(!daemon_option_enabled(crm_system_name, "watchdog")) {
-        crm_trace("Watchdog disabled");
-
-    } else if(value == NULL && sbd_timeout > 0) {
-        char *timeout = NULL;
-
-        st_timeout = 2 * sbd_timeout / 1000;
-        timeout = crm_strdup_printf("%lds", st_timeout);
-        crm_notice("Setting stonith-watchdog-timeout=%s", timeout);
-
-        update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
-                             "stonith-watchdog-timeout", timeout, FALSE, NULL, NULL);
-        free(timeout);
-
-    } else if(st_timeout <= 0) {
-        crm_notice("Watchdog enabled but stonith-watchdog-timeout is disabled");
-
-    } else if(st_timeout < sbd_timeout) {
-        do_crm_log_always(LOG_EMERG, "Shutting down pacemaker, stonith-watchdog-timeout (%ldms) is too short (must be greater than %ldms)",
-                          st_timeout, sbd_timeout);
-        crmd_exit(DAEMON_RESPAWN_STOP);
-    }
-
     value = crmd_pref(config_hash, "no-quorum-policy");
-    if (safe_str_eq(value, "suicide") && daemon_option_enabled(crm_system_name, "watchdog")) {
+    if (safe_str_eq(value, "suicide") && pcmk_locate_sbd()) {
         no_quorum_suicide_escalation = TRUE;
     }
 
@@ -1087,6 +1059,35 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     value = g_hash_table_lookup(config_hash, "cluster-name");
     if (value) {
         fsa_cluster_name = strdup(value);
+    }
+
+#if 0
+    {
+        int sub_call_id;
+
+        sub_call_id = fsa_cib_conn->cmds->query(fsa_cib_conn, 
+            "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION
+            "/" XML_CIB_TAG_NOTIFICATIONS "/" XML_CIB_TAG_NOTIFY, NULL,
+            cib_scope_local | cib_xpath);
+
+        fsa_register_cib_callback(sub_call_id, FALSE, NULL,
+                                  notifications_query_callback);
+
+        crm_trace("Querying the CIB for notifications ... call %d", sub_call_id);
+    }
+#endif
+
+    {
+        xmlNode *cib_object = NULL;
+        int rc;
+
+        rc = fsa_cib_conn->cmds->query(fsa_cib_conn, 
+            "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION
+            "/" XML_CIB_TAG_NOTIFICATIONS "/" XML_CIB_TAG_NOTIFY, &cib_object,
+            cib_scope_local | cib_xpath | cib_sync_call);
+
+        notifications_query_callback(msg, call_id, rc, cib_object, user_data);
+        free_xml(cib_object);
     }
 
     set_bit(fsa_input_register, R_READ_CONFIG);

@@ -100,7 +100,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="16" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
+        <pseudo_event id="16" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0"/>
       </trigger>
       <trigger>
         <rsc_op id="18" operation="start" operation_key="lxc-ms_start_0" internal_operation_key="lxc-ms:0_start_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
@@ -149,7 +149,7 @@
         <rsc_op id="11" operation="monitor" operation_key="lxc-ms_monitor_0" internal_operation_key="lxc-ms:0_monitor_0" on_node="18node3" on_node_uuid="3"/>
       </trigger>
       <trigger>
-        <rsc_op id="16" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
+        <pseudo_event id="16" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="25" operation="stop" operation_key="lxc-ms-master_stop_0"/>
@@ -158,17 +158,13 @@
   </synapse>
   <synapse id="11">
     <action_set>
-      <rsc_op id="16" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1">
-        <primitive id="lxc-ms" long-id="lxc-ms:0" class="ocf" provider="pacemaker" type="Stateful"/>
+      <pseudo_event id="16" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0">
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
-      </rsc_op>
+      </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
         <pseudo_event id="29" operation="demote" operation_key="lxc-ms-master_demote_0"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="31" operation="start" operation_key="lxc1_start_0" on_node="18node1" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -254,7 +250,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="16" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
+        <pseudo_event id="16" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="29" operation="demote" operation_key="lxc-ms-master_demote_0"/>

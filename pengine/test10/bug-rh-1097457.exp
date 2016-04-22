@@ -389,6 +389,9 @@
       <rsc_op id="91" operation="stop" operation_key="lamaVM2_stop_0" on_node="lama3" on_node_uuid="2">
         <primitive id="lamaVM2" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_container="VM2" CRM_meta_timeout="20000" />
+        <downed>
+          <node id="lamaVM2"/>
+        </downed>
       </rsc_op>
     </action_set>
     <inputs/>

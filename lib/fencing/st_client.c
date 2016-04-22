@@ -2308,7 +2308,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     crm_element_value_int(op_reply, F_STONITH_CALLID, &reply_id);
 
     if (reply_id == stonith->call_id) {
-        crm_trace("Syncronous reply %d received", reply_id);
+        crm_trace("Synchronous reply %d received", reply_id);
 
         if (crm_element_value_int(op_reply, F_STONITH_RC, &rc) != 0) {
             rc = -ENOMSG;

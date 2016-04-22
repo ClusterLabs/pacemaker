@@ -2,7 +2,7 @@
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  *
  * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
+ * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
  *
@@ -11,7 +11,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
+ * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
@@ -62,6 +62,7 @@ enum pe_find {
 #  define pe_flag_stonith_enabled	0x00000010ULL
 #  define pe_flag_have_stonith_resource	0x00000020ULL
 #  define pe_flag_enable_unfencing	0x00000040ULL
+#  define pe_flag_concurrent_fencing	0x00000080ULL
 
 #  define pe_flag_stop_rsc_orphans	0x00000100ULL
 #  define pe_flag_stop_action_orphans	0x00000200ULL
@@ -121,6 +122,9 @@ typedef struct pe_working_set_s {
     GHashTable *template_rsc_sets;
     const char *localhost;
     GHashTable *tags;
+
+    int blocked_resources;
+    int disabled_resources;
 
 } pe_working_set_t;
 
@@ -295,6 +299,8 @@ struct resource_s {
     const char *isolation_wrapper;
     gboolean exclusive_discover;
     int remote_reconnect_interval;
+
+    pe_working_set_t *cluster;
 };
 
 struct pe_action_s {
@@ -392,8 +398,8 @@ enum pe_ordering {
     pe_order_stonith_stop          = 0x2000,    /* only applies if the action is non-pseudo */
     pe_order_serialize_only        = 0x4000,    /* serialize */
 
-    pe_order_implies_first_printed = 0x10000,   /* Like ..implies_first but only ensures 'first' is printed, not manditory */
-    pe_order_implies_then_printed  = 0x20000,   /* Like ..implies_then but only ensures 'then' is printed, not manditory */
+    pe_order_implies_first_printed = 0x10000,   /* Like ..implies_first but only ensures 'first' is printed, not mandatory */
+    pe_order_implies_then_printed  = 0x20000,   /* Like ..implies_then but only ensures 'then' is printed, not mandatory */
 
     pe_order_asymmetrical          = 0x100000,  /* Indicates asymmetrical one way ordering constraint. */
     pe_order_load                  = 0x200000,  /* Only relevant if... */

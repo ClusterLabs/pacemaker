@@ -224,6 +224,9 @@
     <action_set>
       <crm_event id="17" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="uuid1">
         <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="uuid1" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="uuid1"/>
+        </downed>
       </crm_event>
     </action_set>
     <inputs/>

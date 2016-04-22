@@ -918,6 +918,30 @@ stonith_manual_ack(xmlNode * msg, remote_fencing_op_t * op)
     return -EINPROGRESS;
 }
 
+char *
+stonith_get_peer_name(unsigned int nodeid)
+{
+    crm_node_t *node = crm_find_peer(nodeid, NULL);
+    char *nodename = NULL;
+
+    if (node && node->uname) {
+        return strdup(node->uname);
+
+    } else if ((nodename = get_node_name(nodeid))) {
+        return nodename;
+
+    } else {
+        const char *last_known_name = g_hash_table_lookup(known_peer_names, GUINT_TO_POINTER(nodeid));
+
+        if (last_known_name) {
+            crm_debug("Use the last known name %s for nodeid %u", last_known_name, nodeid);
+            return strdup(last_known_name);
+        }
+    }
+
+    return NULL;
+}
+
 /*!
  * \internal
  * \brief Create a new remote stonith op
@@ -999,16 +1023,17 @@ create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
 
     if (op->call_options & st_opt_cs_nodeid) {
         int nodeid = crm_atoi(op->target, NULL);
-        crm_node_t *node = crm_get_peer(nodeid, NULL);
+        char *nodename = stonith_get_peer_name(nodeid);
 
         /* Ensure the conversion only happens once */
         op->call_options &= ~st_opt_cs_nodeid;
 
-        if (node && node->uname) {
+        if (nodename) {
             free(op->target);
-            op->target = strdup(node->uname);
+            op->target = nodename;
+
         } else {
-            crm_warn("Could not expand nodeid '%s' into a host name (%p)", op->target, node);
+            crm_warn("Could not expand nodeid '%s' into a host name", op->target);
         }
     }
 
@@ -1309,7 +1334,7 @@ report_timeout_period(remote_fencing_op_t * op, int op_timeout)
     const char *call_id = NULL;
 
     if (op->call_options & st_opt_sync_call) {
-        /* There is no reason to report the timeout for a syncronous call. It
+        /* There is no reason to report the timeout for a synchronous call. It
          * is impossible to use the reported timeout to do anything when the client
          * is blocking for the response.  This update is only important for
          * async calls that require a callback to report the results in. */
@@ -1996,6 +2021,7 @@ stonith_fence_history(xmlNode * msg, xmlNode ** output)
     int rc = 0;
     const char *target = NULL;
     xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, msg, LOG_TRACE);
+    char *nodename = NULL;
 
     if (dev) {
         int options = 0;
@@ -2004,10 +2030,10 @@ stonith_fence_history(xmlNode * msg, xmlNode ** output)
         crm_element_value_int(msg, F_STONITH_CALLOPTS, &options);
         if (target && (options & st_opt_cs_nodeid)) {
             int nodeid = crm_atoi(target, NULL);
-            crm_node_t *node = crm_get_peer(nodeid, NULL);
 
-            if (node) {
-                target = node->uname;
+            nodename = stonith_get_peer_name(nodeid);
+            if (nodename) {
+                target = nodename;
             }
         }
     }
@@ -2040,6 +2066,7 @@ stonith_fence_history(xmlNode * msg, xmlNode ** output)
         }
     }
 
+    free(nodename);
     return rc;
 }
 

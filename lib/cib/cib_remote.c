@@ -540,7 +540,7 @@ cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char 
         return cib->call_id;
     }
 
-    crm_trace("Waiting for a syncronous reply");
+    crm_trace("Waiting for a synchronous reply");
 
     start_time = time(NULL);
     remaining_time = cib->call_timeout ? cib->call_timeout : 60;
@@ -594,7 +594,7 @@ cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char 
         return -ENOMSG;
     }
 
-    crm_trace("Syncronous reply received");
+    crm_trace("Synchronous reply received");
 
     /* Start processing the reply... */
     if (crm_element_value_int(op_reply, F_CIB_RC, &rc) != 0) {

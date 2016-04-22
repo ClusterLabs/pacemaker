@@ -6,7 +6,7 @@ Online: [ yingying.site ]
      rsc1	(ocf::pacemaker:Dummy):	Stopped 
      rsc2	(ocf::pacemaker:Dummy):	Started yingying.site 
      rsc3	(ocf::pacemaker:Dummy):	Started yingying.site 
-     rsc4	(ocf::pacemaker:Dummy):	FAILED yingying.site (unmanaged) 
+     rsc4	(ocf::pacemaker:Dummy):	FAILED yingying.site ( blocked ) 
 
 Transition Summary:
  * Start   rsc1	(yingying.site)
@@ -26,5 +26,5 @@ Online: [ yingying.site ]
      rsc1	(ocf::pacemaker:Dummy):	Started yingying.site 
      rsc2	(ocf::pacemaker:Dummy):	Started yingying.site 
      rsc3	(ocf::pacemaker:Dummy):	Started yingying.site 
-     rsc4	(ocf::pacemaker:Dummy):	FAILED yingying.site (unmanaged) 
+     rsc4	(ocf::pacemaker:Dummy):	FAILED yingying.site ( blocked ) 
 

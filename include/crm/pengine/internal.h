@@ -2,7 +2,7 @@
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  *
  * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
+ * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
  *
@@ -11,13 +11,14 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
+ * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef PE_INTERNAL__H
 #  define PE_INTERNAL__H
 #  include <crm/pengine/status.h>
+#  include <crm/pengine/remote.h>
 
 #  define pe_rsc_info(rsc, fmt, args...)  crm_log_tag(LOG_INFO,  rsc ? rsc->id : "<NULL>", fmt, ##args)
 #  define pe_rsc_debug(rsc, fmt, args...) crm_log_tag(LOG_DEBUG, rsc ? rsc->id : "<NULL>", fmt, ##args)
@@ -103,7 +104,7 @@ void common_free(resource_t * rsc);
 
 extern pe_working_set_t *pe_dataset;
 
-extern node_t *node_copy(node_t * this_node);
+extern node_t *node_copy(const node_t *this_node);
 extern time_t get_effective_time(pe_working_set_t * data_set);
 extern int get_failcount(node_t * node, resource_t * rsc, time_t *last_failure,
                          pe_working_set_t * data_set);
@@ -179,6 +180,7 @@ extern action_t *custom_action(resource_t * rsc, char *key, const char *task, no
 		rsc, stop_key(rsc), CRMD_ACTION_STOP, node,		\
 		optional, TRUE, data_set);
 
+#  define reload_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_RELOAD, 0)
 #  define start_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_START, 0)
 #  define start_action(rsc, node, optional) custom_action(		\
 		rsc, start_key(rsc), CRMD_ACTION_START, node,		\
@@ -214,7 +216,7 @@ extern action_t *find_first_action(GListPtr input, const char *uuid, const char 
 extern enum action_tasks get_complex_task(resource_t * rsc, const char *name,
                                           gboolean allow_non_atomic);
 
-extern GListPtr find_actions(GListPtr input, const char *key, node_t * on_node);
+extern GListPtr find_actions(GListPtr input, const char *key, const node_t *on_node);
 extern GListPtr find_actions_exact(GListPtr input, const char *key, node_t * on_node);
 extern GListPtr find_recurring_actions(GListPtr input, node_t * not_on_node);
 
@@ -271,11 +273,6 @@ void trigger_unfencing(
 
 void set_bit_recursive(resource_t * rsc, unsigned long long flag);
 void clear_bit_recursive(resource_t * rsc, unsigned long long flag);
-gboolean xml_contains_remote_node(xmlNode *xml);
-gboolean is_baremetal_remote_node(node_t *node);
-gboolean is_container_remote_node(node_t *node);
-gboolean is_remote_node(node_t *node);
-resource_t * rsc_contains_remote_node(pe_working_set_t * data_set, resource_t *rsc);
 
 gboolean add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref);
 

@@ -116,6 +116,8 @@ typedef struct async_command_s {
     /*! If the operation timed out, this is the last signal
      *  we sent to the process to get it to terminate */
     int last_timeout_signo;
+
+    stonith_device_t *active_on;
 } async_command_t;
 
 static xmlNode *stonith_construct_async_reply(async_command_t * cmd, const char *output,
@@ -252,6 +254,46 @@ create_async_command(xmlNode * msg)
     return cmd;
 }
 
+static int
+get_action_limit(stonith_device_t * device)
+{
+    const char *value = NULL;
+    int action_limit = 1;
+
+    value = g_hash_table_lookup(device->params, STONITH_ATTR_ACTION_LIMIT);
+    if (value) {
+       action_limit = crm_parse_int(value, "1");
+       if (action_limit == 0) {
+           /* pcmk_action_limit should not be 0. Enforce it to be 1. */
+           action_limit = 1;
+       }
+    }
+
+    return action_limit;
+}
+
+static int
+get_active_cmds(stonith_device_t * device)
+{
+    int counter = 0;
+    GListPtr gIter = NULL;
+    GListPtr gIterNext = NULL;
+
+    CRM_CHECK(device != NULL, return 0);
+
+    for (gIter = cmd_list; gIter != NULL; gIter = gIterNext) {
+        async_command_t *cmd = gIter->data;
+
+        gIterNext = gIter->next;
+
+        if (cmd->active_on == device) {
+            counter++;
+        }
+    }
+
+    return counter;
+}
+
 static gboolean
 stonith_device_execute(stonith_device_t * device)
 {
@@ -259,11 +301,16 @@ stonith_device_execute(stonith_device_t * device)
     const char *action_str = NULL;
     async_command_t *cmd = NULL;
     stonith_action_t *action = NULL;
+    int active_cmds = 0;
+    int action_limit = 0;
 
     CRM_CHECK(device != NULL, return FALSE);
 
-    if (device->active_pid) {
-        crm_trace("%s is still active with pid %u", device->id, device->active_pid);
+    active_cmds = get_active_cmds(device);
+    action_limit = get_action_limit(device);
+    if (action_limit > -1 && active_cmds >= action_limit) {
+        crm_trace("%s is over its action limit of %d (%u active action%s)",
+                  device->id, action_limit, active_cmds, active_cmds > 1 ? "s" : "");
         return TRUE;
     }
 
@@ -340,7 +387,7 @@ stonith_device_execute(stonith_device_t * device)
         crm_debug("Operation %s%s%s on %s now running with pid=%d, timeout=%ds",
                   cmd->action, cmd->victim ? " for node " : "", cmd->victim ? cmd->victim : "",
                   device->id, exec_rc, cmd->timeout);
-        device->active_pid = exec_rc;
+        cmd->active_on = device;
 
     } else {
         crm_warn("Operation %s%s%s on %s failed: %s (%d)",
@@ -873,7 +920,6 @@ status_search_cb(GPid pid, int rc, const char *output, gpointer user_data)
         return;
     }
 
-    dev->active_pid = 0;
     mainloop_set_trigger(dev->work);
 
     if (rc == 1 /* unknown */ ) {
@@ -910,7 +956,6 @@ dynamic_list_search_cb(GPid pid, int rc, const char *output, gpointer user_data)
         return;
     }
 
-    dev->active_pid = 0;
     mainloop_set_trigger(dev->work);
 
     /* If we successfully got the targets earlier, don't disable. */
@@ -1885,8 +1930,9 @@ unfence_cb(GPid pid, int rc, const char *output, gpointer user_data)
 
     log_operation(cmd, rc, pid, NULL, output);
 
+    cmd->active_on = NULL;
+
     if(dev) {
-        dev->active_pid = 0;
         mainloop_set_trigger(dev->work);
     } else {
         crm_trace("Device %s does not exist", cmd->device);
@@ -1928,10 +1974,11 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
 
     CRM_CHECK(cmd != NULL, return);
 
+    cmd->active_on = NULL;
+
     /* The device is ready to do something else now */
     device = g_hash_table_lookup(device_list, cmd->device);
     if (device) {
-        device->active_pid = 0;
         if (rc == pcmk_ok &&
             (safe_str_eq(cmd->action, "list") ||
              safe_str_eq(cmd->action, "monitor") || safe_str_eq(cmd->action, "status"))) {
@@ -2104,19 +2151,22 @@ stonith_fence(xmlNode * msg)
 
     } else {
         const char *host = crm_element_value(dev, F_STONITH_TARGET);
+        char *nodename = NULL;
 
         if (cmd->options & st_opt_cs_nodeid) {
             int nodeid = crm_atoi(host, NULL);
-            crm_node_t *node = crm_get_peer(nodeid, NULL);
 
-            if (node) {
-                host = node->uname;
+            nodename = stonith_get_peer_name(nodeid);
+            if (nodename) {
+                host = nodename;
             }
         }
 
         /* If we get to here, then self-fencing is implicitly allowed */
         get_capable_devices(host, cmd->action, cmd->default_timeout,
                             TRUE, cmd, stonith_fence_get_devices_cb);
+
+        free(nodename);
     }
 
     return -EINPROGRESS;

@@ -36,6 +36,8 @@ CRM_TRACE_INIT_DATA(pe_allocate);
 
 void set_alloc_actions(pe_working_set_t * data_set);
 void migrate_reload_madness(pe_working_set_t * data_set);
+extern void ReloadRsc(resource_t * rsc, node_t *node, pe_working_set_t * data_set);
+extern gboolean DeleteRsc(resource_t * rsc, node_t * node, gboolean optional, pe_working_set_t * data_set);
 
 resource_alloc_functions_t resource_class_alloc_functions[] = {
     {
@@ -322,8 +324,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
 
 #if 0
             /* Always reload/restart the entire resource */
-            op = custom_action(rsc, start_key(rsc), RSC_START, NULL, FALSE, TRUE, data_set);
-            update_action_flags(op, pe_action_allow_reload_conversion);
+            ReloadRsc(rsc, active_node, data_set);
 #else
             /* Re-sending the recurring op is sufficient - the old one will be cancelled automatically */
             op = custom_action(rsc, key, task, active_node, TRUE, TRUE, data_set);
@@ -333,11 +334,9 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
         } else if (digest_restart && rsc->isolation_wrapper == NULL && (uber_parent(rsc))->isolation_wrapper == NULL) {
             pe_rsc_trace(rsc, "Reloading '%s' action for resource %s", task, rsc->id);
 
-            /* Allow this resource to reload - unless something else causes a full restart */
-            set_bit(rsc->flags, pe_rsc_try_reload);
-
-            /* Create these for now, it keeps the action IDs the same in the regression outputs */
-            custom_action(rsc, key, task, NULL, TRUE, TRUE, data_set);
+            /* Reload this resource */
+            ReloadRsc(rsc, active_node, data_set);
+            free(key);
 
         } else {
             pe_rsc_trace(rsc, "Resource %s doesn't know how to reload", rsc->id);
@@ -352,8 +351,6 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
     return did_change;
 }
 
-extern gboolean DeleteRsc(resource_t * rsc, node_t * node, gboolean optional,
-                          pe_working_set_t * data_set);
 
 static void
 check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_working_set_t * data_set)
@@ -769,7 +766,7 @@ apply_system_health(pe_working_set_t * data_set)
         /* Requires the admin to configure the rsc_location constaints for
          * processing the stored health scores
          */
-        /* TODO: Check for the existance of appropriate node health constraints */
+        /* TODO: Check for the existence of appropriate node health constraints */
         return TRUE;
 
     } else {
@@ -985,7 +982,7 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
     int r1_weight = -INFINITY;
     int r2_weight = -INFINITY;
 
-    const char *reason = "existance";
+    const char *reason = "existence";
 
     const GListPtr nodes = (GListPtr) data;
     resource_t *resource1 = (resource_t *) convert_const_pointer(a);
@@ -1326,6 +1323,7 @@ stage6(pe_working_set_t * data_set)
     action_t *done = get_pseudo_op(STONITH_DONE, data_set);
     gboolean need_stonith = TRUE;
     GListPtr gIter = data_set->nodes;
+    GListPtr stonith_ops = NULL;
 
     crm_trace("Processing fencing and shutdown cases");
 
@@ -1371,11 +1369,15 @@ stage6(pe_working_set_t * data_set)
                 dc_down = stonith_op;
                 dc_fence = stonith_op;
 
-            } else {
+            } else if (is_set(data_set->flags, pe_flag_concurrent_fencing) == FALSE) {
                 if (last_stonith) {
                     order_actions(last_stonith, stonith_op, pe_order_optional);
                 }
                 last_stonith = stonith_op;
+
+            } else {
+                order_actions(stonith_op, done, pe_order_implies_then);
+                stonith_ops = g_list_append(stonith_ops, stonith_op);
             }
 
         } else if (node->details->online && node->details->shutdown &&
@@ -1440,8 +1442,21 @@ stage6(pe_working_set_t * data_set)
             order_actions(node_stop, dc_down, pe_order_optional);
         }
 
-        if (last_stonith && dc_down != last_stonith) {
-            order_actions(last_stonith, dc_down, pe_order_optional);
+        if (last_stonith) {
+            if (dc_down != last_stonith) {
+                order_actions(last_stonith, dc_down, pe_order_optional);
+            }
+
+        } else {
+            GListPtr gIter2 = NULL;
+
+            for (gIter2 = stonith_ops; gIter2 != NULL; gIter2 = gIter2->next) {
+                action_t *stonith_op = (action_t *) gIter2->data;
+
+                if (dc_down != stonith_op) {
+                    order_actions(stonith_op, dc_down, pe_order_optional);
+                }
+            }
         }
     }
 
@@ -1454,6 +1469,8 @@ stage6(pe_working_set_t * data_set)
     }
 
     order_actions(done, all_stopped, pe_order_implies_then);
+
+    g_list_free(stonith_ops);
     return TRUE;
 }
 
@@ -1709,16 +1726,18 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
                     NULL,
                     pe_order_preserve | pe_order_implies_first,
                     data_set);
-            } else {
+            }
 
-                custom_action_order(remote_rsc,
-                    generate_op_key(remote_rsc->id, RSC_START, 0),
-                    NULL,
-                    action->rsc,
-                    NULL,
-                    action,
-                    pe_order_preserve | pe_order_implies_then | pe_order_runnable_left,
-                    data_set);
+            if(container && is_set(container->flags, pe_rsc_failed)) {
+                /* Just like a stop, the demote is implied by the
+                 * container having failed/stopped
+                 *
+                 * If we really wanted to we would order the demote
+                 * after the stop, IFF the containers current role was
+                 * stopped (otherwise we re-introduce an ordering
+                 * loop)
+                 */
+                pe_set_action_bit(action, pe_action_pseudo);
             }
 
         } else if (safe_str_eq(action->task, "stop") &&
@@ -1969,7 +1988,6 @@ stage7(pe_working_set_t * data_set)
     for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
         resource_t *rsc = (resource_t *) gIter->data;
 
-        rsc_reload(rsc, data_set);
         LogActions(rsc, data_set, FALSE);
     }
     return TRUE;

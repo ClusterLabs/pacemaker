@@ -1,3 +1,4 @@
+3 of 6 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
@@ -31,6 +32,6 @@ Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
  shooter	(stonith:fence_xvm):	Started rhel7-auto2 
  engine	(ocf::heartbeat:Dummy):	Stopped 
  Clone Set: keystone-clone [keystone]
-     Stopped: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
+     Stopped (disabled): [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
  central	(ocf::heartbeat:Dummy):	Stopped 
 

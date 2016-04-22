@@ -1,3 +1,4 @@
+4 of 25 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ xfc0 xfc1 xfc2 xfc3 ]
@@ -12,10 +13,10 @@ Online: [ xfc0 xfc1 xfc2 xfc3 ]
  xu-test11	(ocf::heartbeat:Xen):	Started xfc3
  xu-test12	(ocf::heartbeat:Xen):	Started xfc2
  xu-test13	(ocf::heartbeat:Xen):	Stopped
- xu-test14	(ocf::heartbeat:Xen):	(target-role:Stopped) Stopped
- xu-test15	(ocf::heartbeat:Xen):	(target-role:Stopped) Stopped
- xu-test16	(ocf::heartbeat:Xen):	(target-role:Stopped) Stopped
- xu-test17	(ocf::heartbeat:Xen):	(target-role:Stopped) Stopped
+ xu-test14	(ocf::heartbeat:Xen):	Stopped ( disabled ) 
+ xu-test15	(ocf::heartbeat:Xen):	Stopped ( disabled ) 
+ xu-test16	(ocf::heartbeat:Xen):	Stopped ( disabled ) 
+ xu-test17	(ocf::heartbeat:Xen):	Stopped ( disabled ) 
  xu-test2	(ocf::heartbeat:Xen):	Started xfc3
  xu-test3	(ocf::heartbeat:Xen):	Started xfc1
  xu-test4	(ocf::heartbeat:Xen):	Started xfc0
@@ -97,10 +98,10 @@ Online: [ xfc0 xfc1 xfc2 xfc3 ]
  xu-test11	(ocf::heartbeat:Xen):	Started xfc3
  xu-test12	(ocf::heartbeat:Xen):	Started xfc3
  xu-test13	(ocf::heartbeat:Xen):	Started xfc3
- xu-test14	(ocf::heartbeat:Xen):	(target-role:Stopped) Stopped
- xu-test15	(ocf::heartbeat:Xen):	(target-role:Stopped) Stopped
- xu-test16	(ocf::heartbeat:Xen):	(target-role:Stopped) Stopped
- xu-test17	(ocf::heartbeat:Xen):	(target-role:Stopped) Stopped
+ xu-test14	(ocf::heartbeat:Xen):	Stopped ( disabled ) 
+ xu-test15	(ocf::heartbeat:Xen):	Stopped ( disabled ) 
+ xu-test16	(ocf::heartbeat:Xen):	Stopped ( disabled ) 
+ xu-test17	(ocf::heartbeat:Xen):	Stopped ( disabled ) 
  xu-test2	(ocf::heartbeat:Xen):	Started xfc1
  xu-test3	(ocf::heartbeat:Xen):	Started xfc0
  xu-test4	(ocf::heartbeat:Xen):	Started xfc2

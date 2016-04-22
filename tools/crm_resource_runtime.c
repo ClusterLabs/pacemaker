@@ -584,6 +584,28 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
     return rc;
 }
 
+static int
+cli_delete_attr(cib_t * cib_conn, const char * host_uname, const char * attr_name,
+                pe_working_set_t * data_set)
+{
+    node_t *node = pe_find_node(data_set->nodes, host_uname);
+
+    if (node == NULL) {
+        CMD_ERR("Error deleting attribute '%s': node '%s' is unknown", attr_name, host_uname);
+        return -ENXIO;
+    }
+
+#if !HAVE_ATOMIC_ATTRD
+    if (is_remote_node(node)) {
+        /* Talk directly to cib for remote nodes if it's legacy attrd */
+        return delete_attr_delegate(cib_conn, cib_sync_call, XML_CIB_TAG_STATUS, node->details->id, NULL, NULL,
+                                    NULL, attr_name, NULL, FALSE, NULL);
+    }
+#endif
+    return attrd_update_delegate(NULL, 'D', node->details->uname, attr_name, NULL, XML_CIB_TAG_STATUS, NULL,
+                                 NULL, NULL, node ? is_remote_node(node) : FALSE);
+}
+
 int
 cli_resource_delete(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_uname,
                resource_t * rsc, pe_working_set_t * data_set)
@@ -652,8 +674,7 @@ cli_resource_delete(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_
         }
 
         printf(", removing %s\n", attr_name);
-        rc = attrd_update_delegate(NULL, 'D', host_uname, attr_name, NULL, XML_CIB_TAG_STATUS, NULL,
-                              NULL, NULL, node ? is_remote_node(node) : FALSE);
+        rc = cli_delete_attr(cib_conn, host_uname, attr_name, data_set);
         free(attr_name);
 
     } else if(rc != -EOPNOTSUPP) {
@@ -838,7 +859,7 @@ static void dump_list(GList *items, const char *tag)
     GList *item = NULL;
 
     for (item = items; item != NULL; item = item->next) {
-        crm_trace("%s[%d]: %s", tag, lpc, item->data);
+        crm_trace("%s[%d]: %s", tag, lpc, (char*)item->data);
         lpc++;
     }
 }

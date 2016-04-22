@@ -1,3 +1,4 @@
+1 of 3 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ fc16-builder ]
@@ -5,7 +6,7 @@ OFFLINE: [ fc16-builder2 ]
 
  A	(ocf::pacemaker:Dummy):	Started fc16-builder
  B	(ocf::pacemaker:Dummy):	Started fc16-builder
- C	(ocf::pacemaker:Dummy):	(target-role:Stopped) Started fc16-builder 
+ C	(ocf::pacemaker:Dummy):	Started fc16-builder ( disabled ) 
 
 Transition Summary:
  * Stop    A	(Started fc16-builder)
@@ -22,5 +23,5 @@ OFFLINE: [ fc16-builder2 ]
 
  A	(ocf::pacemaker:Dummy):	Stopped 
  B	(ocf::pacemaker:Dummy):	Started fc16-builder
- C	(ocf::pacemaker:Dummy):	(target-role:Stopped) Stopped 
+ C	(ocf::pacemaker:Dummy):	Stopped ( disabled ) 
 

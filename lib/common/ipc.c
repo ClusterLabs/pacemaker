@@ -494,11 +494,11 @@ crm_ipcs_flush_events(crm_client_t * c)
         sent++;
         header = event[0].iov_base;
         if (header->size_compressed) {
-            crm_trace("Event %d to %p[%d] (%d compressed bytes) sent",
+            crm_trace("Event %d to %p[%d] (%zu compressed bytes) sent",
                       header->qb.id, c->ipcs, c->pid, rc);
         } else {
-            crm_trace("Event %d to %p[%d] (%d bytes) sent: %.120s",
-                      header->qb.id, c->ipcs, c->pid, rc, event[1].iov_base);
+            crm_trace("Event %d to %p[%d] (%zu bytes) sent: %.120s",
+                      header->qb.id, c->ipcs, c->pid, rc, (char *)(event[1].iov_base));
         }
 
         c->event_queue = g_list_remove(c->event_queue, event);
@@ -509,7 +509,7 @@ crm_ipcs_flush_events(crm_client_t * c)
 
     queue_len -= sent;
     if (sent > 0 || c->event_queue) {
-        crm_trace("Sent %d events (%d remaining) for %p[%d]: %s (%d)",
+        crm_trace("Sent %d events (%d remaining) for %p[%d]: %s (%zd)",
                   sent, queue_len, c->ipcs, c->pid, pcmk_strerror(rc < 0 ? rc : 0), rc);
     }
 
@@ -658,7 +658,7 @@ crm_ipcs_sendv(crm_client_t * c, struct iovec * iov, enum crm_ipc_flags flags)
                        header->qb.id, c->ipcs, c->pid, header->qb.size, pcmk_strerror(rc), rc);
 
         } else {
-            crm_trace("Response %d sent, %d bytes to %p[%d]", header->qb.id, rc, c->ipcs, c->pid);
+            crm_trace("Response %d sent, %zd bytes to %p[%d]", header->qb.id, rc, c->ipcs, c->pid);
         }
 
         if (flags & crm_ipc_server_free) {
@@ -749,13 +749,13 @@ pick_ipc_buffer(unsigned int max)
 {
     static unsigned int global_max = 0;
 
-    if(global_max == 0) {
+    if (global_max == 0) {
         const char *env = getenv("PCMK_ipc_buffer");
 
         if (env) {
             int env_max = crm_parse_int(env, "0");
 
-            global_max = (env_max > 0)? env_max : MAX_MSG_SIZE;
+            global_max = (env_max > 0)? QB_MAX(MIN_MSG_SIZE, env_max) : MAX_MSG_SIZE;
 
         } else {
             global_max = MAX_MSG_SIZE;
@@ -828,7 +828,7 @@ void
 crm_ipc_close(crm_ipc_t * client)
 {
     if (client) {
-        crm_trace("Disconnecting %s IPC connection %p (%p.%p)", client->name, client, client->ipc);
+        crm_trace("Disconnecting %s IPC connection %p (%p)", client->name, client, client->ipc);
 
         if (client->ipc) {
             qb_ipcc_connection_t *ipc = client->ipc;

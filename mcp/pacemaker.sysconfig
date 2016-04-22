@@ -1,5 +1,3 @@
-# For non-systemd based systems, prefix export to each enabled line
-
 # Turn on special handling for CMAN clusters in the init script
 # Without this, fenced (and by inference, cman) cannot reliably be made to shut down
 # PCMK_STACK=cman
@@ -80,8 +78,8 @@
 # PCMK_ipc_type=shared-mem|socket|posix|sysv
 
 # Specify an IPC buffer size in bytes
-# Useful when connecting to really big clusters that exceed the default 20k buffer
-# PCMK_ipc_buffer=20480
+# Useful when connecting to really big clusters that exceed the default 128k buffer
+# PCMK_ipc_buffer=131072
 
 #==#==# Profiling and memory leak testing
 

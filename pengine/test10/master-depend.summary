@@ -1,3 +1,4 @@
+5 of 10 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ vbox4 ]
@@ -10,9 +11,9 @@ OFFLINE: [ vbox3 ]
  Clone Set: clvmd_clone [clvmd]
      Stopped: [ vbox3 vbox4 ]
  vmnci36	(ocf::heartbeat:vm):	Stopped 
- vmnci37	(ocf::heartbeat:vm):	(target-role:stopped) Stopped 
- vmnci38	(ocf::heartbeat:vm):	(target-role:stopped) Stopped 
- vmnci55	(ocf::heartbeat:vm):	(target-role:stopped) Stopped 
+ vmnci37	(ocf::heartbeat:vm):	Stopped ( disabled ) 
+ vmnci38	(ocf::heartbeat:vm):	Stopped ( disabled ) 
+ vmnci55	(ocf::heartbeat:vm):	Stopped ( disabled ) 
 
 Transition Summary:
  * Start   drbd0:0	(vbox4)
@@ -44,7 +45,7 @@ Online: [ vbox4 ]
 OFFLINE: [ vbox3 ]
 
  Master/Slave Set: drbd [drbd0]
-     Slaves: [ vbox4 ]
+     Slaves (target-role): [ vbox4 ]
      Stopped: [ vbox3 ]
  Clone Set: cman_clone [cman]
      Started: [ vbox4 ]
@@ -52,7 +53,7 @@ OFFLINE: [ vbox3 ]
  Clone Set: clvmd_clone [clvmd]
      Stopped: [ vbox3 vbox4 ]
  vmnci36	(ocf::heartbeat:vm):	Stopped 
- vmnci37	(ocf::heartbeat:vm):	(target-role:stopped) Stopped 
- vmnci38	(ocf::heartbeat:vm):	(target-role:stopped) Stopped 
- vmnci55	(ocf::heartbeat:vm):	(target-role:stopped) Stopped 
+ vmnci37	(ocf::heartbeat:vm):	Stopped ( disabled ) 
+ vmnci38	(ocf::heartbeat:vm):	Stopped ( disabled ) 
+ vmnci55	(ocf::heartbeat:vm):	Stopped ( disabled ) 
 

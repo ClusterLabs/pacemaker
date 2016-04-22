@@ -10,10 +10,10 @@
   <xsl:attribute name="id">
     <xsl:choose>
       <xsl:when test="$base">
-	<xsl:value-of select="$base"/>
+        <xsl:value-of select="$base"/>
       </xsl:when>
       <xsl:otherwise>
-	<xsl:value-of select="name()"/>
+        <xsl:value-of select="name()"/>
       </xsl:otherwise>
     </xsl:choose>
     <xsl:text>.</xsl:text>
@@ -115,10 +115,10 @@
     <xsl:call-template name="auto-id"/>
     <xsl:apply-templates select="@*"/>
     <xsl:for-each select="attributes//nvpair"> 
-	<xsl:element name="nvpair">
-	  <xsl:apply-templates select="@*"/>
-	  <xsl:call-template name="auto-id"/>
-	</xsl:element>
+      <xsl:element name="nvpair">
+        <xsl:apply-templates select="@*"/>
+        <xsl:call-template name="auto-id"/>
+      </xsl:element>
     </xsl:for-each>
     <xsl:apply-templates select="rule"/>
   </xsl:element>
@@ -129,10 +129,10 @@
     <xsl:apply-templates select="@*"/>
     <xsl:call-template name="auto-id"/>
       <xsl:for-each select="attributes//nvpair"> 
-	<xsl:element name="nvpair">
-	  <xsl:apply-templates select="@*"/>
-	  <xsl:call-template name="auto-id"/>
-	</xsl:element>
+        <xsl:element name="nvpair">
+          <xsl:apply-templates select="@*"/>
+          <xsl:call-template name="auto-id"/>
+        </xsl:element>
       </xsl:for-each>
       <xsl:apply-templates select="rule"/>
   </xsl:element>
@@ -143,11 +143,11 @@
     <xsl:apply-templates select="@*"/>
     <xsl:call-template name="auto-id"/>
     <xsl:for-each select="attributes//nvpair">
-	<xsl:element name="nvpair">
-	  <xsl:call-template name="auto-id"/>
-	  <xsl:attribute name="name"><xsl:value-of select="translate(@name, '_', '-')"/></xsl:attribute>
-	  <xsl:attribute name="value"><xsl:value-of select="@value"/></xsl:attribute>
-	</xsl:element>
+      <xsl:element name="nvpair">
+        <xsl:call-template name="auto-id"/>
+        <xsl:attribute name="name"><xsl:value-of select="translate(@name, '_', '-')"/></xsl:attribute>
+        <xsl:attribute name="value"><xsl:value-of select="@value"/></xsl:attribute>
+      </xsl:element>
     </xsl:for-each>
     <xsl:apply-templates select="rule"/>
   </xsl:element>
@@ -185,7 +185,7 @@
     </xsl:if>
     <xsl:if test="not(contains(., '.'))">
       <xsl:call-template name="upper-case-value">
-	<xsl:with-param name="value"><xsl:value-of select="."/></xsl:with-param>
+        <xsl:with-param name="value"><xsl:value-of select="."/></xsl:with-param>
       </xsl:call-template>
     </xsl:if>
   </xsl:attribute>
@@ -205,15 +205,15 @@
     <xsl:choose>
       <!-- IDs cant start with a digit -->
       <xsl:when test='not(string(number(substring(.,1,1))) = "NaN")'>
-	<!-- set an automatic id -->
-	<xsl:for-each select=".."> 
-	  <xsl:value-of select="name()"/>
-	  <xsl:text>.auto-</xsl:text>
-	  <xsl:number level="any"/>
-	</xsl:for-each>
+        <!-- set an automatic id -->
+        <xsl:for-each select=".."> 
+          <xsl:value-of select="name()"/>
+          <xsl:text>.auto-</xsl:text>
+          <xsl:number level="any"/>
+        </xsl:for-each>
       </xsl:when>
       <xsl:otherwise>
-	<xsl:value-of select="translate(., ':', '-')"/>
+        <xsl:value-of select="translate(., ':', '-')"/>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:attribute>
@@ -238,42 +238,42 @@
     <xsl:choose>
 
       <xsl:when test="contains(., 'default_resource_stickiness')">
-	<xsl:value-of select="translate(., '_', '-')"/>
+        <xsl:value-of select="translate(., '_', '-')"/>
       </xsl:when>
       <xsl:when test="contains(., 'no_quorum_policy')">
-	<xsl:value-of select="translate(., '_', '-')"/>
+        <xsl:value-of select="translate(., '_', '-')"/>
       </xsl:when>
       <xsl:when test="contains(., 'transition_idle_timeout')">
-	<xsl:text>cluster-delay</xsl:text>
+        <xsl:text>cluster-delay</xsl:text>
       </xsl:when>
       <xsl:when test="contains(., 'symmetric_cluster')">
-	<xsl:value-of select="translate(., '_', '-')"/>
+        <xsl:value-of select="translate(., '_', '-')"/>
       </xsl:when>
       <xsl:when test="contains(., 'stonith_enabled')">
-	<xsl:value-of select="translate(., '_', '-')"/>
+        <xsl:value-of select="translate(., '_', '-')"/>
       </xsl:when>
       <xsl:when test="contains(., 'stonith_action')">
-	<xsl:value-of select="translate(., '_', '-')"/>
+        <xsl:value-of select="translate(., '_', '-')"/>
       </xsl:when>
       <xsl:when test="contains(., 'is_managed_default')">
-	<xsl:value-of select="translate(., '_', '-')"/>
+        <xsl:value-of select="translate(., '_', '-')"/>
       </xsl:when>
       <xsl:when test="contains(., 'stop_orphan_resources')">
-	<xsl:value-of select="translate(., '_', '-')"/>
+        <xsl:value-of select="translate(., '_', '-')"/>
       </xsl:when>
       <xsl:when test="contains(., 'stop_orphan_actions')">
-	<xsl:value-of select="translate(., '_', '-')"/>
+        <xsl:value-of select="translate(., '_', '-')"/>
       </xsl:when>
       <xsl:when test="contains(., 'remove_after_stop')">
-	<xsl:value-of select="translate(., '_', '-')"/>
+        <xsl:value-of select="translate(., '_', '-')"/>
       </xsl:when>
 <!--
       <xsl:when test="contains(., '')">
-	<xsl:value-of select="translate(., '_', '-')"/>
+        <xsl:value-of select="translate(., '_', '-')"/>
       </xsl:when>
 -->
       <xsl:otherwise>
-	<xsl:value-of select="."/>
+        <xsl:value-of select="."/>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:attribute>
@@ -283,17 +283,17 @@
 <xsl:template name="resource-common">
     <xsl:if test="contains(name(), 'primitive')">
       <xsl:for-each select="@*"> 
-	<xsl:choose>
-	  <xsl:when test="starts-with(name(), 'type')">
-	    <xsl:apply-templates select="."/>
-	  </xsl:when>
-	  <xsl:when test="starts-with(name(), 'class')">
-	    <xsl:apply-templates select="."/>
-	  </xsl:when>
-	  <xsl:when test="starts-with(name(), 'provider')">
-	    <xsl:apply-templates select="."/>
-	  </xsl:when>
-	</xsl:choose>
+        <xsl:choose>
+          <xsl:when test="starts-with(name(), 'type')">
+            <xsl:apply-templates select="."/>
+          </xsl:when>
+          <xsl:when test="starts-with(name(), 'class')">
+            <xsl:apply-templates select="."/>
+          </xsl:when>
+          <xsl:when test="starts-with(name(), 'provider')">
+            <xsl:apply-templates select="."/>
+          </xsl:when>
+        </xsl:choose>
       </xsl:for-each>
     </xsl:if>
 
@@ -303,27 +303,27 @@
 
     <xsl:element name="meta_attributes">
       <xsl:attribute name="id">
-	<xsl:value-of select="name()"/>
-	<xsl:text>-</xsl:text>
-	<xsl:value-of select="@id"/>
-	<xsl:text>.meta</xsl:text>
+        <xsl:value-of select="name()"/>
+        <xsl:text>-</xsl:text>
+        <xsl:value-of select="@id"/>
+        <xsl:text>.meta</xsl:text>
       </xsl:attribute>
-	<xsl:for-each select="@*"> 
-	  <xsl:choose>
-	    <xsl:when test="starts-with(name(), 'id')"/>
-	    <xsl:when test="starts-with(name(), 'type')"/>
-	    <xsl:when test="starts-with(name(), 'class')"/>
-	    <xsl:when test="starts-with(name(), 'provider')"/>
-	    <xsl:when test="starts-with(name(), 'description')"/>
-	    <xsl:otherwise>
-	      <xsl:call-template name="create-as-attr">
-		<xsl:with-param name="name"><xsl:value-of select="name()"/></xsl:with-param>
-		<xsl:with-param name="value"><xsl:value-of select="."/></xsl:with-param>
-	      </xsl:call-template>
-	    </xsl:otherwise>
-	  </xsl:choose>
-	</xsl:for-each>
-	<xsl:call-template name="convert-instance-to-meta"/>
+      <xsl:for-each select="@*"> 
+        <xsl:choose>
+          <xsl:when test="starts-with(name(), 'id')"/>
+          <xsl:when test="starts-with(name(), 'type')"/>
+          <xsl:when test="starts-with(name(), 'class')"/>
+          <xsl:when test="starts-with(name(), 'provider')"/>
+          <xsl:when test="starts-with(name(), 'description')"/>
+          <xsl:otherwise>
+            <xsl:call-template name="create-as-attr">
+              <xsl:with-param name="name"><xsl:value-of select="name()"/></xsl:with-param>
+              <xsl:with-param name="value"><xsl:value-of select="."/></xsl:with-param>
+            </xsl:call-template>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:for-each>
+      <xsl:call-template name="convert-instance-to-meta"/>
     </xsl:element>
 
 </xsl:template>
@@ -410,25 +410,25 @@
 
     <xsl:attribute name="dc-uuid">
       <xsl:call-template name="rename-default">
-	<xsl:with-param name="newvalue"><xsl:value-of select="@dc-uuid"/></xsl:with-param>
-	<xsl:with-param name="oldvalue"><xsl:value-of select="@dc_uuid"/></xsl:with-param>
-	<xsl:with-param name="default">0</xsl:with-param>
+        <xsl:with-param name="newvalue"><xsl:value-of select="@dc-uuid"/></xsl:with-param>
+        <xsl:with-param name="oldvalue"><xsl:value-of select="@dc_uuid"/></xsl:with-param>
+        <xsl:with-param name="default">0</xsl:with-param>
       </xsl:call-template>
     </xsl:attribute>
 
     <xsl:attribute name="have-quorum">
       <xsl:call-template name="rename-default">
-	<xsl:with-param name="newvalue"><xsl:value-of select="@have-quorum"/></xsl:with-param>
-	<xsl:with-param name="oldvalue"><xsl:value-of select="@have_quorum"/></xsl:with-param>
-	<xsl:with-param name="default">false</xsl:with-param>
+        <xsl:with-param name="newvalue"><xsl:value-of select="@have-quorum"/></xsl:with-param>
+        <xsl:with-param name="oldvalue"><xsl:value-of select="@have_quorum"/></xsl:with-param>
+        <xsl:with-param name="default">false</xsl:with-param>
       </xsl:call-template>
     </xsl:attribute>
 
     <xsl:attribute name="remote-tls-port">
       <xsl:call-template name="rename-default">
-	<xsl:with-param name="newvalue"><xsl:value-of select="@remote-tls-port"/></xsl:with-param>
-	<xsl:with-param name="oldvalue"><xsl:value-of select="@remote_access_port"/></xsl:with-param>
-	<xsl:with-param name="default">0</xsl:with-param>
+        <xsl:with-param name="newvalue"><xsl:value-of select="@remote-tls-port"/></xsl:with-param>
+        <xsl:with-param name="oldvalue"><xsl:value-of select="@remote_access_port"/></xsl:with-param>
+        <xsl:with-param name="default">0</xsl:with-param>
       </xsl:call-template>
     </xsl:attribute>
 
@@ -456,16 +456,16 @@
       <xsl:when test="//nvpair[@name='stonith_enabled']"/>
       <xsl:otherwise>
 
-	<xsl:element name="cluster_property_set">
-	  <xsl:call-template name="auto-id"/>
-	  <xsl:element name="nvpair">
-	    <xsl:call-template name="auto-id">
-	      <xsl:with-param name="base">nvp</xsl:with-param>
-	    </xsl:call-template>
-	    <xsl:attribute name="name">stonith-enabled</xsl:attribute>
-	    <xsl:attribute name="value">false</xsl:attribute>
-	  </xsl:element>
-	</xsl:element>
+        <xsl:element name="cluster_property_set">
+          <xsl:call-template name="auto-id"/>
+          <xsl:element name="nvpair">
+            <xsl:call-template name="auto-id">
+              <xsl:with-param name="base">nvp</xsl:with-param>
+            </xsl:call-template>
+            <xsl:attribute name="name">stonith-enabled</xsl:attribute>
+            <xsl:attribute name="value">false</xsl:attribute>
+          </xsl:element>
+        </xsl:element>
 
       </xsl:otherwise>
     </xsl:choose>
@@ -495,7 +495,7 @@
     <!-- make sure some sort of score is always set -->
     <xsl:if test="not(@score)">
       <xsl:if test="not(@score_attribute)">
-	<xsl:attribute name="score">0</xsl:attribute>
+        <xsl:attribute name="score">0</xsl:attribute>
       </xsl:if>
     </xsl:if>
 
@@ -507,9 +507,9 @@
 
     <xsl:if test="not(count(*))">
       <xsl:element name="expression">
-	<xsl:call-template name="auto-id"/>
-	<xsl:attribute name="attribute">#uname</xsl:attribute>
-	<xsl:attribute name="operation">defined</xsl:attribute>
+        <xsl:call-template name="auto-id"/>
+        <xsl:attribute name="attribute">#uname</xsl:attribute>
+        <xsl:attribute name="operation">defined</xsl:attribute>
       </xsl:element>
     </xsl:if>
 
@@ -583,27 +583,27 @@
 
     <xsl:if test="@from_role">
       <xsl:attribute name="rsc-role">
-	<xsl:call-template name="camel-case-value">
-	  <xsl:with-param name="value"><xsl:value-of select="@from_role"/></xsl:with-param>
-	</xsl:call-template>
+        <xsl:call-template name="camel-case-value">
+          <xsl:with-param name="value"><xsl:value-of select="@from_role"/></xsl:with-param>
+        </xsl:call-template>
       </xsl:attribute>
     </xsl:if>
     <xsl:if test="@to_role">
       <xsl:attribute name="with-rsc-role">
-	<xsl:call-template name="camel-case-value">
-	  <xsl:with-param name="value"><xsl:value-of select="@to_role"/></xsl:with-param>
-	</xsl:call-template>
+        <xsl:call-template name="camel-case-value">
+          <xsl:with-param name="value"><xsl:value-of select="@to_role"/></xsl:with-param>
+        </xsl:call-template>
       </xsl:attribute>
     </xsl:if>
     
     <xsl:for-each select="@*"> 
       <xsl:choose>
-	<xsl:when test="starts-with(name(), 'to')"/>
-	<xsl:when test="starts-with(name(), 'from')"/>
-	<xsl:when test="starts-with(name(), 'symmetrical')"/>
-	<xsl:otherwise>
-	  <xsl:apply-templates select="."/>
-	</xsl:otherwise>
+        <xsl:when test="starts-with(name(), 'to')"/>
+        <xsl:when test="starts-with(name(), 'from')"/>
+        <xsl:when test="starts-with(name(), 'symmetrical')"/>
+        <xsl:otherwise>
+          <xsl:apply-templates select="."/>
+        </xsl:otherwise>
       </xsl:choose>
     </xsl:for-each>
     <xsl:apply-templates select="node()" />
@@ -621,71 +621,71 @@
     <xsl:choose>
       <xsl:when test="not(contains(@type, 'before'))">
 
-	<xsl:attribute name="first">
-	  <xsl:value-of select="@to"/>
-	</xsl:attribute>
-	<xsl:attribute name="then">
-	  <xsl:value-of select="@from"/>
-	</xsl:attribute>
+        <xsl:attribute name="first">
+          <xsl:value-of select="@to"/>
+        </xsl:attribute>
+        <xsl:attribute name="then">
+          <xsl:value-of select="@from"/>
+        </xsl:attribute>
 
-	<xsl:choose>
-	  <xsl:when test="@action">
-	    <xsl:attribute name="then-action">
-	      <xsl:value-of select="@action"/>
-	    </xsl:attribute>
-	  </xsl:when>
-	  <xsl:otherwise>
-	    <xsl:attribute name="then-action">start</xsl:attribute>
-	  </xsl:otherwise>
-	</xsl:choose>
+        <xsl:choose>
+          <xsl:when test="@action">
+            <xsl:attribute name="then-action">
+              <xsl:value-of select="@action"/>
+            </xsl:attribute>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:attribute name="then-action">start</xsl:attribute>
+          </xsl:otherwise>
+        </xsl:choose>
 
-	<xsl:choose>
-	  <xsl:when test="@to_action">
-	    <xsl:attribute name="first-action">
-	      <xsl:value-of select="@to_action"/>
-	    </xsl:attribute>
-	  </xsl:when>
-	  <xsl:when test="@action">
-	    <xsl:attribute name="first-action">
-	      <xsl:value-of select="@action"/>
-	    </xsl:attribute>
-	  </xsl:when>
-	  <xsl:otherwise>
-	    <xsl:attribute name="first-action">start</xsl:attribute>
-	  </xsl:otherwise>
-	</xsl:choose>
+        <xsl:choose>
+          <xsl:when test="@to_action">
+            <xsl:attribute name="first-action">
+              <xsl:value-of select="@to_action"/>
+            </xsl:attribute>
+          </xsl:when>
+          <xsl:when test="@action">
+            <xsl:attribute name="first-action">
+              <xsl:value-of select="@action"/>
+            </xsl:attribute>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:attribute name="first-action">start</xsl:attribute>
+          </xsl:otherwise>
+        </xsl:choose>
 
       </xsl:when>
       <xsl:otherwise>
-	<xsl:if test="@action">
-	  <xsl:attribute name="first-action">
-	  <xsl:value-of select="@action"/>
-	  </xsl:attribute>
-	</xsl:if>
-	<xsl:attribute name="first">
-	  <xsl:value-of select="@from"/>
-	</xsl:attribute>
-	<xsl:attribute name="then">
-	  <xsl:value-of select="@to"/>
-	</xsl:attribute>
-	<xsl:if test="@to_action">
-	  <xsl:attribute name="then-action">
-	    <xsl:value-of select="@to_action"/>
-	  </xsl:attribute>
-	</xsl:if>
+        <xsl:if test="@action">
+          <xsl:attribute name="first-action">
+          <xsl:value-of select="@action"/>
+          </xsl:attribute>
+        </xsl:if>
+        <xsl:attribute name="first">
+          <xsl:value-of select="@from"/>
+        </xsl:attribute>
+        <xsl:attribute name="then">
+          <xsl:value-of select="@to"/>
+        </xsl:attribute>
+        <xsl:if test="@to_action">
+          <xsl:attribute name="then-action">
+            <xsl:value-of select="@to_action"/>
+          </xsl:attribute>
+        </xsl:if>
       </xsl:otherwise>
 
     </xsl:choose>
 
     <xsl:for-each select="@*"> 
       <xsl:choose>
-	<xsl:when test="starts-with(name(), 'to')"/>
-	<xsl:when test="starts-with(name(), 'from')"/>
-	<xsl:when test="contains(name(), 'action')"/>
-	<xsl:when test="starts-with(name(), 'type')"/>
-	<xsl:otherwise>
-	  <xsl:apply-templates select="."/>
-	</xsl:otherwise>
+        <xsl:when test="starts-with(name(), 'to')"/>
+        <xsl:when test="starts-with(name(), 'from')"/>
+        <xsl:when test="contains(name(), 'action')"/>
+        <xsl:when test="starts-with(name(), 'type')"/>
+        <xsl:otherwise>
+          <xsl:apply-templates select="."/>
+        </xsl:otherwise>
       </xsl:choose>
     </xsl:for-each>
     <xsl:apply-templates select="node()" />
@@ -699,18 +699,18 @@
     <xsl:call-template name="auto-id"/>
     <xsl:for-each select="@*"> 
       <xsl:choose>
-	<xsl:when test="starts-with(name(), 'id')">
-	  <!--
-	      Do not s/:/-/ for lrm_resource IDs 
-	      Leave node IDs unmodified
-	    -->
-	  <xsl:attribute name="id">
-	    <xsl:value-of select="."/>
-	  </xsl:attribute>  
-	</xsl:when>
-	<xsl:otherwise>
-	  <xsl:apply-templates select="."/>
-	</xsl:otherwise>
+        <xsl:when test="starts-with(name(), 'id')">
+          <!--
+              Do not s/:/-/ for lrm_resource IDs 
+              Leave node IDs unmodified
+            -->
+          <xsl:attribute name="id">
+            <xsl:value-of select="."/>
+          </xsl:attribute>  
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:apply-templates select="."/>
+        </xsl:otherwise>
       </xsl:choose>
     </xsl:for-each>
     <xsl:apply-templates select="node()" />

@@ -2,7 +2,7 @@
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  *
  * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
+ * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
  *
@@ -11,7 +11,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
+ * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
@@ -123,6 +123,7 @@ lrm_state_t *lrm_state_find_or_create(const char *node_name);
  * Regular resources go to the lrmd, and remote connection resources are
  * handled locally in the crmd.
  */
+void lrm_state_disconnect_only(lrm_state_t * lrm_state);
 void lrm_state_disconnect(lrm_state_t * lrm_state);
 int lrm_state_ipc_connect(lrm_state_t * lrm_state);
 int lrm_state_remote_connect_async(lrm_state_t * lrm_state, const char *server, int port,
@@ -158,7 +159,6 @@ int remote_ra_exec(lrm_state_t * lrm_state, const char *rsc_id, const char *acti
                    int start_delay,     /* ms */
                    lrmd_key_value_t * params);
 void remote_ra_cleanup(lrm_state_t * lrm_state);
-
-xmlNode *simple_remote_node_status(const char *node_name, xmlNode *parent, const char *source);
+void remote_ra_fail(const char *node_name);
 
 gboolean process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op, struct recurring_op_s *pending);

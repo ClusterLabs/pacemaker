@@ -1420,6 +1420,12 @@ custom_action_order(resource_t * lh_rsc, char *lh_action_task, action_t * lh_act
 
     order = calloc(1, sizeof(order_constraint_t));
 
+    crm_trace("Creating[%d] %s %s %s - %s %s %s", data_set->order_id,
+              lh_rsc?lh_rsc->id:"NA", lh_action_task, lh_action?lh_action->uuid:"NA",
+              rh_rsc?rh_rsc->id:"NA", rh_action_task, rh_action?rh_action->uuid:"NA");
+
+    /* CRM_ASSERT(data_set->order_id != 291); */
+
     order->id = data_set->order_id++;
     order->type = type;
     order->lh_rsc = lh_rsc;

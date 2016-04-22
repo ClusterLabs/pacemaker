@@ -130,6 +130,34 @@ check_timer(const char *value)
 }
 
 gboolean
+check_sbd_timeout(const char *value)
+{
+    const char *env_value = getenv("SBD_WATCHDOG_TIMEOUT");
+
+    long sbd_timeout = crm_get_msec(env_value);
+    long st_timeout = crm_get_msec(value);
+
+    if(value == NULL || st_timeout <= 0) {
+        crm_notice("Watchdog may be enabled but stonith-watchdog-timeout is disabled: %s", value);
+
+    } else if(pcmk_locate_sbd() == 0) {
+        do_crm_log_always(LOG_EMERG, "Shutting down: stonith-watchdog-timeout is configured (%ldms) but SBD is not active", st_timeout);
+        crm_exit(DAEMON_RESPAWN_STOP);
+        return FALSE;
+
+    } else if(st_timeout < sbd_timeout) {
+        do_crm_log_always(LOG_EMERG, "Shutting down: stonith-watchdog-timeout (%ldms) is too short (must be greater than %ldms)",
+                          st_timeout, sbd_timeout);
+        crm_exit(DAEMON_RESPAWN_STOP);
+        return FALSE;
+    }
+
+    crm_info("Watchdog functionality is consistent: %s delay exceeds timeout of %s", value, env_value);
+    return TRUE;
+}
+
+
+gboolean
 check_boolean(const char *value)
 {
     int tmp = FALSE;
@@ -1218,10 +1246,14 @@ crm_pid_active(long pid, const char *daemon)
         snprintf(proc_path, sizeof(proc_path), "/proc/%lu/exe", pid);
 
         rc = readlink(proc_path, exe_path, PATH_MAX - 1);
-        if (rc < 0) {
+        if (rc < 0 && errno == EACCES) {
+            crm_perror(LOG_INFO, "Could not read from %s", proc_path);
+            return 1;
+        } else if (rc < 0) {
             crm_perror(LOG_ERR, "Could not read from %s", proc_path);
             return 0;
         }
+        
 
         exe_path[rc] = 0;
 
@@ -1243,15 +1275,22 @@ crm_pid_active(long pid, const char *daemon)
 
 #define	LOCKSTRLEN	11
 
-int
+long
 crm_read_pidfile(const char *filename)
 {
     int fd;
-    long pid = -1;
+    struct stat sbuf;
+    long pid = -ENOENT;
     char buf[LOCKSTRLEN + 1];
 
     if ((fd = open(filename, O_RDONLY)) < 0) {
         goto bail;
+    }
+
+    if (fstat(fd, &sbuf) >= 0 && sbuf.st_size < LOCKSTRLEN) {
+        sleep(2);           /* if someone was about to create one,
+                             * give'm a sec to do so
+                             */
     }
 
     if (read(fd, buf, sizeof(buf)) < 1) {
@@ -1261,6 +1300,8 @@ crm_read_pidfile(const char *filename)
     if (sscanf(buf, "%lu", &pid) > 0) {
         if (pid <= 0) {
             pid = -ESRCH;
+        } else {
+            crm_trace("Got pid %lu from %s\n", pid, filename);
         }
     }
 
@@ -1271,46 +1312,31 @@ crm_read_pidfile(const char *filename)
     return pid;
 }
 
-int
+long
 crm_pidfile_inuse(const char *filename, long mypid, const char *daemon)
 {
-    long pid = 0;
-    struct stat sbuf;
-    char buf[LOCKSTRLEN + 1];
-    int rc = -ENOENT, fd = 0;
+    long pid = crm_read_pidfile(filename);
 
-    if ((fd = open(filename, O_RDONLY)) >= 0) {
-        if (fstat(fd, &sbuf) >= 0 && sbuf.st_size < LOCKSTRLEN) {
-            sleep(2);           /* if someone was about to create one,
-                                 * give'm a sec to do so
-                                 */
-        }
-        if (read(fd, buf, sizeof(buf)) > 0) {
-            if (sscanf(buf, "%lu", &pid) > 0) {
-                crm_trace("Got pid %lu from %s\n", pid, filename);
-                if (pid <= 1) {
-                    /* Invalid pid */
-                    rc = -ENOENT;
-                    unlink(filename);
+    if (pid < 2) {
+        /* Invalid pid */
+        pid = -ENOENT;
+        unlink(filename);
 
-                } else if (mypid && pid == mypid) {
-                    /* In use by us */
-                    rc = pcmk_ok;
+    } else if (mypid && pid == mypid) {
+        /* In use by us */
+        pid = pcmk_ok;
 
-                } else if (crm_pid_active(pid, daemon) == FALSE) {
-                    /* Contains a stale value */
-                    unlink(filename);
-                    rc = -ENOENT;
+    } else if (crm_pid_active(pid, daemon) == FALSE) {
+        /* Contains a stale value */
+        unlink(filename);
+        pid = -ENOENT;
 
-                } else if (mypid && pid != mypid) {
-                    /* locked by existing process - give up */
-                    rc = -EEXIST;
-                }
-            }
-        }
-        close(fd);
+    } else if (mypid && pid != mypid) {
+        /* locked by existing process - give up */
+        pid = -EEXIST;
     }
-    return rc;
+
+    return pid;
 }
 
 static int
@@ -1772,7 +1798,7 @@ attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const cha
     }
 
     crm_xml_add(update, F_TYPE, T_ATTRD);
-    crm_xml_add(update, F_ORIG, crm_system_name);
+    crm_xml_add(update, F_ORIG, crm_system_name?crm_system_name:"unknown");
 
     if (name == NULL && command == 'U') {
         command = 'R';
@@ -1791,6 +1817,14 @@ attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const cha
             break;
         case 'R':
             crm_xml_add(update, F_ATTRD_TASK, ATTRD_OP_REFRESH);
+            break;
+        case 'B':
+            crm_xml_add(update, F_ATTRD_TASK, ATTRD_OP_UPDATE_BOTH);
+            crm_xml_add(update, F_ATTRD_ATTRIBUTE, name);
+            break;
+        case 'Y':
+            crm_xml_add(update, F_ATTRD_TASK, ATTRD_OP_UPDATE_DELAY);
+            crm_xml_add(update, F_ATTRD_ATTRIBUTE, name);
             break;
         case 'Q':
             crm_xml_add(update, F_ATTRD_TASK, ATTRD_OP_QUERY);
@@ -2046,7 +2080,7 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char * c
 
     if (compare_version("2.1", caller_version) <= 0) {
         if (op->t_run || op->t_rcchange || op->exec_time || op->queue_time) {
-            crm_trace("Timing data (%s_%s_%d): last=%lu change=%lu exec=%lu queue=%lu",
+            crm_trace("Timing data (%s_%s_%d): last=%u change=%u exec=%u queue=%u",
                       op->rsc_id, op->op_type, op->interval,
                       op->t_run, op->t_rcchange, op->exec_time, op->queue_time);
 
@@ -2270,7 +2304,8 @@ find_library_function(void **handle, const char *lib, const char *fn, gboolean f
     }
 
     a_function = dlsym(*handle, fn);
-    if ((error = dlerror()) != NULL) {
+    if (a_function == NULL) {
+        error = dlerror();
         crm_err("%sCould not find %s in %s: %s", fatal ? "Fatal: " : "", fn, lib, error);
         if (fatal) {
             crm_exit(DAEMON_RESPAWN_STOP);

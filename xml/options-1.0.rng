@@ -4,29 +4,29 @@
   <start>
     <interleave>
       <element name="crm_config">
-	<zeroOrMore>
-	  <element name="cluster_property_set">
-	    <externalRef href="nvset.rng"/>
-	  </element>
-	</zeroOrMore>
+        <zeroOrMore>
+          <element name="cluster_property_set">
+            <externalRef href="nvset.rng"/>
+          </element>
+        </zeroOrMore>
       </element>
       <optional>
-	<element name="rsc_defaults">
-	  <zeroOrMore>
-	    <element name="meta_attributes">
-	      <externalRef href="nvset.rng"/>
-	    </element>
-	  </zeroOrMore>
-	</element>
+        <element name="rsc_defaults">
+          <zeroOrMore>
+            <element name="meta_attributes">
+              <externalRef href="nvset.rng"/>
+            </element>
+          </zeroOrMore>
+        </element>
       </optional>
       <optional>
-	<element name="op_defaults">
-	  <zeroOrMore>
-	    <element name="meta_attributes">
-	      <externalRef href="nvset.rng"/>
-	    </element>
-	  </zeroOrMore>
-	</element>
+        <element name="op_defaults">
+          <zeroOrMore>
+            <element name="meta_attributes">
+              <externalRef href="nvset.rng"/>
+            </element>
+          </zeroOrMore>
+        </element>
       </optional>
     </interleave>
   </start>

@@ -52,7 +52,7 @@ Every time the monitor action is run, this resource agent records (in the CIB) t
 <parameter name="pidfile" unique="0">
 <longdesc lang="en">PID file</longdesc>
 <shortdesc lang="en">PID file</shortdesc>
-<content type="string" default="$HA_VARRUN/ping-${OCF_RESOURCE_INSTANCE}" />
+<content type="string" default="${HA_VARRUN%%/}/ping-${OCF_RESOURCE_INSTANCE}" />
 </parameter>
 
 <parameter name="dampen" unique="0">
@@ -142,7 +142,6 @@ Enables to use default attrd_updater verbose logging on every call.
 <actions>
 <action name="start"   timeout="60" />
 <action name="stop"    timeout="20" />
-<action name="reload"  timeout="100" />
 <action name="monitor" depth="0"  timeout="60" interval="10"/>
 <action name="meta-data"  timeout="5" />
 <action name="validate-all"  timeout="30" />
@@ -219,6 +218,15 @@ ping_validate() {
 	exit $OCF_ERR_CONFIGURED
     fi
 
+    # For fping allow only same IP versions or hostnames
+    if use_fping; then
+        hosts_family
+        if [ $? -eq 99 ]; then
+            ocf_log err "host_list can contain only host with same IP versions for fping"
+            exit $OCF_ERR_CONFIGURED
+        fi
+    fi
+
     check_binary ping
 
     return $OCF_SUCCESS
@@ -226,6 +234,13 @@ ping_validate() {
 
 
 fping_check() {
+    p_exe=fping
+    hosts_family
+    case $? in
+        6) p_exe=fping6 ;;
+        99) ocf_log err "Ambiguous IP versions in host_list: '$OCF_RESKEY_host_list'"; exit $OCF_ERR_CONFIGURED;;
+    esac
+
     active=0
     f_out=`mktemp`
     f_err=`mktemp`
@@ -233,7 +248,7 @@ fping_check() {
     n=$OCF_RESKEY_attempts
     timeout=`expr $OCF_RESKEY_timeout \* 1000 / $OCF_RESKEY_attempts`
 
-    cmd="fping -r $OCF_RESKEY_attempts -t $timeout -B 1.0 $OCF_RESKEY_options $OCF_RESKEY_host_list"
+    cmd="$p_exe -r $OCF_RESKEY_attempts -t $timeout -B 1.0 $OCF_RESKEY_options $OCF_RESKEY_host_list"
     $cmd>$f_out 2>$f_err; rc=$?
     active=`grep alive $f_out|wc -l`
 
@@ -282,7 +297,7 @@ ping_check() {
 
 ping_update() {
     
-    if ocf_is_true "$OCF_RESKEY_use_fping" && have_binary fping; then
+    if use_fping; then
 	fping_check
 	active=$?
     else
@@ -291,7 +306,11 @@ ping_update() {
     fi
 
     score=`expr $active \* $OCF_RESKEY_multiplier`
-    attrd_updater -n $OCF_RESKEY_name -v $score -d $OCF_RESKEY_dampen $attrd_options
+    if [ "$__OCF_ACTION" = "start" ] ; then
+        attrd_updater -n $OCF_RESKEY_name -B $score -d $OCF_RESKEY_dampen $attrd_options
+    else
+        attrd_updater -n $OCF_RESKEY_name -v $score -d $OCF_RESKEY_dampen $attrd_options
+    fi
     rc=$?
     case $rc in 
 	0) ping_conditional_log debug "Updated $OCF_RESKEY_name = $score" ;;
@@ -308,6 +327,39 @@ ping_update() {
     return 0
 }
 
+use_fping() {
+    ocf_is_true "$OCF_RESKEY_use_fping" && have_binary fping;
+}
+
+# return values:
+#     4 IPv4
+#     6 IPv6
+#     0 indefinite (i.e. hostname)
+host_family() {
+    case $1 in
+	*[0-9].*[0-9].*[0-9].*[0-9]) return 4 ;;
+	*:*) return 6 ;;
+	*) return 0 ;;
+    esac
+}
+
+# return values same as host_family plus
+#     99 ambiguous families
+hosts_family() {
+    # For fping allow only same IP versions or hostnames
+    family=0
+    for host in $OCF_RESKEY_host_list; do
+        host_family $host
+        f=$?        
+        if [ $family -ne 0 -a $f -ne 0 -a $f -ne $family ] ; then
+            family=99
+            break
+        fi
+        [ $f -ne 0 ] && family=$f
+    done
+    return $family
+}
+
 : ${OCF_RESKEY_name:="pingd"}
 : ${OCF_RESKEY_dampen:="5s"}
 : ${OCF_RESKEY_attempts:="3"}
@@ -317,7 +369,7 @@ ping_update() {
 : ${OCF_RESKEY_use_fping:="1"}
 
 : ${OCF_RESKEY_CRM_meta_timeout:="20000"}
-: ${OCF_RESKEY_CRM_meta_globally_unique:="true"}
+: ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
 
 integer=`echo ${OCF_RESKEY_timeout} | egrep -o '[0-9]*'`
 case ${OCF_RESKEY_timeout} in
@@ -345,25 +397,25 @@ elif [ ${OCF_RESKEY_timeout} -gt 1000 ]; then
 fi
 
 if [ ${OCF_RESKEY_CRM_meta_globally_unique} = "false" ]; then
-    : ${OCF_RESKEY_pidfile:="$HA_VARRUN/ping-${OCF_RESKEY_name}"}
+    : ${OCF_RESKEY_pidfile:="${HA_VARRUN%%/}/ping-${OCF_RESKEY_name}"}
 else 
-    : ${OCF_RESKEY_pidfile:="$HA_VARRUN/ping-${OCF_RESOURCE_INSTANCE}"}
+    : ${OCF_RESKEY_pidfile:="${HA_VARRUN%%/}/ping-${OCF_RESOURCE_INSTANCE}"}
 fi
+
+# Check the debug option
+case "${OCF_RESKEY_debug}" in
+    true|True|TRUE|1)    OCF_RESKEY_debug=true;;
+    false|False|FALSE|0) OCF_RESKEY_debug=false;;
+    *)
+        ocf_log warn "Value for 'debug' is incorrect. Please specify 'true' or 'false' not: ${OCF_RESKEY_debug}"
+        OCF_RESKEY_debug=false
+        ;;
+esac
 
 attrd_options='-q'
-if ocf_is_true ${OCF_RESKEY_debug} ; then
+if [ ${OCF_RESKEY_debug} = "true" ]; then
     attrd_options=''
 fi
-
-# Check the debug option    
-    case "${OCF_RESKEY_debug}" in
-	true|True|TRUE|1)    OCF_RESKEY_debug=true;;
-	false|False|FALSE|0) OCF_RESKEY_debug=false;;
-	*)
-            ocf_log warn "Value for 'debug' is incorrect. Please specify 'true' or 'false' not: ${OCF_RESKEY_debug}"
-	    OCF_RESKEY_debug=false
-	    ;;
-    esac
 
 case $__OCF_ACTION in
 meta-data)	meta_data
@@ -372,7 +424,6 @@ meta-data)	meta_data
 start)		ping_start;;
 stop)		ping_stop;;
 monitor)	ping_monitor;;
-reload)		ping_start;;
 validate-all)	ping_validate;;
 usage|help)	ping_usage
 		exit $OCF_SUCCESS

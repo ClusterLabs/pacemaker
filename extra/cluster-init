@@ -151,7 +151,7 @@ done
 if [ ! -z $cluster ]; then
     host_input="-g $cluster"
     # use the last digit present in the variable (if any)
-    dsh_group=`echo $cluster | sed 's/[^0-9]\+//g;s/.*\([0-9]\)$/\1/'`
+    dsh_group=`echo $cluster | sed 's/[^0-9][^0-9]*//g;s/.*\([0-9]\)$/\1/'`
 fi
 
 if [ -z $dsh_group ]; then

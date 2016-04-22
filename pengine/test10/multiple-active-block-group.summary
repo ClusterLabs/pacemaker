@@ -4,9 +4,9 @@ Online: [ node2 node3 ]
 
  st-sbd	(stonith:external/sbd):	Started node2
  Resource Group: dgroup
-     dummy	(ocf::heartbeat:DummyTimeout):	FAILED (unmanaged)[ node2 node3 ]
-     dummy2	(ocf::heartbeat:Dummy):	Started node2 (unmanaged)
-     dummy3	(ocf::heartbeat:Dummy):	Started node2 (unmanaged)
+     dummy	(ocf::heartbeat:DummyTimeout):	FAILED ( blocked ) [ node2 node3 ]
+     dummy2	(ocf::heartbeat:Dummy):	Started node2 ( blocked ) 
+     dummy3	(ocf::heartbeat:Dummy):	Started node2 ( blocked ) 
 
 Transition Summary:
 
@@ -17,7 +17,7 @@ Online: [ node2 node3 ]
 
  st-sbd	(stonith:external/sbd):	Started node2
  Resource Group: dgroup
-     dummy	(ocf::heartbeat:DummyTimeout):	FAILED (unmanaged)[ node2 node3 ]
-     dummy2	(ocf::heartbeat:Dummy):	Started node2 (unmanaged)
-     dummy3	(ocf::heartbeat:Dummy):	Started node2 (unmanaged)
+     dummy	(ocf::heartbeat:DummyTimeout):	FAILED ( blocked ) [ node2 node3 ]
+     dummy2	(ocf::heartbeat:Dummy):	Started node2 ( blocked ) 
+     dummy3	(ocf::heartbeat:Dummy):	Started node2 ( blocked ) 
 

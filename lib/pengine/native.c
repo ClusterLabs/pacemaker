@@ -436,12 +436,15 @@ void
 native_print(resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
     node_t *node = NULL;
+    const char *desc = NULL;
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *kind = crm_element_value(rsc->xml, XML_ATTR_TYPE);
     const char *target_role = NULL;
 
     int offset = 0;
+    int flagOffset = 0;
     char buffer[LINE_MAX];
+    char flagBuffer[LINE_MAX];
 
     CRM_ASSERT(rsc->variant == pe_native);
     CRM_ASSERT(kind != NULL);
@@ -518,21 +521,6 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
         if (rsc_state == NULL) {
             rsc_state = role2text(rsc->role);
         }
-        if (target_role) {
-            enum rsc_role_e target_role_e = text2role(target_role);
-
-	    /* Ignore target role Started, as it is the default anyways
-             * (and would also allow a Master to be Master).
-             * Show if current role differs from target role,
-             * or if target role limits our abilities. */
-            if (target_role_e != RSC_ROLE_STARTED && (
-                target_role_e == RSC_ROLE_SLAVE ||
-		target_role_e == RSC_ROLE_STOPPED ||
-                safe_str_neq(target_role, rsc_state)))
-            {
-                offset += snprintf(buffer + offset, LINE_MAX - offset, "(target-role:%s) ", target_role);
-            }
-        }
         offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", rsc_state);
     }
 
@@ -540,7 +528,7 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
         offset += snprintf(buffer + offset, LINE_MAX - offset, " %s", node->details->uname);
 
         if (node->details->online == FALSE && node->details->unclean) {
-            offset += snprintf(buffer + offset, LINE_MAX - offset, " (UNCLEAN)");
+            flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset, "%sUNCLEAN", flagOffset?", ":"");
         }
     }
 
@@ -548,26 +536,52 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
         const char *pending_task = native_pending_task(rsc);
 
         if (pending_task) {
-            offset += snprintf(buffer + offset, LINE_MAX - offset, " (%s)", pending_task);
+            flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset, "%s%s", flagOffset?", ":"", pending_task);
         }
     }
 
-    if(is_not_set(rsc->flags, pe_rsc_managed)) {
-        offset += snprintf(buffer + offset, LINE_MAX - offset, " (unmanaged)");
+    if (target_role) {
+        enum rsc_role_e target_role_e = text2role(target_role);
+
+        /* Ignore target role Started, as it is the default anyways
+         * (and would also allow a Master to be Master).
+         * Show if current role differs from target role,
+         * or if target role limits our abilities. */
+        if (target_role_e == RSC_ROLE_STOPPED) {
+            flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset, "%sdisabled", flagOffset?", ":"");
+            rsc->cluster->disabled_resources++;
+
+        } else if (uber_parent(rsc)->variant == pe_master
+                   && target_role_e > RSC_ROLE_STOPPED
+                   && target_role_e < RSC_ROLE_MASTER
+                   && safe_str_neq(target_role, role2text(rsc->role))) {
+            flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset, "%starget-role:%s", flagOffset?", ":"", target_role);
+            rsc->cluster->disabled_resources++;
+        }
     }
+
+    if (is_set(rsc->flags, pe_rsc_block)) {
+        flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset, "%sblocked", flagOffset?", ":"");
+        rsc->cluster->blocked_resources++;
+
+    } else if (is_not_set(rsc->flags, pe_rsc_managed)) {
+        flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset, "%sunmanaged", flagOffset?", ":"");
+    }
+
     if(is_set(rsc->flags, pe_rsc_failure_ignored)) {
-        offset += snprintf(buffer + offset, LINE_MAX - offset, " (failure ignored)");
+        flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset, "%sfailure ignored", flagOffset?", ":"");
     }
 
     if ((options & pe_print_rsconly) || g_list_length(rsc->running_on) > 1) {
-        const char *desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
-        if(desc) {
-            offset += snprintf(buffer + offset, LINE_MAX - offset, " %s", desc);
-        }
+        desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
     }
 
     CRM_LOG_ASSERT(offset > 0);
-    status_print("%s", buffer);
+    if(flagOffset > 0) {
+        status_print("%s ( %s ) %s", buffer, flagBuffer, desc?desc:"");
+    } else {
+        status_print("%s %s", buffer, desc?desc:"");
+    }
 
 #if CURSES_ENABLED
     if ((options & pe_print_rsconly) || g_list_length(rsc->running_on) > 1) {

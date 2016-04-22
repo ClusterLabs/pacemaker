@@ -8,10 +8,10 @@
   <define name="attribute-score">
     <attribute name="score">
       <choice>
-	<data type="integer"/>
-	<value>INFINITY</value>
-	<value>+INFINITY</value>
-	<value>-INFINITY</value>
+        <data type="integer"/>
+        <value>INFINITY</value>
+        <value>+INFINITY</value>
+        <value>-INFINITY</value>
       </choice>
     </attribute>
   </define>

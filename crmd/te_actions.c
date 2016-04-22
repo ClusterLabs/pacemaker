@@ -65,6 +65,12 @@ send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
     int rc = pcmk_ok;
     crm_node_t *peer = NULL;
 
+    /* We (usually) rely on the membership layer to do node_update_cluster,
+     * and the peer status callback to do node_update_peer, because the node
+     * might have already rejoined before we get the stonith result here.
+     */
+    int flags = node_update_join | node_update_expected;
+
     /* zero out the node-status & remove all LRM status info */
     xmlNode *node_state = NULL;
 
@@ -76,6 +82,14 @@ send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
 
     CRM_CHECK(peer != NULL, return);
 
+    if (peer->state == NULL) {
+        /* Usually, we rely on the membership layer to update the cluster state
+         * in the CIB. However, if the node has never been seen, do it here, so
+         * the node is not considered unclean.
+         */
+        flags |= node_update_cluster;
+    }
+
     if (peer->uuid == NULL) {
         crm_info("Recording uuid '%s' for node '%s'", uuid, target);
         peer->uuid = strdup(uuid);
@@ -83,13 +97,8 @@ send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
 
     crmd_peer_down(peer, TRUE);
 
-    /* Generate a node state update for the CIB.
-     * We rely on the membership layer to do node_update_cluster,
-     * and the peer status callback to do node_update_peer,
-     * because the node might rejoin before we get the stonith result.
-     */
-    node_state = do_update_node_cib(peer, node_update_join|node_update_expected,
-                                    NULL, __FUNCTION__);
+    /* Generate a node state update for the CIB */
+    node_state = do_update_node_cib(peer, flags, NULL, __FUNCTION__);
 
     /* we have to mark whether or not remote nodes have already been fenced */
     if (peer->flags & crm_remote_node) {

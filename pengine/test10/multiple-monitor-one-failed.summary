@@ -1,0 +1,21 @@
+
+Current cluster status:
+Online: [ dhcp180 dhcp69 ]
+
+ Dummy-test2	(ocf::test:Dummy):	FAILED dhcp180 
+
+Transition Summary:
+ * Recover Dummy-test2	(Started dhcp180)
+
+Executing cluster transition:
+ * Resource action: Dummy-test2     stop on dhcp180
+ * Pseudo action:   all_stopped
+ * Resource action: Dummy-test2     start on dhcp180
+ * Resource action: Dummy-test2     monitor=30000 on dhcp180
+ * Resource action: Dummy-test2     monitor=10000 on dhcp180
+
+Revised cluster status:
+Online: [ dhcp180 dhcp69 ]
+
+ Dummy-test2	(ocf::test:Dummy):	Started dhcp180 
+

@@ -123,7 +123,6 @@ Log what have been done more verbosely.
 <actions>
 <action name="start"   timeout="30" />
 <action name="stop"    timeout="30" />
-<action name="reload"  timeout="30" />
 <action name="monitor" depth="0"  timeout="30" interval="10"/>
 <action name="meta-data"  timeout="5" />
 <action name="validate-all"  timeout="30" />
@@ -134,7 +133,7 @@ END
 
 usage() {
     cat <<END
-usage: $0 {start|stop|reload|monitor|validate-all|meta-data}
+usage: $0 {start|stop|monitor|validate-all|meta-data}
 
 Expects to have a fully populated OCF RA-compliant environment set.
 END
@@ -396,7 +395,11 @@ update() {
     local speed=$( iface_get_speed ${OCF_RESKEY_iface} )
 
     : $(( score = speed * ${OCF_RESKEY_weight_base} / 1000 ))
-    attrd_updater -n ${OCF_RESKEY_name} -v ${score} -d ${OCF_RESKEY_dampen} ${attrd_options}
+    if [ "$__OCF_ACTION" = "start" ] ; then
+        attrd_updater -n ${OCF_RESKEY_name} -B ${score} -d ${OCF_RESKEY_dampen} ${attrd_options}
+    else 
+        attrd_updater -n ${OCF_RESKEY_name} -v ${score} -d ${OCF_RESKEY_dampen} ${attrd_options}
+    fi
     rc=$?
     case ${rc} in
         0)
@@ -443,9 +446,6 @@ case $__OCF_ACTION in
         ;;
     monitor)
         monitor
-        ;;
-    reload)
-        start
         ;;
     validate-all)
         ;;

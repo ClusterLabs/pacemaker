@@ -208,6 +208,11 @@ shot? If you value your data, set up a STONITH device and enable this.
 
 If true, or unset, the cluster will refuse to start resources unless
 one or more STONITH resources have been configured.
+If false, unresponsive nodes are immediately assumed to be running no
+resources, and resource takeover to online nodes starts without any
+further protection (which means _data loss_ if the unresponsive node
+still accesses shared storage, for example).  See also the +requires+
+meta-attribute in <<s-resource-options>>.
 
 | stonith-action | reboot |
 indexterm:[stonith-action,Cluster Option]

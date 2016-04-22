@@ -39,6 +39,9 @@
      <action_set>
       <crm_event id="13" operation="do_shutdown" operation_key="do_shutdown-xen-b" on_node="xen-b" on_node_uuid="6a0b1629-ab27-47c7-a6a4-461c94e477f2">
         <attributes CRM_meta_op_no_wait="true" />
+        <downed>
+          <node id="6a0b1629-ab27-47c7-a6a4-461c94e477f2"/>
+        </downed>
       </crm_event>
      </action_set>
      <inputs>

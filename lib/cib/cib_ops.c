@@ -723,7 +723,7 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
         }
 
         path = xmlGetNodePath(match);
-        crm_debug("Processing %s op for %s (%s)", op, section, path);
+        crm_debug("Processing %s op for %s with %s", op, section, path);
         free(path);
 
         if (safe_str_eq(op, CIB_OP_DELETE)) {

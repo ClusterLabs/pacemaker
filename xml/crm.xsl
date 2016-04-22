@@ -41,10 +41,10 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 <xsl:template name="location_prefs">
     <xsl:parameter name="resource"/>
     <xsl:for-each select="/cib/configuration/constraints/rsc_location">
-	<xsl:if test="@rsc = $resource">
-	  <xsl:apply-templates/>
-	</xsl:if>
-	<xsl:text> </xsl:text>
+        <xsl:if test="@rsc = $resource">
+          <xsl:apply-templates/>
+        </xsl:if>
+        <xsl:text> </xsl:text>
     </xsl:for-each>
 </xsl:template>
 

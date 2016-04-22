@@ -62,6 +62,8 @@ gboolean stonith_shutdown_flag = FALSE;
 qb_ipcs_service_t *ipcs = NULL;
 xmlNode *local_cib = NULL;
 
+GHashTable *known_peer_names = NULL;
+
 static cib_t *cib_api = NULL;
 static void *cib_library = NULL;
 
@@ -1083,15 +1085,13 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         stonith_enabled_s = crm_element_value(stonith_enabled_xml, XML_NVPAIR_ATTR_VALUE);
     }
 
-    if(daemon_option_enabled(crm_system_name, "watchdog")) {
-        const char *value = NULL;
+    if (stonith_enabled_s == NULL || crm_is_true(stonith_enabled_s)) {
         long timeout_ms = 0;
+        const char *value = NULL;
 
-        if(value == NULL) {
-            stonith_watchdog_xml = get_xpath_object("//nvpair[@name='stonith-watchdog-timeout']", local_cib, LOG_TRACE);
-            if (stonith_watchdog_xml) {
-                value = crm_element_value(stonith_watchdog_xml, XML_NVPAIR_ATTR_VALUE);
-            }
+        stonith_watchdog_xml = get_xpath_object("//nvpair[@name='stonith-watchdog-timeout']", local_cib, LOG_TRACE);
+        if (stonith_watchdog_xml) {
+            value = crm_element_value(stonith_watchdog_xml, XML_NVPAIR_ATTR_VALUE);
         }
 
         if(value) {
@@ -1102,6 +1102,9 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
             crm_notice("New watchdog timeout %lds (was %lds)", timeout_ms/1000, stonith_watchdog_timeout_ms/1000);
             stonith_watchdog_timeout_ms = timeout_ms;
         }
+
+    } else {
+        stonith_watchdog_timeout_ms = 0;
     }
 
     if (stonith_enabled_s && crm_is_true(stonith_enabled_s) == FALSE) {
@@ -1170,6 +1173,10 @@ stonith_cleanup(void)
     if (ipcs) {
         qb_ipcs_destroy(ipcs);
     }
+
+    g_hash_table_destroy(known_peer_names);
+    known_peer_names = NULL;
+
     crm_peer_destroy();
     crm_client_cleanup();
     free(stonith_our_uname);
@@ -1249,11 +1256,17 @@ static void
 st_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
 {
     if ((type != crm_status_processes) && !is_set(node->flags, crm_remote_node)) {
+        xmlNode *query = NULL;
+
+        if (node->id && node->uname) {
+            g_hash_table_insert(known_peer_names, GUINT_TO_POINTER(node->id), strdup(node->uname));
+        }
+
         /*
          * This is a hack until we can send to a nodeid and/or we fix node name lookups
          * These messages are ignored in stonith_peer_callback()
          */
-        xmlNode *query = create_xml_node(NULL, "stonith_command");
+        query = create_xml_node(NULL, "stonith_command");
 
         crm_xml_add(query, F_XML_TAGNAME, "stonith_command");
         crm_xml_add(query, F_TYPE, T_STONITH_NG);
@@ -1371,6 +1384,16 @@ main(int argc, char **argv)
         printf("    <content type=\"time\" default=\"0s\"/>\n");
         printf("  </parameter>\n");
 
+        printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_ACTION_LIMIT);
+        printf
+            ("    <shortdesc lang=\"en\">The maximum number of actions can be performed in parallel on this device</shortdesc>\n");
+        printf
+            ("    <longdesc lang=\"en\">Pengine property concurrent-fencing=true needs to be configured first.\n"
+             "Then use this to specify the maximum number of actions can be performed in parallel on this device. -1 is unlimited.</longdesc>\n");
+        printf("    <content type=\"integer\" default=\"1\"/>\n");
+        printf("  </parameter>\n");
+
+
         for (lpc = 0; lpc < DIMOF(actions); lpc++) {
             printf("  <parameter name=\"pcmk_%s_action\" unique=\"0\">\n", actions[lpc]);
             printf
@@ -1423,6 +1446,7 @@ main(int argc, char **argv)
     mainloop_add_signal(SIGTERM, stonith_shutdown);
 
     crm_peer_init();
+    known_peer_names = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, free);
 
     if (stand_alone == FALSE) {
 #if SUPPORT_HEARTBEAT
@@ -1438,6 +1462,8 @@ main(int argc, char **argv)
             cluster.cpg.cpg_confchg_fn = pcmk_cpg_membership;
 #endif
         }
+
+        crm_set_status_callback(&st_peer_update_callback);
 
         if (crm_cluster_connect(&cluster) == FALSE) {
             crm_crit("Cannot sign in to the cluster... terminating");
@@ -1475,13 +1501,12 @@ main(int argc, char **argv)
         stonith_our_uname = strdup("localhost");
     }
 
-    crm_set_status_callback(&st_peer_update_callback);
 
     device_list = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_device);
 
     topology = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_topology_entry);
 
-    if(daemon_option_enabled(crm_system_name, "watchdog")) {
+    if(stonith_watchdog_timeout_ms > 0) {
         xmlNode *xml;
         stonith_key_value_t *params = NULL;
 

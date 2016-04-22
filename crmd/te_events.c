@@ -247,77 +247,6 @@ status_from_rc(crm_action_t * action, int orig_status, int rc, int target_rc)
     return PCMK_LRM_OP_ERROR;
 }
 
-static void
-process_remote_node_action(crm_action_t *action, xmlNode *event)
-{
-    xmlNode *child = NULL;
-
-    /* The whole point of this function is to detect when a remote-node
-     * is integrated into the cluster or has failed, and properly abort
-     * the transition so resources can be placed on the new node or fail
-     * all pending actions on a lost node.
-     */
-
-    if (crm_remote_peer_cache_size() == 0) {
-        return;
-    } else if (action->type != action_type_rsc) {
-        return;
-    } else if (action->confirmed == FALSE) {
-        return;
-    } else if (!action->failed || safe_str_neq(crm_element_value(action->xml, XML_LRM_ATTR_TASK), "start")) {
-        /* we only care about failed remote nodes, or remote nodes that have just come online. */
-        return;
-    }
-
-    for (child = __xml_first_child(action->xml); child != NULL; child = __xml_next(child)) {
-        const char *provider;
-        const char *type;
-        const char *rsc;
-        const char *action_type;
-        crm_node_t *remote_peer;
-
-        if (safe_str_neq(crm_element_name(child), XML_CIB_TAG_RESOURCE)) {
-            continue;
-        }
-
-        provider = crm_element_value(child, XML_AGENT_ATTR_PROVIDER);
-        type = crm_element_value(child, XML_ATTR_TYPE);
-        rsc = ID(child);
-        action_type = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
-
-        if (safe_str_neq(provider, "pacemaker") || safe_str_neq(type, "remote") || rsc == NULL) {
-            break;
-        }
-
-        remote_peer = crm_get_peer_full(0, rsc, CRM_GET_PEER_REMOTE);
-        if (remote_peer == NULL) {
-            break;
-        }
-
-        /* if a remote node connection failed, and this failure is not related to a probe
-         * action, make sure to cancel any in-flight operations occurring on that remote node
-         * since those actions will timeout. we don't want to wait around for the timeouts */
-        if (action->failed &&
-            !(safe_str_eq(action_type, "monitor") && action->interval == 0)) {
-
-            /* the rsc id is actually the remote node id. we want to mark all
-             * in-flight actions on a failed remote node as incompletable */
-            fail_incompletable_actions(transition_graph, rsc);
-
-        } else if (!action->failed &&
-                   safe_str_eq(remote_peer->state, CRM_NODE_LOST) &&
-                   safe_str_eq(action_type, "start")) {
-            /* A remote node will be placed in the "lost" state after
-             * it has been successfully fenced.  After successfully connecting
-             * to a remote-node after being fenced, we need to abort the transition
-             * so resources can be placed on the newly integrated remote-node */
-            abort_transition(INFINITY, tg_restart, "Remote-node re-discovered.", event);
-        }
-
-        return;
-    }
-}
-
 /*!
  * \internal
  * \brief Confirm action and update transition graph, aborting transition on failures
@@ -385,9 +314,6 @@ match_graph_event(crm_action_t *action, xmlNode *event, int op_status,
     target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
     crm_info("Action %s (%d) confirmed on %s (rc=%d%s)",
              crm_str(this_event), action->id, crm_str(target), op_rc, ignore_s);
-
-    /* determine if this action affects a remote-node's online/offline status */
-    process_remote_node_action(action, event);
 }
 
 crm_action_t *
@@ -458,86 +384,53 @@ get_cancel_action(const char *id, const char *node)
     return NULL;
 }
 
+/* downed nodes are listed like: <downed> <node id="UUID1" /> ... </downed> */
+#define XPATH_DOWNED "//" XML_GRAPH_TAG_DOWNED \
+                     "/" XML_CIB_TAG_NODE "[@" XML_ATTR_UUID "='%s']"
+
 /*!
  * \brief Find a transition event that would have made a specified node down
  *
- * \param[in] id      If nonzero, also consider this action ID a match
  * \param[in] target  UUID of node to match
- * \param[in] filter  If not NULL, only match CRM actions of this type
  * \param[in] quiet   If FALSE, log a warning if no match found
  *
  * \return Matching event if found, NULL otherwise
- *
- * \note "Down" events are CRM_OP_FENCE and CRM_OP_SHUTDOWN.
  */
 crm_action_t *
-match_down_event(int id, const char *target, const char *filter, bool quiet)
+match_down_event(const char *target, bool quiet)
 {
-    const char *this_action = NULL;
-    const char *this_node = NULL;
     crm_action_t *match = NULL;
+    xmlXPathObjectPtr xpath_ret = NULL;
+    GListPtr gIter, gIter2;
 
-    GListPtr gIter = NULL;
-    GListPtr gIter2 = NULL;
+    char *xpath = crm_strdup_printf(XPATH_DOWNED, target);
 
-    gIter = transition_graph->synapses;
-    for (; gIter != NULL; gIter = gIter->next) {
-        synapse_t *synapse = (synapse_t *) gIter->data;
+    for (gIter = transition_graph->synapses;
+         gIter != NULL && match == NULL;
+         gIter = gIter->next) {
 
-        /* lookup event */
-        gIter2 = synapse->actions;
-        for (; gIter2 != NULL; gIter2 = gIter2->next) {
-            crm_action_t *action = (crm_action_t *) gIter2->data;
+        for (gIter2 = ((synapse_t*)gIter->data)->actions;
+             gIter2 != NULL && match == NULL;
+             gIter2 = gIter2->next) {
 
-            if (id > 0 && action->id == id) {
-                match = action;
-                break;
+            match = (crm_action_t*)gIter2->data;
+            xpath_ret = xpath_search(match->xml, xpath);
+            if (numXpathResults(xpath_ret) < 1) {
+                match = NULL;
             }
-
-            this_action = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
-
-            if (action->type != action_type_crm) {
-                continue;
-
-            } else if (filter != NULL && safe_str_neq(this_action, filter)) {
-                continue;
-
-            } else if (safe_str_neq(this_action, CRM_OP_FENCE)
-                       && safe_str_neq(this_action, CRM_OP_SHUTDOWN)) {
-                continue;
-            }
-
-            this_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
-
-            if (this_node == NULL) {
-                crm_log_xml_err(action->xml, "No node uuid");
-            }
-
-            if (safe_str_neq(this_node, target)) {
-                crm_trace("Action %d node %s is not a match for %s",
-                          action->id, this_node, target);
-                continue;
-            }
-
-            match = action;
-            id = action->id;
-            break;
-        }
-
-        if (match != NULL) {
-            break;
+            freeXpathObject(xpath_ret);
         }
     }
 
-    if (match != NULL) {
-        crm_debug("Match found for action %d: %s on %s", id,
-                  crm_element_value(match->xml, XML_LRM_ATTR_TASK_KEY), target);
+    free(xpath);
 
-    } else if (id > 0) {
-        crm_err("No match for action %d", id);
+    if (match != NULL) {
+        crm_debug("Shutdown action found for node %s: action %d (%s)",
+                  target, match->id,
+                  crm_element_value(match->xml, XML_LRM_ATTR_TASK_KEY));
 
     } else if(quiet == FALSE) {
-        crm_warn("No match for shutdown action on %s", target);
+        crm_warn("No reason to expect node %s to be down", target);
     }
 
     return match;
@@ -628,7 +521,7 @@ process_graph_event(xmlNode * event, const char *event_node)
     } else {
         if (update_failcount(event, event_node, rc, target_rc,
                              (transition_num == -1), ignore_failures)) {
-            /* Turns out this wasn't an lrm status refresh update aferall */
+            /* Turns out this wasn't an lrm status refresh update afterall */
             stop_early = FALSE;
             desc = "failed";
         }

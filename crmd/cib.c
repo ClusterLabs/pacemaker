@@ -58,6 +58,7 @@ do_cib_updated(const char *event, xmlNode * msg)
     int format= 1;
     xmlNode *patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
     xmlNode *change = NULL;
+    xmlXPathObject *xpathObj = NULL;
 
     CRM_CHECK(msg != NULL, return);
     crm_element_value_int(msg, F_CIB_RC, &rc);
@@ -68,20 +69,39 @@ do_cib_updated(const char *event, xmlNode * msg)
 
     crm_element_value_int(patchset, "format", &format);
     if (format == 1) {
-        if (get_xpath_object
-            ("//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_CIB_TAG_CRMCONFIG, msg,
-             LOG_TRACE) != NULL) {
+        if ((xpathObj = xpath_search(
+                 msg,
+                 "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_CIB_TAG_CRMCONFIG " | " \
+                 "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_CIB_TAG_NOTIFICATIONS
+                 )) != NULL) {
+            freeXpathObject(xpathObj);
             mainloop_set_trigger(config_read);
         }
-
     } else if (format == 2) {
         for (change = __xml_first_child(patchset); change != NULL; change = __xml_next(change)) {
             const char *xpath = crm_element_value(change, XML_DIFF_PATH);
-            if (xpath != NULL
-                && strstr(xpath, "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_CRMCONFIG "/")) {
-                mainloop_set_trigger(config_read);
-                break;
+
+            if (xpath == NULL) {
+                continue;
             }
+
+            /* modifying properties */
+            if (!strstr(xpath, "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_CRMCONFIG "/") &&
+                !strstr(xpath, "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_NOTIFICATIONS)) {
+                xmlNode *section = NULL;
+                const char *name = NULL;
+
+                /* adding notifications section */
+                if ((strcmp(xpath, "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION) != 0) ||
+                    ((section = __xml_first_child(change)) == NULL) ||
+                    ((name = crm_element_name(section)) == NULL) ||
+                    (strcmp(name, XML_CIB_TAG_NOTIFICATIONS) != 0)) {
+                    continue;
+                }
+            } 
+
+            mainloop_set_trigger(config_read);
+            break;
         }
 
     } else {

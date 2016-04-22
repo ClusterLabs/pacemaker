@@ -109,6 +109,7 @@ typedef struct lrmd_private_s {
     /* Internal IPC proxy msg passing for remote guests */
     void (*proxy_callback)(lrmd_t *lrmd, void *userdata, xmlNode *msg);
     void *proxy_callback_userdata;
+    char *peer_version;
 } lrmd_private_t;
 
 static lrmd_list_t *
@@ -880,6 +881,25 @@ lrmd_api_poke_connection(lrmd_t * lrmd)
     return rc < 0 ? rc : pcmk_ok;
 }
 
+int
+remote_proxy_check(lrmd_t * lrmd, GHashTable *hash)
+{
+    int rc;
+    const char *value;
+    lrmd_private_t *native = lrmd->private;
+    xmlNode *data = create_xml_node(NULL, F_LRMD_OPERATION);
+
+    crm_xml_add(data, F_LRMD_ORIGIN, __FUNCTION__);
+
+    value = g_hash_table_lookup(hash, "stonith-watchdog-timeout");
+    crm_xml_add(data, F_LRMD_WATCHDOG, value);
+
+    rc = lrmd_send_command(lrmd, LRMD_OP_CHECK, data, NULL, 0, 0, native->type == CRM_CLIENT_IPC ? TRUE : FALSE);
+    free_xml(data);
+
+    return rc < 0 ? rc : pcmk_ok;
+}
+
 static int
 lrmd_handshake(lrmd_t * lrmd, const char *name)
 {
@@ -907,6 +927,7 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
         crm_err("Did not receive registration reply");
         rc = -EPROTO;
     } else {
+        const char *version = crm_element_value(reply, F_LRMD_PROTOCOL_VERSION);
         const char *msg_type = crm_element_value(reply, F_LRMD_OPERATION);
         const char *tmp_ticket = crm_element_value(reply, F_LRMD_CLIENTID);
 
@@ -914,7 +935,7 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
 
         if (rc == -EPROTO) {
             crm_err("LRMD protocol mismatch client version %s, server version %s",
-                LRMD_PROTOCOL_VERSION, crm_element_value(reply, F_LRMD_PROTOCOL_VERSION));
+                LRMD_PROTOCOL_VERSION, version);
             crm_log_xml_err(reply, "Protocol Error");
 
         } else if (safe_str_neq(msg_type, CRM_OP_REGISTER)) {
@@ -928,6 +949,7 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
         } else {
             crm_trace("Obtained registration token: %s", tmp_ticket);
             native->token = strdup(tmp_ticket);
+            native->peer_version = strdup(version?version:"1.0"); /* Included since 1.1 */
             rc = pcmk_ok;
         }
     }
@@ -1359,6 +1381,7 @@ lrmd_tls_disconnect(lrmd_t * lrmd)
 
     } else if (native->sock) {
         close(native->sock);
+        native->sock = 0;
     }
 
     if (native->pending_notify) {
@@ -1745,7 +1768,7 @@ lsb_get_metadata(const char *type, char **output)
     lsb_meta_helper_free_value(dflt_start);
     lsb_meta_helper_free_value(dflt_stop);
 
-    crm_trace("Created fake metadata: %d", strlen(*output));
+    crm_trace("Created fake metadata: %zd", strlen(*output));
     return pcmk_ok;
 }
 
@@ -1887,7 +1910,7 @@ static int
 heartbeat_get_metadata(const char *type, char **output)
 {
 	*output = crm_strdup_printf(hb_metadata_template, type, type, type);
-	crm_trace("Created fake metadata: %d", strlen(*output));
+	crm_trace("Created fake metadata: %zd", strlen(*output));
 	return pcmk_ok;
 }
 #endif

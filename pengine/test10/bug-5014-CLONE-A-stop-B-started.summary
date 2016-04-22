@@ -1,3 +1,4 @@
+1 of 2 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ fc16-builder ]
@@ -20,7 +21,7 @@ Revised cluster status:
 Online: [ fc16-builder ]
 
  Clone Set: clone1 [ClusterIP]
-     Stopped: [ fc16-builder ]
+     Stopped (disabled): [ fc16-builder ]
  Clone Set: clone2 [ClusterIP2]
      Started: [ fc16-builder ]
 
