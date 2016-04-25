@@ -22,8 +22,8 @@ WantedBy=multi-user.target
 Type=simple
 KillMode=process
 NotifyAccess=main
-EnvironmentFile=-@sysconfdir@/sysconfig/pacemaker
-EnvironmentFile=-@sysconfdir@/sysconfig/sbd
+EnvironmentFile=-@CONFIGDIR@/pacemaker
+EnvironmentFile=-@CONFIGDIR@/sbd
 SuccessExitStatus=100
 
 ExecStart=@sbindir@/pacemakerd -f

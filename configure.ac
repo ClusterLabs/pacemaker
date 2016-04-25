@@ -322,6 +322,13 @@ AC_ARG_WITH(doc-cli,
     [ ASCIIDOC_CLI_TYPE="$withval" ])
 AC_SUBST(ASCIIDOC_CLI_TYPE)
 
+CONFIGDIR=""
+AC_ARG_WITH(configdir,
+    [  --with-configdir=DIR
+       Directory for Pacemaker configuration file [${CONFIGDIR}]],
+    [ CONFIGDIR="$withval" ]
+)
+
 dnl ===============================================
 dnl General Processing
 dnl ===============================================
@@ -428,10 +435,14 @@ if test x"${docdir}" = x""; then
    #docdir=${datadir}/doc/packages/${PACKAGE}
 fi
 AC_SUBST(docdir)
+if test x"${CONFIGDIR}" = x""; then
+    CONFIGDIR="${sysconfdir}/sysconfig"
+fi
+AC_SUBST(CONFIGDIR)
 
 for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
     sharedstatedir localstatedir libdir includedir oldincludedir infodir \
-    mandir INITDIR docdir
+    mandir INITDIR docdir CONFIGDIR
 do
   dirname=`eval echo '${'${j}'}'`
   if
