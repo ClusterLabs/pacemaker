@@ -12,6 +12,7 @@
 %global shortcommit %(c=%{commit}; case ${c} in
                       Pacemaker-*%{rparen} echo ${c:10};;
                       *%{rparen} echo ${c:0:7};; esac)
+%global pre_release %(s=%{shortcommit}; [ ${s: -4:3} != -rc ]; echo $?)
 %global post_release %([ %{commit} = Pacemaker-%{shortcommit} ]; echo $?)
 %global github_owner ClusterLabs
 
@@ -58,8 +59,12 @@
 %global debug_package %{nil}
 %endif
 
-%if %{with pre_release}
+%if %{with pre_release} || 0%{pre_release}
+%if 0%{pre_release}
+%global pcmk_release 0.%{specversion}.%(s=%{shortcommit}; echo ${s: -3})
+%else
 %global pcmk_release 0.%{specversion}.%{shortcommit}.git
+%endif
 %else
 %if 0%{post_release}
 %global pcmk_release %{specversion}.%{shortcommit}.git
