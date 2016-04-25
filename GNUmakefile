@@ -49,7 +49,7 @@ TAG     ?= $(shell T=$$(git describe --all "$(COMMIT)" | sed -n 's|tags/\(.*\)|\
 	       || git log --pretty="format:%H" -n 1 "$(COMMIT)")
 lparen = (
 rparen = )
-SHORTTAG ?= $(shell case $(TAG) in Pacemaker-*$(rparen) echo $(TAG);; \
+SHORTTAG ?= $(shell case $(TAG) in Pacemaker-*$(rparen) echo $(TAG) | cut -c11-;; \
 	      *$(rparen) git log --pretty="format:%h" -n 1 "$(TAG)";; esac)
 WITH    ?= --without doc
 #WITH    ?= --without=doc --with=gcov
@@ -161,7 +161,8 @@ srpm-%:	export $(PACKAGE)-%.spec
 	    sed -i 's/^\(%global pcmk_release \).*/\10.%{specversion}.%{shortcommit}.git/' $(PACKAGE).spec;	\
 	    sed -i 's/^\(%global pcmkversion \).*/\1$(shell echo $(NEXT_RELEASE) | sed -e s:Pacemaker-:: -e s:-.*::)/' $(PACKAGE).spec;;	\
 	  *)			\
-	    [ "$(TAG)" = "$(SHORTTAG)" ] || sed -i 's/^\(%global pcmk_release \).*/\1%{specversion}.%{shortcommit}.git/' $(PACKAGE).spec;	\
+	    [ "$(TAG)" = "Pacemaker-$(SHORTTAG)" ] \
+	      || sed -i 's/^\(%global pcmk_release \).*/\1%{specversion}.%{shortcommit}.git/' $(PACKAGE).spec; \
 	    sed -i 's/^\(%global pcmkversion \).*/\1$(shell git describe --tags $(TAG) | sed -e s:Pacemaker-:: -e s:-.*::)/' $(PACKAGE).spec;;\
 	esac
 	rpmbuild -bs --define "dist .$*" $(RPM_OPTS) $(PACKAGE).spec
