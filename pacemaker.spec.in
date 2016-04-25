@@ -7,8 +7,12 @@
 # set following to the actual commit or, for final release, concatenate
 # "pcmkversion" macro to "Pacemaker-" (will yield a tag per the convention)
 %global commit HEAD
-%global shortcommit %(c=%{commit}; [ ${c} = Pacemaker-%{pcmkversion} ] && echo %{pcmkversion} || echo ${c:0:7})
-%global post_release %([ %{commit} = Pacemaker-%{pcmkversion} ]; echo $?)
+%global lparen (
+%global rparen )
+%global shortcommit %(c=%{commit}; case ${c} in
+                      Pacemaker-*%{rparen} echo ${c:10};;
+                      *%{rparen} echo ${c:0:7};; esac)
+%global post_release %([ %{commit} = Pacemaker-%{shortcommit} ]; echo $?)
 %global github_owner ClusterLabs
 
 # Turn off the auto compilation of python files not in the site-packages directory
