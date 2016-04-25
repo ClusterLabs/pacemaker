@@ -49,7 +49,8 @@ TAG     ?= $(shell T=$$(git describe --all "$(COMMIT)" | sed -n 's|tags/\(.*\)|\
 	       || git log --pretty="format:%H" -n 1 "$(COMMIT)")
 lparen = (
 rparen = )
-SHORTTAG ?= $(shell case $(TAG) in Pacemaker-*$(rparen) echo $(TAG);; *$(rparen) git log --pretty="format:%h" -n 1;; esac)
+SHORTTAG ?= $(shell case $(TAG) in Pacemaker-*$(rparen) echo $(TAG);; \
+	      *$(rparen) git log --pretty="format:%h" -n 1 "$(TAG)";; esac)
 WITH    ?= --without doc
 #WITH    ?= --without=doc --with=gcov
 
