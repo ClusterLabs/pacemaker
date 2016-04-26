@@ -681,7 +681,9 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
     attribute_t *a = g_hash_table_lookup(attributes, attr);
 
     if(a == NULL) {
-        if (safe_str_eq(op, ATTRD_OP_UPDATE) || safe_str_eq(op, ATTRD_OP_UPDATE_BOTH)) {
+        if (op == NULL /* Compatibility - The xml children from an old ATTRD_OP_SYNC_RESPONSE have no F_ATTRD_TASK */
+            || safe_str_eq(op, ATTRD_OP_UPDATE)
+            || safe_str_eq(op, ATTRD_OP_UPDATE_BOTH)) {
             a = create_attribute(xml);
         } else {
             crm_warn("Update error (attribute %s not found)", attr);
