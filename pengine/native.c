@@ -1837,7 +1837,12 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
         } else if ((then_rsc_role == RSC_ROLE_STOPPED) && safe_str_eq(then->task, RSC_STOP)) {
             /* ignore... if 'then' is supposed to be stopped after 'first', but
              * then is already stopped, there is nothing to be done when non-symmetrical.  */
-        } else if ((then_rsc_role >= RSC_ROLE_STARTED) && safe_str_eq(then->task, RSC_START)) {
+        } else if ((then_rsc_role >= RSC_ROLE_STARTED)
+                   && safe_str_eq(then->task, RSC_START)
+                   && then->node
+                   && then_rsc->running_on
+                   && g_list_length(then_rsc->running_on) == 1
+                   && then->node->details == ((node_t *) then_rsc->running_on->data)->details) {
             /* ignore... if 'then' is supposed to be started after 'first', but
              * then is already started, there is nothing to be done when non-symmetrical.  */
         } else if (!(first->flags & pe_action_runnable)) {
