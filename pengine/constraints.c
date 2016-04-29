@@ -1159,6 +1159,32 @@ sort_cons_priority_rh(gconstpointer a, gconstpointer b)
     return strcmp(rsc_constraint1->rsc_rh->id, rsc_constraint2->rsc_rh->id);
 }
 
+static void
+anti_colocation_order(resource_t * first_rsc, int first_role,
+                      resource_t * then_rsc, int then_role,
+                      pe_working_set_t * data_set)
+{
+    const char *first_task = NULL;
+    const char *then_task = NULL;
+
+    if (first_role == RSC_ROLE_MASTER) {
+        first_task = CRMD_ACTION_DEMOTE;
+
+    } else {
+        first_task = CRMD_ACTION_STOP;
+    }
+
+    if (then_role == RSC_ROLE_MASTER) {
+        then_task = CRMD_ACTION_PROMOTE;
+
+    } else {
+        then_task = CRMD_ACTION_START;
+    }
+
+    new_rsc_order(first_rsc, first_task, then_rsc, then_task,
+                  pe_order_anti_colocation, data_set);
+}
+
 gboolean
 rsc_colocation_new(const char *id, const char *node_attr, int score,
                    resource_t * rsc_lh, resource_t * rsc_rh,
@@ -1210,10 +1236,8 @@ rsc_colocation_new(const char *id, const char *node_attr, int score,
     data_set->colocation_constraints = g_list_append(data_set->colocation_constraints, new_con);
 
     if (score <= -INFINITY) {
-        new_rsc_order(rsc_lh, CRMD_ACTION_STOP, rsc_rh, CRMD_ACTION_START,
-                      pe_order_anti_colocation, data_set);
-        new_rsc_order(rsc_rh, CRMD_ACTION_STOP, rsc_lh, CRMD_ACTION_START,
-                      pe_order_anti_colocation, data_set);
+        anti_colocation_order(rsc_lh, new_con->role_lh, rsc_rh, new_con->role_rh, data_set);
+        anti_colocation_order(rsc_rh, new_con->role_rh, rsc_lh, new_con->role_lh, data_set);
     }
 
     return TRUE;
