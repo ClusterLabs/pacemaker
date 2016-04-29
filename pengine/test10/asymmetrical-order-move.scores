@@ -1,0 +1,8 @@
+Allocation scores:
+Using the original execution date of: 2016-04-28 11:50:29Z
+native_color: dummy1 allocation score on sle12sp2-1: -INFINITY
+native_color: dummy1 allocation score on sle12sp2-2: -INFINITY
+native_color: dummy2 allocation score on sle12sp2-1: -INFINITY
+native_color: dummy2 allocation score on sle12sp2-2: 0
+native_color: st_sbd allocation score on sle12sp2-1: 0
+native_color: st_sbd allocation score on sle12sp2-2: 0
