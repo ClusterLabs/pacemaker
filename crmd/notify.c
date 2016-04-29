@@ -221,7 +221,7 @@ crm_time_format_hr(const char *format, crm_time_hr_t * hr_dt)
 {
     const char *mark_s;
     int max = 128, scanned_pos = 0, printed_pos = 0, fmt_pos = 0,
-        date_len = 0, nano_digits, fmt_len;
+        date_len = 0, nano_digits = 0, fmt_len;
     char nano_s[10], date_s[max+1], nanofmt_s[5] = "%", *tmp_fmt_s;
     struct tm tm;
     crm_time_t dt;
