@@ -1,0 +1,7 @@
+digraph "g" {
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+"dummy2_start_0 sle12sp2-2" [ style=dashed color="red" fontcolor="black"]
+"dummy2_stop_0 sle12sp2-1" -> "all_stopped" [ style = bold]
+"dummy2_stop_0 sle12sp2-1" -> "dummy2_start_0 sle12sp2-2" [ style = dashed]
+"dummy2_stop_0 sle12sp2-1" [ style=bold color="green" fontcolor="black"]
+}
