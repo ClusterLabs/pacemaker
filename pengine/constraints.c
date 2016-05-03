@@ -1164,25 +1164,41 @@ anti_colocation_order(resource_t * first_rsc, int first_role,
                       resource_t * then_rsc, int then_role,
                       pe_working_set_t * data_set)
 {
-    const char *first_task = NULL;
-    const char *then_task = NULL;
+    const char *first_tasks[] = { NULL, NULL };
+    const char *then_tasks[] = { NULL, NULL };
+    int first_lpc = 0;
+    int then_lpc = 0;
 
+    /* Actions to make first_rsc lose first_role */
     if (first_role == RSC_ROLE_MASTER) {
-        first_task = CRMD_ACTION_DEMOTE;
+        first_tasks[0] = CRMD_ACTION_DEMOTE;
 
     } else {
-        first_task = CRMD_ACTION_STOP;
+        first_tasks[0] = CRMD_ACTION_STOP;
+
+        if (first_role == RSC_ROLE_SLAVE) {
+            first_tasks[1] = CRMD_ACTION_PROMOTE;
+        }
     }
 
+    /* Actions to make then_rsc gain then_role */
     if (then_role == RSC_ROLE_MASTER) {
-        then_task = CRMD_ACTION_PROMOTE;
+        then_tasks[0] = CRMD_ACTION_PROMOTE;
 
     } else {
-        then_task = CRMD_ACTION_START;
+        then_tasks[0] = CRMD_ACTION_START;
+
+        if (then_role == RSC_ROLE_SLAVE) {
+            then_tasks[1] = CRMD_ACTION_DEMOTE;
+        }
     }
 
-    new_rsc_order(first_rsc, first_task, then_rsc, then_task,
-                  pe_order_anti_colocation, data_set);
+    for (first_lpc = 0; first_lpc <= 1 && first_tasks[first_lpc] != NULL; first_lpc++) {
+        for (then_lpc = 0; then_lpc <= 1 && then_tasks[then_lpc] != NULL; then_lpc++) {
+            new_rsc_order(first_rsc, first_tasks[first_lpc], then_rsc, then_tasks[then_lpc],
+                          pe_order_anti_colocation, data_set);
+        }
+    }
 }
 
 gboolean
