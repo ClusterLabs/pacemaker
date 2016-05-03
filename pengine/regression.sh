@@ -180,6 +180,7 @@ do_test colo_master_w_native "cl#5070 - Verify promotion order is affected when 
 do_test colo_slave_w_native  "cl#5070 - Verify promotion order is affected when colocating slave to native rsc."
 do_test anti-colocation-order "cl#5187 - Prevent resources in an anti-colocation from even temporarily running on a same node"
 do_test anti-colocation-master "Organize order of actions for master resources in anti-colocations"
+do_test anti-colocation-slave "Organize order of actions for slave resources in anti-colocations"
 do_test enforce-colo1 "Always enforce B with A INFINITY."
 do_test complex_enforce_colo "Always enforce B with A INFINITY. (make sure heat-engine stops)"
 
