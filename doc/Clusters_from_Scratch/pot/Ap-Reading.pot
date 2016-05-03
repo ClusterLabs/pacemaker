@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-10-17T05:19:03\n"
-"PO-Revision-Date: 2012-10-17T05:19:03\n"
+"POT-Creation-Date: 2016-05-03 17:45-0500\n"
+"PO-Revision-Date: 2016-05-03 17:45-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -19,16 +19,16 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Project Website <ulink url=\"http://www.clusterlabs.org\">http://www.clusterlabs.org</ulink>"
+msgid "Project Website <ulink url=\"http://www.clusterlabs.org/\">http://www.clusterlabs.org/</ulink>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Cluster Commands A comprehensive guide to cluster commands has been written by SuSE and can be found at: <ulink url=\"http://www.suse.com/documentation/sle_ha/book_sleha/?page=/documentation/sle_ha/book_sleha/data/book_sleha.html\">http://www.suse.com/documentation/sle_ha/book_sleha/?page=/documentation/sle_ha/book_sleha/data/book_sleha.html</ulink>"
+msgid "SuSE has a comprehensive guide to cluster commands (though using the <literal>crmsh</literal> command-line shell rather than <literal>pcs</literal>) at: <ulink url=\"https://www.suse.com/documentation/sle_ha/book_sleha/data/book_sleha.html\">https://www.suse.com/documentation/sle_ha/book_sleha/data/book_sleha.html</ulink>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Corosync <ulink url=\"http://www.corosync.org\">http://www.corosync.org</ulink>"
+msgid "Corosync <ulink url=\"http://www.corosync.org/\">http://www.corosync.org/</ulink>"
 msgstr ""
 

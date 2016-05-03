@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-10-17T05:19:01\n"
-"PO-Revision-Date: 2012-10-17T05:19:01\n"
+"POT-Creation-Date: 2016-05-03 17:45-0500\n"
+"PO-Revision-Date: 2016-05-03 17:45-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -17,34 +17,14 @@ msgstr ""
 msgid "FAQ"
 msgstr ""
 
-#. Tag: title
+#. Tag: para
 #, no-c-format
-msgid "History"
+msgid "Why is the Project Called Pacemaker?"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Why is the Project Called <indexterm significance=\"preferred\"><primary>Pacemaker</primary><secondary>naming</secondary></indexterm>Pacemaker?"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "First of all, the reason its not called the CRM is because of the abundance of terms<footnote><para><ulink url=\"http://en.wikipedia.org/wiki/CRM\" /></para></footnote> that are commonly abbreviated to those three letters."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "The Pacemaker name came from Kham<footnote><para><ulink url=\"http://khamsouk.souvanlasy.com/\" /></para></footnote>, a good friend of mine, and was originally used by a Java GUI that I was prototyping in early 2007. Alas other commitments have prevented the GUI from progressing much and, when it came time to choose a name for this project, Lars suggested it was an even better fit for an independent CRM."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "The idea stems from the analogy between the role of this software and that of the little device that keeps the human heart pumping. Pacemaker monitors the cluster and intervenes when necessary to ensure the smooth operation of the services it provides."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "There were a number of other names (and acronyms) tossed around, but suffice to say \"Pacemaker\" was the best"
+msgid "<indexterm> <primary>Pacemaker</primary> </indexterm> First of all, the reason it’s not called the CRM is because of the abundance of terms <footnote><para><ulink url=\"http://en.wikipedia.org/wiki/CRM\">http://en.wikipedia.org/wiki/CRM</ulink></para></footnote> that are commonly abbreviated to those three letters. The Pacemaker name came from Kham, <footnote><para><ulink url=\"http://khamsouk.souvanlasy.com/\">http://khamsouk.souvanlasy.com/</ulink></para></footnote> a good friend of Pacemaker developer Andrew Beekhof’s, and was originally used by a Java GUI that Beekhof was prototyping in early 2007. Alas, other commitments prevented the GUI from progressing much and, when it came time to choose a name for this project, Lars Marowsky-Bree suggested it was an even better fit for an independent CRM. The idea stems from the analogy between the role of this software and that of the little device that keeps the human heart pumping. Pacemaker monitors the cluster and intervenes when necessary to ensure the smooth operation of the services it provides. There were a number of other names (and acronyms) tossed around, but suffice to say \"Pacemaker\" was the best."
 msgstr ""
 
 #. Tag: para
@@ -54,7 +34,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The decision was made to spin-off the CRM into its own project after the 2.1.3 Heartbeat release in order to"
+msgid "The decision was made to spin-off the CRM into its own project after the 2.1.3 Heartbeat release in order to:"
 msgstr ""
 
 #. Tag: para
@@ -69,37 +49,32 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "foster the clearer package boundaries, thus leading to"
+msgid "foster clearer package boundaries, thus leading to better and more stable interfaces"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "better and more stable interfaces"
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "Setup"
+msgid "What Messaging Layers are Supported?"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "What <indexterm significance=\"preferred\"><primary>Messaging Layers </primary></indexterm>Messaging Layers are Supported?"
+msgid "<indexterm> <primary>Messaging Layers</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Corosync (<ulink url=\"http://www.corosync.org/\" />)"
+msgid "<ulink url=\"http://www.corosync.org/\">Corosync</ulink>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Heartbeat (<ulink url=\"http://linux-ha.org/\" />)"
+msgid "<ulink url=\"http://linux-ha.org/\">Heartbeat</ulink>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Can I Choose which Messaging Layer to use at Run Time?"
+msgid "Can I Choose Which Messaging Layer to Use at Run Time?"
 msgstr ""
 
 #. Tag: para
@@ -119,12 +94,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Which Messaging Layer Should I Choose?"
+msgid "<anchor id=\"q-messaging-layer\" xreflabel=\"[q-messaging-layer]\"></anchor> Which Messaging Layer Should I Choose?"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "This is discussed in <xref linkend=\"ap-install\" />."
+msgid "<indexterm> <primary>Cluster</primary><secondary>Choosing Between Heartbeat and Corosync</secondary> </indexterm> <indexterm> <primary>Choosing Between Heartbeat and Corosync</primary> </indexterm> <indexterm> <primary>Cluster Stack</primary><secondary>Corosync</secondary> </indexterm> <indexterm> <primary>Corosync</primary> </indexterm> <indexterm> <primary>Corosync</primary> </indexterm> <indexterm> <primary>Cluster Stack</primary><secondary>Heartbeat</secondary> </indexterm> <indexterm> <primary>Heartbeat</primary> </indexterm> <indexterm> <primary>Heartbeat</primary> </indexterm> You can choose from multiple messaging layers, including heartbeat, corosync 1 (with or without CMAN), and corosync 2. Corosync 2 is the current state of the art due to its more advanced features and better support for pacemaker, but often the best choice is to use whatever comes with your Linux distribution, and follow the distribution’s setup instructions."
 msgstr ""
 
 #. Tag: para
@@ -134,12 +109,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Official packages for most major .rpm and based distributions are available from the ClusterLabs Website<footnote><para><ulink url=\"http://www.clusterlabs.org/rpm\" /></para></footnote>."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "For Debian packages, building from source and details on using the above repositories, see our installation page<footnote><para><ulink url=\"http://clusterlabs.org/wiki/Install\" /></para></footnote>."
+msgid "Most major Linux distributions have pacemaker packages in their standard package repositories. See the <ulink url=\"http://clusterlabs.org/wiki/Install\">Install wiki page</ulink> for details."
 msgstr ""
 
 #. Tag: para
@@ -149,11 +119,6 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Please refer to the Releases page<footnote><para><ulink url=\"http://clusterlabs.org/wiki/Releases\" /></para></footnote> for an up-to-date list of versions supported directly by the project."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "When seeking assistance, please try to ensure you have one of these versions."
+msgid "Some Linux distributions (such as Red Hat Enterprise Linux and SUSE Linux Enterprise) offer technical support for their customers; contact them for details of such support. For help within the community (mailing lists, IRC, etc.) from Pacemaker developers and users, refer to the <ulink url=\"http://clusterlabs.org/wiki/Releases\">Releases wiki page</ulink> for an up-to-date list of versions considered to be supported by the project. When seeking assistance, please try to ensure you have one of these versions."
 msgstr ""
 

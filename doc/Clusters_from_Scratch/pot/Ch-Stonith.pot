@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-10-17T05:19:03\n"
-"PO-Revision-Date: 2012-10-17T05:19:03\n"
+"POT-Creation-Date: 2016-05-03 17:45-0500\n"
+"PO-Revision-Date: 2016-05-03 17:45-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -19,17 +19,17 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "What Is STONITH"
+msgid "What is STONITH?"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "STONITH is an acronym for Shoot-The-Other-Node-In-The-Head and it protects your data from being corrupted by rogue nodes or concurrent access."
+msgid "STONITH (Shoot The Other Node In The Head aka. fencing) protects your data from being corrupted by rogue nodes or unintended concurrent access."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Just because a node is unresponsive, this doesn’t mean it isn’t accessing your data. The only way to be 100% sure that your data is safe, is to use STONITH so we can be certain that the node is truly offline, before allowing the data to be accessed from another node."
+msgid "Just because a node is unresponsive doesn’t mean it has stopped accessing your data. The only way to be 100% sure that your data is safe, is to use STONITH to ensure that the node is truly offline before allowing the data to be accessed from another node."
 msgstr ""
 
 #. Tag: para
@@ -39,77 +39,92 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "What STONITH Device Should You Use"
+msgid "Choose a STONITH Device"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "It is crucial that the STONITH device can allow the cluster to differentiate between a node failure and a network one."
+msgid "It is crucial that your STONITH device can allow the cluster to differentiate between a node failure and a network failure."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The biggest mistake people make in choosing a STONITH device is to use remote power switch (such as many on-board IMPI controllers) that shares power with the node it controls. In such cases, the cluster cannot be sure if the node is really offline, or active and suffering from a network fault."
+msgid "A common mistake people make when choosing a STONITH device is to use a remote power switch (such as many on-board IPMI controllers) that shares power with the node it controls. If the power fails in such a case, the cluster cannot be sure whether the node is really offline, or active and suffering from a network fault, so the cluster will stop all resources to avoid a possible split-brain situation."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Likewise, any device that relies on the machine being active (such as SSH-based \"devices\" used during testing) are inappropriate."
+msgid "Likewise, any device that relies on the machine being active (such as SSH-based \"devices\" sometimes used during testing) is inappropriate."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Configuring STONITH"
+msgid "Configure the Cluster for STONITH"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Find the correct driver: <literal>pcs stonith list</literal>"
+msgid "Install the STONITH agent(s). To see what packages are available, run <literal>yum search fence-</literal>. Be sure to install the package(s) on all cluster nodes."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Find the parameters associated with the device: <literal>pcs stonith describe &lt;agent name&gt;</literal>"
+msgid "Configure the STONITH device itself to be able to fence your nodes and accept fencing requests. This includes any necessary configuration on the device and on the nodes, and any firewall or SELinux changes needed. Test the communication between the device and your nodes."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Create a local config to make changes to <literal>pcs cluster cib stonith_cfg</literal>"
+msgid "Find the correct STONITH agent script: <literal>pcs stonith list</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Create the fencing resource using <literal>pcs -f stonith_cfg stonith create &lt;stonith_id&gt; &lt;stonith device type&gt; [stonith device options]</literal>"
+msgid "Find the parameters associated with the device: <literal>pcs stonith describe <replaceable>agent_name</replaceable></literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Set stonith-enable to true. <literal>pcs -f stonith_cfg property set stonith-enabled=true</literal>"
+msgid "Create a local copy of the CIB: <literal>pcs cluster cib stonith_cfg</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If the device does not know how to fence nodes based on their uname, you may also need to set the special <literal>pcmk_host_map</literal> parameter. See <literal>man stonithd</literal> for details."
+msgid "Create the fencing resource: <literal>pcs -f stonith_cfg stonith create <replaceable>stonith_id stonith_device_type [stonith_device_options]</replaceable></literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If the device does not support the list command, you may also need to set the special <literal>pcmk_host_list</literal> and/or <literal>pcmk_host_check</literal> parameters. See <literal>man stonithd</literal> for details."
+msgid "Any flags that do not take arguments, such as <literal>--ssl</literal>, should be passed as <literal>ssl=1</literal>."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If the device does not expect the victim to be specified with the port parameter, you may also need to set the special <literal>pcmk_host_argument</literal> parameter. See <literal>man stonithd</literal> for details."
+msgid "Enable STONITH in the cluster: <literal>pcs -f stonith_cfg property set stonith-enabled=true</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Commit the new configuration. <literal>pcs cluster push cib stonith_cfg</literal>"
+msgid "If the device does not know how to fence nodes based on their uname, you may also need to set the special <emphasis role=\"strong\">pcmk_host_map</emphasis> parameter. See <literal>man stonithd</literal> for details."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Once the stonith resource is running, you can test it by executing: <literal>stonith_admin --reboot nodename</literal>. Although you might want to stop the cluster on that machine first."
+msgid "If the device does not support the <emphasis role=\"strong\">list</emphasis> command, you may also need to set the special <emphasis role=\"strong\">pcmk_host_list</emphasis> and/or <emphasis role=\"strong\">pcmk_host_check</emphasis> parameters. See <literal>man stonithd</literal> for details."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If the device does not expect the victim to be specified with the <emphasis role=\"strong\">port</emphasis> parameter, you may also need to set the special <emphasis role=\"strong\">pcmk_host_argument</emphasis> parameter. See <literal>man stonithd</literal> for details."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Commit the new configuration: <literal>pcs cluster cib-push stonith_cfg</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Once the STONITH resource is running, test it (you might want to stop the cluster on that machine first): <literal>stonith_admin --reboot <replaceable>nodename</replaceable></literal>"
 msgstr ""
 
 #. Tag: title
@@ -119,80 +134,119 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Assuming we have an chassis containing four nodes and an IPMI device active on 10.0.0.1, then we would chose the fence_ipmilan driver in step 2 and obtain the following list of parameters"
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "Obtaining a list of STONITH Parameters"
-msgstr ""
-
-#. Tag: programlisting
-#, no-c-format
-msgid "# pcs stonith describe fence_ipmilan\n"
-"Stonith options for: fence_ipmilan\n"
-"  auth: IPMI Lan Auth type (md5, password, or none)\n"
-"  ipaddr: IPMI Lan IP to talk to\n"
-"  passwd: Password (if required) to control power on IPMI device\n"
-"  passwd_script: Script to retrieve password (if required)\n"
-"  lanplus: Use Lanplus\n"
-"  login: Username/Login (if required) to control power on IPMI device\n"
-"  action: Operation to perform. Valid operations: on, off, reboot, status, list, diag, monitor or metadata\n"
-"  timeout: Timeout (sec) for IPMI operation\n"
-"  cipher: Ciphersuite to use (same as ipmitool -C parameter)\n"
-"  method: Method to fence (onoff or cycle)\n"
-"  power_wait: Wait X seconds after on/off operation\n"
-"  delay: Wait X seconds before fencing is started\n"
-"  privlvl: Privilege level on IPMI device\n"
-"  verbose: Verbose mode"
+msgid "For this example, assume we have a chassis containing four nodes and an IPMI device active on 10.0.0.1. Following the steps above would go something like this:"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "from which we would create a STONITH resource fragment that might look like this"
+msgid "Step 1: Install the <emphasis role=\"strong\">fence-agents-ipmilan</emphasis> package on both nodes."
 msgstr ""
 
-#. Tag: title
+#. Tag: para
 #, no-c-format
-msgid "Sample STONITH Resource"
+msgid "Step 2: Configure the IP address, authentication credentials, etc. in the IPMI device itself."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Step 3: Choose the <emphasis role=\"strong\">fence_ipmilan</emphasis> STONITH agent."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Step 4: Obtain the agent’s possible parameters:"
 msgstr ""
 
 #. Tag: screen
 #, no-c-format
-msgid "# pcs cluster cib stonith_cfg\n"
-"# pcs -f stonith_cfg stonith create impi-fencing fence_ipmilan \\\n"
+msgid "[root@pcmk-1 ~]# pcs stonith describe fence_ipmilan\n"
+"Stonith options for: fence_ipmilan\n"
+"  ipport: TCP/UDP port to use for connection with device\n"
+"  inet6_only: Forces agent to use IPv6 addresses only\n"
+"  ipaddr (required): IP Address or Hostname\n"
+"  passwd_script: Script to retrieve password\n"
+"  method: Method to fence (onoff|cycle)\n"
+"  inet4_only: Forces agent to use IPv4 addresses only\n"
+"  passwd: Login password or passphrase\n"
+"  lanplus: Use Lanplus to improve security of connection\n"
+"  auth: IPMI Lan Auth type.\n"
+"  cipher: Ciphersuite to use (same as ipmitool -C parameter)\n"
+"  privlvl: Privilege level on IPMI device\n"
+"  action (required): Fencing Action\n"
+"  login: Login Name\n"
+"  verbose: Verbose mode\n"
+"  debug: Write debug information to given file\n"
+"  version: Display version information and exit\n"
+"  help: Display help and exit\n"
+"  power_wait: Wait X seconds after issuing ON/OFF\n"
+"  login_timeout: Wait X seconds for cmd prompt after login\n"
+"  power_timeout: Test X seconds for status change after ON/OFF\n"
+"  delay: Wait X seconds before fencing is started\n"
+"  ipmitool_path: Path to ipmitool binary\n"
+"  shell_timeout: Wait X seconds for cmd prompt after issuing command\n"
+"  retry_on: Count of attempts to retry power on\n"
+"  sudo: Use sudo (without password) when calling 3rd party sotfware.\n"
+"  stonith-timeout: How long to wait for the STONITH action (reboot, on, off) to complete per a stonith device.\n"
+"  priority: The priority of the stonith resource. Devices are tried in order of highest priority to lowest.\n"
+"  pcmk_host_map: A mapping of host names to ports numbers for devices that do not support host names.\n"
+"  pcmk_host_list: A list of machines controlled by this device (Optional unless pcmk_host_check=static-list).\n"
+"  pcmk_host_check: How to determine which machines are controlled by the device."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Step 5: <literal>pcs cluster cib stonith_cfg</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Step 6: Here are example parameters for creating our STONITH resource:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-1 ~]# pcs -f stonith_cfg stonith create ipmi-fencing fence_ipmilan \\\n"
 "      pcmk_host_list=\"pcmk-1 pcmk-2\" ipaddr=10.0.0.1 login=testuser \\\n"
-"      passwd=acd123 op monitor interval=60s"
-msgstr ""
-
-#. Tag: programlisting
-#, no-c-format
-msgid "# pcs -f stonith_cfg stonith\n"
-" impi-fencing   (stonith:fence_ipmilan) Stopped"
+"      passwd=acd123 op monitor interval=60s\n"
+"[root@pcmk-1 ~]# pcs -f stonith_cfg stonith\n"
+" ipmi-fencing   (stonith:fence_ipmilan):        Stopped"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "And finally, since we disabled it earlier, we need to re-enable STONITH. At this point we should have the following configuration."
+msgid "Steps 7-10: Enable STONITH in the cluster:"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# pcs -f stonith_cfg property set stonith-enabled=true\n"
-"# pcs -f stonith_cfg property\n"
-"dc-version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0\n"
-"cluster-infrastructure: corosync\n"
-"no-quorum-policy: ignore\n"
-"stonith-enabled: true"
+msgid "[root@pcmk-1 ~]# pcs -f stonith_cfg property set stonith-enabled=true\n"
+"[root@pcmk-1 ~]# pcs -f stonith_cfg property\n"
+"Cluster Properties:\n"
+" cluster-infrastructure: corosync\n"
+" cluster-name: mycluster\n"
+" dc-version: 1.1.12-a14efad\n"
+" have-watchdog: false\n"
+" stonith-enabled: true"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Now push the configuration into the cluster."
+msgid "Step 11: <literal>pcs cluster cib-push stonith_cfg</literal>"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: para
 #, no-c-format
-msgid "# pcs cluster push cib stonith_cfg"
+msgid "Step 12: Test:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-1 ~]# pcs cluster stop pcmk-2\n"
+"[root@pcmk-1 ~]# stonith_admin --reboot pcmk-2"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "After a successful test, login to any rebooted nodes, and start the cluster (with <literal>pcs cluster start</literal>)."
 msgstr ""
 

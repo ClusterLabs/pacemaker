@@ -19,56 +19,6 @@ msgstr ""
 
 #. Tag: firstname
 #, no-c-format
-msgid "Andrew"
-msgstr ""
-
-#. Tag: surname
-#, no-c-format
-msgid "Beekhof"
-msgstr ""
-
-#. Tag: member
-#, no-c-format
-msgid "Import from Pages.app"
-msgstr ""
-
-#. Tag: firstname
-#, no-c-format
-msgid "Raoul"
-msgstr ""
-
-#. Tag: surname
-#, no-c-format
-msgid "Scarazzini"
-msgstr ""
-
-#. Tag: member
-#, no-c-format
-msgid "Italian translation"
-msgstr ""
-
-#. Tag: member
-#, no-c-format
-msgid "Updated for Fedora 13"
-msgstr ""
-
-#. Tag: member
-#, no-c-format
-msgid "Update the GFS2 section to use CMAN"
-msgstr ""
-
-#. Tag: member
-#, no-c-format
-msgid "Generate docbook content from asciidoc sources"
-msgstr ""
-
-#. Tag: member
-#, no-c-format
-msgid "Updated for Fedora 17"
-msgstr ""
-
-#. Tag: firstname
-#, no-c-format
 msgid "David"
 msgstr ""
 
@@ -79,7 +29,17 @@ msgstr ""
 
 #. Tag: member
 #, no-c-format
-msgid "Updated for pcs"
+msgid "Import from Pages.app"
+msgstr ""
+
+#. Tag: member
+#, no-c-format
+msgid "Added Future Features Section"
+msgstr ""
+
+#. Tag: member
+#, no-c-format
+msgid "Added Baremetal remote-node feature documentation"
 msgstr ""
 
 #. Tag: firstname
@@ -94,16 +54,16 @@ msgstr ""
 
 #. Tag: member
 #, no-c-format
-msgid "Updated for Fedora 21"
+msgid "Targeted CentOS 7.1 and Pacemaker 1.1.12+, updated for current terminology and practice"
 msgstr ""
 
 #. Tag: member
 #, no-c-format
-msgid "Minor corrections, plus use include file for intro"
+msgid "Updated for Pacemaker 1.1.14"
 msgstr ""
 
 #. Tag: member
 #, no-c-format
-msgid "Update for CentOS 7.1 and leaving firewalld/SELinux enabled"
+msgid "Updated for Pacemaker 1.1.15"
 msgstr ""
 

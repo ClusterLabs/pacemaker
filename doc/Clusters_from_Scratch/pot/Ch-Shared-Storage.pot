@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-10-17T05:19:03\n"
-"PO-Revision-Date: 2012-10-17T05:19:03\n"
+"POT-Creation-Date: 2016-05-03 17:45-0500\n"
+"PO-Revision-Date: 2016-05-03 17:45-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -14,17 +14,17 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Replicated Storage with DRBD"
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "Background"
+msgid "Replicate Storage Using DRBD"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Even if you’re serving up static websites, having to manually synchronize the contents of that website to all the machines in the cluster is not ideal. For dynamic websites, such as a wiki, it’s not even an option. Not everyone care afford network-attached storage but somehow the data needs to be kept in sync. Enter DRBD which can be thought of as network based RAID-1. See <ulink url=\"http://www.drbd.org/\">http://www.drbd.org/</ulink> for more details."
+msgid "Even if you’re serving up static websites, having to manually synchronize the contents of that website to all the machines in the cluster is not ideal. For dynamic websites, such as a wiki, it’s not even an option. Not everyone care afford network-attached storage, but somehow the data needs to be kept in sync."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Enter DRBD, which can be thought of as network-based RAID-1. <footnote><para>See <ulink url=\"http://www.drbd.org/\">http://www.drbd.org/</ulink> for details.</para></footnote>"
 msgstr ""
 
 #. Tag: title
@@ -34,67 +34,119 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Since its inclusion in the upstream 2.6.33 kernel, everything needed to use DRBD has shiped with Fedora since version 13. All you need to do is install it:"
+msgid "DRBD itself is included in the upstream kernel,<footnote><para>Since version 2.6.33</para></footnote> but we do need some utilities to use it effectively."
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: para
 #, no-c-format
-msgid "# yum install -y drbd-pacemaker drbd-udev"
+msgid "CentOS does not ship these utilities, so we need to enable a third-party repository to get them. Supported packages for many OSes are available from DRBD’s maker <ulink url=\"http://www.linbit.com/\">LINBIT</ulink>, but here we’ll use the free <ulink url=\"http://elrepo.org/\">ELRepo</ulink> repository."
 msgstr ""
 
-#. Tag: literallayout
+#. Tag: para
 #, no-c-format
-msgid "Loaded plugins: langpacks, presto, refresh-packagekit\n"
-"Resolving Dependencies\n"
-"--&gt; Running transaction check\n"
-"---&gt; Package drbd-pacemaker.x86_64 0:8.3.11-5.fc17 will be installed\n"
-"--&gt; Processing Dependency: drbd-utils = 8.3.11-5.fc17 for package: drbd-pacemaker-8.3.11-5.fc17.x86_64\n"
-"---&gt; Package drbd-udev.x86_64 0:8.3.11-5.fc17 will be installed\n"
-"--&gt; Running transaction check\n"
-"---&gt; Package drbd-utils.x86_64 0:8.3.11-5.fc17 will be installed\n"
-"--&gt; Finished Dependency Resolution\n"
-"\n"
-"Dependencies Resolved\n"
-"\n"
-"======================================================================================\n"
-" Package              Arch         Version                Repository             Size\n"
-"======================================================================================\n"
-"Installing:\n"
-" drbd-pacemaker       x86_64       8.3.11-5.fc17          updates-testing        22 k\n"
-" drbd-udev            x86_64       8.3.11-5.fc17          updates-testing       6.4 k\n"
-"Installing for dependencies:\n"
-" drbd-utils           x86_64       8.3.11-5.fc17          updates-testing       183 k\n"
-"\n"
-"Transaction Summary\n"
-"======================================================================================\n"
-"Install  2 Packages (+1 Dependent package)\n"
-"\n"
-"Total download size: 212 k\n"
-"Installed size: 473 k\n"
-"Downloading Packages:\n"
-"(1/3): drbd-pacemaker-8.3.11-5.fc17.x86_64.rpm                 |  22 kB     00:00\n"
-"(2/3): drbd-udev-8.3.11-5.fc17.x86_64.rpm                      | 6.4 kB     00:00\n"
-"(3/3): drbd-utils-8.3.11-5.fc17.x86_64.rpm                     | 183 kB     00:00\n"
-"--------------------------------------------------------------------------------------\n"
-"Total                                                 293 kB/s | 212 kB     00:00\n"
-"Running Transaction Check\n"
-"Running Transaction Test\n"
-"Transaction Test Succeeded\n"
-"Running Transaction\n"
-"  Installing : drbd-utils-8.3.11-5.fc17.x86_64                                    1/3\n"
-"  Installing : drbd-pacemaker-8.3.11-5.fc17.x86_64                                2/3\n"
-"  Installing : drbd-udev-8.3.11-5.fc17.x86_64                                     3/3\n"
-"  Verifying  : drbd-pacemaker-8.3.11-5.fc17.x86_64                                1/3\n"
-"  Verifying  : drbd-udev-8.3.11-5.fc17.x86_64                                     2/3\n"
-"  Verifying  : drbd-utils-8.3.11-5.fc17.x86_64                                    3/3\n"
-"\n"
-"Installed:\n"
-"  drbd-pacemaker.x86_64 0:8.3.11-5.fc17        drbd-udev.x86_64 0:8.3.11-5.fc17\n"
-"\n"
-"Dependency Installed:\n"
-"  drbd-utils.x86_64 0:8.3.11-5.fc17\n"
-"\n"
-"Complete!"
+msgid "On both nodes, import the ELRepo package signing key, and enable the repository:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org\n"
+"# rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-2.el7.elrepo.noarch.rpm"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Now, we can install the DRBD kernel module and utilities:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# yum install -y kmod-drbd84 drbd84-utils"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The version of drbd84-utils shipped with CentOS 7.1 has a bug in the Pacemaker integration script. Until a fix is packaged, download the affected script directly from the upstream, on both nodes:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# curl -o /usr/lib/ocf/resource.d/linbit/drbd 'http://git.linbit.com/gitweb.cgi?p=drbd-utils.git;a=blob_plain;f=scripts/drbd.ocf;h=cf6b966341377a993d1bf5f585a5b9fe72eaa5f2;hb=c11ba026bbbbc647b8112543df142f2185cb4b4b'"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "This is a temporary fix that will be overwritten if the package is upgraded."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "DRBD will not be able to run under the default SELinux security policies. If you are familiar with SELinux, you can modify the policies in a more fine-grained manner, but here we will simply exempt DRBD processes from SELinux control:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# semanage permissive -a drbd_t"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "We will configure DRBD to use port 7789, so allow that port from each host to the other:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-1 ~]# firewall-cmd --permanent --add-rich-rule='rule family=\"ipv4\" source address=\"192.168.122.102\" port port=\"7789\" protocol=\"tcp\" accept'\n"
+"success\n"
+"[root@pcmk-1 ~]# firewall-cmd --reload\n"
+"success"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-2 ~]# firewall-cmd --permanent --add-rich-rule='rule family=\"ipv4\" source address=\"192.168.122.101\" port port=\"7789\" protocol=\"tcp\" accept'\n"
+"success\n"
+"[root@pcmk-2 ~]# firewall-cmd --reload\n"
+"success"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In this example, we have only two nodes, and all network traffic is on the same LAN. In production, it is recommended to use a dedicated, isolated network for cluster-related traffic, so the firewall configuration would likely be different; one approach would be to add the dedicated network interfaces to the trusted zone."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Allocate a Disk Volume for DRBD"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "DRBD will need its own block device on each node. This can be a physical disk partition or logical volume, of whatever size you need for your data. For this document, we will use a 1GiB logical volume, which is more than sufficient for a single HTML file and (later) GFS2 metadata."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-1 ~]# vgdisplay | grep -e Name -e Free\n"
+"  VG Name               centos_pcmk-1\n"
+"  Free  PE / Size       382 / 1.49 GiB\n"
+"[root@pcmk-1 ~]# lvcreate --name drbd-demo --size 1G centos_pcmk-1\n"
+"Logical volume \"drbd-demo\" created\n"
+"[root@pcmk-1 ~]# lvs\n"
+"  LV        VG            Attr       LSize Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert\n"
+"  drbd-demo centos_pcmk-1 -wi-a----- 1.00g\n"
+"  root      centos_pcmk-1 -wi-ao---- 5.00g\n"
+"  swap      centos_pcmk-1 -wi-ao---- 1.00g"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Repeat for the second node, making sure to use the same size:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-1 ~]# ssh pcmk-2 -- lvcreate --name drbd-demo --size 1G centos_pcmk-2\n"
+"Logical volume \"drbd-demo\" created"
 msgstr ""
 
 #. Tag: title
@@ -104,88 +156,16 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Before we configure DRBD, we need to set aside some disk for it to use."
+msgid "There is no series of commands for building a DRBD configuration, so simply run this on both nodes to use this sample configuration:"
 msgstr ""
 
-#. Tag: title
+#. Tag: screen
 #, no-c-format
-msgid "Create A Partition for DRBD"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "If you have more than 1Gb free, feel free to use it. For this guide however, 1Gb is plenty of space for a single html file and sufficient for later holding the GFS2 metadata."
-msgstr ""
-
-#. Tag: programlisting
-#, no-c-format
-msgid "# vgdisplay | grep -e Name - e Free\n"
-"  VG Name               vg_pcmk1\n"
-"  Free  PE / Size       31 / 992.00 MiB\n"
-"# lvs\n"
-"  LV        VG          Attr     LSize   Pool Origin Data%  Move Log Copy%  Convert\n"
-"  lv_root   vg_pcmk1 -wi-ao--   8.56g\n"
-"  lv_swap   vg_pcmk1 -wi-ao-- 960.00m\n"
-"# lvcreate -n drbd-demo -L 1G vg_pcmk1\n"
-"Logical volume \"drbd-demo\" created\n"
-"# lvs\n"
-"  LV        VG          Attr     LSize   Pool Origin Data%  Move Log Copy%  Convert\n"
-"  drbd-demo vg_pcmk1 -wi-a--- 1.00G\n"
-"  lv_root   vg_pcmk1 -wi-ao--   8.56g\n"
-"  lv_swap   vg_pcmk1 -wi-ao-- 960.00m"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Repeat this on the second node, be sure to use the same size partition."
-msgstr ""
-
-#. Tag: programlisting
-#, no-c-format
-msgid "# ssh pcmk-2 -- lvs\n"
-"LV   VG    Attr  LSize  Origin Snap% Move Log Copy% Convert\n"
-"  lv_root   vg_pcmk1 -wi-ao--   8.56g\n"
-"  lv_swap   vg_pcmk1 -wi-ao-- 960.00m\n"
-"# ssh pcmk-2 -- lvcreate -n drbd-demo -L 1G vg_pcmk1\n"
-"Logical volume \"drbd-demo\" created\n"
-"# ssh pcmk-2 -- lvs\n"
-"LV    VG    Attr  LSize  Origin Snap% Move Log Copy% Convert\n"
-"  drbd-demo vg_pcmk1 -wi-a--- 1.00G\n"
-"  lv_root   vg_pcmk1 -wi-ao--   8.56g\n"
-"  lv_swap   vg_pcmk1 -wi-ao-- 960.00m"
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "Write the DRBD Config"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "There is no series of commands for building a DRBD configuration, so simply copy the configuration below to /etc/drbd.conf"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Detailed information on the directives used in this configuration (and other alternatives) is available from <ulink url=\"http://www.drbd.org/users-guide/ch-configure.html\">http://www.drbd.org/users-guide/ch-configure.html</ulink>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Be sure to use the names and addresses of your nodes if they differ from the ones used in this guide."
-msgstr ""
-
-#. Tag: literallayout
-#, no-c-format
-msgid "global {\n"
-" usage-count yes;\n"
-"}\n"
-"common {\n"
-" protocol C;\n"
-"}\n"
+msgid "# cat &lt;&lt;END &gt;/etc/drbd.d/wwwdata.res\n"
 "resource wwwdata {\n"
+" protocol C;\n"
 " meta-disk internal;\n"
-" device  /dev/drbd1;\n"
+" device /dev/drbd1;\n"
 " syncer {\n"
 "  verify-alg sha1;\n"
 " }\n"
@@ -193,223 +173,273 @@ msgid "global {\n"
 "  allow-two-primaries;\n"
 " }\n"
 " on pcmk-1 {\n"
-"  disk   /dev/vg_pcmk1/drbd-demo;\n"
+"  disk   /dev/centos_pcmk-1/drbd-demo;\n"
 "  address  192.168.122.101:7789;\n"
 " }\n"
 " on pcmk-2 {\n"
-"  disk   /dev/vg_pcmk1/drbd-demo;\n"
+"  disk   /dev/centos_pcmk-2/drbd-demo;\n"
 "  address  192.168.122.102:7789;\n"
 " }\n"
-"}"
+"}\n"
+"END"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "TODO: Explain the reason for the allow-two-primaries option"
+msgid "Edit the file to use the hostnames, IP addresses and logical volume paths of your nodes if they differ from the ones used in this guide."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Detailed information on the directives used in this configuration (and other alternatives) is available at <ulink url=\"http://www.drbd.org/users-guide/ch-configure.html\">http://www.drbd.org/users-guide/ch-configure.html</ulink>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <emphasis role=\"strong\">allow-two-primaries</emphasis> option would not normally be used in an active/passive cluster. We are adding it here for the convenience of changing to an active/active cluster later."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Initialize and Load DRBD"
+msgid "Initialize DRBD"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "With the configuration in place, we can now perform the DRBD initialization"
-msgstr ""
-
-#. Tag: programlisting
-#, no-c-format
-msgid "# drbdadm create-md wwwdata\n"
-"Writing meta data...\n"
-"initializing activity log\n"
-"NOT initialized bitmap\n"
-"New drbd meta data block successfully created.\n"
-"success"
+msgid "With the configuration in place, we can now get DRBD running."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Now load the DRBD kernel module and confirm that everything is sane"
-msgstr ""
-
-#. Tag: programlisting
-#, no-c-format
-msgid "# modprobe drbd\n"
-"# drbdadm up wwwdata\n"
-"# cat /proc/drbd\n"
-"version: 8.3.11 (api:88/proto:86-96)\n"
-"srcversion: 0D2B62DEDB020A425130935\n"
-"\n"
-" 1: cs:Connected ro:Secondary/Secondary ds:Inconsistent/Inconsistent C r-----\n"
-"    ns:0 nr:0 dw:0 dr:0 al:0 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:1015740"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Repeat on the second node"
-msgstr ""
-
-#. Tag: programlisting
-#, no-c-format
-msgid "# ssh pcmk-2 -- drbdadm --force create-md wwwdata\n"
-"Writing meta data...\n"
-"initializing activity log\n"
-"NOT initialized bitmap\n"
-"New drbd meta data block successfully created.\n"
-"success\n"
-"# ssh pcmk-2 -- modprobe drbd\n"
-"WARNING: Deprecated config file /etc/modprobe.conf, all config files belong into /etc/modprobe.d/.\n"
-"# ssh pcmk-2 -- drbdadm up wwwdata\n"
-"# ssh pcmk-2 -- cat /proc/drbd\n"
-"version: 8.3.11 (api:88/proto:86-96)\n"
-"srcversion: 0D2B62DEDB020A425130935\n"
-"\n"
-" 1: cs:Connected ro:Secondary/Secondary ds:Inconsistent/Inconsistent C r-----\n"
-"    ns:0 nr:0 dw:0 dr:0 al:0 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:1015740"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Now we need to tell DRBD which set of data to use. Since both sides contain garbage, we can run the following on pcmk-1:"
-msgstr ""
-
-#. Tag: programlisting
-#, no-c-format
-msgid "# drbdadm -- --overwrite-data-of-peer primary wwwdata\n"
-"# cat /proc/drbd\n"
-"version: 8.3.11 (api:88/proto:86-96)\n"
-"srcversion: 0D2B62DEDB020A425130935\n"
-"\n"
-" 1: cs:SyncSource ro:Primary/Secondary ds:UpToDate/Inconsistent C r-----\n"
-"    ns:8064 nr:0 dw:0 dr:8728 al:0 bm:0 lo:0 pe:1 ua:0 ap:0 ep:1 wo:f oos:1007804\n"
-"        [&gt;....................] sync'ed:  0.9% (1007804/1015740)K\n"
-"        finish: 0:12:35 speed: 1,320 (1,320) K/sec"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "After a while, the sync should finish and you’ll see:"
-msgstr ""
-
-#. Tag: programlisting
-#, no-c-format
-msgid "# cat /proc/drbd\n"
-"version: 8.3.11 (api:88/proto:86-96)\n"
-"srcversion: 0D2B62DEDB020A425130935\n"
-"\n"
-" 1: cs:Connected ro:Primary/Secondary ds:UpToDate/UpToDate C r-----\n"
-"    ns:1015740 nr:0 dw:0 dr:1016404 al:0 bm:62 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "pcmk-1 is now in the Primary state which allows it to be written to. Which means it’s a good point at which to create a filesystem and populate it with some data to serve up via our WebSite resource."
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "Populate DRBD with Data"
-msgstr ""
-
-#. Tag: programlisting
-#, no-c-format
-msgid "# mkfs.ext4 /dev/drbd1\n"
-"mke2fs 1.42 (29-Nov-2011)\n"
-"Filesystem label=\n"
-"OS type: Linux\n"
-"Block size=4096 (log=2)\n"
-"Fragment size=4096 (log=2)\n"
-"Stride=0 blocks, Stripe width=0 blocks\n"
-"63488 inodes, 253935 blocks\n"
-"12696 blocks (5.00%) reserved for the super user\n"
-"First data block=0\n"
-"Maximum filesystem blocks=260046848\n"
-"8 block groups\n"
-"32768 blocks per group, 32768 fragments per group\n"
-"7936 inodes per group\n"
-"Superblock backups stored on blocks:\n"
-"        32768, 98304, 163840, 229376\n"
-"\n"
-"Allocating group tables: done\n"
-"Writing inode tables: done\n"
-"Creating journal (4096 blocks): done\n"
-"Writing superblocks and filesystem accounting information: done"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Now mount the newly created filesystem so we can create our index file"
-msgstr ""
-
-#. Tag: programlisting
-#, no-c-format
-msgid "# mount /dev/drbd1 /mnt/\n"
-"# cat &lt;&lt;-END &gt;/mnt/index.html\n"
-" &lt;html&gt;\n"
-"  &lt;body&gt;My Test Site - drbd&lt;/body&gt;\n"
-" &lt;/html&gt;\n"
-"END\n"
-"# umount /dev/drbd1"
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "Configure the Cluster for DRBD"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "One handy feature pcs has is the ability to queue up several changes into a file and commit those changes atomically. To do this, start by populating the file with the current raw xml config from the cib. This can be done using the following command."
-msgstr ""
-
-#. Tag: programlisting
-#, no-c-format
-msgid "# pcs cluster cib drbd_cfg"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Now using the pcs -f option, make changes to the configuration saved in the drbd_cfg file. These changes will not be seen by the cluster until the drbd_cfg file is pushed into the live cluster’s cib later on."
+msgid "These commands create the local metadata for the DRBD resource, ensure the DRBD kernel module is loaded, and bring up the DRBD resource. Run them on one node:"
 msgstr ""
 
 #. Tag: screen
 #, no-c-format
-msgid "# pcs -f drbd_cfg resource create WebData ocf:linbit:drbd \\\n"
-"         drbd_resource=wwwdata op monitor interval=60s\n"
-"# pcs -f drbd_cfg resource master WebDataClone WebData \\\n"
-"         master-max=1 master-node-max=1 clone-max=2 clone-node-max=1 \\\n"
-"         notify=true"
-msgstr ""
-
-#. Tag: programlisting
-#, no-c-format
-msgid "# pcs -f drbd_cfg resource show\n"
-" ClusterIP      (ocf::heartbeat:IPaddr2) Started\n"
-" WebSite        (ocf::heartbeat:apache) Started\n"
-" Master/Slave Set: WebDataClone [WebData]\n"
-"     Stopped: [ WebData:0 WebData:1 ]"
+msgid "[root@pcmk-1 ~]# drbdadm create-md wwwdata\n"
+"initializing activity log\n"
+"NOT initializing bitmap\n"
+"Writing meta data...\n"
+"New drbd meta data block successfully created.\n"
+"[root@pcmk-1 ~]# modprobe drbd\n"
+"[root@pcmk-1 ~]# drbdadm up wwwdata"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "After you are satisfied with all the changes, you can commit all the changes at once by pushing the drbd_cfg file into the live cib."
+msgid "We can confirm DRBD’s status on this node:"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# pcs cluster push cib drbd_cfg\n"
-"CIB updated\n"
+msgid "[root@pcmk-1 ~]# cat /proc/drbd\n"
+"version: 8.4.6 (api:1/proto:86-101)\n"
+"GIT-hash: 833d830e0152d1e457fa7856e71e11248ccf3f70 build by phil@Build64R7, 2015-04-10 05:13:52\n"
 "\n"
-"# pcs status\n"
+" 1: cs:WFConnection ro:Secondary/Unknown ds:Inconsistent/DUnknown C r----s\n"
+"    ns:0 nr:0 dw:0 dr:0 al:0 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:1048508"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Because we have not yet initialized the data, this node’s data is marked as <emphasis role=\"strong\">Inconsistent</emphasis>. Because we have not yet initialized the second node, the local state is <emphasis role=\"strong\">WFConnection</emphasis> (waiting for connection), and the partner node’s status is marked as <emphasis role=\"strong\">Unknown</emphasis>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Now, repeat the above commands on the second node. This time, when we check the status, it shows:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-2 ~]# cat /proc/drbd\n"
+"version: 8.4.6 (api:1/proto:86-101)\n"
+"GIT-hash: 833d830e0152d1e457fa7856e71e11248ccf3f70 build by phil@Build64R7, 2015-04-10 05:13:52\n"
 "\n"
-"Last updated: Fri Sep 14 12:19:49 2012\n"
-"Last change: Fri Sep 14 12:19:13 2012 via cibadmin on pcmk-1\n"
+" 1: cs:Connected ro:Secondary/Secondary ds:Inconsistent/Inconsistent C r-----\n"
+"    ns:0 nr:0 dw:0 dr:0 al:0 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:1048508"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "You can see the state has changed to <emphasis role=\"strong\">Connected</emphasis>, meaning the two DRBD nodes are communicating properly, and both nodes are in <emphasis role=\"strong\">Secondary</emphasis> role with <emphasis role=\"strong\">Inconsistent</emphasis> data."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "To make the data consistent, we need to tell DRBD which node should be considered to have the correct data. In this case, since we are creating a new resource, both have garbage, so we’ll just pick pcmk-1 and run this command on it:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-1 ~]# drbdadm primary --force wwwdata"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If you are using an older version of DRBD, the required syntax may be different. See the documentation for your version for how to perform these commands."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If we check the status immediately, we’ll see something like this:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-1 ~]# cat /proc/drbd\n"
+"version: 8.4.6 (api:1/proto:86-101)\n"
+"GIT-hash: 833d830e0152d1e457fa7856e71e11248ccf3f70 build by phil@Build64R7, 2015-04-10 05:13:52\n"
+"\n"
+" 1: cs:SyncSource ro:Primary/Secondary ds:UpToDate/Inconsistent C r-----\n"
+"    ns:2872 nr:0 dw:0 dr:3784 al:0 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:1045636\n"
+"        [&gt;....................] sync'ed:  0.4% (1045636/1048508)K\n"
+"        finish: 0:10:53 speed: 1,436 (1,436) K/sec"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "We can see that this node has the <emphasis role=\"strong\">Primary</emphasis> role, the partner node has the <emphasis role=\"strong\">Secondary</emphasis> role, this node’s data is now considered <emphasis role=\"strong\">UpToDate</emphasis>, the partner node’s data is still <emphasis role=\"strong\">Inconsistent</emphasis>, and a progress bar shows how far along the partner node is in synchronizing the data."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "After a while, the sync should finish, and you’ll see something like:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-1 ~]# cat /proc/drbd\n"
+"version: 8.4.6 (api:1/proto:86-101)\n"
+"GIT-hash: 833d830e0152d1e457fa7856e71e11248ccf3f70 build by phil@Build64R7, 2015-04-10 05:13:52\n"
+"\n"
+" 1: cs:Connected ro:Primary/Secondary ds:UpToDate/UpToDate C r-----\n"
+"    ns:1048508 nr:0 dw:0 dr:1049420 al:0 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Both sets of data are now <emphasis role=\"strong\">UpToDate</emphasis>, and we can proceed to creating and populating a filesystem for our WebSite resource’s documents."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Populate the DRBD Disk"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "On the node with the primary role (pcmk-1 in this example), create a filesystem on the DRBD device:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-1 ~]# mkfs.xfs /dev/drbd1\n"
+"meta-data=/dev/drbd1             isize=256    agcount=4, agsize=65532 blks\n"
+"         =                       sectsz=512   attr=2, projid32bit=1\n"
+"         =                       crc=0        finobt=0\n"
+"data     =                       bsize=4096   blocks=262127, imaxpct=25\n"
+"         =                       sunit=0      swidth=0 blks\n"
+"naming   =version 2              bsize=4096   ascii-ci=0 ftype=0\n"
+"log      =internal log           bsize=4096   blocks=853, version=2\n"
+"         =                       sectsz=512   sunit=0 blks, lazy-count=1\n"
+"realtime =none                   extsz=4096   blocks=0, rtextents=0"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In this example, we create an xfs filesystem with no special options. In a production environment, you should choose a filesystem type and options that are suitable for your application."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Mount the newly created filesystem, populate it with our web document, give it the same SELinux policy as the web document root, then unmount it (the cluster will handle mounting and unmounting it later):"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-1 ~]# mount /dev/drbd1 /mnt\n"
+"[root@pcmk-1 ~]# cat &lt;&lt;-END &gt;/mnt/index.html\n"
+" &lt;html&gt;\n"
+"  &lt;body&gt;My Test Site - DRBD&lt;/body&gt;\n"
+" &lt;/html&gt;\n"
+"END\n"
+"[root@pcmk-1 ~]# chcon -R --reference=/var/www/html /mnt\n"
+"[root@pcmk-1 ~]# umount /dev/drbd1"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Configure the Cluster for the DRBD device"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "One handy feature <literal>pcs</literal> has is the ability to queue up several changes into a file and commit those changes atomically. To do this, start by populating the file with the current raw XML config from the CIB."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-1 ~]# pcs cluster cib drbd_cfg"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Using the <literal>pcs -f</literal> option, make changes to the configuration saved in the <literal>drbd_cfg</literal> file. These changes will not be seen by the cluster until the <literal>drbd_cfg</literal> file is pushed into the live cluster’s CIB later."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Here, we create a cluster resource for the DRBD device, and an additional <emphasis>clone</emphasis> resource to allow the resource to run on both nodes at the same time."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-1 ~]# pcs -f drbd_cfg resource create WebData ocf:linbit:drbd \\\n"
+"         drbd_resource=wwwdata op monitor interval=60s\n"
+"[root@pcmk-1 ~]# pcs -f drbd_cfg resource master WebDataClone WebData \\\n"
+"         master-max=1 master-node-max=1 clone-max=2 clone-node-max=1 \\\n"
+"         notify=true\n"
+"[root@pcmk-1 ~]# pcs -f drbd_cfg resource show\n"
+" ClusterIP      (ocf::heartbeat:IPaddr2):       Started\n"
+" WebSite        (ocf::heartbeat:apache):        Started\n"
+" Master/Slave Set: WebDataClone [WebData]\n"
+"     Stopped: [ pcmk-1 pcmk-2 ]"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "After you are satisfied with all the changes, you can commit them all at once by pushing the drbd_cfg file into the live CIB."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-1 ~]# pcs cluster cib-push drbd_cfg\n"
+"CIB updated"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Early versions of <literal>pcs</literal> required <literal>push cib</literal> in place of <literal>cib-push</literal> above."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Let’s see what the cluster did with the new configuration:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-1 ~]# pcs status\n"
+"Cluster name: mycluster\n"
+"Last updated: Fri Aug 14 09:29:41 2015\n"
+"Last change: Fri Aug 14 09:29:25 2015\n"
 "Stack: corosync\n"
-"Current DC: pcmk-2 (2) - partition with quorum\n"
-"Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0\n"
-"2 Nodes configured, unknown expected votes\n"
-"4 Resources configured.\n"
+"Current DC: pcmk-1 (1) - partition with quorum\n"
+"Version: 1.1.12-a14efad\n"
+"2 Nodes configured\n"
+"4 Resources configured\n"
+"\n"
 "\n"
 "Online: [ pcmk-1 pcmk-2 ]\n"
 "\n"
@@ -419,41 +449,65 @@ msgid "# pcs cluster push cib drbd_cfg\n"
 " WebSite        (ocf::heartbeat:apache):        Started pcmk-1\n"
 " Master/Slave Set: WebDataClone [WebData]\n"
 "     Masters: [ pcmk-1 ]\n"
-"     Slaves: [ pcmk-2 ]"
+"     Slaves: [ pcmk-2 ]\n"
+"\n"
+"PCSD Status:\n"
+"  pcmk-1: Online\n"
+"  pcmk-2: Online\n"
+"\n"
+"Daemon Status:\n"
+"  corosync: active/disabled\n"
+"  pacemaker: active/disabled\n"
+"  pcsd: active/enabled"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "TODO: Include details on adding a second DRBD resource"
+msgid "We can see that <emphasis role=\"strong\">WebDataClone</emphasis> (our DRBD device) is running as master (DRBD’s primary role) on <emphasis role=\"strong\">pcmk-1</emphasis> and slave (DRBD’s secondary role) on <emphasis role=\"strong\">pcmk-2</emphasis>."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Now that DRBD is functioning we can configure a Filesystem resource to use it. In addition to the filesystem’s definition, we also need to tell the cluster where it can be located (only on the DRBD Primary) and when it is allowed to start (after the Primary was promoted)."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "We are going to take a shortcut when creating the resource this time though. Instead of explicitly saying we want the <emphasis>ocf:heartbeat:Filesystem</emphasis> script, we are only going to ask for <emphasis>Filesystem</emphasis>. We can do this because we know there is only one resource script named <emphasis>Filesystem</emphasis> available to pacemaker, and that pcs is smart enough to fill in the <emphasis>ocf:heartbeat</emphasis> portion for us correctly in the configuration. If there were multiple <emphasis>Filesystem</emphasis> scripts from different ocf providers, we would need to specify the exact one we wanted to use."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Once again we will queue up our changes to a file and then push the new configuration to the cluster as the final step."
+msgid "The resource agent should load the DRBD module when needed if it’s not already loaded. If that does not happen, configure your operating system to load the module at boot time. For &DISTRO; &DISTRO_VERSION;, you would run this on both nodes:"
 msgstr ""
 
 #. Tag: screen
 #, no-c-format
-msgid "# pcs cluster cib fs_cfg\n"
-"# pcs -f fs_cfg resource create WebFS Filesystem \\\n"
-"         device=\"/dev/drbd/by-res/wwwdata\" directory=\"/var/www/html\" \\\n"
-"         fstype=\"ext4\""
+msgid "# echo drbd &gt;/etc/modules-load.d/drbd.conf"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: title
 #, no-c-format
-msgid "# pcs -f fs_cfg constraint colocation add WebFS WebDataClone INFINITY with-rsc-role=Master\n"
-"# pcs -f fs_cfg constraint order promote WebDataClone then start WebFS\n"
+msgid "Configure the Cluster for the Filesystem"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Now that we have a working DRBD device, we need to mount its filesystem."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In addition to defining the filesystem, we also need to tell the cluster where it can be located (only on the DRBD Primary) and when it is allowed to start (after the Primary was promoted)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "We are going to take a shortcut when creating the resource this time. Instead of explicitly saying we want the <emphasis role=\"strong\">ocf:heartbeat:Filesystem</emphasis> script, we are only going to ask for <emphasis role=\"strong\">Filesystem</emphasis>. We can do this because we know there is only one resource script named <emphasis role=\"strong\">Filesystem</emphasis> available to pacemaker, and that pcs is smart enough to fill in the <emphasis role=\"strong\">ocf:heartbeat:</emphasis> portion for us correctly in the configuration. If there were multiple <emphasis role=\"strong\">Filesystem</emphasis> scripts from different OCF providers, we would need to specify the exact one we wanted."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Once again, we will queue our changes to a file and then push the new configuration to the cluster as the final step."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-1 ~]# pcs cluster cib fs_cfg\n"
+"[root@pcmk-1 ~]# pcs -f fs_cfg resource create WebFS Filesystem \\\n"
+"         device=\"/dev/drbd1\" directory=\"/var/www/html\" fstype=\"xfs\"\n"
+"[root@pcmk-1 ~]# pcs -f fs_cfg constraint colocation add WebFS with WebDataClone INFINITY with-rsc-role=Master\n"
+"[root@pcmk-1 ~]# pcs -f fs_cfg constraint order promote WebDataClone then start WebFS\n"
 "Adding WebDataClone WebFS (kind: Mandatory) (Options: first-action=promote then-action=start)"
 msgstr ""
 
@@ -462,57 +516,60 @@ msgstr ""
 msgid "We also need to tell the cluster that Apache needs to run on the same machine as the filesystem and that it must be active before Apache can start."
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# pcs -f fs_cfg constraint colocation add WebSite WebFS INFINITY\n"
-"# pcs -f fs_cfg constraint order WebFS then WebSite"
+msgid "[root@pcmk-1 ~]# pcs -f fs_cfg constraint colocation add WebSite with WebFS INFINITY\n"
+"[root@pcmk-1 ~]# pcs -f fs_cfg constraint order WebFS then WebSite\n"
+"Adding WebFS WebSite (kind: Mandatory) (Options: first-action=start then-action=start)"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Now review the updated configuration."
+msgid "Review the updated configuration."
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# pcs -f fs_cfg constraint\n"
+msgid "[root@pcmk-1 ~]# pcs -f fs_cfg constraint\n"
 "Location Constraints:\n"
 "Ordering Constraints:\n"
-"  start ClusterIP then start WebSite\n"
-"  WebFS then WebSite\n"
-"  promote WebDataClone then start WebFS\n"
+"  start ClusterIP then start WebSite (kind:Mandatory)\n"
+"  promote WebDataClone then start WebFS (kind:Mandatory)\n"
+"  start WebFS then start WebSite (kind:Mandatory)\n"
 "Colocation Constraints:\n"
-"  WebSite with ClusterIP\n"
-"  WebFS with WebDataClone (with-rsc-role:Master)\n"
-"  WebSite with WebFS\n"
-"\n"
-"# pcs -f fs_cfg resource show\n"
-" ClusterIP      (ocf::heartbeat:IPaddr2) Started\n"
-" WebSite        (ocf::heartbeat:apache) Started\n"
+"  WebSite with ClusterIP (score:INFINITY)\n"
+"  WebFS with WebDataClone (score:INFINITY) (with-rsc-role:Master)\n"
+"  WebSite with WebFS (score:INFINITY)"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-1 ~]# pcs -f fs_cfg resource show\n"
+" ClusterIP      (ocf::heartbeat:IPaddr2):       Started\n"
+" WebSite        (ocf::heartbeat:apache):        Started\n"
 " Master/Slave Set: WebDataClone [WebData]\n"
 "     Masters: [ pcmk-1 ]\n"
 "     Slaves: [ pcmk-2 ]\n"
-" WebFS  (ocf::heartbeat:Filesystem) Stopped"
+" WebFS  (ocf::heartbeat:Filesystem):    Stopped"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "After reviewing the new configuration, we again upload it and watch the cluster put it into effect."
+msgid "After reviewing the new configuration, upload it and watch the cluster put it into effect."
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# pcs cluster push cib fs_cfg\n"
-"CIB updated\n"
-"# pcs status\n"
-" Last updated: Fri Aug 10 12:47:01 2012\n"
+msgid "[root@pcmk-1 ~]# pcs cluster cib-push fs_cfg\n"
+"[root@pcmk-1 ~]# pcs status\n"
+"Last updated: Fri Aug 14 09:34:11 2015\n"
+"Last change: Fri Aug 14 09:34:09 2015\n"
+"Stack: corosync\n"
+"Current DC: pcmk-1 (1) - partition with quorum\n"
+"Version: 1.1.12-a14efad\n"
+"2 Nodes configured\n"
+"5 Resources configured\n"
 "\n"
-" Last change: Fri Aug 10 12:46:55 2012 via cibadmin on pcmk-1\n"
-" Stack: corosync\n"
-" Current DC: pcmk-1 (1) - partition with quorum\n"
-" Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0\n"
-" 2 Nodes configured, unknown expected votes\n"
-" 5 Resources configured.\n"
 "\n"
 "Online: [ pcmk-1 pcmk-2 ]\n"
 "\n"
@@ -523,48 +580,72 @@ msgid "# pcs cluster push cib fs_cfg\n"
 " Master/Slave Set: WebDataClone [WebData]\n"
 "     Masters: [ pcmk-1 ]\n"
 "     Slaves: [ pcmk-2 ]\n"
-" WebFS  (ocf::heartbeat:Filesystem):    Started pcmk-1"
+" WebFS  (ocf::heartbeat:Filesystem):    Started pcmk-1\n"
+"\n"
+"PCSD Status:\n"
+"  pcmk-1: Online\n"
+"  pcmk-2: Online\n"
+"\n"
+"Daemon Status:\n"
+"  corosync: active/disabled\n"
+"  pacemaker: active/disabled\n"
+"  pcsd: active/enabled"
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Testing Migration"
+msgid "Test Cluster Failover"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "We could shut down the active node again, but another way to safely simulate recovery is to put the node into what is called \"standby mode\". Nodes in this state tell the cluster that they are not allowed to run resources. Any resources found active there will be moved elsewhere. This feature can be particularly useful when updating the resources' packages."
+msgid "Previously, we used <literal>pcs cluster stop pcmk-1</literal> to stop all cluster services on <emphasis role=\"strong\">pcmk-1</emphasis>, failing over the cluster resources, but there is another way to safely simulate node failure."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Put the local node into standby mode and observe the cluster move all the resources to the other node. Note also that the node’s status will change to indicate that it can no longer host resources."
+msgid "We can put the node into <emphasis>standby mode</emphasis>. Nodes in this state continue to run corosync and pacemaker but are not allowed to run resources. Any resources found active there will be moved elsewhere. This feature can be particularly useful when performing system administration tasks such as updating packages used by cluster resources."
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: para
 #, no-c-format
-msgid "# pcs cluster standby pcmk-1\n"
-"# pcs status\n"
-"\n"
-"Last updated: Fri Sep 14 12:41:12 2012\n"
-"Last change: Fri Sep 14 12:41:08 2012 via crm_attribute on pcmk-1\n"
+msgid "Put the active node into standby mode, and observe the cluster move all the resources to the other node. The node’s status will change to indicate that it can no longer host resources."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-1 ~]# pcs cluster standby pcmk-1\n"
+"[root@pcmk-1 ~]# pcs status\n"
+"Cluster name: mycluster\n"
+"Last updated: Fri Aug 14 09:36:49 2015\n"
+"Last change: Fri Aug 14 09:36:43 2015\n"
 "Stack: corosync\n"
 "Current DC: pcmk-1 (1) - partition with quorum\n"
-"Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0\n"
-"2 Nodes configured, unknown expected votes\n"
-"5 Resources configured.\n"
+"Version: 1.1.12-a14efad\n"
+"2 Nodes configured\n"
+"5 Resources configured\n"
+"\n"
 "\n"
 "Node pcmk-1 (1): standby\n"
 "Online: [ pcmk-2 ]\n"
 "\n"
 "Full list of resources:\n"
 "\n"
-"ClusterIP       (ocf::heartbeat:IPaddr2):       Started pcmk-2\n"
-"WebSite (ocf::heartbeat:apache):        Started pcmk-2\n"
+" ClusterIP      (ocf::heartbeat:IPaddr2):       Started pcmk-2\n"
+" WebSite        (ocf::heartbeat:apache):        Started pcmk-2\n"
 " Master/Slave Set: WebDataClone [WebData]\n"
 "     Masters: [ pcmk-2 ]\n"
-"     Stopped: [ WebData:1 ]\n"
-"WebFS   (ocf::heartbeat:Filesystem):    Started pcmk-2"
+"     Stopped: [ pcmk-1 ]\n"
+" WebFS  (ocf::heartbeat:Filesystem):    Started pcmk-2\n"
+"\n"
+"PCSD Status:\n"
+"  pcmk-1: Online\n"
+"  pcmk-2: Online\n"
+"\n"
+"Daemon Status:\n"
+"  corosync: active/disabled\n"
+"  pacemaker: active/disabled\n"
+"  pcsd: active/enabled"
 msgstr ""
 
 #. Tag: para
@@ -572,18 +653,19 @@ msgstr ""
 msgid "Once we’ve done everything we needed to on pcmk-1 (in this case nothing, we just wanted to see the resources move), we can allow the node to be a full cluster member again."
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# pcs cluster unstandby pcmk-1\n"
-"# pcs status\n"
-"\n"
-"Last updated: Fri Sep 14 12:43:02 2012\n"
-"Last change: Fri Sep 14 12:42:57 2012 via crm_attribute on pcmk-1\n"
+msgid "[root@pcmk-1 ~]# pcs cluster unstandby pcmk-1\n"
+"[root@pcmk-1 ~]# pcs status\n"
+"Cluster name: mycluster\n"
+"Last updated: Fri Aug 14 09:38:02 2015\n"
+"Last change: Fri Aug 14 09:37:56 2015\n"
 "Stack: corosync\n"
 "Current DC: pcmk-1 (1) - partition with quorum\n"
-"Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0\n"
-"2 Nodes configured, unknown expected votes\n"
-"5 Resources configured.\n"
+"Version: 1.1.12-a14efad\n"
+"2 Nodes configured\n"
+"5 Resources configured\n"
+"\n"
 "\n"
 "Online: [ pcmk-1 pcmk-2 ]\n"
 "\n"
@@ -594,11 +676,20 @@ msgid "# pcs cluster unstandby pcmk-1\n"
 " Master/Slave Set: WebDataClone [WebData]\n"
 "     Masters: [ pcmk-2 ]\n"
 "     Slaves: [ pcmk-1 ]\n"
-" WebFS  (ocf::heartbeat:Filesystem):    Started pcmk-2"
+" WebFS  (ocf::heartbeat:Filesystem):    Started pcmk-2\n"
+"\n"
+"PCSD Status:\n"
+"  pcmk-1: Online\n"
+"  pcmk-2: Online\n"
+"\n"
+"Daemon Status:\n"
+"  corosync: active/disabled\n"
+"  pacemaker: active/disabled\n"
+"  pcsd: active/enabled"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Notice that our resource stickiness settings prevent the services from migrating back to pcmk-1."
+msgid "Notice that <emphasis role=\"strong\">pcmk-1</emphasis> is back to the <emphasis role=\"strong\">Online</emphasis> state, and that the cluster resources stay where they are due to our resource stickiness settings configured earlier."
 msgstr ""
 

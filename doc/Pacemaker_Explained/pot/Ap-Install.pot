@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-10-17T05:19:01\n"
-"PO-Revision-Date: 2012-10-17T05:19:01\n"
+"POT-Creation-Date: 2016-05-03 17:45-0500\n"
+"PO-Revision-Date: 2016-05-03 17:45-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -14,62 +14,22 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Installation"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "The following text may no longer be accurate in some places."
+msgid "Installing"
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Choosing a Cluster Stack"
+msgid "Installing the Software"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm> <primary>Cluster</primary><secondary>Choosing Between Heartbeat and Corosync</secondary> </indexterm> <indexterm> <primary>Choosing Between Heartbeat and Corosync</primary> </indexterm> <indexterm> <primary>Cluster Stack</primary><secondary>Corosync</secondary> </indexterm> <indexterm> <primary>Corosync</primary> </indexterm> <indexterm> <primary>Corosync</primary> </indexterm> <indexterm> <primary>Cluster Stack</primary><secondary>Heartbeat</secondary> </indexterm> <indexterm> <primary>Heartbeat</primary> </indexterm> <indexterm> <primary>Heartbeat</primary> </indexterm>"
+msgid "Most major Linux distributions have pacemaker packages in their standard package repositories, or the software can be built from source code. See the <ulink url=\"http://clusterlabs.org/wiki/Install\">Install wiki page</ulink> for details."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Ultimately the choice of cluster stack is a personal decision that must be made in the context of you or your company’s needs and strategic direction. Pacemaker currently functions equally well with both stacks."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Here are some factors that may influence the decision:"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "SUSE/Novell, Red Hat and Oracle are all putting their collective weight behind the Corosync cluster stack."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Using Corosync gives your applications access to the following additional cluster services"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "distributed locking service"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "extended virtual synchronization service"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "cluster closed process group service"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "It is likely that Pacemaker, at some point in the future, will make use of some of these additional services not provided by Heartbeat"
+msgid "See <link linkend=\"q-messaging-layer\">Which Messaging Layer Should I Choose?</link> for information about choosing a messaging layer."
 msgstr ""
 
 #. Tag: title
@@ -79,17 +39,121 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "For Corosync"
+msgid "Enabling Pacemaker For Corosync 2.<emphasis>x</emphasis>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The Corosync configuration is normally located in <emphasis>/etc/corosync/corosync.conf</emphasis> and an example for a machine with an address of <literal>1.2.3.4</literal> in a cluster communicating on port 1234 (without peer authentication and message encryption) is shown below."
+msgid "High-level cluster management tools are available that can configure corosync for you. This document focuses on the lower-level details if you want to configure corosync yourself."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Corosync configuration is normally located in <literal>/etc/corosync/corosync.conf</literal>."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "An example Corosync configuration file"
+msgid "Corosync 2.<emphasis>x</emphasis> configuration file for two nodes <emphasis role=\"strong\">myhost1</emphasis> and <emphasis role=\"strong\">myhost2</emphasis>"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "totem {\n"
+"version: 2\n"
+"secauth: off\n"
+"cluster_name: mycluster\n"
+"transport: udpu\n"
+"}\n"
+"\n"
+"nodelist {\n"
+"  node {\n"
+"        ring0_addr: myhost1\n"
+"        nodeid: 1\n"
+"       }\n"
+"  node {\n"
+"        ring0_addr: myhost2\n"
+"        nodeid: 2\n"
+"       }\n"
+"}\n"
+"\n"
+"quorum {\n"
+"provider: corosync_votequorum\n"
+"two_node: 1\n"
+"}\n"
+"\n"
+"logging {\n"
+"to_syslog: yes\n"
+"}"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Corosync 2.<emphasis>x</emphasis> configuration file for three nodes <emphasis role=\"strong\">myhost1</emphasis>, <emphasis role=\"strong\">myhost2</emphasis> and <emphasis role=\"strong\">myhost3</emphasis>"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "totem {\n"
+"version: 2\n"
+"secauth: off\n"
+"cluster_name: mycluster\n"
+"transport: udpu\n"
+"}\n"
+"\n"
+"nodelist {\n"
+"  node {\n"
+"        ring0_addr: myhost1\n"
+"        nodeid: 1\n"
+"       }\n"
+"  node {\n"
+"        ring0_addr: myhost2\n"
+"        nodeid: 2\n"
+"       }\n"
+"  node {\n"
+"        ring0_addr: myhost3\n"
+"        nodeid: 3\n"
+"       }\n"
+"}\n"
+"\n"
+"quorum {\n"
+"provider: corosync_votequorum\n"
+"\n"
+"}\n"
+"\n"
+"logging {\n"
+"to_syslog: yes\n"
+"}"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In the above examples, the <literal>totem</literal> section defines what protocol version and options (including encryption) to use, <footnote><para> Please consult the Corosync website (<ulink url=\"http://www.corosync.org/\">http://www.corosync.org/</ulink>) and documentation for details on enabling encryption and peer authentication for the cluster. </para></footnote> and gives the cluster a unique name (<literal>mycluster</literal> in these examples)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <literal>node</literal> section lists the nodes in this cluster. (See <xref linkend=\"s-node-name\" /> for how this affects pacemaker.)"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <literal>quorum</literal> section defines how the cluster uses quorum. The important thing is that two-node clusters must be handled specially, so <literal>two_node: 1</literal> must be defined for two-node clusters (and only for two-node clusters)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <literal>logging</literal> section should be self-explanatory."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Enabling Pacemaker For Corosync 1.<emphasis>x</emphasis>"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Corosync 1.<emphasis>x</emphasis> configuration file for a cluster with all nodes on the <literal>192.0.2.0/24</literal> network"
 msgstr ""
 
 #. Tag: programlisting
@@ -100,7 +164,7 @@ msgid "  totem {\n"
 "      threads: 0\n"
 "      interface {\n"
 "          ringnumber: 0\n"
-"          bindnetaddr: 1.2.3.4\n"
+"          bindnetaddr: 192.0.2.0\n"
 "          mcastaddr: 239.255.1.1\n"
 "          mcastport: 1234\n"
 "      }\n"
@@ -117,38 +181,42 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The logging should be mostly obvious and the amf section refers to the Availability Management Framework and is not covered in this document."
+msgid "With corosync 1.<emphasis>x</emphasis>, the <literal>totem</literal> section contains the protocol version and options as with 2.<emphasis>x</emphasis>. However, nodes are also listed here, in the <literal>interface</literal> section. The <literal>bindnetaddr</literal> option is usually the <emphasis>network</emphasis> address, thus allowing the same configuration file to be used on all nodes. IPv4 or IPv6 addresses can be used with corosync."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The interesting part of the configuration is the totem section. This is where we define how the node can communicate with the rest of the cluster and what protocol version and options (including encryption <footnote><para> Please consult the Corosync website (<ulink url=\"http://www.corosync.org/\">http://www.corosync.org/</ulink>) and documentation for details on enabling encryption and peer authentication for the cluster. </para></footnote> ) it should use. Beginners are encouraged to use the values shown and modify the interface section based on their network."
+msgid "The <literal>amf</literal> section refers to the Availability Management Framework and is not covered in this document."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "It is also possible to configure Corosync for an IPv6 based environment. Simply configure <literal>bindnetaddr</literal> and <literal>mcastaddr</literal> with their IPv6 equivalents, eg."
+msgid "The above corosync configuration is enough for corosync to operate by itself, but corosync 1.<emphasis>x</emphasis> additionally needs to be told when it is being used in conjunction with Pacemaker. This can be accomplished in one of two ways:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Via the CMAN software provided with Red Hat Enterprise Linux 6 and its derivatives"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Via the pacemaker corosync plugin"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "To use CMAN, consult its documentation."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "To use the pacemaker corosync plugin, add the following fragment to the corosync configuration and restart the cluster."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Example options for an IPv6 environment"
-msgstr ""
-
-#. Tag: programlisting
-#, no-c-format
-msgid "  bindnetaddr: fec0::1:a800:4ff:fe00:20\n"
-"  mcastaddr: ff05::1"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "To tell Corosync to use the Pacemaker cluster manager, add the following fragment to a functional Corosync configuration and restart the cluster."
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "Configuration fragment for enabling Pacemaker under Corosync"
+msgid "Corosync 1._x_configuration fragment to enable Pacemaker plugin"
 msgstr ""
 
 #. Tag: programlisting
@@ -175,20 +243,25 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "For Heartbeat"
+msgid "Enabling Pacemaker For Heartbeat"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Add the following to a functional <emphasis>ha.cf</emphasis> configuration file and restart Heartbeat:"
+msgid "See the heartbeat documentation for how to set up a <literal>ha.cf</literal> configuration file."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "To enable the use of pacemaker with heartbeat, add the following to a functional <literal>ha.cf</literal> configuration file and restart Heartbeat:"
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Configuration fragment for enabling Pacemaker under Heartbeat"
+msgid "Heartbeat configuration fragment to enable Pacemaker"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
 msgid "crm respawn"
 msgstr ""

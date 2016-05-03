@@ -1,0 +1,458 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2016-05-03 17:45-0500\n"
+"PO-Revision-Date: 2016-05-03 17:45-0500\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Remote Node Walk-through"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis role=\"strong\">What this tutorial is:</emphasis> An in-depth walk-through of how to get Pacemaker to integrate a remote node into the cluster as a node capable of running cluster resources."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis role=\"strong\">What this tutorial is not:</emphasis> A realistic deployment scenario. The steps shown here are meant to get users familiar with the concept of remote nodes as quickly as possible."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "This tutorial requires three machines: two to act as cluster nodes, and a third to act as the remote node."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Configure Remote Node"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Configure Firewall on Remote Node"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Allow cluster-related services through the local firewall:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# firewall-cmd --permanent --add-service=high-availability\n"
+"success\n"
+"# firewall-cmd --reload\n"
+"success"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If you are using iptables directly, or some other firewall solution besides firewalld, simply open the following ports, which can be used by various clustering components: TCP ports 2224, 3121, and 21064, and UDP port 5405."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If you run into any problems during testing, you might want to disable the firewall and SELinux entirely until you have everything working. This may create significant security issues and should not be performed on machines that will be exposed to the outside world, but may be appropriate during development and testing on a protected host."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "To disable security measures:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# setenforce 0\n"
+"# sed -i.bak \"s/SELINUX=enforcing/SELINUX=permissive/g\" /etc/selinux/config\n"
+"# systemctl disable firewalld.service\n"
+"# systemctl stop firewalld.service\n"
+"# iptables --flush"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Configure pacemaker_remote on Remote Node"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Install the pacemaker_remote daemon on the remote node."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# yum install -y pacemaker-remote resource-agents pcs"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Create a location for the shared authentication key:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# mkdir -p --mode=0750 /etc/pacemaker\n"
+"# chgrp haclient /etc/pacemaker"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "All nodes (both cluster nodes and remote nodes) must have the same authentication key installed for the communication to work correctly. If you already have a key on an existing node, copy it to the new remote node. Otherwise, create a new key, for example:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Now start and enable the pacemaker_remote daemon on the remote node."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# systemctl enable pacemaker_remote.service\n"
+"# systemctl start pacemaker_remote.service"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Verify the start is successful."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# systemctl status pacemaker_remote\n"
+"pacemaker_remote.service - Pacemaker Remote Service\n"
+"   Loaded: loaded (/usr/lib/systemd/system/pacemaker_remote.service; enabled)\n"
+"   Active: active (running) since Fri 2015-08-21 15:21:20 CDT; 20s ago\n"
+" Main PID: 21273 (pacemaker_remot)\n"
+"   CGroup: /system.slice/pacemaker_remote.service\n"
+"           └─21273 /usr/sbin/pacemaker_remoted\n"
+"\n"
+"Aug 21 15:21:20 remote1 systemd[1]: Starting Pacemaker Remote Service...\n"
+"Aug 21 15:21:20 remote1 systemd[1]: Started Pacemaker Remote Service.\n"
+"Aug 21 15:21:20 remote1 pacemaker_remoted[21273]: notice: crm_add_logfile: Additional logging available in /var/log/pacemaker.log\n"
+"Aug 21 15:21:20 remote1 pacemaker_remoted[21273]: notice: lrmd_init_remote_tls_server: Starting a tls listener on port 3121.\n"
+"Aug 21 15:21:20 remote1 pacemaker_remoted[21273]: notice: bind_and_listen: Listening on address ::"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Verify Connection to Remote Node"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Before moving forward, it’s worth verifying that the cluster nodes can contact the remote node on port 3121. Here’s a trick you can use. Connect using ssh from each of the cluster nodes. The connection will get destroyed, but how it is destroyed tells you whether it worked or not."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "First, add the remote node’s hostname (we’re using <emphasis role=\"strong\">remote1</emphasis> in this tutorial) to the cluster nodes' <literal>/etc/hosts</literal> files if you haven’t already. This is required unless you have DNS set up in a way where remote1’s address can be discovered."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Execute the following on each cluster node, replacing the IP address with the actual IP address of the remote node."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# cat &lt;&lt; END &gt;&gt; /etc/hosts\n"
+"192.168.122.10    remote1\n"
+"END"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If running the ssh command on one of the cluster nodes results in this output before disconnecting, the connection works:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# ssh -p 3121 remote1\n"
+"ssh_exchange_identification: read: Connection reset by peer"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If you see one of these, the connection is not working:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# ssh -p 3121 remote1\n"
+"ssh: connect to host remote1 port 3121: No route to host"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# ssh -p 3121 remote1\n"
+"ssh: connect to host remote1 port 3121: Connection refused"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Once you can successfully connect to the remote node from the both cluster nodes, move on to setting up Pacemaker on the cluster nodes."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Configure Cluster Nodes"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Configure Firewall on Cluster Nodes"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "On each cluster node, allow cluster-related services through the local firewall, following the same procedure as in <xref linkend=\"_configure_firewall_on_remote_node\" />."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Install Pacemaker on Cluster Nodes"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "On the two cluster nodes, install the following packages."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# yum install -y pacemaker corosync pcs resource-agents"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Copy Authentication Key to Cluster Nodes"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Create a location for the shared authentication key, and copy it from any existing node:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# mkdir -p --mode=0750 /etc/pacemaker\n"
+"# chgrp haclient /etc/pacemaker\n"
+"# scp remote1:/etc/pacemaker/authkey /etc/pacemaker/authkey"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Configure Corosync on Cluster Nodes"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Corosync handles Pacemaker’s cluster membership and messaging. The corosync config file is located in <literal>/etc/corosync/corosync.conf</literal>. That config file must be initialized with information about the two cluster nodes before pacemaker can start."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "To initialize the corosync config file, execute the following pcs command on both nodes, filling in the information in &lt;&gt; with your nodes' information."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# pcs cluster setup --force --local --name mycluster &lt;node1 ip or hostname&gt; &lt;node2 ip or hostname&gt;"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Start Pacemaker on Cluster Nodes"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Start the cluster stack on both cluster nodes using the following command."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# pcs cluster start"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Verify corosync membership"
+msgstr ""
+
+#. Tag: literallayout
+#, no-c-format
+msgid "# pcs status corosync\n"
+"Membership information\n"
+"----------------------\n"
+"    Nodeid      Votes Name\n"
+"         1          1 node1 (local)"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Verify Pacemaker status. At first, the <literal>pcs cluster status</literal> output will look like this."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# pcs status\n"
+"Cluster name: mycluster\n"
+"Last updated: Fri Aug 21 16:14:05 2015\n"
+"Last change: Fri Aug 21 14:02:14 2015\n"
+"Stack: corosync\n"
+"Current DC: NONE\n"
+"Version: 1.1.12-a14efad\n"
+"1 Nodes configured, unknown expected votes\n"
+"0 Resources configured"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "After about a minute, you should see your two cluster nodes come online."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# pcs status\n"
+"Cluster name: mycluster\n"
+"Last updated: Fri Aug 21 16:16:32 2015\n"
+"Last change: Fri Aug 21 14:02:14 2015\n"
+"Stack: corosync\n"
+"Current DC: node1 (1) - partition with quorum\n"
+"Version: 1.1.12-a14efad\n"
+"2 Nodes configured\n"
+"0 Resources configured\n"
+"\n"
+"Online: [ node1 node2 ]"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "For the sake of this tutorial, we are going to disable stonith to avoid having to cover fencing device configuration."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# pcs property set stonith-enabled=false"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Integrate Remote Node into Cluster"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Integrating a remote node into the cluster is achieved through the creation of a remote node connection resource. The remote node connection resource both establishes the connection to the remote node and defines that the remote node exists. Note that this resource is actually internal to Pacemaker’s crmd component. A metadata file for this resource can be found in the <literal>/usr/lib/ocf/resource.d/pacemaker/remote</literal> file that describes what options are available, but there is no actual <emphasis role=\"strong\">ocf:pacemaker:remote</emphasis> resource agent script that performs any work."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Define the remote node connection resource to our remote node, <emphasis role=\"strong\">remote1</emphasis>, using the following command on any cluster node."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# pcs resource create remote1 ocf:pacemaker:remote"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "That’s it. After a moment you should see the remote node come online."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "Cluster name: mycluster\n"
+"Last updated: Fri Aug 21 17:13:09 2015\n"
+"Last change: Fri Aug 21 17:02:02 2015\n"
+"Stack: corosync\n"
+"Current DC: node1 (1) - partition with quorum\n"
+"Version: 1.1.12-a14efad\n"
+"3 Nodes configured\n"
+"1 Resources configured\n"
+"\n"
+"\n"
+"Online: [ node1 node2 ]\n"
+"RemoteOnline: [ remote1 ]\n"
+"\n"
+"Full list of resources:\n"
+"\n"
+" remote1 (ocf::pacemaker:remote):       Started node1\n"
+"\n"
+"PCSD Status:\n"
+"  node1: Online\n"
+"  node2: Online\n"
+"\n"
+"Daemon Status:\n"
+"  corosync: active/disabled\n"
+"  pacemaker: active/disabled\n"
+"  pcsd: active/enabled"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Starting Resources on Remote Node"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Once the remote node is integrated into the cluster, starting resources on a remote node is the exact same as on cluster nodes. Refer to the <ulink url=\"http://clusterlabs.org/doc/\"><emphasis>Clusters from Scratch</emphasis></ulink> document for examples of resource creation."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Never involve a remote node connection resource in a resource group, colocation constraint, or order constraint."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Fencing Remote Nodes"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Remote nodes are fenced the same way as cluster nodes. No special considerations are required. Configure fencing resources for use with remote nodes the same as you would with cluster nodes."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Note, however, that remote nodes can never <emphasis>initiate</emphasis> a fencing action. Only cluster nodes are capable of actually executing a fencing operation against another node."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Accessing Cluster Tools from a Remote Node"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Besides allowing the cluster to manage resources on a remote node, pacemaker_remote has one other trick. The pacemaker_remote daemon allows nearly all the pacemaker tools (<literal>crm_resource</literal>, <literal>crm_mon</literal>, <literal>crm_attribute</literal>, <literal>crm_master</literal>, etc.) to work on remote nodes natively."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Try it: Run <literal>crm_mon</literal> on the remote node after pacemaker has integrated it into the cluster. These tools just work. These means resource agents such as master/slave resources which need access to tools like <literal>crm_master</literal> work seamlessly on the remote nodes."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Higher-level command shells such as <literal>pcs</literal> may have partial support on remote nodes, but it is recommended to run them from a cluster node."
+msgstr ""
+
