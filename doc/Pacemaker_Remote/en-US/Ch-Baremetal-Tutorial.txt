@@ -111,16 +111,20 @@ END
 ----
 
 If running the ssh command on one of the cluster nodes results in this
-output before disconnecting, the connection works.
+output before disconnecting, the connection works:
 ----
 # ssh -p 3121 remote1
 ssh_exchange_identification: read: Connection reset by peer
 ----
 
-If you see this, the connection is not working.
+If you see one of these, the connection is not working:
 ----
 # ssh -p 3121 remote1
 ssh: connect to host remote1 port 3121: No route to host
+----
+----
+# ssh -p 3121 remote1
+ssh: connect to host remote1 port 3121: Connection refused
 ----
 
 Once you can successfully connect to the remote node from the both

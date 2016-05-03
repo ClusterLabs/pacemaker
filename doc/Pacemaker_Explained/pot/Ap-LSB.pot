@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-10-17T05:19:01\n"
-"PO-Revision-Date: 2012-10-17T05:19:01\n"
+"POT-Creation-Date: 2016-05-03 17:45-0500\n"
+"PO-Revision-Date: 2016-05-03 17:45-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -14,17 +14,17 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "init-Script LSB Compliance"
+msgid "Init Script LSB Compliance"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The relevant part of <ulink url=\"http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html\">LSB spec</ulink> includes a description of all the return codes listed here."
+msgid "The relevant part of the <ulink url=\"http://refspecs.linuxfoundation.org/lsb.shtml\">LSB specifications</ulink> includes a description of all the return codes listed here."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Assuming <literal>some_service</literal> is configured correctly and currently not active, the following sequence will help you determine if it is LSB compatible:"
+msgid "Assuming <literal>some_service</literal> is configured correctly and currently inactive, the following sequence will help you determine if it is LSB-compatible:"
 msgstr ""
 
 #. Tag: para
@@ -32,7 +32,7 @@ msgstr ""
 msgid "Start (stopped):"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
 msgid "# /etc/init.d/some_service start ; echo \"result: $?\""
 msgstr ""
@@ -44,7 +44,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Did the command print result: 0 (in addition to the regular output)?"
+msgid "Did the command print <emphasis role=\"strong\">result: 0</emphasis> (in addition to its usual output)?"
 msgstr ""
 
 #. Tag: para
@@ -52,7 +52,7 @@ msgstr ""
 msgid "Status (running):"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
 msgid "# /etc/init.d/some_service status ; echo \"result: $?\""
 msgstr ""
@@ -82,7 +82,7 @@ msgstr ""
 msgid "Stop (running):"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
 msgid "# /etc/init.d/some_service stop ; echo \"result: $?\""
 msgstr ""
@@ -104,7 +104,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Did the command print result: 3 (in addition to the regular output)?"
+msgid "Did the command print <emphasis role=\"strong\">result: 3</emphasis> (in addition to its usual output)?"
 msgstr ""
 
 #. Tag: para
@@ -134,6 +134,6 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If the answer to any of the above questions is no, then the script is not LSB compliant. Your options are then to either fix the script or write an OCF agent based on the existing script."
+msgid "If the answer to any of the above questions is no, then the script is not LSB-compliant. Your options are then to either fix the script or write an OCF agent based on the existing script."
 msgstr ""
 

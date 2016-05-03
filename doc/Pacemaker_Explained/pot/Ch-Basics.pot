@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-10-17T05:19:02\n"
-"PO-Revision-Date: 2012-10-17T05:19:02\n"
+"POT-Creation-Date: 2016-05-03 17:45-0500\n"
+"PO-Revision-Date: 2016-05-03 17:45-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -24,42 +24,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The cluster is written using XML notation and divided into two main sections: configuration and status."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "The status section contains the history of each resource on each node and based on this data, the cluster can construct the complete current state of the cluster. The authoritative source for the status section is the local resource manager (lrmd) process on each cluster node and the cluster will occasionally repopulate the entire section. For this reason it is never written to disk and administrators are advised against modifying it in any way."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "The configuration section contains the more traditional information like cluster options, lists of resources and indications of where they should be placed. The configuration section is the primary focus of this document."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "The configuration section itself is divided into four parts:"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Configuration options (called <literal>crm_config</literal>)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Nodes"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Resources"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Resource relationships (called <literal>constraints</literal>)"
+msgid "The cluster is defined by the Cluster Information Base (CIB), which uses XML notation. The simplest CIB, an empty one, looks like this:"
 msgstr ""
 
 #. Tag: title
@@ -69,15 +34,75 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "  &lt;cib admin_epoch=\"0\" epoch=\"0\" num_updates=\"0\" have-quorum=\"false\"&gt;\n"
-"     &lt;configuration&gt;\n"
-"        &lt;crm_config/&gt;\n"
-"        &lt;nodes/&gt;\n"
-"        &lt;resources/&gt;\n"
-"        &lt;constraints/&gt;\n"
-"     &lt;/configuration&gt;\n"
-"     &lt;status/&gt;\n"
-"  &lt;/cib&gt;"
+msgid "&lt;cib crm_feature_set=\"3.0.7\" validate-with=\"pacemaker-1.2\" admin_epoch=\"1\" epoch=\"0\" num_updates=\"0\"&gt;\n"
+"  &lt;configuration&gt;\n"
+"    &lt;crm_config/&gt;\n"
+"    &lt;nodes/&gt;\n"
+"    &lt;resources/&gt;\n"
+"    &lt;constraints/&gt;\n"
+"  &lt;/configuration&gt;\n"
+"  &lt;status/&gt;\n"
+"&lt;/cib&gt;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The empty configuration above contains the major sections that make up a CIB:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>cib</literal>: The entire CIB is enclosed with a <literal>cib</literal> tag. Certain fundamental settings are defined as attributes of this tag."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>configuration</literal>: This section — the primary focus of this document —  contains traditional configuration information such as what resources the cluster serves and the relationships among them."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>crm_config</literal>: cluster-wide configuration options"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>nodes</literal>: the machines that host the cluster"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>resources</literal>: the services run by the cluster"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>constraints</literal>: indications of how resources should be placed"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>status</literal>: This section contains the history of each resource on each node. Based on this data, the cluster can construct the complete current state of the cluster. The authoritative source for this section is the local resource manager (lrmd process) on each cluster node, and the cluster will occasionally repopulate the entire section. For this reason, it is never written to disk, and administrators are advised against modifying it in any way."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In this document, configuration settings will be described as <emphasis>properties</emphasis> or <emphasis>options</emphasis> based on how they are defined in the CIB:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Properties are XML attributes of an XML element."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Options are name-value pairs expressed as <literal>nvpair</literal> child elements of an XML element."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Normally you will use command-line tools that abstract the XML, so the distinction will be unimportant; both properties and options are cluster settings you can tweak."
 msgstr ""
 
 #. Tag: title
@@ -87,7 +112,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Before one starts to configure a cluster, it is worth explaining how to view the finished product. For this purpose we have created the <literal>crm_mon</literal> utility that will display the current state of an active cluster. It can show the cluster status by node or by resource and can be used in either single-shot or dynamically-updating mode. There are also modes for displaying a list of the operations performed (grouped by node and resource) as well as information about failures."
+msgid "Before one starts to configure a cluster, it is worth explaining how to view the finished product. For this purpose we have created the <literal>crm_mon</literal> utility, which will display the current state of an active cluster. It can show the cluster status by node or by resource and can be used in either single-shot or dynamically-updating mode. There are also modes for displaying a list of the operations performed (grouped by node and resource) as well as information about failures."
 msgstr ""
 
 #. Tag: para
@@ -160,7 +185,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The DC (Designated Controller) node is where all the decisions are made and if the current DC fails a new one is elected from the remaining cluster nodes. The choice of DC is of no significance to an administrator beyond the fact that its logs will generally be more interesting."
+msgid "The DC (Designated Controller) node is where all the decisions are made, and if the current DC fails a new one is elected from the remaining cluster nodes. The choice of DC is of no significance to an administrator beyond the fact that its logs will generally be more interesting."
 msgstr ""
 
 #. Tag: title
@@ -175,7 +200,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Rule 1 - Never edit the cib.xml file manually. Ever. I’m not making this up."
+msgid "Rule 1 - Never edit the <literal>cib.xml</literal> file manually. Ever. I’m not making this up."
 msgstr ""
 
 #. Tag: para
@@ -190,17 +215,22 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Now that it is clear how NOT to update the configuration, we can begin to explain how you should."
+msgid "Now that it is clear how <emphasis>not</emphasis> to update the configuration, we can begin to explain how you <emphasis>should</emphasis>."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Editing the CIB Using XML"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The most powerful tool for modifying the configuration is the <literal>cibadmin</literal> command which talks to a running cluster. With <literal>cibadmin</literal>, the user can query, add, remove, update or replace any part of the configuration; all changes take effect immediately, so there is no need to perform a reload-like operation."
+msgid "The most powerful tool for modifying the configuration is the <literal>cibadmin</literal> command. With <literal>cibadmin</literal>, you can query, add, remove, update or replace any part of the configuration. All changes take effect immediately, so there is no need to perform a reload-like operation."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The simplest way of using cibadmin is to use it to save the current configuration to a temporary file, edit that file with your favorite text or XML editor and then upload the revised configuration."
+msgid "The simplest way of using <literal>cibadmin</literal> is to use it to save the current configuration to a temporary file, edit that file with your favorite text or XML editor, and then upload the revised configuration. <footnote><para>This process might appear to risk overwriting changes that happen after the initial cibadmin call, but pacemaker will reject any update that is \"too old\". If the CIB is updated in some other fashion after the initial cibadmin, the second cibadmin will be rejected because the version number will be too low.</para></footnote>"
 msgstr ""
 
 #. Tag: title
@@ -208,7 +238,7 @@ msgstr ""
 msgid "Safely using an editor to modify the cluster configuration"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
 msgid "# cibadmin --query &gt; tmp.xml\n"
 "# vi tmp.xml\n"
@@ -217,29 +247,24 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Some of the better XML editors can make use of a Relax NG schema to help make sure any changes you make are valid. The schema describing the configuration can normally be found in <emphasis>/usr/lib/heartbeat/pacemaker.rng</emphasis> on most systems."
+msgid "Some of the better XML editors can make use of a Relax NG schema to help make sure any changes you make are valid. The schema describing the configuration can be found in <literal>pacemaker.rng</literal>, which may be deployed in a location such as <literal>/usr/share/pacemaker</literal> or <literal>/usr/lib/heartbeat</literal> depending on your operating system and how you installed the software."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If you only wanted to modify the resources section, you could instead do"
+msgid "If you want to modify just one section of the configuration, you can query and replace just that section to avoid modifying any others."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Safely using an editor to modify a subsection of the cluster configuration"
+msgid "Safely using an editor to modify only the resources section"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# cibadmin --query --obj_type resources &gt; tmp.xml\n"
+msgid "# cibadmin --query --scope resources &gt; tmp.xml\n"
 "# vi tmp.xml\n"
-"# cibadmin --replace --obj_type resources --xml-file tmp.xml"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "to avoid modifying any other part of the configuration."
+"# cibadmin --replace --scope resources --xml-file tmp.xml"
 msgstr ""
 
 #. Tag: title
@@ -249,22 +274,18 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Identify the object you wish to delete. Eg. run"
+msgid "Identify the object you wish to delete by XML tag and id. For example, you might search the CIB for all STONITH-related configuration:"
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Searching for STONITH related configuration items"
+msgid "Searching for STONITH-related configuration items"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# cibadmin -Q | grep stonith"
-msgstr ""
-
-#. Tag: programlisting
-#, no-c-format
-msgid " &lt;nvpair id=\"cib-bootstrap-options-stonith-action\" name=\"stonith-action\" value=\"reboot\"/&gt;\n"
+msgid "# cibadmin -Q | grep stonith\n"
+" &lt;nvpair id=\"cib-bootstrap-options-stonith-action\" name=\"stonith-action\" value=\"reboot\"/&gt;\n"
 " &lt;nvpair id=\"cib-bootstrap-options-stonith-enabled\" name=\"stonith-enabled\" value=\"1\"/&gt;\n"
 " &lt;primitive id=\"child_DoFencing\" class=\"stonith\" type=\"external/vmware\"&gt;\n"
 " &lt;lrm_resource id=\"child_DoFencing:0\" type=\"external/vmware\" class=\"stonith\"&gt;\n"
@@ -278,10 +299,10 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Next identify the resource’s tag name and id (in this case we’ll choose <literal>primitive</literal> and <literal>child_DoFencing</literal>). Then simply execute:"
+msgid "If you wanted to delete the <literal>primitive</literal> tag with id <literal>child_DoFencing</literal>, you would run:"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
 msgid "# cibadmin --delete --crm_xml '&lt;primitive id=\"child_DoFencing\"/&gt;'"
 msgstr ""
@@ -293,37 +314,47 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Some common tasks can also be performed with one of the higher level tools that avoid the need to read or edit XML."
+msgid "Most tasks can be performed with one of the other command-line tools provided with pacemaker, avoiding the need to read or edit XML."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "To enable stonith for example, one could run:"
+msgid "To enable STONITH for example, one could run:"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# crm_attribute --attr-name stonith-enabled --attr-value true"
+msgid "# crm_attribute --name stonith-enabled --update 1"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Or, to see if <literal>somenode</literal> is allowed to run resources, there is:"
+msgid "Or, to check whether <emphasis role=\"strong\">somenode</emphasis> is allowed to run resources, there is:"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# crm_standby --get-value --node-uname somenode"
+msgid "# crm_standby --get-value --node somenode"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Or, to find the current location of <literal>my-test-rsc</literal>, one can use:"
+msgid "Or, to find the current location of <emphasis role=\"strong\">my-test-rsc</emphasis>, one can use:"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
 msgid "# crm_resource --locate --resource my-test-rsc"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Examples of using these tools for specific cases will be given throughout this document where appropriate."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Old versions of pacemaker (1.0.3 and earlier) had different command-line tool syntax. If you are using an older version, check your installed manual pages for the proper syntax to use."
 msgstr ""
 
 #. Tag: title
@@ -338,12 +369,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "To begin, simply invoke <literal>crm_shadow</literal> and give it the name of a configuration to create <footnote><para>Shadow copies are identified with a name, making it possible to have more than one.</para></footnote> ; be sure to follow the simple on-screen instructions."
+msgid "To begin, simply invoke <literal>crm_shadow --create</literal> with the name of a configuration to create <footnote><para>Shadow copies are identified with a name, making it possible to have more than one.</para></footnote>, and follow the simple on-screen instructions."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Read the above carefully, failure to do so could result in you destroying the cluster’s active configuration!"
+msgid "Read this section and the on-screen instructions carefully; failure to do so could result in destroying the cluster’s active configuration!"
 msgstr ""
 
 #. Tag: title
@@ -351,37 +382,37 @@ msgstr ""
 msgid "Creating and displaying the active sandbox"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid " # crm_shadow --create test\n"
-" Setting up shadow instance\n"
-" Type Ctrl-D to exit the crm_shadow shell\n"
-" shadow[test]:\n"
-" shadow[test] # crm_shadow --which\n"
-" test"
+msgid "# crm_shadow --create test\n"
+"Setting up shadow instance\n"
+"Type Ctrl-D to exit the crm_shadow shell\n"
+"shadow[test]:\n"
+"shadow[test] # crm_shadow --which\n"
+"test"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "From this point on, all cluster commands will automatically use the shadow copy instead of talking to the cluster’s active configuration. Once you have finished experimenting, you can either commit the changes, or discard them as shown below. Again, be sure to follow the on-screen instructions carefully."
+msgid "From this point on, all cluster commands will automatically use the shadow copy instead of talking to the cluster’s active configuration. Once you have finished experimenting, you can either make the changes active via the <literal>--commit</literal> option, or discard them using the <literal>--delete</literal> option. Again, be sure to follow the on-screen instructions carefully!"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "For a full list of <literal>crm_shadow</literal> options and commands, invoke it with the &lt;parameter&gt;--help&lt;/parameter&gt; option."
+msgid "For a full list of <literal>crm_shadow</literal> options and commands, invoke it with the <literal>--help</literal> option."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Using a sandbox to make multiple changes atomically"
+msgid "Using a sandbox to make multiple changes atomically, discard them and verify the real configuration is untouched"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
 msgid " shadow[test] # crm_failcount -G -r rsc_c001n01\n"
 "  name=fail-count-rsc_c001n01 value=0\n"
-" shadow[test] # crm_standby -v on -n c001n02\n"
-" shadow[test] # crm_standby -G -n c001n02\n"
+" shadow[test] # crm_standby -v on -N c001n02\n"
+" shadow[test] # crm_standby -G -N c001n02\n"
 " name=c001n02 scope=nodes value=on\n"
 " shadow[test] # cibadmin --erase --force\n"
 " shadow[test] # cibadmin --query\n"
@@ -399,7 +430,7 @@ msgid " shadow[test] # crm_failcount -G -r rsc_c001n01\n"
 "  Now type Ctrl-D to exit the crm_shadow shell\n"
 "  shadow[test] # exit\n"
 "  # crm_shadow --which\n"
-"  No shadow instance provided\n"
+"  No active shadow configuration defined\n"
 "  # cibadmin -Q\n"
 " &lt;cib cib_feature_revision=\"1\" validate-with=\"pacemaker-1.0\" admin_epoch=\"0\" crm_feature_set=\"3.0\" have-quorum=\"1\" epoch=\"110\"\n"
 "       dc-uuid=\"c001n01\" num_updates=\"551\"&gt;\n"
@@ -410,11 +441,6 @@ msgid " shadow[test] # crm_failcount -G -r rsc_c001n01\n"
 "             &lt;nvpair id=\"cib-bootstrap-2\" name=\"pe-input-series-max\" value=\"30000\"/&gt;"
 msgstr ""
 
-#. Tag: para
-#, no-c-format
-msgid "Making changes in a sandbox and verifying the real configuration is untouched"
-msgstr ""
-
 #. Tag: title
 #, no-c-format
 msgid "Testing Your Configuration Changes"
@@ -422,22 +448,27 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "We saw previously how to make a series of changes to a \"shadow\" copy of the configuration. Before loading the changes back into the cluster (eg. <literal>crm_shadow --commit mytest --force</literal>), it is often advisable to simulate the effect of the changes with <literal>crm_simulate</literal>, eg."
+msgid "We saw previously how to make a series of changes to a \"shadow\" copy of the configuration. Before loading the changes back into the cluster (e.g. <literal>crm_shadow --commit mytest --force</literal>), it is often advisable to simulate the effect of the changes with <literal>crm_simulate</literal>. For example:"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
 msgid "# crm_simulate --live-check -VVVVV --save-graph tmp.graph --save-dotfile tmp.dot"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The tool uses the same library as the live cluster to show what it would have done given the supplied input. It’s output, in addition to a significant amount of logging, is stored in two files <literal>tmp.graph</literal> and <literal>tmp.dot</literal>, both are representations of the same thing — the cluster’s response to your changes."
+msgid "This tool uses the same library as the live cluster to show what it would have done given the supplied input. Its output, in addition to a significant amount of logging, is stored in two files <literal>tmp.graph</literal> and <literal>tmp.dot</literal>. Both files are representations of the same thing: the cluster’s response to your changes."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "In the graph file is stored the complete transition, containing a list of all the actions, their parameters and their pre-requisites. Because the transition graph is not terribly easy to read, the tool also generates a Graphviz dot-file representing the same information."
+msgid "The graph file stores the complete transition from the existing cluster state to your desired new state, containing a list of all the actions, their parameters and their pre-requisites. Because the transition graph is not terribly easy to read, the tool also generates a Graphviz <footnote><para>Graph visualization software. See <ulink url=\"http://www.graphviz.org/\">http://www.graphviz.org/</ulink> for details.</para></footnote> dot-file representing the same information."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "For information on the options supported by <literal>crm_simulate</literal>, use its <literal>--help</literal> option."
 msgstr ""
 
 #. Tag: title
@@ -452,7 +483,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Dashed-arrows indicate dependencies that are not present in the transition graph"
+msgid "Dashed arrows indicate dependencies that are not present in the transition graph"
 msgstr ""
 
 #. Tag: para
@@ -505,19 +536,9 @@ msgstr ""
 msgid "Small Cluster Transition"
 msgstr ""
 
-#. Tag: phrase
-#, no-c-format
-msgid "An example transition graph as represented by Graphviz"
-msgstr ""
-
 #. Tag: para
 #, no-c-format
-msgid "In the above example, it appears that a new node, <literal>node2</literal>, has come online and that the cluster is checking to make sure <literal>rsc1</literal>, <literal>rsc2</literal> and <literal>rsc3</literal> are not already running there (Indicated by the <literal>*_monitor_0</literal> entries). Once it did that, and assuming the resources were not active there, it would have liked to stop <literal>rsc1</literal> and <literal>rsc2</literal> on <literal>node1</literal> and move them to <literal>node2</literal>. However, there appears to be some problem and the cluster cannot or is not permitted to perform the stop actions which implies it also cannot perform the start actions. For some reason the cluster does not want to start <literal>rsc3</literal> anywhere."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "For information on the options supported by <literal>crm_simulate</literal>, use the <literal>--help</literal> option."
+msgid "In the above example, it appears that a new node, <emphasis role=\"strong\">pcmk-2</emphasis>, has come online and that the cluster is checking to make sure <emphasis role=\"strong\">rsc1</emphasis>, <emphasis role=\"strong\">rsc2</emphasis> and <emphasis role=\"strong\">rsc3</emphasis> are not already running there (Indicated by the <emphasis role=\"strong\">rscN_monitor_0</emphasis> entries). Once it did that, and assuming the resources were not active there, it would have liked to stop <emphasis role=\"strong\">rsc1</emphasis> and <emphasis role=\"strong\">rsc2</emphasis> on <emphasis role=\"strong\">pcmk-1</emphasis> and move them to <emphasis role=\"strong\">pcmk-2</emphasis>. However, there appears to be some problem and the cluster cannot or is not permitted to perform the stop actions which implies it also cannot perform the start actions. For some reason the cluster does not want to start <emphasis role=\"strong\">rsc3</emphasis> anywhere."
 msgstr ""
 
 #. Tag: title
@@ -525,14 +546,9 @@ msgstr ""
 msgid "Complex Cluster Transition"
 msgstr ""
 
-#. Tag: phrase
-#, no-c-format
-msgid "Another, slightly more complex, transition graph that you're not expected to be able to read"
-msgstr ""
-
 #. Tag: title
 #, no-c-format
-msgid "Do I Need to Update the Configuration on all Cluster Nodes?"
+msgid "Do I Need to Update the Configuration on All Cluster Nodes?"
 msgstr ""
 
 #. Tag: para

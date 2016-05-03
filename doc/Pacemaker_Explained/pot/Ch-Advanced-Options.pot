@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-10-17T05:19:01\n"
-"PO-Revision-Date: 2012-10-17T05:19:01\n"
+"POT-Creation-Date: 2016-05-03 17:45-0500\n"
+"PO-Revision-Date: 2016-05-03 17:45-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -44,6 +44,11 @@ msgstr ""
 
 #. Tag: entry
 #, no-c-format
+msgid "Default"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
 msgid "Description"
 msgstr ""
 
@@ -54,7 +59,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The user to connect as. Needs to be part of the <literal>hacluster</literal> group on the target host. Defaults to <emphasis>$USER</emphasis>. <indexterm> <primary>Environment Variable</primary><secondary>CIB_user</secondary> </indexterm> <indexterm> <primary>CIB_user</primary> </indexterm>"
+msgid "$USER"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The user to connect as. Needs to be part of the <literal>hacluster</literal> group on the target host. <indexterm> <primary>Environment Variable</primary><secondary>CIB_user</secondary> </indexterm> <indexterm> <primary>CIB_user</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -74,7 +84,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The host to contact. Defaults to <emphasis>localhost</emphasis>. <indexterm> <primary>Environment Variable</primary><secondary>CIB_server</secondary> </indexterm> <indexterm> <primary>CIB_server</primary> </indexterm>"
+msgid "localhost"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The host to contact <indexterm> <primary>Environment Variable</primary><secondary>CIB_server</secondary> </indexterm> <indexterm> <primary>CIB_server</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -94,28 +109,33 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Encrypt network traffic; defaults to <emphasis>true</emphasis>. <indexterm> <primary>Environment Variable</primary><secondary>CIB_encrypted</secondary> </indexterm> <indexterm> <primary>CIB_encrypted</primary> </indexterm>"
+msgid "TRUE"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "So, if <literal>c001n01</literal> is an active cluster node and is listening on <literal>1234</literal> for connections, and <literal>someguy</literal> is a member of the <literal>hacluster</literal> group, then the following would prompt for <literal>someguy</literal>'s password and return the cluster’s current configuration:"
+msgid "Whether to encrypt network traffic <indexterm> <primary>Environment Variable</primary><secondary>CIB_encrypted</secondary> </indexterm> <indexterm> <primary>CIB_encrypted</primary> </indexterm>"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: para
 #, no-c-format
-msgid "# export CIB_port=1234; export CIB_server=c001n01; export CIB_user=someguy;\n"
+msgid "So, if <emphasis role=\"strong\">c001n01</emphasis> is an active cluster node and is listening on port 1234 for connections, and <emphasis role=\"strong\">someuser</emphasis> is a member of the <emphasis role=\"strong\">hacluster</emphasis> group, then the following would prompt for <emphasis role=\"strong\">someuser</emphasis>'s password and return the cluster’s current configuration:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# export CIB_port=1234; export CIB_server=c001n01; export CIB_user=someuser;\n"
 "# cibadmin -Q"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "For security reasons, the cluster does not listen for remote connections by default. If you wish to allow remote access, you need to set the <literal>remote-tls-port</literal> (encrypted) or <literal>remote-clear-port</literal> (unencrypted) top-level options (ie., those kept in the cib tag, like <literal>num_updates</literal> and <literal>epoch</literal>)."
+msgid "For security reasons, the cluster does not listen for remote connections by default. If you wish to allow remote access, you need to set the <literal>remote-tls-port</literal> (encrypted) or <literal>remote-clear-port</literal> (unencrypted) CIB properties (i.e., those kept in the <literal>cib</literal> tag, like <literal>num_updates</literal> and <literal>epoch</literal>)."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Extra top-level CIB options for remote access"
+msgid "Extra top-level CIB properties for remote access"
 msgstr ""
 
 #. Tag: entry
@@ -130,7 +150,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Listen for encrypted remote connections on this port. Default: <emphasis>none</emphasis> <indexterm> <primary>remote-tls-port</primary><secondary>Remote Connection Option</secondary> </indexterm> <indexterm> <primary>Remote Connection Option</primary> </indexterm> <indexterm> <primary>Remote Connection</primary><secondary>Option</secondary><tertiary>remote-tls-port</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>remote-tls-port</secondary> </indexterm> <indexterm> <primary>remote-tls-port</primary> </indexterm>"
+msgid "<emphasis>none</emphasis>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Listen for encrypted remote connections on this port. <indexterm> <primary>remote-tls-port</primary><secondary>Remote Connection Option</secondary> </indexterm> <indexterm> <primary>Remote Connection Option</primary> </indexterm> <indexterm> <primary>Remote Connection</primary><secondary>Option</secondary><tertiary>remote-tls-port</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>remote-tls-port</secondary> </indexterm> <indexterm> <primary>remote-tls-port</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -140,7 +165,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Listen for plaintext remote connections on this port. Default: <emphasis>none</emphasis> <indexterm> <primary>remote-clear-port</primary><secondary>Remote Connection Option</secondary> </indexterm> <indexterm> <primary>Remote Connection Option</primary> </indexterm> <indexterm> <primary>Remote Connection</primary><secondary>Option</secondary><tertiary>remote-clear-port</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>remote-clear-port</secondary> </indexterm> <indexterm> <primary>remote-clear-port</primary> </indexterm>"
+msgid "Listen for plaintext remote connections on this port. <indexterm> <primary>remote-clear-port</primary><secondary>Remote Connection Option</secondary> </indexterm> <indexterm> <primary>Remote Connection Option</primary> </indexterm> <indexterm> <primary>Remote Connection</primary><secondary>Option</secondary><tertiary>remote-clear-port</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>remote-clear-port</secondary> </indexterm> <indexterm> <primary>remote-clear-port</primary> </indexterm>"
 msgstr ""
 
 #. Tag: title
@@ -150,22 +175,22 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "By default, recurring actions are scheduled relative to when the resource started. So if your resource was last started at 14:32 and you have a backup set to be performed every 24 hours, then the backup will always run at in the middle of the business day - hardly desirable."
+msgid "By default, recurring actions are scheduled relative to when the resource started. So if your resource was last started at 14:32 and you have a backup set to be performed every 24 hours, then the backup will always run in the middle of the business day — hardly desirable."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "To specify a date/time that the operation should be relative to, set the operation’s <literal>interval-origin</literal>. The cluster uses this point to calculate the correct <literal>start-delay</literal> such that the operation will occur at <emphasis>origin + (interval * N)</emphasis>."
+msgid "To specify a date and time that the operation should be relative to, set the operation’s <literal>interval-origin</literal>. The cluster uses this point to calculate the correct <literal>start-delay</literal> such that the operation will occur at <emphasis>origin + (interval * N)</emphasis>."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "So, if the operation’s interval is 24h, it’s interval-origin is set to <literal>02:00</literal> and it is currently <literal>14:32</literal>, then the cluster would initiate the operation with a start delay of 11 hours and 28 minutes. If the resource is moved to another node before 2am, then the operation is of course cancelled."
+msgid "So, if the operation’s interval is 24h, its interval-origin is set to 02:00 and it is currently 14:32, then the cluster would initiate the operation with a start delay of 11 hours and 28 minutes. If the resource is moved to another node before 2am, then the operation is cancelled."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The value specified for interval and <literal>interval-origin</literal> can be any date/time conforming to the <ulink url=\"http://en.wikipedia.org/wiki/ISO_8601\">ISO8601 standard</ulink>. By way of example, to specify an operation that would run on the first Monday of 2009 and every Monday after that you would add:"
+msgid "The value specified for <literal>interval</literal> and <literal>interval-origin</literal> can be any date/time conforming to the <ulink url=\"http://en.wikipedia.org/wiki/ISO_8601\">ISO8601 standard</ulink>. By way of example, to specify an operation that would run on the first Monday of 2009 and every Monday after that, you would add:"
 msgstr ""
 
 #. Tag: title
@@ -190,65 +215,75 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Manual Intervention"
+msgid "Moving Resources Manually"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "There are primarily two occasions when you would want to move a resource from it’s current location: when the whole node is under maintenance, and when a single resource needs to be moved."
+msgid "There are primarily two occasions when you would want to move a resource from its current location: when the whole node is under maintenance, and when a single resource needs to be moved."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Standby Mode"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Since everything eventually comes down to a score, you could create constraints for every resource to prevent them from running on one node. While the configuration can seem convoluted at times, not even we would require this of administrators."
+msgid "Since everything eventually comes down to a score, you could create constraints for every resource to prevent them from running on one node. While pacemaker configuration can seem convoluted at times, not even we would require this of administrators."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Instead one can set a special node attribute which tells the cluster \"don’t let anything run here\". There is even a helpful tool to help query and set it, called <literal>crm_standby</literal>. To check the standby status of the current machine, simply run:"
+msgid "Instead, one can set a special node attribute which tells the cluster \"don’t let anything run here\". There is even a helpful tool to help query and set it, called <literal>crm_standby</literal>. To check the standby status of the current machine, run:"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# crm_standby --get-value"
+msgid "# crm_standby -G"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "A value of <literal>true</literal> indicates that the node is <emphasis>NOT</emphasis> able to host any resources, while a value of <literal>false</literal> says that it <emphasis>CAN</emphasis>."
+msgid "A value of <literal>on</literal> indicates that the node is <emphasis>not</emphasis> able to host any resources, while a value of <literal>off</literal> says that it <emphasis>can</emphasis>."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "You can also check the status of other nodes in the cluster by specifying the <literal>--node-uname</literal> option:"
+msgid "You can also check the status of other nodes in the cluster by specifying the <literal>--node</literal> option:"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# crm_standby --get-value --node-uname sles-2"
+msgid "# crm_standby -G --node sles-2"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "To change the current node’s standby status, use <literal>--attr-value</literal> instead of <literal>--get-value</literal>."
+msgid "To change the current node’s standby status, use <literal>-v</literal> instead of <literal>-G</literal>:"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# crm_standby --attr-value"
+msgid "# crm_standby -v on"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Again, you can change another host’s value by supplying a host name with <literal>--node-uname</literal>."
+msgid "Again, you can change another host’s value by supplying a hostname with <literal>--node</literal>."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Moving One Resource"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "When only one resource is required to move, we do this by creating location constraints. However, once again we provide a user friendly shortcut as part of the <literal>crm_resource</literal> command, which creates and modifies the extra constraints for you. If <literal>Email</literal> was running on <literal>sles-1</literal> and you wanted it moved to a specific location, the command would look something like:"
+msgid "When only one resource is required to move, we could do this by creating location constraints. However, once again we provide a user-friendly shortcut as part of the <literal>crm_resource</literal> command, which creates and modifies the extra constraints for you. If <literal>Email</literal> were running on <literal>sles-1</literal> and you wanted it moved to a specific location, the command would look something like:"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
 msgid "# crm_resource -M -r Email -H sles-2"
 msgstr ""
@@ -268,7 +303,7 @@ msgstr ""
 msgid "It is important to note that subsequent invocations of <literal>crm_resource -M</literal> are not cumulative. So, if you ran these commands"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
 msgid "# crm_resource -M -r Email -H sles-2\n"
 "# crm_resource -M -r Email -H sles-3"
@@ -284,7 +319,7 @@ msgstr ""
 msgid "To allow the resource to move back again, use:"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
 msgid "# crm_resource -U -r Email"
 msgstr ""
@@ -294,7 +329,7 @@ msgstr ""
 msgid "Note the use of the word <emphasis>allow</emphasis>. The resource can move back to its original location but, depending on <literal>resource-stickiness</literal>, it might stay where it is. To be absolutely certain that it moves back to <literal>sles-1</literal>, move it there before issuing the call to <literal>crm_resource -U</literal>:"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
 msgid "# crm_resource -M -r Email -H sles-1\n"
 "# crm_resource -U -r Email"
@@ -302,12 +337,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Alternatively, if you only care that the resource should be moved from its current location, try"
+msgid "Alternatively, if you only care that the resource should be moved from its current location, try:"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# crm_resource -M -r Email`"
+msgid "# crm_resource -B -r Email"
 msgstr ""
 
 #. Tag: para
@@ -327,7 +362,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "In some cases, such as when <literal>resource-stickiness</literal> is set to <literal>INFINITY</literal>, it is possible that you will end up with the problem described in <xref linkend=\"node-score-equal\" />. The tool can detect some of these cases and deals with them by also creating both a positive and negative constraint. Eg."
+msgid "In some cases, such as when <literal>resource-stickiness</literal> is set to <literal>INFINITY</literal>, it is possible that you will end up with the problem described in <xref linkend=\"node-score-equal\" />. The tool can detect some of these cases and deals with them by creating both positive and negative constraints. E.g."
 msgstr ""
 
 #. Tag: para
@@ -352,27 +387,42 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "New in 1.0 is the concept of a migration threshold. <footnote><para> The naming of this option was perhaps unfortunate as it is easily confused with true migration, the process of moving a resource from one node to another without stopping it. Xen virtual guests are the most common example of resources that can be migrated in this manner. </para></footnote>"
+msgid "Normally, if a running resource fails, pacemaker will try to start it again on the same node. However if a resource fails repeatedly, it is possible that there is an underlying problem on that node, and you might desire trying a different node in such a case."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Simply define <literal>migration-threshold=N</literal> for a resource and it will migrate to a new node after N failures. There is no threshold defined by default. To determine the resource’s current failure status and limits, use <literal>crm_mon --failcounts</literal>."
+msgid "<indexterm> <primary>migration-threshold</primary> </indexterm> <indexterm> <primary>failure-timeout</primary> </indexterm> <indexterm> <primary>start-failure-is-fatal</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "By default, once the threshold has been reached, this node will no longer be allowed to run the failed resource until the administrator manually resets the resource’s failcount using <literal>crm_failcount</literal> (after hopefully first fixing the failure’s cause). However it is possible to expire them by setting the resource’s <literal>failure-timeout</literal> option."
+msgid "Pacemaker allows you to set your preference via the <literal>migration-threshold</literal> resource option. <footnote><para> The naming of this option was perhaps unfortunate as it is easily confused with live migration, the process of moving a resource from one node to another without stopping it. Xen virtual guests are the most common example of resources that can be migrated in this manner. </para></footnote>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "So a setting of <literal>migration-threshold=2</literal> and <literal>failure-timeout=60s</literal> would cause the resource to move to a new node after 2 failures, and allow it to move back (depending on the stickiness and constraint scores) after one minute."
+msgid "Simply define <literal>migration-threshold=<replaceable>N</replaceable></literal> for a resource and it will migrate to a new node after <emphasis>N</emphasis> failures. There is no threshold defined by default. To determine the resource’s current failure status and limits, run <literal>crm_mon --failcounts</literal>."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "There are two exceptions to the migration threshold concept; they occur when a resource either fails to start or fails to stop. Start failures cause the failcount to be set to <literal>INFINITY</literal> and thus always cause the resource to move immediately."
+msgid "By default, once the threshold has been reached, the troublesome node will no longer be allowed to run the failed resource until the administrator manually resets the resource’s failcount using <literal>crm_failcount</literal> (after hopefully first fixing the failure’s cause). Alternatively, it is possible to expire them by setting the <literal>failure-timeout</literal> option for the resource."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "For example, a setting of <literal>migration-threshold=2</literal> and <literal>failure-timeout=60s</literal> would cause the resource to move to a new node after 2 failures, and allow it to move back (depending on stickiness and constraint scores) after one minute."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "There are two exceptions to the migration threshold concept: when a resource either fails to start or fails to stop."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If the cluster property <literal>start-failure-is-fatal</literal> is set to <literal>true</literal> (which is the default), start failures cause the failcount to be set to <literal>INFINITY</literal> and thus always cause the resource to move immediately."
 msgstr ""
 
 #. Tag: para
@@ -382,7 +432,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Please read <xref linkend=\"s-rules-recheck\" /> before enabling this option."
+msgid "Please read <xref linkend=\"s-rules-recheck\" /> to understand how timeouts work before configuring a <literal>failure-timeout</literal>."
 msgstr ""
 
 #. Tag: title
@@ -392,37 +442,32 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Setting up the cluster to move resources when external connectivity is lost is a two-step process."
+msgid "You can configure the cluster to move resources when external connectivity is lost in two steps."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Tell Pacemaker to monitor connectivity"
+msgid "Tell Pacemaker to Monitor Connectivity"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "To do this, you need to add a <literal>ping</literal> resource to the cluster. The <literal>ping</literal> resource uses the system utility of the same name to a test if list of machines (specified by DNS hostname or IPv4/IPv6 address) are reachable and uses the results to maintain a node attribute normally called <literal>pingd</literal>. <footnote><para> The attribute name is customizable; that allows multiple ping groups to be defined. </para></footnote>"
+msgid "First, add an <emphasis role=\"strong\">ocf:pacemaker:ping</emphasis> resource to the cluster. The <emphasis role=\"strong\">ping</emphasis> resource uses the system utility of the same name to a test whether list of machines (specified by DNS hostname or IPv4/IPv6 address) are reachable and uses the results to maintain a node attribute called <literal>pingd</literal> by default. <footnote><para> The attribute name is customizable, in order to allow multiple ping groups to be defined. </para></footnote>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Older versions of Heartbeat required users to add ping nodes to <emphasis>ha.cf</emphasis> - this is no longer required."
+msgid "Older versions of Heartbeat required users to add ping nodes to <literal>ha.cf</literal>, but this is no longer required."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Older versions of Pacemaker used a custom binary called <emphasis>pingd</emphasis> for this functionality; this is now deprecated in favor of <emphasis>ping</emphasis>."
+msgid "Older versions of Pacemaker used a different agent <emphasis role=\"strong\">ocf:pacemaker:pingd</emphasis> which is now deprecated in favor of <emphasis role=\"strong\">ping</emphasis>. If your version of Pacemaker does not contain the <emphasis role=\"strong\">ping</emphasis> resource agent, download the latest version from <ulink url=\"https://github.com/ClusterLabs/pacemaker/tree/master/extra/resources/ping\">https://github.com/ClusterLabs/pacemaker/tree/master/extra/resources/ping</ulink>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If your version of Pacemaker does not contain the ping agent, you can download the latest version from <ulink url=\"https://github.com/ClusterLabs/pacemaker/tree/master/extra/resources/ping\">https://github.com/ClusterLabs/pacemaker/tree/master/extra/resources/ping</ulink>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Normally the resource will run on all cluster nodes, which means that you’ll need to create a clone. A template for this can be found below along with a description of the most interesting parameters."
+msgid "Normally, the ping resource should run on all cluster nodes, which means that you’ll need to create a clone. A template for this can be found below along with a description of the most interesting parameters."
 msgstr ""
 
 #. Tag: title
@@ -488,22 +533,27 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Tell Pacemaker how to interpret the connectivity data"
+msgid "Tell Pacemaker How to Interpret the Connectivity Data"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Before reading the following, please make sure you have read and understood <xref linkend=\"ch-rules\" /> above."
+msgid "Before attempting the following, make sure you understand <xref linkend=\"ch-rules\" />."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "There are a number of ways to use the connectivity data provided by Heartbeat. The most common setup is for people to have a single ping node, to prevent the cluster from running a resource on any unconnected node."
+msgid "There are a number of ways to use the connectivity data."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The most common setup is for people to have a single ping target (e.g. the service network’s default gateway), to prevent the cluster from running a resource on any unconnected node."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Don’t run on unconnected nodes"
+msgid "Don’t run a resource on unconnected nodes"
 msgstr ""
 
 #. Tag: programlisting
@@ -517,26 +567,32 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "A more complex setup is to have a number of ping nodes configured. You can require the cluster to only run resources on nodes that can connect to all (or a minimum subset) of them."
+msgid "A more complex setup is to have a number of ping targets configured. You can require the cluster to only run resources on nodes that can connect to all (or a minimum subset) of them."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Run only on nodes connected to three or more ping nodes; this assumes <literal>multiplier</literal> is set to 1000:"
+msgid "Run only on nodes connected to three or more ping targets."
 msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "&lt;rsc_location id=\"WebServer-connectivity\" rsc=\"Webserver\"&gt;\n"
+msgid "&lt;primitive id=\"ping\" provider=\"pacemaker\" class=\"ocf\" type=\"ping\"&gt;\n"
+"... &lt;!-- omitting some configuration to highlight important parts --&gt;\n"
+"      &lt;nvpair id=\"pingd-multiplier\" name=\"multiplier\" value=\"1000\"/&gt;\n"
+"...\n"
+"&lt;/primitive&gt;\n"
+"...\n"
+"&lt;rsc_location id=\"WebServer-connectivity\" rsc=\"Webserver\"&gt;\n"
 "   &lt;rule id=\"ping-prefer-rule\" score=\"-INFINITY\" &gt;\n"
-"    &lt;expression id=\"ping-prefer\" attribute=\"pingd\" operation=\"lt\" value=\"3000\"/&gt;\n"
+"      &lt;expression id=\"ping-prefer\" attribute=\"pingd\" operation=\"lt\" value=\"3000\"/&gt;\n"
 "   &lt;/rule&gt;\n"
 "&lt;/rsc_location&gt;"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Instead you can tell the cluster only to <emphasis>prefer</emphasis> nodes with the best connectivity. Just be sure to set <literal>multiplier</literal> to a value higher than that of <literal>resource-stickiness</literal> (and don’t set either of them to <literal>INFINITY</literal>)."
+msgid "Alternatively, you can tell the cluster only to <emphasis>prefer</emphasis> nodes with the best connectivity. Just be sure to set <literal>multiplier</literal> to a value higher than that of <literal>resource-stickiness</literal> (and don’t set either of them to <literal>INFINITY</literal>)."
 msgstr ""
 
 #. Tag: title
@@ -555,12 +611,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "It is perhaps easier to think of this in terms of the simple constraints that the cluster translates it into. For example, if <literal>sles-1</literal> is connected to all 5 ping nodes but <literal>sles-2</literal> is only connected to 2, then it would be as if you instead had the following constraints in your configuration:"
+msgid "It is perhaps easier to think of this in terms of the simple constraints that the cluster translates it into. For example, if <emphasis role=\"strong\">sles-1</emphasis> is connected to all five ping nodes but <emphasis role=\"strong\">sles-2</emphasis> is only connected to two, then it would be as if you instead had the following constraints in your configuration:"
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "How the cluster translates the pingd constraint"
+msgid "How the cluster translates the above location constraint"
 msgstr ""
 
 #. Tag: programlisting
@@ -598,32 +654,37 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Resource Migration"
+msgid "Migrating Resources"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Some resources, such as Xen virtual guests, are able to move to another location without loss of state. We call this resource migration; this is different from the normal practice of stopping the resource on the first machine and starting it elsewhere."
+msgid "Normally, when the cluster needs to move a resource, it fully restarts the resource (i.e. stops the resource on the current node and starts it on the new node)."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Not all resources are able to migrate, see the Migration Checklist below, and those that can, won’t do so in all situations. Conceptually there are two requirements from which the other prerequisites follow:"
+msgid "However, some types of resources, such as Xen virtual guests, are able to move to another location without loss of state (often referred to as live migration or hot migration). In pacemaker, this is called resource migration. Pacemaker can be configured to migrate a resource when moving it, rather than restarting it."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "the resource must be active and healthy at the old location"
+msgid "Not all resources are able to migrate; see the Migration Checklist below, and those that can, won’t do so in all situations. Conceptually, there are two requirements from which the other prerequisites follow:"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "everything required for the resource to run must be available on both the old and new locations"
+msgid "The resource must be active and healthy at the old location; and"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The cluster is able to accommodate both push and pull migration models by requiring the resource agent to support two new actions: <literal>migrate_to</literal> (performed on the current location) and <literal>migrate_from</literal> (performed on the destination)."
+msgid "everything required for the resource to run must be available on both the old and new locations."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The cluster is able to accommodate both <emphasis>push</emphasis> and <emphasis>pull</emphasis> migration models by requiring the resource agent to support two special actions: <literal>migrate_to</literal> (performed on the current location) and <literal>migrate_from</literal> (performed on the destination)."
 msgstr ""
 
 #. Tag: para
@@ -638,7 +699,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "There is no wrong or right way to implement migration for your service, as long as it works."
+msgid "There is no wrong or right way for a resource agent to implement migration, as long as it works."
 msgstr ""
 
 #. Tag: title
@@ -663,12 +724,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The resource must not, directly or indirectly, depend on any primitive or group resources."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "The resource must support two new actions: <literal>migrate_to</literal> and <literal>migrate_from</literal>, and advertise them in its metadata."
+msgid "The resource agent must support <literal>migrate_to</literal> and <literal>migrate_from</literal> actions, and advertise them in its metadata."
 msgstr ""
 
 #. Tag: para
@@ -678,7 +734,22 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If the resource depends on a clone, and at the time the resource needs to be move, the clone has instances that are stopping and instances that are starting, then the resource will be moved in the traditional manner. The Policy Engine is not yet able to model this situation correctly and so takes the safe (yet less optimal) path."
+msgid "If an otherwise migratable resource depends on another resource via an ordering constraint, there are special situations in which it will be restarted rather than migrated."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "For example, if the resource depends on a clone, and at the time the resource needs to be moved, the clone has instances that are stopping and instances that are starting, then the resource will be restarted. The Policy Engine is not yet able to model this situation correctly and so takes the safer (if less optimal) path."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In pacemaker 1.1.11 and earlier, a migratable resource will be restarted when moving if it directly or indirectly depends on <emphasis>any</emphasis> primitive or group resources."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Even in newer versions, if a migratable resource depends on a non-migratable resource, and both need to be moved, the migratable resource will be restarted."
 msgstr ""
 
 #. Tag: title
@@ -759,22 +830,22 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The cluster automatically detects changes to the definition of services it manages. However, the normal response is to stop the service (using the old definition) and start it again (with the new definition). This works well, but some services are smarter and can be told to use a new set of options without restarting."
+msgid "The cluster automatically detects changes to the definition of services it manages. The normal response is to stop the service (using the old definition) and start it again (with the new definition). This works well, but some services are smarter and can be told to use a new set of options without restarting."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "To take advantage of this capability, your resource agent must:"
+msgid "To take advantage of this capability, the resource agent must:"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Accept the <literal>reload</literal> operation and perform any required actions. <emphasis>The steps required here depend completely on your application!</emphasis>"
+msgid "Accept the <literal>reload</literal> operation and perform any required actions. <emphasis>The actions here depend completely on your application!</emphasis>"
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "The DRBD Agent’s Control logic for Supporting the <literal>reload</literal> Operation"
+msgid "The DRBD agent’s logic for supporting <literal>reload</literal>"
 msgstr ""
 
 #. Tag: programlisting
@@ -862,12 +933,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Once these requirements are satisfied, the cluster will automatically know to reload the resource (instead of restarting) when a non-unique fields changes."
+msgid "Once these requirements are satisfied, the cluster will automatically know to reload the resource (instead of restarting) when a non-unique field changes."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The metadata is re-read when the resource is started. This may mean that the resource will be restarted the first time, even though you changed a parameter with <literal>unique=0</literal>"
+msgid "Metadata will not be re-read unless the resource needs to be started. This may mean that the resource will be restarted the first time, even though you changed a parameter with <literal>unique=0</literal>."
 msgstr ""
 
 #. Tag: para

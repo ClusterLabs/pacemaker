@@ -1,0 +1,222 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2016-05-03 17:45-0500\n"
+"PO-Revision-Date: 2016-05-03 17:45-0500\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Configuration Explained"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The walk-through examples use some of these options, but don’t explain exactly what they mean or do. This section is meant to be the go-to resource for all the options available for configuring pacemaker_remote-based nodes. <indexterm> <primary>configuration</primary> </indexterm>"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Resource Meta-Attributes for Guest Nodes"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "When configuring a virtual machine to use as a guest node, these are the metadata options available to enable the resource as a guest node and define its connection parameters."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Meta-attributes for configuring VM resources as guest nodes"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Option"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Default"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Description"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>remote-node</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>none</emphasis>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The node name of the guest node this resource defines. This both enables the resource as a guest node and defines the unique name used to identify the guest node. If no other parameters are set, this value will also be assumed as the hostname to use when connecting to pacemaker_remote on the VM. This value <emphasis role=\"strong\">must not</emphasis> overlap with any resource or node IDs."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>remote-port</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "3121"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The port on the virtual machine that the cluster will use to connect to pacemaker_remote."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>remote-addr</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>value of</emphasis> <literal>remote-node</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The IP address or hostname to use when connecting to pacemaker_remote on the VM."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>remote-connect-timeout</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "60s"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "How long before a pending guest connection will time out."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Connection Resources for Remote Nodes"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A remote node is defined by a connection resource. That connection resource has instance attributes that define where the remote node is located on the network and how to communicate with it."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Descriptions of these instance attributes can be retrieved using the following <literal>pcs</literal> command:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# pcs resource describe remote\n"
+"ocf:pacemaker:remote - remote resource agent\n"
+"\n"
+"Resource options:\n"
+"  server: Server location to connect to. This can be an ip address or hostname.\n"
+"  port: tcp port to connect to.\n"
+"  reconnect_interval: Time in seconds to wait before attempting to reconnect to\n"
+"                      a remote node after an active connection to the remote\n"
+"                      node has been severed. This wait is recurring. If\n"
+"                      reconnect fails after the wait period, a new reconnect\n"
+"                      attempt will be made after observing the wait time. When\n"
+"                      this option is in use, pacemaker will keep attempting to\n"
+"                      reach out and connect to the remote node indefinitely\n"
+"                      after each wait interval."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "When defining a remote node’s connection resource, it is common and recommended to name the connection resource the same as the remote node’s hostname. By default, if no <emphasis role=\"strong\">server</emphasis> option is provided, the cluster will attempt to contact the remote node using the resource name as the hostname."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Example defining a remote node with the hostname <emphasis role=\"strong\">remote1</emphasis>:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# pcs resource create remote1 remote"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Example defining a remote node to connect to a specific IP address and port:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# pcs resource create remote1 remote server=192.168.122.200 port=8938"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Environment Variables for Daemon Start-up"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Authentication and encryption of the connection between cluster nodes and nodes running pacemaker_remote is achieved using with <ulink url=\"https://en.wikipedia.org/wiki/TLS-PSK\">TLS-PSK</ulink> encryption/authentication over TCP (port 3121 by default). This means that both the cluster node and remote node must share the same private key. By default, this key is placed at <literal>/etc/pacemaker/authkey</literal> on each node."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "You can change the default port and/or key location for Pacemaker and pacemaker_remote via environment variables. These environment variables can be enabled by placing them in the <literal>/etc/sysconfig/pacemaker</literal> file."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "#==#==# Pacemaker Remote\n"
+"# Use a custom directory for finding the authkey.\n"
+"PCMK_authkey_location=/etc/pacemaker/authkey\n"
+"#\n"
+"# Specify a custom port for Pacemaker Remote connections\n"
+"PCMK_remote_port=3121"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Removing Remote Nodes and Guest Nodes"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If the resource creating a guest node, or the <emphasis role=\"strong\">ocf:pacemaker:remote</emphasis> resource creating a connection to a remote node, is removed from the configuration, the affected node will continue to show up in output as an offline node."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If you want to get rid of that output, run (replacing $NODE_NAME appropriately):"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# crm_node --force --remove $NODE_NAME"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Be absolutely sure that the node’s resource has been deleted from the configuration first."
+msgstr ""
+

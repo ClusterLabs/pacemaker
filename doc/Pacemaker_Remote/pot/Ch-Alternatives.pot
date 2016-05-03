@@ -1,0 +1,109 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2016-05-03 17:45-0500\n"
+"PO-Revision-Date: 2016-05-03 17:45-0500\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Alternative Configurations"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "These alternative configurations may be appropriate in limited cases, such as a test cluster, but are not the best method in most situations. They are presented here for completeness and as an example of pacemaker’s flexibility to suit your needs."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Virtual Machines as Cluster Nodes"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The preferred use of virtual machines in a pacemaker cluster is as a cluster resource, whether opaque or as a guest node. However, it is possible to run the full cluster stack on a virtual node instead."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "This is commonly used to set up test environments; a single physical host (that does not participate in the cluster) runs two or more virtual machines, all running the full cluster stack. This can be used to simulate a larger cluster for testing purposes."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In a production environment, fencing becomes more complicated, especially if the underlying hosts run any services besides the clustered VMs. If the VMs are not guaranteed a minimum amount of host resources, CPU and I/O contention can cause timing issues for cluster components."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Another situation where this approach is sometimes used is when the cluster owner leases the VMs from a provider and does not have direct access to the underlying host. The main concerns in this case are proper fencing (usually via a custom resource agent that communicates with the provider’s APIs) and maintaining a static IP address between reboots, as well as resource contention issues."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Virtual Machines as Remote Nodes"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Virtual machines may be configured following the process for remote nodes rather than guest nodes (i.e., using an <emphasis role=\"strong\">ocf:pacemaker:remote</emphasis> resource rather than letting the cluster manage the VM directly)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "This is mainly useful in testing, to use a single physical host to simulate a larger cluster involving remote nodes. Pacemaker’s Cluster Test Suite (CTS) uses this approach to test remote node functionality."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Containers as Guest Nodes"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Containers,<footnote><para><ulink url=\"https://en.wikipedia.org/wiki/Operating-system-level_virtualization\">https://en.wikipedia.org/wiki/Operating-system-level_virtualization</ulink></para></footnote> and in particular Linux containers (LXC) and Docker, have become a popular method of isolating services in a resource-efficient manner."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The preferred means of integrating containers into Pacemaker is as a cluster resource, whether opaque or using Pacemaker’s built-in resource isolation support.<footnote><para>Documentation for this support is planned but not yet available.</para></footnote>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "However, it is possible to run <literal>pacemaker_remote</literal> inside a container, following the process for guest nodes. This is not recommended but can be useful, for example, in testing scenarios, to simulate a large number of guest nodes."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The configuration process is very similar to that described for guest nodes using virtual machines. Key differences:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The underlying host must install the libvirt driver for the desired container technology — for example, the <literal>libvirt-daemon-lxc</literal> package to get the <ulink url=\"http://libvirt.org/drvlxc.html:\">libvirt-lxc</ulink> driver for LXC containers."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Libvirt XML definitions must be generated for the containers. The <literal>pacemaker-cts</literal> package includes a script for this purpose, <literal>/usr/share/pacemaker/tests/cts/lxc_autogen.sh</literal>. Run it with the <literal>--help</literal> option for details on how to use it. It is intended for testing purposes only, and hardcodes various parameters that would need to be set appropriately in real usage. Of course, you can create XML definitions manually, following the appropriate libvirt driver documentation."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "To share the authentication key, either share the host’s <literal>/etc/pacemaker</literal> directory with the container, or copy the key into the container’s filesystem."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <emphasis role=\"strong\">VirtualDomain</emphasis> resource for a container will need <emphasis role=\"strong\">force_stop=\"true\"</emphasis> and an appropriate hypervisor option, for example <emphasis role=\"strong\">hypervisor=\"lxc:///\"</emphasis> for LXC containers."
+msgstr ""
+

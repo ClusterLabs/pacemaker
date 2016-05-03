@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-10-17T05:19:03\n"
-"PO-Revision-Date: 2012-10-17T05:19:03\n"
+"POT-Creation-Date: 2016-05-03 17:45-0500\n"
+"PO-Revision-Date: 2016-05-03 17:45-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -14,43 +14,44 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Creating an Active/Passive Cluster"
+msgid "Create an Active/Passive Cluster"
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Exploring the Existing Configuration"
+msgid "Explore the Existing Configuration"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "When Pacemaker starts up, it automatically records the number and details of the nodes in the cluster as well as which stack is being used and the version of Pacemaker being used."
+msgid "When Pacemaker starts up, it automatically records the number and details of the nodes in the cluster, as well as which stack is being used and the version of Pacemaker being used."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "This is what the base configuration should look like."
+msgid "The first few lines of output should look like this:"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# pcs status\n"
-"Last updated: Fri Sep 14 10:12:01 2012\n"
-"Last change: Fri Sep 14 09:51:55 2012 via crmd on pcmk-2\n"
+msgid "[root@pcmk-1 ~]# pcs status\n"
+"Cluster name: mycluster\n"
+"WARNING: no stonith devices and stonith-enabled is not false\n"
+"Last updated: Tue Dec 16 16:15:29 2014\n"
+"Last change: Tue Dec 16 15:49:47 2014\n"
 "Stack: corosync\n"
-"Current DC: pcmk-1 (1) - partition with quorum\n"
-"Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0\n"
-"2 Nodes configured, unknown expected votes\n"
-"0 Resources configured.\n"
+"Current DC: pcmk-2 (2) - partition with quorum\n"
+"Version: 1.1.12-a14efad\n"
+"2 Nodes configured\n"
+"0 Resources configured\n"
 "\n"
-"Online: [ pcmk-1 pcmk-2 ]\n"
 "\n"
-"Full list of resources:"
+"Online: [ pcmk-1 pcmk-2 ]"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "For those that are not of afraid of XML, you can see the raw cluster configuration and status by using the <literal>pcs cluster cib</literal> command."
+msgid "For those who are not of afraid of XML, you can see the raw cluster configuration and status by using the <literal>pcs cluster cib</literal> command."
 msgstr ""
 
 #. Tag: title
@@ -58,45 +59,49 @@ msgstr ""
 msgid "The last XML you’ll see in this document"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# pcs cluster cib"
+msgid "[root@pcmk-1 ~]# pcs cluster cib"
 msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "&lt;cib epoch=\"4\" num_updates=\"19\" admin_epoch=\"0\" validate-with=\"pacemaker-1.2\" crm_feature_set=\"3.0.6\" update-origin=\"pcmk-1\" update-client=\"crmd\" cib-last-written=\"Wed Aug  1 16:08:52 2012\" have-quorum=\"1\" dc-uuid=\"1\"&gt;\n"
+msgid "&lt;cib crm_feature_set=\"3.0.9\" validate-with=\"pacemaker-2.3\" epoch=\"5\" num_updates=\"8\" admin_epoch=\"0\" cib-last-written=\"Tue Dec 16 15:49:47 2014\" have-quorum=\"1\" dc-uuid=\"2\"&gt;\n"
 "  &lt;configuration&gt;\n"
 "    &lt;crm_config&gt;\n"
 "      &lt;cluster_property_set id=\"cib-bootstrap-options\"&gt;\n"
-"        &lt;nvpair id=\"cib-bootstrap-options-dc-version\" name=\"dc-version\" value=\"1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0\"/&gt;\n"
+"        &lt;nvpair id=\"cib-bootstrap-options-have-watchdog\" name=\"have-watchdog\" value=\"false\"/&gt;\n"
+"        &lt;nvpair id=\"cib-bootstrap-options-dc-version\" name=\"dc-version\" value=\"1.1.12-a14efad\"/&gt;\n"
 "        &lt;nvpair id=\"cib-bootstrap-options-cluster-infrastructure\" name=\"cluster-infrastructure\" value=\"corosync\"/&gt;\n"
+"        &lt;nvpair id=\"cib-bootstrap-options-cluster-name\" name=\"cluster-name\" value=\"mycluster\"/&gt;\n"
 "      &lt;/cluster_property_set&gt;\n"
 "    &lt;/crm_config&gt;\n"
 "    &lt;nodes&gt;\n"
-"      &lt;node id=\"1\" uname=\"pcmk-1\" type=\"normal\"/&gt;\n"
-"      &lt;node id=\"2\" uname=\"pcmk-2\" type=\"normal\"/&gt;\n"
+"      &lt;node id=\"1\" uname=\"pcmk-1\"/&gt;\n"
+"      &lt;node id=\"2\" uname=\"pcmk-2\"/&gt;\n"
 "    &lt;/nodes&gt;\n"
 "    &lt;resources/&gt;\n"
 "    &lt;constraints/&gt;\n"
 "  &lt;/configuration&gt;\n"
 "  &lt;status&gt;\n"
-"    &lt;node_state id=\"2\" uname=\"pcmk-2\" ha=\"active\" in_ccm=\"true\" crmd=\"online\" join=\"member\" expected=\"member\" crm-debug-origin=\"do_state_transition\" shutdown=\"0\"&gt;\n"
+"    &lt;node_state id=\"2\" uname=\"pcmk-2\" in_ccm=\"true\" crmd=\"online\" crm-debug-origin=\"do_state_transition\" join=\"member\" expected=\"member\"&gt;\n"
 "      &lt;lrm id=\"2\"&gt;\n"
 "        &lt;lrm_resources/&gt;\n"
 "      &lt;/lrm&gt;\n"
 "      &lt;transient_attributes id=\"2\"&gt;\n"
 "        &lt;instance_attributes id=\"status-2\"&gt;\n"
+"          &lt;nvpair id=\"status-2-shutdown\" name=\"shutdown\" value=\"0\"/&gt;\n"
 "          &lt;nvpair id=\"status-2-probe_complete\" name=\"probe_complete\" value=\"true\"/&gt;\n"
 "        &lt;/instance_attributes&gt;\n"
 "      &lt;/transient_attributes&gt;\n"
 "    &lt;/node_state&gt;\n"
-"    &lt;node_state id=\"1\" uname=\"pcmk-1\" ha=\"active\" in_ccm=\"true\" crmd=\"online\" join=\"member\" expected=\"member\" crm-debug-origin=\"do_state_transition\" shutdown=\"0\"&gt;\n"
+"    &lt;node_state id=\"1\" uname=\"pcmk-1\" in_ccm=\"true\" crmd=\"online\" crm-debug-origin=\"do_state_transition\" join=\"member\" expected=\"member\"&gt;\n"
 "      &lt;lrm id=\"1\"&gt;\n"
 "        &lt;lrm_resources/&gt;\n"
 "      &lt;/lrm&gt;\n"
 "      &lt;transient_attributes id=\"1\"&gt;\n"
 "        &lt;instance_attributes id=\"status-1\"&gt;\n"
+"          &lt;nvpair id=\"status-1-shutdown\" name=\"shutdown\" value=\"0\"/&gt;\n"
 "          &lt;nvpair id=\"status-1-probe_complete\" name=\"probe_complete\" value=\"true\"/&gt;\n"
 "        &lt;/instance_attributes&gt;\n"
 "      &lt;/transient_attributes&gt;\n"
@@ -107,17 +112,16 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Before we make any changes, its a good idea to check the validity of the configuration."
+msgid "Before we make any changes, it’s a good idea to check the validity of the configuration."
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# crm_verify -L -V\n"
+msgid "[root@pcmk-1 ~]# crm_verify -L -V\n"
 "   error: unpack_resources: Resource start-up disabled since no STONITH resources have been defined\n"
 "   error: unpack_resources: Either configure some or disable STONITH with the stonith-enabled option\n"
 "   error: unpack_resources: NOTE: Clusters with shared data need STONITH to ensure data integrity\n"
-"Errors found during check: config not valid\n"
-"  -V may provide more details"
+"Errors found during check: config not valid"
 msgstr ""
 
 #. Tag: para
@@ -127,23 +131,23 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "In order to guarantee the safety of your data <footnote><para>If the data is corrupt, there is little point in continuing to make it available</para></footnote> , the default for STONITH <footnote><para>A common node fencing mechanism. Used to ensure data integrity by powering off \"bad\" nodes</para></footnote> in Pacemaker is <literal>enabled</literal>. However it also knows when no STONITH configuration has been supplied and reports this as a problem (since the cluster would not be able to make progress if a situation requiring node fencing arose)."
+msgid "In order to guarantee the safety of your data, <footnote><para>If the data is corrupt, there is little point in continuing to make it available</para></footnote> the default for STONITH <footnote><para>A common node fencing mechanism. Used to ensure data integrity by powering off \"bad\" nodes</para></footnote> in Pacemaker is <emphasis role=\"strong\">enabled</emphasis>. However, it also knows when no STONITH configuration has been supplied and reports this as a problem (since the cluster would not be able to make progress if a situation requiring node fencing arose)."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "For now, we will disable this feature and configure it later in the Configuring STONITH section. It is important to note that the use of STONITH is highly encouraged, turning it off tells the cluster to simply pretend that failed nodes are safely powered off. Some vendors will even refuse to support clusters that have it disabled."
+msgid "We will disable this feature for now and configure it later."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "To disable STONITH, we set the <emphasis>stonith-enabled</emphasis> cluster option to false."
+msgid "To disable STONITH, set the <emphasis role=\"strong\">stonith-enabled</emphasis> cluster option to false:"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# pcs property set stonith-enabled=false\n"
-"# crm_verify -L"
+msgid "[root@pcmk-1 ~]# pcs property set stonith-enabled=false\n"
+"[root@pcmk-1 ~]# crm_verify -L"
 msgstr ""
 
 #. Tag: para
@@ -153,48 +157,63 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The use of stonith-enabled=false is completely inappropriate for a production cluster. We use it here to defer the discussion of its configuration which can differ widely from one installation to the next. See <xref linkend=\"_what_is_stonith\" /> for information on why STONITH is important and details on how to configure it."
+msgid "The use of <literal>stonith-enabled=false</literal> is completely inappropriate for a production cluster. It tells the cluster to simply pretend that failed nodes are safely powered off. Some vendors will refuse to support clusters that have STONITH disabled."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "We disable STONITH here only to defer the discussion of its configuration, which can differ widely from one installation to the next. See <xref linkend=\"_what_is_stonith\" /> for information on why STONITH is important and details on how to configure it."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Adding a Resource"
+msgid "Add a Resource"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The first thing we should do is configure an IP address. Regardless of where the cluster service(s) are running, we need a consistent address to contact them on. Here I will choose and add 192.168.122.120 as the floating address, give it the imaginative name ClusterIP and tell the cluster to check that its running every 30 seconds."
+msgid "Our first resource will be a unique IP address that the cluster can bring up on either node. Regardless of where any cluster service(s) are running, end users need a consistent address to contact them on. Here, I will choose 192.168.122.120 as the floating address, give it the imaginative name ClusterIP and tell the cluster to check whether it is running every 30 seconds."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The chosen address must not be one already associated with a physical node"
+msgid "The chosen address must not already be in use on the network. Do not reuse an IP address one of the nodes already has configured."
 msgstr ""
 
 #. Tag: screen
 #, no-c-format
-msgid "# pcs resource create ClusterIP ocf:heartbeat:IPaddr2 \\\n"
-"    ip=192.168.0.120 cidr_netmask=32 op monitor interval=30s"
+msgid "[root@pcmk-1 ~]# pcs resource create ClusterIP ocf:heartbeat:IPaddr2 \\\n"
+"    ip=192.168.122.120 cidr_netmask=32 op monitor interval=30s"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The other important piece of information here is ocf:heartbeat:IPaddr2."
+msgid "Another important piece of information here is <emphasis role=\"strong\">ocf:heartbeat:IPaddr2</emphasis>. This tells Pacemaker three things about the resource you want to add:"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "This tells Pacemaker three things about the resource you want to add. The first field, ocf, is the standard to which the resource script conforms to and where to find it. The second field is specific to OCF resources and tells the cluster which namespace to find the resource script in, in this case heartbeat. The last field indicates the name of the resource script."
+msgid "The first field (<emphasis role=\"strong\">ocf</emphasis> in this case) is the standard to which the resource script conforms and where to find it."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "To obtain a list of the available resource standards (the ocf part of ocf:heartbeat:IPaddr2), run"
+msgid "The second field (<emphasis role=\"strong\">heartbeat</emphasis> in this case) is standard-specific; for OCF resources, it tells the cluster which OCF namespace the resource script is in."
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: para
 #, no-c-format
-msgid "# pcs resource standards\n"
+msgid "The third field (<emphasis role=\"strong\">IPaddr2</emphasis> in this case) is the name of the resource script."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "To obtain a list of the available resource standards (the <emphasis role=\"strong\">ocf</emphasis> part of <emphasis role=\"strong\">ocf:heartbeat:IPaddr2</emphasis>), run:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-1 ~]# pcs resource standards\n"
 "ocf\n"
 "lsb\n"
 "service\n"
@@ -204,67 +223,72 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "To obtain a list of the available ocf resource providers (the heartbeat part of ocf:heartbeat:IPaddr2), run"
+msgid "To obtain a list of the available OCF resource providers (the <emphasis role=\"strong\">heartbeat</emphasis> part of <emphasis role=\"strong\">ocf:heartbeat:IPaddr2</emphasis>), run:"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# pcs resource providers\n"
+msgid "[root@pcmk-1 ~]# pcs resource providers\n"
 "heartbeat\n"
-"linbit\n"
-"pacemaker\n"
-"redhat"
+"openstack\n"
+"pacemaker"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Finally, if you want to see all the resource agents available for a specific ocf provider (the IPaddr2 part of ocf:heartbeat:IPaddr2), run"
+msgid "Finally, if you want to see all the resource agents available for a specific OCF provider (the <emphasis role=\"strong\">IPaddr2</emphasis> part of <emphasis role=\"strong\">ocf:heartbeat:IPaddr2</emphasis>), run:"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# pcs resource agents ocf:heartbeat\n"
-"AoEtarget\n"
-"AudibleAlarm\n"
+msgid "[root@pcmk-1 ~]# pcs resource agents ocf:heartbeat\n"
 "CTDB\n"
-"ClusterMon\n"
 "Delay\n"
 "Dummy\n"
+"Filesystem\n"
+"IPaddr\n"
+"IPaddr2\n"
 ".\n"
 ". (skipping lots of resources to save space)\n"
 ".\n"
-"IPaddr2\n"
-".\n"
-".\n"
-".\n"
+"rsyncd\n"
+"slapd\n"
 "symlink\n"
-"syslog-ng\n"
-"tomcat\n"
-"vmware"
+"tomcat"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Now verify that the IP resource has been added and display the cluster’s status to see that it is now active."
+msgid "Now, verify that the IP resource has been added, and display the cluster’s status to see that it is now active:"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# pcs status\n"
-"\n"
-"Last updated: Fri Sep 14 10:17:00 2012\n"
-"Last change: Fri Sep 14 10:15:48 2012 via cibadmin on pcmk-1\n"
+msgid "[root@pcmk-1 ~]# pcs status\n"
+"Cluster name: mycluster\n"
+"Last updated: Tue Dec 16 17:44:40 2014\n"
+"Last change: Tue Dec 16 17:44:26 2014\n"
 "Stack: corosync\n"
 "Current DC: pcmk-1 (1) - partition with quorum\n"
-"Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0\n"
-"2 Nodes configured, unknown expected votes\n"
-"1 Resources configured.\n"
+"Version: 1.1.12-a14efad\n"
+"2 Nodes configured\n"
+"1 Resources configured\n"
+"\n"
 "\n"
 "Online: [ pcmk-1 pcmk-2 ]\n"
 "\n"
 "Full list of resources:\n"
 "\n"
-" ClusterIP      (ocf::heartbeat:IPaddr2):       Started pcmk-1"
+" ClusterIP      (ocf::heartbeat:IPaddr2):       Started pcmk-1\n"
+"\n"
+"PCSD Status:\n"
+"  pcmk-1: Online\n"
+"  pcmk-2: Online\n"
+"\n"
+"Daemon Status:\n"
+"  corosync: active/disabled\n"
+"  pacemaker: active/disabled\n"
+"  pcsd: active/enabled"
 msgstr ""
 
 #. Tag: title
@@ -274,7 +298,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Being a high-availability cluster, we should test failover of our new resource before moving on."
+msgid "Since our ultimate goal is high availability, we should test failover of our new resource before moving on."
 msgstr ""
 
 #. Tag: para
@@ -282,60 +306,111 @@ msgstr ""
 msgid "First, find the node on which the IP address is running."
 msgstr ""
 
-#. Tag: para
+#. Tag: screen
 #, no-c-format
-msgid "Shut down Pacemaker and Corosync on that machine."
+msgid "[root@pcmk-1 ~]# pcs status\n"
+"Cluster name: mycluster\n"
+"Last updated: Tue Dec 16 17:44:40 2014\n"
+"Last change: Tue Dec 16 17:44:26 2014\n"
+"Stack: corosync\n"
+"Current DC: pcmk-1 (1) - partition with quorum\n"
+"Version: 1.1.12-a14efad\n"
+"2 Nodes configured\n"
+"1 Resources configured\n"
+"\n"
+"\n"
+"Online: [ pcmk-1 pcmk-2 ]\n"
+"\n"
+"Full list of resources:\n"
+"\n"
+" ClusterIP      (ocf::heartbeat:IPaddr2):       Started pcmk-1"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: para
 #, no-c-format
-msgid "#pcs cluster stop pcmk-1\n"
+msgid "You can see that the status of the <emphasis role=\"strong\">ClusterIP</emphasis> resource is <emphasis role=\"strong\">Started</emphasis> on a particular node (in this example, <emphasis role=\"strong\">pcmk-1</emphasis>). Shut down Pacemaker and Corosync on that machine to trigger a failover."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-1 ~]# pcs cluster stop pcmk-1\n"
 "Stopping Cluster..."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Once Corosync is no longer running, go to the other node and check the cluster status."
+msgid "A cluster command such as <literal>pcs cluster stop <replaceable>nodename</replaceable></literal> can be run from any node in the cluster, not just the affected node."
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: para
 #, no-c-format
-msgid "# pcs status\n"
-"\n"
-"Last updated: Fri Sep 14 10:31:01 2012\n"
-"Last change: Fri Sep 14 10:15:48 2012 via cibadmin on pcmk-1\n"
+msgid "Verify that pacemaker and corosync are no longer running:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-1 ~]# pcs status\n"
+"Error: cluster is not currently running on this node"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Go to the other node, and check the cluster status."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-2 ~]# pcs status\n"
+"Cluster name: mycluster\n"
+"Last updated: Wed Dec 17 10:30:56 2014\n"
+"Last change: Tue Dec 16 17:44:26 2014\n"
 "Stack: corosync\n"
-"Current DC: pcmk-2 (2) - partition WITHOUT quorum\n"
-"Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0\n"
-"2 Nodes configured, unknown expected votes\n"
-"1 Resources configured.\n"
+"Current DC: pcmk-2 (2) - partition with quorum\n"
+"Version: 1.1.12-a14efad\n"
+"2 Nodes configured\n"
+"1 Resources configured\n"
+"\n"
 "\n"
 "Online: [ pcmk-2 ]\n"
 "OFFLINE: [ pcmk-1 ]\n"
 "\n"
 "Full list of resources:\n"
 "\n"
-" ClusterIP      (ocf::heartbeat:IPaddr2):       Stopped"
+" ClusterIP      (ocf::heartbeat:IPaddr2):       Started pcmk-2\n"
+"\n"
+"PCSD Status:\n"
+"  pcmk-1: Online\n"
+"  pcmk-2: Online\n"
+"\n"
+"Daemon Status:\n"
+"  corosync: active/disabled\n"
+"  pacemaker: active/disabled\n"
+"  pcsd: active/enabled"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "There are three things to notice about the cluster’s current state. The first is that, as expected, <literal>pcmk-1</literal> is now offline. However we can also see that <literal>ClusterIP</literal> isn’t running anywhere!"
+msgid "Notice that <emphasis role=\"strong\">pcmk-1</emphasis> is <emphasis role=\"strong\">OFFLINE</emphasis> for cluster purposes (its <emphasis role=\"strong\">PCSD</emphasis> is still <emphasis role=\"strong\">Online</emphasis>, allowing it to receive <literal>pcs</literal> commands, but it is not participating in the cluster)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Also notice that <emphasis role=\"strong\">ClusterIP</emphasis> is now running on <emphasis role=\"strong\">pcmk-2</emphasis> — failover happened automatically, and no errors are reported."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Quorum and Two-Node Clusters"
+msgid "Quorum"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "This is because the cluster no longer has quorum, as can be seen by the text \"partition WITHOUT quorum\" in the status output. In order to reduce the possibility of data corruption, Pacemaker’s default behavior is to stop all resources if the cluster does not have quorum."
+msgid "If a cluster splits into two (or more) groups of nodes that can no longer communicate with each other (aka. <emphasis>partitions</emphasis>), <emphasis>quorum</emphasis> is used to prevent resources from starting on more nodes than desired, which would risk data corruption."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "A cluster is said to have quorum when more than half the known or expected nodes are online, or for the mathematically inclined, whenever the following equation is true:"
+msgid "A cluster has quorum when more than half of all known nodes are online in the same partition, or for the mathematically inclined, whenever the following equation is true:"
 msgstr ""
 
 #. Tag: literallayout
@@ -345,72 +420,63 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Therefore a two-node cluster only has quorum when both nodes are running, which is no longer the case for our cluster. This would normally make the creation of a two-node cluster pointless <footnote><para>Actually some would argue that two-node clusters are always pointless, but that is an argument for another time</para></footnote> , however it is possible to control how Pacemaker behaves when quorum is lost. In particular, we can tell the cluster to simply ignore quorum altogether."
-msgstr ""
-
-#. Tag: programlisting
-#, no-c-format
-msgid "# pcs property set no-quorum-policy=ignore\n"
-"# pcs property\n"
-"dc-version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0\n"
-"cluster-infrastructure: corosync\n"
-"stonith-enabled: false\n"
-"no-quorum-policy: ignore"
+msgid "For example, if a 5-node cluster split into 3- and 2-node paritions, the 3-node partition would have quorum and could continue serving resources. If a 6-node cluster split into two 3-node partitions, neither partition would have quorum; pacemaker’s default behavior in such cases is to stop all resources, in order to prevent data corruption."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "After a few moments, the cluster will start the IP address on the remaining node. Note that the cluster still does not have quorum."
-msgstr ""
-
-#. Tag: programlisting
-#, no-c-format
-msgid "# pcs status\n"
-"Last updated: Fri Sep 14 10:38:11 2012\n"
-"Last change: Fri Sep 14 10:37:53 2012 via cibadmin on pcmk-2\n"
-"Stack: corosync\n"
-"Current DC: pcmk-2 (2) - partition WITHOUT quorum\n"
-"Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0\n"
-"2 Nodes configured, unknown expected votes\n"
-"1 Resources configured.\n"
-"\n"
-"Online: [ pcmk-2 ]\n"
-"OFFLINE: [ pcmk-1 ]\n"
-"\n"
-"Full list of resources:\n"
-"\n"
-" ClusterIP      (ocf::heartbeat:IPaddr2):       Started pcmk-2"
+msgid "Two-node clusters are a special case. By the above definition, a two-node cluster would only have quorum when both nodes are running. This would make the creation of a two-node cluster pointless, <footnote><para>Some would argue that two-node clusters are always pointless, but that is an argument for another time</para></footnote> but corosync has the ability to treat two-node clusters as if only one node is required for quorum."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Now simulate node recovery by restarting the cluster stack on <literal>pcmk-1</literal> and check the cluster’s status. Note, if you get an authentication error with the <emphasis>pcs cluster start pcmk-1</emphasis> command, you must authenticate on the node using the <emphasis>pcs cluster auth pcmk pcmk-1 pcmk-2</emphasis> command discussed earlier."
+msgid "The <literal>pcs cluster setup</literal> command will automatically configure <emphasis role=\"strong\">two_node: 1</emphasis> in <literal>corosync.conf</literal>, so a two-node cluster will \"just work\"."
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: para
 #, no-c-format
-msgid "# pcs cluster start pcmk-1\n"
-"Starting Cluster...\n"
-"# pcs status\n"
-"\n"
-"Last updated: Fri Sep 14 10:42:56 2012\n"
-"Last change: Fri Sep 14 10:37:53 2012 via cibadmin on pcmk-2\n"
+msgid "If you are using a different cluster shell, you will have to configure <literal>corosync.conf</literal> appropriately yourself. If you are using older versions of corosync, you will have to ignore quorum at the pacemaker level, using <literal>pcs property set no-quorum-policy=ignore</literal> (or the equivalent command if you are using a different cluster shell)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Now, simulate node recovery by restarting the cluster stack on <emphasis role=\"strong\">pcmk-1</emphasis>, and check the cluster’s status. (It may take a little while before the cluster gets going on the node, but it eventually will look like the below.)"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-1 ~]# pcs cluster start pcmk-1\n"
+"pcmk-1: Starting Cluster...\n"
+"[root@pcmk-1 ~]# pcs status\n"
+"Cluster name: mycluster\n"
+"Last updated: Wed Dec 17 10:50:11 2014\n"
+"Last change: Tue Dec 16 17:44:26 2014\n"
 "Stack: corosync\n"
 "Current DC: pcmk-2 (2) - partition with quorum\n"
-"Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0\n"
-"2 Nodes configured, unknown expected votes\n"
-"1 Resources configured.\n"
+"Version: 1.1.12-a14efad\n"
+"2 Nodes configured\n"
+"1 Resources configured\n"
+"\n"
 "\n"
 "Online: [ pcmk-1 pcmk-2 ]\n"
 "\n"
 "Full list of resources:\n"
 "\n"
-" ClusterIP      (ocf::heartbeat:IPaddr2):       Started pcmk-2"
+" ClusterIP      (ocf::heartbeat:IPaddr2):       Started pcmk-2\n"
+"\n"
+"PCSD Status:\n"
+"  pcmk-1: Online\n"
+"  pcmk-2: Online\n"
+"\n"
+"Daemon Status:\n"
+"  corosync: active/disabled\n"
+"  pacemaker: active/disabled\n"
+"  pcsd: active/enabled"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "In the dark days, the cluster may have moved the IP back to its original location (<literal>pcmk-1</literal>). Usually this is no longer the case."
+msgid "With older versions of pacemaker, the cluster might move the IP back to its original location (<emphasis role=\"strong\">pcmk-1</emphasis>). Usually, this is no longer the case."
 msgstr ""
 
 #. Tag: title
@@ -420,18 +486,23 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "In most circumstances, it is highly desirable to prevent healthy resources from being moved around the cluster. Moving resources almost always requires a period of downtime. For complex services like Oracle databases, this period can be quite long."
+msgid "In most circumstances, it is highly desirable to prevent healthy resources from being moved around the cluster. Moving resources almost always requires a period of downtime. For complex services such as databases, this period can be quite long."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "To address this, Pacemaker has the concept of resource stickiness which controls how much a service prefers to stay running where it is. You may like to think of it as the \"cost\" of any downtime. By default, Pacemaker assumes there is zero cost associated with moving resources and will do so to achieve \"optimal\" <footnote><para>It should be noted that Pacemaker’s definition of optimal may not always agree with that of a human’s. The order in which Pacemaker processes lists of resources and nodes creates implicit preferences in situations where the administrator has not explicitly specified them</para></footnote> resource placement. We can specify a different stickiness for every resource, but it is often sufficient to change the default."
+msgid "To address this, Pacemaker has the concept of resource <emphasis>stickiness</emphasis>, which controls how strongly a service prefers to stay running where it is. You may like to think of it as the \"cost\" of any downtime. By default, Pacemaker assumes there is zero cost associated with moving resources and will do so to achieve \"optimal\" <footnote><para>Pacemaker’s definition of optimal may not always agree with that of a human’s. The order in which Pacemaker processes lists of resources and nodes creates implicit preferences in situations where the administrator has not explicitly specified them.</para></footnote> resource placement. We can specify a different stickiness for every resource, but it is often sufficient to change the default."
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# pcs resource rsc defaults resource-stickiness=100\n"
-"# pcs resource rsc defaults\n"
+msgid "[root@pcmk-1 ~]# pcs resource defaults resource-stickiness=100\n"
+"[root@pcmk-1 ~]# pcs resource defaults\n"
 "resource-stickiness: 100"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Older versions of <literal>pcs</literal> required that <literal>rsc</literal> be added after <literal>resource</literal> in the above commands."
 msgstr ""
 

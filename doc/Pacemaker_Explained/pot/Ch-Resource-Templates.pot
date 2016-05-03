@@ -1,0 +1,317 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2016-05-03 17:45-0500\n"
+"PO-Revision-Date: 2016-05-03 17:45-0500\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Resource Templates"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If you want to create lots of resources with similar configurations, defining a resource template simplifies the task. Once defined, it can be referenced in primitives or in certain types of constraints."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Configuring Resources with Templates"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The primitives referencing the template will inherit all meta-attributes, instance attributes, utilization attributes and operations defined in the template. And you can define specific attributes and operations for any of the primitives. If any of these are defined in both the template and the primitive, the values defined in the primitive will take precedence over the ones defined in the template."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Hence, resource templates help to reduce the amount of configuration work. If any changes are needed, they can be done to the template definition and will take effect globally in all resource definitions referencing that template."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Resource templates have a syntax similar to that of primitives."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Resource template for a migratable Xen virtual machine"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;template id=\"vm-template\" class=\"ocf\" provider=\"heartbeat\" type=\"Xen\"&gt;\n"
+"  &lt;meta_attributes id=\"vm-template-meta_attributes\"&gt;\n"
+"    &lt;nvpair id=\"vm-template-meta_attributes-allow-migrate\" name=\"allow-migrate\" value=\"true\"/&gt;\n"
+"  &lt;/meta_attributes&gt;\n"
+"  &lt;utilization id=\"vm-template-utilization\"&gt;\n"
+"    &lt;nvpair id=\"vm-template-utilization-memory\" name=\"memory\" value=\"512\"/&gt;\n"
+"  &lt;/utilization&gt;\n"
+"  &lt;operations&gt;\n"
+"    &lt;op id=\"vm-template-monitor-15s\" interval=\"15s\" name=\"monitor\" timeout=\"60s\"/&gt;\n"
+"    &lt;op id=\"vm-template-start-0\" interval=\"0\" name=\"start\" timeout=\"60s\"/&gt;\n"
+"  &lt;/operations&gt;\n"
+"&lt;/template&gt;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Once you define a resource template, you can use it in primitives by specifying the <literal>template</literal> property."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Xen primitive resource using a resource template"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;primitive id=\"vm1\" template=\"vm-template\"&gt;\n"
+"  &lt;instance_attributes id=\"vm1-instance_attributes\"&gt;\n"
+"    &lt;nvpair id=\"vm1-instance_attributes-name\" name=\"name\" value=\"vm1\"/&gt;\n"
+"    &lt;nvpair id=\"vm1-instance_attributes-xmfile\" name=\"xmfile\" value=\"/etc/xen/shared-vm/vm1\"/&gt;\n"
+"  &lt;/instance_attributes&gt;\n"
+"&lt;/primitive&gt;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In the example above, the new primitive <literal>vm1</literal> will inherit everything from <literal>vm-template</literal>. For example, the equivalent of the above two examples would be:"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Equivalent Xen primitive resource not using a resource template"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;primitive id=\"vm1\" class=\"ocf\" provider=\"heartbeat\" type=\"Xen\"&gt;\n"
+"  &lt;meta_attributes id=\"vm-template-meta_attributes\"&gt;\n"
+"    &lt;nvpair id=\"vm-template-meta_attributes-allow-migrate\" name=\"allow-migrate\" value=\"true\"/&gt;\n"
+"  &lt;/meta_attributes&gt;\n"
+"  &lt;utilization id=\"vm-template-utilization\"&gt;\n"
+"    &lt;nvpair id=\"vm-template-utilization-memory\" name=\"memory\" value=\"512\"/&gt;\n"
+"  &lt;/utilization&gt;\n"
+"  &lt;operations&gt;\n"
+"    &lt;op id=\"vm-template-monitor-15s\" interval=\"15s\" name=\"monitor\" timeout=\"60s\"/&gt;\n"
+"    &lt;op id=\"vm-template-start-0\" interval=\"0\" name=\"start\" timeout=\"60s\"/&gt;\n"
+"  &lt;/operations&gt;\n"
+"  &lt;instance_attributes id=\"vm1-instance_attributes\"&gt;\n"
+"    &lt;nvpair id=\"vm1-instance_attributes-name\" name=\"name\" value=\"vm1\"/&gt;\n"
+"    &lt;nvpair id=\"vm1-instance_attributes-xmfile\" name=\"xmfile\" value=\"/etc/xen/shared-vm/vm1\"/&gt;\n"
+"  &lt;/instance_attributes&gt;\n"
+"&lt;/primitive&gt;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If you want to overwrite some attributes or operations, add them to the particular primitive’s definition."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Xen resource overriding template values"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;primitive id=\"vm2\" template=\"vm-template\"&gt;\n"
+"  &lt;meta_attributes id=\"vm2-meta_attributes\"&gt;\n"
+"    &lt;nvpair id=\"vm2-meta_attributes-allow-migrate\" name=\"allow-migrate\" value=\"false\"/&gt;\n"
+"  &lt;/meta_attributes&gt;\n"
+"  &lt;utilization id=\"vm2-utilization\"&gt;\n"
+"    &lt;nvpair id=\"vm2-utilization-memory\" name=\"memory\" value=\"1024\"/&gt;\n"
+"  &lt;/utilization&gt;\n"
+"  &lt;instance_attributes id=\"vm2-instance_attributes\"&gt;\n"
+"    &lt;nvpair id=\"vm2-instance_attributes-name\" name=\"name\" value=\"vm2\"/&gt;\n"
+"    &lt;nvpair id=\"vm2-instance_attributes-xmfile\" name=\"xmfile\" value=\"/etc/xen/shared-vm/vm2\"/&gt;\n"
+"  &lt;/instance_attributes&gt;\n"
+"  &lt;operations&gt;\n"
+"    &lt;op id=\"vm2-monitor-30s\" interval=\"30s\" name=\"monitor\" timeout=\"120s\"/&gt;\n"
+"    &lt;op id=\"vm2-stop-0\" interval=\"0\" name=\"stop\" timeout=\"60s\"/&gt;\n"
+"  &lt;/operations&gt;\n"
+"&lt;/primitive&gt;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In the example above, the new primitive <literal>vm2</literal> has special attribute values. Its <literal>monitor</literal> operation has a longer <literal>timeout</literal> and <literal>interval</literal>, and the primitive has an additional <literal>stop</literal> operation."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "To see the resulting definition of a resource, run:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# crm_resource --query-xml --resource vm2"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "To see the raw definition of a resource in the CIB, run:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# crm_resource --query-xml-raw --resource vm2"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Referencing Templates in Constraints"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A resource template can be referenced in the following types of constraints:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>order</literal> constraints (see <xref linkend=\"s-resource-ordering\" />)"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>colocation</literal> constraints (see <xref linkend=\"s-resource-colocation\" />)"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>rsc_ticket</literal> constraints (for multi-site clusters as described in <xref linkend=\"s-ticket-constraints\" />)"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Resource templates referenced in constraints stand for all primitives which are derived from that template. This means, the constraint applies to all primitive resources referencing the resource template. Referencing resource templates in constraints is an alternative to resource sets and can simplify the cluster configuration considerably."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "For example, given the example templates earlier in this section:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;rsc_colocation id=\"vm-template-colo-base-rsc\" rsc=\"vm-template\" rsc-role=\"Started\" with-rsc=\"base-rsc\" score=\"INFINITY\"/&gt;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "would colocate all VMs with <literal>base-rsc</literal> and is the equivalent of the following constraint configuration:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;rsc_colocation id=\"vm-colo-base-rsc\" score=\"INFINITY\"&gt;\n"
+"  &lt;resource_set id=\"vm-colo-base-rsc-0\" sequential=\"false\" role=\"Started\"&gt;\n"
+"    &lt;resource_ref id=\"vm1\"/&gt;\n"
+"    &lt;resource_ref id=\"vm2\"/&gt;\n"
+"  &lt;/resource_set&gt;\n"
+"  &lt;resource_set id=\"vm-colo-base-rsc-1\"&gt;\n"
+"    &lt;resource_ref id=\"base-rsc\"/&gt;\n"
+"  &lt;/resource_set&gt;\n"
+"&lt;/rsc_colocation&gt;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In a colocation constraint, only one template may be referenced from either <literal>rsc</literal> or <literal>with-rsc</literal>; the other reference must be a regular resource."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Referencing Resource Templates in Sequential Resource Sets"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Resource templates can also be referenced in resource sets."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "For example:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;rsc_order id=\"order1\" score=\"INFINITY\"&gt;\n"
+"  &lt;resource_set id=\"order1-0\"&gt;\n"
+"    &lt;resource_ref id=\"base-rsc\"/&gt;\n"
+"    &lt;resource_ref id=\"vm-template\"/&gt;\n"
+"    &lt;resource_ref id=\"top-rsc\"/&gt;\n"
+"  &lt;/resource_set&gt;\n"
+"&lt;/rsc_order&gt;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "is the equivalent of the following constraint configuration:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;rsc_order id=\"order1\" score=\"INFINITY\"&gt;\n"
+"  &lt;resource_set id=\"order1-0\"&gt;\n"
+"    &lt;resource_ref id=\"base-rsc\"/&gt;\n"
+"    &lt;resource_ref id=\"vm1\"/&gt;\n"
+"    &lt;resource_ref id=\"vm2\"/&gt;\n"
+"    &lt;resource_ref id=\"top-rsc\"/&gt;\n"
+"  &lt;/resource_set&gt;\n"
+"&lt;/rsc_order&gt;"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Referencing Resource Templates in Parallel Resource Sets"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If the resources referencing the template can run in parallel:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;rsc_order id=\"order2\" score=\"INFINITY\"&gt;\n"
+"  &lt;resource_set id=\"order2-0\"&gt;\n"
+"    &lt;resource_ref id=\"base-rsc\"/&gt;\n"
+"  &lt;/resource_set&gt;\n"
+"  &lt;resource_set id=\"order2-1\" sequential=\"false\"&gt;\n"
+"    &lt;resource_ref id=\"vm-template\"/&gt;\n"
+"  &lt;/resource_set&gt;\n"
+"  &lt;resource_set id=\"order2-2\"&gt;\n"
+"    &lt;resource_ref id=\"top-rsc\"/&gt;\n"
+"  &lt;/resource_set&gt;\n"
+"&lt;/rsc_order&gt;"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;rsc_order id=\"order2\" score=\"INFINITY\"&gt;\n"
+"  &lt;resource_set id=\"order2-0\"&gt;\n"
+"    &lt;resource_ref id=\"base-rsc\"/&gt;\n"
+"  &lt;/resource_set&gt;\n"
+"  &lt;resource_set id=\"order2-1\" sequential=\"false\"&gt;\n"
+"    &lt;resource_ref id=\"vm1\"/&gt;\n"
+"    &lt;resource_ref id=\"vm2\"/&gt;\n"
+"  &lt;/resource_set&gt;\n"
+"  &lt;resource_set id=\"order2-2\"&gt;\n"
+"    &lt;resource_ref id=\"top-rsc\"/&gt;\n"
+"  &lt;/resource_set&gt;\n"
+"&lt;/rsc_order&gt;"
+msgstr ""
+
