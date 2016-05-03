@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-10-17T05:19:03\n"
-"PO-Revision-Date: 2012-10-17T05:19:03\n"
+"POT-Creation-Date: 2016-05-03 17:45-0500\n"
+"PO-Revision-Date: 2016-05-03 17:45-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -14,7 +14,7 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Verify Cluster Installation"
+msgid "Start and Verify Cluster"
 msgstr ""
 
 #. Tag: title
@@ -24,22 +24,22 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Now that corosync is configured, it is time to start the cluster. The command below will start corosync and pacemaker on both nodes in the cluster. If you are issuing the start command from a different node than the one you ran the <emphasis>pcs cluster auth</emphasis> command on earlier, you must authenticate on current node you are logged into before you will be allowed to start the cluster."
+msgid "Now that corosync is configured, it is time to start the cluster. The command below will start corosync and pacemaker on both nodes in the cluster. If you are issuing the start command from a different node than the one you ran the <literal>pcs cluster auth</literal> command on earlier, you must authenticate on the current node you are logged into before you will be allowed to start the cluster."
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# pcs cluster start --all\n"
+msgid "[root@pcmk-1 ~]# pcs cluster start --all\n"
 "pcmk-1: Starting Cluster...\n"
 "pcmk-2: Starting Cluster..."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "An alternative to using the <emphasis>pcs cluster startall</emphasis> command is to issue either of the below commands on each node in the cluster by hand."
+msgid "An alternative to using the <literal>pcs cluster start --all</literal> command is to issue either of the below command sequences on each node in the cluster separately:"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
 msgid "# pcs cluster start\n"
 "Starting Cluster..."
@@ -50,10 +50,15 @@ msgstr ""
 msgid "or"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
 msgid "# systemctl start corosync.service\n"
 "# systemctl start pacemaker.service"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In this example, we are not enabling the corosync and pacemaker services to start at boot. If a cluster node fails or is rebooted, you will need to run <literal>pcs cluster start <replaceable>nodename</replaceable></literal> (or <literal>--all</literal>) to start the cluster on it. While you could enable the services to start at boot, requiring a manual start of cluster services gives you the opportunity to do a post-mortem investigation of a node failure before returning it to the cluster."
 msgstr ""
 
 #. Tag: title
@@ -63,12 +68,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The first thing to check is if cluster communication is happy, for that we use <literal>corosync-cfgtool</literal>."
+msgid "First, use <literal>corosync-cfgtool</literal> to check whether cluster communication is happy:"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# corosync-cfgtool -s\n"
+msgid "[root@pcmk-1 ~]# corosync-cfgtool -s\n"
 "Printing ring status.\n"
 "Local node ID 1\n"
 "RING ID 0\n"
@@ -78,7 +83,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "We can see here that everything appears normal with our fixed IP address, not a 127.0.0.x loopback address, listed as the <literal>id</literal> and <literal>no faults</literal> for the status."
+msgid "We can see here that everything appears normal with our fixed IP address (not a 127.0.0.x loopback address) listed as the <emphasis role=\"strong\">id</emphasis>, and <emphasis role=\"strong\">no faults</emphasis> for the status."
 msgstr ""
 
 #. Tag: para
@@ -88,35 +93,32 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Next we check the membership and quorum APIs:"
+msgid "Next, check the membership and quorum APIs:"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# corosync-cmapctl  | grep members\n"
+msgid "[root@pcmk-1 ~]# corosync-cmapctl  | grep members\n"
+"runtime.totem.pg.mrp.srp.members.1.config_version (u64) = 0\n"
 "runtime.totem.pg.mrp.srp.members.1.ip (str) = r(0) ip(192.168.122.101)\n"
 "runtime.totem.pg.mrp.srp.members.1.join_count (u32) = 1\n"
 "runtime.totem.pg.mrp.srp.members.1.status (str) = joined\n"
+"runtime.totem.pg.mrp.srp.members.2.config_version (u64) = 0\n"
 "runtime.totem.pg.mrp.srp.members.2.ip (str) = r(0) ip(192.168.122.102)\n"
-"runtime.totem.pg.mrp.srp.members.2.join_count (u32) = 1\n"
+"runtime.totem.pg.mrp.srp.members.2.join_count (u32) = 2\n"
 "runtime.totem.pg.mrp.srp.members.2.status (str) = joined\n"
 "\n"
-"# pcs status corosync\n"
+"[root@pcmk-1 ~]# pcs status corosync\n"
 "Membership information\n"
 " --------------------------\n"
 "    Nodeid      Votes Name\n"
-"         1          1 pcmk-1\n"
+"         1          1 pcmk-1 (local)\n"
 "         2          1 pcmk-2"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
 msgid "You should see both nodes have joined the cluster."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "All good!"
 msgstr ""
 
 #. Tag: title
@@ -126,54 +128,72 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Now that we have confirmed that Corosync is functional we can check the rest of the stack. Pacemaker has already been started, so verify the necessary processes are running."
+msgid "Now that we have confirmed that Corosync is functional, we can check the rest of the stack. Pacemaker has already been started, so verify the necessary processes are running:"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# ps axf\n"
+msgid "[root@pcmk-1 ~]# ps axf\n"
 "  PID TTY      STAT   TIME COMMAND\n"
 "    2 ?        S      0:00 [kthreadd]\n"
 "...lots of processes...\n"
-"28019 ?        Ssl    0:03 /usr/sbin/corosync\n"
-"28047 ?        Ss     0:00 /usr/sbin/pacemakerd -f\n"
-"28048 ?        Ss     0:00  \\_ /usr/libexec/pacemaker/cib\n"
-"28049 ?        Ss     0:00  \\_ /usr/libexec/pacemaker/stonithd\n"
-"28050 ?        Ss     0:00  \\_ /usr/lib64/heartbeat/lrmd\n"
-"28051 ?        Ss     0:00  \\_ /usr/libexec/pacemaker/attrd\n"
-"28052 ?        Ss     0:00  \\_ /usr/libexec/pacemaker/pengine\n"
-"28053 ?        Ss     0:00  \\_ /usr/libexec/pacemaker/crmd"
+" 1362 ?        Ssl    0:35 corosync\n"
+" 1379 ?        Ss     0:00 /usr/sbin/pacemakerd -f\n"
+" 1380 ?        Ss     0:00  \\_ /usr/libexec/pacemaker/cib\n"
+" 1381 ?        Ss     0:00  \\_ /usr/libexec/pacemaker/stonithd\n"
+" 1382 ?        Ss     0:00  \\_ /usr/libexec/pacemaker/lrmd\n"
+" 1383 ?        Ss     0:00  \\_ /usr/libexec/pacemaker/attrd\n"
+" 1384 ?        Ss     0:00  \\_ /usr/libexec/pacemaker/pengine\n"
+" 1385 ?        Ss     0:00  \\_ /usr/libexec/pacemaker/crmd"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If that looks ok, check the pcs status output."
+msgid "If that looks OK, check the <literal>pcs status</literal> output:"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# pcs status\n"
-"Last updated: Fri Sep 14 09:52:25 2012\n"
-"Last change: Fri Sep 14 09:51:55 2012 via crmd on pcmk-2\n"
+msgid "[root@pcmk-1 ~]# pcs status\n"
+"Cluster name: mycluster\n"
+"WARNING: no stonith devices and stonith-enabled is not false\n"
+"Last updated: Tue Dec 16 16:15:29 2014\n"
+"Last change: Tue Dec 16 15:49:47 2014\n"
 "Stack: corosync\n"
 "Current DC: pcmk-2 (2) - partition with quorum\n"
-"Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0\n"
-"2 Nodes configured, unknown expected votes\n"
-"0 Resources configured.\n"
+"Version: 1.1.12-a14efad\n"
+"2 Nodes configured\n"
+"0 Resources configured\n"
+"\n"
 "\n"
 "Online: [ pcmk-1 pcmk-2 ]\n"
 "\n"
-"Full list of resources:"
+"Full list of resources:\n"
+"\n"
+"\n"
+"PCSD Status:\n"
+"  pcmk-1: Online\n"
+"  pcmk-2: Online\n"
+"\n"
+"Daemon Status:\n"
+"  corosync: active/disabled\n"
+"  pacemaker: active/disabled\n"
+"  pcsd: active/enabled"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Next, check for any ERRORs during startup - there shouldn’t be any."
+msgid "Finally, ensure there are no startup errors (aside from messages relating to not having STONITH configured, which are OK at this point):"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# grep -i error /var/log/messages"
+msgid "[root@pcmk-1 ~]# journalctl | grep -i error"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Other operating systems may report startup errors in other locations, for example <literal>/var/log/messages</literal>."
 msgstr ""
 
 #. Tag: para

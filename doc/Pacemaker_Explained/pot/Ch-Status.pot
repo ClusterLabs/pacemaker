@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-10-17T05:19:02\n"
-"PO-Revision-Date: 2012-10-17T05:19:02\n"
+"POT-Creation-Date: 2016-05-03 17:45-0500\n"
+"PO-Revision-Date: 2016-05-03 17:45-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -14,7 +14,7 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Status - Here be dragons"
+msgid "Status — Here be dragons"
 msgstr ""
 
 #. Tag: para
@@ -39,12 +39,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "In addition to the cluster’s configuration, the CIB holds an up-to-date representation of each cluster node in the status section."
+msgid "In addition to the cluster’s configuration, the CIB holds an up-to-date representation of each cluster node in the <literal>status</literal> section."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "A bare-bones status entry for a healthy node called <literal>cl-virt-1</literal>"
+msgid "A bare-bones status entry for a healthy node <emphasis role=\"strong\">cl-virt-1</emphasis>"
 msgstr ""
 
 #. Tag: programlisting
@@ -57,7 +57,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Users are highly recommended <emphasis>not to modify</emphasis> any part of a node’s state <emphasis>directly</emphasis>. The cluster will periodically regenerate the entire section from authoritative sources. So any changes should be done with the tools for those subsystems."
+msgid "Users are highly recommended <emphasis>not</emphasis> to modify any part of a node’s state <emphasis>directly</emphasis>. The cluster will periodically regenerate the entire section from authoritative sources, so any changes should be done with the tools appropriate to those sources."
 msgstr ""
 
 #. Tag: title
@@ -67,7 +67,7 @@ msgstr ""
 
 #. Tag: entry
 #, no-c-format
-msgid "Dataset"
+msgid "CIB Object"
 msgstr ""
 
 #. Tag: entry
@@ -77,7 +77,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<literal>node_state fields</literal>"
+msgid "<literal>node_state</literal>"
 msgstr ""
 
 #. Tag: para
@@ -87,7 +87,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<literal>transient_attributes tag</literal>"
+msgid "<literal>transient_attributes</literal>"
 msgstr ""
 
 #. Tag: para
@@ -97,7 +97,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<literal>lrm tag</literal>"
+msgid "<literal>lrm</literal>"
 msgstr ""
 
 #. Tag: para
@@ -107,12 +107,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The fields used in the <literal>node_state</literal> objects are named as they are largely for historical reasons and are rooted in Pacemaker’s origins as the Heartbeat resource manager."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "They have remained unchanged to preserve compatibility with older versions."
+msgid "The fields used in the <literal>node_state</literal> objects are named as they are largely for historical reasons and are rooted in Pacemaker’s origins as the Heartbeat resource manager. They have remained unchanged to preserve compatibility with older versions."
 msgstr ""
 
 #. Tag: title
@@ -137,7 +132,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm> <primary>id</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm> Unique identifier for the node. Corosync based clusters use the uname of the machine, Heartbeat clusters use a human-readable (but annoying) UUID."
+msgid "<indexterm> <primary>id</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm> Unique identifier for the node. Corosync-based clusters use a numeric counter, while Heartbeat clusters use a (barely) human-readable UUID."
 msgstr ""
 
 #. Tag: para
@@ -157,7 +152,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm> <primary>ha</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>ha</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>ha</secondary> </indexterm> <indexterm> <primary>ha</primary> </indexterm> Flag specifying whether the cluster software is active on the node. Allowed values: <literal>active</literal>, <literal>dead</literal>."
+msgid "<indexterm> <primary>ha</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>ha</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>ha</secondary> </indexterm> <indexterm> <primary>ha</primary> </indexterm> Is the cluster software active on this node? Allowed values: <literal>active</literal>, <literal>dead</literal>."
 msgstr ""
 
 #. Tag: para
@@ -167,7 +162,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm> <primary>in_ccm</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>in_ccm</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>in_ccm</secondary> </indexterm> <indexterm> <primary>in_ccm</primary> </indexterm> Flag for cluster membership; allowed values: <literal>true</literal>, <literal>false</literal>."
+msgid "<indexterm> <primary>in_ccm</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>in_ccm</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>in_ccm</secondary> </indexterm> <indexterm> <primary>in_ccm</primary> </indexterm> Is the node a member of the cluster? Allowed values: <literal>true</literal>, <literal>false</literal>."
 msgstr ""
 
 #. Tag: para
@@ -177,7 +172,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm> <primary>crmd</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>crmd</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>crmd</secondary> </indexterm> <indexterm> <primary>crmd</primary> </indexterm> Flag: is the crmd process active on the node? One of <literal>online</literal>, <literal>offline</literal>."
+msgid "<indexterm> <primary>crmd</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>crmd</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>crmd</secondary> </indexterm> <indexterm> <primary>crmd</primary> </indexterm> Is the crmd process active on the node? Allowed values: <literal>online</literal>, <literal>offline</literal>."
 msgstr ""
 
 #. Tag: para
@@ -187,7 +182,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm> <primary>join</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>join</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>join</secondary> </indexterm> <indexterm> <primary>join</primary> </indexterm> Flag saying whether the node participates in hosting resources. Possible values: <literal>down</literal>, <literal>pending</literal>, <literal>member</literal>, <literal>banned</literal>."
+msgid "<indexterm> <primary>join</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>join</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>join</secondary> </indexterm> <indexterm> <primary>join</primary> </indexterm> Does the node participate in hosting resources? Allowed values: <literal>down</literal>, <literal>pending</literal>, <literal>member</literal>, <literal>banned</literal>."
 msgstr ""
 
 #. Tag: para
@@ -207,12 +202,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm> <primary>crm-debug-origin</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>crm-debug-origin</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>crm-debug-origin</secondary> </indexterm> <indexterm> <primary>crm-debug-origin</primary> </indexterm> Diagnostic indicator: the origin of the most recent change(s)."
+msgid "<indexterm> <primary>crm-debug-origin</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>crm-debug-origin</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>crm-debug-origin</secondary> </indexterm> <indexterm> <primary>crm-debug-origin</primary> </indexterm> The origin of the most recent change(s). For diagnostic purposes."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The cluster uses these fields to determine if, at the node level, the node is healthy or is in a failed state and needs to be fenced."
+msgid "The cluster uses these fields to determine whether, at the node level, the node is healthy or is in a failed state and needs to be fenced."
 msgstr ""
 
 #. Tag: title
@@ -222,7 +217,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Like regular <link linkend=\"s-node-attributes\">node attributes</link>, the name/value pairs listed here also help to describe the node. However they are forgotten by the cluster when the node goes offline. This can be useful, for instance, when you want a node to be in standby mode (not able to run resources) until the next reboot."
+msgid "Like regular <link linkend=\"s-node-attributes\">node attributes</link>, the name/value pairs listed in the <literal>transient_attributes</literal> section help to describe the node. However they are forgotten by the cluster when the node goes offline. This can be useful, for instance, when you want a node to be in standby mode (not able to run resources) just until the next reboot."
 msgstr ""
 
 #. Tag: para
@@ -232,24 +227,24 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Example set of transient node attributes for node \"cl-virt-1\""
+msgid "A set of transient node attributes for node <emphasis role=\"strong\">cl-virt-1</emphasis>"
 msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "  &lt;transient_attributes id=\"cl-virt-1\"&gt;\n"
-"    &lt;instance_attributes id=\"status-cl-virt-1\"&gt;\n"
-"       &lt;nvpair id=\"status-cl-virt-1-pingd\" name=\"pingd\" value=\"3\"/&gt;\n"
-"       &lt;nvpair id=\"status-cl-virt-1-probe_complete\" name=\"probe_complete\" value=\"true\"/&gt;\n"
-"       &lt;nvpair id=\"status-cl-virt-1-fail-count-pingd:0\" name=\"fail-count-pingd:0\" value=\"1\"/&gt;\n"
-"       &lt;nvpair id=\"status-cl-virt-1-last-failure-pingd:0\" name=\"last-failure-pingd:0\" value=\"1239009742\"/&gt;\n"
-"    &lt;/instance_attributes&gt;\n"
-"  &lt;/transient_attributes&gt;"
+msgid "&lt;transient_attributes id=\"cl-virt-1\"&gt;\n"
+"  &lt;instance_attributes id=\"status-cl-virt-1\"&gt;\n"
+"     &lt;nvpair id=\"status-cl-virt-1-pingd\" name=\"pingd\" value=\"3\"/&gt;\n"
+"     &lt;nvpair id=\"status-cl-virt-1-probe_complete\" name=\"probe_complete\" value=\"true\"/&gt;\n"
+"     &lt;nvpair id=\"status-cl-virt-1-fail-count-pingd:0\" name=\"fail-count-pingd:0\" value=\"1\"/&gt;\n"
+"     &lt;nvpair id=\"status-cl-virt-1-last-failure-pingd:0\" name=\"last-failure-pingd:0\" value=\"1239009742\"/&gt;\n"
+"  &lt;/instance_attributes&gt;\n"
+"&lt;/transient_attributes&gt;"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "In the above example, we can see that the <literal>pingd:0</literal> resource has failed once, at <literal>Mon Apr 6 11:22:22 2009</literal>. <footnote><para> You can use the standard <literal>date</literal> command to print a human readable of any seconds-since-epoch value: # <literal>date -d @&lt;parameter&gt;number&lt;/parameter&gt;</literal> </para></footnote> We also see that the node is connected to three \"pingd\" peers and that all known resources have been checked for on this machine (<literal>probe_complete</literal>)."
+msgid "In the above example, we can see that the <literal>pingd:0</literal> resource has failed once, at 09:22:22 UTC 6 April 2009. <footnote><para> You can use the standard <literal>date</literal> command to print a human-readable version of any seconds-since-epoch value, for example <literal>date -d @1239009742</literal>. </para></footnote> We also see that the node is connected to three <emphasis role=\"strong\">pingd</emphasis> peers and that all known resources have been checked for on this machine (<literal>probe_complete</literal>)."
 msgstr ""
 
 #. Tag: title
@@ -264,12 +259,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "A node’s resource history is held in the <literal>lrm_resources</literal> tag (a child of the <literal>lrm</literal> tag). The information stored here includes enough information for the cluster to stop the resource safely if it is removed from the <literal>configuration</literal> section. Specifically the resource’s <literal>id</literal>, <literal>class</literal>, <literal>type</literal> and <literal>provider</literal> are stored."
+msgid "A node’s resource history is held in the <literal>lrm_resources</literal> tag (a child of the <literal>lrm</literal> tag). The information stored here includes enough information for the cluster to stop the resource safely if it is removed from the <literal>configuration</literal> section. Specifically, the resource’s <literal>id</literal>, <literal>class</literal>, <literal>type</literal> and <literal>provider</literal> are stored."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "A record of the apcstonith resource"
+msgid "A record of the <literal>apcstonith</literal> resource"
 msgstr ""
 
 #. Tag: programlisting
@@ -279,7 +274,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Additionally, we store the last job for every combination of <literal>resource, action</literal> and <literal>interval</literal>. The concatenation of the values in this tuple are used to create the id of the <literal>lrm_rsc_op</literal> object."
+msgid "Additionally, we store the last job for every combination of <literal>resource</literal>, <literal>action</literal> and <literal>interval</literal>. The concatenation of the values in this tuple are used to create the id of the <literal>lrm_rsc_op</literal> object."
 msgstr ""
 
 #. Tag: title
@@ -384,7 +379,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Diagnostic indicator. Machine local date/time, in seconds since epoch, at which the job was executed."
+msgid "Machine-local date/time, in seconds since epoch, at which the job was executed. For diagnostic purposes."
 msgstr ""
 
 #. Tag: para
@@ -399,7 +394,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Diagnostic indicator. Machine local date/time, in seconds since epoch, at which the job first returned the current value of <literal>rc-code</literal>."
+msgid "Machine-local date/time, in seconds since epoch, at which the job first returned the current value of <literal>rc-code</literal>. For diagnostic purposes."
 msgstr ""
 
 #. Tag: para
@@ -414,7 +409,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Diagnostic indicator. Time, in milliseconds, that the job was running for."
+msgid "Time, in milliseconds, that the job was running for. For diagnostic purposes."
 msgstr ""
 
 #. Tag: para
@@ -429,7 +424,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Diagnostic indicator. Time, in seconds, that the job was queued for in the LRMd."
+msgid "Time, in seconds, that the job was queued for in the LRMd. For diagnostic purposes."
 msgstr ""
 
 #. Tag: para
@@ -499,17 +494,17 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Diagnostic indicator. The origin of the current values."
+msgid "The origin of the current values. For diagnostic purposes."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Simple Example"
+msgid "Simple Operation History Example"
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "A monitor operation (determines current state of the apcstonith resource)"
+msgid "A monitor operation (determines current state of the <literal>apcstonith</literal> resource)"
 msgstr ""
 
 #. Tag: programlisting
@@ -532,7 +527,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The cluster schedules probes for every configured resource on when a new node starts, in order to determine the resource’s current state before it takes any further action."
+msgid "The cluster schedules probes for every configured resource on a node when the node first starts, in order to determine the resource’s current state before it takes any further action."
 msgstr ""
 
 #. Tag: para
@@ -542,27 +537,22 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The third field of the <literal>transition-key</literal> contains a 7, this indicates that the job expects to find the resource inactive."
+msgid "The third field of the <literal>transition-key</literal> contains a 7, which indicates that the job expects to find the resource inactive. By looking at the <literal>rc-code</literal> property, we see that this was the case."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "By looking at the <literal>rc-code</literal> property, we see that this was the case."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "As that is the only job recorded for this node we can conclude that the cluster started the resource elsewhere."
+msgid "As that is the only job recorded for this node, we can conclude that the cluster started the resource elsewhere."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Complex Resource History Example"
+msgid "Complex Operation History Example"
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Resource history of a pingd clone with multiple jobs"
+msgid "Resource history of a <literal>pingd</literal> clone with multiple jobs"
 msgstr ""
 
 #. Tag: programlisting
@@ -627,7 +617,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The cluster processes each job record to build up a picture of the resource’s state. After the first and second entries, it is considered stopped and after the third it considered active."
+msgid "The cluster processes each job record to build up a picture of the resource’s state. After the first and second entries, it is considered stopped, and after the third it considered active."
 msgstr ""
 
 #. Tag: para

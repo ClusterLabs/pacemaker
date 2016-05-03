@@ -1,0 +1,233 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2016-05-03 17:45-0500\n"
+"PO-Revision-Date: 2016-05-03 17:45-0500\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Receiving Notification for Cluster Events"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<anchor id=\"ch-notifications\" xreflabel=\"Chapter 7, Receiving Notification for Cluster Events\"></anchor> <indexterm> <primary>Resource</primary><secondary>Notification</secondary> </indexterm> <indexterm> <primary>Notification</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A Pacemaker cluster is an event-driven system. In this context, an <emphasis>event</emphasis> might be a resource failure or a configuration change, among others."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <emphasis role=\"strong\">ocf:pacemaker:ClusterMon</emphasis> resource can monitor the cluster status and trigger alerts on each cluster event. This resource runs <literal>crm_mon</literal> in the background at regular (configurable) intervals and uses <literal>crm_mon</literal> capabilities to trigger emails (SMTP), SNMP traps or external programs (via the <literal>extra_options</literal> parameter)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Depending on your system settings and compilation settings, SNMP or email alerts might be unavailable. Check the output of <literal>crm_mon --help</literal> to see whether these options are available to you. In any case, executing an external agent will always be available, and you can use this agent to send emails, SNMP traps or whatever action you develop."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Configuring SNMP Notifications"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>Resource</primary><secondary>Notification</secondary><tertiary>SNMP</tertiary> </indexterm> <indexterm> <primary>Notification</primary><secondary>SNMP</secondary> </indexterm> <indexterm> <primary>SNMP</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Requires an IP to send SNMP traps to, and an SNMP community string. The Pacemaker MIB is provided with the source, and is typically installed in <literal>/usr/share/snmp/mibs/PCMK-MIB.txt</literal>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "This example uses <literal>snmphost.example.com</literal> as the SNMP IP and <literal>public</literal> as the community string:"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Configuring ClusterMon to send SNMP traps"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;clone id=\"ClusterMon-clone\"&gt;\n"
+"    &lt;primitive class=\"ocf\" id=\"ClusterMon-SNMP\" provider=\"pacemaker\" type=\"ClusterMon\"&gt;\n"
+"        &lt;instance_attributes id=\"ClusterMon-instance_attributes\"&gt;\n"
+"            &lt;nvpair id=\"ClusterMon-instance_attributes-user\" name=\"user\" value=\"root\"/&gt;\n"
+"            &lt;nvpair id=\"ClusterMon-instance_attributes-update\" name=\"update\" value=\"30\"/&gt;\n"
+"            &lt;nvpair id=\"ClusterMon-instance_attributes-extra_options\" name=\"extra_options\" value=\"-S snmphost.example.com -C public\"/&gt;\n"
+"        &lt;/instance_attributes&gt;\n"
+"    &lt;/primitive&gt;\n"
+"&lt;/clone&gt;"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Configuring Email Notifications"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>Resource</primary><secondary>Notification</secondary><tertiary>SMTP</tertiary> </indexterm> <indexterm> <primary>Notification</primary><secondary>SMTP</secondary> </indexterm> <indexterm> <primary>SMTP</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Requires the recipient e-mail address. You can also optionally configure the sender e-mail address, the hostname of the SMTP relay, and a prefix string for the subject line."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Configuring ClusterMon to send email alerts"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;clone id=\"ClusterMon-clone\"&gt;\n"
+"    &lt;primitive class=\"ocf\" id=\"ClusterMon-SMTP\" provider=\"pacemaker\" type=\"ClusterMon\"&gt;\n"
+"        &lt;instance_attributes id=\"ClusterMon-instance_attributes\"&gt;\n"
+"            &lt;nvpair id=\"ClusterMon-instance_attributes-user\" name=\"user\" value=\"root\"/&gt;\n"
+"            &lt;nvpair id=\"ClusterMon-instance_attributes-update\" name=\"update\" value=\"30\"/&gt;\n"
+"            &lt;nvpair id=\"ClusterMon-instance_attributes-extra_options\" name=\"extra_options\" value=\"-T pacemaker@example.com -F pacemaker@node2.example.com -P PACEMAKER -H mail.example.com\"/&gt;\n"
+"        &lt;/instance_attributes&gt;\n"
+"    &lt;/primitive&gt;\n"
+"&lt;/clone&gt;"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Configuring Notifications via External-Agent"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Requires a program (external-agent) to run when resource operations take place, and an external-recipient (IP address, email address, URI). When triggered, the external-agent is fed with dynamically filled environment variables describing precisely the cluster event that occurred. By making smart usage of these variables in your external-agent code, you can trigger any action."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Configuring ClusterMon to execute an external-agent"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;clone id=\"ClusterMon-clone\"&gt;\n"
+"    &lt;primitive class=\"ocf\" id=\"ClusterMon\" provider=\"pacemaker\" type=\"ClusterMon\"&gt;\n"
+"        &lt;instance_attributes id=\"ClusterMon-instance_attributes\"&gt;\n"
+"            &lt;nvpair id=\"ClusterMon-instance_attributes-user\" name=\"user\" value=\"root\"/&gt;\n"
+"            &lt;nvpair id=\"ClusterMon-instance_attributes-update\" name=\"update\" value=\"30\"/&gt;\n"
+"            &lt;nvpair id=\"ClusterMon-instance_attributes-extra_options\" name=\"extra_options\" value=\"-E /usr/local/bin/example.sh -e 192.168.12.1\"/&gt;\n"
+"        &lt;/instance_attributes&gt;\n"
+"    &lt;/primitive&gt;\n"
+"&lt;/clone&gt;"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Environment Variables Passed to the External Agent"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Environment Variable"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Description"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CRM_notify_recipient</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The static external-recipient from the resource definition. <indexterm> <primary>Environment Variable</primary><secondary>CRM_notify_recipient</secondary> </indexterm> <indexterm> <primary>CRM_notify_recipient</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CRM_notify_node</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The node on which the status change happened. <indexterm> <primary>Environment Variable</primary><secondary>CRM_notify_node</secondary> </indexterm> <indexterm> <primary>CRM_notify_node</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CRM_notify_rsc</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The name of the resource that changed the status. <indexterm> <primary>Environment Variable</primary><secondary>CRM_notify_rsc</secondary> </indexterm> <indexterm> <primary>CRM_notify_rsc</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CRM_notify_task</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The operation that caused the status change. <indexterm> <primary>Environment Variable</primary><secondary>CRM_notify_task</secondary> </indexterm> <indexterm> <primary>CRM_notify_task</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CRM_notify_desc</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The textual output relevant error code of the operation (if any) that caused the status change. <indexterm> <primary>Environment Variable</primary><secondary>CRM_notify_desc</secondary> </indexterm> <indexterm> <primary>CRM_notify_desc</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CRM_notify_rc</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The return code of the operation. <indexterm> <primary>Environment Variable</primary><secondary>CRM_notify_rc</secondary> </indexterm> <indexterm> <primary>CRM_notify_rc</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CRM_notify_target_rc</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The expected return code of the operation. <indexterm> <primary>Environment Variable</primary><secondary>CRM_notify_target_rc</secondary> </indexterm> <indexterm> <primary>CRM_notify_target_rc</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CRM_notify_status</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The numerical representation of the status of the operation. <indexterm> <primary>Environment Variable</primary><secondary>CRM_notify_target_rc</secondary> </indexterm> <indexterm> <primary>CRM_notify_target_rc</primary> </indexterm>"
+msgstr ""
+

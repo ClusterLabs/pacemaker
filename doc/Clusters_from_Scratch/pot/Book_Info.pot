@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-10-17T05:19:03\n"
-"PO-Revision-Date: 2012-10-17T05:19:03\n"
+"POT-Creation-Date: 2016-05-03 17:45-0500\n"
+"PO-Revision-Date: 2016-05-03 17:45-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -19,7 +19,7 @@ msgstr ""
 
 #. Tag: subtitle
 #, no-c-format
-msgid "Creating Active/Passive and Active/Active Clusters on Fedora"
+msgid "Step-by-Step Instructions for Building Your First High-Availability Cluster"
 msgstr ""
 
 #. Tag: productname
@@ -64,6 +64,6 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Given the graphical nature of the Fedora install process, a number of screenshots are included. However the guide is primarily composed of commands, the reasons for executing them and their expected outputs."
+msgid "Given the graphical nature of the install process, a number of screenshots are included. However the guide is primarily composed of commands, the reasons for executing them and their expected outputs."
 msgstr ""
 

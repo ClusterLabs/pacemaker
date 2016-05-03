@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-10-17T05:19:01\n"
-"PO-Revision-Date: 2012-10-17T05:19:01\n"
+"POT-Creation-Date: 2016-05-03 17:45-0500\n"
+"PO-Revision-Date: 2016-05-03 17:45-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -29,12 +29,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "One of the most common elements of a cluster is a set of resources that need to be located together, start sequentially, and stop in the reverse order. To simplify this configuration we support the concept of groups."
+msgid "One of the most common elements of a cluster is a set of resources that need to be located together, start sequentially, and stop in the reverse order. To simplify this configuration, we support the concept of groups."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "An example group"
+msgid "A group of two primitive resources"
 msgstr ""
 
 #. Tag: programlisting
@@ -42,11 +42,11 @@ msgstr ""
 msgid "&lt;group id=\"shortcut\"&gt;\n"
 "   &lt;primitive id=\"Public-IP\" class=\"ocf\" type=\"IPaddr\" provider=\"heartbeat\"&gt;\n"
 "    &lt;instance_attributes id=\"params-public-ip\"&gt;\n"
-"       &lt;nvpair id=\"public-ip-addr\" name=\"ip\" value=\"1.2.3.4\"/&gt;\n"
+"       &lt;nvpair id=\"public-ip-addr\" name=\"ip\" value=\"192.0.2.2\"/&gt;\n"
 "    &lt;/instance_attributes&gt;\n"
 "   &lt;/primitive&gt;\n"
 "   &lt;primitive id=\"Email\" class=\"lsb\" type=\"exim\"/&gt;\n"
-"  &lt;/group&gt;"
+"&lt;/group&gt;"
 msgstr ""
 
 #. Tag: para
@@ -95,7 +95,7 @@ msgid "&lt;configuration&gt;\n"
 "   &lt;resources&gt;\n"
 "    &lt;primitive id=\"Public-IP\" class=\"ocf\" type=\"IPaddr\" provider=\"heartbeat\"&gt;\n"
 "     &lt;instance_attributes id=\"params-public-ip\"&gt;\n"
-"        &lt;nvpair id=\"public-ip-addr\" name=\"ip\" value=\"1.2.3.4\"/&gt;\n"
+"        &lt;nvpair id=\"public-ip-addr\" name=\"ip\" value=\"192.0.2.2\"/&gt;\n"
 "     &lt;/instance_attributes&gt;\n"
 "    &lt;/primitive&gt;\n"
 "    &lt;primitive id=\"Email\" class=\"lsb\" type=\"exim\"/&gt;\n"
@@ -144,7 +144,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Your name for the group <indexterm> <primary>id</primary><secondary>Group Resource Property</secondary> </indexterm> <indexterm> <primary>Group Resource Property</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Group Property</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>Group Property</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm>"
+msgid "A unique name for the group <indexterm> <primary>id</primary><secondary>Group Resource Property</secondary> </indexterm> <indexterm> <primary>Group Resource Property</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Group Property</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>Group Property</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm>"
 msgstr ""
 
 #. Tag: title
@@ -154,7 +154,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Options inherited from <link linkend=\"s-resource-options\">primitive</link> resources: <literal>priority, target-role, is-managed</literal>"
+msgid "Groups inherit the <literal>priority</literal>, <literal>target-role</literal>, and <literal>is-managed</literal> properties from primitive resources. See <xref linkend=\"s-resource-options\" /> for information about those properties."
 msgstr ""
 
 #. Tag: title
@@ -164,7 +164,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Groups have no instance attributes, however any that are set here will be inherited by the group’s children."
+msgid "Groups have no instance attributes. However, any that are set for the group object will be inherited by the group’s children."
 msgstr ""
 
 #. Tag: title
@@ -174,7 +174,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Groups may only contain a collection of <xref linkend=\"primitive-resource\" /> cluster resources. To refer to the child of a group resource, just use the child’s id instead of the group’s."
+msgid "Groups may only contain a collection of cluster resources (see <xref linkend=\"primitive-resource\" />). To refer to a child of a group resource, just use the child’s <literal>id</literal> instead of the group’s."
 msgstr ""
 
 #. Tag: title
@@ -184,12 +184,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Although it is possible to reference the group’s children in constraints, it is usually preferable to use the group’s name instead."
+msgid "Although it is possible to reference a group’s children in constraints, it is usually preferable to reference the group itself."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Example constraints involving groups"
+msgid "Some constraints involving groups"
 msgstr ""
 
 #. Tag: programlisting
@@ -228,7 +228,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Clones were initially conceived as a convenient way to start N instances of an IP resource and have them distributed throughout the cluster for load balancing. They have turned out to quite useful for a number of purposes including integrating with Red Hat’s DLM, the fencing subsystem, and OCFS2."
+msgid "Clones were initially conceived as a convenient way to start multiple instances of an IP address resource and have them distributed throughout the cluster for load balancing. They have turned out to quite useful for a number of purposes including integrating with the Distributed Lock Manager (used by many cluster filesystems), the fencing subsystem, and OCFS2."
 msgstr ""
 
 #. Tag: para
@@ -248,7 +248,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Globally Unique"
+msgid "Globally unique"
 msgstr ""
 
 #. Tag: para
@@ -258,22 +258,22 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Anonymous clones are the simplest type. These resources behave completely identically everywhere they are running. Because of this, there can only be one copy of an anonymous clone active per machine."
+msgid "<emphasis>Anonymous</emphasis> clones are the simplest. These behave completely identically everywhere they are running. Because of this, there can be only one copy of an anonymous clone active per machine."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Globally unique clones are distinct entities. A copy of the clone running on one machine is not equivalent to another instance on another node. Nor would any two copies on the same node be equivalent."
+msgid "<emphasis>Globally unique</emphasis> clones are distinct entities. A copy of the clone running on one machine is not equivalent to another instance on another node, nor would any two copies on the same node be equivalent."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Stateful clones are covered later in <xref linkend=\"s-resource-multistate\" />."
+msgid "<emphasis>Stateful</emphasis> clones are covered later in <xref linkend=\"s-resource-multistate\" />."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "An example clone"
+msgid "A clone of an LSB resource"
 msgstr ""
 
 #. Tag: programlisting
@@ -298,7 +298,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Your name for the clone <indexterm> <primary>id</primary><secondary>Clone Property</secondary> </indexterm> <indexterm> <primary>Clone Property</primary> </indexterm> <indexterm> <primary>Clone</primary><secondary>Property</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm>"
+msgid "A unique name for the clone <indexterm> <primary>id</primary><secondary>Clone Property</secondary> </indexterm> <indexterm> <primary>Clone Property</primary> </indexterm> <indexterm> <primary>Clone</primary><secondary>Property</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm>"
 msgstr ""
 
 #. Tag: title
@@ -306,9 +306,19 @@ msgstr ""
 msgid "Clone Options"
 msgstr ""
 
+#. Tag: para
+#, no-c-format
+msgid "Options inherited from <link linkend=\"s-resource-options\">primitive</link> resources: <literal>priority, target-role, is-managed</literal>"
+msgstr ""
+
 #. Tag: title
 #, no-c-format
-msgid "Clone specific configuration options"
+msgid "Clone-specific configuration options"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Default"
 msgstr ""
 
 #. Tag: para
@@ -318,7 +328,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "How many copies of the resource to start. Defaults to the number of nodes in the cluster. <indexterm> <primary>clone-max</primary><secondary>Clone Option</secondary> </indexterm> <indexterm> <primary>Clone Option</primary> </indexterm> <indexterm> <primary>Clone</primary><secondary>Option</secondary><tertiary>clone-max</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>clone-max</secondary> </indexterm> <indexterm> <primary>clone-max</primary> </indexterm>"
+msgid "number of nodes in cluster"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "How many copies of the resource to start <indexterm> <primary>clone-max</primary><secondary>Clone Option</secondary> </indexterm> <indexterm> <primary>Clone Option</primary> </indexterm> <indexterm> <primary>Clone</primary><secondary>Option</secondary><tertiary>clone-max</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>clone-max</secondary> </indexterm> <indexterm> <primary>clone-max</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -328,7 +343,22 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "How many copies of the resource can be started on a single node; default <emphasis>1</emphasis>. <indexterm> <primary>clone-node-max</primary><secondary>Clone Option</secondary> </indexterm> <indexterm> <primary>Clone Option</primary> </indexterm> <indexterm> <primary>Clone</primary><secondary>Option</secondary><tertiary>clone-node-max</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>clone-node-max</secondary> </indexterm> <indexterm> <primary>clone-node-max</primary> </indexterm>"
+msgid "1"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "How many copies of the resource can be started on a single node <indexterm> <primary>clone-node-max</primary><secondary>Clone Option</secondary> </indexterm> <indexterm> <primary>Clone Option</primary> </indexterm> <indexterm> <primary>Clone</primary><secondary>Option</secondary><tertiary>clone-node-max</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>clone-node-max</secondary> </indexterm> <indexterm> <primary>clone-node-max</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>clone-min</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Require at least this number of clone instances to be runnable before allowing resources depending on the clone to be runnable <emphasis>(since 1.1.14)</emphasis> <indexterm> <primary>clone-min</primary><secondary>Clone Option</secondary> </indexterm> <indexterm> <primary>Clone Option</primary> </indexterm> <indexterm> <primary>Clone</primary><secondary>Option</secondary><tertiary>clone-min</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>clone-min</secondary> </indexterm> <indexterm> <primary>clone-min</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -338,7 +368,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "When stopping or starting a copy of the clone, tell all the other copies beforehand and when the action was successful. Allowed values: <emphasis>false</emphasis>, <literal>true</literal> <indexterm> <primary>notify</primary><secondary>Clone Option</secondary> </indexterm> <indexterm> <primary>Clone Option</primary> </indexterm> <indexterm> <primary>Clone</primary><secondary>Option</secondary><tertiary>notify</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>notify</secondary> </indexterm> <indexterm> <primary>notify</primary> </indexterm>"
+msgid "true"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "When stopping or starting a copy of the clone, tell all the other copies beforehand and again when the action was successful. Allowed values: <literal>false</literal>, <literal>true</literal> <indexterm> <primary>notify</primary><secondary>Clone Option</secondary> </indexterm> <indexterm> <primary>Clone Option</primary> </indexterm> <indexterm> <primary>Clone</primary><secondary>Option</secondary><tertiary>notify</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>notify</secondary> </indexterm> <indexterm> <primary>notify</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -348,7 +383,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Does each copy of the clone perform a different function? Allowed values: <emphasis>false</emphasis>, <literal>true</literal> <indexterm> <primary>globally-unique</primary><secondary>Clone Option</secondary> </indexterm> <indexterm> <primary>Clone Option</primary> </indexterm> <indexterm> <primary>Clone</primary><secondary>Option</secondary><tertiary>globally-unique</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>globally-unique</secondary> </indexterm> <indexterm> <primary>globally-unique</primary> </indexterm>"
+msgid "false"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Does each copy of the clone perform a different function? Allowed values: <literal>false</literal>, <literal>true</literal> <indexterm> <primary>globally-unique</primary><secondary>Clone Option</secondary> </indexterm> <indexterm> <primary>Clone Option</primary> </indexterm> <indexterm> <primary>Clone</primary><secondary>Option</secondary><tertiary>globally-unique</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>globally-unique</secondary> </indexterm> <indexterm> <primary>globally-unique</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -358,7 +398,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Should the copies be started in series (instead of in parallel). Allowed values: <emphasis>false</emphasis>, <literal>true</literal> <indexterm> <primary>ordered</primary><secondary>Clone Option</secondary> </indexterm> <indexterm> <primary>Clone Option</primary> </indexterm> <indexterm> <primary>Clone</primary><secondary>Option</secondary><tertiary>ordered</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>ordered</secondary> </indexterm> <indexterm> <primary>ordered</primary> </indexterm>"
+msgid "Should the copies be started in series (instead of in parallel)? Allowed values: <literal>false</literal>, <literal>true</literal> <indexterm> <primary>ordered</primary><secondary>Clone Option</secondary> </indexterm> <indexterm> <primary>Clone Option</primary> </indexterm> <indexterm> <primary>Clone</primary><secondary>Option</secondary><tertiary>ordered</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>ordered</secondary> </indexterm> <indexterm> <primary>ordered</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -368,7 +408,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Changes the behavior of ordering constraints (between clones/masters) so that instances can start/stop as soon as their peer instance has (rather than waiting for every instance of the other clone has). Allowed values: <emphasis>false</emphasis>, <literal>true</literal> <indexterm> <primary>interleave</primary><secondary>Clone Option</secondary> </indexterm> <indexterm> <primary>Clone Option</primary> </indexterm> <indexterm> <primary>Clone</primary><secondary>Option</secondary><tertiary>interleave</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>interleave</secondary> </indexterm> <indexterm> <primary>interleave</primary> </indexterm>"
+msgid "If this clone depends on another clone via an ordering constraint, is it allowed to start after the local instance of the other clone starts, rather than wait for all instances of the other clone to start? Allowed values: <literal>false</literal>, <literal>true</literal> <indexterm> <primary>interleave</primary><secondary>Clone Option</secondary> </indexterm> <indexterm> <primary>Clone Option</primary> </indexterm> <indexterm> <primary>Clone</primary><secondary>Option</secondary><tertiary>interleave</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>interleave</secondary> </indexterm> <indexterm> <primary>interleave</primary> </indexterm>"
 msgstr ""
 
 #. Tag: title
@@ -388,7 +428,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Clones must contain exactly one group or one regular resource."
+msgid "Clones must contain exactly one primitive or group resource."
 msgstr ""
 
 #. Tag: para
@@ -403,27 +443,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "In most cases, a clone will have a single copy on each active cluster node. If this is not the case, you can indicate which nodes the cluster should preferentially assign copies to with resource location constraints. These constraints are written no differently to those for regular resources except that the clone’s id is used."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Ordering constraints behave slightly differently for clones. In the example below, <literal>apache-stats</literal> will wait until all copies of the clone that need to be started have done so before being started itself. Only if <emphasis>no</emphasis> copies can be started <literal>apache-stats</literal> will be prevented from being active. Additionally, the clone will wait for <literal>apache-stats</literal> to be stopped before stopping the clone."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Colocation of a regular (or group) resource with a clone means that the resource can run on any machine with an active copy of the clone. The cluster will choose a copy based on where the clone is running and the resource’s own location preferences."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Colocation between clones is also possible. In such cases, the set of allowed locations for the clone is limited to nodes on which the clone is (or will be) active. Allocation is then performed as normally."
+msgid "In most cases, a clone will have a single copy on each active cluster node. If this is not the case, you can indicate which nodes the cluster should preferentially assign copies to with resource location constraints. These constraints are written no differently from those for primitive resources except that the clone’s <literal>id</literal> is used."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Example constraints involving clones"
+msgid "Some constraints involving clones"
 msgstr ""
 
 #. Tag: programlisting
@@ -433,6 +458,21 @@ msgid "&lt;constraints&gt;\n"
 "    &lt;rsc_colocation id=\"stats-with-clone\" rsc=\"apache-stats\" with=\"apache-clone\"/&gt;\n"
 "    &lt;rsc_order id=\"start-clone-then-stats\" first=\"apache-clone\" then=\"apache-stats\"/&gt;\n"
 "&lt;/constraints&gt;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Ordering constraints behave slightly differently for clones. In the example above, <literal>apache-stats</literal> will wait until all copies of <literal>apache-clone</literal> that need to be started have done so before being started itself. Only if <emphasis>no</emphasis> copies can be started will <literal>apache-stats</literal> be prevented from being active. Additionally, the clone will wait for <literal>apache-stats</literal> to be stopped before stopping itself."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Colocation of a primitive or group resource with a clone means that the resource can run on any machine with an active copy of the clone. The cluster will choose a copy based on where the clone is running and the resource’s own location preferences."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Colocation between clones is also possible. If one clone <literal>A</literal> is colocated with another clone <literal>B</literal>, the set of allowed locations for <literal>A</literal> is limited to nodes on which <literal>B</literal> is (or will be) active. Placement is then performed normally."
 msgstr ""
 
 #. Tag: title
@@ -450,6 +490,11 @@ msgstr ""
 msgid "To achieve a stable allocation pattern, clones are slightly sticky by default. If no value for <literal>resource-stickiness</literal> is provided, the clone will use a value of 1. Being a small value, it causes minimal disturbance to the score calculations of other resources but is enough to prevent Pacemaker from needlessly moving copies around the cluster."
 msgstr ""
 
+#. Tag: para
+#, no-c-format
+msgid "For globally unique clones, this may result in multiple instances of the clone staying on a single node, even after another eligible node becomes active (for example, after being put into standby mode then made active again). If you do not want this behavior, specify a <literal>resource-stickiness</literal> of 0 for the clone temporarily and let the cluster adjust, then set it back to 1 if you want the default behavior to apply again."
+msgstr ""
+
 #. Tag: title
 #, no-c-format
 msgid "Clone Resource Agent Requirements"
@@ -462,12 +507,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Globally unique clones do require some additional support in the resource agent. In particular, it must only respond with other probes for instances of the clone should result in they should return one of the other OCF error codes."
+msgid "Globally unique clones do require some additional support in the resource agent. In particular, it must only respond with <literal>${OCF_SUCCESS}</literal> if the node has that exact instance active. All other probes for instances of the clone should result in <literal>${OCF_NOT_RUNNING}</literal> (or one of the other OCF error codes if they are failed)."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Copies of a clone are identified by appending a colon and a numerical offset, eg. <literal>apache:2</literal>."
+msgid "Individual instances of a clone are identified by appending a colon and a numerical offset, e.g. <literal>apache:2</literal>."
 msgstr ""
 
 #. Tag: para
@@ -477,7 +522,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "You should not make any assumptions (based on <literal>OCF_RESKEY_CRM_meta_clone</literal>) about which copies are active. In particular, the list of active copies will not always be an unbroken sequence, nor always start at 0."
+msgid "The resource agent must not make any assumptions (based on <literal>OCF_RESKEY_CRM_meta_clone</literal>) about which numerical instances are active. In particular, the list of active copies will not always be an unbroken sequence, nor always start at 0."
 msgstr ""
 
 #. Tag: title
@@ -487,7 +532,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Supporting notifications requires the <literal>notify</literal> action to be implemented. Once supported, the notify action will be passed a number of extra variables which, when combined with additional context, can be used to calculate the current state of the cluster and what is about to happen to it."
+msgid "Supporting notifications requires the <literal>notify</literal> action to be implemented. If supported, the notify action will be passed a number of extra variables which, when combined with additional context, can be used to calculate the current state of the cluster and what is about to happen to it."
 msgstr ""
 
 #. Tag: title
@@ -602,7 +647,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The variables come in pairs, such as <literal>OCF_RESKEY_CRM_meta_notify_start_resource</literal> and <literal>OCF_RESKEY_CRM_meta_notify_start_uname</literal> and should be treated as an array of whitespace separated elements."
+msgid "The variables come in pairs, such as <literal>OCF_RESKEY_CRM_meta_notify_start_resource</literal> and <literal>OCF_RESKEY_CRM_meta_notify_start_uname</literal> and should be treated as an array of whitespace-separated elements."
 msgstr ""
 
 #. Tag: para
@@ -612,7 +657,7 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Example notification variables"
+msgid "Notification variables"
 msgstr ""
 
 #. Tag: programlisting
@@ -733,7 +778,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Multi-state resources are a specialization of Clone resources; please ensure you understand the section on clones before continuing! They allow the instances to be in one of two operating modes; these are called <literal>Master</literal> and <literal>Slave</literal>, but can mean whatever you wish them to mean. The only limitation is that when an instance is started, it must come up in the <literal>Slave</literal> state."
+msgid "Multi-state resources are a specialization of clone resources; please ensure you understand <xref linkend=\"s-resource-clone\" /> before continuing!"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Multi-state resources allow the instances to be in one of two operating modes (called <emphasis>roles</emphasis>). The roles are called <emphasis>master</emphasis> and <emphasis>slave</emphasis>, but can mean whatever you wish them to mean. The only limitation is that when an instance is started, it must come up in the slave role."
 msgstr ""
 
 #. Tag: title
@@ -768,7 +818,7 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Multi-state specific resource configuration options"
+msgid "Multi-state-specific resource configuration options"
 msgstr ""
 
 #. Tag: para
@@ -778,7 +828,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "How many copies of the resource can be promoted to <literal>master</literal> status; default 1. <indexterm> <primary>master-max</primary><secondary>Multi-State Option</secondary> </indexterm> <indexterm> <primary>Multi-State Option</primary> </indexterm> <indexterm> <primary>Multi-State</primary><secondary>Option</secondary><tertiary>master-max</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>master-max</secondary> </indexterm> <indexterm> <primary>master-max</primary> </indexterm>"
+msgid "How many copies of the resource can be promoted to the <literal>master</literal> role <indexterm> <primary>master-max</primary><secondary>Multi-State Option</secondary> </indexterm> <indexterm> <primary>Multi-State Option</primary> </indexterm> <indexterm> <primary>Multi-State</primary><secondary>Option</secondary><tertiary>master-max</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>master-max</secondary> </indexterm> <indexterm> <primary>master-max</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -788,7 +838,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "How many copies of the resource can be promoted to <literal>master</literal> status on a single node; default 1. <indexterm> <primary>master-node-max</primary><secondary>Multi-State Option</secondary> </indexterm> <indexterm> <primary>Multi-State Option</primary> </indexterm> <indexterm> <primary>Multi-State</primary><secondary>Option</secondary><tertiary>master-node-max</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>master-node-max</secondary> </indexterm> <indexterm> <primary>master-node-max</primary> </indexterm>"
+msgid "How many copies of the resource can be promoted to the <literal>master</literal> role on a single node <indexterm> <primary>master-node-max</primary><secondary>Multi-State Option</secondary> </indexterm> <indexterm> <primary>Multi-State Option</primary> </indexterm> <indexterm> <primary>Multi-State</primary><secondary>Option</secondary><tertiary>master-node-max</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>master-node-max</secondary> </indexterm> <indexterm> <primary>master-node-max</primary> </indexterm>"
 msgstr ""
 
 #. Tag: title
@@ -798,7 +848,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Multi-state resources have no instance attributes; however, any that are set here will be inherited by master’s children."
+msgid "Multi-state resources have no instance attributes; however, any that are set here will be inherited by a master’s children."
 msgstr ""
 
 #. Tag: title
@@ -808,7 +858,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Masters must contain exactly one group or one regular resource."
+msgid "Masters must contain exactly one primitive or group resource."
 msgstr ""
 
 #. Tag: para
@@ -823,17 +873,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The normal type of monitor actions are not sufficient to monitor a multi-state resource in the <literal>Master</literal> state. To detect failures of the <literal>Master</literal> instance, you need to define an additional monitor action with <literal>role=\"Master\"</literal>."
+msgid "The usual monitor actions are insufficient to monitor a multi-state resource, because pacemaker needs to verify not only that the resource is active, but also that its actual role matches its intended one."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "It is crucial that <emphasis>every</emphasis> monitor operation has a different interval!"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "This is because Pacemaker currently differentiates between operations only by resource and interval; so if eg. a master/slave resource has the same monitor interval for both roles, Pacemaker would ignore the role when checking the status - which would cause unexpected return codes, and therefore unnecessary complications."
+msgid "Define two monitoring actions: the usual one will cover the slave role, and an additional one with <literal>role=\"master\"</literal> will cover the master role."
 msgstr ""
 
 #. Tag: title
@@ -853,6 +898,11 @@ msgid "&lt;master id=\"myMasterRsc\"&gt;\n"
 "&lt;/master&gt;"
 msgstr ""
 
+#. Tag: para
+#, no-c-format
+msgid "It is crucial that <emphasis>every</emphasis> monitor operation has a different interval! Pacemaker currently differentiates between operations only by resource and interval; so if (for example) a master/slave resource had the same monitor interval for both roles, Pacemaker would ignore the role when checking the status — which would cause unexpected return codes, and therefore unnecessary complications."
+msgstr ""
+
 #. Tag: title
 #, no-c-format
 msgid "Multi-state Constraints"
@@ -860,17 +910,17 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "In most cases, a multi-state resources will have a single copy on each active cluster node. If this is not the case, you can indicate which nodes the cluster should preferentially assign copies to with resource location constraints. These constraints are written no differently to those for regular resources except that the master’s id is used."
+msgid "In most cases, multi-state resources will have a single copy on each active cluster node. If this is not the case, you can indicate which nodes the cluster should preferentially assign copies to with resource location constraints. These constraints are written no differently from those for primitive resources except that the master’s <literal>id</literal> is used."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "When considering multi-state resources in constraints, for most purposes it is sufficient to treat them as clones. The exception is when the <literal>rsc-role</literal> and/or <literal>with-rsc-role</literal> fields (for colocation constraints) and <literal>first-action</literal> and/or <literal>then-action</literal> fields (for ordering constraints) are used."
+msgid "When considering multi-state resources in constraints, for most purposes it is sufficient to treat them as clones. The exception is that the <literal>first-action</literal> and/or <literal>then-action</literal> fields for ordering constraints may be set to <literal>promote</literal> or <literal>demote</literal> to constrain the master role, and colocation constraints may contain <literal>rsc-role</literal> and/or <literal>with-rsc-role</literal> fields."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Additional constraint options relevant to multi-state resources"
+msgid "Additional colocation constraint options for multi-state resources"
 msgstr ""
 
 #. Tag: para
@@ -880,7 +930,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "An additional attribute of colocation constraints that specifies the role that <literal>rsc</literal> must be in. Allowed values: <emphasis>Started</emphasis>, <literal>Master</literal>, <literal>Slave</literal>. <indexterm> <primary>rsc-role</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary><tertiary>rsc-role</tertiary> </indexterm> <indexterm> <primary>Ordering</primary><secondary>rsc-role</secondary> </indexterm> <indexterm> <primary>rsc-role</primary> </indexterm>"
+msgid "started"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "An additional attribute of colocation constraints that specifies the role that <literal>rsc</literal> must be in. Allowed values: <literal>started</literal>, <literal>master</literal>, <literal>slave</literal>. <indexterm> <primary>rsc-role</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary><tertiary>rsc-role</tertiary> </indexterm> <indexterm> <primary>Ordering</primary><secondary>rsc-role</secondary> </indexterm> <indexterm> <primary>rsc-role</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -890,37 +945,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "An additional attribute of colocation constraints that specifies the role that <literal>with-rsc</literal> must be in. Allowed values: <emphasis>Started</emphasis>, <literal>Master</literal>, <literal>Slave</literal>. <indexterm> <primary>with-rsc-role</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary><tertiary>with-rsc-role</tertiary> </indexterm> <indexterm> <primary>Ordering</primary><secondary>with-rsc-role</secondary> </indexterm> <indexterm> <primary>with-rsc-role</primary> </indexterm>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "<literal>first-action</literal>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "An additional attribute of ordering constraints that specifies the action that the <literal>first</literal> resource must complete before executing the specified action for the <literal>then</literal> resource. Allowed values: <emphasis>start</emphasis>, <literal>stop</literal>, <literal>promote</literal>, <literal>demote</literal>. <indexterm> <primary>first-action</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary><tertiary>first-action</tertiary> </indexterm> <indexterm> <primary>Ordering</primary><secondary>first-action</secondary> </indexterm> <indexterm> <primary>first-action</primary> </indexterm>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "<literal>then-action</literal>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "An additional attribute of ordering constraints that specifies the action that the <literal>then</literal> resource can only execute after the <literal>first-action</literal> on the <literal>first</literal> resource has completed. Allowed values: <literal>start</literal>, <literal>stop</literal>, <literal>promote</literal>, <literal>demote</literal>. Defaults to the value (specified or implied) of <literal>first-action</literal>. <indexterm> <primary>then-action</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary><tertiary>then-action</tertiary> </indexterm> <indexterm> <primary>Ordering</primary><secondary>then-action</secondary> </indexterm> <indexterm> <primary>then-action</primary> </indexterm>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "In the example below, <literal>myApp</literal> will wait until one of the database copies has been started and promoted to master before being started itself. Only if no copies can be promoted will <literal>apache-stats</literal> be prevented from being active. Additionally, the database will wait for <literal>myApp</literal> to be stopped before it is demoted."
+msgid "An additional attribute of colocation constraints that specifies the role that <literal>with-rsc</literal> must be in. Allowed values: <literal>started</literal>, <literal>master</literal>, <literal>slave</literal>. <indexterm> <primary>with-rsc-role</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary><tertiary>with-rsc-role</tertiary> </indexterm> <indexterm> <primary>Ordering</primary><secondary>with-rsc-role</secondary> </indexterm> <indexterm> <primary>with-rsc-role</primary> </indexterm>"
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Example constraints involving multi-state resources"
+msgid "Constraints involving multi-state resources"
 msgstr ""
 
 #. Tag: programlisting
@@ -939,12 +969,114 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Colocation of a regular (or group) resource with a multi-state resource means that it can run on any machine with an active copy of the multi-state resource that is in the specified state (<literal>Master</literal> or <literal>Slave</literal>). In the example, the cluster will choose a location based on where database is running as a <literal>Master</literal>, and if there are multiple <literal>Master</literal> instances it will also factor in <literal>myApp</literal>'s own location preferences when deciding which location to choose."
+msgid "In the example above, <literal>myApp</literal> will wait until one of the database copies has been started and promoted to master before being started itself on the same node. Only if no copies can be promoted will <literal>myApp</literal> be prevented from being active. Additionally, the cluster will wait for <literal>myApp</literal> to be stopped before demoting the database."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Colocation with regular clones and other multi-state resources is also possible. In such cases, the set of allowed locations for the <literal>rsc</literal> clone is (after role filtering) limited to nodes on which the <literal>with-rsc</literal> multi-state resource is (or will be) in the specified role. Allocation is then performed as-per-normal."
+msgid "Colocation of a primitive or group resource with a multi-state resource means that it can run on any machine with an active copy of the multi-state resource that has the specified role (<literal>master</literal> or <literal>slave</literal>). In the example above, the cluster will choose a location based on where database is running as a <literal>master</literal>, and if there are multiple <literal>master</literal> instances it will also factor in <literal>myApp</literal>'s own location preferences when deciding which location to choose."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Colocation with regular clones and other multi-state resources is also possible. In such cases, the set of allowed locations for the <literal>rsc</literal> clone is (after role filtering) limited to nodes on which the <literal>with-rsc</literal> multi-state resource is (or will be) in the specified role. Placement is then performed as normal."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Using Multi-state Resources in Colocation Sets"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Additional colocation set options relevant to multi-state resources"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>role</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The role that <emphasis>all members</emphasis> of the set must be in. Allowed values: <literal>started</literal>, <literal>master</literal>, <literal>slave</literal>. <indexterm> <primary>role</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary><tertiary>role</tertiary> </indexterm> <indexterm> <primary>Ordering</primary><secondary>role</secondary> </indexterm> <indexterm> <primary>role</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In the following example <literal>B</literal>'s master must be located on the same node as <literal>A</literal>'s master. Additionally resources <literal>C</literal> and <literal>D</literal> must be located on the same node as <literal>A</literal>'s and <literal>B</literal>'s masters."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Colocate C and D with A’s and B’s master instances"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;constraints&gt;\n"
+"    &lt;rsc_colocation id=\"coloc-1\" score=\"INFINITY\" &gt;\n"
+"      &lt;resource_set id=\"colocated-set-example-1\" sequential=\"true\" role=\"Master\"&gt;\n"
+"        &lt;resource_ref id=\"A\"/&gt;\n"
+"        &lt;resource_ref id=\"B\"/&gt;\n"
+"      &lt;/resource_set&gt;\n"
+"      &lt;resource_set id=\"colocated-set-example-2\" sequential=\"true\"&gt;\n"
+"        &lt;resource_ref id=\"C\"/&gt;\n"
+"        &lt;resource_ref id=\"D\"/&gt;\n"
+"      &lt;/resource_set&gt;\n"
+"    &lt;/rsc_colocation&gt;\n"
+"&lt;/constraints&gt;"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Using Multi-state Resources in Ordering Sets"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Additional ordered set options relevant to multi-state resources"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>action</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "value of <literal>first-action</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "An additional attribute of ordering constraint sets that specifies the action that applies to <emphasis>all members</emphasis> of the set. Allowed values: <literal>start</literal>, <literal>stop</literal>, <literal>promote</literal>, <literal>demote</literal>. <indexterm> <primary>action</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary><tertiary>action</tertiary> </indexterm> <indexterm> <primary>Ordering</primary><secondary>action</secondary> </indexterm> <indexterm> <primary>action</primary> </indexterm>"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Start C and D after first promoting A and B"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;constraints&gt;\n"
+"    &lt;rsc_order id=\"order-1\" score=\"INFINITY\" &gt;\n"
+"      &lt;resource_set id=\"ordered-set-1\" sequential=\"true\" action=\"promote\"&gt;\n"
+"        &lt;resource_ref id=\"A\"/&gt;\n"
+"        &lt;resource_ref id=\"B\"/&gt;\n"
+"      &lt;/resource_set&gt;\n"
+"      &lt;resource_set id=\"ordered-set-2\" sequential=\"true\" action=\"start\"&gt;\n"
+"        &lt;resource_ref id=\"C\"/&gt;\n"
+"        &lt;resource_ref id=\"D\"/&gt;\n"
+"      &lt;/resource_set&gt;\n"
+"    &lt;/rsc_order&gt;\n"
+"&lt;/constraints&gt;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In the above example, <literal>B</literal> cannot be promoted to a master role until <literal>A</literal> has been promoted. Additionally, resources <literal>C</literal> and <literal>D</literal> must wait until <literal>A</literal> and <literal>B</literal> have been promoted before they can start."
 msgstr ""
 
 #. Tag: title
@@ -954,7 +1086,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm> <primary>resource-stickiness</primary><secondary>Multi-State</secondary> </indexterm> <indexterm> <primary>Multi-State</primary> </indexterm> To achieve a stable allocation pattern, multi-state resources are slightly sticky by default. If no value for <literal>resource-stickiness</literal> is provided, the multi-state resource will use a value of 1. Being a small value, it causes minimal disturbance to the score calculations of other resources but is enough to prevent Pacemaker from needlessly moving copies around the cluster."
+msgid "<indexterm> <primary>resource-stickiness</primary><secondary>Multi-State</secondary> </indexterm> <indexterm> <primary>Multi-State</primary> </indexterm> As with regular clones, multi-state resources are slightly sticky by default. See <xref linkend=\"s-clone-stickiness\" /> for details."
 msgstr ""
 
 #. Tag: title
@@ -964,17 +1096,17 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "During the start operation, most Resource Agent scripts should call the <literal>crm_master</literal> utility. This tool automatically detects both the resource and host and should be used to set a preference for being promoted. Based on this, <literal>master-max</literal>, and <literal>master-node-max</literal>, the instance(s) with the highest preference will be promoted."
+msgid "During the start operation, most resource agents should call the <literal>crm_master</literal> utility. This tool automatically detects both the resource and host and should be used to set a preference for being promoted. Based on this, <literal>master-max</literal>, and <literal>master-node-max</literal>, the instance(s) with the highest preference will be promoted."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The other alternative is to create a location constraint that indicates which nodes are most preferred as masters."
+msgid "An alternative is to create a location constraint that indicates which nodes are most preferred as masters."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Manually specifying which node should be promoted"
+msgid "Explicitly preferring node1 to be promoted to master"
 msgstr ""
 
 #. Tag: programlisting
@@ -988,22 +1120,27 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Multi-state Resource Agent Requirements"
+msgid "Requirements for Multi-state Resource Agents"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Since multi-state resources are an extension of cloned resources, all the requirements of Clones are also requirements of multi-state resources. Additionally, multi-state resources require two extra actions: <literal>demote</literal> and <literal>promote</literal>; these actions are responsible for changing the state of the resource. Like <literal>start</literal> and <literal>stop</literal>, they should return <literal>OCF_SUCCESS</literal> if they completed successfully or a relevant error code if they did not."
+msgid "Since multi-state resources are an extension of cloned resources, all the requirements for resource agents that support clones are also requirements for resource agents that support multi-state resources."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The states can mean whatever you wish, but when the resource is started, it must come up in the mode called <literal>Slave</literal>. From there the cluster will then decide which instances to promote to <literal>Master</literal>."
+msgid "Additionally, multi-state resources require two extra actions, <literal>demote</literal> and <literal>promote</literal>, which are responsible for changing the state of the resource. Like <literal>start</literal> and <literal>stop</literal>, they should return <literal>${OCF_SUCCESS}</literal> if they completed successfully or a relevant error code if they did not."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "In addition to the Clone requirements for monitor actions, agents must also <emphasis>accurately</emphasis> report which state they are in. The cluster relies on the agent to report its status (including role) accurately and does not indicate to the agent what role it currently believes it to be in."
+msgid "The states can mean whatever you wish, but when the resource is started, it must come up in the mode called <literal>slave</literal>. From there the cluster will decide which instances to promote to <literal>master</literal>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In addition to the clone requirements for monitor actions, agents must also <emphasis>accurately</emphasis> report which state they are in. The cluster relies on the agent to report its status (including role) accurately and does not indicate to the agent what role it currently believes it to be in."
 msgstr ""
 
 #. Tag: title
@@ -1073,12 +1210,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Like clones, supporting notifications requires the <literal>notify</literal> action to be implemented. Once supported the notify action will be passed a number of extra variables which, when combined with additional context, can be used to calculate the current state of the cluster and what is about to happen to it."
+msgid "Like clones, supporting notifications requires the <literal>notify</literal> action to be implemented. If supported, the notify action will be passed a number of extra variables which, when combined with additional context, can be used to calculate the current state of the cluster and what is about to happen to it."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Environment variables supplied with Master notify actions <footnote><para>Emphasized variables are specific to <literal>Master</literal> resources and all behave in the same manner as described for Clone resources.</para></footnote>"
+msgid "Environment variables supplied with multi-state notify actions <footnote><para>Emphasized variables are specific to <literal>Master</literal> resources, and all behave in the same manner as described for Clone resources.</para></footnote>"
 msgstr ""
 
 #. Tag: para
@@ -1183,7 +1320,7 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Multi-state - Proper Interpretation of Notification Environment Variables"
+msgid "Proper Interpretation of Multi-state Notification Environment Variables"
 msgstr ""
 
 #. Tag: title

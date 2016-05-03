@@ -1,0 +1,174 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2016-05-03 17:45-0500\n"
+"PO-Revision-Date: 2016-05-03 17:45-0500\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Guest Node Quick Example"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If you already know how to use Pacemaker, you’ll likely be able to grasp this new concept of guest nodes by reading through this quick example without having to sort through all the detailed walk-through steps. Here are the key configuration ingredients that make this possible using libvirt and KVM virtual guests. These steps strip everything down to the very basics. <indexterm> <primary>guest node</primary> </indexterm> <indexterm> <primary>node</primary><secondary>guest node</secondary> </indexterm> <indexterm> <primary>guest node</primary> </indexterm>"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Mile-High View of Configuration Steps"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Give each virtual machine that will be used as a guest node a static network address and unique hostname."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Put the same authentication key with the path <literal>/etc/pacemaker/authkey</literal> on every cluster node and virtual machine. This secures remote communication."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Run this command if you want to make a somewhat random key:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Install pacemaker_remote on every virtual machine, enabling it to start at boot, and if a local firewall is used, allow the node to accept connections on TCP port 3121."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "yum install pacemaker-remote resource-agents\n"
+"systemctl enable pacemaker_remote\n"
+"firewall-cmd --add-port 3121/tcp --permanent"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If you just want to see this work, you may want to simply disable the local firewall and put SELinux in permissive mode while testing. This creates security risks and should not be done on a production machine exposed to the Internet, but can be appropriate for a protected test machine."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Create a Pacemaker resource to launch each virtual machine, using the <emphasis role=\"strong\">remote-node</emphasis> meta-attribute to let Pacemaker know this will be a guest node capable of running resources."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# pcs resource create vm-guest1 VirtualDomain hypervisor=\"qemu:///system\" config=\"vm-guest1.xml\" meta remote-node=\"guest1\""
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The above command will create CIB XML similar to the following:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "      &lt;primitive class=\"ocf\" id=\"vm-guest1\" provider=\"heartbeat\" type=\"VirtualDomain\"&gt;\n"
+"        &lt;instance_attributes id=\"vm-guest-instance_attributes\"&gt;\n"
+"          &lt;nvpair id=\"vm-guest1-instance_attributes-hypervisor\" name=\"hypervisor\" value=\"qemu:///system\"/&gt;\n"
+"          &lt;nvpair id=\"vm-guest1-instance_attributes-config\" name=\"config\" value=\"guest1.xml\"/&gt;\n"
+"        &lt;/instance_attributes&gt;\n"
+"        &lt;operations&gt;\n"
+"          &lt;op id=\"vm-guest1-interval-30s\" interval=\"30s\" name=\"monitor\"/&gt;\n"
+"        &lt;/operations&gt;\n"
+"        &lt;meta_attributes id=\"vm-guest1-meta_attributes\"&gt;\n"
+"          &lt;nvpair id=\"vm-guest1-meta_attributes-remote-node\" name=\"remote-node\" value=\"guest1\"/&gt;\n"
+"        &lt;/meta_attributes&gt;\n"
+"      &lt;/primitive&gt;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In the example above, the meta-attribute <emphasis role=\"strong\">remote-node=\"guest1\"</emphasis> tells Pacemaker that this resource is a guest node with the hostname <emphasis role=\"strong\">guest1</emphasis>. The cluster will attempt to contact the virtual machine’s pacemaker_remote service at the hostname <emphasis role=\"strong\">guest1</emphasis> after it launches."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The ID of the resource creating the virtual machine (<emphasis role=\"strong\">vm-guest1</emphasis> in the above example) <emphasis>must</emphasis> be different from the virtual machine’s uname (<emphasis role=\"strong\">guest1</emphasis> in the above example). Pacemaker will create an implicit internal resource for the pacemaker_remote connection to the guest, named with the value of <emphasis role=\"strong\">remote-node</emphasis>, so that value cannot be used as the name of any other resource."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Using a Guest Node"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Guest nodes will show up in <literal>crm_mon</literal> output as normal:"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Example <literal>crm_mon</literal> output after <emphasis role=\"strong\">guest1</emphasis> is integrated into cluster"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "Last updated: Wed Mar 13 13:52:39 2013\n"
+"Last change: Wed Mar 13 13:25:17 2013 via crmd on node1\n"
+"Stack: corosync\n"
+"Current DC: node1 (24815808) - partition with quorum\n"
+"Version: 1.1.10\n"
+"2 Nodes configured, unknown expected votes\n"
+"2 Resources configured.\n"
+"\n"
+"Online: [ node1 guest1]\n"
+"\n"
+"vm-guest1     (ocf::heartbeat:VirtualDomain): Started node1"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Now, you could place a resource, such as a webserver, on <emphasis role=\"strong\">guest1</emphasis>:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# pcs resource create webserver apache params configfile=/etc/httpd/conf/httpd.conf op monitor interval=30s\n"
+"# pcs constraint location webserver prefers guest1"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Now, the crm_mon output would show:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "Last updated: Wed Mar 13 13:52:39 2013\n"
+"Last change: Wed Mar 13 13:25:17 2013 via crmd on node1\n"
+"Stack: corosync\n"
+"Current DC: node1 (24815808) - partition with quorum\n"
+"Version: 1.1.10\n"
+"2 Nodes configured, unknown expected votes\n"
+"2 Resources configured.\n"
+"\n"
+"Online: [ node1 guest1]\n"
+"\n"
+"vm-guest1     (ocf::heartbeat:VirtualDomain): Started node1\n"
+"webserver     (ocf::heartbeat::apache):       Started guest1"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "It is worth noting that after <emphasis role=\"strong\">guest1</emphasis> is integrated into the cluster, nearly all the Pacemaker command-line tools immediately become available to the guest node. This means things like <literal>crm_mon</literal>, <literal>crm_resource</literal>, and <literal>crm_attribute</literal> will work natively on the guest node, as long as the connection between the guest node and a cluster node exists. This is particularly important for any master/slave resources executing on the guest node that need access to <literal>crm_master</literal> to set transient attributes."
+msgstr ""
+

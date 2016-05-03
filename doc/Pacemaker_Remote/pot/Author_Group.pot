@@ -12,8 +12,23 @@ msgstr ""
 "Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#. Tag: title
+#. Tag: firstname
 #, no-c-format
-msgid "Preface"
+msgid "David"
+msgstr ""
+
+#. Tag: surname
+#, no-c-format
+msgid "Vossel"
+msgstr ""
+
+#. Tag: orgname
+#, no-c-format
+msgid "Red Hat"
+msgstr ""
+
+#. Tag: contrib
+#, no-c-format
+msgid "Primary author"
 msgstr ""
 

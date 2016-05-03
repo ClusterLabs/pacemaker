@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-10-17T05:19:02\n"
-"PO-Revision-Date: 2012-10-17T05:19:02\n"
+"POT-Creation-Date: 2016-05-03 17:45-0500\n"
+"PO-Revision-Date: 2016-05-03 17:45-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -34,7 +34,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Scores are calculated on a per-resource basis and any node with a negative score for a resource can’t run that resource. After calculating the scores for a resource, the cluster then chooses the node with the highest one."
+msgid "Scores are calculated per resource and node. Any node with a negative score for a resource can’t run that resource. The cluster places a resource on the node with the highest score for it."
 msgstr ""
 
 #. Tag: title
@@ -44,7 +44,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<literal>INFINITY</literal> is currently defined as 1,000,000 and addition/subtraction with it follows these three basic rules:"
+msgid "Pacemaker implements <literal>INFINITY</literal> (or equivalently, <literal>+INFINITY</literal>) internally as a score of 1,000,000. Addition and subtraction with it follow these three basic rules:"
 msgstr ""
 
 #. Tag: para
@@ -54,12 +54,27 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Any value - <literal>INFINITY</literal> = -<literal>INFINITY</literal>"
+msgid "Any value - <literal>INFINITY</literal> = <literal>-INFINITY</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<literal>INFINITY</literal> - <literal>INFINITY</literal> = -<literal>INFINITY</literal>"
+msgid "<literal>INFINITY</literal> - <literal>INFINITY</literal> = <literal>-INFINITY</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "What if you want to use a score higher than 1,000,000? Typically this possibility arises when someone wants to base the score on some external metric that might go above 1,000,000."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The short answer is you can’t."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The long answer is it is sometimes possible work around this limitation creatively. You may be able to set the score to some computed value based on the external metric rather than use the metric directly. For nodes, you can store the metric as a node attribute, and query the attribute when computing the score (possibly as part of a custom resource agent)."
 msgstr ""
 
 #. Tag: title
@@ -69,22 +84,37 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm> <primary>Location Constraints</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Constraints</secondary><tertiary>Location</tertiary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Location</secondary> </indexterm> <indexterm> <primary>Location</primary> </indexterm> There are two alternative strategies for specifying which nodes a resources can run on. One way is to say that by default they can run anywhere and then create location constraints for nodes that are not allowed. The other option is to have nodes \"opt-in\"… to start with nothing able to run anywhere and selectively enable allowed nodes."
+msgid "<indexterm> <primary>Location Constraints</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Constraints</secondary><tertiary>Location</tertiary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Location</secondary> </indexterm> <indexterm> <primary>Location</primary> </indexterm> <emphasis>Location constraints</emphasis> tell the cluster which nodes a resource can run on."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "There are two alternative strategies. One way is to say that, by default, resources can run anywhere, and then the location constraints specify nodes that are not allowed (an <emphasis>opt-out</emphasis> cluster). The other way is to start with nothing able to run anywhere, and use location constraints to selectively enable allowed nodes (an <emphasis>opt-in</emphasis> cluster)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Whether you should choose opt-in or opt-out depends on your personal preference and the make-up of your cluster. If most of your resources can run on most of the nodes, then an opt-out arrangement is likely to result in a simpler configuration. On the other-hand, if most resources can only run on a small subset of nodes, an opt-in configuration might be simpler."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Options"
+msgid "Location Properties"
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Options for Simple Location Constraints"
+msgid "Properties of a rsc_location Constraint"
 msgstr ""
 
 #. Tag: entry
 #, no-c-format
 msgid "Field"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Default"
 msgstr ""
 
 #. Tag: entry
@@ -129,12 +159,47 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Positive values indicate the resource should run on this node. Negative values indicate the resource should not run on this node."
+msgid "Positive values indicate the resource should run on this node. Negative values indicate the resource should not run on this node. Values of +/- <literal>INFINITY</literal> change \"should\"/\"should not\" to \"must\"/\"must not\". <indexterm> <primary>score</primary><secondary>Location Constraints</secondary> </indexterm> <indexterm> <primary>Location Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Location</secondary><tertiary>score</tertiary> </indexterm> <indexterm> <primary>Location</primary><secondary>score</secondary> </indexterm> <indexterm> <primary>score</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Values of +/- <literal>INFINITY</literal> change \"should\"/\"should not\" to \"must\"/\"must not\". <indexterm> <primary>score</primary><secondary>Location Constraints</secondary> </indexterm> <indexterm> <primary>Location Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Location</secondary><tertiary>score</tertiary> </indexterm> <indexterm> <primary>Location</primary><secondary>score</secondary> </indexterm> <indexterm> <primary>score</primary> </indexterm>"
+msgid "<literal>resource-discovery</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "always"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Whether Pacemaker should perform resource discovery (that is, check whether the resource is already running) for this resource on this node. This should normally be left as the default, so that rogue instances of a service can be stopped when they are running where they are not supposed to be. However, there are two situations where disabling resource discovery is a good idea: when a service is not installed on a node, discovery might return an error (properly written OCF agents will not, so this is usually only seen with other agent types); and when Pacemaker Remote is used to scale a cluster to hundreds of nodes, limiting resource discovery to allowed nodes can significantly boost performance."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>always:</literal> Always perform resource discovery for the specified resource on this node."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>never:</literal> Never perform resource discovery for the specified resource on this node. This option should generally be used with a -INFINITY score, although that is not strictly required."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>exclusive:</literal> Perform resource discovery for the specified resource only on this node (and other nodes similarly marked as <literal>exclusive</literal>). Multiple location constraints using <literal>exclusive</literal> discovery for the same resource across different nodes creates a subset of nodes resource-discovery is exclusive to. If a resource is marked for <literal>exclusive</literal> discovery on one or more nodes, that resource is only allowed to be placed within that subset of nodes."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>Resource Discovery</primary><secondary>Location Constraints</secondary> </indexterm> <indexterm> <primary>Location Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Location</secondary><tertiary>Resource Discovery</tertiary> </indexterm> <indexterm> <primary>Location</primary><secondary>Resource Discovery</secondary> </indexterm> <indexterm> <primary>Resource Discovery</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Setting resource-discovery to <literal>never</literal> or <literal>exclusive</literal> removes Pacemaker’s ability to detect and stop unwanted instances of a service running where it’s not supposed to be. It is up to the system administrator (you!) to make sure that the service can <emphasis>never</emphasis> be active on nodes without resource-discovery (such as by leaving the relevant software uninstalled)."
 msgstr ""
 
 #. Tag: title
@@ -152,19 +217,19 @@ msgstr ""
 msgid "To create an opt-in cluster, start by preventing resources from running anywhere by default:"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# crm_attribute --attr-name symmetric-cluster --attr-value false"
+msgid "# crm_attribute --name symmetric-cluster --update false"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Then start enabling nodes. The following fragment says that the web server prefers <literal>sles-1</literal>, the database prefers <literal>sles-2</literal> and both can fail over to <literal>sles-3</literal> if their most preferred node fails."
+msgid "Then start enabling nodes. The following fragment says that the web server prefers <emphasis role=\"strong\">sles-1</emphasis>, the database prefers <emphasis role=\"strong\">sles-2</emphasis> and both can fail over to <emphasis role=\"strong\">sles-3</emphasis> if their most preferred node fails."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Example set of opt-in location constraints"
+msgid "Opt-in location constraints for two resources"
 msgstr ""
 
 #. Tag: programlisting
@@ -192,9 +257,9 @@ msgstr ""
 msgid "To create an opt-out cluster, start by allowing resources to run anywhere by default:"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# crm_attribute --attr-name symmetric-cluster --attr-value true"
+msgid "# crm_attribute --name symmetric-cluster --update true"
 msgstr ""
 
 #. Tag: para
@@ -204,7 +269,7 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Example set of opt-out location constraints"
+msgid "Opt-out location constraints for two resources"
 msgstr ""
 
 #. Tag: programlisting
@@ -215,11 +280,6 @@ msgid "&lt;constraints&gt;\n"
 "    &lt;rsc_location id=\"loc-3-dont-run\" rsc=\"Database\" node=\"sles-1\" score=\"-INFINITY\"/&gt;\n"
 "    &lt;rsc_location id=\"loc-4\" rsc=\"Database\" node=\"sles-2\" score=\"200\"/&gt;\n"
 "&lt;/constraints&gt;"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Whether you should choose opt-in or opt-out depends both on your personal preference and the make-up of your cluster. If most of your resources can run on most of the nodes, then an opt-out arrangement is likely to result in a simpler configuration. On the other-hand, if most resources can only run on a small subset of nodes an opt-in configuration might be simpler."
 msgstr ""
 
 #. Tag: title
@@ -234,7 +294,7 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Example of two resources that prefer two nodes equally"
+msgid "Constraints where a resource prefers two nodes equally"
 msgstr ""
 
 #. Tag: programlisting
@@ -250,22 +310,37 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "In the example above, assuming no other constraints and an inactive cluster, Webserver would probably be placed on sles-1 and Database on sles-2. It would likely have placed Webserver based on the node’s uname and Database based on the desire to spread the resource load evenly across the cluster. However other factors can also be involved in more complex configurations."
+msgid "In the example above, assuming no other constraints and an inactive cluster, <literal>Webserver</literal> would probably be placed on <literal>sles-1</literal> and <literal>Database</literal> on <literal>sles-2</literal>. It would likely have placed <literal>Webserver</literal> based on the node’s uname and <literal>Database</literal> based on the desire to spread the resource load evenly across the cluster. However other factors can also be involved in more complex configurations."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Specifying in which Order Resources Should Start/Stop"
+msgid "Specifying the Order in which Resources Should Start/Stop"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm> <primary>Resource</primary><secondary>Constraints</secondary><tertiary>Ordering</tertiary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary> </indexterm> <indexterm> <primary>Ordering</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Start Order</secondary> </indexterm> <indexterm> <primary>Start Order</primary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> The way to specify the order in which resources should start is by creating <literal>rsc_order</literal> constraints."
+msgid "<indexterm> <primary>Resource</primary><secondary>Constraints</secondary><tertiary>Ordering</tertiary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary> </indexterm> <indexterm> <primary>Ordering</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Start Order</secondary> </indexterm> <indexterm> <primary>Start Order</primary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>Ordering constraints</emphasis> tell the cluster the order in which resources should start."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Ordering constraints affect <emphasis>only</emphasis> the ordering of resources; they do <emphasis>not</emphasis> require that the resources be placed on the same node. If you want resources to be started on the same node <emphasis>and</emphasis> in a specific order, you need both an ordering constraint <emphasis>and</emphasis> a colocation constraint (see <xref linkend=\"s-resource-colocation\" />), or alternatively, a group (see <xref linkend=\"group-resources\" />)."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Properties of an Ordering Constraint"
+msgid "Ordering Properties"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Properties of a rsc_order Constraint"
 msgstr ""
 
 #. Tag: para
@@ -280,7 +355,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The name of a resource that must be started before the <literal>then</literal> resource is allowed to. <indexterm> <primary>first</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary><tertiary>first</tertiary> </indexterm> <indexterm> <primary>Ordering</primary><secondary>first</secondary> </indexterm> <indexterm> <primary>first</primary> </indexterm>"
+msgid "Name of the resource that the <literal>then</literal> resource depends on <indexterm> <primary>first</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary><tertiary>first</tertiary> </indexterm> <indexterm> <primary>Ordering</primary><secondary>first</secondary> </indexterm> <indexterm> <primary>first</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -290,7 +365,37 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The name of a resource. This resource will start after the <literal>first</literal> resource. <indexterm> <primary>then</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary><tertiary>then</tertiary> </indexterm> <indexterm> <primary>Ordering</primary><secondary>then</secondary> </indexterm> <indexterm> <primary>then</primary> </indexterm>"
+msgid "Name of the dependent resource <indexterm> <primary>then</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary><tertiary>then</tertiary> </indexterm> <indexterm> <primary>Ordering</primary><secondary>then</secondary> </indexterm> <indexterm> <primary>then</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>first-action</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "start"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The action that the <literal>first</literal> resource must complete before <literal>then-action</literal> can be initiated for the <literal>then</literal> resource. Allowed values: <literal>start</literal>, <literal>stop</literal>, <literal>promote</literal>, <literal>demote</literal>. <indexterm> <primary>first-action</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary><tertiary>first-action</tertiary> </indexterm> <indexterm> <primary>Ordering</primary><secondary>first-action</secondary> </indexterm> <indexterm> <primary>first-action</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>then-action</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "value of <literal>first-action</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The action that the <literal>then</literal> resource can execute only after the <literal>first-action</literal> on the <literal>first</literal> resource has completed. Allowed values: <literal>start</literal>, <literal>stop</literal>, <literal>promote</literal>, <literal>demote</literal>. <indexterm> <primary>then-action</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary><tertiary>then-action</tertiary> </indexterm> <indexterm> <primary>Ordering</primary><secondary>then-action</secondary> </indexterm> <indexterm> <primary>then-action</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -300,22 +405,22 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "How to enforce the constraint. (<emphasis>Since 1.1.2</emphasis>)"
+msgid "How to enforce the constraint. Allowed values:"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "* Optional - Just a suggestion. Only applies if both resources are starting/stopping."
+msgid "<literal>Optional:</literal> Just a suggestion. Only applies if both resources are executing the specified actions. Any change in state by the <literal>first</literal> resource will have no effect on the <literal>then</literal> resource."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "* Mandatory - Always. If <emphasis>first</emphasis> is stopping or cannot be started, <emphasis>then</emphasis> must be stopped."
+msgid "<literal>Mandatory:</literal> Always. If <literal>first</literal> does not perform <literal>first-action</literal>, <literal>then</literal> will not be allowed to performed <literal>then-action</literal>. If <literal>first</literal> is restarted, <literal>then</literal> (if running) will be stopped beforehand and started afterward."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "* Serialize - Ensure that no two stop/start actions occur concurrently for a set of resources."
+msgid "<literal>Serialize:</literal> Ensure that no two stop/start actions occur concurrently for the resources. <literal>First</literal> and <literal>then</literal> can start in either order, but one must complete starting before the other can be started. A typical use case is when resource start-up puts a high load on the host."
 msgstr ""
 
 #. Tag: para
@@ -330,60 +435,45 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If true, which is the default, stop the resources in the reverse order. Default value: <emphasis>true</emphasis> <indexterm> <primary>symmetrical</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Ordering Constraints</primary><secondary>symmetrical</secondary> </indexterm> <indexterm> <primary>symmetrical</primary> </indexterm>"
+msgid "TRUE"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If true, the reverse of the constraint applies for the opposite action (for example, if B starts after A starts, then B stops before A stops). <indexterm> <primary>symmetrical</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Ordering Constraints</primary><secondary>symmetrical</secondary> </indexterm> <indexterm> <primary>symmetrical</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>Promote</literal> and <literal>demote</literal> apply to the master role of <link linkend=\"s-resource-multistate\">multi-state</link> resources."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Mandatory Ordering"
+msgid "Optional and mandatory ordering"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "When the <literal>then</literal> resource cannot run without the <literal>first</literal> resource being active, one should use mandatory constraints. To specify a constraint is mandatory, use scores greater than zero. This will ensure that the then resource will react when the first resource changes state."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "If the <literal>first</literal> resource was running and is stopped, the <literal>then</literal> resource will also be stopped (if it is running)."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "If the <literal>first</literal> resource was not running and cannot be started, the <literal>then</literal> resource will be stopped (if it is running)."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "If the <literal>first</literal> resource is (re)started while the <literal>then</literal> resource is running, the <literal>then</literal> resource will be stopped and restarted."
+msgid "Here is an example of ordering constraints where <literal>Database</literal> <emphasis>must</emphasis> start before <literal>Webserver</literal>, and <literal>IP</literal> <emphasis>should</emphasis> start before <literal>Webserver</literal> if they both need to be started:"
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Advisory Ordering"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "On the other hand, when <literal>score=\"0\"</literal> is specified for a constraint, the constraint is considered optional and only has an effect when both resources are stopping and/or starting. Any change in state by the <literal>first</literal> resource will have no effect on the <literal>then</literal> resource."
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "Example of an optional and mandatory ordering constraint"
+msgid "Optional and mandatory ordering constraints"
 msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
 msgid "&lt;constraints&gt;\n"
-"    &lt;rsc_order id=\"order-1\" first=\"Database\" then=\"Webserver\" /&gt;\n"
-"    &lt;rsc_order id=\"order-2\" first=\"IP\" then=\"Webserver\" score=\"0\"/&gt;\n"
+"&lt;rsc_order id=\"order-1\" first=\"IP\" then=\"Webserver\" kind=\"Optional\"/&gt;\n"
+"&lt;rsc_order id=\"order-2\" first=\"Database\" then=\"Webserver\" kind=\"Mandatory\" /&gt;\n"
 "&lt;/constraints&gt;"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Some additional information on ordering constraints can be found in the document <ulink url=\"http://clusterlabs.org/doc/Ordering_Explained.pdf\">Ordering Explained</ulink>."
+msgid "Because the above example lets <literal>symmetrical</literal> default to TRUE, <literal>Webserver</literal> must be stopped before <literal>Database</literal> can be stopped, and <literal>Webserver</literal> should be stopped before <literal>IP</literal> if they both need to be stopped."
 msgstr ""
 
 #. Tag: title
@@ -393,32 +483,42 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm> <primary>Resource</primary><secondary>Constraints</secondary><tertiary>Colocation</tertiary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Colocation</secondary> </indexterm> <indexterm> <primary>Colocation</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Location Relative to other Resources</secondary> </indexterm> <indexterm> <primary>Location Relative to other Resources</primary> </indexterm> When the location of one resource depends on the location of another one, we call this colocation."
+msgid "<indexterm> <primary>Resource</primary><secondary>Constraints</secondary><tertiary>Colocation</tertiary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Colocation</secondary> </indexterm> <indexterm> <primary>Colocation</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Location Relative to other Resources</secondary> </indexterm> <indexterm> <primary>Location Relative to other Resources</primary> </indexterm> <emphasis>Colocation constraints</emphasis> tell the cluster that the location of one resource depends on the location of another one."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "There is an important side-effect of creating a colocation constraint between two resources: it affects the order in which resources are assigned to a node. If you think about it, it’s somewhat obvious. You can’t place A relative to B unless you know where B is. <footnote><para> While the human brain is sophisticated enough to read the constraint in any order and choose the correct one depending on the situation, the cluster is not quite so smart. Yet. </para></footnote>"
+msgid "Colocation has an important side-effect: it affects the order in which resources are assigned to a node. Think about it: You can’t place A relative to B unless you know where B is. <footnote><para> While the human brain is sophisticated enough to read the constraint in any order and choose the correct one depending on the situation, the cluster is not quite so smart. Yet. </para></footnote>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "So when you are creating colocation constraints, it is important to consider whether you should colocate A with B or B with A."
+msgid "So when you are creating colocation constraints, it is important to consider whether you should colocate A with B, or B with A."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Another thing to keep in mind is that, assuming A is collocated with B, the cluster will also take into account A’s preferences when deciding which node to choose for B."
+msgid "Another thing to keep in mind is that, assuming A is colocated with B, the cluster will take into account A’s preferences when deciding which node to choose for B."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "For a detailed look at exactly how this occurs, see the <ulink url=\"http://www.clusterlabs.org/mediawiki/images/6/61/Colocation_Explained.pdf\">Colocation Explained</ulink> document."
+msgid "For a detailed look at exactly how this occurs, see <ulink url=\"http://clusterlabs.org/doc/Colocation_Explained.pdf\">Colocation Explained</ulink>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Colocation constraints affect <emphasis>only</emphasis> the placement of resources; they do <emphasis>not</emphasis> require that the resources be started in a particular order. If you want resources to be started on the same node <emphasis>and</emphasis> in a specific order, you need both an ordering constraint (see <xref linkend=\"s-resource-ordering\" />) <emphasis>and</emphasis> a colocation constraint, or alternatively, a group (see <xref linkend=\"group-resources\" />)."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Properties of a Collocation Constraint"
+msgid "Colocation Properties"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Properties of a rsc_colocation Constraint"
 msgstr ""
 
 #. Tag: para
@@ -428,7 +528,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The colocation source. If the constraint cannot be satisfied, the cluster may decide not to allow the resource to run at all. <indexterm> <primary>rsc</primary><secondary>Colocation Constraints</secondary> </indexterm> <indexterm> <primary>Colocation Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Colocation</secondary><tertiary>rsc</tertiary> </indexterm> <indexterm> <primary>Colocation</primary><secondary>rsc</secondary> </indexterm> <indexterm> <primary>rsc</primary> </indexterm>"
+msgid "The name of a resource that should be located relative to <literal>with-rsc</literal>. <indexterm> <primary>rsc</primary><secondary>Colocation Constraints</secondary> </indexterm> <indexterm> <primary>Colocation Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Colocation</secondary><tertiary>rsc</tertiary> </indexterm> <indexterm> <primary>Colocation</primary><secondary>rsc</secondary> </indexterm> <indexterm> <primary>rsc</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -438,12 +538,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The colocation target. The cluster will decide where to put this resource first and then decide where to put the resource in the <literal>rsc</literal> field. <indexterm> <primary>with-rsc</primary><secondary>Colocation Constraints</secondary> </indexterm> <indexterm> <primary>Colocation Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Colocation</secondary><tertiary>with-rsc</tertiary> </indexterm> <indexterm> <primary>Colocation</primary><secondary>with-rsc</secondary> </indexterm> <indexterm> <primary>with-rsc</primary> </indexterm>"
+msgid "The name of the resource used as the colocation target. The cluster will decide where to put this resource first and then decide where to put <literal>rsc</literal>. <indexterm> <primary>with-rsc</primary><secondary>Colocation Constraints</secondary> </indexterm> <indexterm> <primary>Colocation Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Colocation</secondary><tertiary>with-rsc</tertiary> </indexterm> <indexterm> <primary>Colocation</primary><secondary>with-rsc</secondary> </indexterm> <indexterm> <primary>with-rsc</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Positive values indicate the resource should run on the same node. Negative values indicate the resources should not run on the same node. Values of +/- <literal>INFINITY</literal> change \"should\" to \"must\". <indexterm> <primary>score</primary><secondary>Colocation Constraints</secondary> </indexterm> <indexterm> <primary>Colocation Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Colocation</secondary><tertiary>score</tertiary> </indexterm> <indexterm> <primary>Colocation</primary><secondary>score</secondary> </indexterm> <indexterm> <primary>score</primary> </indexterm>"
+msgid "Positive values indicate the resources should run on the same node. Negative values indicate the resources should run on different nodes. Values of +/- <literal>INFINITY</literal> change \"should\" to \"must\". <indexterm> <primary>score</primary><secondary>Colocation Constraints</secondary> </indexterm> <indexterm> <primary>Colocation Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Colocation</secondary><tertiary>score</tertiary> </indexterm> <indexterm> <primary>Colocation</primary><secondary>score</secondary> </indexterm> <indexterm> <primary>score</primary> </indexterm>"
 msgstr ""
 
 #. Tag: title
@@ -453,47 +553,52 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Mandatory placement occurs any time the constraint’s score is <literal>+INFINITY</literal> or <literal>-INFINITY</literal>. In such cases, if the constraint can’t be satisfied, then the <literal>rsc</literal> resource is not permitted to run. For <literal>score=INFINITY</literal>, this includes cases where the <literal>with-rsc</literal> resource is not active."
+msgid "Mandatory placement occurs when the constraint’s score is <literal>+INFINITY</literal> or <literal>-INFINITY</literal>. In such cases, if the constraint can’t be satisfied, then the <literal>rsc</literal> resource is not permitted to run. For <literal>score=INFINITY</literal>, this includes cases where the <literal>with-rsc</literal> resource is not active."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If you need <literal>resource1</literal> to always run on the same machine as <literal>resource2</literal>, you would add the following constraint:"
+msgid "If you need resource <literal>A</literal> to always run on the same machine as resource <literal>B</literal>, you would add the following constraint:"
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "An example colocation constraint"
+msgid "Mandatory colocation constraint for two resources"
 msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "&lt;rsc_colocation id=\"colocate\" rsc=\"resource1\" with-rsc=\"resource2\" score=\"INFINITY\"/&gt;"
+msgid "&lt;rsc_colocation id=\"colocate\" rsc=\"A\" with-rsc=\"B\" score=\"INFINITY\"/&gt;"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Remember, because <literal>INFINITY</literal> was used, if <literal>resource2</literal> can’t run on any of the cluster nodes (for whatever reason) then <literal>resource1</literal> will not be allowed to run."
+msgid "Remember, because <literal>INFINITY</literal> was used, if <literal>B</literal> can’t run on any of the cluster nodes (for whatever reason) then <literal>A</literal> will not be allowed to run. Whether <literal>A</literal> is running or not has no effect on <literal>B</literal>."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Alternatively, you may want the opposite… that <literal>resource1</literal> cannot run on the same machine as <literal>resource2</literal>. In this case use <literal>score=\"-INFINITY\"</literal>"
+msgid "Alternatively, you may want the opposite — that <literal>A</literal> <emphasis>cannot</emphasis> run on the same machine as <literal>B</literal>. In this case, use <literal>score=\"-INFINITY\"</literal>."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "An example anti-colocation constraint"
+msgid "Mandatory anti-colocation constraint for two resources"
 msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "&lt;rsc_colocation id=\"anti-colocate\" rsc=\"resource1\" with-rsc=\"resource2\" score=\"-INFINITY\"/&gt;"
+msgid "&lt;rsc_colocation id=\"anti-colocate\" rsc=\"A\" with-rsc=\"B\" score=\"-INFINITY\"/&gt;"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Again, by specifying <literal>-INFINTY</literal>, the constraint is binding. So if the only place left to run is where <literal>resource2</literal> already is, then <literal>resource1</literal> may not run anywhere."
+msgid "Again, by specifying <literal>-INFINITY</literal>, the constraint is binding. So if the only place left to run is where <literal>B</literal> already is, then <literal>A</literal> may not run anywhere."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "As with <literal>INFINITY</literal>, <literal>B</literal> can run even if <literal>A</literal> is stopped. However, in this case <literal>A</literal> also can run if <literal>B</literal> is stopped, because it still meets the constraint of <literal>A</literal> and <literal>B</literal> not running on the same node."
 msgstr ""
 
 #. Tag: title
@@ -503,22 +608,116 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If mandatory placement is about \"must\" and \"must not\", then advisory placement is the \"I’d prefer if\" alternative. For constraints with scores greater than <literal>-INFINITY</literal> and less than <literal>INFINITY</literal>, the cluster will try and accommodate your wishes but may ignore them if the alternative is to stop some of the cluster resources."
+msgid "If mandatory placement is about \"must\" and \"must not\", then advisory placement is the \"I’d prefer if\" alternative. For constraints with scores greater than <literal>-INFINITY</literal> and less than <literal>INFINITY</literal>, the cluster will try to accommodate your wishes but may ignore them if the alternative is to stop some of the cluster resources."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Like in life, where if enough people prefer something it effectively becomes mandatory, advisory colocation constraints can combine with other elements of the configuration to behave as if they were mandatory."
+msgid "As in life, where if enough people prefer something it effectively becomes mandatory, advisory colocation constraints can combine with other elements of the configuration to behave as if they were mandatory."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "An example advisory-only colocation constraint"
+msgid "Advisory colocation constraint for two resources"
 msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "&lt;rsc_colocation id=\"colocate-maybe\" rsc=\"resource1\" with-rsc=\"resource2\" score=\"500\"/&gt;"
+msgid "&lt;rsc_colocation id=\"colocate-maybe\" rsc=\"A\" with-rsc=\"B\" score=\"500\"/&gt;"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Resource Sets"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>Resource sets</emphasis> allow multiple resources to be affected by a single constraint."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "A set of 3 resources"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;resource_set id=\"resource-set-example\"&gt;\n"
+"   &lt;resource_ref id=\"A\"/&gt;\n"
+"   &lt;resource_ref id=\"B\"/&gt;\n"
+"   &lt;resource_ref id=\"C\"/&gt;\n"
+"&lt;/resource_set&gt;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Resource sets are valid inside <literal>rsc_location</literal>, <literal>rsc_order</literal> (see <xref linkend=\"s-resource-sets-ordering\" />), <literal>rsc_colocation</literal> (see <xref linkend=\"s-resource-sets-colocation\" />), and <literal>rsc_ticket</literal> (see <xref linkend=\"s-ticket-constraints\" />) constraints."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A resource set has a number of properties that can be set, though not all have an effect in all contexts."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Properties of a resource_set"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A unique name for the set <indexterm> <primary>id</primary><secondary>Resource Sets</secondary> </indexterm> <indexterm> <primary>Resource Sets</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Resource Sets</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>Resource Sets</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>sequential</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "true"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Whether the members of the set must be acted on in order. Meaningful within <literal>rsc_order</literal> and <literal>rsc_colocation</literal>. <indexterm> <primary>sequential</primary><secondary>Resource Sets</secondary> </indexterm> <indexterm> <primary>Resource Sets</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Resource Sets</secondary><tertiary>sequential</tertiary> </indexterm> <indexterm> <primary>Resource Sets</primary><secondary>sequential</secondary> </indexterm> <indexterm> <primary>sequential</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>require-all</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Whether all members of the set must be active before continuing. Meaningful within <literal>rsc_order</literal>. <indexterm> <primary>require-all</primary><secondary>Resource Sets</secondary> </indexterm> <indexterm> <primary>Resource Sets</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Resource Sets</secondary><tertiary>require-all</tertiary> </indexterm> <indexterm> <primary>Resource Sets</primary><secondary>require-all</secondary> </indexterm> <indexterm> <primary>require-all</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>role</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Limit the effect of the constraint to the specified role. Meaningful within <literal>rsc_location</literal>, <literal>rsc_colocation</literal> and <literal>rsc_ticket</literal>. <indexterm> <primary>role</primary><secondary>Resource Sets</secondary> </indexterm> <indexterm> <primary>Resource Sets</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Resource Sets</secondary><tertiary>role</tertiary> </indexterm> <indexterm> <primary>Resource Sets</primary><secondary>role</secondary> </indexterm> <indexterm> <primary>role</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>action</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Limit the effect of the constraint to the specified action. Meaningful within <literal>rsc_order</literal>. <indexterm> <primary>action</primary><secondary>Resource Sets</secondary> </indexterm> <indexterm> <primary>Resource Sets</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Resource Sets</secondary><tertiary>action</tertiary> </indexterm> <indexterm> <primary>Resource Sets</primary><secondary>action</secondary> </indexterm> <indexterm> <primary>action</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>Advanced use only.</emphasis> Use a specific score for this set within the constraint. <indexterm> <primary>score</primary><secondary>Resource Sets</secondary> </indexterm> <indexterm> <primary>Resource Sets</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Resource Sets</secondary><tertiary>score</tertiary> </indexterm> <indexterm> <primary>Resource Sets</primary><secondary>score</secondary> </indexterm> <indexterm> <primary>score</primary> </indexterm>"
 msgstr ""
 
 #. Tag: title
@@ -547,22 +746,17 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Ordered Set"
+msgid "Visual representation of the four resources' start order for the above constraints"
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Visual representation of the four resources' start order for the above constraints"
-msgstr ""
-
-#. Tag: phrase
-#, no-c-format
-msgid "Ordered set"
+msgid "Ordered Set"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "To simplify this situation, there is an alternate format for ordering constraints:"
+msgid "To simplify this situation, resource sets (see <xref linkend=\"s-resource-sets\" />) can be used within ordering constraints:"
 msgstr ""
 
 #. Tag: title
@@ -586,27 +780,22 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Resource sets have the same ordering semantics as groups."
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "A group resource with the equivalent ordering rules"
-msgstr ""
-
-#. Tag: programlisting
-#, no-c-format
-msgid "&lt;group id=\"dummy\"&gt;\n"
-"    &lt;primitive id=\"A\" .../&gt;\n"
-"    &lt;primitive id=\"B\" .../&gt;\n"
-"    &lt;primitive id=\"C\" .../&gt;\n"
-"    &lt;primitive id=\"D\" .../&gt;\n"
-"&lt;/group&gt;"
+msgid "While the set-based format is not less verbose, it is significantly easier to get right and maintain."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "While the set-based format is not less verbose, it is significantly easier to get right and maintain. It can also be expanded to allow ordered sets of (un)ordered resources. In the example below, <literal>rscA</literal> and <literal>rscB</literal> can both start in parallel, as can <literal>rscC</literal> and <literal>rscD</literal>, however <literal>rscC</literal> and <literal>rscD</literal> can only start once <emphasis>both</emphasis> <literal>rscA</literal> <emphasis>and</emphasis> <literal>rscB</literal> are active."
+msgid "If you use a higher-level tool, pay attention to how it exposes this functionality. Depending on the tool, creating a set <literal>A B</literal> may be equivalent to <literal>A then B</literal>, or <literal>B then A</literal>."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Ordering Multiple Sets"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The syntax can be expanded to allow ordered sets of (un)ordered resources. In the example below, <literal>A</literal> and <literal>B</literal> can both start in parallel, as can <literal>C</literal> and <literal>D</literal>, however <literal>C</literal> and <literal>D</literal> can only start once <emphasis>both</emphasis> <literal>A</literal> <emphasis>and</emphasis> <literal>B</literal> are active."
 msgstr ""
 
 #. Tag: title
@@ -632,17 +821,7 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Two Sets of Unordered Resources"
-msgstr ""
-
-#. Tag: title
-#, no-c-format
 msgid "Visual representation of the start order for two ordered sets of unordered resources"
-msgstr ""
-
-#. Tag: phrase
-#, no-c-format
-msgid "Two ordered sets"
 msgstr ""
 
 #. Tag: para
@@ -677,58 +856,108 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Three Resources Sets"
-msgstr ""
-
-#. Tag: title
-#, no-c-format
 msgid "Visual representation of the start order for the three sets defined above"
 msgstr ""
 
-#. Tag: phrase
+#. Tag: para
 #, no-c-format
-msgid "Three ordered sets"
+msgid "An ordered set with <literal>sequential=false</literal> makes sense only if there is another set in the constraint. Otherwise, the constraint has no effect."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Collocating Sets of Resources"
+msgid "Resource Set OR Logic"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Another common situation is for an administrator to create a set of collocated resources. Previously this was possible either by defining a resource group (See <xref linkend=\"group-resources\" />) which could not always accurately express the design; or by defining each relationship as an individual constraint, causing a constraint explosion as the number of resources and combinations grew."
+msgid "The unordered set logic discussed so far has all been \"AND\" logic. To illustrate this take the 3 resource set figure in the previous section. Those sets can be expressed, <literal>(A and B) then (C) then (D) then (E and F)</literal>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Say for example we want to change the first set, <literal>(A and B)</literal>, to use \"OR\" logic so the sets look like this: <literal>(A or B) then (C) then (D) then (E and F)</literal>. This functionality can be achieved through the use of the <literal>require-all</literal> option. This option defaults to TRUE which is why the \"AND\" logic is used by default. Setting <literal>require-all=false</literal> means only one resource in the set needs to be started before continuing on to the next set."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "A chain of collocated resources"
+msgid "Resource Set \"OR\" logic: Three ordered sets, where the first set is internally unordered with \"OR\" logic"
 msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
 msgid "&lt;constraints&gt;\n"
-"    &lt;rsc_colocation id=\"coloc-1\" rsc=\"B\" with-rsc=\"A\" score=\"INFINITY\"/&gt;\n"
+"    &lt;rsc_order id=\"order-1\"&gt;\n"
+"      &lt;resource_set id=\"ordered-set-1\" sequential=\"false\" require-all=\"false\"&gt;\n"
+"        &lt;resource_ref id=\"A\"/&gt;\n"
+"        &lt;resource_ref id=\"B\"/&gt;\n"
+"      &lt;/resource_set&gt;\n"
+"      &lt;resource_set id=\"ordered-set-2\" sequential=\"true\"&gt;\n"
+"        &lt;resource_ref id=\"C\"/&gt;\n"
+"        &lt;resource_ref id=\"D\"/&gt;\n"
+"      &lt;/resource_set&gt;\n"
+"      &lt;resource_set id=\"ordered-set-3\" sequential=\"false\"&gt;\n"
+"        &lt;resource_ref id=\"E\"/&gt;\n"
+"        &lt;resource_ref id=\"F\"/&gt;\n"
+"      &lt;/resource_set&gt;\n"
+"    &lt;/rsc_order&gt;\n"
+"&lt;/constraints&gt;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "An ordered set with <literal>require-all=false</literal> makes sense only in conjunction with <literal>sequential=false</literal>. Think of it like this: <literal>sequential=false</literal> modifies the set to be an unordered set using \"AND\" logic by default, and adding <literal>require-all=false</literal> flips the unordered set’s \"AND\" logic to \"OR\" logic."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Colocating Sets of Resources"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Another common situation is for an administrator to create a set of colocated resources."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "One way to do this would be to define a resource group (see <xref linkend=\"group-resources\" />), but that cannot always accurately express the desired state."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Another way would be to define each relationship as an individual constraint, but that causes a constraint explosion as the number of resources and combinations grow. An example of this approach:"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Chain of colocated resources"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;constraints&gt;\n"
+"    &lt;rsc_colocation id=\"coloc-1\" rsc=\"D\" with-rsc=\"C\" score=\"INFINITY\"/&gt;\n"
 "    &lt;rsc_colocation id=\"coloc-2\" rsc=\"C\" with-rsc=\"B\" score=\"INFINITY\"/&gt;\n"
-"    &lt;rsc_colocation id=\"coloc-3\" rsc=\"D\" with-rsc=\"C\" score=\"INFINITY\"/&gt;\n"
+"    &lt;rsc_colocation id=\"coloc-3\" rsc=\"B\" with-rsc=\"A\" score=\"INFINITY\"/&gt;\n"
 "&lt;/constraints&gt;"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "To make things easier, we allow an alternate form of colocation constraints using <literal>resource_sets</literal>. Just like the expanded version, a resource that can’t be active also prevents any resource that must be collocated with it from being active. For example, if <literal>B was</literal> not able to run, then both <literal>C (+and by inference +D)</literal> must also remain stopped."
+msgid "To make things easier, resource sets (see <xref linkend=\"s-resource-sets\" />) can be used within colocation constraints. As with the chained version, a resource that can’t be active prevents any resource that must be colocated with it from being active. For example, if <literal>B</literal> is not able to run, then both <literal>C</literal> and by inference <literal>D</literal> must also remain stopped. Here is an example <literal>resource_set</literal>:"
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "The equivalent colocation chain expressed using <literal>resource_sets</literal>"
+msgid "Equivalent colocation chain expressed using <literal>resource_set</literal>"
 msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
 msgid "&lt;constraints&gt;\n"
 "    &lt;rsc_colocation id=\"coloc-1\" score=\"INFINITY\" &gt;\n"
-"      &lt;resource_set id=\"collocated-set-example\" sequential=\"true\"&gt;\n"
+"      &lt;resource_set id=\"colocated-set-example\" sequential=\"true\"&gt;\n"
 "        &lt;resource_ref id=\"A\"/&gt;\n"
 "        &lt;resource_ref id=\"B\"/&gt;\n"
 "        &lt;resource_ref id=\"C\"/&gt;\n"
@@ -740,34 +969,29 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Resource sets have the same colocation semantics as groups."
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "A group resource with the equivalent colocation rules"
+msgid "If you use a higher-level tool, pay attention to how it exposes this functionality. Depending on the tool, creating a set <literal>A B</literal> may be equivalent to <literal>A with B</literal>, or <literal>B with A</literal>."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "This notation can also be used in this context to tell the cluster that a set of resources must all be located with a common peer, but have no dependencies on each other. In this scenario, unlike the previous, <literal>B would</literal> be allowed to remain active even if <literal>A or</literal> <literal>C</literal> (or both) were inactive."
+msgid "This notation can also be used to tell the cluster that a set of resources must all be located with a common peer, but have no dependencies on each other. In this scenario, unlike the previous, <literal>B</literal> <emphasis>would</emphasis> be allowed to remain active even if <literal>A</literal> or <literal>C</literal> (or both) were inactive."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Using colocation sets to specify a common peer."
+msgid "Using colocated sets to specify a common peer"
 msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
 msgid "&lt;constraints&gt;\n"
 "    &lt;rsc_colocation id=\"coloc-1\" score=\"INFINITY\" &gt;\n"
-"      &lt;resource_set id=\"collocated-set-1\" sequential=\"false\"&gt;\n"
+"      &lt;resource_set id=\"colocated-set-1\" sequential=\"false\"&gt;\n"
 "        &lt;resource_ref id=\"A\"/&gt;\n"
 "        &lt;resource_ref id=\"B\"/&gt;\n"
 "        &lt;resource_ref id=\"C\"/&gt;\n"
 "      &lt;/resource_set&gt;\n"
-"      &lt;resource_set id=\"collocated-set-2\" sequential=\"true\"&gt;\n"
+"      &lt;resource_set id=\"colocated-set-2\" sequential=\"true\"&gt;\n"
 "        &lt;resource_ref id=\"D\"/&gt;\n"
 "      &lt;/resource_set&gt;\n"
 "    &lt;/rsc_colocation&gt;\n"
@@ -776,28 +1000,33 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Of course there is no limit to the number and size of the sets used. The only thing that matters is that in order for any member of set N to be active, all the members of set N+1 must also be active (and naturally on the same node); and if a set has <literal>sequential=\"true\"</literal>, then in order for member M to be active, member M+1 must also be active. You can even specify the role in which the members of a set must be in using the set’s role attribute."
+msgid "A colocated set with <literal>sequential=false</literal> makes sense only if there is another set in the constraint. Otherwise, the constraint has no effect."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "There is no inherent limit to the number and size of the sets used. The only thing that matters is that in order for any member of one set in the constraint to be active, all members of sets listed after it must also be active (and naturally on the same node); and if a set has <literal>sequential=\"true\"</literal>, then in order for one member of that set to be active, all members listed after it must also be active. You can even specify the role in which the members of a set must be in using the set’s <literal>role</literal> attribute."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "A colocation chain where the members of the middle set have no inter-dependencies and the last has master status."
+msgid "A colocation chain where the members of the middle set have no interdependencies and the last has master status."
 msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
 msgid "&lt;constraints&gt;\n"
 "    &lt;rsc_colocation id=\"coloc-1\" score=\"INFINITY\" &gt;\n"
-"      &lt;resource_set id=\"collocated-set-1\" sequential=\"true\"&gt;\n"
+"      &lt;resource_set id=\"colocated-set-1\" sequential=\"true\"&gt;\n"
 "        &lt;resource_ref id=\"A\"/&gt;\n"
 "        &lt;resource_ref id=\"B\"/&gt;\n"
 "      &lt;/resource_set&gt;\n"
-"      &lt;resource_set id=\"collocated-set-2\" sequential=\"false\"&gt;\n"
+"      &lt;resource_set id=\"colocated-set-2\" sequential=\"false\"&gt;\n"
 "        &lt;resource_ref id=\"C\"/&gt;\n"
 "        &lt;resource_ref id=\"D\"/&gt;\n"
 "        &lt;resource_ref id=\"E\"/&gt;\n"
 "      &lt;/resource_set&gt;\n"
-"      &lt;resource_set id=\"collocated-set-2\" sequential=\"true\" role=\"Master\"&gt;\n"
+"      &lt;resource_set id=\"colocated-set-3\" sequential=\"true\" role=\"Master\"&gt;\n"
 "        &lt;resource_ref id=\"F\"/&gt;\n"
 "        &lt;resource_ref id=\"G\"/&gt;\n"
 "      &lt;/resource_set&gt;\n"
@@ -807,16 +1036,11 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Another Three Resources Sets"
-msgstr ""
-
-#. Tag: title
-#, no-c-format
 msgid "Visual representation of a colocation chain where the members of the middle set have no inter-dependencies"
 msgstr ""
 
-#. Tag: phrase
+#. Tag: para
 #, no-c-format
-msgid "Colocation chain"
+msgid "Unlike ordered sets, colocated sets do not use the <literal>require-all</literal> option."
 msgstr ""
 
