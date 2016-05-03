@@ -76,6 +76,12 @@ It is recommended to run Pacemaker 1.1.12 or later when using pacemaker_remote
 due to important bug fixes. An overview of changes in pacemaker_remote
 capability by version:
 
+.1.1.15
+* If pacemaker_remote is stopped on an active node, it will wait for the
+  cluster to migrate all resources off before exiting, rather than exit
+  immediately and get fenced.
+* Bug fixes
+
 .1.1.14
 * Resources that create guest nodes can be included in groups
 * reconnect_interval option for remote nodes
