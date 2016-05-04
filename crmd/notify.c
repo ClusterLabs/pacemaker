@@ -221,7 +221,7 @@ crm_time_format_hr(const char *format, crm_time_hr_t * hr_dt)
 {
     const char *mark_s;
     int max = 128, scanned_pos = 0, printed_pos = 0, fmt_pos = 0,
-        date_len = 0, nano_digits, fmt_len;
+        date_len = 0, nano_digits = 0, fmt_len;
     char nano_s[10], date_s[max+1], nanofmt_s[5] = "%", *tmp_fmt_s;
     struct tm tm;
     crm_time_t dt;
@@ -450,13 +450,27 @@ get_meta_attrs_from_cib(xmlNode *basenode, notify_entry_t *entry)
     unpack_instance_attributes(basenode, basenode, XML_TAG_META_SETS, NULL,
                                config_hash, NULL, FALSE, now);
 
-    value = g_hash_table_lookup(config_hash, XML_NOTIFY_ATTR_TIMEOUT);
+    value = g_hash_table_lookup(config_hash, XML_ALERT_ATTR_TIMEOUT);
     if (value) {
         entry->timeout = crm_get_msec(value);
-        crm_trace("Found timeout %dmsec", entry->timeout);
+        if (entry->timeout <= 0) {
+            if (entry->timeout == 0) {
+                crm_trace("Setting timeout to default %dmsec",
+                          CRMD_NOTIFY_DEFAULT_TIMEOUT_MS);
+            } else {
+                crm_warn("Invalid timeout value setting to default %dmsec",
+                         CRMD_NOTIFY_DEFAULT_TIMEOUT_MS);
+            }
+            entry->timeout = CRMD_NOTIFY_DEFAULT_TIMEOUT_MS;
+        } else {
+            crm_trace("Found timeout %dmsec", entry->timeout);
+        }
     }
-    value = g_hash_table_lookup(config_hash, XML_NOTIFY_ATTR_TSTAMP_FORMAT);
+    value = g_hash_table_lookup(config_hash, XML_ALERT_ATTR_TSTAMP_FORMAT);
     if (value) {
+        /* hard to do any checks here as merely anything can
+         * can be a valid time-format-string
+         */
         entry->tstamp_format = (char *) value;
         crm_trace("Found timestamp format string '%s'", value);
     }
@@ -466,15 +480,21 @@ get_meta_attrs_from_cib(xmlNode *basenode, notify_entry_t *entry)
 }
 
 void
-notifications_query_callback(xmlNode * msg, int call_id, int rc,
-                             xmlNode * output, void *user_data)
+parse_notifications(xmlNode *notifications)
 {
-    xmlNode *notify = output;
+    xmlNode *notify;
     notify_entry_t entry;
 
     free_notify_list();
 
-    if (rc != pcmk_ok) {
+    if (notifications) {
+        crm_info("We have an alerts section in the cib");
+
+        if (notify_script) {
+            crm_warn("Cib contains configuration for Legacy Notifications "
+                     "which is overruled by alerts section");
+        }
+    } else {
         crm_info("No optional alerts section in cib");
 
         if (notify_script) {
@@ -489,29 +509,17 @@ notifications_query_callback(xmlNode * msg, int call_id, int rc,
         }
 
         return;
-    } else {
-        crm_info("We have an alerts section in the cib");
-
-        if (notify_script) {
-            crm_warn("Cib contains configuration for Legacy Notifications "
-                     "which is overruled by alerts section");
-        }
     }
 
-    if ((notify) &&
-        (crm_element_name(notify)) &&
-        (strcmp(crm_element_name(notify), XML_CIB_TAG_NOTIFY) != 0)) {
-        notify = first_named_child(notify, XML_CIB_TAG_NOTIFY);
-    }
-
-    for (; notify; notify = __xml_next(notify)) {
+    for (notify = first_named_child(notifications, XML_CIB_TAG_ALERT);
+         notify; notify = __xml_next(notify)) {
         xmlNode *recipient;
         int recipients = 0, envvars = 0;
         GHashTable *config_hash = NULL;
 
         entry = (notify_entry_t) {
             .id = (char *) crm_element_value(notify, XML_ATTR_ID),
-            .path = (char *) crm_element_value(notify, XML_NOTIFY_ATTR_PATH),
+            .path = (char *) crm_element_value(notify, XML_ALERT_ATTR_PATH),
             .timeout = CRMD_NOTIFY_DEFAULT_TIMEOUT_MS
         };
 
@@ -529,12 +537,12 @@ notifications_query_callback(xmlNode * msg, int call_id, int rc,
                    entry.tstamp_format, envvars);
 
         for (recipient = first_named_child(notify,
-                                           XML_CIB_TAG_NOTIFY_RECIPIENT);
+                                           XML_CIB_TAG_ALERT_RECIPIENT);
              recipient; recipient = __xml_next(recipient)) {
             int envvars_added = 0;
 
             entry.recipient = (char *) crm_element_value(recipient,
-                                                XML_NOTIFY_ATTR_REC_VALUE);
+                                                XML_ALERT_ATTR_REC_VALUE);
             recipients++;
 
             entry.envvars =
