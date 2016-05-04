@@ -1,5 +1,6 @@
 [Unit]
 Description=Pacemaker Remote Service
+Documentation=man:pacemaker_remoted http://clusterlabs.org/doc/en-US/Pacemaker/1.1-pcs/html/Pacemaker_Remote/index.html
 After=network.target
 
 [Install]
