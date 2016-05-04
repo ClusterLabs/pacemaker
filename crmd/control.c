@@ -976,6 +976,8 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     const char *value = NULL;
     GHashTable *config_hash = NULL;
     crm_time_t *now = crm_time_new(NULL);
+    xmlNode *crmconfig = NULL;
+    xmlNode *alerts = NULL;
 
     if (rc != pcmk_ok) {
         fsa_data_t *msg_data = NULL;
@@ -987,6 +989,20 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
             crm_err("The cluster is mis-configured - shutting down and staying down");
             set_bit(fsa_input_register, R_STAYDOWN);
         }
+        goto bail;
+    }
+
+    crmconfig = output;
+    if ((crmconfig) &&
+        (crm_element_name(crmconfig)) &&
+        (strcmp(crm_element_name(crmconfig), XML_CIB_TAG_CRMCONFIG) != 0)) {
+        crmconfig = first_named_child(crmconfig, XML_CIB_TAG_CRMCONFIG);
+    }
+    if (!crmconfig) {
+        fsa_data_t *msg_data = NULL;
+
+        crm_err("Local CIB query for " XML_CIB_TAG_CRMCONFIG " section failed");
+        register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
         goto bail;
     }
 
@@ -1058,34 +1074,8 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         fsa_cluster_name = strdup(value);
     }
 
-#if 0
-    {
-        int sub_call_id;
-
-        sub_call_id = fsa_cib_conn->cmds->query(fsa_cib_conn, 
-            "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION
-            "/" XML_CIB_TAG_NOTIFICATIONS "/" XML_CIB_TAG_NOTIFY, NULL,
-            cib_scope_local | cib_xpath);
-
-        fsa_register_cib_callback(sub_call_id, FALSE, NULL,
-                                  notifications_query_callback);
-
-        crm_trace("Querying the CIB for notifications ... call %d", sub_call_id);
-    }
-#endif
-
-    {
-        xmlNode *cib_object = NULL;
-        int rc;
-
-        rc = fsa_cib_conn->cmds->query(fsa_cib_conn, 
-            "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION
-            "/" XML_CIB_TAG_NOTIFICATIONS "/" XML_CIB_TAG_NOTIFY, &cib_object,
-            cib_scope_local | cib_xpath | cib_sync_call);
-
-        notifications_query_callback(msg, call_id, rc, cib_object, user_data);
-        free_xml(cib_object);
-    }
+    alerts = output?first_named_child(output, XML_CIB_TAG_ALERTS):NULL;
+    parse_notifications(alerts);
 
     set_bit(fsa_input_register, R_READ_CONFIG);
     crm_trace("Triggering FSA: %s", __FUNCTION__);
@@ -1100,7 +1090,9 @@ gboolean
 crm_read_options(gpointer user_data)
 {
     int call_id =
-        fsa_cib_conn->cmds->query(fsa_cib_conn, XML_CIB_TAG_CRMCONFIG, NULL, cib_scope_local);
+        fsa_cib_conn->cmds->query(fsa_cib_conn,
+            "//" XML_CIB_TAG_CRMCONFIG " | //" XML_CIB_TAG_ALERTS,
+            NULL, cib_xpath | cib_scope_local);
 
     fsa_register_cib_callback(call_id, FALSE, NULL, config_query_callback);
     crm_trace("Querying the CIB... call %d", call_id);
