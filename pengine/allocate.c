@@ -608,12 +608,55 @@ failcount_clear_action_exists(node_t * node, resource_t * rsc)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Force resource away if failures hit migration threshold
+ *
+ * \param[in,out] rsc       Resource to check for failures
+ * \param[in,out] node      Node to check for failures
+ * \param[in,out] data_set  Cluster working set to update
+ */
+static void
+check_migration_threshold(resource_t *rsc, node_t *node,
+                          pe_working_set_t *data_set)
+{
+    int fail_count, countdown;
+    resource_t *failed;
+
+    /* Migration threshold of 0 means never force away */
+    if (rsc->migration_threshold == 0) {
+        return;
+    }
+
+    /* If there are no failures, there's no need to force away */
+    fail_count = get_failcount_all(node, rsc, NULL, data_set);
+    if (fail_count <= 0) {
+        return;
+    }
+
+    /* How many more times recovery will be tried on this node */
+    countdown = QB_MAX(rsc->migration_threshold - fail_count, 0);
+
+    /* If failed resource has a parent, we'll force the parent away */
+    failed = rsc;
+    if (is_not_set(rsc->flags, pe_rsc_unique)) {
+        failed = uber_parent(rsc);
+    }
+
+    if (countdown == 0) {
+        resource_location(failed, node, -INFINITY, "__fail_limit__", data_set);
+        crm_warn("Forcing %s away from %s after %d failures (max=%d)",
+                 failed->id, node->details->uname, fail_count,
+                 rsc->migration_threshold);
+    } else {
+        crm_info("%s can fail %d more times on %s before being forced off",
+                 failed->id, countdown, node->details->uname);
+    }
+}
+
 static void
 common_apply_stickiness(resource_t * rsc, node_t * node, pe_working_set_t * data_set)
 {
-    int fail_count = 0;
-    resource_t *failed = rsc;
-
     if (rsc->children) {
         GListPtr gIter = rsc->children;
 
@@ -652,26 +695,12 @@ common_apply_stickiness(resource_t * rsc, node_t * node, pe_working_set_t * data
         }
     }
 
-    /* only check failcount here if a failcount clear action
+    /* Check the migration threshold only if a failcount clear action
      * has not already been placed for this resource on the node.
-     * There is no sense in potentially forcing the rsc from this
+     * There is no sense in potentially forcing the resource from this
      * node if the failcount is being reset anyway. */
     if (failcount_clear_action_exists(node, rsc) == FALSE) {
-        fail_count = get_failcount_all(node, rsc, NULL, data_set);
-    }
-
-    if (fail_count > 0 && rsc->migration_threshold != 0) {
-        if (is_not_set(rsc->flags, pe_rsc_unique)) {
-            failed = uber_parent(rsc);
-        }
-        if (rsc->migration_threshold <= fail_count) {
-            resource_location(failed, node, -INFINITY, "__fail_limit__", data_set);
-            crm_warn("Forcing %s away from %s after %d failures (max=%d)",
-                     failed->id, node->details->uname, fail_count, rsc->migration_threshold);
-        } else {
-            crm_info("%s can fail %d more times on %s before being forced off",
-                     failed->id, rsc->migration_threshold - fail_count, node->details->uname);
-        }
+        check_migration_threshold(rsc, node, data_set);
     }
 }
 
