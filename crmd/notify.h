@@ -29,6 +29,6 @@ void crmd_enable_notifications(const char *script, const char *target);
 void crmd_notify_node_event(crm_node_t *node);
 void crmd_notify_fencing_op(stonith_event_t * e);
 void crmd_notify_resource_op(const char *node, lrmd_event_data_t * op);
-void notifications_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data);
+void parse_notifications(xmlNode *notifications);
 
 #endif

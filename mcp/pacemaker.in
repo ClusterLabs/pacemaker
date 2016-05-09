@@ -59,7 +59,7 @@ notify()
 status()
 {
 	pid=$(pidof $1 2>/dev/null)
-	rtrn=$?
+	local rtrn=$?
 	if [ $rtrn -ne 0 ]; then
 		echo "$1 is stopped"
 	else

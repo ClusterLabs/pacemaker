@@ -52,6 +52,7 @@ void *ais_ipc_ctx = NULL;
 
 hdb_handle_t ais_ipc_handle = 0;
 
+#if SUPPORT_CMAN
 static bool valid_cman_name(const char *name, uint32_t nodeid) 
 {
     bool rc = TRUE;
@@ -66,6 +67,7 @@ static bool valid_cman_name(const char *name, uint32_t nodeid)
     free(fakename);
     return rc;
 }
+#endif
 
 static gboolean
 plugin_get_details(uint32_t * id, char **uname)

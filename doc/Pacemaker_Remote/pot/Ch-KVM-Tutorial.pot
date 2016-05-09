@@ -1,0 +1,767 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2016-05-03 17:45-0500\n"
+"PO-Revision-Date: 2016-05-03 17:45-0500\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Guest Node Walk-through"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis role=\"strong\">What this tutorial is:</emphasis> An in-depth walk-through of how to get Pacemaker to manage a KVM guest instance and integrate that guest into the cluster as a guest node."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis role=\"strong\">What this tutorial is not:</emphasis> A realistic deployment scenario. The steps shown here are meant to get users familiar with the concept of guest nodes as quickly as possible."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Configure the Physical Host"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "For this example, we will use a single physical host named <emphasis role=\"strong\">example-host</emphasis>. A production cluster would likely have multiple physical hosts, in which case you would run the commands here on each one, unless noted otherwise."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Configure Firewall on Host"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "On the physical host, allow cluster-related services through the local firewall:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# firewall-cmd --permanent --add-service=high-availability\n"
+"success\n"
+"# firewall-cmd --reload\n"
+"success"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If you are using iptables directly, or some other firewall solution besides firewalld, simply open the following ports, which can be used by various clustering components: TCP ports 2224, 3121, and 21064, and UDP port 5405."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If you run into any problems during testing, you might want to disable the firewall and SELinux entirely until you have everything working. This may create significant security issues and should not be performed on machines that will be exposed to the outside world, but may be appropriate during development and testing on a protected host."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "To disable security measures:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-1 ~]# setenforce 0\n"
+"[root@pcmk-1 ~]# sed -i.bak \"s/SELINUX=enforcing/SELINUX=permissive/g\" /etc/selinux/config\n"
+"[root@pcmk-1 ~]# systemctl disable firewalld.service\n"
+"[root@pcmk-1 ~]# systemctl stop firewalld.service\n"
+"[root@pcmk-1 ~]# iptables --flush"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Install Cluster Software"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# yum install -y pacemaker corosync pcs resource-agents"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Configure Corosync"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Corosync handles pacemaker’s cluster membership and messaging. The corosync config file is located in <literal>/etc/corosync/corosync.conf</literal>. That config file must be initialized with information about the cluster nodes before pacemaker can start."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "To initialize the corosync config file, execute the following <literal>pcs</literal> command, replacing the cluster name and hostname as desired:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# pcs cluster setup --force --local --name mycluster example-host"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If you have multiple physical hosts, you would execute the setup command on only one host, but list all of them at the end of the command."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Configure Pacemaker for Remote Node Communication"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Create a place to hold an authentication key for use with pacemaker_remote:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# mkdir -p --mode=0750 /etc/pacemaker\n"
+"# chgrp haclient /etc/pacemaker"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Generate a key:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If you have multiple physical hosts, you would generate the key on only one host, and copy it to the same location on all hosts."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Verify Cluster Software"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Start the cluster"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# pcs cluster start"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Verify corosync membership"
+msgstr ""
+
+#. Tag: literallayout
+#, no-c-format
+msgid "# pcs status corosync\n"
+"\n"
+"Membership information\n"
+"----------------------\n"
+"    Nodeid      Votes Name\n"
+"         1          1 example-host (local)"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Verify pacemaker status. At first, the output will look like this:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# pcs status\n"
+"Cluster name: mycluster\n"
+"WARNING: no stonith devices and stonith-enabled is not false\n"
+"Last updated: Fri Oct  9 15:18:32 2015          Last change: Fri Oct  9 12:42:21 2015 by root via cibadmin on example-host\n"
+"Stack: corosync\n"
+"Current DC: NONE\n"
+"1 node and 0 resources configured\n"
+"\n"
+"Node example-host: UNCLEAN (offline)\n"
+"\n"
+"Full list of resources:\n"
+"\n"
+"\n"
+"PCSD Status:\n"
+"  example-host: Online\n"
+"\n"
+"Daemon Status:\n"
+"  corosync: active/disabled\n"
+"  pacemaker: active/disabled\n"
+"  pcsd: active/enabled"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "After a short amount of time, you should see your host as a single node in the cluster:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# pcs status\n"
+"Cluster name: mycluster\n"
+"WARNING: no stonith devices and stonith-enabled is not false\n"
+"Last updated: Fri Oct  9 15:20:05 2015          Last change: Fri Oct  9 12:42:21 2015 by root via cibadmin on example-host\n"
+"Stack: corosync\n"
+"Current DC: example-host (version 1.1.13-a14efad) - partition WITHOUT quorum\n"
+"1 node and 0 resources configured\n"
+"\n"
+"Online: [ example-host ]\n"
+"\n"
+"Full list of resources:\n"
+"\n"
+"\n"
+"PCSD Status:\n"
+"  example-host: Online\n"
+"\n"
+"Daemon Status:\n"
+"  corosync: active/disabled\n"
+"  pacemaker: active/disabled\n"
+"  pcsd: active/enabled"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Disable STONITH and Quorum"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Now, enable the cluster to work without quorum or stonith. This is required for the sake of getting this tutorial to work with a single cluster node."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# pcs property set stonith-enabled=false\n"
+"# pcs property set no-quorum-policy=ignore"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The use of <literal>stonith-enabled=false</literal> is completely inappropriate for a production cluster. It tells the cluster to simply pretend that failed nodes are safely powered off. Some vendors will refuse to support clusters that have STONITH disabled. We disable STONITH here only to focus the discussion on pacemaker_remote, and to be able to use a single physical host in the example."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Now, the status output should look similar to this:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# pcs status\n"
+"Cluster name: mycluster\n"
+"Last updated: Fri Oct  9 15:22:49 2015          Last change: Fri Oct  9 15:22:46 2015 by root via cibadmin on example-host\n"
+"Stack: corosync\n"
+"Current DC: example-host (version 1.1.13-a14efad) - partition with quorum\n"
+"1 node and 0 resources configured\n"
+"\n"
+"Online: [ example-host ]\n"
+"\n"
+"Full list of resources:\n"
+"\n"
+"\n"
+"PCSD Status:\n"
+"  example-host: Online\n"
+"\n"
+"Daemon Status:\n"
+"  corosync: active/disabled\n"
+"  pacemaker: active/disabled\n"
+"  pcsd: active/enabled"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Go ahead and stop the cluster for now after verifying everything is in order."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# pcs cluster stop --force"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Install Virtualization Software"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# yum install -y kvm libvirt qemu-system qemu-kvm bridge-utils virt-manager\n"
+"# systemctl enable libvirtd.service"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Reboot the host."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "While KVM is used in this example, any virtualization platform with a Pacemaker resource agent can be used to create a guest node. The resource agent needs only to support usual commands (start, stop, etc.); Pacemaker implements the <emphasis role=\"strong\">remote-node</emphasis> meta-attribute, independent of the agent."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Configure the KVM guest"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Create Guest"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "We will not outline here the installation steps required to create a KVM guest. There are plenty of tutorials available elsewhere that do that. Just be sure to configure the guest with a hostname and a static IP address (as an example here, we will use guest1 and 192.168.122.10)."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Configure Firewall on Guest"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "On each guest, allow cluster-related services through the local firewall, following the same procedure as in <xref linkend=\"_configure_firewall_on_host\" />."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Verify Connectivity"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "At this point, you should be able to ping and ssh into guests from hosts, and vice versa."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Configure pacemaker_remote"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Install pacemaker_remote, and enable it to run at start-up. Here, we also install the pacemaker package; it is not required, but it contains the dummy resource agent that we will use later for testing."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# yum install -y pacemaker pacemaker-remote resource-agents\n"
+"# systemctl enable pacemaker_remote.service"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Copy the authentication key from a host:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# mkdir -p --mode=0750 /etc/pacemaker\n"
+"# chgrp haclient /etc/pacemaker\n"
+"# scp root@example-host:/etc/pacemaker/authkey /etc/pacemaker"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Start pacemaker_remote, and verify the start was successful:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# systemctl start pacemaker_remote\n"
+"# systemctl status pacemaker_remote\n"
+"\n"
+"  pacemaker_remote.service - Pacemaker Remote Service\n"
+"          Loaded: loaded (/usr/lib/systemd/system/pacemaker_remote.service; enabled)\n"
+"          Active: active (running) since Thu 2013-03-14 18:24:04 EDT; 2min 8s ago\n"
+"        Main PID: 1233 (pacemaker_remot)\n"
+"          CGroup: name=systemd:/system/pacemaker_remote.service\n"
+"                  └─1233 /usr/sbin/pacemaker_remoted\n"
+"\n"
+"  Mar 14 18:24:04 guest1 systemd[1]: Starting Pacemaker Remote Service...\n"
+"  Mar 14 18:24:04 guest1 systemd[1]: Started Pacemaker Remote Service.\n"
+"  Mar 14 18:24:04 guest1 pacemaker_remoted[1233]: notice: lrmd_init_remote_tls_server: Starting a tls listener on port 3121."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Verify Host Connection to Guest"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Before moving forward, it’s worth verifying that the host can contact the guest on port 3121. Here’s a trick you can use. Connect using ssh from the host. The connection will get destroyed, but how it is destroyed tells you whether it worked or not."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "First add guest1 to the host machine’s <literal>/etc/hosts</literal> file if you haven’t already. This is required unless you have DNS setup in a way where guest1’s address can be discovered."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# cat &lt;&lt; END &gt;&gt; /etc/hosts\n"
+"192.168.122.10    guest1\n"
+"END"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If running the ssh command on one of the cluster nodes results in this output before disconnecting, the connection works:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# ssh -p 3121 guest1\n"
+"ssh_exchange_identification: read: Connection reset by peer"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If you see one of these, the connection is not working:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# ssh -p 3121 guest1\n"
+"ssh: connect to host guest1 port 3121: No route to host"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# ssh -p 3121 guest1\n"
+"ssh: connect to host guest1 port 3121: Connection refused"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Once you can successfully connect to the guest from the host, shutdown the guest. Pacemaker will be managing the virtual machine from this point forward."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Integrate Guest into Cluster"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Now the fun part, integrating the virtual machine you’ve just created into the cluster. It is incredibly simple."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Start the Cluster"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "On the host, start pacemaker."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Wait for the host to become the DC. The output of <literal>pcs status</literal> should look as it did in <xref linkend=\"_disable_stonith_and_quorum\" />."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Integrate as Guest Node"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If you didn’t already do this earlier in the verify host to guest connection section, add the KVM guest’s IP address to the host’s <literal>/etc/hosts</literal> file so we can connect by hostname. For this example:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "We will use the <emphasis role=\"strong\">VirtualDomain</emphasis> resource agent for the management of the virtual machine. This agent requires the virtual machine’s XML config to be dumped to a file on disk. To do this, pick out the name of the virtual machine you just created from the output of this list."
+msgstr ""
+
+#. Tag: literallayout
+#, no-c-format
+msgid "# virsh list --all\n"
+" Id    Name                           State\n"
+"----------------------------------------------------\n"
+" -     guest1                         shut off"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In my case I named it guest1. Dump the xml to a file somewhere on the host using the following command."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# virsh dumpxml guest1 &gt; /etc/pacemaker/guest1.xml"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Now just register the resource with pacemaker and you’re set!"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# pcs resource create vm-guest1 VirtualDomain hypervisor=\"qemu:///system\" \\\n"
+"    config=\"/etc/pacemaker/guest1.xml\" meta remote-node=guest1"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "This example puts the guest XML under /etc/pacemaker because the permissions and SELinux labeling should not need any changes. If you run into trouble with this or any step, try disabling SELinux with <literal>setenforce 0</literal>. If it works after that, see SELinux documentation for how to troubleshoot, if you wish to reenable SELinux."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Pacemaker will automatically monitor pacemaker_remote connections for failure, so it is not necessary to create a recurring monitor on the VirtualDomain resource."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Once the <emphasis role=\"strong\">vm-guest1</emphasis> resource is started you will see <emphasis role=\"strong\">guest1</emphasis> appear in the <literal>pcs status</literal> output as a node. The final <literal>pcs status</literal> output should look something like this."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# pcs status\n"
+"Cluster name: mycluster\n"
+"Last updated: Fri Oct  9 18:00:45 2015          Last change: Fri Oct  9 17:53:44 2015 by root via crm_resource on example-host\n"
+"Stack: corosync\n"
+"Current DC: example-host (version 1.1.13-a14efad) - partition with quorum\n"
+"2 nodes and 2 resources configured\n"
+"\n"
+"Online: [ example-host ]\n"
+"GuestOnline: [ guest1@example-host ]\n"
+"\n"
+"Full list of resources:\n"
+"\n"
+" vm-guest1      (ocf::heartbeat:VirtualDomain): Started example-host\n"
+"\n"
+"PCSD Status:\n"
+"  example-host: Online\n"
+"\n"
+"Daemon Status:\n"
+"  corosync: active/disabled\n"
+"  pacemaker: active/disabled\n"
+"  pcsd: active/enabled"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Starting Resources on KVM Guest"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The commands below demonstrate how resources can be executed on both the guest node and the cluster node."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Create a few Dummy resources. Dummy resources are real resource agents used just for testing purposes. They actually execute on the host they are assigned to just like an apache server or database would, except their execution just means a file was created. When the resource is stopped, that the file it created is removed."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# pcs resource create FAKE1 ocf:pacemaker:Dummy\n"
+"# pcs resource create FAKE2 ocf:pacemaker:Dummy\n"
+"# pcs resource create FAKE3 ocf:pacemaker:Dummy\n"
+"# pcs resource create FAKE4 ocf:pacemaker:Dummy\n"
+"# pcs resource create FAKE5 ocf:pacemaker:Dummy"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Now check your <literal>pcs status</literal> output. In the resource section, you should see something like the following, where some of the resources started on the cluster node, and some started on the guest node."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "Full list of resources:\n"
+"\n"
+" vm-guest1      (ocf::heartbeat:VirtualDomain): Started example-host\n"
+" FAKE1  (ocf::pacemaker:Dummy): Started guest1\n"
+" FAKE2  (ocf::pacemaker:Dummy): Started guest1\n"
+" FAKE3  (ocf::pacemaker:Dummy): Started example-host\n"
+" FAKE4  (ocf::pacemaker:Dummy): Started guest1\n"
+" FAKE5  (ocf::pacemaker:Dummy): Started example-host"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The guest node, <emphasis role=\"strong\">guest1</emphasis>, reacts just like any other node in the cluster. For example, pick out a resource that is running on your cluster node. For my purposes, I am picking FAKE3 from the output above. We can force FAKE3 to run on <emphasis role=\"strong\">guest1</emphasis> in the exact same way we would any other node."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# pcs constraint location FAKE3 prefers guest1"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Now, looking at the bottom of the <literal>pcs status</literal> output you’ll see FAKE3 is on <emphasis role=\"strong\">guest1</emphasis>."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "Full list of resources:\n"
+"\n"
+" vm-guest1      (ocf::heartbeat:VirtualDomain): Started example-host\n"
+" FAKE1  (ocf::pacemaker:Dummy): Started guest1\n"
+" FAKE2  (ocf::pacemaker:Dummy): Started guest1\n"
+" FAKE3  (ocf::pacemaker:Dummy): Started guest1\n"
+" FAKE4  (ocf::pacemaker:Dummy): Started example-host\n"
+" FAKE5  (ocf::pacemaker:Dummy): Started example-host"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Testing Recovery and Fencing"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Pacemaker’s policy engine is smart enough to know fencing guest nodes associated with a virtual machine means shutting off/rebooting the virtual machine. No special configuration is necessary to make this happen. If you are interested in testing this functionality out, trying stopping the guest’s pacemaker_remote daemon. This would be equivalent of abruptly terminating a cluster node’s corosync membership without properly shutting it down."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "ssh into the guest and run this command."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# kill -9 `pidof pacemaker_remoted`"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Within a few seconds, your <literal>pcs status</literal> output will show a monitor failure, and the <emphasis role=\"strong\">guest1</emphasis> node will not be shown while it is being recovered."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# pcs status\n"
+"Cluster name: mycluster\n"
+"Last updated: Fri Oct  9 18:08:35 2015          Last change: Fri Oct  9 18:07:00 2015 by root via cibadmin on example-host\n"
+"Stack: corosync\n"
+"Current DC: example-host (version 1.1.13-a14efad) - partition with quorum\n"
+"2 nodes and 7 resources configured\n"
+"\n"
+"Online: [ example-host ]\n"
+"\n"
+"Full list of resources:\n"
+"\n"
+" vm-guest1      (ocf::heartbeat:VirtualDomain): Started example-host\n"
+" FAKE1  (ocf::pacemaker:Dummy): Stopped\n"
+" FAKE2  (ocf::pacemaker:Dummy): Stopped\n"
+" FAKE3  (ocf::pacemaker:Dummy): Stopped\n"
+" FAKE4  (ocf::pacemaker:Dummy): Started example-host\n"
+" FAKE5  (ocf::pacemaker:Dummy): Started example-host\n"
+"\n"
+"Failed Actions:\n"
+"* guest1_monitor_30000 on example-host 'unknown error' (1): call=8, status=Error, exitreason='none',\n"
+"    last-rc-change='Fri Oct  9 18:08:29 2015', queued=0ms, exec=0ms\n"
+"\n"
+"\n"
+"PCSD Status:\n"
+"  example-host: Online\n"
+"\n"
+"Daemon Status:\n"
+"  corosync: active/disabled\n"
+"  pacemaker: active/disabled\n"
+"  pcsd: active/enabled"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A guest node involves two resources: the one you explicitly configured creates the guest, and Pacemaker creates an implicit resource for the pacemaker_remote connection, which will be named the same as the value of the <emphasis role=\"strong\">remote-node</emphasis> attribute of the explicit resource. When we killed pacemaker_remote, it is the implicit resource that failed, which is why the failed action starts with <emphasis role=\"strong\">guest1</emphasis> and not <emphasis role=\"strong\">vm-guest1</emphasis>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Once recovery of the guest is complete, you’ll see it automatically get re-integrated into the cluster. The final <literal>pcs status</literal> output should look something like this."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "Cluster name: mycluster\n"
+"Last updated: Fri Oct  9 18:18:30 2015          Last change: Fri Oct  9 18:07:00 2015 by root via cibadmin on example-host\n"
+"Stack: corosync\n"
+"Current DC: example-host (version 1.1.13-a14efad) - partition with quorum\n"
+"2 nodes and 7 resources configured\n"
+"\n"
+"Online: [ example-host ]\n"
+"GuestOnline: [ guest1@example-host ]\n"
+"\n"
+"Full list of resources:\n"
+"\n"
+" vm-guest1      (ocf::heartbeat:VirtualDomain): Started example-host\n"
+" FAKE1  (ocf::pacemaker:Dummy): Started guest1\n"
+" FAKE2  (ocf::pacemaker:Dummy): Started guest1\n"
+" FAKE3  (ocf::pacemaker:Dummy): Started guest1\n"
+" FAKE4  (ocf::pacemaker:Dummy): Started example-host\n"
+" FAKE5  (ocf::pacemaker:Dummy): Started example-host\n"
+"\n"
+"Failed Actions:\n"
+"* guest1_monitor_30000 on example-host 'unknown error' (1): call=8, status=Error, exitreason='none',\n"
+"    last-rc-change='Fri Oct  9 18:08:29 2015', queued=0ms, exec=0ms\n"
+"\n"
+"\n"
+"PCSD Status:\n"
+"  example-host: Online\n"
+"\n"
+"Daemon Status:\n"
+"  corosync: active/disabled\n"
+"  pacemaker: active/disabled\n"
+"  pcsd: active/enabled"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Normally, once you’ve investigated and addressed a failed action, you can clear the failure. However Pacemaker does not yet support cleanup for the implicitly created connection resource while the explicit resource is active. If you want to clear the failed action from the status output, stop the guest resource before clearing it. For example:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# pcs resource disable vm-guest1 --wait\n"
+"# pcs resource cleanup guest1\n"
+"# pcs resource enable vm-guest1"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Accessing Cluster Tools from Guest Node"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Besides allowing the cluster to manage resources on a guest node, pacemaker_remote has one other trick. The pacemaker_remote daemon allows nearly all the pacemaker tools (<literal>crm_resource</literal>, <literal>crm_mon</literal>, <literal>crm_attribute</literal>, <literal>crm_master</literal>, etc.) to work on guest nodes natively."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Try it: Run <literal>crm_mon</literal> on the guest after pacemaker has integrated the guest node into the cluster. These tools just work. This means resource agents such as master/slave resources which need access to tools like <literal>crm_master</literal> work seamlessly on the guest nodes."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Higher-level command shells such as <literal>pcs</literal> may have partial support on guest nodes, but it is recommended to run them from a cluster node."
+msgstr ""
+

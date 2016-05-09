@@ -7,4 +7,5 @@ digraph "g" {
 "group1_stop_0" -> "group1_stopped_0" [ style = bold]
 "group1_stop_0" [ style=bold color="green" fontcolor="orange"]
 "group1_stopped_0" [ style=bold color="green" fontcolor="orange"]
+"group2_start_0" [ style=dashed color="red" fontcolor="orange"]
 }

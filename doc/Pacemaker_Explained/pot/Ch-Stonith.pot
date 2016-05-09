@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-10-17T05:19:02\n"
-"PO-Revision-Date: 2012-10-17T05:19:02\n"
+"POT-Creation-Date: 2016-05-03 17:45-0500\n"
+"PO-Revision-Date: 2016-05-03 17:45-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -14,7 +14,7 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Configure STONITH"
+msgid "STONITH"
 msgstr ""
 
 #. Tag: para
@@ -24,12 +24,12 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "What Is STONITH"
+msgid "What Is STONITH?"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "STONITH is an acronym for Shoot-The-Other-Node-In-The-Head and it protects your data from being corrupted by rogue nodes or concurrent access."
+msgid "STONITH (an acronym for \"Shoot The Other Node In The Head\"), also called <emphasis>fencing</emphasis>, protects your data from being corrupted by rogue nodes or concurrent access."
 msgstr ""
 
 #. Tag: para
@@ -44,7 +44,7 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "What STONITH Device Should You Use"
+msgid "What STONITH Device Should You Use?"
 msgstr ""
 
 #. Tag: para
@@ -54,7 +54,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The biggest mistake people make in choosing a STONITH device is to use remote power switch (such as many on-board IMPI controllers) that shares power with the node it controls. In such cases, the cluster cannot be sure if the node is really offline, or active and suffering from a network fault."
+msgid "The biggest mistake people make in choosing a STONITH device is to use a remote power switch (such as many on-board IPMI controllers) that shares power with the node it controls. In such cases, the cluster cannot be sure if the node is really offline, or active and suffering from a network fault."
 msgstr ""
 
 #. Tag: para
@@ -64,29 +64,457 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
+msgid "Special Treatment of STONITH Resources"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "STONITH resources are somewhat special in Pacemaker."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "STONITH may be initiated by pacemaker or by other parts of the cluster (such as resources like DRBD or DLM). To accommodate this, pacemaker does not require the STONITH resource to be in the <emphasis>started</emphasis> state in order to be used, thus allowing reliable use of STONITH devices in such a case."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In pacemaker versions 1.1.9 and earlier, this feature either did not exist or did not work well. Only \"running\" STONITH resources could be used by Pacemaker for fencing, and if another component tried to fence a node while Pacemaker was moving STONITH resources, the fencing could fail."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "All nodes have access to STONITH devices' definitions and instantiate them on-the-fly when needed, but preference is given to <emphasis>verified</emphasis> instances, which are the ones that are <emphasis>started</emphasis> according to the cluster’s knowledge."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In the case of a cluster split, the partition with a verified instance will have a slight advantage, because the STONITH daemon in the other partition will have to hear from all its current peers before choosing a node to perform the fencing."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Fencing resources do work the same as regular resources in some respects:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>target-role</literal> can be used to enable or disable the resource"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Location constraints can be used to prevent a specific node from using the resource"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Currently there is a limitation that fencing resources may only have one set of meta-attributes and one set of instance attributes. This can be revisited if it becomes a significant limitation for people."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "See the table below or run <literal>man stonithd</literal> to see special instance attributes that may be set for any fencing resource, regardless of fence agent."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Properties of Fencing Resources"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Field"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Type"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Default"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Description"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>stonith-timeout</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "NA"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Older versions used this to override the default period to wait for a STONITH (reboot, on, off) action to complete for this device. It has been replaced by the <literal>pcmk_reboot_timeout</literal> and <literal>pcmk_off_timeout</literal> properties. <indexterm> <primary>stonith-timeout</primary><secondary>Fencing</secondary> </indexterm> <indexterm> <primary>Fencing</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>Property</secondary><tertiary>stonith-timeout</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>stonith-timeout</secondary> </indexterm> <indexterm> <primary>stonith-timeout</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>priority</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "integer"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "0"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The priority of the STONITH resource. Devices are tried in order of highest priority to lowest. <indexterm> <primary>priority</primary><secondary>Fencing</secondary> </indexterm> <indexterm> <primary>Fencing</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>Property</secondary><tertiary>priority</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>priority</secondary> </indexterm> <indexterm> <primary>priority</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>pcmk_host_map</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "string"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A mapping of host names to ports numbers for devices that do not support host names. Example: <literal>node1:1;node2:2,3</literal> tells the cluster to use port 1 for <emphasis role=\"strong\">node1</emphasis> and ports 2 and 3 for <emphasis role=\"strong\">node2</emphasis>. <indexterm> <primary>pcmk_host_map</primary><secondary>Fencing</secondary> </indexterm> <indexterm> <primary>Fencing</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>Property</secondary><tertiary>pcmk_host_map</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>pcmk_host_map</secondary> </indexterm> <indexterm> <primary>pcmk_host_map</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>pcmk_host_list</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A list of machines controlled by this device (optional unless <literal>pcmk_host_check</literal> is <literal>static-list</literal>). <indexterm> <primary>pcmk_host_list</primary><secondary>Fencing</secondary> </indexterm> <indexterm> <primary>Fencing</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>Property</secondary><tertiary>pcmk_host_list</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>pcmk_host_list</secondary> </indexterm> <indexterm> <primary>pcmk_host_list</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>pcmk_host_check</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "dynamic-list"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "How to determine which machines are controlled by the device. Allowed values:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>dynamic-list:</literal> query the device"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>static-list:</literal> check the <literal>pcmk_host_list</literal> attribute"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>none:</literal> assume every device can fence every machine"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>pcmk_host_check</primary><secondary>Fencing</secondary> </indexterm> <indexterm> <primary>Fencing</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>Property</secondary><tertiary>pcmk_host_check</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>pcmk_host_check</secondary> </indexterm> <indexterm> <primary>pcmk_host_check</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>pcmk_delay_max</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "time"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "0s"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Enable a random delay of up to the time specified before executing stonith actions. This is sometimes used in two-node clusters to ensure that the nodes don’t fence each other at the same time."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>pcmk_delay_max</primary><secondary>Fencing</secondary> </indexterm> <indexterm> <primary>Fencing</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>Property</secondary><tertiary>pcmk_delay_max</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>pcmk_delay_max</secondary> </indexterm> <indexterm> <primary>pcmk_delay_max</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>pcmk_action_limit</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "1"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The maximum number of actions that can be performed in parallel on this device, if the cluster option <literal>concurrent-fencing</literal> is <literal>true</literal>. -1 is unlimited."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>pcmk_action_limit</primary><secondary>Fencing</secondary> </indexterm> <indexterm> <primary>Fencing</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>Property</secondary><tertiary>pcmk_action_limit</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>pcmk_action_limit</secondary> </indexterm> <indexterm> <primary>pcmk_action_limit</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>pcmk_host_argument</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "port"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>Advanced use only.</emphasis> Which parameter should be supplied to the resource agent to identify the node to be fenced. Some devices do not support the standard <literal>port</literal> parameter or may provide additional ones. Use this to specify an alternate, device-specific parameter. A value of <literal>none</literal> tells the cluster not to supply any additional parameters. <indexterm> <primary>pcmk_host_argument</primary><secondary>Fencing</secondary> </indexterm> <indexterm> <primary>Fencing</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>Property</secondary><tertiary>pcmk_host_argument</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>pcmk_host_argument</secondary> </indexterm> <indexterm> <primary>pcmk_host_argument</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>pcmk_reboot_action</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "reboot"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>Advanced use only.</emphasis> The command to send to the resource agent in order to reboot a node. Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific command. <indexterm> <primary>pcmk_reboot_action</primary><secondary>Fencing</secondary> </indexterm> <indexterm> <primary>Fencing</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>Property</secondary><tertiary>pcmk_reboot_action</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>pcmk_reboot_action</secondary> </indexterm> <indexterm> <primary>pcmk_reboot_action</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>pcmk_reboot_timeout</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "60s"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>Advanced use only.</emphasis> Specify an alternate timeout to use for <literal>reboot</literal> actions instead of the value of <literal>stonith-timeout</literal>. Some devices need much more or less time to complete than normal. Use this to specify an alternate, device-specific timeout. <indexterm> <primary>pcmk_reboot_timeout</primary><secondary>Fencing</secondary> </indexterm> <indexterm> <primary>Fencing</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>Property</secondary><tertiary>pcmk_reboot_timeout</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>pcmk_reboot_timeout</secondary> </indexterm> <indexterm> <primary>pcmk_reboot_timeout</primary> </indexterm> <indexterm> <primary>stonith-timeout</primary><secondary>Fencing</secondary> </indexterm> <indexterm> <primary>Fencing</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>Property</secondary><tertiary>stonith-timeout</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>stonith-timeout</secondary> </indexterm> <indexterm> <primary>stonith-timeout</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>pcmk_reboot_retries</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "2"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>Advanced use only.</emphasis> The maximum number of times to retry the <literal>reboot</literal> command within the timeout period. Some devices do not support multiple connections, and operations may fail if the device is busy with another task, so Pacemaker will automatically retry the operation, if there is time remaining. Use this option to alter the number of times Pacemaker retries before giving up. <indexterm> <primary>pcmk_reboot_retries</primary><secondary>Fencing</secondary> </indexterm> <indexterm> <primary>Fencing</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>Property</secondary><tertiary>pcmk_reboot_retries</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>pcmk_reboot_retries</secondary> </indexterm> <indexterm> <primary>pcmk_reboot_retries</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>pcmk_off_action</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "off"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>Advanced use only.</emphasis> The command to send to the resource agent in order to shut down a node. Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific command. <indexterm> <primary>pcmk_off_action</primary><secondary>Fencing</secondary> </indexterm> <indexterm> <primary>Fencing</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>Property</secondary><tertiary>pcmk_off_action</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>pcmk_off_action</secondary> </indexterm> <indexterm> <primary>pcmk_off_action</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>pcmk_off_timeout</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>Advanced use only.</emphasis> Specify an alternate timeout to use for <literal>off</literal> actions instead of the value of <literal>stonith-timeout</literal>. Some devices need much more or less time to complete than normal. Use this to specify an alternate, device-specific timeout. <indexterm> <primary>pcmk_off_timeout</primary><secondary>Fencing</secondary> </indexterm> <indexterm> <primary>Fencing</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>Property</secondary><tertiary>pcmk_off_timeout</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>pcmk_off_timeout</secondary> </indexterm> <indexterm> <primary>pcmk_off_timeout</primary> </indexterm> <indexterm> <primary>stonith-timeout</primary><secondary>Fencing</secondary> </indexterm> <indexterm> <primary>Fencing</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>Property</secondary><tertiary>stonith-timeout</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>stonith-timeout</secondary> </indexterm> <indexterm> <primary>stonith-timeout</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>pcmk_off_retries</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>Advanced use only.</emphasis> The maximum number of times to retry the <literal>off</literal> command within the timeout period. Some devices do not support multiple connections, and operations may fail if the device is busy with another task, so Pacemaker will automatically retry the operation, if there is time remaining. Use this option to alter the number of times Pacemaker retries before giving up. <indexterm> <primary>pcmk_off_retries</primary><secondary>Fencing</secondary> </indexterm> <indexterm> <primary>Fencing</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>Property</secondary><tertiary>pcmk_off_retries</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>pcmk_off_retries</secondary> </indexterm> <indexterm> <primary>pcmk_off_retries</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>pcmk_list_action</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "list"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>Advanced use only.</emphasis> The command to send to the resource agent in order to list nodes. Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific command. <indexterm> <primary>pcmk_list_action</primary><secondary>Fencing</secondary> </indexterm> <indexterm> <primary>Fencing</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>Property</secondary><tertiary>pcmk_list_action</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>pcmk_list_action</secondary> </indexterm> <indexterm> <primary>pcmk_list_action</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>pcmk_list_timeout</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>Advanced use only.</emphasis> Specify an alternate timeout to use for <literal>list</literal> actions instead of the value of <literal>stonith-timeout</literal>. Some devices need much more or less time to complete than normal. Use this to specify an alternate, device-specific timeout. <indexterm> <primary>pcmk_list_timeout</primary><secondary>Fencing</secondary> </indexterm> <indexterm> <primary>Fencing</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>Property</secondary><tertiary>pcmk_list_timeout</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>pcmk_list_timeout</secondary> </indexterm> <indexterm> <primary>pcmk_list_timeout</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>pcmk_list_retries</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>Advanced use only.</emphasis> The maximum number of times to retry the <literal>list</literal> command within the timeout period. Some devices do not support multiple connections, and operations may fail if the device is busy with another task, so Pacemaker will automatically retry the operation, if there is time remaining. Use this option to alter the number of times Pacemaker retries before giving up. <indexterm> <primary>pcmk_list_retries</primary><secondary>Fencing</secondary> </indexterm> <indexterm> <primary>Fencing</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>Property</secondary><tertiary>pcmk_list_retries</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>pcmk_list_retries</secondary> </indexterm> <indexterm> <primary>pcmk_list_retries</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>pcmk_monitor_action</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "monitor"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>Advanced use only.</emphasis> The command to send to the resource agent in order to report extended status. Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific command. <indexterm> <primary>pcmk_monitor_action</primary><secondary>Fencing</secondary> </indexterm> <indexterm> <primary>Fencing</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>Property</secondary><tertiary>pcmk_monitor_action</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>pcmk_monitor_action</secondary> </indexterm> <indexterm> <primary>pcmk_monitor_action</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>pcmk_monitor_timeout</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>Advanced use only.</emphasis> Specify an alternate timeout to use for <literal>monitor</literal> actions instead of the value of <literal>stonith-timeout</literal>. Some devices need much more or less time to complete than normal. Use this to specify an alternate, device-specific timeout. <indexterm> <primary>pcmk_monitor_timeout</primary><secondary>Fencing</secondary> </indexterm> <indexterm> <primary>Fencing</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>Property</secondary><tertiary>pcmk_monitor_timeout</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>pcmk_monitor_timeout</secondary> </indexterm> <indexterm> <primary>pcmk_monitor_timeout</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>pcmk_monitor_retries</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>Advanced use only.</emphasis> The maximum number of times to retry the <literal>monitor</literal> command within the timeout period. Some devices do not support multiple connections, and operations may fail if the device is busy with another task, so Pacemaker will automatically retry the operation, if there is time remaining. Use this option to alter the number of times Pacemaker retries before giving up. <indexterm> <primary>pcmk_monitor_retries</primary><secondary>Fencing</secondary> </indexterm> <indexterm> <primary>Fencing</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>Property</secondary><tertiary>pcmk_monitor_retries</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>pcmk_monitor_retries</secondary> </indexterm> <indexterm> <primary>pcmk_monitor_retries</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>pcmk_status_action</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "status"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>Advanced use only.</emphasis> The command to send to the resource agent in order to report status. Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific command. <indexterm> <primary>pcmk_status_action</primary><secondary>Fencing</secondary> </indexterm> <indexterm> <primary>Fencing</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>Property</secondary><tertiary>pcmk_status_action</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>pcmk_status_action</secondary> </indexterm> <indexterm> <primary>pcmk_status_action</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>pcmk_status_timeout</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>Advanced use only.</emphasis> Specify an alternate timeout to use for <literal>status</literal> actions instead of the value of <literal>stonith-timeout</literal>. Some devices need much more or less time to complete than normal. Use this to specify an alternate, device-specific timeout. <indexterm> <primary>pcmk_status_timeout</primary><secondary>Fencing</secondary> </indexterm> <indexterm> <primary>Fencing</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>Property</secondary><tertiary>pcmk_status_timeout</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>pcmk_status_timeout</secondary> </indexterm> <indexterm> <primary>pcmk_status_timeout</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>pcmk_status_retries</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>Advanced use only.</emphasis> The maximum number of times to retry the <literal>status</literal> command within the timeout period. Some devices do not support multiple connections, and operations may fail if the device is busy with another task, so Pacemaker will automatically retry the operation, if there is time remaining. Use this option to alter the number of times Pacemaker retries before giving up. <indexterm> <primary>pcmk_status_retries</primary><secondary>Fencing</secondary> </indexterm> <indexterm> <primary>Fencing</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>Property</secondary><tertiary>pcmk_status_retries</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>pcmk_status_retries</secondary> </indexterm> <indexterm> <primary>pcmk_status_retries</primary> </indexterm>"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
 msgid "Configuring STONITH"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Find the correct driver: <literal>stonith_admin --list-installed</literal>"
+msgid "Higher-level configuration shells include functionality to simplify the process below, particularly the step for deciding which parameters are required. However since this document deals only with core components, you should refer to the STONITH section of the <ulink url=\"http://www.clusterlabs.org/doc/\">Clusters from Scratch</ulink> guide for those details."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Since every device is different, the parameters needed to configure it will vary. To find out the parameters associated with the device, run: <literal>stonith_admin --metadata --agent type</literal>"
+msgid "Find the correct driver:"
 msgstr ""
 
-#. Tag: literallayout
+#. Tag: screen
 #, no-c-format
-msgid "The output should be XML formatted text containing additional\n"
-"parameter descriptions. We will endevor to make the output more\n"
-"friendly in a later version."
+msgid "# stonith_admin --list-installed"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Enter the shell crm Create an editable copy of the existing configuration <literal>cib new stonith</literal> Create a fencing resource containing a primitive resource with a class of stonith, a type of type and a parameter for each of the values returned in step 2: <literal>configure primitive …</literal>"
+msgid "Find the required parameters associated with the device (replacing $AGENT_NAME with the name obtained from the previous step):"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# stonith_admin --metadata --agent $AGENT_NAME"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Create a file called <literal>stonith.xml</literal> containing a primitive resource with a class of <literal>stonith</literal>, a type equal to the agent name obtained earlier, and a parameter for each of the values returned in the previous step."
 msgstr ""
 
 #. Tag: para
@@ -96,32 +524,52 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If the device does not support the list command, you may also need to set the special <literal>pcmk_host_list</literal> and/or <literal>pcmk_host_check</literal> parameters. See <literal>man stonithd</literal> for details."
+msgid "If the device does not support the <literal>list</literal> command, you may also need to set the special <literal>pcmk_host_list</literal> and/or <literal>pcmk_host_check</literal> parameters. See <literal>man stonithd</literal> for details."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If the device does not expect the victim to be specified with the port parameter, you may also need to set the special <literal>pcmk_host_argument</literal> parameter. See <literal>man stonithd</literal> for details."
+msgid "If the device does not expect the victim to be specified with the <literal>port</literal> parameter, you may also need to set the special <literal>pcmk_host_argument</literal> parameter. See <literal>man stonithd</literal> for details."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Upload it into the CIB from the shell: <literal>cib commit stonith</literal>"
+msgid "Upload it into the CIB using cibadmin:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# cibadmin -C -o resources --xml-file stonith.xml"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Once the stonith resource is running, you can test it by executing: <literal>stonith_admin --reboot nodename</literal>. Although you might want to stop the cluster on that machine first."
+msgid "Set <literal>stonith-enabled</literal> to true:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# crm_attribute -t crm_config -n stonith-enabled -v true"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Once the stonith resource is running, you can test it by executing the following (although you might want to stop the cluster on that machine first):"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# stonith_admin --reboot nodename"
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Example"
+msgid "Example STONITH Configuration"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Assuming we have an chassis containing four nodes and an IPMI device active on 10.0.0.1, then we would chose the fence_ipmilan driver in step 2 and obtain the following list of parameters"
+msgid "Assume we have an chassis containing four nodes and an IPMI device active on 192.0.2.1. We would choose the <literal>fence_ipmilan</literal> driver, and obtain the following list of parameters:"
 msgstr ""
 
 #. Tag: title
@@ -129,165 +577,686 @@ msgstr ""
 msgid "Obtaining a list of STONITH Parameters"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
 msgid "# stonith_admin --metadata -a fence_ipmilan"
 msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "&lt;?xml version=\"1.0\" ?&gt;\n"
-"&lt;resource-agent name=\"fence_ipmilan\" shortdesc=\"Fence agent for IPMI over LAN\"&gt;\n"
-"&lt;longdesc&gt;\n"
-"fence_ipmilan is an I/O Fencing agent which can be used with machines controlled by IPMI. This agent calls support software using ipmitool (http://ipmitool.sf.net/).\n"
-"\n"
-"To use fence_ipmilan with HP iLO 3 you have to enable lanplus option (lanplus / -P) and increase wait after operation to 4 seconds (power_wait=4 / -T 4)&lt;/longdesc&gt;\n"
-"&lt;parameters&gt;\n"
-"        &lt;parameter name=\"auth\" unique=\"1\"&gt;\n"
-"                &lt;getopt mixed=\"-A\" /&gt;\n"
-"                &lt;content type=\"string\" /&gt;\n"
-"                &lt;shortdesc&gt;IPMI Lan Auth type (md5, password, or none)&lt;/shortdesc&gt;\n"
-"        &lt;/parameter&gt;\n"
-"        &lt;parameter name=\"ipaddr\" unique=\"1\"&gt;\n"
-"                &lt;getopt mixed=\"-a\" /&gt;\n"
-"                &lt;content type=\"string\" /&gt;\n"
-"                &lt;shortdesc&gt;IPMI Lan IP to talk to&lt;/shortdesc&gt;\n"
-"        &lt;/parameter&gt;\n"
-"        &lt;parameter name=\"passwd\" unique=\"1\"&gt;\n"
-"                &lt;getopt mixed=\"-p\" /&gt;\n"
-"                &lt;content type=\"string\" /&gt;\n"
-"                &lt;shortdesc&gt;Password (if required) to control power on IPMI device&lt;/shortdesc&gt;\n"
-"        &lt;/parameter&gt;\n"
-"        &lt;parameter name=\"passwd_script\" unique=\"1\"&gt;\n"
-"                &lt;getopt mixed=\"-S\" /&gt;\n"
-"                &lt;content type=\"string\" /&gt;\n"
-"                &lt;shortdesc&gt;Script to retrieve password (if required)&lt;/shortdesc&gt;\n"
-"        &lt;/parameter&gt;\n"
-"        &lt;parameter name=\"lanplus\" unique=\"1\"&gt;\n"
-"                &lt;getopt mixed=\"-P\" /&gt;\n"
-"                &lt;content type=\"boolean\" /&gt;\n"
-"                &lt;shortdesc&gt;Use Lanplus&lt;/shortdesc&gt;\n"
-"        &lt;/parameter&gt;\n"
-"        &lt;parameter name=\"login\" unique=\"1\"&gt;\n"
-"                &lt;getopt mixed=\"-l\" /&gt;\n"
-"                &lt;content type=\"string\" /&gt;\n"
-"                &lt;shortdesc&gt;Username/Login (if required) to control power on IPMI device&lt;/shortdesc&gt;\n"
-"        &lt;/parameter&gt;\n"
-"        &lt;parameter name=\"action\" unique=\"1\"&gt;\n"
-"                &lt;getopt mixed=\"-o\" /&gt;\n"
-"                &lt;content type=\"string\" default=\"reboot\"/&gt;\n"
-"                &lt;shortdesc&gt;Operation to perform. Valid operations: on, off, reboot, status, list, diag, monitor or metadata&lt;/shortdesc&gt;\n"
-"        &lt;/parameter&gt;\n"
-"        &lt;parameter name=\"timeout\" unique=\"1\"&gt;\n"
-"                &lt;getopt mixed=\"-t\" /&gt;\n"
-"                &lt;content type=\"string\" /&gt;\n"
-"                &lt;shortdesc&gt;Timeout (sec) for IPMI operation&lt;/shortdesc&gt;\n"
-"        &lt;/parameter&gt;\n"
-"        &lt;parameter name=\"cipher\" unique=\"1\"&gt;\n"
-"                &lt;getopt mixed=\"-C\" /&gt;\n"
-"                &lt;content type=\"string\" /&gt;\n"
-"                &lt;shortdesc&gt;Ciphersuite to use (same as ipmitool -C parameter)&lt;/shortdesc&gt;\n"
-"        &lt;/parameter&gt;\n"
-"        &lt;parameter name=\"method\" unique=\"1\"&gt;\n"
-"                &lt;getopt mixed=\"-M\" /&gt;\n"
-"                &lt;content type=\"string\" default=\"onoff\"/&gt;\n"
-"                &lt;shortdesc&gt;Method to fence (onoff or cycle)&lt;/shortdesc&gt;\n"
-"        &lt;/parameter&gt;\n"
-"        &lt;parameter name=\"power_wait\" unique=\"1\"&gt;\n"
-"                &lt;getopt mixed=\"-T\" /&gt;\n"
-"                &lt;content type=\"string\" default=\"2\"/&gt;\n"
-"                &lt;shortdesc&gt;Wait X seconds after on/off operation&lt;/shortdesc&gt;\n"
-"        &lt;/parameter&gt;\n"
-"        &lt;parameter name=\"delay\" unique=\"1\"&gt;\n"
-"                &lt;getopt mixed=\"-f\" /&gt;\n"
-"                &lt;content type=\"string\" /&gt;\n"
-"                &lt;shortdesc&gt;Wait X seconds before fencing is started&lt;/shortdesc&gt;\n"
-"        &lt;/parameter&gt;\n"
-"        &lt;parameter name=\"verbose\" unique=\"1\"&gt;\n"
-"                &lt;getopt mixed=\"-v\" /&gt;\n"
-"                &lt;content type=\"boolean\" /&gt;\n"
-"                &lt;shortdesc&gt;Verbose mode&lt;/shortdesc&gt;\n"
-"        &lt;/parameter&gt;\n"
-"&lt;/parameters&gt;\n"
-"&lt;actions&gt;\n"
-"        &lt;action name=\"on\" /&gt;\n"
-"        &lt;action name=\"off\" /&gt;\n"
-"        &lt;action name=\"reboot\" /&gt;\n"
-"        &lt;action name=\"status\" /&gt;\n"
-"        &lt;action name=\"diag\" /&gt;\n"
-"        &lt;action name=\"list\" /&gt;\n"
-"        &lt;action name=\"monitor\" /&gt;\n"
-"        &lt;action name=\"metadata\" /&gt;\n"
-"&lt;/actions&gt;\n"
+msgid "&lt;resource-agent name=\"fence_ipmilan\" shortdesc=\"Fence agent for IPMI over LAN\"&gt;\n"
+"  &lt;symlink name=\"fence_ilo3\" shortdesc=\"Fence agent for HP iLO3\"/&gt;\n"
+"  &lt;symlink name=\"fence_ilo4\" shortdesc=\"Fence agent for HP iLO4\"/&gt;\n"
+"  &lt;symlink name=\"fence_idrac\" shortdesc=\"Fence agent for Dell iDRAC\"/&gt;\n"
+"  &lt;symlink name=\"fence_imm\" shortdesc=\"Fence agent for IBM Integrated Management Module\"/&gt;\n"
+"  &lt;longdesc&gt;\n"
+"  &lt;/longdesc&gt;\n"
+"  &lt;vendor-url&gt;\n"
+"  &lt;/vendor-url&gt;\n"
+"  &lt;parameters&gt;\n"
+"    &lt;parameter name=\"auth\" unique=\"0\" required=\"0\"&gt;\n"
+"      &lt;getopt mixed=\"-A\"/&gt;\n"
+"      &lt;content type=\"string\"/&gt;\n"
+"      &lt;shortdesc&gt;\n"
+"      &lt;/shortdesc&gt;\n"
+"    &lt;/parameter&gt;\n"
+"    &lt;parameter name=\"ipaddr\" unique=\"0\" required=\"1\"&gt;\n"
+"      &lt;getopt mixed=\"-a\"/&gt;\n"
+"      &lt;content type=\"string\"/&gt;\n"
+"      &lt;shortdesc&gt;\n"
+"      &lt;/shortdesc&gt;\n"
+"    &lt;/parameter&gt;\n"
+"    &lt;parameter name=\"passwd\" unique=\"0\" required=\"0\"&gt;\n"
+"      &lt;getopt mixed=\"-p\"/&gt;\n"
+"      &lt;content type=\"string\"/&gt;\n"
+"      &lt;shortdesc&gt;\n"
+"      &lt;/shortdesc&gt;\n"
+"    &lt;/parameter&gt;\n"
+"    &lt;parameter name=\"passwd_script\" unique=\"0\" required=\"0\"&gt;\n"
+"      &lt;getopt mixed=\"-S\"/&gt;\n"
+"      &lt;content type=\"string\"/&gt;\n"
+"      &lt;shortdesc&gt;\n"
+"      &lt;/shortdesc&gt;\n"
+"    &lt;/parameter&gt;\n"
+"    &lt;parameter name=\"lanplus\" unique=\"0\" required=\"0\"&gt;\n"
+"      &lt;getopt mixed=\"-P\"/&gt;\n"
+"      &lt;content type=\"boolean\"/&gt;\n"
+"      &lt;shortdesc&gt;\n"
+"      &lt;/shortdesc&gt;\n"
+"    &lt;/parameter&gt;\n"
+"    &lt;parameter name=\"login\" unique=\"0\" required=\"0\"&gt;\n"
+"      &lt;getopt mixed=\"-l\"/&gt;\n"
+"      &lt;content type=\"string\"/&gt;\n"
+"      &lt;shortdesc&gt;\n"
+"      &lt;/shortdesc&gt;\n"
+"    &lt;/parameter&gt;\n"
+"    &lt;parameter name=\"action\" unique=\"0\" required=\"0\"&gt;\n"
+"      &lt;getopt mixed=\"-o\"/&gt;\n"
+"      &lt;content type=\"string\" default=\"reboot\"/&gt;\n"
+"      &lt;shortdesc&gt;\n"
+"      &lt;/shortdesc&gt;\n"
+"    &lt;/parameter&gt;\n"
+"    &lt;parameter name=\"timeout\" unique=\"0\" required=\"0\"&gt;\n"
+"      &lt;getopt mixed=\"-t\"/&gt;\n"
+"      &lt;content type=\"string\"/&gt;\n"
+"      &lt;shortdesc&gt;\n"
+"      &lt;/shortdesc&gt;\n"
+"    &lt;/parameter&gt;\n"
+"    &lt;parameter name=\"cipher\" unique=\"0\" required=\"0\"&gt;\n"
+"      &lt;getopt mixed=\"-C\"/&gt;\n"
+"      &lt;content type=\"string\"/&gt;\n"
+"      &lt;shortdesc&gt;\n"
+"      &lt;/shortdesc&gt;\n"
+"    &lt;/parameter&gt;\n"
+"    &lt;parameter name=\"method\" unique=\"0\" required=\"0\"&gt;\n"
+"      &lt;getopt mixed=\"-M\"/&gt;\n"
+"      &lt;content type=\"string\" default=\"onoff\"/&gt;\n"
+"      &lt;shortdesc&gt;\n"
+"      &lt;/shortdesc&gt;\n"
+"    &lt;/parameter&gt;\n"
+"    &lt;parameter name=\"power_wait\" unique=\"0\" required=\"0\"&gt;\n"
+"      &lt;getopt mixed=\"-T\"/&gt;\n"
+"      &lt;content type=\"string\" default=\"2\"/&gt;\n"
+"      &lt;shortdesc&gt;\n"
+"      &lt;/shortdesc&gt;\n"
+"    &lt;/parameter&gt;\n"
+"    &lt;parameter name=\"delay\" unique=\"0\" required=\"0\"&gt;\n"
+"      &lt;getopt mixed=\"-f\"/&gt;\n"
+"      &lt;content type=\"string\"/&gt;\n"
+"      &lt;shortdesc&gt;\n"
+"      &lt;/shortdesc&gt;\n"
+"    &lt;/parameter&gt;\n"
+"    &lt;parameter name=\"privlvl\" unique=\"0\" required=\"0\"&gt;\n"
+"      &lt;getopt mixed=\"-L\"/&gt;\n"
+"      &lt;content type=\"string\"/&gt;\n"
+"      &lt;shortdesc&gt;\n"
+"      &lt;/shortdesc&gt;\n"
+"    &lt;/parameter&gt;\n"
+"    &lt;parameter name=\"verbose\" unique=\"0\" required=\"0\"&gt;\n"
+"      &lt;getopt mixed=\"-v\"/&gt;\n"
+"      &lt;content type=\"boolean\"/&gt;\n"
+"      &lt;shortdesc&gt;\n"
+"      &lt;/shortdesc&gt;\n"
+"    &lt;/parameter&gt;\n"
+"  &lt;/parameters&gt;\n"
+"  &lt;actions&gt;\n"
+"    &lt;action name=\"on\"/&gt;\n"
+"    &lt;action name=\"off\"/&gt;\n"
+"    &lt;action name=\"reboot\"/&gt;\n"
+"    &lt;action name=\"status\"/&gt;\n"
+"    &lt;action name=\"diag\"/&gt;\n"
+"    &lt;action name=\"list\"/&gt;\n"
+"    &lt;action name=\"monitor\"/&gt;\n"
+"    &lt;action name=\"metadata\"/&gt;\n"
+"    &lt;action name=\"stop\" timeout=\"20s\"/&gt;\n"
+"    &lt;action name=\"start\" timeout=\"20s\"/&gt;\n"
+"  &lt;/actions&gt;\n"
 "&lt;/resource-agent&gt;"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "from which we would create a STONITH resource fragment that might look like this"
+msgid "Based on that, we would create a STONITH resource fragment that might look like this:"
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Sample STONITH Resource"
+msgid "An IPMI-based STONITH Resource"
 msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "# crm crm(live)# cib new stonith\n"
-"INFO: stonith shadow CIB created\n"
-"crm(stonith)# configure primitive impi-fencing stonith::fence_ipmilan \\\n"
-" params pcmk_host_list=\"pcmk-1 pcmk-2\" ipaddr=10.0.0.1 login=testuser passwd=abc123 \\\n"
-" op monitor interval=\"60s\""
+msgid "&lt;primitive id=\"Fencing\" class=\"stonith\" type=\"fence_ipmilan\" &gt;\n"
+"  &lt;instance_attributes id=\"Fencing-params\" &gt;\n"
+"    &lt;nvpair id=\"Fencing-passwd\" name=\"passwd\" value=\"testuser\" /&gt;\n"
+"    &lt;nvpair id=\"Fencing-login\" name=\"login\" value=\"abc123\" /&gt;\n"
+"    &lt;nvpair id=\"Fencing-ipaddr\" name=\"ipaddr\" value=\"192.0.2.1\" /&gt;\n"
+"    &lt;nvpair id=\"Fencing-pcmk_host_list\" name=\"pcmk_host_list\" value=\"pcmk-1 pcmk-2\" /&gt;\n"
+"  &lt;/instance_attributes&gt;\n"
+"  &lt;operations &gt;\n"
+"    &lt;op id=\"Fencing-monitor-10m\" interval=\"10m\" name=\"monitor\" timeout=\"300s\" /&gt;\n"
+"  &lt;/operations&gt;\n"
+"&lt;/primitive&gt;"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "And finally, since we disabled it earlier, we need to re-enable STONITH. At this point we should have the following configuration."
+msgid "Finally, we need to enable STONITH:"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Advanced STONITH Configurations"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Now push the configuration into the cluster."
+msgid "Some people consider that having one fencing device is a single point of failure <footnote><para>Not true, since a node or resource must fail before fencing even has a chance to</para></footnote>; others prefer removing the node from the storage and network instead of turning it off."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Whatever the reason, Pacemaker supports fencing nodes with multiple devices through a feature called <emphasis>fencing topologies</emphasis>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Simply create the individual devices as you normally would, then define one or more <literal>fencing-level</literal> entries in the <literal>fencing-topology</literal> section of the configuration."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Each fencing level is attempted in order of ascending <literal>index</literal>. Allowed indexes are 0 to 9."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If a device fails, processing terminates for the current level. No further devices in that level are exercised, and the next level is attempted instead."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If the operation succeeds for all the listed devices in a level, the level is deemed to have passed."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The operation is finished when a level has passed (success), or all levels have been attempted (failed)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If the operation failed, the next step is determined by the Policy Engine and/or <literal>crmd</literal>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Some possible uses of topologies include:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Try poison-pill and fail back to power"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Try disk and network, and fall back to power if either fails"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Initiate a kdump and then poweroff the node"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Properties of Fencing Levels"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>id</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A unique name for the level <indexterm> <primary>id</primary><secondary>fencing-level</secondary> </indexterm> <indexterm> <primary>fencing-level</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>fencing-level</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>fencing-level</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>target</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The name of a single node to which this level applies <indexterm> <primary>target</primary><secondary>fencing-level</secondary> </indexterm> <indexterm> <primary>fencing-level</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>fencing-level</secondary><tertiary>target</tertiary> </indexterm> <indexterm> <primary>fencing-level</primary><secondary>target</secondary> </indexterm> <indexterm> <primary>target</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>target-pattern</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A regular expression matching the names of nodes to which this level applies <emphasis>(since 1.1.14)</emphasis> <indexterm> <primary>target-pattern</primary><secondary>fencing-level</secondary> </indexterm> <indexterm> <primary>fencing-level</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>fencing-level</secondary><tertiary>target-pattern</tertiary> </indexterm> <indexterm> <primary>fencing-level</primary><secondary>target-pattern</secondary> </indexterm> <indexterm> <primary>target-pattern</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>target-attribute</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The name of a node attribute that is set for nodes to which this level applies <emphasis>(since 1.1.14)</emphasis> <indexterm> <primary>target-attribute</primary><secondary>fencing-level</secondary> </indexterm> <indexterm> <primary>fencing-level</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>fencing-level</secondary><tertiary>target-attribute</tertiary> </indexterm> <indexterm> <primary>fencing-level</primary><secondary>target-attribute</secondary> </indexterm> <indexterm> <primary>target-attribute</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>index</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The order in which to attempt the levels. Levels are attempted in ascending order <emphasis>until one succeeds</emphasis>. <indexterm> <primary>index</primary><secondary>fencing-level</secondary> </indexterm> <indexterm> <primary>fencing-level</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>fencing-level</secondary><tertiary>index</tertiary> </indexterm> <indexterm> <primary>fencing-level</primary><secondary>index</secondary> </indexterm> <indexterm> <primary>index</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>devices</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A comma-separated list of devices that must all be tried for this level <indexterm> <primary>devices</primary><secondary>fencing-level</secondary> </indexterm> <indexterm> <primary>fencing-level</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>fencing-level</secondary><tertiary>devices</tertiary> </indexterm> <indexterm> <primary>fencing-level</primary><secondary>devices</secondary> </indexterm> <indexterm> <primary>devices</primary> </indexterm>"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Fencing topology with different devices for different nodes"
 msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "crm(stonith)# configure property stonith-enabled=\"true\"\n"
-"crm(stonith)# configure shownode pcmk-1\n"
-"node pcmk-2\n"
-"primitive WebData ocf:linbit:drbd \\\n"
-"    params drbd_resource=\"wwwdata\" \\\n"
-"    op monitor interval=\"60s\"\n"
-"primitive WebFS ocf:heartbeat:Filesystem \\\n"
-"    params device=\"/dev/drbd/by-res/wwwdata\" directory=\"/var/www/html\" fstype=\"gfs2\"\n"
-"primitive WebSite ocf:heartbeat:apache \\\n"
-"    params configfile=\"/etc/httpd/conf/httpd.conf\" \\\n"
-"    op monitor interval=\"1min\"\n"
-"primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
-"    params ip=\"192.168.122.101\" cidr_netmask=\"32\" clusterip_hash=\"sourceip\" \\\n"
-"    op monitor interval=\"30s\"primitive ipmi-fencing stonith::fence_ipmilan \\ params pcmk_host_list=\"pcmk-1 pcmk-2\" ipaddr=10.0.0.1 login=testuser passwd=abc123 \\ op monitor interval=\"60s\"ms WebDataClone WebData \\\n"
-"    meta master-max=\"2\" master-node-max=\"1\" clone-max=\"2\" clone-node-max=\"1\" notify=\"true\"\n"
-"clone WebFSClone WebFS\n"
-"clone WebIP ClusterIP \\\n"
-"    meta globally-unique=\"true\" clone-max=\"2\" clone-node-max=\"2\"\n"
-"clone WebSiteClone WebSite\n"
-"colocation WebSite-with-WebFS inf: WebSiteClone WebFSClone\n"
-"colocation fs_on_drbd inf: WebFSClone WebDataClone:Master\n"
-"colocation website-with-ip inf: WebSiteClone WebIP\n"
-"order WebFS-after-WebData inf: WebDataClone:promote WebFSClone:start\n"
-"order WebSite-after-WebFS inf: WebFSClone WebSiteClone\n"
-"order apache-after-ip inf: WebIP WebSiteClone\n"
-"property $id=\"cib-bootstrap-options\" \\\n"
-"    dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
-"    cluster-infrastructure=\"openais\" \\\n"
-"    expected-quorum-votes=\"2\" \\\n"
-"    stonith-enabled=\"true\" \\\n"
-"    no-quorum-policy=\"ignore\"\n"
-"rsc_defaults $id=\"rsc-options\" \\\n"
-"    resource-stickiness=\"100\"\n"
-"crm(stonith)# cib commit stonithINFO: commited 'stonith' shadow CIB to the cluster\n"
-"crm(stonith)# quit\n"
-"bye"
+msgid " &lt;cib crm_feature_set=\"3.0.6\" validate-with=\"pacemaker-1.2\" admin_epoch=\"1\" epoch=\"0\" num_updates=\"0\"&gt;\n"
+"  &lt;configuration&gt;\n"
+"    ...\n"
+"    &lt;fencing-topology&gt;\n"
+"      &lt;!-- For pcmk-1, try poison-pill and fail back to power --&gt;\n"
+"      &lt;fencing-level id=\"f-p1.1\" target=\"pcmk-1\" index=\"1\" devices=\"poison-pill\"/&gt;\n"
+"      &lt;fencing-level id=\"f-p1.2\" target=\"pcmk-1\" index=\"2\" devices=\"power\"/&gt;\n"
+"\n"
+"      &lt;!-- For pcmk-2, try disk and network, and fail back to power --&gt;\n"
+"      &lt;fencing-level id=\"f-p2.1\" target=\"pcmk-2\" index=\"1\" devices=\"disk,network\"/&gt;\n"
+"      &lt;fencing-level id=\"f-p2.2\" target=\"pcmk-2\" index=\"2\" devices=\"power\"/&gt;\n"
+"    &lt;/fencing-topology&gt;\n"
+"    ...\n"
+"  &lt;configuration&gt;\n"
+"  &lt;status/&gt;\n"
+"&lt;/cib&gt;"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Example Dual-Layer, Dual-Device Fencing Topologies"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The following example illustrates an advanced use of <literal>fencing-topology</literal> in a cluster with the following properties:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "3 nodes (2 active prod-mysql nodes, 1 prod_mysql-rep in standby for quorum purposes)"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "the active nodes have an IPMI-controlled power board reached at 192.0.2.1 and 192.0.2.2"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "the active nodes also have two independent PSUs (Power Supply Units) connected to two independent PDUs (Power Distribution Units) reached at 198.51.100.1 (port 10 and port 11) and 203.0.113.1 (port 10 and port 11)"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "the first fencing method uses the <literal>fence_ipmi</literal> agent"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "the second fencing method uses the <literal>fence_apc_snmp</literal> agent targetting 2 fencing devices (one per PSU, either port 10 or 11)"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "fencing is only implemented for the active nodes and has location constraints"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "fencing topology is set to try IPMI fencing first then default to a \"sure-kill\" dual PDU fencing"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In a normal failure scenario, STONITH will first select <literal>fence_ipmi</literal> to try to kill the faulty node. Using a fencing topology, if that first method fails, STONITH will then move on to selecting <literal>fence_apc_snmp</literal> twice:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "once for the first PDU"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "again for the second PDU"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The fence action is considered successful only if both PDUs report the required status. If any of them fails, STONITH loops back to the first fencing method, <literal>fence_ipmi</literal>, and so on until the node is fenced or fencing action is cancelled."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "First fencing method: single IPMI device"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Each cluster node has it own dedicated IPMI channel that can be called for fencing using the following primitives:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;primitive class=\"stonith\" id=\"fence_prod-mysql1_ipmi\" type=\"fence_ipmilan\"&gt;\n"
+"  &lt;instance_attributes id=\"fence_prod-mysql1_ipmi-instance_attributes\"&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql1_ipmi-instance_attributes-ipaddr\" name=\"ipaddr\" value=\"192.0.2.1\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql1_ipmi-instance_attributes-action\" name=\"action\" value=\"off\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql1_ipmi-instance_attributes-login\" name=\"login\" value=\"fencing\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql1_ipmi-instance_attributes-passwd\" name=\"passwd\" value=\"finishme\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql1_ipmi-instance_attributes-verbose\" name=\"verbose\" value=\"true\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql1_ipmi-instance_attributes-pcmk_host_list\" name=\"pcmk_host_list\" value=\"prod-mysql1\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql1_ipmi-instance_attributes-lanplus\" name=\"lanplus\" value=\"true\"/&gt;\n"
+"  &lt;/instance_attributes&gt;\n"
+"&lt;/primitive&gt;\n"
+"&lt;primitive class=\"stonith\" id=\"fence_prod-mysql2_ipmi\" type=\"fence_ipmilan\"&gt;\n"
+"  &lt;instance_attributes id=\"fence_prod-mysql2_ipmi-instance_attributes\"&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql2_ipmi-instance_attributes-ipaddr\" name=\"ipaddr\" value=\"192.0.2.2\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql2_ipmi-instance_attributes-action\" name=\"action\" value=\"off\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql2_ipmi-instance_attributes-login\" name=\"login\" value=\"fencing\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql2_ipmi-instance_attributes-passwd\" name=\"passwd\" value=\"finishme\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql2_ipmi-instance_attributes-verbose\" name=\"verbose\" value=\"true\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql2_ipmi-instance_attributes-pcmk_host_list\" name=\"pcmk_host_list\" value=\"prod-mysql2\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql2_ipmi-instance_attributes-lanplus\" name=\"lanplus\" value=\"true\"/&gt;\n"
+"  &lt;/instance_attributes&gt;\n"
+"&lt;/primitive&gt;"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Second fencing method: dual PDU devices"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Each cluster node also has two distinct power channels controlled by two distinct PDUs. That means a total of 4 fencing devices configured as follows:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Node 1, PDU 1, PSU 1 @ port 10"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Node 1, PDU 2, PSU 2 @ port 10"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Node 2, PDU 1, PSU 1 @ port 11"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Node 2, PDU 2, PSU 2 @ port 11"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The matching fencing agents are configured as follows:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;primitive class=\"stonith\" id=\"fence_prod-mysql1_apc1\" type=\"fence_apc_snmp\"&gt;\n"
+"  &lt;instance_attributes id=\"fence_prod-mysql1_apc1-instance_attributes\"&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql1_apc1-instance_attributes-ipaddr\" name=\"ipaddr\" value=\"198.51.100.1\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql1_apc1-instance_attributes-action\" name=\"action\" value=\"off\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql1_apc1-instance_attributes-port\" name=\"port\" value=\"10\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql1_apc1-instance_attributes-login\" name=\"login\" value=\"fencing\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql1_apc1-instance_attributes-passwd\" name=\"passwd\" value=\"fencing\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql1_apc1-instance_attributes-pcmk_host_list\" name=\"pcmk_host_list\" value=\"prod-mysql1\"/&gt;\n"
+"  &lt;/instance_attributes&gt;\n"
+"&lt;/primitive&gt;\n"
+"&lt;primitive class=\"stonith\" id=\"fence_prod-mysql1_apc2\" type=\"fence_apc_snmp\"&gt;\n"
+"  &lt;instance_attributes id=\"fence_prod-mysql1_apc2-instance_attributes\"&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql1_apc2-instance_attributes-ipaddr\" name=\"ipaddr\" value=\"203.0.113.1\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql1_apc2-instance_attributes-action\" name=\"action\" value=\"off\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql1_apc2-instance_attributes-port\" name=\"port\" value=\"10\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql1_apc2-instance_attributes-login\" name=\"login\" value=\"fencing\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql1_apc2-instance_attributes-passwd\" name=\"passwd\" value=\"fencing\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql1_apc2-instance_attributes-pcmk_host_list\" name=\"pcmk_host_list\" value=\"prod-mysql1\"/&gt;\n"
+"  &lt;/instance_attributes&gt;\n"
+"&lt;/primitive&gt;\n"
+"&lt;primitive class=\"stonith\" id=\"fence_prod-mysql2_apc1\" type=\"fence_apc_snmp\"&gt;\n"
+"  &lt;instance_attributes id=\"fence_prod-mysql2_apc1-instance_attributes\"&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql2_apc1-instance_attributes-ipaddr\" name=\"ipaddr\" value=\"198.51.100.1\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql2_apc1-instance_attributes-action\" name=\"action\" value=\"off\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql2_apc1-instance_attributes-port\" name=\"port\" value=\"11\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql2_apc1-instance_attributes-login\" name=\"login\" value=\"fencing\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql2_apc1-instance_attributes-passwd\" name=\"passwd\" value=\"fencing\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql2_apc1-instance_attributes-pcmk_host_list\" name=\"pcmk_host_list\" value=\"prod-mysql2\"/&gt;\n"
+"  &lt;/instance_attributes&gt;\n"
+"&lt;/primitive&gt;\n"
+"&lt;primitive class=\"stonith\" id=\"fence_prod-mysql2_apc2\" type=\"fence_apc_snmp\"&gt;\n"
+"  &lt;instance_attributes id=\"fence_prod-mysql2_apc2-instance_attributes\"&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql2_apc2-instance_attributes-ipaddr\" name=\"ipaddr\" value=\"203.0.113.1\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql2_apc2-instance_attributes-action\" name=\"action\" value=\"off\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql2_apc2-instance_attributes-port\" name=\"port\" value=\"11\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql2_apc2-instance_attributes-login\" name=\"login\" value=\"fencing\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql2_apc2-instance_attributes-passwd\" name=\"passwd\" value=\"fencing\"/&gt;\n"
+"    &lt;nvpair id=\"fence_prod-mysql2_apc2-instance_attributes-pcmk_host_list\" name=\"pcmk_host_list\" value=\"prod-mysql2\"/&gt;\n"
+"  &lt;/instance_attributes&gt;\n"
+"&lt;/primitive&gt;"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Location Constraints"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "To prevent STONITH from trying to run a fencing agent on the same node it is supposed to fence, constraints are placed on all the fencing primitives:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;constraints&gt;\n"
+"  &lt;rsc_location id=\"l_fence_prod-mysql1_ipmi\" node=\"prod-mysql1\" rsc=\"fence_prod-mysql1_ipmi\" score=\"-INFINITY\"/&gt;\n"
+"  &lt;rsc_location id=\"l_fence_prod-mysql2_ipmi\" node=\"prod-mysql2\" rsc=\"fence_prod-mysql2_ipmi\" score=\"-INFINITY\"/&gt;\n"
+"  &lt;rsc_location id=\"l_fence_prod-mysql1_apc2\" node=\"prod-mysql1\" rsc=\"fence_prod-mysql1_apc2\" score=\"-INFINITY\"/&gt;\n"
+"  &lt;rsc_location id=\"l_fence_prod-mysql1_apc1\" node=\"prod-mysql1\" rsc=\"fence_prod-mysql1_apc1\" score=\"-INFINITY\"/&gt;\n"
+"  &lt;rsc_location id=\"l_fence_prod-mysql2_apc1\" node=\"prod-mysql2\" rsc=\"fence_prod-mysql2_apc1\" score=\"-INFINITY\"/&gt;\n"
+"  &lt;rsc_location id=\"l_fence_prod-mysql2_apc2\" node=\"prod-mysql2\" rsc=\"fence_prod-mysql2_apc2\" score=\"-INFINITY\"/&gt;\n"
+"&lt;/constraints&gt;"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Fencing topology"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Now that all the fencing resources are defined, it’s time to create the right topology. We want to first fence using IPMI and if that does not work, fence both PDUs to effectively and surely kill the node."
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;fencing-topology&gt;\n"
+"  &lt;fencing-level devices=\"fence_prod-mysql1_ipmi\" id=\"fencing-2\" index=\"1\" target=\"prod-mysql1\"/&gt;\n"
+"  &lt;fencing-level devices=\"fence_prod-mysql1_apc1,fence_prod-mysql1_apc2\" id=\"fencing-3\" index=\"2\" target=\"prod-mysql1\"/&gt;\n"
+"  &lt;fencing-level devices=\"fence_prod-mysql2_ipmi\" id=\"fencing-0\" index=\"1\" target=\"prod-mysql2\"/&gt;\n"
+"  &lt;fencing-level devices=\"fence_prod-mysql2_apc1,fence_prod-mysql2_apc2\" id=\"fencing-1\" index=\"2\" target=\"prod-mysql2\"/&gt;\n"
+"&lt;/fencing-topology&gt;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Please note, in <literal>fencing-topology</literal>, the lowest <literal>index</literal> value determines the priority of the first fencing method."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Final configuration"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Put together, the configuration looks like this:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;cib admin_epoch=\"0\" crm_feature_set=\"3.0.7\" epoch=\"292\" have-quorum=\"1\" num_updates=\"29\" validate-with=\"pacemaker-1.2\"&gt;\n"
+"  &lt;configuration&gt;\n"
+"    &lt;crm_config&gt;\n"
+"      &lt;cluster_property_set id=\"cib-bootstrap-options\"&gt;\n"
+"        &lt;nvpair id=\"cib-bootstrap-options-stonith-enabled\" name=\"stonith-enabled\" value=\"true\"/&gt;\n"
+"        &lt;nvpair id=\"cib-bootstrap-options-stonith-action\" name=\"stonith-action\" value=\"off\"/&gt;\n"
+"        &lt;nvpair id=\"cib-bootstrap-options-expected-quorum-votes\" name=\"expected-quorum-votes\" value=\"3\"/&gt;\n"
+"       ...\n"
+"      &lt;/cluster_property_set&gt;\n"
+"    &lt;/crm_config&gt;\n"
+"    &lt;nodes&gt;\n"
+"      &lt;node id=\"prod-mysql1\" uname=\"prod-mysql1\"&gt;\n"
+"      &lt;node id=\"prod-mysql2\" uname=\"prod-mysql2\"/&gt;\n"
+"      &lt;node id=\"prod-mysql-rep1\" uname=\"prod-mysql-rep1\"/&gt;\n"
+"        &lt;instance_attributes id=\"prod-mysql-rep1\"&gt;\n"
+"          &lt;nvpair id=\"prod-mysql-rep1-standby\" name=\"standby\" value=\"on\"/&gt;\n"
+"        &lt;/instance_attributes&gt;\n"
+"      &lt;/node&gt;\n"
+"    &lt;/nodes&gt;\n"
+"    &lt;resources&gt;\n"
+"      &lt;primitive class=\"stonith\" id=\"fence_prod-mysql1_ipmi\" type=\"fence_ipmilan\"&gt;\n"
+"        &lt;instance_attributes id=\"fence_prod-mysql1_ipmi-instance_attributes\"&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql1_ipmi-instance_attributes-ipaddr\" name=\"ipaddr\" value=\"192.0.2.1\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql1_ipmi-instance_attributes-action\" name=\"action\" value=\"off\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql1_ipmi-instance_attributes-login\" name=\"login\" value=\"fencing\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql1_ipmi-instance_attributes-passwd\" name=\"passwd\" value=\"finishme\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql1_ipmi-instance_attributes-verbose\" name=\"verbose\" value=\"true\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql1_ipmi-instance_attributes-pcmk_host_list\" name=\"pcmk_host_list\" value=\"prod-mysql1\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql1_ipmi-instance_attributes-lanplus\" name=\"lanplus\" value=\"true\"/&gt;\n"
+"        &lt;/instance_attributes&gt;\n"
+"      &lt;/primitive&gt;\n"
+"      &lt;primitive class=\"stonith\" id=\"fence_prod-mysql2_ipmi\" type=\"fence_ipmilan\"&gt;\n"
+"        &lt;instance_attributes id=\"fence_prod-mysql2_ipmi-instance_attributes\"&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql2_ipmi-instance_attributes-ipaddr\" name=\"ipaddr\" value=\"192.0.2.2\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql2_ipmi-instance_attributes-action\" name=\"action\" value=\"off\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql2_ipmi-instance_attributes-login\" name=\"login\" value=\"fencing\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql2_ipmi-instance_attributes-passwd\" name=\"passwd\" value=\"finishme\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql2_ipmi-instance_attributes-verbose\" name=\"verbose\" value=\"true\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql2_ipmi-instance_attributes-pcmk_host_list\" name=\"pcmk_host_list\" value=\"prod-mysql2\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql2_ipmi-instance_attributes-lanplus\" name=\"lanplus\" value=\"true\"/&gt;\n"
+"        &lt;/instance_attributes&gt;\n"
+"      &lt;/primitive&gt;\n"
+"      &lt;primitive class=\"stonith\" id=\"fence_prod-mysql1_apc1\" type=\"fence_apc_snmp\"&gt;\n"
+"        &lt;instance_attributes id=\"fence_prod-mysql1_apc1-instance_attributes\"&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql1_apc1-instance_attributes-ipaddr\" name=\"ipaddr\" value=\"198.51.100.1\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql1_apc1-instance_attributes-action\" name=\"action\" value=\"off\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql1_apc1-instance_attributes-port\" name=\"port\" value=\"10\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql1_apc1-instance_attributes-login\" name=\"login\" value=\"fencing\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql1_apc1-instance_attributes-passwd\" name=\"passwd\" value=\"fencing\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql1_apc1-instance_attributes-pcmk_host_list\" name=\"pcmk_host_list\" value=\"prod-mysql1\"/&gt;\n"
+"        &lt;/instance_attributes&gt;\n"
+"      &lt;/primitive&gt;\n"
+"      &lt;primitive class=\"stonith\" id=\"fence_prod-mysql1_apc2\" type=\"fence_apc_snmp\"&gt;\n"
+"        &lt;instance_attributes id=\"fence_prod-mysql1_apc2-instance_attributes\"&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql1_apc2-instance_attributes-ipaddr\" name=\"ipaddr\" value=\"203.0.113.1\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql1_apc2-instance_attributes-action\" name=\"action\" value=\"off\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql1_apc2-instance_attributes-port\" name=\"port\" value=\"10\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql1_apc2-instance_attributes-login\" name=\"login\" value=\"fencing\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql1_apc2-instance_attributes-passwd\" name=\"passwd\" value=\"fencing\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql1_apc2-instance_attributes-pcmk_host_list\" name=\"pcmk_host_list\" value=\"prod-mysql1\"/&gt;\n"
+"        &lt;/instance_attributes&gt;\n"
+"      &lt;/primitive&gt;\n"
+"      &lt;primitive class=\"stonith\" id=\"fence_prod-mysql2_apc1\" type=\"fence_apc_snmp\"&gt;\n"
+"        &lt;instance_attributes id=\"fence_prod-mysql2_apc1-instance_attributes\"&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql2_apc1-instance_attributes-ipaddr\" name=\"ipaddr\" value=\"198.51.100.1\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql2_apc1-instance_attributes-action\" name=\"action\" value=\"off\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql2_apc1-instance_attributes-port\" name=\"port\" value=\"11\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql2_apc1-instance_attributes-login\" name=\"login\" value=\"fencing\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql2_apc1-instance_attributes-passwd\" name=\"passwd\" value=\"fencing\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql2_apc1-instance_attributes-pcmk_host_list\" name=\"pcmk_host_list\" value=\"prod-mysql2\"/&gt;\n"
+"        &lt;/instance_attributes&gt;\n"
+"      &lt;/primitive&gt;\n"
+"      &lt;primitive class=\"stonith\" id=\"fence_prod-mysql2_apc2\" type=\"fence_apc_snmp\"&gt;\n"
+"        &lt;instance_attributes id=\"fence_prod-mysql2_apc2-instance_attributes\"&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql2_apc2-instance_attributes-ipaddr\" name=\"ipaddr\" value=\"203.0.113.1\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql2_apc2-instance_attributes-action\" name=\"action\" value=\"off\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql2_apc2-instance_attributes-port\" name=\"port\" value=\"11\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql2_apc2-instance_attributes-login\" name=\"login\" value=\"fencing\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql2_apc2-instance_attributes-passwd\" name=\"passwd\" value=\"fencing\"/&gt;\n"
+"          &lt;nvpair id=\"fence_prod-mysql2_apc2-instance_attributes-pcmk_host_list\" name=\"pcmk_host_list\" value=\"prod-mysql2\"/&gt;\n"
+"        &lt;/instance_attributes&gt;\n"
+"      &lt;/primitive&gt;\n"
+"   &lt;/resources&gt;\n"
+"    &lt;constraints&gt;\n"
+"      &lt;rsc_location id=\"l_fence_prod-mysql1_ipmi\" node=\"prod-mysql1\" rsc=\"fence_prod-mysql1_ipmi\" score=\"-INFINITY\"/&gt;\n"
+"      &lt;rsc_location id=\"l_fence_prod-mysql2_ipmi\" node=\"prod-mysql2\" rsc=\"fence_prod-mysql2_ipmi\" score=\"-INFINITY\"/&gt;\n"
+"      &lt;rsc_location id=\"l_fence_prod-mysql1_apc2\" node=\"prod-mysql1\" rsc=\"fence_prod-mysql1_apc2\" score=\"-INFINITY\"/&gt;\n"
+"      &lt;rsc_location id=\"l_fence_prod-mysql1_apc1\" node=\"prod-mysql1\" rsc=\"fence_prod-mysql1_apc1\" score=\"-INFINITY\"/&gt;\n"
+"      &lt;rsc_location id=\"l_fence_prod-mysql2_apc1\" node=\"prod-mysql2\" rsc=\"fence_prod-mysql2_apc1\" score=\"-INFINITY\"/&gt;\n"
+"      &lt;rsc_location id=\"l_fence_prod-mysql2_apc2\" node=\"prod-mysql2\" rsc=\"fence_prod-mysql2_apc2\" score=\"-INFINITY\"/&gt;\n"
+"    &lt;/constraints&gt;\n"
+"    &lt;fencing-topology&gt;\n"
+"      &lt;fencing-level devices=\"fence_prod-mysql1_ipmi\" id=\"fencing-2\" index=\"1\" target=\"prod-mysql1\"/&gt;\n"
+"      &lt;fencing-level devices=\"fence_prod-mysql1_apc1,fence_prod-mysql1_apc2\" id=\"fencing-3\" index=\"2\" target=\"prod-mysql1\"/&gt;\n"
+"      &lt;fencing-level devices=\"fence_prod-mysql2_ipmi\" id=\"fencing-0\" index=\"1\" target=\"prod-mysql2\"/&gt;\n"
+"      &lt;fencing-level devices=\"fence_prod-mysql2_apc1,fence_prod-mysql2_apc2\" id=\"fencing-1\" index=\"2\" target=\"prod-mysql2\"/&gt;\n"
+"    &lt;/fencing-topology&gt;\n"
+"   ...\n"
+"  &lt;/configuration&gt;\n"
+"&lt;/cib&gt;"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Remapping Reboots"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "When the cluster needs to reboot a node, whether because <literal>stonith-action</literal> is <literal>reboot</literal> or because a reboot was manually requested (such as by <literal>stonith_admin --reboot</literal>), it will remap that to other commands in two cases:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If the chosen fencing device does not support the <literal>reboot</literal> command, the cluster will ask it to perform <literal>off</literal> instead."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If a fencing topology level with multiple devices must be executed, the cluster will ask all the devices to perform <literal>off</literal>, then ask the devices to perform <literal>on</literal>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "To understand the second case, consider the example of a node with redundant power supplies connected to intelligent power switches. Rebooting one switch and then the other would have no effect on the node. Turning both switches off, and then on, actually reboots the node."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In such a case, the fencing operation will be treated as successful as long as the <literal>off</literal> commands succeed, because then it is safe for the cluster to recover any resources that were on the node. Timeouts and errors in the <literal>on</literal> phase will be logged but ignored."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "When a reboot operation is remapped, any action-specific timeout for the remapped action will be used (for example, <literal>pcmk_off_timeout</literal> will be used when executing the <literal>off</literal> command, not <literal>pcmk_reboot_timeout</literal>)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In Pacemaker versions 1.1.13 and earlier, reboots will not be remapped in the second case. To achieve the same effect, separate fencing devices for off and on actions must be configured."
 msgstr ""
 

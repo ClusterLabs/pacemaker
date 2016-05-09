@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-10-17T05:19:02\n"
-"PO-Revision-Date: 2012-10-17T05:19:02\n"
+"POT-Creation-Date: 2016-05-03 17:45-0500\n"
+"PO-Revision-Date: 2016-05-03 17:45-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -39,12 +39,22 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
+msgid "Rule Properties"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
 msgid "Properties of a Rule"
 msgstr ""
 
 #. Tag: entry
 #, no-c-format
 msgid "Field"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Default"
 msgstr ""
 
 #. Tag: entry
@@ -59,7 +69,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Limits the rule to apply only when the resource is in that role. Allowed values: <emphasis>Started</emphasis>, <literal>Slave,</literal> and <literal>Master</literal>. NOTE: A rule with <literal>role=\"Master\"</literal> can not determine the initial location of a clone instance. It will only affect which of the active instances will be promoted. <indexterm> <primary>role</primary><secondary>Constraint Rule</secondary> </indexterm> <indexterm> <primary>Constraint Rule</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Rule</secondary><tertiary>role</tertiary> </indexterm> <indexterm> <primary>Rule</primary><secondary>role</secondary> </indexterm> <indexterm> <primary>role</primary> </indexterm>"
+msgid "<literal>started</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Limits the rule to apply only when the resource is in the specified role. Allowed values are <literal>started</literal>, <literal>slave</literal>, and <literal>master</literal>. A rule with <literal>role=\"master\"</literal> cannot determine the initial location of a clone instance and will only affect which of the active instances will be promoted. <indexterm> <primary>role</primary><secondary>Constraint Rule</secondary> </indexterm> <indexterm> <primary>Constraint Rule</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Rule</secondary><tertiary>role</tertiary> </indexterm> <indexterm> <primary>Rule</primary><secondary>role</secondary> </indexterm> <indexterm> <primary>role</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -89,7 +104,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "How to combine the result of multiple expression objects. Allowed values: <emphasis>and</emphasis> and <literal>or</literal>. <indexterm> <primary>boolean-op</primary><secondary>Constraint Rule</secondary> </indexterm> <indexterm> <primary>Constraint Rule</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Rule</secondary><tertiary>boolean-op</tertiary> </indexterm> <indexterm> <primary>Rule</primary><secondary>boolean-op</secondary> </indexterm> <indexterm> <primary>boolean-op</primary> </indexterm>"
+msgid "<literal>and</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "How to combine the result of multiple expression objects. Allowed values are <literal>and</literal> and <literal>or</literal>. <indexterm> <primary>boolean-op</primary><secondary>Constraint Rule</secondary> </indexterm> <indexterm> <primary>Constraint Rule</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Rule</secondary><tertiary>boolean-op</tertiary> </indexterm> <indexterm> <primary>Rule</primary><secondary>boolean-op</secondary> </indexterm> <indexterm> <primary>boolean-op</primary> </indexterm>"
 msgstr ""
 
 #. Tag: title
@@ -119,7 +139,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "User supplied value for comparison <indexterm> <primary>value</primary><secondary>Constraint Expression</secondary> </indexterm> <indexterm> <primary>Constraint Expression</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Attribute Expression</secondary><tertiary>value</tertiary> </indexterm> <indexterm> <primary>Attribute Expression</primary><secondary>value</secondary> </indexterm> <indexterm> <primary>value</primary> </indexterm>"
+msgid "User-supplied value for comparison <indexterm> <primary>value</primary><secondary>Constraint Expression</secondary> </indexterm> <indexterm> <primary>Constraint Expression</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Attribute Expression</secondary><tertiary>value</tertiary> </indexterm> <indexterm> <primary>Attribute Expression</primary><secondary>value</secondary> </indexterm> <indexterm> <primary>value</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -139,7 +159,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Determines how the value(s) should be tested. Allowed values: <emphasis>string</emphasis>, <literal>integer</literal>, <literal>version</literal> <indexterm> <primary>type</primary><secondary>Constraint Expression</secondary> </indexterm> <indexterm> <primary>Constraint Expression</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Attribute Expression</secondary><tertiary>type</tertiary> </indexterm> <indexterm> <primary>Attribute Expression</primary><secondary>type</secondary> </indexterm> <indexterm> <primary>type</primary> </indexterm>"
+msgid "<literal>string</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Determines how the value(s) should be tested. Allowed values are <literal>string</literal>, <literal>integer</literal>, and <literal>version</literal>. <indexterm> <primary>type</primary><secondary>Constraint Expression</secondary> </indexterm> <indexterm> <primary>Constraint Expression</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Attribute Expression</secondary><tertiary>type</tertiary> </indexterm> <indexterm> <primary>Attribute Expression</primary><secondary>type</secondary> </indexterm> <indexterm> <primary>type</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -154,47 +179,47 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "* <emphasis>lt</emphasis> - True if the node attribute’s value is less than <literal>value</literal>"
+msgid "<literal>lt:</literal> True if the value of the node’s <literal>attribute</literal> is less than <literal>value</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "* <emphasis>gt</emphasis> - True if the node attribute’s value is greater than <literal>value</literal>"
+msgid "<literal>gt:</literal> True if the value of the node’s <literal>attribute</literal> is greater than <literal>value</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "* <emphasis>lte</emphasis> - True if the node attribute’s value is less than or equal to <literal>value</literal>"
+msgid "<literal>lte:</literal> True if the value of the node’s <literal>attribute</literal> is less than or equal to <literal>value</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "* <emphasis>gte</emphasis> - True if the node attribute’s value is greater than or equal to <literal>value</literal>"
+msgid "<literal>gte:</literal> True if the value of the node’s <literal>attribute</literal> is greater than or equal to <literal>value</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "* <emphasis>eq</emphasis> - True if the node attribute’s value is equal to <literal>value</literal>"
+msgid "<literal>eq:</literal> True if the value of the node’s <literal>attribute</literal> is equal to <literal>value</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "* <emphasis>ne</emphasis> - True if the node attribute’s value is not equal to <literal>value</literal>"
+msgid "<literal>ne:</literal> True if the value of the node’s <literal>attribute</literal> is not equal to <literal>value</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "* <emphasis>defined</emphasis> - True if the node has the named attribute"
+msgid "<literal>defined:</literal> True if the node has the named attribute"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "* <emphasis>not_defined</emphasis> - True if the node does not have the named attribute <indexterm> <primary>operation</primary><secondary>Constraint Expression</secondary> </indexterm> <indexterm> <primary>Constraint Expression</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Attribute Expression</secondary><tertiary>operation</tertiary> </indexterm> <indexterm> <primary>Attribute Expression</primary><secondary>operation</secondary> </indexterm> <indexterm> <primary>operation</primary> </indexterm>"
+msgid "<literal>not_defined:</literal> True if the node does not have the named attribute <indexterm> <primary>operation</primary><secondary>Constraint Expression</secondary> </indexterm> <indexterm> <primary>Constraint Expression</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Attribute Expression</secondary><tertiary>operation</tertiary> </indexterm> <indexterm> <primary>Attribute Expression</primary><secondary>operation</secondary> </indexterm> <indexterm> <primary>operation</primary> </indexterm>"
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Time/Date Based Expressions"
+msgid "Time- and Date-Based Expressions"
 msgstr ""
 
 #. Tag: para
@@ -204,7 +229,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "As the name suggests, <literal>date_expressions</literal> are used to control a resource or cluster option based on the current date/time. They can contain an optional <literal>date_spec</literal> and/or <literal>duration</literal> object depending on the context."
+msgid "As the name suggests, <literal>date_expressions</literal> are used to control a resource or cluster option based on the current date/time. They may contain an optional <literal>date_spec</literal> and/or <literal>duration</literal> object depending on the context."
 msgstr ""
 
 #. Tag: title
@@ -219,7 +244,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "A date/time conforming to the ISO8601 specification. <indexterm> <primary>start</primary><secondary>Constraint Expression</secondary> </indexterm> <indexterm> <primary>Constraint Expression</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date/Time Expression</secondary><tertiary>start</tertiary> </indexterm> <indexterm> <primary>Date/Time Expression</primary><secondary>start</secondary> </indexterm> <indexterm> <primary>start</primary> </indexterm>"
+msgid "A date/time conforming to the <ulink url=\"http://en.wikipedia.org/wiki/ISO_8601\">ISO8601</ulink> specification. <indexterm> <primary>start</primary><secondary>Constraint Expression</secondary> </indexterm> <indexterm> <primary>Constraint Expression</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date/Time Expression</secondary><tertiary>start</tertiary> </indexterm> <indexterm> <primary>Date/Time Expression</primary><secondary>start</secondary> </indexterm> <indexterm> <primary>start</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -229,7 +254,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "A date/time conforming to the ISO8601 specification. Can be inferred by supplying a value for <literal>start</literal> and a <literal>duration</literal>. <indexterm> <primary>end</primary><secondary>Constraint Expression</secondary> </indexterm> <indexterm> <primary>Constraint Expression</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date/Time Expression</secondary><tertiary>end</tertiary> </indexterm> <indexterm> <primary>Date/Time Expression</primary><secondary>end</secondary> </indexterm> <indexterm> <primary>end</primary> </indexterm>"
+msgid "A date/time conforming to the <ulink url=\"http://en.wikipedia.org/wiki/ISO_8601\">ISO8601</ulink> specification. Can be inferred by supplying a value for <literal>start</literal> and a <literal>duration</literal>. <indexterm> <primary>end</primary><secondary>Constraint Expression</secondary> </indexterm> <indexterm> <primary>Constraint Expression</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date/Time Expression</secondary><tertiary>end</tertiary> </indexterm> <indexterm> <primary>Date/Time Expression</primary><secondary>end</secondary> </indexterm> <indexterm> <primary>end</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -239,22 +264,22 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "* <emphasis>gt</emphasis> - True if the current date/time is after <literal>start</literal>"
+msgid "<literal>gt:</literal> True if the current date/time is after <literal>start</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "* <emphasis>lt</emphasis> - True if the current date/time is before <literal>end</literal>"
+msgid "<literal>lt:</literal> True if the current date/time is before <literal>end</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "* <emphasis>in-range</emphasis> - True if the current date/time is after <literal>start</literal> and before <literal>end</literal>"
+msgid "<literal>in-range:</literal> True if the current date/time is after <literal>start</literal> and before <literal>end</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "* <emphasis>date-spec</emphasis> - performs a cron-like comparison to the current date/time <indexterm> <primary>operation</primary><secondary>Constraint Expression</secondary> </indexterm> <indexterm> <primary>Constraint Expression</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date/Time Expression</secondary><tertiary>operation</tertiary> </indexterm> <indexterm> <primary>Date/Time Expression</primary><secondary>operation</secondary> </indexterm> <indexterm> <primary>operation</primary> </indexterm>"
+msgid "<literal>date-spec:</literal> True if the current date/time matches a <literal>date_spec</literal> object (described below) <indexterm> <primary>operation</primary><secondary>Constraint Expression</secondary> </indexterm> <indexterm> <primary>Constraint Expression</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date/Time Expression</secondary><tertiary>operation</tertiary> </indexterm> <indexterm> <primary>Date/Time Expression</primary><secondary>operation</secondary> </indexterm> <indexterm> <primary>operation</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -279,12 +304,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "For example, <literal>monthdays=\"1\"</literal> matches the first day of every month and <literal>hours=\"09-17\"</literal> matches the hours between 9am and 5pm (inclusive). However, at this time one cannot specify <literal>weekdays=\"1,2\"</literal> or <literal>weekdays=\"1-2,5-6\"</literal> since they contain multiple ranges. Depending on demand, this may be implemented in a future release."
+msgid "For example, <literal>monthdays=\"1\"</literal> matches the first day of every month and <literal>hours=\"09-17\"</literal> matches the hours between 9am and 5pm (inclusive). At this time, multiple ranges (e.g. <literal>weekdays=\"1,2\"</literal> or <literal>weekdays=\"1-2,5-6\"</literal>) are not supported; depending on demand, this might be implemented in a future release."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Properties of a Date Spec"
+msgid "Properties of a Date Specification"
 msgstr ""
 
 #. Tag: para
@@ -294,7 +319,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "A unique name for the date <indexterm> <primary>id</primary><secondary>Date Specification</secondary> </indexterm> <indexterm> <primary>Date Specification</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date Specification</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>Date Specification</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm>"
+msgid "A unique name for the object <indexterm> <primary>id</primary><secondary>Date Specification</secondary> </indexterm> <indexterm> <primary>Date Specification</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date Specification</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>Date Specification</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -314,7 +339,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Allowed values: 0-31 (depending on month and year) <indexterm> <primary>monthdays</primary><secondary>Date Specification</secondary> </indexterm> <indexterm> <primary>Date Specification</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date Specification</secondary><tertiary>monthdays</tertiary> </indexterm> <indexterm> <primary>Date Specification</primary><secondary>monthdays</secondary> </indexterm> <indexterm> <primary>monthdays</primary> </indexterm>"
+msgid "Allowed values: 1-31 (depending on month and year) <indexterm> <primary>monthdays</primary><secondary>Date Specification</secondary> </indexterm> <indexterm> <primary>Date Specification</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date Specification</secondary><tertiary>monthdays</tertiary> </indexterm> <indexterm> <primary>Date Specification</primary><secondary>monthdays</secondary> </indexterm> <indexterm> <primary>monthdays</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -364,7 +389,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Year according the Gregorian calendar <indexterm> <primary>years</primary><secondary>Date Specification</secondary> </indexterm> <indexterm> <primary>Date Specification</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date Specification</secondary><tertiary>years</tertiary> </indexterm> <indexterm> <primary>Date Specification</primary><secondary>years</secondary> </indexterm> <indexterm> <primary>years</primary> </indexterm>"
+msgid "Year according to the Gregorian calendar <indexterm> <primary>years</primary><secondary>Date Specification</secondary> </indexterm> <indexterm> <primary>Date Specification</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date Specification</secondary><tertiary>years</tertiary> </indexterm> <indexterm> <primary>Date Specification</primary><secondary>years</secondary> </indexterm> <indexterm> <primary>years</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -374,7 +399,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "May differ from Gregorian years; Eg. <literal>2005-001 Ordinal</literal> is also <literal>2005-01-01 Gregorian</literal> is also <literal>2004-W53-6 Weekly</literal> <indexterm> <primary>weekyears</primary><secondary>Date Specification</secondary> </indexterm> <indexterm> <primary>Date Specification</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date Specification</secondary><tertiary>weekyears</tertiary> </indexterm> <indexterm> <primary>Date Specification</primary><secondary>weekyears</secondary> </indexterm> <indexterm> <primary>weekyears</primary> </indexterm>"
+msgid "Year in which the week started; e.g. 1 January 2005 can be specified as <emphasis>2005-001 Ordinal</emphasis>, <emphasis>2005-01-01 Gregorian</emphasis> or <emphasis>2004-W53-6 Weekly</emphasis> and thus would match <literal>years=\"2005\"</literal> or <literal>weekyears=\"2004\"</literal> <indexterm> <primary>weekyears</primary><secondary>Date Specification</secondary> </indexterm> <indexterm> <primary>Date Specification</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date Specification</secondary><tertiary>weekyears</tertiary> </indexterm> <indexterm> <primary>Date Specification</primary><secondary>weekyears</secondary> </indexterm> <indexterm> <primary>weekyears</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -384,7 +409,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Allowed values: 0-7 (0 is new, 4 is full moon). Seriously, you can use this. This was implemented to demonstrate the ease with which new comparisons could be added. <indexterm> <primary>moon</primary><secondary>Date Specification</secondary> </indexterm> <indexterm> <primary>Date Specification</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date Specification</secondary><tertiary>moon</tertiary> </indexterm> <indexterm> <primary>Date Specification</primary><secondary>moon</secondary> </indexterm> <indexterm> <primary>moon</primary> </indexterm>"
+msgid "Allowed values are 0-7 (0 is new, 4 is full moon). Seriously, you can use this. This was implemented to demonstrate the ease with which new comparisons could be added. <indexterm> <primary>moon</primary><secondary>Date Specification</secondary> </indexterm> <indexterm> <primary>Date Specification</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date Specification</secondary><tertiary>moon</tertiary> </indexterm> <indexterm> <primary>Date Specification</primary><secondary>moon</secondary> </indexterm> <indexterm> <primary>moon</primary> </indexterm>"
 msgstr ""
 
 #. Tag: title
@@ -399,17 +424,17 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Durations are used to calculate a value for <literal>end</literal> when one is not supplied to in_range operations. They contain the same fields as <literal>date_spec</literal> objects but without the limitations (ie. you can have a duration of 19 months). Like <literal>date_specs</literal>, any field not supplied is ignored."
+msgid "Durations are used to calculate a value for <literal>end</literal> when one is not supplied to <literal>in-range</literal> operations. They contain the same fields as <literal>date_spec</literal> objects but without the limitations (e.g. you can have a duration of 19 months). As with <literal>date_specs</literal>, any field not supplied is ignored."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Sample Time Based Expressions"
+msgid "Sample Time-Based Expressions"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "A small sample of how time based expressions can be used."
+msgid "A small sample of how time-based expressions can be used:"
 msgstr ""
 
 #. Tag: title
@@ -442,7 +467,7 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "9am-5pm, Mon-Friday"
+msgid "9am-5pm Monday-Friday"
 msgstr ""
 
 #. Tag: programlisting
@@ -461,7 +486,7 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "9am-6pm, Mon-Friday, or all day saturday"
+msgid "9am-6pm Monday through Friday or anytime Saturday"
 msgstr ""
 
 #. Tag: programlisting
@@ -478,7 +503,7 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "9am-5pm or 9pm-12pm, Mon-Friday"
+msgid "9am-5pm or 9pm-12am Monday through Friday"
 msgstr ""
 
 #. Tag: programlisting
@@ -516,12 +541,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Because no time is specified, 00:00:00 is implied."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "This means that the range includes all of 2005-03-01 but none of 2005-04-01. You may wish to write <literal>end=\"2005-03-31T23:59:59\"</literal> to avoid confusion."
+msgid "Because no time is specified with the above dates, 00:00:00 is implied. This means that the range includes all of 2005-03-01 but none of 2005-04-01. You may wish to write <literal>end=\"2005-03-31T23:59:59\"</literal> to avoid confusion."
 msgstr ""
 
 #. Tag: title
@@ -550,12 +570,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If the constraint’s outer-most rule evaluates to <literal>false</literal>, the cluster treats the constraint as if it was not there. When the rule evaluates to <literal>true</literal>, the node’s preference for running the resource is updated with the score associated with the rule."
+msgid "A location constraint may contain rules. When the constraint’s outermost rule evaluates to <literal>false</literal>, the cluster treats the constraint as if it were not there. When the rule evaluates to <literal>true</literal>, the node’s preference for running the resource is updated with the score associated with the rule."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If this sounds familiar, its because you have been using a simplified syntax for location constraint rules already. Consider the following location constraint:"
+msgid "If this sounds familiar, it is because you have been using a simplified syntax for location constraint rules already. Consider the following location constraint:"
 msgstr ""
 
 #. Tag: title
@@ -591,12 +611,17 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The advantage of using the expanded form is that one can then add extra clauses to the rule, such as limiting the rule such that it only applies during certain times of the day or days of the week (this is discussed in subsequent sections)."
+msgid "The advantage of using the expanded form is that one can then add extra clauses to the rule, such as limiting the rule such that it only applies during certain times of the day or days of the week."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Location Rules Based on Other Node Properties"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "It also allows us to match on node properties other than its name. If we rated each machine’s CPU power such that the cluster had the following nodes section:"
+msgid "The expanded form allows us to match on node properties other than its name. If we rated each machine’s CPU power such that the cluster had the following nodes section:"
 msgstr ""
 
 #. Tag: title
@@ -622,13 +647,13 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "then we could prevent resources from running on underpowered machines with the rule"
+msgid "then we could prevent resources from running on underpowered machines with this rule:"
 msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
 msgid "&lt;rule id=\"need-more-power-rule\" score=\"-INFINITY\"&gt;\n"
-"   &lt;expression id=\" need-more-power-expr\" attribute=\"cpu_mips\"\n"
+"   &lt;expression id=\"need-more-power-expr\" attribute=\"cpu_mips\"\n"
 "               operation=\"lt\" value=\"3000\"/&gt;\n"
 "&lt;/rule&gt;"
 msgstr ""
@@ -650,7 +675,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Often some cluster nodes will be different from their peers; sometimes these differences (the location of a binary or the names of network interfaces) require resources to be configured differently depending on the machine they’re hosted on."
+msgid "Often some cluster nodes will be different from their peers. Sometimes, these differences — e.g. the location of a binary or the names of network interfaces — require resources to be configured differently depending on the machine they’re hosted on."
 msgstr ""
 
 #. Tag: para
@@ -695,7 +720,27 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The order in which <literal>instance_attributes</literal> objects are evaluated is determined by their score (highest to lowest). If not supplied, score defaults to zero and objects with an equal score are processed in listed order. If the <literal>instance_attributes</literal> object does not have a <literal>rule</literal> or has a <literal>rule</literal> that evaluates to <literal>true</literal>, then for any parameter the resource does not yet have a value for, the resource will use the parameter values defined by the <literal>instance_attributes</literal> object."
+msgid "The order in which <literal>instance_attributes</literal> objects are evaluated is determined by their score (highest to lowest). If not supplied, score defaults to zero, and objects with an equal score are processed in listed order. If the <literal>instance_attributes</literal> object has no rule or a <literal>rule</literal> that evaluates to <literal>true</literal>, then for any parameter the resource does not yet have a value for, the resource will use the parameter values defined by the <literal>instance_attributes</literal>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "For example, given the configuration above, if the resource is placed on node1:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>special-node1</literal> has the highest score (3) and so is evaluated first; its rule evaluates to <literal>true</literal>, so <literal>interface</literal> is set to <literal>eth1</literal>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>special-node2</literal> is evaluated next with score 2, but its rule evaluates to <literal>false</literal>, so it is ignored."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>defaults</literal> is evaluated last with score 1, and has no rule, so its values are examined; <literal>interface</literal> is already defined, so the value here is not used, but <literal>port</literal> is not yet defined, so <literal>port</literal> is set to <literal>9999</literal>."
 msgstr ""
 
 #. Tag: title
@@ -715,7 +760,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The difference is that because they are cluster options, one cannot (or should not, because they won’t work) use attribute based expressions. The following example illustrates how to set a different <literal>resource-stickiness</literal> value during and outside of work hours. This allows resources to automatically move back to their most preferred hosts, but at a time that (in theory) does not interfere with business activities."
+msgid "The difference is that because they are cluster options, one cannot (or should not, because they won’t work) use attribute-based expressions. The following example illustrates how to set a different <literal>resource-stickiness</literal> value during and outside work hours. This allows resources to automatically move back to their most preferred hosts, but at a time that (in theory) does not interfere with business activities."
 msgstr ""
 
 #. Tag: title
@@ -742,21 +787,21 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Ensuring Time Based Rules Take Effect"
+msgid "Ensuring Time-Based Rules Take Effect"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "A Pacemaker cluster is an event driven system. As such, it won’t recalculate the best place for resources to run in unless something (like a resource failure or configuration change) happens. This can mean that a location constraint that only allows resource X to run between 9am and 5pm is not enforced."
+msgid "A Pacemaker cluster is an event-driven system. As such, it won’t recalculate the best place for resources to run unless something (like a resource failure or configuration change) happens. This can mean that a location constraint that only allows resource X to run between 9am and 5pm is not enforced."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If you rely on time based rules, it is essential that you set the <literal>cluster-recheck-interval</literal> option. This tells the cluster to periodically recalculate the ideal state of the cluster. For example, if you set <literal>cluster-recheck-interval=5m</literal>, then sometime between 9:00 and 9:05 the cluster would notice that it needs to start resource X, and between 17:00 and 17:05 it would realize that X needed to be stopped."
+msgid "If you rely on time-based rules, the <literal>cluster-recheck-interval</literal> cluster option (which defaults to 15 minutes) is essential. This tells the cluster to periodically recalculate the ideal state of the cluster."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Note that the timing of the actual start and stop actions depends on what else needs to be performed first ."
+msgid "For example, if you set <literal>cluster-recheck-interval=\"5m\"</literal>, then sometime between 09:00 and 09:05 the cluster would notice that it needs to start resource X, and between 17:00 and 17:05 it would realize that X needed to be stopped. The timing of the actual start and stop actions depends on what other actions the cluster may need to perform first."
 msgstr ""
 

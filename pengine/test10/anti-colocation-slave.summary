@@ -1,0 +1,35 @@
+
+Current cluster status:
+Online: [ sle12sp2-1 sle12sp2-2 ]
+
+ st_sbd	(stonith:external/sbd):	Started sle12sp2-1 
+ Master/Slave Set: ms1 [state1]
+     Masters: [ sle12sp2-1 ]
+     Slaves: [ sle12sp2-2 ]
+ dummy1	(ocf::pacemaker:Dummy):	Started sle12sp2-1 
+
+Transition Summary:
+ * Demote  state1:0	(Master -> Slave sle12sp2-1)
+ * Promote state1:1	(Slave -> Master sle12sp2-2)
+ * Move    dummy1	(Started sle12sp2-1 -> sle12sp2-2)
+
+Executing cluster transition:
+ * Resource action: dummy1          stop on sle12sp2-1
+ * Pseudo action:   all_stopped
+ * Pseudo action:   ms1_demote_0
+ * Resource action: state1          demote on sle12sp2-1
+ * Pseudo action:   ms1_demoted_0
+ * Pseudo action:   ms1_promote_0
+ * Resource action: state1          promote on sle12sp2-2
+ * Pseudo action:   ms1_promoted_0
+ * Resource action: dummy1          start on sle12sp2-2
+
+Revised cluster status:
+Online: [ sle12sp2-1 sle12sp2-2 ]
+
+ st_sbd	(stonith:external/sbd):	Started sle12sp2-1 
+ Master/Slave Set: ms1 [state1]
+     Masters: [ sle12sp2-2 ]
+     Slaves: [ sle12sp2-1 ]
+ dummy1	(ocf::pacemaker:Dummy):	Started sle12sp2-2 
+

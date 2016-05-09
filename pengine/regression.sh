@@ -179,6 +179,8 @@ do_test coloc_fp_logic "Verify floating point calculations in colocation are wor
 do_test colo_master_w_native "cl#5070 - Verify promotion order is affected when colocating master to native rsc."
 do_test colo_slave_w_native  "cl#5070 - Verify promotion order is affected when colocating slave to native rsc."
 do_test anti-colocation-order "cl#5187 - Prevent resources in an anti-colocation from even temporarily running on a same node"
+do_test anti-colocation-master "Organize order of actions for master resources in anti-colocations"
+do_test anti-colocation-slave "Organize order of actions for slave resources in anti-colocations"
 do_test enforce-colo1 "Always enforce B with A INFINITY."
 do_test complex_enforce_colo "Always enforce B with A INFINITY. (make sure heat-engine stops)"
 
@@ -530,6 +532,7 @@ do_test bug-5069-op-enabled  "Test on-fail=ignore with failure when monitor is e
 do_test bug-5069-op-disabled "Test on-fail-ignore with failure when monitor is disabled."
 do_test obsolete-lrm-resource "cl#5115 - Do not use obsolete lrm_resource sections"
 do_test expire-non-blocked-failure "Ignore failure-timeout only if the failed operation has on-fail=block"
+do_test asymmetrical-order-move "Respect asymmetrical ordering when trying to move resources"
 
 do_test ignore_stonith_rsc_order1 "cl#5056- Ignore order constraint between stonith and non-stonith rsc."
 do_test ignore_stonith_rsc_order2 "cl#5056- Ignore order constraint with group rsc containing mixed stonith and non-stonith."
