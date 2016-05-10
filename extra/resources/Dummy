@@ -101,6 +101,14 @@ running). This can be used to test on-fail=ignore.
 <content type="string" default="" />
 </parameter>
 
+<parameter name="envfile" unique="1">
+<longdesc lang="en">
+If this is set, the environment will be dumped to this file for every call.
+</longdesc>
+<shortdesc lang="en">Environment dump file</shortdesc>
+<content type="string" default="" />
+</parameter>
+
 </parameters>
 
 <actions>
@@ -132,6 +140,14 @@ usage: $0 {start|stop|monitor|migrate_to|migrate_from|validate-all|meta-data}
 
 Expects to have a fully populated OCF RA-compliant environment set.
 END
+}
+
+dump_env() {
+    if [ "${OCF_RESKEY_envfile}" != "" ]; then
+            echo "### $(date) ###
+$(env)
+###" >> "${OCF_RESKEY_envfile}"
+    fi
 }
 
 dummy_start() {
@@ -215,6 +231,8 @@ if [ -z "$OCF_RESKEY_state" ]; then
     fi
 fi
 VERIFY_SERIALIZED_FILE="${OCF_RESKEY_state}.serialized"
+
+dump_env
 
 case $__OCF_ACTION in
 meta-data)	meta_data
