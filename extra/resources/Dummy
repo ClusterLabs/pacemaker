@@ -91,6 +91,16 @@ the cluster reacts to operation timeouts.
 <content type="string" default="0" />
 </parameter>
 
+<parameter name="fail_start_on" unique="0">
+<longdesc lang="en">
+Start actions will return failure if running on the host specified here, but
+the resource will start successfully anyway (future monitor calls will find it
+running). This can be used to test on-fail=ignore.
+</longdesc>
+<shortdesc lang="en">Report bogus start failure on specified host</shortdesc>
+<content type="string" default="" />
+</parameter>
+
 </parameters>
 
 <actions>
@@ -125,11 +135,24 @@ END
 }
 
 dummy_start() {
+    local RETVAL
+
     dummy_monitor
-    if [ $? -eq $OCF_SUCCESS ]; then
-	return $OCF_SUCCESS
+
+    RETVAL=$?
+    if [ $RETVAL -eq $OCF_SUCCESS ]; then
+        if [ "$(hostname)" = "${OCF_RESKEY_fail_start_on}" ]; then
+            RETVAL=$OCF_ERR_GENERIC
+        fi
+        return $RETVAL
     fi
+
     touch "${OCF_RESKEY_state}"
+    RETVAL=$?
+    if [ "$(hostname)" = "${OCF_RESKEY_fail_start_on}" ]; then
+        RETVAL=$OCF_ERR_GENERIC
+    fi
+    return $RETVAL
 }
 
 dummy_stop() {
