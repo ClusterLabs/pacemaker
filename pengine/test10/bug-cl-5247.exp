@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="4" operation="stop" operation_key="prmDB2_stop_0" on_node="bl460g8n4" on_node_uuid="3232261400">
         <primitive id="prmDB2" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_name="stop" CRM_meta_on_fail="fence" CRM_meta_remote_node="pgsr02" CRM_meta_timeout="120000" config="/etc/libvirt/qemu/pgsr02.xml"  hypervisor="qemu:///system" migration_transport="ssh"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_fail="fence" CRM_meta_remote_node="pgsr02" CRM_meta_restart_remaining="0" CRM_meta_timeout="120000" config="/etc/libvirt/qemu/pgsr02.xml"  hypervisor="qemu:///system" migration_transport="ssh"/>
       </rsc_op>
     </action_set>
     <inputs>

@@ -19,7 +19,7 @@
     <action_set>
       <rsc_op id="5" operation="stop" operation_key="remote1_stop_0" on_node="18node1" on_node_uuid="1">
         <primitive id="remote1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_restart_remaining="999999" CRM_meta_timeout="20000" />
         <downed>
           <node id="remote1"/>
         </downed>
