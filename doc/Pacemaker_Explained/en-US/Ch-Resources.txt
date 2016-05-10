@@ -357,8 +357,10 @@ indexterm:[Resource,Option,requires]
 |migration-threshold
 |INFINITY
 |How many failures may occur for this resource on a node, before this
- node is marked ineligible to host this resource. A value of INFINITY
- indicates that this feature is disabled.
+ node is marked ineligible to host this resource. A value of 0 indicates that
+ this feature is disabled (the node will never be marked ineligible); by
+ constrast, the cluster treats INFINITY (the default) as a very large but
+ finite number.
  indexterm:[migration-threshold,Resource Option]
  indexterm:[Resource,Option,migration-threshold]
 
