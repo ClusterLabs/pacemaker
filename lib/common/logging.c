@@ -844,7 +844,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
             crm_perror(LOG_INFO, "Cannot change active directory to %s", base);
 
         } else {
-            crm_info("Changed active directory to %s/%s", base, pwent->pw_name);
+            crm_info("Changed active directory to %s", base);
 #if 0
             {
                 char path[512];
