@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="4" operation="monitor" operation_key="sbd_stonith_monitor_15000" on_node="qa-suse-2" on_node_uuid="qa-suse-2">
         <primitive id="sbd_stonith" class="stonith" type="external/sbd"/>
-        <attributes CRM_meta_interval="15000" CRM_meta_name="monitor" CRM_meta_start_delay="15000" CRM_meta_timeout="30000"  sbd_device="/dev/sda1"/>
+        <attributes CRM_meta_interval="15000" CRM_meta_name="monitor" CRM_meta_start_delay="15000" CRM_meta_timeout="15000"  sbd_device="/dev/sda1"/>
       </rsc_op>
     </action_set>
     <inputs/>

@@ -99,7 +99,7 @@
     <action_set>
       <rsc_op id="20" operation="monitor" operation_key="mysqld_monitor_1000" on_node="asttest2" on_node_uuid="asttest2">
         <primitive id="mysqld" class="lsb" type="mysql"/>
-        <attributes CRM_meta_interval="1000" CRM_meta_name="monitor" CRM_meta_start_delay="10000" CRM_meta_timeout="25000" />
+        <attributes CRM_meta_interval="1000" CRM_meta_name="monitor" CRM_meta_start_delay="10000" CRM_meta_timeout="15000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -225,7 +225,7 @@
     <action_set>
       <rsc_op id="29" operation="monitor" operation_key="fonulator_monitor_1000" on_node="asttest2" on_node_uuid="asttest2">
         <primitive id="fonulator" class="lsb" type="fonulator"/>
-        <attributes CRM_meta_interval="1000" CRM_meta_name="monitor" CRM_meta_start_delay="30000" CRM_meta_timeout="50000" />
+        <attributes CRM_meta_interval="1000" CRM_meta_name="monitor" CRM_meta_start_delay="30000" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -254,7 +254,7 @@
     <action_set>
       <rsc_op id="31" operation="monitor" operation_key="asterisk_monitor_1000" on_node="asttest2" on_node_uuid="asttest2">
         <primitive id="asterisk" class="lsb" type="asterisk-11.0.1"/>
-        <attributes CRM_meta_interval="1000" CRM_meta_name="monitor" CRM_meta_start_delay="10000" CRM_meta_timeout="25000" />
+        <attributes CRM_meta_interval="1000" CRM_meta_name="monitor" CRM_meta_start_delay="10000" CRM_meta_timeout="15000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -283,7 +283,7 @@
     <action_set>
       <rsc_op id="33" operation="monitor" operation_key="iax2_mon_monitor_60000" on_node="asttest2" on_node_uuid="asttest2">
         <primitive id="iax2_mon" class="lsb" type="iax2_mon"/>
-        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_start_delay="30000" CRM_meta_timeout="50000" />
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_start_delay="30000" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -312,7 +312,7 @@
     <action_set>
       <rsc_op id="35" operation="monitor" operation_key="httpd_monitor_1000" on_node="asttest2" on_node_uuid="asttest2">
         <primitive id="httpd" class="lsb" type="apache2"/>
-        <attributes CRM_meta_interval="1000" CRM_meta_name="monitor" CRM_meta_start_delay="10000" CRM_meta_timeout="30000" />
+        <attributes CRM_meta_interval="1000" CRM_meta_name="monitor" CRM_meta_start_delay="10000" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -341,7 +341,7 @@
     <action_set>
       <rsc_op id="37" operation="monitor" operation_key="tftp_monitor_60000" on_node="asttest2" on_node_uuid="asttest2">
         <primitive id="tftp" class="lsb" type="tftp-srce"/>
-        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_start_delay="10000" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_start_delay="10000" CRM_meta_timeout="10000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1222,7 +1222,7 @@
     <action_set>
       <rsc_op id="110" operation="monitor" operation_key="fs_drbd_monitor_1000" on_node="asttest2" on_node_uuid="asttest2">
         <primitive id="fs_drbd" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_interval="1000" CRM_meta_name="monitor" CRM_meta_start_delay="30000" CRM_meta_timeout="70000"  device="/dev/drbd/by-res/r0" directory="/mnt/drbd" fstype="ext3"/>
+        <attributes CRM_meta_interval="1000" CRM_meta_name="monitor" CRM_meta_start_delay="30000" CRM_meta_timeout="40000"  device="/dev/drbd/by-res/r0" directory="/mnt/drbd" fstype="ext3"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1235,7 +1235,7 @@
     <action_set>
       <rsc_op id="109" operation="start" operation_key="fs_drbd_start_0" on_node="asttest2" on_node_uuid="asttest2">
         <primitive id="fs_drbd" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_name="start" CRM_meta_start_delay="1000" CRM_meta_timeout="61000"  device="/dev/drbd/by-res/r0" directory="/mnt/drbd" fstype="ext3"/>
+        <attributes CRM_meta_name="start" CRM_meta_start_delay="1000" CRM_meta_timeout="60000"  device="/dev/drbd/by-res/r0" directory="/mnt/drbd" fstype="ext3"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1251,7 +1251,7 @@
     <action_set>
       <rsc_op id="108" operation="stop" operation_key="fs_drbd_stop_0" on_node="asttest1" on_node_uuid="asttest1">
         <primitive id="fs_drbd" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_name="stop" CRM_meta_start_delay="1000" CRM_meta_timeout="61000"  device="/dev/drbd/by-res/r0" directory="/mnt/drbd" fstype="ext3"/>
+        <attributes CRM_meta_name="stop" CRM_meta_start_delay="1000" CRM_meta_timeout="60000"  device="/dev/drbd/by-res/r0" directory="/mnt/drbd" fstype="ext3"/>
       </rsc_op>
     </action_set>
     <inputs>

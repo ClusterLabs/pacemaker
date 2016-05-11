@@ -351,7 +351,7 @@
     <action_set>
       <rsc_op id="35" operation="monitor" operation_key="vip-164-fw_monitor_10000" internal_operation_key="vip-164-fw:0_monitor_10000" on_node="sd01-1" on_node_uuid="2">
         <primitive id="vip-164-fw" long-id="vip-164-fw:0" class="ocf" provider="vds-ok" type="VIPfirewall"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="20000" allow_action="pass"  vip="10.5.4.164"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="10000" allow_action="pass"  vip="10.5.4.164"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -377,7 +377,7 @@
     <action_set>
       <rsc_op id="38" operation="monitor" operation_key="vip-165-fw_monitor_10000" internal_operation_key="vip-165-fw:0_monitor_10000" on_node="sd01-1" on_node_uuid="2">
         <primitive id="vip-165-fw" long-id="vip-165-fw:0" class="ocf" provider="vds-ok" type="VIPfirewall"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="20000" allow_action="pass"  vip="10.5.4.165"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="10000" allow_action="pass"  vip="10.5.4.165"/>
       </rsc_op>
     </action_set>
     <inputs/>

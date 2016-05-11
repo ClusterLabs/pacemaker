@@ -26,7 +26,7 @@
     <action_set>
       <rsc_op id="22" operation="monitor" operation_key="PRIM_Web_IP1_monitor_5000" on_node="sles11-ha2" on_node_uuid="sles11-ha2">
         <primitive id="PRIM_Web_IP1" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_start_delay="1000" CRM_meta_timeout="6000"  ip="192.168.2.45"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_start_delay="1000" CRM_meta_timeout="5000"  ip="192.168.2.45"/>
       </rsc_op>
     </action_set>
     <inputs>

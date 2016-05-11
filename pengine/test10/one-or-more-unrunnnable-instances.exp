@@ -2073,7 +2073,7 @@
     <action_set>
       <rsc_op id="342" operation="monitor" operation_key="nova-consoleauth_monitor_60000" internal_operation_key="nova-consoleauth:0_monitor_60000" on_node="rdo7-node1" on_node_uuid="1">
         <primitive id="nova-consoleauth" long-id="nova-consoleauth:0" class="systemd" type="openstack-nova-consoleauth"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="30000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -2099,7 +2099,7 @@
     <action_set>
       <rsc_op id="344" operation="monitor" operation_key="nova-consoleauth:1_monitor_60000" on_node="rdo7-node2" on_node_uuid="2">
         <primitive id="nova-consoleauth" long-id="nova-consoleauth:1" class="systemd" type="openstack-nova-consoleauth"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="30000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -2125,7 +2125,7 @@
     <action_set>
       <rsc_op id="346" operation="monitor" operation_key="nova-consoleauth:2_monitor_60000" on_node="rdo7-node3" on_node_uuid="3">
         <primitive id="nova-consoleauth" long-id="nova-consoleauth:2" class="systemd" type="openstack-nova-consoleauth"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="30000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -2184,7 +2184,7 @@
     <action_set>
       <rsc_op id="352" operation="monitor" operation_key="nova-novncproxy_monitor_60000" internal_operation_key="nova-novncproxy:0_monitor_60000" on_node="rdo7-node1" on_node_uuid="1">
         <primitive id="nova-novncproxy" long-id="nova-novncproxy:0" class="systemd" type="openstack-nova-novncproxy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="30000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -2210,7 +2210,7 @@
     <action_set>
       <rsc_op id="354" operation="monitor" operation_key="nova-novncproxy:1_monitor_60000" on_node="rdo7-node2" on_node_uuid="2">
         <primitive id="nova-novncproxy" long-id="nova-novncproxy:1" class="systemd" type="openstack-nova-novncproxy"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="30000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -2236,7 +2236,7 @@
     <action_set>
       <rsc_op id="356" operation="monitor" operation_key="nova-novncproxy:2_monitor_60000" on_node="rdo7-node3" on_node_uuid="3">
         <primitive id="nova-novncproxy" long-id="nova-novncproxy:2" class="systemd" type="openstack-nova-novncproxy"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="30000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -2295,7 +2295,7 @@
     <action_set>
       <rsc_op id="362" operation="monitor" operation_key="nova-api_monitor_60000" internal_operation_key="nova-api:0_monitor_60000" on_node="rdo7-node1" on_node_uuid="1">
         <primitive id="nova-api" long-id="nova-api:0" class="systemd" type="openstack-nova-api"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="30000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -2321,7 +2321,7 @@
     <action_set>
       <rsc_op id="364" operation="monitor" operation_key="nova-api:1_monitor_60000" on_node="rdo7-node2" on_node_uuid="2">
         <primitive id="nova-api" long-id="nova-api:1" class="systemd" type="openstack-nova-api"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="30000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -2347,7 +2347,7 @@
     <action_set>
       <rsc_op id="366" operation="monitor" operation_key="nova-api:2_monitor_60000" on_node="rdo7-node3" on_node_uuid="3">
         <primitive id="nova-api" long-id="nova-api:2" class="systemd" type="openstack-nova-api"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="30000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -2406,7 +2406,7 @@
     <action_set>
       <rsc_op id="372" operation="monitor" operation_key="nova-scheduler_monitor_60000" internal_operation_key="nova-scheduler:0_monitor_60000" on_node="rdo7-node1" on_node_uuid="1">
         <primitive id="nova-scheduler" long-id="nova-scheduler:0" class="systemd" type="openstack-nova-scheduler"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="30000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -2432,7 +2432,7 @@
     <action_set>
       <rsc_op id="374" operation="monitor" operation_key="nova-scheduler:1_monitor_60000" on_node="rdo7-node2" on_node_uuid="2">
         <primitive id="nova-scheduler" long-id="nova-scheduler:1" class="systemd" type="openstack-nova-scheduler"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="30000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -2458,7 +2458,7 @@
     <action_set>
       <rsc_op id="376" operation="monitor" operation_key="nova-scheduler:2_monitor_60000" on_node="rdo7-node3" on_node_uuid="3">
         <primitive id="nova-scheduler" long-id="nova-scheduler:2" class="systemd" type="openstack-nova-scheduler"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="30000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -2517,7 +2517,7 @@
     <action_set>
       <rsc_op id="382" operation="monitor" operation_key="nova-conductor_monitor_60000" internal_operation_key="nova-conductor:0_monitor_60000" on_node="rdo7-node1" on_node_uuid="1">
         <primitive id="nova-conductor" long-id="nova-conductor:0" class="systemd" type="openstack-nova-conductor"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="30000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -2543,7 +2543,7 @@
     <action_set>
       <rsc_op id="384" operation="monitor" operation_key="nova-conductor:1_monitor_60000" on_node="rdo7-node2" on_node_uuid="2">
         <primitive id="nova-conductor" long-id="nova-conductor:1" class="systemd" type="openstack-nova-conductor"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="30000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -2569,7 +2569,7 @@
     <action_set>
       <rsc_op id="386" operation="monitor" operation_key="nova-conductor:2_monitor_60000" on_node="rdo7-node3" on_node_uuid="3">
         <primitive id="nova-conductor" long-id="nova-conductor:2" class="systemd" type="openstack-nova-conductor"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="30000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>

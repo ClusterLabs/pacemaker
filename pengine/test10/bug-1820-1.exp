@@ -115,7 +115,7 @@
     <action_set>
       <rsc_op id="9" operation="monitor" operation_key="test1_monitor_10000" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0">
         <primitive id="test1" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_start_delay="30000" CRM_meta_timeout="60000" allow_migrate="true"  xmfile="/etc/xen/test1"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_start_delay="30000" CRM_meta_timeout="30000" allow_migrate="true"  xmfile="/etc/xen/test1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -191,7 +191,7 @@
     <action_set>
       <rsc_op id="14" operation="monitor" operation_key="test2_monitor_10000" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0">
         <primitive id="test2" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_start_delay="30000" CRM_meta_timeout="60000" allow_migrate="true"  xmfile="/etc/xen/test2"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_start_delay="30000" CRM_meta_timeout="30000" allow_migrate="true"  xmfile="/etc/xen/test2"/>
        </rsc_op>
      </action_set>
      <inputs>

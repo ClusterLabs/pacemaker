@@ -12,7 +12,7 @@
     <action_set>
       <rsc_op id="6" operation="monitor" operation_key="apache_1_monitor_10000" on_node="hs21c" on_node_uuid="c97a3ee5-02d8-4fad-a9fb-a79ae2b35549">
         <primitive id="apache_1" class="ocf" provider="heartbeat" type="apache"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_start_delay="60000" CRM_meta_timeout="80000" />
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_start_delay="60000" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -50,7 +50,7 @@
     <action_set>
       <rsc_op id="8" operation="monitor" operation_key="nfs_1_monitor_20000" on_node="hs21c" on_node_uuid="c97a3ee5-02d8-4fad-a9fb-a79ae2b35549">
         <primitive id="nfs_1" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_interval="20000" CRM_meta_name="monitor" CRM_meta_start_delay="10000" CRM_meta_timeout="50000"  device="hs21d:/nfs" directory="/mnt/tmp" fstype="nfs" options="ro"/>
+        <attributes CRM_meta_interval="20000" CRM_meta_name="monitor" CRM_meta_start_delay="10000" CRM_meta_timeout="40000"  device="hs21d:/nfs" directory="/mnt/tmp" fstype="nfs" options="ro"/>
       </rsc_op>
     </action_set>
     <inputs>
