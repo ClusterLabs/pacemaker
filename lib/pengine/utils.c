@@ -502,7 +502,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
                        action->uuid, action->node->details->uname);
             if (is_set(action->rsc->flags, pe_rsc_managed)
                 && save_action && a_task == stop_rsc) {
-                pe_fence_node(data_set, action->node, "Node is unclean");
+                pe_fence_node(data_set, action->node, "because node is unclean");
             }
 
         } else if (action->node->details->pending) {
