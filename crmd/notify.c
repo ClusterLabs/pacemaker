@@ -520,7 +520,8 @@ parse_notifications(xmlNode *notifications)
         entry = (notify_entry_t) {
             .id = (char *) crm_element_value(notify, XML_ATTR_ID),
             .path = (char *) crm_element_value(notify, XML_ALERT_ATTR_PATH),
-            .timeout = CRMD_NOTIFY_DEFAULT_TIMEOUT_MS
+            .timeout = CRMD_NOTIFY_DEFAULT_TIMEOUT_MS,
+            .tstamp_format = (char *) CRMD_NOTIFY_DEFAULT_TSTAMP_FORMAT
         };
 
         entry.envvars =
