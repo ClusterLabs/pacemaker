@@ -944,7 +944,6 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
     if (value_i < 0) {
         value_i = 0;
     }
-    value_i += start_delay;
     value_ms = crm_itoa(value_i);
     g_hash_table_replace(action->meta, strdup(field), value_ms);
 }
