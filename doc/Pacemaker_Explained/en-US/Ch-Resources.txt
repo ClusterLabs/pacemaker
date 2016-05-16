@@ -367,6 +367,9 @@ indexterm:[Resource,Option,requires]
 |How many seconds to wait before acting as if the failure had not
  occurred, and potentially allowing the resource back to the node on
  which it failed. A value of 0 indicates that this feature is disabled.
+ As with any time-based actions, this is not guaranteed to be checked more
+ frequently than the value of +cluster-recheck-interval+ (see
+ <<s-cluster-options>>).
  indexterm:[failure-timeout,Resource Option]
  indexterm:[Resource,Option,failure-timeout]
 
