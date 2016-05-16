@@ -1,3 +1,19 @@
+* Mon May 16 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.15-rc2
+- Update source tarball to revision: 4112547
+- Changesets: 40
+- Diff:       12 files changed, 132 insertions(+), 76 deletions(-)
+
+- Changes since Pacemaker-1.1.15-rc1
+  + attrd: Fix issue introduced in 1.1.15-rc1 breaking the synchronization of attributes
+  + attrd: If attribute delay changes, update it when synchronizing attributes
+  + crmd: Fix issue introduced in 1.1.15-rc1 with cluster properties defaulting if alerts section present
+  + crmd: Rename alerts' tstamp_format to timestamp-format and default to "%H:%M:%S.%06N"
+  + crmd: Take start-delay into account for the timeout of the action timer
+  + pengine: Correctly set OCF_RESKEY_CRM_meta_timeout when start-delay is configured
+  + pengine: Properly order actions for master/slave resources in anti-colocations
+  + pengine: Respect asymmetrical ordering when trying to move resources
+  + resources: SysInfo now resets #health_disk to green when there's sufficient free disk
+
 * Fri Apr 22 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.15-rc1
 - Update source tarball to revision: f7dfcf8
 - Changesets: 301
