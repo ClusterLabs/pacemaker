@@ -1010,7 +1010,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     config_hash =
         g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
 
-    unpack_instance_attributes(output, output, XML_CIB_TAG_PROPSET, NULL, config_hash,
+    unpack_instance_attributes(crmconfig, crmconfig, XML_CIB_TAG_PROPSET, NULL, config_hash,
                                CIB_OPTIONS_FIRST, FALSE, now);
 
     verify_crmd_options(config_hash);

@@ -25,6 +25,9 @@
 /* Default-Timeout to use before killing a notification script (in milliseconds) */
 #  define CRMD_NOTIFY_DEFAULT_TIMEOUT_MS (300000)
 
+/* Default-Format-String used to pass timestamps to the notification scripts */
+#  define CRMD_NOTIFY_DEFAULT_TSTAMP_FORMAT "%H:%M:%S.%06N"
+
 void crmd_enable_notifications(const char *script, const char *target);
 void crmd_notify_node_event(crm_node_t *node);
 void crmd_notify_fencing_op(stonith_event_t * e);
