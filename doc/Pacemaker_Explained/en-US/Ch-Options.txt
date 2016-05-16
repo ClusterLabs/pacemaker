@@ -96,6 +96,7 @@ A complete set of CIB properties will look something like this:
 -------
 ======
 
+[[s-cluster-options]]
 == Cluster Options ==
 
 Cluster options, as you might expect, control how the cluster behaves

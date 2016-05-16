@@ -49,7 +49,7 @@ meta_data() {
 <?xml version="1.0"?>
 <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
 <resource-agent name="HealthCPU" version="0.1">
-<version>0.1</version>
+<version>1.0</version>
 
 <longdesc lang="en">
 Systhem health agent that measures the CPU idling and updates the #health-cpu attribute.
