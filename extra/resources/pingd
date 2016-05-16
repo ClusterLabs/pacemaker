@@ -76,7 +76,7 @@ case $__OCF_ACTION in
 	cat <<END
 <?xml version="1.0"?>
 <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
-<resource-agent name="pingd">
+<resource-agent name="pingd" version="1.0">
 <version>1.0</version>
 <longdesc lang="en">
 This agent (ocf:pacemaker:pingd) has been replaced by the more reliable ocf:pacemaker:ping.

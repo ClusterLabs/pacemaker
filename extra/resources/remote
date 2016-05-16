@@ -44,7 +44,7 @@ meta_data() {
 <?xml version="1.0"?>
 <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
 <resource-agent name="remote" version="0.1">
-<version>0.1</version>
+<version>1.0</version>
 <shortdesc lang="en">remote resource agent</shortdesc>
   <parameters>
     <parameter name="server" unique="1">
