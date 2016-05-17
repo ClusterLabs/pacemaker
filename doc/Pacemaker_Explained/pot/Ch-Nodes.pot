@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-10-17T05:19:02\n"
-"PO-Revision-Date: 2012-10-17T05:19:02\n"
+"POT-Creation-Date: 2016-05-03 17:45-0500\n"
+"PO-Revision-Date: 2016-05-03 17:45-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -29,7 +29,7 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Example cluster node entry"
+msgid "Example Heartbeat cluster node entry"
 msgstr ""
 
 #. Tag: programlisting
@@ -37,19 +37,74 @@ msgstr ""
 msgid "&lt;node id=\"1186dc9a-324d-425a-966e-d757e693dc86\" uname=\"pcmk-1\" type=\"normal\"/&gt;"
 msgstr ""
 
+#. Tag: title
+#, no-c-format
+msgid "Example Corosync cluster node entry"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;node id=\"101\" uname=\"pcmk-1\" type=\"normal\"/&gt;"
+msgstr ""
+
 #. Tag: para
 #, no-c-format
-msgid "In normal circumstances, the admin should let the cluster populate this information automatically from the communications and membership data. However one can use the <literal>crm_uuid</literal> tool to read an existing UUID or define a value before the cluster starts."
+msgid "In normal circumstances, the admin should let the cluster populate this information automatically from the communications and membership data. However for Heartbeat, one can use the <literal>crm_uuid</literal> tool to read an existing UUID or define a value before the cluster starts."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Describing a Cluster Node"
+msgid "Where Pacemaker Gets the Node Name"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm> <primary>Node</primary><secondary>attribute</secondary> </indexterm> <indexterm> <primary>attribute</primary> </indexterm> Beyond the basic definition of a node the administrator can also describe the node’s attributes, such as how much RAM, disk, what OS or kernel version it has, perhaps even its physical location. This information can then be used by the cluster when deciding where to place resources. For more information on the use of node attributes, see <xref linkend=\"ch-rules\" />."
+msgid "Traditionally, Pacemaker required nodes to be referred to by the value returned by <literal>uname -n</literal>. This can be problematic for services that require the <literal>uname -n</literal> to be a specific value (e.g. for a licence file)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "This requirement has been relaxed for clusters using Corosync 2.0 or later. The name Pacemaker uses is:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The value stored in <literal>corosync.conf</literal> under <emphasis role=\"strong\">ring0_addr</emphasis> in the <emphasis role=\"strong\">nodelist</emphasis>, if it does not contain an IP address; otherwise"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The value stored in <literal>corosync.conf</literal> under <emphasis role=\"strong\">name</emphasis> in the <emphasis role=\"strong\">nodelist</emphasis>; otherwise"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The value of <literal>uname -n</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Pacemaker provides the <literal>crm_node -n</literal> command which displays the name used by a running cluster."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If a Corosync <emphasis role=\"strong\">nodelist</emphasis> is used, <literal>crm_node --name-for-id</literal> <replaceable>number</replaceable> is also available to display the name used by the node with the corosync <emphasis role=\"strong\">nodeid</emphasis> of <replaceable>number</replaceable>, for example: <literal>crm_node --name-for-id 2</literal>."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Node Attributes"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>Node</primary><secondary>attribute</secondary> </indexterm> <indexterm> <primary>attribute</primary> </indexterm> <emphasis>Node attributes</emphasis> are a special type of option (name-value pair) that applies to a node object."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Beyond the basic definition of a node, the administrator can describe the node’s attributes, such as how much RAM, disk, what OS or kernel version it has, perhaps even its physical location. This information can then be used by the cluster when deciding where to place resources. For more information on the use of node attributes, see <xref linkend=\"ch-rules\" />."
 msgstr ""
 
 #. Tag: para
@@ -64,212 +119,266 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "The result of using crm_attribute to specify which kernel pcmk-1 is running"
+msgid "Result of using crm_attribute to specify which kernel pcmk-1 is running"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# crm_attribute --type nodes --node pcmk-1 --name kernel --update $(uname -r)"
 msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "# crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --attr-value `uname -r`"
-msgstr ""
-
-#. Tag: programlisting
-#, no-c-format
-msgid "&lt;node uname=\"pcmk-1\" type=\"normal\" id=\"1186dc9a-324d-425a-966e-d757e693dc86\"&gt;\n"
-"   &lt;instance_attributes id=\"nodes-1186dc9a-324d-425a-966e-d757e693dc86\"&gt;\n"
-"     &lt;nvpair id=\"kernel-1186dc9a-324d-425a-966e-d757e693dc86\" name=\"kernel\" value=\"2.6.16.46-0.4-default\"/&gt;\n"
+msgid "&lt;node uname=\"pcmk-1\" type=\"normal\" id=\"101\"&gt;\n"
+"   &lt;instance_attributes id=\"nodes-101\"&gt;\n"
+"     &lt;nvpair id=\"nodes-101-kernel\" name=\"kernel\" value=\"3.10.0-123.13.2.el7.x86_64\"/&gt;\n"
 "   &lt;/instance_attributes&gt;\n"
 "&lt;/node&gt;"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "A simpler way to determine the current value of an attribute is to use <literal>crm_attribute</literal> command again:"
+msgid "Rather than having to read the XML, a simpler way to determine the current value of an attribute is to use <literal>crm_attribute</literal> again:"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: screen
 #, no-c-format
-msgid "# crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --get-value"
+msgid "# crm_attribute --type nodes --node pcmk-1 --name kernel --query\n"
+"scope=nodes  name=kernel value=3.10.0-123.13.2.el7.x86_64"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "By specifying <literal>--type nodes</literal> the admin tells the cluster that this attribute is persistent. There are also transient attributes which are kept in the status section which are \"forgotten\" whenever the node rejoins the cluster. The cluster uses this area to store a record of how many times a resource has failed on that node but administrators can also read and write to this section by specifying <literal>--type status</literal>."
+msgid "By specifying <literal>--type nodes</literal> the admin tells the cluster that this attribute is persistent. There are also transient attributes which are kept in the status section which are \"forgotten\" whenever the node rejoins the cluster. The cluster uses this area to store a record of how many times a resource has failed on that node, but administrators can also read and write to this section by specifying <literal>--type status</literal>."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Adding a New Cluster Node"
+msgid "Managing Nodes in a Corosync-Based Cluster"
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Corosync"
+msgid "Adding a New Corosync Node"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm> <primary>Corosync</primary><secondary>Add Cluster Node</secondary> </indexterm> <indexterm> <primary>Add Cluster Node</primary> </indexterm> <indexterm> <primary>Add Cluster Node</primary><secondary>Corosync</secondary> </indexterm> <indexterm> <primary>Corosync</primary> </indexterm> Adding a new node is as simple as installing Corosync and Pacemaker, and copying <emphasis>/etc/corosync/corosync.conf</emphasis> and <emphasis>/etc/ais/authkey</emphasis> (if it exists) from an existing node. You may need to modify the <literal>mcastaddr</literal> option to match the new node’s IP address."
+msgid "<indexterm> <primary>Corosync</primary><secondary>Add Cluster Node</secondary> </indexterm> <indexterm> <primary>Add Cluster Node</primary> </indexterm> <indexterm> <primary>Add Cluster Node</primary><secondary>Corosync</secondary> </indexterm> <indexterm> <primary>Corosync</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If a log message containing \"Invalid digest\" appears from Corosync, the keys are not consistent between the machines."
+msgid "To add a new node:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Install Corosync and Pacemaker on the new host."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Copy <literal>/etc/corosync/corosync.conf</literal> and <literal>/etc/corosync/authkey</literal> (if it exists) from an existing node. You may need to modify the <emphasis role=\"strong\">mcastaddr</emphasis> option to match the new node’s IP address."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Start the cluster software on the new host. If a log message containing \"Invalid digest\" appears from Corosync, the keys are not consistent between the machines."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Heartbeat"
+msgid "Removing a Corosync Node"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm> <primary>Heartbeat</primary><secondary>Add Cluster Node</secondary> </indexterm> <indexterm> <primary>Add Cluster Node</primary> </indexterm> <indexterm> <primary>Add Cluster Node</primary><secondary>Heartbeat</secondary> </indexterm> <indexterm> <primary>Heartbeat</primary> </indexterm> Provided you specified <literal>autojoin any</literal> in <emphasis>ha.cf</emphasis>, adding a new node is as simple as installing heartbeat and copying <emphasis>ha.cf</emphasis> and <emphasis>authkeys</emphasis> from an existing node."
+msgid "<indexterm> <primary>Corosync</primary><secondary>Remove Cluster Node</secondary> </indexterm> <indexterm> <primary>Remove Cluster Node</primary> </indexterm> <indexterm> <primary>Remove Cluster Node</primary><secondary>Corosync</secondary> </indexterm> <indexterm> <primary>Corosync</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If you don’t want to use <literal>autojoin</literal>, then after setting up <emphasis>ha.cf</emphasis> and <emphasis>authkeys</emphasis>, you must use the <literal>hb_addnode</literal> command before starting the new node."
+msgid "Because the messaging and membership layers are the authoritative source for cluster nodes, deleting them from the CIB is not a complete solution. First, one must arrange for corosync to forget about the node (<emphasis role=\"strong\">pcmk-1</emphasis> in the example below)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Stop the cluster on the host to be removed. How to do this will vary with your operating system and installed versions of cluster software, for example, <literal>pcs cluster stop</literal> if you are using pcs for cluster management, or <literal>service corosync stop</literal> on a host using corosync 1.x with the pacemaker plugin."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "From one of the remaining active cluster nodes, tell Pacemaker to forget about the removed host, which will also delete the node from the CIB:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# crm_node -R pcmk-1"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "This procedure only works for pacemaker 1.1.8 and later."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Removing a Cluster Node"
+msgid "Replacing a Corosync Node"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm> <primary>Corosync</primary><secondary>Remove Cluster Node</secondary> </indexterm> <indexterm> <primary>Remove Cluster Node</primary> </indexterm> <indexterm> <primary>Remove Cluster Node</primary><secondary>Corosync</secondary> </indexterm> <indexterm> <primary>Corosync</primary> </indexterm> Because the messaging and membership layers are the authoritative source for cluster nodes, deleting them from the CIB is not a reliable solution. First one must arrange for heartbeat to forget about the node (<emphasis>pcmk-1</emphasis> in the example below)."
+msgid "<indexterm> <primary>Corosync</primary><secondary>Replace Cluster Node</secondary> </indexterm> <indexterm> <primary>Replace Cluster Node</primary> </indexterm> <indexterm> <primary>Replace Cluster Node</primary><secondary>Corosync</secondary> </indexterm> <indexterm> <primary>Corosync</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "On the host to be removed:"
+msgid "To replace an existing cluster node:"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Find and record the node’s Corosync id: <literal>crm_node -i</literal>"
+msgid "Make sure the old node is completely stopped."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Stop the cluster: <literal>/etc/init.d/corosync stop</literal>"
+msgid "Give the new machine the same hostname and IP address as the old one."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Next, from one of the remaining active cluster nodes:"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Tell the cluster to forget about the removed host:"
-msgstr ""
-
-#. Tag: programlisting
-#, no-c-format
-msgid "# crm_node -R $COROSYNC_ID"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Only now is it safe to delete the node from the CIB with:"
-msgstr ""
-
-#. Tag: programlisting
-#, no-c-format
-msgid "# cibadmin --delete --obj_type nodes --crm_xml '&lt;node uname=\"_pcmk-1_\"/&gt;'\n"
-"# cibadmin --delete --obj_type status --crm_xml '&lt;node_state uname=\"_pcmk-1_\"/&gt;'"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "<indexterm> <primary>Heartbeat</primary><secondary>Remove Cluster Node</secondary> </indexterm> <indexterm> <primary>Remove Cluster Node</primary> </indexterm> <indexterm> <primary>Remove Cluster Node</primary><secondary>Heartbeat</secondary> </indexterm> <indexterm> <primary>Heartbeat</primary> </indexterm> Because the messaging and membership layers are the authoritative source for cluster nodes, deleting them from the CIB is not a reliable solution."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "First one must arrange for heartbeat to forget about the node (pcmk-1 in the example below). To do this, shut down heartbeat on the node and then, from one of the remaining active cluster nodes, run:"
-msgstr ""
-
-#. Tag: programlisting
-#, no-c-format
-msgid "# hb_delnode pcmk-1"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Only then is it safe to delete the node from the CIB with:"
-msgstr ""
-
-#. Tag: programlisting
-#, no-c-format
-msgid "# cibadmin --delete --obj_type nodes --crm_xml '&lt;node uname=\"pcmk-1\"/&gt;'\n"
-"# cibadmin --delete --obj_type status --crm_xml '&lt;node_state uname=\"pcmk-1\"/&gt;'"
+msgid "Follow the procedure above for adding a node."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Replacing a Cluster Node"
+msgid "Managing Nodes in a Heartbeat-based Cluster"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Adding a New Heartbeat Node"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm> <primary>Corosync</primary><secondary>Replace Cluster Node</secondary> </indexterm> <indexterm> <primary>Replace Cluster Node</primary> </indexterm> <indexterm> <primary>Replace Cluster Node</primary><secondary>Corosync</secondary> </indexterm> <indexterm> <primary>Corosync</primary> </indexterm> The five-step guide to replacing an existing cluster node:"
+msgid "<indexterm> <primary>Heartbeat</primary><secondary>Add Cluster Node</secondary> </indexterm> <indexterm> <primary>Add Cluster Node</primary> </indexterm> <indexterm> <primary>Add Cluster Node</primary><secondary>Heartbeat</secondary> </indexterm> <indexterm> <primary>Heartbeat</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Make sure the old node is completely stopped"
+msgid "Install heartbeat and pacemaker on the new host."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Give the new machine the same hostname and IP address as the old one"
+msgid "Copy <literal>ha.cf</literal> and <literal>authkeys</literal> from an existing node."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Install the cluster software :-)"
+msgid "If you do not use <emphasis role=\"strong\">autojoin any</emphasis> in <literal>ha.cf</literal>, run:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "hb_addnode $(uname -n)"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Copy <emphasis>/etc/corosync/corosync.conf</emphasis> and <emphasis>/etc/ais/authkey</emphasis> (if it exists) to the new node"
+msgid "Start the cluster software on the new node."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Removing a Heartbeat Node"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Start the new cluster node"
+msgid "<indexterm> <primary>Heartbeat</primary><secondary>Remove Cluster Node</secondary> </indexterm> <indexterm> <primary>Remove Cluster Node</primary> </indexterm> <indexterm> <primary>Remove Cluster Node</primary><secondary>Heartbeat</secondary> </indexterm> <indexterm> <primary>Heartbeat</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm> <primary>Heartbeat</primary><secondary>Replace Cluster Node</secondary> </indexterm> <indexterm> <primary>Replace Cluster Node</primary> </indexterm> <indexterm> <primary>Replace Cluster Node</primary><secondary>Heartbeat</secondary> </indexterm> <indexterm> <primary>Heartbeat</primary> </indexterm> The seven-step guide to replacing an existing cluster node:"
+msgid "Because the messaging and membership layers are the authoritative source for cluster nodes, deleting them from the CIB is not a complete solution. First, one must arrange for Heartbeat to forget about the node (pcmk-1 in the example below)."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Give the new machine the same hostname as the old one"
+msgid "On the host to be removed, stop the cluster:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "service heartbeat stop"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Go to an active cluster node and look up the UUID for the old node in <emphasis>/var/lib/heartbeat/hostcache</emphasis>"
+msgid "From one of the remaining active cluster nodes, tell Heartbeat the node should be removed:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "hb_delnode pcmk-1"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Install the cluster software"
+msgid "Tell Pacemaker to forget about the removed host:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "crm_node -R pcmk-1"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Copy <emphasis>ha.cf</emphasis> and <emphasis>authkeys</emphasis> to the new node"
+msgid "This procedure only works for pacemaker versions after 1.1.8."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Replacing a Heartbeat Node"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "On the new node, populate it’s UUID using <literal>crm_uuid -w</literal> and the UUID from step 2"
+msgid "<indexterm> <primary>Heartbeat</primary><secondary>Replace Cluster Node</secondary> </indexterm> <indexterm> <primary>Replace Cluster Node</primary> </indexterm> <indexterm> <primary>Replace Cluster Node</primary><secondary>Heartbeat</secondary> </indexterm> <indexterm> <primary>Heartbeat</primary> </indexterm> To replace an existing cluster node:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Give the new machine the same hostname as the old one."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Go to an active cluster node and look up the UUID for the old node in <literal>/var/lib/heartbeat/hostcache</literal>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Install the cluster software."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Copy <literal>ha.cf</literal> and <literal>authkeys</literal> to the new node."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "On the new node, populate its UUID using <literal>crm_uuid -w</literal> and the UUID obtained earlier."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Start the new cluster node."
 msgstr ""
 

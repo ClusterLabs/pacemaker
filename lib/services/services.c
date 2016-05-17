@@ -380,11 +380,11 @@ services_set_op_pending(svc_action_t *op, DBusPendingCall *pending)
 void
 services_action_cleanup(svc_action_t * op)
 {
-#if SUPPORT_DBUS
     if(op->opaque == NULL) {
         return;
     }
 
+#if SUPPORT_DBUS
     if(op->opaque->timerid != 0) {
         crm_trace("Removing timer for call %s to %s", op->action, op->rsc);
         g_source_remove(op->opaque->timerid);
@@ -400,6 +400,7 @@ services_action_cleanup(svc_action_t * op)
         dbus_pending_call_unref(op->opaque->pending);
         op->opaque->pending = NULL;
     }
+#endif
 
     if (op->opaque->stderr_gsource) {
         mainloop_del_fd(op->opaque->stderr_gsource);
@@ -410,7 +411,6 @@ services_action_cleanup(svc_action_t * op)
         mainloop_del_fd(op->opaque->stdout_gsource);
         op->opaque->stdout_gsource = NULL;
     }
-#endif
 }
 
 void

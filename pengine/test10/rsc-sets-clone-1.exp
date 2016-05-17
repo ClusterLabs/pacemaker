@@ -77,7 +77,7 @@
     <action_set>
       <rsc_op id="2" operation="monitor" operation_key="stonithsys3_monitor_15000" on_node="sys2" on_node_uuid="sys2">
         <primitive id="stonithsys3" class="stonith" type="external/ipmi"/>
-        <attributes CRM_meta_interval="15000" CRM_meta_name="monitor" CRM_meta_start_delay="15000" CRM_meta_timeout="30000"  hostname="sys3" interface="lan" ipaddr="192.168.1.222" passwd="****" userid="admin"/>
+        <attributes CRM_meta_interval="15000" CRM_meta_name="monitor" CRM_meta_start_delay="15000" CRM_meta_timeout="15000"  hostname="sys3" interface="lan" ipaddr="192.168.1.222" passwd="****" userid="admin"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -444,7 +444,7 @@
     <action_set>
       <rsc_op id="74" operation="monitor" operation_key="stonithsys2_monitor_15000" on_node="sys3" on_node_uuid="sys3">
         <primitive id="stonithsys2" class="stonith" type="external/ipmi"/>
-        <attributes CRM_meta_interval="15000" CRM_meta_name="monitor" CRM_meta_start_delay="15000" CRM_meta_timeout="30000"  hostname="sys2" interface="lan" ipaddr="192.168.1.221" passwd="****" userid="admin"/>
+        <attributes CRM_meta_interval="15000" CRM_meta_name="monitor" CRM_meta_start_delay="15000" CRM_meta_timeout="15000"  hostname="sys2" interface="lan" ipaddr="192.168.1.221" passwd="****" userid="admin"/>
       </rsc_op>
     </action_set>
     <inputs>

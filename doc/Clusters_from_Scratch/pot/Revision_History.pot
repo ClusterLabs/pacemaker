@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-10-17T05:19:03\n"
-"PO-Revision-Date: 2012-10-17T05:19:03\n"
+"POT-Creation-Date: 2016-05-03 17:45-0500\n"
+"PO-Revision-Date: 2016-05-03 17:45-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -80,5 +80,30 @@ msgstr ""
 #. Tag: member
 #, no-c-format
 msgid "Updated for pcs"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Ken"
+msgstr ""
+
+#. Tag: surname
+#, no-c-format
+msgid "Gaillot"
+msgstr ""
+
+#. Tag: member
+#, no-c-format
+msgid "Updated for Fedora 21"
+msgstr ""
+
+#. Tag: member
+#, no-c-format
+msgid "Minor corrections, plus use include file for intro"
+msgstr ""
+
+#. Tag: member
+#, no-c-format
+msgid "Update for CentOS 7.1 and leaving firewalld/SELinux enabled"
 msgstr ""
 

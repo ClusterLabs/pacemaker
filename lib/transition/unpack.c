@@ -65,6 +65,12 @@ unpack_action(synapse_t * parent, xmlNode * xml_action)
         action->timeout = crm_parse_int(value, NULL);
     }
 
+    /* Take start-delay into account for the timeout of the action timer */
+    value = g_hash_table_lookup(action->params, "CRM_meta_start_delay");
+    if (value != NULL) {
+        action->timeout += crm_parse_int(value, NULL);
+    }
+
     value = g_hash_table_lookup(action->params, "CRM_meta_interval");
     if (value != NULL) {
         action->interval = crm_parse_int(value, NULL);

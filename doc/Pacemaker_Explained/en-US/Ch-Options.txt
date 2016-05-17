@@ -96,6 +96,7 @@ A complete set of CIB properties will look something like this:
 -------
 ======
 
+[[s-cluster-options]]
 == Cluster Options ==
 
 Cluster options, as you might expect, control how the cluster behaves
@@ -225,6 +226,11 @@ legacy devices.
 indexterm:[stonith-timeout,Cluster Option]
 indexterm:[Cluster,Option,stonith-timeout]
 How long to wait for STONITH actions (reboot, on, off) to complete
+
+| concurrent-fencing | FALSE |
+indexterm:[concurrent-fencing,Cluster Option]
+indexterm:[Cluster,Option,concurrent-fencing]
+Is the cluster allowed to initiate multiple fence actions concurrently?
 
 | cluster-delay | 60s |
 indexterm:[cluster-delay,Cluster Option]

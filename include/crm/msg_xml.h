@@ -162,9 +162,9 @@
 #  define XML_CIB_TAG_OPCONFIG		"op_defaults"
 #  define XML_CIB_TAG_RSCCONFIG   	"rsc_defaults"
 #  define XML_CIB_TAG_ACLS   		"acls"
-#  define XML_CIB_TAG_NOTIFICATIONS     "alerts"
-#  define XML_CIB_TAG_NOTIFY            "alert"
-#  define XML_CIB_TAG_NOTIFY_RECIPIENT  "recipient"
+#  define XML_CIB_TAG_ALERTS    	"alerts"
+#  define XML_CIB_TAG_ALERT   		"alert"
+#  define XML_CIB_TAG_ALERT_RECIPIENT	"recipient"
 
 #  define XML_CIB_TAG_STATE         	"node_state"
 #  define XML_CIB_TAG_NODE          	"node"
@@ -347,10 +347,10 @@
 #  define XML_CONFIG_ATTR_FORCE_QUIT	"shutdown-escalation"
 #  define XML_CONFIG_ATTR_RECHECK	"cluster-recheck-interval"
 
-#  define XML_NOTIFY_ATTR_PATH          "path"
-#  define XML_NOTIFY_ATTR_TIMEOUT       "timeout"
-#  define XML_NOTIFY_ATTR_TSTAMP_FORMAT "tstamp_format"
-#  define XML_NOTIFY_ATTR_REC_VALUE     "value"
+#  define XML_ALERT_ATTR_PATH		"path"
+#  define XML_ALERT_ATTR_TIMEOUT	"timeout"
+#  define XML_ALERT_ATTR_TSTAMP_FORMAT	"timestamp-format"
+#  define XML_ALERT_ATTR_REC_VALUE	"value"
 
 #  define XML_CIB_TAG_GENERATION_TUPPLE	"generation_tuple"
 

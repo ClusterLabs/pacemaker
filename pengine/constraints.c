@@ -1159,6 +1159,48 @@ sort_cons_priority_rh(gconstpointer a, gconstpointer b)
     return strcmp(rsc_constraint1->rsc_rh->id, rsc_constraint2->rsc_rh->id);
 }
 
+static void
+anti_colocation_order(resource_t * first_rsc, int first_role,
+                      resource_t * then_rsc, int then_role,
+                      pe_working_set_t * data_set)
+{
+    const char *first_tasks[] = { NULL, NULL };
+    const char *then_tasks[] = { NULL, NULL };
+    int first_lpc = 0;
+    int then_lpc = 0;
+
+    /* Actions to make first_rsc lose first_role */
+    if (first_role == RSC_ROLE_MASTER) {
+        first_tasks[0] = CRMD_ACTION_DEMOTE;
+
+    } else {
+        first_tasks[0] = CRMD_ACTION_STOP;
+
+        if (first_role == RSC_ROLE_SLAVE) {
+            first_tasks[1] = CRMD_ACTION_PROMOTE;
+        }
+    }
+
+    /* Actions to make then_rsc gain then_role */
+    if (then_role == RSC_ROLE_MASTER) {
+        then_tasks[0] = CRMD_ACTION_PROMOTE;
+
+    } else {
+        then_tasks[0] = CRMD_ACTION_START;
+
+        if (then_role == RSC_ROLE_SLAVE) {
+            then_tasks[1] = CRMD_ACTION_DEMOTE;
+        }
+    }
+
+    for (first_lpc = 0; first_lpc <= 1 && first_tasks[first_lpc] != NULL; first_lpc++) {
+        for (then_lpc = 0; then_lpc <= 1 && then_tasks[then_lpc] != NULL; then_lpc++) {
+            new_rsc_order(first_rsc, first_tasks[first_lpc], then_rsc, then_tasks[then_lpc],
+                          pe_order_anti_colocation, data_set);
+        }
+    }
+}
+
 gboolean
 rsc_colocation_new(const char *id, const char *node_attr, int score,
                    resource_t * rsc_lh, resource_t * rsc_rh,
@@ -1210,10 +1252,8 @@ rsc_colocation_new(const char *id, const char *node_attr, int score,
     data_set->colocation_constraints = g_list_append(data_set->colocation_constraints, new_con);
 
     if (score <= -INFINITY) {
-        new_rsc_order(rsc_lh, CRMD_ACTION_STOP, rsc_rh, CRMD_ACTION_START,
-                      pe_order_anti_colocation, data_set);
-        new_rsc_order(rsc_rh, CRMD_ACTION_STOP, rsc_lh, CRMD_ACTION_START,
-                      pe_order_anti_colocation, data_set);
+        anti_colocation_order(rsc_lh, new_con->role_lh, rsc_rh, new_con->role_rh, data_set);
+        anti_colocation_order(rsc_rh, new_con->role_rh, rsc_lh, new_con->role_lh, data_set);
     }
 
     return TRUE;

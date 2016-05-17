@@ -39,7 +39,7 @@ meta_data() {
 	cat <<END
 <?xml version="1.0"?>
 <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
-<resource-agent name="SysInfo">
+<resource-agent name="SysInfo" version="1.0">
 <version>1.0</version>
 
 <longdesc lang="en">
@@ -56,6 +56,7 @@ Sample Linux output:
    ram_total:      513
    ram_free:       117
    root_free:      2.4
+   #health_disk:   red
 
 Sample Darwin output:
    arch:   i386
@@ -67,6 +68,7 @@ Sample Darwin output:
    ram_total:      2016
    ram_free:       787
    root_free:      13
+   #health_disk:   green
 
 Units:
    free_swap: Mb
@@ -119,6 +121,7 @@ Can be one of: B, K, M, G, T, P (case-insensitive)
 <longdesc lang="en">
 The amount of free space required in monitored disks. If any
 of the monitored disks has less than this amount of free space,
+, with the node attribute "#health_disk" changing to "red",
 all resources will move away from the node. Set the node-health-strategy
 property appropriately for this to take effect.
 If the unit is not specified, it defaults to disk_unit.
@@ -224,8 +227,11 @@ SysInfoStats() {
 	    disk_free=`SysInfo_hdd_units $disk_free`
 	    UpdateStat ${disk_label}_free $disk_free
 	    if [ -n "$MIN_FREE" ]; then
-		test $disk_free -le $MIN_FREE &&
+		if [ $disk_free -le $MIN_FREE ]; then
 		    UpdateStat "#health_disk" "red"
+		else
+		    UpdateStat "#health_disk" "green"
+		fi
 	    fi
 	fi
     done

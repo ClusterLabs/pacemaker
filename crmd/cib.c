@@ -72,7 +72,7 @@ do_cib_updated(const char *event, xmlNode * msg)
         if ((xpathObj = xpath_search(
                  msg,
                  "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_CIB_TAG_CRMCONFIG " | " \
-                 "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_CIB_TAG_NOTIFICATIONS
+                 "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_CIB_TAG_ALERTS
                  )) != NULL) {
             freeXpathObject(xpathObj);
             mainloop_set_trigger(config_read);
@@ -87,7 +87,7 @@ do_cib_updated(const char *event, xmlNode * msg)
 
             /* modifying properties */
             if (!strstr(xpath, "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_CRMCONFIG "/") &&
-                !strstr(xpath, "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_NOTIFICATIONS)) {
+                !strstr(xpath, "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_ALERTS)) {
                 xmlNode *section = NULL;
                 const char *name = NULL;
 
@@ -95,7 +95,7 @@ do_cib_updated(const char *event, xmlNode * msg)
                 if ((strcmp(xpath, "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION) != 0) ||
                     ((section = __xml_first_child(change)) == NULL) ||
                     ((name = crm_element_name(section)) == NULL) ||
-                    (strcmp(name, XML_CIB_TAG_NOTIFICATIONS) != 0)) {
+                    (strcmp(name, XML_CIB_TAG_ALERTS) != 0)) {
                     continue;
                 }
             } 

@@ -46,7 +46,7 @@ meta_data() {
 <?xml version="1.0"?>
 <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
 <resource-agent name="HealthSMART" version="0.1">
-<version>0.1</version>
+<version>1.0</version>
 
 <longdesc lang="en">
 Systhem health agent that checks the S.M.A.R.T. status of the given drives and

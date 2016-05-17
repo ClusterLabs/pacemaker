@@ -10,6 +10,7 @@ digraph "g" {
 "ms1_stop_0" -> "rsc1:1_stop_0 node2" [ style = bold]
 "ms1_stop_0" [ style=bold color="green" fontcolor="orange"]
 "ms1_stopped_0" [ style=bold color="green" fontcolor="orange"]
+"ms2_start_0" [ style=dashed color="red" fontcolor="orange"]
 "rsc1:0_demote_0 node1" -> "ms1_demoted_0" [ style = bold]
 "rsc1:0_demote_0 node1" -> "rsc1:0_stop_0 node1" [ style = bold]
 "rsc1:0_demote_0 node1" [ style=bold color="green" fontcolor="black"]

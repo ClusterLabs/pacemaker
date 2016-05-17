@@ -233,7 +233,7 @@
      <action_set>
       <rsc_op id="26" operation="monitor" operation_key="resource_ipaddr1_single_monitor_5000" on_node="power720-1" on_node_uuid="ac446085-4c9d-4d4a-a94d-5e63b6e421e3">
         <primitive id="resource_ipaddr1_single" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_start_delay="1000" CRM_meta_timeout="21000" cidr_netmask="24"  ip="192.168.2.6" nic="eth1" target_role="started"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_start_delay="1000" CRM_meta_timeout="20000" cidr_netmask="24"  ip="192.168.2.6" nic="eth1" target_role="started"/>
        </rsc_op>
      </action_set>
     <inputs>
@@ -293,7 +293,7 @@
      <action_set>
       <rsc_op id="29" operation="monitor" operation_key="resource_nfsserver_single_monitor_15000" on_node="power720-1" on_node_uuid="ac446085-4c9d-4d4a-a94d-5e63b6e421e3">
         <primitive id="resource_nfsserver_single" class="lsb" type="nfsserver"/>
-        <attributes CRM_meta_enabled="true" CRM_meta_interval="15000" CRM_meta_name="monitor" CRM_meta_on_fail="stop" CRM_meta_role="Started" CRM_meta_start_delay="15000" CRM_meta_timeout="30000" />
+        <attributes CRM_meta_enabled="true" CRM_meta_interval="15000" CRM_meta_name="monitor" CRM_meta_on_fail="stop" CRM_meta_role="Started" CRM_meta_start_delay="15000" CRM_meta_timeout="15000" />
        </rsc_op>
      </action_set>
      <inputs>

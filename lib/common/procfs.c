@@ -135,6 +135,7 @@ crm_procfs_pid_of(const char *name)
             crm_info("Found %s active as process %d", name, pid);
             break;
         }
+        pid = 0;
     }
     closedir(dp);
     return pid;

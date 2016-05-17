@@ -35,7 +35,7 @@
     <action_set>
       <rsc_op id="38" operation="start" operation_key="UmVIPcheck_start_0" on_node="srv04" on_node_uuid="srv04">
         <primitive id="UmVIPcheck" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_start_delay="2000" CRM_meta_timeout="92000" />
+        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_start_delay="2000" CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
