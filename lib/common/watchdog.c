@@ -108,6 +108,8 @@ pcmk_panic_local(void)
     int rc = pcmk_ok;
     uid_t uid = geteuid();
     pid_t ppid = getppid();
+    const char *env = getenv("PCMK_panic_delay");
+    int panic_delay = crm_get_msec(env) / 1000;
 
     if(uid != 0 && ppid > 1) {
         /* We're a non-root pacemaker daemon (cib, crmd, pengine,
@@ -139,6 +141,11 @@ pcmk_panic_local(void)
     }
 
     /* We're either pacemakerd, or a pacemaker daemon running as root */
+
+    if (panic_delay > 0) {
+        crm_notice("Wait %d seconds before reboot", panic_delay);
+        sleep(panic_delay);
+    }
 
     sysrq_trigger('b');
     /* reboot(RB_HALT_SYSTEM); rc = errno; */
