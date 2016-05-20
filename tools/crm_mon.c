@@ -3302,7 +3302,7 @@ send_snmp_trap(const char *node, const char *rsc, const char *task, int target_r
         char csysuptime[20];
         time_t now = time(NULL);
 
-        sprintf(csysuptime, "%ld", now);
+        sprintf(csysuptime, "%lld", (long long) now);
         snmp_add_var(trap_pdu, sysuptime_oid, sizeof(sysuptime_oid) / sizeof(oid), 't', csysuptime);
     }
 
