@@ -127,6 +127,8 @@ BuildRequires: systemd-devel
 
 %if %{with cman} && %{cman_native}
 BuildRequires: clusterlib-devel
+# pacemaker initscript: cman initscript, fence_tool (+ some soft-dependencies)
+Requires:      cman
 %endif
 
 Requires:      corosync
