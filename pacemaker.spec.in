@@ -349,6 +349,11 @@ rm -f %{buildroot}/%{_initrddir}/pacemaker
 rm -f %{buildroot}/%{_initrddir}/pacemaker_remote
 %endif
 
+# Don't ship fence_pcmk where it has no use
+%if %{without cman}
+rm -f %{buildroot}/%{_sbindir}/fence_pcmk
+%endif
+
 %if %{with coverage}
 GCOV_BASE=%{buildroot}/%{_var}/lib/pacemaker/gcov
 mkdir -p $GCOV_BASE
@@ -450,7 +455,9 @@ exit 0
 %{_sbindir}/crm_master
 %{_sbindir}/crm_node
 %{_sbindir}/fence_legacy
+%if %{with cman}
 %{_sbindir}/fence_pcmk
+%endif
 %{_sbindir}/stonith_admin
 
 %doc %{_mandir}/man7/crmd.*
@@ -462,7 +469,9 @@ exit 0
 %doc %{_mandir}/man8/crm_attribute.*
 %doc %{_mandir}/man8/crm_node.*
 %doc %{_mandir}/man8/crm_master.*
+%if %{with cman}
 %doc %{_mandir}/man8/fence_pcmk.*
+%endif
 %doc %{_mandir}/man8/fence_legacy.*
 %doc %{_mandir}/man8/pacemakerd.*
 %doc %{_mandir}/man8/stonith_admin.*
