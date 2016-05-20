@@ -128,6 +128,7 @@ BuildRequires: systemd-devel
 %if %{with cman} && %{cman_native}
 BuildRequires: clusterlib-devel
 # pacemaker initscript: cman initscript, fence_tool (+ some soft-dependencies)
+# "post" scriptlet: ccs_update_schema
 Requires:      cman
 %endif
 
@@ -400,6 +401,12 @@ rm -rf %{buildroot}
 
 %post
 /sbin/chkconfig --add pacemaker || :
+%if %{with cman} && %{cman_native}
+# make fence_pcmk in cluster.conf valid instantly otherwise tools like ccs may
+# choke (until schema gets auto-regenerated on the next start of cluster),
+# per the protocol shared with other packages contributing to cluster.rng
+/usr/sbin/ccs_update_schema >/dev/null 2>&1 || :
+%endif
 
 %preun
 /sbin/service pacemaker stop || :
