@@ -26,8 +26,17 @@
 %global py_site    %{?python_sitearch}%{!?python_sitearch:%(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")}
 %global cman_native 0%{?el6} || (0%{?fedora} > 0 && 0%{?fedora} < 17)
 
-# https://fedoraproject.org/wiki/EPEL:Packaging?rd=Packaging:EPEL#The_.25license_tag
-%{!?_licensedir:%global license %doc}
+# It's desired to apply "license" macro uniformly in "files" sections below,
+# but RPM versions not aware of this new classification normally (re)define it
+# to the value of "License:", so following is to ensure the macro definition
+# is per expectation only after that tag; solution courtesy of Jason Tibbitts:
+# https://pkgs.fedoraproject.org/cgit/rpms/epel-rpm-macros.git/tree/macros.zzz-epel?h=el6&id=e1adcb77b0c05a6c29bc0eb0c4e82113180a0a99#n12
+%if !%{defined _licensedir}
+%define description %{lua:
+    rpm.define("license %doc")
+    print("%description")
+}
+%endif
 
 # Conditionals
 # Invoke "rpmbuild --without <feature>" or "rpmbuild --with <feature>"
