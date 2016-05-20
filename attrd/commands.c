@@ -71,7 +71,7 @@ void write_attribute(attribute_t *a);
 void write_or_elect_attribute(attribute_t *a);
 void attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter);
 void attrd_peer_sync(crm_node_t *peer, xmlNode *xml);
-void attrd_peer_remove(uint32_t nodeid, const char *host, gboolean uncache, const char *source);
+void attrd_peer_remove(const char *host, gboolean uncache, const char *source);
 
 static gboolean
 send_attrd_message(crm_node_t * node, xmlNode * data)
@@ -534,17 +534,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
         attrd_peer_sync(peer, xml);
 
     } else if (safe_str_eq(op, ATTRD_OP_PEER_REMOVE)) {
-        int host_id = 0;
-        char *endptr = NULL;
-
-        host_id = strtol(host, &endptr, 10);
-        if (errno != 0 || endptr == host || *endptr != '\0') {
-            host_id = 0;
-        } else {
-            host = NULL;
-        }
-        attrd_peer_remove(host_id, host, TRUE, peer->uname);
-
+        attrd_peer_remove(host, TRUE, peer->uname);
 
     } else if (safe_str_eq(op, ATTRD_OP_SYNC_RESPONSE)
               && safe_str_neq(peer->uname, attrd_cluster->uname)) {
@@ -585,16 +575,22 @@ attrd_peer_sync(crm_node_t *peer, xmlNode *xml)
     free_xml(sync);
 }
 
+/*!
+ * \internal
+ * \brief Remove all attributes and optionally peer cache entries for a node
+ *
+ * \param[in] host     Name of node to purge
+ * \param[in] uncache  If TRUE, remove node from peer caches
+ * \param[in] source   Who requested removal (only used for logging)
+ */
 void
-attrd_peer_remove(uint32_t nodeid, const char *host, gboolean uncache, const char *source)
+attrd_peer_remove(const char *host, gboolean uncache, const char *source)
 {
     attribute_t *a = NULL;
     GHashTableIter aIter;
 
+    CRM_CHECK(host != NULL, return);
     crm_notice("Removing all %s attributes for %s", host, source);
-    if(host == NULL) {
-        return;
-    }
 
     g_hash_table_iter_init(&aIter, attributes);
     while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
@@ -605,7 +601,7 @@ attrd_peer_remove(uint32_t nodeid, const char *host, gboolean uncache, const cha
 
     if (uncache) {
         crm_remote_peer_cache_remove(host);
-        reap_crm_member(nodeid, host);
+        reap_crm_member(0, host);
     }
 }
 
@@ -835,7 +831,7 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
             }
         } else {
             /* Remove all attribute values associated with lost nodes */
-            attrd_peer_remove(peer->id, peer->uname, FALSE, __FUNCTION__);
+            attrd_peer_remove(peer->uname, FALSE, "peer loss");
             if (peer_writer && safe_str_eq(peer->uname, peer_writer)) {
                 free(peer_writer);
                 peer_writer = NULL;
