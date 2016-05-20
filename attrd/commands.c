@@ -63,7 +63,6 @@ typedef struct attribute_value_s {
         char *nodename;
         char *current;
         char *requested;
-        char *stored;
 } attribute_value_t;
 
 
@@ -101,7 +100,6 @@ free_attribute_value(gpointer data)
     free(v->nodename);
     free(v->current);
     free(v->requested);
-    free(v->stored);
     free(v);
 }
 
@@ -881,15 +879,9 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
     g_hash_table_iter_init(&iter, a->values);
     while (g_hash_table_iter_next(&iter, (gpointer *) & peer, (gpointer *) & v)) {
         do_crm_log(level, "Update %d for %s[%s]=%s: %s (%d)", call_id, a->id, peer, v->requested, pcmk_strerror(rc), rc);
-
-        if(rc == pcmk_ok) {
-            free(v->stored);
-            v->stored = v->requested;
-            v->requested = NULL;
-
-        } else {
-            free(v->requested);
-            v->requested = NULL;
+        free(v->requested);
+        v->requested = NULL;
+        if (rc != pcmk_ok) {
             a->changed = TRUE; /* Attempt write out again */
         }
     }
