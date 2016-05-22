@@ -66,6 +66,7 @@ int cli_resource_print_list(pe_working_set_t * data_set, bool raw);
 int cli_resource_print_attribute(const char *rsc, const char *attr, pe_working_set_t * data_set);
 int cli_resource_print_property(const char *rsc, const char *attr, pe_working_set_t * data_set);
 int cli_resource_print_operations(const char *rsc_id, const char *host_uname, bool active, pe_working_set_t * data_set);
+int cli_resource_print_resource_agent_version(const char* rsc_id);
 
 /* runtime */
 void cli_resource_check(cib_t * cib, resource_t *rsc);

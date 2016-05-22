@@ -126,6 +126,7 @@ static struct crm_option long_options[] = {
     {"locate",     0, 0, 'W', "\t\tDisplay the current location(s) of a resource"},
     {"stack",      0, 0, 'A', "\t\tDisplay the prerequisites and dependents of a resource"},
     {"constraints",0, 0, 'a', "\tDisplay the (co)location constraints that apply to a resource"},
+    {"resource-agent-version", 0, 0, 'I', "\tDisplay the version of the resource's agent on local node"},
 
     {"-spacer-",	1, 0, '-', "\nCommands:"},
     {"cleanup",         0, 0, 'C', "\t\tDelete the resource history and re-check the current state. Optional: --resource"},
@@ -482,6 +483,7 @@ main(int argc, char **argv)
             case 'o':
             case 'A':
             case 'a':
+            case 'I':
                 rsc_cmd = flag;
                 break;
 
@@ -714,6 +716,15 @@ main(int argc, char **argv)
         }
 
         cli_resource_print_colocation(rsc, FALSE, rsc_cmd == 'A', 1);
+
+    } else if (rsc_cmd == 'I') {
+        if (rsc_id == NULL) {
+            CMD_ERR("Must supply a resource id with -r");
+            rc = -ENXIO;
+            goto bail;
+        }
+
+        rc = cli_resource_print_resource_agent_version(rsc_id);
 
     } else if (rsc_cmd == 'c') {
         int found = 0;
