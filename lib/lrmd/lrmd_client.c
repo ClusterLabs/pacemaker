@@ -1976,6 +1976,39 @@ lrmd_api_get_metadata(lrmd_t * lrmd,
     return generic_get_metadata(class, provider, type, output);
 }
 
+static const char*
+lrmd_api_get_version(lrmd_t * lrmd,
+                     const char *class,
+                     const char *provider,
+                     const char *type, enum lrmd_call_options options)
+{
+    const char *version = NULL;
+    char *output = NULL;
+
+    lrmd_api_get_metadata(lrmd, class, provider, type, &output, options);
+
+    if (output) {
+        xmlNode *metadata = string2xml(output);
+        xmlNode *version_xml = get_xpath_object("//resource-agent/@version", metadata, LOG_ERR);
+        
+        if (!version_xml) {
+            crm_err("Resource agent version for %s:%s:%s does not specified", class, provider, type);
+        }
+
+        version = crm_element_value(version_xml, "version");
+            
+        if (!valid_version_format(version, FALSE)) {
+            crm_err("Resource agent version for %s:%s:%s has invalid format: %s", class, provider, type, version);
+            version = NULL;
+        }
+       
+        free(metadata);
+        free(output);
+    }
+
+    return version ? version : "0.1";
+}
+
 static int
 lrmd_api_exec(lrmd_t * lrmd, const char *rsc_id, const char *action, const char *userdata, int interval,        /* ms */
               int timeout,      /* ms */
@@ -2163,6 +2196,7 @@ lrmd_api_new(void)
     new_lrmd->cmds->get_rsc_info = lrmd_api_get_rsc_info;
     new_lrmd->cmds->set_callback = lrmd_api_set_callback;
     new_lrmd->cmds->get_metadata = lrmd_api_get_metadata;
+    new_lrmd->cmds->get_version = lrmd_api_get_version;
     new_lrmd->cmds->exec = lrmd_api_exec;
     new_lrmd->cmds->cancel = lrmd_api_cancel;
     new_lrmd->cmds->list_agents = lrmd_api_list_agents;

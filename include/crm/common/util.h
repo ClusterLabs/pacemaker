@@ -62,6 +62,7 @@ char *score2char(int score);
 char *score2char_stack(int score, char *buf, size_t len);
 
 int compare_version(const char *version1, const char *version2);
+gboolean valid_version_format(const char* version, gboolean in_range);
 
 gboolean parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval);
 gboolean decode_transition_key(const char *key, char **uuid, int *action, int *transition_id,

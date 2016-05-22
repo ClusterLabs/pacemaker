@@ -836,6 +836,7 @@ probe_resources(pe_working_set_t * data_set)
 
     GListPtr gIter = NULL;
     GListPtr gIter2 = NULL;
+    GListPtr gIter3 = NULL;
 
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
@@ -875,6 +876,14 @@ probe_resources(pe_working_set_t * data_set)
             resource_t *rsc = (resource_t *) gIter2->data;
 
             rsc->cmds->create_probe(rsc, node, probe_node_complete, FALSE, data_set);
+
+            for (gIter3 = rsc->actions; gIter3 != NULL; gIter3 = gIter3->next) {
+                action_t *action = (action_t *) gIter3->data;
+                
+                if (safe_str_eq(action->task, RSC_STATUS) && rsc->version) {
+                    add_hash_param(action->meta, XML_ATTR_VERSION, rsc->version);
+                }
+            }
         }
     }
     return TRUE;

@@ -2784,6 +2784,7 @@ determine_op_status(
         case PCMK_OCF_INVALID_PARAM:
         case PCMK_OCF_INSUFFICIENT_PRIV:
         case PCMK_OCF_UNIMPLEMENT_FEATURE:
+        case PCMK_OCF_WRONG_VERSION:
             if (rc == PCMK_OCF_UNIMPLEMENT_FEATURE && interval > 0) {
                 result = PCMK_LRM_OP_NOTSUPPORTED;
                 break;
@@ -2798,7 +2799,7 @@ determine_op_status(
             }
             result = PCMK_LRM_OP_ERROR_HARD;
             break;
-
+        
         default:
             if (result == PCMK_LRM_OP_DONE) {
                 crm_info("Treating %s (rc=%d) on %s as an ERROR",

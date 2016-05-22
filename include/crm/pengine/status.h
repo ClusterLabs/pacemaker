@@ -242,6 +242,7 @@ enum pe_action_flags {
 
 struct resource_s {
     char *id;
+    char *version;
     char *clone_name;
     xmlNode *xml;
     xmlNode *orig_xml;
