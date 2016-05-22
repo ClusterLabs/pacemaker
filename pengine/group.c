@@ -204,7 +204,7 @@ group_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 
         } else if (group_data->colocated) {
             rsc_colocation_new("group:internal_colocation", NULL, INFINITY,
-                               child_rsc, last_rsc, NULL, NULL, data_set);
+                               child_rsc, last_rsc, TRUE, NULL, NULL, data_set);
         }
 
         if (top->variant == pe_master) {

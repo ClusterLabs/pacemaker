@@ -29,6 +29,14 @@
               <ref name="attribute-roles"/>
             </attribute>
           </optional>
+          <optional>
+            <attribute name="rsc-version"><text/></attribute>
+          </optional>
+          <optional>
+            <attribute name="rsc-op">
+              <ref name="attribute-ops"/>
+            </attribute>
+          </optional>
         </group>
         <oneOrMore>
           <ref name="element-resource-set"/>
@@ -85,6 +93,14 @@
             </attribute>
           </optional>
           <optional>
+            <attribute name="version"><text/></attribute>
+          </optional>
+          <optional>
+            <attribute name="op">
+              <ref name="attribute-ops"/>
+            </attribute>
+          </optional>
+          <optional>
             <externalRef href="score.rng"/>
           </optional>
           <oneOrMore>
@@ -130,6 +146,22 @@
               <ref name="attribute-roles"/>
             </attribute>
           </optional>
+          <optional>
+            <attribute name="rsc-version"><text/></attribute>
+          </optional>
+          <optional>
+            <attribute name="with-rsc-version"><text/></attribute>
+          </optional>
+          <optional>
+            <attribute name="rsc-op">
+              <ref name="attribute-ops"/>
+            </attribute>
+          </optional>
+          <optional>
+            <attribute name="with-rsc-op">
+              <ref name="attribute-ops"/>
+            </attribute>
+          </optional>
         </group>
       </choice>
     </element>
@@ -170,6 +202,22 @@
           <optional>
             <attribute name="then-action">
               <ref name="attribute-actions"/>
+            </attribute>
+          </optional>
+          <optional>
+            <attribute name="first-version"><text/></attribute>
+          </optional>
+          <optional>
+            <attribute name="then-version"><text/></attribute>
+          </optional>
+          <optional>
+            <attribute name="first-op">
+              <ref name="attribute-ops"/>
+            </attribute>
+          </optional>
+          <optional>
+            <attribute name="then-op">
+              <ref name="attribute-ops"/>
             </attribute>
           </optional>
         </group>
@@ -230,6 +278,18 @@
       <value>Started</value>
       <value>Master</value>
       <value>Slave</value>
+    </choice>
+  </define>
+
+  <define name="attribute-ops">
+    <choice>
+      <value>in_range</value>
+      <value>eq</value>
+      <value>neq</value>
+      <value>gt</value>
+      <value>gte</value>
+      <value>lt</value>
+      <value>lte</value>
     </choice>
   </define>
 

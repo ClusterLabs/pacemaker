@@ -53,6 +53,8 @@ struct rsc_colocation_s {
     resource_t *rsc_lh;
     resource_t *rsc_rh;
 
+    gboolean rsc_rh_valid;
+
     int role_lh;
     int role_rh;
 
