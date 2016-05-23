@@ -1035,8 +1035,8 @@ internal_stonith_action_execute(stonith_action_t * action)
                     WTERMSIG(status));
 
         } else {
-            crm_err("call %s for %s exited abnormally. stopped=%d, continued=%d",
-                    action->action, action->agent, WIFSTOPPED(status), WIFCONTINUED(status));
+            crm_err("call %s for %s returned unexpected status %#x",
+                    action->action, action->agent, status);
         }
     }
 
