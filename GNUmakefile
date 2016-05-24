@@ -100,8 +100,8 @@ rpmbuild-with = \
 	done; \
 	case "$(3)" in \
 	*.spec) [ $${PREREL} -eq 0 ] \
-		&& sed -i 's/^\(%global pcmkversion \).*/\1$(shell git describe --tags $(TAG) | sed -e s:Pacemaker-:: -e s:-.*::)/' $(3) \
-		|| sed -i 's/^\(%global pcmkversion \).*/\1$(shell echo $(NEXT_RELEASE) | sed -e s:Pacemaker-:: -e s:-.*::)/' $(3);; \
+		&& sed -i "s/^\(%global pcmkversion \).*/\1$$(echo $(LAST_RELEASE) | sed -e s:Pacemaker-:: -e s:-.*::)/" $(3) \
+		|| sed -i "s/^\(%global pcmkversion \).*/\1$$(echo $(NEXT_RELEASE) | sed -e s:Pacemaker-:: -e s:-.*::)/" $(3);; \
 	esac; \
 	CMD="$${CMD} $(3)"; \
 	eval "$${CMD}"
