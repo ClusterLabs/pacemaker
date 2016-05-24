@@ -1232,7 +1232,7 @@ setup_cib(void)
         cib_api->cmds->register_callback(cib_api, rc, 120, FALSE, NULL, "init_cib_cache_cb",
                                          init_cib_cache_cb);
         cib_api->cmds->set_connection_dnotify(cib_api, cib_connection_destroy);
-        crm_notice("Watching for stonith topology changes");
+        crm_info("Watching for stonith topology changes");
     }
 }
 

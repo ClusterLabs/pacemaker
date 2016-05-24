@@ -396,9 +396,12 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
     if (lrm_state->pending_ops && lrm_state_is_connected(lrm_state) == TRUE) {
         guint removed = g_hash_table_foreach_remove(
             lrm_state->pending_ops, stop_recurring_actions, lrm_state);
+        guint nremaining = g_hash_table_size(lrm_state->pending_ops);
 
-        crm_notice("Stopped %u recurring operations at %s (%u ops remaining)",
-                   removed, when, g_hash_table_size(lrm_state->pending_ops));
+        if (removed || nremaining) {
+            crm_notice("Stopped %u recurring operations at %s (%u operations remaining)",
+                       removed, when, nremaining);
+        }
     }
 
     if (lrm_state->pending_ops) {
@@ -2002,8 +2005,10 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
         removed = g_hash_table_foreach_remove(
             lrm_state->pending_ops, stop_recurring_action_by_rsc, &data);
 
-        crm_debug("Stopped %u recurring operations in preparation for %s_%s_%d",
-                  removed, rsc->id, operation, op->interval);
+        if (removed) {
+            crm_debug("Stopped %u recurring operations in preparation for %s_%s_%d",
+                      removed, rsc->id, operation, op->interval);
+        }
     }
 
     /* now do the op */
@@ -2330,27 +2335,37 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op, struct recurr
 
     switch (op->op_status) {
         case PCMK_LRM_OP_CANCELLED:
-            crm_info("Operation %s: %s (node=%s, call=%d, confirmed=%s)",
-                     op_key, services_lrm_status_str(op->op_status), lrm_state->node_name,
-                     op->call_id, removed ? "true" : "false");
+            crm_info("Result of %s operation for %s on %s: %s "
+                     CRM_XS " call=%d key=%s confirmed=%s",
+                     op->op_type, op->rsc_id, lrm_state->node_name,
+                     services_lrm_status_str(op->op_status),
+                     op->call_id, op_key, (removed? "true" : "false"));
             break;
 
         case PCMK_LRM_OP_DONE:
             do_crm_log(op->interval?LOG_INFO:LOG_NOTICE,
-                       "Operation %s: %s (node=%s, call=%d, rc=%d, cib-update=%d, confirmed=%s)",
-                       op_key, services_ocf_exitcode_str(op->rc), lrm_state->node_name,
-                       op->call_id, op->rc, update_id, removed ? "true" : "false");
+                       "Result of %s operation for %s on %s: %s "
+                       CRM_XS " call=%d key=%s confirmed=%s rc=%d cib-update=%d",
+                       op->op_type, op->rsc_id, lrm_state->node_name,
+                       services_ocf_exitcode_str(op->rc),
+                       op->call_id, op_key, (removed? "true" : "false"),
+                       op->rc, update_id);
             break;
 
         case PCMK_LRM_OP_TIMEOUT:
-            crm_err("Operation %s: %s (node=%s, call=%d, timeout=%dms)",
-                    op_key, services_lrm_status_str(op->op_status), lrm_state->node_name, op->call_id, op->timeout);
+            crm_err("Result of %s operation for %s on %s: %s "
+                    CRM_XS " call=%d key=%s timeout=%dms",
+                    op->op_type, op->rsc_id, lrm_state->node_name,
+                    services_lrm_status_str(op->op_status),
+                    op->call_id, op_key, op->timeout);
             break;
 
         default:
-            crm_err("Operation %s (node=%s, call=%d, status=%d, cib-update=%d, confirmed=%s) %s",
-                    op_key, lrm_state->node_name, op->call_id, op->op_status, update_id, removed ? "true" : "false",
-                    services_lrm_status_str(op->op_status));
+            crm_err("Result of %s operation for %s on %s: %s "
+                    CRM_XS " call=%d key=%s confirmed=%s status=%d cib-update=%d",
+                    op->op_type, op->rsc_id, lrm_state->node_name,
+                    services_lrm_status_str(op->op_status), op->call_id, op_key,
+                    (removed? "true" : "false"), op->op_status, update_id);
     }
 
     if (op->output) {

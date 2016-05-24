@@ -378,7 +378,7 @@ main(int argc, char **argv)
     g_main_run(mloop);
 
   done:
-    crm_notice("Cleaning up before exit");
+    crm_info("Shutting down attribute manager");
 
     election_fini(writer);
     crm_client_disconnect_all(ipcs);

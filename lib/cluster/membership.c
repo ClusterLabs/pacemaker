@@ -329,7 +329,8 @@ crm_reap_dead_member(gpointer key, gpointer value, gpointer user_data)
         return FALSE;
 
     } else if (crm_is_peer_active(value) == FALSE) {
-        crm_notice("Removing %s/%u from the membership list", node->uname, node->id);
+        crm_info("Removing node with name %s and id %u from membership cache",
+                 (node->uname? node->uname : "unknown"), node->id);
         return TRUE;
     }
     return FALSE;
@@ -350,7 +351,7 @@ reap_crm_member(uint32_t id, const char *name)
     crm_node_t search;
 
     if (crm_peer_cache == NULL) {
-        crm_trace("Nothing to do, cache not initialized");
+        crm_trace("Membership cache not initialized, ignoring purge request");
         return 0;
     }
 
@@ -358,11 +359,15 @@ reap_crm_member(uint32_t id, const char *name)
     search.uname = name ? strdup(name) : NULL;
     matches = g_hash_table_foreach_remove(crm_peer_cache, crm_reap_dead_member, &search);
     if(matches) {
-        crm_notice("Purged %d peers with id=%u and/or uname=%s from the membership cache",
-                   matches, search.id, search.uname);
+        crm_notice("Purged %d peers with id=%u%s%s from the membership cache",
+                   matches, search.id,
+                   (search.uname? " and/or uname=" : ""),
+                   (search.uname? search.uname : ""));
 
     } else {
-        crm_info("No peers with id=%u and/or uname=%s exist", id, name);
+        crm_info("No peers with id=%u%s%s to purge from the membership cache",
+                 search.id, (search.uname? " and/or uname=" : ""),
+                 (search.uname? search.uname : ""));
     }
 
     free(search.uname);
@@ -992,8 +997,10 @@ crm_update_peer_state_iter(const char *source, crm_node_t * node, const char *st
 {
     gboolean is_member;
 
-    CRM_CHECK(node != NULL, crm_err("%s: Could not set 'state' to %s", source, state);
-                            return NULL);
+    CRM_CHECK(node != NULL,
+              crm_err("Could not set state for unknown host to %s"
+                      CRM_XS " source=%s", state, source);
+              return NULL);
 
     is_member = safe_str_eq(state, CRM_NODE_MEMBER);
     if (membership && is_member) {
@@ -1006,8 +1013,9 @@ crm_update_peer_state_iter(const char *source, crm_node_t * node, const char *st
                                            crm_status_rstate : crm_status_nstate;
 
         node->state = strdup(state);
-        crm_notice("%s: Node %s[%u] - state is now %s (was %s)",
-                   source, node->uname, node->id, state, last);
+        crm_notice("Node %s state is now %s " CRM_XS
+                   " nodeid=%u previous=%s source=%s", node->uname, state,
+                   node->id, (last? last : "unknown"), source);
         if (crm_status_callback) {
             crm_status_callback(status_type, node, last);
         }
@@ -1029,8 +1037,8 @@ crm_update_peer_state_iter(const char *source, crm_node_t * node, const char *st
         }
 
     } else {
-        crm_trace("%s: Node %s[%u] - state is unchanged (%s)", source, node->uname, node->id,
-                  state);
+        crm_trace("Node %s state is unchanged (%s) " CRM_XS
+                  " nodeid=%u source=%s", node->uname, state, node->id, source);
     }
     return node;
 }

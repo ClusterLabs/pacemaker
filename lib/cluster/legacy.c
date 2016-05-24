@@ -185,7 +185,7 @@ send_plugin_text(int class, struct iovec *iov)
 void
 terminate_cs_connection(crm_cluster_t *cluster)
 {
-    crm_notice("Disconnecting from Corosync");
+    crm_info("Disconnecting from Corosync");
 
     if (is_classic_ais_cluster()) {
         if (ais_ipc_handle) {
@@ -214,6 +214,8 @@ terminate_cs_connection(crm_cluster_t *cluster)
 #  endif
     ais_fd_async = -1;
     ais_fd_sync = -1;
+
+    crm_notice("Disconnected from Corosync");
 }
 
 void
