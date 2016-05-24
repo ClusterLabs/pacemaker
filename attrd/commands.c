@@ -543,9 +543,8 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
         } else {
             host = NULL;
         }
-
-        crm_notice("Processing %s from %s: %s %u", op, peer->uname, host, host_id);
         attrd_peer_remove(host_id, host, TRUE, peer->uname);
+
 
     } else if (safe_str_eq(op, ATTRD_OP_SYNC_RESPONSE)
               && safe_str_neq(peer->uname, attrd_cluster->uname)) {
@@ -592,27 +591,15 @@ attrd_peer_remove(uint32_t nodeid, const char *host, gboolean uncache, const cha
     attribute_t *a = NULL;
     GHashTableIter aIter;
 
-    crm_notice("Removing all %s (%u) attributes for %s", host, nodeid, source);
+    crm_notice("Removing all %s attributes for %s", host, source);
     if(host == NULL) {
         return;
     }
 
     g_hash_table_iter_init(&aIter, attributes);
     while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
-        attribute_value_t *v = g_hash_table_lookup(a->values, host);
-
-        if(v && v->current) {
-            free(v->current);
-            v->current = NULL;
-            a->changed = TRUE;
-
-            crm_debug("Removed %s[%s]=%s for %s", a->id, host, v->current, source);
-            if(a->timer) {
-                crm_trace("Delayed write out (%dms) for %s", a->timeout_ms, a->id);
-                mainloop_timer_start(a->timer);
-            } else {
-                write_or_elect_attribute(a);
-            }
+        if(g_hash_table_remove(a->values, host)) {
+            crm_debug("Removed %s[%s] for %s", a->id, host, source);
         }
     }
 
