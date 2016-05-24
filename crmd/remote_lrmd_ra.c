@@ -178,7 +178,11 @@ remote_node_up(const char *node_name)
     CRM_CHECK(node_name != NULL, return);
     crm_info("Announcing pacemaker_remote node %s", node_name);
 
-    /* Clear node's operation history and transient attributes */
+    /* Clear node's operation history and transient attributes.
+     * This should and normally will be done when the node leaves,
+     * but since remote node state has a number of corner cases,
+     * we additionally clear it on startup to be sure.
+     */
     call_opt = crmd_cib_smart_opt();
     erase_status_tag(node_name, XML_CIB_TAG_LRM, call_opt);
     erase_status_tag(node_name, XML_TAG_TRANSIENT_NODEATTRS, call_opt);
@@ -236,8 +240,12 @@ remote_node_down(const char *node_name)
     int call_opt = crmd_cib_smart_opt();
     crm_node_t *node;
 
-    /* Clear all node attributes */
+    /* Purge node from attrd's memory */
     update_attrd_remote_node_removed(node_name, NULL);
+
+    /* Purge node's operation history and transient attributes from CIB */
+    erase_status_tag(node_name, XML_CIB_TAG_LRM, call_opt);
+    erase_status_tag(node_name, XML_TAG_TRANSIENT_NODEATTRS, call_opt);
 
     /* Ensure node is in the remote peer cache with lost state */
     node = crm_remote_peer_get(node_name);
