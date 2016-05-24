@@ -249,6 +249,10 @@ attrd_client_update(xmlNode *xml)
         regfree(r_patt);
         free(r_patt);
         return;
+
+    } else if (attr == NULL) {
+        crm_err("Update request did not specify attribute or regular expression");
+        return;
     }
 
     if (host == NULL) {
@@ -651,6 +655,7 @@ void
 attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
 {
     bool changed = FALSE;
+    attribute_t *a;
     attribute_value_t *v = NULL;
     int dampen = 0;
 
@@ -659,8 +664,12 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
     const char *value = crm_element_value(xml, F_ATTRD_VALUE);
     const char *dvalue = crm_element_value(xml, F_ATTRD_DAMPEN);
 
-    attribute_t *a = g_hash_table_lookup(attributes, attr);
+    if (attr == NULL) {
+        crm_warn("Peer update did not specify attribute");
+        return;
+    }
 
+    a = g_hash_table_lookup(attributes, attr);
     if(a == NULL) {
         if (op == NULL /* The xml children from an ATTRD_OP_SYNC_RESPONSE have no F_ATTRD_TASK */
             || safe_str_eq(op, ATTRD_OP_UPDATE)
