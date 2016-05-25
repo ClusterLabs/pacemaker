@@ -2092,6 +2092,37 @@ native_expand(resource_t * rsc, pe_working_set_t * data_set)
     }
 }
 
+#define is_runnable(a) ((a) && (a)->node && \
+    (((a)->flags & (pe_action_optional|pe_action_runnable|pe_action_pseudo)) == pe_action_runnable))
+
+#define add_meta_restarting(a) \
+    add_hash_param((a)->meta, XML_RSC_ATTR_RESTARTING, XML_BOOLEAN_TRUE)
+
+/*!
+ * \internal
+ * \brief Mark resource actions as being part of a restart
+ *
+ * If a resource has runnable stop and start actions (previously checked to be
+ * on the same node), add a meta-data variable to the demote (if any) and stop
+ * actions, so resource agents can do a "lightweight" stop if desired.
+ *
+ * \param[in,out] stop   Stop action to check/mark
+ * \param[in,out] start  Start action to check
+ * \param[in,out] demote Demote action to mark
+ */
+static void
+mark_as_restart(pe_action_t *stop, pe_action_t *start, pe_action_t *demote)
+{
+    if (is_runnable(stop) && is_runnable(start)
+        && (stop->node->details == start->node->details)) {
+
+        add_meta_restarting(stop);
+        if (demote) {
+            add_meta_restarting(demote);
+        }
+    }
+}
+
 #define log_change(fmt, args...)  do {          \
         if(terminal) {                          \
             printf(" * "fmt"\n", ##args);       \
@@ -2206,6 +2237,10 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
     if (possible_matches) {
         demote = possible_matches->data;
         g_list_free(possible_matches);
+    }
+
+    if (terminal == FALSE) {
+        mark_as_restart(stop, start, demote);
     }
 
     if (rsc->role == rsc->next_role) {
