@@ -91,6 +91,24 @@ the cluster reacts to operation timeouts.
 <content type="string" default="0" />
 </parameter>
 
+<parameter name="fail_start_on" unique="0">
+<longdesc lang="en">
+Start actions will return failure if running on the host specified here, but
+the resource will start successfully anyway (future monitor calls will find it
+running). This can be used to test on-fail=ignore.
+</longdesc>
+<shortdesc lang="en">Fail to start on specified host</shortdesc>
+<content type="string" default="" />
+</parameter>
+
+<parameter name="envfile" unique="1">
+<longdesc lang="en">
+If this is set, the environment will be dumped to this file for every call.
+</longdesc>
+<shortdesc lang="en">Environment dump file</shortdesc>
+<content type="string" default="" />
+</parameter>
+
 </parameters>
 
 <actions>
@@ -124,12 +142,33 @@ Expects to have a fully populated OCF RA-compliant environment set.
 END
 }
 
-dummy_start() {
-    dummy_monitor
-    if [ $? -eq $OCF_SUCCESS ]; then
-	return $OCF_SUCCESS
+dump_env() {
+    if [ "${OCF_RESKEY_envfile}" != "" ]; then
+            echo "### $(date) ###
+$(env)
+###" >> "${OCF_RESKEY_envfile}"
     fi
+}
+
+dummy_start() {
+    local RETVAL
+
+    dummy_monitor
+
+    RETVAL=$?
+    if [ $RETVAL -eq $OCF_SUCCESS ]; then
+        if [ "$(hostname)" = "${OCF_RESKEY_fail_start_on}" ]; then
+            RETVAL=$OCF_ERR_GENERIC
+        fi
+        return $RETVAL
+    fi
+
     touch "${OCF_RESKEY_state}"
+    RETVAL=$?
+    if [ "$(hostname)" = "${OCF_RESKEY_fail_start_on}" ]; then
+        RETVAL=$OCF_ERR_GENERIC
+    fi
+    return $RETVAL
 }
 
 dummy_stop() {
@@ -192,6 +231,8 @@ if [ -z "$OCF_RESKEY_state" ]; then
     fi
 fi
 VERIFY_SERIALIZED_FILE="${OCF_RESKEY_state}.serialized"
+
+dump_env
 
 case $__OCF_ACTION in
 meta-data)	meta_data

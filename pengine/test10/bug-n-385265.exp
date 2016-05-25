@@ -26,7 +26,7 @@
      <action_set>
        <rsc_op id="2" operation="stop" operation_key="resource_idvscommon_stop_0" on_node="ih02" on_node_uuid="57226bfc-310f-409b-8b3d-49d93498e4b5">
         <primitive id="resource_idvscommon" class="ocf" provider="dfs" type="idvs"/>
-        <attributes CRM_meta_timeout="20000"  site="common"/>
+        <attributes CRM_meta_restart_remaining="0" CRM_meta_timeout="20000"  site="common"/>
        </rsc_op>
      </action_set>
      <inputs>
