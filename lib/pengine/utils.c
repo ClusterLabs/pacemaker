@@ -1164,8 +1164,6 @@ find_first_action(GListPtr input, const char *uuid, const char *task, node_t * o
 {
     GListPtr gIter = NULL;
 
-    CRM_CHECK(uuid || task, return NULL);
-
     for (gIter = input; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
 
