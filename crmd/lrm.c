@@ -1684,10 +1684,14 @@ do_lrm_invoke(long long action,
                 in_progress = cancel_op(lrm_state, rsc->id, NULL, call, TRUE);
             }
 
-            if (in_progress == FALSE) {
+            /* Acknowledge the cancellation operation if it's for a remote connection resource */
+            if (in_progress == FALSE || is_remote_lrmd_ra(NULL, NULL, rsc->id)) {
                 lrmd_event_data_t *op = construct_op(lrm_state, input->xml, rsc->id, op_task);
+                char *op_id = make_stop_id(rsc->id, call);
 
-                crm_info("Nothing known about operation %d for %s", call, op_key);
+                if (is_remote_lrmd_ra(NULL, NULL, rsc->id) == FALSE) {
+                    crm_info("Nothing known about operation %d for %s", call, op_key);
+                }
                 delete_op_entry(lrm_state, NULL, rsc->id, op_key, call);
 
                 CRM_ASSERT(op != NULL);
@@ -1697,10 +1701,9 @@ do_lrm_invoke(long long action,
                 send_direct_ack(from_host, from_sys, rsc, op, rsc->id);
                 lrmd_free_event(op);
 
-                /* needed?? surely not otherwise the cancel_op_(_key) wouldn't
-                 * have failed in the first place
-                 */
-                g_hash_table_remove(lrm_state->pending_ops, op_key);
+                /* needed?? yes for the cancellation operation of a remote connection resource */
+                g_hash_table_remove(lrm_state->pending_ops, op_id);
+                free(op_id);
             }
 
             free(op_key);
