@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="36" operation="stop" operation_key="VM2_stop_0" on_node="lama3" on_node_uuid="2">
         <primitive id="VM2" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_name="stop" CRM_meta_remote_node="lamaVM2" CRM_meta_timeout="90000000" config="/etc/libvirt/qemu/VM2.xml"  hypervisor="qemu:///system"/>
+        <attributes CRM_meta_name="stop" CRM_meta_remote_node="lamaVM2" CRM_meta_restarting="true" CRM_meta_timeout="90000000" config="/etc/libvirt/qemu/VM2.xml"  hypervisor="qemu:///system"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -388,7 +388,7 @@
     <action_set>
       <rsc_op id="91" operation="stop" operation_key="lamaVM2_stop_0" on_node="lama3" on_node_uuid="2">
         <primitive id="lamaVM2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="VM2" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_container="VM2" CRM_meta_restarting="true" CRM_meta_timeout="20000" />
         <downed>
           <node id="lamaVM2"/>
         </downed>

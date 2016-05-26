@@ -1281,7 +1281,7 @@ determine_online_status_no_fencing(pe_working_set_t * data_set, xmlNode * node_s
 
     } else {
         /* mark it unclean */
-        pe_fence_node(data_set, this_node, "unexpectedly down");
+        pe_fence_node(data_set, this_node, "because node is unexpectedly down");
         crm_info("\tin_cluster=%s, is_peer=%s, join=%s, expected=%s",
                  crm_str(in_cluster), crm_str(is_peer), crm_str(join), crm_str(exp_state));
     }
@@ -1763,7 +1763,7 @@ unpack_find_resource(pe_working_set_t * data_set, node_t * node, const char *rsc
         crm_trace("%s not found: %s", rsc_id, parent ? parent->id : "orphan");
 
     } else if (rsc->variant > pe_native) {
-        crm_trace("%s is no longer a primitve resource, the lrm_resource entry is obsolete",
+        crm_trace("%s is no longer a primitive resource, the lrm_resource entry is obsolete",
                   rsc_id);
         return NULL;
 

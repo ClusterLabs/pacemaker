@@ -571,14 +571,18 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
     }
 
     if(reason == NULL) {
-        do_crm_log(level, "Transition aborted: %s (source=%s:%d, %d)",
-                   abort_text, fn, line, transition_graph->complete);
+        do_crm_log(level, "Transition aborted: %s "CRM_XS" source=%s:%d complete=%s",
+                   abort_text, fn, line,
+                   (transition_graph->complete? "true" : "false"));
 
     } else if(change == NULL) {
         char *local_path = xml_get_path(reason);
 
-        do_crm_log(level, "Transition aborted by %s.%s: %s (cib=%d.%d.%d, source=%s:%d, path=%s, %d)",
-                   TYPE(reason), ID(reason), abort_text, add[0], add[1], add[2], fn, line, local_path, transition_graph->complete);
+        do_crm_log(level, "Transition aborted by %s.%s: %s "
+                   CRM_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
+                   TYPE(reason), ID(reason), abort_text,
+                   add[0], add[1], add[2], fn, line, local_path,
+                   (transition_graph->complete? "true" : "false"));
         free(local_path);
 
     } else {
@@ -602,35 +606,47 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
         if(strcmp(op, "delete") == 0) {
             const char *shortpath = strrchr(path, '/');
 
-            do_crm_log(level, "Transition aborted by deletion of %s: %s (cib=%d.%d.%d, source=%s:%d, path=%s, %d)",
-                       shortpath?shortpath+1:path, abort_text, add[0], add[1], add[2], fn, line, path, transition_graph->complete);
+            do_crm_log(level, "Transition aborted by deletion of %s: %s "
+                       CRM_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
+                       (shortpath? (shortpath + 1) : path), abort_text,
+                       add[0], add[1], add[2], fn, line, path,
+                       (transition_graph->complete? "true" : "false"));
 
         } else if (safe_str_eq(XML_CIB_TAG_NVPAIR, kind)) { 
-            do_crm_log(level, "Transition aborted by %s, %s=%s: %s (%s cib=%d.%d.%d, source=%s:%d, path=%s, %d)",
-                       crm_element_value(reason, XML_ATTR_ID),
+            do_crm_log(level, "Transition aborted by %s doing %s %s=%s: %s "
+                       CRM_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
+                       crm_element_value(reason, XML_ATTR_ID), op,
                        crm_element_value(reason, XML_NVPAIR_ATTR_NAME),
                        crm_element_value(reason, XML_NVPAIR_ATTR_VALUE),
-                       abort_text, op, add[0], add[1], add[2], fn, line, path, transition_graph->complete);
+                       abort_text, add[0], add[1], add[2], fn, line, path,
+                       (transition_graph->complete? "true" : "false"));
 
         } else if (safe_str_eq(XML_LRM_TAG_RSC_OP, kind)) {
             const char *magic = crm_element_value(reason, XML_ATTR_TRANSITION_MAGIC);
 
-            do_crm_log(level, "Transition aborted by %s '%s' on %s: %s (magic=%s, cib=%d.%d.%d, source=%s:%d, %d)",
+            do_crm_log(level, "Transition aborted by operation %s '%s' on %s: %s "
+                       CRM_XS " magic=%s cib=%d.%d.%d source=%s:%d complete=%s",
                        crm_element_value(reason, XML_LRM_ATTR_TASK_KEY), op,
                        crm_element_value(reason, XML_LRM_ATTR_TARGET), abort_text,
-                       magic, add[0], add[1], add[2], fn, line, transition_graph->complete);
+                       magic, add[0], add[1], add[2], fn, line,
+                       (transition_graph->complete? "true" : "false"));
 
         } else if (safe_str_eq(XML_CIB_TAG_STATE, kind)
                    || safe_str_eq(XML_CIB_TAG_NODE, kind)) {
             const char *uname = crm_peer_uname(ID(reason));
 
-            do_crm_log(level, "Transition aborted by %s '%s' on %s: %s (cib=%d.%d.%d, source=%s:%d, %d)",
-                       kind, op, uname ? uname : ID(reason), abort_text,
-                       add[0], add[1], add[2], fn, line, transition_graph->complete);
+            do_crm_log(level, "Transition aborted by %s '%s' on %s: %s "
+                       CRM_XS " cib=%d.%d.%d source=%s:%d complete=%s",
+                       kind, op, (uname? uname : ID(reason)), abort_text,
+                       add[0], add[1], add[2], fn, line,
+                       (transition_graph->complete? "true" : "false"));
 
         } else {
-            do_crm_log(level, "Transition aborted by %s.%s '%s': %s (cib=%d.%d.%d, source=%s:%d, path=%s, %d)",
-                       TYPE(reason), ID(reason), op?op:"change", abort_text, add[0], add[1], add[2], fn, line, path, transition_graph->complete);
+            do_crm_log(level, "Transition aborted by %s.%s '%s': %s "
+                       CRM_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
+                       TYPE(reason), ID(reason), (op? op : "change"), abort_text,
+                       add[0], add[1], add[2], fn, line, path,
+                       (transition_graph->complete? "true" : "false"));
         }
     }
 

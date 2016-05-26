@@ -11,9 +11,9 @@
 #
 ### BEGIN INIT INFO
 # Provides:		pacemaker_remoted
-# Required-Start:	$network
+# Required-Start:	$network $remote_fs
 # Should-Start:		$syslog
-# Required-Stop:	$network
+# Required-Stop:	$network $remote_fs
 # Default-Start:
 # Default-Stop:
 # Short-Description:	Starts and stops the Pacemaker remote agent for non-cluster nodes

@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="24" operation="stop" operation_key="fake_stop_0" on_node="rhel7-auto5" on_node_uuid="5">
         <primitive id="fake" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_isolation_host="rhel7-auto5" CRM_meta_isolation_instance="fake" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_timeout="20000"  pcmk_docker_image="centos:dock-wrapper-test" pcmk_docker_privileged="false"/>
+        <attributes CRM_meta_isolation_host="rhel7-auto5" CRM_meta_isolation_instance="fake" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_restarting="true" CRM_meta_timeout="20000"  pcmk_docker_image="centos:dock-wrapper-test" pcmk_docker_privileged="false"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -38,7 +38,7 @@
     <action_set>
       <rsc_op id="25" operation="stop" operation_key="replicated:0_stop_0" on_node="rhel7-auto5" on_node_uuid="5">
         <primitive id="replicated:0" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_isolation_host="rhel7-auto5" CRM_meta_isolation_instance="replicated_0" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="20000"  pcmk_docker_image="centos:dock-wrapper-test" pcmk_docker_privileged="false"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_isolation_host="rhel7-auto5" CRM_meta_isolation_instance="replicated_0" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_restarting="true" CRM_meta_timeout="20000"  pcmk_docker_image="centos:dock-wrapper-test" pcmk_docker_privileged="false"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -80,7 +80,7 @@
     <action_set>
       <rsc_op id="26" operation="stop" operation_key="replicated:1_stop_0" on_node="rhel7-auto5" on_node_uuid="5">
         <primitive id="replicated:1" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_isolation_host="rhel7-auto5" CRM_meta_isolation_instance="replicated_1" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="20000"  pcmk_docker_image="centos:dock-wrapper-test" pcmk_docker_privileged="false"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_isolation_host="rhel7-auto5" CRM_meta_isolation_instance="replicated_1" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_restarting="true" CRM_meta_timeout="20000"  pcmk_docker_image="centos:dock-wrapper-test" pcmk_docker_privileged="false"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -234,7 +234,7 @@
     <action_set>
       <rsc_op id="31" operation="stop" operation_key="s1_stop_0" on_node="rhel7-auto5" on_node_uuid="5">
         <primitive id="s1" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_isolation_host="rhel7-auto5" CRM_meta_isolation_instance="group_is_container" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_name="stop" CRM_meta_timeout="20000"  pcmk_docker_image="centos:dock-wrapper-test" pcmk_docker_privileged="false"/>
+        <attributes CRM_meta_isolation_host="rhel7-auto5" CRM_meta_isolation_instance="group_is_container" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_name="stop" CRM_meta_restarting="true" CRM_meta_timeout="20000"  pcmk_docker_image="centos:dock-wrapper-test" pcmk_docker_privileged="false"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -279,7 +279,7 @@
     <action_set>
       <rsc_op id="32" operation="stop" operation_key="s2_stop_0" on_node="rhel7-auto5" on_node_uuid="5">
         <primitive id="s2" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_isolation_host="rhel7-auto5" CRM_meta_isolation_instance="group_is_container" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_name="stop" CRM_meta_timeout="20000"  pcmk_docker_image="centos:dock-wrapper-test" pcmk_docker_privileged="false"/>
+        <attributes CRM_meta_isolation_host="rhel7-auto5" CRM_meta_isolation_instance="group_is_container" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_name="stop" CRM_meta_restarting="true" CRM_meta_timeout="20000"  pcmk_docker_image="centos:dock-wrapper-test" pcmk_docker_privileged="false"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -387,7 +387,7 @@
     <action_set>
       <rsc_op id="37" operation="stop" operation_key="g1:0_stop_0" on_node="rhel7-auto5" on_node_uuid="5">
         <primitive id="g1:0" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_isolation_host="rhel7-auto5" CRM_meta_isolation_instance="mygroup_0" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="20000"  pcmk_docker_image="centos:dock-wrapper-test" pcmk_docker_privileged="false"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_isolation_host="rhel7-auto5" CRM_meta_isolation_instance="mygroup_0" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_restarting="true" CRM_meta_timeout="20000"  pcmk_docker_image="centos:dock-wrapper-test" pcmk_docker_privileged="false"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -432,7 +432,7 @@
     <action_set>
       <rsc_op id="38" operation="stop" operation_key="g2:0_stop_0" on_node="rhel7-auto5" on_node_uuid="5">
         <primitive id="g2:0" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_isolation_host="rhel7-auto5" CRM_meta_isolation_instance="mygroup_0" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="20000"  pcmk_docker_image="centos:dock-wrapper-test" pcmk_docker_privileged="false"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_isolation_host="rhel7-auto5" CRM_meta_isolation_instance="mygroup_0" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_restarting="true" CRM_meta_timeout="20000"  pcmk_docker_image="centos:dock-wrapper-test" pcmk_docker_privileged="false"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -540,7 +540,7 @@
     <action_set>
       <rsc_op id="43" operation="stop" operation_key="g1:1_stop_0" on_node="rhel7-auto5" on_node_uuid="5">
         <primitive id="g1:1" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_isolation_host="rhel7-auto5" CRM_meta_isolation_instance="mygroup_1" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="20000"  pcmk_docker_image="centos:dock-wrapper-test" pcmk_docker_privileged="false"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_isolation_host="rhel7-auto5" CRM_meta_isolation_instance="mygroup_1" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_restarting="true" CRM_meta_timeout="20000"  pcmk_docker_image="centos:dock-wrapper-test" pcmk_docker_privileged="false"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -585,7 +585,7 @@
     <action_set>
       <rsc_op id="44" operation="stop" operation_key="g2:1_stop_0" on_node="rhel7-auto5" on_node_uuid="5">
         <primitive id="g2:1" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_isolation_host="rhel7-auto5" CRM_meta_isolation_instance="mygroup_1" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="20000"  pcmk_docker_image="centos:dock-wrapper-test" pcmk_docker_privileged="false"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_isolation_host="rhel7-auto5" CRM_meta_isolation_instance="mygroup_1" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_restarting="true" CRM_meta_timeout="20000"  pcmk_docker_image="centos:dock-wrapper-test" pcmk_docker_privileged="false"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -742,7 +742,7 @@
     <action_set>
       <rsc_op id="53" operation="stop" operation_key="iso_mem1_stop_0" on_node="rhel7-auto5" on_node_uuid="5">
         <primitive id="iso_mem1" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_isolation_host="rhel7-auto5" CRM_meta_isolation_instance="iso_mem1" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_timeout="20000"  pcmk_docker_image="centos:dock-wrapper-test" pcmk_docker_privileged="false"/>
+        <attributes CRM_meta_isolation_host="rhel7-auto5" CRM_meta_isolation_instance="iso_mem1" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_restarting="true" CRM_meta_timeout="20000"  pcmk_docker_image="centos:dock-wrapper-test" pcmk_docker_privileged="false"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -787,7 +787,7 @@
     <action_set>
       <rsc_op id="54" operation="stop" operation_key="iso_mem2_stop_0" on_node="rhel7-auto5" on_node_uuid="5">
         <primitive id="iso_mem2" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_isolation_host="rhel7-auto5" CRM_meta_isolation_instance="iso_mem2" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_timeout="20000"  pcmk_docker_image="centos:dock-wrapper-test" pcmk_docker_privileged="false"/>
+        <attributes CRM_meta_isolation_host="rhel7-auto5" CRM_meta_isolation_instance="iso_mem2" CRM_meta_isolation_wrapper="docker-wrapper" CRM_meta_restarting="true" CRM_meta_timeout="20000"  pcmk_docker_image="centos:dock-wrapper-test" pcmk_docker_privileged="false"/>
       </rsc_op>
     </action_set>
     <inputs>

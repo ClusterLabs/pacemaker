@@ -214,11 +214,12 @@ stop_child(pcmk_child_t * child, int signal)
 
     errno = 0;
     if (kill(child->pid, signal) == 0) {
-        crm_notice("Stopping %s: Sent -%d to process %d", child->name, signal, child->pid);
+        crm_notice("Stopping %s "CRM_XS" sent signal %d to process %d",
+                   child->name, signal, child->pid);
 
     } else {
-        crm_perror(LOG_ERR, "Stopping %s: Could not send -%d to process %d failed",
-                   child->name, signal, child->pid);
+        crm_perror(LOG_ERR, "Could not stop %s (process %d) with signal %d",
+                   child->name, child->pid, signal);
     }
 
     return TRUE;
@@ -405,7 +406,8 @@ pcmk_shutdown_worker(gpointer user_data)
 
                 } else if (now >= next_log) {
                     next_log = now + 30;
-                    crm_notice("Still waiting for %s (pid=%d, seq=%d) to terminate...",
+                    crm_notice("Still waiting for %s to terminate "
+                               CRM_XS " pid=%d seq=%d",
                                child->name, child->pid, child->start_seq);
                 }
                 return TRUE;
@@ -1014,7 +1016,8 @@ main(int argc, char **argv)
         crm_exit(ENODATA);
     }
 
-    crm_notice("Starting Pacemaker %s (Build: %s): %s", PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
+    crm_notice("Starting Pacemaker %s "CRM_XS" build=%s features:%s",
+               PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
     mainloop = g_main_new(FALSE);
     sysrq_init();
 

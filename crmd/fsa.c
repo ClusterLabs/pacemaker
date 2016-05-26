@@ -441,7 +441,7 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
 
             /* Error checking and reporting */
         } else {
-            crm_err("Action %s (0x%llx) not supported ",
+            crm_err("Action %s not supported "CRM_XS" 0x%llx",
                     fsa_action2string(fsa_actions), fsa_actions);
             register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, fsa_data, NULL, __FUNCTION__);
         }
@@ -503,8 +503,10 @@ do_state_transition(long long actions,
         level = LOG_WARNING;
     }
 
-    do_crm_log(level, "State transition %s -> %s [ input=%s cause=%s origin=%s ]",
-               state_from, state_to, input, fsa_cause2string(cause), msg_data->origin);
+    do_crm_log(level, "State transition %s -> %s "
+               CRM_XS " input=%s cause=%s origin=%s",
+               state_from, state_to, input, fsa_cause2string(cause),
+               msg_data->origin);
 
     /* the last two clauses might cause trouble later */
     if (next_state != S_ELECTION && cur_state != S_RELEASE_DC) {

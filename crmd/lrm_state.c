@@ -744,8 +744,8 @@ lrm_state_cancel(lrm_state_t * lrm_state, const char *rsc_id, const char *action
         return -ENOTCONN;
     }
 
-    /* Optimize this, cancel requires a synced request/response to the server.
-     * Figure out a way to make this async. */
+    /* Figure out a way to make this async?
+     * NOTICE: Currently it's synced and directly acknowledged in do_lrm_invoke(). */
     if (is_remote_lrmd_ra(NULL, NULL, rsc_id)) {
         return remote_ra_cancel(lrm_state, rsc_id, action, interval);
     }

@@ -51,7 +51,7 @@
     <action_set>
       <rsc_op id="96" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:0_stop_0" on_node="lxc1" on_node_uuid="lxc1" router_node="rhel7-1">
         <primitive id="lxc-ms" long-id="lxc-ms:0" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_restarting="true" CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -67,7 +67,7 @@
     <action_set>
       <rsc_op id="95" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="rhel7-1">
         <primitive id="lxc-ms" long-id="lxc-ms:0" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_restarting="true" CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>

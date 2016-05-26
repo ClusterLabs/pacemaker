@@ -19,7 +19,7 @@
     <action_set>
       <rsc_op id="2" operation="stop" operation_key="rhel7-auto4_stop_0" on_node="rhel7-auto1" on_node_uuid="1">
         <primitive id="rhel7-auto4" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_name="stop" CRM_meta_restarting="true" CRM_meta_timeout="60000" />
         <downed>
           <node id="rhel7-auto4"/>
         </downed>

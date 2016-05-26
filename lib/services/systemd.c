@@ -21,6 +21,7 @@
 #include <crm/services.h>
 #include <crm/common/mainloop.h>
 
+#include <sys/stat.h>
 #include <gio/gio.h>
 #include <services_private.h>
 #include <systemd.h>
@@ -545,11 +546,18 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
         FILE *file_strm = NULL;
         char *override_dir = crm_strdup_printf("%s/%s.service.d", SYSTEMD_OVERRIDE_ROOT, op->agent);
         char *override_file = crm_strdup_printf("%s/%s.service.d/50-pacemaker.conf", SYSTEMD_OVERRIDE_ROOT, op->agent);
+        mode_t orig_umask;
 
         method = "StartUnit";
         crm_build_path(override_dir, 0755);
 
+        /* Ensure the override file is world-readable. This is not strictly
+         * necessary, but it avoids a systemd warning in the logs.
+         */
+        orig_umask = umask(S_IWGRP | S_IWOTH);
         file_strm = fopen(override_file, "w");
+        umask(orig_umask);
+
         if (file_strm != NULL) {
             /* TODO: Insert the start timeout in too */
             char *override = crm_strdup_printf(
