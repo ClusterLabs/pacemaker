@@ -79,7 +79,7 @@
     <action_set>
       <rsc_op id="6" operation="stop" operation_key="fake_stop_0" on_node="rhel7-alt4" on_node_uuid="rhel7-alt4" router_node="rhel7-alt1">
         <primitive id="fake" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_name="stop" CRM_meta_restarting="true" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
