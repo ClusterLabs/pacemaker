@@ -501,8 +501,10 @@ get_rsc_metadata(const char *type, const char *rclass, const char *provider, boo
 
     snprintf(key, len, "%s::%s:%s", type, rclass, provider);
     if(force == FALSE) {
-        crm_trace("Retreiving cached metadata for %s", key);
         metadata = g_hash_table_lookup(metadata_hash, key);
+        if (metadata) {
+            crm_trace("Retrieved cached metadata for %s", key);
+        }
     }
 
     if(metadata == NULL) {
@@ -759,7 +761,7 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
         return TRUE;
     }
 
-    crm_trace("Includind additional digests for %s::%s:%s", rsc->provider, rsc->class, rsc->type);
+    crm_trace("Including additional digests for %s::%s:%s", rsc->provider, rsc->class, rsc->type);
     append_restart_list(op, metadata, xml_op, caller_version);
     append_secure_list(op, metadata, xml_op, caller_version);
 

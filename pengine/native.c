@@ -1459,7 +1459,7 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
                                 rsc->container, generate_op_key(rsc->container->id, RSC_STOP, 0), NULL,
                                 pe_order_implies_first, data_set);
 
-            rsc_colocation_new("resource-with-containter", NULL, INFINITY, rsc, rsc->container, NULL,
+            rsc_colocation_new("resource-with-container", NULL, INFINITY, rsc, rsc->container, NULL,
                                NULL, data_set);
         }
     }
