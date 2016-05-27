@@ -3,7 +3,7 @@
 %global pcmk_docdir %{_docdir}/%{name}
 
 %global specversion 1
-%global pcmkversion 1.1.14
+%global pcmkversion 1.1.15
 # set following to the actual commit or, for final release, concatenate
 # "pcmkversion" macro to "Pacemaker-" (will yield a tag per the convention)
 %global commit HEAD
@@ -479,7 +479,7 @@ exit 0
 %doc %{_mandir}/man7/crmd.*
 %doc %{_mandir}/man7/pengine.*
 %doc %{_mandir}/man7/stonithd.*
-%if %{without cman} || !%{cman_native)
+%if %{without cman} || !%{cman_native}
 %doc %{_mandir}/man7/ocf_pacemaker_controld.*
 %endif
 %doc %{_mandir}/man7/ocf_pacemaker_o2cb.*
@@ -500,7 +500,7 @@ exit 0
 
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/cib
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/pengine
-%if %{without cman} || !%{cman_native)
+%if %{without cman} || !%{cman_native}
 /usr/lib/ocf/resource.d/pacemaker/controld
 %endif
 /usr/lib/ocf/resource.d/pacemaker/o2cb
