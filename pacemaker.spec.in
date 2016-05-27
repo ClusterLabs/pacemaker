@@ -3,7 +3,7 @@
 %global pcmk_docdir %{_docdir}/%{name}
 
 %global specversion 1
-%global pcmkversion 1.1.14
+%global pcmkversion 1.1.15
 # set following to the actual commit or, for final release, concatenate
 # "pcmkversion" macro to "Pacemaker-" (will yield a tag per the convention)
 %global commit HEAD
@@ -24,9 +24,19 @@
 %global cs_version %(pkg-config corosync --modversion  | awk -F . '{print $1}')
 # It has to be eventually decided whether to use Python2 or Python3
 %global py_site    %{?python_sitearch}%{!?python_sitearch:%(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")}
+%global cman_native 0%{?el6} || (0%{?fedora} > 0 && 0%{?fedora} < 17)
 
-# https://fedoraproject.org/wiki/EPEL:Packaging?rd=Packaging:EPEL#The_.25license_tag
-%{!?_licensedir:%global license %doc}
+# It's desired to apply "license" macro uniformly in "files" sections below,
+# but RPM versions not aware of this new classification normally (re)define it
+# to the value of "License:", so following is to ensure the macro definition
+# is per expectation only after that tag; solution courtesy of Jason Tibbitts:
+# https://pkgs.fedoraproject.org/cgit/rpms/epel-rpm-macros.git/tree/macros.zzz-epel?h=el6&id=e1adcb77b0c05a6c29bc0eb0c4e82113180a0a99#n12
+%if !%{defined _licensedir}
+%define description %{lua:
+    rpm.define("license %doc")
+    print("%description")
+}
+%endif
 
 # Conditionals
 # Invoke "rpmbuild --without <feature>" or "rpmbuild --with <feature>"
@@ -124,20 +134,11 @@ BuildRequires: bison byacc flex help2man gnutls-devel pkgconfig(dbus-1)
 BuildRequires: systemd-devel
 %endif
 
-%if %{with cman}
-
-%if 0%{?fedora} > 0
-%if 0%{?fedora} < 17
+%if %{with cman} && %{cman_native}
 BuildRequires: clusterlib-devel
-%endif
-%endif
-
-%if 0%{?rhel} > 0
-%if 0%{?rhel} < 7
-BuildRequires: clusterlib-devel
-%endif
-%endif
-
+# pacemaker initscript: cman initscript, fence_tool (+ some soft-dependencies)
+# "post" scriptlet: ccs_update_schema
+Requires:      cman
 %endif
 
 Requires:      corosync
@@ -358,6 +359,11 @@ rm -f %{buildroot}/%{_initrddir}/pacemaker
 rm -f %{buildroot}/%{_initrddir}/pacemaker_remote
 %endif
 
+# Don't ship fence_pcmk where it has no use
+%if %{without cman}
+rm -f %{buildroot}/%{_sbindir}/fence_pcmk
+%endif
+
 %if %{with coverage}
 GCOV_BASE=%{buildroot}/%{_var}/lib/pacemaker/gcov
 mkdir -p $GCOV_BASE
@@ -404,6 +410,12 @@ rm -rf %{buildroot}
 
 %post
 /sbin/chkconfig --add pacemaker || :
+%if %{with cman} && %{cman_native}
+# make fence_pcmk in cluster.conf valid instantly otherwise tools like ccs may
+# choke (until schema gets auto-regenerated on the next start of cluster),
+# per the protocol shared with other packages contributing to cluster.rng
+/usr/sbin/ccs_update_schema >/dev/null 2>&1 || :
+%endif
 
 %preun
 /sbin/service pacemaker stop || :
@@ -459,19 +471,25 @@ exit 0
 %{_sbindir}/crm_master
 %{_sbindir}/crm_node
 %{_sbindir}/fence_legacy
+%if %{with cman}
 %{_sbindir}/fence_pcmk
+%endif
 %{_sbindir}/stonith_admin
 
 %doc %{_mandir}/man7/crmd.*
 %doc %{_mandir}/man7/pengine.*
 %doc %{_mandir}/man7/stonithd.*
+%if %{without cman} || !%{cman_native}
 %doc %{_mandir}/man7/ocf_pacemaker_controld.*
+%endif
 %doc %{_mandir}/man7/ocf_pacemaker_o2cb.*
 %doc %{_mandir}/man7/ocf_pacemaker_remote.*
 %doc %{_mandir}/man8/crm_attribute.*
 %doc %{_mandir}/man8/crm_node.*
 %doc %{_mandir}/man8/crm_master.*
+%if %{with cman}
 %doc %{_mandir}/man8/fence_pcmk.*
+%endif
 %doc %{_mandir}/man8/fence_legacy.*
 %doc %{_mandir}/man8/pacemakerd.*
 %doc %{_mandir}/man8/stonith_admin.*
@@ -482,7 +500,9 @@ exit 0
 
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/cib
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/pengine
+%if %{without cman} || !%{cman_native}
 /usr/lib/ocf/resource.d/pacemaker/controld
+%endif
 /usr/lib/ocf/resource.d/pacemaker/o2cb
 /usr/lib/ocf/resource.d/pacemaker/remote
 /usr/lib/ocf/resource.d/.isolation

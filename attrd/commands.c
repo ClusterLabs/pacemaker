@@ -63,7 +63,6 @@ typedef struct attribute_value_s {
         char *nodename;
         char *current;
         char *requested;
-        char *stored;
 } attribute_value_t;
 
 
@@ -71,7 +70,7 @@ void write_attribute(attribute_t *a);
 void write_or_elect_attribute(attribute_t *a);
 void attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter);
 void attrd_peer_sync(crm_node_t *peer, xmlNode *xml);
-void attrd_peer_remove(uint32_t nodeid, const char *host, gboolean uncache, const char *source);
+void attrd_peer_remove(const char *host, gboolean uncache, const char *source);
 
 static gboolean
 send_attrd_message(crm_node_t * node, xmlNode * data)
@@ -101,7 +100,6 @@ free_attribute_value(gpointer data)
     free(v->nodename);
     free(v->current);
     free(v->requested);
-    free(v->stored);
     free(v);
 }
 
@@ -250,6 +248,10 @@ attrd_client_update(xmlNode *xml)
         free(host);
         regfree(r_patt);
         free(r_patt);
+        return;
+
+    } else if (attr == NULL) {
+        crm_err("Update request did not specify attribute or regular expression");
         return;
     }
 
@@ -534,24 +536,13 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
         attrd_peer_sync(peer, xml);
 
     } else if (safe_str_eq(op, ATTRD_OP_PEER_REMOVE)) {
-        int host_id = 0;
-        char *endptr = NULL;
-
-        host_id = strtol(host, &endptr, 10);
-        if (errno != 0 || endptr == host || *endptr != '\0') {
-            host_id = 0;
-        } else {
-            host = NULL;
-        }
-
-        crm_notice("Processing %s from %s: %s %u", op, peer->uname, host, host_id);
-        attrd_peer_remove(host_id, host, TRUE, peer->uname);
+        attrd_peer_remove(host, TRUE, peer->uname);
 
     } else if (safe_str_eq(op, ATTRD_OP_SYNC_RESPONSE)
               && safe_str_neq(peer->uname, attrd_cluster->uname)) {
         xmlNode *child = NULL;
 
-        crm_notice("Processing %s from %s", op, peer->uname);
+        crm_info("Processing %s from %s", op, peer->uname);
         for (child = __xml_first_child(xml); child != NULL; child = __xml_next(child)) {
             host = crm_element_value(child, F_ATTRD_HOST);
             attrd_peer_update(peer, child, host, TRUE);
@@ -586,39 +577,33 @@ attrd_peer_sync(crm_node_t *peer, xmlNode *xml)
     free_xml(sync);
 }
 
+/*!
+ * \internal
+ * \brief Remove all attributes and optionally peer cache entries for a node
+ *
+ * \param[in] host     Name of node to purge
+ * \param[in] uncache  If TRUE, remove node from peer caches
+ * \param[in] source   Who requested removal (only used for logging)
+ */
 void
-attrd_peer_remove(uint32_t nodeid, const char *host, gboolean uncache, const char *source)
+attrd_peer_remove(const char *host, gboolean uncache, const char *source)
 {
     attribute_t *a = NULL;
     GHashTableIter aIter;
 
-    crm_notice("Removing all %s (%u) attributes for %s", host, nodeid, source);
-    if(host == NULL) {
-        return;
-    }
+    CRM_CHECK(host != NULL, return);
+    crm_notice("Removing all %s attributes for %s", host, source);
 
     g_hash_table_iter_init(&aIter, attributes);
     while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
-        attribute_value_t *v = g_hash_table_lookup(a->values, host);
-
-        if(v && v->current) {
-            free(v->current);
-            v->current = NULL;
-            a->changed = TRUE;
-
-            crm_debug("Removed %s[%s]=%s for %s", a->id, host, v->current, source);
-            if(a->timer) {
-                crm_trace("Delayed write out (%dms) for %s", a->timeout_ms, a->id);
-                mainloop_timer_start(a->timer);
-            } else {
-                write_or_elect_attribute(a);
-            }
+        if(g_hash_table_remove(a->values, host)) {
+            crm_debug("Removed %s[%s] for %s", a->id, host, source);
         }
     }
 
     if (uncache) {
         crm_remote_peer_cache_remove(host);
-        reap_crm_member(nodeid, host);
+        reap_crm_member(0, host);
     }
 }
 
@@ -670,6 +655,7 @@ void
 attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
 {
     bool changed = FALSE;
+    attribute_t *a;
     attribute_value_t *v = NULL;
     int dampen = 0;
 
@@ -678,8 +664,12 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
     const char *value = crm_element_value(xml, F_ATTRD_VALUE);
     const char *dvalue = crm_element_value(xml, F_ATTRD_DAMPEN);
 
-    attribute_t *a = g_hash_table_lookup(attributes, attr);
+    if (attr == NULL) {
+        crm_warn("Peer update did not specify attribute");
+        return;
+    }
 
+    a = g_hash_table_lookup(attributes, attr);
     if(a == NULL) {
         if (op == NULL /* The xml children from an ATTRD_OP_SYNC_RESPONSE have no F_ATTRD_TASK */
             || safe_str_eq(op, ATTRD_OP_UPDATE)
@@ -848,7 +838,7 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
             }
         } else {
             /* Remove all attribute values associated with lost nodes */
-            attrd_peer_remove(peer->id, peer->uname, FALSE, __FUNCTION__);
+            attrd_peer_remove(peer->uname, FALSE, "peer loss");
             if (peer_writer && safe_str_eq(peer->uname, peer_writer)) {
                 free(peer_writer);
                 peer_writer = NULL;
@@ -898,15 +888,9 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
     g_hash_table_iter_init(&iter, a->values);
     while (g_hash_table_iter_next(&iter, (gpointer *) & peer, (gpointer *) & v)) {
         do_crm_log(level, "Update %d for %s[%s]=%s: %s (%d)", call_id, a->id, peer, v->requested, pcmk_strerror(rc), rc);
-
-        if(rc == pcmk_ok) {
-            free(v->stored);
-            v->stored = v->requested;
-            v->requested = NULL;
-
-        } else {
-            free(v->requested);
-            v->requested = NULL;
+        free(v->requested);
+        v->requested = NULL;
+        if (rc != pcmk_ok) {
             a->changed = TRUE; /* Attempt write out again */
         }
     }

@@ -534,6 +534,10 @@ main(int argc, char **argv)
                         printf("We were able to %s node %s on behalf of %s from %s at %s\n",
                                action_s, hp->target, hp->client, hp->origin, ctime(&complete));
                     } else {
+                        /* ocf:pacemaker:controld depends on "wishes to" being
+                         * in this output, when used with older versions of DLM
+                         * that don't report stateful_merge_wait
+                         */
                         printf("%s at %s wishes to %s node %s - %d %d\n",
                                hp->client, hp->origin, action_s, hp->target, hp->state, hp->completed);
                     }

@@ -463,14 +463,17 @@ mcp_read_config(void)
     if(local_handle){
         gid_t gid = 0;
         if (crm_user_lookup(CRM_DAEMON_USER, NULL, &gid) < 0) {
-            crm_warn("No group found for user %s", CRM_DAEMON_USER);
+            crm_warn("Could not authorize group with corosync " CRM_XS
+                     " No group found for user %s", CRM_DAEMON_USER);
 
         } else {
             char key[PATH_MAX];
             snprintf(key, PATH_MAX, "uidgid.gid.%u", gid);
             rc = cmap_set_uint8(local_handle, key, 1);
-            crm_notice("Configured corosync to accept connections from group %u: %s (%d)",
-                       gid, ais_error2text(rc), rc);
+            if (rc != CS_OK) {
+                crm_warn("Could not authorize group with corosync "CRM_XS
+                         " group=%u rc=%d (%s)", gid, rc, ais_error2text(rc));
+            }
         }
     }
     cmap_finalize(local_handle);

@@ -170,13 +170,16 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
         cleanup_alloc_calculations(&data_set);
 
         if (was_processing_error) {
-            crm_err("Calculated Transition %d: %s", transition_id, filename);
+            crm_err("Calculated transition %d (with errors), saving inputs in %s",
+                    transition_id, filename);
 
         } else if (was_processing_warning) {
-            crm_warn("Calculated Transition %d: %s", transition_id, filename);
+            crm_warn("Calculated transition %d (with warnings), saving inputs in %s",
+                     transition_id, filename);
 
         } else {
-            crm_notice("Calculated Transition %d: %s", transition_id, filename);
+            crm_notice("Calculated transition %d, saving inputs in %s",
+                       transition_id, filename);
         }
 
         if (crm_config_error) {

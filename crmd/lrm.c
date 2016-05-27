@@ -396,9 +396,12 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
     if (lrm_state->pending_ops && lrm_state_is_connected(lrm_state) == TRUE) {
         guint removed = g_hash_table_foreach_remove(
             lrm_state->pending_ops, stop_recurring_actions, lrm_state);
+        guint nremaining = g_hash_table_size(lrm_state->pending_ops);
 
-        crm_notice("Stopped %u recurring operations at %s (%u ops remaining)",
-                   removed, when, g_hash_table_size(lrm_state->pending_ops));
+        if (removed || nremaining) {
+            crm_notice("Stopped %u recurring operations at %s (%u operations remaining)",
+                       removed, when, nremaining);
+        }
     }
 
     if (lrm_state->pending_ops) {
@@ -498,8 +501,10 @@ get_rsc_metadata(const char *type, const char *rclass, const char *provider, boo
 
     snprintf(key, len, "%s::%s:%s", type, rclass, provider);
     if(force == FALSE) {
-        crm_trace("Retreiving cached metadata for %s", key);
         metadata = g_hash_table_lookup(metadata_hash, key);
+        if (metadata) {
+            crm_trace("Retrieved cached metadata for %s", key);
+        }
     }
 
     if(metadata == NULL) {
@@ -756,7 +761,7 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
         return TRUE;
     }
 
-    crm_trace("Includind additional digests for %s::%s:%s", rsc->provider, rsc->class, rsc->type);
+    crm_trace("Including additional digests for %s::%s:%s", rsc->provider, rsc->class, rsc->type);
     append_restart_list(op, metadata, xml_op, caller_version);
     append_secure_list(op, metadata, xml_op, caller_version);
 
@@ -1681,10 +1686,14 @@ do_lrm_invoke(long long action,
                 in_progress = cancel_op(lrm_state, rsc->id, NULL, call, TRUE);
             }
 
-            if (in_progress == FALSE) {
+            /* Acknowledge the cancellation operation if it's for a remote connection resource */
+            if (in_progress == FALSE || is_remote_lrmd_ra(NULL, NULL, rsc->id)) {
                 lrmd_event_data_t *op = construct_op(lrm_state, input->xml, rsc->id, op_task);
+                char *op_id = make_stop_id(rsc->id, call);
 
-                crm_info("Nothing known about operation %d for %s", call, op_key);
+                if (is_remote_lrmd_ra(NULL, NULL, rsc->id) == FALSE) {
+                    crm_info("Nothing known about operation %d for %s", call, op_key);
+                }
                 delete_op_entry(lrm_state, NULL, rsc->id, op_key, call);
 
                 CRM_ASSERT(op != NULL);
@@ -1694,10 +1703,9 @@ do_lrm_invoke(long long action,
                 send_direct_ack(from_host, from_sys, rsc, op, rsc->id);
                 lrmd_free_event(op);
 
-                /* needed?? surely not otherwise the cancel_op_(_key) wouldn't
-                 * have failed in the first place
-                 */
-                g_hash_table_remove(lrm_state->pending_ops, op_key);
+                /* needed?? yes for the cancellation operation of a remote connection resource */
+                g_hash_table_remove(lrm_state->pending_ops, op_id);
+                free(op_id);
             }
 
             free(op_key);
@@ -2002,8 +2010,10 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
         removed = g_hash_table_foreach_remove(
             lrm_state->pending_ops, stop_recurring_action_by_rsc, &data);
 
-        crm_debug("Stopped %u recurring operations in preparation for %s_%s_%d",
-                  removed, rsc->id, operation, op->interval);
+        if (removed) {
+            crm_debug("Stopped %u recurring operations in preparation for %s_%s_%d",
+                      removed, rsc->id, operation, op->interval);
+        }
     }
 
     /* now do the op */
@@ -2330,27 +2340,37 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op, struct recurr
 
     switch (op->op_status) {
         case PCMK_LRM_OP_CANCELLED:
-            crm_info("Operation %s: %s (node=%s, call=%d, confirmed=%s)",
-                     op_key, services_lrm_status_str(op->op_status), lrm_state->node_name,
-                     op->call_id, removed ? "true" : "false");
+            crm_info("Result of %s operation for %s on %s: %s "
+                     CRM_XS " call=%d key=%s confirmed=%s",
+                     op->op_type, op->rsc_id, lrm_state->node_name,
+                     services_lrm_status_str(op->op_status),
+                     op->call_id, op_key, (removed? "true" : "false"));
             break;
 
         case PCMK_LRM_OP_DONE:
             do_crm_log(op->interval?LOG_INFO:LOG_NOTICE,
-                       "Operation %s: %s (node=%s, call=%d, rc=%d, cib-update=%d, confirmed=%s)",
-                       op_key, services_ocf_exitcode_str(op->rc), lrm_state->node_name,
-                       op->call_id, op->rc, update_id, removed ? "true" : "false");
+                       "Result of %s operation for %s on %s: %s "
+                       CRM_XS " call=%d key=%s confirmed=%s rc=%d cib-update=%d",
+                       op->op_type, op->rsc_id, lrm_state->node_name,
+                       services_ocf_exitcode_str(op->rc),
+                       op->call_id, op_key, (removed? "true" : "false"),
+                       op->rc, update_id);
             break;
 
         case PCMK_LRM_OP_TIMEOUT:
-            crm_err("Operation %s: %s (node=%s, call=%d, timeout=%dms)",
-                    op_key, services_lrm_status_str(op->op_status), lrm_state->node_name, op->call_id, op->timeout);
+            crm_err("Result of %s operation for %s on %s: %s "
+                    CRM_XS " call=%d key=%s timeout=%dms",
+                    op->op_type, op->rsc_id, lrm_state->node_name,
+                    services_lrm_status_str(op->op_status),
+                    op->call_id, op_key, op->timeout);
             break;
 
         default:
-            crm_err("Operation %s (node=%s, call=%d, status=%d, cib-update=%d, confirmed=%s) %s",
-                    op_key, lrm_state->node_name, op->call_id, op->op_status, update_id, removed ? "true" : "false",
-                    services_lrm_status_str(op->op_status));
+            crm_err("Result of %s operation for %s on %s: %s "
+                    CRM_XS " call=%d key=%s confirmed=%s status=%d cib-update=%d",
+                    op->op_type, op->rsc_id, lrm_state->node_name,
+                    services_lrm_status_str(op->op_status), op->call_id, op_key,
+                    (removed? "true" : "false"), op->op_status, update_id);
     }
 
     if (op->output) {

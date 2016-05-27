@@ -67,7 +67,8 @@ do_cl_join_announce(long long action,
 
     /* dont announce if we're in one of these states */
     if (cur_state != S_PENDING) {
-        crm_warn("Do not announce ourselves in state %s", fsa_state2string(cur_state));
+        crm_warn("Not announcing cluster join because in state %s",
+                 fsa_state2string(cur_state));
         return;
     }
 
@@ -83,7 +84,7 @@ do_cl_join_announce(long long action,
 
     } else {
         /* Delay announce until we have finished local startup */
-        crm_warn("Delaying announce until local startup is complete");
+        crm_warn("Delaying announce of cluster join until local startup is complete");
         return;
     }
 }
@@ -111,7 +112,7 @@ do_cl_join_offer_respond(long long action,
     }
 #endif
 
-    crm_trace("Accepting join offer from %s: join-%s",
+    crm_trace("Accepting cluster join offer from node %s "CRM_XS" join-%s",
               welcome_from, crm_element_value(input->msg, F_CRM_JOIN_ID));
 
     /* we only ever want the last one */
@@ -122,7 +123,8 @@ do_cl_join_offer_respond(long long action,
     }
 
     if (update_dc(input->msg) == FALSE) {
-        crm_warn("Discarding offer from %s (expected %s)", welcome_from, fsa_our_dc);
+        crm_warn("Discarding cluster join offer from node %s (expected %s)",
+                 welcome_from, fsa_our_dc);
         return;
     }
 
@@ -206,8 +208,8 @@ do_cl_join_finalize_respond(long long action,
     crm_element_value_int(input->msg, F_CRM_JOIN_ID, &join_id);
 
     if (was_nack) {
-        crm_err("Join (join-%d) with leader %s failed (NACK'd): Shutting down",
-                join_id, welcome_from);
+        crm_err("Shutting down because cluster join with leader %s failed "
+                CRM_XS" join-%d NACK'd", welcome_from, join_id);
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
         return;
     }
@@ -218,7 +220,8 @@ do_cl_join_finalize_respond(long long action,
     }
 
     if (update_dc(input->msg) == FALSE) {
-        crm_warn("Discarding %s from %s (expected %s)", op, welcome_from, fsa_our_dc);
+        crm_warn("Discarding %s from node %s (expected from %s)",
+                 op, welcome_from, fsa_our_dc);
         return;
     }
 

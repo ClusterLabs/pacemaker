@@ -70,9 +70,11 @@ save_cib_contents(xmlNode * msg, int call_id, int rc, xmlNode * output, void *us
 
         sprintf(filename, PE_STATE_DIR "/pe-core-%s.bz2", id);
         if (write_xml_file(output, filename, TRUE) < 0) {
-            crm_err("Could not save CIB contents after PE crash to %s", filename);
+            crm_err("Could not save Cluster Information Base to %s after Policy Engine crash",
+                    filename);
         } else {
-            crm_notice("Saved CIB contents after PE crash to %s", filename);
+            crm_notice("Saved Cluster Information Base to %s after Policy Engine crash",
+                       filename);
         }
 
         free(filename);
@@ -86,8 +88,8 @@ pe_ipc_destroy(gpointer user_data)
         int rc = pcmk_ok;
         char *uuid_str = crm_generate_uuid();
 
-        crm_crit("Connection to the Policy Engine failed (pid=%d, uuid=%s)",
-                 pe_subsystem->pid, uuid_str);
+        crm_crit("Connection to the Policy Engine failed "
+                 CRM_XS " pid=%d uuid=%s", pe_subsystem->pid, uuid_str);
 
         /*
          *The PE died...
@@ -194,17 +196,18 @@ do_pe_invoke(long long action,
              enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     if (AM_I_DC == FALSE) {
-        crm_err("Not DC: No need to invoke the PE (anymore): %s", fsa_action2string(action));
+        crm_err("Not invoking Policy Engine because not DC: %s",
+                fsa_action2string(action));
         return;
     }
 
     if (is_set(fsa_input_register, R_PE_CONNECTED) == FALSE) {
         if (is_set(fsa_input_register, R_SHUTDOWN)) {
-            crm_err("Cannot shut down gracefully without the PE");
+            crm_err("Cannot shut down gracefully without the Policy Engine");
             register_fsa_input_before(C_FSA_INTERNAL, I_TERMINATE, NULL);
 
         } else {
-            crm_info("Waiting for the PE to connect");
+            crm_info("Waiting for the Policy Engine to connect");
             crmd_fsa_stall(FALSE);
             register_fsa_action(A_PE_START);
         }
@@ -212,11 +215,12 @@ do_pe_invoke(long long action,
     }
 
     if (cur_state != S_POLICY_ENGINE) {
-        crm_notice("No need to invoke the PE in state %s", fsa_state2string(cur_state));
+        crm_notice("Not invoking Policy Engine because in state %s",
+                   fsa_state2string(cur_state));
         return;
     }
     if (is_set(fsa_input_register, R_HAVE_CIB) == FALSE) {
-        crm_err("Attempted to invoke the PE without a consistent copy of the CIB!");
+        crm_err("Attempted to invoke Policy Engine without consistent Cluster Information Base!");
 
         /* start the join from scratch */
         register_fsa_input_before(C_FSA_INTERNAL, I_ELECTION, NULL);
@@ -302,7 +306,8 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     pid_t watchdog = pcmk_locate_sbd();
 
     if (rc != pcmk_ok) {
-        crm_err("Cant retrieve the CIB: %s (call %d)", pcmk_strerror(rc), call_id);
+        crm_err("Could not retrieve the Cluster Information Base: %s "
+                CRM_XS " call=%d", pcmk_strerror(rc), call_id);
         register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
         return;
 

@@ -55,7 +55,11 @@ WITH    ?= --without doc
 #WITH    ?= --without=doc --with=gcov
 
 LAST_RC		?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | grep rc | head -n 1)
-LAST_RELEASE	?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | grep -v rc | head -n 1)
+ifneq ($(origin VERSION), undefined)
+LAST_RELEASE	?= Pacemaker-$(VERSION)
+else
+LAST_RELEASE	?= $(shell git tag -l | grep Pacemaker | sort -Vr | grep -v rc | head -n 1)
+endif
 NEXT_RELEASE	?= $(shell echo $(LAST_RELEASE) | awk -F. '/[0-9]+\./{$$3+=1;OFS=".";print $$1,$$2,$$3}')
 
 BUILD_COUNTER	?= build.counter
@@ -100,8 +104,8 @@ rpmbuild-with = \
 	done; \
 	case "$(3)" in \
 	*.spec) [ $${PREREL} -eq 0 ] \
-		&& sed -i 's/^\(%global pcmkversion \).*/\1$(shell git describe --tags $(TAG) | sed -e s:Pacemaker-:: -e s:-.*::)/' $(3) \
-		|| sed -i 's/^\(%global pcmkversion \).*/\1$(shell echo $(NEXT_RELEASE) | sed -e s:Pacemaker-:: -e s:-.*::)/' $(3);; \
+		&& sed -i "s/^\(%global pcmkversion \).*/\1$$(echo $(LAST_RELEASE) | sed -e s:Pacemaker-:: -e s:-.*::)/" $(3) \
+		|| sed -i "s/^\(%global pcmkversion \).*/\1$$(echo $(NEXT_RELEASE) | sed -e s:Pacemaker-:: -e s:-.*::)/" $(3);; \
 	esac; \
 	CMD="$${CMD} $(3)"; \
 	eval "$${CMD}"

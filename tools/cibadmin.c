@@ -89,7 +89,7 @@ static struct crm_option long_options[] = {
     {"create",      0, 0, 'C', "\tCreate an object in the CIB.  Will fail if the object already exists."},
     {"modify",      0, 0, 'M', "\tFind the object somewhere in the CIB's XML tree and update it.  Fails if the object does not exist unless -c is specified"},
     {"patch",	    0, 0, 'P', "\tSupply an update in the form of an xml diff (See also: crm_diff)"},
-    {"replace",     0, 0, 'R', "\tRecursivly replace an object in the CIB"},
+    {"replace",     0, 0, 'R', "\tRecursively replace an object in the CIB"},
     {"delete",      0, 0, 'D', "\tDelete the first object matching the supplied criteria, Eg. <op id=\"rsc1_op1\" name=\"monitor\"/>"},
     {"-spacer-",    0, 0, '-', "\n\tThe tagname and all attributes must match in order for the element to be deleted\n"},
     {"delete-all",  0, 0, 'd', "When used with --xpath, remove all matching objects in the configuration instead of just the first one"},
@@ -126,7 +126,7 @@ static struct crm_option long_options[] = {
     {"-spacer-",    0, 0, '-', "Query the configuration from the local node:", pcmk_option_paragraph},
     {"-spacer-",    0, 0, '-', " cibadmin --query --local", pcmk_option_example},
 
-    {"-spacer-",    0, 0, '-', "Query the just the cluster options configuration:", pcmk_option_paragraph},
+    {"-spacer-",    0, 0, '-', "Query just the cluster options configuration:", pcmk_option_paragraph},
     {"-spacer-",    0, 0, '-', " cibadmin --query --scope crm_config", pcmk_option_example},
 
     {"-spacer-",    0, 0, '-', "Query all 'target-role' settings:", pcmk_option_paragraph},
@@ -156,7 +156,7 @@ static struct crm_option long_options[] = {
     {"-spacer-",    0, 0, '-', " cibadmin --replace --xml-file $HOME/local.xml", pcmk_option_example},
 
     {"-spacer-",    0, 0, '-', "SEE ALSO:"},
-    {"-spacer-",    0, 0, '-', " crm(8), pcs(8), crm_shadow(8)"},
+    {"-spacer-",    0, 0, '-', " crm(8), pcs(8), crm_shadow(8), crm_diff(8)"},
 
     /* Legacy options */
     {"host",	     1, 0, 'h', NULL, 1},
@@ -218,7 +218,7 @@ main(int argc, char **argv)
     crm_set_options(NULL, "command [options] [data]", long_options,
                     "Provides direct access to the cluster configuration."
                     "\n\nAllows the configuration, or sections of it, to be queried, modified, replaced and deleted."
-                    "\n\nWhere necessary, XML data will be obtained using the -X, -x, or -p options\n");
+                    "\n\nWhere necessary, XML data will be obtained using the -X, -x, or -p options.\n");
 
     if (argc < 2) {
         crm_help('?', EX_USAGE);

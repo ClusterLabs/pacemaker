@@ -1773,6 +1773,8 @@ attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const cha
 {
     int rc = -ENOTCONN;
     int max = 5;
+    const char *task = NULL;
+    const char *name_as = NULL;
     xmlNode *update = create_xml_node(NULL, __FUNCTION__);
 
     static gboolean connected = TRUE;
@@ -1806,35 +1808,44 @@ attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const cha
 
     switch (command) {
         case 'u':
-            crm_xml_add(update, F_ATTRD_TASK, ATTRD_OP_UPDATE);
-            crm_xml_add(update, F_ATTRD_REGEX, name);
+            task = ATTRD_OP_UPDATE;
+            name_as = F_ATTRD_REGEX;
             break;
         case 'D':
         case 'U':
         case 'v':
-            crm_xml_add(update, F_ATTRD_TASK, ATTRD_OP_UPDATE);
-            crm_xml_add(update, F_ATTRD_ATTRIBUTE, name);
+            task = ATTRD_OP_UPDATE;
+            name_as = F_ATTRD_ATTRIBUTE;
             break;
         case 'R':
-            crm_xml_add(update, F_ATTRD_TASK, ATTRD_OP_REFRESH);
+            task = ATTRD_OP_REFRESH;
             break;
         case 'B':
-            crm_xml_add(update, F_ATTRD_TASK, ATTRD_OP_UPDATE_BOTH);
-            crm_xml_add(update, F_ATTRD_ATTRIBUTE, name);
+            task = ATTRD_OP_UPDATE_BOTH;
+            name_as = F_ATTRD_ATTRIBUTE;
             break;
         case 'Y':
-            crm_xml_add(update, F_ATTRD_TASK, ATTRD_OP_UPDATE_DELAY);
-            crm_xml_add(update, F_ATTRD_ATTRIBUTE, name);
+            task = ATTRD_OP_UPDATE_DELAY;
+            name_as = F_ATTRD_ATTRIBUTE;
             break;
         case 'Q':
-            crm_xml_add(update, F_ATTRD_TASK, ATTRD_OP_QUERY);
-            crm_xml_add(update, F_ATTRD_ATTRIBUTE, name);
+            task = ATTRD_OP_QUERY;
+            name_as = F_ATTRD_ATTRIBUTE;
             break;
         case 'C':
-            crm_xml_add(update, F_ATTRD_TASK, ATTRD_OP_PEER_REMOVE);
+            task = ATTRD_OP_PEER_REMOVE;
             break;
     }
 
+    if (name_as != NULL) {
+        if (name == NULL) {
+            rc = -EINVAL;
+            goto done;
+        }
+        crm_xml_add(update, name_as, name);
+    }
+
+    crm_xml_add(update, F_ATTRD_TASK, task);
     crm_xml_add(update, F_ATTRD_VALUE, value);
     crm_xml_add(update, F_ATTRD_DAMPEN, dampen);
     crm_xml_add(update, F_ATTRD_SECTION, section);
@@ -1878,6 +1889,7 @@ attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const cha
         }
     }
 
+done:
     free_xml(update);
     if (rc > 0) {
         crm_debug("Sent update: %s=%s for %s", name, value, host ? host : "localhost");
