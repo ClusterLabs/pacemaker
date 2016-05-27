@@ -358,7 +358,12 @@ indexterm:[Resource,Option,requires]
 |INFINITY
 |How many failures may occur for this resource on a node, before this
  node is marked ineligible to host this resource. A value of INFINITY
- indicates that this feature is disabled.
+ indicates that this feature is disabled.  Disregarding this option
+ altogether, <<s-failure-migration,the same effect>> has
+ +start-failure-is-fatal+ cluster option set to true (default).
+ This means that for this option, with the exception of INFINITY
+ value (default), to be taken into account, +start-failure-is-fatal+
+ has to be disabled first.
  indexterm:[migration-threshold,Resource Option]
  indexterm:[Resource,Option,migration-threshold]
 
