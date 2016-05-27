@@ -458,12 +458,14 @@ action_launch_child(svc_action_t *op)
 }
 
 #ifndef HAVE_SYS_SIGNALFD_H
-static int sigchld_pipe[2];
+static int sigchld_pipe[2] = { -1, -1 };
 
 static void
 sigchld_handler()
 {
-    if (write(sigchld_pipe[1], "", 1) == -1) {}
+    if ((sigchld_pipe[1] >= 0) && (write(sigchld_pipe[1], "", 1) == -1)) {
+        crm_perror(LOG_TRACE, "Could not poke SIGCHLD self-pipe");
+    }
 }
 #endif
 
@@ -619,23 +621,24 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
 #ifdef HAVE_SYS_SIGNALFD_H
     sigset_t mask;
     sigset_t old_mask;
-#define sigchld_cleanup() {                                                   \
+#define sigchld_cleanup() do {                                                \
     if (sigismember(&old_mask, SIGCHLD) == 0) {                               \
         if (sigprocmask(SIG_UNBLOCK, &mask, NULL) < 0) {                      \
             crm_perror(LOG_ERR, "sigprocmask() failed to unblock sigchld");   \
         }                                                                     \
     }                                                                         \
-}
+} while (0)
 #else
     struct sigaction sa;
     struct sigaction old_sa;
-#define sigchld_cleanup() {                                                   \
+#define sigchld_cleanup() do {                                                \
     if (sigaction(SIGCHLD, &old_sa, NULL) < 0) {                              \
         crm_perror(LOG_ERR, "sigaction() failed to remove sigchld handler");  \
     }                                                                         \
     close(sigchld_pipe[0]);                                                   \
     close(sigchld_pipe[1]);                                                   \
-}
+    sigchld_pipe[0] = sigchld_pipe[1] = -1;                                   \
+} while(0)
 #endif
 
     /* Fail fast */
