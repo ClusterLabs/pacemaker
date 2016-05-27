@@ -479,7 +479,9 @@ exit 0
 %doc %{_mandir}/man7/crmd.*
 %doc %{_mandir}/man7/pengine.*
 %doc %{_mandir}/man7/stonithd.*
+%if %{without cman} || !%{cman_native)
 %doc %{_mandir}/man7/ocf_pacemaker_controld.*
+%endif
 %doc %{_mandir}/man7/ocf_pacemaker_o2cb.*
 %doc %{_mandir}/man7/ocf_pacemaker_remote.*
 %doc %{_mandir}/man8/crm_attribute.*
@@ -498,7 +500,9 @@ exit 0
 
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/cib
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/pengine
+%if %{without cman} || !%{cman_native)
 /usr/lib/ocf/resource.d/pacemaker/controld
+%endif
 /usr/lib/ocf/resource.d/pacemaker/o2cb
 /usr/lib/ocf/resource.d/pacemaker/remote
 /usr/lib/ocf/resource.d/.isolation
