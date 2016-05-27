@@ -1,3 +1,18 @@
+* Fri May 27 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.15-rc3
+- Update source tarball to revision: 3e9486f
+- Changesets: 59
+- Diff:       44 files changed, 353 insertions(+), 195 deletions(-)
+
+- Changes since Pacemaker-1.1.15-rc2
+  + make various log messages more user-friendly
+  + improve FreeBSD and Hurd support
+  + Bug cl#5266: log correct directory name that daemons change to
+  + Bug cl#5270: make systemd overrides world-readable to avoid log warnings
+  + Bug cl#5272: validate attrd requests better
+  + Bug rhbz#1321711: handle DLM "wait fencing" state better in controld agent
+  + Bug rhbz#1338623: fix 1.1.15-rc1 regression in attrd when node ID is reused
+  + libcrmcommon: fix regression in 1.1.14 that made have-watchdog always true
+
 * Mon May 16 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.15-rc2
 - Update source tarball to revision: 4112547
 - Changesets: 40
@@ -6,7 +21,6 @@
 - Changes since Pacemaker-1.1.15-rc1
   + attrd: Fix issue introduced in 1.1.15-rc1 breaking the synchronization of attributes
   + attrd: If attribute delay changes, update it when synchronizing attributes
-  + crmd: Fix issue introduced in 1.1.15-rc1 with cluster properties defaulting if alerts section present
   + crmd: Rename alerts' tstamp_format to timestamp-format and default to "%H:%M:%S.%06N"
   + crmd: Take start-delay into account for the timeout of the action timer
   + pengine: Correctly set OCF_RESKEY_CRM_meta_timeout when start-delay is configured
