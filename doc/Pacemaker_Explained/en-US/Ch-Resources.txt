@@ -360,7 +360,9 @@ indexterm:[Resource,Option,requires]
  node is marked ineligible to host this resource. A value of 0 indicates that
  this feature is disabled (the node will never be marked ineligible); by
  constrast, the cluster treats INFINITY (the default) as a very large but
- finite number.
+ finite number. This option has an effect only if the failed operation has
+ on-fail=restart (the default), and additionally for failed start operations,
+ if the cluster property start-failure-is-fatal is false.
  indexterm:[migration-threshold,Resource Option]
  indexterm:[Resource,Option,migration-threshold]
 
