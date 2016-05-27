@@ -992,6 +992,23 @@ action_complete(svc_action_t * action)
     } else if (action->stdout_data) {
         cmd->output = strdup(action->stdout_data);
     }
+   
+    if (safe_str_eq(cmd->action, "monitor") && cmd->interval == 0 && cmd->exec_rc == PCMK_OCF_NOT_RUNNING) {
+        
+        const char* rsc_version = crm_meta_value(cmd->params, "version");
+
+        if (rsc_version) {
+            lrmd_t *lrmd_conn = lrmd_api_new();
+            const char *ra_version = lrmd_conn->cmds->get_version(lrmd_conn, rsc->class, rsc->provider, rsc->type, 0);
+
+            lrmd_api_delete(lrmd_conn);
+
+            if (compare_version(rsc_version, ra_version) != 0) {
+                cmd->exec_rc = PCMK_OCF_WRONG_VERSION;
+                cmd->lrmd_op_status = PCMK_LRM_OP_ERROR;
+            }
+        }
+    }
 
     cmd_finalize(cmd, rsc);
 }

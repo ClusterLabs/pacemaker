@@ -1459,7 +1459,7 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
                                 rsc->container, generate_op_key(rsc->container->id, RSC_STOP, 0), NULL,
                                 pe_order_implies_first, data_set);
 
-            rsc_colocation_new("resource-with-containter", NULL, INFINITY, rsc, rsc->container, NULL,
+            rsc_colocation_new("resource-with-containter", NULL, INFINITY, rsc, rsc->container, TRUE, NULL,
                                NULL, data_set);
         }
     }
@@ -1630,7 +1630,7 @@ colocation_match(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * co
         attribute = constraint->node_attribute;
     }
 
-    if (rsc_rh->allocated_to) {
+    if (rsc_rh->allocated_to && constraint->rsc_rh_valid) {
         value = g_hash_table_lookup(rsc_rh->allocated_to->details->attrs, attribute);
         do_check = TRUE;
 

@@ -39,6 +39,7 @@
 #include <time.h>
 #include <libgen.h>
 #include <signal.h>
+#include <regex.h>
 
 #include <qb/qbdefs.h>
 
@@ -607,6 +608,30 @@ compare_version(const char *version1, const char *version2)
     }
 
     return rc;
+}
+
+gboolean
+valid_version_format(const char *version, gboolean in_range)
+{
+    regex_t regex; 
+    int rc = 0;
+    const char *format_regex = NULL;
+   
+    if (version == NULL) {
+        return FALSE;
+    }
+
+    if (in_range) { 
+        format_regex = "^[[:digit:]]+([.][[:digit:]]+)*[-][[:digit:]]+$"; 
+    } else {
+        format_regex = "^[[:digit:]]+([.][[:digit:]]+)*$";
+    }
+
+    regcomp(&regex, format_regex, REG_EXTENDED);
+    rc = regexec(&regex, version, 0, NULL, 0);
+    regfree(&regex);
+
+    return rc == 0;
 }
 
 gboolean do_stderr = FALSE;

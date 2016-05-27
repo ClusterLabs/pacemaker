@@ -460,6 +460,17 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     get_meta_attributes((*rsc)->meta, *rsc, NULL, data_set);
     get_rsc_attributes((*rsc)->parameters, *rsc, NULL, data_set);
 
+    value = g_hash_table_lookup((*rsc)->parameters, XML_ATTR_VERSION);
+    if (!value) {
+        (*rsc)->version = NULL;
+    } else if (!valid_version_format(value, FALSE)) {
+        pe_err("Invalid format for the resource version: %s", value);
+        free(*rsc);
+        return FALSE;
+    } else {
+        (*rsc)->version = strdup(value);
+    }
+
     (*rsc)->flags = 0;
     set_bit((*rsc)->flags, pe_rsc_runnable);
     set_bit((*rsc)->flags, pe_rsc_provisional);
@@ -846,6 +857,7 @@ common_free(resource_t * rsc)
     g_list_free(rsc->rsc_location);
     pe_rsc_trace(rsc, "Resource freed");
     free(rsc->id);
+    free(rsc->version);
     free(rsc->clone_name);
     free(rsc->allocated_to);
     free(rsc->variant_opaque);

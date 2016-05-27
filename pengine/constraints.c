@@ -250,6 +250,76 @@ valid_resource_or_tag(pe_working_set_t * data_set, const char * id,
 }
 
 static gboolean
+valid_versioned_constraint(const char *rsc_version, const char *cons_version, const char *op)
+{
+    if (cons_version == NULL) {
+        return TRUE;
+    }
+
+    if (rsc_version == NULL) {
+        return FALSE;
+    }
+
+    if (safe_str_eq(op, "in_range")) {
+        char* pch = NULL;
+        char* last_dot_ptr = NULL;
+        char cons_version_copy[100] = { 0 };
+        char* version_from = NULL;
+        char version_to[100] = { 0 };
+        
+        if (!valid_version_format(cons_version, TRUE)) {
+            crm_config_err("Invalid format for the 'in_range' constraint version: %s", cons_version);
+            return FALSE;
+        }
+
+        strcpy(cons_version_copy, cons_version);
+
+        version_from = strtok(cons_version_copy, "-");
+
+        pch = strtok(NULL, "-");
+        last_dot_ptr = strrchr(version_from, '.');
+        if (last_dot_ptr) {
+            strncpy(version_to, version_from, last_dot_ptr - version_from + 1);
+        }
+        strcat(version_to, pch);
+
+        if (compare_version(version_from, version_to) > 0) {
+            crm_config_err("Invalid 'in_range' version: upper bound must be gte than lower bound", cons_version);
+            return FALSE;
+        }
+
+        return (compare_version(rsc_version, version_from) >= 0) && (compare_version(rsc_version, version_to) <= 0);
+    }
+
+    if (!valid_version_format(cons_version, FALSE)) {
+        crm_config_err("Invalid format for the constraint version: %s", cons_version);
+        return FALSE;
+    }
+
+    if (op == NULL || safe_str_eq(op, "eq")) {
+        return compare_version(rsc_version, cons_version) == 0;
+    }
+    if (safe_str_eq(op, "neq")) {
+        return compare_version(rsc_version, cons_version) != 0;
+    }
+    if (safe_str_eq(op, "gt")) {
+        return compare_version(rsc_version, cons_version) > 0;
+    }
+    if (safe_str_eq(op, "gte")) {
+        return compare_version(rsc_version, cons_version) >= 0;
+    }
+    if (safe_str_eq(op, "lt")) {
+        return compare_version(rsc_version, cons_version) < 0;
+    }
+    if (safe_str_eq(op, "lte")) {
+        return compare_version(rsc_version, cons_version) <= 0;
+    }
+
+    crm_config_err("Invalid operation: %s", op);
+    return FALSE;
+}
+
+static gboolean
 unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
 {
     int order_id = 0;
@@ -264,6 +334,10 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     const char *id_then = NULL;
     const char *action_then = NULL;
     const char *action_first = NULL;
+    const char *version_then = NULL;
+    const char *version_first = NULL;
+    const char *op_then = NULL;
+    const char *op_first = NULL;
     const char *instance_then = NULL;
     const char *instance_first = NULL;
     const char *require_all_s = NULL;
@@ -344,6 +418,16 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
                             id_first);
             return FALSE;
         }
+    }
+
+    if (!valid_versioned_constraint(rsc_then->version, version_then, op_then)) {
+        crm_config_err("Invalid order constraint '%s': Resource '%s' does not satisfy specified condition", id, id_then);
+        return FALSE;
+    }
+
+    if (!valid_versioned_constraint(rsc_first->version, version_first, op_first)) {
+        crm_config_err("Invalid order constraint '%s': Resource '%s' does not satisfy specified condition", id, id_first);
+        return FALSE;
     }
 
     require_all_s = crm_element_value(xml_obj, "require-all");
@@ -709,6 +793,8 @@ unpack_rsc_location(xmlNode * xml_obj, resource_t * rsc_lh, const char * role,
     gboolean empty = TRUE;
     rsc_to_node_t *location = NULL;
     const char *id_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
+    const char *rsc_lh_version = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_VERSION);
+    const char *rsc_lh_op = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_OPERATION);
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
     const char *node = crm_element_value(xml_obj, XML_CIB_TAG_NODE);
     const char *discovery = crm_element_value(xml_obj, XML_LOCATION_ATTR_DISCOVERY);
@@ -716,6 +802,11 @@ unpack_rsc_location(xmlNode * xml_obj, resource_t * rsc_lh, const char * role,
     if (rsc_lh == NULL) {
         /* only a warn as BSC adds the constraint then the resource */
         crm_config_warn("No resource (con=%s, rsc=%s)", id, id_lh);
+        return FALSE;
+    }
+
+    if (!valid_versioned_constraint(rsc_lh->version, rsc_lh_version, rsc_lh_op)) {
+        crm_config_err("Invalid location constraint '%s': Resource '%s' does not satisfy specified condition", id, id_lh);
         return FALSE;
     }
     
@@ -1203,7 +1294,7 @@ anti_colocation_order(resource_t * first_rsc, int first_role,
 
 gboolean
 rsc_colocation_new(const char *id, const char *node_attr, int score,
-                   resource_t * rsc_lh, resource_t * rsc_rh,
+                   resource_t * rsc_lh, resource_t * rsc_rh, gboolean rsc_rh_valid,
                    const char *state_lh, const char *state_rh, pe_working_set_t * data_set)
 {
     rsc_colocation_t *new_con = NULL;
@@ -1233,6 +1324,7 @@ rsc_colocation_new(const char *id, const char *node_attr, int score,
     new_con->id = id;
     new_con->rsc_lh = rsc_lh;
     new_con->rsc_rh = rsc_rh;
+    new_con->rsc_rh_valid = rsc_rh_valid;
     new_con->score = score;
     new_con->role_lh = text2role(state_lh);
     new_con->role_rh = text2role(state_rh);
@@ -2155,7 +2247,7 @@ unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
                 EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
                 if (with != NULL) {
                     pe_rsc_trace(resource, "Colocating %s with %s", resource->id, with->id);
-                    rsc_colocation_new(set_id, NULL, local_score, resource, with, role, role,
+                    rsc_colocation_new(set_id, NULL, local_score, resource, with, TRUE, role, role,
                                        data_set);
                 }
 
@@ -2169,7 +2261,7 @@ unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
                 EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
                 if (last != NULL) {
                     pe_rsc_trace(resource, "Colocating %s with %s", last->id, resource->id);
-                    rsc_colocation_new(set_id, NULL, local_score, last, resource, role, role,
+                    rsc_colocation_new(set_id, NULL, local_score, last, resource, TRUE, role, role,
                                        data_set);
                 }
 
@@ -2203,7 +2295,7 @@ unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
                         EXPAND_CONSTRAINT_IDREF(set_id, with, ID(xml_rsc_with));
                         pe_rsc_trace(resource, "Anti-Colocating %s with %s", resource->id,
                                      with->id);
-                        rsc_colocation_new(set_id, NULL, local_score, resource, with, role, role,
+                        rsc_colocation_new(set_id, NULL, local_score, resource, with, TRUE, role, role,
                                            data_set);
                     }
                 }
@@ -2251,13 +2343,13 @@ colocate_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, int score,
     }
 
     if (rsc_1 != NULL && rsc_2 != NULL) {
-        rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, role_1, role_2, data_set);
+        rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, TRUE, role_1, role_2, data_set);
 
     } else if (rsc_1 != NULL) {
         for (xml_rsc = __xml_first_child(set2); xml_rsc != NULL; xml_rsc = __xml_next_element(xml_rsc)) {
             if (crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
                 EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc));
-                rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, role_1, role_2, data_set);
+                rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, TRUE, role_1, role_2, data_set);
             }
         }
 
@@ -2265,7 +2357,7 @@ colocate_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, int score,
         for (xml_rsc = __xml_first_child(set1); xml_rsc != NULL; xml_rsc = __xml_next_element(xml_rsc)) {
             if (crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
                 EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
-                rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, role_1, role_2, data_set);
+                rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, TRUE, role_1, role_2, data_set);
             }
         }
 
@@ -2280,7 +2372,7 @@ colocate_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, int score,
                      xml_rsc_2 = __xml_next_element(xml_rsc_2)) {
                     if (crm_str_eq((const char *)xml_rsc_2->name, XML_TAG_RESOURCE_REF, TRUE)) {
                         EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc_2));
-                        rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, role_1, role_2, data_set);
+                        rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, TRUE, role_1, role_2, data_set);
                     }
                 }
             }
@@ -2302,11 +2394,17 @@ unpack_simple_colocation(xmlNode * xml_obj, pe_working_set_t * data_set)
     const char *id_rh = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET);
     const char *state_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
     const char *state_rh = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_ROLE);
+    const char *rsc_lh_version = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_VERSION);
+    const char *rsc_rh_version = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_VERSION);
+    const char *rsc_lh_op = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_OPERATION);
+    const char *rsc_rh_op = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_OPERATION);
     const char *instance_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_INSTANCE);
     const char *instance_rh = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_INSTANCE);
     const char *attr = crm_element_value(xml_obj, XML_COLOC_ATTR_NODE_ATTR);
 
     const char *symmetrical = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
+
+    gboolean rsc_rh_valid = TRUE;
 
     resource_t *rsc_lh = pe_find_constraint_resource(data_set->resources, id_lh);
     resource_t *rsc_rh = pe_find_constraint_resource(data_set->resources, id_rh);
@@ -2350,6 +2448,16 @@ unpack_simple_colocation(xmlNode * xml_obj, pe_working_set_t * data_set)
         }
     }
 
+    if (!valid_versioned_constraint(rsc_lh->version, rsc_lh_version, rsc_lh_op)) {
+        crm_config_err("Invalid colocation constraint '%s': Resource '%s' does not satisfy specified condition", id, id_lh);
+        return FALSE;
+    }
+
+    if (!valid_versioned_constraint(rsc_rh->version, rsc_rh_version, rsc_rh_op)) {
+        crm_config_err("Invalid colocation constraint '%s': Resource '%s' does not satisfy specified condition", id, id_rh);
+        rsc_rh_valid = FALSE;
+    }
+
     if (crm_is_true(symmetrical)) {
         crm_config_warn("The %s colocation constraint attribute has been removed."
                         "  It didn't do what you think it did anyway.", XML_CONS_ATTR_SYMMETRICAL);
@@ -2359,7 +2467,7 @@ unpack_simple_colocation(xmlNode * xml_obj, pe_working_set_t * data_set)
         score_i = char2score(score);
     }
 
-    rsc_colocation_new(id, attr, score_i, rsc_lh, rsc_rh, state_lh, state_rh, data_set);
+    rsc_colocation_new(id, attr, score_i, rsc_lh, rsc_rh, rsc_rh_valid, state_lh, state_rh, data_set);
     return TRUE;
 }
 

@@ -395,3 +395,36 @@ cli_resource_print_property(const char *rsc, const char *attr, pe_working_set_t 
     }
     return -ENXIO;
 }
+
+
+int cli_resource_print_resource_agent_version(const char* rsc_id)
+{
+    lrmd_t *lrmd_conn = NULL;
+    lrmd_rsc_info_t *rsc_info = NULL;
+
+    lrmd_conn = lrmd_api_new();
+
+    lrmd_conn->cmds->connect(lrmd_conn, "lrmd", NULL);
+    if (!lrmd_conn->cmds->is_connected(lrmd_conn)) {
+        CMD_ERR("Cannot connect to lrmd");
+        lrmd_api_delete(lrmd_conn);
+        return -ENOTCONN;
+    }
+
+    rsc_info = lrmd_conn->cmds->get_rsc_info(lrmd_conn, rsc_id, 0);
+    if (!rsc_info) {
+        fprintf(stderr, "Cannot identify resource agent. Please provide correct resource id\n");
+        lrmd_conn->cmds->disconnect(lrmd_conn);
+        lrmd_api_delete(lrmd_conn);
+        return -EINVAL;
+    }
+
+    printf("%s\n", lrmd_conn->cmds->get_version(lrmd_conn, rsc_info->class, rsc_info->provider, rsc_info->type, 0));
+
+    lrmd_conn->cmds->disconnect(lrmd_conn);
+    lrmd_free_rsc_info(rsc_info);
+    lrmd_api_delete(lrmd_conn);
+
+    return pcmk_ok;
+}
+

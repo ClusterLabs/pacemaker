@@ -31,7 +31,7 @@ extern void pe_free_rsc_to_node(GListPtr constraints);
 extern void pe_free_ordering(GListPtr constraints);
 
 extern gboolean rsc_colocation_new(const char *id, const char *node_attr, int score,
-                                   resource_t * rsc_lh, resource_t * rsc_rh,
+                                   resource_t * rsc_lh, resource_t * rsc_rh, gboolean rsc_rh_valid,
                                    const char *state_lh, const char *state_rh,
                                    pe_working_set_t * data_set);
 

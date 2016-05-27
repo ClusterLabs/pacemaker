@@ -91,6 +91,14 @@ the cluster reacts to operation timeouts.
 <content type="string" default="0" />
 </parameter>
 
+<parameter name="version" unique="1">
+<longdesc lang="en">
+Version of the resource. Should contain numbers separated by dots.
+</longdesc>
+<shortdesc lang="en">Resource version</shortdesc>
+<content type="string" default=""/>
+</parameter>
+
 </parameters>
 
 <actions>

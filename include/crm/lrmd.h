@@ -411,6 +411,17 @@ typedef struct lrmd_api_operations_s {
                          const char *agent, char **output, enum lrmd_call_options options);
 
     /*!
+     * \brief Get the resource agent version of a resource agent.
+     *
+     * \retval version on success
+     * \retval value "0.1" on failure
+     */
+    const char* (*get_version) (lrmd_t * lrmd,
+                                const char *class,
+                                const char *provider,
+                                const char *agent, enum lrmd_call_options options);
+
+    /*!
      * \brief Retrieve a list of installed resource agents.
      *
      * \note if class is not provided, all known agents will be returned

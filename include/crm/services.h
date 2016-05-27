@@ -99,6 +99,7 @@ enum ocf_exitcode {
     PCMK_OCF_NOT_RUNNING          = 7,  /* End of overlap with LSB */
     PCMK_OCF_RUNNING_MASTER       = 8,
     PCMK_OCF_FAILED_MASTER        = 9,
+    PCMK_OCF_WRONG_VERSION        = 10,
 
 
     /* 150-199	reserved for application use */
@@ -344,6 +345,8 @@ enum svc_action_flags {
                 return "master";
             case PCMK_OCF_FAILED_MASTER:
                 return "master (failed)";
+            case PCMK_OCF_WRONG_VERSION:
+                return "wrong version";
             case PCMK_OCF_SIGNAL:
                 return "OCF_SIGNAL";
             case PCMK_OCF_NOT_SUPPORTED:
