@@ -463,7 +463,7 @@ static int sigchld_pipe[2];
 static void
 sigchld_handler()
 {
-    write(sigchld_pipe[1], "", 1);
+    if (write(sigchld_pipe[1], "", 1) == -1) {}
 }
 #endif
 
