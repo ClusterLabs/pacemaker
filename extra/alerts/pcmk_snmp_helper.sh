@@ -20,6 +20,10 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #
 ##############################################################################
+# This sample script assumes that only users who already have root access can edit the CIB.
+# Otherwise, a malicious user could run commands as root by inserting shell code into the
+# the trap_options variable. If that is not the case in your environment, you should edit this
+# script to remove or validate trap_options.
 #
 # Sample configuration (cib fragment in xml notation)
 # ================================
