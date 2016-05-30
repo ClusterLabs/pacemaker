@@ -65,8 +65,8 @@ trap_version_default="2c"
 trap_options_default=""
 trap_community_default="public"
 trap_node_default="true"
-trap_fencing_default="true"
-trap_resource_default="true"
+trap_fencing_tasks_default="all"
+trap_resource_tasks_default="all"
 trap_only_monitor_failed_default="true"
 
 : ${trap_binary=${trap_binary_default}}
@@ -74,10 +74,26 @@ trap_only_monitor_failed_default="true"
 : ${trap_options=${trap_options_default}}
 : ${trap_community=${trap_community_default}}
 : ${trap_node=${trap_node_default}}
-: ${trap_fencing=${trap_fencing_default}}
-: ${trap_resource=${trap_resource_default}}
+: ${trap_fencing_tasks=${trap_fencing_tasks_default}}
+: ${trap_resource_tasks=${trap_resource_tasks_default}}
 : ${trap_only_monitor_failed=${trap_only_monitor_failed_default}}
 
+#
+is_match_tasks() {
+    trap_tasks=`echo $1 | tr ',' ' '`
+
+    if [ "${trap_tasks}" = "all" ]; then
+        return 0
+    else 
+        for act in $trap_tasks
+        do
+            act=`echo $act | tr A-Z a-z`
+            [ "$act" != "${CRM_alert_task}" ] && continue
+            return 0
+        done
+    fi
+    return 1
+}
 #
 case $CRM_alert_kind in
     node)
@@ -88,26 +104,29 @@ case $CRM_alert_kind in
         fi
 	;;
     fencing)
-        if [ ${trap_fencing} = "true" ]; then
-    	    ${trap_binary} -v ${trap_version} ${trap_options} -c ${trap_community} ${CRM_alert_recipient} "" PACEMAKER-MIB::pacemakerNotificationTrap \
+        is_match_tasks ${trap_fencing_tasks}
+        [ $? != 0 ] && exit 0
+
+        ${trap_binary} -v ${trap_version} ${trap_options} -c ${trap_community} ${CRM_alert_recipient} "" PACEMAKER-MIB::pacemakerNotificationTrap \
 		PACEMAKER-MIB::pacemakerNotificationNode s "${CRM_alert_node}" \
 		PACEMAKER-MIB::pacemakerNotificationOperation s "${CRM_alert_task}" \
 		PACEMAKER-MIB::pacemakerNotificationDescription s "${CRM_alert_desc}" \
 		PACEMAKER-MIB::pacemakerNotificationReturnCode i ${CRM_alert_rc}
-        fi
 	;;
     resource)
-        if [ ${trap_resource} = "true" ]; then
-	    case ${CRM_alert_desc} in
-	        Cancelled) ;;
-	        *)
-                    if [ ${trap_only_monitor_failed} = "true" ]; then
-                        if [[ ${CRM_alert_rc} == 0 && ${CRM_alert_task} == "monitor" ]]; then
-                            exit;
-                        fi
-                    fi
+        is_match_tasks ${trap_resource_tasks}
+        [ $? != 0 ] && exit 0
 
-    		    ${trap_binary} -v ${trap_version} ${trap_options} -c ${trap_community} ${CRM_alert_recipient} "" PACEMAKER-MIB::pacemakerNotificationTrap \
+        case ${CRM_alert_desc} in
+	    Cancelled) ;;
+	    *)
+                if [ ${trap_only_monitor_failed} = "true" ]; then
+                    if [[ ${CRM_alert_rc} == 0 && ${CRM_alert_task} == "monitor" ]]; then
+                        exit;
+                    fi
+                fi
+
+    	        ${trap_binary} -v ${trap_version} ${trap_options} -c ${trap_community} ${CRM_alert_recipient} "" PACEMAKER-MIB::pacemakerNotificationTrap \
 			PACEMAKER-MIB::pacemakerNotificationNode s "${CRM_alert_node}" \
 			PACEMAKER-MIB::pacemakerNotificationResource s "${CRM_alert_rsc}" \
 			PACEMAKER-MIB::pacemakerNotificationOperation s "${CRM_alert_task}" \
@@ -115,8 +134,7 @@ case $CRM_alert_kind in
 			PACEMAKER-MIB::pacemakerNotificationStatus i ${CRM_alert_status} \
 			PACEMAKER-MIB::pacemakerNotificationReturnCode i ${CRM_alert_rc} PACEMAKER-MIB::pacemakerNotificationTargetReturnCode i ${CRM_alert_target_rc}
 		    ;;
-	    esac
-        fi
+        esac
 	;;
     *)
         ;;
