@@ -62,7 +62,7 @@ static struct crm_option long_options[] = {
     {"unfence",     1, 0, 'U', "Unfence the named host"},
     {"reboot",      1, 0, 'B', "Reboot the named host"},
     {"confirm",     1, 0, 'C', "Confirm the named host is now safely down"},
-    {"history",     1, 0, 'H', "Retrieve last fencing operation"},
+    {"history",     1, 0, 'H', "Retrieve last fencing operation for specified node (or '*' for all)"},
     {"last",        1, 0, 'h', "Indicate when the named node was last fenced. Optional: --as-node-id"},
 
     {"-spacer-",    0, 0, '-', ""},
@@ -246,7 +246,9 @@ show_history(stonith_t *st, const char *target, int timeout, int quiet,
     stonith_history_t *history, *hp, *latest = NULL;
     int rc = 0;
 
-    rc = st->cmds->history(st, st_opts, target, &history, timeout);
+    rc = st->cmds->history(st, st_opts,
+                           (safe_str_eq(target, "*")? NULL : target),
+                           &history, timeout);
     for (hp = history; hp; hp = hp->next) {
         char *action_s = NULL;
         time_t complete = hp->completed;
