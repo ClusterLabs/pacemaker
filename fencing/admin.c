@@ -62,7 +62,7 @@ static struct crm_option long_options[] = {
     {"unfence",     1, 0, 'U', "Unfence the named host"},
     {"reboot",      1, 0, 'B', "Reboot the named host"},
     {"confirm",     1, 0, 'C', "Confirm the named host is now safely down"},
-    {"history",     1, 0, 'H', "Retrieve last fencing operation"},
+    {"history",     1, 0, 'H', "Retrieve last fencing operation for specified node (or '*' for all)"},
     {"last",        1, 0, 'h', "Indicate when the named node was last fenced. Optional: --as-node-id"},
 
     {"-spacer-",    0, 0, '-', ""},
@@ -237,6 +237,84 @@ handle_level(stonith_t *st, char *target, int fence_level,
     }
     return st->cmds->remove_level_full(st, st_opts, node, pattern,
                                        name, value, fence_level);
+}
+
+static int
+show_history(stonith_t *st, const char *target, int timeout, int quiet,
+             int verbose)
+{
+    stonith_history_t *history, *hp, *latest = NULL;
+    int rc = 0;
+
+    rc = st->cmds->history(st, st_opts,
+                           (safe_str_eq(target, "*")? NULL : target),
+                           &history, timeout);
+    for (hp = history; hp; hp = hp->next) {
+        char *action_s = NULL;
+        time_t complete = hp->completed;
+
+        if (hp->state == st_done) {
+            latest = hp;
+        }
+
+        if (quiet || !verbose) {
+            continue;
+        } else if (hp->action == NULL) {
+            action_s = strdup("unknown");
+        } else if (hp->action[0] != 'r') {
+            action_s = crm_concat("turn", hp->action, ' ');
+        } else {
+            action_s = strdup(hp->action);
+        }
+
+        if (hp->state == st_failed) {
+            printf("%s failed to %s node %s on behalf of %s from %s at %s\n",
+                   hp->delegate ? hp->delegate : "We", action_s, hp->target,
+                   hp->client, hp->origin, ctime(&complete));
+
+        } else if (hp->state == st_done && hp->delegate) {
+            printf("%s was able to %s node %s on behalf of %s from %s at %s\n",
+                   hp->delegate, action_s, hp->target,
+                   hp->client, hp->origin, ctime(&complete));
+
+        } else if (hp->state == st_done) {
+            printf("We were able to %s node %s on behalf of %s from %s at %s\n",
+                   action_s, hp->target, hp->client, hp->origin, ctime(&complete));
+        } else {
+            /* ocf:pacemaker:controld depends on "wishes to" being
+             * in this output, when used with older versions of DLM
+             * that don't report stateful_merge_wait
+             */
+            printf("%s at %s wishes to %s node %s - %d %d\n",
+                   hp->client, hp->origin, action_s, hp->target, hp->state, hp->completed);
+        }
+
+        free(action_s);
+    }
+
+    if (latest) {
+        if (quiet) {
+            printf("%d\n", latest->completed);
+        } else {
+            char *action_s = NULL;
+            time_t complete = latest->completed;
+
+            if (latest->action == NULL) {
+                action_s = strdup("unknown");
+            } else if (latest->action[0] != 'r') {
+                action_s = crm_concat("turn", latest->action, ' ');
+            } else {
+                action_s = strdup(latest->action);
+            }
+
+            printf("%s was able to %s node %s on behalf of %s from %s at %s\n",
+                   latest->delegate ? latest->delegate : "We", action_s, latest->target,
+                   latest->client, latest->origin, ctime(&complete));
+
+            free(action_s);
+        }
+    }
+    return rc;
 }
 
 int
@@ -498,78 +576,9 @@ main(int argc, char **argv)
             }
             break;
         case 'H':
-            {
-                stonith_history_t *history, *hp, *latest = NULL;
-
-                rc = st->cmds->history(st, st_opts, target, &history, timeout);
-                for (hp = history; hp; hp = hp->next) {
-                    char *action_s = NULL;
-                    time_t complete = hp->completed;
-
-                    if (hp->state == st_done) {
-                        latest = hp;
-                    }
-
-                    if (quiet || !verbose) {
-                        continue;
-                    } else if (hp->action == NULL) {
-                        action_s = strdup("unknown");
-                    } else if (hp->action[0] != 'r') {
-                        action_s = crm_concat("turn", hp->action, ' ');
-                    } else {
-                        action_s = strdup(hp->action);
-                    }
-
-                    if (hp->state == st_failed) {
-                        printf("%s failed to %s node %s on behalf of %s from %s at %s\n",
-                               hp->delegate ? hp->delegate : "We", action_s, hp->target,
-                               hp->client, hp->origin, ctime(&complete));
-
-                    } else if (hp->state == st_done && hp->delegate) {
-                        printf("%s was able to %s node %s on behalf of %s from %s at %s\n",
-                               hp->delegate, action_s, hp->target,
-                               hp->client, hp->origin, ctime(&complete));
-
-                    } else if (hp->state == st_done) {
-                        printf("We were able to %s node %s on behalf of %s from %s at %s\n",
-                               action_s, hp->target, hp->client, hp->origin, ctime(&complete));
-                    } else {
-                        /* ocf:pacemaker:controld depends on "wishes to" being
-                         * in this output, when used with older versions of DLM
-                         * that don't report stateful_merge_wait
-                         */
-                        printf("%s at %s wishes to %s node %s - %d %d\n",
-                               hp->client, hp->origin, action_s, hp->target, hp->state, hp->completed);
-                    }
-
-                    free(action_s);
-                }
-
-                if (latest) {
-                    if (quiet) {
-                        printf("%d\n", latest->completed);
-                    } else {
-                        char *action_s = NULL;
-                        time_t complete = latest->completed;
-
-                        if (latest->action == NULL) {
-                            action_s = strdup("unknown");
-                        } else if (latest->action[0] != 'r') {
-                            action_s = crm_concat("turn", latest->action, ' ');
-                        } else {
-                            action_s = strdup(latest->action);
-                        }
-
-                        printf("%s was able to %s node %s on behalf of %s from %s at %s\n",
-                               latest->delegate ? latest->delegate : "We", action_s, latest->target,
-                               latest->client, latest->origin, ctime(&complete));
-
-                        free(action_s);
-                    }
-                }
-                break;
-            }                   /* closing bracket for -H case */
-    }                           /* closing bracket for switch case */
+            rc = show_history(st, target, timeout, quiet, verbose);
+            break;
+    }
 
   done:
     free(async_fence_data.name);
