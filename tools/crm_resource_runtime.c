@@ -1097,13 +1097,13 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
 
     /*
       grab full cib
-      determine resource state of list
+      determine originally active resources
       disable or ban
-      poll and and watch for resources to get stopped
+      poll cib and watch for affected resources to get stopped
       without --timeout, calculate the stop timeout for each step and wait for that
       if we hit --timeout or the service timeout, re-enable or un-ban, report failure and indicate which resources we couldn't take down
       if everything stopped, re-enable or un-ban
-      poll and and watch for resources to get stopped
+      poll cib and watch for affected resources to get started
       without --timeout, calculate the start timeout for each step and wait for that
       if we hit --timeout or the service timeout, report (different) failure and indicate which resources we couldn't bring back up
       report success
