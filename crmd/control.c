@@ -903,13 +903,12 @@ pe_cluster_option crmd_opts[] = {
      * defining RHEL7_COMPAT.
      */
 	{ "notification-agent", NULL, "string", NULL, "/dev/null", &check_script,
-          "Notification script or tool to be called after significant cluster events",
-          "Full path to a script or binary that will be invoked when resources start/stop/fail, fencing occurs or nodes join/leave the cluster.\n"
-          "Must exist on all nodes in the cluster."
+          "Deprecated",
+          "Use alert path in alerts section instead"
         },
 	{ "notification-recipient", NULL, "string", NULL, "", NULL,
-          "Destination for notifications (Optional)",
-          "Where should the supplied script send notifications to.  Useful to avoid hard-coding this in the script."
+          "Deprecated",
+          "Use recipient value in alerts section instead"
         },
 #endif
 
