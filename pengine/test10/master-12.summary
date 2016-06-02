@@ -6,8 +6,8 @@ Online: [ sel3 sel4 ]
      Masters: [ sel3 ]
      Slaves: [ sel4 ]
  Master/Slave Set: ms-sf [sf] (unique)
-     sf:0	(ocf::heartbeat:Stateful):	Started sel3
-     sf:1	(ocf::heartbeat:Stateful):	Started sel4
+     sf:0	(ocf::heartbeat:Stateful):	Slave sel3 
+     sf:1	(ocf::heartbeat:Stateful):	Slave sel4 
  fs0	(ocf::heartbeat:Filesystem):	Started sel3
 
 Transition Summary:
@@ -26,6 +26,6 @@ Online: [ sel3 sel4 ]
      Slaves: [ sel4 ]
  Master/Slave Set: ms-sf [sf] (unique)
      sf:0	(ocf::heartbeat:Stateful):	Master sel3
-     sf:1	(ocf::heartbeat:Stateful):	Started sel4
+     sf:1	(ocf::heartbeat:Stateful):	Slave sel4 
  fs0	(ocf::heartbeat:Filesystem):	Started sel3
 
