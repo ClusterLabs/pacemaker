@@ -839,7 +839,7 @@ stonith_action_async_done(mainloop_child_t * p, pid_t pid, int core, int signo, 
 static int
 internal_stonith_action_execute(stonith_action_t * action)
 {
-    int pid, status, len, rc = -EPROTO;
+    int pid, status = 0, len, rc = -EPROTO;
     int ret;
     int total = 0;
     int p_read_fd, p_write_fd;  /* parent read/write file descriptors */
