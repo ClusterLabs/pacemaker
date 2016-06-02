@@ -707,7 +707,7 @@ cli_resource_check(cib_t * cib_conn, resource_t *rsc)
             printf("\n  * The configuration specifies that '%s' should remain stopped\n", parent->id);
             need_nl++;
 
-        } else if(parent->variant > pe_clone && role != RSC_ROLE_MASTER) {
+        } else if(parent->variant > pe_clone && role == RSC_ROLE_SLAVE) {
             printf("\n  * The configuration specifies that '%s' should not be promoted\n", parent->id);
             need_nl++;
         }
