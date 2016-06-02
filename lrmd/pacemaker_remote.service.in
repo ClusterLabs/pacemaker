@@ -10,8 +10,8 @@ WantedBy=multi-user.target
 Type=simple
 KillMode=process
 NotifyAccess=none
-EnvironmentFile=-@sysconfdir@/sysconfig/pacemaker
-EnvironmentFile=-@sysconfdir@/sysconfig/sbd
+EnvironmentFile=-@CONFIGDIR@/pacemaker
+EnvironmentFile=-@CONFIGDIR@/sbd
 
 ExecStart=@sbindir@/pacemaker_remoted
 
