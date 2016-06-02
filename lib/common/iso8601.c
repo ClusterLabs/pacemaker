@@ -1001,6 +1001,8 @@ ha_set_tm_time(crm_time_t * target, struct tm *source)
     int h_offset = 0;
     int m_offset = 0;
 
+    target->duration = FALSE;
+
     if (source->tm_year > 0) {
         /* years since 1900 */
         target->years = 1900 + source->tm_year;
