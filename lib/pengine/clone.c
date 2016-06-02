@@ -528,7 +528,7 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
     if(rsc->variant == pe_master) {
         enum rsc_role_e role = configured_role(rsc);
 
-        if(role > RSC_ROLE_STOPPED && role < RSC_ROLE_MASTER) {
+        if(role == RSC_ROLE_SLAVE) {
             short_print(list_text, child_text, "Slaves (target-role)", NULL, options, print_data);
         } else {
             short_print(list_text, child_text, "Slaves", NULL, options, print_data);
