@@ -1,4 +1,3 @@
-10 of 16 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ sd01-0 sd01-1 ]
@@ -10,7 +9,7 @@ Online: [ sd01-0 sd01-1 ]
      cdev-pool-0-iscsi-lun-1	(ocf::vds-ok:iSCSILogicalUnit):	Started sd01-1 
  Master/Slave Set: ms-cdev-pool-0-drbd [cdev-pool-0-drbd]
      Masters: [ sd01-1 ]
-     Slaves (target-role): [ sd01-0 ]
+     Slaves: [ sd01-0 ]
  Clone Set: cl-ietd [ietd]
      Started: [ sd01-0 sd01-1 ]
  Clone Set: cl-vlan1-net [vlan1-net]
@@ -20,7 +19,7 @@ Online: [ sd01-0 sd01-1 ]
      vip-165	(ocf::heartbeat:IPaddr2):	Started sd01-1 
  Master/Slave Set: ms-cdev-pool-0-iscsi-vips-fw [cdev-pool-0-iscsi-vips-fw]
      Masters: [ sd01-1 ]
-     Slaves (target-role): [ sd01-0 ]
+     Slaves: [ sd01-0 ]
 
 Transition Summary:
  * Move    vip-164	(Started sd01-1 -> sd01-0)
@@ -104,7 +103,7 @@ Online: [ sd01-0 sd01-1 ]
      cdev-pool-0-iscsi-lun-1	(ocf::vds-ok:iSCSILogicalUnit):	Started sd01-0 
  Master/Slave Set: ms-cdev-pool-0-drbd [cdev-pool-0-drbd]
      Masters: [ sd01-0 ]
-     Slaves (target-role): [ sd01-1 ]
+     Slaves: [ sd01-1 ]
  Clone Set: cl-ietd [ietd]
      Started: [ sd01-0 sd01-1 ]
  Clone Set: cl-vlan1-net [vlan1-net]
@@ -114,5 +113,5 @@ Online: [ sd01-0 sd01-1 ]
      vip-165	(ocf::heartbeat:IPaddr2):	Started sd01-0 
  Master/Slave Set: ms-cdev-pool-0-iscsi-vips-fw [cdev-pool-0-iscsi-vips-fw]
      Masters: [ sd01-0 ]
-     Slaves (target-role): [ sd01-1 ]
+     Slaves: [ sd01-1 ]
 

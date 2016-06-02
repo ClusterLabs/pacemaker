@@ -1,4 +1,4 @@
-5 of 10 resources DISABLED and 0 BLOCKED from being started due to failures
+3 of 10 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ vbox4 ]
@@ -45,7 +45,7 @@ Online: [ vbox4 ]
 OFFLINE: [ vbox3 ]
 
  Master/Slave Set: drbd [drbd0]
-     Slaves (target-role): [ vbox4 ]
+     Slaves: [ vbox4 ]
      Stopped: [ vbox3 ]
  Clone Set: cman_clone [cman]
      Started: [ vbox4 ]

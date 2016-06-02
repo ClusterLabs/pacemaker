@@ -96,6 +96,7 @@ License:       GPLv2+ and LGPLv2+ and BSD
 Url:           http://www.clusterlabs.org
 Group:         System Environment/Daemons
 
+# eg. https://github.com/ClusterLabs/pacemaker/archive/8ae45302394b039fb098e150f156df29fc0cb576/pacemaker-8ae4530.tar.gz
 Source0:       https://github.com/%{github_owner}/%{name}/archive/%{commit}/%{name}-%{shortcommit}.tar.gz
 BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 AutoReqProv:   on
@@ -108,11 +109,6 @@ Requires:      %{name}-cli = %{version}-%{release}
 %if %{defined systemd_requires}
 %systemd_requires
 %endif
-
-%if 0%{?rhel} > 0
-ExclusiveArch: i386 i686 x86_64
-%endif
-
 
 # Required for core functionality (python-devel depends on python)
 BuildRequires: automake autoconf libtool pkgconfig libtool-ltdl-devel
@@ -301,10 +297,13 @@ manager for Corosync, CMAN and/or Linux-HA.
 find . -exec touch \{\} \;
 
 %build
+
+# Early versions of autotools (e.g. RHEL <= 5) do not support --docdir
+export docdir=%{pcmk_docdir}
+
 ./autogen.sh
 
-# RHEL <= 5 does not support --docdir
-docdir=%{pcmk_docdir} %{configure}                 \
+%{configure}                                       \
         %{?with_profiling:   --with-profiling}     \
         %{?with_coverage:    --with-coverage}      \
         %{!?with_cman:       --without-cman}       \
@@ -320,7 +319,7 @@ sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool
 sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 %endif
 
-make %{_smp_mflags} V=1 docdir=%{pcmk_docdir} all
+make %{_smp_mflags} V=1 all
 
 %install
 rm -rf %{buildroot}
@@ -342,9 +341,6 @@ chmod a+x %{buildroot}/%{_datadir}/pacemaker/tests/cts/CTSlab.py
 
 # These are not actually scripts
 find %{buildroot} -name '*.xml' -type f -print0 | xargs -0 chmod a-x
-find %{buildroot} -name '*.xsl' -type f -print0 | xargs -0 chmod a-x
-find %{buildroot} -name '*.rng' -type f -print0 | xargs -0 chmod a-x
-find %{buildroot} -name '*.dtd' -type f -print0 | xargs -0 chmod a-x
 
 # Don't package static libs
 find %{buildroot} -name '*.a' -type f -print0 | xargs -0 rm -f

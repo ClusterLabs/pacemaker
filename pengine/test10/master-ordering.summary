@@ -1,4 +1,3 @@
-4 of 17 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ webcluster01 ]
@@ -81,7 +80,7 @@ OFFLINE: [ webcluster02 ]
  intip_1_master	(ocf::heartbeat:IPaddr2):	Started webcluster01
  intip_2_slave	(ocf::heartbeat:IPaddr2):	Started webcluster01
  Master/Slave Set: ms_drbd_www [drbd_www]
-     Slaves (target-role): [ webcluster01 ]
+     Slaves: [ webcluster01 ]
      Stopped: [ webcluster02 ]
  Clone Set: clone_ocfs2_www [ocfs2_www] (unique)
      ocfs2_www:0	(ocf::heartbeat:Filesystem):	Stopped
@@ -89,7 +88,7 @@ OFFLINE: [ webcluster02 ]
  Clone Set: clone_webservice [group_webservice]
      Stopped: [ webcluster01 webcluster02 ]
  Master/Slave Set: ms_drbd_mysql [drbd_mysql]
-     Slaves (target-role): [ webcluster01 ]
+     Slaves: [ webcluster01 ]
      Stopped: [ webcluster02 ]
  fs_mysql	(ocf::heartbeat:Filesystem):	Stopped
 

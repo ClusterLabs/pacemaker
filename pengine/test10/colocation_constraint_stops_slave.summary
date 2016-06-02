@@ -1,11 +1,11 @@
-2 of 2 resources DISABLED and 0 BLOCKED from being started due to failures
+1 of 2 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ fc16-builder ]
 OFFLINE: [ fc16-builder2 ]
 
  Master/Slave Set: MASTER_RSC_A [NATIVE_RSC_A]
-     Slaves (target-role): [ fc16-builder ]
+     Slaves: [ fc16-builder ]
  NATIVE_RSC_B	(ocf::pacemaker:Dummy):	Started fc16-builder ( disabled ) 
 
 Transition Summary:
