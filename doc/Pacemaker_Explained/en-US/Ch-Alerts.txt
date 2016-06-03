@@ -1,0 +1,298 @@
+= Receiving Alerts for Cluster Events =
+
+//// 
+We prefer [[ch-alerts]], but older versions of asciidoc don't deal well
+with that construct for chapter headings
+////
+anchor:ch-alerts[Chapter 7, Receiving Alerts for Cluster Events]
+indexterm:[Resource,Alerts]
+
+A Pacemaker cluster is an event-driven system. In this context, an 'event'
+might be a resource failure or a configuration change, among others.
+
+
+
+
+
+
+[[s-alerts-configuration]]
+== Configuring Alerts via Alert-Agents ==
+
+As with resource-agents an external program (alert-agent) is required to pass alerts generated from cluster events to a recipient (IP address, email address, URI).
+
+When triggered, the alert-agent is fed with dynamically filled environment
+variables describing precisely the cluster event that occurred. By making
+smart usage of these variables in your alert-agent code, you can trigger
+any action.
+
+It is possible to use multiple alert-agents at the same time.
+
+Similarly as with resource-agents, +meta-attributes+ can be used to configure how pacemaker is treating the alert-agent (formatting of environment-variables, timeout-handling, ...).
+
+If an alert-agent needs additional configuration - again similar as with resource-agents - +instance-attributes+ can be added to be passed to the alert-agents as additional environment variables.
+
+For each of the configured alert-agents it is possible to configure multiple recipients. The alert-agents are called separately for each of the recipients configured.
+
+Instance- and meta-attributes can either be configured globally per alert-agent and/or per recipient.
+
+[NOTE]
+=====
+When there are multiple alert-agents and/or recipients configured on each cluster event there are multiple processes forked at the same time - for each alert-agent and each recipient one.
+
+Assuming that not all of these processes get scheduled right away this would lead to timestamps, being taken from withing these processes, would differ for a single cluster event. And they would be delayed.
+
+Thus pacemaker creates a u-second-resolution timestamp whenever a cluster event occurs and passes that to the alert-agents.
+
+Furthermore pacemaker as well passes an every time increased sequence-number whenever an alert-agent is called. The sequence-numbers are valid just withing one cluster-node. An alert created for a cluster event that happened later in time does reliably have a higher sequence number than those for cluster events that had happened prior to this event.
+=====
+
+[NOTE]
+=====
+The interface is realized as backward-compatible evolution of the interfaces previously provided with +ocf:pacemaker:Clustermon+ and *integrated-notifications*.
+To preserve script-compatibility the environment-variables passed to the alert-agents are available prepended +CRM_notify+ (compatibility version) as well as +CRM_alert+. And they implement a superset of those previous features.  
+=====
+
+[WARNING]
+=====
+Although the interface is realized as backward-compatible evolution of the interface previously provided with +ocf:pacemaker:Clustermon+ there is still one pitfall.
+
++Clustermon+ is executed as a resource by lrmd and thus is running under root-privileges - and so do the external-scripts being called. The alert-agents are currently forked by crmd and are thus running as user hacluster. While running the alert-agents with reduced privileges is in general a security benefit, existent scripts might not be able to cope with not being executed as root.
+
+Configuring +sudo+ accordingly for the alert-agent-executable or the use of the sticky-bit on it might be a way around.
+=====
+
+[[s-alerts-examples]]
+== Using the Example Alert-Agents ==
+There are several example alert-agents provided in the the +.../extra/alerts+ directory of the pacemaker-source-tree.
+
+.Simple Example logging Cluster Events to a File
+=====
+[source,XML]
+-----
+<configuration>
+    <alerts>
+        <alert id="alert_sample" path="/path/to/pcmk_alert_sample.sh">
+            <instance_attributes id="config_for_pcmk_alert_sample">
+                <nvpair id="debug_option_1" name="debug_exec_order" value="false"/>
+            </instance_attributes>
+            <meta_attributes id="config_for_timestamp">
+                <nvpair id="ts_fmt" name="timestamp-format" value="%H:%M:%S.%06N"/>
+            </meta_attributes>
+            <recipient id="logfile_destination" value="/path/to/logfile"/>
+        </alert>
+    </alerts>
+</configuration>
+-----
+=====
+
+.Sending Cluster Events as SNMP Traps
+=====
+[source,XML]
+-----
+<configuration>
+    <alerts>
+        <alert id="snmp_alert" path="/path/to/pcmk_snmp_helper.sh">
+            <instance_attributes id="config_for_snmp_helper">
+                <nvpair id="trap_node_states" name="trap_node_states" value="all"/>
+            </instance_attributes>
+            <meta_attributes id="config_for_timestamp">
+                <nvpair id="ts_fmt" name="timestamp-format"
+                    value=""%Y-%m-%d,%H:%M:%S.%01N""/>
+            </meta_attributes>
+            <recipient id="snmp_destination" value="192.168.1.2"/>
+        </alert>
+    </alerts>
+</configuration>
+-----
+Alternatively attributes can be added to the recipient-section as well.
+[source,XML]
+-----
+<configuration>
+    <alerts>
+        <alert id="snmp_alert" path="/path/to/pcmk_snmp_helper.sh">
+            <recipient id="snmp_destination" value="192.168.1.2">
+                <instance_attributes id="config_for_snmp_helper">
+                    <nvpair id="trap_node_states" name="trap_node_states" value="all"/>
+                </instance_attributes>
+                <meta_attributes id="config_for_timestamp">
+                    <nvpair id="ts_fmt" name="timestamp-format"
+                        value=""%Y-%m-%d,%H:%M:%S.%01N""/>
+                </meta_attributes>
+            </recipient>
+        </alert>
+    </alerts>
+</configuration>
+-----
+=====
+
+.Sending Cluster Events as E-Mails
+=====
+[source,XML]
+-----
+<configuration>
+    <alerts>
+        <alert id="snmp_alert" path="/path/to/pcmk_snmp_helper.sh">
+            <instance_attributes id="config_for_snmp_helper">
+                <nvpair id="trap_node_states" name="trap_node_states" value="all"/>
+            </instance_attributes>
+            <meta_attributes id="config_for_timestamp">
+                <nvpair id="ts_fmt" name="timestamp-format"
+                    value=""%Y-%m-%d,%H:%M:%S.%01N""/>
+            </meta_attributes>
+            <recipient id="snmp_destination" value="192.168.1.2"/>
+        </alert>
+    </alerts>
+</configuration>
+-----
+=====
+
+[[s-alerts-reference]]
+== Alerts - Reference ==
+
+.Environment Variables Passed to the External Agent - Common
+
+[width="95%",cols="m,2>",options="header",align="center"]
+|=========================================================
+
+|Environment Variable
+|Description
+
+|CRM_alert_kind
+|Indicates the type of alert. One of `node`, `fencing`, `resource`
+ indexterm:[Environment Variable,CRM_alert_,kind]
+
+|CRM_alert_version
+|Indicates the version of Pacemaker sending the alert.
+ indexterm:[Environment Variable,CRM_alert_,version]
+
+|CRM_alert_recipient
+|The value specified in the recipient section within an alert section
+ indexterm:[Environment Variable,CRM_alert_,recipient]
+
+|CRM_alert_node_sequence
+| A sequence number increased whenever an alert is being issued on the
+local node; Use to reference the order in which alerts have been issued
+by pacemaker. Be aware that it doesn't have a cluster-wide meaning.
+ indexterm:[Environment Variable,CRM_alert_node_,sequence]
+
+|CRM_alert_timestamp
+| A timestamp that is created prior to spawning out the process which
+executes the alert-agent; The format is configurable via a
+format-string as with the `date` command - including the nano-second part.
+ indexterm:[Environment Variable,CRM_alert_,timestamp]
+
+|=========================================================
+
+.Environment Variables - Additional for `node` alerts
+
+[width="95%",cols="m,2>",options="header",align="center"]
+|=========================================================
+
+|Environment Variable
+|Description
+
+|CRM_alert_node
+| The node name for which the status changed
+ indexterm:[Environment Variable,CRM_alert_,node]
+
+|CRM_alert_nodeid
+| The node id for which the status changed
+ indexterm:[Environment Variable,CRM_alert_,nodeid]
+
+|CRM_alert_desc
+| The current node state; One of `member` or `lost`
+ indexterm:[Environment Variable,CRM_alert_,desc]
+
+|=========================================================
+
+.Environment Variables - Additional for `fencing` alerts
+
+[width="95%",cols="m,2>",options="header",align="center"]
+|=========================================================
+
+|Environment Variable
+|Description
+
+|CRM_alert_node
+| The node name the fencing operation is requested for
+ indexterm:[Environment Variable,CRM_alert_,node]
+
+|CRM_alert_task
+| The fencing operation that was requested
+ indexterm:[Environment Variable,CRM_alert_,task]
+
+|CRM_alert_rc
+| The numerical return code of the operation
+ indexterm:[Environment Variable,CRM_alert_,rc]
+
+|CRM_alert_desc
+| A summary of requested fencing operation, by origin, on target
+adding textual output relevant error code of the fencing operation (if any)
+ indexterm:[Environment Variable,CRM_alert_,desc]
+
+
+|=========================================================
+
+.Environment Variables - Additional for `resource` alerts
+
+[width="95%",cols="m,2>",options="header",align="center"]
+|=========================================================
+
+|Environment Variable
+|Description
+
+|CRM_alert_node
+| The node name for which the status changed
+ indexterm:[Environment Variable,CRM_alert_,node]
+
+|CRM_alert_rsc
+| The name of the resource that changed the status
+ indexterm:[Environment Variable,CRM_alert_,rsc]
+
+|CRM_alert_task
+| The operation that caused the status change
+ indexterm:[Environment Variable,CRM_alert_,task]
+
+|CRM_alert_interval
+| The interval of a resource operation
+ indexterm:[Environment Variable,CRM_alert_,interval]
+
+|CRM_alert_rc
+| The numerical return code of the operation
+ indexterm:[Environment Variable,CRM_alert_,rc]
+
+|CRM_alert_target_rc
+| The expected numerical return code of the operation
+ indexterm:[Environment Variable,CRM_alert_,target_rc]
+
+|CRM_alert_status
+| The numerical representation of the status of the operation
+ indexterm:[Environment Variable,CRM_alert_,status]
+
+|CRM_alert_desc
+| The textual output relevant error code of the operation (if any)
+that caused the status change
+ indexterm:[Environment Variable,CRM_alert_,desc]
+
+|=========================================================
+
+
+.Meta-Attributes
+
+[width="95%",cols="m,2>",options="header",align="center"]
+|=========================================================
+
+|Meta-Attribute
+|Description
+
+|timestamp-format
+| Format string as used with `date` command - including the nano-second part - defining the format in which the timestamp of a cluster event is passed to the alert-agent
+ indexterm:[meta-attribute,timestamp-format]
+ 
+|timeout
+| Alert-Agents are forked as separate processes. So to prevent them from hogging system-resources they are observed and terminated if they don't complete within the timeout specified.
+ indexterm:[meta-attribute,timeout]
+
+
+|=========================================================
+
