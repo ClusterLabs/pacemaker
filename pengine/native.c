@@ -1350,7 +1350,7 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 
         if(rsc != top) {
             /* Only create these constraints once, rsc is almost certainly cloned */
-            clear_bit_recursive(top, pe_rsc_have_unfencing);
+            set_bit_recursive(top, pe_rsc_have_unfencing);
         }
 
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
