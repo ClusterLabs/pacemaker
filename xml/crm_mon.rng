@@ -10,56 +10,58 @@
         <element name="crm_mon">
             <attribute name="version"> <text/> </attribute>
             <element name="summary">
-                <optional>
-                    <element name="last_update">
-                        <!-- crm_mon shows dates like "Mon Apr 13 16:06:27 2015" not
-                             the XSD dateTime like "2015-04-13T16:06:27-05:00" -->
-                        <attribute name="time"> <text/> </attribute>
-                    </element>
-                </optional>
-                <optional>
-                    <element name="last_change">
-                        <attribute name="time"> <text/> </attribute>
-                        <attribute name="user"> <text/> </attribute>
-                        <attribute name="client"> <text/> </attribute>
-                        <attribute name="origin"> <text/> </attribute>
-                    </element>
-                </optional>
-                <optional>
-                    <element name="stack">
-                        <attribute name="type"> <text/> </attribute>
-                    </element>
-                </optional>
-                <element name="current_dc">
-                    <attribute name="present"> <data type="boolean" /> </attribute>
+                <interleave>
                     <optional>
-                        <group>
-                            <attribute name="version"> <text/> </attribute>
-                            <attribute name="name"> <text/> </attribute>
-                            <!-- pacemaker IDs are user-defined strings that are
-                                 not as restricted as the XSD ID type -->
-                            <attribute name="id"> <text/> </attribute>
-                            <attribute name="with_quorum"> <data type="boolean" /> </attribute>
-                        </group>
+                        <element name="last_update">
+                            <!-- crm_mon shows dates like "Mon Apr 13 16:06:27 2015" not
+                                 the XSD dateTime like "2015-04-13T16:06:27-05:00" -->
+                            <attribute name="time"> <text/> </attribute>
+                        </element>
                     </optional>
-                </element>
-                <element name="nodes_configured">
-                    <attribute name="number"> <data type="int" /> </attribute>
-                    <choice>
-                        <attribute name="expected_votes"> <data type="int" /> </attribute>
-                        <attribute name="expected_votes"> <value>unknown</value> </attribute>
-                    </choice>
-                </element>
-                <element name="resources_configured">
-                    <attribute name="number"> <data type="int" /> </attribute>
-                </element>
-                <optional>
-                    <element name="cluster_options">
-                        <attribute name="stonith-enabled"> <data type="boolean" /> </attribute>
-                        <attribute name="symmetric-cluster"> <data type="boolean" /> </attribute>
-                        <attribute name="no-quorum-policy"> <text/> </attribute>
+                    <optional>
+                        <element name="last_change">
+                            <attribute name="time"> <text/> </attribute>
+                            <attribute name="user"> <text/> </attribute>
+                            <attribute name="client"> <text/> </attribute>
+                            <attribute name="origin"> <text/> </attribute>
+                        </element>
+                    </optional>
+                    <optional>
+                        <element name="stack">
+                            <attribute name="type"> <text/> </attribute>
+                        </element>
+                    </optional>
+                    <element name="current_dc">
+                        <attribute name="present"> <data type="boolean" /> </attribute>
+                        <optional>
+                            <group>
+                                <attribute name="version"> <text/> </attribute>
+                                <attribute name="name"> <text/> </attribute>
+                                <!-- pacemaker IDs are user-defined strings that are
+                                     not as restricted as the XSD ID type -->
+                                <attribute name="id"> <text/> </attribute>
+                                <attribute name="with_quorum"> <data type="boolean" /> </attribute>
+                            </group>
+                        </optional>
                     </element>
-                </optional>
+                    <element name="nodes_configured">
+                        <attribute name="number"> <data type="int" /> </attribute>
+                        <choice>
+                            <attribute name="expected_votes"> <data type="int" /> </attribute>
+                            <attribute name="expected_votes"> <value>unknown</value> </attribute>
+                        </choice>
+                    </element>
+                    <element name="resources_configured">
+                        <attribute name="number"> <data type="int" /> </attribute>
+                    </element>
+                    <optional>
+                        <element name="cluster_options">
+                            <attribute name="stonith-enabled"> <data type="boolean" /> </attribute>
+                            <attribute name="symmetric-cluster"> <data type="boolean" /> </attribute>
+                            <attribute name="no-quorum-policy"> <text/> </attribute>
+                        </element>
+                    </optional>
+                </interleave>
             </element>
             <element name="nodes">
                 <zeroOrMore>
