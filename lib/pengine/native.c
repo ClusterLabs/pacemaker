@@ -579,7 +579,7 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
 
     CRM_LOG_ASSERT(offset > 0);
     if(flagOffset > 0) {
-        status_print("%s ( %s )%s%s", buffer, flagBuffer, desc?" ":"", desc?desc:"");
+        status_print("%s (%s)%s%s", buffer, flagBuffer, desc?" ":"", desc?desc:"");
     } else {
         status_print("%s%s%s", buffer, desc?" ":"", desc?desc:"");
     }
