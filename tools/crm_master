@@ -18,13 +18,13 @@ while true ; do
 	    -r|--resource) OCF_RESOURCE_INSTANCE=$2; shift; shift;;
 	    --version) crm_attribute --version; exit 0;;
 	    --help) 
-		echo "crm_master - A convenience wrapper for crm_attribute"; 
-		echo ""; 
-		echo "Set, update or delete a resource's promotion score"; 
-		echo "";
+		echo "crm_master - A convenience wrapper for crm_attribute"
+		echo ""
+		echo "Set, update or delete a resource's promotion score"
+		echo ""
 		echo "This program should normally only be invoked from inside an OCF resource agent"
-		echo ""; 
-		echo "Usage: crm_master command [options]"; 
+		echo ""
+		echo "Usage: crm_master command [options]"
 		echo "Options:"
 		echo " --help 		This text"
 		echo " --version 		Version information"
