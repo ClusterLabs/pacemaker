@@ -21,7 +21,7 @@
 #
 ##############################################################################
 # This sample script assumes that only users who already have root access can
-# edit the CIB. Otherwise, a malicious user could run commands as root by
+# edit the CIB. Otherwise, a malicious user could run commands as hacluster by
 # inserting shell code into the trap_options variable. If that is not the case
 # in your environment, you should edit this script to remove or validate
 # trap_options.
@@ -31,10 +31,12 @@
 # <configuration>
 #   <alerts>
 #     <alert id="snmp_alert" path="/path/to/pcmk_snmp_helper.sh">
-#       <instance_attributes id="insta_9">
-#         <nvpair id="trap_nodes" name="trap_node" value="no"/>
-#         <nvpair id="trap_fencing" name="trap_fencing" value="no"/>
+#       <instance_attributes id="config_for_snmp_helper">
+#         <nvpair id="trap_node_states" name="trap_node_states" value="all"/>
 #       </instance_attributes>
+#       <meta_attributes id="config_for_timestamp">
+#         <nvpair id="ts_fmt" name="timestamp-format" value=""%Y-%m-%d,%H:%M:%S.%01N""/>
+#       </meta_attributes>
 #       <recipient id="snmp_destination" value="192.168.1.2"/>
 #     </alert>
 #   </alerts>
@@ -45,10 +47,12 @@
 #   <alerts>
 #     <alert id="snmp_alert" path="/path/to/pcmk_snmp_helper.sh">
 #       <recipient id="snmp_destination" value="192.168.1.2">
-#        <instance_attributes id="insta_9">
-#         <nvpair id="trap_nodes" name="trap_node" value="no"/>
-#         <nvpair id="trap_fencing" name="trap_fencing" value="no"/>
-#        </instance_attributes>
+#         <instance_attributes id="config_for_snmp_helper">
+#           <nvpair id="trap_node_states" name="trap_node_states" value="all"/>
+#         </instance_attributes>
+#         <meta_attributes id="config_for_timestamp">
+#           <nvpair id="ts_fmt" name="timestamp-format" value=""%Y-%m-%d,%H:%M:%S.%01N""/>
+#         </meta_attributes>
 #       </recipient>
 #     </alert>
 #   </alerts>
@@ -65,86 +69,94 @@ trap_binary_default="/usr/bin/snmptrap"
 trap_version_default="2c"
 trap_options_default=""
 trap_community_default="public"
-trap_node_default="true"
+trap_node_states_default="all"
 trap_fencing_tasks_default="all"
 trap_resource_tasks_default="all"
-trap_only_monitor_failed_default="true"
+trap_monitor_success_default="false"
+trap_add_hires_timestamp_oid_default="true"
 
 : ${trap_binary=${trap_binary_default}}
 : ${trap_version=${trap_version_default}}
 : ${trap_options=${trap_options_default}}
 : ${trap_community=${trap_community_default}}
-: ${trap_node=${trap_node_default}}
+: ${trap_node_states=${trap_node_states_default}}
 : ${trap_fencing_tasks=${trap_fencing_tasks_default}}
 : ${trap_resource_tasks=${trap_resource_tasks_default}}
-: ${trap_only_monitor_failed=${trap_only_monitor_failed_default}}
+: ${trap_monitor_success=${trap_monitor_success_default}}
+: ${trap_add_hires_timestamp_oid=${trap_add_hires_timestamp_oid_default}}
 
-#
-is_match_tasks() {
-    trap_tasks=`echo $1 | tr ',' ' '`
+if [ "${trap_add_hires_timestamp_oid}" = "true" ]
+    hires_timestamp="HOST-RESOURCES-MIB::hrSystemDate s \"${CRM_alert_timestamp}\""
+fi
 
-    if [ "${trap_tasks}" = "all" ]; then
+is_in_list() {
+    item_list=`echo "$1" | tr ',' ' '`
+
+    if [ "${item_list}" = "all" ]; then
         return 0
-    else 
-        for act in $trap_tasks
+    else
+        for act in $item_list
         do
-            act=`echo $act | tr A-Z a-z`
-            [ "$act" != "${CRM_alert_task}" ] && continue
+            act=`echo "$act" | tr A-Z a-z`
+            [ "$act" != "$2" ] && continue
             return 0
         done
     fi
     return 1
 }
-#
+
 case "$CRM_alert_kind" in
     node)
-        if [ "${trap_node}" = "true" ]; then
-    	    "${trap_binary}" -v "${trap_version}" ${trap_options} \
-		-c "${trap_community}" "${CRM_alert_recipient}" "" \
-		PACEMAKER-MIB::pacemakerNotificationTrap \
-		PACEMAKER-MIB::pacemakerNotificationNode s "${CRM_alert_node}" \
-		PACEMAKER-MIB::pacemakerNotificationDescription s "${CRM_alert_desc}"
-        fi
-	;;
-    fencing)
-        is_match_tasks ${trap_fencing_tasks}
+        is_in_list "${trap_node_states}" "${CRM_alert_desc}"
         [ $? -ne 0 ] && exit 0
 
         "${trap_binary}" -v "${trap_version}" ${trap_options} \
-		-c "${trap_community}" "${CRM_alert_recipient}" "" \
-		PACEMAKER-MIB::pacemakerNotificationTrap \
-		PACEMAKER-MIB::pacemakerNotificationNode s "${CRM_alert_node}" \
-		PACEMAKER-MIB::pacemakerNotificationOperation s "${CRM_alert_task}" \
-		PACEMAKER-MIB::pacemakerNotificationDescription s "${CRM_alert_desc}" \
-		PACEMAKER-MIB::pacemakerNotificationReturnCode i ${CRM_alert_rc}
-	;;
+        -c "${trap_community}" "${CRM_alert_recipient}" "" \
+        PACEMAKER-MIB::pacemakerNotificationTrap \
+        PACEMAKER-MIB::pacemakerNotificationNode s "${CRM_alert_node}" \
+        PACEMAKER-MIB::pacemakerNotificationDescription s "${CRM_alert_desc}" \
+        ${hires_timestamp}
+        ;;
+    fencing)
+        is_in_list "${trap_fencing_tasks}" "${CRM_alert_task}"
+        [ $? -ne 0 ] && exit 0
+
+        "${trap_binary}" -v "${trap_version}" ${trap_options} \
+        -c "${trap_community}" "${CRM_alert_recipient}" "" \
+        PACEMAKER-MIB::pacemakerNotificationTrap \
+        PACEMAKER-MIB::pacemakerNotificationNode s "${CRM_alert_node}" \
+        PACEMAKER-MIB::pacemakerNotificationOperation s "${CRM_alert_task}" \
+        PACEMAKER-MIB::pacemakerNotificationDescription s "${CRM_alert_desc}" \
+        PACEMAKER-MIB::pacemakerNotificationReturnCode i ${CRM_alert_rc} \
+        ${hires_timestamp}
+        ;;
     resource)
-        is_match_tasks ${trap_resource_tasks}
+        is_in_list "${trap_resource_tasks}" "${CRM_alert_task}"
         [ $? -ne 0 ] && exit 0
 
         case "${CRM_alert_desc}" in
-	    Cancelled) ;;
-	    *)
-                if [ "${trap_only_monitor_failed}" = "true" ]; then
-                    if [[ ${CRM_alert_rc} -eq 0 && "${CRM_alert_task}" == "monitor" ]]; then
-                        exit;
-                    fi
+        Cancelled) ;;
+        *)
+            if [ "${trap_monitor_success}" = "false" ]; then
+                if [[ ${CRM_alert_rc} -eq 0 && "${CRM_alert_task}" == "monitor" ]]; then
+                    exit;
                 fi
+            fi
 
-    	        "${trap_binary}" -v "${trap_version}" ${trap_options} \
-			-c "${trap_community}" "${CRM_alert_recipient}" "" \
-			PACEMAKER-MIB::pacemakerNotificationTrap \
-			PACEMAKER-MIB::pacemakerNotificationNode s "${CRM_alert_node}" \
-			PACEMAKER-MIB::pacemakerNotificationResource s "${CRM_alert_rsc}" \
-			PACEMAKER-MIB::pacemakerNotificationOperation s "${CRM_alert_task}" \
-			PACEMAKER-MIB::pacemakerNotificationDescription s "${CRM_alert_desc}" \
-			PACEMAKER-MIB::pacemakerNotificationStatus i ${CRM_alert_status} \
-			PACEMAKER-MIB::pacemakerNotificationReturnCode i ${CRM_alert_rc} \
-			PACEMAKER-MIB::pacemakerNotificationTargetReturnCode i ${CRM_alert_target_rc}
-		    ;;
+            "${trap_binary}" -v "${trap_version}" ${trap_options} \
+            -c "${trap_community}" "${CRM_alert_recipient}" "" \
+            PACEMAKER-MIB::pacemakerNotificationTrap \
+            PACEMAKER-MIB::pacemakerNotificationNode s "${CRM_alert_node}" \
+            PACEMAKER-MIB::pacemakerNotificationResource s "${CRM_alert_rsc}" \
+            PACEMAKER-MIB::pacemakerNotificationOperation s "${CRM_alert_task}" \
+            PACEMAKER-MIB::pacemakerNotificationDescription s "${CRM_alert_desc}" \
+            PACEMAKER-MIB::pacemakerNotificationStatus i ${CRM_alert_status} \
+            PACEMAKER-MIB::pacemakerNotificationReturnCode i ${CRM_alert_rc} \
+            PACEMAKER-MIB::pacemakerNotificationTargetReturnCode i ${CRM_alert_target_rc} \
+            ${hires_timestamp}
+            ;;
         esac
-	;;
+        ;;
     *)
         ;;
-
 esac
