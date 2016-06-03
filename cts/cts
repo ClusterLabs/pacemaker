@@ -302,7 +302,7 @@ elif [ $summary = 1 ]; then
 	    *) cat -n $f | grep $patterns
 		;;
 	esac
-	echo ""
+	echo
     done
 
 elif [ $watch = 1 ]; then

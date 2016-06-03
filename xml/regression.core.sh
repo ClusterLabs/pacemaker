@@ -78,7 +78,7 @@ function do_test {
     if [ $rc2 != 0 ]; then
 	echo "	* Failed"
 	diff $diff_opts $expected $output 2>/dev/null >> $failed
-	echo "" >> $failed
+	echo >> $failed
 	num_failed=`expr $num_failed + 1`
     else 
 	rm $output

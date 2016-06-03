@@ -17,23 +17,23 @@ fi
 
 function helptext() {
     echo "cluster-helper - A tool for running commands on multiple hosts"
-    echo ""
+    echo
     echo "Attempt to use pdsh, qarsh, or ssh (in that order) to execute commands"
     echo "on mutiple hosts"
-    echo ""
+    echo
     echo "DSH groups can be configured and specified with -g instead of listing"
     echo "the individual hosts every time"
-    echo ""
+    echo
     echo "Usage: cluster-helper [options] [command]"
-    echo ""
+    echo
     echo "Options:"
     echo "--ssh            Force the use of ssh instead of qarsh even if it available"
     echo "-g, --group      Specify the group to operate on/with"
     echo "-w, --host       Specify a host to operate on/with.  May be specified multiple times"
     echo "-f, --format     Specifiy the output format When listing hosts or group contents"
     echo "                 Allowed values: [oneline], long, short, pdsh, bullet"
-    echo ""
-    echo ""
+    echo
+    echo
     echo "Commands:"
     echo "--list   format  List the contents of a group in the specified format"
     echo "--add    name    Add supplied (-w) hosts to the named group"
@@ -42,11 +42,11 @@ function helptext() {
     echo "                 the specified command on the hosts or group"
     echo "--xargs          Run the supplied command having replaced any occurances"
     echo "                 of {} with the node name"
-    echo ""
+    echo
     echo "--copy file(s) host:file   Pass subsequent arguments to scp or qacp"
     echo "                           Any occurances of {} are replaced with the node name"
     echo "--key            Install an ssh key"
-    echo ""
+    echo
     exit $1
 }
 
@@ -95,13 +95,13 @@ function expand() {
 	( for h in $hosts; do
 		echo $h | sed 's:\..*::'
 		done ) | tr '\n' ' '
-	echo ""
+	echo
 	
     elif [ "x$hosts" != x -a $fmt = pdsh ]; then
 	( for h in $hosts; do
 		echo "-w $h"
 	    done ) | tr '\n' ' '
-	echo ""
+	echo
 	
     elif [ "x$hosts" != x -a $fmt = long ]; then
 	for h in $hosts; do
