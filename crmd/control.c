@@ -1076,7 +1076,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         fsa_cluster_name = strdup(value);
     }
 
-    alerts = output?first_named_child(output, XML_CIB_TAG_ALERTS):NULL;
+    alerts = first_named_child(output, XML_CIB_TAG_ALERTS);
     parse_notifications(alerts);
 
     set_bit(fsa_input_register, R_READ_CONFIG);

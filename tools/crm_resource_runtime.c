@@ -589,21 +589,20 @@ cli_delete_attr(cib_t * cib_conn, const char * host_uname, const char * attr_nam
                 pe_working_set_t * data_set)
 {
     node_t *node = pe_find_node(data_set->nodes, host_uname);
+    gboolean is_remote = FALSE;
 
-    if (node == NULL) {
-        CMD_ERR("Error deleting attribute '%s': node '%s' is unknown", attr_name, host_uname);
-        return -ENXIO;
-    }
-
-#if !HAVE_ATOMIC_ATTRD
-    if (is_remote_node(node)) {
+    if (node && is_remote_node(node)) {
+#if HAVE_ATOMIC_ATTRD
+        is_remote = TRUE;
+#else
         /* Talk directly to cib for remote nodes if it's legacy attrd */
         return delete_attr_delegate(cib_conn, cib_sync_call, XML_CIB_TAG_STATUS, node->details->id, NULL, NULL,
                                     NULL, attr_name, NULL, FALSE, NULL);
-    }
 #endif
-    return attrd_update_delegate(NULL, 'D', node->details->uname, attr_name, NULL, XML_CIB_TAG_STATUS, NULL,
-                                 NULL, NULL, node ? is_remote_node(node) : FALSE);
+    }
+    return attrd_update_delegate(NULL, 'D', host_uname, attr_name, NULL,
+                                 XML_CIB_TAG_STATUS, NULL, NULL, NULL,
+                                 is_remote);
 }
 
 int
