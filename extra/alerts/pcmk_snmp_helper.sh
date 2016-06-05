@@ -51,7 +51,7 @@
 #           <nvpair id="trap_node_states" name="trap_node_states" value="all"/>
 #         </instance_attributes>
 #         <meta_attributes id="config_for_timestamp">
-#           <nvpair id="ts_fmt" name="timestamp-format" value=""%Y-%m-%d,%H:%M:%S.%01N""/>
+#           <nvpair id="ts_fmt" name="timestamp-format" value="%Y-%m-%d,%H:%M:%S.%01N"/>
 #         </meta_attributes>
 #       </recipient>
 #     </alert>
@@ -85,8 +85,8 @@ trap_add_hires_timestamp_oid_default="true"
 : ${trap_monitor_success=${trap_monitor_success_default}}
 : ${trap_add_hires_timestamp_oid=${trap_add_hires_timestamp_oid_default}}
 
-if [ "${trap_add_hires_timestamp_oid}" = "true" ]
-    hires_timestamp="HOST-RESOURCES-MIB::hrSystemDate s \"${CRM_alert_timestamp}\""
+if [ "${trap_add_hires_timestamp_oid}" = "true" ]; then
+    hires_timestamp="HOST-RESOURCES-MIB::hrSystemDate s ${CRM_alert_timestamp}"
 fi
 
 is_in_list() {
