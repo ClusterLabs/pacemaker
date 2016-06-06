@@ -530,7 +530,7 @@ crmd_ha_msg_dispatch(ll_cluster_t * cluster_conn, gpointer user_data)
         if (cluster_conn->llc_ops->msgready(cluster_conn) == 0) {
             crm_trace("no message ready yet");
         }
-        /* invoke the callbacks but dont block */
+        /* invoke the callbacks but don't block */
         cluster_conn->llc_ops->rcvmsg(cluster_conn, 0);
     }
 

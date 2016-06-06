@@ -1497,7 +1497,7 @@ do_lrm_invoke(long long action,
         /* The lrmd can not fail a resource, it does not understand the
          * concept of success or failure in relation to a resource, it simply
          * executes operations and reports the results. We determine what a failure is.
-         * Becaues of this, if we want to fail a resource we have to fake what we
+         * Because of this, if we want to fail a resource we have to fake what we
          * understand a failure to look like.
          *
          * To do this we create a fake lrmd operation event for the resource
