@@ -63,7 +63,7 @@ enum crmd_fsa_state {
                                  */
 
     S_HALT,                     /* Freeze - dont do anything
-                                 * Something ad happened that needs the admin to fix
+                                 * Something bad happened that needs the admin to fix
                                  * Wait for I_ELECTION
                                  */
 
