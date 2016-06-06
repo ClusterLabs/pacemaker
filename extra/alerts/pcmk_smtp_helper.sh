@@ -33,18 +33,26 @@
 #   </alerts>
 # </configuration>
 
+email_recipient="${CRM_alert_recipient}"
+
 email_client_default="sendmail"
 email_sender_default="hacluster"
+email_recipient_default="root"
 
 : ${email_client=${email_client_default}}
 : ${email_sender=${email_sender_default}}
+: ${email_recipient=${email_recipient_default}}
 
 node_name=`uname -n`
 cluster_name=`crm_attribute --query -n cluster-name -q`
 email_body=`env | grep CRM_alert_`
 
-if [ -z ${email_sender##*@*} ]; then
+if [ ! -z "${email_sender##*@*}" ]; then
     email_sender="${email_sender}@${node_name}"
+fi
+
+if [ ! -z "${email_recipient##*@*}" ]; then
+    email_recipient="${email_recipient}@${node_name}"
 fi
 
 if [ -z ${CRM_alert_version} ]; then
@@ -85,10 +93,13 @@ else
 
     esac
 
-    if [ ! -z ${email_subject} ]; then
+    if [ ! -z "${email_subject}" ]; then
         case $email_client in
             sendmail)
-                sendmail -F "${email_sender}" "${CRM_alert_recipient}" <<__EOF__
+                sendmail -t -r ${email_sender} <<__EOF__
+From: ${email_sender}
+To: ${email_recipient}
+Return-Path: ${email_sender}
 Subject: ${email_subject}
 
 ${email_body}
@@ -97,4 +108,5 @@ __EOF__
             *)
                 ;;
         esac
+    fi
 fi
