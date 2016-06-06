@@ -184,7 +184,7 @@ do_dc_join_offer_all(long long action,
     }
     g_hash_table_foreach(crm_peer_cache, join_make_offer, NULL);
 
-    /* dont waste time by invoking the PE yet; */
+    /* don't waste time by invoking the PE yet; */
     crm_info("join-%d: Waiting on %d outstanding join acks",
              current_join_id, crmd_join_phase_count(crm_join_welcomed));
 }
@@ -251,7 +251,7 @@ do_dc_join_offer_one(long long action,
      */
     abort_transition(INFINITY, tg_restart, "Node join", NULL);
 
-    /* dont waste time by invoking the pe yet; */
+    /* don't waste time by invoking the pe yet; */
     crm_debug("Waiting on %d outstanding join acks for join-%d",
               crmd_join_phase_count(crm_join_welcomed), current_join_id);
 }
@@ -366,7 +366,7 @@ do_dc_join_filter_offer(long long action,
 
 
     if (check_join_state(cur_state, __FUNCTION__) == FALSE) {
-        /* dont waste time by invoking the PE yet; */
+        /* don't waste time by invoking the PE yet; */
         crm_debug("join-%d: Still waiting on %d outstanding offers",
                   join_id, crmd_join_phase_count(crm_join_welcomed));
     }
@@ -519,7 +519,7 @@ do_dc_join_ack(long long action,
              join_id, CRMD_JOINSTATE_MEMBER, join_from);
 
     /* update CIB with the current LRM status from the node
-     * We dont need to notify the TE of these updates, a transition will
+     * We don't need to notify the TE of these updates, a transition will
      *   be started in due time
      */
     erase_status_tag(join_from, XML_CIB_TAG_LRM, cib_scope_local);

@@ -65,7 +65,7 @@ do_cl_join_announce(long long action,
      * left the CCM list
      */
 
-    /* dont announce if we're in one of these states */
+    /* don't announce if we're in one of these states */
     if (cur_state != S_PENDING) {
         crm_warn("Not announcing cluster join because in state %s",
                  fsa_state2string(cur_state));

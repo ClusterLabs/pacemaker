@@ -62,7 +62,7 @@ enum crmd_fsa_state {
                                  * state of the cluster a reality
                                  */
 
-    S_HALT,                     /* Freeze - dont do anything
+    S_HALT,                     /* Freeze - don't do anything
                                  * Something bad happened that needs the admin to fix
                                  * Wait for I_ELECTION
                                  */

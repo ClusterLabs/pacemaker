@@ -1293,7 +1293,7 @@
   + crmd: Bug lf#2379 - Ensure the cluster terminates when the PE is not available
   + crmd: Do not allow the target_rc to be misused by resource agents
   + crmd: Do not ignore action timeouts based on FSA state
-  + crmd: Ensure we dont get stuck in S_PENDING if we loose an election to someone that never talks to us again
+  + crmd: Ensure we don't get stuck in S_PENDING if we loose an election to someone that never talks to us again
   + crmd: Fix memory leaks exposed by valgrind
   + crmd: Remove race condition that could lead to multiple instances of a clone being active on a machine
   + crmd: Send erase_status_tag() calls to the local CIB when the DC is fenced, since there is no DC to accept them
@@ -1409,7 +1409,7 @@
   + pengine: Make sure promote/demote pseudo actions are created correctly
   + pengine: Prevent target-role from promoting more than master-max instances
   + ais: Bug lf#2199 - Prevent expected-quorum-votes from being populated with garbage
-  + ais: Prevent deadlock - dont try to release IPC message if the connection failed
+  + ais: Prevent deadlock - don't try to release IPC message if the connection failed
   + cib: For validation errors, send back the full CIB so the client can display the errors
   + cib: Prevent use-after-free for remote plaintext connections
   + crmd: Bug lf#2201 - Prevent use-of-NULL when running heartbeat

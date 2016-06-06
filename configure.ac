@@ -406,7 +406,7 @@ case $libdir in
     ;;
 esac
 
-dnl Expand autoconf variables so that we dont end up with '${prefix}'
+dnl Expand autoconf variables so that we don't end up with '${prefix}'
 dnl in #defines and python scripts
 dnl NOTE: Autoconf deliberately leaves them unexpanded to allow
 dnl    make exec_prefix=/foo install

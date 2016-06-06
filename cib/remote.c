@@ -106,7 +106,7 @@ init_remote_listener(int port, gboolean encrypted)
     };
 
     if (port <= 0) {
-        /* dont start it */
+        /* don't start it */
         return 0;
     }
 
