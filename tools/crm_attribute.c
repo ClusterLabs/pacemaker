@@ -265,8 +265,9 @@ main(int argc, char **argv)
         && is_remote_node == FALSE
 #endif
         && safe_str_eq(type, XML_CIB_TAG_STATUS)
-        && pcmk_ok == attrd_update_delegate(NULL, command, dest_uname, attr_name, attr_value, type, set_name,
-                                 NULL, NULL, is_remote_node)) {
+        && pcmk_ok == attrd_update_delegate(NULL, command, dest_uname, attr_name,
+                                            attr_value, type, set_name, NULL, NULL,
+                                            is_remote_node?attrd_opt_remote:attrd_opt_none)) {
         crm_info("Update %s=%s sent via attrd", attr_name, command == 'D' ? "<none>" : attr_value);
 
     } else if (command == 'D') {

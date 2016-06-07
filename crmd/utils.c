@@ -1080,7 +1080,7 @@ update_attrd_helper(const char *host, const char *name, const char *value, const
         }
 
         rc = attrd_update_delegate(attrd_ipc, command, host, name, value, XML_CIB_TAG_STATUS, NULL,
-                                   NULL, user_name, is_remote_node);
+                                   NULL, user_name, is_remote_node?attrd_opt_remote:attrd_opt_none);
         if (rc == pcmk_ok) {
             break;
 

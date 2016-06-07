@@ -589,11 +589,11 @@ cli_delete_attr(cib_t * cib_conn, const char * host_uname, const char * attr_nam
                 pe_working_set_t * data_set)
 {
     node_t *node = pe_find_node(data_set->nodes, host_uname);
-    gboolean is_remote = FALSE;
+    int attr_options = attrd_opt_none;
 
     if (node && is_remote_node(node)) {
 #if HAVE_ATOMIC_ATTRD
-        is_remote = TRUE;
+        set_bit(attr_options, attrd_opt_remote);
 #else
         /* Talk directly to cib for remote nodes if it's legacy attrd */
         return delete_attr_delegate(cib_conn, cib_sync_call, XML_CIB_TAG_STATUS, node->details->id, NULL, NULL,
@@ -602,7 +602,7 @@ cli_delete_attr(cib_t * cib_conn, const char * host_uname, const char * attr_nam
     }
     return attrd_update_delegate(NULL, 'D', host_uname, attr_name, NULL,
                                  XML_CIB_TAG_STATUS, NULL, NULL, NULL,
-                                 is_remote);
+                                 attr_options);
 }
 
 int
