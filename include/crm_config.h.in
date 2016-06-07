@@ -88,15 +88,15 @@
 #undef SUPPORT_UPSTART
 
 
-/****** Compatability ******/
+/****** Compatibility ******/
 
 /* Does corosync use libqb for its ipc */
 #undef CS_USES_LIBQB
 
-/* Compatability alias for SUPPORT_COROSYNC */
+/* Compatibility alias for SUPPORT_COROSYNC */
 #undef SUPPORT_AIS
 
-/* Compatability alias for SUPPORT_COROSYNC */
+/* Compatibility alias for SUPPORT_COROSYNC */
 #undef AIS_COROSYNC
 
 #endif /* CRM_CONFIG__H__IN */

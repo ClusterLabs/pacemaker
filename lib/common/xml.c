@@ -616,11 +616,11 @@ __xml_acl_create(xmlNode * xml, xmlNode *target, enum xml_private_flags mode)
     const char *xpath = crm_element_value(xml, XML_ACL_ATTR_XPATH);
 
     if(tag == NULL) {
-        /* Compatability handling for pacemaker < 1.1.12 */
+        /* Compatibility handling for pacemaker < 1.1.12 */
         tag = crm_element_value(xml, XML_ACL_ATTR_TAGv1);
     }
     if(ref == NULL) {
-        /* Compatability handling for pacemaker < 1.1.12 */
+        /* Compatibility handling for pacemaker < 1.1.12 */
         ref = crm_element_value(xml, XML_ACL_ATTR_REFv1);
     }
 

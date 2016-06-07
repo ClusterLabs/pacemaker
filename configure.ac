@@ -1062,7 +1062,7 @@ dnl ========================================================================
 dnl    Cluster infrastructure - Heartbeat / LibQB
 dnl ========================================================================
 
-dnl Compatability checks
+dnl Compatibility checks
 AC_CHECK_MEMBERS([struct lrm_ops.fail_rsc],,,[[#include <lrm/lrm_api.h>]])
 
 if test x${enable_no_stack} = xyes; then
