@@ -729,24 +729,6 @@ elif test "$ac_cv_lib_dl_dlopen" = yes; then
 else
         LIBADD_DL=${lt_cv_dlopen_libs}
 fi
-dnl
-dnl Check for location of gettext
-dnl
-dnl On at least Solaris 2.x, where it is in libc, specifying lintl causes
-dnl grief. Ensure minimal result, not the sum of all possibilities.
-dnl And do libc first.
-dnl Known examples:
-dnl    c:      Linux, Solaris 2.6+
-dnl    intl:   BSD, AIX
-
-AC_CHECK_LIB(c, gettext)
-if test x$ac_cv_lib_c_gettext != xyes; then
-   AC_CHECK_LIB(intl, gettext)
-fi
-
-if test x$ac_cv_lib_c_gettext != xyes -a x$ac_cv_lib_intl_gettext != xyes; then
-   AC_MSG_ERROR(You need gettext installed in order to build ${PACKAGE})
-fi
 
 if test "X$GLIBCONFIG" != X; then
 	AC_MSG_CHECKING(for special glib includes: )
