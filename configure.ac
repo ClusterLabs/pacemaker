@@ -1965,6 +1965,7 @@ lrmd/Makefile                                                   \
         lrmd/pacemaker_remote.service				\
         lrmd/pacemaker_remote					\
 extra/Makefile							\
+	extra/alerts/Makefile					\
 	extra/resources/Makefile				\
 	extra/logrotate/Makefile				\
 	extra/logrotate/pacemaker				\
