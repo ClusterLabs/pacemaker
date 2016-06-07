@@ -180,10 +180,6 @@ AC_ARG_ENABLE([quiet],
      Supress make output unless there is an error
      [default=no]])
 
-AC_ARG_ENABLE([thread-safe],
-[  --enable-thread-safe Enable some client libraries to be thread safe.
-     [default=no]])
-
 AC_ARG_ENABLE([bundled-ltdl],
 [  --enable-bundled-ltdl  Configure, build and install the standalone ltdl library bundled with ${PACKAGE} [default=no]])
 LTDL_LIBS=""
@@ -697,22 +693,16 @@ if test x"${PKGCONFIG}" = x""; then
    AC_MSG_ERROR(You need pkgconfig installed in order to build ${PACKAGE})
 fi
 
-if test "x${enable_thread_safe}" = "xyes"; then
-        GPKGNAME="gthread-2.0"
-else
-        GPKGNAME="glib-2.0"
-fi
-
 if
-   $PKGCONFIG --exists $GPKGNAME
+   $PKGCONFIG --exists glib-2.0
 then
-	GLIBCONFIG="$PKGCONFIG $GPKGNAME"
+	GLIBCONFIG="$PKGCONFIG glib-2.0"
 else
 	set -x
         echo PKG_CONFIG_PATH=$PKG_CONFIG_PATH
-	$PKGCONFIG --exists $GPKGNAME; echo $?
-	$PKGCONFIG --cflags $GPKGNAME; echo $?
-	$PKGCONFIG $GPKGNAME; echo $?
+	$PKGCONFIG --exists glib-2.0; echo $?
+	$PKGCONFIG --cflags glib-2.0; echo $?
+	$PKGCONFIG glib-2.0; echo $?
 	set +x
 
 	AC_MSG_ERROR(You need glib2-devel installed in order to build ${PACKAGE})
