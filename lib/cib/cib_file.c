@@ -204,7 +204,7 @@ cib_file_is_live(const char *filename)
             int i;
 
             /* Compare against each possible live CIB name */
-            for (i = 0; i < sizeof(livenames)/sizeof(const char*); ++i) {
+            for (i = 0; i < DIMOF(livenames); ++i) {
                 real_livename = crm_compat_realpath(livenames[i]);
                 if (real_livename && !strcmp(real_filename, real_livename)) {
                     free(real_livename);
