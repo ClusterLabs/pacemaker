@@ -157,7 +157,7 @@
     <action_set>
       <rsc_op id="18" operation="stop" operation_key="prmStonith2-2_stop_0" on_node="bl460g8n3" on_node_uuid="3232261399">
         <primitive id="prmStonith2-2" class="stonith" type="external/ipmi"/>
-        <attributes CRM_meta_name="stop" CRM_meta_on_fail="ignore" CRM_meta_timeout="60000"  hostname="bl460g8n4" interface="lanplus" ipaddr="192.168.28.44" passwd="****" pcmk_reboot_timeout="60s" userid="USERID"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_fail="ignore" CRM_meta_start_expected="local" CRM_meta_timeout="60000"  hostname="bl460g8n4" interface="lanplus" ipaddr="192.168.28.44" passwd="****" pcmk_reboot_timeout="60s" userid="USERID"/>
       </rsc_op>
     </action_set>
     <inputs>

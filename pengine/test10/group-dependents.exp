@@ -1251,7 +1251,7 @@
     <action_set>
       <rsc_op id="108" operation="stop" operation_key="fs_drbd_stop_0" on_node="asttest1" on_node_uuid="asttest1">
         <primitive id="fs_drbd" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_name="stop" CRM_meta_start_delay="1000" CRM_meta_timeout="60000"  device="/dev/drbd/by-res/r0" directory="/mnt/drbd" fstype="ext3"/>
+        <attributes CRM_meta_name="stop" CRM_meta_start_delay="1000" CRM_meta_start_expected="peer" CRM_meta_timeout="60000"  device="/dev/drbd/by-res/r0" directory="/mnt/drbd" fstype="ext3"/>
       </rsc_op>
     </action_set>
     <inputs>

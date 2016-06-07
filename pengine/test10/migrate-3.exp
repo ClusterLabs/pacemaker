@@ -28,7 +28,7 @@
      <action_set>
       <rsc_op id="1" operation="stop" operation_key="rsc3_stop_0" on_node="node1" on_node_uuid="node1">
         <primitive id="rsc3" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_timeout="20000" allow_migrate="on" />
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000" allow_migrate="on" />
        </rsc_op>
      </action_set>
      <inputs>

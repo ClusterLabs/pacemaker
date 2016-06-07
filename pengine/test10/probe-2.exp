@@ -559,7 +559,7 @@
     <action_set>
       <rsc_op id="62" operation="stop" operation_key="fs_mysql_stop_0" on_node="wc02" on_node_uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396">
         <primitive id="fs_mysql" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_timeout="20000"  device="/dev/drbd1" directory="/data/mysql" fstype="ext3"/>
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000"  device="/dev/drbd1" directory="/data/mysql" fstype="ext3"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -607,7 +607,7 @@
     <action_set>
       <rsc_op id="65" operation="stop" operation_key="intip_sql_stop_0" on_node="wc02" on_node_uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396">
         <primitive id="intip_sql" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_timeout="20000"  ip="192.168.100.200" netmask="24" nic="eth1" target-role="Started"/>
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000"  ip="192.168.100.200" netmask="24" nic="eth1" target-role="Started"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -655,7 +655,7 @@
     <action_set>
       <rsc_op id="68" operation="stop" operation_key="mysql-server_stop_0" on_node="wc02" on_node_uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396">
         <primitive id="mysql-server" class="ocf" provider="heartbeat" type="mysql"/>
-        <attributes CRM_meta_timeout="20000" additional_parameters="--basedir=/usr --skip-external-locking --port=42006" binary="/usr/sbin/mysqld" config="/etc/mysql/my.cnf"  datadir="/data/mysql/data/" pid="/var/run/mysqld/mysqld.pid" priority="1000" socket="/var/run/mysqld/mysqld.sock" target-role="Started"/>
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000" additional_parameters="--basedir=/usr --skip-external-locking --port=42006" binary="/usr/sbin/mysqld" config="/etc/mysql/my.cnf"  datadir="/data/mysql/data/" pid="/var/run/mysqld/mysqld.pid" priority="1000" socket="/var/run/mysqld/mysqld.sock" target-role="Started"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1031,7 +1031,7 @@
     <action_set>
       <rsc_op id="168" operation="stop" operation_key="stonith_rackpdu:0_stop_0" on_node="wc01" on_node_uuid="31de4ab3-2d05-476e-8f9a-627ad6cd94ca">
         <primitive id="stonith_rackpdu:0" class="stonith" type="external/rackpdu"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_timeout="20000" community="wc"  hostlist="wc01 wc02" pduip="pdu02.r02.ipax.at"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_start_expected="local" CRM_meta_timeout="20000" community="wc"  hostlist="wc01 wc02" pduip="pdu02.r02.ipax.at"/>
       </rsc_op>
     </action_set>
     <inputs>

@@ -39,7 +39,7 @@
     <action_set>
       <rsc_op id="28" operation="stop" operation_key="stonithsys3_stop_0" on_node="sys2" on_node_uuid="sys2">
         <primitive id="stonithsys3" class="stonith" type="external/ipmi"/>
-        <attributes CRM_meta_timeout="20000"  hostname="sys3" interface="lan" ipaddr="192.168.1.222" passwd="****" userid="admin"/>
+        <attributes CRM_meta_start_expected="local" CRM_meta_timeout="20000"  hostname="sys3" interface="lan" ipaddr="192.168.1.222" passwd="****" userid="admin"/>
       </rsc_op>
     </action_set>
     <inputs>

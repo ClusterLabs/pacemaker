@@ -134,7 +134,7 @@
     <action_set>
       <rsc_op id="21" operation="stop" operation_key="IPaddr_192_168_1_102_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181">
         <primitive id="IPaddr_192_168_1_102" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="20000"  ip="192.168.1.102"/>
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000"  ip="192.168.1.102"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -185,7 +185,7 @@
     <action_set>
       <rsc_op id="24" operation="stop" operation_key="LVM_12_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181">
         <primitive id="LVM_12" class="ocf" provider="heartbeat" type="LVM"/>
-        <attributes CRM_meta_timeout="20000"  volgrpname="data02vg"/>
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000"  volgrpname="data02vg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -236,7 +236,7 @@
     <action_set>
       <rsc_op id="27" operation="stop" operation_key="Filesystem_13_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181">
         <primitive id="Filesystem_13" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_timeout="20000"  device="/dev/data02vg/v0" directory="/data/d2" fstype="ext3"/>
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000"  device="/dev/data02vg/v0" directory="/data/d2" fstype="ext3"/>
       </rsc_op>
     </action_set>
     <inputs>

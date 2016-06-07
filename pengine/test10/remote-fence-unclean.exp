@@ -19,7 +19,7 @@
     <action_set>
       <rsc_op id="5" operation="stop" operation_key="remote1_stop_0" on_node="18node1" on_node_uuid="1">
         <primitive id="remote1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_start_expected="local" CRM_meta_timeout="20000" />
         <downed>
           <node id="remote1"/>
         </downed>
@@ -114,7 +114,7 @@
     <action_set>
       <rsc_op id="16" operation="stop" operation_key="FAKE3_stop_0" on_node="18builder" on_node_uuid="5">
         <primitive id="FAKE3" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -152,7 +152,7 @@
     <action_set>
       <rsc_op id="19" operation="stop" operation_key="FAKE4_stop_0" on_node="18node1" on_node_uuid="1">
         <primitive id="FAKE4" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>

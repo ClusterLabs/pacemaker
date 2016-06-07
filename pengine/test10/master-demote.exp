@@ -16,7 +16,7 @@
      <action_set>
       <rsc_op id="39" operation="stop" operation_key="named_address_stop_0" on_node="cxa1" on_node_uuid="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2">
         <primitive id="named_address" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_timeout="20000"  ip="192.168.1.188"/>
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000"  ip="192.168.1.188"/>
        </rsc_op>
      </action_set>
     <inputs/>

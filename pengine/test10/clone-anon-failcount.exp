@@ -90,7 +90,7 @@
     <action_set>
       <rsc_op id="33" operation="stop" operation_key="UmVIPcheck_stop_0" on_node="srv01" on_node_uuid="srv01">
         <primitive id="UmVIPcheck" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -138,7 +138,7 @@
     <action_set>
       <rsc_op id="35" operation="stop" operation_key="UmIPaddr_stop_0" on_node="srv01" on_node_uuid="srv01">
         <primitive id="UmIPaddr" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_start_expected="peer" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -186,7 +186,7 @@
     <action_set>
       <rsc_op id="38" operation="stop" operation_key="UmDummy01_stop_0" on_node="srv01" on_node_uuid="srv01">
         <primitive id="UmDummy01" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_on_fail="stop" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_name="stop" CRM_meta_on_fail="stop" CRM_meta_start_expected="peer" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -234,7 +234,7 @@
     <action_set>
       <rsc_op id="41" operation="stop" operation_key="UmDummy02_stop_0" on_node="srv01" on_node_uuid="srv01">
         <primitive id="UmDummy02" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_start_expected="peer" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -326,7 +326,7 @@
     <action_set>
       <rsc_op id="15" operation="stop" operation_key="clnUMdummy01:1_stop_0" internal_operation_key="clnUMdummy01:0_stop_0" on_node="srv04" on_node_uuid="srv04">
         <primitive id="clnUMdummy01" long-id="clnUMdummy01:1" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_fail="block" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_fail="block" CRM_meta_start_expected="local" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -374,7 +374,7 @@
     <action_set>
       <rsc_op id="91" operation="stop" operation_key="clnUMdummy02:1_stop_0" internal_operation_key="clnUMdummy02:0_stop_0" on_node="srv04" on_node_uuid="srv04">
         <primitive id="clnUMdummy02" long-id="clnUMdummy02:1" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_fail="block" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_fail="block" CRM_meta_start_expected="local" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>

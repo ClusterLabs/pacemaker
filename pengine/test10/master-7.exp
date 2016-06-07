@@ -138,7 +138,7 @@
     <action_set>
       <rsc_op id="34" operation="stop" operation_key="ocf_192.168.100.181_stop_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
         <primitive id="ocf_192.168.100.181" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="20000"  ip="192.168.100.181"/>
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000"  ip="192.168.100.181"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -193,7 +193,7 @@
     <action_set>
       <rsc_op id="37" operation="stop" operation_key="heartbeat_192.168.100.182_stop_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
         <primitive id="heartbeat_192.168.100.182" class="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="20000" >
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000" >
           <param name="1" value="192.168.100.182"/>
         </attributes>
       </rsc_op>
@@ -246,7 +246,7 @@
     <action_set>
       <rsc_op id="40" operation="stop" operation_key="ocf_192.168.100.183_stop_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
         <primitive id="ocf_192.168.100.183" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="20000"  ip="192.168.100.183"/>
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000"  ip="192.168.100.183"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -288,7 +288,7 @@
     <action_set>
       <rsc_op id="47" operation="stop" operation_key="lsb_dummy_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
         <primitive id="lsb_dummy" class="lsb" type="/usr/lib/heartbeat/cts/LSBDummy"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>

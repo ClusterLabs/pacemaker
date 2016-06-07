@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="13" operation="stop" operation_key="xen-a-fencing_stop_0" on_node="xen-b" on_node_uuid="9cb7f556-e0a7-4073-8845-2d7c1d54e331">
         <primitive id="xen-a-fencing" class="stonith" type="external/ipmi"/>
-        <attributes CRM_meta_timeout="20000"  hostname="xen-a" interface="lanplus" ipaddr="217.148.178.55" passwd="****" userid="root"/>
+        <attributes CRM_meta_start_expected="local" CRM_meta_timeout="20000"  hostname="xen-a" interface="lanplus" ipaddr="217.148.178.55" passwd="****" userid="root"/>
       </rsc_op>
     </action_set>
     <inputs/>

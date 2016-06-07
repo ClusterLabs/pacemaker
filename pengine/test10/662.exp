@@ -92,7 +92,7 @@
      <action_set>
       <rsc_op id="38" operation="stop" operation_key="rsc_c001n02_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
         <primitive id="rsc_c001n02" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="20000"  ip="127.0.0.12"/>
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000"  ip="127.0.0.12"/>
        </rsc_op>
      </action_set>
     <inputs>

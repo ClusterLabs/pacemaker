@@ -51,7 +51,7 @@
     <action_set>
       <rsc_op id="6" operation="stop" operation_key="fencing_stop_0" on_node="virt-1" on_node_uuid="1">
         <primitive id="fencing" class="stonith" type="fence_scsi"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_start_expected="local" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -83,7 +83,7 @@
     <action_set>
       <rsc_op id="13" operation="stop" operation_key="dlm_stop_0" internal_operation_key="dlm:0_stop_0" on_node="virt-1" on_node_uuid="1">
         <primitive id="dlm" long-id="dlm:0" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_start_expected="local" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -212,7 +212,7 @@
     <action_set>
       <rsc_op id="22" operation="stop" operation_key="clvmd_stop_0" internal_operation_key="clvmd:0_stop_0" on_node="virt-1" on_node_uuid="1">
         <primitive id="clvmd" long-id="clvmd:0" class="ocf" provider="heartbeat" type="clvm"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_start_expected="local" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>

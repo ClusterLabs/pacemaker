@@ -54,7 +54,7 @@
     <action_set>
       <rsc_op id="15" operation="stop" operation_key="FAKE1_stop_0" on_node="18builder" on_node_uuid="5">
         <primitive id="FAKE1" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -115,7 +115,7 @@
     <action_set>
       <rsc_op id="18" operation="stop" operation_key="FAKE2_stop_0" on_node="18node2" on_node_uuid="2">
         <primitive id="FAKE2" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>

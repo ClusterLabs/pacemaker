@@ -19,7 +19,7 @@
     <action_set>
       <rsc_op id="3" operation="stop" operation_key="myclone_stop_0" internal_operation_key="myclone:0_stop_0" on_node="f20node1" on_node_uuid="1">
         <primitive id="myclone" long-id="myclone:0" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -117,7 +117,7 @@
     <action_set>
       <rsc_op id="9" operation="stop" operation_key="vm_stop_0" on_node="f20node1" on_node_uuid="1">
         <primitive id="vm" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>

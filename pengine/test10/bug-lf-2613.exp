@@ -115,7 +115,7 @@
     <action_set>
       <rsc_op id="58" operation="stop" operation_key="prmExPostgreSQLDB1_stop_0" on_node="act1" on_node_uuid="act1">
         <primitive id="prmExPostgreSQLDB1" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_start_expected="peer" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -163,7 +163,7 @@
     <action_set>
       <rsc_op id="61" operation="stop" operation_key="prmFsPostgreSQLDB1-1_stop_0" on_node="act1" on_node_uuid="act1">
         <primitive id="prmFsPostgreSQLDB1-1" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_start_expected="peer" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -211,7 +211,7 @@
     <action_set>
       <rsc_op id="64" operation="stop" operation_key="prmFsPostgreSQLDB1-2_stop_0" on_node="act1" on_node_uuid="act1">
         <primitive id="prmFsPostgreSQLDB1-2" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_start_expected="peer" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -259,7 +259,7 @@
     <action_set>
       <rsc_op id="67" operation="stop" operation_key="prmFsPostgreSQLDB1-3_stop_0" on_node="act1" on_node_uuid="act1">
         <primitive id="prmFsPostgreSQLDB1-3" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_start_expected="peer" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -307,7 +307,7 @@
     <action_set>
       <rsc_op id="70" operation="stop" operation_key="prmIpPostgreSQLDB1_stop_0" on_node="act1" on_node_uuid="act1">
         <primitive id="prmIpPostgreSQLDB1" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_start_expected="peer" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -355,7 +355,7 @@
     <action_set>
       <rsc_op id="2" operation="stop" operation_key="prmApPostgreSQLDB1_stop_0" on_node="act1" on_node_uuid="act1">
         <primitive id="prmApPostgreSQLDB1" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_start_expected="peer" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>

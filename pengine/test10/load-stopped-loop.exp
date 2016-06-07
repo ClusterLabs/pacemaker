@@ -135,7 +135,7 @@
     <action_set>
       <rsc_op id="220" operation="stop" operation_key="stonith-v03-b_stop_0" on_node="v03-a" on_node_uuid="v03-a">
         <primitive id="stonith-v03-b" class="stonith" type="fence_ipmilan"/>
-        <attributes CRM_meta_timeout="20000" auth="md5"  ipaddr="v03-b-control" lanplus="true" login="****" method="onoff" passwd="****" pcmk_host_argument="none" pcmk_host_check="static-list" pcmk_host_list="v03-b" power_wait="5" priority="0" recheck_wait="1" rechecks="5"/>
+        <attributes CRM_meta_start_expected="local" CRM_meta_timeout="20000" auth="md5"  ipaddr="v03-b-control" lanplus="true" login="****" method="onoff" passwd="****" pcmk_host_argument="none" pcmk_host_check="static-list" pcmk_host_list="v03-b" power_wait="5" priority="0" recheck_wait="1" rechecks="5"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -170,7 +170,7 @@
     <action_set>
       <rsc_op id="221" operation="stop" operation_key="stonith-v03-a_stop_0" on_node="v03-b" on_node_uuid="v03-b">
         <primitive id="stonith-v03-a" class="stonith" type="fence_ipmilan"/>
-        <attributes CRM_meta_timeout="20000" auth="md5"  ipaddr="v03-a-control" lanplus="true" login="****" method="onoff" passwd="****" pcmk_host_argument="none" pcmk_host_check="static-list" pcmk_host_list="v03-a" power_wait="5" priority="0" recheck_wait="1" rechecks="5"/>
+        <attributes CRM_meta_start_expected="local" CRM_meta_timeout="20000" auth="md5"  ipaddr="v03-a-control" lanplus="true" login="****" method="onoff" passwd="****" pcmk_host_argument="none" pcmk_host_check="static-list" pcmk_host_list="v03-a" power_wait="5" priority="0" recheck_wait="1" rechecks="5"/>
       </rsc_op>
     </action_set>
     <inputs/>

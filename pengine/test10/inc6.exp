@@ -19,7 +19,7 @@
      <action_set>
       <rsc_op id="12" operation="stop" operation_key="child_rsc2:1_stop_0" on_node="node1" on_node_uuid="uuid1">
         <primitive id="child_rsc2:1" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
      </action_set>
      <inputs>
@@ -98,7 +98,7 @@
      <action_set>
       <rsc_op id="28" operation="stop" operation_key="child_rsc4:1_stop_0" on_node="node1" on_node_uuid="uuid1">
         <primitive id="child_rsc4:1" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
      </action_set>
      <inputs>
@@ -177,7 +177,7 @@
      <action_set>
       <rsc_op id="36" operation="stop" operation_key="child_rsc5:1_stop_0" on_node="node2" on_node_uuid="uuid2">
         <primitive id="child_rsc5:1" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
      </action_set>
      <inputs>
@@ -260,7 +260,7 @@
      <action_set>
       <rsc_op id="42" operation="stop" operation_key="child_rsc6:0_stop_0" on_node="node1" on_node_uuid="uuid1">
         <primitive id="child_rsc6" long-id="child_rsc6:0" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_start_expected="local" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
      <inputs>
@@ -289,7 +289,7 @@
      <action_set>
       <rsc_op id="44" operation="stop" operation_key="child_rsc6:1_stop_0" on_node="node2" on_node_uuid="uuid2">
         <primitive id="child_rsc6" long-id="child_rsc6:1" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_start_expected="local" CRM_meta_timeout="20000" />
       </rsc_op>
      </action_set>
      <inputs>
@@ -377,7 +377,7 @@
      <action_set>
       <rsc_op id="52" operation="stop" operation_key="child_rsc7:1_stop_0" on_node="node2" on_node_uuid="uuid2">
         <primitive id="child_rsc7:1" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
      </action_set>
      <inputs>

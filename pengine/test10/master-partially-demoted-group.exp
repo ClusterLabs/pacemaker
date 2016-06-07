@@ -95,7 +95,7 @@
     <action_set>
       <rsc_op id="12" operation="stop" operation_key="vip-164_stop_0" on_node="sd01-1" on_node_uuid="2">
         <primitive id="vip-164" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="60000" cidr_netmask="32"  ip="10.5.4.164" nic="vlan1"/>
+        <attributes CRM_meta_name="stop" CRM_meta_start_expected="peer" CRM_meta_timeout="60000" cidr_netmask="32"  ip="10.5.4.164" nic="vlan1"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -143,7 +143,7 @@
     <action_set>
       <rsc_op id="15" operation="stop" operation_key="vip-165_stop_0" on_node="sd01-1" on_node_uuid="2">
         <primitive id="vip-165" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="60000" cidr_netmask="32"  ip="10.5.4.165" nic="vlan1"/>
+        <attributes CRM_meta_name="stop" CRM_meta_start_expected="peer" CRM_meta_timeout="60000" cidr_netmask="32"  ip="10.5.4.165" nic="vlan1"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -251,7 +251,7 @@
     <action_set>
       <rsc_op id="22" operation="stop" operation_key="cdev-pool-0-iscsi-target_stop_0" on_node="sd01-1" on_node_uuid="2">
         <primitive id="cdev-pool-0-iscsi-target" class="ocf" provider="vds-ok" type="iSCSITarget"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="60000" additional_parameters="InitialR2T=No ImmediateData=Yes MaxRecvDataSegmentLength=65536 MaxXmitDataSegmentLength=65536 MaxBurstLength=262144 FirstBurstLength=131072 MaxOutstandingR2T=2 Wthreads=128 QueuedCommands=32" allowed_initiators="10.5.4.0/24" cluster_managed="yes"  implementation="iet" incoming_password="123456" incoming_username="cdev-vds-ok-pool-0" iqn="iqn.2010-01.com.vds-ok:storage.sdev.vds-ok.s01.0" portals="10.5.4.164 10.5.4.165" tid="1"/>
+        <attributes CRM_meta_name="stop" CRM_meta_start_expected="peer" CRM_meta_timeout="60000" additional_parameters="InitialR2T=No ImmediateData=Yes MaxRecvDataSegmentLength=65536 MaxXmitDataSegmentLength=65536 MaxBurstLength=262144 FirstBurstLength=131072 MaxOutstandingR2T=2 Wthreads=128 QueuedCommands=32" allowed_initiators="10.5.4.0/24" cluster_managed="yes"  implementation="iet" incoming_password="123456" incoming_username="cdev-vds-ok-pool-0" iqn="iqn.2010-01.com.vds-ok:storage.sdev.vds-ok.s01.0" portals="10.5.4.164 10.5.4.165" tid="1"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -299,7 +299,7 @@
     <action_set>
       <rsc_op id="25" operation="stop" operation_key="cdev-pool-0-iscsi-lun-1_stop_0" on_node="sd01-1" on_node_uuid="2">
         <primitive id="cdev-pool-0-iscsi-lun-1" class="ocf" provider="vds-ok" type="iSCSILogicalUnit"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="60000" cluster_managed="yes"  implementation="iet" lun="1" path="/dev/drbd/by-res/cdev-pool-0/0" scsi_id="kjhdSDFDSfklnjlf" scsi_sn="kjhdSDFDSfklnjlf" target_iqn="iqn.2010-01.com.vds-ok:storage.sdev.vds-ok.s01.0"/>
+        <attributes CRM_meta_name="stop" CRM_meta_start_expected="peer" CRM_meta_timeout="60000" cluster_managed="yes"  implementation="iet" lun="1" path="/dev/drbd/by-res/cdev-pool-0/0" scsi_id="kjhdSDFDSfklnjlf" scsi_sn="kjhdSDFDSfklnjlf" target_iqn="iqn.2010-01.com.vds-ok:storage.sdev.vds-ok.s01.0"/>
       </rsc_op>
     </action_set>
     <inputs>

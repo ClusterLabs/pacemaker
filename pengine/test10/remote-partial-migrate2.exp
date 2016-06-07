@@ -191,7 +191,7 @@
     <action_set>
       <rsc_op id="81" operation="stop" operation_key="FAKE5_stop_0" on_node="pcmk1" on_node_uuid="1">
         <primitive id="FAKE5" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_name="stop" CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -235,7 +235,7 @@
     <action_set>
       <rsc_op id="90" operation="stop" operation_key="FAKE9_stop_0" on_node="pcmk2" on_node_uuid="2">
         <primitive id="FAKE9" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_name="stop" CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -273,7 +273,7 @@
     <action_set>
       <rsc_op id="97" operation="stop" operation_key="FAKE12_stop_0" on_node="pcmk1" on_node_uuid="1">
         <primitive id="FAKE12" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_name="stop" CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -311,7 +311,7 @@
     <action_set>
       <rsc_op id="102" operation="stop" operation_key="FAKE14_stop_0" on_node="pcmk2" on_node_uuid="2">
         <primitive id="FAKE14" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_name="stop" CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -355,7 +355,7 @@
     <action_set>
       <rsc_op id="109" operation="stop" operation_key="FAKE17_stop_0" on_node="pcmk_remote1" on_node_uuid="pcmk_remote1" router_node="pcmk1">
         <primitive id="FAKE17" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_name="stop" CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -399,7 +399,7 @@
     <action_set>
       <rsc_op id="126" operation="stop" operation_key="FAKE25_stop_0" on_node="pcmk_remote1" on_node_uuid="pcmk_remote1" router_node="pcmk1">
         <primitive id="FAKE25" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_name="stop" CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -437,7 +437,7 @@
     <action_set>
       <rsc_op id="133" operation="stop" operation_key="FAKE28_stop_0" on_node="pcmk3" on_node_uuid="3">
         <primitive id="FAKE28" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_name="stop" CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -475,7 +475,7 @@
     <action_set>
       <rsc_op id="138" operation="stop" operation_key="FAKE30_stop_0" on_node="pcmk1" on_node_uuid="1">
         <primitive id="FAKE30" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_name="stop" CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -519,7 +519,7 @@
     <action_set>
       <rsc_op id="145" operation="stop" operation_key="FAKE33_stop_0" on_node="pcmk_remote1" on_node_uuid="pcmk_remote1" router_node="pcmk1">
         <primitive id="FAKE33" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_name="stop" CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -557,7 +557,7 @@
     <action_set>
       <rsc_op id="156" operation="stop" operation_key="FAKE38_stop_0" on_node="pcmk2" on_node_uuid="2">
         <primitive id="FAKE38" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_name="stop" CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -601,7 +601,7 @@
     <action_set>
       <rsc_op id="159" operation="stop" operation_key="FAKE39_stop_0" on_node="pcmk1" on_node_uuid="1">
         <primitive id="FAKE39" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_name="stop" CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -645,7 +645,7 @@
     <action_set>
       <rsc_op id="164" operation="stop" operation_key="FAKE41_stop_0" on_node="pcmk_remote2" on_node_uuid="pcmk_remote2" router_node="pcmk1">
         <primitive id="FAKE41" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_name="stop" CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -693,7 +693,7 @@
     <action_set>
       <rsc_op id="177" operation="stop" operation_key="FAKE47_stop_0" on_node="pcmk_remote1" on_node_uuid="pcmk_remote1" router_node="pcmk1">
         <primitive id="FAKE47" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_name="stop" CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -731,7 +731,7 @@
     <action_set>
       <rsc_op id="180" operation="stop" operation_key="FAKE48_stop_0" on_node="pcmk1" on_node_uuid="1">
         <primitive id="FAKE48" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_name="stop" CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -775,7 +775,7 @@
     <action_set>
       <rsc_op id="183" operation="stop" operation_key="FAKE49_stop_0" on_node="pcmk_remote3" on_node_uuid="pcmk_remote3" router_node="pcmk3">
         <primitive id="FAKE49" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_name="stop" CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
