@@ -825,7 +825,7 @@
   + corosync: Populate the cib nodelist from corosync if available
   + corosync: Use the CFG API and DNS to determine node names if not configured in corosync.conf
   + crmd: Block after 10 failed fencing attempts for a node
-  + crmd: cl#5051 - Fixes file leak in pe ipc connection initialization.
+  + crmd: cl#5051 - Fixes file leak in PE ipc connection initialization.
   + crmd: cl#5053 - Fixes fail-count not being updated properly.
   + crmd: cl#5057 - Restart sub-systems correctly (bnc#755671)
   + crmd: cl#5068 - Fixes crm_node -R option so it works with corosync 2.0
