@@ -1516,7 +1516,7 @@
   + crmd: Bug lf#2120 - All transient node attribute updates need to go via attrd
   + crmd: Correctly calculate how long an FSA action took to avoid spamming the logs with errors
   + crmd: Fix another large memory leak affecting Heartbeat based clusters
-  + lha: Restore compatability with older versions
+  + lha: Restore compatibility with older versions
   + pengine: Bug bnc#495687 - Filesystem is not notified of successful STONITH under some conditions
   + pengine: Make running a cluster with STONITH enabled but no STONITH resources an error and provide details on resolutions
   + pengine: Prevent use-ofNULL when using resource ordering sets
@@ -2091,7 +2091,7 @@
   + Core: XML memory corruption - catch, and handle, cases where we are overwriting an attribute value with itself
   + Core: The xml ID type does not allow UUIDs that start with a number
   + Core: Implement XPath based versions of query/delete/replace/modify
-  + Core: Remove some HA2.0.(3,4) compatability code
+  + Core: Remove some HA2.0.(3,4) compatibility code
   + crmd: Overhaul the detection of nodes that are starting vs. failed
   + pengine: Bug LF:1459 - Allow failures to expire
   + pengine: Have the PE do non-persistent configuration upgrades before performing calculations
@@ -2219,10 +2219,10 @@
   + Medium: Build: Re-instate a better default for LCRSODIR
   + Medium: CIB: Bug LF-1861 - Filter irrelvant error status from synchronous CIB clients
   + Medium: Core: Bug 1849 - Invalid conversion of ordinal leap year to gregorian date
-  + Medium: Core: Drop compataibility code for 2.0.4 and 2.0.5 clusters
+  + Medium: Core: Drop compatibility code for 2.0.4 and 2.0.5 clusters
   + Medium: crmd: Bug LF-1860 - Automatically cancel recurring ops before demote and promote operations (not only stops)
   + Medium: crmd: Save the current CIB contents if we detect the PE crashed
-  + Medium: pengine: Bug LF:1866 - Fix version check when applying compatability handling for failed start operations
+  + Medium: pengine: Bug LF:1866 - Fix version check when applying compatibility handling for failed start operations
   + Medium: pengine: Bug LF:1866 - Restore the ability to have start failures not be fatal
   + Medium: pengine: Bug PM1 - Failcount applies to all instances of non-unique clone
   + Medium: pengine: Correctly set the state of partially active master/slave groups

@@ -694,7 +694,7 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
 
             log_level = LOG_INFO;
             result = "Cancelling";
-            /* its running : cancel it */
+            /* it's running : cancel it */
 
             mon = custom_action(rsc, local_key, RSC_CANCEL, node, FALSE, TRUE, data_set);
 
@@ -2879,7 +2879,7 @@ native_start_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set
              *   the node is shot before doing anything
              *   to with the resource
              *
-             * its analogous to waiting for all the probes
+             * it's analogous to waiting for all the probes
              *   for rscX to complete before starting rscX
              *
              * the most likely explaination is that the

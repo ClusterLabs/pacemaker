@@ -132,7 +132,7 @@ while true; do
 	--dest) DESTDIR=$2; shift; shift;;
 	--) if [ ! -z $2 ]; then DESTDIR=$2; fi; break;;
 	-h|--help) usage; exit 0;;
-	# Options for compatability with hb_report
+	# Options for compatibility with hb_report
 	-s) shift;;
 
 	*) echo "Unknown argument: $1"; usage; exit 1;;

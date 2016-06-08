@@ -392,8 +392,8 @@ pcmk_cpg_membership(cpg_handle_t handle,
                  (peer? peer->uname : "<none>"), counter, i);
 
         /* Anyone that is sending us CPG messages must also be a _CPG_ member.
-         * But its _not_ safe to assume its in the quorum membership.
-         * We may have just found out its dead and are processing the last couple of messages it sent
+         * But it's _not_ safe to assume it's in the quorum membership.
+         * We may have just found out it's dead and are processing the last couple of messages it sent
          */
         peer = crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, ONLINESTATUS);
         if(peer && peer->state && crm_is_peer_active(peer) == FALSE) {
@@ -679,7 +679,7 @@ text2msg_type(const char *text)
         int scan_rc = sscanf(text, "%d", &type);
 
         if (scan_rc != 1 || type <= crm_msg_stonith_ng) {
-            /* Ensure its sane */
+            /* Ensure it's sane */
             type = crm_msg_none;
         }
     }

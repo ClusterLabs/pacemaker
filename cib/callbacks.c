@@ -1266,7 +1266,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         if (manage_counters == FALSE) {
             int format = 1;
             /* Legacy code
-             * If the diff is NULL at this point, its because nothing changed
+             * If the diff is NULL at this point, it's because nothing changed
              */
             if (*cib_diff) {
                 crm_element_value_int(*cib_diff, "format", &format);

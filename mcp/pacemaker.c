@@ -1041,7 +1041,7 @@ main(int argc, char **argv)
         }
 #if 0
         /* system() is not thread-safe, can't call from here
-         * Actually, its a pretty hacky way to try and achieve this anyway
+         * Actually, it's a pretty hacky way to try and achieve this anyway
          */
         if (system("echo 1 > /proc/sys/kernel/core_uses_pid") != 0) {
             crm_perror(LOG_ERR, "Could not enable /proc/sys/kernel/core_uses_pid");

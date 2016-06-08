@@ -3674,7 +3674,7 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
 
     id = crm_element_value(rsc_op, XML_LRM_ATTR_TASK_KEY);
     if (id == NULL) {
-        /* Compatability with <= 1.1.5 */
+        /* Compatibility with <= 1.1.5 */
         id = ID(rsc_op);
     }
 

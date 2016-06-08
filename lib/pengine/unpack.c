@@ -3098,7 +3098,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
     }
 
     if (status == PCMK_LRM_OP_ERROR) {
-        /* Older versions set this if rc != 0 but its up to us to decide */
+        /* Older versions set this if rc != 0 but it's up to us to decide */
         status = PCMK_LRM_OP_DONE;
     }
 

@@ -737,7 +737,7 @@ read_output(int fd)
         more = read(fd, buffer, READ_MAX - 1);
 
         if (more > 0) {
-            buffer[more] = 0; /* Make sure its nul-terminated for logging
+            buffer[more] = 0; /* Make sure it's nul-terminated for logging
                               * 'more' is always less than our buffer size
                               */
             output = realloc_safe(output, len + more + 1);

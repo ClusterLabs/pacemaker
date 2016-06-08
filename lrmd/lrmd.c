@@ -885,7 +885,7 @@ action_complete(svc_action_t * action)
              *
              * So we have to jump through a few hoops so that we don't
              * report 'complete' to the rest of pacemaker until, you know,
-             * its actually done.
+             * it's actually done.
              */
             goagain = true;
             cmd->real_action = cmd->action;
@@ -1543,7 +1543,7 @@ cancel_op(const char *rsc_id, const char *action, int interval)
      * 1. Check pending ops list, if it hasn't been handed off
      *    to the service library or stonith recurring list remove
      *    it there and that will stop it.
-     * 2. If it isn't in the pending ops list, then its either a
+     * 2. If it isn't in the pending ops list, then it's either a
      *    recurring op in the stonith recurring list, or the service
      *    library's recurring list.  Stop it there
      * 3. If not found in any lists, then this operation has either

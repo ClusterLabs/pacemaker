@@ -161,7 +161,7 @@ slist_basic_destroy(GListPtr list)
 #  define crm_free(free_obj) do { free(free_obj); free_obj=NULL; } while(0)
 
 /* These two child iterator macros are no longer to be used
- * They exist for compatability reasons and will be removed in a
+ * They exist for compatibility reasons and will be removed in a
  * future release
  */
 #  define xml_child_iter(parent, child, code) do {			\
@@ -227,7 +227,7 @@ slist_basic_destroy(GListPtr list)
 
 #  define zap_xml_from_parent(parent, xml_obj) free_xml(xml_obj); xml_obj = NULL
 
-/* For ABI compatability with version < 1.1.4 */
+/* For ABI compatibility with version < 1.1.4 */
 static inline char *
 calculate_xml_digest(xmlNode * input, gboolean sort, gboolean do_filter)
 {
