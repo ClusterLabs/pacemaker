@@ -2543,7 +2543,7 @@ record_failed_op(xmlNode *op, node_t* node, pe_working_set_t * data_set)
     xmlNode *xIter = NULL;
     const char *op_key = crm_element_value(op, XML_LRM_ATTR_TASK_KEY);
 
-    if ((node->details->shutdown) && (node->details->online == FALSE)) {
+    if (node->details->online == FALSE) {
         return;
     }
 
