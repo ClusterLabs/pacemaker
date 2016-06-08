@@ -1408,7 +1408,7 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
     }
 
     if(rsc->variant == pe_clone || rsc->variant == pe_master) {
-        /* Grab the first child resource in the hope its not a group */
+        /* Grab the first child resource in the hope it's not a group */
         rsc = rsc->children->data;
     }
 

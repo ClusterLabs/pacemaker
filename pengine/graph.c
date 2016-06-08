@@ -47,13 +47,13 @@ get_action_flags(action_t * action, node_t * node)
 
             /* Go to great lengths to ensure the correct value for pe_action_runnable...
              *
-             * If we are a clone, then for _ordering_ constraints, its only relevant
+             * If we are a clone, then for _ordering_ constraints, it's only relevant
              * if we are runnable _anywhere_.
              *
              * This only applies to _runnable_ though, and only for ordering constraints.
              * If this function is ever used during colocation, then we'll need additional logic
              *
-             * Not very satisfying, but its logical and appears to work well.
+             * Not very satisfying, but it's logical and appears to work well.
              */
             if (is_not_set(clone_flags, pe_action_runnable)
                 && is_set(flags, pe_action_runnable)) {

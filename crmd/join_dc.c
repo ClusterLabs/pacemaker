@@ -169,7 +169,7 @@ do_dc_join_offer_all(long long action,
                      enum crmd_fsa_state cur_state,
                      enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    /* reset everyones status back to down or in_ccm in the CIB
+    /* reset everyone's status back to down or in_ccm in the CIB
      *
      * any nodes that are active in the CIB but not in the CCM list
      *   will be seen as offline by the PE anyway

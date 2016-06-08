@@ -156,7 +156,7 @@ char *
 calculate_on_disk_digest(xmlNode * input)
 {
     /* Always use the v1 format for on-disk digests
-     * a) its a compatibility nightmare
+     * a) it's a compatibility nightmare
      * b) we only use this once at startup, all other
      *    invocations are in a separate child process
      */

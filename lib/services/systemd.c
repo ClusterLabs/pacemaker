@@ -247,7 +247,7 @@ systemd_unit_by_name(const gchar * arg_name, svc_action_t *op)
     char *name = NULL;
 
 /*
-  Equivalent to GetUnit if its already loaded
+  Equivalent to GetUnit if it's already loaded
   <method name="LoadUnit">
    <arg name="name" type="s" direction="in"/>
    <arg name="unit" type="o" direction="out"/>

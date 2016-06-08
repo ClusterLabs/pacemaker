@@ -3874,7 +3874,7 @@ crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, 
          * It exists to help debug slowness in xmlNodeDump() and
          * potentially if we ever want to go back to it.
          *
-         * In theory its a good idea (reuse) but our custom version does
+         * In theory it's a good idea (reuse) but our custom version does
          * better for the filtered case and avoids the final strdup() for
          * everything
          */

@@ -393,7 +393,7 @@ cman_event_callback(cman_handle_t handle, void *privdata, int reason, int arg)
 
                 if (cman_nodes[lpc].cn_nodeid == 0) {
                     /* Never allow node ID 0 to be considered a member #315711 */
-                    /* Skip entirely, its a qdisk */
+                    /* Skip entirely, it's a qdisk */
                     continue;
                 }
 
@@ -942,7 +942,7 @@ crm_is_corosync_peer_active(const crm_node_t * node)
 
     } else if (is_cman_cluster() && (node->processes & crm_proc_cpg)) {
         /* If we can still talk to our peer process on that node,
-         * then its also part of the corosync membership
+         * then it's also part of the corosync membership
          */
         crm_trace("%s: processes=%.8x", node->uname, node->processes);
         return TRUE;

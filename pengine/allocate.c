@@ -2762,7 +2762,7 @@ stage8(pe_working_set_t * data_set)
             && crm_str_eq(action->task, RSC_STOP, TRUE)
             ) {
             /* Eventually we should just ignore the 'fence' case
-             * But for now its the best way to detect (in CTS) when
+             * But for now it's the best way to detect (in CTS) when
              * CIB resource updates are being lost
              */
             if (is_set(data_set->flags, pe_flag_have_quorum)

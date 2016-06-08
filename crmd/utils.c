@@ -61,7 +61,7 @@ do_timer_control(long long action,
 /* 		timer_op_ok = crm_timer_stop(election_timeout); */
     }
 
-    /* don't start a timer that wasnt already running */
+    /* don't start a timer that wasn't already running */
     if (action & A_DC_TIMER_START && timer_op_ok) {
         crm_timer_start(election_trigger);
         if (AM_I_DC) {

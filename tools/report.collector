@@ -618,7 +618,7 @@ get_logfiles() {
     # Always include system logs (if we can find them)
     msg="Mark:pcmk:`perl -e 'print time()'`"
     logger -p $facility.info $msg >/dev/null 2>&1
-    sleep 2 # Give syslog time to catch up in case its busy
+    sleep 2 # Give syslog time to catch up in case it's busy
     findmsg 1 "$msg"
 
     # Look for detail logs:

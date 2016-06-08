@@ -37,7 +37,7 @@ cluster-helper --list bullet $target
 if [ $kill != 0 ]; then
     echo "Cleaning processes"
 
-    # Bah. Force systemd to actually look at the process and realize its dead"
+    # Bah. Force systemd to actually look at the process and realize it's dead"
     cluster-helper $target -- "service corosync stop" &> /dev/null &
     cluster-helper $target -- "service pacemaker stop" &> /dev/null &
 

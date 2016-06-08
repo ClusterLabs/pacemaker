@@ -1152,7 +1152,7 @@ static gboolean mainloop_timer_cb(gpointer user_data)
     CRM_ASSERT(t != NULL);
 
     id = t->id;
-    t->id = 0; /* Ensure its unset during callbacks so that
+    t->id = 0; /* Ensure it's unset during callbacks so that
                 * mainloop_timer_running() works as expected
                 */
 
