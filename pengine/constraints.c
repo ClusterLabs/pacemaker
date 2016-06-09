@@ -861,19 +861,23 @@ unpack_location_set(xmlNode * location, xmlNode * set, pe_working_set_t * data_s
 {
     xmlNode *xml_rsc = NULL;
     resource_t *resource = NULL;
-    const char *set_id = ID(set);
-    const char *role = crm_element_value(set, "role");
-    const char *local_score = crm_element_value(set, XML_RULE_ATTR_SCORE);
+    const char *set_id;
+    const char *role;
+    const char *local_score;
 
     if (set == NULL) {
         crm_config_err("No resource_set object to process.");
         return FALSE;
     }
 
+    set_id = ID(set);
     if (set_id == NULL) {
         crm_config_err("resource_set must have an id");
         return FALSE;
     }
+
+    role = crm_element_value(set, "role");
+    local_score = crm_element_value(set, XML_RULE_ATTR_SCORE);
 
     for (xml_rsc = __xml_first_child(set); xml_rsc != NULL; xml_rsc = __xml_next_element(xml_rsc)) {
         if (crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
