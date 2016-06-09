@@ -791,7 +791,6 @@ unpack_location_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_
 
     xmlNode *new_xml = NULL;
     xmlNode *rsc_set_lh = NULL;
-    gboolean any_sets = FALSE;
 
     *expanded_xml = NULL;
 
@@ -846,13 +845,11 @@ unpack_location_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_
             crm_xml_add(rsc_set_lh, "role", state_lh);
             xml_remove_prop(new_xml, XML_RULE_ATTR_ROLE);
         }
-        any_sets = TRUE;
-    }
-
-    if (any_sets) {
         crm_log_xml_trace(new_xml, "Expanded rsc_location...");
         *expanded_xml = new_xml;
+
     } else {
+        /* No sets */
         free_xml(new_xml);
     }
 
@@ -897,27 +894,13 @@ unpack_location(xmlNode * xml_obj, pe_working_set_t * data_set)
     xmlNode *orig_xml = NULL;
     xmlNode *expanded_xml = NULL;
 
-    const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
-
-    gboolean rc = TRUE;
-
-    if (xml_obj == NULL) {
-        crm_config_err("No rsc_location constraint object to process.");
+    if (unpack_location_tags(xml_obj, &expanded_xml, data_set) == FALSE) {
         return FALSE;
     }
 
-    if (id == NULL) {
-        crm_config_err("%s constraint must have an id", crm_element_name(xml_obj));
-        return FALSE;
-    }
-
-    rc = unpack_location_tags(xml_obj, &expanded_xml, data_set);
     if (expanded_xml) {
         orig_xml = xml_obj;
         xml_obj = expanded_xml;
-
-    } else if (rc == FALSE) {
-        return FALSE;
     }
 
     for (set = __xml_first_child(xml_obj); set != NULL; set = __xml_next_element(set)) {
