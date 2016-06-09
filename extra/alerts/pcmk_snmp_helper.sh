@@ -138,7 +138,7 @@ case "$CRM_alert_kind" in
         Cancelled) ;;
         *)
             if [ "${trap_monitor_success}" = "false" ]; then
-                if [[ ${CRM_alert_rc} -eq 0 && "${CRM_alert_task}" == "monitor" ]]; then
+                if [[ ${CRM_alert_rc} -eq 0 || ${CRM_alert_rc} -eq 8 ]] && [ "${CRM_alert_task}" == "monitor" ]; then
                     exit;
                 fi
             fi
