@@ -68,25 +68,23 @@ status()
 	return $rtrn
 }
 
-# rpm based distros
-if [ -d @sysconfdir@/sysconfig ]; then
+if [ -d @CONFIGDIR@ ]; then
 	[ -f @INITDIR@/functions ] && . @INITDIR@/functions
 set -a
-	[ -f @sysconfdir@/sysconfig/pacemaker ] && . @sysconfdir@/sysconfig/pacemaker
+	[ -f @CONFIGDIR@/pacemaker ] && . @CONFIGDIR@/pacemaker
 set +a
-	[ -z "$LOCK_FILE" ] && LOCK_FILE="@localstatedir@/lock/subsys/pacemaker"
 fi
 
-# deb based distros
-if [ -d @sysconfdir@/default ]; then
-set -a
-	[ -f @sysconfdir@/default/pacemaker ] && . @sysconfdir@/default/pacemaker
-set +a
-	[ -z "$LOCK_FILE" ] && LOCK_FILE="@localstatedir@/lock/pacemaker"
+LOCK_DIR="."
+if [ -d "@localstatedir@/lock/subsys" ]; then
+	LOCK_DIR="@localstatedir@/lock/subsys" 
+elif [ -d "@localstatedir@/lock" ]; then
+	LOCK_DIR="@localstatedir@/lock" 
 fi
+[ -z "$LOCK_FILE" ] && LOCK_FILE="$LOCK_DIR/pacemaker"
 
 # Unless specified otherwise, assume cman is in use if cluster.conf exists
-if [ x = "x$PCMK_STACK" -a -f @sysconfdir@/cluster/cluster.conf ]; then
+if [ x = "x$PCMK_STACK" -a -f "@sysconfdir@/cluster/cluster.conf" ]; then
     PCMK_STACK=cman
 fi
 
@@ -98,7 +96,7 @@ start()
 	# to avoid to clean it up on every boot.
 	# they also assume that init scripts will create
 	# required subdirectories for proper operations
-	mkdir -p @localstatedir@/run
+	mkdir -p "@localstatedir@/run"
 
 	if status $prog > /dev/null 2>&1; then
 		success
@@ -109,8 +107,8 @@ start()
 		sleep 5
 
 		if status $prog > /dev/null 2>&1; then
-			touch $LOCK_FILE
-			pidof $prog > @localstatedir@/run/$prog.pid
+			touch "$LOCK_FILE"
+			pidof $prog > "@localstatedir@/run/$prog.pid"
 			success
 		else
 			failure
@@ -228,8 +226,8 @@ stop()
 	    echo -n "$desc is already stopped"
 	fi
 
-	rm -f $LOCK_FILE
-	rm -f @localstatedir@/run/$prog.pid
+	rm -f "$LOCK_FILE"
+	rm -f "@localstatedir@/run/$prog.pid"
 	killall -q -9 'crmd stonithd attrd cib lrmd pacemakerd'
 	success
 	echo
