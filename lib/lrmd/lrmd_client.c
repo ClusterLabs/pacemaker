@@ -1412,6 +1412,9 @@ lrmd_api_disconnect(lrmd_t * lrmd)
 
     free(native->token);
     native->token = NULL;
+
+    free(native->peer_version);
+    native->peer_version = NULL;
     return 0;
 }
 
@@ -2217,6 +2220,8 @@ lrmd_api_delete(lrmd_t * lrmd)
 #endif
         free(native->remote_nodename);
         free(native->remote);
+        free(native->token);
+        free(native->peer_version);
     }
 
     free(lrmd->private);
