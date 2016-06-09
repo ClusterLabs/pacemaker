@@ -908,6 +908,9 @@ unpack_location(xmlNode * xml_obj, pe_working_set_t * data_set)
             any_sets = TRUE;
             set = expand_idref(set, data_set->input);
             if (unpack_location_set(xml_obj, set, data_set) == FALSE) {
+                if (expanded_xml) {
+                    free_xml(expanded_xml);
+                }
                 return FALSE;
             }
         }
