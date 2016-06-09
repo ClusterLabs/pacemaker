@@ -51,6 +51,7 @@ pe_free_rsc_to_node(GListPtr constraints)
         iterator = iterator->next;
 
         g_list_free_full(cons->node_list_rh, free);
+        free(cons->id);
         free(cons);
     }
     if (constraints != NULL) {
@@ -75,7 +76,7 @@ rsc2node_new(const char *id, resource_t * rsc,
 
     new_con = calloc(1, sizeof(rsc_to_node_t));
     if (new_con != NULL) {
-        new_con->id = id;
+        new_con->id = strdup(id);
         new_con->rsc_lh = rsc;
         new_con->node_list_rh = NULL;
         new_con->role_filter = RSC_ROLE_UNKNOWN;
