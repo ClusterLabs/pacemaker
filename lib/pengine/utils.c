@@ -698,7 +698,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
         }
     }
 
-    /* Begin compatability code */
+    /* Begin compatibility code ("requires" set on start action not resource) */
     value = g_hash_table_lookup(action->meta, "requires");
 
     if (safe_str_neq(action->task, RSC_START)
@@ -715,8 +715,8 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
     } else if (safe_str_eq(value, "unfencing")) {
         action->needs = rsc_req_stonith;
         set_bit(action->rsc->flags, pe_rsc_needs_unfencing);
-        if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            crm_notice("%s requires (un)fencing but fencing is disabled", action->rsc->id);
+        if (is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
+            crm_notice("%s requires unfencing but fencing is disabled", action->rsc->id);
         }
 
     } else if (is_set(data_set->flags, pe_flag_stonith_enabled)
@@ -725,7 +725,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
         if (is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
             crm_notice("%s requires fencing but fencing is disabled", action->rsc->id);
         }
-        /* End compatability code */
+        /* End compatibility code */
 
     } else if (is_set(action->rsc->flags, pe_rsc_needs_fencing)) {
         action->needs = rsc_req_stonith;

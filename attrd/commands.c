@@ -252,6 +252,9 @@ attrd_client_update(xmlNode *xml)
 
     } else if (attr == NULL) {
         crm_err("Update request did not specify attribute or regular expression");
+        free(key);
+        free(set);
+        free(host);
         return;
     }
 

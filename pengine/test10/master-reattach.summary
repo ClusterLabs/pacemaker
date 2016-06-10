@@ -1,11 +1,10 @@
-2 of 5 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ dktest1 dktest2 ]
 
  Master/Slave Set: ms-drbd1 [drbd1] (unmanaged)
-     drbd1	(ocf::heartbeat:drbd):	Master dktest1 ( target-role:started, unmanaged ) 
-     drbd1	(ocf::heartbeat:drbd):	Slave dktest2 ( target-role:started, unmanaged ) 
+     drbd1	(ocf::heartbeat:drbd):	Master dktest1 ( unmanaged ) 
+     drbd1	(ocf::heartbeat:drbd):	Slave dktest2 ( unmanaged ) 
  Resource Group: apache
      apache-vip	(ocf::heartbeat:IPaddr2):	Started dktest1 (unmanaged)
      mount	(ocf::heartbeat:Filesystem):	Started dktest1 (unmanaged)
@@ -24,8 +23,8 @@ Revised cluster status:
 Online: [ dktest1 dktest2 ]
 
  Master/Slave Set: ms-drbd1 [drbd1] (unmanaged)
-     drbd1	(ocf::heartbeat:drbd):	Master dktest1 ( target-role:started, unmanaged ) 
-     drbd1	(ocf::heartbeat:drbd):	Slave dktest2 ( target-role:started, unmanaged ) 
+     drbd1	(ocf::heartbeat:drbd):	Master dktest1 ( unmanaged ) 
+     drbd1	(ocf::heartbeat:drbd):	Slave dktest2 ( unmanaged ) 
  Resource Group: apache
      apache-vip	(ocf::heartbeat:IPaddr2):	Started dktest1 (unmanaged)
      mount	(ocf::heartbeat:Filesystem):	Started dktest1 (unmanaged)

@@ -9,31 +9,27 @@ respawn limit 10 3600
 expect fork
 
 env prog=crm_mon
-env rpm_sysconf=@sysconfdir@/sysconfig/crm_mon
-env rpm_lockfile=@localstatedir@/lock/subsys/crm_mon
-env deb_sysconf=@sysconfdir@/default/crm_mon
-env deb_lockfile=@localstatedir@/lock/crm_mon
+env sysconf=@CONFIGDIR@/crm_mon
+env rpm_lockdir=@localstatedir@/lock/subsys
+env deb_lockdir=@localstatedir@/lock
 
 
 script
-    [ -f "$rpm_sysconf" ] && . $rpm_sysconf
-    [ -f "$deb_sysconf" ] && . $deb_sysconf
+    [ -f "$sysconf" ] && . "$sysconf"
     exec $prog $OPTIONS
 end script
 
 post-start script
-    [ -f "$rpm_sysconf" ] && . $rpm_sysconf
-    [ -f "$deb_sysconf" ] && . $deb_sysconf
-    [ -z "$LOCK_FILE" -a -d @sysconfdir@/sysconfig ] && LOCK_FILE="$rpm_lockfile"
-    [ -z "$LOCK_FILE" -a -d @sysconfdir@/default ] && LOCK_FILE="$deb_lockfile"
-    touch $LOCK_FILE
+    [ -f "$sysconf" ] && . "$sysconf"
+    [ -z "$LOCK_FILE" -a -d "$rpm_lockdir" ] && LOCK_FILE="$rpm_lockdir/$prog"
+    [ -z "$LOCK_FILE" -a -d "$deb_lockdir" ] && LOCK_FILE="$deb_lockdir/$prog"
+    touch "$LOCK_FILE"
 end script
 
 post-stop script
-    [ -f "$rpm_sysconf" ] && . $rpm_sysconf
-    [ -f "$deb_sysconf" ] && . $deb_sysconf
-    [ -z "$LOCK_FILE" -a -d @sysconfdir@/sysconfig ] && LOCK_FILE="$rpm_lockfile"
-    [ -z "$LOCK_FILE" -a -d @sysconfdir@/default ] && LOCK_FILE="$deb_lockfile"
-    rm -f $LOCK_FILE
+    [ -f "$sysconf" ] && . "$sysconf"
+    [ -z "$LOCK_FILE" -a -d "$rpm_lockdir" ] && LOCK_FILE="$rpm_lockdir/$prog"
+    [ -z "$LOCK_FILE" -a -d "$deb_lockdir" ] && LOCK_FILE="$deb_lockdir/$prog"
+    rm -f "$LOCK_FILE"
 end script
 

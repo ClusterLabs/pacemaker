@@ -322,6 +322,13 @@ AC_ARG_WITH(doc-cli,
     [ ASCIIDOC_CLI_TYPE="$withval" ])
 AC_SUBST(ASCIIDOC_CLI_TYPE)
 
+CONFIGDIR=""
+AC_ARG_WITH(configdir,
+    [  --with-configdir=DIR
+       Directory for Pacemaker configuration file [${CONFIGDIR}]],
+    [ CONFIGDIR="$withval" ]
+)
+
 dnl ===============================================
 dnl General Processing
 dnl ===============================================
@@ -399,7 +406,7 @@ case $libdir in
     ;;
 esac
 
-dnl Expand autoconf variables so that we dont end up with '${prefix}'
+dnl Expand autoconf variables so that we don't end up with '${prefix}'
 dnl in #defines and python scripts
 dnl NOTE: Autoconf deliberately leaves them unexpanded to allow
 dnl    make exec_prefix=/foo install
@@ -428,10 +435,14 @@ if test x"${docdir}" = x""; then
    #docdir=${datadir}/doc/packages/${PACKAGE}
 fi
 AC_SUBST(docdir)
+if test x"${CONFIGDIR}" = x""; then
+    CONFIGDIR="${sysconfdir}/sysconfig"
+fi
+AC_SUBST(CONFIGDIR)
 
 for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
     sharedstatedir localstatedir libdir includedir oldincludedir infodir \
-    mandir INITDIR docdir
+    mandir INITDIR docdir CONFIGDIR
 do
   dirname=`eval echo '${'${j}'}'`
   if
@@ -1051,7 +1062,7 @@ dnl ========================================================================
 dnl    Cluster infrastructure - Heartbeat / LibQB
 dnl ========================================================================
 
-dnl Compatability checks
+dnl Compatibility checks
 AC_CHECK_MEMBERS([struct lrm_ops.fail_rsc],,,[[#include <lrm/lrm_api.h>]])
 
 if test x${enable_no_stack} = xyes; then
@@ -1954,6 +1965,7 @@ lrmd/Makefile                                                   \
         lrmd/pacemaker_remote.service				\
         lrmd/pacemaker_remote					\
 extra/Makefile							\
+	extra/alerts/Makefile					\
 	extra/resources/Makefile				\
 	extra/logrotate/Makefile				\
 	extra/logrotate/pacemaker				\

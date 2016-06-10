@@ -4,7 +4,7 @@ Online: [ process1a process2b ]
 
  Master/Slave Set: ms-sf [ms-sf_group] (unique)
      Resource Group: ms-sf_group:0
-         master_slave_Stateful:0	(ocf::heartbeat:Dummy-statful):	Started process2b
+         master_slave_Stateful:0	(ocf::heartbeat:Dummy-statful):	Slave process2b 
          master_slave_procdctl:0	(ocf::heartbeat:procdctl):	Stopped 
      Resource Group: ms-sf_group:1
          master_slave_Stateful:1	(ocf::heartbeat:Dummy-statful):	Master process1a
@@ -35,7 +35,7 @@ Online: [ process1a process2b ]
 
  Master/Slave Set: ms-sf [ms-sf_group] (unique)
      Resource Group: ms-sf_group:0
-         master_slave_Stateful:0	(ocf::heartbeat:Dummy-statful):	Started process2b
+         master_slave_Stateful:0	(ocf::heartbeat:Dummy-statful):	Slave process2b 
          master_slave_procdctl:0	(ocf::heartbeat:procdctl):	Stopped 
      Resource Group: ms-sf_group:1
          master_slave_Stateful:1	(ocf::heartbeat:Dummy-statful):	Stopped 

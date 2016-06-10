@@ -37,9 +37,9 @@ Revised cluster status:
 Online: [ node1 node2 ]
 
  Master/Slave Set: rsc1 [child_rsc1] (unique)
-     child_rsc1:0	(ocf::heartbeat:apache):	Started node1
-     child_rsc1:1	(ocf::heartbeat:apache):	Started node2
-     child_rsc1:2	(ocf::heartbeat:apache):	Started node1
-     child_rsc1:3	(ocf::heartbeat:apache):	Started node2
+     child_rsc1:0	(ocf::heartbeat:apache):	Slave node1 
+     child_rsc1:1	(ocf::heartbeat:apache):	Slave node2 
+     child_rsc1:2	(ocf::heartbeat:apache):	Slave node1 
+     child_rsc1:3	(ocf::heartbeat:apache):	Slave node2 
      child_rsc1:4	(ocf::heartbeat:apache):	Stopped 
 

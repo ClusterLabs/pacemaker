@@ -42,7 +42,7 @@ dump_xml_for_digest(xmlNode * an_xml_node)
     char *buffer = NULL;
     int offset = 0, max = 0;
 
-    /* for compatability with the old result which is used for v1 digests */
+    /* for compatibility with the old result which is used for v1 digests */
     crm_buffer_add_char(&buffer, &offset, &max, ' ');
     crm_xml_dump(an_xml_node, 0, &buffer, &offset, &max, 0);
     crm_buffer_add_char(&buffer, &offset, &max, '\n');
@@ -156,7 +156,7 @@ char *
 calculate_on_disk_digest(xmlNode * input)
 {
     /* Always use the v1 format for on-disk digests
-     * a) its a compatability nightmare
+     * a) it's a compatibility nightmare
      * b) we only use this once at startup, all other
      *    invocations are in a separate child process
      */

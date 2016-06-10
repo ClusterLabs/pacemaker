@@ -274,6 +274,32 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
     }
 }
 
+/*
+ * \internal
+ * \brief Send a direct OK ack for a resource task
+ *
+ * \param[in] lrm_state  LRM connection
+ * \param[in] input      Input message being ack'ed
+ * \param[in] rsc_id     ID of affected resource
+ * \param[in] rsc        Affected resource (if available)
+ * \param[in] task       Operation task being ack'ed
+ * \param[in] ack_host   Name of host to send ack to
+ * \param[in] ack_sys    IPC system name to ack
+ */
+static void
+send_task_ok_ack(lrm_state_t *lrm_state, ha_msg_input_t *input,
+                 const char *rsc_id, lrmd_rsc_info_t *rsc, const char *task,
+                 const char *ack_host, const char *ack_sys)
+{
+    lrmd_event_data_t *op = construct_op(lrm_state, input->xml, rsc_id, task);
+
+    CRM_ASSERT(op != NULL);
+    op->rc = PCMK_OCF_OK;
+    op->op_status = PCMK_LRM_OP_DONE;
+    send_direct_ack(ack_host, ack_sys, rsc, op, rsc_id);
+    lrmd_free_event(op);
+}
+
 void
 lrm_op_callback(lrmd_event_data_t * op)
 {
@@ -499,7 +525,7 @@ get_rsc_metadata(const char *type, const char *rclass, const char *provider, boo
         return NULL;
     }
 
-    snprintf(key, len, "%s::%s:%s", type, rclass, provider);
+    snprintf(key, len, "%s::%s:%s", rclass, provider, type);
     if(force == FALSE) {
         metadata = g_hash_table_lookup(metadata_hash, key);
         if (metadata) {
@@ -509,19 +535,16 @@ get_rsc_metadata(const char *type, const char *rclass, const char *provider, boo
 
     if(metadata == NULL) {
         rc = lrm_state_get_metadata(lrm_state, rclass, provider, type, &metadata, 0);
-        crm_trace("Retrieved live metadata for %s: %s (%d)", key, pcmk_strerror(rc), rc);
         if(rc == pcmk_ok) {
+            crm_trace("Retrieved live metadata for %s", key);
             CRM_LOG_ASSERT(metadata != NULL);
             g_hash_table_insert(metadata_hash, key, metadata);
             key = NULL;
         } else {
-            CRM_LOG_ASSERT(metadata == NULL);
-            metadata = NULL;
+            crm_trace("No metadata found for %s: %s" CRM_XS " rc=%d",
+                     key, pcmk_strerror(rc), rc);
+            CRM_CHECK(metadata == NULL, metadata = NULL);
         }
-    }
-
-    if (metadata == NULL) {
-        crm_warn("No metadata found for %s: %s (%d)", key, pcmk_strerror(rc), rc);
     }
 
     free(key);
@@ -751,17 +774,17 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
 
     m_string = get_rsc_metadata(rsc->type, rsc->class, rsc->provider, safe_str_eq(op->op_type, RSC_START));
     if(m_string == NULL) {
-        crm_err("No metadata for %s::%s:%s", rsc->provider, rsc->class, rsc->type);
+        crm_err("No metadata for %s::%s:%s", rsc->class, rsc->provider, rsc->type);
         return TRUE;
     }
 
     metadata = string2xml(m_string);
     if(metadata == NULL) {
-        crm_err("Metadata for %s::%s:%s is not valid XML", rsc->provider, rsc->class, rsc->type);
+        crm_err("Metadata for %s::%s:%s is not valid XML", rsc->class, rsc->provider, rsc->type);
         return TRUE;
     }
 
-    crm_trace("Including additional digests for %s::%s:%s", rsc->provider, rsc->class, rsc->type);
+    crm_trace("Including additional digests for %s::%s:%s", rsc->class, rsc->provider, rsc->type);
     append_restart_list(op, metadata, xml_op, caller_version);
     append_secure_list(op, metadata, xml_op, caller_version);
 
@@ -1497,7 +1520,7 @@ do_lrm_invoke(long long action,
         /* The lrmd can not fail a resource, it does not understand the
          * concept of success or failure in relation to a resource, it simply
          * executes operations and reports the results. We determine what a failure is.
-         * Becaues of this, if we want to fail a resource we have to fake what we
+         * Because of this, if we want to fail a resource we have to fake what we
          * understand a failure to look like.
          *
          * To do this we create a fake lrmd operation event for the resource
@@ -1628,20 +1651,12 @@ do_lrm_invoke(long long action,
             synthesize_lrmd_failure(lrm_state, input->xml, PCMK_OCF_NOT_CONFIGURED);
 
         } else if (rsc == NULL) {
-            lrmd_event_data_t *op = NULL;
-
             crm_notice("Not creating resource for a %s event: %s", operation, ID(input->xml));
             delete_rsc_entry(lrm_state, input, ID(xml_rsc), NULL, pcmk_ok, user_name);
 
-            op = construct_op(lrm_state, input->xml, ID(xml_rsc), operation);
-
             /* Deleting something that does not exist is a success */
-            op->op_status = PCMK_LRM_OP_DONE;
-            op->rc = PCMK_OCF_OK;
-            CRM_ASSERT(op != NULL);
-
-            send_direct_ack(from_host, from_sys, NULL, op, ID(xml_rsc));
-            lrmd_free_event(op);
+            send_task_ok_ack(lrm_state, input, ID(xml_rsc), NULL, operation,
+                             from_host, from_sys);
 
         } else if (safe_str_eq(operation, CRMD_ACTION_CANCEL)) {
             char *op_key = NULL;
@@ -1688,24 +1703,35 @@ do_lrm_invoke(long long action,
 
             /* Acknowledge the cancellation operation if it's for a remote connection resource */
             if (in_progress == FALSE || is_remote_lrmd_ra(NULL, NULL, rsc->id)) {
-                lrmd_event_data_t *op = construct_op(lrm_state, input->xml, rsc->id, op_task);
                 char *op_id = make_stop_id(rsc->id, call);
 
                 if (is_remote_lrmd_ra(NULL, NULL, rsc->id) == FALSE) {
                     crm_info("Nothing known about operation %d for %s", call, op_key);
                 }
                 delete_op_entry(lrm_state, NULL, rsc->id, op_key, call);
+                send_task_ok_ack(lrm_state, input, rsc->id, rsc, op_task,
+                                 from_host, from_sys);
 
-                CRM_ASSERT(op != NULL);
-
-                op->rc = PCMK_OCF_OK;
-                op->op_status = PCMK_LRM_OP_DONE;
-                send_direct_ack(from_host, from_sys, rsc, op, rsc->id);
-                lrmd_free_event(op);
-
-                /* needed?? yes for the cancellation operation of a remote connection resource */
+                /* needed at least for cancellation of a remote operation */
                 g_hash_table_remove(lrm_state->pending_ops, op_id);
                 free(op_id);
+
+            } else {
+                /* No ack is needed since abcdaa8, but peers with older versions
+                 * in a rolling upgrade need one. We didn't bump the feature set
+                 * at that commit, so we can only compare against the previous
+                 * CRM version (3.0.8). If any peers have feature set 3.0.9 but
+                 * not abcdaa8, they will time out waiting for the ack (no
+                 * released versions of Pacemaker are affected).
+                 */
+                const char *peer_version = crm_element_value(params, XML_ATTR_CRM_VERSION);
+
+                if (compare_version(peer_version, "3.0.8") <= 0) {
+                    crm_info("Sending compatibility ack for %s cancellation to %s (CRM version %s)",
+                             op_key, from_host, peer_version);
+                    send_task_ok_ack(lrm_state, input, rsc->id, rsc, op_task,
+                                     from_host, from_sys);
+                }
             }
 
             free(op_key);

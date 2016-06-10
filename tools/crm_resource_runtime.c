@@ -589,21 +589,20 @@ cli_delete_attr(cib_t * cib_conn, const char * host_uname, const char * attr_nam
                 pe_working_set_t * data_set)
 {
     node_t *node = pe_find_node(data_set->nodes, host_uname);
+    int attr_options = attrd_opt_none;
 
-    if (node == NULL) {
-        CMD_ERR("Error deleting attribute '%s': node '%s' is unknown", attr_name, host_uname);
-        return -ENXIO;
-    }
-
-#if !HAVE_ATOMIC_ATTRD
-    if (is_remote_node(node)) {
+    if (node && is_remote_node(node)) {
+#if HAVE_ATOMIC_ATTRD
+        set_bit(attr_options, attrd_opt_remote);
+#else
         /* Talk directly to cib for remote nodes if it's legacy attrd */
         return delete_attr_delegate(cib_conn, cib_sync_call, XML_CIB_TAG_STATUS, node->details->id, NULL, NULL,
                                     NULL, attr_name, NULL, FALSE, NULL);
-    }
 #endif
-    return attrd_update_delegate(NULL, 'D', node->details->uname, attr_name, NULL, XML_CIB_TAG_STATUS, NULL,
-                                 NULL, NULL, node ? is_remote_node(node) : FALSE);
+    }
+    return attrd_update_delegate(NULL, 'D', host_uname, attr_name, NULL,
+                                 XML_CIB_TAG_STATUS, NULL, NULL, NULL,
+                                 attr_options);
 }
 
 int
@@ -707,7 +706,7 @@ cli_resource_check(cib_t * cib_conn, resource_t *rsc)
             printf("\n  * The configuration specifies that '%s' should remain stopped\n", parent->id);
             need_nl++;
 
-        } else if(parent->variant > pe_clone && role != RSC_ROLE_MASTER) {
+        } else if(parent->variant > pe_clone && role == RSC_ROLE_SLAVE) {
             printf("\n  * The configuration specifies that '%s' should not be promoted\n", parent->id);
             need_nl++;
         }
@@ -1097,13 +1096,13 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
 
     /*
       grab full cib
-      determine resource state of list
+      determine originally active resources
       disable or ban
-      poll and and watch for resources to get stopped
+      poll cib and watch for affected resources to get stopped
       without --timeout, calculate the stop timeout for each step and wait for that
       if we hit --timeout or the service timeout, re-enable or un-ban, report failure and indicate which resources we couldn't take down
       if everything stopped, re-enable or un-ban
-      poll and and watch for resources to get stopped
+      poll cib and watch for affected resources to get started
       without --timeout, calculate the start timeout for each step and wait for that
       if we hit --timeout or the service timeout, report (different) failure and indicate which resources we couldn't bring back up
       report success
@@ -1409,7 +1408,7 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
     }
 
     if(rsc->variant == pe_clone || rsc->variant == pe_master) {
-        /* Grab the first child resource in the hope its not a group */
+        /* Grab the first child resource in the hope it's not a group */
         rsc = rsc->children->data;
     }
 

@@ -791,7 +791,6 @@ unpack_location_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_
 
     xmlNode *new_xml = NULL;
     xmlNode *rsc_set_lh = NULL;
-    gboolean any_sets = FALSE;
 
     *expanded_xml = NULL;
 
@@ -846,13 +845,11 @@ unpack_location_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_
             crm_xml_add(rsc_set_lh, "role", state_lh);
             xml_remove_prop(new_xml, XML_RULE_ATTR_ROLE);
         }
-        any_sets = TRUE;
-    }
-
-    if (any_sets) {
         crm_log_xml_trace(new_xml, "Expanded rsc_location...");
         *expanded_xml = new_xml;
+
     } else {
+        /* No sets */
         free_xml(new_xml);
     }
 
@@ -864,19 +861,23 @@ unpack_location_set(xmlNode * location, xmlNode * set, pe_working_set_t * data_s
 {
     xmlNode *xml_rsc = NULL;
     resource_t *resource = NULL;
-    const char *set_id = ID(set);
-    const char *role = crm_element_value(set, "role");
-    const char *local_score = crm_element_value(set, XML_RULE_ATTR_SCORE);
+    const char *set_id;
+    const char *role;
+    const char *local_score;
 
     if (set == NULL) {
         crm_config_err("No resource_set object to process.");
         return FALSE;
     }
 
+    set_id = ID(set);
     if (set_id == NULL) {
         crm_config_err("resource_set must have an id");
         return FALSE;
     }
+
+    role = crm_element_value(set, "role");
+    local_score = crm_element_value(set, XML_RULE_ATTR_SCORE);
 
     for (xml_rsc = __xml_first_child(set); xml_rsc != NULL; xml_rsc = __xml_next_element(xml_rsc)) {
         if (crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
@@ -897,27 +898,13 @@ unpack_location(xmlNode * xml_obj, pe_working_set_t * data_set)
     xmlNode *orig_xml = NULL;
     xmlNode *expanded_xml = NULL;
 
-    const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
-
-    gboolean rc = TRUE;
-
-    if (xml_obj == NULL) {
-        crm_config_err("No rsc_location constraint object to process.");
+    if (unpack_location_tags(xml_obj, &expanded_xml, data_set) == FALSE) {
         return FALSE;
     }
 
-    if (id == NULL) {
-        crm_config_err("%s constraint must have an id", crm_element_name(xml_obj));
-        return FALSE;
-    }
-
-    rc = unpack_location_tags(xml_obj, &expanded_xml, data_set);
     if (expanded_xml) {
         orig_xml = xml_obj;
         xml_obj = expanded_xml;
-
-    } else if (rc == FALSE) {
-        return FALSE;
     }
 
     for (set = __xml_first_child(xml_obj); set != NULL; set = __xml_next_element(set)) {
@@ -925,6 +912,9 @@ unpack_location(xmlNode * xml_obj, pe_working_set_t * data_set)
             any_sets = TRUE;
             set = expand_idref(set, data_set->input);
             if (unpack_location_set(xml_obj, set, data_set) == FALSE) {
+                if (expanded_xml) {
+                    free_xml(expanded_xml);
+                }
                 return FALSE;
             }
         }

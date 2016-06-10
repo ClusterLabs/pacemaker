@@ -1,4 +1,3 @@
-6 of 4 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ sles236 sles238 ]
@@ -8,7 +7,7 @@ Online: [ sles236 sles238 ]
      Stopped: [ sles238 ]
  Master/Slave Set: ms-drbd1 [drbd1]
      Masters: [ sles236 ]
-     Slaves (target-role): [ sles238 ]
+     Slaves: [ sles238 ]
 
 Transition Summary:
  * Start   drbd0:1	(sles238)
@@ -30,8 +29,8 @@ Online: [ sles236 sles238 ]
 
  Master/Slave Set: ms-drbd0 [drbd0]
      Masters: [ sles236 ]
-     Slaves (target-role): [ sles238 ]
+     Slaves: [ sles238 ]
  Master/Slave Set: ms-drbd1 [drbd1]
      Masters: [ sles236 ]
-     Slaves (target-role): [ sles238 ]
+     Slaves: [ sles238 ]
 

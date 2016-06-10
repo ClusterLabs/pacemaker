@@ -24,14 +24,14 @@ OFFLINE: [ c001n03 c001n05 ]
      ocf_msdummy:1	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Stopped 
      ocf_msdummy:2	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Stopped 
      ocf_msdummy:3	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Stopped 
-     ocf_msdummy:4	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Started c001n02
+     ocf_msdummy:4	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Slave c001n02 
      ocf_msdummy:5	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Stopped 
      ocf_msdummy:6	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	FAILED c001n04 
      ocf_msdummy:7	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Stopped 
-     ocf_msdummy:8	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Started c001n06
-     ocf_msdummy:9	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Started c001n07
-     ocf_msdummy:10	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Started c001n06
-     ocf_msdummy:11	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Started c001n07
+     ocf_msdummy:8	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Slave c001n06 
+     ocf_msdummy:9	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Slave c001n07 
+     ocf_msdummy:10	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Slave c001n06 
+     ocf_msdummy:11	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Slave c001n07 
 
 Transition Summary:
  * Stop    ocf_msdummy:6	(c001n04)
@@ -68,12 +68,12 @@ OFFLINE: [ c001n03 c001n04 c001n05 ]
      ocf_msdummy:1	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Stopped 
      ocf_msdummy:2	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Stopped 
      ocf_msdummy:3	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Stopped 
-     ocf_msdummy:4	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Started c001n02
+     ocf_msdummy:4	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Slave c001n02 
      ocf_msdummy:5	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Stopped 
      ocf_msdummy:6	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Stopped 
      ocf_msdummy:7	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Stopped 
-     ocf_msdummy:8	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Started c001n06
-     ocf_msdummy:9	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Started c001n07
-     ocf_msdummy:10	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Started c001n06
-     ocf_msdummy:11	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Started c001n07
+     ocf_msdummy:8	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Slave c001n06 
+     ocf_msdummy:9	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Slave c001n07 
+     ocf_msdummy:10	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Slave c001n06 
+     ocf_msdummy:11	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Slave c001n07 
 

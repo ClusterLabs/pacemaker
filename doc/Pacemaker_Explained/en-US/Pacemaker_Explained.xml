@@ -11,7 +11,7 @@
   <xi:include href="Ch-Nodes.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <xi:include href="Ch-Resources.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <xi:include href="Ch-Constraints.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-  <xi:include href="Ch-Notifications.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+  <xi:include href="Ch-Alerts.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <xi:include href="Ch-Rules.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <xi:include href="Ch-Advanced-Options.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <xi:include href="Ch-Advanced-Resources.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>

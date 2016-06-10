@@ -229,11 +229,11 @@ controld_monitor() {
 
     case $rc in
       0) smw=$(dlm_tool status -v | grep "stateful_merge_wait=" | cut -d= -f2)
-         if [ $smw -eq 1 ]; then
+         if [ -n "$smw" ] && [ $smw -eq 1 ]; then
              ocf_log err "DLM status is: stateful_merge_wait"
              rc=$OCF_ERR_GENERIC
          elif [ -z "$smw" ] && dlm_tool ls | grep -q "wait fencing" && \
-	      ! stonith_admin -H -V | grep -q "wishes to"; then
+	      ! stonith_admin -H '*' -V | grep -q "wishes to"; then
              ocf_log err "DLM status is: wait fencing"
              rc=$OCF_ERR_GENERIC
          else

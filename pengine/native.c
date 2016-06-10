@@ -694,7 +694,7 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
 
             log_level = LOG_INFO;
             result = "Cancelling";
-            /* its running : cancel it */
+            /* it's running : cancel it */
 
             mon = custom_action(rsc, local_key, RSC_CANCEL, node, FALSE, TRUE, data_set);
 
@@ -1350,7 +1350,7 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 
         if(rsc != top) {
             /* Only create these constraints once, rsc is almost certainly cloned */
-            clear_bit_recursive(top, pe_rsc_have_unfencing);
+            set_bit_recursive(top, pe_rsc_have_unfencing);
         }
 
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
@@ -2851,21 +2851,24 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
 static void
 native_start_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_t * data_set)
 {
-    node_t *target = stonith_op ? stonith_op->node : NULL;
-
+    node_t *target;
     GListPtr gIter = NULL;
     action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
     action_t *stonith_done = get_pseudo_op(STONITH_DONE, data_set);
+
+    CRM_CHECK(stonith_op && stonith_op->node, return);
+    target = stonith_op->node;
 
     for (gIter = rsc->actions; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
 
         if(action->needs == rsc_req_nothing) {
+            /* Anything other than start or promote requires nothing */
+
         } else if (action->needs == rsc_req_stonith) {
             order_actions(stonith_done, action, pe_order_optional);
 
-        } else if (target != NULL
-                   && safe_str_eq(action->task, RSC_START)
+        } else if (safe_str_eq(action->task, RSC_START)
                    && NULL == pe_hash_table_lookup(rsc->known_on, target->details->id)) {
             /* if known == NULL, then we dont know if
              *   the resource is active on the node
@@ -2876,7 +2879,7 @@ native_start_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set
              *   the node is shot before doing anything
              *   to with the resource
              *
-             * its analogous to waiting for all the probes
+             * it's analogous to waiting for all the probes
              *   for rscX to complete before starting rscX
              *
              * the most likely explaination is that the
@@ -2941,42 +2944,33 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
 
     action_t *start = NULL;
     resource_t *top = uber_parent(rsc);
+    node_t *target;
 
-    key = start_key(rsc);
-    action_list = find_actions(rsc->actions, key, NULL);
-    if(action_list) {
-        start = action_list->data;
-    }
+    CRM_CHECK(stonith_op && stonith_op->node, return);
+    target = stonith_op->node;
 
-    g_list_free(action_list);
-    free(key);
+    /* Check whether the resource has a pending start action */
+    start = find_first_action(rsc->actions, NULL, CRMD_ACTION_START, NULL);
 
+    /* Get a list of stop actions potentially implied by the fencing */
     key = stop_key(rsc);
-    action_list = find_fence_target_node_actions(rsc->actions, key, stonith_op->node, data_set);
+    action_list = find_fence_target_node_actions(rsc->actions, key, target,
+                                                 data_set);
     free(key);
-
-    /* add the stonith OP as a stop pre-req and the mark the stop
-     * as a pseudo op - since its now redundant
-     */
 
     for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
 
-        if (action->node->details->online
-            && action->node->details->unclean == FALSE && is_set(rsc->flags, pe_rsc_failed)) {
-            continue;
-        }
-
         if (is_set(rsc->flags, pe_rsc_failed)) {
-            crm_notice("Stop of failed resource %s is"
-                       " implicit after %s is fenced", rsc->id, action->node->details->uname);
+            crm_notice("Stop of failed resource %s is implicit after %s is fenced",
+                       rsc->id, target->details->uname);
         } else {
             crm_info("%s is implicit after %s is fenced",
-                     action->uuid, action->node->details->uname);
+                     action->uuid, target->details->uname);
         }
 
-        /* the stop would never complete and is
-         * now implied by the stonith operation
+        /* The stop would never complete and is now implied by the fencing,
+         * so convert it into a pseudo-action.
          */
         update_action_flags(action, pe_action_pseudo);
         update_action_flags(action, pe_action_runnable);
@@ -2986,7 +2980,12 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
             enum pe_ordering flags = pe_order_optional;
             action_t *parent_stop = find_first_action(top->actions, NULL, RSC_STOP, NULL);
 
-            if(stonith_op->node->details->remote_rsc) {
+            if (target->details->remote_rsc) {
+                /* User constraints must not order a resource in a guest node
+                 * relative to the guest node container resource. This flag
+                 * marks constraints as generated by the cluster and thus
+                 * immune to that check.
+                 */
                 flags |= pe_order_preserve;
             }
             order_actions(stonith_op, action, flags);
@@ -3060,8 +3059,10 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
 
     g_list_free(action_list);
 
+    /* Get a list of demote actions potentially implied by the fencing */
     key = demote_key(rsc);
-    action_list = find_fence_target_node_actions(rsc->actions, key, stonith_op->node, data_set);
+    action_list = find_fence_target_node_actions(rsc->actions, key, target,
+                                                 data_set);
     free(key);
 
     for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
@@ -3069,17 +3070,19 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
 
         if (action->node->details->online == FALSE || action->node->details->unclean == TRUE
             || is_set(rsc->flags, pe_rsc_failed)) {
+
             if (is_set(rsc->flags, pe_rsc_failed)) {
-                pe_rsc_info(rsc, "Demote of failed resource %s is"
-                            " implict after %s is fenced", rsc->id, action->node->details->uname);
+                pe_rsc_info(rsc,
+                            "Demote of failed resource %s is implicit after %s is fenced",
+                            rsc->id, target->details->uname);
             } else {
                 pe_rsc_info(rsc, "%s is implicit after %s is fenced",
-                            action->uuid, action->node->details->uname);
+                            action->uuid, target->details->uname);
             }
-            /* the stop would never complete and is
-             * now implied by the stonith operation
+
+            /* The demote would never complete and is now implied by the
+             * fencing, so convert it into a pseudo-action.
              */
-            crm_trace("here - 1");
             update_action_flags(action, pe_action_pseudo);
             update_action_flags(action, pe_action_runnable);
 
@@ -3103,19 +3106,12 @@ rsc_stonith_ordering(resource_t * rsc, action_t * stonith_op, pe_working_set_t *
 
             rsc_stonith_ordering(child_rsc, stonith_op, data_set);
         }
-        return;
-    }
 
-    if (is_not_set(rsc->flags, pe_rsc_managed)) {
+    } else if (is_not_set(rsc->flags, pe_rsc_managed)) {
         pe_rsc_trace(rsc, "Skipping fencing constraints for unmanaged resource: %s", rsc->id);
-        return;
-    }
 
-    /* Start constraints */
-    native_start_constraints(rsc, stonith_op, data_set);
-
-    /* Stop constraints */
-    if (stonith_op) {
+    } else {
+        native_start_constraints(rsc, stonith_op, data_set);
         native_stop_constraints(rsc, stonith_op, data_set);
     }
 }

@@ -313,7 +313,7 @@ o2cb_stop() {
 	return $OCF_ERR_GENERIC
     fi
 
-    # Don't unmount configfs - its always in use by libdlm
+    # Don't unmount configfs - it's always in use by libdlm
 }
 
 o2cb_monitor() {

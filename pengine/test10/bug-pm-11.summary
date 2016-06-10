@@ -4,7 +4,7 @@ Online: [ node-a node-b ]
 
  Master/Slave Set: ms-sf [group] (unique)
      Resource Group: group:0
-         stateful-1:0	(ocf::heartbeat:Stateful):	Started node-b
+         stateful-1:0	(ocf::heartbeat:Stateful):	Slave node-b 
          stateful-2:0	(ocf::heartbeat:Stateful):	Stopped 
      Resource Group: group:1
          stateful-1:1	(ocf::heartbeat:Stateful):	Master node-a
@@ -39,8 +39,8 @@ Online: [ node-a node-b ]
 
  Master/Slave Set: ms-sf [group] (unique)
      Resource Group: group:0
-         stateful-1:0	(ocf::heartbeat:Stateful):	Started node-b
-         stateful-2:0	(ocf::heartbeat:Stateful):	Started node-b
+         stateful-1:0	(ocf::heartbeat:Stateful):	Slave node-b 
+         stateful-2:0	(ocf::heartbeat:Stateful):	Slave node-b 
      Resource Group: group:1
          stateful-1:1	(ocf::heartbeat:Stateful):	Master node-a
          stateful-2:1	(ocf::heartbeat:Stateful):	Master node-a

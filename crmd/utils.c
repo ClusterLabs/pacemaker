@@ -61,7 +61,7 @@ do_timer_control(long long action,
 /* 		timer_op_ok = crm_timer_stop(election_timeout); */
     }
 
-    /* dont start a timer that wasnt already running */
+    /* don't start a timer that wasn't already running */
     if (action & A_DC_TIMER_START && timer_op_ok) {
         crm_timer_start(election_trigger);
         if (AM_I_DC) {
@@ -1080,7 +1080,7 @@ update_attrd_helper(const char *host, const char *name, const char *value, const
         }
 
         rc = attrd_update_delegate(attrd_ipc, command, host, name, value, XML_CIB_TAG_STATUS, NULL,
-                                   NULL, user_name, is_remote_node);
+                                   NULL, user_name, is_remote_node?attrd_opt_remote:attrd_opt_none);
         if (rc == pcmk_ok) {
             break;
 

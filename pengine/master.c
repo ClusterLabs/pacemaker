@@ -428,7 +428,7 @@ filter_anonymous_instance(resource_t * rsc, node_t * node)
         resource_t *child = rIter->data;
 
         /*
-         * We know its not running, but any score will still count if
+         * We know it's not running, but any score will still count if
          * the instance has been probed on $node
          *
          * Again use ->find_rsc() because we might be a cloned group
@@ -1029,7 +1029,7 @@ master_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocatio
             }
         }
 
-        /* Only do this if its not a master-master colocation
+        /* Only do this if it's not a master-master colocation
          * Doing this unconditionally would prevent the slaves from being started
          */
         if (constraint->role_lh != RSC_ROLE_MASTER || constraint->role_rh != RSC_ROLE_MASTER) {

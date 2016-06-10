@@ -45,19 +45,6 @@ failure()
 	printf "[FAILED]\r"
 }
 
-# rpm based distros
-if [ -d @sysconfdir@/sysconfig ]; then
-	[ -f @INITDIR@/functions ] && . @INITDIR@/functions
-	[ -f @sysconfdir@/sysconfig/pacemaker ] && . @sysconfdir@/sysconfig/pacemaker
-	[ -z "$LOCK_FILE" ] && LOCK_FILE="@localstatedir@/lock/subsys/pacemaker"
-fi
-
-# deb based distros
-if [ -d @sysconfdir@/default ]; then
-	[ -f @sysconfdir@/default/pacemaker ] && . @sysconfdir@/default/pacemaker
-	[ -z "$LOCK_FILE" ] && LOCK_FILE="@localstatedir@/lock/pacemaker"
-fi
-
 dummy_usage() {
 	cat <<END
 usage: $0 {start|stop|status}

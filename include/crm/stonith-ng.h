@@ -26,6 +26,7 @@
 #  define STONITH_NG__H
 
 #  include <dlfcn.h>
+#  include <errno.h>
 #  include <stdbool.h>
 
 /* TO-DO: Work out how to drop this requirement */
@@ -447,7 +448,11 @@ stonith_api_kick_helper(uint32_t nodeid, int timeout, bool off)
         st_kick_fn = dlsym(st_library, "stonith_api_kick");
     }
     if (st_kick_fn == NULL) {
+#ifdef ELIBACC
         return -ELIBACC;
+#else
+        return -ENOSYS;
+#endif
     }
 
     return (*st_kick_fn) (nodeid, NULL, timeout, off);

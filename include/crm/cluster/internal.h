@@ -77,7 +77,7 @@ struct crm_ais_quorum_resp_s {
 enum crm_proc_flag {
     crm_proc_none      = 0x00000001,
     /* These values are sent over the network by the legacy plugin
-     * Therefor changing any of these values is going to break compatability
+     * Therefor changing any of these values is going to break compatibility
      *
      * So don't
      */

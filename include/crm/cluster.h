@@ -124,7 +124,7 @@ enum crm_ais_msg_class {
     crm_class_quorum  = 5,
 };
 
-/* order here matters - its used to index into the crm_children array */
+/* order here matters - it's used to index into the crm_children array */
 enum crm_ais_msg_types {
     crm_msg_none     = 0,
     crm_msg_ais      = 1,

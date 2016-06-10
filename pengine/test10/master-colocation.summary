@@ -1,10 +1,9 @@
-2 of 5 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Online: [ box1 box2 ]
 
  Master/Slave Set: ms-conntrackd [conntrackd-stateful]
-     Slaves (target-role): [ box1 box2 ]
+     Slaves: [ box1 box2 ]
  Resource Group: virtualips
      externalip	(ocf::heartbeat:IPaddr2):	Started box2
      internalip	(ocf::heartbeat:IPaddr2):	Started box2
@@ -25,7 +24,7 @@ Online: [ box1 box2 ]
 
  Master/Slave Set: ms-conntrackd [conntrackd-stateful]
      Masters: [ box2 ]
-     Slaves (target-role): [ box1 ]
+     Slaves: [ box1 ]
  Resource Group: virtualips
      externalip	(ocf::heartbeat:IPaddr2):	Started box2
      internalip	(ocf::heartbeat:IPaddr2):	Started box2

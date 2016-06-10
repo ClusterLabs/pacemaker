@@ -1351,7 +1351,7 @@ stage6(pe_working_set_t * data_set)
     action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
     action_t *done = get_pseudo_op(STONITH_DONE, data_set);
     gboolean need_stonith = TRUE;
-    GListPtr gIter = data_set->nodes;
+    GListPtr gIter;
     GListPtr stonith_ops = NULL;
 
     crm_trace("Processing fencing and shutdown cases");
@@ -1361,7 +1361,8 @@ stage6(pe_working_set_t * data_set)
         need_stonith = FALSE;
     }
 
-    for (; gIter != NULL; gIter = gIter->next) {
+    /* Check each node for stonith/shutdown */
+    for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
 
         /* remote-nodes associated with a container resource (such as a vm) are not fenced */
@@ -1387,7 +1388,10 @@ stage6(pe_working_set_t * data_set)
         }
 
         stonith_op = NULL;
-        if (need_stonith && node->details->unclean && pe_can_fence(data_set, node)) {
+
+        if (node->details->unclean
+            && need_stonith && pe_can_fence(data_set, node)) {
+
             pe_warn("Scheduling Node %s for STONITH", node->details->uname);
 
             stonith_op = pe_fence_op(node, NULL, FALSE, data_set);
@@ -1480,7 +1484,7 @@ stage6(pe_working_set_t * data_set)
             GListPtr gIter2 = NULL;
 
             for (gIter2 = stonith_ops; gIter2 != NULL; gIter2 = gIter2->next) {
-                action_t *stonith_op = (action_t *) gIter2->data;
+                stonith_op = (action_t *) gIter2->data;
 
                 if (dc_down != stonith_op) {
                     order_actions(stonith_op, dc_down, pe_order_optional);
@@ -1967,7 +1971,7 @@ stage7(pe_working_set_t * data_set)
     /* Don't ask me why, but apparently they need to be processed in
      * the order they were created in... go figure
      *
-     * Also g_list_prepend() has horrendous performance characteristics
+     * Also g_list_append() has horrendous performance characteristics
      * So we need to use g_list_prepend() and then reverse the list here
      */
     data_set->ordering_constraints = g_list_reverse(data_set->ordering_constraints);
@@ -2758,7 +2762,7 @@ stage8(pe_working_set_t * data_set)
             && crm_str_eq(action->task, RSC_STOP, TRUE)
             ) {
             /* Eventually we should just ignore the 'fence' case
-             * But for now its the best way to detect (in CTS) when
+             * But for now it's the best way to detect (in CTS) when
              * CIB resource updates are being lost
              */
             if (is_set(data_set->flags, pe_flag_have_quorum)

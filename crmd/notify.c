@@ -596,35 +596,38 @@ crmd_enable_notifications(const char *script, const char *target)
 }
 
 static void
-set_notify_key(enum notify_keys_e name, const char *cvalue, char *value)
+set_alert_key(enum notify_keys_e name, const char *value)
 {
     const char **key;
 
-    if(!cvalue) {
-        cvalue = value;
-    }
-
-    for(key = notify_keys[name]; *key; key++) {
-        crm_trace("Setting notify key %s = '%s'", *key, cvalue);
-        if (cvalue) {
-            setenv(*key, cvalue, 1);
+    for (key = notify_keys[name]; *key; key++) {
+        crm_trace("Setting alert key %s = '%s'", *key, value);
+        if (value) {
+            setenv(*key, value, 1);
         } else {
             unsetenv(*key);
         }
     }
-
-    free(value);
 }
 
 static void
-unset_notify_keys()
+set_alert_key_int(enum notify_keys_e name, int value)
+{
+    char *s = crm_itoa(value);
+
+    set_alert_key(name, s);
+    free(s);
+}
+
+static void
+unset_alert_keys()
 {
     const char **key;
     enum notify_keys_e name;
 
     for(name = 0; name < DIMOF(notify_keys); name++) {
         for(key = notify_keys[name]; *key; key++) {
-            crm_trace("Unsetting notify key %s", *key);
+            crm_trace("Unsetting alert key %s", *key);
             unsetenv(*key);
         }
     }
@@ -680,8 +683,8 @@ send_notifications(const char *kind)
     GListPtr l;
     crm_time_hr_t *now = crm_time_hr_new(NULL);
 
-    set_notify_key(CRM_notify_kind, kind, NULL);
-    set_notify_key(CRM_notify_version, VERSION, NULL);
+    set_alert_key(CRM_notify_kind, kind);
+    set_alert_key(CRM_notify_version, VERSION);
 
     for (l = g_list_first(notify_list); l; l = g_list_next(l)) {
         notify_entry_t *entry = (notify_entry_t *)(l->data);
@@ -690,9 +693,9 @@ send_notifications(const char *kind)
         operations++;
         crm_debug("Sending '%s' notification to '%s' via '%s'", kind,
                   entry->recipient, entry->path);
-        set_notify_key(CRM_notify_recipient, entry->recipient, NULL);
-        set_notify_key(CRM_notify_node_sequence, crm_itoa(operations), NULL);
-        set_notify_key(CRM_notify_timestamp, timestamp, NULL);
+        set_alert_key(CRM_notify_recipient, entry->recipient);
+        set_alert_key_int(CRM_notify_node_sequence, operations);
+        set_alert_key(CRM_notify_timestamp, timestamp);
 
         notify = services_action_create_generic(entry->path, NULL);
 
@@ -713,7 +716,7 @@ send_notifications(const char *kind)
         free(timestamp);
     }
 
-    unset_notify_keys();
+    unset_alert_keys();
     if (now) {
         free(now);
     }
@@ -726,9 +729,9 @@ crmd_notify_node_event(crm_node_t *node)
         return;
     }
 
-    set_notify_key(CRM_notify_node, node->uname, NULL);
-    set_notify_key(CRM_notify_nodeid, NULL, crm_itoa(node->id));
-    set_notify_key(CRM_notify_desc, node->state, NULL);
+    set_alert_key(CRM_notify_node, node->uname);
+    set_alert_key_int(CRM_notify_nodeid, node->id);
+    set_alert_key(CRM_notify_desc, node->state);
 
     send_notifications("node");
 }
@@ -747,12 +750,13 @@ crmd_notify_fencing_op(stonith_event_t * e)
         e->operation, e->origin, e->target, pcmk_strerror(e->result),
         e->id);
 
-    set_notify_key(CRM_notify_node, e->target, NULL);
-    set_notify_key(CRM_notify_task, e->operation, NULL);
-    set_notify_key(CRM_notify_desc, NULL, desc);
-    set_notify_key(CRM_notify_rc, NULL, crm_itoa(e->result));
+    set_alert_key(CRM_notify_node, e->target);
+    set_alert_key(CRM_notify_task, e->operation);
+    set_alert_key(CRM_notify_desc, desc);
+    set_alert_key_int(CRM_notify_rc, e->result);
 
     send_notifications("fencing");
+    free(desc);
 }
 
 void
@@ -777,22 +781,20 @@ crmd_notify_resource_op(const char *node, lrmd_event_data_t * op)
         return;
     }
 
-    set_notify_key(CRM_notify_node, node, NULL);
+    set_alert_key(CRM_notify_node, node);
 
-    set_notify_key(CRM_notify_rsc, op->rsc_id, NULL);
-    set_notify_key(CRM_notify_task, op->op_type, NULL);
-    set_notify_key(CRM_notify_interval, NULL, crm_itoa(op->interval));
+    set_alert_key(CRM_notify_rsc, op->rsc_id);
+    set_alert_key(CRM_notify_task, op->op_type);
+    set_alert_key_int(CRM_notify_interval, op->interval);
 
-    set_notify_key(CRM_notify_target_rc, NULL, crm_itoa(target_rc));
-    set_notify_key(CRM_notify_status, NULL, crm_itoa(op->op_status));
-    set_notify_key(CRM_notify_rc, NULL, crm_itoa(op->rc));
+    set_alert_key_int(CRM_notify_target_rc, target_rc);
+    set_alert_key_int(CRM_notify_status, op->op_status);
+    set_alert_key_int(CRM_notify_rc, op->rc);
 
     if(op->op_status == PCMK_LRM_OP_DONE) {
-        set_notify_key(CRM_notify_desc,
-                       services_ocf_exitcode_str(op->rc), NULL);
+        set_alert_key(CRM_notify_desc, services_ocf_exitcode_str(op->rc));
     } else {
-        set_notify_key(CRM_notify_desc,
-                       services_lrm_status_str(op->op_status), NULL);
+        set_alert_key(CRM_notify_desc, services_lrm_status_str(op->op_status));
     }
 
     send_notifications("resource");

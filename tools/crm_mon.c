@@ -48,6 +48,8 @@
 #include <../pengine/pengine.h>
 #include <crm/stonith-ng.h>
 
+extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
+
 void clean_up(int rc);
 void crm_diff_update(const char *event, xmlNode * msg);
 gboolean mon_refresh_display(gpointer user_data);
@@ -3674,7 +3676,7 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
 
     id = crm_element_value(rsc_op, XML_LRM_ATTR_TASK_KEY);
     if (id == NULL) {
-        /* Compatability with <= 1.1.5 */
+        /* Compatibility with <= 1.1.5 */
         id = ID(rsc_op);
     }
 
@@ -4036,7 +4038,7 @@ mon_refresh_display(gpointer user_data)
             break;
     }
 
-    cleanup_calculations(&data_set);
+    cleanup_alloc_calculations(&data_set);
     return TRUE;
 }
 

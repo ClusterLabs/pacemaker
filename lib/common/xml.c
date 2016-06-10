@@ -616,11 +616,11 @@ __xml_acl_create(xmlNode * xml, xmlNode *target, enum xml_private_flags mode)
     const char *xpath = crm_element_value(xml, XML_ACL_ATTR_XPATH);
 
     if(tag == NULL) {
-        /* Compatability handling for pacemaker < 1.1.12 */
+        /* Compatibility handling for pacemaker < 1.1.12 */
         tag = crm_element_value(xml, XML_ACL_ATTR_TAGv1);
     }
     if(ref == NULL) {
-        /* Compatability handling for pacemaker < 1.1.12 */
+        /* Compatibility handling for pacemaker < 1.1.12 */
         ref = crm_element_value(xml, XML_ACL_ATTR_REFv1);
     }
 
@@ -3874,7 +3874,7 @@ crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, 
          * It exists to help debug slowness in xmlNodeDump() and
          * potentially if we ever want to go back to it.
          *
-         * In theory its a good idea (reuse) but our custom version does
+         * In theory it's a good idea (reuse) but our custom version does
          * better for the filtered case and avoids the final strdup() for
          * everything
          */

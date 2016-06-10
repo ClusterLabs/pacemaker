@@ -207,12 +207,11 @@ get_xpath_object_relative(const char *xpath, xmlNode * xml_obj, int error_level)
     }
 
     xpath_prefix = (char *)xmlGetNodePath(xml_obj);
-    len += strlen(xpath_prefix);
-    len += strlen(xpath);
 
-    xpath_full = strdup(xpath_prefix);
-    xpath_full = realloc_safe(xpath_full, len + 1);
-    strncat(xpath_full, xpath, len);
+    len = strlen(xpath_prefix) + strlen(xpath) + 1;
+    xpath_full = malloc(len);
+    strcpy(xpath_full, xpath_prefix);
+    strcat(xpath_full, xpath);
 
     result = get_xpath_object(xpath_full, xml_obj, error_level);
 

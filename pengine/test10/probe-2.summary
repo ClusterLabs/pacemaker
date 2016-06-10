@@ -1,4 +1,3 @@
-4 of 22 resources DISABLED and 0 BLOCKED from being started due to failures
 
 Current cluster status:
 Node wc02 (f36760d8-d84a-46b2-b452-4c8cac8b3396): standby
@@ -10,14 +9,14 @@ Online: [ wc01 ]
      intip_nfs	(ocf::heartbeat:IPaddr2):	Started wc01
  Master/Slave Set: ms_drbd_mysql [drbd_mysql]
      Masters: [ wc02 ]
-     Slaves (target-role): [ wc01 ]
+     Slaves: [ wc01 ]
  Resource Group: group_mysql
      fs_mysql	(ocf::heartbeat:Filesystem):	Started wc02
      intip_sql	(ocf::heartbeat:IPaddr2):	Started wc02
      mysql-server	(ocf::heartbeat:mysql):	Started wc02
  Master/Slave Set: ms_drbd_www [drbd_www]
      Masters: [ wc01 ]
-     Slaves (target-role): [ wc02 ]
+     Slaves: [ wc02 ]
  Clone Set: clone_nfs-common [group_nfs-common]
      Started: [ wc01 wc02 ]
  Clone Set: clone_mysql-proxy [group_mysql-proxy]

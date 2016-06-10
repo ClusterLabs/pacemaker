@@ -1,3 +1,23 @@
+* Fri Jun 10 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.15-1
+- Update source tarball to revision: a50be16
+- Changesets: 82
+- Diff:       61 files changed, 542 insertions(+), 509 deletions(-)
+
+- Features added since Pacemaker-1.1.15-rc3
+  + sample alert scripts are now installed in /usr/share/pacemaker/alerts
+  + stonith_admin: allow -H '*' to show history for all nodes
+  + ./configure --with-configdir argument for /etc/sysconfig, /etc/default, etc.
+
+- Changes since Pacemaker-1.1.15-rc3
+  + fix multiple memory issues (leaks, use-after-free) in daemons and libraries
+  + improve FreeBSD support
+  + Bug rhbz#1321711: handle DLM "wait fencing" state better in controld agent
+  + crmd: avoid timeout on older peers when cancelling a resource operation
+  + pengine: properly order stop actions on guest node relative to host stonith
+  + tools: don't require node to be known to crm_resource when deleting attribute
+  + tools: consistently print ms resource state in crm_mon
+  + tools: update crm_mon schema for recent changes
+
 * Fri May 27 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.15-rc3
 - Update source tarball to revision: 3e9486f
 - Changesets: 59
@@ -1293,7 +1313,7 @@
   + crmd: Bug lf#2379 - Ensure the cluster terminates when the PE is not available
   + crmd: Do not allow the target_rc to be misused by resource agents
   + crmd: Do not ignore action timeouts based on FSA state
-  + crmd: Ensure we dont get stuck in S_PENDING if we loose an election to someone that never talks to us again
+  + crmd: Ensure we don't get stuck in S_PENDING if we loose an election to someone that never talks to us again
   + crmd: Fix memory leaks exposed by valgrind
   + crmd: Remove race condition that could lead to multiple instances of a clone being active on a machine
   + crmd: Send erase_status_tag() calls to the local CIB when the DC is fenced, since there is no DC to accept them
@@ -1409,7 +1429,7 @@
   + pengine: Make sure promote/demote pseudo actions are created correctly
   + pengine: Prevent target-role from promoting more than master-max instances
   + ais: Bug lf#2199 - Prevent expected-quorum-votes from being populated with garbage
-  + ais: Prevent deadlock - dont try to release IPC message if the connection failed
+  + ais: Prevent deadlock - don't try to release IPC message if the connection failed
   + cib: For validation errors, send back the full CIB so the client can display the errors
   + cib: Prevent use-after-free for remote plaintext connections
   + crmd: Bug lf#2201 - Prevent use-of-NULL when running heartbeat
@@ -1516,7 +1536,7 @@
   + crmd: Bug lf#2120 - All transient node attribute updates need to go via attrd
   + crmd: Correctly calculate how long an FSA action took to avoid spamming the logs with errors
   + crmd: Fix another large memory leak affecting Heartbeat based clusters
-  + lha: Restore compatability with older versions
+  + lha: Restore compatibility with older versions
   + pengine: Bug bnc#495687 - Filesystem is not notified of successful STONITH under some conditions
   + pengine: Make running a cluster with STONITH enabled but no STONITH resources an error and provide details on resolutions
   + pengine: Prevent use-ofNULL when using resource ordering sets
@@ -2091,7 +2111,7 @@
   + Core: XML memory corruption - catch, and handle, cases where we are overwriting an attribute value with itself
   + Core: The xml ID type does not allow UUIDs that start with a number
   + Core: Implement XPath based versions of query/delete/replace/modify
-  + Core: Remove some HA2.0.(3,4) compatability code
+  + Core: Remove some HA2.0.(3,4) compatibility code
   + crmd: Overhaul the detection of nodes that are starting vs. failed
   + pengine: Bug LF:1459 - Allow failures to expire
   + pengine: Have the PE do non-persistent configuration upgrades before performing calculations
@@ -2219,10 +2239,10 @@
   + Medium: Build: Re-instate a better default for LCRSODIR
   + Medium: CIB: Bug LF-1861 - Filter irrelvant error status from synchronous CIB clients
   + Medium: Core: Bug 1849 - Invalid conversion of ordinal leap year to gregorian date
-  + Medium: Core: Drop compataibility code for 2.0.4 and 2.0.5 clusters
+  + Medium: Core: Drop compatibility code for 2.0.4 and 2.0.5 clusters
   + Medium: crmd: Bug LF-1860 - Automatically cancel recurring ops before demote and promote operations (not only stops)
   + Medium: crmd: Save the current CIB contents if we detect the PE crashed
-  + Medium: pengine: Bug LF:1866 - Fix version check when applying compatability handling for failed start operations
+  + Medium: pengine: Bug LF:1866 - Fix version check when applying compatibility handling for failed start operations
   + Medium: pengine: Bug LF:1866 - Restore the ability to have start failures not be fatal
   + Medium: pengine: Bug PM1 - Failcount applies to all instances of non-unique clone
   + Medium: pengine: Correctly set the state of partially active master/slave groups

@@ -50,8 +50,8 @@ do_cl_join_query(long long action,
 
 /*	 A_CL_JOIN_ANNOUNCE	*/
 
-/* this is kind of a workaround for the fact that we may not be around
- * or are otherwise unable to reply when the DC sends out A_WELCOME_ALL
+/* this is kind of a workaround for the fact that we may not be around or
+ * are otherwise unable to reply when the DC sends out A_DC_JOIN_OFFER_ALL
  */
 void
 do_cl_join_announce(long long action,
@@ -65,7 +65,7 @@ do_cl_join_announce(long long action,
      * left the CCM list
      */
 
-    /* dont announce if we're in one of these states */
+    /* don't announce if we're in one of these states */
     if (cur_state != S_PENDING) {
         crm_warn("Not announcing cluster join because in state %s",
                  fsa_state2string(cur_state));
