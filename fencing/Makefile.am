@@ -56,9 +56,6 @@ BUILT_SOURCES 		= standalone_config.h
 
 stonithd_SOURCES	+= standalone_config.c config.y config.l
 stonithd_AM_LFLAGS 	= -o$(LEX_OUTPUT_ROOT).c
-
-# lex/yacc issues:
-
 endif
 stonithd_YFLAGS 	= -d
 
@@ -69,6 +66,7 @@ stonithd_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/pengine/libpengine.la	\
 			$(CRYPTOLIB) $(CLUSTERLIBS)
 
+# lex/yacc issues:
 CFLAGS			= $(CFLAGS_COPY:-Werror=)
 
 CLEANFILES = $(man7_MANS) $(man8_MANS)
