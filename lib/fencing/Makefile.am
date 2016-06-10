@@ -23,5 +23,3 @@ lib_LTLIBRARIES = libstonithd.la
 libstonithd_la_SOURCES = st_client.c
 libstonithd_la_LDFLAGS = -version-info 4:1:2
 libstonithd_la_LIBADD = $(top_builddir)/lib/common/libcrmcommon.la
-
-AM_CFLAGS = $(AM_CPPFLAGS)

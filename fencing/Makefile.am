@@ -17,8 +17,6 @@
 #
 include $(top_srcdir)/Makefile.common
 
-SUBDIRS =
-
 ## binary progs
 testdir			= $(datadir)/$(PACKAGE)/tests/fencing
 test_SCRIPTS		= regression.py

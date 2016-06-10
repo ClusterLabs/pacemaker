@@ -17,10 +17,6 @@
 #
 include $(top_srcdir)/Makefile.common
 
-headerdir=$(pkgincludedir)/crm/cluster
-
-header_HEADERS = 
-
 ## libraries
 lib_LTLIBRARIES	= libcrmcluster.la 
 
@@ -45,7 +41,3 @@ endif
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~
-
-install-exec-local:
-
-uninstall-local:

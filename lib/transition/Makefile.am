@@ -21,7 +21,6 @@ include $(top_srcdir)/Makefile.common
 lib_LTLIBRARIES	= libtransitioner.la
 
 ## SOURCES
-noinst_HEADERS		= 
 libtransitioner_la_SOURCES	= unpack.c graph.c utils.c
 
 libtransitioner_la_LDFLAGS	= -version-info 2:5:0
@@ -30,7 +29,3 @@ libtransitioner_la_LIBADD       = $(top_builddir)/lib/common/libcrmcommon.la
 
 clean-generic:
 	rm -f *~
-
-install-exec-local:
-
-uninstall-local:

@@ -26,9 +26,6 @@ COMMONLIBS	= 							\
 		$(top_builddir)/lib/cib/libcib.la			\
 		$(CURSESLIBS) $(CLUSTERLIBS)
 
-headerdir               = $(pkgincludedir)/crm
-header_HEADERS		=
-
 pcmkdir			= $(datadir)/$(PACKAGE)
 pcmk_DATA		= report.common report.collector
 
@@ -56,8 +53,6 @@ sbin_PROGRAMS		+= ipmiservicelogd
 endif
 
 ## SOURCES
-
-noinst_HEADERS		=
 
 MAN8DEPS		= crm_attribute crm_node
 
@@ -142,11 +137,5 @@ ipmiservicelogd_SOURCES	= ipmiservicelogd.c
 ipmiservicelogd_CFLAGS	= $(OPENIPMI_SERVICELOG_CFLAGS) $(SERVICELOG_CFLAGS)
 ipmiservicelogd_LDFLAGS	= $(top_builddir)/lib/common/libcrmcommon.la $(OPENIPMI_SERVICELOG_LIBS) $(SERVICELOG_LIBS)
 endif
-
-install-exec-local:
-
-uninstall-local:
-
-.PHONY: install-exec-hook
 
 CLEANFILES = $(man8_MANS)

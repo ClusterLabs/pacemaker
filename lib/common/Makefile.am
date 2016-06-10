@@ -44,7 +44,3 @@ libcrmcommon_la_SOURCES += $(top_builddir)/lib/gnu/md5.c
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~
-
-install-exec-local:
-
-uninstall-local:
