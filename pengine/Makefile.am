@@ -58,8 +58,8 @@ man7_MANS =	pengine.7
 endif
 
 ## SOURCES
+
 noinst_HEADERS	= allocate.h utils.h pengine.h
-#utils.h pengine.h
 
 libpengine_la_LDFLAGS	= -version-info 11:0:1
 # -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version
