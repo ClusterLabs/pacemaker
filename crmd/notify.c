@@ -756,6 +756,7 @@ crmd_notify_fencing_op(stonith_event_t * e)
     set_alert_key_int(CRM_notify_rc, e->result);
 
     send_notifications("fencing");
+    free(desc);
 }
 
 void

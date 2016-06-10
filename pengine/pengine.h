@@ -82,7 +82,7 @@ enum rsc_discover_e {
 };
 
 struct rsc_to_node_s {
-    const char *id;
+    char *id;
     resource_t *rsc_lh;
 
     enum rsc_role_e role_filter;

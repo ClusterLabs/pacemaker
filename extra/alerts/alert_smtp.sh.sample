@@ -22,13 +22,13 @@
 # ================================
 # <configuration>
 #   <alerts>
-#     <alert id="smtp_alert" path="/path/to/pcmk_smtp_helper.sh">
-#       <instance_attributes id="config_for_pcmk_smtp_helper">
+#     <alert id="smtp_alert" path="/path/to/alert_smtp">
+#       <instance_attributes id="config_for_alert_smtp">
 #         <nvpair id="cluster_name" name="cluster_name" value=""/>
 #         <nvpair id="email_client" name="email_client" value=""/>
 #         <nvpair id="email_sender" name="email_sender" value=""/>
 #       </instance_attributes>
-#       <recipient id="smtp_destination" value="admin@where.admin.lives"/>
+#       <recipient id="smtp_destination" value="admin@example.com"/>
 #     </alert>
 #   </alerts>
 # </configuration>
@@ -56,10 +56,8 @@ if [ ! -z "${email_recipient##*@*}" ]; then
 fi
 
 if [ -z ${CRM_alert_version} ]; then
-    email_subject="Pacemaker version 1.1.15 is required for smtp-helper"
-
+    email_subject="Pacemaker version 1.1.15 or later is required for alerts"
 else
-
     case ${CRM_alert_kind} in
         node)
             email_subject="${CRM_alert_timestamp} ${cluster_name}: Node '${CRM_alert_node}' is now '${CRM_alert_desc}'"
@@ -92,11 +90,15 @@ else
             ;;
 
     esac
+fi
 
-    if [ ! -z "${email_subject}" ]; then
-        case $email_client in
-            sendmail)
-                sendmail -t -r ${email_sender} <<__EOF__
+if [ ! -z "${email_subject}" ]; then
+    case $email_client in
+        # This sample script supports only sendmail for sending the email.
+	# Support for additional senders can easily be added by adding
+	# new cases here.
+        sendmail)
+            sendmail -t -r "${email_sender}" <<__EOF__
 From: ${email_sender}
 To: ${email_recipient}
 Return-Path: ${email_sender}
@@ -104,9 +106,8 @@ Subject: ${email_subject}
 
 ${email_body}
 __EOF__
-                ;;
-            *)
-                ;;
-        esac
-    fi
+            ;;
+        *)
+            ;;
+    esac
 fi

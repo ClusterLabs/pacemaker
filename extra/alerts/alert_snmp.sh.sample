@@ -20,40 +20,23 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #
 ##############################################################################
-# This sample script assumes that only users who already have root access can
-# edit the CIB. Otherwise, a malicious user could run commands as hacluster by
-# inserting shell code into the trap_options variable. If that is not the case
-# in your environment, you should edit this script to remove or validate
-# trap_options.
+# This sample script assumes that only users who already have
+# hacluster-equivalent access to the cluster nodes can edit the CIB. Otherwise,
+# a malicious user could run commands as hacluster by inserting shell code into
+# the trap_options or timestamp-format parameters.
 #
 # Sample configuration (cib fragment in xml notation)
 # ================================
 # <configuration>
 #   <alerts>
-#     <alert id="snmp_alert" path="/path/to/pcmk_snmp_helper.sh">
-#       <instance_attributes id="config_for_snmp_helper">
+#     <alert id="snmp_alert" path="/path/to/alert_snmp.sh">
+#       <instance_attributes id="config_for_alert_snmp">
 #         <nvpair id="trap_node_states" name="trap_node_states" value="all"/>
 #       </instance_attributes>
 #       <meta_attributes id="config_for_timestamp">
 #         <nvpair id="ts_fmt" name="timestamp-format" value=""%Y-%m-%d,%H:%M:%S.%01N""/>
 #       </meta_attributes>
 #       <recipient id="snmp_destination" value="192.168.1.2"/>
-#     </alert>
-#   </alerts>
-# </configuration>
-# ================================
-# ================================
-# <configuration>
-#   <alerts>
-#     <alert id="snmp_alert" path="/path/to/pcmk_snmp_helper.sh">
-#       <recipient id="snmp_destination" value="192.168.1.2">
-#         <instance_attributes id="config_for_snmp_helper">
-#           <nvpair id="trap_node_states" name="trap_node_states" value="all"/>
-#         </instance_attributes>
-#         <meta_attributes id="config_for_timestamp">
-#           <nvpair id="ts_fmt" name="timestamp-format" value="%Y-%m-%d,%H:%M:%S.%01N"/>
-#         </meta_attributes>
-#       </recipient>
 #     </alert>
 #   </alerts>
 # </configuration>
@@ -137,10 +120,10 @@ case "$CRM_alert_kind" in
         case "${CRM_alert_desc}" in
         Cancelled) ;;
         *)
-            if [ "${trap_monitor_success}" = "false" ]; then
-                if [[ ${CRM_alert_rc} -eq 0 && "${CRM_alert_task}" == "monitor" ]]; then
-                    exit;
-                fi
+            if [ "${trap_monitor_success}" = "false" ] \
+                && [ "${CRM_alert_rc}" = "${CRM_alert_target_rc}" ] \
+                && [ "${CRM_alert_task}" = "monitor" ]; then
+                    exit
             fi
 
             "${trap_binary}" -v "${trap_version}" ${trap_options} \

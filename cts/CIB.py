@@ -414,8 +414,7 @@ Description=Dummy resource that takes a while to start
 [Service]
 Type=notify
 ExecStart=/usr/bin/python -c 'import time, systemd.daemon; time.sleep(10); systemd.daemon.notify("READY=1"); time.sleep(86400)'
-ExecStop=/bin/sleep 10
-ExecStop=/bin/kill -s KILL \$MAINPID
+ExecStop=/bin/sh -c 'sleep 10; [ -n "\$MAINPID" ] && kill -s KILL \$MAINPID'
 """
 
             os.system("cat <<-END >/tmp/DummySD.service\n%s\nEND" % (dummy_service_file))

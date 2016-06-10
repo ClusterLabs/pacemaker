@@ -48,6 +48,8 @@
 #include <../pengine/pengine.h>
 #include <crm/stonith-ng.h>
 
+extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
+
 void clean_up(int rc);
 void crm_diff_update(const char *event, xmlNode * msg);
 gboolean mon_refresh_display(gpointer user_data);
@@ -4036,7 +4038,7 @@ mon_refresh_display(gpointer user_data)
             break;
     }
 
-    cleanup_calculations(&data_set);
+    cleanup_alloc_calculations(&data_set);
     return TRUE;
 }
 

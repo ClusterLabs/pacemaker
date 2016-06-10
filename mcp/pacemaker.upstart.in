@@ -7,31 +7,27 @@ kill timeout 3600
 respawn
 
 env prog=pacemakerd
-env rpm_sysconf=@sysconfdir@/sysconfig/pacemaker
-env rpm_lockfile=@localstatedir@/lock/subsys/pacemaker
-env deb_sysconf=@sysconfdir@/default/pacemaker
-env deb_lockfile=@localstatedir@/lock/pacemaker
+env sysconf=@CONFIGDIR@/crm_mon
+env rpm_lockdir=@localstatedir@/lock/subsys
+env deb_lockdir=@localstatedir@/lock
 
 script
-    [ -f "$rpm_sysconf" ] && . $rpm_sysconf
-    [ -f "$deb_sysconf" ] && . $deb_sysconf
+    [ -f "$sysconf" ] && . "$sysconf"
     exec $prog
 end script
 
 post-start script
-    [ -f "$rpm_sysconf" ] && . $rpm_sysconf
-    [ -f "$deb_sysconf" ] && . $deb_sysconf
-    [ -z "$LOCK_FILE" -a -d @sysconfdir@/sysconfig ] && LOCK_FILE="$rpm_lockfile"
-    [ -z "$LOCK_FILE" -a -d @sysconfdir@/default ] && LOCK_FILE="$deb_lockfile"
-    touch $LOCK_FILE
-    pidof $prog > @localstatedir@/run/$prog.pid
+    [ -f "$sysconf" ] && . "$sysconf"
+    [ -z "$LOCK_FILE" -a -d "$rpm_lockdir" ] && LOCK_FILE="$rpm_lockdir/pacemaker"
+    [ -z "$LOCK_FILE" -a -d "$deb_lockdir" ] && LOCK_FILE="$deb_lockdir/pacemaker"
+    touch "$LOCK_FILE"
+    pidof $prog > "@localstatedir@/run/$prog.pid"
 end script
 
 post-stop script
-    [ -f "$rpm_sysconf" ] && . $rpm_sysconf
-    [ -f "$deb_sysconf" ] && . $deb_sysconf
-    [ -z "$LOCK_FILE" -a -d @sysconfdir@/sysconfig ] && LOCK_FILE="$rpm_lockfile"
-    [ -z "$LOCK_FILE" -a -d @sysconfdir@/default ] && LOCK_FILE="$deb_lockfile"
-    rm -f $LOCK_FILE
-    rm -f @localstatedir@/run/$prog.pid
+    [ -f "$sysconf" ] && . "$sysconf"
+    [ -z "$LOCK_FILE" -a -d "$rpm_lockdir" ] && LOCK_FILE="$rpm_lockdir/pacemaker"
+    [ -z "$LOCK_FILE" -a -d "$deb_lockdir" ] && LOCK_FILE="$deb_lockdir/pacemaker"
+    rm -f "$LOCK_FILE"
+    rm -f "@localstatedir@/run/$prog.pid"
 end script

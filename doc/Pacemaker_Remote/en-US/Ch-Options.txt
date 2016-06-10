@@ -92,8 +92,10 @@ remote node must share the same private key. By default, this
 key is placed at +/etc/pacemaker/authkey+ on each node.
 
 You can change the default port and/or key location for Pacemaker and
-pacemaker_remote via environment variables. These environment variables can be
-enabled by placing them in the +/etc/sysconfig/pacemaker+ file.
+pacemaker_remote via environment variables. How these variables are set varies
+by OS, but usually they are set in the +/etc/sysconfig/pacemaker+ or
++/etc/default/pacemaker+ file.
+
 ----
 #==#==# Pacemaker Remote
 # Use a custom directory for finding the authkey.

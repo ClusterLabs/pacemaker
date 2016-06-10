@@ -4,7 +4,7 @@ Documentation=man:crm_mon
 
 [Service]
 Type=forking
-EnvironmentFile=-@sysconfdir@/sysconfig/crm_mon
+EnvironmentFile=-@CONFIGDIR@/crm_mon
 ExecStart=@sbindir@/crm_mon $OPTIONS
 Restart=always
 

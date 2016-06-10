@@ -162,14 +162,11 @@ instance attributes are completely up to the particular agent.
 
 == Using the Sample Alert Agents ==
 
-Several sample alert agents are provided in the
-https://github.com/ClusterLabs/pacemaker/tree/master/extra/alerts[+extra/alerts+]
-directory of the pacemaker source tree. If you installed Pacemaker via a
-package, these might be available somewhere on your system, such as
-+/usr/share/pacemaker+.
+Pacemaker provides several sample alert agents, installed in
++/usr/share/pacemaker/alerts+ by default.
 
-While these sample scripts may be used directly as alert agents,
-they are provided mainly as templates to be edited to suit your purposes.
+While these sample scripts may be copied and used as-is, they are provided
+mainly as templates to be edited to suit your purposes.
 See their source code for the full set of instance attributes they support.
 
 .Sending cluster events as SNMP traps
@@ -178,8 +175,8 @@ See their source code for the full set of instance attributes they support.
 -----
 <configuration>
     <alerts>
-        <alert id="snmp_alert" path="/path/to/pcmk_snmp_helper.sh">
-            <instance_attributes id="config_for_snmp_helper">
+        <alert id="snmp_alert" path="/path/to/alert_snmp.sh">
+            <instance_attributes id="config_for_alert_snmp">
                 <nvpair id="trap_node_states" name="trap_node_states" value="all"/>
             </instance_attributes>
             <meta_attributes id="config_for_timestamp">
@@ -199,8 +196,8 @@ See their source code for the full set of instance attributes they support.
 -----
     <configuration>
         <alerts>
-            <alert id="smtp_alert" path="/path/to/pcmk_smtp_helper.sh">
-              <instance_attributes id="config_for_pcmk_smtp_helper">
+            <alert id="smtp_alert" path="/path/to/alert_smtp.sh">
+              <instance_attributes id="config_for_alert_smtp">
                   <nvpair id="email_sender" name="email_sender"
                       value="donotreply@example.com"/>
               </instance_attributes>
@@ -306,6 +303,14 @@ Special concerns when writing alert agents:
   of permissions. If an agent requires additional privileges, it is
   recommended to configure +sudo+ to allow the agent to run the necessary
   commands as another user with the appropriate privileges.
+
+* As always, take care to validate and sanitize user-configured parameters,
+  such as CRM_alert_timestamp (whose content is specified by the
+  user-configured timestamp-format), CRM_alert_recipient, and all instance
+  attributes. Mostly this is needed simply to protect against configuration
+  errors, but if some user can modify the CIB without having hacluster-level
+  access to the cluster nodes, it is a potential security concern as well, to
+  avoid the possibility of code injection.
 
 [NOTE]
 =====

@@ -490,6 +490,8 @@ exit 0
 %doc %{_mandir}/man8/pacemakerd.*
 %doc %{_mandir}/man8/stonith_admin.*
 
+%doc %{_datadir}/pacemaker/alerts
+
 %license COPYING
 %doc AUTHORS
 %doc ChangeLog
@@ -543,6 +545,7 @@ exit 0
 %{_sbindir}/crm_simulate
 %{_sbindir}/crm_report
 %{_sbindir}/crm_ticket
+%exclude %{_datadir}/pacemaker/alerts
 %exclude %{_datadir}/pacemaker/tests
 %{_datadir}/pacemaker
 %{_datadir}/snmp/mibs/PCMK-MIB.txt

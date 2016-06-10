@@ -17,19 +17,12 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ##############################################################################
-# This sample script assumes that only users who already have root access can
-# edit the CIB. Otherwise, a malicious user can create damage anywhere in the
-# filesystem  where user hacluster has access - as well as writing to special
-# files.
-# If that is not the case in your environment, you should edit this script to
-# validate the log-destination.
-#
 # Sample configuration (cib fragment in xml notation)
 # ================================
 # <configuration>
 #   <alerts>
-#     <alert id="alert_sample" path="/path/to/pcmk_alert_sample.sh">
-#       <instance_attributes id="config_for_pcmk_alert_sample">
+#     <alert id="alert_sample" path="/path/to/alert_file.sh">
+#       <instance_attributes id="config_for_alert_file">
 #         <nvpair id="debug_option_1" name="debug_exec_order" value="false"/>
 #       </instance_attributes>
 #       <meta_attributes id="config_for_timestamp">
@@ -41,12 +34,15 @@
 # </configuration>
 
 if [ -z $CRM_alert_version ]; then
-    echo "Pacemaker version 1.1.15 is required" >> ${CRM_alert_recipient}
+    echo "Pacemaker version 1.1.15 or later is required" >> "${CRM_alert_recipient}"
     exit 0
 fi
 
 debug_exec_order_default="false"
 
+# Pacemaker passes instance attributes to alert agents as environment variables.
+# It is completely up to the agent what instance attributes to support.
+# Here, we define an instance attribute "debug_exec_order".
 : ${debug_exec_order=${debug_exec_order_default}}
 
 if [ "${debug_exec_order}" = "true" ]
@@ -62,7 +58,7 @@ fi
 
 case $CRM_alert_kind in
     node)
-        echo "${tstamp}Node '${CRM_alert_node}' is now '${CRM_alert_desc}'" >> ${CRM_alert_recipient}
+        echo "${tstamp}Node '${CRM_alert_node}' is now '${CRM_alert_desc}'" >> "${CRM_alert_recipient}"
         ;;
     fencing)
         # Other keys:
@@ -71,7 +67,7 @@ case $CRM_alert_kind in
         # CRM_alert_task
         # CRM_alert_rc
         #
-        echo "${tstamp}Fencing ${CRM_alert_desc}" >> ${CRM_alert_recipient}
+        echo "${tstamp}Fencing ${CRM_alert_desc}" >> "${CRM_alert_recipient}"
         ;;
     resource)
         # Other keys:
@@ -95,12 +91,12 @@ case $CRM_alert_kind in
         case ${CRM_alert_desc} in
             Cancelled) ;;
             *)
-                echo "${tstamp}Resource operation '${CRM_alert_task}${CRM_alert_interval}' for '${CRM_alert_rsc}' on '${CRM_alert_node}': ${CRM_alert_desc}${CRM_alert_target_rc}" >> ${CRM_alert_recipient}
+                echo "${tstamp}Resource operation '${CRM_alert_task}${CRM_alert_interval}' for '${CRM_alert_rsc}' on '${CRM_alert_node}': ${CRM_alert_desc}${CRM_alert_target_rc}" >> "${CRM_alert_recipient}"
                 ;;
         esac
         ;;
     *)
-        echo "${tstamp}Unhandled $CRM_alert_kind alert" >> ${CRM_alert_recipient}
-        env | grep CRM_alert >> ${CRM_alert_recipient}
+        echo "${tstamp}Unhandled $CRM_alert_kind alert" >> "${CRM_alert_recipient}"
+        env | grep CRM_alert >> "${CRM_alert_recipient}"
         ;;
 esac
