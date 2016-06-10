@@ -1,3 +1,23 @@
+* Fri Jun 10 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.15-1
+- Update source tarball to revision: a50be16
+- Changesets: 82
+- Diff:       61 files changed, 542 insertions(+), 509 deletions(-)
+
+- Features added since Pacemaker-1.1.15-rc3
+  + sample alert scripts are now installed in /usr/share/pacemaker/alerts
+  + stonith_admin: allow -H '*' to show history for all nodes
+  + ./configure --with-configdir argument for /etc/sysconfig, /etc/default, etc.
+
+- Changes since Pacemaker-1.1.15-rc3
+  + fix multiple memory issues (leaks, use-after-free) in daemons and libraries
+  + improve FreeBSD support
+  + Bug rhbz#1321711: handle DLM "wait fencing" state better in controld agent
+  + crmd: avoid timeout on older peers when cancelling a resource operation
+  + pengine: properly order stop actions on guest node relative to host stonith
+  + tools: don't require node to be known to crm_resource when deleting attribute
+  + tools: consistently print ms resource state in crm_mon
+  + tools: update crm_mon schema for recent changes
+
 * Fri May 27 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.15-rc3
 - Update source tarball to revision: 3e9486f
 - Changesets: 59
