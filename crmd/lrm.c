@@ -274,6 +274,32 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
     }
 }
 
+/*
+ * \internal
+ * \brief Send a direct OK ack for a resource task
+ *
+ * \param[in] lrm_state  LRM connection
+ * \param[in] input      Input message being ack'ed
+ * \param[in] rsc_id     ID of affected resource
+ * \param[in] rsc        Affected resource (if available)
+ * \param[in] task       Operation task being ack'ed
+ * \param[in] ack_host   Name of host to send ack to
+ * \param[in] ack_sys    IPC system name to ack
+ */
+static void
+send_task_ok_ack(lrm_state_t *lrm_state, ha_msg_input_t *input,
+                 const char *rsc_id, lrmd_rsc_info_t *rsc, const char *task,
+                 const char *ack_host, const char *ack_sys)
+{
+    lrmd_event_data_t *op = construct_op(lrm_state, input->xml, rsc_id, task);
+
+    CRM_ASSERT(op != NULL);
+    op->rc = PCMK_OCF_OK;
+    op->op_status = PCMK_LRM_OP_DONE;
+    send_direct_ack(ack_host, ack_sys, rsc, op, rsc_id);
+    lrmd_free_event(op);
+}
+
 void
 lrm_op_callback(lrmd_event_data_t * op)
 {
@@ -1625,20 +1651,12 @@ do_lrm_invoke(long long action,
             synthesize_lrmd_failure(lrm_state, input->xml, PCMK_OCF_NOT_CONFIGURED);
 
         } else if (rsc == NULL) {
-            lrmd_event_data_t *op = NULL;
-
             crm_notice("Not creating resource for a %s event: %s", operation, ID(input->xml));
             delete_rsc_entry(lrm_state, input, ID(xml_rsc), NULL, pcmk_ok, user_name);
 
-            op = construct_op(lrm_state, input->xml, ID(xml_rsc), operation);
-
             /* Deleting something that does not exist is a success */
-            op->op_status = PCMK_LRM_OP_DONE;
-            op->rc = PCMK_OCF_OK;
-            CRM_ASSERT(op != NULL);
-
-            send_direct_ack(from_host, from_sys, NULL, op, ID(xml_rsc));
-            lrmd_free_event(op);
+            send_task_ok_ack(lrm_state, input, ID(xml_rsc), NULL, operation,
+                             from_host, from_sys);
 
         } else if (safe_str_eq(operation, CRMD_ACTION_CANCEL)) {
             char *op_key = NULL;
@@ -1685,24 +1703,35 @@ do_lrm_invoke(long long action,
 
             /* Acknowledge the cancellation operation if it's for a remote connection resource */
             if (in_progress == FALSE || is_remote_lrmd_ra(NULL, NULL, rsc->id)) {
-                lrmd_event_data_t *op = construct_op(lrm_state, input->xml, rsc->id, op_task);
                 char *op_id = make_stop_id(rsc->id, call);
 
                 if (is_remote_lrmd_ra(NULL, NULL, rsc->id) == FALSE) {
                     crm_info("Nothing known about operation %d for %s", call, op_key);
                 }
                 delete_op_entry(lrm_state, NULL, rsc->id, op_key, call);
+                send_task_ok_ack(lrm_state, input, rsc->id, rsc, op_task,
+                                 from_host, from_sys);
 
-                CRM_ASSERT(op != NULL);
-
-                op->rc = PCMK_OCF_OK;
-                op->op_status = PCMK_LRM_OP_DONE;
-                send_direct_ack(from_host, from_sys, rsc, op, rsc->id);
-                lrmd_free_event(op);
-
-                /* needed?? yes for the cancellation operation of a remote connection resource */
+                /* needed at least for cancellation of a remote operation */
                 g_hash_table_remove(lrm_state->pending_ops, op_id);
                 free(op_id);
+
+            } else {
+                /* No ack is needed since abcdaa8, but peers with older versions
+                 * in a rolling upgrade need one. We didn't bump the feature set
+                 * at that commit, so we can only compare against the previous
+                 * CRM version (3.0.8). If any peers have feature set 3.0.9 but
+                 * not abcdaa8, they will time out waiting for the ack (no
+                 * released versions of Pacemaker are affected).
+                 */
+                const char *peer_version = crm_element_value(params, XML_ATTR_CRM_VERSION);
+
+                if (compare_version(peer_version, "3.0.8") <= 0) {
+                    crm_info("Sending compatibility ack for %s cancellation to %s (CRM version %s)",
+                             op_key, from_host, peer_version);
+                    send_task_ok_ack(lrm_state, input, rsc->id, rsc, op_task,
+                                     from_host, from_sys);
+                }
             }
 
             free(op_key);
