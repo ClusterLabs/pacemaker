@@ -1921,15 +1921,15 @@ heartbeat_get_metadata(const char *type, char **output)
 static int
 generic_get_metadata(const char *standard, const char *provider, const char *type, char **output)
 {
-    svc_action_t *action = resources_action_create(type,
-                                                   standard,
-                                                   provider,
-                                                   type,
-                                                   "meta-data",
-                                                   0,
-                                                   30000,
-                                                   NULL,
-                                                   0);
+    svc_action_t *action;
+
+    action = resources_action_create(type, standard, provider, type,
+                                     "meta-data", 0, 30000, NULL, 0);
+    if (action == NULL) {
+        crm_err("Unable to retrieve meta-data for %s:%s:%s", standard, provider, type);
+        services_action_free(action);
+        return -EINVAL;
+    }
 
     if (!(services_action_sync(action))) {
         crm_err("Failed to retrieve meta-data for %s:%s:%s", standard, provider, type);
@@ -1938,7 +1938,7 @@ generic_get_metadata(const char *standard, const char *provider, const char *typ
     }
 
     if (!action->stdout_data) {
-        crm_err("Failed to retrieve meta-data for %s:%s:%s", standard, provider, type);
+        crm_err("Failed to receive meta-data for %s:%s:%s", standard, provider, type);
         services_action_free(action);
         return -EIO;
     }

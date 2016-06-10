@@ -499,7 +499,7 @@ get_rsc_metadata(const char *type, const char *rclass, const char *provider, boo
         return NULL;
     }
 
-    snprintf(key, len, "%s::%s:%s", type, rclass, provider);
+    snprintf(key, len, "%s::%s:%s", rclass, provider, type);
     if(force == FALSE) {
         metadata = g_hash_table_lookup(metadata_hash, key);
         if (metadata) {
@@ -509,19 +509,16 @@ get_rsc_metadata(const char *type, const char *rclass, const char *provider, boo
 
     if(metadata == NULL) {
         rc = lrm_state_get_metadata(lrm_state, rclass, provider, type, &metadata, 0);
-        crm_trace("Retrieved live metadata for %s: %s (%d)", key, pcmk_strerror(rc), rc);
         if(rc == pcmk_ok) {
+            crm_trace("Retrieved live metadata for %s", key);
             CRM_LOG_ASSERT(metadata != NULL);
             g_hash_table_insert(metadata_hash, key, metadata);
             key = NULL;
         } else {
-            CRM_LOG_ASSERT(metadata == NULL);
-            metadata = NULL;
+            crm_trace("No metadata found for %s: %s" CRM_XS " rc=%d",
+                     key, pcmk_strerror(rc), rc);
+            CRM_CHECK(metadata == NULL, metadata = NULL);
         }
-    }
-
-    if (metadata == NULL) {
-        crm_warn("No metadata found for %s: %s (%d)", key, pcmk_strerror(rc), rc);
     }
 
     free(key);
@@ -751,17 +748,17 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
 
     m_string = get_rsc_metadata(rsc->type, rsc->class, rsc->provider, safe_str_eq(op->op_type, RSC_START));
     if(m_string == NULL) {
-        crm_err("No metadata for %s::%s:%s", rsc->provider, rsc->class, rsc->type);
+        crm_err("No metadata for %s::%s:%s", rsc->class, rsc->provider, rsc->type);
         return TRUE;
     }
 
     metadata = string2xml(m_string);
     if(metadata == NULL) {
-        crm_err("Metadata for %s::%s:%s is not valid XML", rsc->provider, rsc->class, rsc->type);
+        crm_err("Metadata for %s::%s:%s is not valid XML", rsc->class, rsc->provider, rsc->type);
         return TRUE;
     }
 
-    crm_trace("Including additional digests for %s::%s:%s", rsc->provider, rsc->class, rsc->type);
+    crm_trace("Including additional digests for %s::%s:%s", rsc->class, rsc->provider, rsc->type);
     append_restart_list(op, metadata, xml_op, caller_version);
     append_secure_list(op, metadata, xml_op, caller_version);
 
