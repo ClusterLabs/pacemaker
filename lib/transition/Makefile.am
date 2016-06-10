@@ -15,10 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-MAINTAINERCLEANFILES    = Makefile.in
-
-AM_CPPFLAGS        = -I$(top_builddir)/include  -I$(top_srcdir)/include  \
-		  -I$(top_builddir)/libltdl  -I$(top_srcdir)/libltdl
+include $(top_srcdir)/Makefile.common
 
 ## libraries
 lib_LTLIBRARIES	= libtransitioner.la

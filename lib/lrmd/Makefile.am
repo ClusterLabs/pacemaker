@@ -14,13 +14,7 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#
-
-MAINTAINERCLEANFILES = Makefile.in
-
-AM_CPPFLAGS         = -I$(top_builddir)/include  -I$(top_srcdir)/include     \
-                   -I$(top_builddir)/libltdl  -I$(top_srcdir)/libltdl     \
-		   -I$(top_builddir)          -I$(top_srcdir)
+include $(top_srcdir)/Makefile.common
 
 lib_LTLIBRARIES = liblrmd.la
 
