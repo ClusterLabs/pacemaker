@@ -39,5 +39,3 @@ endif
 if BUILD_SYSTEMD
 libcrmservice_la_SOURCES += systemd.c
 endif
-
-AM_CFLAGS = $(AM_CPPFLAGS)

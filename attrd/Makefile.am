@@ -21,8 +21,6 @@ halibdir		= $(CRM_DAEMON_DIR)
 halib_PROGRAMS		= attrd
 ## SOURCES
 
-noinst_HEADERS		=
-
 attrd_SOURCES		=
 attrd_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la 		\
 		$(top_builddir)/lib/common/libcrmcommon.la		\
@@ -37,9 +35,3 @@ endif
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~
-
-install-exec-local:
-
-uninstall-local:
-
-.PHONY: install-exec-hook

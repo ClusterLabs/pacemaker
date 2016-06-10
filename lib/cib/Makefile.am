@@ -21,7 +21,6 @@ include $(top_srcdir)/Makefile.common
 lib_LTLIBRARIES	= libcib.la
 
 ## SOURCES
-noinst_HEADERS		= 
 libcib_la_SOURCES	= cib_ops.c cib_utils.c cib_client.c cib_native.c cib_attrs.c
 libcib_la_SOURCES      += cib_file.c cib_remote.c
 
@@ -31,7 +30,3 @@ libcib_la_CFLAGS	= -I$(top_srcdir)
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~
-
-install-exec-local:
-
-uninstall-local:

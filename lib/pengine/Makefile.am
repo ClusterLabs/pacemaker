@@ -34,7 +34,3 @@ libpe_status_la_LIBADD	=  @CURSESLIBS@ $(top_builddir)/lib/common/libcrmcommon.l
 
 clean-generic:
 	rm -f *.log *.debug *~
-
-install-exec-local:
-
-uninstall-local:

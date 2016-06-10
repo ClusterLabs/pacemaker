@@ -17,7 +17,4 @@
 #
 MAINTAINERCLEANFILES	= Makefile.in
 
-headerdir=$(pkgincludedir)/crm/fencing
-
 noinst_HEADERS		= internal.h 
-header_HEADERS		= 
