@@ -1001,6 +1001,12 @@ ha_set_tm_time(crm_time_t * target, struct tm *source)
     int h_offset = 0;
     int m_offset = 0;
 
+    /* Ensure target is fully initialized */
+    target->years = 0;
+    target->months = 0;
+    target->days = 0;
+    target->seconds = 0;
+    target->offset = 0;
     target->duration = FALSE;
 
     if (source->tm_year > 0) {
@@ -1013,7 +1019,6 @@ ha_set_tm_time(crm_time_t * target, struct tm *source)
         target->days = 1 + source->tm_yday;
     }
 
-    target->seconds = 0;
     if (source->tm_hour >= 0) {
         target->seconds += 60 * 60 * source->tm_hour;
     }
@@ -1029,7 +1034,6 @@ ha_set_tm_time(crm_time_t * target, struct tm *source)
     m_offset = (GMTOFF(source) - (3600 * h_offset)) / (60);
     crm_trace("Offset (s): %ld, offset (hh:mm): %.2d:%.2d", GMTOFF(source), h_offset, m_offset);
 
-    target->offset = 0;
     target->offset += 60 * 60 * h_offset;
     target->offset += 60 * m_offset;
 }

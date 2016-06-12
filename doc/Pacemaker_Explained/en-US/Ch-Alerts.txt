@@ -37,6 +37,9 @@ In the example above, the cluster will call +my-script.sh+ for each event.
 Multiple alert agents may be configured; the cluster will call all of them for
 each event.
 
+Alert agents will be called only on cluster nodes. They will be called for
+events involving Pacemaker Remote nodes, but they will never be called _on_
+those nodes.
 
 == Alert Recipients ==
 
