@@ -1148,6 +1148,12 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
     }
     if(rc != pcmk_ok) {
         fprintf(stderr, "Could not set target-role for %s: %s (%d)\n", rsc_id, pcmk_strerror(rc), rc);
+        if (current_active) {
+            g_list_free_full(current_active, free);
+        }
+        if (restart_target_active) {
+            g_list_free_full(restart_target_active, free);
+        }
         free(rsc_id);
         return crm_exit(rc);
     }
@@ -1185,7 +1191,11 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
                 goto failure;
             }
 
+            if (current_active) {
+                g_list_free_full(current_active, free);
+            }
             current_active = get_active_resources(host, &data_set);
+            g_list_free(list_delta);
             list_delta = subtract_lists(current_active, target_active);
             dump_list(current_active, "Current");
             dump_list(list_delta, "Delta");
@@ -1222,7 +1232,13 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
         return crm_exit(rc);
     }
 
+    if (target_active) {
+        g_list_free_full(target_active, free);
+    }
     target_active = restart_target_active;
+    if (list_delta) {
+        g_list_free(list_delta);
+    }
     list_delta = subtract_lists(target_active, current_active);
     fprintf(stdout, "Waiting for %d resources to start again:\n", g_list_length(list_delta));
     display_list(list_delta, " * ");
@@ -1248,7 +1264,11 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
                 goto failure;
             }
 
+            if (current_active) {
+                g_list_free_full(current_active, free);
+            }
             current_active = get_active_resources(host, &data_set);
+            g_list_free(list_delta);
             list_delta = subtract_lists(target_active, current_active);
             dump_list(current_active, "Current");
             dump_list(list_delta, "Delta");
@@ -1264,8 +1284,8 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
 
     }
 
-    free(rsc_id);
-    return pcmk_ok;
+    rc = pcmk_ok;
+    goto done;
 
   failure:
     if(is_clone && host) {
@@ -1278,6 +1298,21 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
     } else {
         cli_resource_delete_attribute(rsc_id, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, cib, &data_set);
     }
+
+done:
+    if (list_delta) {
+        g_list_free(list_delta);
+    }
+    if (current_active) {
+        g_list_free_full(current_active, free);
+    }
+    if (target_active && (target_active != restart_target_active)) {
+        g_list_free_full(target_active, free);
+    }
+    if (restart_target_active) {
+        g_list_free_full(restart_target_active, free);
+    }
+    cleanup_alloc_calculations(&data_set);
     free(rsc_id);
     return rc;
 }
