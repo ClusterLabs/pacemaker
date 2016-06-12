@@ -1178,7 +1178,7 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
             dump_list(list_delta, "Delta");
         }
 
-        crm_trace("%d (was %d) resources remaining", before, g_list_length(list_delta));
+        crm_trace("%d (was %d) resources remaining", g_list_length(list_delta), before);
         if(before == g_list_length(list_delta)) {
             /* aborted during stop phase, print the contents of list_delta */
             fprintf(stderr, "Could not complete shutdown of %s, %d resources remaining\n", rsc_id, g_list_length(list_delta));
@@ -1209,6 +1209,7 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
 
     step_timeout_s = timeout / sleep_interval;
     while(g_list_length(list_delta) > 0) {
+        before = g_list_length(list_delta);
         if(timeout_ms == 0) {
             step_timeout_s = max_delay_in(&data_set, list_delta) / sleep_interval;
         }
@@ -1241,7 +1242,7 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
             goto failure;
         }
 
-    } while(g_list_length(list_delta) > 0);
+    }
 
     free(rsc_id);
     return pcmk_ok;
