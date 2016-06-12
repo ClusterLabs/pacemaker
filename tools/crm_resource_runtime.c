@@ -1044,6 +1044,9 @@ max_delay_in(pe_working_set_t * data_set, GList *resources)
     return 5 + (max_delay / 1000);
 }
 
+#define waiting_for_starts(d, r, h) ((g_list_length(d) > 0) || \
+                                    (resource_is_running_on((r), (h)) == FALSE))
+
 /*!
  * \internal
  * \brief Restart a resource (on a particular host if requested).
@@ -1244,14 +1247,15 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
     display_list(list_delta, " * ");
 
     step_timeout_s = timeout / sleep_interval;
-    while(g_list_length(list_delta) > 0) {
+    while (waiting_for_starts(list_delta, rsc, host)) {
         before = g_list_length(list_delta);
         if(timeout_ms == 0) {
             step_timeout_s = max_delay_in(&data_set, list_delta) / sleep_interval;
         }
 
         /* We probably don't need the entire step timeout */
-        for(lpc = 0; lpc < step_timeout_s && g_list_length(list_delta) > 0; lpc++) {
+        for (lpc = 0; (lpc < step_timeout_s) && waiting_for_starts(list_delta, rsc, host); lpc++) {
+
             sleep(sleep_interval);
             if(timeout) {
                 timeout -= sleep_interval;
@@ -1267,7 +1271,11 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
             if (current_active) {
                 g_list_free_full(current_active, free);
             }
-            current_active = get_active_resources(host, &data_set);
+
+            /* It's OK if dependent resources moved to a different node,
+             * so we check active resources on all nodes.
+             */
+            current_active = get_active_resources(NULL, &data_set);
             g_list_free(list_delta);
             list_delta = subtract_lists(target_active, current_active);
             dump_list(current_active, "Current");
