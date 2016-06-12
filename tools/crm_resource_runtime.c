@@ -1070,6 +1070,7 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
 
     bool is_clone = FALSE;
     char *rsc_id = NULL;
+    char *orig_target_role = NULL;
 
     GList *list_delta = NULL;
     GList *target_active = NULL;
@@ -1088,7 +1089,9 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
         return -ENXIO;
     }
 
+    /* We might set the target-role meta-attribute */
     attr_set_type = XML_TAG_META_SETS;
+
     rsc_id = strdup(rsc->id);
     if(rsc->variant > pe_group) {
         is_clone = TRUE;
@@ -1127,10 +1130,20 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
     dump_list(current_active, "Origin");
 
     if(is_clone && host) {
+        /* Stop the clone instance by banning it from the host */
         BE_QUIET = TRUE;
         rc = cli_resource_ban(rsc_id, host, NULL, cib);
 
     } else {
+        /* Stop the resource by setting target-role to Stopped.
+         * Remember any existing target-role so we can restore it later
+         * (though it only makes any difference if it's Slave).
+         */
+        char *lookup_id = clone_strip(rsc->id);
+
+        find_resource_attr(cib, XML_NVPAIR_ATTR_VALUE, lookup_id, NULL, NULL,
+                           NULL, XML_RSC_ATTR_TARGET_ROLE, &orig_target_role);
+        free(lookup_id);
         rc = cli_resource_update_attribute(rsc_id, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, RSC_STOPPED, FALSE, cib, &data_set);
     }
     if(rc != pcmk_ok) {
@@ -1192,6 +1205,13 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
     if(is_clone && host) {
         rc = cli_resource_clear(rsc_id, host, NULL, cib);
 
+    } else if (orig_target_role) {
+        rc = cli_resource_update_attribute(rsc_id, NULL, NULL,
+                                           XML_RSC_ATTR_TARGET_ROLE,
+                                           orig_target_role, FALSE, cib,
+                                           &data_set);
+        free(orig_target_role);
+        orig_target_role = NULL;
     } else {
         rc = cli_resource_delete_attribute(rsc_id, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, cib, &data_set);
     }
@@ -1250,7 +1270,11 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
   failure:
     if(is_clone && host) {
         cli_resource_clear(rsc_id, host, NULL, cib);
-
+    } else if (orig_target_role) {
+        cli_resource_update_attribute(rsc_id, NULL, NULL,
+                                      XML_RSC_ATTR_TARGET_ROLE,
+                                      orig_target_role, FALSE, cib, &data_set);
+        free(orig_target_role);
     } else {
         cli_resource_delete_attribute(rsc_id, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, cib, &data_set);
     }
