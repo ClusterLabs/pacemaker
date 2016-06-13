@@ -2368,25 +2368,28 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op, struct recurr
         case PCMK_LRM_OP_CANCELLED:
             crm_info("Result of %s operation for %s on %s: %s "
                      CRM_XS " call=%d key=%s confirmed=%s",
-                     op->op_type, op->rsc_id, lrm_state->node_name,
+                     crm_action_str(op->op_type, op->interval),
+                     op->rsc_id, lrm_state->node_name,
                      services_lrm_status_str(op->op_status),
                      op->call_id, op_key, (removed? "true" : "false"));
             break;
 
         case PCMK_LRM_OP_DONE:
             do_crm_log(op->interval?LOG_INFO:LOG_NOTICE,
-                       "Result of %s operation for %s on %s: %s "
-                       CRM_XS " call=%d key=%s confirmed=%s rc=%d cib-update=%d",
-                       op->op_type, op->rsc_id, lrm_state->node_name,
-                       services_ocf_exitcode_str(op->rc),
+                       "Result of %s operation for %s on %s: %d (%s) "
+                       CRM_XS " call=%d key=%s confirmed=%s cib-update=%d",
+                       crm_action_str(op->op_type, op->interval),
+                       op->rsc_id, lrm_state->node_name,
+                       op->rc, services_ocf_exitcode_str(op->rc),
                        op->call_id, op_key, (removed? "true" : "false"),
-                       op->rc, update_id);
+                       update_id);
             break;
 
         case PCMK_LRM_OP_TIMEOUT:
             crm_err("Result of %s operation for %s on %s: %s "
                     CRM_XS " call=%d key=%s timeout=%dms",
-                    op->op_type, op->rsc_id, lrm_state->node_name,
+                    crm_action_str(op->op_type, op->interval),
+                    op->rsc_id, lrm_state->node_name,
                     services_lrm_status_str(op->op_status),
                     op->call_id, op_key, op->timeout);
             break;
@@ -2394,7 +2397,8 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op, struct recurr
         default:
             crm_err("Result of %s operation for %s on %s: %s "
                     CRM_XS " call=%d key=%s confirmed=%s status=%d cib-update=%d",
-                    op->op_type, op->rsc_id, lrm_state->node_name,
+                    crm_action_str(op->op_type, op->interval),
+                    op->rsc_id, lrm_state->node_name,
                     services_lrm_status_str(op->op_status), op->call_id, op_key,
                     (removed? "true" : "false"), op->op_status, update_id);
     }
