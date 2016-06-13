@@ -817,19 +817,35 @@ static bool resource_is_running_on(resource_t *rsc, const char *host)
     return found;
 }
 
-static GList *get_active_resources(const char *host, pe_working_set_t *data_set) 
+/*!
+ * \internal
+ * \brief Create a list of all resources active on host from a given list
+ *
+ * \param[in] host      Name of host to check whether resources are active
+ * \param[in] rsc_list  List of resources to check
+ *
+ * \return New list of resources from list that are active on host
+ */
+static GList *
+get_active_resources(const char *host, GList *rsc_list)
 {
     GList *rIter = NULL;
     GList *active = NULL;
 
-    for (rIter = data_set->resources; rIter != NULL; rIter = rIter->next) {
+    for (rIter = rsc_list; rIter != NULL; rIter = rIter->next) {
         resource_t *rsc = (resource_t *) rIter->data;
 
-        if(resource_is_running_on(rsc, host)) {
+        /* Expand groups to their members, because if we're restarting a member
+         * other than the first, we can't otherwise tell which resources are
+         * stopping and starting.
+         */
+        if (rsc->variant == pe_group) {
+            active = g_list_concat(active,
+                                   get_active_resources(host, rsc->children));
+        } else if (resource_is_running_on(rsc, host)) {
             active = g_list_append(active, strdup(rsc->id));
         }
     }
-
     return active;
 }
 
@@ -1127,8 +1143,8 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
         return rc;
     }
 
-    restart_target_active = get_active_resources(host, &data_set);
-    current_active = get_active_resources(host, &data_set);
+    restart_target_active = get_active_resources(host, data_set.resources);
+    current_active = get_active_resources(host, data_set.resources);
 
     dump_list(current_active, "Origin");
 
@@ -1167,7 +1183,7 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
         goto failure;
     }
 
-    target_active = get_active_resources(host, &data_set);
+    target_active = get_active_resources(host, data_set.resources);
     dump_list(target_active, "Target");
 
     list_delta = subtract_lists(current_active, target_active);
@@ -1197,7 +1213,7 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
             if (current_active) {
                 g_list_free_full(current_active, free);
             }
-            current_active = get_active_resources(host, &data_set);
+            current_active = get_active_resources(host, data_set.resources);
             g_list_free(list_delta);
             list_delta = subtract_lists(current_active, target_active);
             dump_list(current_active, "Current");
@@ -1275,7 +1291,7 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
             /* It's OK if dependent resources moved to a different node,
              * so we check active resources on all nodes.
              */
-            current_active = get_active_resources(NULL, &data_set);
+            current_active = get_active_resources(NULL, data_set.resources);
             g_list_free(list_delta);
             list_delta = subtract_lists(target_active, current_active);
             dump_list(current_active, "Current");
