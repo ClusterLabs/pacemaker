@@ -114,6 +114,9 @@ systemd_service_name(const char *name)
 
     } else if (strstr(name, ".service")) {
         return strdup(name);
+
+    } else if (strstr(name, ".socket")) {
+        return strdup(name);
     }
 
     return crm_strdup_printf("%s.service", name);
