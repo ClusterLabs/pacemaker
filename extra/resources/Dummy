@@ -157,7 +157,7 @@ dummy_start() {
 
     RETVAL=$?
     if [ $RETVAL -eq $OCF_SUCCESS ]; then
-        if [ "$(hostname)" = "${OCF_RESKEY_fail_start_on}" ]; then
+        if [ "$(uname -n)" = "${OCF_RESKEY_fail_start_on}" ]; then
             RETVAL=$OCF_ERR_GENERIC
         fi
         return $RETVAL
@@ -165,7 +165,7 @@ dummy_start() {
 
     touch "${OCF_RESKEY_state}"
     RETVAL=$?
-    if [ "$(hostname)" = "${OCF_RESKEY_fail_start_on}" ]; then
+    if [ "$(uname -n)" = "${OCF_RESKEY_fail_start_on}" ]; then
         RETVAL=$OCF_ERR_GENERIC
     fi
     return $RETVAL
