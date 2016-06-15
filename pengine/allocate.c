@@ -759,6 +759,7 @@ apply_system_health(pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
     const char *health_strategy = pe_pref(data_set->config_hash, "node-health-strategy");
+    int base_health = 0;
 
     if (health_strategy == NULL || safe_str_eq(health_strategy, "none")) {
         /* Prevent any accidental health -> score translation */
@@ -788,7 +789,9 @@ apply_system_health(pe_working_set_t * data_set)
     } else if (safe_str_eq(health_strategy, "progressive")) {
         /* Same as the above, but use the r/y/g scores provided by the user
          * Defaults are provided by the pe_prefs table
+         * Also, custom health "base score" can be used
          */
+        base_health = crm_parse_int(pe_pref(data_set->config_hash, "node-health-base"), "0");
 
     } else if (safe_str_eq(health_strategy, "custom")) {
 
@@ -806,7 +809,7 @@ apply_system_health(pe_working_set_t * data_set)
     crm_info("Applying automated node health strategy: %s", health_strategy);
 
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        int system_health = 0;
+        int system_health = base_health;
         node_t *node = (node_t *) gIter->data;
 
         /* Search through the node hash table for system health entries. */
