@@ -534,6 +534,7 @@ do_test bug-5069-op-disabled "Test on-fail-ignore with failure when monitor is d
 do_test obsolete-lrm-resource "cl#5115 - Do not use obsolete lrm_resource sections"
 do_test expire-non-blocked-failure "Ignore failure-timeout only if the failed operation has on-fail=block"
 do_test asymmetrical-order-move "Respect asymmetrical ordering when trying to move resources"
+do_test start-then-stop-with-unfence "Avoid graph loop with start-then-stop constraint plus unfencing"
 
 do_test ignore_stonith_rsc_order1 "cl#5056- Ignore order constraint between stonith and non-stonith rsc."
 do_test ignore_stonith_rsc_order2 "cl#5056- Ignore order constraint with group rsc containing mixed stonith and non-stonith."

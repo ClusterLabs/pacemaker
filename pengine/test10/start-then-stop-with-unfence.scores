@@ -1,0 +1,19 @@
+Allocation scores:
+clone_color: jrummy-clone allocation score on rhel7-node1.example.com: 500
+clone_color: jrummy-clone allocation score on rhel7-node2.example.com: 500
+clone_color: jrummy:0 allocation score on rhel7-node1.example.com: 0
+clone_color: jrummy:0 allocation score on rhel7-node2.example.com: 1
+clone_color: jrummy:1 allocation score on rhel7-node1.example.com: 0
+clone_color: jrummy:1 allocation score on rhel7-node2.example.com: 0
+native_color: ip1 allocation score on rhel7-node1.example.com: 500
+native_color: ip1 allocation score on rhel7-node2.example.com: 0
+native_color: ip2 allocation score on rhel7-node1.example.com: 0
+native_color: ip2 allocation score on rhel7-node2.example.com: 500
+native_color: jrummy:0 allocation score on rhel7-node1.example.com: 0
+native_color: jrummy:0 allocation score on rhel7-node2.example.com: 1
+native_color: jrummy:1 allocation score on rhel7-node1.example.com: 0
+native_color: jrummy:1 allocation score on rhel7-node2.example.com: -INFINITY
+native_color: mpath-node1 allocation score on rhel7-node1.example.com: 0
+native_color: mpath-node1 allocation score on rhel7-node2.example.com: 0
+native_color: mpath-node2 allocation score on rhel7-node1.example.com: 0
+native_color: mpath-node2 allocation score on rhel7-node2.example.com: 0
