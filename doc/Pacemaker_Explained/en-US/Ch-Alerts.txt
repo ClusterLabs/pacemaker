@@ -43,7 +43,7 @@ those nodes.
 
 == Alert Recipients ==
 
-Each alert may be configured with one or more recipients.
+Usually alerts are directed towards a recipient. Thus each alert may be additionally configured with one or more recipients.
 The cluster will call the agent separately for each recipient.
 
 .Alert configuration with recipient
@@ -184,7 +184,7 @@ See their source code for the full set of instance attributes they support.
             </instance_attributes>
             <meta_attributes id="config_for_timestamp">
                 <nvpair id="ts_fmt" name="timestamp-format"
-                    value=""%Y-%m-%d,%H:%M:%S.%01N""/>
+                    value="%Y-%m-%d,%H:%M:%S.%01N"/>
             </meta_attributes>
             <recipient id="snmp_destination" value="192.168.1.2"/>
         </alert>
@@ -301,6 +301,14 @@ Special concerns when writing alert agents:
   able to run concurrently, it should be configured with only a single
   recipient. The agent is free, however, to interpret the recipient
   as a list.
+
+* When a cluster event occurs all alerts configured are being fired off at
+  the same time as separate processes. Depending on how many alerts -
+  respectively recipients - are configured, and on what is done within the
+  alert agents, significant load burst should be considered. If this
+  shows as an issue, however, significant actions might rather be queued
+  into some other instance, instead of being executed directly from the
+  agent.
 
 * Alert agents are run as the +hacluster+ user, which has a minimal set
   of permissions. If an agent requires additional privileges, it is
