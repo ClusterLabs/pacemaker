@@ -23,7 +23,10 @@
       <attribute name="id"><data type="ID"/></attribute>
       <choice>
         <group>
-          <attribute name="rsc"><data type="IDREF"/></attribute>
+          <choice>
+            <attribute name="rsc"><data type="IDREF"/></attribute>
+            <attribute name="rsc-pattern"><text/></attribute>
+          </choice>
           <optional>
             <attribute name="role">
               <ref name="attribute-roles"/>
