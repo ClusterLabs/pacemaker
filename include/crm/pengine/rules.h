@@ -22,6 +22,8 @@
 #  include <crm/common/iso8601.h>
 #  include <crm/pengine/common.h>
 
+#  include <regex.h>
+
 enum expression_type {
     not_expr,
     nested_rule,
@@ -31,17 +33,31 @@ enum expression_type {
     time_expr
 };
 
+typedef struct pe_re_match_data {
+    char *string;
+    int nregs;
+    regmatch_t *pmatch;
+} pe_re_match_data_t;
+
 enum expression_type find_expression_type(xmlNode * expr);
 
 gboolean test_ruleset(xmlNode * ruleset, GHashTable * node_hash, crm_time_t * now);
 
 gboolean test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now);
 
+gboolean pe_test_rule_re(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now,
+                         pe_re_match_data_t * match_data);
+
 gboolean test_expression(xmlNode * expr, GHashTable * node_hash,
                          enum rsc_role_e role, crm_time_t * now);
+
+gboolean pe_test_expression_re(xmlNode * expr, GHashTable * node_hash,
+                         enum rsc_role_e role, crm_time_t * now, pe_re_match_data_t * match_data);
 
 void unpack_instance_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_name,
                                 GHashTable * node_hash, GHashTable * hash,
                                 const char *always_first, gboolean overwrite, crm_time_t * now);
+
+char *pe_expand_re_matches(const char *string, pe_re_match_data_t * match_data);
 
 #endif
