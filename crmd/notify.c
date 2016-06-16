@@ -746,9 +746,9 @@ crmd_notify_fencing_op(stonith_event_t * e)
     }
 
     desc = crm_strdup_printf(
-        "Operation %s requested by %s for peer %s: %s (ref=%s)",
-        e->operation, e->origin, e->target, pcmk_strerror(e->result),
-        e->id);
+        "Operation %s of %s by %s for %s@%s: %s (ref=%s)",
+        e->action, e->target, e->executioner ? e->executioner : "<no-one>",
+        e->client_origin, e->origin, pcmk_strerror(e->result), e->id);
 
     set_alert_key(CRM_notify_node, e->target);
     set_alert_key(CRM_notify_task, e->operation);
