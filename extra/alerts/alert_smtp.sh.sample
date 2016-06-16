@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Copyright (C) 2016 Klaus Wenninger <kwenning@redhat.com>
 #
@@ -33,15 +33,13 @@
 #   </alerts>
 # </configuration>
 
-email_recipient="${CRM_alert_recipient}"
-
 email_client_default="sendmail"
 email_sender_default="hacluster"
 email_recipient_default="root"
 
 : ${email_client=${email_client_default}}
 : ${email_sender=${email_sender_default}}
-: ${email_recipient=${email_recipient_default}}
+email_recipient="${CRM_alert_recipient-${email_recipient_default}}"
 
 node_name=`uname -n`
 cluster_name=`crm_attribute --query -n cluster-name -q`
