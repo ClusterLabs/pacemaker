@@ -817,19 +817,35 @@ static bool resource_is_running_on(resource_t *rsc, const char *host)
     return found;
 }
 
-static GList *get_active_resources(const char *host, pe_working_set_t *data_set) 
+/*!
+ * \internal
+ * \brief Create a list of all resources active on host from a given list
+ *
+ * \param[in] host      Name of host to check whether resources are active
+ * \param[in] rsc_list  List of resources to check
+ *
+ * \return New list of resources from list that are active on host
+ */
+static GList *
+get_active_resources(const char *host, GList *rsc_list)
 {
     GList *rIter = NULL;
     GList *active = NULL;
 
-    for (rIter = data_set->resources; rIter != NULL; rIter = rIter->next) {
+    for (rIter = rsc_list; rIter != NULL; rIter = rIter->next) {
         resource_t *rsc = (resource_t *) rIter->data;
 
-        if(resource_is_running_on(rsc, host)) {
+        /* Expand groups to their members, because if we're restarting a member
+         * other than the first, we can't otherwise tell which resources are
+         * stopping and starting.
+         */
+        if (rsc->variant == pe_group) {
+            active = g_list_concat(active,
+                                   get_active_resources(host, rsc->children));
+        } else if (resource_is_running_on(rsc, host)) {
             active = g_list_append(active, strdup(rsc->id));
         }
     }
-
     return active;
 }
 
@@ -1044,6 +1060,9 @@ max_delay_in(pe_working_set_t * data_set, GList *resources)
     return 5 + (max_delay / 1000);
 }
 
+#define waiting_for_starts(d, r, h) ((g_list_length(d) > 0) || \
+                                    (resource_is_running_on((r), (h)) == FALSE))
+
 /*!
  * \internal
  * \brief Restart a resource (on a particular host if requested).
@@ -1070,6 +1089,7 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
 
     bool is_clone = FALSE;
     char *rsc_id = NULL;
+    char *orig_target_role = NULL;
 
     GList *list_delta = NULL;
     GList *target_active = NULL;
@@ -1088,7 +1108,9 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
         return -ENXIO;
     }
 
+    /* We might set the target-role meta-attribute */
     attr_set_type = XML_TAG_META_SETS;
+
     rsc_id = strdup(rsc->id);
     if(rsc->variant > pe_group) {
         is_clone = TRUE;
@@ -1121,20 +1143,36 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
         return rc;
     }
 
-    restart_target_active = get_active_resources(host, &data_set);
-    current_active = get_active_resources(host, &data_set);
+    restart_target_active = get_active_resources(host, data_set.resources);
+    current_active = get_active_resources(host, data_set.resources);
 
     dump_list(current_active, "Origin");
 
     if(is_clone && host) {
+        /* Stop the clone instance by banning it from the host */
         BE_QUIET = TRUE;
         rc = cli_resource_ban(rsc_id, host, NULL, cib);
 
     } else {
+        /* Stop the resource by setting target-role to Stopped.
+         * Remember any existing target-role so we can restore it later
+         * (though it only makes any difference if it's Slave).
+         */
+        char *lookup_id = clone_strip(rsc->id);
+
+        find_resource_attr(cib, XML_NVPAIR_ATTR_VALUE, lookup_id, NULL, NULL,
+                           NULL, XML_RSC_ATTR_TARGET_ROLE, &orig_target_role);
+        free(lookup_id);
         rc = cli_resource_update_attribute(rsc_id, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, RSC_STOPPED, FALSE, cib, &data_set);
     }
     if(rc != pcmk_ok) {
         fprintf(stderr, "Could not set target-role for %s: %s (%d)\n", rsc_id, pcmk_strerror(rc), rc);
+        if (current_active) {
+            g_list_free_full(current_active, free);
+        }
+        if (restart_target_active) {
+            g_list_free_full(restart_target_active, free);
+        }
         free(rsc_id);
         return crm_exit(rc);
     }
@@ -1145,7 +1183,7 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
         goto failure;
     }
 
-    target_active = get_active_resources(host, &data_set);
+    target_active = get_active_resources(host, data_set.resources);
     dump_list(target_active, "Target");
 
     list_delta = subtract_lists(current_active, target_active);
@@ -1172,13 +1210,17 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
                 goto failure;
             }
 
-            current_active = get_active_resources(host, &data_set);
+            if (current_active) {
+                g_list_free_full(current_active, free);
+            }
+            current_active = get_active_resources(host, data_set.resources);
+            g_list_free(list_delta);
             list_delta = subtract_lists(current_active, target_active);
             dump_list(current_active, "Current");
             dump_list(list_delta, "Delta");
         }
 
-        crm_trace("%d (was %d) resources remaining", before, g_list_length(list_delta));
+        crm_trace("%d (was %d) resources remaining", g_list_length(list_delta), before);
         if(before == g_list_length(list_delta)) {
             /* aborted during stop phase, print the contents of list_delta */
             fprintf(stderr, "Could not complete shutdown of %s, %d resources remaining\n", rsc_id, g_list_length(list_delta));
@@ -1192,6 +1234,13 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
     if(is_clone && host) {
         rc = cli_resource_clear(rsc_id, host, NULL, cib);
 
+    } else if (orig_target_role) {
+        rc = cli_resource_update_attribute(rsc_id, NULL, NULL,
+                                           XML_RSC_ATTR_TARGET_ROLE,
+                                           orig_target_role, FALSE, cib,
+                                           &data_set);
+        free(orig_target_role);
+        orig_target_role = NULL;
     } else {
         rc = cli_resource_delete_attribute(rsc_id, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, cib, &data_set);
     }
@@ -1202,19 +1251,27 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
         return crm_exit(rc);
     }
 
+    if (target_active) {
+        g_list_free_full(target_active, free);
+    }
     target_active = restart_target_active;
+    if (list_delta) {
+        g_list_free(list_delta);
+    }
     list_delta = subtract_lists(target_active, current_active);
     fprintf(stdout, "Waiting for %d resources to start again:\n", g_list_length(list_delta));
     display_list(list_delta, " * ");
 
     step_timeout_s = timeout / sleep_interval;
-    while(g_list_length(list_delta) > 0) {
+    while (waiting_for_starts(list_delta, rsc, host)) {
+        before = g_list_length(list_delta);
         if(timeout_ms == 0) {
             step_timeout_s = max_delay_in(&data_set, list_delta) / sleep_interval;
         }
 
         /* We probably don't need the entire step timeout */
-        for(lpc = 0; lpc < step_timeout_s && g_list_length(list_delta) > 0; lpc++) {
+        for (lpc = 0; (lpc < step_timeout_s) && waiting_for_starts(list_delta, rsc, host); lpc++) {
+
             sleep(sleep_interval);
             if(timeout) {
                 timeout -= sleep_interval;
@@ -1227,7 +1284,15 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
                 goto failure;
             }
 
-            current_active = get_active_resources(host, &data_set);
+            if (current_active) {
+                g_list_free_full(current_active, free);
+            }
+
+            /* It's OK if dependent resources moved to a different node,
+             * so we check active resources on all nodes.
+             */
+            current_active = get_active_resources(NULL, data_set.resources);
+            g_list_free(list_delta);
             list_delta = subtract_lists(target_active, current_active);
             dump_list(current_active, "Current");
             dump_list(list_delta, "Delta");
@@ -1241,18 +1306,37 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
             goto failure;
         }
 
-    } while(g_list_length(list_delta) > 0);
+    }
 
-    free(rsc_id);
-    return pcmk_ok;
+    rc = pcmk_ok;
+    goto done;
 
   failure:
     if(is_clone && host) {
         cli_resource_clear(rsc_id, host, NULL, cib);
-
+    } else if (orig_target_role) {
+        cli_resource_update_attribute(rsc_id, NULL, NULL,
+                                      XML_RSC_ATTR_TARGET_ROLE,
+                                      orig_target_role, FALSE, cib, &data_set);
+        free(orig_target_role);
     } else {
         cli_resource_delete_attribute(rsc_id, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, cib, &data_set);
     }
+
+done:
+    if (list_delta) {
+        g_list_free(list_delta);
+    }
+    if (current_active) {
+        g_list_free_full(current_active, free);
+    }
+    if (target_active && (target_active != restart_target_active)) {
+        g_list_free_full(target_active, free);
+    }
+    if (restart_target_active) {
+        g_list_free_full(restart_target_active, free);
+    }
+    cleanup_alloc_calculations(&data_set);
     free(rsc_id);
     return rc;
 }
