@@ -43,7 +43,12 @@
 # ================================
 
 if [ -z "$CRM_alert_version" ]; then
-    echo "Pacemaker version 1.1.15 or later is required"
+    echo "$0 must be run by Pacemaker version 1.1.15 or later"
+    exit 0
+fi
+
+if [ -z "$CRM_alert_recipient" ]; then
+    echo "$0 requires a recipient configured with the SNMP server IP address"
     exit 0
 fi
 
