@@ -381,8 +381,8 @@ main(int argc, char **argv)
     crm_info("Shutting down attribute manager");
 
     election_fini(writer);
-    crm_client_disconnect_all(ipcs);
     if (ipcs) {
+        crm_client_disconnect_all(ipcs);
         qb_ipcs_destroy(ipcs);
         g_hash_table_destroy(attributes);
     }
