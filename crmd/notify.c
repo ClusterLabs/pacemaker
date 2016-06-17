@@ -251,7 +251,7 @@ crm_time_format_hr(const char *format, crm_time_hr_t * hr_dt)
                 nano_digits = (nano_digits < 0)?0:nano_digits;
                 sprintf(&nanofmt_s[1], ".%ds", nano_digits);
             } else {
-                if (format[fmt_pos+fmt_len] != 0) {
+                if (format[scanned_pos] != '\0') {
                     continue;
                 }
                 fmt_pos = scanned_pos; /* print till end */
