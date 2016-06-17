@@ -270,7 +270,13 @@ crm_client_cleanup(void)
 void
 crm_client_disconnect_all(qb_ipcs_service_t *service)
 {
-    qb_ipcs_connection_t *c = qb_ipcs_connection_first_get(service);
+    qb_ipcs_connection_t *c = NULL;
+
+    if (service == NULL) {
+        return;
+    }
+
+    c = qb_ipcs_connection_first_get(service);
 
     while (c != NULL) {
         qb_ipcs_connection_t *last = c;
