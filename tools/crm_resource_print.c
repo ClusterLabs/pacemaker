@@ -19,7 +19,7 @@
 
 #include <crm_resource.h>
 
-bool print_pending = FALSE;
+bool print_pending = TRUE;
 
 #define cons_string(x) x?x:"NA"
 void

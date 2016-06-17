@@ -126,7 +126,7 @@ gboolean has_warnings = FALSE;
 gboolean print_timing = FALSE;
 gboolean watch_fencing = FALSE;
 gboolean print_brief = FALSE;
-gboolean print_pending = FALSE;
+gboolean print_pending = TRUE;
 gboolean print_clone_detail = FALSE;
 
 /* FIXME allow, detect, and correctly interpret glob pattern or regex? */
@@ -379,7 +379,7 @@ static struct crm_option long_options[] = {
     {"hide-headers",   0, 0, 'D', "\tHide all headers" },
     {"show-detail",    0, 0, 'R', "\tShow more details (node IDs, individual clone instances)" },
     {"brief",          0, 0, 'b', "\t\tBrief output" },
-    {"pending",        0, 0, 'j', "\t\tDisplay pending state if 'record-pending' is enabled" },
+    {"pending",        0, 0, 'j', "\t\tDisplay pending state if 'record-pending' is enabled", pcmk_option_hidden},
 
     {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
     {"interval",       1, 0, 'i', "\tUpdate frequency in seconds" },
