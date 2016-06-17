@@ -927,9 +927,11 @@ clone_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
     }
 }
 
-static void
+static bool
 assign_node(resource_t * rsc, node_t * node, gboolean force)
 {
+    bool changed = FALSE;
+
     if (rsc->children) {
 
         GListPtr gIter = rsc->children;
@@ -937,12 +939,17 @@ assign_node(resource_t * rsc, node_t * node, gboolean force)
         for (; gIter != NULL; gIter = gIter->next) {
             resource_t *child_rsc = (resource_t *) gIter->data;
 
-            native_assign_node(child_rsc, NULL, node, force);
+            changed |= native_assign_node(child_rsc, NULL, node, force);
         }
 
-        return;
+        return changed;
     }
+    if (rsc->allocated_to != NULL) {
+        changed = true;
+    }
+
     native_assign_node(rsc, NULL, node, force);
+    return changed;
 }
 
 static resource_t *
@@ -1264,8 +1271,9 @@ clone_update_actions_interleave(action_t * first, action_t * then, node_t * node
              */
             if (type & (pe_order_runnable_left | pe_order_implies_then) /* Mandatory */ ) {
                 pe_rsc_info(then->rsc, "Inhibiting %s from being active", then_child->id);
-                assign_node(then_child, NULL, TRUE);
-                /* TODO - set changed correctly? */
+                if(assign_node(then_child, NULL, TRUE)) {
+                    changed |= pe_graph_updated_then;
+                }
             }
 
         } else {
