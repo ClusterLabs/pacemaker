@@ -1703,16 +1703,14 @@ dnl not have CFLAGS in their environment then this should have
 dnl no effect. However if CFLAGS was exported from the user's
 dnl environment, then the new CFLAGS will also be exported
 dnl to sub processes.
-
-CC_ERRORS=""
-CC_EXTRAS=""
-
 if export | fgrep " CFLAGS=" > /dev/null; then
 	SAVED_CFLAGS="$CFLAGS"
 	unset CFLAGS
 	CFLAGS="$SAVED_CFLAGS"
 	unset SAVED_CFLAGS
 fi
+
+CC_EXTRAS=""
 
 if test "$GCC" != yes; then
         CFLAGS="$CFLAGS -g"
