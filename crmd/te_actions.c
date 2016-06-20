@@ -139,6 +139,8 @@ te_fence_node(crm_graph_t * graph, crm_action_t * action)
     const char *type = NULL;
     gboolean invalid_action = FALSE;
     enum stonith_call_options options = st_opt_none;
+    crm_node_t *peer = NULL;
+    gboolean is_remote_node = FALSE;
 
     id = ID(action->xml);
     target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
@@ -165,6 +167,14 @@ te_fence_node(crm_graph_t * graph, crm_action_t * action)
     if (crmd_join_phase_count(crm_join_confirmed) == 1) {
         options |= st_opt_allow_suicide;
     }
+
+    peer = crm_get_peer_full(0, target, CRM_GET_PEER_ANY);
+
+    if (peer && peer->flags & crm_remote_node) {
+        is_remote_node = TRUE;
+    }
+
+    update_attrd(target, "terminate", "true", NULL, is_remote_node);
 
     rc = stonith_api->cmds->fence(stonith_api, options, target, type,
                                   transition_graph->stonith_timeout / 1000, 0);
