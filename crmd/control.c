@@ -408,21 +408,29 @@ crmd_exit(int rc)
     mainloop_destroy_signal(SIGUSR1);
     mainloop_destroy_signal(SIGTERM);
     mainloop_destroy_signal(SIGTRAP);
-    mainloop_destroy_signal(SIGCHLD);
+    /* leave SIGCHLD engaged as we might still want to drain some service-actions */
 
     if (mloop) {
-        int lpc = 0;
         GMainContext *ctx = g_main_loop_get_context(crmd_mainloop);
 
         /* Don't re-enter this block */
         crmd_mainloop = NULL;
 
+        crmd_drain_alerts(ctx);
+
+        /* no signals on final draining anymore */
+        mainloop_destroy_signal(SIGCHLD);
+
         crm_trace("Draining mainloop %d %d", g_main_loop_is_running(mloop), g_main_context_pending(ctx));
 
-        while(g_main_context_pending(ctx) && lpc < 10) {
-            lpc++;
-            crm_trace("Iteration %d", lpc);
-            g_main_context_dispatch(ctx);
+        {
+            int lpc = 0;
+
+            while((g_main_context_pending(ctx) && lpc < 10)) {
+                lpc++;
+                crm_trace("Iteration %d", lpc);
+                g_main_context_dispatch(ctx);
+            }
         }
 
         crm_trace("Closing mainloop %d %d", g_main_loop_is_running(mloop), g_main_context_pending(ctx));
@@ -471,6 +479,8 @@ crmd_exit(int rc)
         g_main_loop_unref(mloop);
 
         crm_trace("Done %d", rc);
+    } else {
+        mainloop_destroy_signal(SIGCHLD);
     }
 
     /* Graceful */

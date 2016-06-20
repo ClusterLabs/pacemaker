@@ -30,8 +30,9 @@
 
 void crmd_enable_notifications(const char *script, const char *target);
 void crmd_notify_node_event(crm_node_t *node);
-void crmd_notify_fencing_op(stonith_event_t * e);
-void crmd_notify_resource_op(const char *node, lrmd_event_data_t * op);
+void crmd_notify_fencing_op(stonith_event_t *e);
+void crmd_notify_resource_op(const char *node, lrmd_event_data_t *op);
+void crmd_drain_alerts(GMainContext *ctx);
 void parse_notifications(xmlNode *notifications);
 
 #endif
