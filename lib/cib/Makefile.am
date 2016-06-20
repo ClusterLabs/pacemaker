@@ -24,7 +24,7 @@ lib_LTLIBRARIES	= libcib.la
 libcib_la_SOURCES	= cib_ops.c cib_utils.c cib_client.c cib_native.c cib_attrs.c
 libcib_la_SOURCES      += cib_file.c cib_remote.c
 
-libcib_la_LDFLAGS	= -version-info 5:1:1 -L$(top_builddir)/lib/pengine/.libs
+libcib_la_LDFLAGS	= -version-info 5:1:1
 libcib_la_LIBADD        = $(CRYPTOLIB) $(top_builddir)/lib/pengine/libpe_rules.la $(top_builddir)/lib/common/libcrmcommon.la
 libcib_la_CFLAGS	= -I$(top_srcdir)
 
