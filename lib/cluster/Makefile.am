@@ -23,7 +23,6 @@ lib_LTLIBRARIES	= libcrmcluster.la
 libcrmcluster_la_SOURCES = election.c cluster.c membership.c
 libcrmcluster_la_LDFLAGS = -version-info 6:0:2
 libcrmcluster_la_LIBADD  = $(top_builddir)/lib/common/libcrmcommon.la $(top_builddir)/lib/fencing/libstonithd.la $(CLUSTERLIBS)
-libcrmcluster_la_DEPENDENCIES = $(top_builddir)/lib/common/libcrmcommon.la $(top_builddir)/lib/fencing/libstonithd.la 
 
 if BUILD_CS_SUPPORT
 libcrmcluster_la_SOURCES += cpg.c
