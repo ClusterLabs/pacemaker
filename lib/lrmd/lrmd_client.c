@@ -1771,7 +1771,8 @@ lsb_get_metadata(const char *type, char **output)
     lsb_meta_helper_free_value(dflt_start);
     lsb_meta_helper_free_value(dflt_stop);
 
-    crm_trace("Created fake metadata: %zd", strlen(*output));
+    crm_trace("Created fake metadata: %llu",
+              (unsigned long long) strlen(*output));
     return pcmk_ok;
 }
 
@@ -1913,7 +1914,8 @@ static int
 heartbeat_get_metadata(const char *type, char **output)
 {
 	*output = crm_strdup_printf(hb_metadata_template, type, type, type);
-	crm_trace("Created fake metadata: %zd", strlen(*output));
+	crm_trace("Created fake metadata: %llu",
+              (unsigned long long) strlen(*output));
 	return pcmk_ok;
 }
 #endif
