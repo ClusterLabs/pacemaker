@@ -7,7 +7,7 @@ OFFLINE: [ posic042 posic044 ]
  rsc_posic041	(ocf::heartbeat:IPaddr):	Started posic041
  rsc_posic042	(ocf::heartbeat:IPaddr):	Started posic041
  rsc_posic043	(ocf::heartbeat:IPaddr):	Started posic043
- rsc_posic044	(ocf::heartbeat:IPaddr):	Started posic041
+ rsc_posic044	(ocf::heartbeat:IPaddr):	Starting posic041
  Clone Set: DoFencing [child_DoFencing] (unique)
      child_DoFencing:0	(stonith:ssh):	Started posic043
      child_DoFencing:1	(stonith:ssh):	Started posic041
