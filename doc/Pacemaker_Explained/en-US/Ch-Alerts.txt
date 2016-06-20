@@ -297,18 +297,22 @@ See their source code for the full set of instance attributes they support.
 
 Special concerns when writing alert agents:
 
-* Alert agents will be called once per recipient. If an agent is not
-  able to run concurrently, it should be configured with only a single
-  recipient. The agent is free, however, to interpret the recipient
-  as a list.
+* Alert agents may be called with no recipient (if none is configured),
+  so the agent must be able to handle this situation, even if it
+  only exits in that case. (Users may modify the configuration in
+  stages, and add a recipient later.)
 
-* When a cluster event occurs all alerts configured are being fired off at
-  the same time as separate processes. Depending on how many alerts -
-  respectively recipients - are configured, and on what is done within the
-  alert agents, significant load burst should be considered. If this
-  shows as an issue, however, significant actions might rather be queued
-  into some other instance, instead of being executed directly from the
-  agent.
+* If more than one recipient is configured for an alert, the alert agent will
+  be called once per recipient. If an agent is not able to run concurrently, it
+  should be configured with only a single recipient. The agent is free,
+  however, to interpret the recipient as a list.
+
+* When a cluster event occurs, all alerts are fired off at the same time as
+  separate processes. Depending on how many alerts and recipients are
+  configured, and on what is done within the alert agents,
+  a significant load burst may occur. The agent could be written to take
+  this into consideration, for example by queueing resource-intensive actions
+  into some other instance, instead of directly executing them.
 
 * Alert agents are run as the +hacluster+ user, which has a minimal set
   of permissions. If an agent requires additional privileges, it is
