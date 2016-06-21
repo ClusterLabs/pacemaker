@@ -16,10 +16,10 @@
 #
 include $(top_srcdir)/Makefile.common
 
-lib_LTLIBRARIES = liblrmd.la
+lib_LTLIBRARIES		= liblrmd.la
 
-liblrmd_la_SOURCES = lrmd_client.c proxy_common.c
-liblrmd_la_LDFLAGS = -version-info 4:0:3
-liblrmd_la_LIBADD = $(top_builddir)/lib/common/libcrmcommon.la	\
-			$(top_builddir)/lib/services/libcrmservice.la \
+liblrmd_la_LDFLAGS	= -version-info 4:0:3
+liblrmd_la_LIBADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
+			$(top_builddir)/lib/services/libcrmservice.la	\
 			$(top_builddir)/lib/fencing/libstonithd.la
+liblrmd_la_SOURCES	= lrmd_client.c proxy_common.c

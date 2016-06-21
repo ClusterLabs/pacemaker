@@ -17,16 +17,16 @@
 #
 include $(top_srcdir)/Makefile.common
 
-halibdir		= $(CRM_DAEMON_DIR)
-halib_PROGRAMS		= attrd
+halibdir	= $(CRM_DAEMON_DIR)
+halib_PROGRAMS	= attrd
 ## SOURCES
 
-attrd_SOURCES		=
-attrd_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la 		\
-		$(top_builddir)/lib/common/libcrmcommon.la		\
-		$(top_builddir)/lib/cib/libcib.la			\
+attrd_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la	\
+		$(top_builddir)/lib/common/libcrmcommon.la	\
+		$(top_builddir)/lib/cib/libcib.la		\
 		$(CLUSTERLIBS)
 
+attrd_SOURCES	=
 if BUILD_ATOMIC_ATTRD
 attrd_SOURCES	+= main.c commands.c
 else
