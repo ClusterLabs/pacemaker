@@ -15,26 +15,22 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-MAINTAINERCLEANFILES    = Makefile.in
-
-AM_CPPFLAGS        = -I$(top_builddir)/include  -I$(top_srcdir)/include  \
-		  -I$(top_builddir)/libltdl  -I$(top_srcdir)/libltdl
+include $(top_srcdir)/Makefile.common
 
 ## libraries
-lib_LTLIBRARIES	= libcib.la
+lib_LTLIBRARIES		= libcib.la
 
 ## SOURCES
-noinst_HEADERS		= 
 libcib_la_SOURCES	= cib_ops.c cib_utils.c cib_client.c cib_native.c cib_attrs.c
-libcib_la_SOURCES      += cib_file.c cib_remote.c
+libcib_la_SOURCES	+= cib_file.c cib_remote.c
 
-libcib_la_LDFLAGS	= -version-info 5:1:1 -L$(top_builddir)/lib/pengine/.libs
-libcib_la_LIBADD        = $(CRYPTOLIB) $(top_builddir)/lib/pengine/libpe_rules.la $(top_builddir)/lib/common/libcrmcommon.la
-libcib_la_CFLAGS	= -I$(top_srcdir)
+libcib_la_LDFLAGS	= -version-info 5:1:1
+libcib_la_CPPFLAGS	= -I$(top_srcdir) $(AM_CPPFLAGS)
+
+libcib_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
+libcib_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
+
+libcib_la_LIBADD	= $(CRYPTOLIB) $(top_builddir)/lib/pengine/libpe_rules.la $(top_builddir)/lib/common/libcrmcommon.la
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~
-
-install-exec-local:
-
-uninstall-local:

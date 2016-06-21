@@ -15,12 +15,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-MAINTAINERCLEANFILES    = Makefile.in
+include $(top_srcdir)/Makefile.common
 
-AM_CPPFLAGS       	= -I$(top_builddir)/include  -I$(top_srcdir)/include    \
-		  -I$(top_builddir)/libltdl  -I$(top_srcdir)/libltdl   		\
-		  -I$(top_builddir)/lib/gnu  -I$(top_srcdir)/lib/gnu		\
-		  -DSBINDIR=\"$(sbindir)\"
+AM_CPPFLAGS		+= -I$(top_builddir)/lib/gnu -I$(top_srcdir)/lib/gnu \
+			-DSBINDIR=\"$(sbindir)\"
 
 ## libraries
 lib_LTLIBRARIES	= libcrmcommon.la
@@ -33,20 +31,20 @@ lib_LTLIBRARIES	= libcrmcommon.la
 
 CFLAGS		= $(CFLAGS_COPY:-Wcast-qual=) -fPIC
 
+libcrmcommon_la_LDFLAGS	= -version-info 9:0:6
+
+libcrmcommon_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
+libcrmcommon_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
+
+libcrmcommon_la_LIBADD	= @LIBADD_DL@ $(GNUTLSLIBS) -lm
+
 libcrmcommon_la_SOURCES	= compat.c digest.c ipc.c io.c procfs.c utils.c xml.c \
 			  iso8601.c remote.c mainloop.c logging.c watchdog.c \
 			  xpath.c
 if BUILD_CIBSECRETS
 libcrmcommon_la_SOURCES	+= cib_secrets.c
 endif
-
-libcrmcommon_la_LDFLAGS	= -version-info 9:0:6
-libcrmcommon_la_LIBADD  = @LIBADD_DL@ $(GNUTLSLIBS) -lm
-libcrmcommon_la_SOURCES += $(top_builddir)/lib/gnu/md5.c
+libcrmcommon_la_SOURCES	+= $(top_builddir)/lib/gnu/md5.c
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~
-
-install-exec-local:
-
-uninstall-local:
