@@ -234,7 +234,7 @@ crm_send_tls(gnutls_session_t * session, const char *buf, size_t len)
     }
 
     total_send = len;
-    crm_trace("Message size: %zd", len);
+    crm_trace("Message size: %llu", (unsigned long long) len);
 
     while (TRUE) {
         rc = gnutls_record_send(*session, unsent, len);
@@ -247,7 +247,7 @@ crm_send_tls(gnutls_session_t * session, const char *buf, size_t len)
             break;
 
         } else if (rc < len) {
-            crm_debug("Sent %d of %zd bytes", rc, len);
+            crm_debug("Sent %d of %llu bytes", rc, (unsigned long long) len);
             len -= rc;
             unsent += rc;
         } else {
@@ -273,7 +273,8 @@ crm_send_plaintext(int sock, const char *buf, size_t len)
     }
     total_send = len;
 
-    crm_trace("Message on socket %d: size=%zd", sock, len);
+    crm_trace("Message on socket %d: size=%llu",
+              sock, (unsigned long long) len);
   retry:
     rc = write(sock, unsent, len);
     if (rc < 0) {
@@ -288,7 +289,8 @@ crm_send_plaintext(int sock, const char *buf, size_t len)
         }
 
     } else if (rc < len) {
-        crm_trace("Only sent %d of %zd remaining bytes", rc, len);
+        crm_trace("Only sent %d of %llu remaining bytes",
+                  rc, (unsigned long long) len);
         len -= rc;
         unsent += rc;
         goto retry;
@@ -518,7 +520,8 @@ crm_remote_recv_once(crm_remote_t * remote)
     /* automatically grow the buffer when needed */
     if(remote->buffer_size < read_len) {
            remote->buffer_size = 2 * read_len;
-        crm_trace("Expanding buffer to %zu bytes", remote->buffer_size);
+        crm_trace("Expanding buffer to %llu bytes",
+                  (unsigned long long) remote->buffer_size);
 
         remote->buffer = realloc_safe(remote->buffer, remote->buffer_size + 1);
         CRM_ASSERT(remote->buffer != NULL);
@@ -559,28 +562,33 @@ crm_remote_recv_once(crm_remote_t * remote)
         remote->buffer_offset += rc;
         /* always null terminate buffer, the +1 to alloc always allows for this. */
         remote->buffer[remote->buffer_offset] = '\0';
-        crm_trace("Received %u more bytes, %zu total", rc, remote->buffer_offset);
+        crm_trace("Received %u more bytes, %llu total",
+                  rc, (unsigned long long) remote->buffer_offset);
 
     } else if (rc == -EINTR || rc == -EAGAIN) {
         crm_trace("non-blocking, exiting read: %s (%d)", pcmk_strerror(rc), rc);
 
     } else if (rc == 0) {
-        crm_debug("EOF encoutered after %zu bytes", remote->buffer_offset);
+        crm_debug("EOF encoutered after %llu bytes",
+                  (unsigned long long) remote->buffer_offset);
         return -ENOTCONN;
 
     } else {
-        crm_debug("Error receiving message after %zu bytes: %s (%d)",
-                  remote->buffer_offset, pcmk_strerror(rc), rc);
+        crm_debug("Error receiving message after %llu bytes: %s (%d)",
+                  (unsigned long long) remote->buffer_offset,
+                  pcmk_strerror(rc), rc);
         return -ENOTCONN;
     }
 
     header = crm_remote_header(remote);
     if(header) {
         if(remote->buffer_offset < header->size_total) {
-            crm_trace("Read less than the advertised length: %zu < %u bytes",
-                      remote->buffer_offset, header->size_total);
+            crm_trace("Read less than the advertised length: %llu < %u bytes",
+                      (unsigned long long) remote->buffer_offset,
+                      header->size_total);
         } else {
-            crm_trace("Read full message of %zu bytes", remote->buffer_offset);
+            crm_trace("Read full message of %llu bytes",
+                      (unsigned long long) remote->buffer_offset);
             return remote->buffer_offset;
         }
     }

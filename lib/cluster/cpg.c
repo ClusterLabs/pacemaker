@@ -166,7 +166,8 @@ crm_cs_flush(gpointer data)
 
         sent++;
         last_sent++;
-        crm_trace("CPG message sent, size=%zd", iov->iov_len);
+        crm_trace("CPG message sent, size=%llu",
+                  (unsigned long long) iov->iov_len);
 
         cs_message_queue = g_list_remove(cs_message_queue, iov);
         free(iov->iov_base);
@@ -175,11 +176,13 @@ crm_cs_flush(gpointer data)
 
     queue_len -= sent;
     if (sent > 1 || cs_message_queue) {
-        crm_info("Sent %d CPG messages  (%d remaining, last=%u): %s (%d)",
-                 sent, queue_len, last_sent, ais_error2text(rc), rc);
+        crm_info("Sent %d CPG messages  (%d remaining, last=%u): %s (%lld)",
+                 sent, queue_len, last_sent, ais_error2text(rc),
+                 (long long) rc);
     } else {
-        crm_trace("Sent %d CPG messages  (%d remaining, last=%u): %s (%zd)",
-                  sent, queue_len, last_sent, ais_error2text(rc), rc);
+        crm_trace("Sent %d CPG messages  (%d remaining, last=%u): %s (%lld)",
+                  sent, queue_len, last_sent, ais_error2text(rc),
+                  (long long) rc);
     }
 
     if (cs_message_queue) {
@@ -200,7 +203,8 @@ send_cpg_iov(struct iovec * iov)
     static unsigned int queued = 0;
 
     queued++;
-    crm_trace("Queueing CPG message %u (%zd bytes)", queued, iov->iov_len);
+    crm_trace("Queueing CPG message %u (%llu bytes)",
+              queued, (unsigned long long) iov->iov_len);
     cs_message_queue = g_list_append(cs_message_queue, iov);
     crm_cs_flush(&pcmk_cpg_handle);
     return TRUE;
@@ -623,11 +627,13 @@ send_cluster_text(int class, const char *data,
     iov->iov_len = msg->header.size;
 
     if (msg->compressed_size) {
-        crm_trace("Queueing CPG message %u to %s (%zd bytes, %d bytes compressed payload): %.200s",
-                  msg->id, target, iov->iov_len, msg->compressed_size, data);
+        crm_trace("Queueing CPG message %u to %s (%llu bytes, %d bytes compressed payload): %.200s",
+                  msg->id, target, (unsigned long long) iov->iov_len,
+                  msg->compressed_size, data);
     } else {
-        crm_trace("Queueing CPG message %u to %s (%zd bytes, %d bytes payload): %.200s",
-                  msg->id, target, iov->iov_len, msg->size, data);
+        crm_trace("Queueing CPG message %u to %s (%llu bytes, %d bytes payload): %.200s",
+                  msg->id, target, (unsigned long long) iov->iov_len,
+                  msg->size, data);
     }
     free(target);
 
