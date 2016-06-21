@@ -25,6 +25,9 @@ lib_LTLIBRARIES			= libtransitioner.la
 libtransitioner_la_LDFLAGS	= -version-info 2:5:0
 libtransitioner_la_CPPFLAGS	= -I$(top_builddir) $(AM_CPPFLAGS)
 
+libtransitioner_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
+libtransitioner_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
+
 libtransitioner_la_LIBADD	= $(top_builddir)/lib/common/libcrmcommon.la
 libtransitioner_la_SOURCES	= unpack.c graph.c utils.c
 

@@ -32,6 +32,9 @@ halib_PROGRAMS	= cib cibmon
 ## SOURCES
 noinst_HEADERS	= callbacks.h cibio.h cibmessages.h common.h notify.h
 
+cib_CFLAGS	= $(CFLAGS_HARDENED_EXE)
+cib_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
+
 cib_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la \
 		$(COMMONLIBS) $(CRYPTOLIB) $(CLUSTERLIBS)
 

@@ -28,6 +28,9 @@ noinst_HEADERS	= crmd.h crmd_fsa.h crmd_messages.h fsa_defines.h	\
 		fsa_matrix.h fsa_proto.h crmd_utils.h crmd_callbacks.h	\
 		crmd_lrm.h te_callbacks.h tengine.h
 
+crmd_CFLAGS	= $(CFLAGS_HARDENED_EXE)
+crmd_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
+
 crmd_LDADD	= $(top_builddir)/lib/fencing/libstonithd.la		\
 		$(top_builddir)/lib/transition/libtransitioner.la	\
 		$(top_builddir)/lib/pengine/libpe_rules.la		\

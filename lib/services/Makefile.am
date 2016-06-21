@@ -27,6 +27,9 @@ libcrmservice_la_LDFLAGS	= -version-info 4:1:1
 libcrmservice_la_CPPFLAGS	= -DOCF_ROOT_DIR=\"@OCF_ROOT_DIR@\" $(AM_CPPFLAGS)
 libcrmservice_la_CFLAGS		= $(GIO_CFLAGS)
 
+libcrmservice_la_CFLAGS		+= $(CFLAGS_HARDENED_LIB)
+libcrmservice_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
+
 libcrmservice_la_LIBADD		= $(GIO_LIBS) $(top_builddir)/lib/common/libcrmcommon.la $(DBUS_LIBS)
 
 libcrmservice_la_SOURCES	= services.c services_linux.c
