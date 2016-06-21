@@ -27,6 +27,9 @@ libcib_la_SOURCES	+= cib_file.c cib_remote.c
 libcib_la_LDFLAGS	= -version-info 5:1:1
 libcib_la_CPPFLAGS	= -I$(top_srcdir) $(AM_CPPFLAGS)
 
+libcib_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
+libcib_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
+
 libcib_la_LIBADD	= $(CRYPTOLIB) $(top_builddir)/lib/pengine/libpe_rules.la $(top_builddir)/lib/common/libcrmcommon.la
 
 clean-generic:

@@ -63,6 +63,9 @@
 # Turn off cman support on platforms that normally ship with it
 %bcond_without cman
 
+# Turn off hardening of libraries and daemon executables
+%bcond_without hardening
+
 %if %{with profiling}
 # This disables -debuginfo package creation and also the stripping binaries/libraries
 # Useful if you want sane profiling data
@@ -168,6 +171,7 @@ resource health.
 
 Available rpmbuild rebuild options:
   --with(out) : cman stonithd doc coverage profiling pre_release upstart_job
+                hardening
 
 %package cli
 License:       GPLv2+ and LGPLv2+
@@ -301,6 +305,18 @@ find . -exec touch \{\} \;
 # Early versions of autotools (e.g. RHEL <= 5) do not support --docdir
 export docdir=%{pcmk_docdir}
 
+%if %{with hardening}
+# prefer distro-provided hardening flags in case they are defined
+# through _hardening_{c,ld}flags macros, configure script will
+# use its own defaults otherwise; if such hardenings are completely
+# undesired, rpmbuild using "--without hardening"
+# (or "--define '_without_hardening 1'")
+export CFLAGS_HARDENED_EXE="%{?_hardening_cflags}"
+export CFLAGS_HARDENED_LIB="%{?_hardening_cflags}"
+export LDFLAGS_HARDENED_EXE="%{?_hardening_ldflags}"
+export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
+%endif
+
 ./autogen.sh
 
 %{configure}                                       \
@@ -309,6 +325,7 @@ export docdir=%{pcmk_docdir}
         %{!?with_cman:       --without-cman}       \
         --without-heartbeat                        \
         %{!?with_doc:        --with-brand=}        \
+        %{!?with_hardening:  --disable-hardening}  \
         --with-initdir=%{_initrddir}               \
         --localstatedir=%{_var}                    \
         --with-version=%{version}-%{release}

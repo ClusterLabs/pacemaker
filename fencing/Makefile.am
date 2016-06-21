@@ -52,6 +52,9 @@ stonith_admin_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
 stonithd_CPPFLAGS	= -I$(top_srcdir)/pengine $(AM_CPPFLAGS)
 stonithd_YFLAGS		= -d
 
+stonithd_CFLAGS		= $(CFLAGS_HARDENED_EXE)
+stonithd_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
+
 stonithd_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/cluster/libcrmcluster.la	\
 			$(top_builddir)/lib/fencing/libstonithd.la	\

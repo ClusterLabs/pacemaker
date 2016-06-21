@@ -21,6 +21,9 @@ halibdir	= $(CRM_DAEMON_DIR)
 halib_PROGRAMS	= attrd
 ## SOURCES
 
+attrd_CFLAGS	= $(CFLAGS_HARDENED_EXE)
+attrd_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
+
 attrd_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la	\
 		$(top_builddir)/lib/common/libcrmcommon.la	\
 		$(top_builddir)/lib/cib/libcib.la		\

@@ -32,6 +32,10 @@ lib_LTLIBRARIES	= libcrmcommon.la
 CFLAGS		= $(CFLAGS_COPY:-Wcast-qual=) -fPIC
 
 libcrmcommon_la_LDFLAGS	= -version-info 9:0:6
+
+libcrmcommon_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
+libcrmcommon_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
+
 libcrmcommon_la_LIBADD	= @LIBADD_DL@ $(GNUTLSLIBS) -lm
 
 libcrmcommon_la_SOURCES	= compat.c digest.c ipc.c io.c procfs.c utils.c xml.c \
