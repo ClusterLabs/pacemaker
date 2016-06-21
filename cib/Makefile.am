@@ -23,23 +23,23 @@ hadir		= $(sysconfdir)/ha.d
 halibdir	= $(CRM_DAEMON_DIR)
 commmoddir	= $(halibdir)/modules/comm
 
-COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la	\
-		  $(top_builddir)/lib/cib/libcib.la
+COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la \
+		$(top_builddir)/lib/cib/libcib.la
 
 ## binary progs
 halib_PROGRAMS	= cib cibmon
 
 ## SOURCES
-noinst_HEADERS          = callbacks.h cibio.h cibmessages.h common.h notify.h
+noinst_HEADERS	= callbacks.h cibio.h cibmessages.h common.h notify.h
 
-cib_SOURCES		= io.c messages.c notify.c	\
-			callbacks.c main.c remote.c common.c
+cib_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la \
+		$(COMMONLIBS) $(CRYPTOLIB) $(CLUSTERLIBS)
 
-cib_LDADD		= $(top_builddir)/lib/cluster/libcrmcluster.la \
-			  $(COMMONLIBS) $(CRYPTOLIB) $(CLUSTERLIBS)
+cib_SOURCES	= io.c messages.c notify.c \
+		callbacks.c main.c remote.c common.c
 
-cibmon_SOURCES		= cibmon.c
-cibmon_LDADD		= $(COMMONLIBS)
+cibmon_LDADD	= $(COMMONLIBS)
+cibmon_SOURCES	= cibmon.c
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~
