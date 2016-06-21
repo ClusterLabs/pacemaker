@@ -200,4 +200,11 @@ typedef GList *GListPtr;
 guint crm_strcase_hash(gconstpointer v);
 guint g_str_hash_traditional(gconstpointer v);
 
+static inline const char *crm_action_str(const char *task, int interval) {
+    if(safe_str_eq(task, RSC_STATUS) && !interval) {
+        return "probe";
+    }
+    return task;
+}
+
 #endif

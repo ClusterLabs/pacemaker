@@ -184,7 +184,7 @@ static struct crm_option long_options[] = {
     {"utilization",	0, 0, 'z', "\tModify a resource's utilization attribute. For use with -p, -g, -d"},
     {"set-name",        1, 0, 's', "\t(Advanced) ID of the instance_attributes object to change"},
     {"nvpair",          1, 0, 'i', "\t(Advanced) ID of the nvpair object to change/delete"},
-    {"timeout",         1, 0, 'T',  "\t(Advanced) Abort if command does not finish in this time (with --restart or --wait)", pcmk_option_hidden},
+    {"timeout",         1, 0, 'T',  "\t(Advanced) Abort if command does not finish in this time (with --restart or --wait)"},
     {"force",		0, 0, 'f', "\n" /* Is this actually true anymore?
 					   "\t\tForce the resource to move by creating a rule for the current location and a score of -INFINITY"
 					   "\n\t\tThis should be used if the resource's stickiness and constraint scores total more than INFINITY (Currently 100,000)"

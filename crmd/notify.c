@@ -23,9 +23,12 @@
 #include "notify.h"
 #include "crmd_messages.h"
 
-char *notify_script = NULL;
-char *notify_target = NULL;
-GListPtr notify_list = NULL;
+static char *notify_script = NULL;
+static char *notify_target = NULL;
+static GListPtr notify_list = NULL;
+static int alerts_inflight = 0;
+static gboolean draining_alerts = FALSE;
+static guint max_alert_timeout = CRMD_NOTIFY_DEFAULT_TIMEOUT_MS;
 
 typedef struct {
     char *name;
@@ -251,7 +254,7 @@ crm_time_format_hr(const char *format, crm_time_hr_t * hr_dt)
                 nano_digits = (nano_digits < 0)?0:nano_digits;
                 sprintf(&nanofmt_s[1], ".%ds", nano_digits);
             } else {
-                if (format[fmt_pos+fmt_len] != 0) {
+                if (format[scanned_pos] != '\0') {
                     continue;
                 }
                 fmt_pos = scanned_pos; /* print till end */
@@ -439,7 +442,8 @@ get_envvars_from_cib(xmlNode *basenode, GListPtr list, int *count)
 }
 
 static GHashTable *
-get_meta_attrs_from_cib(xmlNode *basenode, notify_entry_t *entry)
+get_meta_attrs_from_cib(xmlNode *basenode, notify_entry_t *entry,
+                        guint *max_timeout)
 {
     GHashTable *config_hash =
         g_hash_table_new_full(crm_str_hash, g_str_equal,
@@ -465,6 +469,9 @@ get_meta_attrs_from_cib(xmlNode *basenode, notify_entry_t *entry)
         } else {
             crm_trace("Found timeout %dmsec", entry->timeout);
         }
+        if (entry->timeout > *max_timeout) {
+            *max_timeout = entry->timeout;
+        }
     }
     value = g_hash_table_lookup(config_hash, XML_ALERT_ATTR_TSTAMP_FORMAT);
     if (value) {
@@ -484,8 +491,10 @@ parse_notifications(xmlNode *notifications)
 {
     xmlNode *notify;
     notify_entry_t entry;
+    guint max_timeout = 0;
 
     free_notify_list();
+    max_alert_timeout = CRMD_NOTIFY_DEFAULT_TIMEOUT_MS;
 
     if (notifications) {
         crm_info("We have an alerts section in the cib");
@@ -530,9 +539,9 @@ parse_notifications(xmlNode *notifications)
                                  &envvars);
 
         config_hash =
-            get_meta_attrs_from_cib(notify, &entry);
+            get_meta_attrs_from_cib(notify, &entry, &max_timeout);
 
-        crm_debug("Found notification: id=%s, path=%s, timeout=%d, "
+        crm_debug("Found alert: id=%s, path=%s, timeout=%d, "
                    "tstamp_format=%s, %d additional environment variables",
                    entry.id, entry.path, entry.timeout,
                    entry.tstamp_format, envvars);
@@ -555,11 +564,12 @@ parse_notifications(xmlNode *notifications)
                 notify_entry_t recipient_entry = entry;
                 GHashTable *config_hash =
                     get_meta_attrs_from_cib(recipient,
-                                            &recipient_entry);
+                                            &recipient_entry,
+                                            &max_timeout);
 
                 add_dup_notify_list_entry(&recipient_entry);
 
-                crm_debug("Notification has recipient: id=%s, value=%s, "
+                crm_debug("Alert has recipient: id=%s, value=%s, "
                           "%d additional environment variables",
                           crm_element_value(recipient, XML_ATTR_ID),
                           recipient_entry.recipient, envvars_added);
@@ -577,6 +587,10 @@ parse_notifications(xmlNode *notifications)
 
         drop_envvars(entry.envvars, -1);
         g_hash_table_destroy(config_hash);
+    }
+
+    if (max_timeout > 0) {
+        max_alert_timeout = max_timeout;
     }
 }
 
@@ -654,7 +668,7 @@ set_envvar_list(GListPtr envvars)
 static void
 unset_envvar_list(GListPtr envvars)
 {
-        GListPtr l;
+    GListPtr l;
 
     for (l = g_list_first(envvars); l; l = g_list_next(l)) {
         envvar_t *entry = (envvar_t *)(l->data);
@@ -667,10 +681,11 @@ unset_envvar_list(GListPtr envvars)
 static void
 crmd_notify_complete(svc_action_t *op)
 {
+    alerts_inflight--;
     if(op->rc == 0) {
-        crm_info("Notification %d (%s) complete", op->sequence, op->agent);
+        crm_info("Alert %d (%s) complete", op->sequence, op->agent);
     } else {
-        crm_warn("Notification %d (%s) failed: %d", op->sequence, op->agent,
+        crm_warn("Alert %d (%s) failed: %d", op->sequence, op->agent,
                  op->rc);
     }
 }
@@ -691,27 +706,36 @@ send_notifications(const char *kind)
         char *timestamp = crm_time_format_hr(entry->tstamp_format, now);
 
         operations++;
-        crm_debug("Sending '%s' notification to '%s' via '%s'", kind,
-                  entry->recipient, entry->path);
-        set_alert_key(CRM_notify_recipient, entry->recipient);
-        set_alert_key_int(CRM_notify_node_sequence, operations);
-        set_alert_key(CRM_notify_timestamp, timestamp);
 
-        notify = services_action_create_generic(entry->path, NULL);
+        if (!draining_alerts) {
+            crm_debug("Sending '%s' alert to '%s' via '%s'", kind,
+                    entry->recipient, entry->path);
+            set_alert_key(CRM_notify_recipient, entry->recipient);
+            set_alert_key_int(CRM_notify_node_sequence, operations);
+            set_alert_key(CRM_notify_timestamp, timestamp);
 
-        notify->timeout = entry->timeout;
-        notify->standard = strdup("event");
-        notify->id = strdup(entry->id);
-        notify->agent = strdup(entry->path);
-        notify->sequence = operations;
+            notify = services_action_create_generic(entry->path, NULL);
 
-        set_envvar_list(entry->envvars);
+            notify->timeout = entry->timeout;
+            notify->standard = strdup("event");
+            notify->id = strdup(entry->id);
+            notify->agent = strdup(entry->path);
+            notify->sequence = operations;
 
-        if(services_action_async(notify, &crmd_notify_complete) == FALSE) {
-            services_action_free(notify);
+            set_envvar_list(entry->envvars);
+
+            alerts_inflight++;
+            if(services_action_async(notify, &crmd_notify_complete) == FALSE) {
+                services_action_free(notify);
+                alerts_inflight--;
+            }
+
+            unset_envvar_list(entry->envvars);
+        } else {
+            crm_warn("Ignoring '%s' alert to '%s' via '%s' received "
+                     "while shutting down",
+                     kind, entry->recipient, entry->path);
         }
-
-        unset_envvar_list(entry->envvars);
 
         free(timestamp);
     }
@@ -746,9 +770,9 @@ crmd_notify_fencing_op(stonith_event_t * e)
     }
 
     desc = crm_strdup_printf(
-        "Operation %s requested by %s for peer %s: %s (ref=%s)",
-        e->operation, e->origin, e->target, pcmk_strerror(e->result),
-        e->id);
+        "Operation %s of %s by %s for %s@%s: %s (ref=%s)",
+        e->action, e->target, e->executioner ? e->executioner : "<no-one>",
+        e->client_origin, e->origin, pcmk_strerror(e->result), e->id);
 
     set_alert_key(CRM_notify_node, e->target);
     set_alert_key(CRM_notify_task, e->operation);
@@ -798,4 +822,36 @@ crmd_notify_resource_op(const char *node, lrmd_event_data_t * op)
     }
 
     send_notifications("resource");
+}
+
+static gboolean
+alert_drain_timeout_callback(gpointer user_data)
+{
+    gboolean *timeout_popped = (gboolean *) user_data;
+
+    *timeout_popped = TRUE;
+    return FALSE;
+}
+
+void
+crmd_drain_alerts(GMainContext *ctx)
+{
+    guint timer;
+    gboolean timeout_popped = FALSE;
+
+    draining_alerts = TRUE;
+
+    timer = g_timeout_add(max_alert_timeout + 5000,
+                          alert_drain_timeout_callback,
+                          (gpointer) &timeout_popped);
+
+    while(alerts_inflight && !timeout_popped) {
+        crm_trace("Draining mainloop while still %d alerts are in flight (timeout=%dms)",
+                  alerts_inflight, max_alert_timeout + 5000);
+        g_main_context_iteration(ctx, TRUE);
+    }
+
+    if (!timeout_popped && (timer > 0)) {
+        g_source_remove(timer);
+    }
 }

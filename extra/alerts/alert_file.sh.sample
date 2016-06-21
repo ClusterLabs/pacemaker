@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Copyright (C) 2015 Andrew Beekhof <andrew@beekhof.net>
 #
@@ -33,8 +33,19 @@
 #   </alerts>
 # </configuration>
 
+# No one will probably ever see this echo, unless they run the script manually.
+# An alternative would be to log to the system log, or similar. (We can't send
+# this to the configured recipient, because that variable won't be defined in
+# this case either.)
 if [ -z $CRM_alert_version ]; then
-    echo "Pacemaker version 1.1.15 or later is required" >> "${CRM_alert_recipient}"
+    echo "$0 must be run by Pacemaker version 1.1.15 or later"
+    exit 0
+fi
+
+# Alert agents must always handle the case where no recipients are defined,
+# even if it's a no-op (a recipient might be added to the configuration later).
+if [ -z "${CRM_alert_recipient}" ]; then
+    echo "$0 requires a recipient configured with a full filename path"
     exit 0
 fi
 
@@ -45,13 +56,13 @@ debug_exec_order_default="false"
 # Here, we define an instance attribute "debug_exec_order".
 : ${debug_exec_order=${debug_exec_order_default}}
 
-if [ "${debug_exec_order}" = "true" ]
+if [ "${debug_exec_order}" = "true" ]; then
     tstamp=`printf "%04d. " "$CRM_alert_node_sequence"`
-    if [ ! -z $CRM_alert_timestamp ]; then
+    if [ ! -z "$CRM_alert_timestamp" ]; then
         tstamp="${tstamp} $CRM_alert_timestamp (`date "+%H:%M:%S.%06N"`): "
     fi
 else
-    if [ ! -z $CRM_alert_timestamp ]; then
+    if [ ! -z "$CRM_alert_timestamp" ]; then
         tstamp="$CRM_alert_timestamp: "
     fi
 fi

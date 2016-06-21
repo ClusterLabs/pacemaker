@@ -37,10 +37,13 @@ In the example above, the cluster will call +my-script.sh+ for each event.
 Multiple alert agents may be configured; the cluster will call all of them for
 each event.
 
+Alert agents will be called only on cluster nodes. They will be called for
+events involving Pacemaker Remote nodes, but they will never be called _on_
+those nodes.
 
 == Alert Recipients ==
 
-Each alert may be configured with one or more recipients.
+Usually alerts are directed towards a recipient. Thus each alert may be additionally configured with one or more recipients.
 The cluster will call the agent separately for each recipient.
 
 .Alert configuration with recipient
@@ -181,7 +184,7 @@ See their source code for the full set of instance attributes they support.
             </instance_attributes>
             <meta_attributes id="config_for_timestamp">
                 <nvpair id="ts_fmt" name="timestamp-format"
-                    value=""%Y-%m-%d,%H:%M:%S.%01N""/>
+                    value="%Y-%m-%d,%H:%M:%S.%01N"/>
             </meta_attributes>
             <recipient id="snmp_destination" value="192.168.1.2"/>
         </alert>
@@ -294,10 +297,22 @@ See their source code for the full set of instance attributes they support.
 
 Special concerns when writing alert agents:
 
-* Alert agents will be called once per recipient. If an agent is not
-  able to run concurrently, it should be configured with only a single
-  recipient. The agent is free, however, to interpret the recipient
-  as a list.
+* Alert agents may be called with no recipient (if none is configured),
+  so the agent must be able to handle this situation, even if it
+  only exits in that case. (Users may modify the configuration in
+  stages, and add a recipient later.)
+
+* If more than one recipient is configured for an alert, the alert agent will
+  be called once per recipient. If an agent is not able to run concurrently, it
+  should be configured with only a single recipient. The agent is free,
+  however, to interpret the recipient as a list.
+
+* When a cluster event occurs, all alerts are fired off at the same time as
+  separate processes. Depending on how many alerts and recipients are
+  configured, and on what is done within the alert agents,
+  a significant load burst may occur. The agent could be written to take
+  this into consideration, for example by queueing resource-intensive actions
+  into some other instance, instead of directly executing them.
 
 * Alert agents are run as the +hacluster+ user, which has a minimal set
   of permissions. If an agent requires additional privileges, it is

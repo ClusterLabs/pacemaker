@@ -1387,8 +1387,9 @@ check_message_sanity(const AIS_Message * msg, const char *data)
     }
 
     AIS_CHECK(msg->header.size > sizeof(AIS_Message),
-              ais_err("Message %d size too small: %d < %zu",
-                      msg->header.id, msg->header.size, sizeof(AIS_Message));
+              ais_err("Message %d size too small: %d < %llu",
+                      msg->header.id, msg->header.size,
+                      (unsigned long long) sizeof(AIS_Message));
               return FALSE);
 
     if (sane && ais_data_len(msg) != tmp_size) {

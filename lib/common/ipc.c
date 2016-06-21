@@ -270,7 +270,13 @@ crm_client_cleanup(void)
 void
 crm_client_disconnect_all(qb_ipcs_service_t *service)
 {
-    qb_ipcs_connection_t *c = qb_ipcs_connection_first_get(service);
+    qb_ipcs_connection_t *c = NULL;
+
+    if (service == NULL) {
+        return;
+    }
+
+    c = qb_ipcs_connection_first_get(service);
 
     while (c != NULL) {
         qb_ipcs_connection_t *last = c;
@@ -494,11 +500,12 @@ crm_ipcs_flush_events(crm_client_t * c)
         sent++;
         header = event[0].iov_base;
         if (header->size_compressed) {
-            crm_trace("Event %d to %p[%d] (%zu compressed bytes) sent",
-                      header->qb.id, c->ipcs, c->pid, rc);
+            crm_trace("Event %d to %p[%d] (%lld compressed bytes) sent",
+                      header->qb.id, c->ipcs, c->pid, (long long) rc);
         } else {
-            crm_trace("Event %d to %p[%d] (%zu bytes) sent: %.120s",
-                      header->qb.id, c->ipcs, c->pid, rc, (char *)(event[1].iov_base));
+            crm_trace("Event %d to %p[%d] (%lld bytes) sent: %.120s",
+                      header->qb.id, c->ipcs, c->pid, (long long) rc,
+                      (char *) (event[1].iov_base));
         }
 
         c->event_queue = g_list_remove(c->event_queue, event);
@@ -509,8 +516,9 @@ crm_ipcs_flush_events(crm_client_t * c)
 
     queue_len -= sent;
     if (sent > 0 || c->event_queue) {
-        crm_trace("Sent %d events (%d remaining) for %p[%d]: %s (%zd)",
-                  sent, queue_len, c->ipcs, c->pid, pcmk_strerror(rc < 0 ? rc : 0), rc);
+        crm_trace("Sent %d events (%d remaining) for %p[%d]: %s (%lld)",
+                  sent, queue_len, c->ipcs, c->pid,
+                  pcmk_strerror(rc < 0 ? rc : 0), (long long) rc);
     }
 
     if (c->event_queue) {
@@ -658,7 +666,8 @@ crm_ipcs_sendv(crm_client_t * c, struct iovec * iov, enum crm_ipc_flags flags)
                        header->qb.id, c->ipcs, c->pid, header->qb.size, pcmk_strerror(rc), rc);
 
         } else {
-            crm_trace("Response %d sent, %zd bytes to %p[%d]", header->qb.id, rc, c->ipcs, c->pid);
+            crm_trace("Response %d sent, %lld bytes to %p[%d]",
+                      header->qb.id, (long long) rc, c->ipcs, c->pid);
         }
 
         if (flags & crm_ipc_server_free) {

@@ -311,14 +311,16 @@ indexterm:[priority,Resource Option]
 indexterm:[Resource,Option,priority]
 
 |target-role
-|started
+|Started
 |What state should the cluster attempt to keep this resource in? Allowed values:
 
-* +stopped:+ Force the resource to be stopped
-* +started:+ Allow the resource to be started (In the case of
-  <<s-resource-multistate,multi-state>> resources, they will not be promoted to
-  master)
-* +master:+ Allow the resource to be started and, if appropriate, promoted
+* +Stopped:+ Force the resource to be stopped
+* +Started:+ Allow the resource to be started (and in the case of
+  <<s-resource-multistate,multi-state>> resources, promoted to master if
+  appropriate)
+* +Slave:+ Allow the resource to be started, but only in Slave mode if
+  the resource is <<s-resource-multistate,multi-state>>
+* +Master:+ Equivalent to +Started+
 indexterm:[target-role,Resource Option]
 indexterm:[Resource,Option,target-role]
 
