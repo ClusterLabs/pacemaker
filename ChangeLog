@@ -1,61 +1,12 @@
-* Fri Jun 10 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.15-1
-- Update source tarball to revision: a50be16
-- Changesets: 82
-- Diff:       61 files changed, 542 insertions(+), 509 deletions(-)
-
-- Features added since Pacemaker-1.1.15-rc3
-  + sample alert scripts are now installed in /usr/share/pacemaker/alerts
-  + stonith_admin: allow -H '*' to show history for all nodes
-  + ./configure --with-configdir argument for /etc/sysconfig, /etc/default, etc.
-
-- Changes since Pacemaker-1.1.15-rc3
-  + fix multiple memory issues (leaks, use-after-free) in daemons and libraries
-  + improve FreeBSD support
-  + Bug rhbz#1321711: handle DLM "wait fencing" state better in controld agent
-  + crmd: avoid timeout on older peers when cancelling a resource operation
-  + pengine: properly order stop actions on guest node relative to host stonith
-  + tools: don't require node to be known to crm_resource when deleting attribute
-  + tools: consistently print ms resource state in crm_mon
-  + tools: update crm_mon schema for recent changes
-
-* Fri May 27 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.15-rc3
-- Update source tarball to revision: 3e9486f
-- Changesets: 59
-- Diff:       44 files changed, 353 insertions(+), 195 deletions(-)
-
-- Changes since Pacemaker-1.1.15-rc2
-  + make various log messages more user-friendly
-  + improve FreeBSD and Hurd support
-  + Bug cl#5266: log correct directory name that daemons change to
-  + Bug cl#5270: make systemd overrides world-readable to avoid log warnings
-  + Bug cl#5272: validate attrd requests better
-  + Bug rhbz#1321711: handle DLM "wait fencing" state better in controld agent
-  + Bug rhbz#1338623: fix 1.1.15-rc1 regression in attrd when node ID is reused
-  + libcrmcommon: fix regression in 1.1.14 that made have-watchdog always true
-
-* Mon May 16 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.15-rc2
-- Update source tarball to revision: 4112547
-- Changesets: 40
-- Diff:       12 files changed, 132 insertions(+), 76 deletions(-)
-
-- Changes since Pacemaker-1.1.15-rc1
-  + attrd: Fix issue introduced in 1.1.15-rc1 breaking the synchronization of attributes
-  + attrd: If attribute delay changes, update it when synchronizing attributes
-  + crmd: Rename alerts' tstamp_format to timestamp-format and default to "%H:%M:%S.%06N"
-  + crmd: Take start-delay into account for the timeout of the action timer
-  + pengine: Correctly set OCF_RESKEY_CRM_meta_timeout when start-delay is configured
-  + pengine: Properly order actions for master/slave resources in anti-colocations
-  + pengine: Respect asymmetrical ordering when trying to move resources
-  + resources: SysInfo now resets #health_disk to green when there's sufficient free disk
-
-* Fri Apr 22 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.15-rc1
-- Update source tarball to revision: f7dfcf8
-- Changesets: 301
-- Diff:       188 files changed, 5526 insertions(+), 3307 deletions(-)
+* Tue Jun 21 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.15-1
+- Update source tarball to revision: 32fa6a5
+- Changesets: 533
+- Diff:       219 files changed, 6659 insertions(+), 3989 deletions(-)
 
 - Features added since Pacemaker-1.1.14
   + Event-driven alerts allow scripts to be called after significant events
-  + Move some files from pacemaker package to pacemaker-cli for cleaner pacemaker-remote dependencies
+  + build: Some files moved from pacemaker package to pacemaker-cli for cleaner pacemaker-remote dependencies
+  + build: ./configure --with-configdir argument for /etc/sysconfig, /etc/default, etc.
   + fencing: Simplify watchdog integration
   + fencing: Support concurrent fencing actions via new pcmk_action_limit option
   + remote: pacemaker_remote may be stopped without disabling resource first
@@ -63,22 +14,38 @@
   + tools: crm_mon now reports why resources are not starting
   + tools: crm_report now obscures passwords in logfiles
   + tools: attrd_updater --update-both/--update-delay options allow changing dampening value
+  + tools: allow stonith_admin -H '*' to show history for all nodes
 
 - Changes since Pacemaker-1.1.14
-  + Fix multiple memory issues (leaks, use-after-free) in daemons and libraries
+  + Fix multiple memory issues (leaks, use-after-free) in daemons, libraries and tools
+  + Make various log messages more user-friendly
+  + Improve FreeBSD and Hurd support
+  + attrd: Prevent possible segfault on exit
   + cib: Fix regression to restore support for compressed CIB larger than 1MB
+  + common: fix regression in 1.1.14 that made have-watchdog always true
+  + controld: handle DLM "wait fencing" state better
   + crmd: Fix regression so that fenced unseen nodes do not remain unclean
+  + crmd: Take start-delay into account when calculation action timeouts
+  + crmd: Avoid timeout on older peers when cancelling a resource operation
   + fencing: Allow fencing by node ID (e.g. by DLM) even if node left cluster
   + lrmd: Fix potential issues when cluster is stopped via systemd shutdown
   + pacemakerd: Properly respawn stonithd if it fails
   + pengine: Fix regression with multiple monitor levels that could ignore failure
+  + pengine: Correctly set OCF_RESKEY_CRM_meta_timeout when start-delay is configured
+  + pengine: Properly order actions for master/slave resources in anti-colocations
+  + pengine: Respect asymmetrical ordering when trying to move resources
+  + pengine: Properly order stop actions on guest node relative to host stonith
+  + pengine: Correctly block actions dependent on unrunnable clones
   + remote: Allow remote nodes to have node attributes even with legacy attrd
   + remote: Recover from remote node fencing more quickly
   + remote: Place resources on newly rejoined remote nodes more quickly
   + resources: ping agent can now use fping6 for IPv6 hosts
+  + resources: SysInfo now resets #health_disk to green when there's sufficient free disk
   + tools: crm_report is now more efficient and handles Pacemaker Remote nodes better
   + tools: Prevent crm_resource segfault when --resource is not supplied with --restart
   + tools: crm_shadow --display option now works
+  + tools: crm_resource --restart handles groups, target-roles and moving resources better
+
 
 * Thu Jan 14 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.14-1
 - Update source tarball to revision: f0b585a
@@ -158,7 +125,7 @@
   + Allow fail-counts to be removed en-mass when the new attrd is in operation
   + attrd supports private attributes (not written to CIB)
   + crmd: Ensure a watchdog device is in use if stonith-watchdog-timeout is configured
-  + crmd: If configured, trigger the watchdog immediately if we loose quorum and no-quorum-policy=suicide
+  + crmd: If configured, trigger the watchdog immediately if we lose quorum and no-quorum-policy=suicide
   + crm_diff: Support generating a difference without versions details if --no-version/-u is supplied
   + crm_resource: Implement an intelligent restart capability
   + Fencing: Advertise the watchdog device for fencing operations
@@ -1313,7 +1280,7 @@
   + crmd: Bug lf#2379 - Ensure the cluster terminates when the PE is not available
   + crmd: Do not allow the target_rc to be misused by resource agents
   + crmd: Do not ignore action timeouts based on FSA state
-  + crmd: Ensure we don't get stuck in S_PENDING if we loose an election to someone that never talks to us again
+  + crmd: Ensure we don't get stuck in S_PENDING if we lose an election to someone that never talks to us again
   + crmd: Fix memory leaks exposed by valgrind
   + crmd: Remove race condition that could lead to multiple instances of a clone being active on a machine
   + crmd: Send erase_status_tag() calls to the local CIB when the DC is fenced, since there is no DC to accept them
@@ -1593,7 +1560,7 @@
   + crmd: Avoid a race condition by waiting for the attrd update to trigger a transition automatically
   + crmd: Bug bnc#480977 - Prevent extra, partial, shutdown when a node restarts too quickly
   + crmd: Bug bnc#480977 - Prevent extra, partial, shutdown when a node restarts too quickly (verified)
-  + crmd: Bug bnc#489063 - Ensure the DC is always unset after we 'loose' an election
+  + crmd: Bug bnc#489063 - Ensure the DC is always unset after we 'lose' an election
   + crmd: Bug BSC#479543 - Correctly find the migration source for timed out migrate_from actions
   + crmd: Call crm_peer_init() before we start the FSA - prevents a race condition when used with Heartbeat
   + crmd: Erasing the status section should not be forced to the local node
