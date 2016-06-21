@@ -569,13 +569,17 @@ remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
         char *now_s = NULL;
         time_t now = time(NULL);
 
-        crm_notice("Graceful proxy shutdown of %s", lrm_state->node_name);
+        crm_notice("%s requested shutdown of its remote connection",
+                   lrm_state->node_name);
 
         now_s = crm_itoa(now);
         update_attrd(lrm_state->node_name, XML_CIB_ATTR_SHUTDOWN, now_s, NULL, TRUE);
         free(now_s);
 
         remote_proxy_ack_shutdown(lrmd);
+
+        crm_warn("Reconnection attempts to %s may result in failures that must be cleared",
+                 lrm_state->node_name);
         return;
 
     } else if (safe_str_eq(op, LRMD_IPC_OP_NEW)) {
