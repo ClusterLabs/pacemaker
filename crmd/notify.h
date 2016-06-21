@@ -23,7 +23,7 @@
 #  include <crm/stonith-ng.h>
 
 /* Default-Timeout to use before killing a notification script (in milliseconds) */
-#  define CRMD_NOTIFY_DEFAULT_TIMEOUT_MS (300000)
+#  define CRMD_NOTIFY_DEFAULT_TIMEOUT_MS (30000)
 
 /* Default-Format-String used to pass timestamps to the notification scripts */
 #  define CRMD_NOTIFY_DEFAULT_TSTAMP_FORMAT "%H:%M:%S.%06N"
