@@ -1914,13 +1914,23 @@ elif test "x${HARDENING}" = "xyes" \
 			 pie=1]
 		)
 	fi
-	# daemons incl. libs: full RELRO if sensible
+	# daemons incl. libs: full RELRO if sensible + as-needed linking
+	#                     so as to possibly mitigate startup performance
+	#                     hit caused by excessive linking with unneeded
+	#                     libraries
 	if test "${relro}" = 1 && test "${pie}" = 1; then
 		flag="-Wl,-z,now"
 		CC_CHECK_LDFLAGS(["${flag}"],
 			[LDFLAGS_HARDENED_EXE="${LDFLAGS_HARDENED_EXE} ${flag}";
 			 LDFLAGS_HARDENED_LIB="${LDFLAGS_HARDENED_LIB} ${flag}";
 			 bindnow=1]
+		)
+	fi
+	if test "${bindnow}" = 1; then
+		flag="-Wl,--as-needed"
+		CC_CHECK_LDFLAGS(["${flag}"],
+			[LDFLAGS_HARDENED_EXE="${LDFLAGS_HARDENED_EXE} ${flag}";
+			 LDFLAGS_HARDENED_LIB="${LDFLAGS_HARDENED_LIB} ${flag}"]
 		)
 	fi
 	# universal: prefer strong > all > default stack protector if possible
