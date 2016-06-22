@@ -1067,7 +1067,7 @@ print_str_str(gpointer key, gpointer value, gpointer user_data)
 void
 print_resource(int log_level, const char *pre_text, resource_t * rsc, gboolean details)
 {
-    long options = pe_print_log;
+    long options = pe_print_log | pe_print_pending;
 
     if (rsc == NULL) {
         do_crm_log(log_level - 1, "%s%s: <NULL>",

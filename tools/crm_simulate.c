@@ -40,7 +40,7 @@ cib_t *global_cib = NULL;
 GListPtr op_fail = NULL;
 bool action_numbers = FALSE;
 gboolean quiet = FALSE;
-gboolean print_pending = FALSE;
+gboolean print_pending = TRUE;
 char *temp_shadow = NULL;
 extern gboolean bringing_nodes_online;
 
@@ -468,7 +468,7 @@ static struct crm_option long_options[] = {
     {"show-scores",   0, 0, 's', "Show allocation scores"},
     {"show-utilization",   0, 0, 'U', "Show utilization information"},
     {"profile",       1, 0, 'P', "Run all tests in the named directory to create profiling data"},
-    {"pending",       0, 0, 'j', "\tDisplay pending state if 'record-pending' is enabled"},
+    {"pending",       0, 0, 'j', "\tDisplay pending state if 'record-pending' is enabled", pcmk_option_hidden},
 
     {"-spacer-",     0, 0, '-', "\nSynthetic Cluster Events:"},
     {"node-up",      1, 0, 'u', "\tBring a node online"},
