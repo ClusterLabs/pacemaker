@@ -180,10 +180,6 @@ AC_ARG_ENABLE([quiet],
      Supress make output unless there is an error
      [default=no]])
 
-AC_ARG_ENABLE([thread-safe],
-[  --enable-thread-safe Enable some client libraries to be thread safe.
-     [default=no]])
-
 AC_ARG_ENABLE([bundled-ltdl],
 [  --enable-bundled-ltdl  Configure, build and install the standalone ltdl library bundled with ${PACKAGE} [default=no]])
 LTDL_LIBS=""
@@ -199,6 +195,13 @@ AC_ARG_ENABLE([upstart],
 AC_ARG_ENABLE([systemd],
     [  --enable-systemd
        Do not build support for the Systemd init system [default=yes]])
+
+AC_ARG_ENABLE(hardening,
+    [  --with-hardening
+       Harden the resulting executables/libraries (best effort by default)],
+    [ HARDENING="${enableval}" ],
+    [ HARDENING=try ],
+)
 
 AC_ARG_WITH(ais,
     [  --with-ais
@@ -697,22 +700,16 @@ if test x"${PKGCONFIG}" = x""; then
    AC_MSG_ERROR(You need pkgconfig installed in order to build ${PACKAGE})
 fi
 
-if test "x${enable_thread_safe}" = "xyes"; then
-        GPKGNAME="gthread-2.0"
-else
-        GPKGNAME="glib-2.0"
-fi
-
 if
-   $PKGCONFIG --exists $GPKGNAME
+   $PKGCONFIG --exists glib-2.0
 then
-	GLIBCONFIG="$PKGCONFIG $GPKGNAME"
+	GLIBCONFIG="$PKGCONFIG glib-2.0"
 else
 	set -x
         echo PKG_CONFIG_PATH=$PKG_CONFIG_PATH
-	$PKGCONFIG --exists $GPKGNAME; echo $?
-	$PKGCONFIG --cflags $GPKGNAME; echo $?
-	$PKGCONFIG $GPKGNAME; echo $?
+	$PKGCONFIG --exists glib-2.0; echo $?
+	$PKGCONFIG --cflags glib-2.0; echo $?
+	$PKGCONFIG glib-2.0; echo $?
 	set +x
 
 	AC_MSG_ERROR(You need glib2-devel installed in order to build ${PACKAGE})
@@ -728,24 +725,6 @@ elif test "$ac_cv_lib_dl_dlopen" = yes; then
 	LIBADD_DL=-ldl
 else
         LIBADD_DL=${lt_cv_dlopen_libs}
-fi
-dnl
-dnl Check for location of gettext
-dnl
-dnl On at least Solaris 2.x, where it is in libc, specifying lintl causes
-dnl grief. Ensure minimal result, not the sum of all possibilities.
-dnl And do libc first.
-dnl Known examples:
-dnl    c:      Linux, Solaris 2.6+
-dnl    intl:   BSD, AIX
-
-AC_CHECK_LIB(c, gettext)
-if test x$ac_cv_lib_c_gettext != xyes; then
-   AC_CHECK_LIB(intl, gettext)
-fi
-
-if test x$ac_cv_lib_c_gettext != xyes -a x$ac_cv_lib_intl_gettext != xyes; then
-   AC_MSG_ERROR(You need gettext installed in order to build ${PACKAGE})
 fi
 
 if test "X$GLIBCONFIG" != X; then
@@ -1731,16 +1710,20 @@ dnl not have CFLAGS in their environment then this should have
 dnl no effect. However if CFLAGS was exported from the user's
 dnl environment, then the new CFLAGS will also be exported
 dnl to sub processes.
-
-CC_ERRORS=""
-CC_EXTRAS=""
-
 if export | fgrep " CFLAGS=" > /dev/null; then
 	SAVED_CFLAGS="$CFLAGS"
 	unset CFLAGS
 	CFLAGS="$SAVED_CFLAGS"
 	unset SAVED_CFLAGS
 fi
+
+AC_ARG_VAR([CFLAGS_HARDENED_LIB], [extra C compiler flags for hardened libraries])
+AC_ARG_VAR([LDFLAGS_HARDENED_LIB], [extra linker flags for hardened libraries])
+
+AC_ARG_VAR([CFLAGS_HARDENED_EXE], [extra C compiler flags for hardened executables])
+AC_ARG_VAR([LDFLAGS_HARDENED_EXE], [extra linker flags for hardened executables])
+
+CC_EXTRAS=""
 
 if test "$GCC" != yes; then
         CFLAGS="$CFLAGS -g"
@@ -1815,12 +1798,6 @@ dnl otherwise none of both
 # Additional warnings it might be nice to enable one day
 #		-Wshadow
 #		-Wunreachable-code
-	case "$host_os" in
-	    *solaris*) ;;
-	    *) EXTRA_FLAGS="$EXTRA_FLAGS
-			-fstack-protector-all"
-		;;
-	esac
 	for j in $EXTRA_FLAGS
 	do
 	  if
@@ -1857,6 +1834,128 @@ dnl System specific options
 	fi
 
   	AC_MSG_NOTICE(Activated additional gcc flags: ${CC_EXTRAS})
+fi
+
+dnl
+dnl Hardening flags
+dnl
+dnl The prime control of whether to apply (targeted) hardening build flags and
+dnl which ones is --{enable,disable}-hardening option passed to ./configure:
+dnl
+dnl --enable-hardening=try (default):
+dnl     depending on whether any of CFLAGS_HARDENED_EXE, LDFLAGS_HARDENED_EXE,
+dnl     CFLAGS_HARDENED_LIB or LDFLAGS_HARDENED_LIB environment variables
+dnl     (see below) is set and non-null, all these custom flags (even if not
+dnl     set) are used as are, otherwise the best effort is made to offer
+dnl     reasonably strong hardening in several categories (RELRO, PIE,
+dnl     "bind now", stack protector) according to what the selected toolchain
+dnl     can offer
+dnl
+dnl --enable-hardening:
+dnl     same effect as --enable-hardening=try when the environment variables
+dnl     in question are suppressed
+dnl
+dnl --disable-hardening:
+dnl     do not apply any targeted hardening measures at all
+dnl
+dnl The user-injected environment variables that regulate the hardening in
+dnl default case are as follows:
+dnl
+dnl * CFLAGS_HARDENED_EXE, LDFLAGS_HARDENED_EXE
+dnl    compiler and linker flags (respectively) for daemon programs
+dnl    (attrd, cib, crmd, lrmd, stonithd, pacemakerd, pacemaker_remoted,
+dnl    pengine)
+dnl
+dnl * CFLAGS_HARDENED_LIB, LDFLAGS_HARDENED_LIB
+dnl    compiler and linker flags (respectively) for libraries linked
+dnl    with the daemon programs
+dnl
+dnl Note that these are purposedly targeted variables (addressing particular
+dnl targets all over the scattered Makefiles) and have no effect outside of
+dnl the predestined scope (e.g., CLI utilities).  For a global reach,
+dnl use CFLAGS, LDFLAGS, etc. as usual.
+dnl
+dnl For guidance on the suitable flags consult, for instance:
+dnl https://fedoraproject.org/wiki/Changes/Harden_All_Packages#Detailed_Harden_Flags_Description
+dnl https://owasp.org/index.php/C-Based_Toolchain_Hardening#GCC.2FBinutils
+dnl
+
+if test "x${HARDENING}" != "xtry"; then
+	unset CFLAGS_HARDENED_EXE
+	unset CFLAGS_HARDENED_LIB
+	unset LDFLAGS_HARDENED_EXE
+	unset LDFLAGS_HARDENED_LIB
+fi
+if test "x${HARDENING}" = "xno"; then
+	AC_MSG_NOTICE([Hardening: explicitly disabled])
+elif test "x${HARDENING}" = "xyes" \
+    || test "$(env | grep -Ec '^(C|LD)FLAGS_HARDENED_(EXE|LIB)=.')" = 0; then
+	dnl We'll figure out on our own...
+	CFLAGS_HARDENED_EXE=
+	CFLAGS_HARDENED_LIB=
+	LDFLAGS_HARDENED_EXE=
+	LDFLAGS_HARDENED_LIB=
+	relro=0
+	pie=0
+	bindnow=0
+	# daemons incl. libs: partial RELRO
+	flag="-Wl,-z,relro"
+	CC_CHECK_LDFLAGS(["${flag}"],
+		[LDFLAGS_HARDENED_EXE="${LDFLAGS_HARDENED_EXE} ${flag}";
+		 LDFLAGS_HARDENED_LIB="${LDFLAGS_HARDENED_LIB} ${flag}";
+		 relro=1]
+	)
+	# daemons: PIE for both CFLAGS and LDFLAGS
+	if cc_supports_flag -fPIE; then
+		flag="-pie"
+		CC_CHECK_LDFLAGS(["${flag}"],
+			[CFLAGS_HARDENED_EXE="${CFLAGS_HARDENED_EXE} -fPIE";
+			 LDFLAGS_HARDENED_EXE="${LDFLAGS_HARDENED_EXE} ${flag}";
+			 pie=1]
+		)
+	fi
+	# daemons incl. libs: full RELRO if sensible + as-needed linking
+	#                     so as to possibly mitigate startup performance
+	#                     hit caused by excessive linking with unneeded
+	#                     libraries
+	if test "${relro}" = 1 && test "${pie}" = 1; then
+		flag="-Wl,-z,now"
+		CC_CHECK_LDFLAGS(["${flag}"],
+			[LDFLAGS_HARDENED_EXE="${LDFLAGS_HARDENED_EXE} ${flag}";
+			 LDFLAGS_HARDENED_LIB="${LDFLAGS_HARDENED_LIB} ${flag}";
+			 bindnow=1]
+		)
+	fi
+	if test "${bindnow}" = 1; then
+		flag="-Wl,--as-needed"
+		CC_CHECK_LDFLAGS(["${flag}"],
+			[LDFLAGS_HARDENED_EXE="${LDFLAGS_HARDENED_EXE} ${flag}";
+			 LDFLAGS_HARDENED_LIB="${LDFLAGS_HARDENED_LIB} ${flag}"]
+		)
+	fi
+	# universal: prefer strong > all > default stack protector if possible
+	flag=
+	if cc_supports_flag -fstack-protector-strong; then
+		flag="-fstack-protector-strong"
+	elif cc_supports_flag -fstack-protector-all; then
+		flag="-fstack-protector-all"
+	elif cc_supports_flag -fstack-protector; then
+		flag="-fstack-protector"
+	fi
+	if test -n "${flag}"; then
+		CC_EXTRAS="${CC_EXTRAS} ${flag}"
+		stackprot=1
+	fi
+	if test "${relro}" = 1 \
+	|| test "${pie}" = 1 \
+	|| test "${stackprot}" = 1; then
+		AC_MSG_NOTICE(
+		[Hardening: relro=${relro} pie=${pie} bindnow=${bindnow} stackprot=${flag}])
+	else
+		AC_MSG_WARN([Hardening: no suitable features in the toolchain detected])
+	fi
+else
+	AC_MSG_NOTICE([Hardening: using custom flags])
 fi
 
 CFLAGS="$CFLAGS $CC_EXTRAS"
@@ -2008,5 +2107,9 @@ AC_MSG_RESULT([  HA group name            = ${CRM_DAEMON_GROUP}])
 AC_MSG_RESULT([  HA user name             = ${CRM_DAEMON_USER}])
 AC_MSG_RESULT([])
 AC_MSG_RESULT([  CFLAGS                   = ${CFLAGS}])
+AC_MSG_RESULT([  CFLAGS_HARDENED_EXE      = ${CFLAGS_HARDENED_EXE}])
+AC_MSG_RESULT([  CFLAGS_HARDENED_LIB      = ${CFLAGS_HARDENED_LIB}])
+AC_MSG_RESULT([  LDFLAGS_HARDENED_EXE     = ${LDFLAGS_HARDENED_EXE}])
+AC_MSG_RESULT([  LDFLAGS_HARDENED_LIB     = ${LDFLAGS_HARDENED_LIB}])
 AC_MSG_RESULT([  Libraries                = ${LIBS}])
 AC_MSG_RESULT([  Stack Libraries          = ${CLUSTERLIBS}])

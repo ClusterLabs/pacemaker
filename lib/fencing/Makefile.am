@@ -16,16 +16,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-MAINTAINERCLEANFILES = Makefile.in
+include $(top_srcdir)/Makefile.common
 
-AM_CPPFLAGS         = -I$(top_builddir)/include  -I$(top_srcdir)/include     \
-                   -I$(top_builddir)/libltdl  -I$(top_srcdir)/libltdl     \
-		   -I$(top_builddir)          -I$(top_srcdir)
+lib_LTLIBRARIES		= libstonithd.la
 
-lib_LTLIBRARIES = libstonithd.la
+libstonithd_la_LDFLAGS	= -version-info 4:1:2
 
-libstonithd_la_SOURCES = st_client.c
-libstonithd_la_LDFLAGS = -version-info 4:1:2
-libstonithd_la_LIBADD = $(top_builddir)/lib/common/libcrmcommon.la
+libstonithd_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
+libstonithd_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 
-AM_CFLAGS = $(AM_CPPFLAGS)
+libstonithd_la_LIBADD	= $(top_builddir)/lib/common/libcrmcommon.la
+libstonithd_la_SOURCES	= st_client.c

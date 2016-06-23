@@ -17,7 +17,7 @@
 #
 include $(top_srcdir)/Makefile.common
 
-AM_CPPFLAGS     += -I$(top_builddir) -I$(top_srcdir)
+AM_CPPFLAGS	+= -I$(top_builddir) -I$(top_srcdir)
 
 halibdir	= $(CRM_DAEMON_DIR)
 
@@ -30,9 +30,8 @@ test_DATA		= regression.core.sh
 test10dir		= $(datadir)/$(PACKAGE)/tests/pengine/test10
 test10_DATA		= $(PE_TESTS) $(PE_TESTS:%.scores=%.xml) $(PE_TESTS:%.scores=%.exp) $(PE_TESTS:%.scores=%.dot) $(PE_TESTS:%.scores=%.summary) $(wildcard test10/*.stderr)
 
-COMMONLIBS	= 					\
-		$(top_builddir)/lib/common/libcrmcommon.la		\
-		$(top_builddir)/lib/pengine/libpe_status.la		\
+COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la	\
+		$(top_builddir)/lib/pengine/libpe_status.la	\
 		libpengine.la $(CURSESLIBS) $(CLUSTERLIBS)
 
 beekhof:
@@ -58,21 +57,26 @@ man7_MANS =	pengine.7
 endif
 
 ## SOURCES
+
 noinst_HEADERS	= allocate.h utils.h pengine.h
-#utils.h pengine.h
 
 libpengine_la_LDFLAGS	= -version-info 11:0:1
+
+libpengine_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
+libpengine_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
+
+libpengine_la_LIBADD	= $(top_builddir)/lib/pengine/libpe_status.la \
+			$(top_builddir)/lib/cib/libcib.la
 # -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version
 libpengine_la_SOURCES	= pengine.c allocate.c utils.c constraints.c
-libpengine_la_SOURCES  += native.c group.c clone.c master.c graph.c utilization.c
+libpengine_la_SOURCES	+= native.c group.c clone.c master.c graph.c utilization.c
 
-libpengine_la_LIBADD    = $(top_builddir)/lib/pengine/libpe_status.la \
-	$(top_builddir)/lib/cib/libcib.la
-
-pengine_SOURCES	= main.c
+pengine_CFLAGS	= $(CFLAGS_HARDENED_EXE)
+pengine_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
 pengine_LDADD	= $(top_builddir)/lib/cib/libcib.la $(COMMONLIBS)
 # libcib for get_object_root()
 #		$(top_builddir)/lib/hbclient/libhbclient.la
+pengine_SOURCES	= main.c
 
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)/$(PE_STATE_DIR)
