@@ -389,7 +389,7 @@
   + cib: Ensure 'cibadmin -R/--replace' commands get replies
   + cib: Erasing the cib is an admin action, bump the admin_epoch instead
   + cib: Fix remote cib based on TLS
-  + cib: Ingore patch failures if we already have their contents
+  + cib: Ignore patch failures if we already have their contents
   + cib: Validate that everyone still sees the same configuration once all updates have completed
   + cibadmin: Allow priviliged clients to perform tasks as unpriviliged users
   + cibadmin: Remove dangerous commands that exposed unnecessary implementation internal details
@@ -1625,7 +1625,7 @@
   + Medium: crmd: Clean up and optimize the DC election algorithm
   + Medium: crmd: Fix memory leak in shutdown
   + Medium: crmd: Fix memory leaks spotted by Valgrind
-  + Medium: crmd: Ingore join messages from hosts other than our DC
+  + Medium: crmd: Ignore join messages from hosts other than our DC
   + Medium: crmd: Limit the scope of resource updates to the status section
   + Medium: crmd: Prevent the crmd from being respawned if its told to shut down when it did not ask to be
   + Medium: crmd: Re-check the election status after membership events
