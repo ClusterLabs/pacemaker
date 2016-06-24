@@ -17,18 +17,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-/**
+/*!
  * \file
- * \brief internal I/O utilities
+ * \brief   internal common utilities
  * \ingroup core
+ * \note    Public APIs are declared in util.h
  */
 
-/* public APIs from io.c are declared in util.h */
+#ifndef CRM_COMMON_INTERNAL__H
+#define CRM_COMMON_INTERNAL__H
 
-#ifndef CRM_COMMON_IO__H
-#define CRM_COMMON_IO__H
+#include <glib.h>       /* for gboolean */
+#include <dirent.h>     /* for struct dirent */
+#include <sys/types.h>  /* for uid_t and gid_t */
 
-#include <glib.h> /* for gboolean */
+/* internal I/O utilities (from io.c) */
 
 char *generate_series_filename(const char *directory, const char *series, int sequence,
                                gboolean bzip);
@@ -44,4 +47,10 @@ void crm_sync_directory(const char *name);
 char *crm_read_contents(const char *filename);
 int crm_write_sync(int fd, const char *contents);
 
-#endif /* CRM_COMMON_IO__H */
+
+/* internal procfs utilities (from procfs.c) */
+
+int crm_procfs_process_info(struct dirent *entry, char *name, int *pid);
+int crm_procfs_pid_of(const char *name);
+
+#endif /* CRM_COMMON_INTERNAL__H */
