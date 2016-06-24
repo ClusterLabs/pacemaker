@@ -2102,7 +2102,7 @@ xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset, bool check_version)
     xmlNode *removed = find_xml_node(patchset, "diff-removed", FALSE);
     xmlNode *old = copy_xml(xml);
 
-    crm_trace("Substraction Phase");
+    crm_trace("Subtraction Phase");
     for (child_diff = __xml_first_child(removed); child_diff != NULL;
          child_diff = __xml_next(child_diff)) {
         CRM_CHECK(root_nodes_seen == 0, rc = FALSE);
@@ -4114,7 +4114,7 @@ apply_xml_diff(xmlNode * old, xmlNode * diff, xmlNode ** new)
                                 crm_trace_nonlog);
     }
 
-    crm_trace("Substraction Phase");
+    crm_trace("Subtraction Phase");
     for (child_diff = __xml_first_child(removed); child_diff != NULL;
          child_diff = __xml_next(child_diff)) {
         CRM_CHECK(root_nodes_seen == 0, result = FALSE);

@@ -475,7 +475,7 @@ master_score(resource_t * rsc, node_t * node, int not_set_value)
 
     if (node == NULL) {
         if (rsc->fns->state(rsc, TRUE) < RSC_ROLE_STARTED) {
-            pe_rsc_trace(rsc, "Ingoring master score for %s: unknown state", rsc->id);
+            pe_rsc_trace(rsc, "Ignoring master score for %s: unknown state", rsc->id);
             return score;
         }
 
