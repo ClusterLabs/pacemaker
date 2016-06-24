@@ -2122,7 +2122,8 @@ print_cluster_times(FILE *stream, pe_working_set_t *data_set)
         case mon_output_plain:
         case mon_output_console:
             print_as("Last updated: %s", crm_now_string());
-            print_as("\t\tLast change: %s", last_written ? last_written : "");
+            print_as((user || client || origin)? "\n" : "\t\t");
+            print_as("Last change: %s", last_written ? last_written : "");
             if (user) {
                 print_as(" by %s", user);
             }
@@ -2280,23 +2281,32 @@ print_cluster_counts(FILE *stream, pe_working_set_t *data_set, const char *stack
         case mon_output_plain:
         case mon_output_console:
 
-            if (stack_s && strstr(stack_s, "classic openais") != NULL) {
-                print_as(", %s expected votes", quorum_votes);
-            }
-
             if(is_set(data_set->flags, pe_flag_maintenance_mode)) {
                 print_as("\n              *** Resource management is DISABLED ***");
                 print_as("\n  The cluster will not attempt to start, stop or recover services");
-                print_as("\n");
             }
 
-            print_as("\n%d node%s and %d resource%s configured",
-                     nnodes, s_if_plural(nnodes),
+            print_as("\n%d node%s configured", nnodes, s_if_plural(nnodes));
+            if (stack_s && strstr(stack_s, "classic openais") != NULL) {
+                print_as(" (%s expected votes)", quorum_votes);
+            }
+            print_as("\n");
+
+            print_as("\n%d resource%s configured",
                      nresources, s_if_plural(nresources));
             if(data_set->disabled_resources || data_set->blocked_resources) {
-                print_as(": %d resource%s DISABLED and %d BLOCKED from being started due to failures",
-                         data_set->disabled_resources, s_if_plural(data_set->disabled_resources),
-                         data_set->blocked_resources);
+                print_as(" (");
+                if (data_set->disabled_resources) {
+                    print_as("%d DISABLED", data_set->disabled_resources);
+                }
+                if (data_set->disabled_resources && data_set->blocked_resources) {
+                    print_as(", ");
+                }
+                if (data_set->blocked_resources) {
+                    print_as("%d BLOCKED from starting due to failure",
+                             data_set->blocked_resources);
+                }
+                print_as(")");
             }
             print_as("\n\n");
 
