@@ -106,16 +106,35 @@ systemd_cleanup(void)
     }
 }
 
+/*!
+ * \internal
+ * \brief Check whether a file name represents a systemd unit
+ *
+ * \param[in] name  File name to check
+ *
+ * \return Pointer to "dot" before filename extension if so, NULL otherwise
+ */
+static const char *
+systemd_unit_extension(const char *name)
+{
+    if (name) {
+        const char *dot = strrchr(name, '.');
+
+        if (dot && (!strcmp(dot, ".service") || !strcmp(dot, ".socket"))) {
+            return dot;
+        }
+    }
+    return NULL;
+}
+
 static char *
 systemd_service_name(const char *name)
 {
     if (name == NULL) {
         return NULL;
+    }
 
-    } else if (strstr(name, ".service")) {
-        return strdup(name);
-
-    } else if (strstr(name, ".socket")) {
+    if (systemd_unit_extension(name)) {
         return strdup(name);
     }
 
@@ -360,15 +379,21 @@ systemd_unit_listall(void)
         }
 
         dbus_message_iter_get_basic(&elem, &value);
-        crm_trace("Got: %s", value.str);
+        crm_trace("DBus ListUnits listed: %s", value.str);
         if(value.str) {
-            char *match = strstr(value.str, ".service");
+            const char *match = systemd_unit_extension(value.str);
 
             if (match) {
-                lpc++;
-                match[0] = 0;
+                char *unit_name;
 
-                units = g_list_append(units, strdup(value.str));
+                if (!strcmp(match, ".service")) {
+                    /* service is the "default" unit type, so strip it */
+                    unit_name = strndup(value.str, match - value.str);
+                } else {
+                    unit_name = strdup(value.str);
+                }
+                lpc++;
+                units = g_list_append(units, unit_name);
             }
         }
         dbus_message_iter_next (&unit);
