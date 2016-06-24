@@ -59,6 +59,7 @@ int crm_procfs_pid_of(const char *name);
 char *crm_concat(const char *prefix, const char *suffix, char join);
 void g_hash_destroy_str(gpointer data);
 long long crm_int_helper(const char *text, char **end_text);
+gboolean crm_ends_with(const char *s, const char *match);
 char *add_list_element(char *list, const char *value);
 bool crm_compress_string(const char *data, int length, int max, char **result,
                          unsigned int *result_len);

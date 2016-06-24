@@ -229,6 +229,28 @@ crm_str_eq(const char *a, const char *b, gboolean use_case)
     return FALSE;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a string ends with a certain sequence
+ *
+ * \param[in] s      String to check
+ * \param[in] match  Sequence to match against end of s
+ *
+ * \return TRUE if s ends with match, FALSE otherwise
+ */
+gboolean
+crm_ends_with(const char *s, const char *match)
+{
+    if ((s == NULL) || (match == NULL)) {
+        return FALSE;
+    } else {
+        size_t slen = strlen(s);
+        size_t mlen = strlen(match);
+
+        return ((slen >= mlen) && !strcmp(s + slen - mlen, match));
+    }
+}
+
 /*
  * This re-implements g_str_hash as it was prior to glib2-2.28:
  *
