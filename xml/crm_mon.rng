@@ -53,12 +53,19 @@
                     </element>
                     <element name="resources_configured">
                         <attribute name="number"> <data type="int" /> </attribute>
+                        <optional>
+                            <attribute name="disabled"> <data type="int" /> </attribute>
+                            <attribute name="blocked"> <data type="int" /> </attribute>
+                        </optional>
                     </element>
                     <optional>
                         <element name="cluster_options">
                             <attribute name="stonith-enabled"> <data type="boolean" /> </attribute>
                             <attribute name="symmetric-cluster"> <data type="boolean" /> </attribute>
                             <attribute name="no-quorum-policy"> <text/> </attribute>
+                            <optional>
+                                <attribute name="maintenance-mode"> <data type="boolean" /> </attribute>
+                            </optional>
                         </element>
                     </optional>
                 </interleave>
