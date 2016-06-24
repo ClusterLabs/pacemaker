@@ -53,4 +53,20 @@ int crm_write_sync(int fd, const char *contents);
 int crm_procfs_process_info(struct dirent *entry, char *name, int *pid);
 int crm_procfs_pid_of(const char *name);
 
+
+/* internal generic string functions (from strings.c) */
+
+char *crm_concat(const char *prefix, const char *suffix, char join);
+void g_hash_destroy_str(gpointer data);
+long long crm_int_helper(const char *text, char **end_text);
+char *add_list_element(char *list, const char *value);
+bool crm_compress_string(const char *data, int length, int max, char **result,
+                         unsigned int *result_len);
+
+static inline int
+crm_strlen_zero(const char *s)
+{
+    return !s || *s == '\0';
+}
+
 #endif /* CRM_COMMON_INTERNAL__H */
