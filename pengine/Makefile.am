@@ -32,7 +32,7 @@ test10_DATA		= $(PE_TESTS) $(PE_TESTS:%.scores=%.xml) $(PE_TESTS:%.scores=%.exp)
 
 COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la	\
 		$(top_builddir)/lib/pengine/libpe_status.la	\
-		libpengine.la $(CURSESLIBS) $(CLUSTERLIBS)
+		libpengine.la
 
 beekhof:
 	echo $(shell ls -1 test10/*.xml)
