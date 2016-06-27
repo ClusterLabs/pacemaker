@@ -455,6 +455,15 @@ native_print_xml(resource_t * rsc, const char *pre_text, long options, void *pri
     }
 }
 
+/* making this inline rather than a macro prevents a coverity "unreachable"
+ * warning on the first usage
+ */
+static inline const char *
+comma_if(int i)
+{
+    return i? ", " : "";
+}
+
 void
 native_print(resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
@@ -546,7 +555,8 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
         offset += snprintf(buffer + offset, LINE_MAX - offset, " %s", node->details->uname);
 
         if (node->details->online == FALSE && node->details->unclean) {
-            flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset, "%sUNCLEAN", flagOffset?", ":"");
+            flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset,
+                                   "%sUNCLEAN", comma_if(flagOffset));
         }
     }
 
@@ -554,7 +564,8 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
         const char *pending_task = native_pending_task(rsc);
 
         if (pending_task) {
-            flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset, "%s%s", flagOffset?", ":"", pending_task);
+            flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset,
+                                   "%s%s", comma_if(flagOffset), pending_task);
         }
     }
 
@@ -565,26 +576,31 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
          * (and would also allow a Master to be Master).
          * Show if target role limits our abilities. */
         if (target_role_e == RSC_ROLE_STOPPED) {
-            flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset, "%sdisabled", flagOffset?", ":"");
+            flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset,
+                                   "%sdisabled", comma_if(flagOffset));
             rsc->cluster->disabled_resources++;
 
         } else if (uber_parent(rsc)->variant == pe_master
                    && target_role_e == RSC_ROLE_SLAVE) {
-            flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset, "%starget-role:%s", flagOffset?", ":"", target_role);
+            flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset,
+                                   "%starget-role:%s", comma_if(flagOffset), target_role);
             rsc->cluster->disabled_resources++;
         }
     }
 
     if (is_set(rsc->flags, pe_rsc_block)) {
-        flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset, "%sblocked", flagOffset?", ":"");
+        flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset,
+                               "%sblocked", comma_if(flagOffset));
         rsc->cluster->blocked_resources++;
 
     } else if (is_not_set(rsc->flags, pe_rsc_managed)) {
-        flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset, "%sunmanaged", flagOffset?", ":"");
+        flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset,
+                               "%sunmanaged", comma_if(flagOffset));
     }
 
     if(is_set(rsc->flags, pe_rsc_failure_ignored)) {
-        flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset, "%sfailure ignored", flagOffset?", ":"");
+        flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset,
+                               "%sfailure ignored", comma_if(flagOffset));
     }
 
     if ((options & pe_print_rsconly) || g_list_length(rsc->running_on) > 1) {
