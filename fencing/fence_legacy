@@ -73,6 +73,7 @@ be configured in cluster.conf, not directly in Pacemaker.
         <action name="off" />
         <action name="on" />
         <action name="status" />
+        <action name="list" />
         <action name="metadata" />
 </actions>
 </resource-agent>
@@ -192,6 +193,10 @@ if ((defined $opt_o) && ($opt_o =~ /metadata/i)) {
 $opt_o=lc($opt_o);
 fail "failed: unrecognised action: $opt_o"
     unless $opt_o =~ /^(on|off|reset|reboot|stat|status|monitor|list|hostlist|poweroff|poweron)$/;
+
+if ( $opt_o eq "hostlist"|| $opt_o eq "list" ) {
+    $opt_q = "1";
+}
 
 if ( $pid=fork() == 0 )
 {
