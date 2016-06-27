@@ -28,13 +28,6 @@ does differ, so make sure you read the version of this guide that
 corresponds to the software installed on your system.
 ===========
 
-[IMPORTANT]
-===========
-Since `pcs` has the ability to manage all aspects of the cluster (both
-corosync and pacemaker), it requires a specific cluster stack to be in
-use: corosync 2.0 or later with votequorum plus Pacemaker 1.1.8 or later.
-===========
-
 == Explore pcs ==
 
 Start by taking some time to familiarize yourself with

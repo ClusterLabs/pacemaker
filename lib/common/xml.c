@@ -261,13 +261,14 @@ static int schema_filter(const struct dirent * a)
     if(strstr(a->d_name, "pacemaker-") != a->d_name) {
         /* crm_trace("%s - wrong prefix", a->d_name); */
 
-    } else if(strstr(a->d_name, ".rng") == NULL) {
+    } else if (!crm_ends_with(a->d_name, ".rng")) {
         /* crm_trace("%s - wrong suffix", a->d_name); */
 
     } else if(sscanf(a->d_name, "pacemaker-%f.rng", &version) == 0) {
         /* crm_trace("%s - wrong format", a->d_name); */
 
     } else if(strcmp(a->d_name, "pacemaker-1.1.rng") == 0) {
+        /* "-1.1" was used for what later became "-next" */
         /* crm_trace("%s - hack", a->d_name); */
 
     } else {
@@ -3145,7 +3146,7 @@ filename2xml(const char *filename)
 {
     xmlNode *xml = NULL;
     xmlDocPtr output = NULL;
-    const char *match = NULL;
+    gboolean uncompressed = TRUE;
     xmlParserCtxtPtr ctxt = NULL;
     xmlErrorPtr last_error = NULL;
     static int xml_options = XML_PARSE_NOBLANKS | XML_PARSE_RECOVER;
@@ -3161,14 +3162,14 @@ filename2xml(const char *filename)
     /* initGenericErrorDefaultFunc(crm_xml_err); */
 
     if (filename) {
-        match = strstr(filename, ".bz2");
+        uncompressed = !crm_ends_with(filename, ".bz2");
     }
 
     if (filename == NULL) {
         /* STDIN_FILENO == fileno(stdin) */
         output = xmlCtxtReadFd(ctxt, STDIN_FILENO, "unknown.xml", NULL, xml_options);
 
-    } else if (match == NULL || match[4] != 0) {
+    } else if (uncompressed) {
         output = xmlCtxtReadFile(ctxt, filename, NULL, xml_options);
 
     } else {

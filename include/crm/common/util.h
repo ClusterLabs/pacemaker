@@ -50,11 +50,30 @@
                                         /* Status of an offline client */
 #  endif
 
+/* public string functions (from strings.c) */
 char *crm_itoa_stack(int an_int, char *buf, size_t len);
 char *crm_itoa(int an_int);
 gboolean crm_is_true(const char *s);
 int crm_str_to_boolean(const char *s, int *ret);
 int crm_parse_int(const char *text, const char *default_text);
+char * crm_strip_trailing_newline(char *str);
+gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
+gboolean safe_str_neq(const char *a, const char *b);
+
+#  define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
+
+/* used with hash tables where case does not matter */
+static inline gboolean
+crm_strcase_equal(gconstpointer a, gconstpointer b)
+{
+    return crm_str_eq((const char *) a, (const char *) b, FALSE);
+}
+
+#  define crm_atoi(text, default_text) crm_parse_int(text, default_text)
+
+/* public I/O functions (from io.c) */
+void crm_build_path(const char *path_c, mode_t mode);
+
 long long crm_get_msec(const char *input);
 unsigned long long crm_get_interval(const char *input);
 int char2score(const char *score);
@@ -68,24 +87,6 @@ gboolean decode_transition_key(const char *key, char **uuid, int *action, int *t
                                int *target_rc);
 gboolean decode_transition_magic(const char *magic, char **uuid, int *transition_id, int *action_id,
                                  int *op_status, int *op_rc, int *target_rc);
-
-char * crm_strip_trailing_newline(char *str);
-
-#  define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
-
-gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
-
-/* used with hash tables where case does not matter */
-static inline gboolean
-crm_strcase_equal(gconstpointer a, gconstpointer b)
-{
-    return crm_str_eq((const char *) a, (const char *) b, FALSE);
-}
-
-gboolean safe_str_neq(const char *a, const char *b);
-
-#  define crm_atoi(text, default_text) crm_parse_int(text, default_text)
-
 /* coverity[+kill] */
 void crm_abort(const char *file, const char *function, int line,
                const char *condition, gboolean do_core, gboolean do_fork);
@@ -127,7 +128,6 @@ char *crm_md5sum(const char *buffer);
 
 char *crm_generate_uuid(void);
 
-void crm_build_path(const char *path_c, mode_t mode);
 int crm_user_lookup(const char *name, uid_t * uid, gid_t * gid);
 
 #ifdef HAVE_GNUTLS_GNUTLS_H

@@ -1247,7 +1247,8 @@ clone_update_actions_interleave(action_t * first, action_t * then, node_t * node
     const char *first_task = task2text(task);
 
     /* Fix this - lazy */
-    if (strstr(first->uuid, "_stopped_0") || strstr(first->uuid, "_demoted_0")) {
+    if (crm_ends_with(first->uuid, "_stopped_0")
+        || crm_ends_with(first->uuid, "_demoted_0")) {
         current = TRUE;
     }
 
@@ -1343,7 +1344,8 @@ clone_update_actions(action_t * first, action_t * then, node_t * node, enum pe_a
         && then->rsc && then->rsc->variant >= pe_clone) {
         clone_variant_data_t *clone_data = NULL;
 
-        if (strstr(then->uuid, "_stop_0") || strstr(then->uuid, "_demote_0")) {
+        if (crm_ends_with(then->uuid, "_stop_0")
+            || crm_ends_with(then->uuid, "_demote_0")) {
             get_clone_variant_data(clone_data, first->rsc);
             rsc = first->rsc->id;
         } else {

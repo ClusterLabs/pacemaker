@@ -1257,7 +1257,7 @@ check_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper)
         return FALSE;
 
     } else if ((wrapper->type == pe_order_optional)
-               && strstr(wrapper->action->uuid, "_stop_0")
+               && crm_ends_with(wrapper->action->uuid, "_stop_0")
                && is_set(wrapper->action->flags, pe_action_migrate_runnable)) {
 
         /* for optional only ordering, ordering is not preserved for
@@ -1327,7 +1327,7 @@ check_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper)
                && wrapper->action->rsc != action->rsc
                && is_set(wrapper->action->rsc->flags, pe_rsc_failed)
                && is_not_set(wrapper->action->rsc->flags, pe_rsc_managed)
-               && strstr(wrapper->action->uuid, "_stop_0")
+               && crm_ends_with(wrapper->action->uuid, "_stop_0")
                && action->rsc && action->rsc->variant >= pe_clone) {
         crm_warn("Ignoring requirement that %s complete before %s:"
                  " unmanaged failed resources cannot prevent clone shutdown",

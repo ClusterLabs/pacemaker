@@ -2122,7 +2122,8 @@ print_cluster_times(FILE *stream, pe_working_set_t *data_set)
         case mon_output_plain:
         case mon_output_console:
             print_as("Last updated: %s", crm_now_string());
-            print_as("\t\tLast change: %s", last_written ? last_written : "");
+            print_as((user || client || origin)? "\n" : "\t\t");
+            print_as("Last change: %s", last_written ? last_written : "");
             if (user) {
                 print_as(" by %s", user);
             }
@@ -2137,7 +2138,7 @@ print_cluster_times(FILE *stream, pe_working_set_t *data_set)
 
         case mon_output_html:
         case mon_output_cgi:
-            fprintf(stream, " <b>Last updated: %s</b><br/>\n", crm_now_string());
+            fprintf(stream, " <b>Last updated:</b> %s<br/>\n", crm_now_string());
             fprintf(stream, " <b>Last change:</b> %s", last_written ? last_written : "");
             if (user) {
                 fprintf(stream, " by %s", user);
@@ -2280,37 +2281,60 @@ print_cluster_counts(FILE *stream, pe_working_set_t *data_set, const char *stack
         case mon_output_plain:
         case mon_output_console:
 
+            print_as("\n%d node%s configured", nnodes, s_if_plural(nnodes));
             if (stack_s && strstr(stack_s, "classic openais") != NULL) {
-                print_as(", %s expected votes", quorum_votes);
+                print_as(" (%s expected votes)", quorum_votes);
             }
+            print_as("\n");
 
-            if(is_set(data_set->flags, pe_flag_maintenance_mode)) {
-                print_as("\n              *** Resource management is DISABLED ***");
-                print_as("\n  The cluster will not attempt to start, stop or recover services");
-                print_as("\n");
-            }
-
-            print_as("\n%d node%s and %d resource%s configured",
-                     nnodes, s_if_plural(nnodes),
+            print_as("%d resource%s configured",
                      nresources, s_if_plural(nresources));
             if(data_set->disabled_resources || data_set->blocked_resources) {
-                print_as(": %d resource%s DISABLED and %d BLOCKED from being started due to failures",
-                         data_set->disabled_resources, s_if_plural(data_set->disabled_resources),
-                         data_set->blocked_resources);
+                print_as(" (");
+                if (data_set->disabled_resources) {
+                    print_as("%d DISABLED", data_set->disabled_resources);
+                }
+                if (data_set->disabled_resources && data_set->blocked_resources) {
+                    print_as(", ");
+                }
+                if (data_set->blocked_resources) {
+                    print_as("%d BLOCKED from starting due to failure",
+                             data_set->blocked_resources);
+                }
+                print_as(")");
             }
-            print_as("\n\n");
+            print_as("\n");
 
             break;
 
         case mon_output_html:
         case mon_output_cgi:
+
             fprintf(stream, " %d node%s configured", nnodes, s_if_plural(nnodes));
             if (stack_s && strstr(stack_s, "classic openais") != NULL) {
                 fprintf(stream, " (%s expected votes)", quorum_votes);
             }
             fprintf(stream, "<br/>\n");
-            fprintf(stream, " %d resource%s configured<br/>\n",
+
+            fprintf(stream, " %d resource%s configured",
                     nresources, s_if_plural(nresources));
+            if (data_set->disabled_resources || data_set->blocked_resources) {
+                fprintf(stream, " (");
+                if (data_set->disabled_resources) {
+                    fprintf(stream, "%d <strong>DISABLED</strong>",
+                            data_set->disabled_resources);
+                }
+                if (data_set->disabled_resources && data_set->blocked_resources) {
+                    fprintf(stream, ", ");
+                }
+                if (data_set->blocked_resources) {
+                    fprintf(stream,
+                            "%d <strong>BLOCKED</strong> from starting due to failure",
+                            data_set->blocked_resources);
+                }
+                fprintf(stream, ")");
+            }
+            fprintf(stream, "<br/>\n");
             break;
 
         case mon_output_xml:
@@ -2318,8 +2342,9 @@ print_cluster_counts(FILE *stream, pe_working_set_t *data_set, const char *stack
                     "        <nodes_configured number=\"%d\" expected_votes=\"%s\" />\n",
                     g_list_length(data_set->nodes), quorum_votes);
             fprintf(stream,
-                    "        <resources_configured number=\"%d\" />\n",
-                    count_resources(data_set, NULL));
+                    "        <resources_configured number=\"%d\" disabled=\"%d\" blocked=\"%d\" />\n",
+                    count_resources(data_set, NULL),
+                    data_set->disabled_resources, data_set->blocked_resources);
             break;
 
         default:
@@ -2341,6 +2366,15 @@ static void
 print_cluster_options(FILE *stream, pe_working_set_t *data_set)
 {
     switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
+                print_as("\n              *** Resource management is DISABLED ***");
+                print_as("\n  The cluster will not attempt to start, stop or recover services");
+                print_as("\n");
+            }
+            break;
+
         case mon_output_html:
             fprintf(stream, " </p>\n <h3>Config Options</h3>\n");
             fprintf(stream, " <table>\n");
@@ -2365,7 +2399,18 @@ print_cluster_options(FILE *stream, pe_working_set_t *data_set)
                     fprintf(stream, "Suicide");
                     break;
             }
-            fprintf(stream, "</td></tr>\n </table>\n <p>\n");
+            fprintf(stream, "</td></tr>\n");
+
+            fprintf(stream, "  <tr><th>Resource management</th><td>");
+            if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
+                fprintf(stream, "<strong>DISABLED</strong> (the cluster will "
+                                "not attempt to start, stop or recover services)");
+            } else {
+                fprintf(stream, "enabled");
+            }
+            fprintf(stream, "</td></tr>\n");
+
+            fprintf(stream, "</table>\n <p>\n");
             break;
 
         case mon_output_xml:
@@ -2391,7 +2436,11 @@ print_cluster_options(FILE *stream, pe_working_set_t *data_set)
                     fprintf(stream, "suicide");
                     break;
             }
-            fprintf(stream, "\" />\n");
+            fprintf(stream, "\"");
+            fprintf(stream, " maintenance-mode=\"%s\"",
+                    is_set(data_set->flags, pe_flag_maintenance_mode)?
+                    "true" : "false");
+            fprintf(stream, " />\n");
             break;
 
         default:
@@ -2685,6 +2734,7 @@ print_status(pe_working_set_t * data_set)
         blank_screen();
     }
     print_cluster_summary(stdout, data_set);
+    print_as("\n");
 
     /* Gather node information (and print if in bad state or grouping by node) */
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
