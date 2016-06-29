@@ -358,6 +358,8 @@ blackbox_logger(int32_t t, struct qb_log_callsite *cs, time_t timestamp, const c
 static void
 crm_control_blackbox(int nsig, bool enable)
 {
+    int lpc = 0;
+
     if (blackbox_file_prefix == NULL) {
         pid_t pid = getpid();
 
@@ -368,6 +370,11 @@ crm_control_blackbox(int nsig, bool enable)
     if (enable && qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
         qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_SIZE, 5 * 1024 * 1024); /* Any size change drops existing entries */
         qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_TRUE);      /* Setting the size seems to disable it */
+
+        /* Enable synchronous logging */
+        for (lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
+            qb_log_ctl(lpc, QB_LOG_CONF_THREADED, QB_FALSE);
+        }
 
         crm_notice("Initiated blackbox recorder: %s", blackbox_file_prefix);
 
@@ -388,6 +395,11 @@ crm_control_blackbox(int nsig, bool enable)
 
     } else if (!enable && qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) == QB_LOG_STATE_ENABLED) {
         qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_FALSE);
+
+        /* Disable synchronous logging again when the blackbox is disabled */
+        for (lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
+            qb_log_ctl(lpc, QB_LOG_CONF_THREADED, QB_TRUE);
+        }
     }
 }
 
