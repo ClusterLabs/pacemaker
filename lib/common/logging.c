@@ -372,8 +372,8 @@ crm_control_blackbox(int nsig, bool enable)
         qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_TRUE);      /* Setting the size seems to disable it */
 
         /* Enable synchronous logging */
-        for (lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
-            qb_log_ctl(lpc, QB_LOG_CONF_THREADED, QB_FALSE);
+        for (lpc = QB_LOG_BLACKBOX; lpc < QB_LOG_TARGET_MAX; lpc++) {
+            qb_log_ctl(lpc, QB_LOG_CONF_FILE_SYNC, QB_TRUE);
         }
 
         crm_notice("Initiated blackbox recorder: %s", blackbox_file_prefix);
@@ -397,8 +397,8 @@ crm_control_blackbox(int nsig, bool enable)
         qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_FALSE);
 
         /* Disable synchronous logging again when the blackbox is disabled */
-        for (lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
-            qb_log_ctl(lpc, QB_LOG_CONF_THREADED, QB_TRUE);
+        for (lpc = QB_LOG_BLACKBOX; lpc < QB_LOG_TARGET_MAX; lpc++) {
+            qb_log_ctl(lpc, QB_LOG_CONF_FILE_SYNC, QB_FALSE);
         }
     }
 }
@@ -736,9 +736,12 @@ crm_log_preinit(const char *entity, int argc, char **argv)
         /* Nuke any syslog activity until it's asked for */
         qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_FALSE);
 
-        /* Set format strings */
+        /* Set format strings and disable threading
+         * Pacemaker and threads do not mix well (due to the amount of forking)
+         */
         qb_log_tags_stringify_fn_set(crm_quark_to_string);
         for (lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
+            qb_log_ctl(lpc, QB_LOG_CONF_THREADED, QB_FALSE);
             set_format_string(lpc, crm_system_name);
         }
     }
