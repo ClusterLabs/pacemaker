@@ -293,12 +293,6 @@ typedef struct qb_ipc_response_header cs_ipc_header_response_t;
 #      include <corosync/corodefs.h>
 #      include <corosync/coroipcc.h>
 #      include <corosync/coroipc_types.h>
-static inline int
-qb_to_cs_error(int a)
-{
-    return a;
-}
-
 typedef coroipc_request_header_t cs_ipc_header_request_t;
 typedef coroipc_response_header_t cs_ipc_header_response_t;
 #    endif
