@@ -101,11 +101,7 @@
     <element name="rsc_colocation">
       <attribute name="id"><data type="ID"/></attribute>
       <optional>
-        <choice>
-          <externalRef href="score.rng"/>
-          <attribute name="score-attribute"><text/></attribute>
-          <attribute name="score-attribute-mangle"><text/></attribute>
-        </choice>
+        <externalRef href="score.rng"/>
       </optional>
       <optional>
         <ref name="element-lifetime"/>
