@@ -3922,8 +3922,16 @@ static void crm_diff_update_v2(const char *event, xmlNode * msg)
             handle_rsc_op(match, local_node);
             free(local_node);
 
+        } else if(strcmp(name, XML_TAG_TRANSIENT_NODEATTRS) == 0
+                  || strcmp(name, XML_TAG_ATTR_SETS) == 0
+                  || strcmp(name, XML_CIB_TAG_NVPAIR) == 0
+                  || strcmp(name, XML_CIB_TAG_TICKETS) == 0
+                  || strcmp(name, XML_CIB_TAG_TICKET_STATE) == 0) {
+            crm_trace("Ignoring %s operation for %s %p, %s", op, xpath, match, name);
+
         } else {
-            crm_err("Ignoring %s operation for %s %p, %s", op, xpath, match, name);
+            crm_err("Unable to process unrecognized CIB change: %s operation for %s %p, %s",
+                    op, xpath, match, name);
         }
     }
 }
