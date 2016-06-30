@@ -104,7 +104,7 @@ indexterm:[Constraints,Location,score]
  (properly written OCF agents will not, so this is usually only seen with other
  agent types); and when Pacemaker Remote is used to scale a cluster to hundreds
  of nodes, limiting resource discovery to allowed nodes can significantly boost
- performance.
+ performance. '(since 1.1.13)'
 
 * +always:+ Always perform resource discovery for the specified resource on this node.
 * +never:+ Never perform resource discovery for the specified resource on this node.
@@ -507,7 +507,7 @@ indexterm:[Constraints,Resource Sets,sequential]
 |require-all
 |true
 |Whether all members of the set must be active before continuing.
- Meaningful within +rsc_order+.
+ Meaningful within +rsc_order+. '(since 1.1.13)'
 indexterm:[require-all,Resource Sets]
 indexterm:[Constraints,Resource Sets,require-all]
 
