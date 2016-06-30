@@ -65,6 +65,12 @@
 # Enable this for rebooting this machine at the time of process (subsystem) failure
 # PCMK_fail_fast=no
 
+# Set action at the time of the system reboot by fail_fast
+# When set 'crash' , the kernel does panic
+# When you want to get kdump , please set 'crash'
+# The default action is 'reboot'
+# PCMK_panic_action=crash
+
 #==#==# Pacemaker Remote
 # Use a custom directory for finding the authkey.
 # PCMK_authkey_location=/etc/pacemaker/authkey
