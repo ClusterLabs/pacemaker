@@ -577,13 +577,19 @@ Some possible uses of topologies include:
 
 |target-pattern
 |A regular expression matching the names of nodes to which this level applies
-'(since 1.1.14)'
+ '(since 1.1.14)'
  indexterm:[target-pattern,fencing-level]
  indexterm:[Fencing,fencing-level,target-pattern]
 
 |target-attribute
-|The name of a node attribute that is set for nodes to which this level applies
-'(since 1.1.14)'
+|The name of a node attribute that is set (to +target-value+) for nodes to
+ which this level applies '(since 1.1.14)'
+ indexterm:[target-attribute,fencing-level]
+ indexterm:[Fencing,fencing-level,target-attribute]
+
+|target-value
+|The node attribute value (of +target-attribute+) that is set for nodes to
+ which this level applies '(since 1.1.14)'
  indexterm:[target-attribute,fencing-level]
  indexterm:[Fencing,fencing-level,target-attribute]
 
