@@ -244,6 +244,10 @@ fping_check() {
     active=0
     f_out=`mktemp`
     f_err=`mktemp`
+    if [ ! -f "$f_out" ] || [ ! -f "$f_err" ]; then
+        ocf_log err "Failed to create temporary files for fping output; is /tmp full?"
+        exit $OCF_ERR_PERM
+    fi
 
     n=$OCF_RESKEY_attempts
     timeout=`expr $OCF_RESKEY_timeout \* 1000 / $OCF_RESKEY_attempts`
