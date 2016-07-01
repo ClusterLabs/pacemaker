@@ -27,7 +27,7 @@ maintained as a separate project.
 This is not meant to be an exhaustive list:
 
 * _crmsh_: https://crmsh.github.io/
-* _pcs_: https://github.com/feist/pcs/
+* _pcs_: https://github.com/ClusterLabs/pcs
 * _LCMC_: http://lcmc.sourceforge.net/
 * _hawk_: https://github.com/ClusterLabs/hawk
 
