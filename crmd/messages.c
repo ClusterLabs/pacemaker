@@ -755,7 +755,7 @@ handle_request(xmlNode * stored_msg, enum crmd_fsa_cause cause)
         throttle_update(stored_msg);
         if (AM_I_DC && transition_graph != NULL) {
             if (transition_graph->complete == FALSE) {
-crm_debug("The throttle changed. Trigger a graph.");
+                crm_debug("The throttle changed. Trigger a graph.");
                 trigger_graph();
             }
         }
