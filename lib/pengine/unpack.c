@@ -154,7 +154,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
 
     value = pe_pref(data_set->config_hash, XML_ATTR_HAVE_WATCHDOG);
     if (value && crm_is_true(value)) {
-        crm_notice("Relying on watchdog integration for fencing");
+        crm_notice("Watchdog will be used via SBD if fencing is required");
         set_bit(data_set->flags, pe_flag_have_stonith_resource);
     }
 

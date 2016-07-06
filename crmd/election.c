@@ -88,7 +88,7 @@ do_election_check(long long action,
                   enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     if (fsa_state != S_ELECTION) {
-        crm_debug("Ignore election check: we not in an election");
+        crm_debug("Ignoring election check because we are not in an election");
 
     } else if(election_check(fsa_election)) {
         register_fsa_input(C_FSA_INTERNAL, I_ELECTION_DC, NULL);
