@@ -4329,7 +4329,7 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
             xml_private_t *p = new_child->_private;
 
             if(p_old != p_new) {
-                crm_info("%s.%s moved from %d to %d - %d",
+                crm_info("%s.%s moved from %d to %d",
                          new_child->name, ID(new_child), p_old, p_new);
                 __xml_node_dirty(new);
                 p->flags |= xpf_moved;
