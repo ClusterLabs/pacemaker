@@ -34,6 +34,7 @@
 #include <crmd.h>
 #include <crmd_messages.h>
 #include <crmd_lrm.h>
+#include <tengine.h>
 #include <throttle.h>
 
 GListPtr fsa_message_queue = NULL;
@@ -752,6 +753,12 @@ handle_request(xmlNode * stored_msg, enum crmd_fsa_cause cause)
 
     } else if (strcmp(op, CRM_OP_THROTTLE) == 0) {
         throttle_update(stored_msg);
+        if (AM_I_DC && transition_graph != NULL) {
+            if (transition_graph->complete == FALSE) {
+                crm_debug("The throttle changed. Trigger a graph.");
+                trigger_graph();
+            }
+        }
         return I_NULL;
 
     } else if (strcmp(op, CRM_OP_CLEAR_FAILCOUNT) == 0) {
