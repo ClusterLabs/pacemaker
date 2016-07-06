@@ -425,6 +425,10 @@ te_update_diff(const char *event, xmlNode * msg)
         }
 
         if(match) {
+            if (match->type == XML_COMMENT_NODE) {
+                crm_trace("Ignoring %s operation for comment at %s", op, xpath);
+                continue;
+            }
             name = (const char *)match->name;
         }
 
