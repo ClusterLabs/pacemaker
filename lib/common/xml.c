@@ -1815,6 +1815,15 @@ xml_accept_changes(xmlNode * xml)
     __xml_accept_changes(top);
 }
 
+static xmlNode *
+find_element(xmlNode *haystack, xmlNode *needle)
+{
+    CRM_CHECK(needle != NULL, return NULL);
+    return (needle->type == XML_COMMENT_NODE)?
+           find_xml_comment(haystack, needle)
+           : find_entity(haystack, crm_element_name(needle), ID(needle));
+}
+
 /* Simplified version for applying v1-style XML patches */
 static void
 __subtract_xml_object(xmlNode * target, xmlNode * patch)
@@ -1867,14 +1876,7 @@ __subtract_xml_object(xmlNode * target, xmlNode * patch)
         xmlNode *target_child = cIter;
 
         cIter = __xml_next(cIter);
-
-        if (target_child->type == XML_COMMENT_NODE) {
-            patch_child = find_xml_comment(patch, target_child);
-
-        } else {
-            patch_child = find_entity(patch, crm_element_name(target_child), ID(target_child));
-        }
-
+        patch_child = find_element(patch, target_child);
         __subtract_xml_object(target_child, patch_child);
     }
     free(id);
@@ -1936,13 +1938,7 @@ __add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * patch)
     for (patch_child = __xml_first_child(patch); patch_child != NULL;
          patch_child = __xml_next(patch_child)) {
 
-        if (patch_child->type == XML_COMMENT_NODE) {
-            target_child = find_xml_comment(target, patch_child);
-
-        } else {
-            target_child = find_entity(target, crm_element_name(patch_child), ID(patch_child));
-        }
-
+        target_child = find_element(target, patch_child);
         __add_xml_object(target, target_child, patch_child);
     }
 }
@@ -4595,13 +4591,7 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
          left_child = __xml_next(left_child)) {
         gboolean child_changed = FALSE;
 
-        if (left_child->type == XML_COMMENT_NODE) {
-            right_child = find_xml_comment(right, left_child);
-
-        } else {
-            right_child = find_entity(right, crm_element_name(left_child), ID(left_child));
-        }
-
+        right_child = find_element(right, left_child);
         subtract_xml_object(diff, left_child, right_child, full, &child_changed, marker);
         if (child_changed) {
             *changed = TRUE;
