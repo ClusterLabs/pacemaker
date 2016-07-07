@@ -269,7 +269,12 @@ stop)
 	#
 	[ "$PCMK_STACK" = cman ] && cman_pre_stop
 	stop
-	[ "$PCMK_STACK" = cman ] && service cman stop
+
+	# Stop cman if needed, unless --skip-cman is specified (which allows
+	# higher-level tooling to stop pacemaker on all nodes, then stop cman
+	# on all nodes, to maintain quorum for DLM-based resources while
+	# pacemaker shuts down).
+	[ "$PCMK_STACK" = cman ] && [ "$2" != "--skip-cman" ] && service cman stop
 ;;
 *)
 	echo "usage: $0 {start|stop|restart|reload|force-reload|condrestart|try-restart|status}"
