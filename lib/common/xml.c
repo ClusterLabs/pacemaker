@@ -4284,15 +4284,13 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
 
     for (cIter = __xml_first_child(old); cIter != NULL; ) {
         xmlNode *old_child = cIter;
-        xmlNode *new_child = find_entity(new, crm_element_name(cIter), ID(cIter));
+        xmlNode *new_child = find_element(new, cIter);
 
         cIter = __xml_next(cIter);
         if(new_child) {
             __xml_diff_object(old_child, new_child);
 
         } else {
-            xml_private_t *p = old_child->_private;
-
             /* Create then free (which will check the acls if necessary) */
             xmlNode *candidate = add_node_copy(new, old_child);
             xmlNode *top = xmlDocGetRootElement(candidate->doc);
@@ -4301,7 +4299,9 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
             __xml_acl_apply(top); /* Make sure any ACLs are applied to 'candidate' */
             free_xml(candidate);
 
-            if(NULL == find_entity(new, crm_element_name(old_child), ID(old_child))) {
+            if (find_element(new, old_child) == NULL) {
+                xml_private_t *p = old_child->_private;
+
                 p->flags |= xpf_skip;
             }
         }
@@ -4309,7 +4309,7 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
 
     for (cIter = __xml_first_child(new); cIter != NULL; ) {
         xmlNode *new_child = cIter;
-        xmlNode *old_child = find_entity(old, crm_element_name(cIter), ID(cIter));
+        xmlNode *old_child = find_element(old, cIter);
 
         cIter = __xml_next(cIter);
         if(old_child == NULL) {
@@ -4321,9 +4321,10 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
             /* Check for movement, we already checked for differences */
             int p_new = __xml_offset(new_child);
             int p_old = __xml_offset(old_child);
-            xml_private_t *p = new_child->_private;
 
             if(p_old != p_new) {
+                xml_private_t *p = new_child->_private;
+
                 crm_info("%s.%s moved from %d to %d",
                          new_child->name, ID(new_child), p_old, p_new);
                 __xml_node_dirty(new);
@@ -4331,12 +4332,10 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
 
                 if(p_old > p_new) {
                     p = old_child->_private;
-                    p->flags |= xpf_skip;
-
                 } else {
                     p = new_child->_private;
-                    p->flags |= xpf_skip;
                 }
+                p->flags |= xpf_skip;
             }
         }
     }
