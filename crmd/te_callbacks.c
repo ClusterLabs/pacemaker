@@ -425,15 +425,21 @@ te_update_diff(const char *event, xmlNode * msg)
         }
 
         if(match) {
+            if (match->type == XML_COMMENT_NODE) {
+                crm_trace("Ignoring %s operation for comment at %s", op, xpath);
+                continue;
+            }
             name = (const char *)match->name;
         }
 
-        crm_trace("Handling %s operation for %s %p, %s", op, xpath, match, name);
+        crm_trace("Handling %s operation for %s%s%s",
+                  op, (xpath? xpath : "CIB"),
+                  (name? " matched by " : ""), (name? name : ""));
         if(xpath == NULL) {
             /* Version field, ignore */
 
         } else if(strstr(xpath, "/cib/configuration")) {
-            abort_transition(INFINITY, tg_restart, "Non-status change", change);
+            abort_transition(INFINITY, tg_restart, "Configuration change", change);
             break; /* Wont be packaged with any resource operations we may be waiting for */
 
         } else if(strstr(xpath, "/"XML_CIB_TAG_TICKETS) || safe_str_eq(name, XML_CIB_TAG_TICKETS)) {
@@ -502,7 +508,7 @@ te_update_diff(const char *event, xmlNode * msg)
             }
 
             if(config) {
-                abort_transition(INFINITY, tg_restart, "Non-status change", change);
+                abort_transition(INFINITY, tg_restart, "Non-status-only change", change);
             }
 
         } else if(strcmp(name, XML_CIB_TAG_STATUS) == 0) {

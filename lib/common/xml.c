@@ -1815,6 +1815,15 @@ xml_accept_changes(xmlNode * xml)
     __xml_accept_changes(top);
 }
 
+static xmlNode *
+find_element(xmlNode *haystack, xmlNode *needle)
+{
+    CRM_CHECK(needle != NULL, return NULL);
+    return (needle->type == XML_COMMENT_NODE)?
+           find_xml_comment(haystack, needle)
+           : find_entity(haystack, crm_element_name(needle), ID(needle));
+}
+
 /* Simplified version for applying v1-style XML patches */
 static void
 __subtract_xml_object(xmlNode * target, xmlNode * patch)
@@ -1867,14 +1876,7 @@ __subtract_xml_object(xmlNode * target, xmlNode * patch)
         xmlNode *target_child = cIter;
 
         cIter = __xml_next(cIter);
-
-        if (target_child->type == XML_COMMENT_NODE) {
-            patch_child = find_xml_comment(patch, target_child);
-
-        } else {
-            patch_child = find_entity(patch, crm_element_name(target_child), ID(target_child));
-        }
-
+        patch_child = find_element(patch, target_child);
         __subtract_xml_object(target_child, patch_child);
     }
     free(id);
@@ -1936,13 +1938,7 @@ __add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * patch)
     for (patch_child = __xml_first_child(patch); patch_child != NULL;
          patch_child = __xml_next(patch_child)) {
 
-        if (patch_child->type == XML_COMMENT_NODE) {
-            target_child = find_xml_comment(target, patch_child);
-
-        } else {
-            target_child = find_entity(target, crm_element_name(patch_child), ID(patch_child));
-        }
-
+        target_child = find_element(target, patch_child);
         __add_xml_object(target, target_child, patch_child);
     }
 }
@@ -3488,48 +3484,47 @@ __xml_log_element(int log_level, const char *file, const char *function, int lin
         char *buffer = NULL;
 
         insert_prefix(options, &buffer, &offset, &max, depth);
-        if(data->type == XML_COMMENT_NODE) {
-            buffer_print(buffer, max, offset, "<!--");
-            buffer_print(buffer, max, offset, "%s", data->content);
-            buffer_print(buffer, max, offset, "-->");
+
+        if (data->type == XML_COMMENT_NODE) {
+            buffer_print(buffer, max, offset, "<!--%s-->", data->content);
 
         } else {
             buffer_print(buffer, max, offset, "<%s", name);
-        }
 
-        hidden = crm_element_value(data, "hidden");
-        for (pIter = crm_first_attr(data); pIter != NULL; pIter = pIter->next) {
-            xml_private_t *p = pIter->_private;
-            const char *p_name = (const char *)pIter->name;
-            const char *p_value = crm_attr_value(pIter);
-            char *p_copy = NULL;
+            hidden = crm_element_value(data, "hidden");
+            for (pIter = crm_first_attr(data); pIter != NULL; pIter = pIter->next) {
+                xml_private_t *p = pIter->_private;
+                const char *p_name = (const char *)pIter->name;
+                const char *p_value = crm_attr_value(pIter);
+                char *p_copy = NULL;
 
-            if(is_set(p->flags, xpf_deleted)) {
-                continue;
-            } else if ((is_set(options, xml_log_option_diff_plus)
-                 || is_set(options, xml_log_option_diff_minus))
-                && strcmp(XML_DIFF_MARKER, p_name) == 0) {
-                continue;
+                if(is_set(p->flags, xpf_deleted)) {
+                    continue;
+                } else if ((is_set(options, xml_log_option_diff_plus)
+                     || is_set(options, xml_log_option_diff_minus))
+                    && strcmp(XML_DIFF_MARKER, p_name) == 0) {
+                    continue;
 
-            } else if (hidden != NULL && p_name[0] != 0 && strstr(hidden, p_name) != NULL) {
-                p_copy = strdup("*****");
+                } else if (hidden != NULL && p_name[0] != 0 && strstr(hidden, p_name) != NULL) {
+                    p_copy = strdup("*****");
 
-            } else {
-                p_copy = crm_xml_escape(p_value);
+                } else {
+                    p_copy = crm_xml_escape(p_value);
+                }
+
+                buffer_print(buffer, max, offset, " %s=\"%s\"", p_name, p_copy);
+                free(p_copy);
             }
 
-            buffer_print(buffer, max, offset, " %s=\"%s\"", p_name, p_copy);
-            free(p_copy);
-        }
+            if(xml_has_children(data) == FALSE) {
+                buffer_print(buffer, max, offset, "/>");
 
-        if(xml_has_children(data) == FALSE) {
-            buffer_print(buffer, max, offset, "/>");
+            } else if(is_set(options, xml_log_option_children)) {
+                buffer_print(buffer, max, offset, ">");
 
-        } else if(is_set(options, xml_log_option_children)) {
-            buffer_print(buffer, max, offset, ">");
-
-        } else {
-            buffer_print(buffer, max, offset, "/>");
+            } else {
+                buffer_print(buffer, max, offset, "/>");
+            }
         }
 
         do_crm_log_alias(log_level, file, function, line, "%s %s", prefix, buffer);
@@ -4289,15 +4284,13 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
 
     for (cIter = __xml_first_child(old); cIter != NULL; ) {
         xmlNode *old_child = cIter;
-        xmlNode *new_child = find_entity(new, crm_element_name(cIter), ID(cIter));
+        xmlNode *new_child = find_element(new, cIter);
 
         cIter = __xml_next(cIter);
         if(new_child) {
             __xml_diff_object(old_child, new_child);
 
         } else {
-            xml_private_t *p = old_child->_private;
-
             /* Create then free (which will check the acls if necessary) */
             xmlNode *candidate = add_node_copy(new, old_child);
             xmlNode *top = xmlDocGetRootElement(candidate->doc);
@@ -4306,7 +4299,9 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
             __xml_acl_apply(top); /* Make sure any ACLs are applied to 'candidate' */
             free_xml(candidate);
 
-            if(NULL == find_entity(new, crm_element_name(old_child), ID(old_child))) {
+            if (find_element(new, old_child) == NULL) {
+                xml_private_t *p = old_child->_private;
+
                 p->flags |= xpf_skip;
             }
         }
@@ -4314,7 +4309,7 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
 
     for (cIter = __xml_first_child(new); cIter != NULL; ) {
         xmlNode *new_child = cIter;
-        xmlNode *old_child = find_entity(old, crm_element_name(cIter), ID(cIter));
+        xmlNode *old_child = find_element(old, cIter);
 
         cIter = __xml_next(cIter);
         if(old_child == NULL) {
@@ -4326,22 +4321,21 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
             /* Check for movement, we already checked for differences */
             int p_new = __xml_offset(new_child);
             int p_old = __xml_offset(old_child);
-            xml_private_t *p = new_child->_private;
 
             if(p_old != p_new) {
-                crm_info("%s.%s moved from %d to %d - %d",
+                xml_private_t *p = new_child->_private;
+
+                crm_info("%s.%s moved from %d to %d",
                          new_child->name, ID(new_child), p_old, p_new);
                 __xml_node_dirty(new);
                 p->flags |= xpf_moved;
 
                 if(p_old > p_new) {
                     p = old_child->_private;
-                    p->flags |= xpf_skip;
-
                 } else {
                     p = new_child->_private;
-                    p->flags |= xpf_skip;
                 }
+                p->flags |= xpf_skip;
             }
         }
     }
@@ -4596,13 +4590,7 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
          left_child = __xml_next(left_child)) {
         gboolean child_changed = FALSE;
 
-        if (left_child->type == XML_COMMENT_NODE) {
-            right_child = find_xml_comment(right, left_child);
-
-        } else {
-            right_child = find_entity(right, crm_element_name(left_child), ID(left_child));
-        }
-
+        right_child = find_element(right, left_child);
         subtract_xml_object(diff, left_child, right_child, full, &child_changed, marker);
         if (child_changed) {
             *changed = TRUE;

@@ -1629,7 +1629,6 @@ do_lrm_invoke(long long action,
 
         CRM_CHECK(xml_rsc != NULL, return);
 
-        /* only the first 16 chars are used by the LRM */
         params = find_xml_node(input->xml, XML_TAG_ATTRS, TRUE);
 
         if (safe_str_eq(operation, CRMD_ACTION_DELETE)) {
