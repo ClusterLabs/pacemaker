@@ -509,6 +509,17 @@ update_action(action_t * then)
             }
         }
 
+        /* Disable constraint if it only applies when on same node, but isn't */
+        if (is_set(other->type, pe_order_same_node)
+            && (first_node->details != then_node->details)) {
+
+            crm_trace("Disabled constraint %s on %s -> %s on %s",
+                       other->action->uuid, first_node->details->uname,
+                       then->uuid, then_node->details->uname);
+            other->type = pe_order_none;
+            continue;
+        }
+
         clear_bit(changed, pe_graph_updated_first);
 
         if (first->rsc != then->rsc
