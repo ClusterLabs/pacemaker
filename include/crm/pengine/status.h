@@ -206,7 +206,7 @@ struct node_s {
 #  define pe_rsc_needs_quorum	 0x10000000ULL
 #  define pe_rsc_needs_fencing	 0x20000000ULL
 #  define pe_rsc_needs_unfencing 0x40000000ULL
-#  define pe_rsc_have_unfencing  0x80000000ULL
+#  define pe_rsc_have_unfencing  0x80000000ULL /* obsolete (not set or used by cluster) */
 
 enum pe_graph_flags {
     pe_graph_none = 0x00000,
