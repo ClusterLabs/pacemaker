@@ -1926,6 +1926,7 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
     op_digest_cache_t *data = NULL;
 
     GHashTable *local_rsc_params = NULL;
+    xmlNode *local_versioned_params = NULL;
 
     action_t *action = NULL;
     char *key = NULL;
@@ -1964,12 +1965,16 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
     local_rsc_params = g_hash_table_new_full(crm_str_hash, g_str_equal,
                                              g_hash_destroy_str, g_hash_destroy_str);
     get_rsc_attributes(local_rsc_params, rsc, node, data_set);
+    local_versioned_params = create_xml_node(NULL, XML_TAG_VER_ATTRS);
+    pe_get_versioned_attributes(local_versioned_params, rsc, node, data_set);
     data->params_all = create_xml_node(NULL, XML_TAG_PARAMS);
     g_hash_table_foreach(local_rsc_params, hash2field, data->params_all);
     g_hash_table_foreach(action->extra, hash2field, data->params_all);
     g_hash_table_foreach(rsc->parameters, hash2field, data->params_all);
     g_hash_table_foreach(action->meta, hash2metafield, data->params_all);
     filter_action_parameters(data->params_all, op_version);
+    crm_summarize_versioned_params(data->params_all, rsc->versioned_parameters);
+    crm_summarize_versioned_params(data->params_all, local_versioned_params);
 
     data->digest_all_calc = calculate_operation_digest(data->params_all, op_version);
 
@@ -2005,6 +2010,7 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
 
     g_hash_table_insert(node->details->digest_cache, strdup(op_id), data);
     g_hash_table_destroy(local_rsc_params);
+    free_xml(local_versioned_params);
     pe_free_action(action);
 
     return data;

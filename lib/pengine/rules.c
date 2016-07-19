@@ -138,6 +138,15 @@ pe_test_expression_re(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e ro
             accept = test_role_expression(expr, role, now);
             break;
 
+        case version_expr:
+            if (node_hash && g_hash_table_contains(node_hash, "#ra-version")) {
+                accept = test_attr_expression(expr, node_hash, now);
+            } else {
+                // we are going to test it when we have ra-version
+                accept = TRUE;
+            }
+            break;
+
         default:
             CRM_CHECK(FALSE /* bad type */ , return FALSE);
             accept = FALSE;
@@ -174,6 +183,9 @@ find_expression_type(xmlNode * expr)
 
     } else if (safe_str_eq(attr, "#role")) {
         return role_expr;
+
+    } else if (safe_str_eq(attr, "#ra-version")) {
+        return version_expr;
     }
 
     return attr_expr;
@@ -698,21 +710,115 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
     }
 }
 
-struct unpack_data_s {
+static xmlNode*
+get_versioned_rule(xmlNode * attr_set)
+{
+    xmlNode * rule = NULL;
+    xmlNode * expr = NULL;
+
+    for (rule = __xml_first_child(attr_set); rule != NULL; rule = __xml_next_element(rule)) {
+        if (crm_str_eq((const char *)rule->name, XML_TAG_RULE, TRUE)) {
+            for (expr = __xml_first_child(rule); expr != NULL; expr = __xml_next_element(expr)) {
+                if (find_expression_type(expr) == version_expr) {
+                    return rule;
+                }
+            }
+        }
+    }
+
+    return NULL;
+}
+
+static gboolean
+versioned_attr(xmlNode * versioned_attrs, const char * name)
+{
+    xmlNode *attrs = NULL;
+    xmlNode *attr = NULL;
+
+    if (!name) {
+        return FALSE;
+    }
+
+    for (attrs = __xml_first_child(versioned_attrs); attrs != NULL; attrs = __xml_next_element(attrs)) {
+        for (attr = __xml_first_child(attrs); attr != NULL; attr = __xml_next_element(attr)) {
+            if (safe_str_eq(crm_element_value(attr, XML_NVPAIR_ATTR_NAME), name)) {
+                return TRUE;
+            }
+        }
+    }
+
+    return FALSE;
+}
+
+static void
+add_versioned_attributes(xmlNode * attr_set, xmlNode * versioned_attrs)
+{
+    xmlNode *attr_set_copy = NULL;
+    xmlNode *rule = NULL;
+
+    CRM_CHECK(versioned_attrs != NULL, return);
+
+    attr_set_copy = copy_xml(attr_set);
+
+    rule = get_versioned_rule(attr_set_copy);
+    if (rule) {
+        xmlNode *expr = __xml_first_child(rule);
+
+        while (expr != NULL) {
+            if (find_expression_type(expr) != version_expr) {
+                xmlNode *node = expr;
+                expr = __xml_next_element(expr);
+                free_xml(node);
+            } else {
+                expr = __xml_next_element(expr);
+            }
+        }
+    } else {
+        xmlNode *attr = __xml_first_child(attr_set_copy);
+
+        while (attr != NULL) {
+            if (safe_str_eq((const char*) attr->name, XML_TAG_RULE)) {
+                free_xml(attr_set_copy);
+                return;
+            } else if (!versioned_attr(versioned_attrs, crm_element_value(attr, XML_NVPAIR_ATTR_NAME))) {
+                xmlNode *node = attr;
+                attr = __xml_next_element(attr);
+                free_xml(node);
+            } else {
+                attr = __xml_next_element(attr);
+            }
+        }
+
+        if (!xml_has_children(attr_set_copy)) {
+            free_xml(attr_set_copy);
+            return;
+        }
+    }
+
+    add_node_nocopy(versioned_attrs, NULL, attr_set_copy);
+}
+
+typedef struct unpack_data_s {
     gboolean overwrite;
     GHashTable *node_hash;
-    GHashTable *hash;
+    void *hash;
     crm_time_t *now;
     xmlNode *top;
-};
+} unpack_data_t;
 
 static void
 unpack_attr_set(gpointer data, gpointer user_data)
 {
     sorted_set_t *pair = data;
-    struct unpack_data_s *unpack_data = user_data;
+    unpack_data_t *unpack_data = user_data;
 
     if (test_ruleset(pair->attr_set, unpack_data->node_hash, unpack_data->now) == FALSE) {
+        return;
+    }
+
+    if (get_versioned_rule(pair->attr_set) && !(unpack_data->node_hash &&
+        g_hash_table_contains(unpack_data->node_hash, "#ra-version"))) {
+        // we haven't actually tested versioned expressions yet
         return;
     }
 
@@ -720,21 +826,32 @@ unpack_attr_set(gpointer data, gpointer user_data)
     populate_hash(pair->attr_set, unpack_data->hash, unpack_data->overwrite, unpack_data->top);
 }
 
-void
-unpack_instance_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_name,
-                           GHashTable * node_hash, GHashTable * hash, const char *always_first,
-                           gboolean overwrite, crm_time_t * now)
+static void
+unpack_versioned_attr_set(gpointer data, gpointer user_data)
 {
-    GListPtr sorted = NULL;
+    sorted_set_t *pair = data;
+    unpack_data_t *unpack_data = user_data;
+
+    if (test_ruleset(pair->attr_set, unpack_data->node_hash, unpack_data->now) == FALSE) {
+        return;
+    }
+    
+    add_versioned_attributes(pair->attr_set, unpack_data->hash);
+}
+
+static GListPtr
+make_pairs_and_populate_data(xmlNode * top, xmlNode * xml_obj, const char *set_name,
+                             GHashTable * node_hash, void * hash, const char *always_first,
+                             gboolean overwrite, crm_time_t * now, unpack_data_t * data)
+{
     GListPtr unsorted = NULL;
     const char *score = NULL;
     sorted_set_t *pair = NULL;
-    struct unpack_data_s data;
     xmlNode *attr_set = NULL;
 
     if (xml_obj == NULL) {
         crm_trace("No instance attributes");
-        return;
+        return NULL;
     }
 
     crm_trace("Checking for attributes");
@@ -760,17 +877,46 @@ unpack_instance_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_nam
     }
 
     if (pair != NULL) {
-        data.hash = hash;
-        data.node_hash = node_hash;
-        data.now = now;
-        data.overwrite = overwrite;
-        data.top = top;
+        data->hash = hash;
+        data->node_hash = node_hash;
+        data->now = now;
+        data->overwrite = overwrite;
+        data->top = top;
     }
 
     if (unsorted) {
-        sorted = g_list_sort(unsorted, sort_pairs);
-        g_list_foreach(sorted, unpack_attr_set, &data);
-        g_list_free_full(sorted, free);
+        return g_list_sort(unsorted, sort_pairs);
+    }
+
+    return NULL;
+}
+
+void
+unpack_instance_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_name,
+                           GHashTable * node_hash, GHashTable * hash, const char *always_first,
+                           gboolean overwrite, crm_time_t * now)
+{
+    unpack_data_t data;
+    GListPtr pairs = make_pairs_and_populate_data(top, xml_obj, set_name, node_hash, hash,
+                                                  always_first, overwrite, now, &data);
+
+    if (pairs) {
+        g_list_foreach(pairs, unpack_attr_set, &data);
+        g_list_free_full(pairs, free);
+    }
+}
+
+void
+pe_unpack_versioned_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_name,
+                               GHashTable * node_hash, xmlNode * hash, crm_time_t * now)
+{
+    unpack_data_t data;
+    GListPtr pairs = make_pairs_and_populate_data(top, xml_obj, set_name, node_hash, hash,
+                                                  NULL, FALSE, now, &data);
+
+    if (pairs) {
+        g_list_foreach(pairs, unpack_versioned_attr_set, &data);
+        g_list_free_full(pairs, free);
     }
 }
 
