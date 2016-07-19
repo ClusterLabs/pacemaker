@@ -69,6 +69,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="2" operation="stonith" operation_key="stonith-virt-1-on" on_node="virt-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
         <rsc_op id="13" operation="stop" operation_key="dlm_stop_0" internal_operation_key="dlm:0_stop_0" on_node="virt-1" on_node_uuid="1"/>
       </trigger>
       <trigger>
@@ -103,6 +106,9 @@
       </rsc_op>
     </action_set>
     <inputs>
+      <trigger>
+        <crm_event id="4" operation="stonith" operation_key="stonith-virt-3-on" on_node="virt-3" on_node_uuid="3"/>
+      </trigger>
       <trigger>
         <pseudo_event id="18" operation="start" operation_key="dlm-clone_start_0"/>
       </trigger>
@@ -173,12 +179,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="2" operation="stonith" operation_key="stonith-virt-1-on" on_node="virt-1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
-        <crm_event id="4" operation="stonith" operation_key="stonith-virt-3-on" on_node="virt-3" on_node_uuid="3"/>
-      </trigger>
-      <trigger>
         <rsc_op id="10" operation="monitor" operation_key="dlm:2_monitor_0" on_node="virt-3" on_node_uuid="3"/>
       </trigger>
       <trigger>
@@ -194,6 +194,9 @@
       </rsc_op>
     </action_set>
     <inputs>
+      <trigger>
+        <crm_event id="2" operation="stonith" operation_key="stonith-virt-1-on" on_node="virt-1" on_node_uuid="1"/>
+      </trigger>
       <trigger>
         <rsc_op id="14" operation="start" operation_key="dlm_start_0" internal_operation_key="dlm:0_start_0" on_node="virt-1" on_node_uuid="1"/>
       </trigger>
@@ -257,6 +260,9 @@
       </rsc_op>
     </action_set>
     <inputs>
+      <trigger>
+        <crm_event id="4" operation="stonith" operation_key="stonith-virt-3-on" on_node="virt-3" on_node_uuid="3"/>
+      </trigger>
       <trigger>
         <rsc_op id="17" operation="start" operation_key="dlm:2_start_0" on_node="virt-3" on_node_uuid="3"/>
       </trigger>
@@ -332,12 +338,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="2" operation="stonith" operation_key="stonith-virt-1-on" on_node="virt-1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
-        <crm_event id="4" operation="stonith" operation_key="stonith-virt-3-on" on_node="virt-3" on_node_uuid="3"/>
-      </trigger>
-      <trigger>
         <rsc_op id="8" operation="monitor" operation_key="clvmd:1_monitor_0" on_node="virt-2" on_node_uuid="2"/>
       </trigger>
       <trigger>
@@ -387,12 +387,6 @@
       <trigger>
         <rsc_op id="11" operation="monitor" operation_key="clvmd:2_monitor_0" on_node="virt-3" on_node_uuid="3"/>
       </trigger>
-      <trigger>
-        <pseudo_event id="21" operation="stopped" operation_key="dlm-clone_stopped_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="29" operation="stopped" operation_key="clvmd-clone_stopped_0"/>
-      </trigger>
     </inputs>
   </synapse>
   <synapse id="25">
@@ -403,10 +397,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="21" operation="stopped" operation_key="dlm-clone_stopped_0"/>
+        <rsc_op id="13" operation="stop" operation_key="dlm_stop_0" internal_operation_key="dlm:0_stop_0" on_node="virt-1" on_node_uuid="1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="29" operation="stopped" operation_key="clvmd-clone_stopped_0"/>
+        <rsc_op id="22" operation="stop" operation_key="clvmd_stop_0" internal_operation_key="clvmd:0_stop_0" on_node="virt-1" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
