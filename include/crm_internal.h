@@ -371,4 +371,6 @@ void remote_proxy_end_session(const char *session);
 void remote_proxy_free(gpointer data);
 int  remote_proxy_check(lrmd_t * lrmd, GHashTable *hash);
 
+char* crm_versioned_param_summary(xmlNode *versioned_params, const char *name);
+void crm_summarize_versioned_params(xmlNode *param_set, xmlNode *versioned_params);
 #endif                          /* CRM_INTERNAL__H */
