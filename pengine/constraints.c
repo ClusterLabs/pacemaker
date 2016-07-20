@@ -1013,9 +1013,6 @@ generate_location_rule(resource_t * rsc, xmlNode * rule_xml, const char *discove
     score = crm_element_value(rule_xml, XML_RULE_ATTR_SCORE);
     if (score == NULL) {
         score = crm_element_value(rule_xml, XML_RULE_ATTR_SCORE_ATTRIBUTE);
-        if (score == NULL) {
-            score = crm_element_value(rule_xml, XML_RULE_ATTR_SCORE_MANGLED);
-        }
         if (score != NULL) {
             raw_score = FALSE;
         }

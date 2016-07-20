@@ -297,6 +297,7 @@
 #  define XML_TAG_RULE			"rule"
 #  define XML_RULE_ATTR_SCORE		"score"
 #  define XML_RULE_ATTR_SCORE_ATTRIBUTE	"score-attribute"
+/* following has no use (hardly ever meaningful); kept for compatibility */
 #  define XML_RULE_ATTR_SCORE_MANGLED	"score-attribute-mangled"
 #  define XML_RULE_ATTR_ROLE		"role"
 #  define XML_RULE_ATTR_RESULT		"result"
