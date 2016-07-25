@@ -1342,30 +1342,41 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 
     if (is_stonith == FALSE
         && is_set(data_set->flags, pe_flag_enable_unfencing)
-        && is_set(rsc->flags, pe_rsc_needs_unfencing)
-        && is_not_set(rsc->flags, pe_rsc_have_unfencing)) {
+        && is_set(rsc->flags, pe_rsc_needs_unfencing)) {
         /* Check if the node needs to be unfenced first */
         node_t *node = NULL;
         GHashTableIter iter;
-
-        if(rsc != top) {
-            /* Only create these constraints once, rsc is almost certainly cloned */
-            set_bit_recursive(top, pe_rsc_have_unfencing);
-        }
 
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
             action_t *unfence = pe_fence_op(node, "on", TRUE, data_set);
 
-            custom_action_order(top, generate_op_key(top->id, top == rsc?RSC_STOP:RSC_STOPPED, 0), NULL,
-                                NULL, strdup(unfence->uuid), unfence,
-                                pe_order_optional, data_set);
+            crm_debug("Ordering any stops of %s before %s, and any starts after",
+                      rsc->id, unfence->uuid);
 
-            crm_debug("Stopping %s prior to unfencing %s", top->id, unfence->uuid);
+            /*
+             * It would be more efficient to order clone resources once,
+             * rather than order each instance, but ordering the instance
+             * allows us to avoid unnecessary dependencies that might conflict
+             * with user constraints.
+             *
+             * @TODO: This constraint can still produce a transition loop if the
+             * resource has a stop scheduled on the node being unfenced, and
+             * there is a user ordering constraint to start some other resource
+             * (which will be ordered after the unfence) before stopping this
+             * resource. An example is "start some slow-starting cloned service
+             * before stopping an associated virtual IP that may be moving to
+             * it":
+             *       stop this -> unfencing -> start that -> stop this
+             */
+            custom_action_order(rsc, stop_key(rsc), NULL,
+                                NULL, strdup(unfence->uuid), unfence,
+                                pe_order_optional|pe_order_same_node, data_set);
 
             custom_action_order(NULL, strdup(unfence->uuid), unfence,
-                                top, generate_op_key(top->id, RSC_START, 0), NULL,
-                                pe_order_implies_then_on_node, data_set);
+                                rsc, start_key(rsc), NULL,
+                                pe_order_implies_then_on_node|pe_order_same_node,
+                                data_set);
         }
     }
 
