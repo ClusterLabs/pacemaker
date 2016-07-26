@@ -1943,7 +1943,7 @@ __add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * patch)
     }
 }
 
-/*
+/*!
  * \internal
  * \brief Find additions or removals in a patch set
  *

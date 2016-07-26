@@ -92,7 +92,7 @@ int throttle_num_cores(void)
     return cores;
 }
 
-/*
+/*!
  * \internal
  * \brief Return name of /proc file containing the CIB deamon's load statistics
  *

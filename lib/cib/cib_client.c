@@ -332,7 +332,7 @@ cib_new(void)
     return cib_native_new();
 }
 
-/*
+/*!
  * \internal
  * \brief Create a generic CIB connection instance
  *

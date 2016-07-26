@@ -635,7 +635,7 @@ struct attrd_callback_s {
     char *value;
 };
 
-/*
+/*!
  * \internal
  * \brief Free an attrd callback structure
  */

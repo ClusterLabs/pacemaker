@@ -350,7 +350,7 @@ services_action_create_generic(const char *exec, const char *args[])
 }
 
 #if SUPPORT_DBUS
-/*
+/*!
  * \internal
  * \brief Update operation's pending DBus call, unreferencing old one if needed
  *
