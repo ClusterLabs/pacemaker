@@ -1413,7 +1413,7 @@ search_devices_record_result(struct device_search_s *search, const char *device,
     }
 }
 
-/*
+/*!
  * \internal
  * \brief Check whether the local host is allowed to execute a fencing action
  *
@@ -1628,7 +1628,7 @@ struct st_query_data {
     int call_options;
 };
 
-/*
+/*!
  * \internal
  * \brief Add action-specific attributes to query reply XML
  *
@@ -1665,7 +1665,7 @@ add_action_specific_attributes(xmlNode *xml, const char *action,
     }
 }
 
-/*
+/*!
  * \internal
  * \brief Add "disallowed" attribute to query reply XML if appropriate
  *
@@ -1686,7 +1686,7 @@ add_disallowed(xmlNode *xml, const char *action, stonith_device_t *device,
     }
 }
 
-/*
+/*!
  * \internal
  * \brief Add child element with action-specific values to query reply XML
  *

@@ -206,7 +206,7 @@ start_test(gpointer user_data)
     if (!options.no_connect) {
         if (!lrmd_conn->cmds->is_connected(lrmd_conn)) {
             try_connect();
-            /* async connect, this funciton will get called back into. */
+            /* async connect -- this function will get called back into */
             return 0;
         }
     }

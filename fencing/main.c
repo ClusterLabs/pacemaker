@@ -888,7 +888,7 @@ update_cib_stonith_devices(const char *event, xmlNode * msg)
 /* Needs to hold node name + attribute name + attribute value + 75 */
 #define XPATH_MAX 512
 
-/*
+/*!
  * \internal
  * \brief Check whether a node has a specific attribute name/value
  *

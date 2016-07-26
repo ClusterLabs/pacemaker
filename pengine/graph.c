@@ -154,7 +154,7 @@ rsc_expand_action(action_t * action)
         gboolean notify = FALSE;
 
         if (action->rsc->parent == NULL) {
-            /* Only outter-most resources have notification actions */
+            /* Only outermost resources have notification actions */
             notify = is_set(action->rsc->flags, pe_rsc_notify);
         }
 

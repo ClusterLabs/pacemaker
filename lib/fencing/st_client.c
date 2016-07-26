@@ -300,7 +300,7 @@ stonith_api_remove_level(stonith_t * st, int options, const char *node, int leve
                                          NULL, NULL, NULL, level);
 }
 
-/*
+/*!
  * \internal
  * \brief Create XML for stonithd topology level registration request
  *

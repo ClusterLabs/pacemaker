@@ -1943,7 +1943,7 @@ __add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * patch)
     }
 }
 
-/*
+/*!
  * \internal
  * \brief Find additions or removals in a patch set
  *
@@ -4235,7 +4235,9 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
             p->flags = (p->flags & ~xpf_created);
 
             if(strcmp(value, old_value) != 0) {
-                /* Restore the original value, so we can call crm_xml_add() whcih checks ACLs */
+                /* Restore the original value, so we can call crm_xml_add(),
+                 * which checks ACLs
+                 */
                 char *vcopy = crm_element_value_copy(new, name);
 
                 crm_trace("Modified %s@%s %s->%s", old->name, name, old_value, vcopy);
@@ -5203,7 +5205,7 @@ first_named_child(xmlNode * parent, const char *name)
     for (match = __xml_first_child(parent); match != NULL; match = __xml_next(match)) {
         /*
          * name == NULL gives first child regardless of name; this is
-         * semantically incorrect in this funciton, but may be necessary
+         * semantically incorrect in this function, but may be necessary
          * due to prior use of xml_child_iter_filter
          */
         if (name == NULL || strcmp((const char *)match->name, name) == 0) {

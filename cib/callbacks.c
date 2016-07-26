@@ -1695,7 +1695,7 @@ initiate_exit(void)
 extern int remote_fd;
 extern int remote_tls_fd;
 
-/*
+/*!
  * \internal
  * \brief Close remote sockets, free the global CIB and quit
  *

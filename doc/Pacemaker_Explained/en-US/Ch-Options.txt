@@ -80,7 +80,7 @@ user with the "correct" ones.
 To change the ones that can be specified by the user,
 for example +admin_epoch+, one should use:
 ----
-# cibadmin --modify --crm_xml '<cib admin_epoch="42"/>'
+# cibadmin --modify --xml-text '<cib admin_epoch="42"/>'
 ----
 
 A complete set of CIB properties will look something like this:

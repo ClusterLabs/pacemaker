@@ -29,7 +29,7 @@
 #include <sys/types.h>
 #include <dirent.h>
 
-/*
+/*!
  * \internal
  * \brief Get process ID and name associated with a /proc directory entry
  *
@@ -102,7 +102,7 @@ crm_procfs_process_info(struct dirent *entry, char *name, int *pid)
     return 0;
 }
 
-/*
+/*!
  * \internal
  * \brief Return process ID of a named process
  *

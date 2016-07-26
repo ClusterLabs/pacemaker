@@ -1649,7 +1649,7 @@ stonith_get_metadata(const char *provider, const char *type, char **output)
         }                                       \
     } while(0)
 
-/*
+/*!
  * \internal
  * \brief Grab an LSB header value
  *

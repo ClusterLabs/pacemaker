@@ -1524,7 +1524,8 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
 
         g_hash_table_iter_init(&iter, override_hash);
         while (g_hash_table_iter_next(&iter, (gpointer *) & name, (gpointer *) & value)) {
-            printf("Overriding the cluser configuration for '%s' with '%s' = '%s'\n", rsc->id, name, value);
+            printf("Overriding the cluster configuration for '%s' with '%s' = '%s'\n",
+                   rsc->id, name, value);
             g_hash_table_replace(op->params, strdup(name), strdup(value));
         }
     }

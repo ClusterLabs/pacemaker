@@ -256,7 +256,7 @@ free_remote_op(gpointer data)
     free(op);
 }
 
-/*
+/*!
  * \internal
  * \brief Return an operation's originally requested action (before any remap)
  *
@@ -270,7 +270,7 @@ op_requested_action(const remote_fencing_op_t *op)
     return ((op->phase > st_phase_requested)? "reboot" : op->action);
 }
 
-/*
+/*!
  * \internal
  * \brief Remap a "reboot" operation to the "off" phase
  *
@@ -635,7 +635,7 @@ topology_is_empty(stonith_topology_t *tp)
     return TRUE;
 }
 
-/*
+/*!
  * \internal
  * \brief Add a device to an operation's automatic unfencing list
  *
@@ -653,7 +653,7 @@ add_required_device(remote_fencing_op_t *op, const char *device)
     }
 }
 
-/*
+/*!
  * \internal
  * \brief Remove a device from the automatic unfencing list
  *
@@ -687,7 +687,7 @@ set_op_device_list(remote_fencing_op_t * op, GListPtr devices)
     op->devices = op->devices_list;
 }
 
-/*
+/*!
  * \internal
  * \brief Check whether a node matches a topology target
  *
@@ -1377,7 +1377,7 @@ report_timeout_period(remote_fencing_op_t * op, int op_timeout)
     }
 }
 
-/*
+/*!
  * \internal
  * \brief Advance an operation to the next device in its topology
  *
@@ -1644,7 +1644,7 @@ all_topology_devices_found(remote_fencing_op_t * op)
     return TRUE;
 }
 
-/*
+/*!
  * \internal
  * \brief Parse action-specific device properties from XML
  *
@@ -1697,7 +1697,7 @@ parse_action_specific(xmlNode *xml, const char *peer, const char *device,
     }
 }
 
-/*
+/*!
  * \internal
  * \brief Parse one device's properties from peer's XML query reply
  *
@@ -1744,7 +1744,7 @@ add_device_properties(xmlNode *xml, remote_fencing_op_t *op,
     }
 }
 
-/*
+/*!
  * \internal
  * \brief Parse a peer's XML query reply and add it to operation's results
  *
@@ -1783,7 +1783,7 @@ add_result(remote_fencing_op_t *op, const char *host, int ndevices, xmlNode *xml
     return result;
 }
 
-/*
+/*!
  * \internal
  * \brief Handle a peer's reply to our fencing query
  *
@@ -1882,7 +1882,7 @@ process_remote_stonith_query(xmlNode * msg)
     return pcmk_ok;
 }
 
-/*
+/*!
  * \internal
  * \brief Handle a peer's reply to a fencing request
  *

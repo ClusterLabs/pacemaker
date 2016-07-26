@@ -103,7 +103,7 @@ copy_meta_keys(gpointer key, gpointer value, gpointer user_data)
     }
 }
 
-/*
+/*!
  * \internal
  * \brief Remove a recurring operation from a resource's history
  *
@@ -132,7 +132,7 @@ history_remove_recurring_op(rsc_history_t *history, const lrmd_event_data_t *op)
     return FALSE;
 }
 
-/*
+/*!
  * \internal
  * \brief Free all recurring operations in resource history
  *
@@ -150,7 +150,7 @@ history_free_recurring_ops(rsc_history_t *history)
     history->recurring_op_list = NULL;
 }
 
-/*
+/*!
  * \internal
  * \brief Free resource history
  *
@@ -274,7 +274,7 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
     }
 }
 
-/*
+/*!
  * \internal
  * \brief Send a direct OK ack for a resource task
  *

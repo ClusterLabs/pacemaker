@@ -35,10 +35,10 @@ context in which the rule is being used.
 |Description
 
 |role
-|+started+
+|+Started+
 |Limits the rule to apply only when the resource is in the specified
- role. Allowed values are +started+, +slave+, and +master+. A rule
- with +role="master"+ cannot determine the initial location of a
+ role. Allowed values are +Started+, +Slave+, and +Master+. A rule
+ with +role="Master"+ cannot determine the initial location of a
  clone instance and will only affect which of the active instances
  will be promoted.
  indexterm:[role,Constraint Rule]

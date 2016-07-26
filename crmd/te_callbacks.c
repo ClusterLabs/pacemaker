@@ -320,7 +320,9 @@ static char *extract_node_uuid(const char *xpath)
     return node_uuid;
 }
 
-static void abort_unless_down(const char *xpath, const char *op, xmlNode *change, const char *reason) 
+static void
+abort_unless_down(const char *xpath, const char *op, xmlNode *change,
+                  const char *reason)
 {
     char *node_uuid = NULL;
     crm_action_t *down = NULL;
@@ -337,7 +339,7 @@ static void abort_unless_down(const char *xpath, const char *op, xmlNode *change
         return;
     }
 
-    down = match_down_event(node_uuid, FALSE);
+    down = match_down_event(node_uuid, TRUE);
     if(down == NULL || down->executed == false) {
         crm_trace("Not expecting %s to be down (%s)", node_uuid, xpath);
         abort_transition(INFINITY, tg_restart, reason, change);
