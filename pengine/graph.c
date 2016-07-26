@@ -510,7 +510,7 @@ update_action(action_t * then)
         }
 
         /* Disable constraint if it only applies when on same node, but isn't */
-        if (is_set(other->type, pe_order_same_node)
+        if (is_set(other->type, pe_order_same_node) && first_node && then_node
             && (first_node->details != then_node->details)) {
 
             crm_trace("Disabled constraint %s on %s -> %s on %s",
