@@ -477,6 +477,23 @@ cib_client_add_notify_callback(cib_t * cib, const char *event,
     return pcmk_ok;
 }
 
+static int 
+get_notify_list_event_count(cib_t * cib, const char *event)
+{
+    GList *l = NULL;
+    int count = 0;
+
+    for (l = g_list_first(cib->notify_list); l; l = g_list_next(l)) {
+        cib_notify_client_t *client = (cib_notify_client_t *)l->data;
+        
+        if (strcmp(client->event, event) == 0) {
+            count++;
+        }
+    }
+    crm_trace("event(%s) count : %d", event, count);
+    return count;
+}
+
 int
 cib_client_del_notify_callback(cib_t * cib, const char *event,
                                void (*callback) (const char *event, xmlNode * msg))
@@ -488,6 +505,11 @@ cib_client_del_notify_callback(cib_t * cib, const char *event,
         return -EPROTONOSUPPORT;
     }
 
+    if (get_notify_list_event_count(cib, event) == 0) {
+        crm_debug("The callback of the event does not exist(%s)", event);
+        return pcmk_ok;
+    }
+
     crm_debug("Removing callback for %s events", event);
 
     new_client = calloc(1, sizeof(cib_notify_client_t));
@@ -495,8 +517,6 @@ cib_client_del_notify_callback(cib_t * cib, const char *event,
     new_client->callback = callback;
 
     list_item = g_list_find_custom(cib->notify_list, new_client, ciblib_GCompareFunc);
-
-    cib->cmds->register_notification(cib, event, 0);
 
     if (list_item != NULL) {
         cib_notify_client_t *list_client = list_item->data;
@@ -509,6 +529,12 @@ cib_client_del_notify_callback(cib_t * cib, const char *event,
     } else {
         crm_trace("Callback not present");
     }
+
+    if (get_notify_list_event_count(cib, event) == 0) {
+        /* When there is not the registration of the event, the processing turns off a notice. */
+        cib->cmds->register_notification(cib, event, 0);
+    }
+
     free(new_client);
     return pcmk_ok;
 }
