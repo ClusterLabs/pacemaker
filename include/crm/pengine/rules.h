@@ -30,7 +30,8 @@ enum expression_type {
     attr_expr,
     loc_expr,
     role_expr,
-    time_expr
+    time_expr,
+    version_expr
 };
 
 typedef struct pe_re_match_data {
@@ -57,6 +58,9 @@ gboolean pe_test_expression_re(xmlNode * expr, GHashTable * node_hash,
 void unpack_instance_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_name,
                                 GHashTable * node_hash, GHashTable * hash,
                                 const char *always_first, gboolean overwrite, crm_time_t * now);
+
+void pe_unpack_versioned_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_name,
+                                    GHashTable * node_hash, xmlNode * hash, crm_time_t * now);
 
 char *pe_expand_re_matches(const char *string, pe_re_match_data_t * match_data);
 
