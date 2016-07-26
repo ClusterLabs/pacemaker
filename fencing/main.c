@@ -1217,7 +1217,7 @@ setup_cib(void)
 
     do {
         sleep(retries);
-        rc = cib_api->cmds->signon(cib_api, CRM_SYSTEM_CRMD, cib_command);
+        rc = cib_api->cmds->signon(cib_api, CRM_SYSTEM_STONITHD, cib_command);
     } while (rc == -ENOTCONN && ++retries < 5);
 
     if (rc != pcmk_ok) {
