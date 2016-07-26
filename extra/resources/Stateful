@@ -57,6 +57,14 @@ Location to store the resource state in
 <content type="string" default="${HA_VARRUN%%/}/Stateful-${OCF_RESOURCE_INSTANCE}.state" />
 </parameter>
 
+<parameter name="envfile" unique="1">
+<longdesc lang="en">
+If this is set, the environment will be dumped to this file for every call.
+</longdesc>
+<shortdesc lang="en">Environment dump file</shortdesc>
+<content type="string" default="" />
+</parameter>
+
 </parameters>
 
 <actions>
@@ -102,6 +110,14 @@ stateful_check_state() {
     fi
 
     return 1
+}
+
+dump_env() {
+    if [ "${OCF_RESKEY_envfile}" != "" ]; then
+            echo "### ${__OCF_ACTION} @ $(date) ###
+$(env | sort)
+###" >> "${OCF_RESKEY_envfile}"
+    fi
 }
 
 stateful_start() {
@@ -196,6 +212,8 @@ if [ "x$OCF_RESKEY_state" = "x" ]; then
 	OCF_RESKEY_state="${HA_VARRUN%%/}/Stateful-${OCF_RESOURCE_INSTANCE}.state"
     fi
 fi
+
+dump_env
 
 case $__OCF_ACTION in
 meta-data)	meta_data;;
