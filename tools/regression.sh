@@ -212,7 +212,7 @@ function test_tools() {
     cmd="crm_resource -r dummy -M"
     test_assert 22
 
-    desc="Don't support migration to non-existant locations"
+    desc="Don't support migration to non-existent locations"
     cmd="crm_resource -r dummy -M -N i.dont.exist"
     test_assert 6
 

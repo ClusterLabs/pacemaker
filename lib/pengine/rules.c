@@ -157,7 +157,7 @@ pe_test_expression_re(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e ro
     }
 
     crm_trace("Expression %s %s on %s",
-              ID(expr), accept ? "passed" : "failed", uname ? uname : "all ndoes");
+              ID(expr), accept ? "passed" : "failed", uname ? uname : "all nodes");
     return accept;
 }
 

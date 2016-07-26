@@ -43,7 +43,7 @@ meta_data() {
 <version>1.0</version>
 
 <longdesc lang="en">
-This is an example resource agent that impliments two states
+This is an example resource agent that implements two states
 </longdesc>
 <shortdesc lang="en">Example stateful resource agent</shortdesc>
 
