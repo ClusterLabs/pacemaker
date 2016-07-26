@@ -48,9 +48,14 @@ failure()
 status()
 {
 	pid=$(pidof $1 2>/dev/null)
-	rtrn=$?
+	local rtrn=$?
 	if [ $rtrn -ne 0 ]; then
 		echo "$1 is stopped"
+		if [ -f "@localstatedir@/run/$prog.pid" ]; then
+			rtrn=1
+		else
+			rtrn=3
+		fi
 	else
 		echo "$1 (pid $pid) is running..."
 	fi
