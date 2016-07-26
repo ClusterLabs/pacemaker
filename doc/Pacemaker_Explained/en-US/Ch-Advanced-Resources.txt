@@ -604,18 +604,18 @@ fields.
 |Description
 
 |rsc-role
-|started
+|Started
 |An additional attribute of colocation constraints that specifies the
- role that +rsc+ must be in.  Allowed values: +started+, +master+,
- +slave+.
+ role that +rsc+ must be in.  Allowed values: +Started+, +Master+,
+ +Slave+.
  indexterm:[rsc-role,Ordering Constraints]
  indexterm:[Constraints,Ordering,rsc-role]
 
 |with-rsc-role
-|started
+|Started
 |An additional attribute of colocation constraints that specifies the
- role that +with-rsc+ must be in.  Allowed values: +started+,
- +master+, +slave+.
+ role that +with-rsc+ must be in.  Allowed values: +Started+,
+ +Master+, +Slave+.
  indexterm:[with-rsc-role,Ordering Constraints]
  indexterm:[Constraints,Ordering,with-rsc-role]
 
@@ -669,9 +669,9 @@ Placement is then performed as normal.
 |Description
 
 |role
-|started
-|The role that 'all members' of the set must be in.  Allowed values: +started+, +master+,
- +slave+.
+|Started
+|The role that 'all members' of the set must be in.  Allowed values: +Started+, +Master+,
+ +Slave+.
  indexterm:[role,Ordering Constraints]
  indexterm:[Constraints,Ordering,role]
 
