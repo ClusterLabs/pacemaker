@@ -144,8 +144,8 @@ END
 
 dump_env() {
     if [ "${OCF_RESKEY_envfile}" != "" ]; then
-            echo "### $(date) ###
-$(env)
+            echo "### ${__OCF_ACTION} @ $(date) ###
+$(env | sort)
 ###" >> "${OCF_RESKEY_envfile}"
     fi
 }
