@@ -43,7 +43,7 @@
  * \mainpage
  * Welcome to the developer documentation for The Pacemaker Project!  For more
  * information about Pacemaker, please visit the
- * <a href="http://clusterlabs.org">project web site</a>.
+ * <a href="http://clusterlabs.org/">project web site</a>.
  *
  * Here are some pointers on where to go from here.
  *
@@ -56,12 +56,7 @@
  *  - \ref fencing
  *
  * Contributing to the Pacemaker Project:
- *  - \ref coding_guidelines
- */
-
-/**
- * \page coding_guidelines Coding Guidelines
- * \verbinclude doc/coding_guidelines.txt
+ * - <a href="http://clusterlabs.org/doc/en-US/Pacemaker/1.1-pcs/html-single/Pacemaker_Development/">Pacemaker Development</a>
  */
 
 #endif                          /* DOXYGEN__H */

@@ -144,6 +144,8 @@ doc/shared/en-US/*.xml
 doc/Clusters_from_Scratch.build
 doc/Clusters_from_Scratch/en-US/Ap-*.xml
 doc/Clusters_from_Scratch/en-US/Ch-*.xml
+doc/Pacemaker_Development.build
+doc/Pacemaker_Development/en-US/Ch-*.xml
 doc/Pacemaker_Explained.build
 doc/Pacemaker_Explained/en-US/Ch-*.xml
 doc/Pacemaker_Explained/en-US/Ap-*.xml

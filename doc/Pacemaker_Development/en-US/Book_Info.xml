@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE bookinfo PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "Pacemaker_Development.ent">
+%BOOK_ENTITIES;
+]>
+<bookinfo id="book-Pacemaker_Development-Pacemaker_Development">
+	<title>Pacemaker Development</title>
+	<subtitle>Working with the Pacemaker Code Base</subtitle>
+	<!--
+		EDITION-PUBSNUMBER should match REVNUMBER in Revision_History.xml.
+		Increment EDITION when the syntax of the documented software
+		changes (OS, pacemaker, corosync, pcs), and PUBSNUMBER for
+		simple textual changes (corrections, translations, etc.).
+		Changing the revision is only necessary when releasing a new
+		version of Pacemaker or publishing the documents to the Web.
+	-->
+	<edition>1</edition>
+	<pubsnumber>0</pubsnumber>
+	<abstract>
+		<para>
+			This document has guidelines and tips for developers
+			interested in editing Pacemaker source code and
+			submitting changes for inclusion in the project.
+		</para>
+	</abstract>
+	<corpauthor>
+		<inlinemediaobject>
+			<imageobject>
+				<imagedata fileref="Common_Content/images/title_logo.svg" format="SVG" />
+			</imageobject>
+		</inlinemediaobject>
+	</corpauthor>
+	<xi:include href="Common_Content/Legal_Notice.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	<xi:include href="Author_Group.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+</bookinfo>
+

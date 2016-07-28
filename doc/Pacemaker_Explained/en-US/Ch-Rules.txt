@@ -73,9 +73,7 @@ context in which the rule is being used.
 indexterm:[Resource,Constraint,Attribute Expression]
 
 Expression objects are used to control a resource based on the
-attributes defined by a node or nodes.  In addition to any attributes
-added by the administrator, each node has a built-in node attribute
-called +#uname+ that can also be used.
+attributes defined by a node or nodes.
 
 .Properties of an Expression
 [width="95%",cols="1m,1,5<a",options="header",align="center"]
@@ -118,6 +116,35 @@ called +#uname+ that can also be used.
 * +not_defined:+ True if the node does not have the named attribute
  indexterm:[operation,Constraint Expression]
  indexterm:[Constraint,Attribute Expression,operation]
+
+|=========================================================
+
+In addition to any attributes added by the administrator, the cluster defines
+special, built-in node attributes for each node that can also be used.
+
+.Built-in node attributes
+[width="95%",cols="1m,5<a",options="header",align="center"]
+|=========================================================
+
+|Name
+|Value
+
+|#uname
+|Node name
+
+|#kind
+|Node type. Possible values are +cluster+, +remote+, and +container+. Kind is
+ +remote+ for Pacemaker Remote nodes created with the +ocf:pacemaker:remote+
+ resource, and +container+ for Pacemaker Remote guest nodes (a legacy name
+ unrelated to the now-common use of "container" for resource isolation).
+ '(since 1.1.13)'
+
+|#ra-version
+|The installed version of the resource agent on the node, as defined
+ by the +version+ attribute of the +resource-agent+ tag in the agent's
+ metadata. Valid only within rules controlling resource options. This can be
+ useful during rolling upgrades of a backward-incompatible resource agent.
+ '(coming in 1.1.16)'
 
 |=========================================================
 

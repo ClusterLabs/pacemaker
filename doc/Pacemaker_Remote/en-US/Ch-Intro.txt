@@ -93,6 +93,7 @@ capability by version:
   hosting their connection fails
 * Running pacemaker_remote within LXC environments is deprecated due to
   newly added Pacemaker support for isolated resources
+* +#kind+ built-in node attribute for use with rules
 * Bug fixes
 
 .1.1.12
