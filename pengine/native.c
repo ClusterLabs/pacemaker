@@ -22,6 +22,7 @@
 #include <crm/pengine/rules.h>
 #include <crm/msg_xml.h>
 #include <allocate.h>
+#include <notif.h>
 #include <utils.h>
 #include <crm/services.h>
 
@@ -45,8 +46,6 @@ void Recurring_Stopped(resource_t * rsc, action_t * start, node_t * node,
                        pe_working_set_t * data_set);
 void RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
                          xmlNode * operation, pe_working_set_t * data_set);
-void pe_post_notify(resource_t * rsc, node_t * node, action_t * op,
-                    notify_data_t * n_data, pe_working_set_t * data_set);
 
 void ReloadRsc(resource_t * rsc, node_t *node, pe_working_set_t * data_set);
 gboolean DeleteRsc(resource_t * rsc, node_t * node, gboolean optional, pe_working_set_t * data_set);

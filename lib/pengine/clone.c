@@ -27,8 +27,6 @@
 #define VARIANT_CLONE 1
 #include "./variant.h"
 
-void clone_create_notifications(resource_t * rsc, action_t * action, action_t * action_complete,
-                                pe_working_set_t * data_set);
 void force_non_unique_clone(resource_t * rsc, const char *rid, pe_working_set_t * data_set);
 resource_t *create_child_clone(resource_t * rsc, int sub_id, pe_working_set_t * data_set);
 
