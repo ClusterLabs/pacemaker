@@ -71,6 +71,16 @@ sort_notify_entries(gconstpointer a, gconstpointer b)
     return strcmp(entry_a->node->details->id, entry_b->node->details->id);
 }
 
+static notify_entry_t *dup_notify_entry(notify_entry_t *entry)
+{
+    notify_entry_t *dup = malloc(sizeof(notify_entry_t));
+
+    CRM_ASSERT(dup != NULL);
+    dup->rsc = entry->rsc;
+    dup->node = entry->node;
+    return dup;
+}
+
 static char *
 expand_node_list(GListPtr list)
 {
@@ -432,9 +442,13 @@ collect_notification_data(resource_t * rsc, gboolean state, gboolean activity,
                 break;
             case RSC_ROLE_SLAVE:
                 n_data->slave = g_list_prepend(n_data->slave, entry);
+                n_data->active = g_list_prepend(n_data->active,
+                                                dup_notify_entry(entry));
                 break;
             case RSC_ROLE_MASTER:
                 n_data->master = g_list_prepend(n_data->master, entry);
+                n_data->active = g_list_prepend(n_data->active,
+                                                dup_notify_entry(entry));
                 break;
             default:
                 crm_err("Unsupported notify role");
