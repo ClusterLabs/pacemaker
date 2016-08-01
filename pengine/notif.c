@@ -687,3 +687,22 @@ free_notification_data(notify_data_t * n_data)
     g_hash_table_destroy(n_data->keys);
     free(n_data);
 }
+
+void
+create_secondary_notification(pe_action_t *action, resource_t *rsc,
+                              pe_action_t *stonith_op,
+                              pe_working_set_t *data_set)
+{
+    notify_data_t *n_data;
+
+    crm_info("Creating secondary notification for %s", action->uuid);
+    n_data = create_notification_boundaries(rsc, RSC_STOP, NULL, stonith_op,
+                                            data_set);
+    collect_notification_data(rsc, TRUE, FALSE, n_data);
+    g_hash_table_insert(n_data->keys, strdup("notify_stop_resource"),
+                        strdup(rsc->id));
+    g_hash_table_insert(n_data->keys, strdup("notify_stop_uname"),
+                        strdup(action->node->details->uname));
+    create_notifications(uber_parent(rsc), n_data, data_set);
+    free_notification_data(n_data);
+}

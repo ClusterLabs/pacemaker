@@ -3023,16 +3023,7 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
              *  + C.notify' depends on STONITH'
              * thus breaking the loop
              */
-            notify_data_t *n_data =
-                create_notification_boundaries(rsc, RSC_STOP, NULL, stonith_op, data_set);
-            crm_info("Creating secondary notification for %s", action->uuid);
-
-            collect_notification_data(rsc, TRUE, FALSE, n_data);
-            g_hash_table_insert(n_data->keys, strdup("notify_stop_resource"), strdup(rsc->id));
-            g_hash_table_insert(n_data->keys, strdup("notify_stop_uname"),
-                                strdup(action->node->details->uname));
-            create_notifications(uber_parent(rsc), n_data, data_set);
-            free_notification_data(n_data);
+            create_secondary_notification(action, rsc, stonith_op, data_set);
         }
 
 /* From Bug #1601, successful fencing must be an input to a failed resources stop action.

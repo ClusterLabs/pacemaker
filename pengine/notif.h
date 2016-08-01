@@ -36,4 +36,8 @@ void create_notifications(resource_t *rsc, notify_data_t *n_data,
 
 void free_notification_data(notify_data_t *n_data);
 
+void create_secondary_notification(pe_action_t *action, resource_t *rsc,
+                                   pe_action_t *stonith_op,
+                                   pe_working_set_t *data_set);
+
 #endif /* CRM_PE_NOTIF__H */
