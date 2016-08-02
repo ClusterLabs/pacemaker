@@ -72,6 +72,7 @@ If this is set, the environment will be dumped to this file for every call.
 <action name="stop"    timeout="20" />
 <action name="monitor" depth="0"  timeout="20" interval="10" role="Master"/>
 <action name="monitor" depth="0"  timeout="20" interval="10" role="Slave"/>
+<action name="notify"  timeout="5" />
 <action name="meta-data"  timeout="5" />
 <action name="validate-all"  timeout="30" />
 </actions>
@@ -220,6 +221,7 @@ meta-data)	meta_data;;
 start)		stateful_start;;
 promote)	stateful_promote;;
 demote)		stateful_demote;;
+notify)         ;; # dumping the environment is all we do
 stop)		stateful_stop;;
 monitor)	stateful_monitor;;
 validate-all)	stateful_validate;;

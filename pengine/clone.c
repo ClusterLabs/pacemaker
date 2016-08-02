@@ -20,6 +20,7 @@
 
 #include <crm/msg_xml.h>
 #include <allocate.h>
+#include <notif.h>
 #include <utils.h>
 #include <allocate.h>
 
