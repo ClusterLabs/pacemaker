@@ -99,7 +99,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 };
 
 gboolean
-update_action_flags(action_t * action, enum pe_action_flags flags)
+update_action_flags(action_t * action, enum pe_action_flags flags, const char *source)
 {
     static unsigned long calls = 0;
     gboolean changed = FALSE;
@@ -107,9 +107,9 @@ update_action_flags(action_t * action, enum pe_action_flags flags)
     enum pe_action_flags last = action->flags;
 
     if (clear) {
-        pe_clear_action_bit(action, flags);
+        action->flags = crm_clear_bit(source, action->uuid, action->flags, flags);
     } else {
-        pe_set_action_bit(action, flags);
+        action->flags = crm_set_bit(source, action->uuid, action->flags, flags);
     }
 
     if (last != action->flags) {
@@ -118,9 +118,9 @@ update_action_flags(action_t * action, enum pe_action_flags flags)
         /* Useful for tracking down _who_ changed a specific flag */
         /* CRM_ASSERT(calls != 534); */
         clear_bit(flags, pe_action_clear);
-        crm_trace("%s on %s: %sset flags 0x%.6x (was 0x%.6x, now 0x%.6x, %lu)",
+        crm_trace("%s on %s: %sset flags 0x%.6x (was 0x%.6x, now 0x%.6x, %lu, %s)",
                   action->uuid, action->node ? action->node->details->uname : "[none]",
-                  clear ? "un-" : "", flags, last, action->flags, calls);
+                  clear ? "un-" : "", flags, last, action->flags, calls, source);
     }
 
     return changed;
@@ -1593,7 +1593,7 @@ rsc_order_then(action_t * lh_action, resource_t * rsc, order_constraint_t * orde
             order_actions(lh_action, rh_action_iter, type);
 
         } else if (type & pe_order_implies_then) {
-            update_action_flags(rh_action_iter, pe_action_runnable | pe_action_clear);
+            update_action_flags(rh_action_iter, pe_action_runnable | pe_action_clear, __FUNCTION__);
             crm_warn("Unrunnable %s 0x%.6x", rh_action_iter->uuid, type);
         } else {
             crm_warn("neither %s 0x%.6x", rh_action_iter->uuid, type);

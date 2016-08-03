@@ -152,7 +152,7 @@ extern enum pe_graph_flags clone_update_actions(action_t * first, action_t * the
                                                 enum pe_action_flags flags,
                                                 enum pe_action_flags filter, enum pe_ordering type);
 
-gboolean update_action_flags(action_t * action, enum pe_action_flags flags);
+gboolean update_action_flags(action_t * action, enum pe_action_flags flags, const char *source);
 gboolean update_action(action_t * action);
 
 #endif
