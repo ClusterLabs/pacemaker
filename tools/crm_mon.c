@@ -1042,6 +1042,174 @@ print_node_end(FILE *stream)
 
 /*!
  * \internal
+ * \brief Print resources section heading appropriate to options
+ *
+ * \param[in] stream      File stream to display output to
+ */
+static void
+print_resources_heading(FILE *stream)
+{
+    const char *heading;
+
+    if (group_by_node) {
+
+        /* Active resources have already been printed by node */
+        heading = (inactive_resources? "Inactive resources" : NULL);
+
+    } else if (inactive_resources) {
+        heading = "Full list of resources";
+
+    } else {
+        heading = "Active resources";
+    }
+
+    /* Print section heading */
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("\n%s:\n\n", heading);
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, " <hr />\n <h2>%s</h2>\n", heading);
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "    <resources>\n");
+            break;
+
+        default:
+            break;
+    }
+
+}
+
+/*!
+ * \internal
+ * \brief Print whatever resource section closing is appropriate
+ *
+ * \param[in] stream     File stream to display output to
+ */
+static void
+print_resources_closing(FILE *stream, gboolean printed_heading)
+{
+    const char *heading;
+
+    /* What type of resources we did or did not display */
+    if (group_by_node) {
+        heading = "inactive ";
+    } else if (inactive_resources) {
+        heading = "";
+    } else {
+        heading = "active ";
+    }
+
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            if (!printed_heading) {
+                print_as("\nNo %sresources\n\n", heading);
+            }
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            if (!printed_heading) {
+                fprintf(stream, " <hr />\n <h2>No %sresources</h2>\n", heading);
+            }
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "    %s\n",
+                    (printed_heading? "</resources>" : "<resources/>"));
+            break;
+
+        default:
+            break;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Print whatever resource section(s) are appropriate
+ *
+ * \param[in] stream     File stream to display output to
+ * \param[in] data_set   Cluster state to display
+ * \param[in] print_opts  Bitmask of pe_print_options
+ */
+static void
+print_resources(FILE *stream, pe_working_set_t *data_set, int print_opts)
+{
+    GListPtr rsc_iter;
+    const char *prefix = NULL;
+    gboolean printed_heading = FALSE;
+    gboolean brief_output = print_brief;
+
+    /* If we already showed active resources by node, and
+     * we're not showing inactive resources, we have nothing to do
+     */
+    if (group_by_node && !inactive_resources) {
+        return;
+    }
+
+    /* XML uses an indent, and ignores brief option for resources */
+    if (output_format == mon_output_xml) {
+        prefix = "        ";
+        brief_output = FALSE;
+    }
+
+    /* If we haven't already printed resources grouped by node,
+     * and brief output was requested, print resource summary */
+    if (brief_output && !group_by_node) {
+        print_resources_heading(stream);
+        printed_heading = TRUE;
+        print_rscs_brief(data_set->resources, NULL, print_opts, stream,
+                         inactive_resources);
+    }
+
+    /* For each resource, display it if appropriate */
+    for (rsc_iter = data_set->resources; rsc_iter != NULL; rsc_iter = rsc_iter->next) {
+        resource_t *rsc = (resource_t *) rsc_iter->data;
+
+        /* Complex resources may have some sub-resources active and some inactive */
+        gboolean is_active = rsc->fns->active(rsc, TRUE);
+        gboolean partially_active = rsc->fns->active(rsc, FALSE);
+
+        /* Skip inactive orphans (deleted but still in CIB) */
+        if (is_set(rsc->flags, pe_rsc_orphan) && !is_active) {
+            continue;
+
+        /* Skip active resources if we already displayed them by node */
+        } else if (group_by_node) {
+            if (is_active) {
+                continue;
+            }
+
+        /* Skip primitives already counted in a brief summary */
+        } else if (brief_output && (rsc->variant == pe_native)) {
+            continue;
+
+        /* Skip resources that aren't at least partially active,
+         * unless we're displaying inactive resources
+         */
+        } else if (!partially_active && !inactive_resources) {
+            continue;
+        }
+
+        /* Print this resource */
+        if (printed_heading == FALSE) {
+            print_resources_heading(stream);
+            printed_heading = TRUE;
+        }
+        rsc->fns->print(rsc, prefix, print_opts, stream);
+    }
+
+    print_resources_closing(stream, printed_heading);
+}
+
+/*!
+ * \internal
  * \brief Print heading for resource history
  *
  * \param[in] stream      File stream to display output to
@@ -2852,58 +3020,8 @@ print_status(pe_working_set_t * data_set)
         free(online_guest_nodes);
     }
 
-    /* If we haven't already displayed resources grouped by node,
-     * or we need to print inactive resources, print a resources section */
-    if (group_by_node == FALSE || inactive_resources) {
-
-        /* If we're printing inactive resources, display a heading */
-        if (inactive_resources) {
-            if (group_by_node == FALSE) {
-                print_as("\nFull list of resources:\n");
-            } else {
-                print_as("\nInactive resources:\n");
-            }
-        }
-        print_as("\n");
-
-        /* If we haven't already printed resources grouped by node,
-         * and brief output was requested, print resource summary */
-        if (print_brief && group_by_node == FALSE) {
-            print_rscs_brief(data_set->resources, NULL, print_opts, stdout,
-                             inactive_resources);
-        }
-
-        /* For each resource, display it if appropriate */
-        for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-            resource_t *rsc = (resource_t *) gIter->data;
-
-            /* Complex resources may have some sub-resources active and some inactive */
-            gboolean is_active = rsc->fns->active(rsc, TRUE);
-            gboolean partially_active = rsc->fns->active(rsc, FALSE);
-
-            /* Always ignore inactive orphan resources (deleted but not yet gone from CIB) */
-            if (is_set(rsc->flags, pe_rsc_orphan) && (is_active == FALSE)) {
-                continue;
-            }
-
-            /* If we already printed resources grouped by node,
-             * only print inactive resources, if that was requested */
-            if (group_by_node == TRUE) {
-                if ((is_active == FALSE) && inactive_resources) {
-                    rsc->fns->print(rsc, NULL, print_opts, stdout);
-                }
-                continue;
-            }
-
-            /* Otherwise, print resource if it's at least partially active
-             * or we're displaying inactive resources,
-             * except for primitive resources already counted in a brief summary */
-            if (!(print_brief && (rsc->variant == pe_native))
-                && (partially_active || inactive_resources)) {
-                    rsc->fns->print(rsc, NULL, print_opts, stdout);
-            }
-        }
-    }
+    /* Print resources section, if needed */
+    print_resources(stdout, data_set, print_opts);
 
     /* print Node Attributes section if requested */
     if (show & mon_show_attributes) {
@@ -3009,28 +3127,8 @@ print_xml_status(pe_working_set_t * data_set)
     }
     fprintf(stream, "    </nodes>\n");
 
-    /*** RESOURCES ***/
-    if (group_by_node == FALSE || inactive_resources) {
-        fprintf(stream, "    <resources>\n");
-        for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-            resource_t *rsc = (resource_t *) gIter->data;
-            gboolean is_active = rsc->fns->active(rsc, TRUE);
-            gboolean partially_active = rsc->fns->active(rsc, FALSE);
-
-            if (is_set(rsc->flags, pe_rsc_orphan) && is_active == FALSE) {
-                continue;
-
-            } else if (group_by_node == FALSE) {
-                if (partially_active || inactive_resources) {
-                    rsc->fns->print(rsc, "        ", print_opts, stream);
-                }
-
-            } else if (is_active == FALSE && inactive_resources) {
-                rsc->fns->print(rsc, "        ", print_opts, stream);
-            }
-        }
-        fprintf(stream, "    </resources>\n");
-    }
+    /* Print resources section, if needed */
+    print_resources(stream, data_set, print_opts);
 
     /* print Node Attributes section if requested */
     if (show & mon_show_attributes) {
@@ -3153,42 +3251,8 @@ print_html_status(pe_working_set_t * data_set, const char *filename)
     }
     fprintf(stream, "</ul>\n");
 
-    if (group_by_node && inactive_resources) {
-        fprintf(stream, "<h2>Inactive Resources</h2>\n");
-
-    } else if (group_by_node == FALSE) {
-        fprintf(stream, " <hr />\n <h2>Resource List</h2>\n");
-    }
-
-    if (group_by_node == FALSE || inactive_resources) {
-        if (print_brief && group_by_node == FALSE) {
-            print_rscs_brief(data_set->resources, NULL, print_opts, stream,
-                             inactive_resources);
-        }
-
-        for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-            resource_t *rsc = (resource_t *) gIter->data;
-            gboolean is_active = rsc->fns->active(rsc, TRUE);
-            gboolean partially_active = rsc->fns->active(rsc, FALSE);
-
-            if (print_brief && group_by_node == FALSE
-                && rsc->variant == pe_native) {
-                continue;
-            }
-
-            if (is_set(rsc->flags, pe_rsc_orphan) && is_active == FALSE) {
-                continue;
-
-            } else if (group_by_node == FALSE) {
-                if (partially_active || inactive_resources) {
-                    rsc->fns->print(rsc, NULL, print_opts, stream);
-                }
-
-            } else if (is_active == FALSE && inactive_resources) {
-                rsc->fns->print(rsc, NULL, print_opts, stream);
-            }
-        }
-    }
+    /* Print resources section, if needed */
+    print_resources(stream, data_set, print_opts);
 
     /* print Node Attributes section if requested */
     if (show & mon_show_attributes) {
