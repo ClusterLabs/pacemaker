@@ -1,0 +1,102 @@
+= Frequently Asked Questions =
+
+[qanda]
+Who is this document intended for?::
+ Anyone who wishes to read and/or edit the Pacemaker source code.
+ Casual contributors should feel free to read just this FAQ, and
+ consult other sections as needed.
+
+Where is the source code for Pacemaker?::
+ indexterm:[downloads]
+ indexterm:[source code]
+ indexterm:[git,GitHub]
+ The https://github.com/ClusterLabs/pacemaker[source code for Pacemaker] is
+ kept on https://github.com/[GitHub], as are all software projects under the
+ https://github.com/ClusterLabs[ClusterLabs] umbrella. Pacemaker uses
+ https://git-scm.com/[Git] for source code management. If you are a Git newbie,
+ the http://schacon.github.io/git/gittutorial.html[gittutorial(7) man page]
+ is an excellent starting point. If you're familiar with using Git from the
+ command line, you can create a local copy of the Pacemaker source code with:
+ `git clone https://github.com/ClusterLabs/pacemaker.git pacemaker`
+
+What are the different Git branches and repositories used for?::
+ indexterm:[branches]
+ * The https://github.com/ClusterLabs/pacemaker/tree/master[master branch]
+   is the primary branch used for development.
+ * The https://github.com/ClusterLabs/pacemaker/tree/1.1[1.1 branch] contains
+   the latest official release, and normally does not receive any changes.
+   During the release cycle, it will contain release candidates for the
+   next official release, and will receive only bug fixes.
+ * The https://github.com/ClusterLabs/pacemaker-1.0[1.0 repository] is a
+   frozen snapshot of the 1.0 release series, and is no longer developed.
+
+How do I build from the source code?::
+ See the
+ https://github.com/ClusterLabs/pacemaker/blob/master/README.markdown[README]
+ in the main checkout directory.
+
+What coding style should I follow?::
+ You'll be mostly fine if you simply follow the example of existing code.
+ When unsure, see <<ch-c-coding>>. Pacemaker has grown and evolved organically
+ over many years, so you will see much code that doesn't conform to the
+ current guidelines. We discourage making changes solely to bring code into
+ conformance, as any change requires developer time for review and opens
+ the possibility of adding bugs. However, new code should follow the
+ guidelines, and it is fine to bring lines of older code into conformance
+ when modifying that code for other reasons.
+
+How should I format my Git commit messages?::
+ indexterm:[git,commit messages]
+ See existing examples in the git log. The first line should look like
+ +change-type: affected-code: explanation+ where +change-type+ can be
+ +Fix+ or +Bug+ for most bug fixes, +Feature+ for new features, +Log+ for
+ changes to log messages or handling, +Doc+ for changes to documentation or
+ comments, or +Test+ for changes in CTS and regression tests. You will
+ sometimes see +Low+, +Mid+/+Med+ and +High+ used instead for bug fixes, to
+ indicate the severity. The important thing is that only commits with
+ +Feature+, +Fix+, +Bug+, or +High+ will be automatically included in the
+ change log for the next release. The +affected-code+ is the name of the
+ component(s) being changed, for example, +crmd+ or +libcrmcommon+ (it's more
+ free-form, so don't sweat getting it exact). The +explanation+ briefly
+ describes the change (ideally, the entire summary line will stay under 80
+ characters, but it's OK if more is needed to be clear). For most commits, the
+ first line should be followed by a blank line and then a longer explanation of
+ 'why' the change was made (referencing any relevant bug reports).
+
+How can I test my changes?::
+ Most importantly, Pacemaker has regression tests for most major components;
+ these will automatically be run for any pull requests submitted through
+ GitHub. Additionally, Pacemaker's Cluster Test Suite (CTS) can be used to set
+ up a test cluster and run a wide variety of complex tests. (This document will
+ have more detail on testing in the future.)
+
+What is Pacemaker's license?::
+ indexterm:[licensing]
+ Pacemaker programs are licensed under version 2 or later of the GNU General
+ Public License (GPLv2+), its headers and libraries are under version 2.1 or
+ later of the less restrictive GNU Lesser General Public License (LGPLv2.1+),
+ its documentation is under version 1.2 or later of the GNU Free Documentation
+ License (GFDLv1.2+), and its init scripts are under the Revised BSD license.
+ If you find any deviations from this policy, or wish to inquire about
+ alternate licensing arrangements, please e-mail pacemaker@oss.clusterlabs.org.
+ Licensing issues are also discussed on the
+ http://clusterlabs.org/wiki/License[ClusterLabs wiki].
+
+How can I contribute my changes to the project?::
+ Contributions of bug fixes or new features are very much appreciated!
+ Patches can be submitted as
+ https://help.github.com/articles/using-pull-requests/[pull requests]
+ via GitHub (the preferred method, due to its excellent
+ https://github.com/features/[features]), or e-mailed to the
+ http://clusterlabs.org/mailman/listinfo/developers[developers@clusterlabs.org]
+ mailing list as an attachment in a format Git can import.
+
+What if I still have questions?::
+ indexterm:[mailing lists]
+ Ask on the
+ http://clusterlabs.org/mailman/listinfo/developers[developers@clusterlabs.org]
+ mailing list for development-related questions, or on the
+ http://clusterlabs.org/mailman/listinfo/users[users@clusterlabs.org]
+ mailing list for general questions about using Pacemaker.
+ Developers often also hang out on http://freenode.net/[freenode's]
+ #clusterlabs IRC channel.

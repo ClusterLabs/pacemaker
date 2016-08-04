@@ -12,12 +12,13 @@
       <revision>
         <revnumber>1-0</revnumber>
         <date>Tue Jul 26 2016</date>
-	<author>
+        <author>
           <firstname>Ken</firstname><surname>Gaillot</surname>
-	  <email>kgaillot@redhat.com</email>
+          <email>kgaillot@redhat.com</email>
         </author>
-	<revdescription>
-	  <simplelist><member>Convert coding guidelines to Publican document</member></simplelist>
+        <revdescription>
+          <simplelist><member>Convert coding guidelines and developer FAQ
+                              to Publican document</member></simplelist>
         </revdescription>
       </revision>
 

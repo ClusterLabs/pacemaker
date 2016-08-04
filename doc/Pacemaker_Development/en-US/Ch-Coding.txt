@@ -1,5 +1,11 @@
 = C Coding Guidelines =
 
+////
+We prefer [[ch-NAME]], but older versions of asciidoc don't deal well
+with that construct for chapter headings
+////
+anchor:ch-c-coding[Chapter 2, C Coding Guidelines]
+
 == Formatting ==
 
 === Whitespace ===
