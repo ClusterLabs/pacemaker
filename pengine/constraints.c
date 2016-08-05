@@ -77,7 +77,7 @@ unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set)
         lifetime = first_named_child(xml_obj, "lifetime");
         if (lifetime) {
             crm_config_warn("Support for the lifetime tag, used by %s, is deprecated."
-                            " The rules it contains should instead be direct decendants of the constraint object",
+                            " The rules it contains should instead be direct descendents of the constraint object",
                             id);
         }
 
