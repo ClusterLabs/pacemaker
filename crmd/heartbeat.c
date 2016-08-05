@@ -354,7 +354,7 @@ crmd_ccm_msg_callback(oc_ed_t event, void *cookie, size_t size, const void *data
     if (update_quorum) {
         crm_have_quorum = ccm_have_quorum(event);
         if (crm_have_quorum == FALSE) {
-            /* did we just loose quorum? */
+            /* did we just lose quorum? */
             if (fsa_has_quorum) {
                 crm_info("Quorum lost: %s", ccm_event_name(event));
             }

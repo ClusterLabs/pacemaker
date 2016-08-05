@@ -880,14 +880,14 @@ probe_resources(pe_working_set_t * data_set)
             continue;
 
         } else if (is_remote_node(node) && node->details->shutdown) {
-            /* Don't try and probe a remote node we're shutting down.
-             * It causes constraint conflicts to try and run any sort of action
-             * other that 'stop' on resources living within a remote-node when
-             * it is being shutdown. */
+            /* Don't probe a Pacemaker Remote node we're shutting down.
+             * It causes constraint conflicts to try to run any action
+             * other than "stop" on resources living within such a node when
+             * it is shutting down. */
             continue;
 
         } else if (is_container_remote_node(node)) {
-            /* TODO enable container node probes once ordered probing is implemented. */
+            /* TODO enable guest node probes once ordered probing is implemented */
             continue;
 
         } else if (node->details->rsc_discovery_enabled == FALSE) {
@@ -1158,9 +1158,10 @@ allocate_resources(pe_working_set_t * data_set)
                 continue;
             }
             pe_rsc_trace(rsc, "Allocating: %s", rsc->id);
-            /* for remote node connection resources, always prefer the partial migration
-             * target during resource allocation if the rsc is in the middle of a
-             * migration */ 
+            /* For remote node connection resources, always prefer the partial
+             * migration target during resource allocation, if the rsc is in the
+             * middle of a migration.
+             */
             rsc->cmds->allocate(rsc, rsc->partial_migration_target, data_set);
         }
     }
@@ -1368,7 +1369,10 @@ stage6(pe_working_set_t * data_set)
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
 
-        /* remote-nodes associated with a container resource (such as a vm) are not fenced */
+        /* Guest nodes are "fenced" by recovering their container resource.
+         * The container stop may be explicit, or implied by the fencing of the
+         * guest's host.
+         */
         if (is_container_remote_node(node)) {
             /* Guest */
             if (need_stonith
@@ -1417,7 +1421,7 @@ stage6(pe_working_set_t * data_set)
             }
 
         } else if (node->details->online && node->details->shutdown &&
-                /* TODO define what a shutdown op means for a baremetal remote node.
+                /* TODO define what a shutdown op means for a remote node.
                  * For now we do not send shutdown operations for remote nodes, but
                  * if we can come up with a good use for this in the future, we will. */
                     is_remote_node(node) == FALSE) {
@@ -1694,10 +1698,11 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
             action->rsc->is_remote_node &&
             safe_str_eq(action->task, CRM_OP_CLEAR_FAILCOUNT)) {
 
-            /* if we are clearing the failcount of an actual remote node connect
-             * resource, then make sure this happens before allowing the connection
-             * to start if we are planning on starting the connection during this
-             * transition */ 
+            /* If we are clearing the failcount of an actual remote node
+             * connection resource, then make sure this happens before allowing
+             * the connection to start if we are planning on starting the
+             * connection during this transition.
+             */
             custom_action_order(action->rsc,
                 NULL,
                 action,
@@ -1710,10 +1715,10 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
                 continue;
         }
 
-        /* detect if the action occurs on a remote node. if so create
-         * ordering constraints that guarantee the action occurs while
-         * the remote node is active (after start, before stop...) things
-         * like that */ 
+        /* If the action occurs on a Pacemaker Remote node, create
+         * ordering constraints that guarantee the action occurs while the node
+         * is active (after start, before stop ... things like that).
+         */
         if (action->node == NULL ||
             is_remote_node(action->node) == FALSE ||
             action->node->details->remote_rsc == NULL ||
@@ -1747,12 +1752,13 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
              * to build a constraint between a resource's demotion and
              * the connection resource starting... because the connection
              * resource can not start. The connection might already be up,
-             * but the START action would not be allowed which in turn would
-             * block the demotion of any resournces living in the remote-node.
+             * but the "start" action would not be allowed, which in turn would
+             * block the demotion of any resources living in the node.
              *
              * In this case, only build the constraint between the demotion and
-             * the connection's stop action. This allows the connection and all the
-             * resources within the remote-node to be torn down properly. */
+             * the connection's "stop" action. This allows the connection and
+             * all the resources within the node to be torn down properly.
+             */
             if (remote_rsc->next_role == RSC_ROLE_STOPPED) {
                 custom_action_order(action->rsc,
                     NULL,
@@ -1780,10 +1786,11 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
                    container &&
                    is_set(container->flags, pe_rsc_failed)) {
 
-            /* when the container representing a remote node fails, the stop
+            /* When the container representing a guest node fails, the stop
              * action for all the resources living in that container is implied
-             * by the container stopping.  This is similar to how fencing operations
-             * work for cluster nodes. */
+             * by the container stopping. This is similar to how fencing
+             * operations work for cluster nodes.
+             */
             pe_set_action_bit(action, pe_action_pseudo);
             custom_action_order(container,
                 generate_op_key(container->id, RSC_STOP, 0),
@@ -1796,14 +1803,16 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
         } else if (safe_str_eq(action->task, "stop")) {
             gboolean after_start = FALSE;
 
-            /* handle special case with baremetal remote where stop actions need to be
-             * ordered after the connection resource starts somewhere else. */
+            /* Handle special case with remote node where stop actions need to be
+             * ordered after the connection resource starts somewhere else.
+             */
             if (is_baremetal_remote_node(action->node)) {
                 node_t *cluster_node = remote_rsc->running_on ? remote_rsc->running_on->data : NULL;
 
-                /* if the current cluster node a baremetal connection resource
-                 * is residing on is unclean or went offline we can't process any
-                 * operations on that remote node until after it starts somewhere else. */
+                /* If the cluster node the remote connection resource resides on
+                 * is unclean or went offline, we can't process any operations
+                 * on that remote node until after it starts elsewhere.
+                 */
                 if (cluster_node == NULL ||
                     cluster_node->details->unclean == TRUE ||
                     cluster_node->details->online == FALSE) {
