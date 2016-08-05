@@ -403,7 +403,8 @@ crmd_ha_status_callback(const char *node, const char *status, void *private)
     trigger_fsa(fsa_source);
 
     if (AM_I_DC) {
-        update = do_update_node_cib(peer, node_update_cluster, NULL, __FUNCTION__);
+        update = create_node_state_update(peer, node_update_cluster, NULL,
+                                          __FUNCTION__);
         fsa_cib_anon_update(XML_CIB_TAG_STATUS, update,
                             cib_scope_local | cib_quorum_override | cib_can_create);
         free_xml(update);
@@ -456,7 +457,8 @@ crmd_client_status_callback(const char *node, const char *client, const char *st
         xmlNode *update = NULL;
 
         crm_trace("Got client status callback");
-        update = do_update_node_cib(peer, node_update_peer, NULL, __FUNCTION__);
+        update = create_node_state_update(peer, node_update_peer, NULL,
+                                          __FUNCTION__);
         fsa_cib_anon_update(XML_CIB_TAG_STATUS, update,
                             cib_scope_local | cib_quorum_override | cib_can_create);
         free_xml(update);

@@ -879,7 +879,8 @@ do_lrm_query_internal(lrm_state_t *lrm_state, int update_flags)
     peer = crm_get_peer_full(0, lrm_state->node_name, CRM_GET_PEER_ANY);
     CRM_CHECK(peer != NULL, return NULL);
 
-    xml_state = do_update_node_cib(peer, update_flags, NULL, __FUNCTION__);
+    xml_state = create_node_state_update(peer, update_flags, NULL,
+                                         __FUNCTION__);
 
     xml_data = create_xml_node(xml_state, XML_CIB_TAG_LRM);
     crm_xml_add(xml_data, XML_ATTR_ID, peer->uuid);
@@ -1932,7 +1933,8 @@ send_direct_ack(const char *to_host, const char *to_sys,
     }
 
     peer = crm_get_peer(0, fsa_our_uname);
-    update = do_update_node_cib(peer, node_update_none, NULL, __FUNCTION__);
+    update = create_node_state_update(peer, node_update_none, NULL,
+                                      __FUNCTION__);
 
     iter = create_xml_node(update, XML_CIB_TAG_LRM);
     crm_xml_add(iter, XML_ATTR_ID, fsa_our_uuid);

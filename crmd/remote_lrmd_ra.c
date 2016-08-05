@@ -203,7 +203,8 @@ remote_node_up(const char *node_name)
     send_remote_state_message(node_name, TRUE);
 
     update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
-    state = do_update_node_cib(node, node_update_cluster, update, __FUNCTION__);
+    state = create_node_state_update(node, node_update_cluster, update,
+                                     __FUNCTION__);
 
     /* Clear the XML_NODE_IS_FENCED flag in the node state. If the node ever
      * needs to be fenced, this flag will allow various actions to determine
@@ -255,7 +256,7 @@ remote_node_down(const char *node_name)
 
     /* Update CIB node state */
     update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
-    do_update_node_cib(node, node_update_cluster, update, __FUNCTION__);
+    create_node_state_update(node, node_update_cluster, update, __FUNCTION__);
     fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, call_id, NULL);
     if (call_id < 0) {
         crm_perror(LOG_ERR, "%s CIB node state update", node_name);
