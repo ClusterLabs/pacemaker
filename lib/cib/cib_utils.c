@@ -502,7 +502,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     if (safe_str_eq(section, XML_CIB_TAG_STATUS)) {
         /* Throttle the amount of costly validation we perform due to status updates
          * a) we don't really care whats in the status section
-         * b) we don't validate any of it's contents at the moment anyway
+         * b) we don't validate any of its contents at the moment anyway
          */
         check_dtd = FALSE;
     }

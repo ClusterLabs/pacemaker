@@ -2924,7 +2924,7 @@ class RemoteDriver(CTSTest):
             return
 
         # This verifies permanent attributes can be set on a remote-node. It also
-        # verifies the remote-node can edit it's own cib node section remotely.
+        # verifies the remote-node can edit its own cib node section remotely.
         (rc, line) = self.CM.rsh(node, "crm_attribute -l forever -n testattr -v testval -N %s" % (self.remote_node), None)
         if rc != 0:
             self.fail("Failed to set remote-node attribute. rc:%s output:%s" % (rc, line))
