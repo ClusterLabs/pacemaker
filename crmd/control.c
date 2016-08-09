@@ -213,6 +213,7 @@ do_shutdown_req(long long action,
 {
     xmlNode *msg = NULL;
 
+    set_bit(fsa_input_register, R_SHUTDOWN);
     crm_info("Sending shutdown request to %s", crm_str(fsa_our_dc));
     msg = create_request(CRM_OP_SHUTDOWN_REQ, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
