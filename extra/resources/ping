@@ -241,34 +241,49 @@ fping_check() {
         99) ocf_log err "Ambiguous IP versions in host_list: '$OCF_RESKEY_host_list'"; exit $OCF_ERR_CONFIGURED;;
     esac
 
-    active=0
-    f_out=`mktemp`
-    f_err=`mktemp`
-    if [ ! -f "$f_out" ] || [ ! -f "$f_err" ]; then
-        ocf_log err "Failed to create temporary files for fping output; is /tmp full?"
-        exit $OCF_ERR_PERM
-    fi
-
-    n=$OCF_RESKEY_attempts
-    timeout=`expr $OCF_RESKEY_timeout \* 1000 / $OCF_RESKEY_attempts`
-
-    cmd="$p_exe -r $OCF_RESKEY_attempts -t $timeout -B 1.0 $OCF_RESKEY_options $OCF_RESKEY_host_list"
-    $cmd>$f_out 2>$f_err; rc=$?
-    active=`grep alive $f_out|wc -l`
+    outp=$(python <<EOF
+from __future__ import print_function
+import subprocess
+import sys
+extra_opts="$OCF_RESKEY_options".split()
+opts = [
+    "$p_exe",
+    "-r", "$OCF_RESKEY_attempts",
+    "-t", str($OCF_RESKEY_timeout * 1000 / $OCF_RESKEY_attempts),
+    "-B", "1.0"
+]
+hostlist="$OCF_RESKEY_host_list".split()
+cmd = opts + extra_opts + hostlist
+p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+stdout, stderr = p.communicate()
+rc = p.returncode
+for line in stdout.splitlines():
+    if "alive" in line:
+        print(line)
+if rc == 1:
+    for line in stdout.splitlines():
+        if "unreachable" in line:
+            print(line.split()[0], "is inactive")
+elif rc != 0:
+    print("Unexpected result for", " ".join(cmd), rc, ": ", stderr.replace('\n', ';'))
+sys.exit(rc)
+EOF
+        )
+    rc=$?
+    active=$(echo "$outp" | grep alive | wc -l)
 
     case $rc in
- 	0) 
-	    ;;
- 	1) 
-	    for h in `grep unreachable $f_out | awk '{print $1}'`; do
-		ping_conditional_log warn "$h is inactive"
-	    done
-	    ;;
- 	*) 
-	    ocf_log err "Unexpected result for '$cmd' $rc: `tr '\n' ';' < $f_err`"
-	    ;;
+    0)
+        ;;
+    1)
+        echo "$outp" | grep inactive | while read in; do
+            ping_conditional_log warn "$in"
+        done
+        ;;
+    *)
+        ocf_log err "$outp"
+        ;;
     esac
-    rm -f $f_out $f_err
 
     return $active
 }
