@@ -5668,13 +5668,8 @@ update_validation(xmlNode ** xml_blob, int *best, int max, gboolean transform, g
                 crm_trace("Stopping at %s", known_schemas[lpc].name);
                 break;
 
-            } else if (max > 0 && lpc == max) {
+            } else if (max > 0 && (lpc == max || next > max)) {
                 crm_trace("Upgrade limit reached at %s (lpc=%d, next=%d, max=%d)",
-                          known_schemas[lpc].name, lpc, next, max);
-                break;
-
-            } else if (max > 0 && next > max) {
-                crm_debug("Upgrade limit reached at %s (lpc=%d, next=%d, max=%d)",
                           known_schemas[lpc].name, lpc, next, max);
                 break;
 
