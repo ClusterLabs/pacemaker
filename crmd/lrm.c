@@ -2025,6 +2025,7 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
     fsa_data_t *msg_data = NULL;
     const char *transition = NULL;
     gboolean stop_recurring = FALSE;
+    bool send_nack = FALSE;
 
     CRM_CHECK(rsc != NULL, return);
     CRM_CHECK(operation != NULL, return);
@@ -2075,18 +2076,29 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
     /* now do the op */
     crm_info("Performing key=%s op=%s_%s_%d", transition, rsc->id, operation, op->interval);
 
-    if (fsa_state != S_NOT_DC && fsa_state != S_POLICY_ENGINE && fsa_state != S_TRANSITION_ENGINE) {
-        if (safe_str_neq(operation, "fail")
-            && safe_str_neq(operation, CRMD_ACTION_STOP)) {
-            crm_info("Discarding attempt to perform action %s on %s in state %s",
-                     operation, rsc->id, fsa_state2string(fsa_state));
-            op->rc = CRM_DIRECT_NACK_RC;
-            op->op_status = PCMK_LRM_OP_ERROR;
-            send_direct_ack(NULL, NULL, rsc, op, rsc->id);
-            lrmd_free_event(op);
-            free(op_id);
-            return;
-        }
+    if (is_set(fsa_input_register, R_SHUTDOWN) && safe_str_eq(operation, RSC_START)) {
+        register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
+        send_nack = TRUE;
+
+    } else if (fsa_state != S_NOT_DC
+               && fsa_state != S_POLICY_ENGINE /* Recalculating */
+               && fsa_state != S_TRANSITION_ENGINE
+               && safe_str_neq(operation, "fail")
+               && safe_str_neq(operation, CRMD_ACTION_STOP)) {
+        send_nack = TRUE;
+    }
+
+    if(send_nack) {
+        crm_notice("Discarding attempt to perform action %s on %s in state %s (shutdown=%s)",
+                   operation, rsc->id, fsa_state2string(fsa_state),
+                   is_set(fsa_input_register, R_SHUTDOWN)?"true":"false");
+
+        op->rc = CRM_DIRECT_NACK_RC;
+        op->op_status = PCMK_LRM_OP_ERROR;
+        send_direct_ack(NULL, NULL, rsc, op, rsc->id);
+        lrmd_free_event(op);
+        free(op_id);
+        return;
     }
 
     op_id = generate_op_key(rsc->id, op->op_type, op->interval);
