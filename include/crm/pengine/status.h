@@ -406,7 +406,7 @@ enum pe_ordering {
 
     pe_order_asymmetrical          = 0x100000,  /* Indicates asymmetrical one way ordering constraint. */
     pe_order_load                  = 0x200000,  /* Only relevant if... */
-    pe_order_one_or_more           = 0x400000,  /* 'then' is only runnable if one or more of it's dependencies are too */
+    pe_order_one_or_more           = 0x400000,  /* 'then' is runnable only if one or more of its dependencies are too */
     pe_order_anti_colocation       = 0x800000,
 
     pe_order_preserve              = 0x1000000, /* Hack for breaking user ordering constraints with container resources */

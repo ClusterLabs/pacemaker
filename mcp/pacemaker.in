@@ -62,6 +62,11 @@ status()
 	local rtrn=$?
 	if [ $rtrn -ne 0 ]; then
 		echo "$1 is stopped"
+		if [ -f "@localstatedir@/run/$prog.pid" ]; then
+			rtrn=1
+		else
+			rtrn=3
+		fi
 	else
 		echo "$1 (pid $pid) is running..."
 	fi
@@ -72,6 +77,7 @@ if [ -d @CONFIGDIR@ ]; then
 	[ -f @INITDIR@/functions ] && . @INITDIR@/functions
 set -a
 	[ -f @CONFIGDIR@/pacemaker ] && . @CONFIGDIR@/pacemaker
+	[ -f @CONFIGDIR@/sbd ] && . @CONFIGDIR@/sbd
 set +a
 fi
 
@@ -86,6 +92,14 @@ fi
 # Unless specified otherwise, assume cman is in use if cluster.conf exists
 if [ x = "x$PCMK_STACK" -a -f "@sysconfdir@/cluster/cluster.conf" ]; then
     PCMK_STACK=cman
+fi
+
+# Check if there is a valid watchdog-device configured in sbd config
+if [ x != "x$SBD_WATCHDOG_DEV" -a "/dev/null" != "$SBD_WATCHDOG_DEV" -a -c "$SBD_WATCHDOG_DEV" ]; then
+	# enhance for unavailable chkconfig - don't touch sbd for now
+	if chkconfig --list sbd_helper 2>/dev/null | grep -q ":on"; then
+		SBD_SERVICE=sbd_helper
+	fi
 fi
 
 start()
@@ -132,7 +146,7 @@ cman_pre_start()
     fi
 
     # start cman's friends if they're not running but were configured to start automatically
-    for cservice in cmirrord clvmd gfs2; do
+    for cservice in cmirrord clvmd gfs2 $SBD_SERVICE; do
 	chkconfig --list $cservice 2>/dev/null | grep -q ":on"
 	if [ $? -eq 0 ]; then
 	    service $cservice status >/dev/null 2>&1
@@ -269,6 +283,7 @@ stop)
 	#
 	[ "$PCMK_STACK" = cman ] && cman_pre_stop
 	stop
+	[ "x$SBD_SERVICE" != x ] && service $SBD_SERVICE stop
 
 	# Stop cman if needed, unless --skip-cman is specified (which allows
 	# higher-level tooling to stop pacemaker on all nodes, then stop cman

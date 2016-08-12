@@ -178,10 +178,9 @@ remote_node_up(const char *node_name)
     CRM_CHECK(node_name != NULL, return);
     crm_info("Announcing pacemaker_remote node %s", node_name);
 
-    /* Clear node's operation history and transient attributes.
-     * This should and normally will be done when the node leaves,
-     * but since remote node state has a number of corner cases,
-     * we additionally clear it on startup to be sure.
+    /* Clear node's operation history. The node's transient attributes should
+     * and normally will be cleared when the node leaves, but since remote node
+     * state has a number of corner cases, clear them here as well, to be sure.
      */
     call_opt = crmd_cib_smart_opt();
     erase_status_tag(node_name, XML_CIB_TAG_LRM, call_opt);
@@ -204,7 +203,8 @@ remote_node_up(const char *node_name)
     send_remote_state_message(node_name, TRUE);
 
     update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
-    state = do_update_node_cib(node, node_update_cluster, update, __FUNCTION__);
+    state = create_node_state_update(node, node_update_cluster, update,
+                                     __FUNCTION__);
 
     /* Clear the XML_NODE_IS_FENCED flag in the node state. If the node ever
      * needs to be fenced, this flag will allow various actions to determine
@@ -243,8 +243,7 @@ remote_node_down(const char *node_name)
     /* Purge node from attrd's memory */
     update_attrd_remote_node_removed(node_name, NULL);
 
-    /* Purge node's operation history and transient attributes from CIB */
-    erase_status_tag(node_name, XML_CIB_TAG_LRM, call_opt);
+    /* Purge node's transient attributes */
     erase_status_tag(node_name, XML_TAG_TRANSIENT_NODEATTRS, call_opt);
 
     /* Ensure node is in the remote peer cache with lost state */
@@ -257,7 +256,7 @@ remote_node_down(const char *node_name)
 
     /* Update CIB node state */
     update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
-    do_update_node_cib(node, node_update_cluster, update, __FUNCTION__);
+    create_node_state_update(node, node_update_cluster, update, __FUNCTION__);
     fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, call_id, NULL);
     if (call_id < 0) {
         crm_perror(LOG_ERR, "%s CIB node state update", node_name);

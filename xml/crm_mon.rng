@@ -264,14 +264,14 @@
             <optional>
                 <attribute name="pending"> <text/> </attribute>
             </optional>
-            <optional>
+            <zeroOrMore>
                 <!-- crm_mon prints the node only if group-by-node is false -->
                 <element name="node">
                     <attribute name="name"> <text/> </attribute>
                     <attribute name="id"> <text/> </attribute>
                     <attribute name="cached"> <data type="boolean" /> </attribute>
                 </element>
-            </optional>
+            </zeroOrMore>
         </element>
     </define>
 

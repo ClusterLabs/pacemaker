@@ -124,7 +124,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
 
     switch (type) {
         case crm_status_uname:
-            /* If we've never seen the node, then it also wont be in the status section */
+            /* If we've never seen the node, then it also won't be in the status section */
             crm_info("%s is now %s", node->uname, state_text(node->state));
             return;
 
@@ -268,7 +268,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         }
 
         /* Update the CIB node state */
-        update = do_update_node_cib(node, flags, NULL, __FUNCTION__);
+        update = create_node_state_update(node, flags, NULL, __FUNCTION__);
         fsa_cib_anon_update(XML_CIB_TAG_STATUS, update,
                             cib_scope_local | cib_quorum_override | cib_can_create);
         free_xml(update);

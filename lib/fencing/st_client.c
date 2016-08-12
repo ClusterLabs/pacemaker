@@ -353,7 +353,11 @@ create_level_registration_xml(const char *node, const char *pattern,
 
         crm_trace("Adding %s (%dc) at offset %d", device_list->value, adding, len);
         list = realloc_safe(list, len + adding + 1);       /* +1 EOS */
-        CRM_CHECK(list != NULL, free_xml(data); return NULL);
+        if (list == NULL) {
+            crm_perror(LOG_CRIT, "Could not create device list");
+            free_xml(data);
+            return NULL;
+        }
         sprintf(list + len, "%s%s", len?",":"", device_list->value);
         len += adding;
     }

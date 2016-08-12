@@ -1685,7 +1685,7 @@ cli_resource_move(const char *rsc_id, const char *host_name, cib_t * cib, pe_wor
                     " --ban %s--host <name>", rsc_id, scope_master?"promoted":"active", scope_master?"--master ":"");
 
         } else {
-            crm_trace("Not banning %s from it's current location: not active", rsc_id);
+            crm_trace("Not banning %s from its current location: not active", rsc_id);
         }
     }
 

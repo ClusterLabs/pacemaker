@@ -93,7 +93,10 @@ find_nvpair_attr_delegate(cib_t * the_cib, const char *attr, const char *section
     }
 
     xpath_string = calloc(1, xpath_max);
-    CRM_CHECK(xpath_string != NULL, return -ENOMEM);
+    if (xpath_string == NULL) {
+        crm_perror(LOG_CRIT, "Could not create xpath");
+        return -ENOMEM;
+    }
 
     attr_snprintf(xpath_string, offset, xpath_max, "%.128s", get_object_path(section));
 
