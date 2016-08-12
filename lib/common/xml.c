@@ -329,7 +329,7 @@ static void __xml_schema_add(
         known_schemas[last].transform = strdup(transform);
     }
     if(after_transform == 0) {
-        after_transform = xml_schema_max;
+        after_transform = xml_schema_max;  /* upgrade is a one-way */
     }
     known_schemas[last].after_transform = after_transform;
 
@@ -5664,7 +5664,7 @@ update_validation(xmlNode ** xml_blob, int *best, int max, gboolean transform, g
             xmlNode *upgrade = NULL;
             int next = known_schemas[lpc].after_transform;
 
-            if (next < 0) {
+            if (next < 0 || next <= lpc) {
                 crm_trace("Stopping at %s", known_schemas[lpc].name);
                 break;
 
