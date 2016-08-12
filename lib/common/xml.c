@@ -5647,20 +5647,27 @@ update_validation(xmlNode ** xml_blob, int *best, int max, gboolean transform, g
     }
 
     while(lpc <= max_stable_schemas) {
-        gboolean valid = TRUE;
-
         crm_debug("Testing '%s' validation (%d of %d)",
                   known_schemas[lpc].name ? known_schemas[lpc].name : "<unset>",
                   lpc, max_stable_schemas);
-        valid = validate_with(xml, lpc, to_logs);
 
-        if (valid) {
-            *best = lpc;
-        } else {
+        if (validate_with(xml, lpc, to_logs) == FALSE) {
             crm_trace("%s validation failed", known_schemas[lpc].name ? known_schemas[lpc].name : "<unset>");
+            if (*best) {
+                /* we've satisfied the validation, no need to check further */
+                break;
+            }
+            rc = -pcmk_err_schema_validation;
+
+        } else {
+            rc = pcmk_ok;
         }
 
-        if (valid && transform) {
+        if (rc == pcmk_ok) {
+            *best = lpc;
+        }
+
+        if (rc == pcmk_ok && transform) {
             xmlNode *upgrade = NULL;
             int next = known_schemas[lpc].after_transform;
 
@@ -5715,6 +5722,11 @@ update_validation(xmlNode ** xml_blob, int *best, int max, gboolean transform, g
                     rc = -pcmk_err_schema_validation;
                 }
             }
+        }
+
+        if (transform == FALSE || rc != pcmk_ok) {
+            /* we need some progress! */
+            lpc++;
         }
     }
 
