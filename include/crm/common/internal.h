@@ -54,6 +54,12 @@ int crm_procfs_process_info(struct dirent *entry, char *name, int *pid);
 int crm_procfs_pid_of(const char *name);
 
 
+/* internal XML schema functions (from xml.c) */
+
+void crm_schema_init(void);
+void crm_schema_cleanup(void);
+
+
 /* internal generic string functions (from strings.c) */
 
 char *crm_concat(const char *prefix, const char *suffix, char join);

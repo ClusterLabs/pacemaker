@@ -350,8 +350,12 @@ static void __xml_schema_add(
     }
 }
 
-
-static int __xml_build_schema_list(void) 
+/*!
+ * \internal
+ * \brief Load pacemaker schemas into cache
+ */
+void
+crm_schema_init(void)
 {
     int lpc, max;
     const char *base = get_schema_root();
@@ -407,7 +411,6 @@ static int __xml_build_schema_list(void)
     __xml_schema_add(2, 0.0, "pacemaker-next", "pacemaker-next.rng", NULL, -1);
     __xml_schema_add(0, 0.0, "none", "N/A", NULL, -1);
     free(namelist);
-    return TRUE;
 }
 
 static void
@@ -5326,36 +5329,17 @@ validate_with_relaxng(xmlDocPtr doc, gboolean to_logs, const char *relaxng_file,
     return valid;
 }
 
+/*!
+ * \internal
+ * \brief Clean up global memory associated with XML schemas
+ */
 void
-crm_xml_init(void)
+crm_schema_cleanup(void)
 {
-    static bool init = TRUE;
-
-    if(init) {
-        init = FALSE;
-        /* The default allocator XML_BUFFER_ALLOC_EXACT does far too many
-         * realloc_safe()s and it can take upwards of 18 seconds (yes, seconds)
-         * to dump a 28kb tree which XML_BUFFER_ALLOC_DOUBLEIT can do in
-         * less than 1 second.
-         */
-        xmlSetBufferAllocationScheme(XML_BUFFER_ALLOC_DOUBLEIT);
-
-        /* Populate and free the _private field when nodes are created and destroyed */
-        xmlDeregisterNodeDefault(pcmkDeregisterNode);
-        xmlRegisterNodeDefault(pcmkRegisterNode);
-
-        __xml_build_schema_list();
-    }
-}
-
-void
-crm_xml_cleanup(void)
-{
-    int lpc = 0;
+    int lpc;
     relaxng_ctx_cache_t *ctx = NULL;
 
-    crm_info("Cleaning up memory from libxml2");
-    for (; lpc < xml_schema_max; lpc++) {
+    for (lpc = 0; lpc < xml_schema_max; lpc++) {
 
         switch (known_schemas[lpc].type) {
             case 0:
@@ -5390,7 +5374,38 @@ crm_xml_cleanup(void)
         free(known_schemas[lpc].transform);
     }
     free(known_schemas);
+    known_schemas = NULL;
+
     xsltCleanupGlobals();
+}
+
+void
+crm_xml_init(void)
+{
+    static bool init = TRUE;
+
+    if(init) {
+        init = FALSE;
+        /* The default allocator XML_BUFFER_ALLOC_EXACT does far too many
+         * realloc_safe()s and it can take upwards of 18 seconds (yes, seconds)
+         * to dump a 28kb tree which XML_BUFFER_ALLOC_DOUBLEIT can do in
+         * less than 1 second.
+         */
+        xmlSetBufferAllocationScheme(XML_BUFFER_ALLOC_DOUBLEIT);
+
+        /* Populate and free the _private field when nodes are created and destroyed */
+        xmlDeregisterNodeDefault(pcmkDeregisterNode);
+        xmlRegisterNodeDefault(pcmkRegisterNode);
+
+        crm_schema_init();
+    }
+}
+
+void
+crm_xml_cleanup(void)
+{
+    crm_info("Cleaning up memory from libxml2");
+    crm_schema_cleanup();
     xmlCleanupParser();
 }
 
