@@ -329,7 +329,7 @@ static void __xml_schema_add(
         known_schemas[last].transform = strdup(transform);
     }
     if(after_transform == 0) {
-        after_transform = xml_schema_max;
+        after_transform = xml_schema_max;  /* upgrade is a one-way */
     }
     known_schemas[last].after_transform = after_transform;
 
@@ -5607,6 +5607,7 @@ update_validation(xmlNode ** xml_blob, int *best, int max, gboolean transform, g
     char *value = NULL;
     int max_stable_schemas = xml_latest_schema_index();
     int lpc = 0, match = -1, rc = pcmk_ok;
+    int next = -1;  /* -1 denotes "inactive" value */
 
     CRM_CHECK(best != NULL, return -EINVAL);
     CRM_CHECK(xml_blob != NULL, return -EINVAL);
@@ -5637,34 +5638,45 @@ update_validation(xmlNode ** xml_blob, int *best, int max, gboolean transform, g
     }
 
     while(lpc <= max_stable_schemas) {
-        gboolean valid = TRUE;
-
         crm_debug("Testing '%s' validation (%d of %d)",
                   known_schemas[lpc].name ? known_schemas[lpc].name : "<unset>",
                   lpc, max_stable_schemas);
-        valid = validate_with(xml, lpc, to_logs);
 
-        if (valid) {
-            *best = lpc;
+        if (validate_with(xml, lpc, to_logs) == FALSE) {
+            if (next != -1) {
+                crm_info("Configuration not valid for schema: %s", known_schemas[lpc].name);
+                next = -1;
+            } else {
+                crm_trace("%s validation failed", known_schemas[lpc].name ? known_schemas[lpc].name : "<unset>");
+            }
+            if (*best) {
+                /* we've satisfied the validation, no need to check further */
+                break;
+            }
+            rc = -pcmk_err_schema_validation;
+
         } else {
-            crm_trace("%s validation failed", known_schemas[lpc].name ? known_schemas[lpc].name : "<unset>");
+            if (next != -1) {
+                crm_debug("Configuration valid for schema: %s", known_schemas[next].name);
+                next = -1;
+            }
+            rc = pcmk_ok;
         }
 
-        if (valid && transform) {
-            xmlNode *upgrade = NULL;
-            int next = known_schemas[lpc].after_transform;
+        if (rc == pcmk_ok) {
+            *best = lpc;
+        }
 
-            if (next < 0) {
+        if (rc == pcmk_ok && transform) {
+            xmlNode *upgrade = NULL;
+            next = known_schemas[lpc].after_transform;
+
+            if (next < 0 || next <= lpc) {
                 crm_trace("Stopping at %s", known_schemas[lpc].name);
                 break;
 
-            } else if (max > 0 && lpc == max) {
+            } else if (max > 0 && (lpc == max || next > max)) {
                 crm_trace("Upgrade limit reached at %s (lpc=%d, next=%d, max=%d)",
-                          known_schemas[lpc].name, lpc, next, max);
-                break;
-
-            } else if (max > 0 && next > max) {
-                crm_debug("Upgrade limit reached at %s (lpc=%d, next=%d, max=%d)",
                           known_schemas[lpc].name, lpc, next, max);
                 break;
 
@@ -5672,15 +5684,7 @@ update_validation(xmlNode ** xml_blob, int *best, int max, gboolean transform, g
                 crm_debug("%s-style configuration is also valid for %s",
                            known_schemas[lpc].name, known_schemas[next].name);
 
-                if (validate_with(xml, next, to_logs)) {
-                    crm_debug("Configuration valid for schema: %s", known_schemas[next].name);
-                    lpc = next;
-                    *best = next;
-                    rc = pcmk_ok;
-
-                } else {
-                    crm_info("Configuration not valid for schema: %s", known_schemas[next].name);
-                }
+                lpc = next;
 
             } else {
                 crm_debug("Upgrading %s-style configuration to %s with %s",
@@ -5709,7 +5713,13 @@ update_validation(xmlNode ** xml_blob, int *best, int max, gboolean transform, g
                     free_xml(upgrade);
                     rc = -pcmk_err_schema_validation;
                 }
+                next = -1;
             }
+        }
+
+        if (transform == FALSE || rc != pcmk_ok) {
+            /* we need some progress! */
+            lpc++;
         }
     }
 
@@ -5732,6 +5742,7 @@ cli_config_update(xmlNode ** xml, int *best_version, gboolean to_logs)
     const char *value = crm_element_value(*xml, XML_ATTR_VALIDATION);
 
     int version = get_schema_version(value);
+    int orig_version = version;
     int min_version = xml_minimum_schema_index();
 
     if (version < min_version) {
@@ -5742,7 +5753,19 @@ cli_config_update(xmlNode ** xml, int *best_version, gboolean to_logs)
 
         value = crm_element_value(converted, XML_ATTR_VALIDATION);
         if (version < min_version) {
-            if (to_logs) {
+            if (version < orig_version) {
+                if (to_logs) {
+                    crm_config_err("Your current configuration could not validate"
+                                   " with any schema in range [%s, %s]\n",
+                                   get_schema_name(orig_version),
+                                   xml_latest_schema());
+                } else {
+                    fprintf(stderr, "Your current configuration could not validate"
+                                    " with any schema in range [%s, %s]\n",
+                                    get_schema_name(orig_version),
+                                    xml_latest_schema());
+                }
+            } else if (to_logs) {
                 crm_config_err("Your current configuration could only be upgraded to %s... "
                                "the minimum requirement is %s.\n", crm_str(value),
                                get_schema_name(min_version));
