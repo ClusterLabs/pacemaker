@@ -5617,6 +5617,7 @@ update_validation(xmlNode ** xml_blob, int *best, int max, gboolean transform, g
     char *value = NULL;
     int max_stable_schemas = xml_latest_schema_index();
     int lpc = 0, match = -1, rc = pcmk_ok;
+    int next = -1;  /* -1 denotes "inactive" value */
 
     CRM_CHECK(best != NULL, return -EINVAL);
     CRM_CHECK(xml_blob != NULL, return -EINVAL);
@@ -5652,7 +5653,12 @@ update_validation(xmlNode ** xml_blob, int *best, int max, gboolean transform, g
                   lpc, max_stable_schemas);
 
         if (validate_with(xml, lpc, to_logs) == FALSE) {
-            crm_trace("%s validation failed", known_schemas[lpc].name ? known_schemas[lpc].name : "<unset>");
+            if (next != -1) {
+                crm_info("Configuration not valid for schema: %s", known_schemas[lpc].name);
+                next = -1;
+            } else {
+                crm_trace("%s validation failed", known_schemas[lpc].name ? known_schemas[lpc].name : "<unset>");
+            }
             if (*best) {
                 /* we've satisfied the validation, no need to check further */
                 break;
@@ -5660,6 +5666,10 @@ update_validation(xmlNode ** xml_blob, int *best, int max, gboolean transform, g
             rc = -pcmk_err_schema_validation;
 
         } else {
+            if (next != -1) {
+                crm_debug("Configuration valid for schema: %s", known_schemas[next].name);
+                next = -1;
+            }
             rc = pcmk_ok;
         }
 
@@ -5669,7 +5679,7 @@ update_validation(xmlNode ** xml_blob, int *best, int max, gboolean transform, g
 
         if (rc == pcmk_ok && transform) {
             xmlNode *upgrade = NULL;
-            int next = known_schemas[lpc].after_transform;
+            next = known_schemas[lpc].after_transform;
 
             if (next < 0 || next <= lpc) {
                 crm_trace("Stopping at %s", known_schemas[lpc].name);
@@ -5684,15 +5694,7 @@ update_validation(xmlNode ** xml_blob, int *best, int max, gboolean transform, g
                 crm_debug("%s-style configuration is also valid for %s",
                            known_schemas[lpc].name, known_schemas[next].name);
 
-                if (validate_with(xml, next, to_logs)) {
-                    crm_debug("Configuration valid for schema: %s", known_schemas[next].name);
-                    lpc = next;
-                    *best = next;
-                    rc = pcmk_ok;
-
-                } else {
-                    crm_info("Configuration not valid for schema: %s", known_schemas[next].name);
-                }
+                lpc = next;
 
             } else {
                 crm_debug("Upgrading %s-style configuration to %s with %s",
@@ -5721,6 +5723,7 @@ update_validation(xmlNode ** xml_blob, int *best, int max, gboolean transform, g
                     free_xml(upgrade);
                     rc = -pcmk_err_schema_validation;
                 }
+                next = -1;
             }
         }
 
