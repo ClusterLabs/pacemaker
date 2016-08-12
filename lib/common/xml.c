@@ -5752,6 +5752,7 @@ cli_config_update(xmlNode ** xml, int *best_version, gboolean to_logs)
     const char *value = crm_element_value(*xml, XML_ATTR_VALIDATION);
 
     int version = get_schema_version(value);
+    int orig_version = version;
     int min_version = xml_minimum_schema_index();
 
     if (version < min_version) {
@@ -5762,7 +5763,19 @@ cli_config_update(xmlNode ** xml, int *best_version, gboolean to_logs)
 
         value = crm_element_value(converted, XML_ATTR_VALIDATION);
         if (version < min_version) {
-            if (to_logs) {
+            if (version < orig_version) {
+                if (to_logs) {
+                    crm_config_err("Your current configuration could not validate"
+                                   " with any schema in range [%s, %s]\n",
+                                   get_schema_name(orig_version),
+                                   xml_latest_schema());
+                } else {
+                    fprintf(stderr, "Your current configuration could not validate"
+                                    " with any schema in range [%s, %s]\n",
+                                    get_schema_name(orig_version),
+                                    xml_latest_schema());
+                }
+            } else if (to_logs) {
                 crm_config_err("Your current configuration could only be upgraded to %s... "
                                "the minimum requirement is %s.\n", crm_str(value),
                                get_schema_name(min_version));
