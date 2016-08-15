@@ -717,10 +717,11 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
     int next = -1;  /* -1 denotes "inactive" value */
 
     CRM_CHECK(best != NULL, return -EINVAL);
+    *best = 0;
+
     CRM_CHECK(xml_blob != NULL, return -EINVAL);
     CRM_CHECK(*xml_blob != NULL, return -EINVAL);
 
-    *best = 0;
     xml = *xml_blob;
     value = crm_element_value_copy(xml, XML_ATTR_VALIDATION);
 
@@ -781,7 +782,8 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
             xmlNode *upgrade = NULL;
             next = known_schemas[lpc].after_transform;
 
-            if (next < 0 || next <= lpc) {
+            if (next <= lpc) {
+                /* There is no next version, or next would regress */
                 crm_trace("Stopping at %s", known_schemas[lpc].name);
                 break;
 
