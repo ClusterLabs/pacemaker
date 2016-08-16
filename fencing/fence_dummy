@@ -117,6 +117,11 @@ all_opt = {
 }
 
 
+def fail_usage(message):
+    sys.stderr.write("%s\nPlease use '-h' for usage\n" % message)
+    sys.exit(1)
+
+
 def show_docs(options):
     """ Handle informational options (display info and exit). """
 
