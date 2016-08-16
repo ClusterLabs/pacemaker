@@ -1,17 +1,20 @@
 #!/usr/bin/python
+"""Dummy fence agent for testing
+"""
 
-# The Following Agent Has Been Tested On:
-#
-# Virsh 0.3.3 on RHEL 5.2 with xen-3.0.3-51
-#
+import os
+import re
+import sys
+import time
+import random
+import atexit
+import getopt
 
-import sys, time, random, os, atexit, getopt, re
-
-#BEGIN_VERSION_GENERATION
-RELEASE_VERSION="3.1.6"
-BUILD_DATE="(built Mon Oct 24 12:14:08 UTC 2011)"
-REDHAT_COPYRIGHT="Copyright (C) Red Hat, Inc. 2004-2010 All rights reserved."
-#END_VERSION_GENERATION
+AGENT_VERSION = "3.2.0"
+OCF_VERSION = "1.0"
+SHORT_DESC = "Dummy fence agent"
+LONG_DESC = """fence_dummy is a fake fencing agent which reports success
+based on its mode (pass|fail|random) without doing anything."""
 
 all_opt = {
     "help"    : {
@@ -24,7 +27,7 @@ all_opt = {
     "version" : { 
         "getopt" : "V",
         "longopt" : "version",
-        "help" : "-V, --version                  Output version information and exit",
+        "help" : "-V, --version                  Display version information and exit",
         "required" : "0",
         "shortdesc" : "Display version information and exit",
         "order" : 53 },
@@ -50,14 +53,14 @@ all_opt = {
         "getopt" : "R:",
         "required" : "0",
         "longopt" : "random_sleep_range",
-        "help" : "--random_sleep-range=[seconds] Issue a sleep between 1 and [seconds]. Used for testing.",
+        "help" : "--random_sleep_range=[seconds] Sleep between 1 and [seconds] before returning",
         "shortdesc" : "Issue a sleep between 1 and [seconds]",
         "order" : 1 },
     "mode": {
         "getopt" : "M:",
         "longopt" : "mode",
         "required" : "0",
-        "help" : "--mode=(pass|fail|random). Used for testing.",
+        "help" : "--mode=(pass|fail|random)      What exit status should be returned for this operation",
         "shortdesc" : "Should operations always pass, always fail or fail at random",
         "order" : 1 },
     "delay" : {
@@ -79,8 +82,7 @@ all_opt = {
     "port" : {
         "getopt" : "n:",
         "longopt" : "plug",
-        "help" : "-n, --plug=[id]                Physical plug number on device or\n" + 
-                "                                        name of virtual machine",
+        "help" : "-n, --plug=[id]                Physical plug number on device",
         "required" : "1",
         "shortdesc" : "Physical plug number or name of virtual machine",
         "order" : 1 },
@@ -94,49 +96,44 @@ all_opt = {
     "nodeid" : {
         "getopt" : "i:",
         "longopt" : "nodeid",
-        "help" : "-i, --nodeid                    corosync id of fence victim",
+        "help" : "-i, --nodeid                   Corosync id of fence victim",
         "required" : "0",
         "shortdesc" : "The corosync id of fence victim",
         "order" : 1},
     "uuid" : {
         "getopt" : "U:",
         "longopt" : "uuid",
-        "help" : "-U, --uuid                     UUID of the VM to fence.",
+        "help" : "-U, --uuid                     UUID of the VM to fence",
         "required" : "0",
-        "shortdesc" : "The UUID of the virtual machine to fence.",
+        "shortdesc" : "The UUID of the virtual machine to fence",
         "order" : 1},
     "mock_dynamic_hosts" : {
         "getopt" : "H:",
         "longopt" : "mock_dynamic_hosts",
-        "help" : "-H, --mock_dynamic_hosts=[hostlist]         List of hosts we can fence.",
+        "help" : "-H, --mock_dynamic_hosts=[list] What to return when dynamically queried for possible targets",
         "required" : "0",
         "shortdesc" : "A list of hosts we can fence.",
         "order" : 1}
 }
 
-def show_docs(options, docs = None):
+
+def show_docs(options):
+    """ Handle informational options (display info and exit). """
+
     device_opt = options["device_opt"]
 
-    if docs == None:
-        docs = { }
-        docs["shortdesc"] = "Fence agent"
-        docs["longdesc"] = ""
-    
-    ## Process special options (and exit)
-    #####
     if options.has_key("-h"): 
         usage(device_opt)
         sys.exit(0)
 
     if options.has_key("-o") and options["-o"].lower() == "metadata":
-        sys.stderr.write("asked for fence_dummy metadata\n")
-        metadata(device_opt, options, docs)
+        metadata(device_opt, options)
         sys.exit(0)
 
     if options.has_key("-V"):
-        print __main__.RELEASE_VERSION, __main__.BUILD_DATE
-        print __main__.REDHAT_COPYRIGHT
+        print AGENT_VERSION
         sys.exit(0)
+
 
 def usage(avail_opt):
     global all_opt
@@ -152,18 +149,23 @@ def usage(avail_opt):
         if len(value["help"]) != 0:
             print "   " + value["help"]
 
-def metadata(avail_opt, options, docs):
+
+def metadata(avail_opt, options):
     global all_opt
+
+    # This log is just for testing handling of stderr output
+    sys.stderr.write("asked for fence_dummy metadata\n")
 
     sorted_list = [ (key, all_opt[key]) for key in avail_opt ]
     sorted_list.sort(lambda x, y: cmp(x[1]["order"], y[1]["order"]))
 
-    print "<?xml version=\"1.0\" ?>"
-    print "<resource-agent name=\"" + os.path.basename(sys.argv[0]) + "\" shortdesc=\"" + docs["shortdesc"] + "\" >"
-    print "<longdesc>" + docs["longdesc"] + "</longdesc>"
-    if docs.has_key("vendorurl"):
-        print "<vendor-url>" + docs["vendorurl"] + "</vendor-url>"
-    print "<parameters>"
+    print """<?xml version="1.0" ?>
+<resource-agent name="%s" shortdesc="%s" version="%s">
+<version>%s</version>
+<longdesc>%s</longdesc>
+<parameters>""" % (os.path.basename(sys.argv[0]), SHORT_DESC,
+                  AGENT_VERSION, OCF_VERSION, LONG_DESC)
+
     for option, value in sorted_list:
         if all_opt[option].has_key("shortdesc"):
             print "\t<parameter name=\"" + option + "\" unique=\"0\" required=\"" + all_opt[option]["required"] + "\">"
@@ -197,22 +199,18 @@ def metadata(avail_opt, options, docs):
                 
             print "\t\t<shortdesc lang=\"en\">" + all_opt[option]["shortdesc"] + "</shortdesc>"
             print "\t</parameter>"
-    print "</parameters>"
-    print "<actions>"
-    if avail_opt.count("io_fencing") == 0:
-        print "\t<action name=\"on\" on_target=\"1\" />"
-        print "\t<action name=\"off\" />"
-        print "\t<action name=\"reboot\" />"
-    else:
-        print "\t<action name=\"enable\" />"
-        print "\t<action name=\"disable\" />"   
 
-    print "\t<action name=\"status\" />"
-    print "\t<action name=\"monitor\" />"
-    print "\t<action name=\"metadata\" />"
-    print "\t<action name=\"list\" />"
-    print "</actions>"
-    print "</resource-agent>"
+    print """</parameters>
+<actions>
+\t<action name="on" on_target="1" />
+\t<action name="off" />
+\t<action name="reboot" />
+\t<action name="status" />
+\t<action name="monitor" />
+\t<action name="metadata" />
+\t<action name="list" />
+</actions>
+</resource-agent>"""
 
 def process_input(avail_opt):
     global all_opt
@@ -318,14 +316,23 @@ def main():
     device_opt = all_opt.keys()
 
     ## Defaults for fence agent
-    docs = { }
-    docs["shortdesc"] = "Dummy fence agent"
-    docs["longdesc"] = "fence_dummy is a fake fencing agent which reports success based on its mode (pass|fail|random) without doing anything."
-
     atexit.register(atexit_handler)
     options = process_input(device_opt)
     options["device_opt"] = device_opt
-    show_docs(options, docs)
+    show_docs(options)
+
+ 
+    # dump input to file
+    if options.has_key("-D"):
+        try:
+           f = open(options["-D"], 'a')
+           f.write("### %s ###\n" % (time.strftime("%Y-%m-%d %H:%M:%S")))
+           for v in sorted(options):
+               f.write("%s=%s\n" % (v, options[v]))
+           f.write("###\n")
+           f.close()
+        except IOError:
+           pass
 
     # random sleep for testing
     if options.has_key("-f"):
