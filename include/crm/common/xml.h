@@ -219,11 +219,14 @@ char *calculate_operation_digest(xmlNode * local_cib, const char *version);
 char *calculate_xml_versioned_digest(xmlNode * input, gboolean sort, gboolean do_filter,
                                      const char *version);
 
+/* schema-related functions (from schemas.c) */
 gboolean validate_xml(xmlNode * xml_blob, const char *validation, gboolean to_logs);
 gboolean validate_xml_verbose(xmlNode * xml_blob);
 int update_validation(xmlNode ** xml_blob, int *best, int max, gboolean transform, gboolean to_logs);
 int get_schema_version(const char *name);
 const char *get_schema_name(int version);
+const char *xml_latest_schema(void);
+gboolean cli_config_update(xmlNode ** xml, int *best_version, gboolean to_logs);
 
 void crm_xml_init(void);
 void crm_xml_cleanup(void);
@@ -274,7 +277,6 @@ xmlNode *sorted_xml(xmlNode * input, xmlNode * parent, gboolean recursive);
 xmlXPathObjectPtr xpath_search(xmlNode * xml_top, const char *path);
 void crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
                               void (*helper)(xmlNode*, void*), void *user_data);
-gboolean cli_config_update(xmlNode ** xml, int *best_version, gboolean to_logs);
 xmlNode *expand_idref(xmlNode * input, xmlNode * top);
 
 void freeXpathObject(xmlXPathObjectPtr xpathObj);
@@ -288,8 +290,6 @@ static inline int numXpathResults(xmlXPathObjectPtr xpathObj)
     }
     return xpathObj->nodesetval->nodeNr;
 }
-
-const char *xml_latest_schema(void);
 
 bool xml_acl_enabled(xmlNode *xml);
 void xml_acl_disable(xmlNode *xml);

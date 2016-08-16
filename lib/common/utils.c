@@ -1569,6 +1569,8 @@ attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const cha
     int max = 5;
     const char *task = NULL;
     const char *name_as = NULL;
+    const char *display_host = (host ? host : "localhost");
+    const char *display_command = NULL; /* for commands without name/value */
     xmlNode *update = create_xml_node(NULL, __FUNCTION__);
 
     static gboolean connected = TRUE;
@@ -1613,6 +1615,7 @@ attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const cha
             break;
         case 'R':
             task = ATTRD_OP_REFRESH;
+            display_command = "refresh";
             break;
         case 'B':
             task = ATTRD_OP_UPDATE_BOTH;
@@ -1628,6 +1631,7 @@ attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const cha
             break;
         case 'C':
             task = ATTRD_OP_PEER_REMOVE;
+            display_command = "purge";
             break;
     }
 
@@ -1686,12 +1690,15 @@ attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const cha
 done:
     free_xml(update);
     if (rc > 0) {
-        crm_debug("Sent update: %s=%s for %s", name, value, host ? host : "localhost");
         rc = pcmk_ok;
+    }
 
+    if (display_command) {
+        crm_debug("Asked attrd to %s %s: %s (%d)",
+                  display_command, display_host, pcmk_strerror(rc), rc);
     } else {
-        crm_debug("Could not send update %s=%s for %s: %s (%d)", name, value,
-                  host ? host : "localhost", pcmk_strerror(rc), rc);
+        crm_debug("Asked attrd to update %s=%s for %s: %s (%d)",
+                  name, value, display_host, pcmk_strerror(rc), rc);
     }
     return rc;
 }
