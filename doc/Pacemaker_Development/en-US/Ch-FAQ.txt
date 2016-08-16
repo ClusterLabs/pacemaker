@@ -58,10 +58,12 @@ How should I format my Git commit messages?::
  change log for the next release. The +affected-code+ is the name of the
  component(s) being changed, for example, +crmd+ or +libcrmcommon+ (it's more
  free-form, so don't sweat getting it exact). The +explanation+ briefly
- describes the change (ideally, the entire summary line will stay under 80
- characters, but it's OK if more is needed to be clear). For most commits, the
- first line should be followed by a blank line and then a longer explanation of
- 'why' the change was made (referencing any relevant bug reports).
+ describes the change (ideally, the entire summary line as well as the lines
+ forming additional paragraphs will stay under 70-75 characters, but
+ exceptions are tolerated if more is needed to be clear). For most commits,
+ the first line should be followed by a blank line and then a longer
+ description of 'why' the change was made (referencing any relevant bug
+ reports if they are publicly viewable).
 
 How can I test my changes?::
  Most importantly, Pacemaker has regression tests for most major components;
