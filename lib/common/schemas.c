@@ -730,7 +730,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
 
         lpc = match;
         if (lpc >= 0 && transform == FALSE) {
-            lpc++;
+            *best = lpc++;
 
         } else if (lpc < 0) {
             crm_debug("Unknown validation type");
