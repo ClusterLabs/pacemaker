@@ -837,7 +837,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
         }
     }
 
-    if (*best > match) {
+    if (*best > match && *best) {
         crm_info("%s the configuration from %s to %s",
                    transform?"Transformed":"Upgraded",
                    value ? value : "<none>", known_schemas[*best].name);
