@@ -854,6 +854,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 {
     gboolean rc = TRUE;
     const char *value = crm_element_value(*xml, XML_ATTR_VALIDATION);
+    char *const orig_value = strdup(value == NULL ? "(none)" : value);
 
     int version = get_schema_version(value);
     int orig_version = version;
@@ -867,18 +868,20 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 
         value = crm_element_value(converted, XML_ATTR_VALIDATION);
         if (version < min_version) {
-            if (version < orig_version) {
+            if (version < orig_version || orig_version == -1) {
                 if (to_logs) {
-                    crm_config_err("Your current configuration could not validate"
-                                   " with any schema in range [%s, %s], cannot"
-                                   " upgrade to %s.\n",
+                    crm_config_err("Your current configuration %s could not"
+                                   " validate with any schema in range [%s, %s],"
+                                   " cannot upgrade to %s.\n",
+                                   orig_value,
                                    get_schema_name(orig_version),
                                    xml_latest_schema(),
                                    get_schema_name(min_version));
                 } else {
-                    fprintf(stderr, "Your current configuration could not validate"
-                                    " with any schema in range [%s, %s], cannot"
-                                    " upgrade to %s.\n",
+                    fprintf(stderr, "Your current configuration %s could not"
+                                    " validate with any schema in range [%s, %s],"
+                                    " cannot upgrade to %s.\n",
+                                    orig_value,
                                     get_schema_name(orig_version),
                                     xml_latest_schema(),
                                     get_schema_name(min_version));
@@ -927,5 +930,6 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
         *best_version = version;
     }
 
+    free(orig_value);
     return rc;
 }
