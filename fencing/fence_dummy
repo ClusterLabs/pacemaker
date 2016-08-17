@@ -93,6 +93,13 @@ all_opt = {
         "required" : "0",
         "shortdesc" : "Physical switch number on device",
         "order" : 1 },
+    "nodename" : {
+        "getopt" : "N:",
+        "longopt" : "nodename",
+        "help" : "-N, --nodename                 Node name of fence victim",
+        "required" : "0",
+        "shortdesc" : "The node name of fence victim",
+        "order" : 1},
     "nodeid" : {
         "getopt" : "i:",
         "longopt" : "nodeid",
