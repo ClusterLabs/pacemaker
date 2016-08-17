@@ -15,7 +15,7 @@
 		version of Pacemaker or publishing the documents to the Web.
 	-->
 	<edition>1</edition>
-	<pubsnumber>0</pubsnumber>
+	<pubsnumber>1</pubsnumber>
 	<abstract>
 		<para>
 			This document has guidelines and tips for developers
