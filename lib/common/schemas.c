@@ -870,14 +870,18 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
             if (version < orig_version) {
                 if (to_logs) {
                     crm_config_err("Your current configuration could not validate"
-                                   " with any schema in range [%s, %s].",
+                                   " with any schema in range [%s, %s], cannot"
+                                   " upgrade to %s.\n",
                                    get_schema_name(orig_version),
-                                   xml_latest_schema());
+                                   xml_latest_schema(),
+                                   get_schema_name(min_version));
                 } else {
                     fprintf(stderr, "Your current configuration could not validate"
-                                    " with any schema in range [%s, %s].\n",
+                                    " with any schema in range [%s, %s], cannot"
+                                    " upgrade to %s.\n",
                                     get_schema_name(orig_version),
-                                    xml_latest_schema());
+                                    xml_latest_schema(),
+                                    get_schema_name(min_version));
                 }
             } else if (to_logs) {
                 crm_config_err("Your current configuration could only be upgraded to %s... "
