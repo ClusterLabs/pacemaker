@@ -72,13 +72,19 @@ How can I test my changes?::
 
 What is Pacemaker's license?::
  indexterm:[licensing]
- Pacemaker programs are licensed under version 2 or later of the GNU General
- Public License (GPLv2+), its headers and libraries are under version 2.1 or
- later of the less restrictive GNU Lesser General Public License (LGPLv2.1+),
- its documentation is under version 1.2 or later of the GNU Free Documentation
- License (GFDLv1.2+), and its init scripts are under the Revised BSD license.
- If you find any deviations from this policy, or wish to inquire about
- alternate licensing arrangements, please e-mail pacemaker@oss.clusterlabs.org.
+ Except where noted otherwise in the file itself, the source code for all
+ Pacemaker programs is licensed under version 2 or later of the GNU General
+ Public License (https://www.gnu.org/licenses/gpl-2.0.html[GPLv2+]), its
+ headers and libraries under version 2.1 or later of the less restrictive
+ GNU Lesser General Public License
+ (https://www.gnu.org/licenses/lgpl-2.1.html[LGPLv2.1+]),
+ its documentation under version 4.0 or later of the
+ Creative Commons Attribution-ShareAlike International Public License
+ (https://creativecommons.org/licenses/by-sa/4.0/legalcode[CC-BY-SA]),
+ and its init scripts under the
+ https://opensource.org/licenses/BSD-3-Clause[Revised BSD] license. If you find
+ any deviations from this policy, or wish to inquire about alternate licensing
+ arrangements, please e-mail pacemaker@oss.clusterlabs.org.
  Licensing issues are also discussed on the
  http://clusterlabs.org/wiki/License[ClusterLabs wiki].
 

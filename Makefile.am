@@ -26,10 +26,13 @@ MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
 CORE	= $(LIBLTDL_DIR) replace include lib mcp attrd pengine cib crmd fencing lrmd tools xml
 SUBDIRS	= $(CORE) cts extra doc
 
-doc_DATA = AUTHORS COPYING COPYING.LIB
+doc_DATA = AUTHORS COPYING
 noinst_PROGRAMS = scratch
 
 ACLOCAL_AMFLAGS  = -I m4
+
+licensedir              = $(docdir)/licenses/
+license_DATA            = $(wildcard licenses/*)
 
 testdir			= $(datadir)/$(PACKAGE)/tests/
 test_SCRIPTS		= coverage.sh BasicSanity.sh
