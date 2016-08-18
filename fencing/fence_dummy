@@ -2,8 +2,11 @@
 """Dummy fence agent for testing
 """
 
-# Pacemaker targets compatibility with python 2.6+ and 3.2+
+# Pacemaker targets compatibility with Python 2.6+ and 3.2+
 from __future__ import print_function, unicode_literals, absolute_import, division
+
+__copyright__ = "Copyright (C) 2012-2016 Andrew Beekhof <andrew@beekhof.net>"
+__license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import io
 import os
@@ -304,7 +307,7 @@ def process_input(avail_opt):
 
             ##
             ######
-            if avail_opt.count(name) == 0:
+            if name not in avail_opt:
                 sys.stderr.write("Parse error: Ignoring unknown option '"+line+"'\n")
                 continue
 
@@ -332,7 +335,6 @@ def main():
     options["device_opt"] = device_opt
     show_docs(options)
 
- 
     # dump input to file
     if "-D" in options:
         try:
@@ -345,12 +347,12 @@ def main():
         except IOError:
            pass
 
-    # random sleep for testing
     if "-f" in options:
         val = int(options["-f"])
         sys.stderr.write("delay sleep for %d seconds\n" % val)
         time.sleep(val)
 
+    # random sleep for testing
     if "-R" in options:
         val = int(options["-R"])
         ran = random.randint(1, val)
@@ -368,13 +370,19 @@ def main():
         else:
             sys.stderr.write("were asked for hostlist but attribute mock_dynamic_hosts wasn't set\n")
 
+    exitcode = random.randint(0, 1)
     if "-M" in options:
         if options["-M"] == "pass":
-            sys.exit(0)
+            exitcode = 0
         elif options["-M"] == "fail":
-            sys.exit(1)
+            exitcode = 1
 
-    sys.exit(random.randint(0, 1))
+    # Ensure we generate some error output on failure exit.
+    if exitcode == 1:
+        sys.stderr.write("simulated fencing failure\n")
+
+    sys.exit(exitcode)
+
 
 if __name__ == "__main__":
     main()
