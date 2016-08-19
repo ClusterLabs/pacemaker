@@ -4,7 +4,7 @@
 Who is this document intended for?::
  Anyone who wishes to read and/or edit the Pacemaker source code.
  Casual contributors should feel free to read just this FAQ, and
- consult other sections as needed.
+ consult other chapters as needed.
 
 Where is the source code for Pacemaker?::
  indexterm:[downloads]
@@ -37,13 +37,13 @@ How do I build from the source code?::
 
 What coding style should I follow?::
  You'll be mostly fine if you simply follow the example of existing code.
- When unsure, see <<ch-c-coding>>. Pacemaker has grown and evolved organically
- over many years, so you will see much code that doesn't conform to the
- current guidelines. We discourage making changes solely to bring code into
- conformance, as any change requires developer time for review and opens
- the possibility of adding bugs. However, new code should follow the
- guidelines, and it is fine to bring lines of older code into conformance
- when modifying that code for other reasons.
+ When unsure, see the relevant chapter of this document for language-specific
+ recommendations. Pacemaker has grown and evolved organically over many years,
+ so you will see much code that doesn't conform to the current guidelines. We
+ discourage making changes solely to bring code into conformance, as any change
+ requires developer time for review and opens the possibility of adding bugs.
+ However, new code should follow the guidelines, and it is fine to bring lines
+ of older code into conformance when modifying that code for other reasons.
 
 How should I format my Git commit messages?::
  indexterm:[git,commit messages]
@@ -52,23 +52,23 @@ How should I format my Git commit messages?::
  +Fix+ or +Bug+ for most bug fixes, +Feature+ for new features, +Log+ for
  changes to log messages or handling, +Doc+ for changes to documentation or
  comments, or +Test+ for changes in CTS and regression tests. You will
- sometimes see +Low+, +Mid+/+Med+ and +High+ used instead for bug fixes, to
- indicate the severity. The important thing is that only commits with
- +Feature+, +Fix+, +Bug+, or +High+ will be automatically included in the
+ sometimes see +Low+, +Med+ (or +Mid+) and +High+ used instead for bug fixes,
+ to indicate the severity. The important thing is that only commits with
+ +Feature+, +Fix+, +Bug+, or +High+ will automatically be included in the
  change log for the next release. The +affected-code+ is the name of the
  component(s) being changed, for example, +crmd+ or +libcrmcommon+ (it's more
  free-form, so don't sweat getting it exact). The +explanation+ briefly
- describes the change (ideally, the entire summary line will stay under 80
- characters, but it's OK if more is needed to be clear). For most commits, the
- first line should be followed by a blank line and then a longer explanation of
- 'why' the change was made (referencing any relevant bug reports).
+ describes the change. The git project recommends the entire summary line stay
+ under 50 characters, but more is fine if needed for clarity. Except for the
+ most simple and obvious of changes, the summary should be followed by a blank
+ line and then a longer explanation of 'why' the change was made.
 
 How can I test my changes?::
  Most importantly, Pacemaker has regression tests for most major components;
  these will automatically be run for any pull requests submitted through
  GitHub. Additionally, Pacemaker's Cluster Test Suite (CTS) can be used to set
- up a test cluster and run a wide variety of complex tests. (This document will
- have more detail on testing in the future.)
+ up a test cluster and run a wide variety of complex tests. This document will
+ have more detail on testing in the future.
 
 What is Pacemaker's license?::
  indexterm:[licensing]
