@@ -30,8 +30,8 @@
           <email>kgaillot@redhat.com</email>
         </author>
         <revdescription>
-          <simplelist><member>Add chapter for python coding
-                              guidelines</member></simplelist>
+          <simplelist><member>Add Python coding guidelines, and
+                              more about licensing</member></simplelist>
         </revdescription>
       </revision>
 

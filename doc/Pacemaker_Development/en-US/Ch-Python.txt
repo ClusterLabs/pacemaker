@@ -6,28 +6,64 @@ with that construct for chapter headings
 ////
 anchor:ch-python-coding[Chapter 3, Python Coding Guidelines]
 
-== Python Compatibility ==
+[[s-python-boilerplate]]
+== Python Boilerplate ==
 
-indexterm:[python,2]
-indexterm:[python,3]
-indexterm:[python,versions]
+indexterm:[Python,boilerplate]
+indexterm:[licensing,Python boilerplate]
 
-Pacemaker targets compatibility with python 2.6 and later, and python 3.2 and
-later. These versions have added features to be more compatible with each
-other, allowing us to support both the 2 and 3 series with the same code. It is
-a good idea to test any changes with both python 2 and 3.
-
-=== Include in All Python Code ===
+Every Python file should start like this:
 
 ====
 [source,Python]
 ----
-# Pacemaker targets compatibility with python 2.6+ and 3.2+
+[<SHEBANG>]
+""" <BRIEF-DESCRIPTION>
+"""
+
+# Pacemaker targets compatibility with Python 2.6+ and 3.2+
 from __future__ import print_function, unicode_literals, absolute_import, division
+
+__copyright__ = "Copyright (C) <YYYY[-YYYY]> Andrew Beekhof <andrew@beekhof.net>"
+__license__ = "<LICENSE> WITHOUT ANY WARRANTY"
 ----
 ====
 
-That means:
+If the file is meant to be directly executed, the first line (+<SHEBANG>+)
+should be +#!/usr/bin/python+. If it is meant to be imported, omit this line.
+
++<BRIEF-DESCRIPTION>+ is obviously a brief description of the file's
+purpose. The string may contain any other information typically used in
+a Python file https://www.python.org/dev/peps/pep-0257/[docstring].
+
+The +import+ statement is discussed further in <<s-python-future-imports>>.
+
++<YYYY>+ is the year the code was 'originally' created (it is the most
+important date for copyright purposes, as it establishes priority and
+the point from which expiration is calculated). If the code is modified
+in later years, add +-YYYY+ with the most recent year of modification.
+
++<LICENSE>+ should follow the policy set forth in the
+https://github.com/ClusterLabs/pacemaker/blob/master/COPYING[+COPYING+] file,
+generally one of "GNU General Public License version 2 or later (GPLv2+)"
+or "GNU Lesser General Public License version 2.1 or later (LGPLv2.1+)".
+
+
+== Python Compatibility ==
+
+indexterm:[Python,2]
+indexterm:[Python,3]
+indexterm:[Python,versions]
+
+Pacemaker targets compatibility with Python 2.6 and later, and Python 3.2 and
+later. These versions have added features to be more compatible with each
+other, allowing us to support both the 2 and 3 series with the same code. It is
+a good idea to test any changes with both Python 2 and 3.
+
+[[s-python-future-imports]]
+=== Python Future Imports ===
+
+The future imports used in <<s-python-boilerplate>> mean:
 
 * All print statements must use parentheses, and printing without a newline
   is accomplished with the +end=' '+ parameter rather than a trailing comma.
