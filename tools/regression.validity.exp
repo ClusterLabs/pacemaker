@@ -202,3 +202,182 @@ Revised cluster status:
 
 =#=#=#= End test: Run crm_simulate with invalid, but possibly recoverable CIB (valid with X.Y+1) - OK (0) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid, but possibly recoverable CIB (valid with X.Y+1)
+=#=#=#= Begin test: Make resulting CIB valid, although without validate-with attribute =#=#=#=
+element rsc_order: validity error : Element rsc_order does not carry attribute to
+element rsc_order: validity error : Element rsc_order does not carry attribute from
+element rsc_order: validity error : No declaration for attribute first of element rsc_order
+element rsc_order: validity error : No declaration for attribute first-action of element rsc_order
+element rsc_order: validity error : No declaration for attribute then of element rsc_order
+element rsc_order: validity error : Element rsc_order does not carry attribute to
+element rsc_order: validity error : Element rsc_order does not carry attribute from
+element rsc_order: validity error : No declaration for attribute first of element rsc_order
+element rsc_order: validity error : No declaration for attribute first-action of element rsc_order
+element rsc_order: validity error : No declaration for attribute then of element rsc_order
+=#=#=#= Current cib after: Make resulting CIB valid, although without validate-with attribute =#=#=#=
+<cib epoch="3" num_updates="1" admin_epoch="0" validate-with="none">
+  <configuration>
+    <crm_config/>
+    <nodes/>
+    <resources>
+      <primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>
+      <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>
+    </resources>
+    <constraints>
+      <rsc_order id="ord_1-2" first="dummy1" first-action="start" then="dummy2"/>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Make resulting CIB valid, although without validate-with attribute - OK (0) =#=#=#=
+* Passed: cibadmin       - Make resulting CIB valid, although without validate-with attribute
+=#=#=#= Begin test: Run crm_simulate with valid CIB, but without validate-with attribute =#=#=#=
+Configuration validation is currently disabled. It is highly encouraged and prevents many common cluster issues.
+bad-1.2.xml:10: element rsc_order: validity error : Element rsc_order does not carry attribute to
+bad-1.2.xml:10: element rsc_order: validity error : Element rsc_order does not carry attribute from
+bad-1.2.xml:10: element rsc_order: validity error : No declaration for attribute first of element rsc_order
+bad-1.2.xml:10: element rsc_order: validity error : No declaration for attribute first-action of element rsc_order
+bad-1.2.xml:10: element rsc_order: validity error : No declaration for attribute then of element rsc_order
+bad-1.2.xml:10: element rsc_order: validity error : Element rsc_order does not carry attribute to
+bad-1.2.xml:10: element rsc_order: validity error : Element rsc_order does not carry attribute from
+bad-1.2.xml:10: element rsc_order: validity error : No declaration for attribute first of element rsc_order
+bad-1.2.xml:10: element rsc_order: validity error : No declaration for attribute first-action of element rsc_order
+bad-1.2.xml:10: element rsc_order: validity error : No declaration for attribute then of element rsc_order
+error: unpack_resources:	Resource start-up disabled since no STONITH resources have been defined
+error: unpack_resources:	Either configure some or disable STONITH with the stonith-enabled option
+error: unpack_resources:	NOTE: Clusters with shared data need STONITH to ensure data integrity
+
+Current cluster status:
+
+ dummy1	(ocf::pacemaker:Dummy):	Stopped
+ dummy2	(ocf::pacemaker:Dummy):	Stopped
+
+Transition Summary:
+error: unpack_resources:	Resource start-up disabled since no STONITH resources have been defined
+error: unpack_resources:	Either configure some or disable STONITH with the stonith-enabled option
+error: unpack_resources:	NOTE: Clusters with shared data need STONITH to ensure data integrity
+
+Executing cluster transition:
+
+Revised cluster status:
+
+ dummy1	(ocf::pacemaker:Dummy):	Stopped
+ dummy2	(ocf::pacemaker:Dummy):	Stopped
+
+=#=#=#= End test: Run crm_simulate with valid CIB, but without validate-with attribute - OK (0) =#=#=#=
+* Passed: crm_simulate   - Run crm_simulate with valid CIB, but without validate-with attribute
+=#=#=#= Begin test: Make resulting CIB invalid, and without validate-with attribute =#=#=#=
+element rsc_order: validity error : Element rsc_order does not carry attribute to
+element rsc_order: validity error : Element rsc_order does not carry attribute from
+element rsc_order: validity error : No declaration for attribute first of element rsc_order
+element rsc_order: validity error : No declaration for attribute first-action of element rsc_order
+element rsc_order: validity error : No declaration for attribute then of element rsc_order
+element rsc_order: validity error : Element rsc_order does not carry attribute to
+element rsc_order: validity error : Element rsc_order does not carry attribute from
+element rsc_order: validity error : No declaration for attribute first of element rsc_order
+element rsc_order: validity error : No declaration for attribute first-action of element rsc_order
+element rsc_order: validity error : No declaration for attribute then of element rsc_order
+Entity: line 10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+Entity: line 10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Entity: line 10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+Entity: line 10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Entity: line 10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+Entity: line 10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Entity: line 10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+Entity: line 10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Entity: line 10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+Entity: line 10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Entity: line 10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+Entity: line 10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Entity: line 10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+Entity: line 10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Entity: line 10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+Entity: line 10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Entity: line 10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+Entity: line 10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Entity: line 10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+Entity: line 10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Entity: line 10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+Entity: line 10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Entity: line 10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+Entity: line 10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Entity: line 10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+Entity: line 10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+=#=#=#= Current cib after: Make resulting CIB invalid, and without validate-with attribute =#=#=#=
+<cib epoch="31" num_updates="0" admin_epoch="0" validate-with="none">
+  <configuration>
+    <crm_config/>
+    <nodes/>
+    <resources>
+      <primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>
+      <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>
+    </resources>
+    <constraints>
+      <rsc_order id="ord_1-2" first="dummy1" first-action="break" then="dummy2"/>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Make resulting CIB invalid, and without validate-with attribute - OK (0) =#=#=#=
+* Passed: cibadmin       - Make resulting CIB invalid, and without validate-with attribute
+=#=#=#= Begin test: Run crm_simulate with invalid CIB, also without validate-with attribute =#=#=#=
+Configuration validation is currently disabled. It is highly encouraged and prevents many common cluster issues.
+bad-1.2.xml:10: element rsc_order: validity error : Element rsc_order does not carry attribute to
+bad-1.2.xml:10: element rsc_order: validity error : Element rsc_order does not carry attribute from
+bad-1.2.xml:10: element rsc_order: validity error : No declaration for attribute first of element rsc_order
+bad-1.2.xml:10: element rsc_order: validity error : No declaration for attribute first-action of element rsc_order
+bad-1.2.xml:10: element rsc_order: validity error : No declaration for attribute then of element rsc_order
+bad-1.2.xml:10: element rsc_order: validity error : Element rsc_order does not carry attribute to
+bad-1.2.xml:10: element rsc_order: validity error : Element rsc_order does not carry attribute from
+bad-1.2.xml:10: element rsc_order: validity error : No declaration for attribute first of element rsc_order
+bad-1.2.xml:10: element rsc_order: validity error : No declaration for attribute first-action of element rsc_order
+bad-1.2.xml:10: element rsc_order: validity error : No declaration for attribute then of element rsc_order
+bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+error: unpack_resources:	Resource start-up disabled since no STONITH resources have been defined
+error: unpack_resources:	Either configure some or disable STONITH with the stonith-enabled option
+error: unpack_resources:	NOTE: Clusters with shared data need STONITH to ensure data integrity
+(constraints.:430   )   error: unpack_simple_rsc_order:	Cannot invert rsc_order constraint ord_1-2. Please specify the inverse manually.
+
+Current cluster status:
+
+ dummy1	(ocf::pacemaker:Dummy):	Stopped
+ dummy2	(ocf::pacemaker:Dummy):	Stopped
+
+Transition Summary:
+error: unpack_resources:	Resource start-up disabled since no STONITH resources have been defined
+error: unpack_resources:	Either configure some or disable STONITH with the stonith-enabled option
+error: unpack_resources:	NOTE: Clusters with shared data need STONITH to ensure data integrity
+
+Executing cluster transition:
+
+Revised cluster status:
+
+ dummy1	(ocf::pacemaker:Dummy):	Stopped
+ dummy2	(ocf::pacemaker:Dummy):	Stopped
+
+=#=#=#= End test: Run crm_simulate with invalid CIB, also without validate-with attribute - OK (0) =#=#=#=
+* Passed: crm_simulate   - Run crm_simulate with invalid CIB, also without validate-with attribute

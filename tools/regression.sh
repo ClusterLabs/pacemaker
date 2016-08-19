@@ -713,6 +713,30 @@ function test_validity() {
     test_assert 0 0
 
 
+    sed 's|\s\s*validate-with="[^"]*"||' /tmp/$$.good-1.2.xml > /tmp/$$.bad-1.2.xml
+    desc="Make resulting CIB valid, although without validate-with attribute"
+    cmd="cibadmin -R --xml-file /tmp/$$.bad-1.2.xml"
+    test_assert 0
+
+    desc="Run crm_simulate with valid CIB, but without validate-with attribute"
+    cmd="crm_simulate -x /tmp/$$.bad-1.2.xml -S"
+    test_assert 0 0
+
+
+    # this will just disable validation and accept the config, outputting
+    # validation errors
+    sed -e 's|\s\s*validate-with="[^"]*"||' \
+        -e 's|\(\s\s*epoch="[^"]*\)"|\10"|' -e 's|"start"|"break"|' \
+        /tmp/$$.good-1.2.xml > /tmp/$$.bad-1.2.xml
+    desc="Make resulting CIB invalid, and without validate-with attribute"
+    cmd="cibadmin -R --xml-file /tmp/$$.bad-1.2.xml"
+    test_assert 0
+
+    desc="Run crm_simulate with invalid CIB, also without validate-with attribute"
+    cmd="crm_simulate -x /tmp/$$.bad-1.2.xml -S"
+    test_assert 0 0
+
+
     rm -f /tmp/$$.good-1.2.xml /tmp/$$.bad-1.2.xml
 }
 
@@ -721,14 +745,15 @@ for t in $tests; do
     test_$t > $test_home/regression.$t.out
 
     sed -i -e 's/cib-last-written.*>/>/'\
-	-e 's/ last-run=\"[0-9]*\"//'	\
-	-e 's/crm_feature_set="[^"]*" //'\
-	-e 's/validate-with="[^"]*" //'\
-	-e 's/Created new pacemaker-.* configuration/Created new pacemaker configuration/'\
+        -e 's/ last-run=\"[0-9]*\"//'\
+        -e 's/crm_feature_set="[^"]*" //'\
+        -e 's/validate-with="[^"]*" //'\
+        -e 's/Created new pacemaker-.* configuration/Created new pacemaker configuration/'\
         -e 's/.*__xml_acl_check/__xml_acl_check/g'\
-	-e 's/.*__xml_acl_post_process/__xml_acl_post_process/g'\
-	-e 's/.*error: unpack_resources:/error: unpack_resources:/g'\
-	-e 's/ last-rc-change=\"[0-9]*\"//' $test_home/regression.$t.out
+        -e 's/.*__xml_acl_post_process/__xml_acl_post_process/g'\
+        -e 's/.*error: unpack_resources:/error: unpack_resources:/g'\
+        -e 's/ last-rc-change=\"[0-9]*\"//'\
+        -e 's|^/tmp/[0-9][0-9]*\.||' $test_home/regression.$t.out
 
     if [ $do_save = 1 ]; then
 	cp $test_home/regression.$t.out $test_home/regression.$t.exp
