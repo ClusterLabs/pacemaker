@@ -243,6 +243,7 @@ run_standard_test(void)
 
     params = stonith_key_value_add(params, "pcmk_host_map", "false_1_node1=1,2 false_1_node2=3,4");
     params = stonith_key_value_add(params, "mode", "pass");
+    params = stonith_key_value_add(params, "mock_dynamic_hosts", "false_1_node1 false_1_node2");
 
     single_test(st->
                 cmds->register_device(st, st_opts, "test-id", "stonith-ng", "fence_dummy", params),
