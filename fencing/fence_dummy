@@ -24,20 +24,6 @@ LONG_DESC = """fence_dummy is a fake fencing agent which reports success
 based on its mode (pass|fail|random) without doing anything."""
 
 all_opt = {
-    "help"    : {
-        "getopt" : "h",
-        "longopt" : "help",
-        "help" : "-h, --help                     Display this help and exit",
-        "required" : "0",
-        "shortdesc" : "Display help and exit",
-        "order" : 54 },
-    "version" : { 
-        "getopt" : "V",
-        "longopt" : "version",
-        "help" : "-V, --version                  Display version information and exit",
-        "required" : "0",
-        "shortdesc" : "Display version information and exit",
-        "order" : 53 },
     "quiet"   : {
         "getopt" : "q",
         "help" : "",
@@ -56,28 +42,20 @@ all_opt = {
         "required" : "0",
         "shortdesc" : "Write debug information to given file",
         "order" : 52 },
-    "random_sleep_range": {
-        "getopt" : "R:",
+    "version" : { 
+        "getopt" : "V",
+        "longopt" : "version",
+        "help" : "-V, --version                  Display version information and exit",
         "required" : "0",
-        "longopt" : "random_sleep_range",
-        "help" : "--random_sleep_range=[seconds] Sleep between 1 and [seconds] before returning",
-        "shortdesc" : "Issue a sleep between 1 and [seconds]",
-        "order" : 1 },
-    "mode": {
-        "getopt" : "M:",
-        "longopt" : "mode",
+        "shortdesc" : "Display version information and exit",
+        "order" : 53 },
+    "help"    : {
+        "getopt" : "h",
+        "longopt" : "help",
+        "help" : "-h, --help                     Display this help and exit",
         "required" : "0",
-        "help" : "--mode=(pass|fail|random)      What exit status should be returned for this operation",
-        "shortdesc" : "Should operations always pass, always fail or fail at random",
-        "order" : 1 },
-    "delay" : {
-        "getopt" : "f:",
-        "longopt" : "delay",
-        "help" : "--delay [seconds]              Wait X seconds before fencing is started",
-        "required" : "0",
-        "shortdesc" : "Wait X seconds before fencing is started",
-        "default" : "0",
-        "order" : 200 },
+        "shortdesc" : "Display help and exit",
+        "order" : 54 },
     "action" : {
         "getopt" : "o:",
         "longopt" : "action",
@@ -86,48 +64,70 @@ all_opt = {
         "shortdesc" : "Fencing Action",
         "default" : "reboot",
         "order" : 1 },
-    "port" : {
-        "getopt" : "n:",
-        "longopt" : "plug",
-        "help" : "-n, --plug=[id]                Physical plug number on device",
-        "required" : "1",
-        "shortdesc" : "Physical plug number or name of virtual machine",
-        "order" : 1 },
-    "switch" : {
-        "getopt" : "s:",
-        "longopt" : "switch",
-        "help" : "-s, --switch=[id]              Physical switch number on device",
-        "required" : "0",
-        "shortdesc" : "Physical switch number on device",
-        "order" : 1 },
     "nodename" : {
         "getopt" : "N:",
         "longopt" : "nodename",
-        "help" : "-N, --nodename                 Node name of fence victim",
+        "help" : "-N, --nodename                 Node name of fence victim (ignored)",
         "required" : "0",
-        "shortdesc" : "The node name of fence victim",
-        "order" : 1},
-    "nodeid" : {
-        "getopt" : "i:",
-        "longopt" : "nodeid",
-        "help" : "-i, --nodeid                   Corosync id of fence victim",
+        "shortdesc" : "The node name of fence victim (ignored)",
+        "order" : 2 },
+    "mode": {
+        "getopt" : "M:",
+        "longopt" : "mode",
         "required" : "0",
-        "shortdesc" : "The corosync id of fence victim",
-        "order" : 1},
-    "uuid" : {
-        "getopt" : "U:",
-        "longopt" : "uuid",
-        "help" : "-U, --uuid                     UUID of the VM to fence",
+        "help" : "-M, --mode=(pass|fail|random)  Exit status to return for non-monitor operations",
+        "shortdesc" : "Whether fence operations should always pass, always fail, or fail at random",
+        "order" : 3 },
+    "random_sleep_range": {
+        "getopt" : "R:",
         "required" : "0",
-        "shortdesc" : "The UUID of the virtual machine to fence",
-        "order" : 1},
+        "longopt" : "random_sleep_range",
+        "help" : "-R, --random_sleep_range=[seconds] Sleep between 1 and [seconds] before returning",
+        "shortdesc" : "Wait randomly between 1 and [seconds]",
+        "order" : 3 },
     "mock_dynamic_hosts" : {
         "getopt" : "H:",
         "longopt" : "mock_dynamic_hosts",
         "help" : "-H, --mock_dynamic_hosts=[list] What to return when dynamically queried for possible targets",
         "required" : "0",
-        "shortdesc" : "A list of hosts we can fence.",
-        "order" : 1}
+        "shortdesc" : "A list of hosts we can fence",
+        "order" : 3 },
+    "delay" : {
+        "getopt" : "f:",
+        "longopt" : "delay",
+        "help" : "-f, --delay [seconds]          Wait X seconds before fencing is started",
+        "required" : "0",
+        "shortdesc" : "Wait X seconds before fencing is started",
+        "default" : "0",
+        "order" : 3 },
+    "port" : {
+        "getopt" : "n:",
+        "longopt" : "plug",
+        "help" : "-n, --plug=[id]                Physical plug number on device (ignored)",
+        "required" : "1",
+        "shortdesc" : "Ignored",
+        "order" : 4 },
+    "switch" : {
+        "getopt" : "s:",
+        "longopt" : "switch",
+        "help" : "-s, --switch=[id]              Physical switch number on device (ignored)",
+        "required" : "0",
+        "shortdesc" : "Ignored",
+        "order" : 4 },
+    "nodeid" : {
+        "getopt" : "i:",
+        "longopt" : "nodeid",
+        "help" : "-i, --nodeid                   Corosync id of fence victim (ignored)",
+        "required" : "0",
+        "shortdesc" : "Ignored",
+        "order" : 4 },
+    "uuid" : {
+        "getopt" : "U:",
+        "longopt" : "uuid",
+        "help" : "-U, --uuid                     UUID of the VM to fence (ignored)",
+        "required" : "0",
+        "shortdesc" : "Ignored",
+        "order" : 4 }
 }
 
 
@@ -231,6 +231,7 @@ def metadata(avail_opt, options):
 </actions>
 </resource-agent>""")
 
+
 def process_input(avail_opt):
     global all_opt
 
@@ -317,6 +318,7 @@ def process_input(avail_opt):
                 opt["-"+all_opt[name]["getopt"]] = "1"
     return opt
 
+
 def atexit_handler():
     try:
         sys.stdout.close()
@@ -324,6 +326,7 @@ def atexit_handler():
     except IOError:
         sys.stderr.write("%s failed to close standard output\n"%(sys.argv[0]))
         sys.exit(1)
+
 
 def main():
     global all_opt
