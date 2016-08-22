@@ -1586,6 +1586,10 @@ attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const cha
     if (ipc == NULL) {
         ipc = local_ipc;
     }
+  
+    if (is_set(options, attrd_opt_client_response)) {
+        flags |= crm_ipc_client_response;
+    }
 
     /* remap common aliases */
     if (safe_str_eq(section, "reboot")) {
