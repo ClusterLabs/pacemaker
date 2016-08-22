@@ -23,6 +23,7 @@ SHORT_DESC = "Dummy fence agent"
 LONG_DESC = """fence_dummy is a fake fencing agent which reports success
 based on its mode (pass|fail|random) without doing anything."""
 
+# Short options used: ifhmnoqsvBDHMRUV
 all_opt = {
     "quiet"   : {
         "getopt" : "q",
@@ -77,6 +78,13 @@ all_opt = {
         "required" : "0",
         "help" : "-M, --mode=(pass|fail|random)  Exit status to return for non-monitor operations",
         "shortdesc" : "Whether fence operations should always pass, always fail, or fail at random",
+        "order" : 3 },
+    "monitor_mode" : {
+        "getopt" : "m:",
+        "longopt" : "monitor_mode",
+        "help" : "-m, --monitor_mode=(pass|fail|random) Exit status to return for monitor operations",
+        "required" : "0",
+        "shortdesc" : "Whether monitor operations should always pass, always fail, or fail at random",
         "order" : 3 },
     "random_sleep_range": {
         "getopt" : "R:",
@@ -328,6 +336,24 @@ def atexit_handler():
         sys.exit(1)
 
 
+def success_mode(options, option, default_value):
+    """ Return exit code specified by option. """
+
+    if option in options:
+        test_value = options[option]
+    else:
+        test_value = default_value
+
+    if test_value == "pass":
+        exitcode = 0
+    elif test_value == "fail":
+        exitcode = 1
+    else:
+        exitcode = random.randint(0, 1)
+
+    return exitcode
+
+
 def main():
     global all_opt
     device_opt = all_opt.keys()
@@ -362,27 +388,29 @@ def main():
         sys.stderr.write("random sleep for %d seconds\n" % ran)
         time.sleep(ran)
 
-    if "-o" in options and (options["-o"] == "monitor"):
-        sys.stderr.write("fence_dummy monitor called\n")
-        sys.exit(0)
-    
-    if "-o" in options and (options["-o"] == "list"):
+    if "-o" in options:
+        action = options["-o"]
+    else:
+        action = "action"
+
+    if action == "monitor":
+        exitcode = success_mode(options, "-m", "pass")
+
+    elif action == "list":
         sys.stderr.write("fence_dummy action (list) called\n")
         if "-H" in options:
             print(options["-H"])
+            exitcode = 0
         else:
             sys.stderr.write("were asked for hostlist but attribute mock_dynamic_hosts wasn't set\n")
-
-    exitcode = random.randint(0, 1)
-    if "-M" in options:
-        if options["-M"] == "pass":
-            exitcode = 0
-        elif options["-M"] == "fail":
             exitcode = 1
+
+    else:
+        exitcode = success_mode(options, "-M", "random")
 
     # Ensure we generate some error output on failure exit.
     if exitcode == 1:
-        sys.stderr.write("simulated fencing failure\n")
+        sys.stderr.write("simulated %s failure\n" % action)
 
     sys.exit(exitcode)
 
