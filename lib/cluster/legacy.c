@@ -272,6 +272,7 @@ plugin_handle_membership(AIS_Message *msg)
         }
         free_xml(xml);
     }
+    free_xml(xml);
 }
 
 static void
