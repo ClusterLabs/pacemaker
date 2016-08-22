@@ -1,32 +1,69 @@
 #!/usr/bin/python
+""" Regression tests for Pacemaker's stonithd
+"""
 
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA.
+# Pacemaker targets compatibility with Python 2.6+ and 3.2+
+from __future__ import print_function, unicode_literals, absolute_import, division
 
+__copyright__ = "Copyright (C) 2012-2016 Andrew Beekhof <andrew@beekhof.net>"
+__license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
+import io
 import os
 import sys
 import subprocess
 import shlex
 import time
 
+FENCE_DUMMY = "/usr/share/pacemaker/tests/cts/fence_dummy"
+
+
+def shlex_split(command):
+    """ Wrapper for shlex.split() that works around Python 2.6 bug """
+
+    if sys.version_info < (2,7,):
+        return shlex.split(command.encode('ascii'))
+    else:
+        return shlex.split(command)
+
+
+def pipe_output(pipes, stdout=True, stderr=False):
+    """ Wrapper to get text output from pipes regardless of Python version """
+
+    output = ""
+    pipe_outputs = pipes.communicate()
+    if sys.version_info < (3,):
+        if stdout:
+            output = output + pipe_outputs[0]
+        if stderr:
+            output = output + pipe_outputs[1]
+    else:
+        if stdout:
+            output = output + pipe_outputs[0].decode(sys.stdout.encoding)
+        if stderr:
+            output = output + pipe_outputs[1].decode(sys.stderr.encoding)
+    return output
+
+
 def output_from_command(command):
-    test = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    test = subprocess.Popen(shlex_split(command),
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
     test.wait()
 
-    return test.communicate()[0].split("\n")
+    return pipe_output(test).split("\n")
+
+
+def localname():
+    """ Return the uname of the local host. """
+
+    our_uname = output_from_command("uname -n")
+    if our_uname:
+        our_uname = our_uname[0]
+    else:
+        our_uname = "localhost"
+    return our_uname
+
 
 class Test:
     def __init__(self, name, description, verbose = 0, with_cpg = 0):
@@ -53,8 +90,6 @@ class Test:
 
         self.executed = 0
 
-        rsc_classes = output_from_command("crm_resource --list-standards")
-
     def __new_cmd(self, cmd, args, exitcode, stdout_match = "", no_wait = 0, stdout_negative_match = "", kill=None):
         self.cmds.append(
             {
@@ -69,7 +104,7 @@ class Test:
         )
 
     def stop_pacemaker(self):
-        cmd = shlex.split("killall -9 -q pacemakerd")
+        cmd = shlex_split("killall -9 -q pacemakerd")
         test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
         test.wait()
 
@@ -77,19 +112,19 @@ class Test:
         ### make sure we are in full control here ###
         self.stop_pacemaker()
 
-        cmd = shlex.split("killall -9 -q stonithd")
+        cmd = shlex_split("killall -9 -q stonithd")
         test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
         test.wait()
 
         if self.verbose:
             self.stonith_options = self.stonith_options + " -V"
-            print "Starting stonithd with %s" % self.stonith_options
+            print("Starting stonithd with %s" % self.stonith_options)
 
         if os.path.exists("/tmp/stonith-regression.log"):
             os.remove('/tmp/stonith-regression.log')
 
-        self.stonith_process = subprocess.Popen(
-            shlex.split("@CRM_DAEMON_DIR@/stonithd %s -l /tmp/stonith-regression.log" % self.stonith_options))
+        cmd = "@CRM_DAEMON_DIR@/stonithd %s -l /tmp/stonith-regression.log" % self.stonith_options
+        self.stonith_process = subprocess.Popen(shlex_split(cmd))
 
         time.sleep(1)
 
@@ -101,14 +136,14 @@ class Test:
         self.stonith_output = ""
         self.stonith_process = None
 
-        f = open('/tmp/stonith-regression.log', 'r')
+        f = io.open('/tmp/stonith-regression.log', 'rt')
         for line in f.readlines():
             self.stonith_output = self.stonith_output + line
 
         if self.verbose:
-            print "Daemon Output Start"
-            print self.stonith_output
-            print "Daemon Output End"
+            print("Daemon Output Start")
+            print(self.stonith_output)
+            print("Daemon Output End")
         os.remove('/tmp/stonith-regression.log')
 
     def add_stonith_log_pattern(self, pattern):
@@ -133,39 +168,37 @@ class Test:
         return self.result_exitcode
 
     def print_result(self, filler):
-        print "%s%s" % (filler, self.result_txt)
+        print("%s%s" % (filler, self.result_txt))
 
     def run_cmd(self, args):
-        cmd = shlex.split(args['args'])
+        cmd = shlex_split(args['args'])
         cmd.insert(0, args['cmd'])
 
         if self.verbose:
-            print "\n\nRunning: "+" ".join(cmd)
+            print("\n\nRunning: "+" ".join(cmd))
         test = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         if args['kill']:
             if self.verbose:
-                print "Also running: "+args['kill']
-            subprocess.Popen(shlex.split(args['kill']))
+                print("Also running: "+args['kill'])
+            subprocess.Popen(shlex_split(args['kill']))
 
         if args['no_wait'] == 0:
             test.wait()
         else:
             return 0
 
-        output_res = test.communicate()
-        output = output_res[0] + output_res[1]
-
+        output = pipe_output(test, stderr=True)
         if self.verbose:
-            print output
+            print(output)
 
         if args['stdout_match'] != "" and output.count(args['stdout_match']) == 0:
             test.returncode = -2
-            print "STDOUT string '%s' was not found in cmd output: %s" % (args['stdout_match'], output)
+            print("STDOUT string '%s' was not found in cmd output: %s" % (args['stdout_match'], output))
 
         if args['stdout_negative_match'] != "" and output.count(args['stdout_negative_match']) != 0:
             test.returncode = -2
-            print "STDOUT string '%s' was found in cmd output: %s" % (args['stdout_negative_match'], output)
+            print("STDOUT string '%s' was found in cmd output: %s" % (args['stdout_negative_match'], output))
 
         return test.returncode;
 
@@ -176,7 +209,7 @@ class Test:
             if outline.count(line):
                 count = 1
                 if self.verbose:
-                    print "This pattern should not have matched = '%s" % (line)
+                    print("This pattern should not have matched = '%s" % (line))
         return count
 
     def match_stonith_patterns(self):
@@ -202,7 +235,7 @@ class Test:
         if len(pats) > 0 or negative_matches:
             if self.verbose:
                 for p in pats:
-                    print "Pattern Not Matched = '%s'" % p
+                    print("Pattern Not Matched = '%s'" % p)
 
             self.result_txt = "FAILURE - '%s' failed. %d patterns out of %d not matched. %d negative matches." % (self.name, len(pats), total_patterns, negative_matches)
             self.result_exitcode = -1
@@ -213,29 +246,29 @@ class Test:
         self.start_environment()
 
         if self.verbose:
-            print "\n--- START TEST - %s" % self.name
+            print("\n--- START TEST - %s" % self.name)
 
         self.result_txt = "SUCCESS - '%s'" % (self.name)
         self.result_exitcode = 0
         for cmd in self.cmds:
             res = self.run_cmd(cmd)
             if res != cmd['expected_exitcode']:
-                print "Step %d FAILED - command returned %d, expected %d" % (i, res, cmd['expected_exitcode'])
+                print("Step %d FAILED - command returned %d, expected %d" % (i, res, cmd['expected_exitcode']))
                 self.result_txt = "FAILURE - '%s' failed at step %d. Command: %s %s" % (self.name, i, cmd['cmd'], cmd['args'])
                 self.result_exitcode = -1
                 break
             else:
                 if self.verbose:
-                    print "Step %d SUCCESS" % (i)
+                    print("Step %d SUCCESS" % (i))
             i = i + 1
         self.clean_environment()
 
         if self.result_exitcode == 0:
             self.match_stonith_patterns()
 
-        print self.result_txt
+        print(self.result_txt)
         if self.verbose:
-            print "--- END TEST - %s\n" % self.name
+            print("--- END TEST - %s\n" % self.name)
 
         self.executed = 1
         return res
@@ -254,24 +287,23 @@ class Tests:
         return test
 
     def print_list(self):
-        print "\n==== %d TESTS FOUND ====" % (len(self.tests))
-        print "%35s - %s" % ("TEST NAME", "TEST DESCRIPTION")
-        print "%35s - %s" % ("--------------------", "--------------------")
+        print("\n==== %d TESTS FOUND ====" % (len(self.tests)))
+        print("%35s - %s" % ("TEST NAME", "TEST DESCRIPTION"))
+        print("%35s - %s" % ("--------------------", "--------------------"))
         for test in self.tests:
-            print "%35s - %s" % (test.name, test.description)
-        print "==== END OF LIST ====\n"
-
+            print("%35s - %s" % (test.name, test.description))
+        print("==== END OF LIST ====\n")
 
     def start_corosync(self):
         if self.verbose:
-            print "Starting corosync"
+            print("Starting corosync")
 
         test = subprocess.Popen("corosync", stdout=subprocess.PIPE)
         test.wait()
         time.sleep(10)
 
     def stop_corosync(self):
-        cmd = shlex.split("killall -9 -q corosync")
+        cmd = shlex_split("killall -9 -q corosync")
         test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
         test.wait()
 
@@ -313,8 +345,8 @@ class Tests:
     def print_results(self):
         failures = 0;
         success = 0;
-        print "\n\n======= FINAL RESULTS =========="
-        print "\n--- FAILURE RESULTS:"
+        print("\n\n======= FINAL RESULTS ==========")
+        print("\n--- FAILURE RESULTS:")
         for test in self.tests:
             if test.executed == 0:
                 continue
@@ -326,9 +358,10 @@ class Tests:
                 success = success + 1
 
         if failures == 0:
-            print "    None"
+            print("    None")
 
-        print "\n--- TOTALS\n    Pass:%d\n    Fail:%d\n" % (success, failures)
+        print("\n--- TOTALS\n    Pass:%d\n    Fail:%d\n" % (success, failures))
+
     def build_api_sanity_tests(self):
         verbose_arg = ""
         if self.verbose:
@@ -501,7 +534,7 @@ class Tests:
             test.add_stonith_log_pattern("for host 'node3' with device 'true' returned: 0")
 
 
-        # add topology, delete topology, verify fencing still works 
+        # add topology, delete topology, verify fencing still works
         for test_type in test_types:
             if test_type["use_cpg"] == 0:
                 continue
@@ -672,20 +705,24 @@ class Tests:
         # Verify monitor occurs for duration of timeout period on failure
         for test_type in test_types:
             test = self.new_test("%s_monitor_timeout" % test_type["prefix"],
-                    "Verify monitor uses duration of timeout period given.", test_type["use_cpg"])
-            test.add_cmd("stonith_admin", "-R true1  -a fence_dummy_monitor_fail -o \"pcmk_host_list=node3\"")
-            # 195 = (unsigned char)-61 (-ENODATA)
-            test.add_expected_fail_cmd("stonith_admin", "-Q true1 -t 5", 195)
+                                 "Verify monitor uses duration of timeout period given.",
+                                 test_type["use_cpg"])
+            test.add_cmd("stonith_admin",
+                         '-R true1 -a fence_dummy -o "mode=fail" -o "monitor_mode=fail" -o "pcmk_host_list=node3"')
+            # 55 = (unsigned char)-201 (-pcmk_err_generic)
+            test.add_expected_fail_cmd("stonith_admin", "-Q true1 -t 5", 55)
             test.add_stonith_log_pattern("Attempt 2 to execute")
 
         # Verify monitor occurs for duration of timeout period on failure, but stops at max retries
         for test_type in test_types:
             test = self.new_test("%s_monitor_timeout_max_retries" % test_type["prefix"],
-                    "Verify monitor retries until max retry value or timeout is hit.", test_type["use_cpg"])
-            test.add_cmd("stonith_admin", "-R true1  -a fence_dummy_monitor_fail -o \"pcmk_host_list=node3\"")
-            # 195 = (unsigned char)-61 (-ENODATA)
-            test.add_expected_fail_cmd("stonith_admin", "-Q true1 -t 15",195)
-            test.add_stonith_log_pattern("Attempted to execute agent fence_dummy_monitor_fail (list) the maximum number of times")
+                                 "Verify monitor retries until max retry value or timeout is hit.",
+                                 test_type["use_cpg"])
+            test.add_cmd("stonith_admin",
+                         '-R true1  -a fence_dummy -o "mode=fail" -o "monitor_mode=fail" -o "pcmk_host_list=node3"')
+            # 55 = (unsigned char)-201 (-pcmk_err_generic)
+            test.add_expected_fail_cmd("stonith_admin", "-Q true1 -t 15", 55)
+            test.add_stonith_log_pattern("Attempted to execute agent fence_dummy (list) the maximum number of times")
 
         # simple register test
         for test_type in test_types:
@@ -698,7 +735,6 @@ class Tests:
             test.add_cmd("stonith_admin", "-D true1")
 
             test.add_expected_fail_cmd("stonith_admin", "-Q true1", 237)
-
 
         # simple reboot test
         for test_type in test_types:
@@ -728,9 +764,9 @@ class Tests:
         for test_type in test_types:
             test = self.new_test("%s_dynamic_list_query" % test_type["prefix"],
                     "Verify dynamic list of fencing devices can be retrieved.", test_type["use_cpg"])
-            test.add_cmd("stonith_admin", "-R true1  -a fence_dummy_list")
-            test.add_cmd("stonith_admin", "-R true2  -a fence_dummy_list")
-            test.add_cmd("stonith_admin", "-R true3  -a fence_dummy_list")
+            test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o mock_dynamic_hosts=fake_port_1")
+            test.add_cmd("stonith_admin", "-R true2  -a fence_dummy -o mock_dynamic_hosts=fake_port_1")
+            test.add_cmd("stonith_admin", "-R true3  -a fence_dummy -o mock_dynamic_hosts=fake_port_1")
 
             test.add_cmd_check_stdout("stonith_admin", "-l fake_port_1", "3 devices found")
 
@@ -739,9 +775,9 @@ class Tests:
         for test_type in test_types:
             test = self.new_test("%s_fence_dynamic_list_query" % test_type["prefix"],
                     "Verify dynamic list of fencing devices can be retrieved.", test_type["use_cpg"])
-            test.add_cmd("stonith_admin", "-R true1  -a fence_dummy_list")
-            test.add_cmd("stonith_admin", "-R true2  -a fence_dummy_list")
-            test.add_cmd("stonith_admin", "-R true3  -a fence_dummy_list")
+            test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o mock_dynamic_hosts=fake_port_1")
+            test.add_cmd("stonith_admin", "-R true2  -a fence_dummy -o mock_dynamic_hosts=fake_port_1")
+            test.add_cmd("stonith_admin", "-R true3  -a fence_dummy -o mock_dynamic_hosts=fake_port_1")
 
             test.add_cmd("stonith_admin", "-F fake_port_1 -t 5 -V");
 
@@ -774,9 +810,7 @@ class Tests:
             test.add_stonith_log_pattern("with device 'true1' returned: 0 (OK)");
 
     def build_nodeid_tests(self):
-        our_uname = output_from_command("uname -n")
-        if our_uname:
-            our_uname = our_uname[0]
+        our_uname = localname()
 
         ### verify nodeid is supplied when nodeid is in the metadata parameters
         test = self.new_test("cpg_supply_nodeid",
@@ -802,11 +836,8 @@ class Tests:
         test.add_cmd("stonith_admin", "-F %s -t 3" % (our_uname))
         test.add_stonith_negative_log_pattern("For stonith action (off) for victim %s, adding nodeid" % (our_uname))
 
-
     def build_unfence_tests(self):
-        our_uname = output_from_command("uname -n")
-        if our_uname:
-            our_uname = our_uname[0]
+        our_uname = localname()
 
         ### verify unfencing using automatic unfencing
         test = self.new_test("cpg_unfence_required_1",
@@ -1017,52 +1048,19 @@ logging {
 
             os.system("cat <<-END >>/etc/corosync/corosync.conf\n%s\nEND" % (corosync_conf))
 
-
         if use_corosync:
             ### make sure we are in control ###
             self.stop_corosync()
             self.start_corosync()
 
-        monitor_fail_agent = ("""#!/usr/bin/python
-import sys
-def main():
-    for line in sys.stdin.readlines():
-        if line.count("monitor") > 0:
-            sys.exit(-1);
-    sys.exit(-1)
-if __name__ == "__main__":
-    main()
-""")
+        os.system("cp %s /usr/sbin/fence_dummy" % FENCE_DUMMY)
 
-        dynamic_list_agent = ("""#!/usr/bin/python
-import sys
-def main():
-    for line in sys.stdin.readlines():
-        if line.count("list") > 0:
-            print "fake_port_1"
-            sys.exit(0)
-        if line.count("off") > 0:
-            sys.exit(0)
-    sys.exit(-1)
-if __name__ == "__main__":
-    main()
-""")
-
-
-        os.system("cat <<-END >>/usr/sbin/fence_dummy_list\n%s\nEND" % (dynamic_list_agent))
-        os.system("chmod 711 /usr/sbin/fence_dummy_list")
-
-        os.system("cat <<-END >>/usr/sbin/fence_dummy_monitor_fail\n%s\nEND" % (monitor_fail_agent))
-        os.system("chmod 711 /usr/sbin/fence_dummy_monitor_fail")
-
-        os.system("cp /usr/share/pacemaker/tests/cts/fence_dummy /usr/sbin/fence_dummy")
-
-        # modifies dummy agent to do require unfencing 
-        os.system("cat /usr/share/pacemaker/tests/cts/fence_dummy  | sed 's/on_target=/automatic=/g' > /usr/sbin/fence_dummy_automatic_unfence");
+        # modifies dummy agent to do require unfencing
+        os.system("sed 's/on_target=/automatic=/g' %s > /usr/sbin/fence_dummy_automatic_unfence" % FENCE_DUMMY);
         os.system("chmod 711 /usr/sbin/fence_dummy_automatic_unfence")
 
         # modifies dummy agent to not advertise reboot
-        os.system("cat /usr/share/pacemaker/tests/cts/fence_dummy  | sed 's/^.*<action.*name.*reboot.*>.*//g' > /usr/sbin/fence_dummy_no_reboot");
+        os.system("sed 's/^.*<action.*name.*reboot.*>.*//g' %s > /usr/sbin/fence_dummy_no_reboot" % FENCE_DUMMY);
         os.system("chmod 711 /usr/sbin/fence_dummy_no_reboot")
 
     def cleanup_environment(self, use_corosync):
@@ -1070,17 +1068,15 @@ if __name__ == "__main__":
             self.stop_corosync()
 
             if self.verbose and os.path.exists('/var/log/corosync.log'):
-                print "Corosync output"
-                f = open('/var/log/corosync.log', 'r')
+                print("Corosync output")
+                f = io.open('/var/log/corosync.log', 'rt')
                 for line in f.readlines():
-                    print line.strip()
+                    print(line.strip())
                 os.remove('/var/log/corosync.log')
 
         if self.autogen_corosync_cfg:
             os.system("rm -f /etc/corosync/corosync.conf")
 
-        os.system("rm -f /usr/sbin/fence_dummy_monitor_fail")
-        os.system("rm -f /usr/sbin/fence_dummy_list")
         os.system("rm -f /usr/sbin/fence_dummy")
         os.system("rm -f /usr/sbin/fence_dummy_automatic_unfence")
         os.system("rm -f /usr/sbin/fence_dummy_no_reboot")
@@ -1123,20 +1119,21 @@ class TestOptions:
                 skip = 1
 
     def show_usage(self):
-        print "usage: " + sys.argv[0] + " [options]"
-        print "If no options are provided, all tests will run"
-        print "Options:"
-        print "\t [--help | -h]                        Show usage"
-        print "\t [--list-tests | -l]                  Print out all registered tests."
-        print "\t [--cpg-only | -c]                    Only run tests that require corosync."
-        print "\t [--no-cpg | -n]                      Only run tests that do not require corosync"
-        print "\t [--run-only | -r 'testname']         Run a specific test"
-        print "\t [--verbose | -V]                     Verbose output"
-        print "\t [--run-only-pattern | -p 'string']   Run only tests containing the string value"
-        print "\n\tExample: Run only the test 'start_top'"
-        print "\t\t python ./regression.py --run-only start_stop"
-        print "\n\tExample: Run only the tests with the string 'systemd' present in them"
-        print "\t\t python ./regression.py --run-only-pattern systemd"
+        print("usage: " + sys.argv[0] + " [options]")
+        print("If no options are provided, all tests will run")
+        print("Options:")
+        print("\t [--help | -h]                        Show usage")
+        print("\t [--list-tests | -l]                  Print out all registered tests.")
+        print("\t [--cpg-only | -c]                    Only run tests that require corosync.")
+        print("\t [--no-cpg | -n]                      Only run tests that do not require corosync")
+        print("\t [--run-only | -r 'testname']         Run a specific test")
+        print("\t [--verbose | -V]                     Verbose output")
+        print("\t [--run-only-pattern | -p 'string']   Run only tests containing the string value")
+        print("\n\tExample: Run only the test 'start_top'")
+        print("\t\t python ./regression.py --run-only start_stop")
+        print("\n\tExample: Run only the tests with the string 'systemd' present in them")
+        print("\t\t python ./regression.py --run-only-pattern systemd")
+
 
 def main(argv):
     o = TestOptions()
@@ -1160,7 +1157,7 @@ def main(argv):
         o.show_usage()
         sys.exit(0)
 
-    print "Starting ..."
+    print("Starting ...")
 
     if o.options['no-cpg']:
         use_corosync = 0
@@ -1185,5 +1182,7 @@ def main(argv):
 
     tests.cleanup_environment(use_corosync)
     tests.exit()
+
+
 if __name__=="__main__":
     main(sys.argv)

@@ -2,8 +2,11 @@
 """Dummy fence agent for testing
 """
 
-# Pacemaker targets compatibility with python 2.6+ and 3.2+
+# Pacemaker targets compatibility with Python 2.6+ and 3.2+
 from __future__ import print_function, unicode_literals, absolute_import, division
+
+__copyright__ = "Copyright (C) 2012-2016 Andrew Beekhof <andrew@beekhof.net>"
+__license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import io
 import os
@@ -20,21 +23,8 @@ SHORT_DESC = "Dummy fence agent"
 LONG_DESC = """fence_dummy is a fake fencing agent which reports success
 based on its mode (pass|fail|random) without doing anything."""
 
+# Short options used: ifhmnoqsvBDHMRUV
 all_opt = {
-    "help"    : {
-        "getopt" : "h",
-        "longopt" : "help",
-        "help" : "-h, --help                     Display this help and exit",
-        "required" : "0",
-        "shortdesc" : "Display help and exit",
-        "order" : 54 },
-    "version" : { 
-        "getopt" : "V",
-        "longopt" : "version",
-        "help" : "-V, --version                  Display version information and exit",
-        "required" : "0",
-        "shortdesc" : "Display version information and exit",
-        "order" : 53 },
     "quiet"   : {
         "getopt" : "q",
         "help" : "",
@@ -53,28 +43,20 @@ all_opt = {
         "required" : "0",
         "shortdesc" : "Write debug information to given file",
         "order" : 52 },
-    "random_sleep_range": {
-        "getopt" : "R:",
+    "version" : { 
+        "getopt" : "V",
+        "longopt" : "version",
+        "help" : "-V, --version                  Display version information and exit",
         "required" : "0",
-        "longopt" : "random_sleep_range",
-        "help" : "--random_sleep_range=[seconds] Sleep between 1 and [seconds] before returning",
-        "shortdesc" : "Issue a sleep between 1 and [seconds]",
-        "order" : 1 },
-    "mode": {
-        "getopt" : "M:",
-        "longopt" : "mode",
+        "shortdesc" : "Display version information and exit",
+        "order" : 53 },
+    "help"    : {
+        "getopt" : "h",
+        "longopt" : "help",
+        "help" : "-h, --help                     Display this help and exit",
         "required" : "0",
-        "help" : "--mode=(pass|fail|random)      What exit status should be returned for this operation",
-        "shortdesc" : "Should operations always pass, always fail or fail at random",
-        "order" : 1 },
-    "delay" : {
-        "getopt" : "f:",
-        "longopt" : "delay",
-        "help" : "--delay [seconds]              Wait X seconds before fencing is started",
-        "required" : "0",
-        "shortdesc" : "Wait X seconds before fencing is started",
-        "default" : "0",
-        "order" : 200 },
+        "shortdesc" : "Display help and exit",
+        "order" : 54 },
     "action" : {
         "getopt" : "o:",
         "longopt" : "action",
@@ -83,48 +65,77 @@ all_opt = {
         "shortdesc" : "Fencing Action",
         "default" : "reboot",
         "order" : 1 },
-    "port" : {
-        "getopt" : "n:",
-        "longopt" : "plug",
-        "help" : "-n, --plug=[id]                Physical plug number on device",
-        "required" : "1",
-        "shortdesc" : "Physical plug number or name of virtual machine",
-        "order" : 1 },
-    "switch" : {
-        "getopt" : "s:",
-        "longopt" : "switch",
-        "help" : "-s, --switch=[id]              Physical switch number on device",
-        "required" : "0",
-        "shortdesc" : "Physical switch number on device",
-        "order" : 1 },
     "nodename" : {
         "getopt" : "N:",
         "longopt" : "nodename",
-        "help" : "-N, --nodename                 Node name of fence victim",
+        "help" : "-N, --nodename                 Node name of fence victim (ignored)",
         "required" : "0",
-        "shortdesc" : "The node name of fence victim",
-        "order" : 1},
-    "nodeid" : {
-        "getopt" : "i:",
-        "longopt" : "nodeid",
-        "help" : "-i, --nodeid                   Corosync id of fence victim",
+        "shortdesc" : "The node name of fence victim (ignored)",
+        "order" : 2 },
+    "mode": {
+        "getopt" : "M:",
+        "longopt" : "mode",
         "required" : "0",
-        "shortdesc" : "The corosync id of fence victim",
-        "order" : 1},
-    "uuid" : {
-        "getopt" : "U:",
-        "longopt" : "uuid",
-        "help" : "-U, --uuid                     UUID of the VM to fence",
+        "help" : "-M, --mode=(pass|fail|random)  Exit status to return for non-monitor operations",
+        "shortdesc" : "Whether fence operations should always pass, always fail, or fail at random",
+        "order" : 3 },
+    "monitor_mode" : {
+        "getopt" : "m:",
+        "longopt" : "monitor_mode",
+        "help" : "-m, --monitor_mode=(pass|fail|random) Exit status to return for monitor operations",
         "required" : "0",
-        "shortdesc" : "The UUID of the virtual machine to fence",
-        "order" : 1},
+        "shortdesc" : "Whether monitor operations should always pass, always fail, or fail at random",
+        "order" : 3 },
+    "random_sleep_range": {
+        "getopt" : "R:",
+        "required" : "0",
+        "longopt" : "random_sleep_range",
+        "help" : "-R, --random_sleep_range=[seconds] Sleep between 1 and [seconds] before returning",
+        "shortdesc" : "Wait randomly between 1 and [seconds]",
+        "order" : 3 },
     "mock_dynamic_hosts" : {
         "getopt" : "H:",
         "longopt" : "mock_dynamic_hosts",
         "help" : "-H, --mock_dynamic_hosts=[list] What to return when dynamically queried for possible targets",
         "required" : "0",
-        "shortdesc" : "A list of hosts we can fence.",
-        "order" : 1}
+        "shortdesc" : "A list of hosts we can fence",
+        "order" : 3 },
+    "delay" : {
+        "getopt" : "f:",
+        "longopt" : "delay",
+        "help" : "-f, --delay [seconds]          Wait X seconds before fencing is started",
+        "required" : "0",
+        "shortdesc" : "Wait X seconds before fencing is started",
+        "default" : "0",
+        "order" : 3 },
+    "port" : {
+        "getopt" : "n:",
+        "longopt" : "plug",
+        "help" : "-n, --plug=[id]                Physical plug number on device (ignored)",
+        "required" : "1",
+        "shortdesc" : "Ignored",
+        "order" : 4 },
+    "switch" : {
+        "getopt" : "s:",
+        "longopt" : "switch",
+        "help" : "-s, --switch=[id]              Physical switch number on device (ignored)",
+        "required" : "0",
+        "shortdesc" : "Ignored",
+        "order" : 4 },
+    "nodeid" : {
+        "getopt" : "i:",
+        "longopt" : "nodeid",
+        "help" : "-i, --nodeid                   Corosync id of fence victim (ignored)",
+        "required" : "0",
+        "shortdesc" : "Ignored",
+        "order" : 4 },
+    "uuid" : {
+        "getopt" : "U:",
+        "longopt" : "uuid",
+        "help" : "-U, --uuid                     UUID of the VM to fence (ignored)",
+        "required" : "0",
+        "shortdesc" : "Ignored",
+        "order" : 4 }
 }
 
 
@@ -228,6 +239,7 @@ def metadata(avail_opt, options):
 </actions>
 </resource-agent>""")
 
+
 def process_input(avail_opt):
     global all_opt
 
@@ -304,7 +316,7 @@ def process_input(avail_opt):
 
             ##
             ######
-            if avail_opt.count(name) == 0:
+            if name not in avail_opt:
                 sys.stderr.write("Parse error: Ignoring unknown option '"+line+"'\n")
                 continue
 
@@ -314,6 +326,7 @@ def process_input(avail_opt):
                 opt["-"+all_opt[name]["getopt"]] = "1"
     return opt
 
+
 def atexit_handler():
     try:
         sys.stdout.close()
@@ -321,6 +334,25 @@ def atexit_handler():
     except IOError:
         sys.stderr.write("%s failed to close standard output\n"%(sys.argv[0]))
         sys.exit(1)
+
+
+def success_mode(options, option, default_value):
+    """ Return exit code specified by option. """
+
+    if option in options:
+        test_value = options[option]
+    else:
+        test_value = default_value
+
+    if test_value == "pass":
+        exitcode = 0
+    elif test_value == "fail":
+        exitcode = 1
+    else:
+        exitcode = random.randint(0, 1)
+
+    return exitcode
+
 
 def main():
     global all_opt
@@ -332,7 +364,6 @@ def main():
     options["device_opt"] = device_opt
     show_docs(options)
 
- 
     # dump input to file
     if "-D" in options:
         try:
@@ -345,36 +376,44 @@ def main():
         except IOError:
            pass
 
-    # random sleep for testing
     if "-f" in options:
         val = int(options["-f"])
         sys.stderr.write("delay sleep for %d seconds\n" % val)
         time.sleep(val)
 
+    # random sleep for testing
     if "-R" in options:
         val = int(options["-R"])
         ran = random.randint(1, val)
         sys.stderr.write("random sleep for %d seconds\n" % ran)
         time.sleep(ran)
 
-    if "-o" in options and (options["-o"] == "monitor"):
-        sys.stderr.write("fence_dummy monitor called\n")
-        sys.exit(0)
-    
-    if "-o" in options and (options["-o"] == "list"):
+    if "-o" in options:
+        action = options["-o"]
+    else:
+        action = "action"
+
+    if action == "monitor":
+        exitcode = success_mode(options, "-m", "pass")
+
+    elif action == "list":
         sys.stderr.write("fence_dummy action (list) called\n")
         if "-H" in options:
             print(options["-H"])
+            exitcode = 0
         else:
             sys.stderr.write("were asked for hostlist but attribute mock_dynamic_hosts wasn't set\n")
+            exitcode = 1
 
-    if "-M" in options:
-        if options["-M"] == "pass":
-            sys.exit(0)
-        elif options["-M"] == "fail":
-            sys.exit(1)
+    else:
+        exitcode = success_mode(options, "-M", "random")
 
-    sys.exit(random.randint(0, 1))
+    # Ensure we generate some error output on failure exit.
+    if exitcode == 1:
+        sys.stderr.write("simulated %s failure\n" % action)
+
+    sys.exit(exitcode)
+
 
 if __name__ == "__main__":
     main()
