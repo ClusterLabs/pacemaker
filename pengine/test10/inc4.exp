@@ -37,7 +37,7 @@
      <action_set>
       <rsc_op id="16" operation="stop" operation_key="child_rsc1:2_stop_0" on_node="node1" on_node_uuid="uuid1">
         <primitive id="child_rsc1:2" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="5" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="5" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
      <inputs>
@@ -84,7 +84,7 @@
      <action_set>
       <rsc_op id="18" operation="stop" operation_key="child_rsc1:3_stop_0" on_node="node1" on_node_uuid="uuid1">
         <primitive id="child_rsc1:3" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_clone="3" CRM_meta_clone_max="5" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="5" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
      <inputs>
@@ -258,7 +258,7 @@
      <action_set>
       <rsc_op id="31" operation="stop" operation_key="child_rsc2:3_stop_0" on_node="node2" on_node_uuid="uuid2">
         <primitive id="child_rsc2:3" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_clone="3" CRM_meta_clone_max="5" CRM_meta_clone_node_max="3" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="5" CRM_meta_clone_node_max="3" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
      <inputs>
@@ -305,7 +305,7 @@
      <action_set>
       <rsc_op id="33" operation="stop" operation_key="child_rsc2:4_stop_0" on_node="node2" on_node_uuid="uuid2">
         <primitive id="child_rsc2:4" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_clone="4" CRM_meta_clone_max="5" CRM_meta_clone_node_max="3" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="4" CRM_meta_clone_max="5" CRM_meta_clone_node_max="3" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
      <inputs>

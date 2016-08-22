@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="3" operation="stop" operation_key="Dummy-test2_stop_0" on_node="dhcp180" on_node_uuid="dhcp180">
         <primitive id="Dummy-test2" class="ocf" provider="test" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000"  state="/tmp/dummy-state" state2="/tmp/dummy-state-2"/>
+        <attributes CRM_meta_start_expected="local" CRM_meta_timeout="20000"  state="/tmp/dummy-state" state2="/tmp/dummy-state-2"/>
       </rsc_op>
     </action_set>
     <inputs/>

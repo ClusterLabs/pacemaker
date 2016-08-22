@@ -211,7 +211,7 @@
     <action_set>
       <rsc_op id="14" operation="stop" operation_key="rsc3_stop_0" on_node="node2" on_node_uuid="uuid2">
         <primitive id="rsc3" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_start_expected="local" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>

@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="5" operation="stop" operation_key="A_stop_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="A" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" allow-migrate="1"  state="anywhere" target-role="started"/>
+        <attributes CRM_meta_start_expected="local" CRM_meta_timeout="20000" allow-migrate="1"  state="anywhere" target-role="started"/>
       </rsc_op>
     </action_set>
     <inputs/>

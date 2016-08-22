@@ -100,7 +100,7 @@
     <action_set>
       <rsc_op id="12" operation="stop" operation_key="ipv6_dem_tas_dns_stop_0" on_node="DEM-1" on_node_uuid="DEM-1">
         <primitive id="ipv6_dem_tas_dns" class="ocf" provider="heartbeat" type="IPv6addr"/>
-        <attributes CRM_meta_timeout="20000" cidr_netmask="112"  ipv6addr="fd15:a2c:8660:c828:172:16:10:241" nic="bond0.3010"/>
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000" cidr_netmask="112"  ipv6addr="fd15:a2c:8660:c828:172:16:10:241" nic="bond0.3010"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -148,7 +148,7 @@
     <action_set>
       <rsc_op id="15" operation="stop" operation_key="d_bird_subnet_state_stop_0" on_node="DEM-1" on_node_uuid="DEM-1">
         <primitive id="d_bird_subnet_state" class="lsb" type="bird_subnet_state"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -196,7 +196,7 @@
     <action_set>
       <rsc_op id="18" operation="stop" operation_key="ip_mgmt_stop_0" on_node="DEM-1" on_node_uuid="DEM-1">
         <primitive id="ip_mgmt" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_timeout="20000" broadcast="172.20.1.241"  iflabel="ha" ip="172.20.1.241" nic="bond0"/>
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000" broadcast="172.20.1.241"  iflabel="ha" ip="172.20.1.241" nic="bond0"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -244,7 +244,7 @@
     <action_set>
       <rsc_op id="21" operation="stop" operation_key="ip_trf_tas_stop_0" on_node="DEM-1" on_node_uuid="DEM-1">
         <primitive id="ip_trf_tas" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_timeout="20000" broadcast="172.16.10.241"  iflabel="ha" ip="172.16.10.241" nic="bond0.3010"/>
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000" broadcast="172.16.10.241"  iflabel="ha" ip="172.16.10.241" nic="bond0.3010"/>
       </rsc_op>
     </action_set>
     <inputs>

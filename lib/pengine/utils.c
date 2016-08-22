@@ -1164,8 +1164,6 @@ find_first_action(GListPtr input, const char *uuid, const char *task, node_t * o
 {
     GListPtr gIter = NULL;
 
-    CRM_CHECK(uuid || task, return NULL);
-
     for (gIter = input; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
 
@@ -1200,24 +1198,29 @@ find_actions(GListPtr input, const char *key, const node_t *on_node)
     for (; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
 
-        crm_trace("Matching %s against %s", key, action->uuid);
         if (safe_str_neq(key, action->uuid)) {
+            crm_trace("%s does not match action %s", key, action->uuid);
             continue;
 
         } else if (on_node == NULL) {
+            crm_trace("Action %s matches (ignoring node)", key);
             result = g_list_prepend(result, action);
 
         } else if (action->node == NULL) {
-            /* skip */
-            crm_trace("While looking for %s action on %s, "
-                      "found an unallocated one.  Assigning"
-                      " it to the requested node...", key, on_node->details->uname);
+            crm_trace("Action %s matches (unallocated, assigning to %s)",
+                      key, on_node->details->uname);
 
             action->node = node_copy(on_node);
             result = g_list_prepend(result, action);
 
         } else if (on_node->details == action->node->details) {
+            crm_trace("Action %s on %s matches", key, on_node->details->uname);
             result = g_list_prepend(result, action);
+
+        } else {
+            crm_trace("Action %s on node %s does not match requested node %s",
+                      key, action->node->details->uname,
+                      on_node->details->uname);
         }
     }
 

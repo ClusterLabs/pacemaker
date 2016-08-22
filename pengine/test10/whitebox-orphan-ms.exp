@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="40" operation="stop" operation_key="FencingFail_stop_0" on_node="18node3" on_node_uuid="3">
         <primitive id="FencingFail" class="stonith" type="fence_dummy"/>
-        <attributes CRM_meta_timeout="90000"  delay="20" mode="fail" pcmk_host_list="18node1 18node3" random_sleep_range="30"/>
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="90000"  delay="20" mode="fail" pcmk_host_list="18node1 18node3" random_sleep_range="30"/>
       </rsc_op>
     </action_set>
     <inputs/>

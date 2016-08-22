@@ -2092,6 +2092,38 @@ native_expand(resource_t * rsc, pe_working_set_t * data_set)
     }
 }
 
+#define is_runnable(a) ((a) && (a)->node && \
+    (((a)->flags & (pe_action_optional|pe_action_runnable|pe_action_pseudo)) == pe_action_runnable))
+
+/*!
+ * \internal
+ * \brief Mark actions for whether start is expected
+ *
+ * Add a meta-data variable to a list of actions indicating whether a
+ * start is expected in the same transition (on the same host or a peer).
+ * RAs can check the resulting environment variable to take different action if
+ * a start is expected (taking into account that the expected start may never
+ * occur or may fail).
+ *
+ * \param[in] list   Actions to mark, if any
+ * \param[in] start  Start action, if any
+ */
+static void
+mark_start_expected(GList *list, const pe_action_t *start)
+{
+    if (is_runnable(start)) {
+        for (; list != NULL; list = list->next) {
+            pe_action_t *action = (pe_action_t *) list->data;
+
+            if (is_runnable(action)) {
+                add_hash_param(action->meta, XML_RSC_ATTR_START_EXPECTED,
+                               (action->node->details == start->node->details)?
+                               "local" : "peer");
+            }
+        }
+    }
+}
+
 #define log_change(fmt, args...)  do {          \
         if(terminal) {                          \
             printf(" * "fmt"\n", ##args);       \
@@ -2126,6 +2158,12 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
     char *key = NULL;
     gboolean moving = FALSE;
     GListPtr possible_matches = NULL;
+
+    /* Using terminal as the condition here is a bit hacky, but works in
+     * practice. An alternative would be to convert terminal to a bitmask
+     * with bits for is-terminal and mark-actions.
+     */
+    gboolean mark_actions = (terminal == FALSE);
 
     if (rsc->children) {
         GListPtr gIter = NULL;
@@ -2172,6 +2210,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
         moving = TRUE;
     }
 
+    /* Check whether this resource is starting on its allocated node */
     key = start_key(rsc);
     possible_matches = find_actions(rsc->actions, key, next);
     free(key);
@@ -2180,18 +2219,27 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
         g_list_free(possible_matches);
     }
 
+    /* Find all stops scheduled for this resource */
     key = stop_key(rsc);
-    if(start == NULL || is_set(start->flags, pe_action_runnable) == FALSE) {
-        possible_matches = find_actions(rsc->actions, key, NULL);
-    } else {
-        possible_matches = find_actions(rsc->actions, key, current);
-    }
+    possible_matches = find_actions(rsc->actions, key, NULL);
     free(key);
-    if (possible_matches) {
+
+    /* Pick one stop (limiting to current node, if also starting somewhere) */
+    if (start && is_set(start->flags, pe_action_runnable)) {
+        stop = find_first_action(possible_matches, NULL, NULL, current);
+    } else if (possible_matches) {
         stop = possible_matches->data;
+    }
+
+    /* Mark all stops if start is expected in same transition */
+    if (mark_actions) {
+        mark_start_expected(possible_matches, start);
+    }
+    if (possible_matches) {
         g_list_free(possible_matches);
     }
 
+    /* Check whether this resource is being promoted */
     key = promote_key(rsc);
     possible_matches = find_actions(rsc->actions, key, next);
     free(key);
@@ -2200,11 +2248,19 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
         g_list_free(possible_matches);
     }
 
+    /* Find all demotes scheduled for this resource */
     key = demote_key(rsc);
-    possible_matches = find_actions(rsc->actions, key, next);
+    possible_matches = find_actions(rsc->actions, key, NULL);
     free(key);
+
+    /* Check whether resource is being demoted (on allocated node, if any) */
+    demote = find_first_action(possible_matches, NULL, NULL, next);
+
+    /* Mark demotes if a start is expected in the same transition */
+    if (mark_actions) {
+        mark_start_expected(possible_matches, start);
+    }
     if (possible_matches) {
-        demote = possible_matches->data;
         g_list_free(possible_matches);
     }
 

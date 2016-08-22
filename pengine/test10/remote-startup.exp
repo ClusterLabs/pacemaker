@@ -29,7 +29,7 @@
     <action_set>
       <rsc_op id="10" operation="stop" operation_key="shooter_stop_0" on_node="18builder" on_node_uuid="5">
         <primitive id="shooter" class="stonith" type="fence_xvm"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>

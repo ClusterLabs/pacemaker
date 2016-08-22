@@ -29,7 +29,7 @@
     <action_set>
       <rsc_op id="26" operation="stop" operation_key="rsc_18node2_stop_0" on_node="remote1" on_node_uuid="remote1" router_node="18node1">
         <primitive id="rsc_18node2" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_timeout="90000" cidr_netmask="32"  ip="192.168.122.85"/>
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="90000" cidr_netmask="32"  ip="192.168.122.85"/>
       </rsc_op>
     </action_set>
     <inputs/>

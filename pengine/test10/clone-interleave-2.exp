@@ -19,7 +19,7 @@
     <action_set>
       <rsc_op id="2" operation="stop" operation_key="dummy_stop_0" on_node="pcmk-1" on_node_uuid="1">
         <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_start_expected="local" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>

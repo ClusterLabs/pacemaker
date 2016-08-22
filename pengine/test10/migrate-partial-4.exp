@@ -87,7 +87,7 @@
     <action_set>
       <rsc_op id="13" operation="stop" operation_key="testfs_stop_0" on_node="lustre02-left" on_node_uuid="lustre02-left">
         <primitive id="testfs" class="ocf" provider="vds-ok" type="Ticketer"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="30000"  name="testfs-operational"/>
+        <attributes CRM_meta_name="stop" CRM_meta_start_expected="peer" CRM_meta_timeout="30000"  name="testfs-operational"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -96,7 +96,7 @@
     <action_set>
       <rsc_op id="12" operation="stop" operation_key="testfs_stop_0" on_node="lustre01-left" on_node_uuid="lustre01-left">
         <primitive id="testfs" class="ocf" provider="vds-ok" type="Ticketer"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="30000"  name="testfs-operational"/>
+        <attributes CRM_meta_name="stop" CRM_meta_start_expected="peer" CRM_meta_timeout="30000"  name="testfs-operational"/>
       </rsc_op>
     </action_set>
     <inputs/>

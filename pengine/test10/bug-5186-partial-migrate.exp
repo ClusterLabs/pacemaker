@@ -75,7 +75,7 @@
     <action_set>
       <rsc_op id="1" operation="stop" operation_key="prmVM2_stop_0" on_node="bl460g1n6" on_node_uuid="3232261592">
         <primitive id="prmVM2" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_name="stop" CRM_meta_on_fail="fence" CRM_meta_record_pending="true" CRM_meta_timeout="120000" config="/migrate_test/config/vm2.xml"  hypervisor="qemu:///system" migration_transport="ssh"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_fail="fence" CRM_meta_record_pending="true" CRM_meta_start_expected="peer" CRM_meta_timeout="120000" config="/migrate_test/config/vm2.xml"  hypervisor="qemu:///system" migration_transport="ssh"/>
       </rsc_op>
     </action_set>
     <inputs/>

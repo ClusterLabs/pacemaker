@@ -94,7 +94,7 @@
     <action_set>
       <rsc_op id="2" operation="stop" operation_key="dummy01_stop_0" on_node="bl460g1n13" on_node_uuid="11111111-1111-1111-1111-111111111111">
         <primitive id="dummy01" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_timeout="120000" />
+        <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_start_expected="peer" CRM_meta_timeout="120000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -142,7 +142,7 @@
     <action_set>
       <rsc_op id="9" operation="stop" operation_key="dummy02_stop_0" on_node="bl460g1n13" on_node_uuid="11111111-1111-1111-1111-111111111111">
         <primitive id="dummy02" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_timeout="120000" />
+        <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_start_expected="peer" CRM_meta_timeout="120000" />
       </rsc_op>
     </action_set>
     <inputs>

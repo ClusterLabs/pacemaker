@@ -265,7 +265,7 @@
      <action_set>
       <rsc_op id="24" operation="stop" operation_key="resource_ipaddr1_single_stop_0" on_node="power720-2" on_node_uuid="1a1ecd04-01a0-43bf-9392-11b89f7d6f10">
         <primitive id="resource_ipaddr1_single" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="20000" cidr_netmask="24"  ip="192.168.2.6" nic="eth1" target_role="started"/>
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000" cidr_netmask="24"  ip="192.168.2.6" nic="eth1" target_role="started"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -328,7 +328,7 @@
      <action_set>
       <rsc_op id="27" operation="stop" operation_key="resource_nfsserver_single_stop_0" on_node="power720-2" on_node_uuid="1a1ecd04-01a0-43bf-9392-11b89f7d6f10">
         <primitive id="resource_nfsserver_single" class="lsb" type="nfsserver"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
      <inputs>

@@ -29,7 +29,7 @@
     <action_set>
       <rsc_op id="15" operation="stop" operation_key="dummy1_stop_0" on_node="hex-13" on_node_uuid="hex-13">
         <primitive id="dummy1" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -64,7 +64,7 @@
     <action_set>
       <rsc_op id="20" operation="stop" operation_key="dummy3_stop_0" on_node="hex-13" on_node_uuid="hex-13">
         <primitive id="dummy3" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>

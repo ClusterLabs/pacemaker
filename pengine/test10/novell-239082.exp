@@ -19,7 +19,7 @@
      <action_set>
       <rsc_op id="2" operation="stop" operation_key="fs_1_stop_0" on_node="xen-1" on_node_uuid="00aaa02f-110f-44e6-9a9d-af93827bfdb9">
         <primitive id="fs_1" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_timeout="120000"  device="/dev/drbd0" directory="/mnt/share1" fstype="reiserfs"/>
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="120000"  device="/dev/drbd0" directory="/mnt/share1" fstype="reiserfs"/>
       </rsc_op>
     </action_set>
     <inputs/>

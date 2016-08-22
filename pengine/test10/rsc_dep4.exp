@@ -53,7 +53,7 @@
      <action_set>
       <rsc_op id="9" operation="stop" operation_key="rsc4_stop_0" on_node="node1" on_node_uuid="node1">
         <primitive id="rsc4" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_timeout="20000"  priority="2.0"/>
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000"  priority="2.0"/>
        </rsc_op>
      </action_set>
      <inputs>

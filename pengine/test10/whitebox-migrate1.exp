@@ -29,7 +29,7 @@
     <action_set>
       <rsc_op id="12" operation="stop" operation_key="shooter1_stop_0" on_node="rhel7-node3" on_node_uuid="3">
         <primitive id="shooter1" class="stonith" type="fence_xvm"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -64,7 +64,7 @@
     <action_set>
       <rsc_op id="19" operation="stop" operation_key="FAKE3_stop_0" on_node="rhel7-node3" on_node_uuid="3">
         <primitive id="FAKE3" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_name="stop" CRM_meta_start_expected="peer" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
