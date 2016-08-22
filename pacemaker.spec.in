@@ -279,7 +279,7 @@ Requires:      systemd-python
 Test framework for cluster-related technologies like Pacemaker
 
 %package       doc
-License:       GPLv2+ and LGPLv2+
+License:       CC-BY-SA
 Summary:       Documentation for Pacemaker
 Group:         Documentation
 
@@ -509,8 +509,9 @@ exit 0
 
 %doc %{_datadir}/pacemaker/alerts
 
-%license COPYING
+%license licenses/GPLv2
 %doc AUTHORS
+%doc COPYING
 %doc ChangeLog
 
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/cib
@@ -592,8 +593,9 @@ exit 0
 %exclude %{_mandir}/man8/pacemaker_remoted.*
 %exclude %{_mandir}/man8/stonith_admin.*
 
-%license COPYING
+%license licenses/GPLv2
 %doc AUTHORS
+%doc COPYING
 %doc ChangeLog
 
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker
@@ -612,14 +614,18 @@ exit 0
 %{_libdir}/libpengine.so.*
 %{_libdir}/libstonithd.so.*
 %{_libdir}/libtransitioner.so.*
-%license COPYING.LIB
+%license licenses/LGPLv2.1
 %doc AUTHORS
+%doc COPYING
+%doc ChangeLog
 
 %files -n %{name}-cluster-libs
 %defattr(-,root,root)
 %{_libdir}/libcrmcluster.so.*
-%license COPYING.LIB
+%license licenses/LGPLv2.1
 %doc AUTHORS
+%doc COPYING
+%doc ChangeLog
 
 %files remote
 %defattr(-,root,root)
@@ -633,20 +639,25 @@ exit 0
 
 %{_sbindir}/pacemaker_remoted
 %{_mandir}/man8/pacemaker_remoted.*
-%license COPYING
+%license licenses/GPLv2
 %doc AUTHORS
+%doc COPYING
+%doc ChangeLog
 
 %files doc
 %defattr(-,root,root)
 %doc %{pcmk_docdir}
+%license licenses/CC-BY-SA-4.0
 
 %files cts
 %defattr(-,root,root)
 %{py_site}/cts
 %{_datadir}/pacemaker/tests/cts
 %{_libexecdir}/pacemaker/lrmd_test
-%license COPYING
+%license licenses/GPLv2
 %doc AUTHORS
+%doc COPYING
+%doc ChangeLog
 
 %files -n %{name}-libs-devel
 %defattr(-,root,root)
@@ -658,8 +669,10 @@ exit 0
 %{_var}/lib/pacemaker/gcov
 %endif
 %{_libdir}/pkgconfig/*.pc
-%license COPYING.LIB
+%license licenses/LGPLv2.1
 %doc AUTHORS
+%doc COPYING
+%doc ChangeLog
 
 %changelog
 

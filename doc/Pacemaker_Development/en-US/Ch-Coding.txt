@@ -6,6 +6,34 @@ with that construct for chapter headings
 ////
 anchor:ch-c-coding[Chapter 2, C Coding Guidelines]
 
+== C Boilerplate ==
+
+indexterm:[C,boilerplate]
+indexterm:[licensing,C boilerplate]
+
+Every C file should start like this:
+
+====
+[source,C]
+----
+/*
+ * Copyright (C) <YYYY[-YYYY]> Andrew Beekhof <andrew@beekhof.net>
+ * 
+ * This source code is licensed under <LICENSE> WITHOUT ANY WARRANTY.
+ */
+----
+====
+
++<YYYY>+ is the year the code was 'originally' created (it is the most
+important date for copyright purposes, as it establishes priority and
+the point from which expiration is calculated). If the code is modified
+in later years, add +-YYYY+ with the most recent year of modification.
+
++<LICENSE>+ should follow the policy set forth in the
+https://github.com/ClusterLabs/pacemaker/blob/master/COPYING[+COPYING+] file,
+generally one of "GNU General Public License version 2 or later (GPLv2+)"
+or "GNU Lesser General Public License version 2.1 or later (LGPLv2.1+)".
+
 == Formatting ==
 
 === Whitespace ===
