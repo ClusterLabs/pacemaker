@@ -412,6 +412,7 @@ if __name__ == "__main__":
     main()
 """)
         dummy_fence_agent = ("""#!/usr/bin/python
+from __future__ import print_function, unicode_literals, absolute_import, division
 import sys
 def main():
     for line in sys.stdin.readlines():
