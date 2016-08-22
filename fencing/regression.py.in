@@ -15,6 +15,9 @@ import subprocess
 import shlex
 import time
 
+FENCE_DUMMY = "/usr/share/pacemaker/tests/cts/fence_dummy"
+
+
 def shlex_split(command):
     """ Wrapper for shlex.split() that works around Python 2.6 bug """
 
@@ -702,20 +705,24 @@ class Tests:
         # Verify monitor occurs for duration of timeout period on failure
         for test_type in test_types:
             test = self.new_test("%s_monitor_timeout" % test_type["prefix"],
-                    "Verify monitor uses duration of timeout period given.", test_type["use_cpg"])
-            test.add_cmd("stonith_admin", "-R true1  -a fence_dummy_monitor_fail -o \"pcmk_host_list=node3\"")
-            # 195 = (unsigned char)-61 (-ENODATA)
-            test.add_expected_fail_cmd("stonith_admin", "-Q true1 -t 5", 195)
+                                 "Verify monitor uses duration of timeout period given.",
+                                 test_type["use_cpg"])
+            test.add_cmd("stonith_admin",
+                         '-R true1 -a fence_dummy -o "mode=fail" -o "monitor_mode=fail" -o "pcmk_host_list=node3"')
+            # 55 = (unsigned char)-201 (-pcmk_err_generic)
+            test.add_expected_fail_cmd("stonith_admin", "-Q true1 -t 5", 55)
             test.add_stonith_log_pattern("Attempt 2 to execute")
 
         # Verify monitor occurs for duration of timeout period on failure, but stops at max retries
         for test_type in test_types:
             test = self.new_test("%s_monitor_timeout_max_retries" % test_type["prefix"],
-                    "Verify monitor retries until max retry value or timeout is hit.", test_type["use_cpg"])
-            test.add_cmd("stonith_admin", "-R true1  -a fence_dummy_monitor_fail -o \"pcmk_host_list=node3\"")
-            # 195 = (unsigned char)-61 (-ENODATA)
-            test.add_expected_fail_cmd("stonith_admin", "-Q true1 -t 15",195)
-            test.add_stonith_log_pattern("Attempted to execute agent fence_dummy_monitor_fail (list) the maximum number of times")
+                                 "Verify monitor retries until max retry value or timeout is hit.",
+                                 test_type["use_cpg"])
+            test.add_cmd("stonith_admin",
+                         '-R true1  -a fence_dummy -o "mode=fail" -o "monitor_mode=fail" -o "pcmk_host_list=node3"')
+            # 55 = (unsigned char)-201 (-pcmk_err_generic)
+            test.add_expected_fail_cmd("stonith_admin", "-Q true1 -t 15", 55)
+            test.add_stonith_log_pattern("Attempted to execute agent fence_dummy (list) the maximum number of times")
 
         # simple register test
         for test_type in test_types:
@@ -728,7 +735,6 @@ class Tests:
             test.add_cmd("stonith_admin", "-D true1")
 
             test.add_expected_fail_cmd("stonith_admin", "-Q true1", 237)
-
 
         # simple reboot test
         for test_type in test_types:
@@ -758,9 +764,9 @@ class Tests:
         for test_type in test_types:
             test = self.new_test("%s_dynamic_list_query" % test_type["prefix"],
                     "Verify dynamic list of fencing devices can be retrieved.", test_type["use_cpg"])
-            test.add_cmd("stonith_admin", "-R true1  -a fence_dummy_list")
-            test.add_cmd("stonith_admin", "-R true2  -a fence_dummy_list")
-            test.add_cmd("stonith_admin", "-R true3  -a fence_dummy_list")
+            test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o mock_dynamic_hosts=fake_port_1")
+            test.add_cmd("stonith_admin", "-R true2  -a fence_dummy -o mock_dynamic_hosts=fake_port_1")
+            test.add_cmd("stonith_admin", "-R true3  -a fence_dummy -o mock_dynamic_hosts=fake_port_1")
 
             test.add_cmd_check_stdout("stonith_admin", "-l fake_port_1", "3 devices found")
 
@@ -769,9 +775,9 @@ class Tests:
         for test_type in test_types:
             test = self.new_test("%s_fence_dynamic_list_query" % test_type["prefix"],
                     "Verify dynamic list of fencing devices can be retrieved.", test_type["use_cpg"])
-            test.add_cmd("stonith_admin", "-R true1  -a fence_dummy_list")
-            test.add_cmd("stonith_admin", "-R true2  -a fence_dummy_list")
-            test.add_cmd("stonith_admin", "-R true3  -a fence_dummy_list")
+            test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o mock_dynamic_hosts=fake_port_1")
+            test.add_cmd("stonith_admin", "-R true2  -a fence_dummy -o mock_dynamic_hosts=fake_port_1")
+            test.add_cmd("stonith_admin", "-R true3  -a fence_dummy -o mock_dynamic_hosts=fake_port_1")
 
             test.add_cmd("stonith_admin", "-F fake_port_1 -t 5 -V");
 
@@ -1047,45 +1053,14 @@ logging {
             self.stop_corosync()
             self.start_corosync()
 
-        monitor_fail_agent = ("""#!/usr/bin/python
-import sys
-def main():
-    for line in sys.stdin.readlines():
-        if line.count("monitor") > 0:
-            sys.exit(-1);
-    sys.exit(-1)
-if __name__ == "__main__":
-    main()
-""")
-
-        dynamic_list_agent = ("""#!/usr/bin/python
-import sys
-def main():
-    for line in sys.stdin.readlines():
-        if line.count("list") > 0:
-            print("fake_port_1")
-            sys.exit(0)
-        if line.count("off") > 0:
-            sys.exit(0)
-    sys.exit(-1)
-if __name__ == "__main__":
-    main()
-""")
-
-        os.system("cat <<-END >>/usr/sbin/fence_dummy_list\n%s\nEND" % (dynamic_list_agent))
-        os.system("chmod 711 /usr/sbin/fence_dummy_list")
-
-        os.system("cat <<-END >>/usr/sbin/fence_dummy_monitor_fail\n%s\nEND" % (monitor_fail_agent))
-        os.system("chmod 711 /usr/sbin/fence_dummy_monitor_fail")
-
-        os.system("cp /usr/share/pacemaker/tests/cts/fence_dummy /usr/sbin/fence_dummy")
+        os.system("cp %s /usr/sbin/fence_dummy" % FENCE_DUMMY)
 
         # modifies dummy agent to do require unfencing
-        os.system("cat /usr/share/pacemaker/tests/cts/fence_dummy  | sed 's/on_target=/automatic=/g' > /usr/sbin/fence_dummy_automatic_unfence");
+        os.system("sed 's/on_target=/automatic=/g' %s > /usr/sbin/fence_dummy_automatic_unfence" % FENCE_DUMMY);
         os.system("chmod 711 /usr/sbin/fence_dummy_automatic_unfence")
 
         # modifies dummy agent to not advertise reboot
-        os.system("cat /usr/share/pacemaker/tests/cts/fence_dummy  | sed 's/^.*<action.*name.*reboot.*>.*//g' > /usr/sbin/fence_dummy_no_reboot");
+        os.system("sed 's/^.*<action.*name.*reboot.*>.*//g' %s > /usr/sbin/fence_dummy_no_reboot" % FENCE_DUMMY);
         os.system("chmod 711 /usr/sbin/fence_dummy_no_reboot")
 
     def cleanup_environment(self, use_corosync):
@@ -1102,8 +1077,6 @@ if __name__ == "__main__":
         if self.autogen_corosync_cfg:
             os.system("rm -f /etc/corosync/corosync.conf")
 
-        os.system("rm -f /usr/sbin/fence_dummy_monitor_fail")
-        os.system("rm -f /usr/sbin/fence_dummy_list")
         os.system("rm -f /usr/sbin/fence_dummy")
         os.system("rm -f /usr/sbin/fence_dummy_automatic_unfence")
         os.system("rm -f /usr/sbin/fence_dummy_no_reboot")
