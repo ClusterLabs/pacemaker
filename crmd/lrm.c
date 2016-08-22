@@ -33,6 +33,7 @@
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
 #include <crmd_lrm.h>
+#include <tengine.h>
 
 #define START_DELAY_THRESHOLD 5 * 60 * 1000
 #define MAX_LRM_REG_FAILS 30
@@ -2269,6 +2270,25 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t * rsc, lrmd_event_data
         }
 
     } else {
+        char *uuid = NULL;
+        int transition_id = 0;
+        int action_id = 0;
+        int target_rc = 0;
+        crm_action_t *action = NULL;
+
+        decode_transition_key(op->user_data, &uuid, &transition_id, &action_id, &target_rc);
+        free(uuid);
+
+        action = get_action(action_id, FALSE);
+
+        if (action) {
+            stop_te_timer(action->timer);
+            action->confirmed = TRUE;
+
+            abort_transition(INFINITY, tg_restart, "No lrm resource", NULL);
+            update_graph(transition_graph, action);
+            trigger_graph();
+        }
         crm_warn("Resource %s no longer exists in the lrmd", op->rsc_id);
         send_direct_ack(NULL, NULL, rsc, op, op->rsc_id);
         goto cleanup;
