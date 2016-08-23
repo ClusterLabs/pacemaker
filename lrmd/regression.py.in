@@ -1,20 +1,14 @@
 #!/usr/bin/python
+""" Regression tests for Pacemaker's lrmd
+"""
 
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA.
+# Pacemaker targets compatibility with Python 2.6+ and 3.2+
+from __future__ import print_function, unicode_literals, absolute_import, division
 
+__copyright__ = "Copyright (C) 2012-2016 Andrew Beekhof <andrew@beekhof.net>"
+__license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
+
+import io
 import os
 import sys
 import subprocess
@@ -28,27 +22,51 @@ test_dir=sys.path[0]
 
 new_path=os.environ['PATH']
 if os.path.exists("%s/regression.py.in" % test_dir):
-    print "Running tests from the source tree: %s (%s)" % (build_dir, test_dir)
+    print("Running tests from the source tree: %s (%s)" % (build_dir, test_dir))
     new_path = "%s/lrmd:%s" % (build_dir, new_path)    # For lrmd, lrmd_test and pacemaker_remoted
     new_path = "%s/tools:%s" % (build_dir, new_path)   # For crm_resource
     new_path = "%s/fencing:%s" % (build_dir, new_path) # For stonithd
 
 else:
-    print "Running tests from the install tree: @CRM_DAEMON_DIR@ (not %s)" % test_dir
+    print("Running tests from the install tree: @CRM_DAEMON_DIR@ (not %s)" % test_dir)
     new_path = "@CRM_DAEMON_DIR@:%s" % (new_path) # For stonithd, lrmd, lrmd_test and pacemaker_remoted
 
-print new_path
+print(new_path)
 os.environ['PATH']=new_path
 
-def output_from_command(command, no_wait=0):
-    test = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
 
-    if no_wait == 0:
-        test.wait()
+def shlex_split(command):
+    """ Wrapper for shlex.split() that works around Python 2.6 bug """
+
+    if sys.version_info < (2,7,):
+        return shlex.split(command.encode('ascii'))
     else:
-        return 0
+        return shlex.split(command)
 
-    return test.communicate()[0].split("\n")
+
+def pipe_output(pipes, stdout=True, stderr=False):
+    """ Wrapper to get text output from pipes regardless of Python version """
+
+    output = ""
+    pipe_outputs = pipes.communicate()
+    if sys.version_info < (3,):
+        if stdout:
+            output = output + pipe_outputs[0]
+        if stderr:
+            output = output + pipe_outputs[1]
+    else:
+        if stdout:
+            output = output + pipe_outputs[0].decode(sys.stdout.encoding)
+        if stderr:
+            output = output + pipe_outputs[1].decode(sys.stderr.encoding)
+    return output
+
+
+def output_from_command(command):
+    test = subprocess.Popen(shlex_split(command), stdout=subprocess.PIPE)
+    test.wait()
+    return pipe_output(test).split("\n")
+
 
 class Test:
     def __init__(self, name, description, verbose = 0, tls = 0):
@@ -96,19 +114,19 @@ class Test:
 
     def start_environment(self):
         ### make sure we are in full control here ###
-        cmd = shlex.split("killall -q -9 stonithd lt-stonithd lrmd lt-lrmd lrmd_test lt-lrmd_test pacemaker_remoted")
+        cmd = shlex_split("killall -q -9 stonithd lt-stonithd lrmd lt-lrmd lrmd_test lt-lrmd_test pacemaker_remoted")
         test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
         test.wait()
 
         additional_args = ""
 
         if self.tls == 0:
-            self.stonith_process = subprocess.Popen(shlex.split("stonithd -s"))
+            self.stonith_process = subprocess.Popen(shlex_split("stonithd -s"))
 
         if self.verbose:
             additional_args = additional_args + " -V"
 
-        self.lrmd_process = subprocess.Popen(shlex.split("%s %s -l /tmp/lrmd-regression.log" % (self.daemon_location, additional_args)))
+        self.lrmd_process = subprocess.Popen(shlex_split("%s %s -l /tmp/lrmd-regression.log" % (self.daemon_location, additional_args)))
 
         time.sleep(1)
 
@@ -118,10 +136,10 @@ class Test:
             self.lrmd_process.wait()
 
             if self.verbose:
-                print "Daemon output"
-                f = open('/tmp/lrmd-regression.log', 'r')
+                print("Daemon output")
+                f = io.open('/tmp/lrmd-regression.log', 'rt')
                 for line in f.readlines():
-                    print line.strip()
+                    print(line.strip())
             os.remove('/tmp/lrmd-regression.log')
 
         if self.stonith_process:
@@ -156,39 +174,39 @@ class Test:
         return self.result_exitcode
 
     def print_result(self, filler):
-        print "%s%s" % (filler, self.result_txt)
+        print("%s%s" % (filler, self.result_txt))
 
     def run_cmd(self, args):
-        cmd = shlex.split(args['args'])
+        cmd = shlex_split(args['args'])
         cmd.insert(0, args['cmd'])
         if self.verbose:
-            print "\n\nRunning: "+" ".join(cmd)
+            print("\n\nRunning: "+" ".join(cmd))
         test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 
         if args['kill']:
             if self.verbose:
-                print "Also running: "+args['kill']
-            ### Typically the kill argument is used to detect some sort of
-            ### failure.  Without yeilding for a few seconds here the process
-            ### launched earlier that is listening for the failure may not have time
-            ### to connect to the lrmd.
+                print("Also running: "+args['kill'])
+            ### Typically, the kill argument is used to detect some sort of
+            ### failure. Without yielding for a few seconds here, the process
+            ### launched earlier that is listening for the failure may not have
+            ### time to connect to the lrmd.
             time.sleep(2)
-            subprocess.Popen(shlex.split(args['kill']))
+            subprocess.Popen(shlex_split(args['kill']))
 
         if args['no_wait'] == 0:
             test.wait()
         else:
             return 0
 
-        output = test.communicate()[0]
+        output = pipe_output(test)
 
         if args['stdout_match'] != "" and output.count(args['stdout_match']) == 0:
             test.returncode = -2
-            print "STDOUT string '%s' was not found in cmd output" % (args['stdout_match'])
+            print("STDOUT string '%s' was not found in cmd output" % (args['stdout_match']))
 
         if args['stdout_negative_match'] != "" and output.count(args['stdout_negative_match']) != 0:
             test.returncode = -2
-            print "STDOUT string '%s' was found in cmd output" % (args['stdout_negative_match'])
+            print("STDOUT string '%s' was found in cmd output" % (args['stdout_negative_match']))
 
         args['cmd_output'] = output
 
@@ -200,34 +218,34 @@ class Test:
 
         if self.tls and self.name.count("stonith") != 0:
             self.result_txt = "SKIPPED - '%s' - disabled when testing pacemaker_remote" % (self.name)
-            print self.result_txt
+            print(self.result_txt)
             return res
 
         self.start_environment()
 
         if self.verbose:
-            print "\n--- START TEST - %s" % self.name
+            print("\n--- START TEST - %s" % self.name)
 
         self.result_txt = "SUCCESS - '%s'" % (self.name)
         self.result_exitcode = 0
         for cmd in self.cmds:
             res = self.run_cmd(cmd)
             if res != cmd['expected_exitcode']:
-                print cmd['cmd_output']
-                print "Step %d FAILED - command returned %d, expected %d" % (i, res, cmd['expected_exitcode'])
+                print(cmd['cmd_output'])
+                print("Step %d FAILED - command returned %d, expected %d" % (i, res, cmd['expected_exitcode']))
                 self.result_txt = "FAILURE - '%s' failed at step %d. Command: lrmd_test %s" % (self.name, i, cmd['args'])
                 self.result_exitcode = -1
                 break
             else:
                 if self.verbose:
-                    print cmd['cmd_output'].strip()
-                    print "Step %d SUCCESS" % (i)
+                    print(cmd['cmd_output'].strip())
+                    print("Step %d SUCCESS" % (i))
             i = i + 1
         self.clean_environment()
 
-        print self.result_txt
+        print(self.result_txt)
         if self.verbose:
-            print "--- END TEST - %s\n" % self.name
+            print("--- END TEST - %s\n" % self.name)
 
         self.executed = 1
         return res
@@ -251,7 +269,7 @@ class Tests:
             # which is really scary looking. I'd rather see the import fail.
             import systemd.daemon
 
-        print "Testing "+repr(self.rsc_classes)
+        print("Testing "+repr(self.rsc_classes))
 
         self.common_cmds = {
             "ocf_reg_line"      : "-c register_rsc -r ocf_test_rsc "+self.action_timeout+" -C ocf -P pacemaker -T Dummy",
@@ -361,7 +379,7 @@ class Tests:
             os.system("dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1")
 
         ### Make fake systemd daemon and unit file ###
-        dummy_daemon = """#!/bin/python
+        dummy_daemon = """#!/usr/bin/python
 import time, systemd.daemon
 time.sleep(3)
 systemd.daemon.notify("READY=1")
@@ -400,28 +418,28 @@ def main():
         if line.count("monitor") > 0:
             sys.exit(0)
         if line.count("metadata") > 0:
-            print '<resource-agent name="fence_dummy_monitor" shortdesc="Dummy Fence agent for testing">'
-            print '  <longdesc>dummy description.</longdesc>'
-            print '  <vendor-url>http://www.example.com</vendor-url>'
-            print '  <parameters>'
-            print '    <parameter name="action" unique="0" required="1">'
-            print '      <getopt mixed="-o, --action=[action]"/>'
-            print '      <content type="string" default="reboot"/>'
-            print '      <shortdesc lang="en">Fencing Action</shortdesc>'
-            print '    </parameter>'
-            print '    <parameter name="port" unique="0" required="0">'
-            print '      <getopt mixed="-n, --plug=[id]"/>'
-            print '      <content type="string"/>'
-            print '      <shortdesc lang="en">Physical plug number or name of virtual machine</shortdesc>'
-            print '    </parameter>'
-            print '  </parameters>'
-            print '  <actions>'
-            print '    <action name="on"/>'
-            print '    <action name="off"/>'
-            print '    <action name="monitor"/>'
-            print '    <action name="metadata"/>'
-            print '  </actions>'
-            print '</resource-agent>'
+            print('<resource-agent name="fence_dummy_monitor" shortdesc="Dummy Fence agent for testing">')
+            print('  <longdesc>dummy description.</longdesc>')
+            print('  <vendor-url>http://www.example.com</vendor-url>')
+            print('  <parameters>')
+            print('    <parameter name="action" unique="0" required="1">')
+            print('      <getopt mixed="-o, --action=[action]"/>')
+            print('      <content type="string" default="reboot"/>')
+            print('      <shortdesc lang="en">Fencing Action</shortdesc>')
+            print('    </parameter>')
+            print('    <parameter name="port" unique="0" required="0">')
+            print('      <getopt mixed="-n, --plug=[id]"/>')
+            print('      <content type="string"/>')
+            print('      <shortdesc lang="en">Physical plug number or name of virtual machine</shortdesc>')
+            print('    </parameter>')
+            print('  </parameters>')
+            print('  <actions>')
+            print('    <action name="on"/>')
+            print('    <action name="off"/>')
+            print('    <action name="monitor"/>')
+            print('    <action name="metadata"/>')
+            print('  </actions>')
+            print('</resource-agent>')
             sys.exit(0)
     sys.exit(-1)
 if __name__ == "__main__":
@@ -440,7 +458,7 @@ if __name__ == "__main__":
         os.system("chmod 711 /usr/sbin/fence_dummy_monitor")
 
         if os.path.exists("%s/cts/LSBDummy" % build_dir):
-            print "Using %s/cts/LSBDummy" % build_dir
+            print("Using %s/cts/LSBDummy" % build_dir)
             os.system("cp %s/cts/LSBDummy /etc/init.d/LSBDummy" % build_dir)
 
             if not os.path.exists("@OCF_RA_DIR@/pacemaker"):
@@ -453,7 +471,7 @@ if __name__ == "__main__":
 
         else:
             # Assume it's installed
-            print "Using @datadir@/@PACKAGE@/tests/cts/LSBDummy"
+            print("Using @datadir@/@PACKAGE@/tests/cts/LSBDummy")
             os.system("cp @datadir@/@PACKAGE@/tests/cts/LSBDummy /etc/init.d/LSBDummy")
 
         os.system("chmod a+x /etc/init.d/LSBDummy")
@@ -462,11 +480,11 @@ if __name__ == "__main__":
 
         os.system("mkdir -p /etc/ha.d/resource.d")
         if os.path.exists("%s/cts/HBDummy" % build_dir):
-            print "Using %s/cts/HBDummy" % build_dir
+            print("Using %s/cts/HBDummy" % build_dir)
             os.system("cp %s/cts/HBDummy /etc/ha.d/resource.d/HBDummy" % build_dir)
         else:
             # Assume it's installed
-            print "Using @datadir@/@PACKAGE@/tests/cts/HBDummy"
+            print("Using @datadir@/@PACKAGE@/tests/cts/HBDummy")
             os.system("cp @datadir@/@PACKAGE@/tests/cts/HBDummy /etc/ha.d/resource.d/HBDummy")
 
         os.system("chmod a+x /etc/ha.d/resource.d/HBDummy")
@@ -486,7 +504,7 @@ if __name__ == "__main__":
         os.system("rm -f /usr/sbin/fence_dummy_monitor")
         os.system("rm -f /usr/sbin/fence_dummy_sleep")
         if os.path.exists("/bin/systemctl"):
-                    os.system("systemctl daemon-reload")
+            os.system("systemctl daemon-reload")
 
     ### These are tests that should apply to all resource classes ###
     def build_generic_tests(self):
@@ -529,7 +547,7 @@ if __name__ == "__main__":
             test.add_cmd(common_cmds["%s_monitor_event" % (rsc)]) ### If this fails, that means the monitor may not be getting rescheduled ####
             test.add_cmd(common_cmds["%s_monitor_event" % (rsc)]) ### If this fails, that means the monitor may not be getting rescheduled ####
 
-            # Add the duplicate monitors. 
+            # Add the duplicate monitors
             test.add_cmd(common_cmds["%s_monitor_line" % (rsc)] + " " + common_cmds["%s_monitor_event" % (rsc)])
             test.add_cmd(common_cmds["%s_monitor_line" % (rsc)] + " " + common_cmds["%s_monitor_event" % (rsc)])
             test.add_cmd(common_cmds["%s_monitor_line" % (rsc)] + " " + common_cmds["%s_monitor_event" % (rsc)])
@@ -1029,12 +1047,12 @@ if __name__ == "__main__":
             test.add_cmd_check_stdout("-c list_agents -C service", "", "HBDummy")            ### should not exist
 
     def print_list(self):
-        print "\n==== %d TESTS FOUND ====" % (len(self.tests))
-        print "%35s - %s" % ("TEST NAME", "TEST DESCRIPTION")
-        print "%35s - %s" % ("--------------------", "--------------------")
+        print("\n==== %d TESTS FOUND ====" % (len(self.tests)))
+        print("%35s - %s" % ("TEST NAME", "TEST DESCRIPTION"))
+        print("%35s - %s" % ("--------------------", "--------------------"))
         for test in self.tests:
-            print "%35s - %s" % (test.name, test.description)
-        print "==== END OF LIST ====\n"
+            print("%35s - %s" % (test.name, test.description))
+        print("==== END OF LIST ====\n")
 
     def run_single(self, name):
         for test in self.tests:
@@ -1064,8 +1082,8 @@ if __name__ == "__main__":
     def print_results(self):
         failures = 0;
         success = 0;
-        print "\n\n======= FINAL RESULTS =========="
-        print "\n--- FAILURE RESULTS:"
+        print("\n\n======= FINAL RESULTS ==========")
+        print("\n--- FAILURE RESULTS:")
         for test in self.tests:
             if test.executed == 0:
                 continue
@@ -1077,9 +1095,9 @@ if __name__ == "__main__":
                 success = success + 1
 
         if failures == 0:
-            print "    None"
+            print("    None")
 
-        print "\n--- TOTALS\n    Pass:%d\n    Fail:%d\n" % (success, failures)
+        print("\n--- TOTALS\n    Pass:%d\n    Fail:%d\n" % (success, failures))
 
 class TestOptions:
     def __init__(self):
@@ -1116,19 +1134,19 @@ class TestOptions:
                 skip = 1
 
     def show_usage(self):
-        print "usage: " + sys.argv[0] + " [options]"
-        print "If no options are provided, all tests will run"
-        print "Options:"
-        print "\t [--help | -h]                        Show usage"
-        print "\t [--list-tests | -l]                  Print out all registered tests."
-        print "\t [--run-only | -r 'testname']         Run a specific test"
-        print "\t [--verbose | -V]                     Verbose output"
-        print "\t [--pacemaker-remote | -R             Test pacemaker-remote binary instead of lrmd."
-        print "\t [--run-only-pattern | -p 'string']   Run only tests containing the string value"
-        print "\n\tExample: Run only the test 'start_top'"
-        print "\t\t python ./regression.py --run-only start_stop"
-        print "\n\tExample: Run only the tests with the string 'systemd' present in them"
-        print "\t\t python ./regression.py --run-only-pattern systemd"
+        print("usage: " + sys.argv[0] + " [options]")
+        print("If no options are provided, all tests will run")
+        print("Options:")
+        print("\t [--help | -h]                        Show usage")
+        print("\t [--list-tests | -l]                  Print out all registered tests.")
+        print("\t [--run-only | -r 'testname']         Run a specific test")
+        print("\t [--verbose | -V]                     Verbose output")
+        print("\t [--pacemaker-remote | -R             Test pacemaker-remote binary instead of lrmd.")
+        print("\t [--run-only-pattern | -p 'string']   Run only tests containing the string value")
+        print("\n\tExample: Run only the test 'start_top'")
+        print("\t\t python ./regression.py --run-only start_stop")
+        print("\n\tExample: Run only the tests with the string 'systemd' present in them")
+        print("\t\t python ./regression.py --run-only-pattern systemd")
 
 
 def main(argv):
@@ -1145,7 +1163,7 @@ def main(argv):
 
     tests.setup_test_environment()
 
-    print "Starting ..."
+    print("Starting ...")
 
     if o.options['list-tests']:
         tests.print_list()
@@ -1164,5 +1182,5 @@ def main(argv):
     tests.cleanup_test_environment()
     tests.exit()
 
-if __name__=="__main__":
+if __name__ == "__main__":
     main(sys.argv)
