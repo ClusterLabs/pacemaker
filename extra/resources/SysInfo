@@ -71,10 +71,10 @@ Sample Darwin output:
    #health_disk:   green
 
 Units:
-   free_swap: Mb
-   ram_*:     Mb
+   free_swap: MB
+   ram_*:     MB
    cpu_speed (Linux): bogomips
-   cpu_speed (Darwin): Ghz
+   cpu_speed (Darwin): GHz
    *_free:    GB (or user-defined: disk_unit)
 
 </longdesc>
