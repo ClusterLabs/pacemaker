@@ -730,7 +730,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
 
         lpc = match;
         if (lpc >= 0 && transform == FALSE) {
-            lpc++;
+            *best = lpc++;
 
         } else if (lpc < 0) {
             crm_debug("Unknown validation type");
@@ -837,7 +837,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
         }
     }
 
-    if (*best > match) {
+    if (*best > match && *best) {
         crm_info("%s the configuration from %s to %s",
                    transform?"Transformed":"Upgraded",
                    value ? value : "<none>", known_schemas[*best].name);
@@ -854,6 +854,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 {
     gboolean rc = TRUE;
     const char *value = crm_element_value(*xml, XML_ATTR_VALIDATION);
+    char *const orig_value = strdup(value == NULL ? "(none)" : value);
 
     int version = get_schema_version(value);
     int orig_version = version;
@@ -867,21 +868,27 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 
         value = crm_element_value(converted, XML_ATTR_VALIDATION);
         if (version < min_version) {
-            if (version < orig_version) {
+            if (version < orig_version || orig_version == -1) {
                 if (to_logs) {
-                    crm_config_err("Your current configuration could not validate"
-                                   " with any schema in range [%s, %s]\n",
+                    crm_config_err("Your current configuration %s could not"
+                                   " validate with any schema in range [%s, %s],"
+                                   " cannot upgrade to %s.\n",
+                                   orig_value,
                                    get_schema_name(orig_version),
-                                   xml_latest_schema());
+                                   xml_latest_schema(),
+                                   get_schema_name(min_version));
                 } else {
-                    fprintf(stderr, "Your current configuration could not validate"
-                                    " with any schema in range [%s, %s]\n",
+                    fprintf(stderr, "Your current configuration %s could not"
+                                    " validate with any schema in range [%s, %s],"
+                                    " cannot upgrade to %s.\n",
+                                    orig_value,
                                     get_schema_name(orig_version),
-                                    xml_latest_schema());
+                                    xml_latest_schema(),
+                                    get_schema_name(min_version));
                 }
             } else if (to_logs) {
                 crm_config_err("Your current configuration could only be upgraded to %s... "
-                               "the minimum requirement is %s.\n", crm_str(value),
+                               "the minimum requirement is %s.", crm_str(value),
                                get_schema_name(min_version));
             } else {
                 fprintf(stderr, "Your current configuration could only be upgraded to %s... "
@@ -923,5 +930,6 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
         *best_version = version;
     }
 
+    free(orig_value);
     return rc;
 }
