@@ -294,7 +294,7 @@ start_child(pcmk_child_t * child)
         /* Start a new session */
         (void)setsid();
 
-        /* Setup the two alternate arg arrarys */
+        /* Setup the two alternate arg arrays */
         opts_vgrind[0] = strdup(VALGRIND_BIN);
         if (use_callgrind) {
             opts_vgrind[1] = strdup("--tool=callgrind");
