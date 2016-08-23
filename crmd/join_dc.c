@@ -251,7 +251,7 @@ do_dc_join_offer_one(long long action,
      */
     abort_transition(INFINITY, tg_restart, "Node join", NULL);
 
-    /* don't waste time by invoking the pe yet; */
+    /* don't waste time by invoking the PE yet; */
     crm_debug("Waiting on %d outstanding join acks for join-%d",
               crmd_join_phase_count(crm_join_welcomed), current_join_id);
 }
