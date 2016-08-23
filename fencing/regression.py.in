@@ -15,7 +15,7 @@ import subprocess
 import shlex
 import time
 
-FENCE_DUMMY = "/usr/share/pacemaker/tests/cts/fence_dummy"
+FENCE_DUMMY = "@datadir@/@PACKAGE@/tests/cts/fence_dummy"
 
 
 def shlex_split(command):
