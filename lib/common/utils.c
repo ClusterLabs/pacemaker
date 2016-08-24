@@ -130,34 +130,6 @@ check_timer(const char *value)
 }
 
 gboolean
-check_sbd_timeout(const char *value)
-{
-    const char *env_value = getenv("SBD_WATCHDOG_TIMEOUT");
-
-    long sbd_timeout = crm_get_msec(env_value);
-    long st_timeout = crm_get_msec(value);
-
-    if(value == NULL || st_timeout <= 0) {
-        crm_notice("Watchdog may be enabled but stonith-watchdog-timeout is disabled: %s", value);
-
-    } else if(pcmk_locate_sbd() == 0) {
-        do_crm_log_always(LOG_EMERG, "Shutting down: stonith-watchdog-timeout is configured (%ldms) but SBD is not active", st_timeout);
-        crm_exit(DAEMON_RESPAWN_STOP);
-        return FALSE;
-
-    } else if(st_timeout < sbd_timeout) {
-        do_crm_log_always(LOG_EMERG, "Shutting down: stonith-watchdog-timeout (%ldms) is too short (must be greater than %ldms)",
-                          st_timeout, sbd_timeout);
-        crm_exit(DAEMON_RESPAWN_STOP);
-        return FALSE;
-    }
-
-    crm_info("Watchdog functionality is consistent: %s delay exceeds timeout of %s", value, env_value);
-    return TRUE;
-}
-
-
-gboolean
 check_boolean(const char *value)
 {
     int tmp = FALSE;

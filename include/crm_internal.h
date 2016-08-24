@@ -129,6 +129,7 @@ gboolean check_number(const char *value);
 gboolean check_quorum(const char *value);
 gboolean check_script(const char *value);
 gboolean check_utilization(const char *value);
+long crm_get_sbd_timeout(void);
 gboolean check_sbd_timeout(const char *value);
 
 /* Shared PE/crmd functionality */
