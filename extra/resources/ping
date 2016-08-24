@@ -241,48 +241,26 @@ fping_check() {
         99) ocf_log err "Ambiguous IP versions in host_list: '$OCF_RESKEY_host_list'"; exit $OCF_ERR_CONFIGURED;;
     esac
 
-    outp=$(python <<EOF
-from __future__ import print_function
-import subprocess
-import sys
-extra_opts="$OCF_RESKEY_options".split()
-opts = [
-    "$p_exe",
-    "-r", "$OCF_RESKEY_attempts",
-    "-t", str($OCF_RESKEY_timeout * 1000 / $OCF_RESKEY_attempts),
-    "-B", "1.0"
-]
-hostlist="$OCF_RESKEY_host_list".split()
-cmd = opts + extra_opts + hostlist
-p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-stdout, stderr = p.communicate()
-rc = p.returncode
-for line in stdout.splitlines():
-    if "alive" in line:
-        print(line)
-if rc == 1:
-    for line in stdout.splitlines():
-        if "unreachable" in line:
-            print(line.split()[0], "is inactive")
-elif rc != 0:
-    print("Unexpected result for", " ".join(cmd), rc, ": ", stderr.replace('\n', ';'))
-sys.exit(rc)
-EOF
-        )
-    rc=$?
-    active=$(echo "$outp" | grep alive | wc -l)
+    active=0
+
+    n=$OCF_RESKEY_attempts
+    timeout=`expr $OCF_RESKEY_timeout \* 1000 / $OCF_RESKEY_attempts`
+
+    cmd="$p_exe -r $OCF_RESKEY_attempts -t $timeout -B 1.0 $OCF_RESKEY_options $OCF_RESKEY_host_list"
+    output=`$cmd 2>&1`; rc=$?
+    active=`echo "$output" | grep "is alive" | wc -l`
 
     case $rc in
-    0)
-        ;;
-    1)
-        echo "$outp" | grep inactive | while read in; do
-            ping_conditional_log warn "$in"
-        done
-        ;;
-    *)
-        ocf_log err "$outp"
-        ;;
+ 	0) 
+	    ;;
+ 	1) 
+	    for h in `echo "$output" | grep "is unreachable" | awk '{print $1}'`; do
+		ping_conditional_log warn "$h is inactive"
+	    done
+	    ;;
+ 	*) 
+	    ocf_log err "Unexpected result for '$cmd' $rc: `echo "$output" | tr '\n' ';'`"
+	    ;;
     esac
 
     return $active
