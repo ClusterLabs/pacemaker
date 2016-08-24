@@ -948,7 +948,7 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
                 action_t *probe = (action_t *) pIter->data;
 
                 order_actions(probe, stopped_mon, pe_order_runnable_left);
-                crm_trace("%s then %s on %s\n", probe->uuid, stopped_mon->uuid, stop_node->details->uname);
+                crm_trace("%s then %s on %s", probe->uuid, stopped_mon->uuid, stop_node->details->uname);
             }
 
             g_list_free(probes);

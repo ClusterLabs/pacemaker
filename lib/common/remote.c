@@ -357,7 +357,7 @@ crm_remote_send(crm_remote_t * remote, xmlNode * msg)
     header->payload_uncompressed = iov[1].iov_len;
     header->size_total = iov[0].iov_len + iov[1].iov_len;
 
-    crm_trace("Sending len[0]=%d, start=%x\n",
+    crm_trace("Sending len[0]=%d, start=%x",
               (int)iov[0].iov_len, *(int*)(void*)xml_text);
     rc = crm_remote_sendv(remote, iov, 2);
     if (rc < 0) {

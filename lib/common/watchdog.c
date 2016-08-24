@@ -95,7 +95,7 @@ sysrq_trigger(char t)
         crm_perror(LOG_ERR, "Opening sysrq-trigger failed");
         return;
     }
-    crm_info("sysrq-trigger: %c\n", t);
+    crm_info("sysrq-trigger: %c", t);
     fprintf(procf, "%c\n", t);
     fclose(procf);
     return;

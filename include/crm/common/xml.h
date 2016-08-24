@@ -222,7 +222,48 @@ char *calculate_xml_versioned_digest(xmlNode * input, gboolean sort, gboolean do
 /* schema-related functions (from schemas.c) */
 gboolean validate_xml(xmlNode * xml_blob, const char *validation, gboolean to_logs);
 gboolean validate_xml_verbose(xmlNode * xml_blob);
-int update_validation(xmlNode ** xml_blob, int *best, int max, gboolean transform, gboolean to_logs);
+
+/*!
+ * \brief Try update CIB XML to the highest pacemaker's standard if feasible
+ *
+ * "Update" means either actively employ XSLT-based transformation(s)
+ * (if intermediate product to transform valid per its declared schema version,
+ * transformation available, proceeded successfully with a result valid per
+ * expectated newer schema version), or just try to bump the marked validating
+ * schema until all gradually rising schema versions attested or the first
+ * such attempt subsequently fails to validate.   Which of the two styles will
+ * be used depends on \p transform parameter (positive/negative, respectively).
+ *
+ * \param[in/out] xml_blob   XML tree representing CIB, may be swapped with
+ *                           an "updated" one
+ * \param[out]    best       The highest configuration version (per its index
+ *                           in the global schemas table) it was possible to
+ *                           reach during the update steps while ensuring
+ *                           the validity of the result; if no validation
+ *                           success was observed against possibly multiple
+ *                           schemas, the value is less or equal the result
+ *                           of <tt>get_schema_version</tt> applied on the
+ *                           input \p xml_blob value (unless that function
+ *                           maps it to -1, then 0 would be used instead)
+ * \param[in]     max        When \p transform is positive, this allows to
+ *                           set upper boundary schema (per its index in the
+ *                           global schemas table) beyond which its forbidden
+ *                           to update by the means of XSLT transformation
+ * \param[in]     transform  Whether to employ XSLT-based transformation so
+ *                           as allow overcoming possible incompatibilities
+ *                           between major schema versions (see above)
+ * \param[in]     to_logs    Whether to output notable progress info to
+ *                           internall log streams or rather to stderr
+ *                           (positive/negative, respectively)
+ *
+ * \return <tt>pcmk_ok</tt> if no non-recoverable error encountered (up to
+ *         caller to evaluate if the update satisfies the requirements
+ *         per returned \p best value), negative value carrying the reason
+ *         otherwise
+ */
+int update_validation(xmlNode **xml_blob, int *best, int max,
+                      gboolean transform, gboolean to_logs);
+
 int get_schema_version(const char *name);
 const char *get_schema_name(int version);
 const char *xml_latest_schema(void);

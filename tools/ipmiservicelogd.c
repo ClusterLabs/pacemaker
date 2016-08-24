@@ -393,7 +393,7 @@ sensor_threshold_event_handler(ipmi_sensor_t * sensor,
     bmc_data.event_type = event_type;
     bmc_data.direction = direction;
 
-    crm_debug("Writing bmc_data (%08x, %08x, %04x, %02x, %02x, %02x, %02x, %02x, %d)\n",
+    crm_debug("Writing bmc_data (%08x, %08x, %04x, %02x, %02x, %02x, %02x, %02x, %d)",
               bmc_data.sel_id,
               bmc_data.sel_type,
               bmc_data.generator,
@@ -458,7 +458,7 @@ sensor_discrete_event_handler(ipmi_sensor_t * sensor,
     bmc_data.event_type = event_type;
     bmc_data.direction = direction;
 
-    crm_debug("Writing bmc_data (%08x, %08x, %04x, %02x, %02x, %02x, %02x, %02x, %d)\n",
+    crm_debug("Writing bmc_data (%08x, %08x, %04x, %02x, %02x, %02x, %02x, %02x, %d)",
               bmc_data.sel_id,
               bmc_data.sel_type,
               bmc_data.generator,

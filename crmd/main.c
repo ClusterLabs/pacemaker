@@ -94,7 +94,7 @@ main(int argc, char **argv)
     }
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
-    crm_info("CRM Git Version: %s (%s)\n", PACEMAKER_VERSION, BUILD_VERSION);
+    crm_info("CRM Git Version: %s (%s)", PACEMAKER_VERSION, BUILD_VERSION);
 
     if (optind > argc) {
         ++argerr;

@@ -232,7 +232,7 @@ upstart_job_listall(void)
                 llpc++;
             }
             lpc++;
-            crm_trace("%s -> %s\n", path, job);
+            crm_trace("%s -> %s", path, job);
             units = g_list_append(units, fix_upstart_name(job));
         }
         dbus_message_iter_next (&unit);

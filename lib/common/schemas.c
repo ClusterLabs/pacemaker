@@ -430,7 +430,7 @@ validate_with_relaxng(xmlDocPtr doc, gboolean to_logs, const char *relaxng_file,
         valid = FALSE;
 
     } else if (rc < 0) {
-        crm_err("Internal libxml error during validation\n");
+        crm_err("Internal libxml error during validation");
     }
 
   cleanup:
@@ -872,7 +872,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
                 if (to_logs) {
                     crm_config_err("Your current configuration %s could not"
                                    " validate with any schema in range [%s, %s],"
-                                   " cannot upgrade to %s.\n",
+                                   " cannot upgrade to %s.",
                                    orig_value,
                                    get_schema_name(orig_version),
                                    xml_latest_schema(),
