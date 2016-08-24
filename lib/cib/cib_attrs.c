@@ -534,7 +534,7 @@ query_node_uuid(cib_t * the_cib, const char *uname, char **uuid, int *is_remote_
     }
 
     if (rc != pcmk_ok) {
-        crm_debug("Could not map name=%s to a UUID: %s\n", uname, pcmk_strerror(rc));
+        crm_debug("Could not map name=%s to a UUID: %s", uname, pcmk_strerror(rc));
     } else {
         crm_info("Mapped %s to %s", uname, *uuid);
     }

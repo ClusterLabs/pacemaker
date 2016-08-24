@@ -586,7 +586,7 @@ construct_pam_passwd(int num_msg, const struct pam_message **msg,
     for (count = 0; count < num_msg; ++count) {
         switch (msg[count]->msg_style) {
             case PAM_TEXT_INFO:
-                crm_info("PAM: %s\n", msg[count]->msg);
+                crm_info("PAM: %s", msg[count]->msg);
                 break;
             case PAM_PROMPT_ECHO_OFF:
             case PAM_PROMPT_ECHO_ON:
@@ -596,7 +596,7 @@ construct_pam_passwd(int num_msg, const struct pam_message **msg,
                 /* In theory we'd want to print this, but then
                  * we see the password prompt in the logs
                  */
-                /* crm_err("PAM error: %s\n", msg[count]->msg); */
+                /* crm_err("PAM error: %s", msg[count]->msg); */
                 break;
             default:
                 crm_err("Unhandled conversation type: %d", msg[count]->msg_style);

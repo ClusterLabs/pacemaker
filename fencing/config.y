@@ -82,7 +82,7 @@ prioline:
 			line_val.type = STANDALONE_LINE_PRIORITY;
 			handle_line_value();
 		} else {
-			crm_err("Standalone Config parser error: priority value, %s, on line %d is not a valid positive integer\n", $3, _line_count);
+			crm_err("Standalone Config parser error: priority value, %s, on line %d is not a valid positive integer", $3, _line_count);
 			reset_line();
 		}
 	}
@@ -143,7 +143,7 @@ stuff:
 int
 yyerror(const char *foo)
 {
-	crm_err("Standalone Config parser error: %s on line %d\n", foo, _line_count);
+	crm_err("Standalone Config parser error: %s on line %d", foo, _line_count);
 	return 0;
 }
 
@@ -213,7 +213,7 @@ handle_line_value(void)
 	}
 
 	if (res) {
-		crm_err("Standalone Config parser error on line %d\n", _line_count);
+		crm_err("Standalone Config parser error on line %d", _line_count);
 	}
 	reset_line();
 }

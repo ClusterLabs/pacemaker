@@ -122,7 +122,7 @@ read_events(lrmd_event_data_t * event)
 static gboolean
 timeout_err(gpointer data)
 {
-    crm_err("timed out in remote_client\n");
+    crm_err("timed out in remote_client");
     client_exit(PCMK_OCF_TIMEOUT);
 
     return FALSE;
@@ -165,7 +165,7 @@ try_connect(void)
         sleep(1);
     }
 
-    crm_err("Failed to connect to pacemaker remote.\n");
+    crm_err("Failed to connect to pacemaker remote.");
     client_exit(PCMK_OCF_UNKNOWN_ERROR);
 }
 
@@ -219,7 +219,7 @@ client_start(gpointer user_data)
                                                options.class, options.provider, options.type, 0);
 
             if (rc != 0){
-                crm_err("failed to register resource %s with pacemaker_remote. rc: %d\n", options.rsc_id, rc);
+                crm_err("failed to register resource %s with pacemaker_remote. rc: %d", options.rsc_id, rc);
                 client_exit(1);
             }
         }
@@ -236,7 +236,7 @@ client_start(gpointer user_data)
         if (rc > 0) {
             exec_call_id = rc;
         } else {
-            crm_err("execution of rsc %s failed. rc = %d\n", options.rsc_id, rc);
+            crm_err("execution of rsc %s failed. rc = %d", options.rsc_id, rc);
             client_exit(PCMK_OCF_UNKNOWN_ERROR);
         }
     }
@@ -494,7 +494,7 @@ main(int argc, char **argv)
     /* if we can't perform an api_call or listen for events, 
      * there is nothing to do */
     if (!options.api_call ) {
-        crm_err("Nothing to be done.  Please specify 'api-call'\n");
+        crm_err("Nothing to be done.  Please specify 'api-call'");
         return PCMK_OCF_UNKNOWN_ERROR;
     }
 
@@ -504,7 +504,7 @@ main(int argc, char **argv)
 
     if (use_tls) {
         if (options.node_name == NULL) {
-            crm_err("\"node\" option required when tls is in use.\n");
+            crm_err("\"node\" option required when tls is in use.");
             return PCMK_OCF_UNKNOWN_ERROR;
         }
         proxy_table =

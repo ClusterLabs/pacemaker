@@ -428,7 +428,7 @@ cib_remote_signon(cib_t * cib, const char *name, enum cib_conn_type type)
     }
 
     if (rc == pcmk_ok) {
-        crm_notice("%s: Opened connection to %s:%d\n", name, private->server, private->port);
+        crm_notice("%s: Opened connection to %s:%d", name, private->server, private->port);
         cib->state = cib_connected_command;
         cib->type = cib_command;
 

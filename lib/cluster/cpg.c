@@ -466,7 +466,7 @@ cluster_connect_cpg(crm_cluster_t *cluster)
 
     cs_repeat(retries, 30, rc = cpg_initialize(&handle, &cpg_callbacks));
     if (rc != CS_OK) {
-        crm_err("Could not connect to the Cluster Process Group API: %d\n", rc);
+        crm_err("Could not connect to the Cluster Process Group API: %d", rc);
         goto bail;
     }
 
@@ -487,7 +487,7 @@ cluster_connect_cpg(crm_cluster_t *cluster)
 
     rc = cpg_fd_get(handle, &fd);
     if (rc != CS_OK) {
-        crm_err("Could not obtain the CPG API connection: %d\n", rc);
+        crm_err("Could not obtain the CPG API connection: %d", rc);
         goto bail;
     }
 

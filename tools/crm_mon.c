@@ -3528,7 +3528,7 @@ event_cb(smtp_session_t session, int event_no, void *arg, ...)
             *ok = 1;
             break;
         default:
-            crm_debug("Got event: %d - ignored.\n", event_no);
+            crm_debug("Got event: %d - ignored.", event_no);
     }
     va_end(alist);
 }

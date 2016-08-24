@@ -262,17 +262,17 @@ cluster_connect_quorum(gboolean(*dispatch) (unsigned long long, gboolean),
 
     rc = quorum_initialize(&pcmk_quorum_handle, &quorum_callbacks, &quorum_type);
     if (rc != CS_OK) {
-        crm_err("Could not connect to the Quorum API: %d\n", rc);
+        crm_err("Could not connect to the Quorum API: %d", rc);
         goto bail;
 
     } else if (quorum_type != QUORUM_SET) {
-        crm_err("Corosync quorum is not configured\n");
+        crm_err("Corosync quorum is not configured");
         goto bail;
     }
 
     rc = quorum_getquorate(pcmk_quorum_handle, &quorate);
     if (rc != CS_OK) {
-        crm_err("Could not obtain the current Quorum API state: %d\n", rc);
+        crm_err("Could not obtain the current Quorum API state: %d", rc);
         goto bail;
     }
 
@@ -286,13 +286,13 @@ cluster_connect_quorum(gboolean(*dispatch) (unsigned long long, gboolean),
 
     rc = quorum_trackstart(pcmk_quorum_handle, CS_TRACK_CHANGES | CS_TRACK_CURRENT);
     if (rc != CS_OK) {
-        crm_err("Could not setup Quorum API notifications: %d\n", rc);
+        crm_err("Could not setup Quorum API notifications: %d", rc);
         goto bail;
     }
 
     rc = quorum_fd_get(pcmk_quorum_handle, &fd);
     if (rc != CS_OK) {
-        crm_err("Could not obtain the Quorum API connection: %d\n", rc);
+        crm_err("Could not obtain the Quorum API connection: %d", rc);
         goto bail;
     }
 

@@ -673,7 +673,7 @@ unpack_simple_location(xmlNode * xml_obj, pe_working_set_t * data_set)
         }
 
         if (regcomp(r_patt, value, REG_EXTENDED)) {
-            crm_config_err("Bad regex '%s' for constraint '%s'\n", value, id);
+            crm_config_err("Bad regex '%s' for constraint '%s'", value, id);
             regfree(r_patt);
             free(r_patt);
             return FALSE;
