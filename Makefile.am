@@ -26,7 +26,7 @@ MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
 CORE	= $(LIBLTDL_DIR) replace include lib mcp attrd pengine cib crmd fencing lrmd tools xml
 SUBDIRS	= $(CORE) cts extra doc
 
-doc_DATA = AUTHORS COPYING
+doc_DATA = README.markdown COPYING
 noinst_PROGRAMS = scratch
 
 ACLOCAL_AMFLAGS  = -I m4
