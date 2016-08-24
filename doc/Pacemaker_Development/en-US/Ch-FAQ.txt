@@ -29,6 +29,10 @@ What are the different Git branches and repositories used for?::
    next official release, and will receive only bug fixes.
  * The https://github.com/ClusterLabs/pacemaker-1.0[1.0 repository] is a
    frozen snapshot of the 1.0 release series, and is no longer developed.
+ * Messages will be posted to the
+   http://clusterlabs.org/mailman/listinfo/developers[developers@clusterlabs.org]
+   mailing list during the release cycle, with instructions about which
+   branches to use when submitting requests.
 
 How do I build from the source code?::
  See the
