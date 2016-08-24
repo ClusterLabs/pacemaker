@@ -510,7 +510,6 @@ exit 0
 %doc %{_datadir}/pacemaker/alerts
 
 %license licenses/GPLv2
-%doc AUTHORS
 %doc COPYING
 %doc ChangeLog
 
@@ -594,7 +593,6 @@ exit 0
 %exclude %{_mandir}/man8/stonith_admin.*
 
 %license licenses/GPLv2
-%doc AUTHORS
 %doc COPYING
 %doc ChangeLog
 
@@ -615,7 +613,6 @@ exit 0
 %{_libdir}/libstonithd.so.*
 %{_libdir}/libtransitioner.so.*
 %license licenses/LGPLv2.1
-%doc AUTHORS
 %doc COPYING
 %doc ChangeLog
 
@@ -623,7 +620,6 @@ exit 0
 %defattr(-,root,root)
 %{_libdir}/libcrmcluster.so.*
 %license licenses/LGPLv2.1
-%doc AUTHORS
 %doc COPYING
 %doc ChangeLog
 
@@ -640,7 +636,6 @@ exit 0
 %{_sbindir}/pacemaker_remoted
 %{_mandir}/man8/pacemaker_remoted.*
 %license licenses/GPLv2
-%doc AUTHORS
 %doc COPYING
 %doc ChangeLog
 
@@ -655,7 +650,6 @@ exit 0
 %{_datadir}/pacemaker/tests/cts
 %{_libexecdir}/pacemaker/lrmd_test
 %license licenses/GPLv2
-%doc AUTHORS
 %doc COPYING
 %doc ChangeLog
 
@@ -670,7 +664,6 @@ exit 0
 %endif
 %{_libdir}/pkgconfig/*.pc
 %license licenses/LGPLv2.1
-%doc AUTHORS
 %doc COPYING
 %doc ChangeLog
 
