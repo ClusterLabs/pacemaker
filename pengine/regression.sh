@@ -599,6 +599,7 @@ echo ""
 do_test reprobe-target_rc "Ensure correct target_rc for reprobe of inactive resources"
 do_test node-maintenance-1 "cl#5128 - Node maintenance"
 do_test node-maintenance-2 "cl#5128 - Node maintenance (coming out of maintenance mode)"
+do_test shutdown-maintenance-node "Do not fence a maintenance node if it shuts down cleanly"
 
 do_test rsc-maintenance "Per-resource maintenance"
 

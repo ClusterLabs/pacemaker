@@ -1,0 +1,63 @@
+<cib crm_feature_set="3.0.10" validate-with="pacemaker-2.4" epoch="437" num_updates="5" admin_epoch="0" cib-last-written="Wed Aug 24 13:59:52 2016" update-origin="sle12sp2-1" update-client="crm_attribute" update-user="root" have-quorum="1" dc-uuid="1084783155">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="true"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.15-60.1-e174ec8"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="sle12sp2-cluster"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1084783155" uname="sle12sp2-1"/>
+      <node id="1084783156" uname="sle12sp2-2">
+        <instance_attributes id="nodes-1084783156">
+          <nvpair name="maintenance" value="on" id="nodes-1084783156-maintenance"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="st-sbd" class="stonith" type="external/sbd"/>
+      <primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy">
+        <operations>
+          <op name="monitor" interval="10" id="dummy1-monitor-10"/>
+        </operations>
+      </primitive>
+    </resources>
+    <constraints/>
+    <rsc_defaults/>
+    <op_defaults/>
+  </configuration>
+  <status>
+    <node_state id="1084783155" uname="sle12sp2-1" in_ccm="true" crmd="online" crm-debug-origin="post_cache_update" join="member" expected="member">
+      <transient_attributes id="1084783155">
+        <instance_attributes id="status-1084783155">
+          <nvpair id="status-1084783155-shutdown" name="shutdown" value="0"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="1084783155">
+        <lrm_resources>
+          <lrm_resource id="st-sbd" type="external/sbd" class="stonith">
+            <lrm_rsc_op id="st-sbd_last_0" operation_key="st-sbd_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.10" transition-key="4:1:0:ab77610f-0715-4f4e-bc5d-d01d073f0b43" transition-magic="0:0;4:1:0:ab77610f-0715-4f4e-bc5d-d01d073f0b43" on_node="sle12sp2-1" call-id="6" rc-code="0" op-status="0" interval="0" last-run="1472039873" last-rc-change="1472039873" exec-time="1241" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummy1_last_0" operation_key="dummy1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="7:1:0:26f9dd8c-07e3-4035-abf2-689a93e29f21" transition-magic="0:0;7:1:0:26f9dd8c-07e3-4035-abf2-689a93e29f21" on_node="sle12sp2-1" call-id="14" rc-code="0" op-status="0" interval="0" last-run="1472039941" last-rc-change="1472039941" exec-time="34" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state  passwd  op_sleep  envfile " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy1_monitor_10000" operation_key="dummy1_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.10" transition-key="7:3:0:ab77610f-0715-4f4e-bc5d-d01d073f0b43" transition-magic="0:0;7:3:0:ab77610f-0715-4f4e-bc5d-d01d073f0b43" on_node="sle12sp2-1" call-id="12" rc-code="0" op-status="0" interval="10000" last-rc-change="1472039928" exec-time="27" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="1084783156" uname="sle12sp2-2" in_ccm="false" crmd="offline" crm-debug-origin="post_cache_update" join="down" expected="down">
+      <lrm id="1084783156">
+        <lrm_resources>
+          <lrm_resource id="st-sbd" type="external/sbd" class="stonith">
+            <lrm_rsc_op id="st-sbd_last_0" operation_key="st-sbd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="3:1:7:26f9dd8c-07e3-4035-abf2-689a93e29f21" transition-magic="0:7;3:1:7:26f9dd8c-07e3-4035-abf2-689a93e29f21" on_node="sle12sp2-2" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1472039941" last-rc-change="1472039941" exec-time="4" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummy1_last_0" operation_key="dummy1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="8:1:0:26f9dd8c-07e3-4035-abf2-689a93e29f21" transition-magic="0:0;8:1:0:26f9dd8c-07e3-4035-abf2-689a93e29f21" on_node="sle12sp2-2" call-id="10" rc-code="0" op-status="0" interval="0" last-run="1472039941" last-rc-change="1472039941" exec-time="53" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state  passwd  op_sleep  envfile " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

@@ -1842,7 +1842,9 @@ process_rsc_state(resource_t * rsc, node_t * node,
 
     /* If a managed resource is believed to be running, but node is down ... */
     if (rsc->role > RSC_ROLE_STOPPED
-        && node->details->online == FALSE && is_set(rsc->flags, pe_rsc_managed)) {
+        && node->details->online == FALSE
+        && node->details->maintenance == FALSE
+        && is_set(rsc->flags, pe_rsc_managed)) {
 
         char *reason = NULL;
         gboolean should_fence = FALSE;
