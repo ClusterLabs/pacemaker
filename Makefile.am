@@ -39,8 +39,11 @@ test_SCRIPTS		= coverage.sh BasicSanity.sh
 test_DATA		= valgrind-pcmk.suppressions
 
 # Scratch file for ad-hoc testing
-scratch_SOURCES	= scratch.c
+nodist_scratch_SOURCES	= scratch.c
 scratch_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la -lm
+
+scratch.c:
+	echo 'int main(void){}' >$@
 
 core:
 	@echo "Building only core components: $(CORE)"
