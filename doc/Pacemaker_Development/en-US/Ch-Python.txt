@@ -85,6 +85,8 @@ The future imports used in <<s-python-boilerplate>> mean:
 * Always use the I/O functions from the +io+ module rather than the native
   I/O functions (e.g. +io.open()+ rather than +open()+).
 * When opening a file, always use the +t+ (text) or +b+ (binary) mode flag.
+* When creating classes, always specify a parent class to ensure that it is a
+  "new-style" class (e.g. +class Foo(object):+ rather than +class Foo:+)
 * Be aware of the bytes type added in Python 3. Many places where strings are
   used in Python 2 use bytes or bytearrays in Python 3 (for example, the pipes
   used with +subprocess.Popen()+). Code should handle both possibilities.
@@ -133,3 +135,7 @@ indexterm:[Python,formatting]
   definitely keep it under 120 characters.
 * Where not conflicting with this style guide, it is recommended (but not
   required) to follow https://www.python.org/dev/peps/pep-0008/:[PEP 8].
+* It is recommended (but not required) to format Python code such that
+  `pylint --disable=line-too-long,too-many-lines,too-many-instance-attributes,too-many-arguments,too-many-statements`
+  produces minimal complaints (even better if you don't need to disable all
+  those checks).
