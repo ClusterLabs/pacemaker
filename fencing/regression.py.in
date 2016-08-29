@@ -938,10 +938,11 @@ class Tests(object):
                              "Verify nodeid is _NOT_ given when fence agent does not have nodeid as parameter",
                              1)
 
+        # use a host name that won't be in corosync.conf
         test.add_cmd("stonith_admin",
-                     "-R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s\"" % (our_uname))
-        test.add_cmd("stonith_admin", "-F %s -t 3" % (our_uname))
-        test.add_stonith_neg_log_pattern("For stonith action (off) for victim %s, adding nodeid" % (our_uname))
+                     "-R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=regr-test\"")
+        test.add_cmd("stonith_admin", "-F regr-test -t 3")
+        test.add_stonith_neg_log_pattern("For stonith action (off) for victim regr-test, adding nodeid")
 
         ### verify nodeid use doesn't explode standalone mode
         test = self.new_test("standalone_do_not_supply_nodeid",
