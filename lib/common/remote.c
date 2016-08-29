@@ -28,6 +28,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
+#include <netinet/tcp.h>
 #include <netdb.h>
 
 #include <stdlib.h>
@@ -927,4 +928,84 @@ int
 crm_remote_tcp_connect(const char *host, int port)
 {
     return crm_remote_tcp_connect_async(host, port, -1, NULL, NULL, NULL);
+}
+
+
+/* Convert a struct sockaddr address to a string, IPv4 and IPv6: */
+
+static char *
+get_ip_str(const struct sockaddr_storage * sa, char * s, size_t maxlen)
+{
+    switch(((struct sockaddr *)sa)->sa_family) {
+        case AF_INET:
+            inet_ntop(AF_INET, &(((struct sockaddr_in *)sa)->sin_addr),
+                      s, maxlen);
+            break;
+
+        case AF_INET6:
+            inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)sa)->sin6_addr),
+                      s, maxlen);
+            break;
+
+        default:
+            strncpy(s, "Unknown AF", maxlen);
+            return NULL;
+    }
+
+    return s;
+}
+
+int
+crm_remote_accept(int ssock)
+{
+    int csock = 0;
+    int rc = 0;
+    int flag = 0;
+    unsigned laddr = 0;
+    struct sockaddr_storage addr;
+    char addr_str[INET6_ADDRSTRLEN];
+#ifdef TCP_USER_TIMEOUT
+    int optval;
+    long sbd_timeout = crm_get_sbd_timeout();
+#endif
+
+    /* accept the connection */
+    laddr = sizeof(addr);
+    memset(&addr, 0, sizeof(addr));
+    csock = accept(ssock, (struct sockaddr *)&addr, &laddr);
+    get_ip_str(&addr, addr_str, INET6_ADDRSTRLEN);
+    crm_info("New remote connection from %s", addr_str);
+
+    if (csock == -1) {
+        crm_err("accept socket failed");
+        return -1;
+    }
+
+    if ((flag = fcntl(csock, F_GETFL)) >= 0) {
+        if ((rc = fcntl(csock, F_SETFL, flag | O_NONBLOCK)) < 0) {
+            crm_err("fcntl() write failed");
+            close(csock);
+            return rc;
+        }
+    } else {
+        crm_err("fcntl() read failed");
+        close(csock);
+        return flag;
+    }
+
+#ifdef TCP_USER_TIMEOUT
+    if (sbd_timeout > 0) {
+        optval = sbd_timeout / 2; /* time to fail and retry before watchdog */
+        rc = setsockopt(csock, SOL_TCP, TCP_USER_TIMEOUT,
+                        &optval, sizeof(optval));
+        if (rc < 0) {
+            crm_err("setting TCP_USER_TIMEOUT (%d) on client socket failed",
+                    optval);
+            close(csock);
+            return rc;
+        }
+    }
+#endif
+
+    return csock;
 }
