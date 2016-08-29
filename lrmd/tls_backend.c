@@ -188,38 +188,10 @@ lrmd_auth_timeout_cb(gpointer data)
     return FALSE;
 }
 
-/* Convert a struct sockaddr address to a string, IPv4 and IPv6: */
-
-static char *
-get_ip_str(const struct sockaddr_storage * sa, char * s, size_t maxlen)
-{
-    switch(((struct sockaddr *)sa)->sa_family) {
-        case AF_INET:
-            inet_ntop(AF_INET, &(((struct sockaddr_in *)sa)->sin_addr),
-                      s, maxlen);
-            break;
-
-        case AF_INET6:
-            inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)sa)->sin6_addr),
-                      s, maxlen);
-            break;
-
-        default:
-            strncpy(s, "Unknown AF", maxlen);
-            return NULL;
-    }
-
-    return s;
-}
-
 static int
 lrmd_remote_listen(gpointer data)
 {
     int csock = 0;
-    int flag = 0;
-    unsigned laddr = 0;
-    struct sockaddr_storage addr;
-    char addr_str[INET6_ADDRSTRLEN];
     gnutls_session_t *session = NULL;
     crm_client_t *new_client = NULL;
 
@@ -228,28 +200,8 @@ lrmd_remote_listen(gpointer data)
         .destroy = lrmd_remote_client_destroy,
     };
 
-    /* accept the connection */
-    laddr = sizeof(addr);
-    memset(&addr, 0, sizeof(addr));
-    csock = accept(ssock, (struct sockaddr *)&addr, &laddr);
-
-    get_ip_str(&addr, addr_str, INET6_ADDRSTRLEN);
-    crm_info("New remote connection from %s", addr_str);
-
-    if (csock == -1) {
-        crm_err("accept socket failed");
-        return TRUE;
-    }
-
-    if ((flag = fcntl(csock, F_GETFL)) >= 0) {
-        if (fcntl(csock, F_SETFL, flag | O_NONBLOCK) < 0) {
-            crm_err("fcntl() write failed");
-            close(csock);
-            return TRUE;
-        }
-    } else {
-        crm_err("fcntl() read failed");
-        close(csock);
+    csock = crm_remote_accept(ssock);
+    if (csock < 0) {
         return TRUE;
     }
 
