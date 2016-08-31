@@ -7,7 +7,7 @@ kill timeout 3600
 respawn
 
 env prog=pacemakerd
-env sysconf=@CONFIGDIR@/crm_mon
+env sysconf=@CONFIGDIR@/pacemaker
 env rpm_lockdir=@localstatedir@/lock/subsys
 env deb_lockdir=@localstatedir@/lock
 
