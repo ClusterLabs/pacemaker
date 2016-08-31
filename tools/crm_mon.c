@@ -3583,7 +3583,9 @@ send_custom_trap(const char *node, const char *rsc, const char *task, int target
     if(rsc) {
         setenv("CRM_notify_rsc", rsc, 1);
     }
-    setenv("CRM_notify_recipient", external_recipient, 1);
+    if (external_recipient) {
+        setenv("CRM_notify_recipient", external_recipient, 1);
+    }
     setenv("CRM_notify_node", node, 1);
     setenv("CRM_notify_task", task, 1);
     setenv("CRM_notify_desc", desc, 1);
