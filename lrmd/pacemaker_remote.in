@@ -115,7 +115,7 @@ start()
 	fi
 	echo
 
-	[ "x$SBD_SERVICE" != x ] && service $SBD_SERVICE start
+	[ "x$SBD_SERVICE" = "x" ] || service $SBD_SERVICE start
 }
 
 stop()
@@ -131,6 +131,8 @@ stop()
 		sleep 1
 		echo -n "."
 	    done
+	else
+		echo -n "$desc is already stopped"
 	fi
 
 	rm -f "$LOCK_FILE"
@@ -138,7 +140,7 @@ stop()
 	success
 	echo
 
-	[ "x$SBD_SERVICE" != x ] && service $SBD_SERVICE stop
+	[ "x$SBD_SERVICE" = "x" ] || service $SBD_SERVICE stop
 }
 
 rtrn=0
