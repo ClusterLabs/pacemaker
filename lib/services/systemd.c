@@ -88,6 +88,49 @@ systemd_send_recv(DBusMessage *msg, DBusError *error, int timeout)
     return pcmk_dbus_send_recv(msg, systemd_proxy, error, timeout);
 }
 
+/*!
+ * \internal
+ * \brief Send a method to systemd without arguments, and wait for reply
+ *
+ * \param[in] method  Method to send
+ *
+ * \return Systemd reply on success, NULL (and error will be logged) otherwise
+ *
+ * \note The caller must call dbus_message_unref() on the reply after
+ *       handling it.
+ */
+static DBusMessage *
+systemd_call_simple_method(const char *method)
+{
+    DBusMessage *msg = systemd_new_method(method);
+    DBusMessage *reply = NULL;
+    DBusError error;
+
+    /* Don't call systemd_init() here, because that calls this */
+    CRM_CHECK(systemd_proxy, return NULL);
+
+    if (msg == NULL) {
+        crm_err("Could not create message to send %s to systemd", method);
+        return NULL;
+    }
+
+    dbus_error_init(&error);
+    reply = systemd_send_recv(msg, &error, DBUS_TIMEOUT_USE_DEFAULT);
+    dbus_message_unref(msg);
+
+    if (dbus_error_is_set(&error)) {
+        crm_err("Could not send %s to systemd: %s (%s)",
+                method, error.message, error.name);
+        return NULL;
+
+    } else if (reply == NULL) {
+        crm_err("Could not send %s to systemd: no reply received", method);
+        return NULL;
+    }
+
+    return reply;
+}
+
 static gboolean
 systemd_init(void)
 {
@@ -354,10 +397,7 @@ systemd_unit_listall(void)
     DBusMessageIter args;
     DBusMessageIter unit;
     DBusMessageIter elem;
-    DBusMessage *msg = NULL;
     DBusMessage *reply = NULL;
-    const char *method = "ListUnits";
-    DBusError error;
 
     if (systemd_init() == FALSE) {
         return NULL;
@@ -369,29 +409,18 @@ systemd_unit_listall(void)
         "  </method>\n"                                                 \
 */
 
-    dbus_error_init(&error);
-    msg = systemd_new_method(method);
-    CRM_ASSERT(msg != NULL);
-
-    reply = systemd_send_recv(msg, &error, DBUS_TIMEOUT_USE_DEFAULT);
-    dbus_message_unref(msg);
-
-    if(error.name) {
-        crm_err("Call to %s failed: %s", method, error.name);
+    reply = systemd_call_simple_method("ListUnits");
+    if (reply == NULL) {
         return NULL;
-
-    } else if (reply == NULL) {
-        crm_err("Call to %s failed: Message has no reply", method);
-        return NULL;
-
-    } else if (!dbus_message_iter_init(reply, &args)) {
-        crm_err("Call to %s failed: Message has no arguments", method);
+    }
+    if (!dbus_message_iter_init(reply, &args)) {
+        crm_err("Could not list systemd units: systemd reply has no arguments");
         dbus_message_unref(reply);
         return NULL;
     }
-
-    if(!pcmk_dbus_type_check(reply, &args, DBUS_TYPE_ARRAY, __FUNCTION__, __LINE__)) {
-        crm_err("Call to %s failed: Message has invalid arguments", method);
+    if (!pcmk_dbus_type_check(reply, &args, DBUS_TYPE_ARRAY,
+                              __FUNCTION__, __LINE__)) {
+        crm_err("Could not list systemd units: systemd reply has invalid arguments");
         dbus_message_unref(reply);
         return NULL;
     }
