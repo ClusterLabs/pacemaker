@@ -889,7 +889,7 @@ unpack_versioned_attr_set(gpointer data, gpointer user_data)
     if (test_ruleset(pair->attr_set, unpack_data->node_hash, unpack_data->now) == FALSE) {
         return;
     }
-    
+
     add_versioned_attributes(pair->attr_set, unpack_data->hash);
 }
 #endif

@@ -1115,7 +1115,7 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
     } else if(action->rsc && action->rsc->variant <= pe_native) {
         g_hash_table_foreach(action->rsc->parameters, hash2smartfield, args_xml);
 #ifdef ENABLE_VERSIONED_ATTRS
-        
+
         if (xml_has_children(action->rsc->versioned_parameters)) {
             add_node_copy(action_xml, action->rsc->versioned_parameters);
         }

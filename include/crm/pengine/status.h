@@ -310,7 +310,7 @@ struct resource_s {
 
     pe_working_set_t *cluster;
 #ifdef ENABLE_VERSIONED_ATTRS
-    
+
     xmlNode *versioned_parameters;
 #endif
 };
