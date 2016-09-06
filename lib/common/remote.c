@@ -447,12 +447,13 @@ crm_remote_parse_buffer(crm_remote_t * remote)
  * \retval negative, session has ended
  */
 int
-crm_remote_ready(crm_remote_t * remote, int timeout /* ms */ )
+crm_remote_ready(crm_remote_t * remote, int total_timeout /* ms */ )
 {
     struct pollfd fds = { 0, };
     int sock = 0;
     int rc = 0;
     time_t start;
+    int timeout = total_timeout;
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
     if (remote->tls_session) {
@@ -483,7 +484,7 @@ crm_remote_ready(crm_remote_t * remote, int timeout /* ms */ )
          * specific timeout we are trying to honor, attempt
          * to adjust the timeout to the closest second. */
         if (errno == EINTR && (timeout > 0)) {
-            timeout = timeout - ((time(NULL) - start) * 1000);
+            timeout = total_timeout - ((time(NULL) - start) * 1000);
             if (timeout < 1000) {
                 timeout = 1000;
             }
@@ -651,7 +652,7 @@ crm_remote_recv(crm_remote_t * remote, int total_timeout /*ms */ , int *disconne
             return FALSE;
         }
 
-        remaining_timeout = remaining_timeout - ((time(NULL) - start) * 1000);
+        remaining_timeout = total_timeout - ((time(NULL) - start) * 1000);
     }
 
     return FALSE;

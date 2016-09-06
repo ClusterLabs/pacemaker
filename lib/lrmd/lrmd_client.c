@@ -610,7 +610,7 @@ lrmd_tls_recv_reply(lrmd_t * lrmd, int total_timeout, int expected_reply_id, int
         if (!xml) {
             /* read some more off the tls buffer if we still have time left. */
             if (remaining_timeout) {
-                remaining_timeout = remaining_timeout - ((time(NULL) - start) * 1000);
+                remaining_timeout = total_timeout - ((time(NULL) - start) * 1000);
             } else {
                 remaining_timeout = total_timeout;
             }
