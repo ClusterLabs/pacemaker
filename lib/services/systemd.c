@@ -28,31 +28,6 @@
 #include <dbus/dbus.h>
 #include <pcmk-dbus.h>
 
-/*
-   /usr/share/dbus-1/interfaces/org.freedesktop.systemd1.Manager.xml
-*/
-
-struct unit_info {
-    const char *id;
-    const char *description;
-    const char *load_state;
-    const char *active_state;
-    const char *sub_state;
-    const char *following;
-    const char *unit_path;
-    uint32_t job_id;
-    const char *job_type;
-    const char *job_path;
-};
-
-struct pcmk_dbus_data {
-        char *name;
-        char *unit;
-        DBusError error;
-        svc_action_t *op;
-        void (*callback)(DBusMessage *reply, svc_action_t *op);
-};
-
 gboolean systemd_unit_exec_with_unit(svc_action_t * op, const char *unit);
 
 #define BUS_NAME         "org.freedesktop.systemd1"
@@ -121,6 +96,7 @@ systemd_call_simple_method(const char *method)
     if (dbus_error_is_set(&error)) {
         crm_err("Could not send %s to systemd: %s (%s)",
                 method, error.message, error.name);
+        dbus_error_free(&error);
         return NULL;
 
     } else if (reply == NULL) {
@@ -228,6 +204,7 @@ systemd_daemon_reload_complete(DBusPendingCall *pending, void *user_data)
 
     if(pcmk_dbus_find_error("Reload", pending, reply, &error)) {
         crm_err("Could not issue systemd reload %d: %s", reload_count, error.message);
+        dbus_error_free(&error);
 
     } else {
         crm_trace("Reload %d complete", reload_count);
@@ -291,6 +268,7 @@ systemd_loadunit_result(DBusMessage *reply, svc_action_t * op)
             crm_err("Could not find unit %s for %s: LoadUnit error '%s'",
                     op->agent, op->id, error.name);
         }
+        dbus_error_free(&error);
 
     } else if(pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH, __FUNCTION__, __LINE__)) {
         dbus_message_get_args (reply, NULL,
@@ -368,6 +346,7 @@ systemd_unit_by_name(const gchar * arg_name, svc_action_t *op)
         dbus_error_init(&error);
         reply = systemd_send_recv(msg, &error,
                                   (op? op->timeout : DBUS_TIMEOUT_USE_DEFAULT));
+        dbus_error_free(&error);
         dbus_message_unref(msg);
 
         unit = systemd_loadunit_result(reply, op);
@@ -531,6 +510,7 @@ systemd_exec_result(DBusMessage *reply, svc_action_t *op)
         if (!systemd_mask_error(op, error.name)) {
             crm_err("Could not issue %s for %s: %s", op->action, op->rsc, error.message);
         }
+        dbus_error_free(&error);
 
     } else {
         if(!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH, __FUNCTION__, __LINE__)) {
@@ -554,11 +534,9 @@ systemd_exec_result(DBusMessage *reply, svc_action_t *op)
 static void
 systemd_async_dispatch(DBusPendingCall *pending, void *user_data)
 {
-    DBusError error;
     DBusMessage *reply = NULL;
     svc_action_t *op = user_data;
 
-    dbus_error_init(&error);
     if(pending) {
         reply = dbus_pending_call_steal_reply(pending);
     }
@@ -726,6 +704,7 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
         DBusError error;
 
         reply = systemd_send_recv(msg, &error, op->timeout);
+        dbus_error_free(&error);
         dbus_message_unref(msg);
         systemd_exec_result(reply, op);
 
