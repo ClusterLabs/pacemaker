@@ -202,7 +202,7 @@ systemd_daemon_reload_complete(DBusPendingCall *pending, void *user_data)
         reply = dbus_pending_call_steal_reply(pending);
     }
 
-    if(pcmk_dbus_find_error("Reload", pending, reply, &error)) {
+    if (pcmk_dbus_find_error(pending, reply, &error)) {
         crm_err("Could not issue systemd reload %d: %s", reload_count, error.message);
         dbus_error_free(&error);
 
@@ -263,10 +263,10 @@ systemd_loadunit_result(DBusMessage *reply, svc_action_t * op)
     const char *path = NULL;
     DBusError error;
 
-    if(pcmk_dbus_find_error("LoadUnit", (void*)&path, reply, &error)) {
+    if (pcmk_dbus_find_error((void*)&path, reply, &error)) {
         if(op && !systemd_mask_error(op, error.name)) {
-            crm_err("Could not find unit %s for %s: LoadUnit error '%s'",
-                    op->agent, op->id, error.name);
+            crm_err("Could not load systemd unit %s for %s: %s",
+                    op->agent, op->id, error.message);
         }
         dbus_error_free(&error);
 
@@ -341,12 +341,9 @@ systemd_unit_by_name(const gchar * arg_name, svc_action_t *op)
     if(op == NULL || op->synchronous) {
         const char *unit = NULL;
         char *munit = NULL;
-        DBusError error;
 
-        dbus_error_init(&error);
-        reply = systemd_send_recv(msg, &error,
+        reply = systemd_send_recv(msg, NULL,
                                   (op? op->timeout : DBUS_TIMEOUT_USE_DEFAULT));
-        dbus_error_free(&error);
         dbus_message_unref(msg);
 
         unit = systemd_loadunit_result(reply, op);
@@ -504,7 +501,7 @@ systemd_exec_result(DBusMessage *reply, svc_action_t *op)
 {
     DBusError error;
 
-    if(pcmk_dbus_find_error(op->action, (void*)&error, reply, &error)) {
+    if (pcmk_dbus_find_error((void*)&error, reply, &error)) {
 
         /* ignore "already started" or "not running" errors */
         if (!systemd_mask_error(op, error.name)) {
@@ -701,10 +698,7 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
         }
 
     } else {
-        DBusError error;
-
-        reply = systemd_send_recv(msg, &error, op->timeout);
-        dbus_error_free(&error);
+        reply = systemd_send_recv(msg, NULL, op->timeout);
         dbus_message_unref(msg);
         systemd_exec_result(reply, op);
 

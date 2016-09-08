@@ -101,8 +101,7 @@ upstart_job_by_name(const gchar * arg_name, gchar ** out_unit, int timeout)
     dbus_message_unref(msg);
 
     if (dbus_error_is_set(&error)) {
-        /* ignore "already started" or "not running" errors */
-        crm_err("Could not issue %s for %s: %s", method, arg_name, error.name);
+        crm_err("Could not issue %s for %s: %s", method, arg_name, error.message);
         dbus_error_free(&error);
 
     } else if(!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH, __FUNCTION__, __LINE__)) {
@@ -195,7 +194,7 @@ upstart_job_listall(void)
     dbus_message_unref(msg);
 
     if (dbus_error_is_set(&error)) {
-        crm_err("Call to %s failed: %s", method, error.name);
+        crm_err("Call to %s failed: %s", method, error.message);
         dbus_error_free(&error);
         return NULL;
 
@@ -274,7 +273,7 @@ get_first_instance(const gchar * job, int timeout)
     dbus_message_unref(msg);
 
     if (dbus_error_is_set(&error)) {
-        crm_err("Call to %s failed: %s", method, error.name);
+        crm_err("Call to %s failed: %s", method, error.message);
         dbus_error_free(&error);
         goto done;
 
@@ -393,7 +392,7 @@ upstart_async_dispatch(DBusPendingCall *pending, void *user_data)
         reply = dbus_pending_call_steal_reply(pending);
     }
 
-    if(pcmk_dbus_find_error(op->action, pending, reply, &error)) {
+    if (pcmk_dbus_find_error(pending, reply, &error)) {
 
         /* ignore "already started" or "not running" errors */
         if (!upstart_mask_error(op, error.name)) {
@@ -542,7 +541,8 @@ upstart_job_exec(svc_action_t * op, gboolean synchronous)
 
     if (dbus_error_is_set(&error)) {
         if(!upstart_mask_error(op, error.name)) {
-            crm_err("Could not issue %s for %s: %s (%s)", action, op->rsc, error.name, job);
+            crm_err("Could not issue %s for %s: %s (%s)",
+                    action, op->rsc, error.message, job);
         }
         dbus_error_free(&error);
 

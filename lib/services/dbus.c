@@ -50,10 +50,6 @@ pcmk_dbus_disconnect(DBusConnection *connection)
  * \internal
  * \brief Check whether a DBus reply indicates an error occurred
  *
- * If the given DBus reply contains an error, log it in some cases,
- * provide it as a DBusError structure if requested, and return TRUE.
- *
- * \param[in]  method  Method that generated the reply (used for logging only)
  * \param[in]  pending If non-NULL, indicates that a DBus request was sent
  * \param[in]  reply   Reply received from DBus
  * \param[out] ret     If non-NULL, will be set to DBus error, if any
@@ -66,8 +62,8 @@ pcmk_dbus_disconnect(DBusConnection *connection)
  *       done using it.
  */
 bool
-pcmk_dbus_find_error(const char *method, DBusPendingCall* pending,
-                     DBusMessage *reply, DBusError *ret)
+pcmk_dbus_find_error(DBusPendingCall *pending, DBusMessage *reply,
+                     DBusError *ret)
 {
     DBusError error;
 
@@ -90,40 +86,37 @@ pcmk_dbus_find_error(const char *method, DBusPendingCall* pending,
             case DBUS_MESSAGE_TYPE_METHOD_RETURN:
                 dbus_message_iter_init(reply, &args);
                 sig = dbus_message_iter_get_signature(&args);
-                crm_trace("Call to %s returned '%s'", method, sig);
+                crm_trace("DBus call returned output args '%s'", sig);
                 dbus_free(sig);
                 break;
             case DBUS_MESSAGE_TYPE_INVALID:
                 dbus_set_error_const(&error,
                                      "org.clusterlabs.pacemaker.InvalidReply",
                                      "Invalid reply");
-                crm_err("Error processing %s response: %s", method, error.message);
                 break;
             case DBUS_MESSAGE_TYPE_METHOD_CALL:
                 dbus_set_error_const(&error,
                                      "org.clusterlabs.pacemaker.InvalidReply.Method",
                                      "Invalid reply (method call)");
-                crm_err("Error processing %s response: %s", method, error.message);
                 break;
             case DBUS_MESSAGE_TYPE_SIGNAL:
                 dbus_set_error_const(&error,
                                      "org.clusterlabs.pacemaker.InvalidReply.Signal",
                                      "Invalid reply (signal)");
-                crm_err("Error processing %s response: %s", method, error.message);
                 break;
             case DBUS_MESSAGE_TYPE_ERROR:
                 dbus_set_error_from_message(&error, reply);
-                crm_info("%s error '%s': %s", method, error.name, error.message);
                 break;
             default:
-                dbus_set_error_const(&error,
-                                     "org.clusterlabs.pacemaker.InvalidReply.Type",
-                                     "Unknown reply type");
-                crm_err("Error processing %s response: %s (%d)", method, error.message, dtype);
+                dbus_set_error(&error,
+                               "org.clusterlabs.pacemaker.InvalidReply.Type",
+                               "Unknown reply type %d", dtype);
         }
     }
 
     if (dbus_error_is_set(&error)) {
+        crm_trace("DBus reply indicated error '%s' (%s)",
+                  error.name, error.message);
         if (ret) {
             dbus_error_init(ret);
             dbus_move_error(&error, ret);
@@ -136,6 +129,21 @@ pcmk_dbus_find_error(const char *method, DBusPendingCall* pending,
     return FALSE;
 }
 
+/*!
+ * \internal
+ * \brief Send a DBus request and wait for the reply
+ *
+ * \param[in]  msg         DBus request to send
+ * \param[in]  connection  DBus connection to use
+ * \param[out] error       If non-NULL, will be set to error, if any
+ * \param[in]  timeout     Timeout to use for request
+ *
+ * \return DBus reply
+ *
+ * \note If error is non-NULL, it is initialized, so the caller may always use
+ *       dbus_error_is_set() to determine whether an error occurred; the caller
+ *       is responsible for calling dbus_error_free() in this case.
+ */
 DBusMessage *
 pcmk_dbus_send_recv(DBusMessage *msg, DBusConnection *connection,
                     DBusError *error, int timeout)
@@ -147,6 +155,11 @@ pcmk_dbus_send_recv(DBusMessage *msg, DBusConnection *connection,
     CRM_ASSERT(dbus_message_get_type (msg) == DBUS_MESSAGE_TYPE_METHOD_CALL);
     method = dbus_message_get_member (msg);
 
+    /* Ensure caller can reliably check whether error is set */
+    if (error) {
+        dbus_error_init(error);
+    }
+
     if (timeout <= 0) {
         /* DBUS_TIMEOUT_USE_DEFAULT (-1) tells DBus to use a sane default */
         timeout = DBUS_TIMEOUT_USE_DEFAULT;
@@ -155,11 +168,9 @@ pcmk_dbus_send_recv(DBusMessage *msg, DBusConnection *connection,
     // send message and get a handle for a reply
     if (!dbus_connection_send_with_reply(connection, msg, &pending, timeout)) {
         if(error) {
-            dbus_error_init(error);
-            dbus_set_error_const(error, "org.clusterlabs.pacemaker.SendFailed",
-                                 "Call to dbus_connection_send_with_reply() failed");
+            dbus_set_error(error, "org.clusterlabs.pacemaker.SendFailed",
+                           "Could not queue DBus '%s' request", method);
         }
-        crm_err("Error sending %s request", method);
         return NULL;
     }
 
@@ -173,7 +184,7 @@ pcmk_dbus_send_recv(DBusMessage *msg, DBusConnection *connection,
         reply = dbus_pending_call_steal_reply(pending);
     }
 
-    (void)pcmk_dbus_find_error(method, pending, reply, error);
+    (void)pcmk_dbus_find_error(pending, reply, error);
 
     if(pending) {
         /* free the pending message handle */
@@ -275,8 +286,9 @@ pcmk_dbus_lookup_result(DBusMessage *reply, struct db_getall_data *data)
     DBusMessageIter dict;
     DBusMessageIter args;
 
-    if(pcmk_dbus_find_error("GetAll", (void*)&error, reply, &error)) {
-        crm_err("Cannot get properties from %s for %s", data->target, data->object);
+    if (pcmk_dbus_find_error((void*)&error, reply, &error)) {
+        crm_err("Cannot get properties from %s for %s: %s",
+                data->target, data->object, error.message);
         dbus_error_free(&error);
         goto cleanup;
     }
