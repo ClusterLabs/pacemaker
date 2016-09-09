@@ -671,6 +671,7 @@ static struct crm_option long_options[] = {
     {"-spacer-",       1, 0, '-', "\nAdditional Options:"},
     {"foreground",     0, 0, 'f', "\t(Ignored) Pacemaker always runs in the foreground"},
     {"pid-file",       1, 0, 'p', "\t(Ignored) Daemon pid file location"},
+    {"standby",        0, 0, 's', "\tStart node in standby state"},
 
     {NULL, 0, 0, 0}
 };
@@ -913,6 +914,8 @@ main(int argc, char **argv)
     int option_index = 0;
     gboolean shutdown = FALSE;
 
+    gboolean start_standby = FALSE;
+
     uid_t pcmk_uid = 0;
     gid_t pcmk_gid = 0;
     struct rlimit cores;
@@ -940,6 +943,9 @@ main(int argc, char **argv)
                 break;
             case 'p':
                 pid_file = optarg;
+                break;
+            case 's':
+                start_standby = TRUE;
                 break;
             case '$':
             case '?':
@@ -1006,6 +1012,12 @@ main(int argc, char **argv)
         crm_ipc_destroy(old_instance);
         crm_err("Pacemaker is already active, aborting startup");
         crm_exit(DAEMON_RESPAWN_STOP);
+    }
+
+    if(start_standby) {
+        setenv("PCMK_node_start_state", "standby", 1);
+    } else {
+        setenv("PCMK_node_start_state", "default", 1);
     }
 
     crm_ipc_close(old_instance);
