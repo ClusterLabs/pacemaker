@@ -1222,21 +1222,16 @@ AC_DEFINE_UNQUOTED(SUPPORT_UPSTART, $HAVE_upstart, Support upstart based system 
 AM_CONDITIONAL(BUILD_UPSTART, test $HAVE_upstart = 1)
 AC_SUBST(SUPPORT_UPSTART)
 
-if
-    $PKGCONFIG --exists systemd
-then
-    systemdunitdir=`$PKGCONFIG --variable=systemdsystemunitdir systemd`
-    AC_SUBST(systemdunitdir)
-else
-    enable_systemd=no
-fi
-
-if test $HAVE_dbus = 1 -a "x${enable_systemd}" != xno; then
-   if test -n "$systemdunitdir" -a "x$systemdunitdir" != xno; then
+AC_MSG_CHECKING([for systemd path for system unit files])
+PKG_CHECK_VAR([systemdunitdir], [systemd], [systemdsystemunitdir], [
+   AC_MSG_RESULT([$systemdunitdir])
+   if test $HAVE_dbus = 1 -a "x$systemdunitdir" != xno; then
       HAVE_systemd=1
       PCMK_FEATURES="$PCMK_FEATURES systemd"
    fi
-fi
+],[
+   AC_MSG_RESULT([no (disabled)])
+])
 
 AC_DEFINE_UNQUOTED(SUPPORT_SYSTEMD, $HAVE_systemd, Support systemd based system services)
 AM_CONDITIONAL(BUILD_SYSTEMD, test $HAVE_systemd = 1)
