@@ -292,11 +292,6 @@ AC_ARG_WITH(ais-prefix,
     [ CSPREFIX=$withval ],
     [ CSPREFIX=$prefix ])
 
-LCRSODIR=""
-AC_ARG_WITH(lcrso-dir,
-    [  --with-lcrso-dir=DIR   Corosync lcrso files. ],
-    [ LCRSODIR="$withval" ])
-
 INITDIR=""
 AC_ARG_WITH(initdir,
     [  --with-initdir=DIR      directory for init (rc) scripts [${INITDIR}]],
