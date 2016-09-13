@@ -28,51 +28,85 @@
 #include <dbus/dbus.h>
 #include <pcmk-dbus.h>
 
-#define BUS_NAME "org.freedesktop.systemd1"
-#define BUS_PATH "/org/freedesktop/systemd1"
+gboolean systemd_unit_exec_with_unit(svc_action_t * op, const char *unit);
 
-#define BUS_PROPERTY_IFACE "org.freedesktop.DBus.Properties"
+#define BUS_NAME         "org.freedesktop.systemd1"
+#define BUS_NAME_MANAGER BUS_NAME ".Manager"
+#define BUS_NAME_UNIT    BUS_NAME ".Unit"
+#define BUS_PATH         "/org/freedesktop/systemd1"
 
-/*
-   /usr/share/dbus-1/interfaces/org.freedesktop.systemd1.Manager.xml
-*/
-gboolean
-systemd_unit_exec_with_unit(svc_action_t * op, const char *unit);
-
-
-struct unit_info {
-    const char *id;
-    const char *description;
-    const char *load_state;
-    const char *active_state;
-    const char *sub_state;
-    const char *following;
-    const char *unit_path;
-    uint32_t job_id;
-    const char *job_type;
-    const char *job_path;
-};
-
-struct pcmk_dbus_data 
+static inline DBusMessage *
+systemd_new_method(const char *method)
 {
-        char *name;
-        char *unit;
-        DBusError error;
-        svc_action_t *op;
-        void (*callback)(DBusMessage *reply, svc_action_t *op);
-};
-
-static DBusMessage *systemd_new_method(const char *iface, const char *method)
-{
-    crm_trace("Calling: %s on %s", method, iface);
-    return dbus_message_new_method_call(BUS_NAME, // target for the method call
-                                        BUS_PATH, // object to call on
-                                        iface, // interface to call on
-                                        method); // method name
+    crm_trace("Calling: %s on " BUS_NAME_MANAGER, method);
+    return dbus_message_new_method_call(BUS_NAME, BUS_PATH, BUS_NAME_MANAGER,
+                                        method);
 }
 
+/*
+ * Functions to manage a static DBus connection
+ */
 
 static DBusConnection* systemd_proxy = NULL;
+
+static inline DBusPendingCall *
+systemd_send(DBusMessage *msg,
+             void(*done)(DBusPendingCall *pending, void *user_data),
+             void *user_data, int timeout)
+{
+    return pcmk_dbus_send(msg, systemd_proxy, done, user_data, timeout);
+}
+
+static inline DBusMessage *
+systemd_send_recv(DBusMessage *msg, DBusError *error, int timeout)
+{
+    return pcmk_dbus_send_recv(msg, systemd_proxy, error, timeout);
+}
+
+/*!
+ * \internal
+ * \brief Send a method to systemd without arguments, and wait for reply
+ *
+ * \param[in] method  Method to send
+ *
+ * \return Systemd reply on success, NULL (and error will be logged) otherwise
+ *
+ * \note The caller must call dbus_message_unref() on the reply after
+ *       handling it.
+ */
+static DBusMessage *
+systemd_call_simple_method(const char *method)
+{
+    DBusMessage *msg = systemd_new_method(method);
+    DBusMessage *reply = NULL;
+    DBusError error;
+
+    /* Don't call systemd_init() here, because that calls this */
+    CRM_CHECK(systemd_proxy, return NULL);
+
+    if (msg == NULL) {
+        crm_err("Could not create message to send %s to systemd", method);
+        return NULL;
+    }
+
+    dbus_error_init(&error);
+    reply = systemd_send_recv(msg, &error, DBUS_TIMEOUT_USE_DEFAULT);
+    dbus_message_unref(msg);
+
+    if (dbus_error_is_set(&error)) {
+        crm_err("Could not send %s to systemd: %s (%s)",
+                method, error.message, error.name);
+        dbus_error_free(&error);
+        return NULL;
+
+    } else if (reply == NULL) {
+        crm_err("Could not send %s to systemd: no reply received", method);
+        return NULL;
+    }
+
+    return reply;
+}
+
 static gboolean
 systemd_init(void)
 {
@@ -97,6 +131,17 @@ systemd_init(void)
     return TRUE;
 }
 
+static inline char *
+systemd_get_property(const char *unit, const char *name,
+                     void (*callback)(const char *name, const char *value, void *userdata),
+                     void *userdata, DBusPendingCall **pending, int timeout)
+{
+    return systemd_proxy?
+           pcmk_dbus_get_property(systemd_proxy, BUS_NAME, unit, BUS_NAME_UNIT,
+                                  name, callback, userdata, pending, timeout)
+           : NULL;
+}
+
 void
 systemd_cleanup(void)
 {
@@ -105,6 +150,10 @@ systemd_cleanup(void)
         systemd_proxy = NULL;
     }
 }
+
+/*
+ * end of systemd_proxy functions
+ */
 
 /*!
  * \internal
@@ -153,8 +202,9 @@ systemd_daemon_reload_complete(DBusPendingCall *pending, void *user_data)
         reply = dbus_pending_call_steal_reply(pending);
     }
 
-    if(pcmk_dbus_find_error("Reload", pending, reply, &error)) {
+    if (pcmk_dbus_find_error(pending, reply, &error)) {
         crm_err("Could not issue systemd reload %d: %s", reload_count, error.message);
+        dbus_error_free(&error);
 
     } else {
         crm_trace("Reload %d complete", reload_count);
@@ -172,12 +222,12 @@ static bool
 systemd_daemon_reload(int timeout)
 {
     static unsigned int reload_count = 0;
-    const char *method = "Reload";
-    DBusMessage *msg = systemd_new_method(BUS_NAME".Manager", method);
+    DBusMessage *msg = systemd_new_method("Reload");
 
     reload_count++;
     CRM_ASSERT(msg != NULL);
-    pcmk_dbus_send(msg, systemd_proxy, systemd_daemon_reload_complete, GUINT_TO_POINTER(reload_count), timeout);
+    systemd_send(msg, systemd_daemon_reload_complete,
+                 GUINT_TO_POINTER(reload_count), timeout);
     dbus_message_unref(msg);
 
     return TRUE;
@@ -213,11 +263,12 @@ systemd_loadunit_result(DBusMessage *reply, svc_action_t * op)
     const char *path = NULL;
     DBusError error;
 
-    if(pcmk_dbus_find_error("LoadUnit", (void*)&path, reply, &error)) {
+    if (pcmk_dbus_find_error((void*)&path, reply, &error)) {
         if(op && !systemd_mask_error(op, error.name)) {
-            crm_err("Could not find unit %s for %s: LoadUnit error '%s'",
-                    op->agent, op->id, error.name);
+            crm_err("Could not load systemd unit %s for %s: %s",
+                    op->agent, op->id, error.message);
         }
+        dbus_error_free(&error);
 
     } else if(pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH, __FUNCTION__, __LINE__)) {
         dbus_message_get_args (reply, NULL,
@@ -280,7 +331,7 @@ systemd_unit_by_name(const gchar * arg_name, svc_action_t *op)
         return FALSE;
     }
 
-    msg = systemd_new_method(BUS_NAME".Manager", "LoadUnit");
+    msg = systemd_new_method("LoadUnit");
     CRM_ASSERT(msg != NULL);
 
     name = systemd_service_name(arg_name);
@@ -290,10 +341,9 @@ systemd_unit_by_name(const gchar * arg_name, svc_action_t *op)
     if(op == NULL || op->synchronous) {
         const char *unit = NULL;
         char *munit = NULL;
-        DBusError error;
 
-        dbus_error_init(&error);
-        reply = pcmk_dbus_send_recv(msg, systemd_proxy, &error, op? op->timeout : DBUS_TIMEOUT_USE_DEFAULT);
+        reply = systemd_send_recv(msg, NULL,
+                                  (op? op->timeout : DBUS_TIMEOUT_USE_DEFAULT));
         dbus_message_unref(msg);
 
         unit = systemd_loadunit_result(reply, op);
@@ -306,7 +356,7 @@ systemd_unit_by_name(const gchar * arg_name, svc_action_t *op)
         return munit;
     }
 
-    pending = pcmk_dbus_send(msg, systemd_proxy, systemd_loadunit_cb, op, op->timeout);
+    pending = systemd_send(msg, systemd_loadunit_cb, op, op->timeout);
     if(pending) {
         services_set_op_pending(op, pending);
     }
@@ -323,10 +373,7 @@ systemd_unit_listall(void)
     DBusMessageIter args;
     DBusMessageIter unit;
     DBusMessageIter elem;
-    DBusMessage *msg = NULL;
     DBusMessage *reply = NULL;
-    const char *method = "ListUnits";
-    DBusError error;
 
     if (systemd_init() == FALSE) {
         return NULL;
@@ -338,29 +385,18 @@ systemd_unit_listall(void)
         "  </method>\n"                                                 \
 */
 
-    dbus_error_init(&error);
-    msg = systemd_new_method(BUS_NAME".Manager", method);
-    CRM_ASSERT(msg != NULL);
-
-    reply = pcmk_dbus_send_recv(msg, systemd_proxy, &error, DBUS_TIMEOUT_USE_DEFAULT);
-    dbus_message_unref(msg);
-
-    if(error.name) {
-        crm_err("Call to %s failed: %s", method, error.name);
+    reply = systemd_call_simple_method("ListUnits");
+    if (reply == NULL) {
         return NULL;
-
-    } else if (reply == NULL) {
-        crm_err("Call to %s failed: Message has no reply", method);
-        return NULL;
-
-    } else if (!dbus_message_iter_init(reply, &args)) {
-        crm_err("Call to %s failed: Message has no arguments", method);
+    }
+    if (!dbus_message_iter_init(reply, &args)) {
+        crm_err("Could not list systemd units: systemd reply has no arguments");
         dbus_message_unref(reply);
         return NULL;
     }
-
-    if(!pcmk_dbus_type_check(reply, &args, DBUS_TYPE_ARRAY, __FUNCTION__, __LINE__)) {
-        crm_err("Call to %s failed: Message has invalid arguments", method);
+    if (!pcmk_dbus_type_check(reply, &args, DBUS_TYPE_ARRAY,
+                              __FUNCTION__, __LINE__)) {
+        crm_err("Could not list systemd units: systemd reply has invalid arguments");
         dbus_message_unref(reply);
         return NULL;
     }
@@ -430,7 +466,8 @@ systemd_unit_metadata(const char *name, int timeout)
 
     if (path) {
         /* TODO: Worth a making blocking call for? Probably not. Possibly if cached. */
-        desc = pcmk_dbus_get_property(systemd_proxy, BUS_NAME, path, BUS_NAME ".Unit", "Description", NULL, NULL, NULL, timeout);
+        desc = systemd_get_property(path, "Description", NULL, NULL, NULL,
+                                    timeout);
     } else {
         desc = crm_strdup_printf("Systemd unit file for %s", name);
     }
@@ -464,12 +501,13 @@ systemd_exec_result(DBusMessage *reply, svc_action_t *op)
 {
     DBusError error;
 
-    if(pcmk_dbus_find_error(op->action, (void*)&error, reply, &error)) {
+    if (pcmk_dbus_find_error((void*)&error, reply, &error)) {
 
         /* ignore "already started" or "not running" errors */
         if (!systemd_mask_error(op, error.name)) {
             crm_err("Could not issue %s for %s: %s", op->action, op->rsc, error.message);
         }
+        dbus_error_free(&error);
 
     } else {
         if(!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH, __FUNCTION__, __LINE__)) {
@@ -493,11 +531,9 @@ systemd_exec_result(DBusMessage *reply, svc_action_t *op)
 static void
 systemd_async_dispatch(DBusPendingCall *pending, void *user_data)
 {
-    DBusError error;
     DBusMessage *reply = NULL;
     svc_action_t *op = user_data;
 
-    dbus_error_init(&error);
     if(pending) {
         reply = dbus_pending_call_steal_reply(pending);
     }
@@ -554,10 +590,10 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
         DBusPendingCall *pending = NULL;
         char *state;
 
-        state = pcmk_dbus_get_property(systemd_proxy, BUS_NAME, unit,
-                                       BUS_NAME ".Unit", "ActiveState",
-                                       op->synchronous?NULL:systemd_unit_check,
-                                       op, op->synchronous?NULL:&pending, op->timeout);
+        state = systemd_get_property(unit, "ActiveState",
+                                     (op->synchronous? NULL : systemd_unit_check),
+                                     op, (op->synchronous? NULL : &pending),
+                                     op->timeout);
         if (op->synchronous) {
             systemd_unit_check("ActiveState", state, op);
             free(state);
@@ -634,7 +670,7 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
 
     crm_debug("Calling %s for %s: %s", method, op->rsc, unit);
 
-    msg = systemd_new_method(BUS_NAME".Manager", method);
+    msg = systemd_new_method(method);
     CRM_ASSERT(msg != NULL);
 
     /* (ss) */
@@ -649,7 +685,8 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
     }
 
     if (op->synchronous == FALSE) {
-        DBusPendingCall* pending = pcmk_dbus_send(msg, systemd_proxy, systemd_async_dispatch, op, op->timeout);
+        DBusPendingCall *pending = systemd_send(msg, systemd_async_dispatch,
+                                                op, op->timeout);
 
         dbus_message_unref(msg);
         if(pending) {
@@ -661,9 +698,7 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
         }
 
     } else {
-        DBusError error;
-
-        reply = pcmk_dbus_send_recv(msg, systemd_proxy, &error, op->timeout);
+        reply = systemd_send_recv(msg, NULL, op->timeout);
         dbus_message_unref(msg);
         systemd_exec_result(reply, op);
 
