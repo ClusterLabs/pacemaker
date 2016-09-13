@@ -31,7 +31,7 @@ if [ -f config.log ]; then
     echo "  $last"
     eval $last
 
-elif [ "x$1" = xinit -a -e `which rpm` ]; then
+elif [ "x$1" = xinit -a -e `which rpm 2>/dev/null` ]; then
     cmd="./__configure.rpm"
     rpm --eval %{configure} | grep -v program-prefix | sed 's/\t/    /' > $cmd
     sh $cmd
@@ -39,7 +39,7 @@ elif [ "x$1" = xinit -a -e `which rpm` ]; then
 
 else
     echo "Now run configure with any arguments (eg. --prefix) specific to your system"
-    if [ -e `which rpm` ]; then
+    if [ -e `which rpm 2>/dev/null` ]; then
 	echo "Suggested invocation:"
 	rpm --eval %{configure} | grep -v program-prefix
     fi
