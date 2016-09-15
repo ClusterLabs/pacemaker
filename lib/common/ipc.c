@@ -910,9 +910,18 @@ crm_ipc_connected(crm_ipc_t * client)
     return rc;
 }
 
+/*!
+ * \brief Check whether an IPC connection is ready to be read
+ *
+ * \param[in] client  Connection to check
+ *
+ * \return Positive value if ready to be read, 0 if not ready, -errno on error
+ */
 int
-crm_ipc_ready(crm_ipc_t * client)
+crm_ipc_ready(crm_ipc_t *client)
 {
+    int rc;
+
     CRM_ASSERT(client != NULL);
 
     if (crm_ipc_connected(client) == FALSE) {
@@ -920,7 +929,8 @@ crm_ipc_ready(crm_ipc_t * client)
     }
 
     client->pfd.revents = 0;
-    return poll(&(client->pfd), 1, 0);
+    rc = poll(&(client->pfd), 1, 0);
+    return (rc < 0)? -errno : rc;
 }
 
 static int
