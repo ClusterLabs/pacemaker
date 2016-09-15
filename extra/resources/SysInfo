@@ -260,7 +260,7 @@ SysInfo_megabytes() {
                      n=a[1];
                      if ($0 == "G" || $0 == "") { n *= 1024 };
                      if (/^kB?/) { n /= 1024 };
-                     printf "%d\n", n }' # Intentionaly round to an integer
+                     printf "%d\n", n }' # Intentionally round to an integer
 }
 
 SysInfo_mem_units() {
