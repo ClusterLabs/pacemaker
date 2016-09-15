@@ -1405,7 +1405,7 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action, int rc)
     xmlNode *xml_rsc = find_xml_node(action, XML_CIB_TAG_RESOURCE, TRUE);
 
     if(xml_rsc == NULL) {
-        /* Do something else?  driect_ack? */
+        /* @TODO Should we do something else, like direct ack? */
         crm_info("Skipping %s=%d on %s (%p): no resource",
                  crm_element_value(action, XML_LRM_ATTR_TASK_KEY), rc, target_node, lrm_state);
         return;

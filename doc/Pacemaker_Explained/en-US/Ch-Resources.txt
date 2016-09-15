@@ -802,7 +802,7 @@ resource agent to look for the parameter and decide how to use it.
       <op id="public-ip-health-300" name="monitor" interval="300">
          <instance_attributes id="params-public-ip-depth-300">
             <nvpair id="public-ip-depth-300" name="OCF_CHECK_LEVEL" value="20"/>
-       </instance_attributes>
+         </instance_attributes>
      </op>
    </operations>
    <instance_attributes id="params-public-ip">

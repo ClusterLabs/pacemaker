@@ -252,9 +252,8 @@ gboolean validate_xml_verbose(xmlNode * xml_blob);
  * \param[in]     transform  Whether to employ XSLT-based transformation so
  *                           as allow overcoming possible incompatibilities
  *                           between major schema versions (see above)
- * \param[in]     to_logs    Whether to output notable progress info to
- *                           internall log streams or rather to stderr
- *                           (positive/negative, respectively)
+ * \param[in]     to_logs    If true, output notable progress info to
+ *                           internal log streams; if false, to stderr
  *
  * \return <tt>pcmk_ok</tt> if no non-recoverable error encountered (up to
  *         caller to evaluate if the update satisfies the requirements

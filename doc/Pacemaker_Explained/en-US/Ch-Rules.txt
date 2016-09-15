@@ -183,8 +183,8 @@ the context.
 
 * +gt:+ True if the current date/time is after +start+
 * +lt:+ True if the current date/time is before +end+
-* +in-range:+ True if the current date/time is after +start+ and before +end+
-* +date-spec:+ True if the current date/time matches a +date_spec+ object
+* +in_range:+ True if the current date/time is after +start+ and before +end+
+* +date_spec:+ True if the current date/time matches a +date_spec+ object
   (described below)
  indexterm:[operation,Constraint Expression]
  indexterm:[Constraint,Date/Time Expression,operation]
@@ -280,7 +280,7 @@ indexterm:[Duration]
 indexterm:[Resource,Constraint,Duration]
 
 Durations are used to calculate a value for +end+ when one is not
-supplied to +in-range+ operations. They contain the same fields as
+supplied to +in_range+ operations. They contain the same fields as
 +date_spec+ objects but without the limitations (e.g. you can have a
 duration of 19 months). As with +date_specs+, any field not supplied is
 ignored.

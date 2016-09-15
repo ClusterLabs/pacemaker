@@ -249,13 +249,17 @@ getconfig() {
     else
 	echo "$host" > $target/STOPPED
     fi
+}
+
+get_readable_cib() {
+    target="$1"; shift;
 
     if [ -f "$target/$CIB_F" ]; then
-	crm_verify -V -x $target/$CIB_F >$target/$CRM_VERIFY_F 2>&1
+        crm_verify -V -x "$target/$CIB_F" >"$target/$CRM_VERIFY_F" 2>&1
         if which crm >/dev/null 2>&1 ; then
-            CIB_file=$target/$CIB_F crm configure show >$target/$CIB_TXT_F 2>&1
+            CIB_file="$target/$CIB_F" crm configure show >"$target/$CIB_TXT_F" 2>&1
         elif which pcs >/dev/null 2>&1 ; then
-            pcs config -f $target/$CIB_F >$target/$CIB_TXT_F 2>&1
+            pcs config -f "$target/$CIB_F" >"$target/$CIB_TXT_F" 2>&1
         fi
     fi
 }
@@ -735,11 +739,15 @@ cf=""
 if [ ! -z "$cluster_cf" ]; then
    cf=`basename $cluster_cf`
 fi
-for f in $cf $CIB_F $CIB_TXT_F $CIB_F.live pengine/*; do
+for f in "$cf" "$CIB_F" "$CIB_F.live" pengine/*; do
     if [ -f "$f" ]; then
-	sanitize $f
+	sanitize "$f"
     fi
 done
+
+# For convenience, generate human-readable version of CIB and any XML errors
+# in it (AFTER sanitizing, so we don't need to sanitize this output)
+get_readable_cib "$REPORT_HOME/$REPORT_TARGET"
 
 # Grab logs
 start=`date -d @${LOG_START} +"%F %T"`

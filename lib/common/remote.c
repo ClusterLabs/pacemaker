@@ -440,14 +440,15 @@ crm_remote_parse_buffer(crm_remote_t * remote)
 
 /*!
  * \internal
- * \brief Determine if a remote session has data to read
+ * \brief Wait for a remote session to have data to read
  *
- * \retval 0, timeout occurred.
- * \retval positive, data is ready to be read
- * \retval negative, session has ended
+ * \param[in] remote         Connection to check
+ * \param[in] total_timeout  Maximum time (in ms) to wait
+ *
+ * \return Positive value if ready to be read, 0 on timeout, -errno on error
  */
 int
-crm_remote_ready(crm_remote_t * remote, int total_timeout /* ms */ )
+crm_remote_ready(crm_remote_t *remote, int total_timeout)
 {
     struct pollfd fds = { 0, };
     int sock = 0;
@@ -493,7 +494,7 @@ crm_remote_ready(crm_remote_t * remote, int total_timeout /* ms */ )
         rc = poll(&fds, 1, timeout);
     } while (rc < 0 && errno == EINTR);
 
-    return rc;
+    return (rc < 0)? -errno : rc;
 }
 
 
@@ -631,12 +632,8 @@ crm_remote_recv(crm_remote_t * remote, int total_timeout /*ms */ , int *disconne
             crm_err("poll timed out (%d ms) while waiting to receive msg", remaining_timeout);
             return FALSE;
 
-        } else if (rc == -EAGAIN) {
-            crm_trace("waiting for remote connection data (up to %dms)",
-                      remaining_timeout);
-
         } else if(rc < 0) {
-            crm_debug("poll() failed: %s (%d)", pcmk_strerror(rc), rc);
+            crm_debug("could not poll: %s (%d)", pcmk_strerror(rc), rc);
 
         } else {
             rc = crm_remote_recv_once(remote);

@@ -73,6 +73,8 @@ Options:
   -u, --user user	ssh username for cluster nodes (default: root)
   -D, --depth           search depth to use when attempting to locate files
   -e, --rsh		specify the remote shell to use (default: ssh -T)
+  --sos-mode            use defaults suitable for being called by sosreport tool
+                        (behavior subject to change and not useful to end users)
   --dest       		a custom destination directory/file
   dest			a custom destination directory/file
 
