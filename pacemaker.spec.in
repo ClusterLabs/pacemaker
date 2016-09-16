@@ -305,6 +305,8 @@ find . -exec touch \{\} \;
 # Early versions of autotools (e.g. RHEL <= 5) do not support --docdir
 export docdir=%{pcmk_docdir}
 
+export systemdunitdir=%{?_unitdir}%{?!_unitdir:no}
+
 %if %{with hardening}
 # prefer distro-provided hardening flags in case they are defined
 # through _hardening_{c,ld}flags macros, configure script will

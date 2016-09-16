@@ -292,11 +292,6 @@ AC_ARG_WITH(ais-prefix,
     [ CSPREFIX=$withval ],
     [ CSPREFIX=$prefix ])
 
-LCRSODIR=""
-AC_ARG_WITH(lcrso-dir,
-    [  --with-lcrso-dir=DIR   Corosync lcrso files. ],
-    [ LCRSODIR="$withval" ])
-
 INITDIR=""
 AC_ARG_WITH(initdir,
     [  --with-initdir=DIR      directory for init (rc) scripts [${INITDIR}]],
@@ -1222,21 +1217,16 @@ AC_DEFINE_UNQUOTED(SUPPORT_UPSTART, $HAVE_upstart, Support upstart based system 
 AM_CONDITIONAL(BUILD_UPSTART, test $HAVE_upstart = 1)
 AC_SUBST(SUPPORT_UPSTART)
 
-if
-    $PKGCONFIG --exists systemd
-then
-    systemdunitdir=`$PKGCONFIG --variable=systemdsystemunitdir systemd`
-    AC_SUBST(systemdunitdir)
-else
-    enable_systemd=no
-fi
-
-if test $HAVE_dbus = 1 -a "x${enable_systemd}" != xno; then
-   if test -n "$systemdunitdir" -a "x$systemdunitdir" != xno; then
+AC_MSG_CHECKING([for systemd path for system unit files])
+PKG_CHECK_VAR([systemdunitdir], [systemd], [systemdsystemunitdir], [
+   AC_MSG_RESULT([$systemdunitdir])
+   if test $HAVE_dbus = 1 -a "x$systemdunitdir" != xno; then
       HAVE_systemd=1
       PCMK_FEATURES="$PCMK_FEATURES systemd"
    fi
-fi
+],[
+   AC_MSG_RESULT([no (disabled)])
+])
 
 AC_DEFINE_UNQUOTED(SUPPORT_SYSTEMD, $HAVE_systemd, Support systemd based system services)
 AM_CONDITIONAL(BUILD_SYSTEMD, test $HAVE_systemd = 1)
@@ -1320,7 +1310,6 @@ COROSYNC_LIBS=""
 CS_USES_LIBQB=0
 
 PCMK_SERVICE_ID=9
-LCRSODIR="$libdir"
 
 if test $SUPPORT_CS = no; then
     AC_MSG_RESULT(no (disabled))
@@ -1373,7 +1362,13 @@ if test $SUPPORT_CS = 1 -a x$HAVE_confdb = x1; then
     dnl Need confdb to support cman and the plugins
     SUPPORT_PLUGIN=1
     BUILD_ATOMIC_ATTRD=0
-    LCRSODIR=`$PKGCONFIG corosync --variable=lcrsodir`
+    AC_MSG_CHECKING([for corosync path for plugins])
+    PKG_CHECK_VAR([LCRSODIR], [corosync], [lcrsodir], [
+       AC_MSG_RESULT([$LCRSODIR])
+    ],[
+       AC_SUBST([LCRSODIR], [$libdir])
+       AC_MSG_RESULT([$LCRSODIR (fallback)])
+    ])
     STACKS="$STACKS corosync-plugin"
     COROSYNC_LIBS="$COROSYNC_LIBS $confdb_LIBS"
 
@@ -1441,7 +1436,6 @@ if test ${BUILD_ATOMIC_ATTRD} = 1; then
     PCMK_FEATURES="$PCMK_FEATURES atomic-attrd"
 fi
 AC_SUBST(CLUSTERLIBS)
-AC_SUBST(LCRSODIR)
 
 dnl ========================================================================
 dnl    SNMP
@@ -2100,7 +2094,9 @@ AC_MSG_RESULT([  Header files             = ${includedir}])
 AC_MSG_RESULT([  Arch-independent files   = ${datadir}])
 AC_MSG_RESULT([  State information        = ${localstatedir}])
 AC_MSG_RESULT([  System configuration     = ${sysconfdir}])
+if test $SUPPORT_PLUGIN = 1; then
 AC_MSG_RESULT([  Corosync Plugins         = ${LCRSODIR}])
+fi
 AC_MSG_RESULT([])
 AC_MSG_RESULT([  Use system LTDL          = ${ac_cv_lib_ltdl_lt_dlopen}])
 AC_MSG_RESULT([])
