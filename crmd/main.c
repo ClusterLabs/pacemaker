@@ -142,7 +142,7 @@ crmd_init(void)
     if (state == S_PENDING || state == S_STARTING) {
         if (safe_str_eq(start_state, "standby")) {
             const crm_node_t * this_node = crm_get_peer(0, fsa_our_uname);
-            set_standby(fsa_cib_conn, this_node->uuid, NULL, "on");
+            set_standby(fsa_cib_conn, this_node->uuid, XML_CIB_TAG_STATUS, "on");
         }
 
         /* Create the mainloop and run it... */
