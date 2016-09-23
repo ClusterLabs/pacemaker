@@ -1659,7 +1659,7 @@ class SplitBrainTest(CTSTest):
             else:
                 try:
                     answer = raw_input('Continue? [nY]')
-                except EOFError, e:
+                except EOFError as e:
                     answer = "n" 
             if answer and answer == "n":
                 raise ValueError("Reformed cluster not stable")
