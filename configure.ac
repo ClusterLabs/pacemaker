@@ -195,10 +195,12 @@ AC_ARG_ENABLE([upstart],
     [enable_upstart=try],
 )
 
-dnl FIXME currently unused
 AC_ARG_ENABLE([systemd],
     [  --enable-systemd
-       Enable support for the systemd init system [default=try]])
+       Enable support for managing resources via systemd [default=try]],
+    [],
+    [enable_systemd=try],
+)
 
 AC_ARG_ENABLE(hardening,
     [  --with-hardening
@@ -1248,16 +1250,38 @@ AC_DEFINE_UNQUOTED(SUPPORT_UPSTART, $HAVE_upstart, Support upstart based system 
 AM_CONDITIONAL(BUILD_UPSTART, test $HAVE_upstart = 1)
 AC_SUBST(SUPPORT_UPSTART)
 
-AC_MSG_CHECKING([for systemd path for system unit files])
-PKG_CHECK_VAR([systemdunitdir], [systemd], [systemdsystemunitdir], [
-   AC_MSG_RESULT([$systemdunitdir])
-   if test $HAVE_dbus = 1 -a "x$systemdunitdir" != xno; then
-      HAVE_systemd=1
-      PCMK_FEATURES="$PCMK_FEATURES systemd"
-   fi
-],[
-   AC_MSG_RESULT([no (disabled)])
-])
+if test "x${enable_systemd}" != xno; then
+	if test $HAVE_dbus = 0; then
+		if test "x${enable_systemd}" = xyes; then
+			AC_MSG_FAILURE([cannot enable systemd without DBus])
+		else
+			enable_systemd=no
+		fi
+	else
+		AC_MSG_CHECKING([for systemd path for system unit files])
+		PKG_CHECK_VAR([systemdunitdir], [systemd], [systemdsystemunitdir], [
+		   AC_MSG_RESULT([${systemdunitdir}])
+		],[
+		   AC_MSG_RESULT([not found])
+		   systemdunitdir=no
+		])
+		if test "x${systemdunitdir}" = xno; then
+			if test "x${enable_systemd}" = xyes; then
+				AC_MSG_FAILURE([cannot enable systemd when systemdunitdir unresolved])
+			fi
+		        enable_systemd=no
+		else
+		        enable_systemd=yes
+		fi
+	fi
+fi
+
+AC_MSG_CHECKING([whether to enable support for managing resources via systemd])
+AC_MSG_RESULT([${enable_systemd}])
+if test "x${enable_systemd}" = xyes; then
+	HAVE_systemd=1
+	PCMK_FEATURES="$PCMK_FEATURES systemd"
+fi
 
 AC_DEFINE_UNQUOTED(SUPPORT_SYSTEMD, $HAVE_systemd, Support systemd based system services)
 AM_CONDITIONAL(BUILD_SYSTEMD, test $HAVE_systemd = 1)
