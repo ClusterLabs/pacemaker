@@ -190,7 +190,10 @@ AC_ARG_ENABLE([no-stack],
 
 AC_ARG_ENABLE([upstart],
     [  --enable-upstart
-       Enable support for the Upstart init system [default=try]])
+       Enable support for the Upstart init system [default=try]],
+    [],
+    [enable_upstart=try],
+)
 
 dnl FIXME currently unused
 AC_ARG_ENABLE([systemd],
@@ -1209,9 +1212,32 @@ AC_SUBST(DBUS_LIBS)
 
 AC_CHECK_TYPES([DBusBasicValue],,,[[#include <dbus/dbus.h>]])
 
-if test $HAVE_dbus = 1 -a "x${enable_upstart}" != xno; then
-   HAVE_upstart=1
-   PCMK_FEATURES="$PCMK_FEATURES upstart"
+if "x${enable_upstart}" != xno; then
+	if test $HAVE_dbus = 0; then
+		if test "x${enable_upstart}" = xyes; then
+			AC_MSG_FAILURE([cannot enable Upstart without DBus])
+		else
+			enable_upstart=no
+		fi
+	fi
+	if test "x${enable_upstart}" = xtry; then
+		AC_MSG_CHECKING([for Upstart version query result via dbus-send])
+		ret=$(dbus-send --system --print-reply= --dest=com.ubuntu.Upstart
+		      /com/ubuntu/Upstart org.freedesktop.DBus.Properties.Get
+		      string:com.ubuntu.Upstart0_6 string:version 2>/dev/null
+		      || echo "this borked")
+		# sanitize output a bit (interested just in value, not type),
+		# ret is intentionally unenquoted so as to normalize whitespace
+		ret=$(echo ${ret} | cut -d' ' -f2-)
+		AC_MSG_RESULT([${ret}])
+		if test "x${ret}" != xborked; then
+			enable_upstart=yes
+		fi
+	fi
+fi
+if test "x${enable_upstart}" = xyes; then
+	HAVE_upstart=1
+	PCMK_FEATURES="$PCMK_FEATURES upstart"
 fi
 
 AC_DEFINE_UNQUOTED(SUPPORT_UPSTART, $HAVE_upstart, Support upstart based system services)
