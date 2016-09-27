@@ -190,11 +190,12 @@ AC_ARG_ENABLE([no-stack],
 
 AC_ARG_ENABLE([upstart],
     [  --enable-upstart
-       Do not build support for the Upstart init system [default=yes]])
+       Enable support for the Upstart init system [default=try]])
 
+dnl FIXME currently unused
 AC_ARG_ENABLE([systemd],
     [  --enable-systemd
-       Do not build support for the Systemd init system [default=yes]])
+       Enable support for the systemd init system [default=try]])
 
 AC_ARG_ENABLE(hardening,
     [  --with-hardening
