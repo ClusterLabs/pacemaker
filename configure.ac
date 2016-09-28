@@ -190,15 +190,17 @@ AC_ARG_ENABLE([no-stack],
 
 AC_ARG_ENABLE([upstart],
     [  --enable-upstart
-       Enable support for the Upstart init system [default=try]],
+       Enable support for managing resources via Upstart [default=try]],
     [],
     [enable_upstart=try],
 )
 
-dnl FIXME currently unused
 AC_ARG_ENABLE([systemd],
     [  --enable-systemd
-       Enable support for the systemd init system [default=try]])
+       Enable support for managing resources via systemd [default=try]],
+    [],
+    [enable_systemd=try],
+)
 
 AC_ARG_ENABLE(hardening,
     [  --with-hardening
@@ -1212,7 +1214,7 @@ AC_SUBST(DBUS_LIBS)
 
 AC_CHECK_TYPES([DBusBasicValue],,,[[#include <dbus/dbus.h>]])
 
-if "x${enable_upstart}" != xno; then
+if test "x${enable_upstart}" != xno; then
 	if test $HAVE_dbus = 0; then
 		if test "x${enable_upstart}" = xyes; then
 			AC_MSG_FAILURE([cannot enable Upstart without DBus])
@@ -1222,19 +1224,23 @@ if "x${enable_upstart}" != xno; then
 	fi
 	if test "x${enable_upstart}" = xtry; then
 		AC_MSG_CHECKING([for Upstart version query result via dbus-send])
-		ret=$(dbus-send --system --print-reply= --dest=com.ubuntu.Upstart
-		      /com/ubuntu/Upstart org.freedesktop.DBus.Properties.Get
-		      string:com.ubuntu.Upstart0_6 string:version 2>/dev/null
+		ret=$(dbus-send --system --print-reply= --dest=com.ubuntu.Upstart \
+		      /com/ubuntu/Upstart org.freedesktop.DBus.Properties.Get \
+		      string:com.ubuntu.Upstart0_6 string:version 2>/dev/null \
 		      || echo "this borked")
 		# sanitize output a bit (interested just in value, not type),
 		# ret is intentionally unenquoted so as to normalize whitespace
 		ret=$(echo ${ret} | cut -d' ' -f2-)
 		AC_MSG_RESULT([${ret}])
-		if test "x${ret}" != xborked; then
+		if test "x${ret}" = xborked; then
+			enable_upstart=no
+		else
 			enable_upstart=yes
 		fi
 	fi
 fi
+AC_MSG_CHECKING([whether to enable support for managing resources via Upstart])
+AC_MSG_RESULT([${enable_upstart}])
 if test "x${enable_upstart}" = xyes; then
 	HAVE_upstart=1
 	PCMK_FEATURES="$PCMK_FEATURES upstart"
@@ -1244,16 +1250,38 @@ AC_DEFINE_UNQUOTED(SUPPORT_UPSTART, $HAVE_upstart, Support upstart based system 
 AM_CONDITIONAL(BUILD_UPSTART, test $HAVE_upstart = 1)
 AC_SUBST(SUPPORT_UPSTART)
 
-AC_MSG_CHECKING([for systemd path for system unit files])
-PKG_CHECK_VAR([systemdunitdir], [systemd], [systemdsystemunitdir], [
-   AC_MSG_RESULT([$systemdunitdir])
-   if test $HAVE_dbus = 1 -a "x$systemdunitdir" != xno; then
-      HAVE_systemd=1
-      PCMK_FEATURES="$PCMK_FEATURES systemd"
-   fi
-],[
-   AC_MSG_RESULT([no (disabled)])
-])
+if test "x${enable_systemd}" != xno; then
+	if test $HAVE_dbus = 0; then
+		if test "x${enable_systemd}" = xyes; then
+			AC_MSG_FAILURE([cannot enable systemd without DBus])
+		else
+			enable_systemd=no
+		fi
+	else
+		AC_MSG_CHECKING([for systemd path for system unit files])
+		PKG_CHECK_VAR([systemdunitdir], [systemd], [systemdsystemunitdir], [
+		   AC_MSG_RESULT([${systemdunitdir}])
+		],[
+		   AC_MSG_RESULT([not found])
+		   systemdunitdir=no
+		])
+		if test "x${systemdunitdir}" = xno; then
+			if test "x${enable_systemd}" = xyes; then
+				AC_MSG_FAILURE([cannot enable systemd when systemdunitdir unresolved])
+			fi
+		        enable_systemd=no
+		else
+		        enable_systemd=yes
+		fi
+	fi
+fi
+
+AC_MSG_CHECKING([whether to enable support for managing resources via systemd])
+AC_MSG_RESULT([${enable_systemd}])
+if test "x${enable_systemd}" = xyes; then
+	HAVE_systemd=1
+	PCMK_FEATURES="$PCMK_FEATURES systemd"
+fi
 
 AC_DEFINE_UNQUOTED(SUPPORT_SYSTEMD, $HAVE_systemd, Support systemd based system services)
 AM_CONDITIONAL(BUILD_SYSTEMD, test $HAVE_systemd = 1)
