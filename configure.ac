@@ -1232,10 +1232,11 @@ if test "x${enable_upstart}" != xno; then
 		# ret is intentionally unenquoted so as to normalize whitespace
 		ret=$(echo ${ret} | cut -d' ' -f2-)
 		AC_MSG_RESULT([${ret}])
-		if test "x${ret}" = xborked; then
-			enable_upstart=no
-		else
+		if test "x${ret}" != xborked \
+		   || initctl --version 2>/dev/null | grep -q upstart; then
 			enable_upstart=yes
+		else
+			enable_upstart=no
 		fi
 	fi
 fi
