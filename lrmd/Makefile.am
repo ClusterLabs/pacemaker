@@ -17,7 +17,10 @@
 include $(top_srcdir)/Makefile.common
 
 lrmdlibdir		= $(CRM_DAEMON_DIR)
-lrmdlib_PROGRAMS	= lrmd lrmd_test lrmd_internal_ctl
+lrmdlib_PROGRAMS	= lrmd lrmd_internal_ctl
+
+# Test components
+lrmdlib_PROGRAMS	+= lrmd_test
 
 testdir			= $(datadir)/$(PACKAGE)/tests/lrmd
 test_SCRIPTS		= regression.py
