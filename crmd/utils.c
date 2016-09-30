@@ -1086,10 +1086,13 @@ update_attrd_helper(const char *host, const char *name, const char *value, const
 {
     gboolean rc;
     int max = 5;
+    int attrd_opts = attrd_opt_none;
 
-#if !HAVE_ATOMIC_ATTRD
-    /* Talk directly to cib for remote nodes if it's legacy attrd */
     if (is_remote_node) {
+#if HAVE_ATOMIC_ATTRD
+        attrd_opts |= attrd_opt_remote;
+#else
+    /* Talk directly to cib for remote nodes if it's legacy attrd */
         int rc;
 
         /* host is required for updating a remote node */
@@ -1101,8 +1104,8 @@ update_attrd_helper(const char *host, const char *name, const char *value, const
             log_attrd_error(host, name, value, is_remote_node, command, rc);
         }
         return;
-    }
 #endif
+    }
 
     if (attrd_ipc == NULL) {
         attrd_ipc = crm_ipc_new(T_ATTRD, 0);
@@ -1118,7 +1121,7 @@ update_attrd_helper(const char *host, const char *name, const char *value, const
         }
 
         rc = attrd_update_delegate(attrd_ipc, command, host, name, value, XML_CIB_TAG_STATUS, NULL,
-                                   NULL, user_name, is_remote_node?attrd_opt_remote:attrd_opt_none);
+                                   NULL, user_name, attrd_opts);
         if (rc == pcmk_ok) {
             break;
 
