@@ -16,11 +16,11 @@
 #
 include $(top_srcdir)/Makefile.common
 
-testdir			= $(datadir)/$(PACKAGE)/tests/lrmd
-test_SCRIPTS		= regression.py
-
 lrmdlibdir		= $(CRM_DAEMON_DIR)
 lrmdlib_PROGRAMS	= lrmd lrmd_test lrmd_internal_ctl
+
+testdir			= $(datadir)/$(PACKAGE)/tests/lrmd
+test_SCRIPTS		= regression.py
 
 initdir			= $(INITDIR)
 init_SCRIPTS		= pacemaker_remote
