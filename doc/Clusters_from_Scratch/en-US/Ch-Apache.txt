@@ -1,9 +1,11 @@
-= Add Apache as a Cluster Service  =
+= Add Apache HTTP Server as a Cluster Service  =
+
+indexterm:[Apache HTTP Server]
 
 Now that we have a basic but functional active/passive two-node cluster,
-we're ready to add some real services. We're going to start with Apache
-because it is a feature of many clusters and relatively simple to
-configure.
+we're ready to add some real services. We're going to start with
+Apache HTTP Server because it is a feature of many clusters and relatively
+simple to configure.
 
 == Install Apache ==
 
@@ -46,6 +48,8 @@ END
 
 == Enable the Apache status URL ==
 
+indexterm:[Apache HTTP Server,/server-status]
+
 In order to monitor the health of your Apache instance, and recover it if
 it fails, the resource agent used by Pacemaker assumes the server-status
 URL is available. On both nodes, enable the URL with:
@@ -54,9 +58,7 @@ URL is available. On both nodes, enable the URL with:
 # cat <<-END >/etc/httpd/conf.d/status.conf
  <Location /server-status>
     SetHandler server-status
-    Order deny,allow
-    Deny from all
-    Allow from 127.0.0.1
+    Require local
  </Location>
 END
 ----
@@ -64,10 +66,13 @@ END
 [NOTE]
 ======
 If you are using a different operating system, server-status may already be
-enabled or may be configurable in a different location.
+enabled or may be configurable in a different location. If you are using
+a version of Apache HTTP Server less than 2.4, the syntax will be different.
 ======
 
 == Configure the Cluster ==
+
+indexterm:[Apache HTTP Server,Apache resource configuration]
 
 At this point, Apache is ready to go, and all that needs to be done is to
 add it to the cluster. Let's call the resource WebSite. We need to use
@@ -145,12 +150,11 @@ failed to start, then you've likely not enabled the status URL correctly.
 You can check whether this is the problem by running:
 
 ....
-wget -O - http://127.0.0.1/server-status
+wget -O - http://localhost/server-status
 ....
 
-If you see *Connection refused* in the output, then this is likely the
-problem.  Ensure that *Allow from 127.0.0.1* is present for
-the *<Location /server-status>* block.
+If you see *Not Found* or *Forbidden* in the output, then this is likely the
+problem.  Ensure that the *<Location /server-status>* block is correct.
 
 ======
 
