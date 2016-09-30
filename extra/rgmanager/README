@@ -1,6 +1,6 @@
 # Legacy: Linux-cluster cluster.conf to Pacemaker CIB translation utility
 
-This directory used contain several parts related to the procedure of
+This directory used to contain several parts related to the procedure of
 cluster stacks/configuration migration, in particular and as the directory
 name suggests: from (CMAN+RGManager)-based stack of HA components to
 the (Corosync+Pacemaker)-based one.

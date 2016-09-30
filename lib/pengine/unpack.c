@@ -502,9 +502,10 @@ handle_startup_fencing(pe_working_set_t *data_set, node_t *new_node)
     static gboolean unseen_are_unclean = TRUE;
 
     if ((new_node->details->type == node_remote) && (new_node->details->remote_rsc == NULL)) {
-        /* ignore fencing remote-nodes that don't have a conneciton resource associated
-         * with them. This happens when remote-node entries get left in the nodes section
-         * after the connection resource is removed */
+        /* Ignore fencing for remote nodes that don't have a connection resource
+         * associated with them. This happens when remote node entries get left
+         * in the nodes section after the connection resource is removed.
+         */
         return;
     }
 

@@ -70,7 +70,7 @@ SPECVERSION	?= $(COUNT)
 
 # rpmbuild wrapper that translates "--with[out] FEATURE" into RPM macros
 #
-# Unfortunately, at least recent versions of rpm do no support mentioned
+# Unfortunately, at least recent versions of rpm do not support mentioned
 # switch.  To work this around, we can emulate mechanism that rpm uses
 # internally: unfold the flags into respective macro definitions:
 #
