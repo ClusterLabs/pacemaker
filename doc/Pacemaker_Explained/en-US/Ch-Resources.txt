@@ -394,6 +394,11 @@ indexterm:[Resource,Option,requires]
 indexterm:[multiple-active,Resource Option]
 indexterm:[Resource,Option,multiple-active]
 
+|allow-migrate
+|TRUE for ocf:pacemaker:remote resources, FALSE otherwise
+|Whether the cluster should try to "live migrate" this resource when it needs
+to be moved (see <<s-migrating-resources>>)
+
 |remote-node
 |
 |The name of the remote-node this resource defines.  This both enables the
@@ -660,7 +665,7 @@ indexterm:[Action,Property,on-fail]
  indexterm:[Action,Property,enabled]
 
 |record-pending
-|
+|FALSE
 |If +true+, the intention to perform the operation is recorded so that
  GUIs and CLI tools can indicate that an operation is in progress.
  This is best set as an 'operation default' (see next section).

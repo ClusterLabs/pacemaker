@@ -480,6 +480,7 @@ three (again assuming that +multiplier+ is set to 1000).
 -------
 =====
 
+[[s-migrating-resources]]
 === Migrating Resources ===
 
 Normally, when the cluster needs to move a resource, it fully restarts
