@@ -142,7 +142,6 @@ Group:         System Environment/Daemons
 Source0:       https://github.com/%{github_owner}/%{name}/archive/%{commit}/%{name}-%{shortcommit}.tar.gz
 BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 AutoReqProv:   on
-Requires:      python
 Requires:      resource-agents
 Requires:      %{name}-libs = %{version}-%{release}
 Requires:      %{name}-cluster-libs = %{version}-%{release}
@@ -152,17 +151,21 @@ Requires:      %{name}-cli = %{version}-%{release}
 %systemd_requires
 %endif
 
-# Required for core functionality (python-devel depends on python)
+# Pacemaker targets compatibility with python 2.6+ and 3.2+
+Requires:      python >= 2.6
+BuildRequires: python-devel >= 2.6
+
+# Pacemaker requires a minimum libqb functionality
+Requires:      libqb > 0.11.0
+BuildRequires: libqb-devel > 0.11.0
+
+# Required for core functionality
 BuildRequires: automake autoconf libtool pkgconfig libtool-ltdl-devel
 BuildRequires: pkgconfig(glib-2.0) libxml2-devel libxslt-devel libuuid-devel
-BuildRequires: python-devel bzip2-devel pam-devel
+BuildRequires: bzip2-devel pam-devel
 
 # Required for agent_config.h which specifies the correct scratch directory
 BuildRequires: resource-agents
-
-# We need reasonably recent versions of libqb
-BuildRequires: libqb-devel > 0.11.0
-Requires:      libqb > 0.11.0
 
 # Enables optional functionality
 BuildRequires: ncurses-devel openssl-devel libselinux-devel docbook-style-xsl
@@ -295,7 +298,7 @@ for developing tools for Pacemaker.
 License:       GPLv2+ and LGPLv2+
 Summary:       Test framework for cluster-related technologies like Pacemaker
 Group:         System Environment/Daemons
-Requires:      python
+Requires:      python >= 2.6
 Requires:      %{name}-libs = %{version}-%{release}
 
 # systemd python bindings are separate package in some distros
