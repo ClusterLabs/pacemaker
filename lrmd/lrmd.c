@@ -1681,7 +1681,7 @@ cancel_op(const char *rsc_id, const char *action, int interval)
 
     if (safe_str_eq(rsc->class, "stonith")) {
         /* The service library does not handle stonith operations.
-         * We have to handle recurring stonith opereations ourselves. */
+         * We have to handle recurring stonith operations ourselves. */
         for (gIter = rsc->recurring_ops; gIter != NULL; gIter = gIter->next) {
             lrmd_cmd_t *cmd = gIter->data;
 
