@@ -190,7 +190,7 @@ Requires:      libqb >= 0.13.0
 BuildRequires: libqb-devel >= 0.13.0
 
 # Basics required for the build (even if usually satisfied through other BRs)
-BuildRequires: coreutils findutils grep sed
+BuildRequires: coreutils findutils grep m4 sed
 
 # Required for core functionality
 BuildRequires: automake autoconf libtool pkgconfig libtool-ltdl-devel
