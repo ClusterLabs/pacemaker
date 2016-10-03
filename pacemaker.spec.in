@@ -209,8 +209,8 @@ when related resources fail and can be configured to periodically check
 resource health.
 
 Available rpmbuild rebuild options:
-  --with(out) : cman stonithd doc coverage profiling pre_release upstart_job
-                hardening
+  --with(out) : cman coverage doc stonithd hardening pre_release profiling
+                upstart_job
 
 %package cli
 License:       GPLv2+ and LGPLv2+
