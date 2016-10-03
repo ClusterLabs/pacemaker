@@ -500,7 +500,7 @@ fi
 %endif
 
 %preun
-/sbin/service pacemaker stop || :
+/sbin/service pacemaker stop >/dev/null 2>&1 || :
 if [ $1 -eq 0 ]; then
     # Package removal, not upgrade
     /sbin/chkconfig --del pacemaker || :
@@ -510,7 +510,7 @@ fi
 /sbin/chkconfig --add pacemaker_remote || :
 
 %preun remote
-/sbin/service pacemaker_remote stop &>/dev/null || :
+/sbin/service pacemaker_remote stop >/dev/null 2>&1 || :
 if [ $1 -eq 0 ]; then
     # Package removal, not upgrade
     /sbin/chkconfig --del pacemaker_remote || :
