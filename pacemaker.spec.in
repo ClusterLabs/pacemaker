@@ -435,20 +435,40 @@ done
 %clean
 rm -rf %{buildroot}
 
-%if %{defined _unitdir}
-
 %post
+%if %{defined _unitdir}
 %systemd_post pacemaker.service
+%else
+/sbin/chkconfig --add pacemaker || :
+%if %{with cman} && %{cman_native}
+# make fence_pcmk in cluster.conf valid instantly otherwise tools like ccs may
+# choke (until schema gets auto-regenerated on the next start of cluster),
+# per the protocol shared with other packages contributing to cluster.rng
+/usr/sbin/ccs_update_schema >/dev/null 2>&1 || :
+%endif
+%endif
 
 %preun
+%if %{defined _unitdir}
 %systemd_preun pacemaker.service
+%else
+/sbin/service pacemaker stop >/dev/null 2>&1 || :
+if [ $1 -eq 0 ]; then
+    # Package removal, not upgrade
+    /sbin/chkconfig --del pacemaker || :
+fi
+%endif
 
 %postun
+%if %{defined _unitdir}
 %systemd_postun_with_restart pacemaker.service
+%endif
 
 %pre remote
-# stop service before anything is touched and remember to restart
-# as one of the last actions
+%if %{defined _unitdir}
+# Stop the service before anything is touched, and remember to restart
+# it as one of the last actions (compared to using systemd_postun_with_restart,
+# this avoids suicide when sbd is in use)
 systemctl --quiet is-active pacemaker_remote
 if [ $? -eq 0 ] ; then
     mkdir -p %{_localstatedir}/lib/rpm-state/%{name}
@@ -457,65 +477,59 @@ if [ $? -eq 0 ] ; then
 else
     rm -f %{_localstatedir}/lib/rpm-state/%{name}/restart_pacemaker_remote
 fi
-
-%post remote
-%systemd_post pacemaker_remote.service
-
-%preun remote
-%systemd_preun pacemaker_remote.service
-
-%postun remote
-# next line degrades to a noop as the service is stopped already before
-# left in though as taken from the old rpm - easier to walk back one day
-%systemd_postun_with_restart pacemaker_remote.service
-# explicitly take care of removing the flag-file(s) upon final removal
-if [ $1 -eq 0 ] ; then
-    rm -f %{_localstatedir}/lib/rpm-state/%{name}/restart_pacemaker_remote
-fi
-
-%posttrans remote
-if [ -e %{_localstatedir}/lib/rpm-state/%{name}/restart_pacemaker_remote ] ; then
-    systemctl start pacemaker_remote >/dev/null 2>&1
-    rm -f %{_localstatedir}/lib/rpm-state/%{name}/restart_pacemaker_remote
-fi
-
-%post cli
-%systemd_post crm_mon.service
-
-%preun cli
-%systemd_preun crm_mon.service
-
-%postun cli
-%systemd_postun_with_restart crm_mon.service
-
-%else
-
-%post
-/sbin/chkconfig --add pacemaker || :
-%if %{with cman} && %{cman_native}
-# make fence_pcmk in cluster.conf valid instantly otherwise tools like ccs may
-# choke (until schema gets auto-regenerated on the next start of cluster),
-# per the protocol shared with other packages contributing to cluster.rng
-/usr/sbin/ccs_update_schema >/dev/null 2>&1 || :
 %endif
 
-%preun
-/sbin/service pacemaker stop >/dev/null 2>&1 || :
-if [ $1 -eq 0 ]; then
-    # Package removal, not upgrade
-    /sbin/chkconfig --del pacemaker || :
-fi
-
 %post remote
+%if %{defined _unitdir}
+%systemd_post pacemaker_remote.service
+%else
 /sbin/chkconfig --add pacemaker_remote || :
+%endif
 
 %preun remote
+%if %{defined _unitdir}
+%systemd_preun pacemaker_remote.service
+%else
 /sbin/service pacemaker_remote stop >/dev/null 2>&1 || :
 if [ $1 -eq 0 ]; then
     # Package removal, not upgrade
     /sbin/chkconfig --del pacemaker_remote || :
 fi
+%endif
 
+%postun remote
+%if %{defined _unitdir}
+# This next line is a no-op, because we stopped the service earlier, but
+# we leave it here because it allows us to revert to the standard behavior
+# in the future if desired
+%systemd_postun_with_restart pacemaker_remote.service
+# Explicitly take care of removing the flag-file(s) upon final removal
+if [ $1 -eq 0 ] ; then
+    rm -f %{_localstatedir}/lib/rpm-state/%{name}/restart_pacemaker_remote
+fi
+%endif
+
+%posttrans remote
+%if %{defined _unitdir}
+if [ -e %{_localstatedir}/lib/rpm-state/%{name}/restart_pacemaker_remote ] ; then
+    systemctl start pacemaker_remote >/dev/null 2>&1
+    rm -f %{_localstatedir}/lib/rpm-state/%{name}/restart_pacemaker_remote
+fi
+%endif
+
+%post cli
+%if %{defined _unitdir}
+%systemd_post crm_mon.service
+%endif
+
+%preun cli
+%if %{defined _unitdir}
+%systemd_preun crm_mon.service
+%endif
+
+%postun cli
+%if %{defined _unitdir}
+%systemd_postun_with_restart crm_mon.service
 %endif
 
 %pre -n %{name}-libs
