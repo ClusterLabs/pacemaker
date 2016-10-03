@@ -16,12 +16,16 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 include $(top_srcdir)/Makefile.common
+EXTRA_DIST =
 
 if BUILD_CS_SUPPORT
 
 initdir			= $(INITDIR)
 init_SCRIPTS		= pacemaker
 sbin_PROGRAMS		= pacemakerd
+
+nodist_noinst_DATA	= pacemaker.sysconfig
+EXTRA_DIST		+= pacemaker.sysconfig.m4
 
 if BUILD_SYSTEMD
 systemdunit_DATA	= pacemaker.service
@@ -40,4 +44,4 @@ pacemakerd_SOURCES	= pacemaker.c corosync.c
 
 endif
 
-CLEANFILES = $(man8_MANS)
+CLEANFILES = $(man8_MANS) $(nodist_noinst_DATA)

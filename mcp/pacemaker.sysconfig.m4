@@ -1,8 +1,10 @@
+ifelse(SUPPORT_CMAN, 1,
 # Turn on special handling for CMAN clusters in the init script.
 # Without this, fenced (and by inference, cman) cannot reliably be made
 # to shut down.
 # PCMK_STACK=cman
 
+)dnl
 #==#==# Variables that control logging
 
 # Enable debug logging globally or per-subsystem.

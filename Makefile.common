@@ -27,6 +27,10 @@ AM_V_PUB = $(am__v_PUB_$(V))
 am__v_PUB_0 = @echo "  PUB     $@: $(DOCBOOK_FORMATS)";
 am__v_PUB_1 = 
 
+AM_V_M4 = $(am__v_M4_$(V))
+am__v_M4_0 = @echo "  M4      " $@;
+am__v_M4_1 = 
+
 MAINTAINERCLEANFILES	= Makefile.in
 
 AM_CPPFLAGS		= -I$(top_builddir)/include -I$(top_srcdir)/include   \
@@ -72,3 +76,6 @@ endif
 	-grep -vqis "<appendix" $@ && sed -i 's/book>/chapter>/g' $@ # Rename to chapter
 
 #	echo Rebuilt $@ from $<
+
+%:  %.m4
+	$(AM_V_M4)$(M4) $(M4_DEFINES) < $< > $@
