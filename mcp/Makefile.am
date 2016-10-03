@@ -16,12 +16,14 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 include $(top_srcdir)/Makefile.common
+EXTRA_DIST =
 
 if BUILD_CS_SUPPORT
 
 if BUILD_INITDIR
 sysconfig		= pacemaker
-config_DATA		= $(sysconfig:=.sysconfig)
+nodist_config_DATA	= $(sysconfig:=.sysconfig)
+EXTRA_DIST		+= $(sysconfig:=.sysconfig.m4)
 
 if BUILD_SYSTEMD
 init_DATA		= pacemaker.service
@@ -62,4 +64,4 @@ endif  # BUILD_INITDIR
 
 endif  # BUILD_CS_SUPPORT
 
-CLEANFILES = $(man8_MANS)
+CLEANFILES = $(man8_MANS) $(sysconfig:=.sysconfig)

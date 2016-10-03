@@ -337,6 +337,7 @@ dnl ===============================================
 dnl General Processing
 dnl ===============================================
 
+M4_DEFINES=
 AC_SUBST(HB_PKG)
 
 INIT_EXT=""
@@ -523,6 +524,7 @@ AC_CHECK_PROGS(LIBTOOL, glibtool libtool libtool15 libtool13)
 
 AM_PATH_PYTHON
 AC_CHECK_PROGS(MAKE, gmake make)
+AC_PATH_PROGS(M4, m4)
 AC_PATH_PROGS(HTML2TXT, lynx w3m)
 AC_PATH_PROGS(HELP2MAN, help2man)
 AC_PATH_PROGS(POD2MAN, pod2man, pod2man)
@@ -1493,6 +1495,9 @@ AC_DEFINE_UNQUOTED(HAVE_ATOMIC_ATTRD, $BUILD_ATOMIC_ATTRD, Support the new atomi
 AC_SUBST(SUPPORT_CMAN)
 AC_SUBST(SUPPORT_CS)
 AC_SUBST(SUPPORT_PLUGIN)
+
+M4_DEFINES="${M4_DEFINES} \"-DHAVE_INITSCRIPT=${HAVE_lsb}\""
+AC_SUBST([M4_DEFINES])
 
 dnl
 dnl    Cluster stack - Sanity
