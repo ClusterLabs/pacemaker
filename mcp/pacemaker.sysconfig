@@ -6,14 +6,14 @@
 #==#==# Variables that control logging
 
 # Enable debug logging globally or per-subsystem.
-# Multiple subsystems may me listed separated by commas
-# eg. PCMK_debug=crmd,pengine.
+# Multiple subsystems may be listed separated by commas,
+# e.g., PCMK_debug=crmd,pengine.
 # PCMK_debug=yes|no|crmd|pengine|cib|stonith-ng|attrd|pacemakerd
 
 # Send INFO (and higher) messages to the named log file.
 # Additional messages may also appear here depending on any configured
 # debug and trace settings.
-# By default Pacemaker will inherit the logfile specified in corosync.conf.
+# By default, Pacemaker will inherit the logfile specified in corosync.conf.
 # PCMK_logfile=/var/log/pacemaker.log
 
 # Specify an alternate syslog target for NOTICE (and higher) messages.
@@ -31,7 +31,7 @@
 # PCMK_trace_functions=function1,function2,function3
 
 # Log all messages from a comma-separated list of files (no path).
-# Supports wildcards eg. PCMK_trace_files=prefix*.c.
+# Supports wildcards, e.g., PCMK_trace_files=prefix*.c.
 # PCMK_trace_files=file.c,other.h
 
 # Log all messages matching comma-separated list of formats.
@@ -40,9 +40,9 @@
 # Log all messages from a comma-separated list of tags.
 # PCMK_trace_tags=tag1,tag2
 
-# Dump the blackbox whenever the message at function and line is printed
-# eg. PCMK_trace_blackbox=te_graph_trigger:223,unpack_clone:81.
-# PCMK_trace_blackbox=fn:line,fn2:line2,...
+# Dump the blackbox whenever the message at function and line is emitted,
+# e.g., PCMK_trace_blackbox=te_graph_trigger:223,unpack_clone:81.
+# PCMK_trace_blackbox=fn:line,fn2:line2
 
 # Enable blackbox logging globally or per-subsystem.
 # The blackbox contains a rolling buffer of all logs (incl. info+debug+trace)
@@ -52,8 +52,8 @@
 # The blackbox recorder can also be enabled for Pacemaker daemons at runtime
 # by sending SIGUSR1 (or SIGTRAP), and disabled by sending SIGUSR2.
 #
-# Multiple subsystems may me listed separated by commas
-# eg. PCMK_blackbox=crmd,pengine.
+# Multiple subsystems may be listed separated by commas,
+# e.g., PCMK_blackbox=crmd,pengine.
 # PCMK_blackbox=yes|no|crmd|pengine|cib|stonith-ng|attrd|pacemakerd
 
 #==#==# Advanced use only
