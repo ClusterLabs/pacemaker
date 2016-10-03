@@ -1,36 +1,68 @@
-%global gname haclient
+# Define globals to control package behavior (configure these as desired)
+
+## User and group to use for nonprivileged services
 %global uname hacluster
+%global gname haclient
+
+## Where to install Pacemaker documentation
 %global pcmk_docdir %{_docdir}/%{name}
 
-%global specversion 1
+## GitHub entity that distributes source (for ease of using a fork)
+%global github_owner ClusterLabs
+
+## Upstream pacemaker version, and its package version (specversion
+## can be incremented to build packages reliably considered "newer"
+## than previously built packages with the same pcmkversion)
 %global pcmkversion 1.1.15
-# set following to the actual commit or, for final release, concatenate
-# "pcmkversion" macro to "Pacemaker-" (will yield a tag per the convention)
+%global specversion 1
+
+## Upstream commit (or git tag, such as "Pacemaker-" plus the
+## {pcmkversion} macro for an official release) to use for this package
 %global commit HEAD
+
+
+# Define globals for convenient use later
+
+## Workaround to use parentheses in other globals
 %global lparen (
 %global rparen )
+
+## Short version of git commit
 %global shortcommit %(c=%{commit}; case ${c} in
                       Pacemaker-*%{rparen} echo ${c:10};;
                       *%{rparen} echo ${c:0:7};; esac)
-%global pre_release %(s=%{shortcommit}; [ ${s: -4:3} != -rc ]; echo $?)
-%global post_release %([ %{commit} = Pacemaker-%{shortcommit} ]; echo $?)
-%global github_owner ClusterLabs
 
-# Turn off the auto compilation of python files not in the site-packages directory
-# Needed so that the -devel package is multilib compliant
+## Whether this is a release candidate
+%global pre_release %(s=%{shortcommit}; [ ${s: -4:3} != -rc ]; echo $?)
+
+## Whether this is a development branch
+%global post_release %([ %{commit} = Pacemaker-%{shortcommit} ]; echo $?)
+
+## Turn off auto-compilation of python files outside site-packages directory,
+## so that the -devel package is multilib-compliant
 %global __os_install_post %(echo '%{__os_install_post}' | sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g')
 
-%global rawhide  %(test ! -e /etc/yum.repos.d/fedora-rawhide.repo; echo $?)
+## Heuristic used to infer bleeding-edge deployments that are
+## less likely to have working versions of the documentation tools
+%global bleeding  %(test ! -e /etc/yum.repos.d/fedora-rawhide.repo; echo $?)
+
+## Corosync version
 %global cs_version %(pkg-config corosync --modversion  | awk -F . '{print $1}')
-# It has to be eventually decided whether to use Python2 or Python3
+
+## Where to install python site libraries (currently, this uses the unversioned
+## python_sitearch macro to get the default system python, but at some point,
+## we should explicitly choose python2_sitearch or python3_sitearch -- or both)
 %global py_site    %{?python_sitearch}%{!?python_sitearch:%(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")}
+
+## Whether this platform defaults to using CMAN
 %global cman_native 0%{?el6} || (0%{?fedora} > 0 && 0%{?fedora} < 17)
 
-# It's desired to apply "license" macro uniformly in "files" sections below,
-# but RPM versions not aware of this new classification normally (re)define it
-# to the value of "License:", so following is to ensure the macro definition
-# is per expectation only after that tag; solution courtesy of Jason Tibbitts:
-# https://pkgs.fedoraproject.org/cgit/rpms/epel-rpm-macros.git/tree/macros.zzz-epel?h=el6&id=e1adcb77b0c05a6c29bc0eb0c4e82113180a0a99#n12
+
+# Definitions for backward compatibility with older RPM versions
+
+## Ensure %license macro behaves consistently (older RPM will otherwise
+## overwrite %license once it encounters "License:"). Courtesy Jason Tibbitts:
+## https://pkgs.fedoraproject.org/cgit/rpms/epel-rpm-macros.git/tree/macros.zzz-epel?h=el6&id=e1adcb77
 %if !%{defined _licensedir}
 %define description %{lua:
     rpm.define("license %doc")
@@ -38,40 +70,47 @@
 }
 %endif
 
-# Conditionals
-# Invoke "rpmbuild --without <feature>" or "rpmbuild --with <feature>"
-# to disable or enable specific features
 
-# Legacy stonithd fencing agents
+# Define conditionals so that "rpmbuild --with <feature>" and
+# "rpmbuild --without <feature>" can enable and disable specific features
+
+## Add option to enable support for stonith/external fencing agents
 %bcond_with stonithd
 
-# Build with/without support for profiling tools
+## Add option to create binaries suitable for use with profiling tools
 %bcond_with profiling
 
-# Include Build with/without support for performing coverage analysis
+## Add option to create binaries with coverage analysis
 %bcond_with coverage
 
-# We generate docs using Publican, Asciidoc and Inkscape, but they're not available everywhere
+## Add option to skip generating documentation
+## (the build tools aren't available everywhere)
 %bcond_without doc
 
-# Use a different versioning scheme
+## Add option to prefix package version with "0."
+## (so later "official" packages will be considered updates)
 %bcond_with pre_release
 
-# Ship an Upstart job file
+## Add option to ship Upstart job files
 %bcond_with upstart_job
 
-# Turn off cman support on platforms that normally ship with it
+## Add option to turn off CMAN support on CMAN-native platforms
 %bcond_without cman
 
-# Turn off hardening of libraries and daemon executables
+## Add option to turn off hardening of libraries and daemon executables
 %bcond_without hardening
 
+
+# Keep sane profiling data if requested
 %if %{with profiling}
-# This disables -debuginfo package creation and also the stripping binaries/libraries
-# Useful if you want sane profiling data
+
+## Disable -debuginfo package and stripping binaries/libraries
 %global debug_package %{nil}
+
 %endif
 
+
+# Define the release version
 %if %{with pre_release} || 0%{pre_release}
 %if 0%{pre_release}
 %global pcmk_release 0.%{specversion}.%(s=%{shortcommit}; echo ${s: -3})
@@ -147,15 +186,12 @@ BuildRequires: corosynclib-devel
 BuildRequires: cluster-glue-libs-devel
 %endif
 
-%if !%{rawhide}
-# More often than not, inkscape is busted on rawhide, don't even bother
-
+%if !%{bleeding}
 %if %{with doc}
 %ifarch %{ix86} x86_64
 BuildRequires: publican inkscape asciidoc
 %endif
 %endif
-
 %endif
 
 %description
