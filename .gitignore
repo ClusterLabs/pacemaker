@@ -71,6 +71,7 @@ mcp/pacemaker
 mcp/pacemaker.combined.upstart
 mcp/pacemaker.service
 mcp/pacemaker.upstart
+/mcp/pacemaker.sysconfig
 pengine/regression.core.sh
 publican.cfg
 tools/cibsecret

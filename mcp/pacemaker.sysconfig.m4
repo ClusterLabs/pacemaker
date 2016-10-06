@@ -1,0 +1,109 @@
+ifelse(SUPPORT_CMAN, 1,
+# Turn on special handling for CMAN clusters in the init script.
+# Without this, fenced (and by inference, cman) cannot reliably be made
+# to shut down.
+# PCMK_STACK=cman
+
+)dnl
+#==#==# Variables that control logging
+
+# Enable debug logging globally or per-subsystem.
+# Multiple subsystems may be listed separated by commas,
+# e.g., PCMK_debug=crmd,pengine.
+# PCMK_debug=yes|no|crmd|pengine|cib|stonith-ng|attrd|pacemakerd
+
+# Send INFO (and higher) messages to the named log file.
+# Additional messages may also appear here depending on any configured
+# debug and trace settings.
+# By default, Pacemaker will inherit the logfile specified in corosync.conf.
+# PCMK_logfile=/var/log/pacemaker.log
+
+# Specify an alternate syslog target for NOTICE (and higher) messages.
+# Use 'none' to disable - not recommended.
+# The default value is 'daemon'.
+# PCMK_logfacility=none|daemon|user|local0|local1|local2|local3|local4|local5|local6|local7
+
+# Send all messages up-to-and-including the configured priority to syslog.
+# A value of 'info' will be far too verbose for most installations and 'debug'
+# is almost certain to send you blind.
+# The default value is 'notice'.
+# PCMK_logpriority=emerg|alert|crit|error|warning|notice|info|debug
+
+# Log all messages from a comma-separated list of functions.
+# PCMK_trace_functions=function1,function2,function3
+
+# Log all messages from a comma-separated list of files (no path).
+# Supports wildcards, e.g., PCMK_trace_files=prefix*.c.
+# PCMK_trace_files=file.c,other.h
+
+# Log all messages matching comma-separated list of formats.
+# PCMK_trace_formats="Sent delete %d"
+
+# Log all messages from a comma-separated list of tags.
+# PCMK_trace_tags=tag1,tag2
+
+# Dump the blackbox whenever the message at function and line is emitted,
+# e.g., PCMK_trace_blackbox=te_graph_trigger:223,unpack_clone:81.
+# PCMK_trace_blackbox=fn:line,fn2:line2
+
+# Enable blackbox logging globally or per-subsystem.
+# The blackbox contains a rolling buffer of all logs (incl. info+debug+trace)
+# and is written after a crash, assertion failure and/or when SIGTRAP is
+# received.
+#
+# The blackbox recorder can also be enabled for Pacemaker daemons at runtime
+# by sending SIGUSR1 (or SIGTRAP), and disabled by sending SIGUSR2.
+#
+# Multiple subsystems may be listed separated by commas,
+# e.g., PCMK_blackbox=crmd,pengine.
+# PCMK_blackbox=yes|no|crmd|pengine|cib|stonith-ng|attrd|pacemakerd
+
+#==#==# Advanced use only
+
+# Enable this for compatibility with older corosync (prior to 2.0)
+# based clusters which used the nodes uname as its uuid also.
+# PCMK_uname_is_uuid=no
+
+# Specify an alternate location for RNG schemas and XSL transforms.
+# Mostly only useful for developer testing.
+# PCMK_schema_directory=/some/path
+
+# Enable this for rebooting this machine at the time of process (subsystem)
+# failure.
+# PCMK_fail_fast=no
+
+# Set action at the time of the system reboot by fail_fast.
+# When set 'crash' , the kernel does panic.
+# When you want to get kdump , please set 'crash'.
+# The default action is 'reboot'.
+# PCMK_panic_action=crash
+
+#==#==# Pacemaker Remote
+# Use a custom directory for finding the authkey.
+# PCMK_authkey_location=/etc/pacemaker/authkey
+#
+# Specify a custom port for Pacemaker Remote connections.
+# PCMK_remote_port=3121
+
+#==#==# IPC
+
+# Force use of a particular class of IPC connection.
+# PCMK_ipc_type=shared-mem|socket|posix|sysv
+
+# Specify an IPC buffer size in bytes.
+# Useful when connecting to really big clusters that exceed the default
+# 128k buffer.
+# PCMK_ipc_buffer=131072
+
+#==#==# Profiling and memory leak testing
+
+# Variables for running child daemons under valgrind and/or checking
+# for memory problems.
+# G_SLICE=always-malloc
+# MALLOC_PERTURB_=221 # or 0
+# MALLOC_CHECK_=3     # or 0,1,2
+# PCMK_valgrind_enabled=yes
+# PCMK_valgrind_enabled=cib,crmd
+# PCMK_callgrind_enabled=yes
+# PCMK_callgrind_enabled=cib,crmd
+# VALGRIND_OPTS="--leak-check=full --trace-children=no --num-callers=25 --log-file=/var/lib/pacemaker/valgrind-%p --suppressions=/usr/share/pacemaker/tests/valgrind-pcmk.suppressions --gen-suppressions=all"
