@@ -355,6 +355,10 @@ install -m 644 mcp/pacemaker.combined.upstart ${RPM_BUILD_ROOT}%{_sysconfdir}/in
 install -m 644 tools/crm_mon.upstart ${RPM_BUILD_ROOT}%{_sysconfdir}/init/crm_mon.conf
 %endif
 
+%if %{defined _unitdir}
+mkdir -p ${RPM_BUILD_ROOT}%{_localstatedir}/lib/rpm-state/%{name}
+%endif
+
 # Scripts that should be executable
 chmod a+x %{buildroot}/%{_datadir}/pacemaker/tests/cts/CTSlab.py
 
@@ -403,6 +407,18 @@ rm -rf %{buildroot}
 %postun
 %systemd_postun_with_restart pacemaker.service
 
+%pre remote
+# stop service before anything is touched and remember to restart
+# as one of the last actions
+systemctl --quiet is-active pacemaker_remote
+if [ $? -eq 0 ] ; then
+    mkdir -p %{_localstatedir}/lib/rpm-state/%{name}
+    touch %{_localstatedir}/lib/rpm-state/%{name}/restart_pacemaker_remote
+    systemctl stop pacemaker_remote >/dev/null 2>&1
+else
+    rm -f %{_localstatedir}/lib/rpm-state/%{name}/restart_pacemaker_remote
+fi
+
 %post remote
 %systemd_post pacemaker_remote.service
 
@@ -410,7 +426,19 @@ rm -rf %{buildroot}
 %systemd_preun pacemaker_remote.service
 
 %postun remote
+# next line degrades to a noop as the service is stopped already before
+# left in though as taken from the old rpm - easier to walk back one day
 %systemd_postun_with_restart pacemaker_remote.service
+# explicitly take care of removing the flag-file(s) upon final removal
+if [ $1 -eq 0 ] ; then
+    rm -f %{_localstatedir}/lib/rpm-state/%{name}/restart_pacemaker_remote
+fi
+
+%posttrans remote
+if [ -e %{_localstatedir}/lib/rpm-state/%{name}/restart_pacemaker_remote ] ; then
+    systemctl start pacemaker_remote >/dev/null 2>&1
+    rm -f %{_localstatedir}/lib/rpm-state/%{name}/restart_pacemaker_remote
+fi
 
 %post cli
 %systemd_post crm_mon.service
@@ -630,6 +658,10 @@ exit 0
 
 %config(noreplace) %{_sysconfdir}/sysconfig/pacemaker
 %if %{defined _unitdir}
+# state directory is shared between the subpackets
+# let rpm take care of removing it once it isn't
+# referenced anymore and empty
+%ghost %dir %{_localstatedir}/lib/rpm-state/%{name}
 %{_unitdir}/pacemaker_remote.service
 %else
 %{_initrddir}/pacemaker_remote
