@@ -191,9 +191,7 @@ BuildRequires: cluster-glue-libs-devel
 
 %if !%{bleeding}
 %if %{with doc}
-%ifarch %{ix86} x86_64
 BuildRequires: publican inkscape asciidoc
-%endif
 %endif
 %endif
 
