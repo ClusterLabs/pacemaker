@@ -168,7 +168,7 @@ BuildRequires: bzip2-devel pam-devel
 BuildRequires: resource-agents
 
 # Enables optional functionality
-BuildRequires: ncurses-devel openssl-devel libselinux-devel docbook-style-xsl
+BuildRequires: ncurses-devel docbook-style-xsl
 BuildRequires: bison byacc flex help2man gnutls-devel pkgconfig(dbus-1)
 
 %if %{defined _unitdir}

@@ -21,11 +21,9 @@
 * heartbeat-devel (Heartbeat)
 
 ## Optional Build Dependencies
-* ncurses-devel
-* openssl-devel
-* libselinux-devel
-* systemd-devel
-* dbus-devel
+* ncurses-devel (interactive crm_mon)
+* systemd-devel (systemd support)
+* dbus-devel (systemd/upstart resource support)
 * cluster-glue-libs-devel (LHA style fencing agents)
 * libesmtp-devel (Email alerts)
 * lm_sensors-devel (SNMP alerts)
