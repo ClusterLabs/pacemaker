@@ -1224,10 +1224,10 @@ if test "x${enable_upstart}" != xno; then
 	fi
 	if test "x${enable_upstart}" = xtry; then
 		AC_MSG_CHECKING([for Upstart version query result via dbus-send])
-		ret=$(dbus-send --system --print-reply= --dest=com.ubuntu.Upstart \
-		      /com/ubuntu/Upstart org.freedesktop.DBus.Properties.Get \
-		      string:com.ubuntu.Upstart0_6 string:version 2>/dev/null \
-		      || echo "this borked")
+		ret=$({ dbus-send --system --print-reply --dest=com.ubuntu.Upstart \
+		        /com/ubuntu/Upstart org.freedesktop.DBus.Properties.Get \
+		        string:com.ubuntu.Upstart0_6 string:version 2>/dev/null \
+		        || echo "this borked"; } | tail -n1)
 		# sanitize output a bit (interested just in value, not type),
 		# ret is intentionally unenquoted so as to normalize whitespace
 		ret=$(echo ${ret} | cut -d' ' -f2-)
