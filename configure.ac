@@ -300,7 +300,7 @@ AC_ARG_WITH(ais-prefix,
 
 INITDIR=""
 AC_ARG_WITH(initdir,
-    [  --with-initdir=DIR      directory for init (rc) scripts [${INITDIR}]],
+    [  --with-initdir=DIR      init (systemd/Upstart/LSB as fits) launchers install path],
     [ INITDIR="$withval" ])
 
 SUPPORT_PROFILING=0
@@ -371,8 +371,6 @@ case $CSPREFIX in
   NONE)	  CSPREFIX=$prefix;;
   prefix) CSPREFIX=$prefix;;
 esac
-
-AC_SUBST(INITDIR)
 
 AC_MSG_NOTICE(Sanitizing libdir: ${libdir})
 case $libdir in
@@ -1180,8 +1178,10 @@ AC_SUBST(BUILD_VERSION)
 
 
 HAVE_dbus=1
+HAVE_lsb=0
 HAVE_upstart=0
 HAVE_systemd=0
+HAVE_initdir=0
 PKG_CHECK_MODULES(DBUS, dbus-1, ,HAVE_dbus=0)
 
 AC_DEFINE_UNQUOTED(SUPPORT_DBUS, $HAVE_dbus, Support dbus)
@@ -1204,7 +1204,8 @@ if test "x${enable_systemd}" != xno; then
 			enable_systemd=no
 		fi
 	fi
-	if test "x${enable_systemd}" = xtry; then
+	if test "x${enable_systemd}" = xtry \
+	  && test "x${enable_upstart}" != xyes; then
 		AC_MSG_CHECKING([for systemd version query result via dbus-send])
 		ret=$({ dbus-send --system --print-reply \
 		        --dest=org.freedesktop.systemd1 \
@@ -1232,15 +1233,20 @@ if test "x${enable_systemd}" = xyes; then
 	HAVE_systemd=1
 	PCMK_FEATURES="$PCMK_FEATURES systemd"
 
-	AC_MSG_CHECKING([for systemd path for system unit files])
-	systemdunitdir="${systemdunitdir-}"
-	PKG_CHECK_VAR([systemdunitdir], [systemd],
-		      [systemdsystemunitdir], [],[
-	   systemdunitdir=no
-	])
-	AC_MSG_RESULT([${systemdunitdir}])
-	if test "x${systemdunitdir}" = xno; then
-		AC_MSG_FAILURE([cannot enable systemd when systemdunitdir unresolved])
+	if test ${HAVE_initdir} = 0; then
+		AC_MSG_CHECKING([for systemd path for system unit files])
+		if test "x${INITDIR}" != xno; then
+			systemdunitdir="${systemdunitdir:-${INITDIR}}"
+			PKG_CHECK_VAR([systemdunitdir], [systemd],
+				      [systemdsystemunitdir], [],[
+			   systemdunitdir=no
+			])
+			AC_MSG_RESULT([${systemdunitdir}])
+		fi
+		INITDIR="${systemdunitdir}"
+		if test "x${INITDIR}" != xno; then
+			HAVE_initdir=1
+		fi
 	fi
 fi
 
@@ -1279,12 +1285,34 @@ AC_MSG_RESULT([${enable_upstart}])
 if test "x${enable_upstart}" = xyes; then
 	HAVE_upstart=1
 	PCMK_FEATURES="$PCMK_FEATURES upstart"
+
+	if test ${HAVE_initdir} = 0; then
+		AC_MSG_CHECKING([for Upstart path for job configuration])
+		if test x"${INITDIR}" != xno; then
+			INITDIR="${INITDIR:-${sysconfdir}/init}"
+		fi
+		AC_MSG_RESULT([${INITDIR}])
+		if test x"${INITDIR}" != xno; then
+			HAVE_initdir=1
+		fi
+	fi
 fi
 
 AC_DEFINE_UNQUOTED(SUPPORT_UPSTART, $HAVE_upstart, Support upstart based system services)
 AM_CONDITIONAL(BUILD_UPSTART, test $HAVE_upstart = 1)
 AC_SUBST(SUPPORT_UPSTART)
 
+
+if test x"${INITDIR}" != xno; then
+	if test ${HAVE_initdir} = 0; then
+		INITDIR="${INITDIR:-/etc/init.d}"
+		HAVE_initdir=1
+		HAVE_lsb=1
+	fi
+	AC_SUBST([INITDIR])
+	AC_SUBST([initdir], ["${INITDIR}"])
+fi
+AM_CONDITIONAL([BUILD_INITDIR], [test $HAVE_initdir = 1])
 
 case $SUPPORT_NAGIOS in
      1|yes|true|try)
@@ -2145,6 +2173,13 @@ AC_MSG_RESULT([  State information        = ${localstatedir}])
 AC_MSG_RESULT([  System configuration     = ${sysconfdir}])
 if test $SUPPORT_PLUGIN = 1; then
 AC_MSG_RESULT([  Corosync Plugins         = ${LCRSODIR}])
+fi
+if test "${HAVE_systemd}" = 1; then
+AC_MSG_RESULT([  systemd unit dir         = ${INITDIR}])
+elif test "${HAVE_upstart}" = 1; then
+AC_MSG_RESULT([  Upstart job conf dir     = ${INITDIR}])
+else
+AC_MSG_RESULT([  LSB init script dir      = ${INITDIR}])
 fi
 AC_MSG_RESULT([])
 AC_MSG_RESULT([  Use system LTDL          = ${ac_cv_lib_ltdl_lt_dlopen}])

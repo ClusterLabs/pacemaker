@@ -19,13 +19,21 @@ include $(top_srcdir)/Makefile.common
 
 if BUILD_CS_SUPPORT
 
-initdir			= $(INITDIR)
-init_SCRIPTS		= pacemaker
-sbin_PROGRAMS		= pacemakerd
+if BUILD_INITDIR
 
 if BUILD_SYSTEMD
-systemdunit_DATA	= pacemaker.service
-endif
+init_DATA		= pacemaker.service
+else
+if BUILD_UPSTART
+upstartjob		= pacemaker pacemaker.combined
+init_DATA		= $(upstartjob:=.upstart)
+else
+init_SCRIPTS		= pacemaker
+endif  # BUILD_UPSTART
+endif  # BUILD_SYSTEMD
+endif  # BUILD_INITDIR
+
+sbin_PROGRAMS		= pacemakerd
 
 ## SOURCES
 
@@ -38,6 +46,16 @@ pacemakerd_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la $(top_builddir)/
 pacemakerd_LDADD	+= $(CLUSTERLIBS)
 pacemakerd_SOURCES	= pacemaker.c corosync.c
 
-endif
+install-data-hook:
+if BUILD_INITDIR
+if BUILD_UPSTART
+	for f in $(upstartjob); do \
+	  mv "$(DESTDIR)$(initdir)/$${f}.upstart" \
+	    "$(DESTDIR)$(initdir)/$${f}.conf"; \
+	done
+endif  # BUILD_UPSTART
+endif  # BUILD_INITDIR
+
+endif  # BUILD_CS_SUPPORT
 
 CLEANFILES = $(man8_MANS)
