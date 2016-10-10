@@ -422,7 +422,8 @@ AC_SUBST(docdir)
 if test x"${CONFIGDIR}" = x""; then
     CONFIGDIR="${sysconfdir}/sysconfig"
 fi
-AC_SUBST(CONFIGDIR)
+AC_SUBST([CONFIGDIR])
+AC_SUBST([configdir], ["${CONFIGDIR}"])
 
 for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
     sharedstatedir localstatedir libdir includedir oldincludedir infodir \
