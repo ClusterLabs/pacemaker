@@ -372,23 +372,6 @@ case $CSPREFIX in
   prefix) CSPREFIX=$prefix;;
 esac
 
-AC_MSG_NOTICE(Sanitizing INITDIR: ${INITDIR})
-case $INITDIR in
-  prefix) INITDIR=$prefix;;
-  "")
-    AC_MSG_CHECKING(which init (rc) directory to use)
-      for initdir in /etc/init.d /etc/rc.d/init.d /sbin/init.d	\
-	   /usr/local/etc/rc.d /etc/rc.d
-      do
-        if
-          test -d $initdir
-        then
-          INITDIR=$initdir
-          break
-        fi
-      done
-      AC_MSG_RESULT($INITDIR);;
-esac
 AC_SUBST(INITDIR)
 
 AC_MSG_NOTICE(Sanitizing libdir: ${libdir})
@@ -432,7 +415,6 @@ eval infodir="`eval echo ${infodir}`"
 eval mandir="`eval echo ${mandir}`"
 
 dnl Home-grown variables
-eval INITDIR="${INITDIR}"
 eval docdir="`eval echo ${docdir}`"
 if test x"${docdir}" = x""; then
    docdir=${datadir}/doc/${PACKAGE}-${VERSION}
