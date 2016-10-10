@@ -18,6 +18,8 @@
 include $(top_srcdir)/Makefile.common
 
 if BUILD_INITDIR
+sysconfig		= crm_mon
+config_DATA		= $(sysconfig:=.sysconfig)
 if BUILD_SYSTEMD
 init_DATA		= crm_mon.service
 else
@@ -149,6 +151,8 @@ endif
 
 install-data-hook:
 if BUILD_INITDIR
+	mv "$(DESTDIR)$(configdir)/$(sysconfig).sysconfig" \
+	  "$(DESTDIR)$(configdir)/$(sysconfig)"
 if BUILD_UPSTART
 	for f in $(upstartjob); do \
 	  mv "$(DESTDIR)$(initdir)/$${f}.upstart" \
