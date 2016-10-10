@@ -156,8 +156,8 @@ Requires:      python >= 2.6
 BuildRequires: python-devel >= 2.6
 
 # Pacemaker requires a minimum libqb functionality
-Requires:      libqb > 0.11.0
-BuildRequires: libqb-devel > 0.11.0
+Requires:      libqb >= 0.13.0
+BuildRequires: libqb-devel >= 0.13.0
 
 # Required for core functionality
 BuildRequires: automake autoconf libtool pkgconfig libtool-ltdl-devel
@@ -168,7 +168,7 @@ BuildRequires: bzip2-devel pam-devel
 BuildRequires: resource-agents
 
 # Enables optional functionality
-BuildRequires: ncurses-devel openssl-devel libselinux-devel docbook-style-xsl
+BuildRequires: ncurses-devel docbook-style-xsl
 BuildRequires: bison byacc flex help2man gnutls-devel pkgconfig(dbus-1)
 
 %if %{defined _unitdir}

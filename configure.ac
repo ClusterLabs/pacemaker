@@ -1050,7 +1050,7 @@ if test x${enable_no_stack} = xyes; then
     SUPPORT_CS=no
 fi
 
-PKG_CHECK_MODULES(libqb, libqb >= 0.13, HAVE_libqb=1)
+PKG_CHECK_MODULES(libqb, libqb >= 0.13)
 CPPFLAGS="$libqb_CFLAGS $CPPFLAGS"
 LIBS="$libqb_LIBS $LIBS"
 AC_CHECK_HEADERS(qb/qbipc_common.h)
@@ -1372,6 +1372,7 @@ if test $SUPPORT_CS = no; then
     SUPPORT_CS=0
 else
     AC_MSG_RESULT($SUPPORT_CS, with '$CSPREFIX')
+    SUPPORT_CS=1
     PKG_CHECK_MODULES(cpg,    libcpg) dnl Fatal
     PKG_CHECK_MODULES(cfg,    libcfg) dnl Fatal
     PKG_CHECK_MODULES(cmap,   libcmap,   HAVE_cmap=1,   HAVE_cmap=0)
@@ -1382,19 +1383,13 @@ else
     PKG_CHECK_MODULES(oldipc, libcoroipcc, HAVE_oldipc=1, HAVE_oldipc=0)
 
     if test $HAVE_oldipc = 1; then
-        SUPPORT_CS=1
 	CFLAGS="$CFLAGS $oldipc_FLAGS $cpg_FLAGS $cfg_FLAGS"
         COROSYNC_LIBS="$COROSYNC_LIBS $oldipc_LIBS $cpg_LIBS $cfg_LIBS"
-
-    elif test $HAVE_libqb = 1; then
-        SUPPORT_CS=1
+    else
         CS_USES_LIBQB=1
 	CFLAGS="$CFLAGS $libqb_FLAGS $cpg_FLAGS $cfg_FLAGS"
         COROSYNC_LIBS="$COROSYNC_LIBS $libqb_LIBS $cpg_LIBS $cfg_LIBS"
         AC_CHECK_LIB(corosync_common, cs_strerror)
-
-    else
-        aisreason="corosync/libqb IPC libraries not found by pkg_config"
     fi
 
     AC_DEFINE_UNQUOTED(HAVE_CONFDB, $HAVE_confdb, Have the old herarchial Corosync config API)
