@@ -48,7 +48,7 @@ ifelse(HAVE_INITSCRIPT, 1,
 # Log all messages from a comma-separated list of tags.
 # PCMK_trace_tags=tag1,tag2
 
-# Dump the blackbox whenever the message at function and line is printed,
+# Dump the blackbox whenever the message at function and line is emitted,
 # e.g. PCMK_trace_blackbox=te_graph_trigger:223,unpack_clone:81
 # PCMK_trace_blackbox=fn:line,fn2:line2,...
 
@@ -57,7 +57,7 @@ ifelse(HAVE_INITSCRIPT, 1,
 # after a crash or assertion failure, and/or when SIGTRAP is received. The
 # blackbox recorder can also be enabled for Pacemaker daemons at runtime by
 # sending SIGUSR1 (or SIGTRAP), and disabled by sending SIGUSR2. Multiple
-# subsystems may me listed separated by commas, e.g. PCMK_blackbox=crmd,pengine
+# subsystems may be listed separated by commas, e.g. PCMK_blackbox=crmd,pengine
 # PCMK_blackbox=yes|no|crmd|pengine|cib|stonith-ng|attrd|pacemakerd
 
 #==#==# Advanced use only
