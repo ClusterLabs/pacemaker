@@ -17,9 +17,18 @@
 #
 include $(top_srcdir)/Makefile.common
 
+if BUILD_INITDIR
 if BUILD_SYSTEMD
-systemdunit_DATA = crm_mon.service
-endif
+init_DATA		= crm_mon.service
+else
+if BUILD_UPSTART
+upstartjob		= crm_mon
+init_DATA		= $(upstartjob:=.upstart)
+else
+# no init script
+endif  # BUILD_UPSTART
+endif  # BUILD_SYSTEMD
+endif  # BUILD_INITDIR
 
 COMMONLIBS	= 							\
 		$(top_builddir)/lib/common/libcrmcommon.la		\
@@ -33,7 +42,6 @@ sbin_SCRIPTS		= crm_report crm_standby crm_master crm_failcount
 if BUILD_CIBSECRETS
 sbin_SCRIPTS		+= cibsecret
 endif
-EXTRA_DIST		= $(sbin_SCRIPTS)
 
 sbin_PROGRAMS		= crm_simulate crmadmin cibadmin crm_node crm_attribute crm_resource crm_verify \
 			 crm_shadow attrd_updater crm_diff crm_mon iso8601 crm_ticket crm_error
@@ -138,5 +146,15 @@ ipmiservicelogd_SOURCES	= ipmiservicelogd.c
 ipmiservicelogd_CFLAGS	= $(OPENIPMI_SERVICELOG_CFLAGS) $(SERVICELOG_CFLAGS)
 ipmiservicelogd_LDFLAGS	= $(top_builddir)/lib/common/libcrmcommon.la $(OPENIPMI_SERVICELOG_LIBS) $(SERVICELOG_LIBS)
 endif
+
+install-data-hook:
+if BUILD_INITDIR
+if BUILD_UPSTART
+	for f in $(upstartjob); do \
+	  mv "$(DESTDIR)$(initdir)/$${f}.upstart" \
+	    "$(DESTDIR)$(initdir)/$${f}.conf"; \
+	done
+endif  # BUILD_UPSTART
+endif  # BUILD_INITDIR
 
 CLEANFILES = $(man8_MANS)

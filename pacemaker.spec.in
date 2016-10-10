@@ -386,7 +386,15 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
         --without-heartbeat                        \
         %{!?with_doc:        --with-brand=}        \
         %{!?with_hardening:  --disable-hardening}  \
+%if %{defined _unitdir}
+        --with-initdir=no                          \
+%else
+%if %{with upstart_job}
+        --with-initdir=no                          \
+%else
         --with-initdir=%{_initrddir}               \
+%endif
+%endif
         --localstatedir=%{_var}                    \
         --with-version=%{version}-%{release}
 
@@ -575,7 +583,9 @@ exit 0
 %if %{defined _unitdir}
 %{_unitdir}/pacemaker.service
 %else
+%if %{without upstart_job}
 %{_initrddir}/pacemaker
+%endif
 %endif
 
 %exclude %{_libexecdir}/pacemaker/lrmd_test
@@ -736,7 +746,9 @@ exit 0
 %ghost %dir %{_localstatedir}/lib/rpm-state/%{name}
 %{_unitdir}/pacemaker_remote.service
 %else
+%if %{without upstart_job}
 %{_initrddir}/pacemaker_remote
+%endif
 %endif
 
 %{_sbindir}/pacemaker_remoted

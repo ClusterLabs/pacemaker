@@ -25,13 +25,19 @@ lrmdlib_PROGRAMS	+= lrmd_test
 testdir			= $(datadir)/$(PACKAGE)/tests/lrmd
 test_SCRIPTS		= regression.py
 
-initdir			= $(INITDIR)
-init_SCRIPTS		= pacemaker_remote
 sbin_PROGRAMS		= pacemaker_remoted
 
+if BUILD_INITDIR
 if BUILD_SYSTEMD
 systemdunit_DATA	= pacemaker_remote.service
-endif
+else
+if BUILD_UPSTART
+# no upstart job
+else
+init_SCRIPTS		= pacemaker_remote
+endif  # BUILD_UPSTART
+endif  # BUILD_SYSTEMD
+endif  # BUILD_INITDIR
 
 lrmd_CFLAGS		= $(CFLAGS_HARDENED_EXE)
 lrmd_LDFLAGS		= $(LDFLAGS_HARDENED_EXE)
