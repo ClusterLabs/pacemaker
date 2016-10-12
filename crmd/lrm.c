@@ -2017,6 +2017,44 @@ stop_recurring_actions(gpointer key, gpointer value, gpointer user_data)
 }
 
 static void
+record_pending_op(const char *node_name, lrmd_rsc_info_t *rsc, lrmd_event_data_t *op)
+{
+    CRM_CHECK(node_name != NULL, return);
+    CRM_CHECK(rsc != NULL, return);
+    CRM_CHECK(op != NULL, return);
+
+    if (op->op_type == NULL
+        || safe_str_eq(op->op_type, CRMD_ACTION_CANCEL)
+        || safe_str_eq(op->op_type, CRMD_ACTION_DELETE)) {
+        return;
+    }
+
+    if (op->params == NULL) {
+        return;
+
+    } else {
+        const char *record_pending = crm_meta_value(op->params, XML_OP_ATTR_PENDING);
+
+        if (record_pending == NULL || crm_is_true(record_pending) == FALSE) {
+            return;
+         }
+    }
+
+    op->call_id = -1;
+    op->op_status = PCMK_LRM_OP_PENDING;
+    op->rc = PCMK_OCF_UNKNOWN;
+
+    op->t_run = time(NULL);
+    op->t_rcchange = op->t_run;
+
+    /* write a "pending" entry to the CIB, inhibit notification */
+    crm_debug("Recording pending op %s_%s_%d on %s in the CIB",
+              op->rsc_id, op->op_type, op->interval, node_name);
+
+    do_update_resource(node_name, rsc, op);
+}
+
+static void
 do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operation, xmlNode * msg,
               xmlNode * request)
 {
@@ -2102,6 +2140,8 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
         free(op_id);
         return;
     }
+
+    record_pending_op(lrm_state->node_name, rsc, op);
 
     op_id = generate_op_key(rsc->id, op->op_type, op->interval);
 
