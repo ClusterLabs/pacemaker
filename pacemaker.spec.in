@@ -58,6 +58,22 @@
 ## Whether this platform defaults to using CMAN
 %define cman_native (0%{?el6} || (0%{?fedora} > 0 && 0%{?fedora} < 17))
 
+## Whether this platform defaults to using systemd as an init system
+## (needs to be evaluated prior to BuildRequires being enumerated and
+## installed as it's intended to conditionally select some of these, and
+## for that there are only few indicators with varying reliability:
+## - presence of systemd-defined macros (when building in a full-fledged
+##   environment, which is not the case with ordinary mock-based builds)
+## - systemd-aware rpm as manifested with the presence of particular
+##   macro (rpm itself will trivially always be present when building)
+## - existence of /usr/lib/os-release file, which is something heavily
+##   propagated by systemd project
+## - when not good enough, there's always a possibility to check
+##   particular distro-specific macros (incl. version comparison)
+%define systemd_native (%{?_unitdir:1}%{?!_unitdir:0}%{nil \
+  } || %{?__transaction_systemd_inhibit:1}%{?!__transaction_systemd_inhibit:0}%{nil \
+  } || %(test -f /usr/lib/os-release; test $? -ne 0; echo $?))
+
 
 # Definitions for backward compatibility with older RPM versions
 
@@ -172,7 +188,7 @@ BuildRequires: resource-agents
 BuildRequires: ncurses-devel docbook-style-xsl
 BuildRequires: bison byacc flex help2man gnutls-devel pkgconfig(dbus-1)
 
-%if %{defined _unitdir}
+%if %{systemd_native}
 BuildRequires: systemd-devel
 %endif
 
@@ -190,6 +206,7 @@ BuildRequires: corosynclib-devel
 BuildRequires: cluster-glue-libs-devel
 %endif
 
+## (note no avoiding effect when building through non-customized mock)
 %if !%{bleeding}
 %if %{with doc}
 BuildRequires: publican inkscape asciidoc
