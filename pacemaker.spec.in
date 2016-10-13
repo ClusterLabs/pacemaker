@@ -189,7 +189,7 @@ BuildRequires: ncurses-devel docbook-style-xsl
 BuildRequires: bison byacc flex help2man gnutls-devel pkgconfig(dbus-1)
 
 %if %{systemd_native}
-BuildRequires: systemd-devel
+BuildRequires: pkgconfig(systemd)
 %endif
 
 %if %{with cman} && %{cman_native}
