@@ -231,6 +231,7 @@ extern xmlNode *max_generation_xml;
 extern GHashTable *resource_history;
 extern GHashTable *voted;
 extern char *te_client_id;
+extern regex_t *version_format_regex;
 
 void log_connected_client(gpointer key, gpointer value, gpointer user_data);
 
@@ -346,6 +347,10 @@ crmd_exit(int rc)
     free(te_subsystem); te_subsystem = NULL;
     free(cib_subsystem); cib_subsystem = NULL;
 
+    if (version_format_regex) {
+        regfree(version_format_regex);
+        free(version_format_regex);
+    }
 
     election_fini(fsa_election);
     fsa_election = NULL;

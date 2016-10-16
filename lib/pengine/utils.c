@@ -1707,6 +1707,21 @@ bool fix_remote_addr(resource_t * rsc)
     return TRUE;
 }
 
+static void
+append_versioned_params(xmlNode *versioned_params, const char *ra_version, xmlNode *params)
+{
+    GHashTable *hash = pe_unpack_versioned_parameters(versioned_params, ra_version);
+    char *key = NULL;
+    char *value = NULL;
+    GHashTableIter iter;
+
+    g_hash_table_iter_init(&iter, hash);
+    while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
+        crm_xml_add(params, key, value);
+    }
+    g_hash_table_destroy(hash);
+}
+
 op_digest_cache_t *
 rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
                       pe_working_set_t * data_set)
@@ -1730,6 +1745,7 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
     const char *secure_list;
     const char *restart_list;
     const char *op_version;
+    const char *ra_version;
 
     data = g_hash_table_lookup(node->details->digest_cache, op_id);
     if (data) {
@@ -1745,6 +1761,7 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
     restart_list = crm_element_value(xml_op, XML_LRM_ATTR_OP_RESTART);
 
     op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
+    ra_version = crm_element_value(xml_op, XML_ATTR_RA_VERSION);
 
     /* key is freed in custom_action */
     interval = crm_parse_int(interval_s, "0");
@@ -1771,11 +1788,9 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
     g_hash_table_foreach(action->extra, hash2field, data->params_all);
     g_hash_table_foreach(rsc->parameters, hash2field, data->params_all);
     g_hash_table_foreach(action->meta, hash2metafield, data->params_all);
+    append_versioned_params(local_versioned_params, ra_version, data->params_all);
+    append_versioned_params(rsc->versioned_parameters, ra_version, data->params_all);
     filter_action_parameters(data->params_all, op_version);
-#ifdef ENABLE_VERSIONED_ATTRS
-    crm_summarize_versioned_params(data->params_all, rsc->versioned_parameters);
-    crm_summarize_versioned_params(data->params_all, local_versioned_params);
-#endif
 
     data->digest_all_calc = calculate_operation_digest(data->params_all, op_version);
 

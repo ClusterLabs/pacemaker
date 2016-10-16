@@ -84,6 +84,7 @@
 #  define XML_ATTR_CRM_VERSION		"crm_feature_set"
 #  define XML_ATTR_DIGEST		"digest"
 #  define XML_ATTR_VALIDATION		"validate-with"
+#  define XML_ATTR_RA_VERSION		"ra-version"
 
 #  define XML_ATTR_QUORUM_PANIC		"no-quorum-panic"
 #  define XML_ATTR_HAVE_QUORUM		"have-quorum"

@@ -33,6 +33,8 @@
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
 #include <crmd_lrm.h>
+#include <regex.h>
+#include <crm/pengine/rules.h>
 
 #define START_DELAY_THRESHOLD 5 * 60 * 1000
 #define MAX_LRM_REG_FAILS 30
@@ -582,22 +584,9 @@ build_parameter_list(lrmd_event_data_t *op, xmlNode *metadata, xmlNode *result,
 
             if(result && accept) {
                 value = g_hash_table_lookup(op->params, name);
-
                 if(value != NULL) {
-#ifdef ENABLE_VERSIONED_ATTRS
-                    char *summary = crm_versioned_param_summary(op->versioned_params, name);
-
-                    if (summary) {
-                        crm_trace("Adding attr %s=%s to the xml result", name, summary);
-                        crm_xml_add(result, name, summary);
-                        free(summary);
-                    } else {
-#endif
-                        crm_trace("Adding attr %s=%s to the xml result", name, value);
-                        crm_xml_add(result, name, value);
-#ifdef ENABLE_VERSIONED_ATTRS
-                    }
-#endif
+                    crm_trace("Adding attr %s=%s to the xml result", name, value);
+                    crm_xml_add(result, name, value);
                 }
             }
         }
@@ -698,6 +687,63 @@ append_secure_list(lrmd_event_data_t *op, xmlNode *metadata, xmlNode * update, c
     free(list);
 }
 
+regex_t *version_format_regex = NULL;
+
+static gboolean
+valid_version_format(const char *version)
+{
+    if (version == NULL) {
+        return FALSE;
+    }
+
+    if (version_format_regex == NULL) {
+        const char *regex_string = "^[[:digit:]]+([.][[:digit:]]+)*$";
+        version_format_regex = calloc(1, sizeof(regex_t));
+        regcomp(version_format_regex, regex_string, REG_EXTENDED | REG_NOSUB);
+
+        CRM_CHECK(version_format_regex != NULL, return TRUE);
+    }
+
+    return regexec(version_format_regex, version, 0, NULL, 0) == 0;
+}
+
+static const char*
+get_ra_version(lrmd_rsc_info_t *rsc, xmlNode *metadata)
+{
+    static const char *default_version = "0.1";
+    const char *version = NULL;
+    xmlNode *version_xml = NULL;
+
+    if (!metadata) {
+        return default_version;
+    }
+
+    version_xml = get_xpath_object("/resource-agent/@version", metadata, LOG_TRACE);
+    if (!version_xml) {
+        if (rsc) {
+            crm_debug("Resource agent %s:%s:%s (for %s) doesn't specify a version number",
+                      rsc->class, rsc->provider, rsc->type, rsc->id);
+        }
+        return default_version;
+    }
+
+    version = crm_element_value(version_xml, XML_ATTR_VERSION);
+    if (!valid_version_format(version)) {
+        if (rsc) {
+            crm_notice("Resource agent version for %s (%s:%s:%s) has unrecognized format",
+                       rsc->id, rsc->class, rsc->provider, rsc->type);
+        }
+        return default_version;
+    }
+
+    if (rsc) {
+        crm_trace("Resource agent version for %s (%s:%s:%s) is %s",
+                  rsc->id, rsc->class, rsc->provider, rsc->type, version);
+    }
+
+    return version;
+}
+
 static gboolean
 build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_t * op,
                        const char *node_name, const char *src)
@@ -705,6 +751,7 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
     int target_rc = 0;
     xmlNode *xml_op = NULL;
     xmlNode *metadata = NULL;
+    const char *ra_version = NULL;
     const char *caller_version = NULL;
     lrm_state_t *lrm_state = NULL;
 
@@ -766,6 +813,9 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
         crm_warn("Cannot update metadata for %s (%s:%s:%s)", rsc->id, rsc->class, rsc->provider, rsc->type);
         return TRUE;
     }
+
+    ra_version = get_ra_version(rsc, metadata);
+    crm_xml_add(xml_op, XML_ATTR_RA_VERSION, ra_version);
 
     crm_trace("Including additional digests for %s::%s:%s", rsc->class, rsc->provider, rsc->type);
     append_restart_list(op, metadata, xml_op, caller_version);
@@ -1822,9 +1872,6 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
     const char *op_timeout = NULL;
     const char *op_interval = NULL;
     GHashTable *params = NULL;
-#ifdef ENABLE_VERSIONED_ATTRS
-    xmlNode *versioned_params = NULL;
-#endif
 
     const char *transition = NULL;
 
@@ -1859,16 +1906,6 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
 
     params = xml2list(rsc_op);
     g_hash_table_remove(params, CRM_META "_op_target_rc");
-#ifdef ENABLE_VERSIONED_ATTRS
-    
-    if (!is_remote_lrmd_ra(NULL, NULL, rsc_id)) {
-        xmlNode *ptr = first_named_child(rsc_op, XML_TAG_VER_ATTRS);
-        
-        if (ptr) {
-            versioned_params = copy_xml(ptr);
-        }
-    }
-#endif
 
     op_delay = crm_meta_value(params, XML_OP_ATTR_START_DELAY);
     op_timeout = crm_meta_value(params, XML_ATTR_TIMEOUT);
@@ -1878,11 +1915,33 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
     op->timeout = crm_parse_int(op_timeout, "0");
     op->start_delay = crm_parse_int(op_delay, "0");
 
+    if (safe_str_neq(op->op_type, RSC_METADATA) && !is_remote_lrmd_ra(NULL, NULL, rsc_id)) {
+        lrmd_rsc_info_t *rsc = lrm_state_get_rsc_info(lrm_state, rsc_id, 0);
+        xmlNode *metadata = lrm_state_get_rsc_metadata(lrm_state, rsc);
+
+        if (metadata) {
+            const char *ra_version = get_ra_version(rsc, metadata);
+            xmlNode *versioned_attrs =  NULL;
+            GHashTable *hash = NULL;
+            char *key = NULL;
+            char *value = NULL;
+            GHashTableIter iter;
+
+            versioned_attrs = first_named_child(rsc_op, XML_TAG_VER_ATTRS);
+            hash = pe_unpack_versioned_parameters(versioned_attrs, ra_version);
+            g_hash_table_iter_init(&iter, hash);
+            while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
+                g_hash_table_iter_steal(&iter);
+                g_hash_table_replace(params, key, value);
+            }
+            g_hash_table_destroy(hash);
+        }
+
+        lrmd_free_rsc_info(rsc);
+    }
+
     if (safe_str_neq(operation, RSC_STOP)) {
         op->params = params;
-#ifdef ENABLE_VERSIONED_ATTRS
-        op->versioned_params = versioned_params;
-#endif
 
     } else {
         rsc_history_t *entry = g_hash_table_lookup(lrm_state->resource_history, rsc_id);
@@ -1891,9 +1950,6 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
          * whatever we are given */
         if (!entry || !entry->stop_params) {
             op->params = params;
-#ifdef ENABLE_VERSIONED_ATTRS
-            op->versioned_params = versioned_params;
-#endif
         } else {
             /* Copy the cached parameter list so that we stop the resource
              * with the old attributes, not the new ones */
@@ -1904,23 +1960,8 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
             g_hash_table_foreach(entry->stop_params, copy_instance_keys, op->params);
             g_hash_table_destroy(params);
             params = NULL;
-#ifdef ENABLE_VERSIONED_ATTRS
-            
-            op->versioned_params = NULL;
-            free_xml(versioned_params);
-#endif
         }
     }
-
-#ifdef ENABLE_VERSIONED_ATTRS
-    if (op->versioned_params) {
-        char *versioned_params_text = dump_xml_unformatted(op->versioned_params);
-
-        if (versioned_params_text) {
-            g_hash_table_insert(op->params, strdup("#" XML_TAG_VER_ATTRS), versioned_params_text);
-        }
-    }
-#endif
 
     /* sanity */
     if (op->interval < 0) {
