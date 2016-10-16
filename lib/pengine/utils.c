@@ -452,6 +452,10 @@ custom_action(resource_t * rsc, char *key, const char *task,
 
         action->meta = g_hash_table_new_full(crm_str_hash, g_str_equal, free, free);
 
+        action->versioned_parameters = create_xml_node(NULL, XML_TAG_OP_VER_ATTRS);
+
+        action->versioned_meta = create_xml_node(NULL, XML_TAG_OP_VER_META);
+
         if (save_action) {
             data_set->actions = g_list_prepend(data_set->actions, action);
             if(rsc == NULL) {
@@ -665,13 +669,156 @@ find_min_interval_mon(resource_t * rsc, gboolean include_disabled)
     return op;
 }
 
+static int
+unpack_start_delay(const char *value, GHashTable *meta)
+{
+    int start_delay = 0;
+
+    if (value != NULL) {
+        start_delay = crm_get_msec(value);
+
+        if (start_delay < 0) {
+            start_delay = 0;
+        }
+
+        if (meta) {
+            g_hash_table_replace(meta, strdup(XML_OP_ATTR_START_DELAY), crm_itoa(start_delay));
+        }
+    }
+
+    return start_delay;
+}
+
+static int
+unpack_interval_origin(const char *value, GHashTable *meta, xmlNode *xml_obj,
+                       unsigned long long interval, crm_time_t *now)
+{
+    int start_delay = 0;
+
+    if (interval > 0 && value) {
+        crm_time_t *origin = crm_time_new(value);
+
+        if (origin && now) {
+            crm_time_t *delay = NULL;
+            int rc = crm_time_compare(origin, now);
+            long long delay_s = 0;
+            int interval_s = (interval / 1000);
+
+            crm_trace("Origin: %s, interval: %d", value, interval_s);
+
+            /* If 'origin' is in the future, find the most recent "multiple" that occurred in the past */
+            while(rc > 0) {
+                crm_time_add_seconds(origin, -interval_s);
+                rc = crm_time_compare(origin, now);
+            }
+
+            /* Now find the first "multiple" that occurs after 'now' */
+            while (rc < 0) {
+                crm_time_add_seconds(origin, interval_s);
+                rc = crm_time_compare(origin, now);
+            }
+
+            delay = crm_time_calculate_duration(origin, now);
+
+            crm_time_log(LOG_TRACE, "origin", origin,
+                         crm_time_log_date | crm_time_log_timeofday |
+                         crm_time_log_with_timezone);
+            crm_time_log(LOG_TRACE, "now", now,
+                         crm_time_log_date | crm_time_log_timeofday |
+                         crm_time_log_with_timezone);
+            crm_time_log(LOG_TRACE, "delay", delay, crm_time_log_duration);
+
+            delay_s = crm_time_get_seconds(delay);
+
+            CRM_CHECK(delay_s >= 0, delay_s = 0);
+            start_delay = delay_s * 1000;
+
+            if (xml_obj) {
+                crm_info("Calculated a start delay of %llds for %s", delay_s, ID(xml_obj));
+            }
+
+            if (meta) {
+                g_hash_table_replace(meta, strdup(XML_OP_ATTR_START_DELAY),
+                                     crm_itoa(start_delay));
+            }
+
+            crm_time_free(origin);
+            crm_time_free(delay);
+        } else if (!origin && xml_obj) {
+            crm_config_err("Operation %s contained an invalid " XML_OP_ATTR_ORIGIN ": %s",
+                           ID(xml_obj), value);
+        }
+    }
+
+    return start_delay;
+}
+
+static int
+unpack_timeout(const char *value, action_t *action, xmlNode *xml_obj,
+               unsigned long long interval, GHashTable *config_hash)
+{
+    int timeout = 0;
+
+    if (value == NULL && xml_obj == NULL && action &&
+        safe_str_eq(action->task, RSC_STATUS) && interval == 0) {
+
+        xmlNode *min_interval_mon = find_min_interval_mon(action->rsc, FALSE);
+
+        if (min_interval_mon) {
+            value = crm_element_value(min_interval_mon, XML_ATTR_TIMEOUT);
+            pe_rsc_trace(action->rsc,
+                         "\t%s uses the timeout value '%s' from the minimum interval monitor",
+                         action->uuid, value);
+        }
+    }
+
+    if (value == NULL && config_hash) {
+        value = pe_pref(config_hash, "default-action-timeout");
+    }
+
+    timeout = crm_get_msec(value);
+    if (timeout < 0) {
+        timeout = 0;
+    }
+
+    return timeout;
+}
+
+static void
+unpack_versioned_meta(xmlNode *versioned_meta, xmlNode *xml_obj, unsigned long long interval, crm_time_t *now)
+{
+    xmlNode *attrs = NULL;
+    xmlNode *attr = NULL;
+
+    for (attrs = __xml_first_child(versioned_meta); attrs != NULL; attrs = __xml_next_element(attrs)) {
+        for (attr = __xml_first_child(attrs); attr != NULL; attr = __xml_next_element(attr)) {
+            const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
+            const char *value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
+
+            if (safe_str_eq(name, XML_OP_ATTR_START_DELAY)) {
+                int start_delay = unpack_start_delay(value, NULL);
+
+                crm_xml_add_int(attr, XML_NVPAIR_ATTR_VALUE, start_delay);
+            } else if (safe_str_eq(name, XML_OP_ATTR_ORIGIN)) {
+                int start_delay = unpack_interval_origin(value, NULL, xml_obj, interval, now);
+
+                crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_OP_ATTR_START_DELAY);
+                crm_xml_add_int(attr, XML_NVPAIR_ATTR_VALUE, start_delay);
+            } else if (safe_str_eq(name, XML_ATTR_TIMEOUT)) {
+                int timeout = unpack_timeout(value, NULL, NULL, 0, NULL);
+
+                crm_xml_add_int(attr, XML_NVPAIR_ATTR_VALUE, timeout);
+            }
+        }
+    }
+}
+
 void
 unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
                  pe_working_set_t * data_set)
 {
-    int value_i = 0;
     unsigned long long interval = 0;
-    unsigned long long start_delay = 0;
+    int timeout = 0;
     char *value_ms = NULL;
     const char *value = NULL;
     const char *field = NULL;
@@ -697,6 +844,13 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
 
     unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_ATTR_SETS,
                                NULL, action->meta, NULL, FALSE, data_set->now);
+
+    pe_unpack_versioned_attributes(data_set->input, xml_obj, XML_TAG_ATTR_SETS, NULL,
+                                   action->versioned_parameters, data_set->now);
+
+    pe_unpack_versioned_attributes(data_set->input, xml_obj, XML_TAG_META_SETS, NULL,
+                                   action->versioned_meta, data_set->now);
+
     g_hash_table_remove(action->meta, "id");
 
     field = XML_LRM_ATTR_INTERVAL;
@@ -884,90 +1038,20 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
                  role2text(action->fail_role));
 
     field = XML_OP_ATTR_START_DELAY;
-    value = g_hash_table_lookup(action->meta, field);
-    if (value != NULL) {
-        value_i = crm_get_msec(value);
-        if (value_i < 0) {
-            value_i = 0;
-        }
-        start_delay = value_i;
-        value_ms = crm_itoa(value_i);
-        g_hash_table_replace(action->meta, strdup(field), value_ms);
-
-    } else if (interval > 0 && g_hash_table_lookup(action->meta, XML_OP_ATTR_ORIGIN)) {
-        crm_time_t *origin = NULL;
-
+    value = g_hash_table_lookup(action->meta, XML_OP_ATTR_START_DELAY);
+    if (value) {
+        unpack_start_delay(value, action->meta);
+    } else {
         value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ORIGIN);
-        origin = crm_time_new(value);
-
-        if (origin == NULL) {
-            crm_config_err("Operation %s contained an invalid " XML_OP_ATTR_ORIGIN ": %s",
-                           ID(xml_obj), value);
-
-        } else {
-            crm_time_t *delay = NULL;
-            int rc = crm_time_compare(origin, data_set->now);
-            long long delay_s = 0;
-            int interval_s = (interval / 1000);
-
-            crm_trace("Origin: %s, interval: %d", value, interval_s);
-
-            /* If 'origin' is in the future, find the most recent "multiple" that occurred in the past */
-            while(rc > 0) {
-                crm_time_add_seconds(origin, -interval_s);
-                rc = crm_time_compare(origin, data_set->now);
-            }
-
-            /* Now find the first "multiple" that occurs after 'now' */
-            while (rc < 0) {
-                crm_time_add_seconds(origin, interval_s);
-                rc = crm_time_compare(origin, data_set->now);
-            }
-
-            delay = crm_time_calculate_duration(origin, data_set->now);
-
-            crm_time_log(LOG_TRACE, "origin", origin,
-                         crm_time_log_date | crm_time_log_timeofday |
-                         crm_time_log_with_timezone);
-            crm_time_log(LOG_TRACE, "now", data_set->now,
-                         crm_time_log_date | crm_time_log_timeofday |
-                         crm_time_log_with_timezone);
-            crm_time_log(LOG_TRACE, "delay", delay, crm_time_log_duration);
-
-            delay_s = crm_time_get_seconds(delay);
-
-            CRM_CHECK(delay_s >= 0, delay_s = 0);
-            start_delay = delay_s * 1000;
-
-            crm_info("Calculated a start delay of %llds for %s", delay_s, ID(xml_obj));
-            g_hash_table_replace(action->meta, strdup(XML_OP_ATTR_START_DELAY),
-                                 crm_itoa(start_delay));
-            crm_time_free(origin);
-            crm_time_free(delay);
-        }
+        unpack_interval_origin(value, action->meta, xml_obj, interval, data_set->now);
     }
 
     field = XML_ATTR_TIMEOUT;
     value = g_hash_table_lookup(action->meta, field);
-    if (value == NULL && xml_obj == NULL && safe_str_eq(action->task, RSC_STATUS) && interval == 0) {
-        xmlNode *min_interval_mon = find_min_interval_mon(action->rsc, FALSE);
+    timeout = unpack_timeout(value, action, xml_obj, interval, data_set->config_hash);
+    g_hash_table_replace(action->meta, strdup(XML_ATTR_TIMEOUT), crm_itoa(timeout));
 
-        if (min_interval_mon) {
-            value = crm_element_value(min_interval_mon, XML_ATTR_TIMEOUT);
-            pe_rsc_trace(action->rsc,
-                         "\t%s uses the timeout value '%s' from the minimum interval monitor",
-                         action->uuid, value);
-        }
-    }
-    if (value == NULL) {
-        value = pe_pref(data_set->config_hash, "default-action-timeout");
-    }
-    value_i = crm_get_msec(value);
-    if (value_i < 0) {
-        value_i = 0;
-    }
-    value_ms = crm_itoa(value_i);
-    g_hash_table_replace(action->meta, strdup(field), value_ms);
+    unpack_versioned_meta(action->versioned_meta, xml_obj, interval, data_set->now);
 }
 
 static xmlNode *
@@ -1115,6 +1199,12 @@ pe_free_action(action_t * action)
     }
     if (action->meta) {
         g_hash_table_destroy(action->meta);
+    }
+    if (action->versioned_parameters) {
+        free_xml(action->versioned_parameters);
+    }
+    if (action->versioned_meta) {
+        free_xml(action->versioned_meta);
     }
     free(action->cancel_task);
     free(action->task);
@@ -1786,6 +1876,7 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
     g_hash_table_foreach(action->meta, hash2metafield, data->params_all);
     append_versioned_params(local_versioned_params, ra_version, data->params_all);
     append_versioned_params(rsc->versioned_parameters, ra_version, data->params_all);
+    append_versioned_params(action->versioned_parameters, ra_version, data->params_all);
     filter_action_parameters(data->params_all, op_version);
 
     data->digest_all_calc = calculate_operation_digest(data->params_all, op_version);

@@ -1927,6 +1927,32 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
             char *value = NULL;
             GHashTableIter iter;
 
+            versioned_attrs = first_named_child(rsc_op, XML_TAG_OP_VER_ATTRS);
+            hash = pe_unpack_versioned_parameters(versioned_attrs, ra_version);
+            g_hash_table_iter_init(&iter, hash);
+            while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
+                g_hash_table_iter_steal(&iter);
+                g_hash_table_replace(params, key, value);
+                // providing meta-names for instance_attributes is only for backward compatibility,
+                // and will be removed in a future release
+                g_hash_table_replace(params, crm_meta_name(key), strdup(value));
+            }
+            g_hash_table_destroy(hash);
+
+            versioned_attrs = first_named_child(rsc_op, XML_TAG_OP_VER_META);
+            hash = pe_unpack_versioned_parameters(versioned_attrs, ra_version);
+            g_hash_table_iter_init(&iter, hash);
+            while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
+                g_hash_table_replace(params, crm_meta_name(key), strdup(value));
+
+                if (safe_str_eq(key, XML_ATTR_TIMEOUT)) {
+                    op->timeout = crm_parse_int(value, "0");
+                } else if (safe_str_eq(key, XML_OP_ATTR_START_DELAY)) {
+                    op->start_delay = crm_parse_int(value, "0");
+                }
+            }
+            g_hash_table_destroy(hash);
+
             versioned_attrs = first_named_child(rsc_op, XML_TAG_RSC_VER_ATTRS);
             hash = pe_unpack_versioned_parameters(versioned_attrs, ra_version);
             g_hash_table_iter_init(&iter, hash);

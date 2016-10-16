@@ -1114,6 +1114,14 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
         }
     }
 
+    if (xml_has_children(action->versioned_parameters)) {
+        add_node_copy(action_xml, action->versioned_parameters);
+    }
+
+    if (xml_has_children(action->versioned_meta)) {
+        add_node_copy(action_xml, action->versioned_meta);
+    }
+
     g_hash_table_foreach(action->meta, hash2metafield, args_xml);
     if (action->rsc != NULL) {
         int isolated = 0;
