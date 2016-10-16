@@ -853,4 +853,10 @@ do_test restart-versioned       "Restart resources on #ra-version change"
 do_test reload-versioned        "Reload resources on #ra-version change"
 
 echo ""
+do_test versioned-operations-1  "Use #ra-version to configure operations of native resources"
+do_test versioned-operations-2  "Use #ra-version to configure operations of stonith resources"
+do_test versioned-operations-3  "Use #ra-version to configure operations of master/slave resources"
+do_test versioned-operations-4  "Use #ra-version to configure operations of groups of the resources"
+
+echo ""
 test_results
