@@ -130,7 +130,7 @@ while true; do
 	-u|--user)      ssh_user="$2"; shift; shift;;
         -D|--max-depth)     maxdepth="$2"; shift; shift;;
 	-M) search_logs=0; shift;;
-        --sos-mode) search_logs=0; extra_logs="/var/log/pacemaker.log /var/log/cluster/corosync.log"; nodes="$host"; shift;;
+        --sos-mode) search_logs=0; nodes="$host"; shift;;
 	--dest) DESTDIR=$2; shift; shift;;
 	--) if [ ! -z $2 ]; then DESTDIR=$2; fi; break;;
 	-h|--help) usage; exit 0;;

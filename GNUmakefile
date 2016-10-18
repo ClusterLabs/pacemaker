@@ -34,11 +34,12 @@ RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
 
 MOCK_OPTIONS	?= --resultdir=$(RPM_ROOT)/mock --no-cleanup-after
 
-# Default to fedora compliant spec files
+# Default to building Fedora-compliant spec files
 # SLES:     /etc/SuSE-release
 # openSUSE: /etc/SuSE-release
-# RHEL:     /etc/redhat-release
+# RHEL:     /etc/redhat-release, /etc/system-release
 # Fedora:   /etc/fedora-release, /etc/redhat-release, /etc/system-release
+# CentOS:   /etc/centos-release, /etc/redhat-release, /etc/system-release
 F       ?= $(shell test ! -e /etc/fedora-release && echo 0; test -e /etc/fedora-release && rpm --eval %{fedora})
 ARCH    ?= $(shell test -e /etc/fedora-release && rpm --eval %{_arch})
 MOCK_CFG ?= $(shell test -e /etc/fedora-release && echo fedora-$(F)-$(ARCH))
@@ -150,24 +151,15 @@ $(PACKAGE)-suse.spec: $(PACKAGE).spec.in GNUmakefile
 	sed -i s:libexecdir}/lcrso:libdir}/lcrso:g $@
 	sed -i 's:%{name}-libs:lib%{name}3:g' $@
 	sed -i s:cluster-glue-libs:libglue:g $@
-	sed -i s:lm_sensors-devel:automake:g $@
 	sed -i s:bzip2-devel:libbz2-devel:g $@
-	sed -i s:bcond_without\ publican:bcond_with\ publican:g $@
 	sed -i s:docbook-style-xsl:docbook-xsl-stylesheets:g $@
 	sed -i s:libtool-ltdl-devel::g $@
 	sed -i s:publican::g $@
 	sed -i s:byacc::g $@
 	sed -i s:gnutls-devel:libgnutls-devel:g $@
 	sed -i s:189:90:g $@
-	sed -i 's@python-devel@python-devel python-curses python-xml@' $@
-	sed -i 's@Requires:      python@Requires:      python python-curses python-xml@' $@
-	sed -i 's@%systemd_post pacemaker.service@if [ ZZZ -eq 1 ]; then systemctl preset pacemaker.service || : ; fi@' $@
-	sed -i 's@%systemd_postun_with_restart pacemaker.service@systemctl daemon-reload || : ; if [ ZZZ -ge 1 ]; then systemctl try-restart pacemaker.service || : ; fi@' $@
-	sed -i 's@%systemd_preun pacemaker.service@if [ ZZZ -eq 0 ]; then systemctl --no-reload disable pacemaker.service || : ; systemctl stop pacemaker.service || : ; fi@' $@
-	sed -i 's@%systemd_post pacemaker_remote.service@if [ ZZZ -eq 1 ]; then systemctl preset pacemaker_remote.service || : ; fi@' $@
-	sed -i 's@%systemd_postun_with_restart pacemaker_remote.service@systemctl daemon-reload || : ; if [ ZZZ -ge 1 ]; then systemctl try-restart pacemaker_remote.service || : ; fi@' $@
-	sed -i 's@%systemd_preun pacemaker_remote.service@if [ ZZZ -eq 0 ]; then systemctl --no-reload disable pacemaker_remote.service || : ; systemctl stop pacemaker_remote.service || : ; fi@' $@
-	sed -i "s@ZZZ@\o0441@g" $@
+	sed -i 's:python-devel:python-curses python-xml python-devel:' $@
+	sed -i 's@Requires:      python@Requires:      python-curses python-xml python@' $@
 	@echo "Applied SUSE-specific modifications"
 
 
