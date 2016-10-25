@@ -545,7 +545,7 @@ define one or more +fencing-level+ entries in the +fencing-topology+ section of
 the configuration.
 
 * Each fencing level is attempted in order of ascending +index+. Allowed
-  indexes are 0 to 9.
+  values are 1 through 9.
 * If a device fails, processing terminates for the current level.
   No further devices in that level are exercised, and the next level is attempted instead.
 * If the operation succeeds for all the listed devices in a level, the level is deemed to have passed.
@@ -596,6 +596,7 @@ Some possible uses of topologies include:
 |index
 |The order in which to attempt the levels.
  Levels are attempted in ascending order 'until one succeeds'.
+ Valid values are 1 through 9.
  indexterm:[index,fencing-level]
  indexterm:[Fencing,fencing-level,index]
 
