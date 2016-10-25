@@ -35,8 +35,7 @@ What are the different Git branches and repositories used for?::
    branches to use when submitting requests.
 
 How do I build from the source code?::
- See the
- https://github.com/ClusterLabs/pacemaker/blob/master/README.markdown[README]
+ See https://github.com/ClusterLabs/pacemaker/blob/master/INSTALL.md[INSTALL.md]
  in the main checkout directory.
 
 What coding style should I follow?::
