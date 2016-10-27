@@ -526,11 +526,12 @@ do_dc_join_ack(long long action,
 
     if (safe_str_eq(join_from, fsa_our_uname)) {
         xmlNode *now_dc_lrmd_state = do_lrm_query(TRUE, fsa_our_uname);
+
         if (now_dc_lrmd_state != NULL) {
             crm_debug("LRM state is updated from do_lrm_query.(%s)", join_from);
             fsa_cib_update(XML_CIB_TAG_STATUS, now_dc_lrmd_state,
                 cib_scope_local | cib_quorum_override | cib_can_create, call_id, NULL);
-            free(now_dc_lrmd_state);
+            free_xml(now_dc_lrmd_state);
         } else {
             crm_warn("Could not get our LRM state. LRM state is updated from join_ack->xml.(%s)", join_from);
             fsa_cib_update(XML_CIB_TAG_STATUS, join_ack->xml,

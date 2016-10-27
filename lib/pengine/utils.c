@@ -1294,18 +1294,18 @@ resource_location(resource_t * rsc, node_t * node, int score, const char *tag,
         GListPtr gIter = data_set->nodes;
 
         for (; gIter != NULL; gIter = gIter->next) {
-            node_t *node = (node_t *) gIter->data;
+            node_t *node_iter = (node_t *) gIter->data;
 
-            resource_node_score(rsc, node, score, tag);
+            resource_node_score(rsc, node_iter, score, tag);
         }
 
     } else {
         GHashTableIter iter;
-        node_t *node = NULL;
+        node_t *node_iter = NULL;
 
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
-        while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-            resource_node_score(rsc, node, score, tag);
+        while (g_hash_table_iter_next(&iter, NULL, (void **)&node_iter)) {
+            resource_node_score(rsc, node_iter, score, tag);
         }
     }
 

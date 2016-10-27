@@ -315,8 +315,7 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
         goto badmsg;
 
     } else if (safe_str_eq("identify", data)) {
-        int pid = getpid();
-        char *pid_s = crm_itoa(pid);
+        char *pid_s = crm_itoa((int) getpid());
 
         send_cluster_text(crm_class_cluster, pid_s, TRUE, NULL, crm_msg_ais);
         free(pid_s);
