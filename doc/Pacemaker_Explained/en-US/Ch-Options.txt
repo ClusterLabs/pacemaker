@@ -278,6 +278,31 @@ indexterm:[Cluster,Option,pe-input-series-max]
 The number of "normal" PE inputs to save. Used when reporting problems.
 A value of -1 means unlimited (report all).
 
+| node-health-strategy | none |
+indexterm:[node-health-strategy,Cluster Option]
+indexterm:[Cluster,Option,node-health-strategy]
+ How the cluster should react to node health attributes (see <<s-node-health>>).
+ Allowed values are +none+, +migrate-on-red+, +only-green+, +progressive+, and
+ +custom+.
+
+| node-health-green | 0 |
+indexterm:[node-health-green,Cluster Option]
+indexterm:[Cluster,Option,node-health-green]
+ The score to use for a node health attribute whose value is +green+.
+ Only used when +node-health-strategy+ is +progressive+ or +custom+.
+
+| node-health-yellow | 0 |
+indexterm:[node-health-yellow,Cluster Option]
+indexterm:[Cluster,Option,node-health-yellow]
+ The score to use for a node health attribute whose value is +yellow+.
+ Only used when +node-health-strategy+ is +progressive+ or +custom+.
+
+| node-health-red | 0 |
+indexterm:[node-health-red,Cluster Option]
+indexterm:[Cluster,Option,node-health-red]
+ The score to use for a node health attribute whose value is +red+.
+ Only used when +node-health-strategy+ is +progressive+ or +custom+.
+
 | remove-after-stop | FALSE |
 indexterm:[remove-after-stop,Cluster Option]
 indexterm:[Cluster,Option,remove-after-stop]

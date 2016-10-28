@@ -75,7 +75,7 @@ indexterm:[Constraints,Location,id]
 
 |rsc
 |
-|A resource name
+|The name of the resource to which this constraint applies
 indexterm:[rsc,Location Constraints]
 indexterm:[Constraints,Location,rsc]
 

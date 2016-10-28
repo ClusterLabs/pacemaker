@@ -653,7 +653,7 @@ static gboolean
 unpack_simple_location(xmlNode * xml_obj, pe_working_set_t * data_set)
 {
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
-    const char *value = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
+    const char *value = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
 
     if(value) {
         resource_t *rsc_lh = pe_find_constraint_resource(data_set->resources, value);
@@ -661,7 +661,7 @@ unpack_simple_location(xmlNode * xml_obj, pe_working_set_t * data_set)
         return unpack_rsc_location(xml_obj, rsc_lh, NULL, NULL, data_set, NULL);
     }
 
-    value = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE"-pattern");
+    value = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE_PATTERN);
     if(value) {
         regex_t *r_patt = calloc(1, sizeof(regex_t));
         bool invert = FALSE;
@@ -727,7 +727,7 @@ unpack_rsc_location(xmlNode * xml_obj, resource_t * rsc_lh, const char * role,
 {
     gboolean empty = TRUE;
     rsc_to_node_t *location = NULL;
-    const char *id_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
+    const char *id_lh = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
     const char *node = crm_element_value(xml_obj, XML_CIB_TAG_NODE);
     const char *discovery = crm_element_value(xml_obj, XML_LOCATION_ATTR_DISCOVERY);
@@ -833,7 +833,7 @@ unpack_location_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_
         return TRUE;
     }
 
-    id_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
+    id_lh = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
     if (id_lh == NULL) {
         return TRUE;
     }
@@ -852,7 +852,7 @@ unpack_location_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_
     new_xml = copy_xml(xml_obj);
 
     /* Convert the template/tag reference in "rsc" into a resource_set under the rsc_location constraint. */
-    if (tag_to_set(new_xml, &rsc_set_lh, XML_COLOC_ATTR_SOURCE, FALSE, data_set) == FALSE) {
+    if (tag_to_set(new_xml, &rsc_set_lh, XML_LOC_ATTR_SOURCE, FALSE, data_set) == FALSE) {
         free_xml(new_xml);
         return FALSE;
     }

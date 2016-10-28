@@ -35,8 +35,7 @@ What are the different Git branches and repositories used for?::
    branches to use when submitting requests.
 
 How do I build from the source code?::
- See the
- https://github.com/ClusterLabs/pacemaker/blob/master/README.markdown[README]
+ See https://github.com/ClusterLabs/pacemaker/blob/master/INSTALL.md[INSTALL.md]
  in the main checkout directory.
 
 What coding style should I follow?::
@@ -88,7 +87,7 @@ What is Pacemaker's license?::
  and its init scripts under the
  https://opensource.org/licenses/BSD-3-Clause[Revised BSD] license. If you find
  any deviations from this policy, or wish to inquire about alternate licensing
- arrangements, please e-mail pacemaker@oss.clusterlabs.org.
+ arrangements, please e-mail mailto:andrew@beekhof.net[andrew@beekhof.net].
  Licensing issues are also discussed on the
  http://clusterlabs.org/wiki/License[ClusterLabs wiki].
 
