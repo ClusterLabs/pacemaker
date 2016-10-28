@@ -737,7 +737,6 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
                    role2text(rsc->next_role));
 
         free(key);
-        key = NULL;
         return;
     }
 
