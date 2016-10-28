@@ -1,7 +1,9 @@
 [appendix]
 
+== Upgrading a Pacemaker Cluster ==
+
 [[ap-upgrade]]
-== Upgrading Cluster Software ==
+=== Upgrading Cluster Software ===
 
 There will always be an upgrade path from any pacemaker 1._x_
 release to any other 1._y_ release.
@@ -63,7 +65,7 @@ indexterm:[Reattach Upgrade]
 
 |=========================================================
 
-=== Complete Cluster Shutdown ===
+==== Complete Cluster Shutdown ====
 
 In this scenario, one shuts down all cluster nodes and resources,
 then upgrades all the nodes before restarting the cluster.
@@ -78,7 +80,7 @@ then upgrades all the nodes before restarting the cluster.
    The messaging layer can be either Corosync or Heartbeat and does not need to
    be the same one before the upgrade.
 
-=== Rolling (node by node) ===
+==== Rolling (node by node) ====
 
 In this scenario, each node is removed from the cluster, upgraded and then
 brought back online until all nodes are running the newest version.
@@ -139,7 +141,7 @@ possible.
 |=========================================================
 ====
 
-=== Disconnect and Reattach ===
+==== Disconnect and Reattach ====
 
 The reattach method is a variant of a complete cluster shutdown, where the
 resources are left active and get re-detected when the cluster is restarted.
@@ -191,3 +193,194 @@ The oldest version of the CRM to support this upgrade type was in Heartbeat 2.0.
 Always check your existing configuration is still compatible with the
 version you are installing before starting the cluster.
 ===========
+
+=== Upgrading the Configuration ===
+
+This process was originally written for the upgrade from 0.6.'x' to 1.'y',
+but the concepts should apply for any upgrade involving a change in
+the XML schema version.
+
+indexterm:[Upgrading the Configuration]
+indexterm:[Configuration,Upgrading]
+
+==== Perform the upgrade ====
+
+===== Upgrade the software =====
+
+Refer to the appendix: <<ap-upgrade>>
+
+===== Upgrade the Configuration =====
+
+As XML is not the friendliest of languages, it is common for cluster
+administrators to have scripted some of their activities. In such
+cases, it is likely that those scripts will not work with the new XML
+syntax.
+
+In order to support such environments, it is actually possible to
+continue using the old XML syntax.
+
+The downside is, however, that not all the new features will be
+available and there is a performance impact since the cluster must do
+a non-persistent configuration upgrade before each transition. So
+while using the old syntax is possible, it is not advisable to
+continue using it indefinitely.
+
+Even if you wish to continue using the old syntax, it is advisable to
+follow the upgrade procedure (except for the last step) to ensure that the
+cluster is able to use your existing configuration (since it will perform much
+the same task internally).
+
+. Create a shadow copy to work with
++
+-----
+# crm_shadow --create upgrade06
+-----
+. Verify the configuration is valid indexterm:[Configuration,Verify]indexterm:[Verify,Configuration]
++
+-----
+# crm_verify --live-check
+-----
+. Fix any errors or warnings
+. Perform the upgrade:
++
+-----
+# cibadmin --upgrade
+-----
+. If this step fails, there are three main possibilities:
+.. The configuration was not valid to start with - go back to step 2
+.. The transformation failed - report a bug or mailto:pacemaker@oss.clusterlabs.org?subject=Transformation%20failed%20during%20upgrade[email the project]
+.. The transformation was successful but produced an invalid result footnote:[
+The most common reason is ID values being repeated or invalid. Pacemaker 1.0 is much stricter regarding this type of validation.
+]
++
+If the result of the transformation is invalid, you may see a number of errors
+from the validation library. If these are not helpful, visit the
+http://clusterlabs.org/wiki/Validation_FAQ[Validation FAQ wiki page] and/or try
+the procedure described below under <<s-upgrade-config-manual>>
++        
+. Check the changes
++
+-----
+# crm_shadow --diff
+-----
++
+If at this point there is anything about the upgrade that you wish to fine-tune (for example, to change some of the automatic IDs) now is the time to do so. Since the shadow configuration is not in use by the cluster, it is safe to edit the file manually:
++
+-----
+# crm_shadow --edit
+-----
++
+This will open the configuration in your favorite editor (whichever is
+specified by the standard *$EDITOR* environment variable)
++
+. Preview how the cluster will react:
++
+------
+# crm_simulate --live-check --save-dotfile upgrade06.dot -S
+# graphviz upgrade06.dot
+------
++
+Verify that either no resource actions will occur or that you are
+happy with any that are scheduled.  If the output contains actions you
+do not expect (possibly due to changes to the score calculations), you
+may need to make further manual changes.  See
+<<s-config-testing-changes>> for further details on how to interpret
+the output of `crm_simulate` and `graphviz`.
++
+. Upload the changes
++
+-----
+# crm_shadow --commit upgrade06 --force
+-----
++
+In the unlikely event this step fails, please report a bug.
+
+[[s-upgrade-config-manual]]
+===== Manually Upgrading the Configuration =====
+
+indexterm:[Configuration,Upgrade manually]
+It is also possible to perform the configuration upgrade steps manually:
+
+. Locate the +upgrade06.xsl+ conversion script provided with the source code
+  (the https://github.com/ClusterLabs/pacemaker/tree/master/xml/upgrade06.xsl[latest version] is available via
+  git).
+          
+. Convert the XML blob: indexterm:[XML,Convert]
++
+-----
+# xsltproc /path/to/upgrade06.xsl config06.xml > config10.xml
+-----
++          
+. Locate the +pacemaker.rng+ script.
+. Check the XML validity: indexterm:[Validate Configuration]indexterm:[Configuration,Validate XML]
++
+----
+# xmllint --relaxng /path/to/pacemaker.rng config10.xml
+----
+
+The advantage of this method is that it can be performed without the
+cluster running and any validation errors should be more informative
+(despite being generated by the same library!) since they include line
+numbers.
+
+
+=== What Changed in 1.0 ===
+
+==== New ====
+
+* Failure timeouts. See <<s-failure-migration>>
+* New section for resource and operation defaults. See <<s-resource-defaults>> and <<s-operation-defaults>>
+* Tool for making offline configuration changes. See <<s-config-sandboxes>>
+* +Rules, instance_attributes, meta_attributes+ and sets of operations can be defined once and referenced in multiple places. See <<s-reusing-config-elements>>
+* The CIB now accepts XPath-based create/modify/delete operations. See the pass:[<command>cibadmin</command>] help text.
+* Multi-dimensional colocation and ordering constraints. See <<s-resource-sets-ordering>> and <<s-resource-sets-colocation>>
+* The ability to connect to the CIB from non-cluster machines. See <<s-remote-connection>>
+* Allow recurring actions to be triggered at known times. See <<s-recurring-start>>
+
+
+==== Changed ====
+
+* Syntax
+** All resource and cluster options now use dashes (-) instead of underscores (_)
+** +master_slave+ was renamed to +master+
+** The +attributes+ container tag was removed
+** The operation field +pre-req+ has been renamed +requires+
+** All operations must have an +interval+, +start+/+stop+ must have it set to zero
+* The +stonith-enabled+ option now defaults to true.
+* The cluster will refuse to start resources if +stonith-enabled+ is true (or unset) and no STONITH resources have been defined
+* The attributes of colocation and ordering constraints were renamed for clarity. See <<s-resource-ordering>> and <<s-resource-colocation>>
+* +resource-failure-stickiness+ has been replaced by +migration-threshold+. See <<s-failure-migration>>
+* The parameters for command-line tools have been made consistent
+* Switched to 'RelaxNG' schema validation and 'libxml2' parser
+** id fields are now XML IDs which have the following limitations:
+*** id's cannot contain colons (:)
+*** id's cannot begin with a number
+*** id's must be globally unique (not just unique for that tag)
+** Some fields (such as those in constraints that refer to resources) are IDREFs.
++
+This means that they must reference existing resources or objects in
+order for the configuration to be valid.  Removing an object which is
+referenced elsewhere will therefore fail.
++              
+** The CIB representation, from which a MD5 digest is calculated to verify CIBs on the nodes, has changed.
++
+This means that every CIB update will require a full refresh on any
+upgraded nodes until the cluster is fully upgraded to 1.0.  This will
+result in significant performance degradation and it is therefore
+highly inadvisable to run a mixed 1.0/0.6 cluster for any longer than
+absolutely necessary.
++              
+* Ping node information no longer needs to be added to _ha.cf_.
++
+Simply include the lists of hosts in your ping resource(s).
+
+
+==== Removed ====
+
+
+* Syntax
+** It is no longer possible to set resource meta options as top-level
+   attributes.  Use meta attributes instead.
+** Resource and operation defaults are no longer read from
+   +crm_config+.  See <<s-resource-defaults>> and
+   <<s-operation-defaults>> instead.
