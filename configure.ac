@@ -20,7 +20,7 @@ dnl     checks for library functions
 dnl     checks for system services
 
 m4_include([version.m4])
-AC_INIT([pacemaker], VERSION_NUMBER, [pacemaker@oss.clusterlabs.org],
+AC_INIT([pacemaker], VERSION_NUMBER, [users@clusterlabs.org],
         [pacemaker], PCMK_URL)
 dnl Workaround autoconf < 2.64
 if test x"${PACKAGE_URL}" = x""; then
