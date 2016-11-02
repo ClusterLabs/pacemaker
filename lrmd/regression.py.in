@@ -1000,50 +1000,6 @@ if __name__ == "__main__":
         test.add_cmd("-c unregister_rsc -r \"test_rsc\" "+self.action_timeout+
                      "-l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
 
-        ### Verify that versioned resource parameters are chosen properly
-
-        # We'll default to one state file, then check the version to use a different one
-        state_file_default = "@CRM_RSCTMP_DIR@/versioned_params_default.state"
-        state_file_expected = "@CRM_RSCTMP_DIR@/versioned_params_expected.state"
-
-        # Versioned attributes are passed as a single key-value pair.
-        # Here, we define the value to choose the state file;
-        # ocf:heartbeat:Dummy should always be at least version 0.9.
-        versioned_key = "#versioned_attributes"
-        versioned_attrs = """<versioned_attributes>
-          <instance_attributes id="id01" score="2">
-            <rule id="id02" score="INFINITY">
-              <expression id="id03" type="version" attribute="#ra-version" operation="gt" value="0.8"/>
-            </rule>
-            <nvpair id="id04" name="state" value="%s"/>
-          </instance_attributes>
-          <instance_attributes id="id05" score="1">
-            <nvpair id="id06" name="state" value="%s"/>
-          </instance_attributes>
-        </versioned_attributes>""" % (state_file_expected, state_file_default)
-        cmd_params = "-k '%s' -v '%s' " % (versioned_key, versioned_attrs)
-
-        test = self.new_test("versioned_params", "Verify use of versioned resource parameters")
-
-        # First, remove the possible state files, so we can reliably tell what gets created.
-        test.add_sys_cmd("rm", "-f %s %s" % (state_file_expected, state_file_default))
-
-        # Register and start the resource.
-        test.add_cmd("-c register_rsc -r test_rsc -P heartbeat -C ocf -T Dummy "
-                     "-l 'NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete' "
-                     "%s" % (self.action_timeout))
-        test.add_cmd("-c exec -r test_rsc -a start -t 6000 %s" % cmd_params)
-
-        # Check the created state file.
-        test.add_expected_fail_sys_cmd("ls", state_file_default, 2)
-        test.add_sys_cmd("ls", state_file_expected)
-
-        # Stop and unregister the resource.
-        test.add_cmd("-c exec -r test_rsc -a stop -t 4000 %s" % cmd_params)
-        test.add_cmd("-c unregister_rsc -r test_rsc " + self.action_timeout +
-                     "-l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
-
-
         ### get metadata ###
         test = self.new_test("get_ocf_metadata", "Retrieve metadata for a resource")
         test.add_cmd_check_stdout("-c metadata -C \"ocf\" -P \"pacemaker\" -T \"Dummy\"",
