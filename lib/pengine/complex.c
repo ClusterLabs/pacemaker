@@ -524,19 +524,15 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_OP_ATTR_ALLOW_MIGRATE);
-    if (crm_is_true(value) && xml_has_children((*rsc)->versioned_parameters)) {
-        pe_rsc_trace((*rsc), "Migration is disabled for resources with versioned parameters");
-    } else if (crm_is_true(value)) {
+    if (crm_is_true(value)) {
         set_bit((*rsc)->flags, pe_rsc_allow_migrate);
-    } else if (value == NULL && baremetal_remote_node &&
-               !xml_has_children((*rsc)->versioned_parameters)) {
+    } else if (value == NULL && baremetal_remote_node) {
         /* by default, we want baremetal remote-nodes to be able
          * to float around the cluster without having to stop all the
          * resources within the remote-node before moving. Allowing
          * migration support enables this feature. If this ever causes
          * problems, migration support can be explicitly turned off with
-         * allow-migrate=false.
-         * We don't support migration for versioned resources, though. */
+         * allow-migrate=false. */
         set_bit((*rsc)->flags, pe_rsc_allow_migrate);
     }
 
