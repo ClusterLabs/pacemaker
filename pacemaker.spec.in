@@ -1,4 +1,4 @@
-# Define globals to control package behavior (configure these as desired)
+# Globals and defines to control package behavior (configure these as desired)
 
 ## User and group to use for nonprivileged services
 %global uname hacluster
@@ -28,34 +28,51 @@
 %global rparen )
 
 ## Short version of git commit
-%global shortcommit %(c=%{commit}; case ${c} in
+%define shortcommit %(c=%{commit}; case ${c} in
                       Pacemaker-*%{rparen} echo ${c:10};;
                       *%{rparen} echo ${c:0:7};; esac)
 
 ## Whether this is a release candidate
-%global pre_release %(s=%{shortcommit}; [ ${s: -4:3} != -rc ]; echo $?)
+%define pre_release %(s=%{shortcommit}; [ ${s: -4:3} != -rc ]; echo $?)
 
 ## Whether this is a development branch
-%global post_release %([ %{commit} = Pacemaker-%{shortcommit} ]; echo $?)
+%define post_release %([ %{commit} = Pacemaker-%{shortcommit} ]; echo $?)
 
 ## Turn off auto-compilation of python files outside site-packages directory,
 ## so that the -devel package is multilib-compliant
-%global __os_install_post %(echo '%{__os_install_post}' | sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g')
+%define __os_install_post %(echo '%{__os_install_post}' | sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g')
 
 ## Heuristic used to infer bleeding-edge deployments that are
 ## less likely to have working versions of the documentation tools
-%global bleeding  %(test ! -e /etc/yum.repos.d/fedora-rawhide.repo; echo $?)
+%define bleeding %(test ! -e /etc/yum.repos.d/fedora-rawhide.repo; echo $?)
 
 ## Corosync version
-%global cs_version %(pkg-config corosync --modversion  | awk -F . '{print $1}')
+%define cs_version %(pkg-config corosync --modversion 2>/dev/null | awk -F . '{print $1}')
 
 ## Where to install python site libraries (currently, this uses the unversioned
 ## python_sitearch macro to get the default system python, but at some point,
 ## we should explicitly choose python2_sitearch or python3_sitearch -- or both)
-%global py_site    %{?python_sitearch}%{!?python_sitearch:%(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")}
+%define py_site %{?python_sitearch}%{!?python_sitearch:%(
+  python -c 'from distutils.sysconfig import get_python_lib as gpl; print(gpl(1))' 2>/dev/null)}
 
 ## Whether this platform defaults to using CMAN
-%global cman_native 0%{?el6} || (0%{?fedora} > 0 && 0%{?fedora} < 17)
+%define cman_native (0%{?el6} || (0%{?fedora} > 0 && 0%{?fedora} < 17))
+
+## Whether this platform defaults to using systemd as an init system
+## (needs to be evaluated prior to BuildRequires being enumerated and
+## installed as it's intended to conditionally select some of these, and
+## for that there are only few indicators with varying reliability:
+## - presence of systemd-defined macros (when building in a full-fledged
+##   environment, which is not the case with ordinary mock-based builds)
+## - systemd-aware rpm as manifested with the presence of particular
+##   macro (rpm itself will trivially always be present when building)
+## - existence of /usr/lib/os-release file, which is something heavily
+##   propagated by systemd project
+## - when not good enough, there's always a possibility to check
+##   particular distro-specific macros (incl. version comparison)
+%define systemd_native (%{?_unitdir:1}%{?!_unitdir:0}%{nil \
+  } || %{?__transaction_systemd_inhibit:1}%{?!__transaction_systemd_inhibit:0}%{nil \
+  } || %(test -f /usr/lib/os-release; test $? -ne 0; echo $?))
 
 
 # Definitions for backward compatibility with older RPM versions
@@ -105,7 +122,7 @@
 %if %{with profiling}
 
 ## Disable -debuginfo package and stripping binaries/libraries
-%global debug_package %{nil}
+%define debug_package %{nil}
 
 %endif
 
@@ -113,15 +130,15 @@
 # Define the release version
 %if %{with pre_release} || 0%{pre_release}
 %if 0%{pre_release}
-%global pcmk_release 0.%{specversion}.%(s=%{shortcommit}; echo ${s: -3})
+%define pcmk_release 0.%{specversion}.%(s=%{shortcommit}; echo ${s: -3})
 %else
-%global pcmk_release 0.%{specversion}.%{shortcommit}.git
+%define pcmk_release 0.%{specversion}.%{shortcommit}.git
 %endif
 %else
 %if 0%{post_release}
-%global pcmk_release %{specversion}.%{shortcommit}.git
+%define pcmk_release %{specversion}.%{shortcommit}.git
 %else
-%global pcmk_release %{specversion}
+%define pcmk_release %{specversion}
 %endif
 %endif
 
@@ -159,6 +176,9 @@ BuildRequires: python-devel >= 2.6
 Requires:      libqb >= 0.13.0
 BuildRequires: libqb-devel >= 0.13.0
 
+# Basics required for the build (even if usually satisfied through other BRs)
+BuildRequires: coreutils findutils grep sed
+
 # Required for core functionality
 BuildRequires: automake autoconf libtool pkgconfig libtool-ltdl-devel
 BuildRequires: pkgconfig(glib-2.0) libxml2-devel libxslt-devel libuuid-devel
@@ -171,8 +191,8 @@ BuildRequires: resource-agents
 BuildRequires: ncurses-devel docbook-style-xsl
 BuildRequires: bison byacc flex help2man gnutls-devel pkgconfig(dbus-1)
 
-%if %{defined _unitdir}
-BuildRequires: systemd-devel
+%if %{systemd_native}
+BuildRequires: pkgconfig(systemd)
 %endif
 
 %if %{with cman} && %{cman_native}
@@ -189,6 +209,7 @@ BuildRequires: corosynclib-devel
 BuildRequires: cluster-glue-libs-devel
 %endif
 
+## (note no avoiding effect when building through non-customized mock)
 %if !%{bleeding}
 %if %{with doc}
 BuildRequires: publican inkscape asciidoc

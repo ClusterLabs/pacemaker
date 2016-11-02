@@ -1214,6 +1214,58 @@ AC_SUBST(DBUS_LIBS)
 
 AC_CHECK_TYPES([DBusBasicValue],,,[[#include <dbus/dbus.h>]])
 
+if test "x${enable_systemd}" != xno; then
+	if test $HAVE_dbus = 0; then
+		if test "x${enable_systemd}" = xyes; then
+			AC_MSG_FAILURE([cannot enable systemd without DBus])
+		else
+			enable_systemd=no
+		fi
+	fi
+	if test "x${enable_systemd}" = xtry; then
+		AC_MSG_CHECKING([for systemd version query result via dbus-send])
+		ret=$({ dbus-send --system --print-reply \
+		        --dest=org.freedesktop.systemd1 \
+		        /org/freedesktop/systemd1 \
+		        org.freedesktop.DBus.Properties.Get \
+		        string:org.freedesktop.systemd1.Manager \
+		        string:Version 2>/dev/null \
+		        || echo "this borked"; } | tail -n1)
+		# sanitize output a bit (interested just in value, not type),
+		# ret is intentionally unenquoted so as to normalize whitespace
+		ret=$(echo ${ret} | cut -d' ' -f2-)
+		AC_MSG_RESULT([${ret}])
+		if test "x${ret}" != xborked \
+		   || systemctl --version 2>/dev/null | grep -q systemd; then
+			enable_systemd=yes
+		else
+			enable_systemd=no
+		fi
+	fi
+fi
+
+AC_MSG_CHECKING([whether to enable support for managing resources via systemd])
+AC_MSG_RESULT([${enable_systemd}])
+if test "x${enable_systemd}" = xyes; then
+	HAVE_systemd=1
+	PCMK_FEATURES="$PCMK_FEATURES systemd"
+
+	AC_MSG_CHECKING([for systemd path for system unit files])
+	systemdunitdir="${systemdunitdir:}"
+	PKG_CHECK_VAR([systemdunitdir], [systemd],
+		      [systemdsystemunitdir], [],[
+	   systemdunitdir=no
+	])
+	AC_MSG_RESULT([${systemdunitdir}])
+	if test "x${systemdunitdir}" = xno; then
+		AC_MSG_FAILURE([cannot enable systemd when systemdunitdir unresolved])
+	fi
+fi
+
+AC_DEFINE_UNQUOTED(SUPPORT_SYSTEMD, $HAVE_systemd, Support systemd based system services)
+AM_CONDITIONAL(BUILD_SYSTEMD, test $HAVE_systemd = 1)
+AC_SUBST(SUPPORT_SYSTEMD)
+
 if test "x${enable_upstart}" != xno; then
 	if test $HAVE_dbus = 0; then
 		if test "x${enable_upstart}" = xyes; then
@@ -1224,10 +1276,10 @@ if test "x${enable_upstart}" != xno; then
 	fi
 	if test "x${enable_upstart}" = xtry; then
 		AC_MSG_CHECKING([for Upstart version query result via dbus-send])
-		ret=$(dbus-send --system --print-reply= --dest=com.ubuntu.Upstart \
-		      /com/ubuntu/Upstart org.freedesktop.DBus.Properties.Get \
-		      string:com.ubuntu.Upstart0_6 string:version 2>/dev/null \
-		      || echo "this borked")
+		ret=$({ dbus-send --system --print-reply --dest=com.ubuntu.Upstart \
+		        /com/ubuntu/Upstart org.freedesktop.DBus.Properties.Get \
+		        string:com.ubuntu.Upstart0_6 string:version 2>/dev/null \
+		        || echo "this borked"; } | tail -n1)
 		# sanitize output a bit (interested just in value, not type),
 		# ret is intentionally unenquoted so as to normalize whitespace
 		ret=$(echo ${ret} | cut -d' ' -f2-)
@@ -1251,42 +1303,6 @@ AC_DEFINE_UNQUOTED(SUPPORT_UPSTART, $HAVE_upstart, Support upstart based system 
 AM_CONDITIONAL(BUILD_UPSTART, test $HAVE_upstart = 1)
 AC_SUBST(SUPPORT_UPSTART)
 
-if test "x${enable_systemd}" != xno; then
-	if test $HAVE_dbus = 0; then
-		if test "x${enable_systemd}" = xyes; then
-			AC_MSG_FAILURE([cannot enable systemd without DBus])
-		else
-			enable_systemd=no
-		fi
-	else
-		AC_MSG_CHECKING([for systemd path for system unit files])
-		PKG_CHECK_VAR([systemdunitdir], [systemd], [systemdsystemunitdir], [
-		   AC_MSG_RESULT([${systemdunitdir}])
-		],[
-		   AC_MSG_RESULT([not found])
-		   systemdunitdir=no
-		])
-		if test "x${systemdunitdir}" = xno; then
-			if test "x${enable_systemd}" = xyes; then
-				AC_MSG_FAILURE([cannot enable systemd when systemdunitdir unresolved])
-			fi
-		        enable_systemd=no
-		else
-		        enable_systemd=yes
-		fi
-	fi
-fi
-
-AC_MSG_CHECKING([whether to enable support for managing resources via systemd])
-AC_MSG_RESULT([${enable_systemd}])
-if test "x${enable_systemd}" = xyes; then
-	HAVE_systemd=1
-	PCMK_FEATURES="$PCMK_FEATURES systemd"
-fi
-
-AC_DEFINE_UNQUOTED(SUPPORT_SYSTEMD, $HAVE_systemd, Support systemd based system services)
-AM_CONDITIONAL(BUILD_SYSTEMD, test $HAVE_systemd = 1)
-AC_SUBST(SUPPORT_SYSTEMD)
 
 case $SUPPORT_NAGIOS in
      1|yes|true|try)
