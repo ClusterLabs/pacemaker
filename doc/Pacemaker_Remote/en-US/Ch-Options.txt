@@ -131,6 +131,6 @@ If you want to get rid of that output, run (replacing $NODE_NAME appropriately):
 
 [WARNING]
 =========
-Be absolutely sure that the node's resource has been deleted from the
-configuration first.
+Be absolutely sure that there are no references to the node's resource in the
+configuration before running the above command.
 =========
