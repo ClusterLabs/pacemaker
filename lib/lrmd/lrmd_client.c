@@ -220,10 +220,6 @@ lrmd_copy_event(lrmd_event_data_t * event)
         }
     }
 
-    if (event->versioned_params) {
-        copy->versioned_params = copy_xml(event->versioned_params);
-    }
-
     return copy;
 }
 
@@ -243,9 +239,6 @@ lrmd_free_event(lrmd_event_data_t * event)
     free((char *)event->remote_nodename);
     if (event->params) {
         g_hash_table_destroy(event->params);
-    }
-    if (event->versioned_params) {
-        free_xml(event->versioned_params);
     }
     free(event);
 }
@@ -297,7 +290,6 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
         event.type = lrmd_event_exec_complete;
 
         event.params = xml2list(msg);
-        event.versioned_params = first_named_child(msg, XML_TAG_VER_ATTRS); 
     } else if (crm_str_eq(type, LRMD_OP_NEW_CLIENT, TRUE)) {
         event.type = lrmd_event_new_client;
     } else if (crm_str_eq(type, LRMD_OP_POKE, TRUE)) {
@@ -1999,7 +1991,6 @@ lrmd_api_exec(lrmd_t * lrmd, const char *rsc_id, const char *action, const char 
     xmlNode *data = create_xml_node(NULL, F_LRMD_RSC);
     xmlNode *args = create_xml_node(data, XML_TAG_ATTRS);
     lrmd_key_value_t *tmp = NULL;
-    const char *versioned_args_key = "#" XML_TAG_VER_ATTRS;
 
     crm_xml_add(data, F_LRMD_ORIGIN, __FUNCTION__);
     crm_xml_add(data, F_LRMD_RSC_ID, rsc_id);
@@ -2010,15 +2001,7 @@ lrmd_api_exec(lrmd_t * lrmd, const char *rsc_id, const char *action, const char 
     crm_xml_add_int(data, F_LRMD_RSC_START_DELAY, start_delay);
 
     for (tmp = params; tmp; tmp = tmp->next) {
-        if (safe_str_eq(tmp->key, versioned_args_key)) {
-            xmlNode *versioned_args = string2xml(tmp->value);
-
-            if (versioned_args) {
-                add_node_nocopy(data, NULL, versioned_args);
-            }
-        } else {
-            hash2smartfield((gpointer) tmp->key, (gpointer) tmp->value, args);
-        }
+        hash2smartfield((gpointer) tmp->key, (gpointer) tmp->value, args);
     }
 
     rc = lrmd_send_command(lrmd, LRMD_OP_RSC_EXEC, data, NULL, timeout, options, TRUE);

@@ -28,7 +28,6 @@
 #include <crm/common/ipc.h>
 #include <crm/common/ipcs.h>
 #include <crm/msg_xml.h>
-#include <crm/pengine/rules.h>
 
 #include <lrmd_private.h>
 
@@ -39,8 +38,6 @@
 #define EXIT_REASON_MAX_LEN 128
 
 GHashTable *rsc_list = NULL;
-regex_t *version_format_regex = NULL;
-GHashTable *ra_version_hash = NULL;
 
 typedef struct lrmd_cmd_s {
     int timeout;
@@ -90,7 +87,6 @@ typedef struct lrmd_cmd_s {
     int last_pid;
 
     GHashTable *params;
-    xmlNode *versioned_attrs;
 } lrmd_cmd_t;
 
 static void cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc);
@@ -164,97 +160,6 @@ build_rsc_from_xml(xmlNode * msg)
     return rsc;
 }
 
-static void
-dup_attr(gpointer key, gpointer value, gpointer user_data)
-{
-    g_hash_table_replace(user_data, strdup(key), strdup(value));
-}
-
-static gboolean
-valid_version_format(const char *version)
-{
-    if (version == NULL) {
-        return FALSE;
-    }
-
-    if (version_format_regex == NULL) {
-        const char *regex_string = "^[[:digit:]]+([.][[:digit:]]+)*$";
-        version_format_regex = calloc(1, sizeof(regex_t));
-        regcomp(version_format_regex, regex_string, REG_EXTENDED);
-    }
-
-    return regexec(version_format_regex, version, 0, NULL, 0) == 0;
-}
-
-static const char*
-get_ra_version(const char *class, const char *provider, const char *type, gboolean update_hash)
-{
-    int len = 0;
-    char *key = NULL;
-    static const char *default_version = "0.1";
-    const char *version = NULL;
-
-    CRM_CHECK(type != NULL, return default_version);
-    CRM_CHECK(class != NULL, return default_version);
-
-    if (!provider) {
-        provider = "heartbeat";
-    }
-    
-    len = strlen(class) + strlen(provider) + strlen(type) + 3;
-    key = calloc(len, sizeof(char));
-
-    if (!key) {
-        return default_version;
-    }
-    
-    if (!ra_version_hash) {
-        ra_version_hash = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
-    }
-
-    snprintf(key, len, "%s:%s:%s", class, provider, type);
-
-    version = g_hash_table_lookup(ra_version_hash, key);
-
-    if (!version || update_hash) {
-        char *metadata = NULL;
-        lrmd_t *lrmd = lrmd_api_new();
-
-        lrmd->cmds->get_metadata(lrmd, class, provider, type, &metadata, 0);
-        lrmd_api_delete(lrmd);
-
-        if (metadata) {
-            xmlNode *metadata_xml = string2xml(metadata);
-            xmlNode *version_xml = get_xpath_object("//resource-agent/@version", metadata_xml, LOG_TRACE);
-
-            if (version_xml) {
-                version = crm_element_value(version_xml, XML_ATTR_VERSION);
-
-                if (valid_version_format(version)) {
-                    crm_info("Resource agent version for %s:%s:%s is %s", class, provider, type, version);
-                    version = strdup(version);
-                    g_hash_table_replace(ra_version_hash, strdup(key), (gpointer) version);
-                } else {
-                    crm_notice("Resource agent version for %s:%s:%s has unrecognized format: %s", class, provider, type, version);
-                    version = default_version;
-                }
-            } else {
-                crm_trace("Resource agent version for %s:%s:%s does not specified", class, provider, type);
-                version = default_version;
-            }
-
-            free_xml(metadata_xml);
-            free(metadata);
-        } else {
-            version = default_version;
-        }
-    }
-
-    free(key);
-
-    return version;
-}
-
 static lrmd_cmd_t *
 create_lrmd_cmd(xmlNode * msg, crm_client_t * client, lrmd_rsc_t *rsc)
 {
@@ -280,23 +185,6 @@ create_lrmd_cmd(xmlNode * msg, crm_client_t * client, lrmd_rsc_t *rsc)
     cmd->rsc_id = crm_element_value_copy(rsc_xml, F_LRMD_RSC_ID);
 
     cmd->params = xml2list(rsc_xml);
-
-    cmd->versioned_attrs = first_named_child(rsc_xml, XML_TAG_VER_ATTRS);
-
-    if (cmd->versioned_attrs) {
-        const char *ra_version = get_ra_version(rsc->class, rsc->provider, rsc->type, safe_str_eq(cmd->action, "start"));
-        GHashTable *node_hash = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
-        GHashTable *hash = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
-
-        cmd->versioned_attrs = copy_xml(cmd->versioned_attrs);
-        g_hash_table_insert(node_hash, strdup("#ra-version"), strdup(ra_version));
-        unpack_instance_attributes(NULL, cmd->versioned_attrs, XML_TAG_ATTR_SETS, node_hash, hash, NULL, FALSE, NULL);
-        g_hash_table_foreach(hash, dup_attr, cmd->params);
-
-        g_hash_table_destroy(node_hash);
-        g_hash_table_destroy(hash);
-    }
-
     cmd->isolation_wrapper = g_hash_table_lookup(cmd->params, "CRM_meta_isolation_wrapper");
 
     if (cmd->isolation_wrapper) {
@@ -328,9 +216,6 @@ free_lrmd_cmd(lrmd_cmd_t * cmd)
     }
     if (cmd->params) {
         g_hash_table_destroy(cmd->params);
-    }
-    if (cmd->versioned_attrs) {
-        free_xml(cmd->versioned_attrs);
     }
     free(cmd->origin);
     free(cmd->action);
@@ -649,11 +534,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
             hash2smartfield((gpointer) key, (gpointer) value, args);
         }
     }
-    
-    if (cmd->versioned_attrs) {
-        add_node_copy(notify, cmd->versioned_attrs);
-    }
-    
+
     if (cmd->client_id && (cmd->call_opts & lrmd_opt_notify_orig_only)) {
         crm_client_t *client = crm_client_get_by_id(cmd->client_id);
 
@@ -1286,6 +1167,12 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
   cleanup_stonith_exec:
     stonith_action_complete(cmd, rc);
     return rc;
+}
+
+static void
+dup_attr(gpointer key, gpointer value, gpointer user_data)
+{
+    g_hash_table_replace(user_data, strdup(key), strdup(value));
 }
 
 static int
