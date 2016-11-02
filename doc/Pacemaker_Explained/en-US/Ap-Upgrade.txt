@@ -39,6 +39,9 @@ indexterm:[rolling upgrade]
 |no
 |yes
 |always
+footnote:[Any active resources will be moved off the node being upgraded,
+so there will be at least a brief outage unless all resources can be
+migrated "live".]
 |yes
 |yes
 |no
@@ -101,7 +104,7 @@ DC, and that nodes with an older feature set cannot join the cluster.
 +
 Therefore, if the CRM feature set is changing in the Pacemaker version you
 are upgrading to, you should run a mixed-version cluster only during a small
-rolling upgrade window. Otherwise, if one of the older nodes drops out of the
+rolling upgrade window. If one of the older nodes drops out of the
 cluster for any reason, it will not be able to rejoin until it is upgraded.
 
 * *LRMD protocol version:* This version number applies to communication between a
@@ -193,15 +196,7 @@ This method may not be used if the cluster contains any Pacemaker Remote nodes.
   services to remain active after the cluster shuts down.
 +
 ----
-# crm_attribute --type rsc_defaults --name is-managed --update false
-----
-
-. For any resource that has a value for +is-managed+, make sure it is
-set to +false+ so that the cluster will not stop it (replacing $rsc_id
-appropriately):
-+
-----
-# crm_resource -t primitive -r $rsc_id -p is-managed -v false
+# crm_attribute --name maintenance-mode --update true
 ----
 
 . On each node, shutdown the cluster software (pacemaker and the messaging
@@ -217,20 +212,14 @@ appropriately):
 . Allow the cluster to resume managing resources again:
 +
 ----
-# crm_attribute --type rsc_defaults --name is-managed --update true
+# crm_attribute --name maintenance-mode --delete
 ----
 
-. For any resource that has a value for +is-managed+, reset it to
-  +true+ if desired, to allow the cluster can recover the service if it fails:
-+
-----
-# crm_resource -t primitive -r $rsc_id -p is-managed -v true
-----
-
-[IMPORTANT]
+[NOTE]
 ===========
-Always check your existing configuration is still compatible with the
-version you are installing before starting the cluster.
+Support for maintenance mode was added in Pacemaker 1.0.0. If you are upgrading
+from an earlier version, you can detach by setting +is-managed+ to +false+ for
+all resources.
 ===========
 
 === Upgrading the Configuration ===
@@ -290,7 +279,7 @@ indexterm:[verify,Configuration]
 If the result of the transformation is invalid, you may see a number of errors
 from the validation library. If these are not helpful, visit the
 http://clusterlabs.org/wiki/Validation_FAQ[Validation FAQ wiki page] and/or try
-the procedure described below under <<s-upgrade-config-manual>>.
+the manual upgrade procedure described below.
 +        
 . Check the changes:
 +
@@ -332,7 +321,6 @@ In the unlikely event this step fails, please report a bug.
 
 [NOTE]
 ====
-[[s-upgrade-config-manual]]
 indexterm:[Configuration,upgrade manually]
 It is also possible to perform the configuration upgrade steps manually:
 

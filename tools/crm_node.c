@@ -95,7 +95,6 @@ cib_remove_node(uint32_t id, const char *name)
 
     crm_trace("Removing %s from the CIB", name);
 
-    /* TODO: Use 'id' instead */
     if(name == NULL && id == 0) {
         return -ENOTUNIQ;
     }
