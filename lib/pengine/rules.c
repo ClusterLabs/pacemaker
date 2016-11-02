@@ -139,8 +139,7 @@ pe_test_expression_re(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e ro
             break;
 
         case version_expr:
-            if (node_hash &&
-                g_hash_table_lookup_extended(node_hash, "#ra-version", NULL, NULL)) {
+            if (node_hash && g_hash_table_contains(node_hash, "#ra-version")) {
                 accept = test_attr_expression(expr, node_hash, now);
             } else {
                 // we are going to test it when we have ra-version
@@ -818,7 +817,7 @@ unpack_attr_set(gpointer data, gpointer user_data)
     }
 
     if (get_versioned_rule(pair->attr_set) && !(unpack_data->node_hash &&
-        g_hash_table_lookup_extended(unpack_data->node_hash, "#ra-version", NULL, NULL))) {
+        g_hash_table_contains(unpack_data->node_hash, "#ra-version"))) {
         // we haven't actually tested versioned expressions yet
         return;
     }
