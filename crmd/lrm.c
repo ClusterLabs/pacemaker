@@ -2086,7 +2086,7 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
 
         /* pcmk remote connections are a special use case.
          * We never ever want to stop monitoring a connection resource until
-         * the entire migration has completed. If the connection is ever unexpected
+         * the entire migration has completed. If the connection is unexpectedly
          * severed, even during a migration, this is an event we must detect.*/
         stop_recurring = FALSE;
 
