@@ -300,7 +300,7 @@ AC_ARG_WITH(ais-prefix,
 
 INITDIR=""
 AC_ARG_WITH(initdir,
-    [  --with-initdir=DIR      directory for init (rc) scripts [${INITDIR}]],
+    [  --with-initdir=DIR      init (systemd/Upstart/LSB as fits) launchers install path],
     [ INITDIR="$withval" ])
 
 SUPPORT_PROFILING=0
@@ -337,6 +337,7 @@ dnl ===============================================
 dnl General Processing
 dnl ===============================================
 
+M4_DEFINES=
 AC_SUBST(HB_PKG)
 
 INIT_EXT=""
@@ -371,25 +372,6 @@ case $CSPREFIX in
   NONE)	  CSPREFIX=$prefix;;
   prefix) CSPREFIX=$prefix;;
 esac
-
-AC_MSG_NOTICE(Sanitizing INITDIR: ${INITDIR})
-case $INITDIR in
-  prefix) INITDIR=$prefix;;
-  "")
-    AC_MSG_CHECKING(which init (rc) directory to use)
-      for initdir in /etc/init.d /etc/rc.d/init.d /sbin/init.d	\
-	   /usr/local/etc/rc.d /etc/rc.d
-      do
-        if
-          test -d $initdir
-        then
-          INITDIR=$initdir
-          break
-        fi
-      done
-      AC_MSG_RESULT($INITDIR);;
-esac
-AC_SUBST(INITDIR)
 
 AC_MSG_NOTICE(Sanitizing libdir: ${libdir})
 case $libdir in
@@ -432,7 +414,6 @@ eval infodir="`eval echo ${infodir}`"
 eval mandir="`eval echo ${mandir}`"
 
 dnl Home-grown variables
-eval INITDIR="${INITDIR}"
 eval docdir="`eval echo ${docdir}`"
 if test x"${docdir}" = x""; then
    docdir=${datadir}/doc/${PACKAGE}-${VERSION}
@@ -442,7 +423,8 @@ AC_SUBST(docdir)
 if test x"${CONFIGDIR}" = x""; then
     CONFIGDIR="${sysconfdir}/sysconfig"
 fi
-AC_SUBST(CONFIGDIR)
+AC_SUBST([CONFIGDIR])
+AC_SUBST([configdir], ["${CONFIGDIR}"])
 
 for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
     sharedstatedir localstatedir libdir includedir oldincludedir infodir \
@@ -542,6 +524,7 @@ AC_CHECK_PROGS(LIBTOOL, glibtool libtool libtool15 libtool13)
 
 AM_PATH_PYTHON
 AC_CHECK_PROGS(MAKE, gmake make)
+AC_PATH_PROGS(M4, m4)
 AC_PATH_PROGS(HTML2TXT, lynx w3m)
 AC_PATH_PROGS(HELP2MAN, help2man)
 AC_PATH_PROGS(POD2MAN, pod2man, pod2man)
@@ -1198,8 +1181,10 @@ AC_SUBST(BUILD_VERSION)
 
 
 HAVE_dbus=1
+HAVE_lsb=0
 HAVE_upstart=0
 HAVE_systemd=0
+HAVE_initdir=0
 PKG_CHECK_MODULES(DBUS, dbus-1, ,HAVE_dbus=0)
 
 AC_DEFINE_UNQUOTED(SUPPORT_DBUS, $HAVE_dbus, Support dbus)
@@ -1214,6 +1199,64 @@ AC_SUBST(DBUS_LIBS)
 
 AC_CHECK_TYPES([DBusBasicValue],,,[[#include <dbus/dbus.h>]])
 
+if test "x${enable_systemd}" != xno; then
+	if test $HAVE_dbus = 0; then
+		if test "x${enable_systemd}" = xyes; then
+			AC_MSG_FAILURE([cannot enable systemd without DBus])
+		else
+			enable_systemd=no
+		fi
+	fi
+	if test "x${enable_systemd}" = xtry \
+	  && test "x${enable_upstart}" != xyes; then
+		AC_MSG_CHECKING([for systemd version query result via dbus-send])
+		ret=$({ dbus-send --system --print-reply \
+		        --dest=org.freedesktop.systemd1 \
+		        /org/freedesktop/systemd1 \
+		        org.freedesktop.DBus.Properties.Get \
+		        string:org.freedesktop.systemd1.Manager \
+		        string:Version 2>/dev/null \
+		        || echo "this borked"; } | tail -n1)
+		# sanitize output a bit (interested just in value, not type),
+		# ret is intentionally unenquoted so as to normalize whitespace
+		ret=$(echo ${ret} | cut -d' ' -f2-)
+		AC_MSG_RESULT([${ret}])
+		if test "x${ret}" != xborked \
+		   || systemctl --version 2>/dev/null | grep -q systemd; then
+			enable_systemd=yes
+		else
+			enable_systemd=no
+		fi
+	fi
+fi
+
+AC_MSG_CHECKING([whether to enable support for managing resources via systemd])
+AC_MSG_RESULT([${enable_systemd}])
+if test "x${enable_systemd}" = xyes; then
+	HAVE_systemd=1
+	PCMK_FEATURES="$PCMK_FEATURES systemd"
+
+	if test ${HAVE_initdir} = 0; then
+		AC_MSG_CHECKING([for systemd path for system unit files])
+		if test "x${INITDIR}" != xno; then
+			systemdunitdir="${systemdunitdir:-${INITDIR}}"
+			PKG_CHECK_VAR([systemdunitdir], [systemd],
+				      [systemdsystemunitdir], [],[
+			   systemdunitdir=no
+			])
+			AC_MSG_RESULT([${systemdunitdir}])
+		fi
+		INITDIR="${systemdunitdir}"
+		if test "x${INITDIR}" != xno; then
+			HAVE_initdir=1
+		fi
+	fi
+fi
+
+AC_DEFINE_UNQUOTED(SUPPORT_SYSTEMD, $HAVE_systemd, Support systemd based system services)
+AM_CONDITIONAL(BUILD_SYSTEMD, test $HAVE_systemd = 1)
+AC_SUBST(SUPPORT_SYSTEMD)
+
 if test "x${enable_upstart}" != xno; then
 	if test $HAVE_dbus = 0; then
 		if test "x${enable_upstart}" = xyes; then
@@ -1224,10 +1267,10 @@ if test "x${enable_upstart}" != xno; then
 	fi
 	if test "x${enable_upstart}" = xtry; then
 		AC_MSG_CHECKING([for Upstart version query result via dbus-send])
-		ret=$(dbus-send --system --print-reply= --dest=com.ubuntu.Upstart \
-		      /com/ubuntu/Upstart org.freedesktop.DBus.Properties.Get \
-		      string:com.ubuntu.Upstart0_6 string:version 2>/dev/null \
-		      || echo "this borked")
+		ret=$({ dbus-send --system --print-reply --dest=com.ubuntu.Upstart \
+		        /com/ubuntu/Upstart org.freedesktop.DBus.Properties.Get \
+		        string:com.ubuntu.Upstart0_6 string:version 2>/dev/null \
+		        || echo "this borked"; } | tail -n1)
 		# sanitize output a bit (interested just in value, not type),
 		# ret is intentionally unenquoted so as to normalize whitespace
 		ret=$(echo ${ret} | cut -d' ' -f2-)
@@ -1245,48 +1288,34 @@ AC_MSG_RESULT([${enable_upstart}])
 if test "x${enable_upstart}" = xyes; then
 	HAVE_upstart=1
 	PCMK_FEATURES="$PCMK_FEATURES upstart"
+
+	if test ${HAVE_initdir} = 0; then
+		AC_MSG_CHECKING([for Upstart path for job configuration])
+		if test x"${INITDIR}" != xno; then
+			INITDIR="${INITDIR:-${sysconfdir}/init}"
+		fi
+		AC_MSG_RESULT([${INITDIR}])
+		if test x"${INITDIR}" != xno; then
+			HAVE_initdir=1
+		fi
+	fi
 fi
 
 AC_DEFINE_UNQUOTED(SUPPORT_UPSTART, $HAVE_upstart, Support upstart based system services)
 AM_CONDITIONAL(BUILD_UPSTART, test $HAVE_upstart = 1)
 AC_SUBST(SUPPORT_UPSTART)
 
-if test "x${enable_systemd}" != xno; then
-	if test $HAVE_dbus = 0; then
-		if test "x${enable_systemd}" = xyes; then
-			AC_MSG_FAILURE([cannot enable systemd without DBus])
-		else
-			enable_systemd=no
-		fi
-	else
-		AC_MSG_CHECKING([for systemd path for system unit files])
-		PKG_CHECK_VAR([systemdunitdir], [systemd], [systemdsystemunitdir], [
-		   AC_MSG_RESULT([${systemdunitdir}])
-		],[
-		   AC_MSG_RESULT([not found])
-		   systemdunitdir=no
-		])
-		if test "x${systemdunitdir}" = xno; then
-			if test "x${enable_systemd}" = xyes; then
-				AC_MSG_FAILURE([cannot enable systemd when systemdunitdir unresolved])
-			fi
-		        enable_systemd=no
-		else
-		        enable_systemd=yes
-		fi
+
+if test x"${INITDIR}" != xno; then
+	if test ${HAVE_initdir} = 0; then
+		INITDIR="${INITDIR:-/etc/init.d}"
+		HAVE_initdir=1
+		HAVE_lsb=1
 	fi
+	AC_SUBST([INITDIR])
+	AC_SUBST([initdir], ["${INITDIR}"])
 fi
-
-AC_MSG_CHECKING([whether to enable support for managing resources via systemd])
-AC_MSG_RESULT([${enable_systemd}])
-if test "x${enable_systemd}" = xyes; then
-	HAVE_systemd=1
-	PCMK_FEATURES="$PCMK_FEATURES systemd"
-fi
-
-AC_DEFINE_UNQUOTED(SUPPORT_SYSTEMD, $HAVE_systemd, Support systemd based system services)
-AM_CONDITIONAL(BUILD_SYSTEMD, test $HAVE_systemd = 1)
-AC_SUBST(SUPPORT_SYSTEMD)
+AM_CONDITIONAL([BUILD_INITDIR], [test $HAVE_initdir = 1])
 
 case $SUPPORT_NAGIOS in
      1|yes|true|try)
@@ -1466,6 +1495,9 @@ AC_DEFINE_UNQUOTED(HAVE_ATOMIC_ATTRD, $BUILD_ATOMIC_ATTRD, Support the new atomi
 AC_SUBST(SUPPORT_CMAN)
 AC_SUBST(SUPPORT_CS)
 AC_SUBST(SUPPORT_PLUGIN)
+
+M4_DEFINES="${M4_DEFINES} \"-DHAVE_INITSCRIPT=${HAVE_lsb}\""
+AC_SUBST([M4_DEFINES])
 
 dnl
 dnl    Cluster stack - Sanity
@@ -2147,6 +2179,13 @@ AC_MSG_RESULT([  State information        = ${localstatedir}])
 AC_MSG_RESULT([  System configuration     = ${sysconfdir}])
 if test $SUPPORT_PLUGIN = 1; then
 AC_MSG_RESULT([  Corosync Plugins         = ${LCRSODIR}])
+fi
+if test "${HAVE_systemd}" = 1; then
+AC_MSG_RESULT([  systemd unit dir         = ${INITDIR}])
+elif test "${HAVE_upstart}" = 1; then
+AC_MSG_RESULT([  Upstart job conf dir     = ${INITDIR}])
+else
+AC_MSG_RESULT([  LSB init script dir      = ${INITDIR}])
 fi
 AC_MSG_RESULT([])
 AC_MSG_RESULT([  Use system LTDL          = ${ac_cv_lib_ltdl_lt_dlopen}])

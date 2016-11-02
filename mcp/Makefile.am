@@ -16,16 +16,28 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 include $(top_srcdir)/Makefile.common
+EXTRA_DIST =
 
 if BUILD_CS_SUPPORT
 
-initdir			= $(INITDIR)
-init_SCRIPTS		= pacemaker
-sbin_PROGRAMS		= pacemakerd
+if BUILD_INITDIR
+sysconfig		= pacemaker
+nodist_config_DATA	= $(sysconfig:=.sysconfig)
+EXTRA_DIST		+= $(sysconfig:=.sysconfig.m4)
 
 if BUILD_SYSTEMD
-systemdunit_DATA	= pacemaker.service
-endif
+init_DATA		= pacemaker.service
+else
+if BUILD_UPSTART
+upstartjob		= pacemaker pacemaker.combined
+init_DATA		= $(upstartjob:=.upstart)
+else
+init_SCRIPTS		= pacemaker
+endif  # BUILD_UPSTART
+endif  # BUILD_SYSTEMD
+endif  # BUILD_INITDIR
+
+sbin_PROGRAMS		= pacemakerd
 
 ## SOURCES
 
@@ -38,6 +50,18 @@ pacemakerd_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la $(top_builddir)/
 pacemakerd_LDADD	+= $(CLUSTERLIBS)
 pacemakerd_SOURCES	= pacemaker.c corosync.c
 
-endif
+install-data-hook:
+if BUILD_INITDIR
+	mv "$(DESTDIR)$(configdir)/$(sysconfig).sysconfig" \
+	  "$(DESTDIR)$(configdir)/$(sysconfig)"
+if BUILD_UPSTART
+	for f in $(upstartjob); do \
+	  mv "$(DESTDIR)$(initdir)/$${f}.upstart" \
+	    "$(DESTDIR)$(initdir)/$${f}.conf"; \
+	done
+endif  # BUILD_UPSTART
+endif  # BUILD_INITDIR
 
-CLEANFILES = $(man8_MANS)
+endif  # BUILD_CS_SUPPORT
+
+CLEANFILES = $(man8_MANS) $(sysconfig:=.sysconfig)
