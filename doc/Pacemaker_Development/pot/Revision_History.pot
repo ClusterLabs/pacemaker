@@ -14,6 +14,26 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Preface"
+msgid "Revision History"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Ken"
+msgstr ""
+
+#. Tag: surname
+#, no-c-format
+msgid "Gaillot"
+msgstr ""
+
+#. Tag: member
+#, no-c-format
+msgid "Convert coding guidelines and developer FAQ to Publican document"
+msgstr ""
+
+#. Tag: member
+#, no-c-format
+msgid "Add Python coding guidelines, and more about licensing"
 msgstr ""
 

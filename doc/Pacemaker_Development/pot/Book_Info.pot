@@ -14,6 +14,16 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Preface"
+msgid "Pacemaker Development"
+msgstr ""
+
+#. Tag: subtitle
+#, no-c-format
+msgid "Working with the Pacemaker Code Base"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "This document has guidelines and tips for developers interested in editing Pacemaker source code and submitting changes for inclusion in the project."
 msgstr ""
 

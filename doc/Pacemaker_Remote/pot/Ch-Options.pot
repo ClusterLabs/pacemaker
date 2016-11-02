@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2016-05-03 17:45-0500\n"
-"PO-Revision-Date: 2016-05-03 17:45-0500\n"
+"POT-Creation-Date: 2016-11-02 17:32-0500\n"
+"PO-Revision-Date: 2016-11-02 17:32-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -29,7 +29,17 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "When configuring a virtual machine to use as a guest node, these are the metadata options available to enable the resource as a guest node and define its connection parameters."
+msgid "When configuring a virtual machine as a guest node, the virtual machine is created using one of the usual resource agents for that purpose (for example, ocf:heartbeat:VirtualDomain or ocf:heartbeat:Xen), with additional metadata parameters."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "No restrictions are enforced on what agents may be used to create a guest node, but obviously the agent must create a distinct environment capable of running the pacemaker_remote daemon and cluster resources. An additional requirement is that fencing the host running the guest node resource must be sufficient for ensuring the guest node is stopped. This means, for example, that not all hypervisors supported by VirtualDomain may be used to create guest nodes; if the guest can survive the hypervisor being fenced, it may not be used as a guest node."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Below are the metadata options available to enable a resource as a guest node and define its connection parameters."
 msgstr ""
 
 #. Tag: title
@@ -135,14 +145,14 @@ msgid "# pcs resource describe remote\n"
 "Resource options:\n"
 "  server: Server location to connect to. This can be an ip address or hostname.\n"
 "  port: tcp port to connect to.\n"
-"  reconnect_interval: Time in seconds to wait before attempting to reconnect to\n"
-"                      a remote node after an active connection to the remote\n"
-"                      node has been severed. This wait is recurring. If\n"
-"                      reconnect fails after the wait period, a new reconnect\n"
-"                      attempt will be made after observing the wait time. When\n"
-"                      this option is in use, pacemaker will keep attempting to\n"
-"                      reach out and connect to the remote node indefinitely\n"
-"                      after each wait interval."
+"  reconnect_interval: Interval in seconds at which Pacemaker will attempt to\n"
+"                      reconnect to a remote node after an active connection to\n"
+"                      the remote node has been severed. When this value is\n"
+"                      nonzero, Pacemaker will retry the connection\n"
+"                      indefinitely, at the specified interval. As with any\n"
+"                      time-based actions, this is not guaranteed to be checked\n"
+"                      more frequently than the value of the\n"
+"                      cluster-recheck-interval cluster option."
 msgstr ""
 
 #. Tag: para
@@ -182,7 +192,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "You can change the default port and/or key location for Pacemaker and pacemaker_remote via environment variables. These environment variables can be enabled by placing them in the <literal>/etc/sysconfig/pacemaker</literal> file."
+msgid "You can change the default port and/or key location for Pacemaker and pacemaker_remote via environment variables. How these variables are set varies by OS, but usually they are set in the <literal>/etc/sysconfig/pacemaker</literal> or <literal>/etc/default/pacemaker</literal> file."
 msgstr ""
 
 #. Tag: screen
@@ -217,6 +227,6 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Be absolutely sure that the node’s resource has been deleted from the configuration first."
+msgid "Be absolutely sure that there are no references to the node’s resource in the configuration before running the above command."
 msgstr ""
 

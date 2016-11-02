@@ -1,0 +1,139 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2016-11-02 17:32-0500\n"
+"PO-Revision-Date: 2016-11-02 17:32-0500\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Frequently Asked Questions"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Who is this document intended for?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Anyone who wishes to read and/or edit the Pacemaker source code. Casual contributors should feel free to read just this FAQ, and consult other sections as needed."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Where is the source code for Pacemaker?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>downloads</primary> </indexterm> <indexterm> <primary>source code</primary> </indexterm> <indexterm> <primary>git</primary><secondary>GitHub</secondary> </indexterm> <indexterm> <primary>GitHub</primary> </indexterm> The <ulink url=\"https://github.com/ClusterLabs/pacemaker\">source code for Pacemaker</ulink> is kept on <ulink url=\"https://github.com/\">GitHub</ulink>, as are all software projects under the <ulink url=\"https://github.com/ClusterLabs\">ClusterLabs</ulink> umbrella. Pacemaker uses <ulink url=\"https://git-scm.com/\">Git</ulink> for source code management. If you are a Git newbie, the <ulink url=\"http://schacon.github.io/git/gittutorial.html\">gittutorial(7) man page</ulink> is an excellent starting point. If you’re familiar with using Git from the command line, you can create a local copy of the Pacemaker source code with: <literal>git clone https://github.com/ClusterLabs/pacemaker.git pacemaker</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "What are the different Git branches and repositories used for?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>branches</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <ulink url=\"https://github.com/ClusterLabs/pacemaker/tree/master\">master branch</ulink> is the primary branch used for development."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <ulink url=\"https://github.com/ClusterLabs/pacemaker/tree/1.1\">1.1 branch</ulink> contains the latest official release, and normally does not receive any changes. During the release cycle, it will contain release candidates for the next official release, and will receive only bug fixes."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <ulink url=\"https://github.com/ClusterLabs/pacemaker-1.0\">1.0 repository</ulink> is a frozen snapshot of the 1.0 release series, and is no longer developed."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Messages will be posted to the <ulink url=\"http://clusterlabs.org/mailman/listinfo/developers\">developers@clusterlabs.org</ulink> mailing list during the release cycle, with instructions about which branches to use when submitting requests."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "How do I build from the source code?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "See <ulink url=\"https://github.com/ClusterLabs/pacemaker/blob/master/INSTALL.md\">INSTALL.md</ulink> in the main checkout directory."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "What coding style should I follow?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "You’ll be mostly fine if you simply follow the example of existing code. When unsure, see the relevant section of this document for language-specific recommendations. Pacemaker has grown and evolved organically over many years, so you will see much code that doesn’t conform to the current guidelines. We discourage making changes solely to bring code into conformance, as any change requires developer time for review and opens the possibility of adding bugs. However, new code should follow the guidelines, and it is fine to bring lines of older code into conformance when modifying that code for other reasons."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "How should I format my Git commit messages?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>git</primary><secondary>commit messages</secondary> </indexterm> <indexterm> <primary>commit messages</primary> </indexterm> See existing examples in the git log. The first line should look like <literal>change-type: affected-code: explanation</literal> where <literal>change-type</literal> can be <literal>Fix</literal> or <literal>Bug</literal> for most bug fixes, <literal>Feature</literal> for new features, <literal>Log</literal> for changes to log messages or handling, <literal>Doc</literal> for changes to documentation or comments, or <literal>Test</literal> for changes in CTS and regression tests. You will sometimes see <literal>Low</literal>, <literal>Med</literal> (or <literal>Mid</literal>) and <literal>High</literal> used instead for bug fixes, to indicate the severity. The important thing is that only commits with <literal>Feature</literal>, <literal>Fix</literal>, <literal>Bug</literal>, or <literal>High</literal> will automatically be included in the change log for the next release. The <literal>affected-code</literal> is the name of the component(s) being changed, for example, <literal>crmd</literal> or <literal>libcrmcommon</literal> (it’s more free-form, so don’t sweat getting it exact). The <literal>explanation</literal> briefly describes the change. The git project recommends the entire summary line stay under 50 characters, but more is fine if needed for clarity. Except for the most simple and obvious of changes, the summary should be followed by a blank line and then a longer explanation of <emphasis>why</emphasis> the change was made."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "How can I test my changes?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Most importantly, Pacemaker has regression tests for most major components; these will automatically be run for any pull requests submitted through GitHub. Additionally, Pacemaker’s Cluster Test Suite (CTS) can be used to set up a test cluster and run a wide variety of complex tests. This document will have more detail on testing in the future."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "What is Pacemaker’s license?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>licensing</primary> </indexterm> Except where noted otherwise in the file itself, the source code for all Pacemaker programs is licensed under version 2 or later of the GNU General Public License (<ulink url=\"https://www.gnu.org/licenses/gpl-2.0.html\">GPLv2+</ulink>), its headers and libraries under version 2.1 or later of the less restrictive GNU Lesser General Public License (<ulink url=\"https://www.gnu.org/licenses/lgpl-2.1.html\">LGPLv2.1+</ulink>), its documentation under version 4.0 or later of the Creative Commons Attribution-ShareAlike International Public License (<ulink url=\"https://creativecommons.org/licenses/by-sa/4.0/legalcode\">CC-BY-SA</ulink>), and its init scripts under the <ulink url=\"https://opensource.org/licenses/BSD-3-Clause\">Revised BSD</ulink> license. If you find any deviations from this policy, or wish to inquire about alternate licensing arrangements, please e-mail <ulink url=\"mailto:andrew@beekhof.net\">andrew@beekhof.net</ulink>. Licensing issues are also discussed on the <ulink url=\"http://clusterlabs.org/wiki/License\">ClusterLabs wiki</ulink>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "How can I contribute my changes to the project?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Contributions of bug fixes or new features are very much appreciated! Patches can be submitted as <ulink url=\"https://help.github.com/articles/using-pull-requests/\">pull requests</ulink> via GitHub (the preferred method, due to its excellent <ulink url=\"https://github.com/features/\">features</ulink>), or e-mailed to the <ulink url=\"http://clusterlabs.org/mailman/listinfo/developers\">developers@clusterlabs.org</ulink> mailing list as an attachment in a format Git can import."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "What if I still have questions?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>mailing lists</primary> </indexterm> Ask on the <ulink url=\"http://clusterlabs.org/mailman/listinfo/developers\">developers@clusterlabs.org</ulink> mailing list for development-related questions, or on the <ulink url=\"http://clusterlabs.org/mailman/listinfo/users\">users@clusterlabs.org</ulink> mailing list for general questions about using Pacemaker. Developers often also hang out on <ulink url=\"http://freenode.net/\">freenode’s</ulink> #clusterlabs IRC channel."
+msgstr ""
+
