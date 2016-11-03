@@ -79,6 +79,16 @@ indexterm:[Constraints,Location,id]
 indexterm:[rsc,Location Constraints]
 indexterm:[Constraints,Location,rsc]
 
+|rsc-pattern
+|
+|A regular expression matching the names of resources to which this constraint
+ applies, if +rsc+ is not specified; if the regular expression contains
+ submatches and the constraint is governed by a rule (see <<ch-rules>>), the
+ submatches can be referenced as +%0+ through +%9+ in the rule's
+ +score-attribute+ or a rule expression's +attribute+ '(since 1.1.16)'
+indexterm:[rsc-pattern,Location Constraints]
+indexterm:[Constraints,Location,rsc-pattern]
+
 |node
 |
 |A node's name

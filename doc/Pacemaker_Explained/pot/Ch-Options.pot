@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2016-05-03 17:45-0500\n"
-"PO-Revision-Date: 2016-05-03 17:45-0500\n"
+"POT-Creation-Date: 2016-11-02 17:32-0500\n"
+"PO-Revision-Date: 2016-11-02 17:32-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -129,7 +129,7 @@ msgstr ""
 
 #. Tag: screen
 #, no-c-format
-msgid "# cibadmin --modify --crm_xml '&lt;cib admin_epoch=\"42\"/&gt;'"
+msgid "# cibadmin --modify --xml-text '&lt;cib admin_epoch=\"42\"/&gt;'"
 msgstr ""
 
 #. Tag: para
@@ -332,7 +332,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm> <primary>start-failure-is-fatal</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>start-failure-is-fatal</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>start-failure-is-fatal</secondary> </indexterm> <indexterm> <primary>start-failure-is-fatal</primary> </indexterm> Should a failure to start a resource on a particular node prevent further start attempts on that node? If FALSE, the cluster will decide whether to try starting on the same node again based on the resource’s current failure count and <literal>migration-threshold</literal> (see <xref linkend=\"s-failure-migration\" />)."
+msgid "<indexterm> <primary>start-failure-is-fatal</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>start-failure-is-fatal</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>start-failure-is-fatal</secondary> </indexterm> <indexterm> <primary>start-failure-is-fatal</primary> </indexterm> Should a failure to start a resource on a particular node prevent further start attempts on that node? If FALSE, the cluster will decide whether the same node is still eligible based on the resource’s current failure count and <literal>migration-threshold</literal> (see <xref linkend=\"s-failure-migration\" />)."
 msgstr ""
 
 #. Tag: para
@@ -492,6 +492,66 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
+msgid "<literal>node-health-strategy</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "none"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>node-health-strategy</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>node-health-strategy</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>node-health-strategy</secondary> </indexterm> <indexterm> <primary>node-health-strategy</primary> </indexterm> How the cluster should react to node health attributes (see <xref linkend=\"s-node-health\" />). Allowed values are <literal>none</literal>, <literal>migrate-on-red</literal>, <literal>only-green</literal>, <literal>progressive</literal>, and <literal>custom</literal>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>node-health-base</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "0"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>node-health-base</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>node-health-base</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>node-health-base</secondary> </indexterm> <indexterm> <primary>node-health-base</primary> </indexterm> The base health score assigned to a node. Only used when <literal>node-health-strategy</literal> is <literal>progressive</literal>. <emphasis>(since 1.1.16)</emphasis>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>node-health-green</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>node-health-green</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>node-health-green</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>node-health-green</secondary> </indexterm> <indexterm> <primary>node-health-green</primary> </indexterm> The score to use for a node health attribute whose value is <literal>green</literal>. Only used when <literal>node-health-strategy</literal> is <literal>progressive</literal> or <literal>custom</literal>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>node-health-yellow</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>node-health-yellow</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>node-health-yellow</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>node-health-yellow</secondary> </indexterm> <indexterm> <primary>node-health-yellow</primary> </indexterm> The score to use for a node health attribute whose value is <literal>yellow</literal>. Only used when <literal>node-health-strategy</literal> is <literal>progressive</literal> or <literal>custom</literal>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>node-health-red</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>node-health-red</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>node-health-red</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>node-health-red</secondary> </indexterm> <indexterm> <primary>node-health-red</primary> </indexterm> The score to use for a node health attribute whose value is <literal>red</literal>. Only used when <literal>node-health-strategy</literal> is <literal>progressive</literal> or <literal>custom</literal>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
 msgid "<literal>remove-after-stop</literal>"
 msgstr ""
 
@@ -588,11 +648,6 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "<literal>default-resource-stickiness</literal>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "0"
 msgstr ""
 
 #. Tag: para

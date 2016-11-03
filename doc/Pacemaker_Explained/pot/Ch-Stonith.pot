@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2016-05-03 17:45-0500\n"
-"PO-Revision-Date: 2016-05-03 17:45-0500\n"
+"POT-Creation-Date: 2016-11-02 17:32-0500\n"
+"PO-Revision-Date: 2016-11-02 17:32-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -746,7 +746,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Each fencing level is attempted in order of ascending <literal>index</literal>. Allowed indexes are 0 to 9."
+msgid "Each fencing level is attempted in order of ascending <literal>index</literal>. Allowed values are 1 through 9."
 msgstr ""
 
 #. Tag: para
@@ -831,7 +831,17 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The name of a node attribute that is set for nodes to which this level applies <emphasis>(since 1.1.14)</emphasis> <indexterm> <primary>target-attribute</primary><secondary>fencing-level</secondary> </indexterm> <indexterm> <primary>fencing-level</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>fencing-level</secondary><tertiary>target-attribute</tertiary> </indexterm> <indexterm> <primary>fencing-level</primary><secondary>target-attribute</secondary> </indexterm> <indexterm> <primary>target-attribute</primary> </indexterm>"
+msgid "The name of a node attribute that is set (to <literal>target-value</literal>) for nodes to which this level applies <emphasis>(since 1.1.14)</emphasis> <indexterm> <primary>target-attribute</primary><secondary>fencing-level</secondary> </indexterm> <indexterm> <primary>fencing-level</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>fencing-level</secondary><tertiary>target-attribute</tertiary> </indexterm> <indexterm> <primary>fencing-level</primary><secondary>target-attribute</secondary> </indexterm> <indexterm> <primary>target-attribute</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>target-value</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The node attribute value (of <literal>target-attribute</literal>) that is set for nodes to which this level applies <emphasis>(since 1.1.14)</emphasis> <indexterm> <primary>target-attribute</primary><secondary>fencing-level</secondary> </indexterm> <indexterm> <primary>fencing-level</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>fencing-level</secondary><tertiary>target-attribute</tertiary> </indexterm> <indexterm> <primary>fencing-level</primary><secondary>target-attribute</secondary> </indexterm> <indexterm> <primary>target-attribute</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -841,7 +851,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The order in which to attempt the levels. Levels are attempted in ascending order <emphasis>until one succeeds</emphasis>. <indexterm> <primary>index</primary><secondary>fencing-level</secondary> </indexterm> <indexterm> <primary>fencing-level</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>fencing-level</secondary><tertiary>index</tertiary> </indexterm> <indexterm> <primary>fencing-level</primary><secondary>index</secondary> </indexterm> <indexterm> <primary>index</primary> </indexterm>"
+msgid "The order in which to attempt the levels. Levels are attempted in ascending order <emphasis>until one succeeds</emphasis>. Valid values are 1 through 9. <indexterm> <primary>index</primary><secondary>fencing-level</secondary> </indexterm> <indexterm> <primary>fencing-level</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>fencing-level</secondary><tertiary>index</tertiary> </indexterm> <indexterm> <primary>fencing-level</primary><secondary>index</secondary> </indexterm> <indexterm> <primary>index</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para

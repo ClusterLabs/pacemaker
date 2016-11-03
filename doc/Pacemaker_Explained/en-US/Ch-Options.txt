@@ -285,6 +285,12 @@ indexterm:[Cluster,Option,node-health-strategy]
  Allowed values are +none+, +migrate-on-red+, +only-green+, +progressive+, and
  +custom+.
 
+| node-health-base | 0 |
+indexterm:[node-health-base,Cluster Option]
+indexterm:[Cluster,Option,node-health-base]
+ The base health score assigned to a node. Only used when
+ +node-health-strategy+ is +progressive+. '(since 1.1.16)'
+
 | node-health-green | 0 |
 indexterm:[node-health-green,Cluster Option]
 indexterm:[Cluster,Option,node-health-green]

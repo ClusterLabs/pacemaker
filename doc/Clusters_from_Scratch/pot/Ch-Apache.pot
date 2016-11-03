@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2016-05-03 17:45-0500\n"
-"PO-Revision-Date: 2016-05-03 17:45-0500\n"
+"POT-Creation-Date: 2016-11-02 17:32-0500\n"
+"PO-Revision-Date: 2016-11-02 17:32-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -14,12 +14,17 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Add Apache as a Cluster Service"
+msgid "Add Apache HTTP Server as a Cluster Service"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Now that we have a basic but functional active/passive two-node cluster, we’re ready to add some real services. We’re going to start with Apache because it is a feature of many clusters and relatively simple to configure."
+msgid "<indexterm> <primary>Apache HTTP Server</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Now that we have a basic but functional active/passive two-node cluster, we’re ready to add some real services. We’re going to start with Apache HTTP Server because it is a feature of many clusters and relatively simple to configure."
 msgstr ""
 
 #. Tag: title
@@ -75,6 +80,11 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
+msgid "<indexterm> <primary>Apache HTTP Server</primary><secondary>/server-status</secondary> </indexterm> <indexterm> <primary>/server-status</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
 msgid "In order to monitor the health of your Apache instance, and recover it if it fails, the resource agent used by Pacemaker assumes the server-status URL is available. On both nodes, enable the URL with:"
 msgstr ""
 
@@ -83,21 +93,24 @@ msgstr ""
 msgid "# cat &lt;&lt;-END &gt;/etc/httpd/conf.d/status.conf\n"
 " &lt;Location /server-status&gt;\n"
 "    SetHandler server-status\n"
-"    Order deny,allow\n"
-"    Deny from all\n"
-"    Allow from 127.0.0.1\n"
+"    Require local\n"
 " &lt;/Location&gt;\n"
 "END"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If you are using a different operating system, server-status may already be enabled or may be configurable in a different location."
+msgid "If you are using a different operating system, server-status may already be enabled or may be configurable in a different location. If you are using a version of Apache HTTP Server less than 2.4, the syntax will be different."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
 msgid "Configure the Cluster"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>Apache HTTP Server</primary><secondary>Apache resource configuration</secondary> </indexterm> <indexterm> <primary>Apache resource configuration</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -177,12 +190,12 @@ msgstr ""
 
 #. Tag: literallayout
 #, no-c-format
-msgid "wget -O - http://127.0.0.1/server-status"
+msgid "wget -O - http://localhost/server-status"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If you see <emphasis role=\"strong\">Connection refused</emphasis> in the output, then this is likely the problem. Ensure that <emphasis role=\"strong\">Allow from 127.0.0.1</emphasis> is present for the <emphasis role=\"strong\">&lt;Location /server-status&gt;</emphasis> block."
+msgid "If you see <emphasis role=\"strong\">Not Found</emphasis> or <emphasis role=\"strong\">Forbidden</emphasis> in the output, then this is likely the problem. Ensure that the <emphasis role=\"strong\">&lt;Location /server-status&gt;</emphasis> block is correct."
 msgstr ""
 
 #. Tag: title

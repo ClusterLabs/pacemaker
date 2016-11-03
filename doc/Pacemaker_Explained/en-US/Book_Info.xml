@@ -12,8 +12,8 @@
 	changes (pacemaker), and PUBSNUMBER for
 	simple textual changes (corrections, translations, etc.).
   -->
-  <edition>7</edition>
-  <pubsnumber>1</pubsnumber>
+  <edition>8</edition>
+  <pubsnumber>0</pubsnumber>
   <abstract>
     <para>
       The purpose of this document is to definitively explain the concepts used to configure Pacemaker.

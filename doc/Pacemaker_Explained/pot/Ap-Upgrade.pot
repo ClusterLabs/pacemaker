@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2016-05-03 17:45-0500\n"
-"PO-Revision-Date: 2016-05-03 17:45-0500\n"
+"POT-Creation-Date: 2016-11-02 17:32-0500\n"
+"PO-Revision-Date: 2016-11-02 17:32-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -14,42 +14,17 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
+msgid "Upgrading"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
 msgid "Upgrading Cluster Software"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "There will always be an upgrade path from any pacemaker 1.<emphasis>x</emphasis> release to any other 1.<emphasis>y</emphasis> release."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Consult the documentation for your messaging layer (Heartbeat or Corosync) to see whether upgrading them to a newer version is also supported."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "There are three approaches to upgrading your cluster software:"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Complete Cluster Shutdown"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Rolling (node by node)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Disconnect and Reattach"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Each method has advantages and disadvantages, some of which are listed in the table below, and you should choose the one most appropriate to your needs."
+msgid "There are three approaches to upgrading a cluster, each with advantages and disadvantages."
 msgstr ""
 
 #. Tag: title
@@ -59,37 +34,42 @@ msgstr ""
 
 #. Tag: entry
 #, no-c-format
-msgid "Type"
+msgid "Method"
 msgstr ""
 
 #. Tag: entry
 #, no-c-format
-msgid "Available between all software versions"
+msgid "Available between all versions"
 msgstr ""
 
 #. Tag: entry
 #, no-c-format
-msgid "Service Outage During Upgrade"
+msgid "Can be used with Pacemaker Remote nodes"
 msgstr ""
 
 #. Tag: entry
 #, no-c-format
-msgid "Service Recovery During Upgrade"
+msgid "Service outage during upgrade"
 msgstr ""
 
 #. Tag: entry
 #, no-c-format
-msgid "Exercises Failover Logic/Configuration"
+msgid "Service recovery during upgrade"
 msgstr ""
 
 #. Tag: entry
 #, no-c-format
-msgid "Allows change of cluster stack type <indexterm> <primary>Cluster</primary><secondary>Switching between Stacks</secondary> </indexterm> <indexterm> <primary>Switching between Stacks</primary> </indexterm> <indexterm> <primary>Changing Cluster Stack</primary> </indexterm> <footnote><para>For example, switching from Heartbeat to Corosync.</para></footnote>"
+msgid "Exercises failover logic"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Allows change of messaging layer <indexterm> <primary>Cluster</primary><secondary>switching between stacks</secondary> </indexterm> <indexterm> <primary>switching between stacks</primary> </indexterm> <indexterm> <primary>Changing cluster stack</primary> </indexterm> <footnote><para>For example, switching from Heartbeat to Corosync.</para></footnote>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Shutdown <indexterm> <primary>Upgrade</primary><secondary>Shutdown</secondary> </indexterm> <indexterm> <primary>Shutdown</primary> </indexterm> <indexterm> <primary>Shutdown Upgrade</primary> </indexterm>"
+msgid "<emphasis role=\"strong\">Complete cluster shutdown <indexterm> <primary>upgrade</primary><secondary>shutdown</secondary> </indexterm> <indexterm> <primary>shutdown</primary> </indexterm> <indexterm> <primary>shutdown upgrade</primary> </indexterm></emphasis>"
 msgstr ""
 
 #. Tag: para
@@ -114,17 +94,27 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Rolling <indexterm> <primary>Upgrade</primary><secondary>Rolling</secondary> </indexterm> <indexterm> <primary>Rolling</primary> </indexterm> <indexterm> <primary>Rolling Upgrade</primary> </indexterm>"
+msgid "<emphasis role=\"strong\">Rolling (node by node) <indexterm> <primary>upgrade</primary><secondary>rolling</secondary> </indexterm> <indexterm> <primary>rolling</primary> </indexterm> <indexterm> <primary>rolling upgrade</primary> </indexterm></emphasis>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Reattach <indexterm> <primary>Upgrade</primary><secondary>Reattach</secondary> </indexterm> <indexterm> <primary>Reattach</primary> </indexterm> <indexterm> <primary>Reattach Upgrade</primary> </indexterm>"
+msgid "always <footnote><para>Any active resources will be moved off the node being upgraded, so there will be at least a brief outage unless all resources can be migrated \"live\".</para></footnote>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis role=\"strong\">Detach and reattach <indexterm> <primary>upgrade</primary><secondary>reattach</secondary> </indexterm> <indexterm> <primary>reattach</primary> </indexterm> <indexterm> <primary>reattach upgrade</primary> </indexterm></emphasis>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
 msgid "only due to failure"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Complete Cluster Shutdown"
 msgstr ""
 
 #. Tag: para
@@ -149,7 +139,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Check the configuration manually or with the <literal>crm_verify</literal> tool if available."
+msgid "Check the configuration with the <literal>crm_verify</literal> tool."
 msgstr ""
 
 #. Tag: para
@@ -159,17 +149,82 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "In this scenario, each node is removed from the cluster, upgraded and then brought back online until all nodes are running the newest version."
+msgid "One variation of this approach is to build a new cluster on new hosts. This allows the new version to be tested beforehand, and minimizes downtime by having the new nodes ready to be placed in production as soon as the old nodes are shut down."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Rolling (node by node)"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Rolling upgrades should always be possible for pacemaker versions 1.0.0 and later."
+msgid "In this scenario, each node is removed from the cluster, upgraded, and then brought back online, until all nodes are running the newest version."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Put the node into standby mode, and wait for any active resources to be moved cleanly to another node."
+msgid "If you plan to upgrade other cluster software — such as the messaging layer — at the same time, consult that software’s documentation for its compatibility with a rolling upgrade."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Pacemaker has three version numbers that affect rolling upgrades:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis role=\"strong\">Pacemaker release version:</emphasis> Rolling upgrades are possible as long as the major version number (the <emphasis>x</emphasis> in <emphasis>x.y.z</emphasis>) stays the same. For example, a rolling upgrade may be done from 1.0.8 to 1.1.15, but not from 0.6.7 to 1.0.0."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis role=\"strong\">CRM feature set:</emphasis> This version number applies to the communication between full cluster nodes."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "It increases when a cluster node running the older version would have problems if the cluster’s Designated Controller (DC) has the newer version. To avoid these problems, Pacemaker ensures that the longest-running node is the DC, and that nodes with an older feature set cannot join the cluster."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Therefore, if the CRM feature set is changing in the Pacemaker version you are upgrading to, you should run a mixed-version cluster only during a small rolling upgrade window. If one of the older nodes drops out of the cluster for any reason, it will not be able to rejoin until it is upgraded."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis role=\"strong\">LRMD protocol version:</emphasis> This version number applies to communication between a Pacemaker Remote node and the cluster. It increases when an older cluster node would have problems hosting the connection to a newer Pacemaker Remote node. To avoid these problems, Pacemaker Remote nodes will accept connections only from cluster nodes with the same or newer LRMD protocol version."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "For rolling upgrades, this means that all cluster nodes should be upgraded before upgrading any Pacemaker Remote nodes."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Unlike with CRM feature set differences between full cluster nodes, mixed LRMD protocol versions between Pacemaker Remote nodes and full cluster nodes are fine, as long as the Pacemaker Remote nodes have the older version. This can be useful, for example, to host a legacy application in an older operating system version used as a Pacemaker Remote node."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "See the ClusterLabs wiki’s <ulink url=\"http://clusterlabs.org/wiki/ReleaseCalendar\">Release Calendar</ulink> to figure out whether the CRM feature set and/or LRMD protocol version changed between the the Pacemaker release versions in your rolling upgrade."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The interpretation of the LRMD protocol version changed in Pacemaker 1.1.15. If you are planning a rolling upgrade from an earlier Pacemaker version to Pacemaker 1.1.15 or later involving Pacemaker Remote nodes, you will need to take special precautions to avoid problems. See <ulink url=\"http://clusterlabs.org/wiki/Upgrading_to_Pacemaker_1.1.15_or_later_from_an_earlier_version\">Upgrading to Pacemaker 1.1.15 or later from an earlier version</ulink> on the ClusterLabs wiki."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "To perform a rolling upgrade, on each node in turn:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Put the node into standby mode, and wait for any active resources to be moved cleanly to another node. (This step is optional, but allows you to deal with any resource issues before the upgrade.)"
 msgstr ""
 
 #. Tag: para
@@ -179,17 +234,17 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If this is the first node to be upgraded, check the configuration manually or with the <literal>crm_verify</literal> tool if available."
+msgid "If this is the first node to be upgraded, check the configuration with the <literal>crm_verify</literal> tool."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Start the messaging layer. This must be the same messaging layer (Corosync or Heartbeat) that the rest of the cluster is using. Upgrading the messaging layer may also be possible; consult the documentation for those projects to see whether the two versions will be compatible."
+msgid "Start the messaging layer. This must be the same messaging layer (Corosync or Heartbeat) that the rest of the cluster is using."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Rolling upgrades were not always possible with older heartbeat and pacemaker versions. The table below shows which versions were compatible during rolling upgrades. Rolling upgrades that cross compatibility boundaries must be performed in multiple steps (for example, upgrading heartbeat 2.0.6 to heartbeat 2.1.3, and then upgrading again to pacemaker 0.6.6). Rolling upgrades from pacemaker 0.<emphasis>x</emphasis> to 1.<emphasis>y</emphasis> are not possible."
+msgid "Rolling upgrades were not always possible with older heartbeat and pacemaker versions. Rolling upgrades that cross compatibility boundaries listed in the following table must be performed in multiple steps."
 msgstr ""
 
 #. Tag: title
@@ -209,7 +264,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Pacemaker 1.0.x"
+msgid "Pacemaker 1.x.y"
 msgstr ""
 
 #. Tag: para
@@ -262,9 +317,19 @@ msgstr ""
 msgid "None. Use an alternate upgrade strategy."
 msgstr ""
 
+#. Tag: title
+#, no-c-format
+msgid "Detach and Reattach"
+msgstr ""
+
 #. Tag: para
 #, no-c-format
 msgid "The reattach method is a variant of a complete cluster shutdown, where the resources are left active and get re-detected when the cluster is restarted."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "This method may not be used if the cluster contains any Pacemaker Remote nodes."
 msgstr ""
 
 #. Tag: para
@@ -274,22 +339,17 @@ msgstr ""
 
 #. Tag: screen
 #, no-c-format
-msgid "# crm_attribute -t crm_config -n is-managed-default -v false"
+msgid "# crm_attribute --name maintenance-mode --update true"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "For any resource that has a value for <literal>is-managed</literal>, make sure it is set to <literal>false</literal> so that the cluster will not stop it (replacing $rsc_id appropriately):"
-msgstr ""
-
-#. Tag: screen
-#, no-c-format
-msgid "# crm_resource -t primitive -r $rsc_id -p is-managed -v false"
+msgid "On each node, shutdown the cluster software (pacemaker and the messaging layer), and upgrade the Pacemaker software. This may also include upgrading the messaging layer. While the underlying operating system may be upgraded at the same time, that will be more likely to cause outages in the detached services (certainly, if a reboot is required)."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Start the cluster software. The messaging layer can be either Corosync or Heartbeat and does not need to be the same one as before the upgrade."
+msgid "On each node, start the cluster software. The messaging layer can be either Corosync or Heartbeat and does not need to be the same one as before the upgrade."
 msgstr ""
 
 #. Tag: para
@@ -304,26 +364,387 @@ msgstr ""
 
 #. Tag: screen
 #, no-c-format
-msgid "# crm_attribute -t crm_config -n is-managed-default -v true"
+msgid "# crm_attribute --name maintenance-mode --delete"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "For any resource that has a value for <literal>is-managed</literal>, reset it to <literal>true</literal> (so the cluster can recover the service if it fails) if desired:"
+msgid "Support for maintenance mode was added in Pacemaker 1.0.0. If you are upgrading from an earlier version, you can detach by setting <literal>is-managed</literal> to <literal>false</literal> for all resources."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Upgrading the Configuration"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>upgrade</primary><secondary>Configuration</secondary> </indexterm> <indexterm> <primary>Configuration</primary> </indexterm> <indexterm> <primary>Configuration</primary><secondary>upgrading</secondary> </indexterm> <indexterm> <primary>upgrading</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Pacemaker’s configuration — the Configuration Information Base (CIB) — has its own XML schema version, independent of the Pacemaker software version."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "After cluster software is upgraded, the cluster will continue to use the older schema version that it was previously using. This can be useful, for example, when administrators have written tools that modify the configuration, and are based on the older syntax."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "However, when using an older syntax, new features may be unavailable, and there is a performance impact, since the cluster must do a non-persistent configuration upgrade before each transition. So while using the old syntax is possible, it is not advisable to continue using it indefinitely."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Even if you wish to continue using the old syntax, it is a good idea to follow the upgrade procedure outlined below, except for the last step, to ensure that the new software has no problems with your existing configuration (since it will perform much the same task internally)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If you are brave, it is sufficient simply to run <literal>cibadmin --upgrade</literal>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A more cautious approach would proceed like this:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Create a shadow copy of the configuration. The later commands will automatically operate on this copy, rather than the live configuration."
 msgstr ""
 
 #. Tag: screen
 #, no-c-format
-msgid "# crm_resource -t primitive -r $rsc_id -p is-managed -v true"
+msgid "# crm_shadow --create shadow"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The oldest version of the CRM to support this upgrade type was in Heartbeat 2.0.4."
+msgid "Verify the configuration is valid with the new software (which may be stricter about syntax mistakes, or may have dropped support for deprecated features): <indexterm> <primary>Configuration</primary><secondary>verify</secondary> </indexterm> <indexterm> <primary>verify</primary> </indexterm> <indexterm> <primary>verify</primary><secondary>Configuration</secondary> </indexterm> <indexterm> <primary>Configuration</primary> </indexterm>"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# crm_verify --live-check"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Always check your existing configuration is still compatible with the version you are installing before starting the cluster."
+msgid "Fix any errors or warnings."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Perform the upgrade:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# cibadmin --upgrade"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If this step fails, there are three main possibilities:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The configuration was not valid to start with (did you do steps 2 and 3?)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The transformation failed - <ulink url=\"http://bugs.clusterlabs.org/\">report a bug</ulink> or <ulink url=\"mailto:users@clusterlabs.org?subject=Transformation%20failed%20during%20upgrade\">email the project</ulink>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The transformation was successful but produced an invalid result."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If the result of the transformation is invalid, you may see a number of errors from the validation library. If these are not helpful, visit the <ulink url=\"http://clusterlabs.org/wiki/Validation_FAQ\">Validation FAQ wiki page</ulink> and/or try the manual upgrade procedure described below."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Check the changes:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# crm_shadow --diff"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If at this point there is anything about the upgrade that you wish to fine-tune (for example, to change some of the automatic IDs), now is the time to do so:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# crm_shadow --edit"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "This will open the configuration in your favorite editor (whichever is specified by the standard <emphasis role=\"strong\">$EDITOR</emphasis> environment variable)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Preview how the cluster will react:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# crm_simulate --live-check --save-dotfile shadow.dot -S\n"
+"# graphviz shadow.dot"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Verify that either no resource actions will occur or that you are happy with any that are scheduled. If the output contains actions you do not expect (possibly due to changes to the score calculations), you may need to make further manual changes. See <xref linkend=\"s-config-testing-changes\" /> for further details on how to interpret the output of <literal>crm_simulate</literal> and <literal>graphviz</literal>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Upload the changes:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# crm_shadow --commit shadow --force"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In the unlikely event this step fails, please report a bug."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>Configuration</primary><secondary>upgrade manually</secondary> </indexterm> <indexterm> <primary>upgrade manually</primary> </indexterm> It is also possible to perform the configuration upgrade steps manually:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Locate the <literal>upgrade*.xsl</literal> conversion scripts provided with the source code. These will often be installed in a location such as <literal>/usr/share/pacemaker</literal>, or may be obtained from the <ulink url=\"https://github.com/ClusterLabs/pacemaker/tree/master/xml\">source repository</ulink>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Run the conversion scripts that apply to your older version, for example: <indexterm> <primary>XML</primary><secondary>convert</secondary> </indexterm> <indexterm> <primary>convert</primary> </indexterm>"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# xsltproc /path/to/upgrade06.xsl config06.xml &gt; config10.xml"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Locate the <literal>pacemaker.rng</literal> script (from the same location as the xsl files)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Check the XML validity: <indexterm> <primary>validate configuration</primary> </indexterm><indexterm> <primary>Configuration</primary><secondary>validate XML</secondary> </indexterm> <indexterm> <primary>validate XML</primary> </indexterm>"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# xmllint --relaxng /path/to/pacemaker.rng config10.xml"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The advantage of this method is that it can be performed without the cluster running, and any validation errors are often more informative."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "What Changed in 1.0"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "New"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Failure timeouts. See <xref linkend=\"s-failure-migration\" />"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "New section for resource and operation defaults. See <xref linkend=\"s-resource-defaults\" /> and <xref linkend=\"s-operation-defaults\" />"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Tool for making offline configuration changes. See <xref linkend=\"s-config-sandboxes\" />"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>Rules, instance_attributes, meta_attributes</literal> and sets of operations can be defined once and referenced in multiple places. See <xref linkend=\"s-reusing-config-elements\" />"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The CIB now accepts XPath-based create/modify/delete operations. See the <command>cibadmin</command> help text."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Multi-dimensional colocation and ordering constraints. See <xref linkend=\"s-resource-sets-ordering\" /> and <xref linkend=\"s-resource-sets-colocation\" />"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The ability to connect to the CIB from non-cluster machines. See <xref linkend=\"s-remote-connection\" />"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Allow recurring actions to be triggered at known times. See <xref linkend=\"s-recurring-start\" />"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Changed"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Syntax"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "All resource and cluster options now use dashes (-) instead of underscores (_)"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>master_slave</literal> was renamed to <literal>master</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <literal>attributes</literal> container tag was removed"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The operation field <literal>pre-req</literal> has been renamed <literal>requires</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "All operations must have an <literal>interval</literal>, <literal>start</literal>/<literal>stop</literal> must have it set to zero"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <literal>stonith-enabled</literal> option now defaults to true."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The cluster will refuse to start resources if <literal>stonith-enabled</literal> is true (or unset) and no STONITH resources have been defined"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The attributes of colocation and ordering constraints were renamed for clarity. See <xref linkend=\"s-resource-ordering\" /> and <xref linkend=\"s-resource-colocation\" />"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>resource-failure-stickiness</literal> has been replaced by <literal>migration-threshold</literal>. See <xref linkend=\"s-failure-migration\" />"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The parameters for command-line tools have been made consistent"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Switched to <emphasis>RelaxNG</emphasis> schema validation and <emphasis>libxml2</emphasis> parser"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "id fields are now XML IDs which have the following limitations:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "id’s cannot contain colons (:)"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "id’s cannot begin with a number"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "id’s must be globally unique (not just unique for that tag)"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Some fields (such as those in constraints that refer to resources) are IDREFs."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "This means that they must reference existing resources or objects in order for the configuration to be valid. Removing an object which is referenced elsewhere will therefore fail."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The CIB representation, from which a MD5 digest is calculated to verify CIBs on the nodes, has changed."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "This means that every CIB update will require a full refresh on any upgraded nodes until the cluster is fully upgraded to 1.0. This will result in significant performance degradation and it is therefore highly inadvisable to run a mixed 1.0/0.6 cluster for any longer than absolutely necessary."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Ping node information no longer needs to be added to <emphasis>ha.cf</emphasis>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Simply include the lists of hosts in your ping resource(s)."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Removed"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "It is no longer possible to set resource meta options as top-level attributes. Use meta attributes instead."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Resource and operation defaults are no longer read from <literal>crm_config</literal>. See <xref linkend=\"s-resource-defaults\" /> and <xref linkend=\"s-operation-defaults\" /> instead."
 msgstr ""
 
