@@ -844,7 +844,4 @@ do_test isolation-restart-all "Restart docker isolated resources."
 do_test isolation-clone       "Cloned isolated primitive."
 
 echo ""
-do_test versioned-resources     "Start resources with #ra-version rules"
-
-echo ""
 test_results
