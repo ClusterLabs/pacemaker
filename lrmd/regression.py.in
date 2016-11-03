@@ -1000,7 +1000,7 @@ if __name__ == "__main__":
         test.add_cmd("-c unregister_rsc -r \"test_rsc\" "+self.action_timeout+
                      "-l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
 
-        ### Verify that versioned resource parameters are chosen properly
+        ### Verify that versioned resource parameters are chosen properly ###
 
         # We'll default to one state file, then check the version to use a different one
         state_file_default = "@CRM_RSCTMP_DIR@/versioned_params_default.state"

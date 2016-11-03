@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2016-05-03 17:45-0500\n"
-"PO-Revision-Date: 2016-05-03 17:45-0500\n"
+"POT-Creation-Date: 2016-11-02 17:32-0500\n"
+"PO-Revision-Date: 2016-11-02 17:32-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -139,7 +139,17 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "A resource name <indexterm> <primary>rsc</primary><secondary>Location Constraints</secondary> </indexterm> <indexterm> <primary>Location Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Location</secondary><tertiary>rsc</tertiary> </indexterm> <indexterm> <primary>Location</primary><secondary>rsc</secondary> </indexterm> <indexterm> <primary>rsc</primary> </indexterm>"
+msgid "The name of the resource to which this constraint applies <indexterm> <primary>rsc</primary><secondary>Location Constraints</secondary> </indexterm> <indexterm> <primary>Location Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Location</secondary><tertiary>rsc</tertiary> </indexterm> <indexterm> <primary>Location</primary><secondary>rsc</secondary> </indexterm> <indexterm> <primary>rsc</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>rsc-pattern</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A regular expression matching the names of resources to which this constraint applies, if <literal>rsc</literal> is not specified; if the regular expression contains submatches and the constraint is governed by a rule (see <xref linkend=\"ch-rules\" />), the submatches can be referenced as <literal>%0</literal> through <literal>%9</literal> in the rule’s <literal>score-attribute</literal> or a rule expression’s <literal>attribute</literal> <emphasis>(since 1.1.16)</emphasis> <indexterm> <primary>rsc-pattern</primary><secondary>Location Constraints</secondary> </indexterm> <indexterm> <primary>Location Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Location</secondary><tertiary>rsc-pattern</tertiary> </indexterm> <indexterm> <primary>Location</primary><secondary>rsc-pattern</secondary> </indexterm> <indexterm> <primary>rsc-pattern</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -174,7 +184,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Whether Pacemaker should perform resource discovery (that is, check whether the resource is already running) for this resource on this node. This should normally be left as the default, so that rogue instances of a service can be stopped when they are running where they are not supposed to be. However, there are two situations where disabling resource discovery is a good idea: when a service is not installed on a node, discovery might return an error (properly written OCF agents will not, so this is usually only seen with other agent types); and when Pacemaker Remote is used to scale a cluster to hundreds of nodes, limiting resource discovery to allowed nodes can significantly boost performance."
+msgid "Whether Pacemaker should perform resource discovery (that is, check whether the resource is already running) for this resource on this node. This should normally be left as the default, so that rogue instances of a service can be stopped when they are running where they are not supposed to be. However, there are two situations where disabling resource discovery is a good idea: when a service is not installed on a node, discovery might return an error (properly written OCF agents will not, so this is usually only seen with other agent types); and when Pacemaker Remote is used to scale a cluster to hundreds of nodes, limiting resource discovery to allowed nodes can significantly boost performance. <emphasis>(since 1.1.13)</emphasis>"
 msgstr ""
 
 #. Tag: para
@@ -692,7 +702,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Whether all members of the set must be active before continuing. Meaningful within <literal>rsc_order</literal>. <indexterm> <primary>require-all</primary><secondary>Resource Sets</secondary> </indexterm> <indexterm> <primary>Resource Sets</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Resource Sets</secondary><tertiary>require-all</tertiary> </indexterm> <indexterm> <primary>Resource Sets</primary><secondary>require-all</secondary> </indexterm> <indexterm> <primary>require-all</primary> </indexterm>"
+msgid "Whether all members of the set must be active before continuing. Meaningful within <literal>rsc_order</literal>. <emphasis>(since 1.1.13)</emphasis> <indexterm> <primary>require-all</primary><secondary>Resource Sets</secondary> </indexterm> <indexterm> <primary>Resource Sets</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Resource Sets</secondary><tertiary>require-all</tertiary> </indexterm> <indexterm> <primary>Resource Sets</primary><secondary>require-all</secondary> </indexterm> <indexterm> <primary>require-all</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -795,7 +805,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The syntax can be expanded to allow ordered sets of (un)ordered resources. In the example below, <literal>A</literal> and <literal>B</literal> can both start in parallel, as can <literal>C</literal> and <literal>D</literal>, however <literal>C</literal> and <literal>D</literal> can only start once <emphasis>both</emphasis> <literal>A</literal> <emphasis>and</emphasis> <literal>B</literal> are active."
+msgid "The syntax can be expanded to allow sets of resources to be ordered relative to each other, where the members of each individual set may be ordered or unordered (controlled by the <literal>sequential</literal> property). In the example below, <literal>A</literal> and <literal>B</literal> can both start in parallel, as can <literal>C</literal> and <literal>D</literal>, however <literal>C</literal> and <literal>D</literal> can only start once <emphasis>both</emphasis> <literal>A</literal> <emphasis>and</emphasis> <literal>B</literal> are active."
 msgstr ""
 
 #. Tag: title
@@ -974,7 +984,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "This notation can also be used to tell the cluster that a set of resources must all be located with a common peer, but have no dependencies on each other. In this scenario, unlike the previous, <literal>B</literal> <emphasis>would</emphasis> be allowed to remain active even if <literal>A</literal> or <literal>C</literal> (or both) were inactive."
+msgid "This notation can also be used to tell the cluster that sets of resources must be colocated relative to each other, where the individual members of each set may or may not depend on each other being active (controlled by the <literal>sequential</literal> property)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In this example, <literal>A</literal>, <literal>B</literal>, and <literal>C</literal> will each be colocated with <literal>D</literal>. <literal>D</literal> must be active, but any of <literal>A</literal>, <literal>B</literal>, or <literal>C</literal> may be inactive without affecting any other resources."
 msgstr ""
 
 #. Tag: title
@@ -1005,12 +1020,17 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "There is no inherent limit to the number and size of the sets used. The only thing that matters is that in order for any member of one set in the constraint to be active, all members of sets listed after it must also be active (and naturally on the same node); and if a set has <literal>sequential=\"true\"</literal>, then in order for one member of that set to be active, all members listed after it must also be active. You can even specify the role in which the members of a set must be in using the set’s <literal>role</literal> attribute."
+msgid "There is no inherent limit to the number and size of the sets used. The only thing that matters is that in order for any member of one set in the constraint to be active, all members of sets listed after it must also be active (and naturally on the same node); and if a set has <literal>sequential=\"true\"</literal>, then in order for one member of that set to be active, all members listed before it must also be active."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If desired, you can restrict the dependency to instances of multistate resources that are in a specific role, using the set’s <literal>role</literal> property."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "A colocation chain where the members of the middle set have no interdependencies and the last has master status."
+msgid "Colocation chain in which the members of the middle set have no interdependencies, and the last listed set (which the cluster places first) is restricted to instances in master status."
 msgstr ""
 
 #. Tag: programlisting
@@ -1018,8 +1038,8 @@ msgstr ""
 msgid "&lt;constraints&gt;\n"
 "    &lt;rsc_colocation id=\"coloc-1\" score=\"INFINITY\" &gt;\n"
 "      &lt;resource_set id=\"colocated-set-1\" sequential=\"true\"&gt;\n"
-"        &lt;resource_ref id=\"A\"/&gt;\n"
 "        &lt;resource_ref id=\"B\"/&gt;\n"
+"        &lt;resource_ref id=\"A\"/&gt;\n"
 "      &lt;/resource_set&gt;\n"
 "      &lt;resource_set id=\"colocated-set-2\" sequential=\"false\"&gt;\n"
 "        &lt;resource_ref id=\"C\"/&gt;\n"
@@ -1027,8 +1047,8 @@ msgid "&lt;constraints&gt;\n"
 "        &lt;resource_ref id=\"E\"/&gt;\n"
 "      &lt;/resource_set&gt;\n"
 "      &lt;resource_set id=\"colocated-set-3\" sequential=\"true\" role=\"Master\"&gt;\n"
-"        &lt;resource_ref id=\"F\"/&gt;\n"
 "        &lt;resource_ref id=\"G\"/&gt;\n"
+"        &lt;resource_ref id=\"F\"/&gt;\n"
 "      &lt;/resource_set&gt;\n"
 "    &lt;/rsc_colocation&gt;\n"
 "&lt;/constraints&gt;"
@@ -1036,7 +1056,12 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Visual representation of a colocation chain where the members of the middle set have no inter-dependencies"
+msgid "Visual representation the above example (resources to the left are placed first)"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Pay close attention to the order in which resources and sets are listed. While the colocation dependency for members of any one set is last-to-first, the colocation dependency for multiple sets is first-to-last. In the above example, <literal>B</literal> is colocated with <literal>A</literal>, but <literal>colocated-set-1</literal> is colocated with <literal>colocated-set-2</literal>."
 msgstr ""
 
 #. Tag: para

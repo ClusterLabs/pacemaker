@@ -1,0 +1,297 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2016-11-02 17:32-0500\n"
+"PO-Revision-Date: 2016-11-02 17:32-0500\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Python Coding Guidelines"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<anchor id=\"ch-python-coding\" xreflabel=\"Chapter 3, Python Coding Guidelines\"></anchor>"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Python Boilerplate"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>Python</primary><secondary>boilerplate</secondary> </indexterm> <indexterm> <primary>boilerplate</primary> </indexterm> <indexterm> <primary>licensing</primary><secondary>Python boilerplate</secondary> </indexterm> <indexterm> <primary>Python boilerplate</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Every Python file should start like this:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "[&lt;SHEBANG&gt;]\n"
+"\"\"\" &lt;BRIEF-DESCRIPTION&gt;\n"
+"\"\"\"\n"
+"\n"
+"# Pacemaker targets compatibility with Python 2.6+ and 3.2+\n"
+"from __future__ import print_function, unicode_literals, absolute_import, division\n"
+"\n"
+"__copyright__ = \"Copyright (C) &lt;YYYY[-YYYY]&gt; Andrew Beekhof &lt;andrew@beekhof.net&gt;\"\n"
+"__license__ = \"&lt;LICENSE&gt; WITHOUT ANY WARRANTY\""
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If the file is meant to be directly executed, the first line (<literal>&lt;SHEBANG&gt;</literal>) should be <literal>#!/usr/bin/python</literal>. If it is meant to be imported, omit this line."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>&lt;BRIEF-DESCRIPTION&gt;</literal> is obviously a brief description of the file’s purpose. The string may contain any other information typically used in a Python file <ulink url=\"https://www.python.org/dev/peps/pep-0257/\">docstring</ulink>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <literal>import</literal> statement is discussed further in <xref linkend=\"s-python-future-imports\" />."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>&lt;YYYY&gt;</literal> is the year the code was <emphasis>originally</emphasis> created (it is the most important date for copyright purposes, as it establishes priority and the point from which expiration is calculated). If the code is modified in later years, add <literal>-YYYY</literal> with the most recent year of modification."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>&lt;LICENSE&gt;</literal> should follow the policy set forth in the <ulink url=\"https://github.com/ClusterLabs/pacemaker/blob/master/COPYING\"><literal>COPYING</literal></ulink> file, generally one of \"GNU General Public License version 2 or later (GPLv2+)\" or \"GNU Lesser General Public License version 2.1 or later (LGPLv2.1+)\"."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Python Compatibility"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>Python</primary><secondary>2</secondary> </indexterm> <indexterm> <primary>2</primary> </indexterm> <indexterm> <primary>Python</primary><secondary>3</secondary> </indexterm> <indexterm> <primary>3</primary> </indexterm> <indexterm> <primary>Python</primary><secondary>versions</secondary> </indexterm> <indexterm> <primary>versions</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Pacemaker targets compatibility with Python 2.6 and later, and Python 3.2 and later. These versions have added features to be more compatible with each other, allowing us to support both the 2 and 3 series with the same code. It is a good idea to test any changes with both Python 2 and 3."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Python Future Imports"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The future imports used in <xref linkend=\"s-python-boilerplate\" /> mean:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "All print statements must use parentheses, and printing without a newline is accomplished with the <literal>end=' '</literal> parameter rather than a trailing comma."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "All string literals will be treated as Unicode (the <literal>u</literal> prefix is unnecessary, and must not be used, because it is not available in Python 3.2)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Local modules must be imported using <literal>from . import</literal> (rather than just <literal>import</literal>). To import one item from a local module, use <literal>from .modulename import</literal> (rather than <literal>from modulename import</literal>)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Division using <literal>/</literal> will always return a floating-point result (use <literal>//</literal> if you want the integer floor instead)."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Other Python Compatibility Requirements"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "When specifying an exception variable, always use <literal>as</literal> instead of a comma (e.g. <literal>except Exception as e</literal> or <literal>except (TypeError, IOError) as e</literal>). Use <literal>e.args</literal> to access the error arguments (instead of iterating over or subscripting <literal>e</literal>)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Use <literal>in</literal> (not <literal>has_key()</literal>) to determine if a dictionary has a particular key."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Always use the I/O functions from the <literal>io</literal> module rather than the native I/O functions (e.g. <literal>io.open()</literal> rather than <literal>open()</literal>)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "When opening a file, always use the <literal>t</literal> (text) or <literal>b</literal> (binary) mode flag."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "When creating classes, always specify a parent class to ensure that it is a \"new-style\" class (e.g. <literal>class Foo(object):</literal> rather than <literal>class Foo:</literal>)"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Be aware of the bytes type added in Python 3. Many places where strings are used in Python 2 use bytes or bytearrays in Python 3 (for example, the pipes used with <literal>subprocess.Popen()</literal>). Code should handle both possibilities."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Be aware that the <literal>items()</literal>, <literal>keys()</literal>, and <literal>values()</literal> methods of dictionaries return lists in Python 2 and views in Python 3. In many case, no special handling is required, but if the code needs to use list methods on the result, cast the result to list first."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Do not name variables <literal>with</literal> or <literal>as</literal>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Do not raise or catch strings as exceptions (e.g. <literal>raise \"Bad thing\"</literal>)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Do not use the <literal>cmp</literal> parameter of sorting functions (use <literal>key</literal> instead, if needed) or the <literal>__cmp__()</literal> method of classes (implement rich comparison methods such as <literal>__lt__()</literal> instead, if needed)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Do not use the <literal>buffer</literal> type."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Do not use features not available in all targeted Python versions. Common examples include:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <literal>argparse</literal>, <literal>html</literal>, <literal>ipaddress</literal>, <literal>sysconfig</literal>, and <literal>UserDict</literal> modules"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <literal>collections.OrderedDict</literal> class"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <literal>subprocess.run()</literal> function"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <literal>subprocess.DEVNULL</literal> constant"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>subprocess</literal> module-specific exceptions"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Set literals (<literal>{1, 2, 3}</literal>)"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Python Usages to Avoid"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Avoid the following if possible, otherwise research the compatibility issues involved (hacky workarounds are often available):"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "long integers"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "octal integer literals"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "mixed binary and string data in one data file or variable"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "metaclasses"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>locale.strcoll</literal> and <literal>locale.strxfrm</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "the <literal>configparser</literal> and <literal>ConfigParser</literal> modules"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "importing compatibility modules such as <literal>six</literal> (so we don’t have to add them to Pacemaker’s dependencies)"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Formatting Python Code"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>Python</primary><secondary>formatting</secondary> </indexterm> <indexterm> <primary>formatting</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Indentation must be 4 spaces, no tabs."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Do not leave trailing whitespace."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Lines should be no longer than 80 characters unless limiting line length significantly impacts readability. For Python, this limitation is flexible since breaking a line often impacts readability, but definitely keep it under 120 characters."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Where not conflicting with this style guide, it is recommended (but not required) to follow <ulink url=\"https://www.python.org/dev/peps/pep-0008/:\">PEP 8</ulink>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "It is recommended (but not required) to format Python code such that <literal>pylint --disable=line-too-long,too-many-lines,too-many-instance-attributes,too-many-arguments,too-many-statements</literal> produces minimal complaints (even better if you don’t need to disable all those checks)."
+msgstr ""
+

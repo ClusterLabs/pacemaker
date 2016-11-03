@@ -1,0 +1,276 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2016-11-02 17:32-0500\n"
+"PO-Revision-Date: 2016-11-02 17:32-0500\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "C Coding Guidelines"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<anchor id=\"ch-c-coding\" xreflabel=\"Chapter 2, C Coding Guidelines\"></anchor>"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "C Boilerplate"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>C</primary><secondary>boilerplate</secondary> </indexterm> <indexterm> <primary>boilerplate</primary> </indexterm> <indexterm> <primary>licensing</primary><secondary>C boilerplate</secondary> </indexterm> <indexterm> <primary>C boilerplate</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Every C file should start like this:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "/*\n"
+" * Copyright (C) &lt;YYYY[-YYYY]&gt; Andrew Beekhof &lt;andrew@beekhof.net&gt;\n"
+" *\n"
+" * This source code is licensed under &lt;LICENSE&gt; WITHOUT ANY WARRANTY.\n"
+" */"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>&lt;YYYY&gt;</literal> is the year the code was <emphasis>originally</emphasis> created (it is the most important date for copyright purposes, as it establishes priority and the point from which expiration is calculated). If the code is modified in later years, add <literal>-YYYY</literal> with the most recent year of modification."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>&lt;LICENSE&gt;</literal> should follow the policy set forth in the <ulink url=\"https://github.com/ClusterLabs/pacemaker/blob/master/COPYING\"><literal>COPYING</literal></ulink> file, generally one of \"GNU General Public License version 2 or later (GPLv2+)\" or \"GNU Lesser General Public License version 2.1 or later (LGPLv2.1+)\"."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Formatting"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Whitespace"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>C</primary><secondary>whitespace</secondary> </indexterm> <indexterm> <primary>whitespace</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Indentation must be 4 spaces, no tabs."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Do not leave trailing whitespace."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Line Length"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Lines should be no longer than 80 characters unless limiting line length significantly impacts readability."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Pointers"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>C</primary><secondary>pointers</secondary> </indexterm> <indexterm> <primary>pointers</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <literal>*</literal> goes by the variable name, not the type:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "char *foo;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Use a space before the <literal>*</literal> and after the closing parenthesis in a cast:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "char *foo = (char *) bar;"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Functions"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>C</primary><secondary>functions</secondary> </indexterm> <indexterm> <primary>functions</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In the function definition, put the return type on its own line, and place the opening brace by itself on a line:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "static int\n"
+"foo(void)\n"
+"{"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "For functions with enough arguments that they must break to the next line, align arguments with the first argument:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "static int\n"
+"function_name(int bar, const char *a, const char *b,\n"
+"              const char *c, const char *d)\n"
+"{"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If a function name gets really long, start the arguments on their own line with 8 spaces of indentation:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "static int\n"
+"really_really_long_function_name_this_is_getting_silly_now(\n"
+"        int bar, const char *a, const char *b,\n"
+"        const char *c, const char *d)\n"
+"{"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Control Statements (if, else, while, for, switch)"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The keyword is followed by one space, then left parenthesis without space, condition, right parenthesis, space, opening bracket on the same line. <literal>else</literal> and <literal>else if</literal> are on the same line with the ending brace and opening brace, separated by a space:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "if (condition1) {\n"
+"    statement1;\n"
+"} else if (condition2) {\n"
+"    statement2;\n"
+"} else {\n"
+"    statement3;\n"
+"}"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In a <literal>switch</literal> statement, <literal>case</literal> is indented one level, and the body of each <literal>case</literal> is indented by another level. The opening brace is on the same line as <literal>switch</literal>."
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "switch (expression) {\n"
+"    case 0:\n"
+"        command1;\n"
+"        break;\n"
+"    case 1:\n"
+"        command2;\n"
+"        break;\n"
+"    default:\n"
+"        command3;\n"
+"}"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Operators"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>C</primary><secondary>operators</secondary> </indexterm> <indexterm> <primary>operators</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Operators have spaces from both sides. Do not rely on operator precedence; use parentheses when mixing operators with different priority."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "No space is used after opening parenthesis and before closing parenthesis."
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "x = a + b - (c * d);"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Naming Conventions"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>C</primary><secondary>naming</secondary> </indexterm> <indexterm> <primary>naming</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Any exposed symbols in libraries (non-<literal>static</literal> function names, type names, etc.) must begin with a prefix appropriate to the library, for example, <literal>crm_</literal>, <literal>pe_</literal>, <literal>st_</literal>, <literal>lrm_</literal>."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "vim Settings"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>vim</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Developers who use <literal>vim</literal> to edit source code can add the following settings to their <literal>~/.vimrc</literal> file to follow Pacemaker C coding guidelines:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "\" follow Pacemaker coding guidelines when editing C source code files\n"
+"filetype plugin indent on\n"
+"au FileType c   setlocal expandtab tabstop=4 softtabstop=4 shiftwidth=4 textwidth=80\n"
+"autocmd BufNewFile,BufRead *.h set filetype=c\n"
+"let c_space_errors = 1"
+msgstr ""
+

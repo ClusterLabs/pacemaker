@@ -624,8 +624,10 @@ Allowed values are:
 |progressive
 |Assign the value of the +node-health-red+ cluster option to +red+, the value
  of +node-health-yellow+ to +yellow+, and the value of +node-health-green+ to
- +green+. This strategy gives the administrator finer control over how
- important each value is.
+ +green+. Each node is additionally assigned a score of +node-health-base+
+ (this allows resources to start even if some attributes are +yellow+). This
+ strategy gives the administrator finer control over how important each value
+ is.
  indexterm:[Node health,progressive]
 
 |custom

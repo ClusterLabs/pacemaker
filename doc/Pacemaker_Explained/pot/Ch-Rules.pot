@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2016-05-03 17:45-0500\n"
-"PO-Revision-Date: 2016-05-03 17:45-0500\n"
+"POT-Creation-Date: 2016-11-02 17:32-0500\n"
+"PO-Revision-Date: 2016-11-02 17:32-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -69,12 +69,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<literal>started</literal>"
+msgid "<literal>Started</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Limits the rule to apply only when the resource is in the specified role. Allowed values are <literal>started</literal>, <literal>slave</literal>, and <literal>master</literal>. A rule with <literal>role=\"master\"</literal> cannot determine the initial location of a clone instance and will only affect which of the active instances will be promoted. <indexterm> <primary>role</primary><secondary>Constraint Rule</secondary> </indexterm> <indexterm> <primary>Constraint Rule</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Rule</secondary><tertiary>role</tertiary> </indexterm> <indexterm> <primary>Rule</primary><secondary>role</secondary> </indexterm> <indexterm> <primary>role</primary> </indexterm>"
+msgid "Limits the rule to apply only when the resource is in the specified role. Allowed values are <literal>Started</literal>, <literal>Slave</literal>, and <literal>Master</literal>. A rule with <literal>role=\"Master\"</literal> cannot determine the initial location of a clone instance and will only affect which of the active instances will be promoted. <indexterm> <primary>role</primary><secondary>Constraint Rule</secondary> </indexterm> <indexterm> <primary>Constraint Rule</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Rule</secondary><tertiary>role</tertiary> </indexterm> <indexterm> <primary>Rule</primary><secondary>role</secondary> </indexterm> <indexterm> <primary>role</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -124,7 +124,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Expression objects are used to control a resource based on the attributes defined by a node or nodes. In addition to any attributes added by the administrator, each node has a built-in node attribute called <literal>#uname</literal> that can also be used."
+msgid "Expression objects are used to control a resource based on the attributes defined by a node or nodes."
 msgstr ""
 
 #. Tag: title
@@ -217,6 +217,56 @@ msgstr ""
 msgid "<literal>not_defined:</literal> True if the node does not have the named attribute <indexterm> <primary>operation</primary><secondary>Constraint Expression</secondary> </indexterm> <indexterm> <primary>Constraint Expression</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Attribute Expression</secondary><tertiary>operation</tertiary> </indexterm> <indexterm> <primary>Attribute Expression</primary><secondary>operation</secondary> </indexterm> <indexterm> <primary>operation</primary> </indexterm>"
 msgstr ""
 
+#. Tag: para
+#, no-c-format
+msgid "In addition to any attributes added by the administrator, the cluster defines special, built-in node attributes for each node that can also be used."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Built-in node attributes"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Name"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Value"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>#uname</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Node name"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>#kind</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Node type. Possible values are <literal>cluster</literal>, <literal>remote</literal>, and <literal>container</literal>. Kind is <literal>remote</literal> for Pacemaker Remote nodes created with the <literal>ocf:pacemaker:remote</literal> resource, and <literal>container</literal> for Pacemaker Remote guest nodes (a legacy name unrelated to the now-common use of \"container\" for resource isolation). <emphasis>(since 1.1.13)</emphasis>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>#ra-version</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The installed version of the resource agent on the node, as defined by the <literal>version</literal> attribute of the <literal>resource-agent</literal> tag in the agent’s metadata. Valid only within rules controlling resource options. This can be useful during rolling upgrades of a backward-incompatible resource agent. <emphasis>(coming in 1.1.17)</emphasis>"
+msgstr ""
+
 #. Tag: title
 #, no-c-format
 msgid "Time- and Date-Based Expressions"
@@ -274,12 +324,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<literal>in-range:</literal> True if the current date/time is after <literal>start</literal> and before <literal>end</literal>"
+msgid "<literal>in_range:</literal> True if the current date/time is after <literal>start</literal> and before <literal>end</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<literal>date-spec:</literal> True if the current date/time matches a <literal>date_spec</literal> object (described below) <indexterm> <primary>operation</primary><secondary>Constraint Expression</secondary> </indexterm> <indexterm> <primary>Constraint Expression</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date/Time Expression</secondary><tertiary>operation</tertiary> </indexterm> <indexterm> <primary>Date/Time Expression</primary><secondary>operation</secondary> </indexterm> <indexterm> <primary>operation</primary> </indexterm>"
+msgid "<literal>date_spec:</literal> True if the current date/time matches a <literal>date_spec</literal> object (described below) <indexterm> <primary>operation</primary><secondary>Constraint Expression</secondary> </indexterm> <indexterm> <primary>Constraint Expression</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date/Time Expression</secondary><tertiary>operation</tertiary> </indexterm> <indexterm> <primary>Date/Time Expression</primary><secondary>operation</secondary> </indexterm> <indexterm> <primary>operation</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -424,7 +474,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Durations are used to calculate a value for <literal>end</literal> when one is not supplied to <literal>in-range</literal> operations. They contain the same fields as <literal>date_spec</literal> objects but without the limitations (e.g. you can have a duration of 19 months). As with <literal>date_specs</literal>, any field not supplied is ignored."
+msgid "Durations are used to calculate a value for <literal>end</literal> when one is not supplied to <literal>in_range</literal> operations. They contain the same fields as <literal>date_spec</literal> objects but without the limitations (e.g. you can have a duration of 19 months). As with <literal>date_specs</literal>, any field not supplied is ignored."
 msgstr ""
 
 #. Tag: title
