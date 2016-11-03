@@ -326,7 +326,7 @@ cli_resource_update_attribute(const char *rsc_id, const char *attr_set, const ch
 
         } else {
             value = crm_element_value(cib_top, XML_ATTR_VALIDATION);
-            if (value && strstr(value, "-0.6")) {
+            if (crm_ends_with(value, "-0.6")) {
                 use_attributes_tag = TRUE;
             }
         }
@@ -1524,7 +1524,8 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
 
         g_hash_table_iter_init(&iter, override_hash);
         while (g_hash_table_iter_next(&iter, (gpointer *) & name, (gpointer *) & value)) {
-            printf("Overriding the cluser configuration for '%s' with '%s' = '%s'\n", rsc->id, name, value);
+            printf("Overriding the cluster configuration for '%s' with '%s' = '%s'\n",
+                   rsc->id, name, value);
             g_hash_table_replace(op->params, strdup(name), strdup(value));
         }
     }
@@ -1684,7 +1685,7 @@ cli_resource_move(const char *rsc_id, const char *host_name, cib_t * cib, pe_wor
                     " --ban %s--host <name>", rsc_id, scope_master?"promoted":"active", scope_master?"--master ":"");
 
         } else {
-            crm_trace("Not banning %s from it's current location: not active", rsc_id);
+            crm_trace("Not banning %s from its current location: not active", rsc_id);
         }
     }
 

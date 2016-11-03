@@ -130,7 +130,7 @@ try_mainloop_connect(void)
         sleep(1);
     }
 
-    crm_err("Couldn not connect to stonithd. \n");
+    crm_err("Could not connect to stonithd.");
     return -1;
 }
 

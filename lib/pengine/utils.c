@@ -1067,7 +1067,7 @@ print_str_str(gpointer key, gpointer value, gpointer user_data)
 void
 print_resource(int log_level, const char *pre_text, resource_t * rsc, gboolean details)
 {
-    long options = pe_print_log;
+    long options = pe_print_log | pe_print_pending;
 
     if (rsc == NULL) {
         do_crm_log(log_level - 1, "%s%s: <NULL>",
@@ -1200,24 +1200,29 @@ find_actions(GListPtr input, const char *key, const node_t *on_node)
     for (; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
 
-        crm_trace("Matching %s against %s", key, action->uuid);
         if (safe_str_neq(key, action->uuid)) {
+            crm_trace("%s does not match action %s", key, action->uuid);
             continue;
 
         } else if (on_node == NULL) {
+            crm_trace("Action %s matches (ignoring node)", key);
             result = g_list_prepend(result, action);
 
         } else if (action->node == NULL) {
-            /* skip */
-            crm_trace("While looking for %s action on %s, "
-                      "found an unallocated one.  Assigning"
-                      " it to the requested node...", key, on_node->details->uname);
+            crm_trace("Action %s matches (unallocated, assigning to %s)",
+                      key, on_node->details->uname);
 
             action->node = node_copy(on_node);
             result = g_list_prepend(result, action);
 
         } else if (on_node->details == action->node->details) {
+            crm_trace("Action %s on %s matches", key, on_node->details->uname);
             result = g_list_prepend(result, action);
+
+        } else {
+            crm_trace("Action %s on node %s does not match requested node %s",
+                      key, action->node->details->uname,
+                      on_node->details->uname);
         }
     }
 
@@ -1289,18 +1294,18 @@ resource_location(resource_t * rsc, node_t * node, int score, const char *tag,
         GListPtr gIter = data_set->nodes;
 
         for (; gIter != NULL; gIter = gIter->next) {
-            node_t *node = (node_t *) gIter->data;
+            node_t *node_iter = (node_t *) gIter->data;
 
-            resource_node_score(rsc, node, score, tag);
+            resource_node_score(rsc, node_iter, score, tag);
         }
 
     } else {
         GHashTableIter iter;
-        node_t *node = NULL;
+        node_t *node_iter = NULL;
 
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
-        while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-            resource_node_score(rsc, node, score, tag);
+        while (g_hash_table_iter_next(&iter, NULL, (void **)&node_iter)) {
+            resource_node_score(rsc, node_iter, score, tag);
         }
     }
 

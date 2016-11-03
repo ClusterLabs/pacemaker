@@ -271,10 +271,11 @@ native_assign_node(resource_t * rsc, GListPtr nodes, node_t * chosen, gboolean f
 
             crm_debug("Processing %s", op->uuid);
             if(safe_str_eq(RSC_STOP, op->task)) {
-                update_action_flags(op, pe_action_optional | pe_action_clear);
+                update_action_flags(op, pe_action_optional | pe_action_clear, __FUNCTION__);
 
             } else if(safe_str_eq(RSC_START, op->task)) {
-                update_action_flags(op, pe_action_runnable | pe_action_clear);
+                update_action_flags(op, pe_action_runnable | pe_action_clear, __FUNCTION__);
+                /* set_bit(rsc->flags, pe_rsc_block); */
 
             } else if(interval && safe_str_neq(interval, "0")) {
                 if(safe_str_eq(rc_inactive, g_hash_table_lookup(op->meta, XML_ATTR_TE_TARGET_RC))) {
@@ -282,7 +283,7 @@ native_assign_node(resource_t * rsc, GListPtr nodes, node_t * chosen, gboolean f
 
                 } else {
                     /* Normal monitor operation, cancel it */
-                    update_action_flags(op, pe_action_runnable | pe_action_clear);
+                    update_action_flags(op, pe_action_runnable | pe_action_clear, __FUNCTION__);
                 }
             }
         }

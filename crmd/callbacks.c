@@ -124,7 +124,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
 
     switch (type) {
         case crm_status_uname:
-            /* If we've never seen the node, then it also wont be in the status section */
+            /* If we've never seen the node, then it also won't be in the status section */
             crm_info("%s is now %s", node->uname, state_text(node->state));
             return;
 
@@ -183,6 +183,14 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 crm_notice("Our peer on the DC (%s) is dead", fsa_our_dc);
                 register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
 
+                /* @COMPAT DC < 1.1.13: If a DC shuts down normally, we don't
+                 * want to fence it. Newer DCs will send their shutdown request
+                 * to all peers, who will update the DC's expected state to
+                 * down, thus avoiding fencing. We can safely erase the DC's
+                 * transient attributes when it leaves in that case. However,
+                 * the only way to avoid fencing older DCs is to leave the
+                 * transient attributes intact until it rejoins.
+                 */
                 if (compare_version(fsa_our_dc_version, "3.0.9") > 0) {
                     erase_status_tag(node->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
                 }
@@ -190,7 +198,6 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             } else if(AM_I_DC && appeared == FALSE) {
                 crm_info("Peer %s left us", node->uname);
                 erase_status_tag(node->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
-                /* crm_update_peer_join(__FUNCTION__, node, crm_join_none); */
             }
             break;
     }
@@ -268,7 +275,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         }
 
         /* Update the CIB node state */
-        update = do_update_node_cib(node, flags, NULL, __FUNCTION__);
+        update = create_node_state_update(node, flags, NULL, __FUNCTION__);
         fsa_cib_anon_update(XML_CIB_TAG_STATUS, update,
                             cib_scope_local | cib_quorum_override | cib_can_create);
         free_xml(update);

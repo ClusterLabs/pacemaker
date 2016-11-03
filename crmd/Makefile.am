@@ -24,19 +24,12 @@ halib_PROGRAMS	= crmd
 
 ## SOURCES
 
-noinst_HEADERS	= crmd.h crmd_fsa.h crmd_messages.h fsa_defines.h 	\
-		fsa_matrix.h fsa_proto.h crmd_utils.h crmd_callbacks.h \
+noinst_HEADERS	= crmd.h crmd_fsa.h crmd_messages.h fsa_defines.h	\
+		fsa_matrix.h fsa_proto.h crmd_utils.h crmd_callbacks.h	\
 		crmd_lrm.h te_callbacks.h tengine.h
 
-crmd_SOURCES	= main.c crmd.c corosync.c notify.c				\
-		fsa.c control.c messages.c membership.c callbacks.c		\
-		election.c join_client.c join_dc.c subsystems.c throttle.c	\
-		cib.c pengine.c tengine.c lrm.c lrm_state.c remote_lrmd_ra.c	\
-		utils.c misc.c te_events.c te_actions.c te_utils.c te_callbacks.c
-
-if BUILD_HEARTBEAT_SUPPORT
-crmd_SOURCES += heartbeat.c
-endif
+crmd_CFLAGS	= $(CFLAGS_HARDENED_EXE)
+crmd_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
 
 crmd_LDADD	= $(top_builddir)/lib/fencing/libstonithd.la		\
 		$(top_builddir)/lib/transition/libtransitioner.la	\
@@ -45,19 +38,20 @@ crmd_LDADD	= $(top_builddir)/lib/fencing/libstonithd.la		\
 		$(top_builddir)/lib/cluster/libcrmcluster.la		\
 		$(top_builddir)/lib/common/libcrmcommon.la		\
 		$(top_builddir)/lib/services/libcrmservice.la		\
-		$(top_builddir)/lib/lrmd/liblrmd.la		\
+		$(top_builddir)/lib/lrmd/liblrmd.la			\
 		$(CLUSTERLIBS)
 
-if BUILD_XML_HELP
-man7_MANS =	crmd.7
+crmd_SOURCES	= main.c crmd.c corosync.c notify.c				\
+		fsa.c control.c messages.c membership.c callbacks.c		\
+		election.c join_client.c join_dc.c subsystems.c throttle.c	\
+		cib.c pengine.c tengine.c lrm.c lrm_state.c remote_lrmd_ra.c	\
+		utils.c misc.c te_events.c te_actions.c te_utils.c te_callbacks.c
+if BUILD_HEARTBEAT_SUPPORT
+crmd_SOURCES += heartbeat.c
 endif
 
-graphs:	fsa_inputs.png fsa_inputs_by_action.png fsa_actions_by_state.png
-
-%.png: %.dot
-	dot -Tpng $< > $@ 
-
-%.dot : fsa_matrix.h make_dot.pl
-	perl $(top_srcdir)/crmd/make_dot.pl $(top_srcdir)/crmd/fsa_matrix.h $(top_builddir)/crmd
+if BUILD_XML_HELP
+man7_MANS 	= crmd.7
+endif
 
 CLEANFILES = $(man7_MANS)

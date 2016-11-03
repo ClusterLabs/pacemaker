@@ -360,17 +360,40 @@ native_pending_task(resource_t * rsc)
     return pending_task;
 }
 
+static enum rsc_role_e
+native_displayable_role(resource_t *rsc)
+{
+    enum rsc_role_e role = rsc->role;
+
+    if ((role == RSC_ROLE_STARTED)
+        && (uber_parent(rsc)->variant == pe_master)) {
+
+        role = RSC_ROLE_SLAVE;
+    }
+    return role;
+}
+
+static const char *
+native_displayable_state(resource_t *rsc, long options)
+{
+    const char *rsc_state = NULL;
+
+    if (options & pe_print_pending) {
+        rsc_state = native_pending_state(rsc);
+    }
+    if (rsc_state == NULL) {
+        rsc_state = role2text(native_displayable_role(rsc));
+    }
+    return rsc_state;
+}
+
 static void
 native_print_xml(resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
-    enum rsc_role_e role = rsc->role;
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
-    const char *rsc_state = NULL;
-
-    if(role == RSC_ROLE_STARTED && uber_parent(rsc)->variant == pe_master) {
-        role = RSC_ROLE_SLAVE;
-    }
+    const char *rsc_state = native_displayable_state(rsc, options);
+    const char *target_role = NULL;
 
     /* resource information. */
     status_print("%s<resource ", pre_text);
@@ -379,15 +402,16 @@ native_print_xml(resource_t * rsc, const char *pre_text, long options, void *pri
                  class,
                  prov ? "::" : "", prov ? prov : "", crm_element_value(rsc->xml, XML_ATTR_TYPE));
 
-    if (options & pe_print_pending) {
-        rsc_state = native_pending_state(rsc);
-    }
-    if (rsc_state == NULL) {
-        rsc_state = role2text(role);
-    }
     status_print("role=\"%s\" ", rsc_state);
+    if (rsc->meta) {
+        target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
+    }
+    if (target_role) {
+        status_print("target_role=\"%s\" ", target_role);
+    }
     status_print("active=\"%s\" ", rsc->fns->active(rsc, TRUE) ? "true" : "false");
     status_print("orphaned=\"%s\" ", is_set(rsc->flags, pe_rsc_orphan) ? "true" : "false");
+    status_print("blocked=\"%s\" ", is_set(rsc->flags, pe_rsc_block) ? "true" : "false");
     status_print("managed=\"%s\" ", is_set(rsc->flags, pe_rsc_managed) ? "true" : "false");
     status_print("failed=\"%s\" ", is_set(rsc->flags, pe_rsc_failed) ? "true" : "false");
     status_print("failure_ignored=\"%s\" ",
@@ -431,6 +455,14 @@ native_print_xml(resource_t * rsc, const char *pre_text, long options, void *pri
     }
 }
 
+/* making this inline rather than a macro prevents a coverity "unreachable"
+ * warning on the first usage
+ */
+static inline const char *
+comma_if(int i)
+{
+    return i? ", " : "";
+}
 
 void
 native_print(resource_t * rsc, const char *pre_text, long options, void *print_data)
@@ -440,7 +472,7 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *kind = crm_element_value(rsc->xml, XML_ATTR_TYPE);
     const char *target_role = NULL;
-    enum rsc_role_e role = rsc->role;
+    enum rsc_role_e role = native_displayable_role(rsc);
 
     int offset = 0;
     int flagOffset = 0;
@@ -457,10 +489,6 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
             return;
         }
         target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
-    }
-
-    if(role == RSC_ROLE_STARTED && uber_parent(rsc)->variant == pe_master) {
-        role = RSC_ROLE_SLAVE;
     }
 
     if (pre_text == NULL && (options & pe_print_printf)) {
@@ -518,13 +546,8 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
     } else if(is_set(rsc->flags, pe_rsc_failed)) {
         offset += snprintf(buffer + offset, LINE_MAX - offset, "FAILED");
     } else {
-        const char *rsc_state = NULL;
-        if (options & pe_print_pending) {
-            rsc_state = native_pending_state(rsc);
-        }
-        if (rsc_state == NULL) {
-            rsc_state = role2text(role);
-        }
+        const char *rsc_state = native_displayable_state(rsc, options);
+
         offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", rsc_state);
     }
 
@@ -532,7 +555,8 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
         offset += snprintf(buffer + offset, LINE_MAX - offset, " %s", node->details->uname);
 
         if (node->details->online == FALSE && node->details->unclean) {
-            flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset, "%sUNCLEAN", flagOffset?", ":"");
+            flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset,
+                                   "%sUNCLEAN", comma_if(flagOffset));
         }
     }
 
@@ -540,7 +564,8 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
         const char *pending_task = native_pending_task(rsc);
 
         if (pending_task) {
-            flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset, "%s%s", flagOffset?", ":"", pending_task);
+            flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset,
+                                   "%s%s", comma_if(flagOffset), pending_task);
         }
     }
 
@@ -551,26 +576,31 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
          * (and would also allow a Master to be Master).
          * Show if target role limits our abilities. */
         if (target_role_e == RSC_ROLE_STOPPED) {
-            flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset, "%sdisabled", flagOffset?", ":"");
+            flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset,
+                                   "%sdisabled", comma_if(flagOffset));
             rsc->cluster->disabled_resources++;
 
         } else if (uber_parent(rsc)->variant == pe_master
                    && target_role_e == RSC_ROLE_SLAVE) {
-            flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset, "%starget-role:%s", flagOffset?", ":"", target_role);
+            flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset,
+                                   "%starget-role:%s", comma_if(flagOffset), target_role);
             rsc->cluster->disabled_resources++;
         }
     }
 
     if (is_set(rsc->flags, pe_rsc_block)) {
-        flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset, "%sblocked", flagOffset?", ":"");
+        flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset,
+                               "%sblocked", comma_if(flagOffset));
         rsc->cluster->blocked_resources++;
 
     } else if (is_not_set(rsc->flags, pe_rsc_managed)) {
-        flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset, "%sunmanaged", flagOffset?", ":"");
+        flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset,
+                               "%sunmanaged", comma_if(flagOffset));
     }
 
     if(is_set(rsc->flags, pe_rsc_failure_ignored)) {
-        flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset, "%sfailure ignored", flagOffset?", ":"");
+        flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset,
+                               "%sfailure ignored", comma_if(flagOffset));
     }
 
     if ((options & pe_print_rsconly) || g_list_length(rsc->running_on) > 1) {

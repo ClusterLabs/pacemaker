@@ -88,7 +88,7 @@ do_election_check(long long action,
                   enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     if (fsa_state != S_ELECTION) {
-        crm_debug("Ignore election check: we not in an election");
+        crm_debug("Ignoring election check because we are not in an election");
 
     } else if(election_check(fsa_election)) {
         register_fsa_input(C_FSA_INTERNAL, I_ELECTION_DC, NULL);
@@ -249,7 +249,8 @@ do_dc_release(long long action,
             crm_node_t *node = crm_get_peer(0, fsa_our_uname);
 
             crm_update_peer_expected(__FUNCTION__, node, CRMD_JOINSTATE_DOWN);
-            update = do_update_node_cib(node, node_update_expected, NULL, __FUNCTION__);
+            update = create_node_state_update(node, node_update_expected, NULL,
+                                              __FUNCTION__);
             fsa_cib_anon_update(XML_CIB_TAG_STATUS, update,
                                 cib_scope_local | cib_quorum_override | cib_can_create);
             free_xml(update);

@@ -93,7 +93,10 @@ find_nvpair_attr_delegate(cib_t * the_cib, const char *attr, const char *section
     }
 
     xpath_string = calloc(1, xpath_max);
-    CRM_CHECK(xpath_string != NULL, return -ENOMEM);
+    if (xpath_string == NULL) {
+        crm_perror(LOG_CRIT, "Could not create xpath");
+        return -ENOMEM;
+    }
 
     attr_snprintf(xpath_string, offset, xpath_max, "%.128s", get_object_path(section));
 
@@ -531,7 +534,7 @@ query_node_uuid(cib_t * the_cib, const char *uname, char **uuid, int *is_remote_
     }
 
     if (rc != pcmk_ok) {
-        crm_debug("Could not map name=%s to a UUID: %s\n", uname, pcmk_strerror(rc));
+        crm_debug("Could not map name=%s to a UUID: %s", uname, pcmk_strerror(rc));
     } else {
         crm_info("Mapped %s to %s", uname, *uuid);
     }

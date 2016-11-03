@@ -82,6 +82,9 @@ SYSLOGS="
     /var/log/cluster/*
 "
 
+# Whether pacemaker_remoted was found (0 = yes, 1 = no, -1 = haven't looked yet)
+REMOTED_STATUS=-1
+
 #
 # keep the user posted
 #
@@ -129,13 +132,23 @@ is_running() {
 }
 
 has_remoted() {
-    # TODO: the binary might be elsewhere
-    if which pacemaker_remoted >/dev/null 2>&1; then
-        return 0
-    elif [ -x "@sbindir@/pacemaker_remoted" ]; then
-        return 0
+    if [ $REMOTED_STATUS -eq -1 ]; then
+        REMOTED_STATUS=1
+        if which pacemaker_remoted >/dev/null 2>&1; then
+            REMOTED_STATUS=0
+        elif [ -x "@sbindir@/pacemaker_remoted" ]; then
+            REMOTED_STATUS=0
+        else
+            # @TODO: the binary might be elsewhere,
+            # but a global search is too expensive
+            for d in /{usr,opt}/{local/,}{s,}bin; do
+                if [ -x "${d}/pacemaker_remoted" ]; then
+                    REMOTED_STATUS=0
+                fi
+            done
+        fi
     fi
-    return 1
+    return $REMOTED_STATUS
 }
 
 # found_dir <description> <dirname>
@@ -158,18 +171,19 @@ detect_daemon_dir() {
         fi
     done
 
+    # Pacemaker Remote nodes don't need to install daemons
+    if has_remoted; then
+        info "Pacemaker daemons not found (this appears to be a Pacemaker Remote node)"
+        return
+    fi
+
     for f in $(find / -maxdepth $maxdepth -type f -name pengine -o -name lrmd_test); do
         d=$(dirname "$f")
         found_dir "daemons" "$d"
         return
     done
 
-    # Pacemaker Remote nodes don't need to install daemons
-    if has_remoted; then
-        info "Not found (this appears to be a Pacemaker Remote node)"
-    else
-        fatal "Pacemaker daemons not found (nonstandard installation?)"
-    fi
+    fatal "Pacemaker daemons not found (nonstandard installation?)"
 }
 
 detect_cib_dir() {
@@ -180,6 +194,12 @@ detect_cib_dir() {
         fi
     done
 
+    # Pacemaker Remote nodes don't need a CIB
+    if has_remoted; then
+        info "Pacemaker config not found (this appears to be a Pacemaker Remote node)"
+        return
+    fi
+
     info "Searching for where Pacemaker keeps config information... this may take a while"
     # TODO: What about false positives where someone copied the CIB?
     for f in $(find / -maxdepth $maxdepth -type f -name cib.xml); do
@@ -188,12 +208,7 @@ detect_cib_dir() {
         return
     done
 
-    # Pacemaker Remote nodes don't need a CIB
-    if has_remoted; then
-        info "Not found (this appears to be a Pacemaker Remote node)"
-    else
-        warning "Pacemaker config not found (nonstandard installation?)"
-    fi
+    warning "Pacemaker config not found (nonstandard installation?)"
 }
 
 detect_state_dir() {
@@ -217,17 +232,18 @@ detect_pe_dir() {
         return
     fi
 
+    if has_remoted; then
+        info "Pacemaker policy engine inputs not found (this appears to be a Pacemaker Remote node)"
+        return
+    fi
+
     info "Searching for where Pacemaker keeps Policy Engine inputs... this may take a while"
     for d in $(find / -maxdepth $maxdepth -type d -name pengine); do
         found_dir "policy engine inputs" "$d"
         return
     done
 
-    if has_remoted; then
-        info "Not found (this appears to be a Pacemaker Remote node)"
-    else
-        fatal "Pacemaker policy engine inputs not found (nonstandard installation?)"
-    fi
+    fatal "Pacemaker policy engine inputs not found (nonstandard installation?)"
 }
 
 detect_host() {

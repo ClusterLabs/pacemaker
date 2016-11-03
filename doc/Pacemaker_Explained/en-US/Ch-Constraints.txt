@@ -75,7 +75,7 @@ indexterm:[Constraints,Location,id]
 
 |rsc
 |
-|A resource name
+|The name of the resource to which this constraint applies
 indexterm:[rsc,Location Constraints]
 indexterm:[Constraints,Location,rsc]
 
@@ -104,7 +104,7 @@ indexterm:[Constraints,Location,score]
  (properly written OCF agents will not, so this is usually only seen with other
  agent types); and when Pacemaker Remote is used to scale a cluster to hundreds
  of nodes, limiting resource discovery to allowed nodes can significantly boost
- performance.
+ performance. '(since 1.1.13)'
 
 * +always:+ Always perform resource discovery for the specified resource on this node.
 * +never:+ Never perform resource discovery for the specified resource on this node.
@@ -507,7 +507,7 @@ indexterm:[Constraints,Resource Sets,sequential]
 |require-all
 |true
 |Whether all members of the set must be active before continuing.
- Meaningful within +rsc_order+.
+ Meaningful within +rsc_order+. '(since 1.1.13)'
 indexterm:[require-all,Resource Sets]
 indexterm:[Constraints,Resource Sets,require-all]
 
@@ -588,11 +588,11 @@ functionality. Depending on the tool, creating a set +A B+ may be equivalent to
 
 === Ordering Multiple Sets ===
 
-The syntax can be expanded to allow
-ordered sets of (un)ordered resources.  In the example below, +A+
-and +B+ can both start in parallel, as can +C+ and +D+,
-however +C+ and +D+ can only start once _both_ +A+ _and_
- +B+ are active.
+The syntax can be expanded to allow sets of resources to be ordered relative to
+each other, where the members of each individual set may be ordered or
+unordered (controlled by the +sequential+ property). In the example below, +A+
+and +B+ can both start in parallel, as can +C+ and +D+, however +C+ and +D+ can
+only start once _both_ +A+ _and_ +B+ are active.
 
 .Ordered sets of unordered resources
 ======
@@ -753,11 +753,14 @@ functionality. Depending on the tool, creating a set +A B+ may be equivalent to
 +A with B+, or +B with A+.
 =========
 
-This notation can also be used to tell the cluster
-that a set of resources must all be located with a common peer, but
-have no dependencies on each other. In this scenario, unlike the
-previous, +B+ 'would' be allowed to remain active even if +A+ or +C+ (or
-both) were inactive.
+This notation can also be used to tell the cluster that sets of resources must
+be colocated relative to each other, where the individual members of each set
+may or may not depend on each other being active (controlled by the
++sequential+ property).
+
+In this example, +A+, +B+, and +C+ will each be colocated with +D+.
++D+ must be active, but any of +A+, +B+, or +C+ may be inactive without
+affecting any other resources.
 
 .Using colocated sets to specify a common peer
 ======
@@ -788,19 +791,21 @@ There is no inherent limit to the number and size of the sets used.
 The only thing that matters is that in order for any member of one set
 in the constraint to be active, all members of sets listed after it must also
 be active (and naturally on the same node); and if a set has +sequential="true"+,
-then in order for one member of that set to be active, all members listed after it
-must also be active. You can even specify the role in which the members of a set
-must be in using the set's +role+ attribute.
+then in order for one member of that set to be active, all members listed
+before it must also be active.
 
-.A colocation chain where the members of the middle set have no interdependencies and the last has master status.
+If desired, you can restrict the dependency to instances of multistate
+resources that are in a specific role, using the set's +role+ property.
+
+.Colocation chain in which the members of the middle set have no interdependencies, and the last listed set (which the cluster places first) is restricted to instances in master status.
 ======
 [source,XML]
 -------
 <constraints>
     <rsc_colocation id="coloc-1" score="INFINITY" >
       <resource_set id="colocated-set-1" sequential="true">
-        <resource_ref id="A"/>
         <resource_ref id="B"/>
+        <resource_ref id="A"/>
       </resource_set>
       <resource_set id="colocated-set-2" sequential="false">
         <resource_ref id="C"/>
@@ -808,18 +813,24 @@ must be in using the set's +role+ attribute.
         <resource_ref id="E"/>
       </resource_set>
       <resource_set id="colocated-set-3" sequential="true" role="Master">
-        <resource_ref id="F"/>
         <resource_ref id="G"/>
+        <resource_ref id="F"/>
       </resource_set>
     </rsc_colocation>
 </constraints>
 -------
 ======
 
-.Visual representation of a colocation chain where the members of the middle set have no inter-dependencies
+.Visual representation the above example (resources to the left are placed first)
 image::images/three-sets-complex.png["Colocation chain",width="16cm",height="9cm",align="center"]
 
 [NOTE]
 ====
+Pay close attention to the order in which resources and sets are listed.
+While the colocation dependency for members of any one set is last-to-first,
+the colocation dependency for multiple sets is first-to-last. In the above
+example, +B+ is colocated with +A+, but +colocated-set-1+ is
+colocated with +colocated-set-2+.
+
 Unlike ordered sets, colocated sets do not use the +require-all+ option.
 ====

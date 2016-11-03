@@ -650,7 +650,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
 
     if (safe_str_eq(operation, CRM_OP_PROBED)
         || safe_str_eq(operation, CRM_OP_REPROBE)) {
-        crm_info("Skipping %s op for %s\n", operation, node);
+        crm_info("Skipping %s op for %s", operation, node);
         goto done;
     }
 

@@ -154,7 +154,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
 
     value = pe_pref(data_set->config_hash, XML_ATTR_HAVE_WATCHDOG);
     if (value && crm_is_true(value)) {
-        crm_notice("Relying on watchdog integration for fencing");
+        crm_notice("Watchdog will be used via SBD if fencing is required");
         set_bit(data_set->flags, pe_flag_have_stonith_resource);
     }
 
@@ -500,11 +500,13 @@ handle_startup_fencing(pe_working_set_t *data_set, node_t *new_node)
 {
     static const char *blind_faith = NULL;
     static gboolean unseen_are_unclean = TRUE;
+    static gboolean need_warning = TRUE;
 
     if ((new_node->details->type == node_remote) && (new_node->details->remote_rsc == NULL)) {
-        /* ignore fencing remote-nodes that don't have a conneciton resource associated
-         * with them. This happens when remote-node entries get left in the nodes section
-         * after the connection resource is removed */
+        /* Ignore fencing for remote nodes that don't have a connection resource
+         * associated with them. This happens when remote node entries get left
+         * in the nodes section after the connection resource is removed.
+         */
         return;
     }
 
@@ -512,7 +514,12 @@ handle_startup_fencing(pe_working_set_t *data_set, node_t *new_node)
 
     if (crm_is_true(blind_faith) == FALSE) {
         unseen_are_unclean = FALSE;
-        crm_warn("Blind faith: not fencing unseen nodes");
+        if (need_warning) {
+            crm_warn("Blind faith: not fencing unseen nodes");
+
+            /* Warn once per run, not per node and transition */
+            need_warning = FALSE;
+        }
     }
 
     if (is_set(data_set->flags, pe_flag_stonith_enabled) == FALSE
@@ -1842,7 +1849,9 @@ process_rsc_state(resource_t * rsc, node_t * node,
 
     /* If a managed resource is believed to be running, but node is down ... */
     if (rsc->role > RSC_ROLE_STOPPED
-        && node->details->online == FALSE && is_set(rsc->flags, pe_rsc_managed)) {
+        && node->details->online == FALSE
+        && node->details->maintenance == FALSE
+        && is_set(rsc->flags, pe_rsc_managed)) {
 
         char *reason = NULL;
         gboolean should_fence = FALSE;

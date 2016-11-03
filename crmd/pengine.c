@@ -165,7 +165,7 @@ do_pe_control(long long action,
 
             pe_subsystem->source =
                 mainloop_add_ipc_client(CRM_SYSTEM_PENGINE, G_PRIORITY_DEFAULT,
-                                        5 * 1024 * 1024 /* 5Mb */ , NULL, &pe_callbacks);
+                                        5 * 1024 * 1024 /* 5MB */ , NULL, &pe_callbacks);
 
             if (pe_subsystem->source == NULL) {
                 crm_warn("Setup of client connection failed, not adding channel to mainloop");

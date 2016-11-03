@@ -43,7 +43,7 @@ meta_data() {
 <version>1.0</version>
 
 <longdesc lang="en">
-This is an example resource agent that impliments two states
+This is an example resource agent that implements two states
 </longdesc>
 <shortdesc lang="en">Example stateful resource agent</shortdesc>
 
@@ -57,6 +57,14 @@ Location to store the resource state in
 <content type="string" default="${HA_VARRUN%%/}/Stateful-${OCF_RESOURCE_INSTANCE}.state" />
 </parameter>
 
+<parameter name="envfile" unique="1">
+<longdesc lang="en">
+If this is set, the environment will be dumped to this file for every call.
+</longdesc>
+<shortdesc lang="en">Environment dump file</shortdesc>
+<content type="string" default="" />
+</parameter>
+
 </parameters>
 
 <actions>
@@ -64,6 +72,7 @@ Location to store the resource state in
 <action name="stop"    timeout="20" />
 <action name="monitor" depth="0"  timeout="20" interval="10" role="Master"/>
 <action name="monitor" depth="0"  timeout="20" interval="10" role="Slave"/>
+<action name="notify"  timeout="5" />
 <action name="meta-data"  timeout="5" />
 <action name="validate-all"  timeout="30" />
 </actions>
@@ -102,6 +111,14 @@ stateful_check_state() {
     fi
 
     return 1
+}
+
+dump_env() {
+    if [ "${OCF_RESKEY_envfile}" != "" ]; then
+            echo "### ${__OCF_ACTION} @ $(date) ###
+$(env | sort)
+###" >> "${OCF_RESKEY_envfile}"
+    fi
 }
 
 stateful_start() {
@@ -197,11 +214,14 @@ if [ "x$OCF_RESKEY_state" = "x" ]; then
     fi
 fi
 
+dump_env
+
 case $__OCF_ACTION in
 meta-data)	meta_data;;
 start)		stateful_start;;
 promote)	stateful_promote;;
 demote)		stateful_demote;;
+notify)         ;; # dumping the environment is all we do
 stop)		stateful_stop;;
 monitor)	stateful_monitor;;
 validate-all)	stateful_validate;;

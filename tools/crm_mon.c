@@ -126,7 +126,7 @@ gboolean has_warnings = FALSE;
 gboolean print_timing = FALSE;
 gboolean watch_fencing = FALSE;
 gboolean print_brief = FALSE;
-gboolean print_pending = FALSE;
+gboolean print_pending = TRUE;
 gboolean print_clone_detail = FALSE;
 
 /* FIXME allow, detect, and correctly interpret glob pattern or regex? */
@@ -379,7 +379,7 @@ static struct crm_option long_options[] = {
     {"hide-headers",   0, 0, 'D', "\tHide all headers" },
     {"show-detail",    0, 0, 'R', "\tShow more details (node IDs, individual clone instances)" },
     {"brief",          0, 0, 'b', "\t\tBrief output" },
-    {"pending",        0, 0, 'j', "\t\tDisplay pending state if 'record-pending' is enabled" },
+    {"pending",        0, 0, 'j', "\t\tDisplay pending state if 'record-pending' is enabled", pcmk_option_hidden},
 
     {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
     {"interval",       1, 0, 'i', "\tUpdate frequency in seconds" },
@@ -1038,6 +1038,174 @@ print_node_end(FILE *stream)
         default:
             break;
     }
+}
+
+/*!
+ * \internal
+ * \brief Print resources section heading appropriate to options
+ *
+ * \param[in] stream      File stream to display output to
+ */
+static void
+print_resources_heading(FILE *stream)
+{
+    const char *heading;
+
+    if (group_by_node) {
+
+        /* Active resources have already been printed by node */
+        heading = (inactive_resources? "Inactive resources" : NULL);
+
+    } else if (inactive_resources) {
+        heading = "Full list of resources";
+
+    } else {
+        heading = "Active resources";
+    }
+
+    /* Print section heading */
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            print_as("\n%s:\n\n", heading);
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            fprintf(stream, " <hr />\n <h2>%s</h2>\n", heading);
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "    <resources>\n");
+            break;
+
+        default:
+            break;
+    }
+
+}
+
+/*!
+ * \internal
+ * \brief Print whatever resource section closing is appropriate
+ *
+ * \param[in] stream     File stream to display output to
+ */
+static void
+print_resources_closing(FILE *stream, gboolean printed_heading)
+{
+    const char *heading;
+
+    /* What type of resources we did or did not display */
+    if (group_by_node) {
+        heading = "inactive ";
+    } else if (inactive_resources) {
+        heading = "";
+    } else {
+        heading = "active ";
+    }
+
+    switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            if (!printed_heading) {
+                print_as("\nNo %sresources\n\n", heading);
+            }
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            if (!printed_heading) {
+                fprintf(stream, " <hr />\n <h2>No %sresources</h2>\n", heading);
+            }
+            break;
+
+        case mon_output_xml:
+            fprintf(stream, "    %s\n",
+                    (printed_heading? "</resources>" : "<resources/>"));
+            break;
+
+        default:
+            break;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Print whatever resource section(s) are appropriate
+ *
+ * \param[in] stream     File stream to display output to
+ * \param[in] data_set   Cluster state to display
+ * \param[in] print_opts  Bitmask of pe_print_options
+ */
+static void
+print_resources(FILE *stream, pe_working_set_t *data_set, int print_opts)
+{
+    GListPtr rsc_iter;
+    const char *prefix = NULL;
+    gboolean printed_heading = FALSE;
+    gboolean brief_output = print_brief;
+
+    /* If we already showed active resources by node, and
+     * we're not showing inactive resources, we have nothing to do
+     */
+    if (group_by_node && !inactive_resources) {
+        return;
+    }
+
+    /* XML uses an indent, and ignores brief option for resources */
+    if (output_format == mon_output_xml) {
+        prefix = "        ";
+        brief_output = FALSE;
+    }
+
+    /* If we haven't already printed resources grouped by node,
+     * and brief output was requested, print resource summary */
+    if (brief_output && !group_by_node) {
+        print_resources_heading(stream);
+        printed_heading = TRUE;
+        print_rscs_brief(data_set->resources, NULL, print_opts, stream,
+                         inactive_resources);
+    }
+
+    /* For each resource, display it if appropriate */
+    for (rsc_iter = data_set->resources; rsc_iter != NULL; rsc_iter = rsc_iter->next) {
+        resource_t *rsc = (resource_t *) rsc_iter->data;
+
+        /* Complex resources may have some sub-resources active and some inactive */
+        gboolean is_active = rsc->fns->active(rsc, TRUE);
+        gboolean partially_active = rsc->fns->active(rsc, FALSE);
+
+        /* Skip inactive orphans (deleted but still in CIB) */
+        if (is_set(rsc->flags, pe_rsc_orphan) && !is_active) {
+            continue;
+
+        /* Skip active resources if we already displayed them by node */
+        } else if (group_by_node) {
+            if (is_active) {
+                continue;
+            }
+
+        /* Skip primitives already counted in a brief summary */
+        } else if (brief_output && (rsc->variant == pe_native)) {
+            continue;
+
+        /* Skip resources that aren't at least partially active,
+         * unless we're displaying inactive resources
+         */
+        } else if (!partially_active && !inactive_resources) {
+            continue;
+        }
+
+        /* Print this resource */
+        if (printed_heading == FALSE) {
+            print_resources_heading(stream);
+            printed_heading = TRUE;
+        }
+        rsc->fns->print(rsc, prefix, print_opts, stream);
+    }
+
+    print_resources_closing(stream, printed_heading);
 }
 
 /*!
@@ -2122,7 +2290,8 @@ print_cluster_times(FILE *stream, pe_working_set_t *data_set)
         case mon_output_plain:
         case mon_output_console:
             print_as("Last updated: %s", crm_now_string());
-            print_as("\t\tLast change: %s", last_written ? last_written : "");
+            print_as((user || client || origin)? "\n" : "\t\t");
+            print_as("Last change: %s", last_written ? last_written : "");
             if (user) {
                 print_as(" by %s", user);
             }
@@ -2137,7 +2306,7 @@ print_cluster_times(FILE *stream, pe_working_set_t *data_set)
 
         case mon_output_html:
         case mon_output_cgi:
-            fprintf(stream, " <b>Last updated: %s</b><br/>\n", crm_now_string());
+            fprintf(stream, " <b>Last updated:</b> %s<br/>\n", crm_now_string());
             fprintf(stream, " <b>Last change:</b> %s", last_written ? last_written : "");
             if (user) {
                 fprintf(stream, " by %s", user);
@@ -2280,37 +2449,60 @@ print_cluster_counts(FILE *stream, pe_working_set_t *data_set, const char *stack
         case mon_output_plain:
         case mon_output_console:
 
+            print_as("\n%d node%s configured", nnodes, s_if_plural(nnodes));
             if (stack_s && strstr(stack_s, "classic openais") != NULL) {
-                print_as(", %s expected votes", quorum_votes);
+                print_as(" (%s expected votes)", quorum_votes);
             }
+            print_as("\n");
 
-            if(is_set(data_set->flags, pe_flag_maintenance_mode)) {
-                print_as("\n              *** Resource management is DISABLED ***");
-                print_as("\n  The cluster will not attempt to start, stop or recover services");
-                print_as("\n");
-            }
-
-            print_as("\n%d node%s and %d resource%s configured",
-                     nnodes, s_if_plural(nnodes),
+            print_as("%d resource%s configured",
                      nresources, s_if_plural(nresources));
             if(data_set->disabled_resources || data_set->blocked_resources) {
-                print_as(": %d resource%s DISABLED and %d BLOCKED from being started due to failures",
-                         data_set->disabled_resources, s_if_plural(data_set->disabled_resources),
-                         data_set->blocked_resources);
+                print_as(" (");
+                if (data_set->disabled_resources) {
+                    print_as("%d DISABLED", data_set->disabled_resources);
+                }
+                if (data_set->disabled_resources && data_set->blocked_resources) {
+                    print_as(", ");
+                }
+                if (data_set->blocked_resources) {
+                    print_as("%d BLOCKED from starting due to failure",
+                             data_set->blocked_resources);
+                }
+                print_as(")");
             }
-            print_as("\n\n");
+            print_as("\n");
 
             break;
 
         case mon_output_html:
         case mon_output_cgi:
+
             fprintf(stream, " %d node%s configured", nnodes, s_if_plural(nnodes));
             if (stack_s && strstr(stack_s, "classic openais") != NULL) {
                 fprintf(stream, " (%s expected votes)", quorum_votes);
             }
             fprintf(stream, "<br/>\n");
-            fprintf(stream, " %d resource%s configured<br/>\n",
+
+            fprintf(stream, " %d resource%s configured",
                     nresources, s_if_plural(nresources));
+            if (data_set->disabled_resources || data_set->blocked_resources) {
+                fprintf(stream, " (");
+                if (data_set->disabled_resources) {
+                    fprintf(stream, "%d <strong>DISABLED</strong>",
+                            data_set->disabled_resources);
+                }
+                if (data_set->disabled_resources && data_set->blocked_resources) {
+                    fprintf(stream, ", ");
+                }
+                if (data_set->blocked_resources) {
+                    fprintf(stream,
+                            "%d <strong>BLOCKED</strong> from starting due to failure",
+                            data_set->blocked_resources);
+                }
+                fprintf(stream, ")");
+            }
+            fprintf(stream, "<br/>\n");
             break;
 
         case mon_output_xml:
@@ -2318,8 +2510,9 @@ print_cluster_counts(FILE *stream, pe_working_set_t *data_set, const char *stack
                     "        <nodes_configured number=\"%d\" expected_votes=\"%s\" />\n",
                     g_list_length(data_set->nodes), quorum_votes);
             fprintf(stream,
-                    "        <resources_configured number=\"%d\" />\n",
-                    count_resources(data_set, NULL));
+                    "        <resources_configured number=\"%d\" disabled=\"%d\" blocked=\"%d\" />\n",
+                    count_resources(data_set, NULL),
+                    data_set->disabled_resources, data_set->blocked_resources);
             break;
 
         default:
@@ -2341,6 +2534,15 @@ static void
 print_cluster_options(FILE *stream, pe_working_set_t *data_set)
 {
     switch (output_format) {
+        case mon_output_plain:
+        case mon_output_console:
+            if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
+                print_as("\n              *** Resource management is DISABLED ***");
+                print_as("\n  The cluster will not attempt to start, stop or recover services");
+                print_as("\n");
+            }
+            break;
+
         case mon_output_html:
             fprintf(stream, " </p>\n <h3>Config Options</h3>\n");
             fprintf(stream, " <table>\n");
@@ -2365,7 +2567,18 @@ print_cluster_options(FILE *stream, pe_working_set_t *data_set)
                     fprintf(stream, "Suicide");
                     break;
             }
-            fprintf(stream, "</td></tr>\n </table>\n <p>\n");
+            fprintf(stream, "</td></tr>\n");
+
+            fprintf(stream, "  <tr><th>Resource management</th><td>");
+            if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
+                fprintf(stream, "<strong>DISABLED</strong> (the cluster will "
+                                "not attempt to start, stop or recover services)");
+            } else {
+                fprintf(stream, "enabled");
+            }
+            fprintf(stream, "</td></tr>\n");
+
+            fprintf(stream, "</table>\n <p>\n");
             break;
 
         case mon_output_xml:
@@ -2391,7 +2604,11 @@ print_cluster_options(FILE *stream, pe_working_set_t *data_set)
                     fprintf(stream, "suicide");
                     break;
             }
-            fprintf(stream, "\" />\n");
+            fprintf(stream, "\"");
+            fprintf(stream, " maintenance-mode=\"%s\"",
+                    is_set(data_set->flags, pe_flag_maintenance_mode)?
+                    "true" : "false");
+            fprintf(stream, " />\n");
             break;
 
         default:
@@ -2685,6 +2902,7 @@ print_status(pe_working_set_t * data_set)
         blank_screen();
     }
     print_cluster_summary(stdout, data_set);
+    print_as("\n");
 
     /* Gather node information (and print if in bad state or grouping by node) */
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
@@ -2802,58 +3020,8 @@ print_status(pe_working_set_t * data_set)
         free(online_guest_nodes);
     }
 
-    /* If we haven't already displayed resources grouped by node,
-     * or we need to print inactive resources, print a resources section */
-    if (group_by_node == FALSE || inactive_resources) {
-
-        /* If we're printing inactive resources, display a heading */
-        if (inactive_resources) {
-            if (group_by_node == FALSE) {
-                print_as("\nFull list of resources:\n");
-            } else {
-                print_as("\nInactive resources:\n");
-            }
-        }
-        print_as("\n");
-
-        /* If we haven't already printed resources grouped by node,
-         * and brief output was requested, print resource summary */
-        if (print_brief && group_by_node == FALSE) {
-            print_rscs_brief(data_set->resources, NULL, print_opts, stdout,
-                             inactive_resources);
-        }
-
-        /* For each resource, display it if appropriate */
-        for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-            resource_t *rsc = (resource_t *) gIter->data;
-
-            /* Complex resources may have some sub-resources active and some inactive */
-            gboolean is_active = rsc->fns->active(rsc, TRUE);
-            gboolean partially_active = rsc->fns->active(rsc, FALSE);
-
-            /* Always ignore inactive orphan resources (deleted but not yet gone from CIB) */
-            if (is_set(rsc->flags, pe_rsc_orphan) && (is_active == FALSE)) {
-                continue;
-            }
-
-            /* If we already printed resources grouped by node,
-             * only print inactive resources, if that was requested */
-            if (group_by_node == TRUE) {
-                if ((is_active == FALSE) && inactive_resources) {
-                    rsc->fns->print(rsc, NULL, print_opts, stdout);
-                }
-                continue;
-            }
-
-            /* Otherwise, print resource if it's at least partially active
-             * or we're displaying inactive resources,
-             * except for primitive resources already counted in a brief summary */
-            if (!(print_brief && (rsc->variant == pe_native))
-                && (partially_active || inactive_resources)) {
-                    rsc->fns->print(rsc, NULL, print_opts, stdout);
-            }
-        }
-    }
+    /* Print resources section, if needed */
+    print_resources(stdout, data_set, print_opts);
 
     /* print Node Attributes section if requested */
     if (show & mon_show_attributes) {
@@ -2959,28 +3127,8 @@ print_xml_status(pe_working_set_t * data_set)
     }
     fprintf(stream, "    </nodes>\n");
 
-    /*** RESOURCES ***/
-    if (group_by_node == FALSE || inactive_resources) {
-        fprintf(stream, "    <resources>\n");
-        for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-            resource_t *rsc = (resource_t *) gIter->data;
-            gboolean is_active = rsc->fns->active(rsc, TRUE);
-            gboolean partially_active = rsc->fns->active(rsc, FALSE);
-
-            if (is_set(rsc->flags, pe_rsc_orphan) && is_active == FALSE) {
-                continue;
-
-            } else if (group_by_node == FALSE) {
-                if (partially_active || inactive_resources) {
-                    rsc->fns->print(rsc, "        ", print_opts, stream);
-                }
-
-            } else if (is_active == FALSE && inactive_resources) {
-                rsc->fns->print(rsc, "        ", print_opts, stream);
-            }
-        }
-        fprintf(stream, "    </resources>\n");
-    }
+    /* Print resources section, if needed */
+    print_resources(stream, data_set, print_opts);
 
     /* print Node Attributes section if requested */
     if (show & mon_show_attributes) {
@@ -3103,42 +3251,8 @@ print_html_status(pe_working_set_t * data_set, const char *filename)
     }
     fprintf(stream, "</ul>\n");
 
-    if (group_by_node && inactive_resources) {
-        fprintf(stream, "<h2>Inactive Resources</h2>\n");
-
-    } else if (group_by_node == FALSE) {
-        fprintf(stream, " <hr />\n <h2>Resource List</h2>\n");
-    }
-
-    if (group_by_node == FALSE || inactive_resources) {
-        if (print_brief && group_by_node == FALSE) {
-            print_rscs_brief(data_set->resources, NULL, print_opts, stream,
-                             inactive_resources);
-        }
-
-        for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-            resource_t *rsc = (resource_t *) gIter->data;
-            gboolean is_active = rsc->fns->active(rsc, TRUE);
-            gboolean partially_active = rsc->fns->active(rsc, FALSE);
-
-            if (print_brief && group_by_node == FALSE
-                && rsc->variant == pe_native) {
-                continue;
-            }
-
-            if (is_set(rsc->flags, pe_rsc_orphan) && is_active == FALSE) {
-                continue;
-
-            } else if (group_by_node == FALSE) {
-                if (partially_active || inactive_resources) {
-                    rsc->fns->print(rsc, NULL, print_opts, stream);
-                }
-
-            } else if (is_active == FALSE && inactive_resources) {
-                rsc->fns->print(rsc, NULL, print_opts, stream);
-            }
-        }
-    }
+    /* Print resources section, if needed */
+    print_resources(stream, data_set, print_opts);
 
     /* print Node Attributes section if requested */
     if (show & mon_show_attributes) {
@@ -3414,7 +3528,7 @@ event_cb(smtp_session_t session, int event_no, void *arg, ...)
             *ok = 1;
             break;
         default:
-            crm_debug("Got event: %d - ignored.\n", event_no);
+            crm_debug("Got event: %d - ignored.", event_no);
     }
     va_end(alist);
 }
@@ -3469,7 +3583,9 @@ send_custom_trap(const char *node, const char *rsc, const char *task, int target
     if(rsc) {
         setenv("CRM_notify_rsc", rsc, 1);
     }
-    setenv("CRM_notify_recipient", external_recipient, 1);
+    if (external_recipient) {
+        setenv("CRM_notify_recipient", external_recipient, 1);
+    }
     setenv("CRM_notify_node", node, 1);
     setenv("CRM_notify_task", task, 1);
     setenv("CRM_notify_desc", desc, 1);
@@ -3873,7 +3989,7 @@ static void crm_diff_update_v2(const char *event, xmlNode * msg)
             free(local_node);
 
         } else {
-            crm_err("Ignoring %s operation for %s %p, %s", op, xpath, match, name);
+            crm_trace("Ignoring %s operation for %s %p, %s", op, xpath, match, name);
         }
     }
 }

@@ -297,6 +297,7 @@
 #  define XML_TAG_RULE			"rule"
 #  define XML_RULE_ATTR_SCORE		"score"
 #  define XML_RULE_ATTR_SCORE_ATTRIBUTE	"score-attribute"
+/* following has no use (hardly ever meaningful); kept for compatibility */
 #  define XML_RULE_ATTR_SCORE_MANGLED	"score-attribute-mangled"
 #  define XML_RULE_ATTR_ROLE		"role"
 #  define XML_RULE_ATTR_RESULT		"result"
@@ -324,6 +325,9 @@
 #  define XML_COLOC_ATTR_NODE_ATTR	"node-attribute"
 #  define XML_COLOC_ATTR_SOURCE_INSTANCE	"rsc-instance"
 #  define XML_COLOC_ATTR_TARGET_INSTANCE	"with-rsc-instance"
+
+#  define XML_LOC_ATTR_SOURCE           "rsc"
+#  define XML_LOC_ATTR_SOURCE_PATTERN   "rsc-pattern"
 
 #  define XML_ORDER_ATTR_FIRST		"first"
 #  define XML_ORDER_ATTR_THEN		"then"

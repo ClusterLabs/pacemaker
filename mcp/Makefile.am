@@ -24,16 +24,19 @@ init_SCRIPTS		= pacemaker
 sbin_PROGRAMS		= pacemakerd
 
 if BUILD_SYSTEMD
-systemdunit_DATA = pacemaker.service
+systemdunit_DATA	= pacemaker.service
 endif
 
 ## SOURCES
 
 noinst_HEADERS		= pacemaker.h
 
-pacemakerd_SOURCES	= pacemaker.c corosync.c 
+pacemakerd_CFLAGS	= $(CFLAGS_HARDENED_EXE)
+pacemakerd_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
+
 pacemakerd_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la $(top_builddir)/lib/common/libcrmcommon.la
 pacemakerd_LDADD	+= $(CLUSTERLIBS)
+pacemakerd_SOURCES	= pacemaker.c corosync.c
 
 endif
 

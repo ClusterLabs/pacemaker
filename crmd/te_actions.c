@@ -99,7 +99,7 @@ send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
     crmd_peer_down(peer, TRUE);
 
     /* Generate a node state update for the CIB */
-    node_state = do_update_node_cib(peer, flags, NULL, __FUNCTION__);
+    node_state = create_node_state_update(peer, flags, NULL, __FUNCTION__);
 
     /* we have to mark whether or not remote nodes have already been fenced */
     if (peer->flags & crm_remote_node) {
@@ -489,15 +489,6 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
         }
         te_update_job_count(action, 1);
         te_start_action_timer(graph, action);
-    }
-
-    value = crm_meta_value(action->params, XML_OP_ATTR_PENDING);
-    if (crm_is_true(value)
-        && safe_str_neq(task, CRMD_ACTION_CANCEL)
-        && safe_str_neq(task, CRMD_ACTION_DELETE)) {
-        /* write a "pending" entry to the CIB, inhibit notification */
-        crm_debug("Recording pending op %s in the CIB", task_uuid);
-        cib_action_update(action, PCMK_LRM_OP_PENDING, PCMK_OCF_UNKNOWN);
     }
 
     return TRUE;

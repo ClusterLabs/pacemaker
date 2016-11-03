@@ -300,7 +300,7 @@ stonith_api_remove_level(stonith_t * st, int options, const char *node, int leve
                                          NULL, NULL, NULL, level);
 }
 
-/*
+/*!
  * \internal
  * \brief Create XML for stonithd topology level registration request
  *
@@ -353,7 +353,11 @@ create_level_registration_xml(const char *node, const char *pattern,
 
         crm_trace("Adding %s (%dc) at offset %d", device_list->value, adding, len);
         list = realloc_safe(list, len + adding + 1);       /* +1 EOS */
-        CRM_CHECK(list != NULL, free_xml(data); return NULL);
+        if (list == NULL) {
+            crm_perror(LOG_CRIT, "Could not create device list");
+            free_xml(data);
+            return NULL;
+        }
         sprintf(list + len, "%s%s", len?",":"", device_list->value);
         len += adding;
     }
@@ -554,7 +558,7 @@ make_args(const char *agent, const char *action, const char *victim, uint32_t vi
         if (victim_nodeid) {
             char nodeid_str[33] = { 0, };
             if (snprintf(nodeid_str, 33, "%u", (unsigned int)victim_nodeid)) {
-                crm_info("For stonith action (%s) for victim %s, adding nodeid (%d) to parameters",
+                crm_info("For stonith action (%s) for victim %s, adding nodeid (%s) to parameters",
                          action, victim, nodeid_str);
                 append_const_arg("nodeid", nodeid_str, &arg_list);
             }

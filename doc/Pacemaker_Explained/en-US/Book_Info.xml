@@ -13,7 +13,7 @@
 	simple textual changes (corrections, translations, etc.).
   -->
   <edition>7</edition>
-  <pubsnumber>0</pubsnumber>
+  <pubsnumber>1</pubsnumber>
   <abstract>
     <para>
       The purpose of this document is to definitively explain the concepts used to configure Pacemaker.

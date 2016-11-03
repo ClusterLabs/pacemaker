@@ -33,6 +33,8 @@
 #include <crm/common/mainloop.h>
 #include <crm/common/ipcs.h>
 
+#include <qb/qbarray.h>
+
 struct mainloop_child_s {
     pid_t pid;
     char *desc;

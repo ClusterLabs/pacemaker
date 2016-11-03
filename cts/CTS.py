@@ -246,7 +246,7 @@ class NodeStatus:
         else:
             try:
                 answer = raw_input('Continue? [nY]')
-            except EOFError, e:
+            except EOFError as e:
                 answer = "n"
         if answer and answer == "n":
             raise ValueError("%s did not come up within %d tries" % (node, Timeout))

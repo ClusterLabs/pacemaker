@@ -27,8 +27,6 @@
 #define VARIANT_CLONE 1
 #include "./variant.h"
 
-void clone_create_notifications(resource_t * rsc, action_t * action, action_t * action_complete,
-                                pe_working_set_t * data_set);
 void force_non_unique_clone(resource_t * rsc, const char *rid, pe_working_set_t * data_set);
 resource_t *create_child_clone(resource_t * rsc, int sub_id, pe_working_set_t * data_set);
 
@@ -314,11 +312,36 @@ short_print(char *list, const char *prefix, const char *type, const char *suffix
     }
 }
 
+static const char *
+configured_role_str(resource_t * rsc)
+{
+    const char *target_role = g_hash_table_lookup(rsc->meta,
+                                                  XML_RSC_ATTR_TARGET_ROLE);
+
+    if ((target_role == NULL) && rsc->children && rsc->children->data) {
+        target_role = g_hash_table_lookup(((resource_t*)rsc->children->data)->meta,
+                                          XML_RSC_ATTR_TARGET_ROLE);
+    }
+    return target_role;
+}
+
+static enum rsc_role_e
+configured_role(resource_t * rsc)
+{
+    const char *target_role = configured_role_str(rsc);
+
+    if (target_role) {
+        return text2role(target_role);
+    }
+    return RSC_ROLE_UNKNOWN;
+}
+
 static void
 clone_print_xml(resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
     int is_master_slave = rsc->variant == pe_master ? 1 : 0;
     char *child_text = crm_concat(pre_text, "   ", ' ');
+    const char *target_role = configured_role_str(rsc);
     GListPtr gIter = rsc->children;
 
     status_print("%s<clone ", pre_text);
@@ -329,6 +352,9 @@ clone_print_xml(resource_t * rsc, const char *pre_text, long options, void *prin
     status_print("failed=\"%s\" ", is_set(rsc->flags, pe_rsc_failed) ? "true" : "false");
     status_print("failure_ignored=\"%s\" ",
                  is_set(rsc->flags, pe_rsc_failure_ignored) ? "true" : "false");
+    if (target_role) {
+        status_print("target_role=\"%s\" ", target_role);
+    }
     status_print(">\n");
 
     for (; gIter != NULL; gIter = gIter->next) {
@@ -369,21 +395,6 @@ bool is_set_recursive(resource_t * rsc, long long flag, bool any)
         return TRUE;
     }
     return FALSE;
-}
-
-static enum rsc_role_e
-configured_role(resource_t * rsc)
-{
-    const char *target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
-
-    if(target_role == NULL) {
-        target_role = g_hash_table_lookup(((resource_t*)rsc->children->data)->meta, XML_RSC_ATTR_TARGET_ROLE);
-    }
-
-    if(target_role) {
-        return text2role(target_role);
-    }
-    return RSC_ROLE_UNKNOWN;
 }
 
 void

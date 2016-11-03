@@ -1048,23 +1048,64 @@ update_without_attrd(const char * host_uuid, const char * name, const char * val
 #endif
 
 static void
+log_attrd_error(const char *host, const char *name, const char *value,
+                gboolean is_remote, char command, int rc)
+{
+    const char *display_command; /* for commands without name/value */
+    const char *node_type = (is_remote? "Pacemaker Remote" : "cluster");
+    gboolean shutting_down = is_set(fsa_input_register, R_SHUTDOWN);
+    const char *when = (shutting_down? " at shutdown" : "");
+
+    switch (command) {
+        case 'R':
+            display_command = "refresh";
+            break;
+        case 'C':
+            display_command = "purge";
+            break;
+        default:
+            display_command = NULL;
+    }
+
+    if (display_command) {
+        crm_err("Could not request %s of %s node %s%s: %s (%d)",
+                display_command, node_type, host, when, pcmk_strerror(rc), rc);
+    } else {
+        crm_err("Could not request update of %s=%s for %s node %s%s: %s (%d)",
+                name, value, node_type, host, when, pcmk_strerror(rc), rc);
+    }
+
+    /* If we can't request shutdown via attribute, fast-track it */
+    if ((command == 'U') && shutting_down) {
+        register_fsa_input(C_FSA_INTERNAL, I_FAIL, NULL);
+    }
+}
+
+static void
 update_attrd_helper(const char *host, const char *name, const char *value, const char *user_name, gboolean is_remote_node, char command)
 {
     gboolean rc;
     int max = 5;
+    int attrd_opts = attrd_opt_none;
 
-#if !HAVE_ATOMIC_ATTRD
-    /* Talk directly to cib for remote nodes if it's legacy attrd */
     if (is_remote_node) {
+#if HAVE_ATOMIC_ATTRD
+        attrd_opts |= attrd_opt_remote;
+#else
+    /* Talk directly to cib for remote nodes if it's legacy attrd */
+        int rc;
+
         /* host is required for updating a remote node */
         CRM_CHECK(host != NULL, return;);
         /* remote node uname and uuid are equal */
-        if (update_without_attrd(host, name, value, user_name, is_remote_node, command) < pcmk_ok) {
-            crm_err("Could not update attribute %s for remote-node %s", name, host);
+        rc = update_without_attrd(host, name, value, user_name, is_remote_node,
+                                  command);
+        if (rc < pcmk_ok) {
+            log_attrd_error(host, name, value, is_remote_node, command, rc);
         }
         return;
-    }
 #endif
+    }
 
     if (attrd_ipc == NULL) {
         attrd_ipc = crm_ipc_new(T_ATTRD, 0);
@@ -1080,7 +1121,7 @@ update_attrd_helper(const char *host, const char *name, const char *value, const
         }
 
         rc = attrd_update_delegate(attrd_ipc, command, host, name, value, XML_CIB_TAG_STATUS, NULL,
-                                   NULL, user_name, is_remote_node?attrd_opt_remote:attrd_opt_none);
+                                   NULL, user_name, attrd_opts);
         if (rc == pcmk_ok) {
             break;
 
@@ -1094,20 +1135,7 @@ update_attrd_helper(const char *host, const char *name, const char *value, const
     } while (max--);
 
     if (rc != pcmk_ok) {
-        if (name) {
-            crm_err("Could not send attrd %s update%s: %s (%d)",
-                    name, is_set(fsa_input_register, R_SHUTDOWN) ? " at shutdown" : "",
-                    pcmk_strerror(rc), rc);
-
-        } else {
-            crm_err("Could not send attrd refresh%s: %s (%d)",
-                    is_set(fsa_input_register, R_SHUTDOWN) ? " at shutdown" : "",
-                    pcmk_strerror(rc), rc);
-        }
-
-        if (is_set(fsa_input_register, R_SHUTDOWN)) {
-            register_fsa_input(C_FSA_INTERNAL, I_FAIL, NULL);
-        }
+        log_attrd_error(host, name, value, is_remote_node, command, rc);
     }
 }
 
@@ -1120,7 +1148,7 @@ update_attrd(const char *host, const char *name, const char *value, const char *
 void
 update_attrd_remote_node_removed(const char *host, const char *user_name)
 {
-    crm_trace("telling attrd to clear attributes for remote host %s", host);
+    crm_trace("Asking attrd to purge Pacemaker Remote node %s", host);
     update_attrd_helper(host, NULL, NULL, user_name, TRUE, 'C');
 }
 

@@ -34,7 +34,7 @@
 #         <nvpair id="trap_node_states" name="trap_node_states" value="all"/>
 #       </instance_attributes>
 #       <meta_attributes id="config_for_timestamp">
-#         <nvpair id="ts_fmt" name="timestamp-format" value=""%Y-%m-%d,%H:%M:%S.%01N""/>
+#         <nvpair id="ts_fmt" name="timestamp-format" value="%Y-%m-%d,%H:%M:%S.%01N"/>
 #       </meta_attributes>
 #       <recipient id="snmp_destination" value="192.168.1.2"/>
 #     </alert>

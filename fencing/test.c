@@ -161,10 +161,10 @@ passive_test(void)
         dispatch_helper(500);  \
     } \
     if (rc != expected_rc) { \
-        crm_err("FAILURE - expected rc %d != %d(%s) for cmd - %s\n", expected_rc, rc, pcmk_strerror(rc), str); \
+        crm_err("FAILURE - expected rc %d != %d(%s) for cmd - %s", expected_rc, rc, pcmk_strerror(rc), str); \
         crm_exit(pcmk_err_generic); \
     } else if (expected_notifications) { \
-        crm_err("FAILURE - expected %d notifications, got only %d for cmd - %s\n", \
+        crm_err("FAILURE - expected %d notifications, got only %d for cmd - %s", \
             num_notifications, num_notifications - expected_notifications, str); \
         crm_exit(pcmk_err_generic); \
     } else { \
@@ -243,6 +243,7 @@ run_standard_test(void)
 
     params = stonith_key_value_add(params, "pcmk_host_map", "false_1_node1=1,2 false_1_node2=3,4");
     params = stonith_key_value_add(params, "mode", "pass");
+    params = stonith_key_value_add(params, "mock_dynamic_hosts", "false_1_node1 false_1_node2");
 
     single_test(st->
                 cmds->register_device(st, st_opts, "test-id", "stonith-ng", "fence_dummy", params),
@@ -317,7 +318,7 @@ standard_dev_test(void)
     crm_debug("Register: %d", rc);
 
     rc = st->cmds->list(st, st_opts, "test-id", &tmp, 10);
-    crm_debug("List: %d output: %s\n", rc, tmp ? tmp : "<none>");
+    crm_debug("List: %d output: %s", rc, tmp ? tmp : "<none>");
 
     rc = st->cmds->monitor(st, st_opts, "test-id", 10);
     crm_debug("Monitor: %d", rc);
@@ -533,7 +534,7 @@ try_mainloop_connect(int check_event)
         sleep(1);
     }
 
-    crm_err("API CONNECTION FAILURE\n");
+    crm_err("API CONNECTION FAILURE");
     mainloop_test_done(FALSE);
 }
 

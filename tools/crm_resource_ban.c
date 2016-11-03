@@ -101,7 +101,7 @@ cli_resource_ban(const char *rsc_id, const char *host, GListPtr allnodes, cib_t 
         CMD_ERR("\tThis message can be disabled with --quiet");
     }
 
-    crm_xml_add(location, XML_COLOC_ATTR_SOURCE, rsc_id);
+    crm_xml_add(location, XML_LOC_ATTR_SOURCE, rsc_id);
     if(scope_master) {
         crm_xml_add(location, XML_RULE_ATTR_ROLE, RSC_ROLE_MASTER_S);
     } else {
@@ -176,7 +176,7 @@ cli_resource_prefer(const char *rsc_id, const char *host, cib_t * cib_conn)
     crm_xml_add(location, XML_ATTR_ID, id);
     free(id);
 
-    crm_xml_add(location, XML_COLOC_ATTR_SOURCE, rsc_id);
+    crm_xml_add(location, XML_LOC_ATTR_SOURCE, rsc_id);
     if(scope_master) {
         crm_xml_add(location, XML_RULE_ATTR_ROLE, RSC_ROLE_MASTER_S);
     } else {

@@ -20,6 +20,7 @@
 
 #include <crm/msg_xml.h>
 #include <allocate.h>
+#include <notif.h>
 #include <utils.h>
 
 #define VARIANT_CLONE 1
@@ -475,7 +476,7 @@ master_score(resource_t * rsc, node_t * node, int not_set_value)
 
     if (node == NULL) {
         if (rsc->fns->state(rsc, TRUE) < RSC_ROLE_STARTED) {
-            pe_rsc_trace(rsc, "Ingoring master score for %s: unknown state", rsc->id);
+            pe_rsc_trace(rsc, "Ignoring master score for %s: unknown state", rsc->id);
             return score;
         }
 
@@ -844,14 +845,14 @@ master_create_actions(resource_t * rsc, pe_working_set_t * data_set)
                                     RSC_PROMOTED, NULL, !any_promoting, TRUE, data_set);
 
     action_complete->priority = INFINITY;
-    update_action_flags(action, pe_action_pseudo);
-    update_action_flags(action, pe_action_runnable);
-    update_action_flags(action_complete, pe_action_pseudo);
-    update_action_flags(action_complete, pe_action_runnable);
+    update_action_flags(action, pe_action_pseudo, __FUNCTION__);
+    update_action_flags(action, pe_action_runnable, __FUNCTION__);
+    update_action_flags(action_complete, pe_action_pseudo, __FUNCTION__);
+    update_action_flags(action_complete, pe_action_runnable, __FUNCTION__);
 
     if (clone_data->masters_allocated > 0) {
-        update_action_flags(action, pe_action_runnable);
-        update_action_flags(action_complete, pe_action_runnable);
+        update_action_flags(action, pe_action_runnable, __FUNCTION__);
+        update_action_flags(action_complete, pe_action_runnable, __FUNCTION__);
     }
 
     child_promoting_constraints(clone_data, pe_order_optional,
@@ -868,10 +869,10 @@ master_create_actions(resource_t * rsc, pe_working_set_t * data_set)
                                     RSC_DEMOTED, NULL, !any_demoting, TRUE, data_set);
     action_complete->priority = INFINITY;
 
-    update_action_flags(action, pe_action_pseudo);
-    update_action_flags(action, pe_action_runnable);
-    update_action_flags(action_complete, pe_action_pseudo);
-    update_action_flags(action_complete, pe_action_runnable);
+    update_action_flags(action, pe_action_pseudo, __FUNCTION__);
+    update_action_flags(action, pe_action_runnable, __FUNCTION__);
+    update_action_flags(action_complete, pe_action_pseudo, __FUNCTION__);
+    update_action_flags(action_complete, pe_action_runnable, __FUNCTION__);
 
     child_demoting_constraints(clone_data, pe_order_optional, rsc, NULL, last_demote_rsc, data_set);
 

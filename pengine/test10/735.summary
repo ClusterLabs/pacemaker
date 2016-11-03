@@ -4,11 +4,11 @@ Online: [ hadev2 hadev3 ]
 OFFLINE: [ hadev1 ]
 
  DcIPaddr	(ocf::heartbeat:IPaddr):	Started hadev2
- rsc_hadev1	(ocf::heartbeat:IPaddr):	Started hadev2
+ rsc_hadev1	(ocf::heartbeat:IPaddr):	Starting hadev2
  rsc_hadev2	(ocf::heartbeat:IPaddr):	Started hadev2
- rsc_hadev3	(ocf::heartbeat:IPaddr):	Stopped 
+ rsc_hadev3	(ocf::heartbeat:IPaddr):	Starting
  Clone Set: DoFencing [child_DoFencing] (unique)
-     child_DoFencing:0	(stonith:ssh):	Stopped 
+     child_DoFencing:0	(stonith:ssh):	Starting
      child_DoFencing:1	(stonith:ssh):	Stopped 
      child_DoFencing:2	(stonith:ssh):	Stopped 
 

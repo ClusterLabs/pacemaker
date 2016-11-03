@@ -320,7 +320,9 @@ static char *extract_node_uuid(const char *xpath)
     return node_uuid;
 }
 
-static void abort_unless_down(const char *xpath, const char *op, xmlNode *change, const char *reason) 
+static void
+abort_unless_down(const char *xpath, const char *op, xmlNode *change,
+                  const char *reason)
 {
     char *node_uuid = NULL;
     crm_action_t *down = NULL;
@@ -337,7 +339,7 @@ static void abort_unless_down(const char *xpath, const char *op, xmlNode *change
         return;
     }
 
-    down = match_down_event(node_uuid, FALSE);
+    down = match_down_event(node_uuid, TRUE);
     if(down == NULL || down->executed == false) {
         crm_trace("Not expecting %s to be down (%s)", node_uuid, xpath);
         abort_transition(INFINITY, tg_restart, reason, change);
@@ -425,24 +427,30 @@ te_update_diff(const char *event, xmlNode * msg)
         }
 
         if(match) {
+            if (match->type == XML_COMMENT_NODE) {
+                crm_trace("Ignoring %s operation for comment at %s", op, xpath);
+                continue;
+            }
             name = (const char *)match->name;
         }
 
-        crm_trace("Handling %s operation for %s %p, %s", op, xpath, match, name);
+        crm_trace("Handling %s operation for %s%s%s",
+                  op, (xpath? xpath : "CIB"),
+                  (name? " matched by " : ""), (name? name : ""));
         if(xpath == NULL) {
             /* Version field, ignore */
 
         } else if(strstr(xpath, "/cib/configuration")) {
-            abort_transition(INFINITY, tg_restart, "Non-status change", change);
-            break; /* Wont be packaged with any resource operations we may be waiting for */
+            abort_transition(INFINITY, tg_restart, "Configuration change", change);
+            break; /* Won't be packaged with any resource operations we may be waiting for */
 
         } else if(strstr(xpath, "/"XML_CIB_TAG_TICKETS) || safe_str_eq(name, XML_CIB_TAG_TICKETS)) {
             abort_transition(INFINITY, tg_restart, "Ticket attribute change", change);
-            break; /* Wont be packaged with any resource operations we may be waiting for */
+            break; /* Won't be packaged with any resource operations we may be waiting for */
 
         } else if(strstr(xpath, "/"XML_TAG_TRANSIENT_NODEATTRS"[") || safe_str_eq(name, XML_TAG_TRANSIENT_NODEATTRS)) {
             abort_unless_down(xpath, op, change, "Transient attribute change");
-            break; /* Wont be packaged with any resource operations we may be waiting for */
+            break; /* Won't be packaged with any resource operations we may be waiting for */
 
         } else if(strstr(xpath, "/"XML_LRM_TAG_RSC_OP"[") && safe_str_eq(op, "delete")) {
             crm_action_t *cancel = NULL;
@@ -502,7 +510,7 @@ te_update_diff(const char *event, xmlNode * msg)
             }
 
             if(config) {
-                abort_transition(INFINITY, tg_restart, "Non-status change", change);
+                abort_transition(INFINITY, tg_restart, "Non-status-only change", change);
             }
 
         } else if(strcmp(name, XML_CIB_TAG_STATUS) == 0) {

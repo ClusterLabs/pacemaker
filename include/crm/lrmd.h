@@ -228,10 +228,9 @@ typedef struct lrmd_event_data_s {
      * parameters given to the operation */
     void *params;
 
-    /* client node name associated with this conneciton.
-     * This is useful if multiple clients are being utilized by
-     * a single process. This name allows the actions to be matched
-     * to the proper client. */
+    /*! client node name associated with this connection
+     * (used to match actions to the proper client when there are multiple)
+     */
     const char *remote_nodename;
 
     /*! exit failure reason string from resource agent operation */

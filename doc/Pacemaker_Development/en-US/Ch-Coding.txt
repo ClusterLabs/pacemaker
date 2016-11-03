@@ -1,0 +1,192 @@
+= C Coding Guidelines =
+
+////
+We prefer [[ch-NAME]], but older versions of asciidoc don't deal well
+with that construct for chapter headings
+////
+anchor:ch-c-coding[Chapter 2, C Coding Guidelines]
+
+== C Boilerplate ==
+
+indexterm:[C,boilerplate]
+indexterm:[licensing,C boilerplate]
+
+Every C file should start like this:
+
+====
+[source,C]
+----
+/*
+ * Copyright (C) <YYYY[-YYYY]> Andrew Beekhof <andrew@beekhof.net>
+ * 
+ * This source code is licensed under <LICENSE> WITHOUT ANY WARRANTY.
+ */
+----
+====
+
++<YYYY>+ is the year the code was 'originally' created (it is the most
+important date for copyright purposes, as it establishes priority and
+the point from which expiration is calculated). If the code is modified
+in later years, add +-YYYY+ with the most recent year of modification.
+
++<LICENSE>+ should follow the policy set forth in the
+https://github.com/ClusterLabs/pacemaker/blob/master/COPYING[+COPYING+] file,
+generally one of "GNU General Public License version 2 or later (GPLv2+)"
+or "GNU Lesser General Public License version 2.1 or later (LGPLv2.1+)".
+
+== Formatting ==
+
+=== Whitespace ===
+
+indexterm:[C,whitespace]
+
+- Indentation must be 4 spaces, no tabs.
+- Do not leave trailing whitespace.
+
+=== Line Length ===
+
+- Lines should be no longer than 80 characters unless limiting line length
+  significantly impacts readability.
+
+=== Pointers ===
+
+indexterm:[C,pointers]
+
+- The +*+ goes by the variable name, not the type:
+
+====
+[source,C]
+----
+char *foo;
+----
+====
+
+- Use a space before the +*+ and after the closing parenthesis in a cast:
+
+====
+[source,C]
+----
+char *foo = (char *) bar;
+----
+====
+
+=== Functions ===
+
+indexterm:[C,functions]
+
+- In the function definition, put the return type on its own line, and place
+  the opening brace by itself on a line:
+
+====
+[source,C]
+----
+static int
+foo(void)
+{
+----
+====
+
+- For functions with enough arguments that they must break to the next line,
+  align arguments with the first argument:
+
+====
+[source,C]
+----
+static int
+function_name(int bar, const char *a, const char *b,
+              const char *c, const char *d)
+{
+----
+====
+
+- If a function name gets really long, start the arguments on their own line
+  with 8 spaces of indentation:
+
+====
+[source,C]
+----
+static int
+really_really_long_function_name_this_is_getting_silly_now(
+        int bar, const char *a, const char *b,
+        const char *c, const char *d)
+{
+----
+====
+
+=== Control Statements (if, else, while, for, switch) ===
+
+- The keyword is followed by one space, then left parenthesis without space,
+  condition, right parenthesis, space, opening bracket on the same line.
+  +else+ and +else if+ are on the same line with the ending brace and opening
+  brace, separated by a space:
+
+====
+[source,C]
+----
+if (condition1) {
+    statement1;
+} else if (condition2) {
+    statement2;
+} else {
+    statement3;
+}
+----
+====
+
+- In a +switch+ statement, +case+ is indented one level, and the body of each
+  +case+ is indented by another level. The opening brace is on the same line as
+  +switch+.
+
+====
+[source,C]
+----
+switch (expression) {
+    case 0:
+        command1;
+        break;
+    case 1:
+        command2;
+        break;
+    default:
+        command3;
+}
+----
+====
+
+=== Operators ===
+
+indexterm:[C,operators]
+
+- Operators have spaces from both sides. Do not rely on operator precedence;
+  use parentheses when mixing operators with different priority.
+- No space is used after opening parenthesis and before closing parenthesis.
+
+====
+[source,C]
+----
+x = a + b - (c * d);
+----
+====
+
+== Naming Conventions ==
+
+indexterm:[C,naming]
+
+- Any exposed symbols in libraries (non-+static+ function names, type names,
+  etc.) must begin with a prefix appropriate to the library, for example,
+  +crm_+, +pe_+, +st_+, +lrm_+.
+
+== vim Settings ==
+
+indexterm:[vim]
+
+Developers who use +vim+ to edit source code can add the following settings to
+their +~/.vimrc+ file to follow Pacemaker C coding guidelines:
+
+----
+" follow Pacemaker coding guidelines when editing C source code files
+filetype plugin indent on
+au FileType c   setlocal expandtab tabstop=4 softtabstop=4 shiftwidth=4 textwidth=80
+autocmd BufNewFile,BufRead *.h set filetype=c
+let c_space_errors = 1
+----

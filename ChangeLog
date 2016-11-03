@@ -389,7 +389,7 @@
   + cib: Ensure 'cibadmin -R/--replace' commands get replies
   + cib: Erasing the cib is an admin action, bump the admin_epoch instead
   + cib: Fix remote cib based on TLS
-  + cib: Ingore patch failures if we already have their contents
+  + cib: Ignore patch failures if we already have their contents
   + cib: Validate that everyone still sees the same configuration once all updates have completed
   + cibadmin: Allow priviliged clients to perform tasks as unpriviliged users
   + cibadmin: Remove dangerous commands that exposed unnecessary implementation internal details
@@ -825,7 +825,7 @@
   + corosync: Populate the cib nodelist from corosync if available
   + corosync: Use the CFG API and DNS to determine node names if not configured in corosync.conf
   + crmd: Block after 10 failed fencing attempts for a node
-  + crmd: cl#5051 - Fixes file leak in pe ipc connection initialization.
+  + crmd: cl#5051 - Fixes file leak in PE ipc connection initialization.
   + crmd: cl#5053 - Fixes fail-count not being updated properly.
   + crmd: cl#5057 - Restart sub-systems correctly (bnc#755671)
   + crmd: cl#5068 - Fixes crm_node -R option so it works with corosync 2.0
@@ -1625,7 +1625,7 @@
   + Medium: crmd: Clean up and optimize the DC election algorithm
   + Medium: crmd: Fix memory leak in shutdown
   + Medium: crmd: Fix memory leaks spotted by Valgrind
-  + Medium: crmd: Ingore join messages from hosts other than our DC
+  + Medium: crmd: Ignore join messages from hosts other than our DC
   + Medium: crmd: Limit the scope of resource updates to the status section
   + Medium: crmd: Prevent the crmd from being respawned if its told to shut down when it did not ask to be
   + Medium: crmd: Re-check the election status after membership events
@@ -2260,8 +2260,8 @@
     Changesets:      347
     Diff:            2272 files changed, 132508 insertions(+), 305991 deletions(-)
 - Test hardware:
-    + 6-node vmware cluster (sles10-sp1/256Mb/vmware stonith) on a single host (opensuse10.3/2Gb/2.66Ghz Quad Core2)
-    + 7-node EMC Centera cluster (sles10/512Mb/2Ghz Xeon/ssh stonith)
+    + 6-node vmware cluster (sles10-sp1/256MB/vmware stonith) on a single host (opensuse10.3/2GB/2.66GHz Quad Core2)
+    + 7-node EMC Centera cluster (sles10/512MB/2GHz Xeon/ssh stonith)
 - Notes: Heartbeat Stack
     + All testing was performed with STONITH enabled
     + The CRM was enabled using the "crm respawn" directive

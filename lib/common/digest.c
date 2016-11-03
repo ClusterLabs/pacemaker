@@ -210,6 +210,7 @@ calculate_xml_versioned_digest(xmlNode * input, gboolean sort, gboolean do_filte
 }
 
 /*!
+ * \internal
  * \brief Return whether calculated digest of XML tree matches expected digest
  *
  * \param[in] input Root of XML to digest

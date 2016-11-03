@@ -256,6 +256,8 @@ crm_remote_peer_cache_refresh(xmlNode *cib)
 {
     struct refresh_data data;
 
+    crm_peer_init();
+
     /* First, we mark all existing cache entries as dirty,
      * so that later we can remove any that weren't in the CIB.
      * We don't empty the cache, because we need to detect changes in state.

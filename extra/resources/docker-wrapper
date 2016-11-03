@@ -62,7 +62,7 @@ such as the CIB and the ability to manage cluster attributes.
 NOTE: Do not confuse this with the docker run command's
 '--priviledged' option which gives a container permission
 to access system devices. To toggle the docker run option,
- set --priviledged=true as part of the ${CONF_PREFIS}_run_opts
+ set --priviledged=true as part of the ${CONF_PREFIX}_run_opts
 arguments. The ${CONF_PREFIX}_privileged option only pertains
 to whether or not the container has access to the cluster's
 CIB or not. Some multistate resources need to be able to write

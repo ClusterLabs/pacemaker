@@ -22,7 +22,10 @@ include $(top_srcdir)/Makefile.common
 helpdir		= $(datadir)/$(PACKAGE)
 
 ascii		= crm_fencing.txt acls.txt
-docbook		= Pacemaker_Explained Clusters_from_Scratch Pacemaker_Remote
+docbook		= Clusters_from_Scratch \
+	Pacemaker_Development \
+	Pacemaker_Explained \
+	Pacemaker_Remote
 doc_DATA	= $(ascii) $(generated_docs)
 
 # rsync destination for www targets
@@ -116,6 +119,29 @@ endif
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
 Clusters_from_Scratch.build: $(PNGS) $(wildcard Clusters_from_Scratch/en-US/*.xml) $(CFS_XML) $(CFS_SHARED_XML) $(PUBLICAN_INTREE_DEPS)
+	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
+	rm -rf $(@:%.build=%)/publish/*
+if PUBLICAN_INTREE_BRAND
+	$(AM_V_PUB)cd $(@:%.build=%) \
+	&& RPM_BUILD_DIR="" XML_CATALOG_FILES="$(CURDIR)/publican-catalog" \
+	   $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) --brand_dir=../publican-clusterlabs \
+	   $(PCMK_quiet)
+else
+	$(AM_V_PUB)cd $(@:%.build=%) \
+	&& RPM_BUILD_DIR="" \
+	   $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) \
+	   $(PCMK_quiet)
+endif
+	rm -rf $(@:%.build=%)/tmp
+	touch $@
+
+
+PD_TXT=$(wildcard Pacemaker_Development/en-US/*.txt)
+PD_XML=$(PD_TXT:%.txt=%.xml)
+
+# We have to hardcode the book name
+# With '%' the test for 'newness' fails
+Pacemaker_Development.build: $(wildcard Pacemaker_Development/en-US/*.xml) $(PD_XML) $(PUBLICAN_INTREE_DEPS)
 	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/*
 if PUBLICAN_INTREE_BRAND

@@ -7,9 +7,22 @@ the options available for configuring pacemaker_remote-based nodes.
 
 == Resource Meta-Attributes for Guest Nodes ==
 
-When configuring a virtual machine to use as a guest node, these are the
-metadata options available to enable the resource as a guest node and
-define its connection parameters.
+When configuring a virtual machine as a guest node, the virtual machine is
+created using one of the usual resource agents for that purpose (for example,
+ocf:heartbeat:VirtualDomain or ocf:heartbeat:Xen), with additional metadata
+parameters.
+
+No restrictions are enforced on what agents may be used to create a guest node,
+but obviously the agent must create a distinct environment capable of running
+the pacemaker_remote daemon and cluster resources. An additional requirement is
+that fencing the host running the guest node resource must be sufficient for
+ensuring the guest node is stopped. This means, for example, that not all
+hypervisors supported by VirtualDomain may be used to create guest nodes; if
+the guest can survive the hypervisor being fenced, it may not be used as a
+guest node.
+
+Below are the metadata options available to enable a resource as a guest node
+and define its connection parameters.
 
 .Meta-attributes for configuring VM resources as guest nodes
 [width="95%",cols="2m,1,4<",options="header",align="center"]
@@ -118,6 +131,6 @@ If you want to get rid of that output, run (replacing $NODE_NAME appropriately):
 
 [WARNING]
 =========
-Be absolutely sure that the node's resource has been deleted from the
-configuration first.
+Be absolutely sure that there are no references to the node's resource in the
+configuration before running the above command.
 =========

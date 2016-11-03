@@ -71,10 +71,10 @@ Sample Darwin output:
    #health_disk:   green
 
 Units:
-   free_swap: Mb
-   ram_*:     Mb
+   free_swap: MB
+   ram_*:     MB
    cpu_speed (Linux): bogomips
-   cpu_speed (Darwin): Ghz
+   cpu_speed (Darwin): GHz
    *_free:    GB (or user-defined: disk_unit)
 
 </longdesc>
@@ -260,7 +260,7 @@ SysInfo_megabytes() {
                      n=a[1];
                      if ($0 == "G" || $0 == "") { n *= 1024 };
                      if (/^kB?/) { n /= 1024 };
-                     printf "%d\n", n }' # Intentionaly round to an integer
+                     printf "%d\n", n }' # Intentionally round to an integer
 }
 
 SysInfo_mem_units() {

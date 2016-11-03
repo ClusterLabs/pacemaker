@@ -35,10 +35,10 @@ context in which the rule is being used.
 |Description
 
 |role
-|+started+
+|+Started+
 |Limits the rule to apply only when the resource is in the specified
- role. Allowed values are +started+, +slave+, and +master+. A rule
- with +role="master"+ cannot determine the initial location of a
+ role. Allowed values are +Started+, +Slave+, and +Master+. A rule
+ with +role="Master"+ cannot determine the initial location of a
  clone instance and will only affect which of the active instances
  will be promoted.
  indexterm:[role,Constraint Rule]
@@ -73,9 +73,7 @@ context in which the rule is being used.
 indexterm:[Resource,Constraint,Attribute Expression]
 
 Expression objects are used to control a resource based on the
-attributes defined by a node or nodes.  In addition to any attributes
-added by the administrator, each node has a built-in node attribute
-called +#uname+ that can also be used.
+attributes defined by a node or nodes.
 
 .Properties of an Expression
 [width="95%",cols="1m,1,5<a",options="header",align="center"]
@@ -121,6 +119,35 @@ called +#uname+ that can also be used.
 
 |=========================================================
 
+In addition to any attributes added by the administrator, the cluster defines
+special, built-in node attributes for each node that can also be used.
+
+.Built-in node attributes
+[width="95%",cols="1m,5<a",options="header",align="center"]
+|=========================================================
+
+|Name
+|Value
+
+|#uname
+|Node name
+
+|#kind
+|Node type. Possible values are +cluster+, +remote+, and +container+. Kind is
+ +remote+ for Pacemaker Remote nodes created with the +ocf:pacemaker:remote+
+ resource, and +container+ for Pacemaker Remote guest nodes (a legacy name
+ unrelated to the now-common use of "container" for resource isolation).
+ '(since 1.1.13)'
+
+|#ra-version
+|The installed version of the resource agent on the node, as defined
+ by the +version+ attribute of the +resource-agent+ tag in the agent's
+ metadata. Valid only within rules controlling resource options. This can be
+ useful during rolling upgrades of a backward-incompatible resource agent.
+ '(coming in 1.1.17)'
+
+|=========================================================
+
 == Time- and Date-Based Expressions ==
 
 indexterm:[Time Based Expressions]
@@ -156,8 +183,8 @@ the context.
 
 * +gt:+ True if the current date/time is after +start+
 * +lt:+ True if the current date/time is before +end+
-* +in-range:+ True if the current date/time is after +start+ and before +end+
-* +date-spec:+ True if the current date/time matches a +date_spec+ object
+* +in_range:+ True if the current date/time is after +start+ and before +end+
+* +date_spec:+ True if the current date/time matches a +date_spec+ object
   (described below)
  indexterm:[operation,Constraint Expression]
  indexterm:[Constraint,Date/Time Expression,operation]
@@ -253,7 +280,7 @@ indexterm:[Duration]
 indexterm:[Resource,Constraint,Duration]
 
 Durations are used to calculate a value for +end+ when one is not
-supplied to +in-range+ operations. They contain the same fields as
+supplied to +in_range+ operations. They contain the same fields as
 +date_spec+ objects but without the limitations (e.g. you can have a
 duration of 19 months). As with +date_specs+, any field not supplied is
 ignored.

@@ -26,6 +26,10 @@
 #include <crm/pengine/rules.h>
 #include <crm/pengine/internal.h>
 
+#include <sys/types.h>
+#include <regex.h>
+#include <ctype.h>
+
 CRM_TRACE_INIT_DATA(pe_rules);
 
 crm_time_t *parse_xml_duration(crm_time_t * start, xmlNode * duration_spec);
@@ -33,6 +37,7 @@ crm_time_t *parse_xml_duration(crm_time_t * start, xmlNode * duration_spec);
 gboolean test_date_expression(xmlNode * time_expr, crm_time_t * now);
 gboolean cron_range_satisfied(crm_time_t * now, xmlNode * cron_spec);
 gboolean test_attr_expression(xmlNode * expr, GHashTable * hash, crm_time_t * now);
+gboolean pe_test_attr_expression_re(xmlNode * expr, GHashTable * hash, crm_time_t * now, pe_re_match_data_t * match_data);
 gboolean test_role_expression(xmlNode * expr, enum rsc_role_e role, crm_time_t * now);
 
 gboolean
@@ -56,6 +61,12 @@ test_ruleset(xmlNode * ruleset, GHashTable * node_hash, crm_time_t * now)
 gboolean
 test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
 {
+    return pe_test_rule_re(rule, node_hash, role, now, NULL);
+}
+
+gboolean
+pe_test_rule_re(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now, pe_re_match_data_t * match_data)
+{
     xmlNode *expr = NULL;
     gboolean test = TRUE;
     gboolean empty = TRUE;
@@ -72,7 +83,7 @@ test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time
 
     crm_trace("Testing rule %s", ID(rule));
     for (expr = __xml_first_child(rule); expr != NULL; expr = __xml_next_element(expr)) {
-        test = test_expression(expr, node_hash, role, now);
+        test = pe_test_expression_re(expr, node_hash, role, now, match_data);
         empty = FALSE;
 
         if (test && do_and == FALSE) {
@@ -96,12 +107,18 @@ test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time
 gboolean
 test_expression(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
 {
+    return pe_test_expression_re(expr, node_hash, role, now, NULL);
+}
+
+gboolean
+pe_test_expression_re(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now, pe_re_match_data_t * match_data)
+{
     gboolean accept = FALSE;
     const char *uname = NULL;
 
     switch (find_expression_type(expr)) {
         case nested_rule:
-            accept = test_rule(expr, node_hash, role, now);
+            accept = pe_test_rule_re(expr, node_hash, role, now, match_data);
             break;
         case attr_expr:
         case loc_expr:
@@ -109,7 +126,7 @@ test_expression(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e role, cr
              * no node to compare with
              */
             if (node_hash != NULL) {
-                accept = test_attr_expression(expr, node_hash, now);
+                accept = pe_test_attr_expression_re(expr, node_hash, now, match_data);
             }
             break;
 
@@ -130,7 +147,7 @@ test_expression(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e role, cr
     }
 
     crm_trace("Expression %s %s on %s",
-              ID(expr), accept ? "passed" : "failed", uname ? uname : "all ndoes");
+              ID(expr), accept ? "passed" : "failed", uname ? uname : "all nodes");
     return accept;
 }
 
@@ -206,7 +223,14 @@ test_role_expression(xmlNode * expr, enum rsc_role_e role, crm_time_t * now)
 gboolean
 test_attr_expression(xmlNode * expr, GHashTable * hash, crm_time_t * now)
 {
+    return pe_test_attr_expression_re(expr, hash, now, NULL);
+}
+
+gboolean
+pe_test_attr_expression_re(xmlNode * expr, GHashTable * hash, crm_time_t * now, pe_re_match_data_t * match_data)
+{
     gboolean accept = FALSE;
+    gboolean attr_allocated = FALSE;
     int cmp = 0;
     const char *h_val = NULL;
 
@@ -221,13 +245,27 @@ test_attr_expression(xmlNode * expr, GHashTable * hash, crm_time_t * now)
     type = crm_element_value(expr, XML_EXPR_ATTR_TYPE);
 
     if (attr == NULL || op == NULL) {
-        pe_err("Invlaid attribute or operation in expression"
+        pe_err("Invalid attribute or operation in expression"
                " (\'%s\' \'%s\' \'%s\')", crm_str(attr), crm_str(op), crm_str(value));
         return FALSE;
     }
 
+    if (match_data) {
+        char *resolved_attr = pe_expand_re_matches(attr, match_data);
+
+       if (resolved_attr) {
+           attr = (const char *) resolved_attr;
+           attr_allocated = TRUE;
+       }
+    }
+
     if (hash != NULL) {
         h_val = (const char *)g_hash_table_lookup(hash, attr);
+    }
+
+    if (attr_allocated) {
+        free((char *)attr);
+        attr = NULL;
     }
 
     if (value != NULL && h_val != NULL) {
@@ -734,4 +772,61 @@ unpack_instance_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_nam
         g_list_foreach(sorted, unpack_attr_set, &data);
         g_list_free_full(sorted, free);
     }
+}
+
+char *
+pe_expand_re_matches(const char *string, pe_re_match_data_t *match_data)
+{
+    size_t len = 0;
+    int i;
+    const char *p, *last_match_index;
+    char *p_dst, *result = NULL;
+
+    if (!string || string[0] == '\0' || !match_data) {
+        return NULL;
+    }
+
+    p = last_match_index = string;
+
+    while (*p) {
+        if (*p == '%' && *(p + 1) && isdigit(*(p + 1))) {
+            i = *(p + 1) - '0';
+            if (match_data->nregs >= i && match_data->pmatch[i].rm_so != -1 &&
+                match_data->pmatch[i].rm_eo > match_data->pmatch[i].rm_so) {
+                len += p - last_match_index + (match_data->pmatch[i].rm_eo - match_data->pmatch[i].rm_so);
+                last_match_index = p + 2;
+            }
+            p++;
+        }
+        p++;
+    }
+    len += p - last_match_index + 1;
+
+    /* FIXME: Excessive? */
+    if (len - 1 <= 0) {
+        return NULL;
+    }
+
+    p_dst = result = calloc(1, len);
+    p = string;
+
+    while (*p) {
+        if (*p == '%' && *(p + 1) && isdigit(*(p + 1))) {
+            i = *(p + 1) - '0';
+            if (match_data->nregs >= i && match_data->pmatch[i].rm_so != -1 &&
+                match_data->pmatch[i].rm_eo > match_data->pmatch[i].rm_so) {
+                /* rm_eo can be equal to rm_so, but then there is nothing to do */
+                int match_len = match_data->pmatch[i].rm_eo - match_data->pmatch[i].rm_so;
+                memcpy(p_dst, match_data->string + match_data->pmatch[i].rm_so, match_len);
+                p_dst += match_len;
+            }
+            p++;
+        } else {
+            *(p_dst) = *(p);
+            p_dst++;
+        }
+        p++;
+    }
+
+    return result;
 }

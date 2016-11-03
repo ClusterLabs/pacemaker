@@ -131,9 +131,9 @@ ClusterMon_start() {
     cmd_prefix=""
     cmd_suffix=""
     if [ ! -z $OCF_RESKEY_user ]; then
-	su - $OCF_RESKEY_user -c "${HA_SBIN_DIR}/crm_mon -p $OCF_RESKEY_pidfile -d -i $OCF_RESKEY_update $OCF_RESKEY_extra_options -h $OCF_RESKEY_htmlfile"
+	su - $OCF_RESKEY_user -c "$CMON_CMD"
     else
-	${HA_SBIN_DIR}/crm_mon -p $OCF_RESKEY_pidfile -d -i $OCF_RESKEY_update $OCF_RESKEY_extra_options -h $OCF_RESKEY_htmlfile
+	$CMON_CMD
     fi
     ClusterMon_exit $?
 }
@@ -153,7 +153,10 @@ ClusterMon_monitor() {
     if [ -f $OCF_RESKEY_pidfile ]; then
 	pid=`cat $OCF_RESKEY_pidfile`
 	if [ ! -z $pid ]; then
-	    kill -s 0 $pid >/dev/null 2>&1; rc=$?
+	    str=$(echo "su - $OCF_RESKEY_user -c \"$CMON_CMD\"" | tr 'crmon, \t' 'xxxxxxxx')
+	    ps -o "args=${str}" -p $pid 2>/dev/null | \
+		grep -qE "[c]rm_mon.*${OCF_RESKEY_pidfile}"
+	    rc=$?
 	    case $rc in
 		0) exit $OCF_SUCCESS;;
 		1) exit $OCF_NOT_RUNNING;;
@@ -243,6 +246,8 @@ fi
 : ${OCF_RESKEY_htmlfile:="/tmp/ClusterMon_${OCF_RESOURCE_INSTANCE}.html"}
 
 OCF_RESKEY_update=`expr $OCF_RESKEY_update / 1000`
+
+CMON_CMD="${HA_SBIN_DIR}/crm_mon -p $OCF_RESKEY_pidfile -d -i $OCF_RESKEY_update $OCF_RESKEY_extra_options -h $OCF_RESKEY_htmlfile"
 
 case $__OCF_ACTION in
 meta-data)	meta_data

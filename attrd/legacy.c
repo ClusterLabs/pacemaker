@@ -635,7 +635,7 @@ struct attrd_callback_s {
     char *value;
 };
 
-/*
+/*!
  * \internal
  * \brief Free an attrd callback structure
  */
@@ -777,7 +777,7 @@ attrd_local_callback(xmlNode * msg)
     const char *value = crm_element_value(msg, F_ATTRD_VALUE);
     const char *host = crm_element_value(msg, F_ATTRD_HOST);
 
-    if (safe_str_eq(op, "refresh")) {
+    if (safe_str_eq(op, ATTRD_OP_REFRESH)) {
         crm_notice("Sending full refresh (origin=%s)", from);
         g_hash_table_foreach(attr_hash, update_for_hash_entry, NULL);
         return;

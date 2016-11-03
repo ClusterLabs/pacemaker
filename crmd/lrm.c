@@ -103,7 +103,7 @@ copy_meta_keys(gpointer key, gpointer value, gpointer user_data)
     }
 }
 
-/*
+/*!
  * \internal
  * \brief Remove a recurring operation from a resource's history
  *
@@ -132,7 +132,7 @@ history_remove_recurring_op(rsc_history_t *history, const lrmd_event_data_t *op)
     return FALSE;
 }
 
-/*
+/*!
  * \internal
  * \brief Free all recurring operations in resource history
  *
@@ -150,7 +150,7 @@ history_free_recurring_ops(rsc_history_t *history)
     history->recurring_op_list = NULL;
 }
 
-/*
+/*!
  * \internal
  * \brief Free resource history
  *
@@ -274,7 +274,7 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
     }
 }
 
-/*
+/*!
  * \internal
  * \brief Send a direct OK ack for a resource task
  *
@@ -870,7 +870,8 @@ do_lrm_query_internal(lrm_state_t *lrm_state, int update_flags)
     peer = crm_get_peer_full(0, lrm_state->node_name, CRM_GET_PEER_ANY);
     CRM_CHECK(peer != NULL, return NULL);
 
-    xml_state = do_update_node_cib(peer, update_flags, NULL, __FUNCTION__);
+    xml_state = create_node_state_update(peer, update_flags, NULL,
+                                         __FUNCTION__);
 
     xml_data = create_xml_node(xml_state, XML_CIB_TAG_LRM);
     crm_xml_add(xml_data, XML_ATTR_ID, peer->uuid);
@@ -1395,7 +1396,7 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action, int rc)
     xmlNode *xml_rsc = find_xml_node(action, XML_CIB_TAG_RESOURCE, TRUE);
 
     if(xml_rsc == NULL) {
-        /* Do something else?  driect_ack? */
+        /* @TODO Should we do something else, like direct ack? */
         crm_info("Skipping %s=%d on %s (%p): no resource",
                  crm_element_value(action, XML_LRM_ATTR_TASK_KEY), rc, target_node, lrm_state);
         return;
@@ -1629,7 +1630,6 @@ do_lrm_invoke(long long action,
 
         CRM_CHECK(xml_rsc != NULL, return);
 
-        /* only the first 16 chars are used by the LRM */
         params = find_xml_node(input->xml, XML_TAG_ATTRS, TRUE);
 
         if (safe_str_eq(operation, CRMD_ACTION_DELETE)) {
@@ -1902,7 +1902,8 @@ send_direct_ack(const char *to_host, const char *to_sys,
     }
 
     peer = crm_get_peer(0, fsa_our_uname);
-    update = do_update_node_cib(peer, node_update_none, NULL, __FUNCTION__);
+    update = create_node_state_update(peer, node_update_none, NULL,
+                                      __FUNCTION__);
 
     iter = create_xml_node(update, XML_CIB_TAG_LRM);
     crm_xml_add(iter, XML_ATTR_ID, fsa_our_uuid);
@@ -1985,6 +1986,44 @@ stop_recurring_actions(gpointer key, gpointer value, gpointer user_data)
 }
 
 static void
+record_pending_op(const char *node_name, lrmd_rsc_info_t *rsc, lrmd_event_data_t *op)
+{
+    CRM_CHECK(node_name != NULL, return);
+    CRM_CHECK(rsc != NULL, return);
+    CRM_CHECK(op != NULL, return);
+
+    if (op->op_type == NULL
+        || safe_str_eq(op->op_type, CRMD_ACTION_CANCEL)
+        || safe_str_eq(op->op_type, CRMD_ACTION_DELETE)) {
+        return;
+    }
+
+    if (op->params == NULL) {
+        return;
+
+    } else {
+        const char *record_pending = crm_meta_value(op->params, XML_OP_ATTR_PENDING);
+
+        if (record_pending == NULL || crm_is_true(record_pending) == FALSE) {
+            return;
+         }
+    }
+
+    op->call_id = -1;
+    op->op_status = PCMK_LRM_OP_PENDING;
+    op->rc = PCMK_OCF_UNKNOWN;
+
+    op->t_run = time(NULL);
+    op->t_rcchange = op->t_run;
+
+    /* write a "pending" entry to the CIB, inhibit notification */
+    crm_debug("Recording pending op %s_%s_%d on %s in the CIB",
+              op->rsc_id, op->op_type, op->interval, node_name);
+
+    do_update_resource(node_name, rsc, op);
+}
+
+static void
 do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operation, xmlNode * msg,
               xmlNode * request)
 {
@@ -1995,6 +2034,7 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
     fsa_data_t *msg_data = NULL;
     const char *transition = NULL;
     gboolean stop_recurring = FALSE;
+    bool send_nack = FALSE;
 
     CRM_CHECK(rsc != NULL, return);
     CRM_CHECK(operation != NULL, return);
@@ -2015,7 +2055,7 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
 
         /* pcmk remote connections are a special use case.
          * We never ever want to stop monitoring a connection resource until
-         * the entire migration has completed. If the connection is ever unexpected
+         * the entire migration has completed. If the connection is unexpectedly
          * severed, even during a migration, this is an event we must detect.*/
         stop_recurring = FALSE;
 
@@ -2045,19 +2085,32 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
     /* now do the op */
     crm_info("Performing key=%s op=%s_%s_%d", transition, rsc->id, operation, op->interval);
 
-    if (fsa_state != S_NOT_DC && fsa_state != S_POLICY_ENGINE && fsa_state != S_TRANSITION_ENGINE) {
-        if (safe_str_neq(operation, "fail")
-            && safe_str_neq(operation, CRMD_ACTION_STOP)) {
-            crm_info("Discarding attempt to perform action %s on %s in state %s",
-                     operation, rsc->id, fsa_state2string(fsa_state));
-            op->rc = CRM_DIRECT_NACK_RC;
-            op->op_status = PCMK_LRM_OP_ERROR;
-            send_direct_ack(NULL, NULL, rsc, op, rsc->id);
-            lrmd_free_event(op);
-            free(op_id);
-            return;
-        }
+    if (is_set(fsa_input_register, R_SHUTDOWN) && safe_str_eq(operation, RSC_START)) {
+        register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
+        send_nack = TRUE;
+
+    } else if (fsa_state != S_NOT_DC
+               && fsa_state != S_POLICY_ENGINE /* Recalculating */
+               && fsa_state != S_TRANSITION_ENGINE
+               && safe_str_neq(operation, "fail")
+               && safe_str_neq(operation, CRMD_ACTION_STOP)) {
+        send_nack = TRUE;
     }
+
+    if(send_nack) {
+        crm_notice("Discarding attempt to perform action %s on %s in state %s (shutdown=%s)",
+                   operation, rsc->id, fsa_state2string(fsa_state),
+                   is_set(fsa_input_register, R_SHUTDOWN)?"true":"false");
+
+        op->rc = CRM_DIRECT_NACK_RC;
+        op->op_status = PCMK_LRM_OP_ERROR;
+        send_direct_ack(NULL, NULL, rsc, op, rsc->id);
+        lrmd_free_event(op);
+        free(op_id);
+        return;
+    }
+
+    record_pending_op(lrm_state->node_name, rsc, op);
 
     op_id = generate_op_key(rsc->id, op->op_type, op->interval);
 

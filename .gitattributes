@@ -1,1 +1,4 @@
-configure.ac	export-subst
+/configure.ac	export-subst
+/.*	export-ignore
+/travisci_build_coverity_scan.sh	export-ignore
+/scratch.c	export-ignore

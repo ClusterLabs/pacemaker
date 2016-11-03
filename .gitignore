@@ -73,10 +73,6 @@ mcp/pacemaker.service
 mcp/pacemaker.upstart
 pengine/regression.core.sh
 publican.cfg
-shell/modules/help.py
-shell/modules/ra.py
-shell/modules/ui.py
-shell/modules/vars.py
 tools/cibsecret
 tools/coverage.sh
 tools/crm_error
@@ -120,7 +116,6 @@ mcp/pacemakerd
 pengine/pengine
 pengine/pengine.xml
 pengine/ptest
-shell/regression/testcases/confbasic-xml.filter
 scratch
 tools/attrd_updater
 tools/cibadmin
@@ -144,6 +139,8 @@ doc/shared/en-US/*.xml
 doc/Clusters_from_Scratch.build
 doc/Clusters_from_Scratch/en-US/Ap-*.xml
 doc/Clusters_from_Scratch/en-US/Ch-*.xml
+doc/Pacemaker_Development.build
+doc/Pacemaker_Development/en-US/Ch-*.xml
 doc/Pacemaker_Explained.build
 doc/Pacemaker_Explained/en-US/Ch-*.xml
 doc/Pacemaker_Explained/en-US/Ap-*.xml

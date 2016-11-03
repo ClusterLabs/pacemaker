@@ -23,10 +23,8 @@
 
   <xi:include href="Ap-FAQ.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <xi:include href="Ap-OCF.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-  <xi:include href="Ap-Changes.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <xi:include href="Ap-Install.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <xi:include href="Ap-Upgrade.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-  <xi:include href="Ap-Upgrade-Config.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <xi:include href="Ap-LSB.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <xi:include href="Ap-Samples.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <appendix id="ap-further-reading">

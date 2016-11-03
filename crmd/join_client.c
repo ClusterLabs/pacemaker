@@ -226,7 +226,6 @@ do_cl_join_finalize_respond(long long action,
     }
 
     /* send our status section to the DC */
-    crm_debug("Confirming join join-%d: %s", join_id, crm_element_value(input->msg, F_CRM_TASK));
     tmp1 = do_lrm_query(TRUE, fsa_our_uname);
     if (tmp1 != NULL) {
         xmlNode *reply = create_request(CRM_OP_JOIN_CONFIRM, tmp1, fsa_our_dc,
@@ -234,36 +233,26 @@ do_cl_join_finalize_respond(long long action,
 
         crm_xml_add_int(reply, F_CRM_JOIN_ID, join_id);
 
-        crm_debug("join-%d: Join complete."
-                  "  Sending local LRM status to %s", join_id, fsa_our_dc);
+        crm_debug("Confirming join-%d: sending local operation history to %s",
+                  join_id, fsa_our_dc);
 
-        if (first_join) {
+        /*
+         * If this is the node's first join since the crmd started on it, clear
+         * any previous transient node attributes, to handle the case where
+         * the node restarted so quickly that the cluster layer didn't notice.
+         *
+         * Do not remove the resources though, they'll be cleaned up in
+         * do_dc_join_ack(). Removing them here creates a race condition if the
+         * crmd is being recovered. Instead of a list of active resources from
+         * the lrmd, we may end up with a blank status section. If we are _NOT_
+         * lucky, we will probe for the "wrong" instance of anonymous clones and
+         * end up with multiple active instances on the machine.
+         */
+        if (first_join && is_not_set(fsa_input_register, R_SHUTDOWN)) {
             first_join = FALSE;
-
-            /*
-             * Clear any previous transient node attribute and lrm operations
-             *
-             * Corosync has a nasty habit of not being able to tell if a
-             *   node is returning or didn't leave in the first place.
-             * This confuses Pacemaker because it never gets a "node up"
-             *   event which is normally used to clean up the status section.
-             *
-             * Do not remove the resources though, they'll be cleaned up in
-             *   do_dc_join_ack().  Removing them here creates a race
-             *   condition if the crmd is being recovered.
-             * Instead of a list of active resources from the lrmd
-             *   we may end up with a blank status section.
-             * If we are _NOT_ lucky, we will probe for the "wrong" instance
-             *   of anonymous clones and end up with multiple active
-             *   instances on the machine.
-             */
             erase_status_tag(fsa_our_uname, XML_TAG_TRANSIENT_NODEATTRS, 0);
-
-            /* Just in case attrd was still around too */
-            if (is_not_set(fsa_input_register, R_SHUTDOWN)) {
-                update_attrd(fsa_our_uname, "terminate", NULL, NULL, FALSE);
-                update_attrd(fsa_our_uname, XML_CIB_ATTR_SHUTDOWN, "0", NULL, FALSE);
-            }
+            update_attrd(fsa_our_uname, "terminate", NULL, NULL, FALSE);
+            update_attrd(fsa_our_uname, XML_CIB_ATTR_SHUTDOWN, "0", NULL, FALSE);
         }
 
         send_cluster_message(crm_get_peer(0, fsa_our_dc), crm_msg_crmd, reply, TRUE);
@@ -277,7 +266,8 @@ do_cl_join_finalize_respond(long long action,
         free_xml(tmp1);
 
     } else {
-        crm_err("Could not send our LRM state to the DC");
+        crm_err("Could not confirm join-%d with %s: Local operation history failed",
+                join_id, fsa_our_dc);
         register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
     }
 }

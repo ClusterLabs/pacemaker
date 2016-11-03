@@ -350,7 +350,7 @@ services_action_create_generic(const char *exec, const char *args[])
 }
 
 #if SUPPORT_DBUS
-/*
+/*!
  * \internal
  * \brief Update operation's pending DBus call, unreferencing old one if needed
  *
@@ -763,24 +763,20 @@ resources_list_standards(void)
 
 #if SUPPORT_SYSTEMD
     agents = systemd_unit_listall();
-#else
-    agents = NULL;
-#endif
-
     if (agents) {
         standards = g_list_append(standards, strdup("systemd"));
         g_list_free_full(agents, free);
     }
-#if SUPPORT_UPSTART
-    agents = upstart_job_listall();
-#else
-    agents = NULL;
 #endif
 
+#if SUPPORT_UPSTART
+    agents = upstart_job_listall();
     if (agents) {
         standards = g_list_append(standards, strdup("upstart"));
         g_list_free_full(agents, free);
     }
+#endif
+
 #if SUPPORT_NAGIOS
     agents = resources_os_list_nagios_agents();
     if (agents) {

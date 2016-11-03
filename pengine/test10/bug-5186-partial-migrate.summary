@@ -4,7 +4,7 @@ Node bl460g1n7 (3232261593): UNCLEAN (offline)
 Online: [ bl460g1n6 bl460g1n8 ]
 
  prmDummy	(ocf::pacemaker:Dummy):	Started bl460g1n7 (UNCLEAN)
- prmVM2	(ocf::heartbeat:VirtualDomain):	Started bl460g1n7 (UNCLEAN)
+ prmVM2	(ocf::heartbeat:VirtualDomain):	Migrating bl460g1n7 (UNCLEAN)
  Resource Group: grpStonith6
      prmStonith6-1	(stonith:external/stonith-helper):	Started bl460g1n8 
      prmStonith6-2	(stonith:external/ipmi):	Started bl460g1n8 

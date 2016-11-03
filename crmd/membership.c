@@ -128,8 +128,20 @@ crmd_node_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output, 
     }
 }
 
+/*!
+ * \internal
+ * \brief Create an XML node state tag with updates
+ *
+ * \param[in/out] node    Node whose state will be used for update
+ * \param[in]     flags   Bitmask of node_update_flags indicating what to update
+ * \param[in/out] parent  XML node to contain update (or NULL)
+ * \param[in]     source  Who requested the update (only used for logging)
+ *
+ * \return Pointer to created node state tag
+ */
 xmlNode *
-do_update_node_cib(crm_node_t * node, int flags, xmlNode * parent, const char *source)
+create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
+                         const char *source)
 {
     const char *value = NULL;
     xmlNode *node_state;
@@ -370,13 +382,13 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
 
         g_hash_table_iter_init(&iter, crm_peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-            do_update_node_cib(node, flags, node_list, source);
+            create_node_state_update(node, flags, node_list, source);
         }
 
         if (crm_remote_peer_cache) {
             g_hash_table_iter_init(&iter, crm_remote_peer_cache);
             while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-                do_update_node_cib(node, flags, node_list, source);
+                create_node_state_update(node, flags, node_list, source);
             }
         }
 

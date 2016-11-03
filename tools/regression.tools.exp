@@ -887,10 +887,10 @@ Error performing operation: Invalid argument
 </cib>
 =#=#=#= End test: Require a destination when migrating a resource that is stopped - Invalid argument (22) =#=#=#=
 * Passed: crm_resource   - Require a destination when migrating a resource that is stopped
-=#=#=#= Begin test: Don't support migration to non-existant locations =#=#=#=
+=#=#=#= Begin test: Don't support migration to non-existent locations =#=#=#=
 Error performing operation: node 'i.dont.exist' is unknown
 Error performing operation: No such device or address
-=#=#=#= Current cib after: Don't support migration to non-existant locations =#=#=#=
+=#=#=#= Current cib after: Don't support migration to non-existent locations =#=#=#=
 <cib epoch="17" num_updates="1" admin_epoch="1">
   <configuration>
     <crm_config>
@@ -928,8 +928,8 @@ Error performing operation: No such device or address
     </node_state>
   </status>
 </cib>
-=#=#=#= End test: Don't support migration to non-existant locations - No such device or address (6) =#=#=#=
-* Passed: crm_resource   - Don't support migration to non-existant locations
+=#=#=#= End test: Don't support migration to non-existent locations - No such device or address (6) =#=#=#=
+* Passed: crm_resource   - Don't support migration to non-existent locations
 =#=#=#= Begin test: Create a fencing resource =#=#=#=
 =#=#=#= Current cib after: Create a fencing resource =#=#=#=
 <cib epoch="18" num_updates="0" admin_epoch="1">

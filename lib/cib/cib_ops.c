@@ -794,7 +794,7 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
                     path = new_path;
                     parent = parent->parent;
                 }
-                crm_trace("Got: %s\n", path);
+                crm_trace("Got: %s", path);
 
                 if (*answer == NULL) {
                     *answer = create_xml_node(NULL, "xpath-query");

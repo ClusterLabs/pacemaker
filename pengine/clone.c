@@ -20,6 +20,7 @@
 
 #include <crm/msg_xml.h>
 #include <allocate.h>
+#include <notif.h>
 #include <utils.h>
 #include <allocate.h>
 
@@ -845,12 +846,12 @@ clone_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     started = custom_action(rsc, started_key(rsc),
                             RSC_STARTED, NULL, !child_starting, TRUE, data_set);
 
-    update_action_flags(start, pe_action_pseudo | pe_action_runnable);
-    update_action_flags(started, pe_action_pseudo);
+    update_action_flags(start, pe_action_pseudo | pe_action_runnable, __FUNCTION__);
+    update_action_flags(started, pe_action_pseudo, __FUNCTION__);
     started->priority = INFINITY;
 
     if (child_active || child_starting) {
-        update_action_flags(started, pe_action_runnable);
+        update_action_flags(started, pe_action_runnable, __FUNCTION__);
     }
 
     child_ordering_constraints(rsc, data_set);
@@ -865,11 +866,11 @@ clone_create_actions(resource_t * rsc, pe_working_set_t * data_set)
                             RSC_STOPPED, NULL, !child_stopping, TRUE, data_set);
 
     stopped->priority = INFINITY;
-    update_action_flags(stop, pe_action_pseudo | pe_action_runnable);
+    update_action_flags(stop, pe_action_pseudo | pe_action_runnable, __FUNCTION__);
     if (allow_dependent_migrations) {
-        update_action_flags(stop, pe_action_migrate_runnable);
+        update_action_flags(stop, pe_action_migrate_runnable, __FUNCTION__);
     }
-    update_action_flags(stopped, pe_action_pseudo | pe_action_runnable);
+    update_action_flags(stopped, pe_action_pseudo | pe_action_runnable, __FUNCTION__);
     if (clone_data->stop_notify == NULL) {
         clone_data->stop_notify =
             create_notification_boundaries(rsc, RSC_STOP, stop, stopped, data_set);
@@ -1120,6 +1121,7 @@ clone_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
             node_t *chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
 
             if (chosen != NULL && is_set_recursive(child_rsc, pe_rsc_block, TRUE) == FALSE) {
+                pe_rsc_trace(rsc_rh, "Allowing %s: %s %d", constraint->id, chosen->details->uname, chosen->weight);
                 rhs = g_list_prepend(rhs, chosen);
             }
         }
@@ -1193,7 +1195,7 @@ clone_action_flags(action_t * action, node_t * node)
 
         child_action =
             find_first_action(child->actions, NULL, task_s, child->children ? NULL : node);
-        pe_rsc_trace(child, "Checking for %s in %s on %s", task_s, child->id,
+        pe_rsc_trace(action->rsc, "Checking for %s in %s on %s", task_s, child->id,
                      node ? node->details->uname : "none");
         if (child_action) {
             enum pe_action_flags child_flags = child->cmds->action_flags(child_action, node);
@@ -1247,7 +1249,8 @@ clone_update_actions_interleave(action_t * first, action_t * then, node_t * node
     const char *first_task = task2text(task);
 
     /* Fix this - lazy */
-    if (strstr(first->uuid, "_stopped_0") || strstr(first->uuid, "_demoted_0")) {
+    if (crm_ends_with(first->uuid, "_stopped_0")
+        || crm_ends_with(first->uuid, "_demoted_0")) {
         current = TRUE;
     }
 
@@ -1343,7 +1346,8 @@ clone_update_actions(action_t * first, action_t * then, node_t * node, enum pe_a
         && then->rsc && then->rsc->variant >= pe_clone) {
         clone_variant_data_t *clone_data = NULL;
 
-        if (strstr(then->uuid, "_stop_0") || strstr(then->uuid, "_demote_0")) {
+        if (crm_ends_with(then->uuid, "_stop_0")
+            || crm_ends_with(then->uuid, "_demote_0")) {
             get_clone_variant_data(clone_data, first->rsc);
             rsc = first->rsc->id;
         } else {

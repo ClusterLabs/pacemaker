@@ -541,7 +541,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
         if (client) {
             send_client_notify(client->id, client, notify);
         }
-    } else {
+    } else if (client_connections != NULL) {
         g_hash_table_foreach(client_connections, send_client_notify, notify);
     }
 
@@ -551,24 +551,26 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
 static void
 send_generic_notify(int rc, xmlNode * request)
 {
-    int call_id = 0;
-    xmlNode *notify = NULL;
-    xmlNode *rsc_xml = get_xpath_object("//" F_LRMD_RSC, request, LOG_ERR);
-    const char *rsc_id = crm_element_value(rsc_xml, F_LRMD_RSC_ID);
-    const char *op = crm_element_value(request, F_LRMD_OPERATION);
+    if (client_connections != NULL) {
+        int call_id = 0;
+        xmlNode *notify = NULL;
+        xmlNode *rsc_xml = get_xpath_object("//" F_LRMD_RSC, request, LOG_ERR);
+        const char *rsc_id = crm_element_value(rsc_xml, F_LRMD_RSC_ID);
+        const char *op = crm_element_value(request, F_LRMD_OPERATION);
 
-    crm_element_value_int(request, F_LRMD_CALLID, &call_id);
+        crm_element_value_int(request, F_LRMD_CALLID, &call_id);
 
-    notify = create_xml_node(NULL, T_LRMD_NOTIFY);
-    crm_xml_add(notify, F_LRMD_ORIGIN, __FUNCTION__);
-    crm_xml_add_int(notify, F_LRMD_RC, rc);
-    crm_xml_add_int(notify, F_LRMD_CALLID, call_id);
-    crm_xml_add(notify, F_LRMD_OPERATION, op);
-    crm_xml_add(notify, F_LRMD_RSC_ID, rsc_id);
+        notify = create_xml_node(NULL, T_LRMD_NOTIFY);
+        crm_xml_add(notify, F_LRMD_ORIGIN, __FUNCTION__);
+        crm_xml_add_int(notify, F_LRMD_RC, rc);
+        crm_xml_add_int(notify, F_LRMD_CALLID, call_id);
+        crm_xml_add(notify, F_LRMD_OPERATION, op);
+        crm_xml_add(notify, F_LRMD_RSC_ID, rsc_id);
 
-    g_hash_table_foreach(client_connections, send_client_notify, notify);
+        g_hash_table_foreach(client_connections, send_client_notify, notify);
 
-    free_xml(notify);
+        free_xml(notify);
+    }
 }
 
 static void
@@ -1566,7 +1568,7 @@ cancel_op(const char *rsc_id, const char *action, int interval)
 
     if (safe_str_eq(rsc->class, "stonith")) {
         /* The service library does not handle stonith operations.
-         * We have to handle recurring stonith opereations ourselves. */
+         * We have to handle recurring stonith operations ourselves. */
         for (gIter = rsc->recurring_ops; gIter != NULL; gIter = gIter->next) {
             lrmd_cmd_t *cmd = gIter->data;
 

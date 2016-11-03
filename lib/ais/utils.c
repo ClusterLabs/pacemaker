@@ -190,7 +190,7 @@ spawn_child(crm_child_t * child)
     } else {
         pcmk_setscheduler(child);
 
-        /* Setup the two alternate arg arrarys */
+        /* Setup the two alternate arg arrays */
         opts_vgrind[0] = ais_strdup(VALGRIND_BIN);
         if (use_callgrind) {
             opts_vgrind[1] = ais_strdup("--tool=callgrind");

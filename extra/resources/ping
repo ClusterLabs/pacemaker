@@ -242,29 +242,26 @@ fping_check() {
     esac
 
     active=0
-    f_out=`mktemp`
-    f_err=`mktemp`
 
     n=$OCF_RESKEY_attempts
     timeout=`expr $OCF_RESKEY_timeout \* 1000 / $OCF_RESKEY_attempts`
 
     cmd="$p_exe -r $OCF_RESKEY_attempts -t $timeout -B 1.0 $OCF_RESKEY_options $OCF_RESKEY_host_list"
-    $cmd>$f_out 2>$f_err; rc=$?
-    active=`grep alive $f_out|wc -l`
+    output=`$cmd 2>&1`; rc=$?
+    active=`echo "$output" | grep "is alive" | wc -l`
 
     case $rc in
  	0) 
 	    ;;
  	1) 
-	    for h in `grep unreachable $f_out | awk '{print $1}'`; do
+	    for h in `echo "$output" | grep "is unreachable" | awk '{print $1}'`; do
 		ping_conditional_log warn "$h is inactive"
 	    done
 	    ;;
  	*) 
-	    ocf_log err "Unexpected result for '$cmd' $rc: `tr '\n' ';' < $f_err`"
+	    ocf_log err "Unexpected result for '$cmd' $rc: `echo "$output" | tr '\n' ';'`"
 	    ;;
     esac
-    rm -f $f_out $f_err
 
     return $active
 }

@@ -95,7 +95,6 @@ cib_remove_node(uint32_t id, const char *name)
 
     crm_trace("Removing %s from the CIB", name);
 
-    /* TODO: Use 'id' instead */
     if(name == NULL && id == 0) {
         return -ENOTUNIQ;
     }
@@ -382,7 +381,7 @@ read_local_hb_uuid(void)
     FILE *input = fopen(UUID_FILE, "r");
 
     if (input == NULL) {
-        crm_info("Could not open UUID file %s\n", UUID_FILE);
+        crm_info("Could not open UUID file %s", UUID_FILE);
         return FALSE;
     }
 
@@ -777,13 +776,13 @@ try_corosync(int command, enum cluster_type_e stack)
             /* Go direct to the Quorum API */
             rc = quorum_initialize(&q_handle, NULL, &quorum_type);
             if (rc != CS_OK) {
-                crm_err("Could not connect to the Quorum API: %d\n", rc);
+                crm_err("Could not connect to the Quorum API: %d", rc);
                 return FALSE;
             }
 
             rc = quorum_getquorate(q_handle, &quorate);
             if (rc != CS_OK) {
-                crm_err("Could not obtain the current Quorum API state: %d\n", rc);
+                crm_err("Could not obtain the current Quorum API state: %d", rc);
                 return FALSE;
             }
 
@@ -799,7 +798,7 @@ try_corosync(int command, enum cluster_type_e stack)
             /* Go direct to the CPG API */
             rc = cpg_initialize(&c_handle, NULL);
             if (rc != CS_OK) {
-                crm_err("Could not connect to the Cluster Process Group API: %d\n", rc);
+                crm_err("Could not connect to the Cluster Process Group API: %d", rc);
                 return FALSE;
             }
 

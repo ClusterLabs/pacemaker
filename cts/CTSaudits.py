@@ -177,7 +177,7 @@ class DiskAudit(ClusterAudit):
                                 % (dfout, node, used, remain))
                 else:
                     if remaining_mb < 10 or used_percent > 95:
-                        self.CM.log("CRIT: Out of log disk space on %s (%d%% / %dMb)"
+                        self.CM.log("CRIT: Out of log disk space on %s (%d%% / %dMB)"
                                     % (node, used_percent, remaining_mb))
                         result = None
                         if self.CM.Env["continue"] == 1:
@@ -185,7 +185,7 @@ class DiskAudit(ClusterAudit):
                         else:
                             try:
                                 answer = raw_input('Continue? [nY]')
-                            except EOFError, e:
+                            except EOFError as e:
                                 answer = "n"
 
                         if answer and answer == "n":
@@ -193,9 +193,9 @@ class DiskAudit(ClusterAudit):
                             ret = 0
 
                     elif remaining_mb < 100 or used_percent > 90:
-                        self.CM.log("WARN: Low on log disk space (%d Mbytes) on %s" % (remaining_mb, node))
+                        self.CM.log("WARN: Low on log disk space (%dMB) on %s" % (remaining_mb, node))
         return result
-    
+
     def is_applicable(self):
         if self.CM.Env["DoBSC"]:
             return 0

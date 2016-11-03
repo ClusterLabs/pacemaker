@@ -1,3 +1,13 @@
+/*
+ * Copyright (C) 2014-2016 Andrew Beekhof <andrew@beekhof.net>
+ *
+ * This source code is licensed under GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
+ */
+
+#ifndef PCMK_DBUS__H
+#  define PCMK_DBUS__H
+
 #ifndef DBUS_TIMEOUT_USE_DEFAULT
 #  define DBUS_TIMEOUT_USE_DEFAULT -1
 #endif
@@ -15,5 +25,7 @@ char *pcmk_dbus_get_property(
     void (*callback)(const char *name, const char *value, void *userdata), void *userdata,
     DBusPendingCall **pending, int timeout);
 
-bool pcmk_dbus_find_error(const char *method, DBusPendingCall* pending, DBusMessage *reply, DBusError *error);
+bool pcmk_dbus_find_error(DBusPendingCall *pending, DBusMessage *reply,
+                          DBusError *error);
 
+#endif /* PCMK_DBUS__H */

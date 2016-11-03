@@ -209,7 +209,7 @@ If you wanted to delete the +primitive+ tag with id +child_DoFencing+,
 you would run:
 
 ----
-# cibadmin --delete --crm_xml '<primitive id="child_DoFencing"/>'
+# cibadmin --delete --xml-text '<primitive id="child_DoFencing"/>'
 ----
 
 === Updating the Configuration Without Using XML ===

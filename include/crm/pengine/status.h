@@ -206,7 +206,7 @@ struct node_s {
 #  define pe_rsc_needs_quorum	 0x10000000ULL
 #  define pe_rsc_needs_fencing	 0x20000000ULL
 #  define pe_rsc_needs_unfencing 0x40000000ULL
-#  define pe_rsc_have_unfencing  0x80000000ULL
+#  define pe_rsc_have_unfencing  0x80000000ULL /* obsolete (not set or used by cluster) */
 
 enum pe_graph_flags {
     pe_graph_none = 0x00000,
@@ -397,13 +397,14 @@ enum pe_ordering {
     pe_order_restart               = 0x1000,    /* 'then' is runnable if 'first' is optional or runnable */
     pe_order_stonith_stop          = 0x2000,    /* only applies if the action is non-pseudo */
     pe_order_serialize_only        = 0x4000,    /* serialize */
+    pe_order_same_node             = 0x8000,    /* applies only if 'first' and 'then' are on same node */
 
     pe_order_implies_first_printed = 0x10000,   /* Like ..implies_first but only ensures 'first' is printed, not mandatory */
     pe_order_implies_then_printed  = 0x20000,   /* Like ..implies_then but only ensures 'then' is printed, not mandatory */
 
     pe_order_asymmetrical          = 0x100000,  /* Indicates asymmetrical one way ordering constraint. */
     pe_order_load                  = 0x200000,  /* Only relevant if... */
-    pe_order_one_or_more           = 0x400000,  /* 'then' is only runnable if one or more of it's dependencies are too */
+    pe_order_one_or_more           = 0x400000,  /* 'then' is runnable only if one or more of its dependencies are too */
     pe_order_anti_colocation       = 0x800000,
 
     pe_order_preserve              = 0x1000000, /* Hack for breaking user ordering constraints with container resources */

@@ -274,7 +274,7 @@ pe_find_node_any(GListPtr nodes, const char *id, const char *uname)
     if (match) {
         return match;
     }
-    crm_trace("Looking up %s via it's uname instead", uname);
+    crm_trace("Looking up %s via its uname instead", uname);
     return pe_find_node(nodes, uname);
 }
 

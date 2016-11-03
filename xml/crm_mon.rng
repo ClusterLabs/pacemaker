@@ -53,12 +53,19 @@
                     </element>
                     <element name="resources_configured">
                         <attribute name="number"> <data type="int" /> </attribute>
+                        <optional>
+                            <attribute name="disabled"> <data type="int" /> </attribute>
+                            <attribute name="blocked"> <data type="int" /> </attribute>
+                        </optional>
                     </element>
                     <optional>
                         <element name="cluster_options">
                             <attribute name="stonith-enabled"> <data type="boolean" /> </attribute>
                             <attribute name="symmetric-cluster"> <data type="boolean" /> </attribute>
                             <attribute name="no-quorum-policy"> <text/> </attribute>
+                            <optional>
+                                <attribute name="maintenance-mode"> <data type="boolean" /> </attribute>
+                            </optional>
                         </element>
                     </optional>
                 </interleave>
@@ -242,8 +249,14 @@
             <attribute name="id"> <text/> </attribute>
             <attribute name="resource_agent"> <text/> </attribute>
             <attribute name="role"> <text/> </attribute>
+            <optional>
+                <attribute name="target_role"> <text/> </attribute>
+            </optional>
             <attribute name="active"> <data type="boolean" /> </attribute>
             <attribute name="orphaned"> <data type="boolean" /> </attribute>
+            <optional>
+                <attribute name="blocked"> <data type="boolean" /> </attribute>
+            </optional>
             <attribute name="managed"> <data type="boolean" /> </attribute>
             <attribute name="failed"> <data type="boolean" /> </attribute>
             <attribute name="failure_ignored"> <data type="boolean" /> </attribute>
@@ -251,14 +264,14 @@
             <optional>
                 <attribute name="pending"> <text/> </attribute>
             </optional>
-            <optional>
+            <zeroOrMore>
                 <!-- crm_mon prints the node only if group-by-node is false -->
                 <element name="node">
                     <attribute name="name"> <text/> </attribute>
                     <attribute name="id"> <text/> </attribute>
                     <attribute name="cached"> <data type="boolean" /> </attribute>
                 </element>
-            </optional>
+            </zeroOrMore>
         </element>
     </define>
 
@@ -278,6 +291,9 @@
             <attribute name="managed"> <data type="boolean" /> </attribute>
             <attribute name="failed"> <data type="boolean" /> </attribute>
             <attribute name="failure_ignored"> <data type="boolean" /> </attribute>
+            <optional>
+                <attribute name="target_role"> <text/> </attribute>
+            </optional>
             <ref name="resource_list" />
         </element>
     </define>

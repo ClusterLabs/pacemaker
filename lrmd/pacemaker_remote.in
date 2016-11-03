@@ -48,9 +48,14 @@ failure()
 status()
 {
 	pid=$(pidof $1 2>/dev/null)
-	rtrn=$?
+	local rtrn=$?
 	if [ $rtrn -ne 0 ]; then
 		echo "$1 is stopped"
+		if [ -f "@localstatedir@/run/$prog.pid" ]; then
+			rtrn=1
+		else
+			rtrn=3
+		fi
 	else
 		echo "$1 (pid $pid) is running..."
 	fi
@@ -61,6 +66,7 @@ if [ -d @CONFIGDIR@ ]; then
 	[ -f @INITDIR@/functions ] && . @INITDIR@/functions
 set -a
 	[ -f @CONFIGDIR@/pacemaker ] && . @CONFIGDIR@/pacemaker
+	[ -f @CONFIGDIR@/sbd ] && . @CONFIGDIR@/sbd
 set +a
 fi
 
@@ -71,6 +77,14 @@ elif [ -d "@localstatedir@/lock" ]; then
 	LOCK_DIR="@localstatedir@/lock" 
 fi
 [ -z "$LOCK_FILE" ] && LOCK_FILE="$LOCK_DIR/pacemaker_remote"
+
+# Check if there is a valid watchdog-device configured in sbd config
+if [ x != "x$SBD_WATCHDOG_DEV" -a "/dev/null" != "$SBD_WATCHDOG_DEV" -a -c "$SBD_WATCHDOG_DEV" ]; then
+	# enhance for unavailable chkconfig - don't touch sbd for now
+	if chkconfig --list sbd_remote_helper 2>/dev/null | grep -q ":on"; then
+		SBD_SERVICE=sbd_remote_helper
+	fi
+fi
 
 start()
 {
@@ -100,6 +114,8 @@ start()
 		fi
 	fi
 	echo
+
+	[ "x$SBD_SERVICE" = "x" ] || service $SBD_SERVICE start
 }
 
 stop()
@@ -115,12 +131,16 @@ stop()
 		sleep 1
 		echo -n "."
 	    done
+	else
+		echo -n "$desc is already stopped"
 	fi
 
 	rm -f "$LOCK_FILE"
 	rm -f "@localstatedir@/run/$prog.pid"
 	success
 	echo
+
+	[ "x$SBD_SERVICE" = "x" ] || service $SBD_SERVICE stop
 }
 
 rtrn=0

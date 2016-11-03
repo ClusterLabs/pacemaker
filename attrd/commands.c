@@ -777,16 +777,17 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
         }
     }
 
-    /* this only involves cluster nodes. */
-    if(v->nodeid == 0 && (v->is_remote == FALSE)) {
-        if(crm_element_value_int(xml, F_ATTRD_HOST_ID, (int*)&v->nodeid) == 0) {
-            /* Create the name/id association */
-            crm_node_t *peer = crm_get_peer(v->nodeid, host);
-            crm_trace("We know %s's node id now: %s", peer->uname, peer->uuid);
-            if(election_state(writer) == election_won) {
-                write_attributes(FALSE, TRUE);
-                return;
-            }
+    /* If this is a cluster node whose node ID we are learning, remember it */
+    if ((v->nodeid == 0) && (v->is_remote == FALSE)
+        && (crm_element_value_int(xml, F_ATTRD_HOST_ID, (int*)&v->nodeid) == 0)) {
+
+        crm_node_t *known_peer = crm_get_peer(v->nodeid, host);
+
+        crm_trace("We know %s's node id now: %s",
+                  known_peer->uname, known_peer->uuid);
+        if (election_state(writer) == election_won) {
+            write_attributes(FALSE, TRUE);
+            return;
         }
     }
 }

@@ -31,9 +31,8 @@
 
 #  include <crm/lrmd.h>
 #  include <crm/common/logging.h>
-#  include <crm/common/io.h>
 #  include <crm/common/ipcs.h>
-#  include <crm/common/procfs.h>
+#  include <crm/common/internal.h>
 
 /* Dynamic loading of libraries */
 void *find_library_function(void **handle, const char *lib, const char *fn, int fatal);
@@ -130,6 +129,7 @@ gboolean check_number(const char *value);
 gboolean check_quorum(const char *value);
 gboolean check_script(const char *value);
 gboolean check_utilization(const char *value);
+long crm_get_sbd_timeout(void);
 gboolean check_sbd_timeout(const char *value);
 
 /* Shared PE/crmd functionality */
@@ -147,14 +147,6 @@ extern int node_score_yellow;
 extern int node_score_infinity;
 
 /* Assorted convenience functions */
-static inline int
-crm_strlen_zero(const char *s)
-{
-    return !s || *s == '\0';
-}
-
-char *add_list_element(char *list, const char *value);
-
 int crm_pid_active(long pid, const char *daemon);
 void crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile);
 
@@ -199,14 +191,7 @@ crm_set_bit(const char *function, const char *target, long long word, long long 
 #  define set_bit(word, bit) word = crm_set_bit(__FUNCTION__, NULL, word, bit)
 #  define clear_bit(word, bit) word = crm_clear_bit(__FUNCTION__, NULL, word, bit)
 
-void g_hash_destroy_str(gpointer data);
-
-long long crm_int_helper(const char *text, char **end_text);
-char *crm_concat(const char *prefix, const char *suffix, char join);
 char *generate_hash_key(const char *crm_msg_reference, const char *sys);
-
-bool crm_compress_string(const char *data, int length, int max, char **result,
-                         unsigned int *result_len);
 
 /*! remote tcp/tls helper functions */
 typedef struct crm_remote_s crm_remote_t;
@@ -218,6 +203,7 @@ xmlNode *crm_remote_parse_buffer(crm_remote_t * remote);
 int crm_remote_tcp_connect(const char *host, int port);
 int crm_remote_tcp_connect_async(const char *host, int port, int timeout,       /*ms */
                                  int *timer_id, void *userdata, void (*callback) (void *userdata, int sock));
+int crm_remote_accept(int ssock);
 
 #  ifdef HAVE_GNUTLS_GNUTLS_H
 /*!
@@ -309,12 +295,6 @@ typedef struct qb_ipc_response_header cs_ipc_header_response_t;
 #      include <corosync/corodefs.h>
 #      include <corosync/coroipcc.h>
 #      include <corosync/coroipc_types.h>
-static inline int
-qb_to_cs_error(int a)
-{
-    return a;
-}
-
 typedef coroipc_request_header_t cs_ipc_header_request_t;
 typedef coroipc_response_header_t cs_ipc_header_response_t;
 #    endif

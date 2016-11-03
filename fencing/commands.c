@@ -1413,7 +1413,7 @@ search_devices_record_result(struct device_search_s *search, const char *device,
     }
 }
 
-/*
+/*!
  * \internal
  * \brief Check whether the local host is allowed to execute a fencing action
  *
@@ -1628,7 +1628,7 @@ struct st_query_data {
     int call_options;
 };
 
-/*
+/*!
  * \internal
  * \brief Add action-specific attributes to query reply XML
  *
@@ -1665,7 +1665,7 @@ add_action_specific_attributes(xmlNode *xml, const char *action,
     }
 }
 
-/*
+/*!
  * \internal
  * \brief Add "disallowed" attribute to query reply XML if appropriate
  *
@@ -1686,7 +1686,7 @@ add_disallowed(xmlNode *xml, const char *action, stonith_device_t *device,
     }
 }
 
-/*
+/*!
  * \internal
  * \brief Add child element with action-specific values to query reply XML
  *
@@ -2461,30 +2461,30 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
         rc = stonith_fence_history(request, &data);
 
     } else if (crm_str_eq(op, STONITH_OP_DEVICE_ADD, TRUE)) {
-        const char *id = NULL;
+        const char *device_id = NULL;
 
-        rc = stonith_device_register(request, &id, FALSE);
-        do_stonith_notify_device(call_options, op, rc, id);
+        rc = stonith_device_register(request, &device_id, FALSE);
+        do_stonith_notify_device(call_options, op, rc, device_id);
 
     } else if (crm_str_eq(op, STONITH_OP_DEVICE_DEL, TRUE)) {
         xmlNode *dev = get_xpath_object("//" F_STONITH_DEVICE, request, LOG_ERR);
-        const char *id = crm_element_value(dev, XML_ATTR_ID);
+        const char *device_id = crm_element_value(dev, XML_ATTR_ID);
 
-        rc = stonith_device_remove(id, FALSE);
-        do_stonith_notify_device(call_options, op, rc, id);
+        rc = stonith_device_remove(device_id, FALSE);
+        do_stonith_notify_device(call_options, op, rc, device_id);
 
     } else if (crm_str_eq(op, STONITH_OP_LEVEL_ADD, TRUE)) {
-        char *id = NULL;
+        char *device_id = NULL;
 
-        rc = stonith_level_register(request, &id);
-        do_stonith_notify_level(call_options, op, rc, id);
-        free(id);
+        rc = stonith_level_register(request, &device_id);
+        do_stonith_notify_level(call_options, op, rc, device_id);
+        free(device_id);
 
     } else if (crm_str_eq(op, STONITH_OP_LEVEL_DEL, TRUE)) {
-        char *id = NULL;
+        char *device_id = NULL;
 
-        rc = stonith_level_remove(request, &id);
-        do_stonith_notify_level(call_options, op, rc, id);
+        rc = stonith_level_remove(request, &device_id);
+        do_stonith_notify_level(call_options, op, rc, device_id);
 
     } else if (crm_str_eq(op, STONITH_OP_CONFIRM, TRUE)) {
         async_command_t *cmd = create_async_command(request);
@@ -2498,12 +2498,12 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
         free_xml(reply);
 
     } else if(safe_str_eq(op, CRM_OP_RM_NODE_CACHE)) {
-        int id = 0;
+        int node_id = 0;
         const char *name = NULL;
 
-        crm_element_value_int(request, XML_ATTR_ID, &id);
+        crm_element_value_int(request, XML_ATTR_ID, &node_id);
         name = crm_element_value(request, XML_ATTR_UNAME);
-        reap_crm_member(id, name);
+        reap_crm_member(node_id, name);
 
         return pcmk_ok;
 

@@ -100,9 +100,9 @@ upstart_job_by_name(const gchar * arg_name, gchar ** out_unit, int timeout)
     reply = pcmk_dbus_send_recv(msg, upstart_proxy, &error, timeout);
     dbus_message_unref(msg);
 
-    if(error.name) {
-        /* ignore "already started" or "not running" errors */
-        crm_err("Could not issue %s for %s: %s", method, arg_name, error.name);
+    if (dbus_error_is_set(&error)) {
+        crm_err("Could not issue %s for %s: %s", method, arg_name, error.message);
+        dbus_error_free(&error);
 
     } else if(!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH, __FUNCTION__, __LINE__)) {
         crm_err("Invalid return type for %s", method);
@@ -193,8 +193,9 @@ upstart_job_listall(void)
     reply = pcmk_dbus_send_recv(msg, upstart_proxy, &error, DBUS_TIMEOUT_USE_DEFAULT);
     dbus_message_unref(msg);
 
-    if(error.name) {
-        crm_err("Call to %s failed: %s", method, error.name);
+    if (dbus_error_is_set(&error)) {
+        crm_err("Call to %s failed: %s", method, error.message);
+        dbus_error_free(&error);
         return NULL;
 
     } else if (!dbus_message_iter_init(reply, &args)) {
@@ -232,7 +233,7 @@ upstart_job_listall(void)
                 llpc++;
             }
             lpc++;
-            crm_trace("%s -> %s\n", path, job);
+            crm_trace("%s -> %s", path, job);
             units = g_list_append(units, fix_upstart_name(job));
         }
         dbus_message_iter_next (&unit);
@@ -271,8 +272,9 @@ get_first_instance(const gchar * job, int timeout)
     reply = pcmk_dbus_send_recv(msg, upstart_proxy, &error, timeout);
     dbus_message_unref(msg);
 
-    if(error.name) {
-        crm_err("Call to %s failed: %s", method, error.name);
+    if (dbus_error_is_set(&error)) {
+        crm_err("Call to %s failed: %s", method, error.message);
+        dbus_error_free(&error);
         goto done;
 
     } else if(reply == NULL) {
@@ -390,12 +392,13 @@ upstart_async_dispatch(DBusPendingCall *pending, void *user_data)
         reply = dbus_pending_call_steal_reply(pending);
     }
 
-    if(pcmk_dbus_find_error(op->action, pending, reply, &error)) {
+    if (pcmk_dbus_find_error(pending, reply, &error)) {
 
         /* ignore "already started" or "not running" errors */
         if (!upstart_mask_error(op, error.name)) {
             crm_err("%s for %s: %s", op->action, op->rsc, error.message);
         }
+        dbus_error_free(&error);
 
     } else if (!g_strcmp0(op->action, "stop")) {
         /* No return vaue */
@@ -536,10 +539,12 @@ upstart_job_exec(svc_action_t * op, gboolean synchronous)
     dbus_error_init(&error);
     reply = pcmk_dbus_send_recv(msg, upstart_proxy, &error, op->timeout);
 
-    if(error.name) {
+    if (dbus_error_is_set(&error)) {
         if(!upstart_mask_error(op, error.name)) {
-            crm_err("Could not issue %s for %s: %s (%s)", action, op->rsc, error.name, job);
+            crm_err("Could not issue %s for %s: %s (%s)",
+                    action, op->rsc, error.message, job);
         }
+        dbus_error_free(&error);
 
     } else if (!g_strcmp0(op->action, "stop")) {
         /* No return vaue */

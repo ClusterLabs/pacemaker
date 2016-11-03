@@ -95,7 +95,7 @@ sysrq_trigger(char t)
         crm_perror(LOG_ERR, "Opening sysrq-trigger failed");
         return;
     }
-    crm_info("sysrq-trigger: %c\n", t);
+    crm_info("sysrq-trigger: %c", t);
     fprintf(procf, "%c\n", t);
     fclose(procf);
     return;
@@ -140,7 +140,11 @@ pcmk_panic_local(void)
 
     /* We're either pacemakerd, or a pacemaker daemon running as root */
 
-    sysrq_trigger('b');
+    if (strcmp("crash", getenv("PCMK_panic_action")) == 0) {
+        sysrq_trigger('c');
+    } else {
+        sysrq_trigger('b');
+    }
     /* reboot(RB_HALT_SYSTEM); rc = errno; */
     reboot(RB_AUTOBOOT);
     rc = errno;
@@ -247,4 +251,38 @@ pcmk_locate_sbd(void)
     free(sbd_path);
 
     return sbd_pid;
+}
+
+long
+crm_get_sbd_timeout(void)
+{
+    const char *env_value = getenv("SBD_WATCHDOG_TIMEOUT");
+    long sbd_timeout = crm_get_msec(env_value);
+
+    return sbd_timeout;
+}
+
+gboolean
+check_sbd_timeout(const char *value)
+{
+    long sbd_timeout = crm_get_sbd_timeout();
+    long st_timeout = crm_get_msec(value);
+
+    if(value == NULL || st_timeout <= 0) {
+        crm_notice("Watchdog may be enabled but stonith-watchdog-timeout is disabled: %s", value);
+
+    } else if(pcmk_locate_sbd() == 0) {
+        do_crm_log_always(LOG_EMERG, "Shutting down: stonith-watchdog-timeout is configured (%ldms) but SBD is not active", st_timeout);
+        crm_exit(DAEMON_RESPAWN_STOP);
+        return FALSE;
+
+    } else if(st_timeout < sbd_timeout) {
+        do_crm_log_always(LOG_EMERG, "Shutting down: stonith-watchdog-timeout (%ldms) is too short (must be greater than %ldms)",
+                          st_timeout, sbd_timeout);
+        crm_exit(DAEMON_RESPAWN_STOP);
+        return FALSE;
+    }
+
+    crm_info("Watchdog functionality is consistent: %s delay exceeds timeout of %ldms", value, sbd_timeout);
+    return TRUE;
 }

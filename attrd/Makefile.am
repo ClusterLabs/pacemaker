@@ -15,23 +15,21 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-MAINTAINERCLEANFILES    = Makefile.in
+include $(top_srcdir)/Makefile.common
 
-AM_CPPFLAGS                = -I$(top_builddir)/include -I$(top_srcdir)/include   \
-			  -I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl
-
-halibdir		= $(CRM_DAEMON_DIR)
-halib_PROGRAMS		= attrd
+halibdir	= $(CRM_DAEMON_DIR)
+halib_PROGRAMS	= attrd
 ## SOURCES
 
-noinst_HEADERS		=
+attrd_CFLAGS	= $(CFLAGS_HARDENED_EXE)
+attrd_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
 
-attrd_SOURCES		=
-attrd_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la 		\
-		$(top_builddir)/lib/common/libcrmcommon.la		\
-		$(top_builddir)/lib/cib/libcib.la			\
+attrd_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la	\
+		$(top_builddir)/lib/common/libcrmcommon.la	\
+		$(top_builddir)/lib/cib/libcib.la		\
 		$(CLUSTERLIBS)
 
+attrd_SOURCES	=
 if BUILD_ATOMIC_ATTRD
 attrd_SOURCES	+= main.c commands.c
 else
@@ -40,9 +38,3 @@ endif
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~
-
-install-exec-local:
-
-uninstall-local:
-
-.PHONY: install-exec-hook

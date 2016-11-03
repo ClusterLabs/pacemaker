@@ -28,6 +28,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
+#include <netinet/tcp.h>
 #include <netdb.h>
 
 #include <stdlib.h>
@@ -357,7 +358,7 @@ crm_remote_send(crm_remote_t * remote, xmlNode * msg)
     header->payload_uncompressed = iov[1].iov_len;
     header->size_total = iov[0].iov_len + iov[1].iov_len;
 
-    crm_trace("Sending len[0]=%d, start=%x\n",
+    crm_trace("Sending len[0]=%d, start=%x",
               (int)iov[0].iov_len, *(int*)(void*)xml_text);
     rc = crm_remote_sendv(remote, iov, 2);
     if (rc < 0) {
@@ -439,19 +440,21 @@ crm_remote_parse_buffer(crm_remote_t * remote)
 
 /*!
  * \internal
- * \brief Determine if a remote session has data to read
+ * \brief Wait for a remote session to have data to read
  *
- * \retval 0, timeout occurred.
- * \retval positive, data is ready to be read
- * \retval negative, session has ended
+ * \param[in] remote         Connection to check
+ * \param[in] total_timeout  Maximum time (in ms) to wait
+ *
+ * \return Positive value if ready to be read, 0 on timeout, -errno on error
  */
 int
-crm_remote_ready(crm_remote_t * remote, int timeout /* ms */ )
+crm_remote_ready(crm_remote_t *remote, int total_timeout)
 {
     struct pollfd fds = { 0, };
     int sock = 0;
     int rc = 0;
     time_t start;
+    int timeout = total_timeout;
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
     if (remote->tls_session) {
@@ -482,7 +485,7 @@ crm_remote_ready(crm_remote_t * remote, int timeout /* ms */ )
          * specific timeout we are trying to honor, attempt
          * to adjust the timeout to the closest second. */
         if (errno == EINTR && (timeout > 0)) {
-            timeout = timeout - ((time(NULL) - start) * 1000);
+            timeout = total_timeout - ((time(NULL) - start) * 1000);
             if (timeout < 1000) {
                 timeout = 1000;
             }
@@ -491,7 +494,7 @@ crm_remote_ready(crm_remote_t * remote, int timeout /* ms */ )
         rc = poll(&fds, 1, timeout);
     } while (rc < 0 && errno == EINTR);
 
-    return rc;
+    return (rc < 0)? -errno : rc;
 }
 
 
@@ -629,12 +632,8 @@ crm_remote_recv(crm_remote_t * remote, int total_timeout /*ms */ , int *disconne
             crm_err("poll timed out (%d ms) while waiting to receive msg", remaining_timeout);
             return FALSE;
 
-        } else if (rc == -EAGAIN) {
-            crm_trace("waiting for remote connection data (up to %dms)",
-                      remaining_timeout);
-
         } else if(rc < 0) {
-            crm_debug("poll() failed: %s (%d)", pcmk_strerror(rc), rc);
+            crm_debug("could not poll: %s (%d)", pcmk_strerror(rc), rc);
 
         } else {
             rc = crm_remote_recv_once(remote);
@@ -650,7 +649,7 @@ crm_remote_recv(crm_remote_t * remote, int total_timeout /*ms */ , int *disconne
             return FALSE;
         }
 
-        remaining_timeout = remaining_timeout - ((time(NULL) - start) * 1000);
+        remaining_timeout = total_timeout - ((time(NULL) - start) * 1000);
     }
 
     return FALSE;
@@ -927,4 +926,84 @@ int
 crm_remote_tcp_connect(const char *host, int port)
 {
     return crm_remote_tcp_connect_async(host, port, -1, NULL, NULL, NULL);
+}
+
+
+/* Convert a struct sockaddr address to a string, IPv4 and IPv6: */
+
+static char *
+get_ip_str(const struct sockaddr_storage * sa, char * s, size_t maxlen)
+{
+    switch(((struct sockaddr *)sa)->sa_family) {
+        case AF_INET:
+            inet_ntop(AF_INET, &(((struct sockaddr_in *)sa)->sin_addr),
+                      s, maxlen);
+            break;
+
+        case AF_INET6:
+            inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)sa)->sin6_addr),
+                      s, maxlen);
+            break;
+
+        default:
+            strncpy(s, "Unknown AF", maxlen);
+            return NULL;
+    }
+
+    return s;
+}
+
+int
+crm_remote_accept(int ssock)
+{
+    int csock = 0;
+    int rc = 0;
+    int flag = 0;
+    unsigned laddr = 0;
+    struct sockaddr_storage addr;
+    char addr_str[INET6_ADDRSTRLEN];
+#ifdef TCP_USER_TIMEOUT
+    int optval;
+    long sbd_timeout = crm_get_sbd_timeout();
+#endif
+
+    /* accept the connection */
+    laddr = sizeof(addr);
+    memset(&addr, 0, sizeof(addr));
+    csock = accept(ssock, (struct sockaddr *)&addr, &laddr);
+    get_ip_str(&addr, addr_str, INET6_ADDRSTRLEN);
+    crm_info("New remote connection from %s", addr_str);
+
+    if (csock == -1) {
+        crm_err("accept socket failed");
+        return -1;
+    }
+
+    if ((flag = fcntl(csock, F_GETFL)) >= 0) {
+        if ((rc = fcntl(csock, F_SETFL, flag | O_NONBLOCK)) < 0) {
+            crm_err("fcntl() write failed");
+            close(csock);
+            return rc;
+        }
+    } else {
+        crm_err("fcntl() read failed");
+        close(csock);
+        return flag;
+    }
+
+#ifdef TCP_USER_TIMEOUT
+    if (sbd_timeout > 0) {
+        optval = sbd_timeout / 2; /* time to fail and retry before watchdog */
+        rc = setsockopt(csock, SOL_TCP, TCP_USER_TIMEOUT,
+                        &optval, sizeof(optval));
+        if (rc < 0) {
+            crm_err("setting TCP_USER_TIMEOUT (%d) on client socket failed",
+                    optval);
+            close(csock);
+            return rc;
+        }
+    }
+#endif
+
+    return csock;
 }

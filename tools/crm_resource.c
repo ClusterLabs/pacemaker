@@ -112,8 +112,8 @@ static struct crm_option long_options[] = {
     {"list-raw",   0, 0, 'l', "\tList the IDs of all instantiated resources (no groups/clones/...)"},
     {"list-cts",   0, 0, 'c', NULL, pcmk_option_hidden},
     {"list-operations", 0, 0, 'O', "\tList active resource operations.  Optionally filtered by resource (-r) and/or node (-N)"},
-    {"list-all-operations", 0, 0, 'o', "List all resource operations.  Optionally filtered by resource (-r) and/or node (-N)"},
-    {"pending",    0, 0, 'j', "\t\tDisplay pending state if 'record-pending' is enabled\n"},
+    {"list-all-operations", 0, 0, 'o', "List all resource operations.  Optionally filtered by resource (-r) and/or node (-N)\n"},
+    {"pending",    0, 0, 'j', "\t\tDisplay pending state if 'record-pending' is enabled\n", pcmk_option_hidden},
 
     {"list-standards",        0, 0, 0, "\tList supported standards"},
     {"list-ocf-providers",    0, 0, 0, "List all available OCF providers"},

@@ -154,7 +154,7 @@ rsc_expand_action(action_t * action)
         gboolean notify = FALSE;
 
         if (action->rsc->parent == NULL) {
-            /* Only outter-most resources have notification actions */
+            /* Only outermost resources have notification actions */
             notify = is_set(action->rsc->flags, pe_rsc_notify);
         }
 
@@ -190,7 +190,7 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
                                                 pe_action_optional, pe_order_implies_then);
 
         } else if (is_set(flags, pe_action_optional) == FALSE) {
-            if (update_action_flags(then, pe_action_optional | pe_action_clear)) {
+            if (update_action_flags(then, pe_action_optional | pe_action_clear, __FUNCTION__)) {
                 changed |= pe_graph_updated_then;
             }
         }
@@ -222,7 +222,8 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
                                                  pe_action_optional, pe_order_implies_first);
 
         } else if (is_set(flags, pe_action_optional) == FALSE) {
-            if (update_action_flags(first, pe_action_runnable | pe_action_clear)) {
+            pe_rsc_trace(first->rsc, "first unrunnable: %s then %s", first->uuid, then->uuid);
+            if (update_action_flags(first, pe_action_runnable | pe_action_clear, __FUNCTION__)) {
                 changed |= pe_graph_updated_first;
             }
         }
@@ -267,7 +268,7 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
             /* if the runnable before count for then exceeds the required number
              * of "before" runnable actions... mark then as runnable */
             if (then->runnable_before >= then->required_runnable_before) {
-                if (update_action_flags(then, pe_action_runnable)) {
+                if (update_action_flags(then, pe_action_runnable, __FUNCTION__)) {
                     changed |= pe_graph_updated_then;
                 }
             }
@@ -288,7 +289,8 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
                                                 pe_action_runnable, pe_order_runnable_left);
 
         } else if (is_set(flags, pe_action_runnable) == FALSE) {
-            if (update_action_flags(then, pe_action_runnable | pe_action_clear)) {
+            pe_rsc_trace(then->rsc, "then unrunnable: %s then %s", first->uuid, then->uuid);
+            if (update_action_flags(then, pe_action_runnable | pe_action_clear, __FUNCTION__)) {
                 changed |= pe_graph_updated_then;
             }
         }
@@ -361,13 +363,13 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
         && (flags & pe_action_optional) == 0) {
         processed = TRUE;
         crm_trace("%s implies %s printed", first->uuid, then->uuid);
-        update_action_flags(then, pe_action_print_always);      /* dont care about changed */
+        update_action_flags(then, pe_action_print_always, __FUNCTION__);      /* dont care about changed */
     }
 
     if ((type & pe_order_implies_first_printed) && (flags & pe_action_optional) == 0) {
         processed = TRUE;
         crm_trace("%s implies %s printed", then->uuid, first->uuid);
-        update_action_flags(first, pe_action_print_always);     /* dont care about changed */
+        update_action_flags(first, pe_action_print_always, __FUNCTION__);     /* dont care about changed */
     }
 
     if ((type & pe_order_implies_then
@@ -379,7 +381,7 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
         && is_set(first->rsc->flags, pe_rsc_block)
         && is_not_set(first->flags, pe_action_runnable)) {
 
-        if (update_action_flags(then, pe_action_runnable | pe_action_clear)) {
+        if (update_action_flags(then, pe_action_runnable | pe_action_clear, __FUNCTION__)) {
             changed |= pe_graph_updated_then;
         }
 
@@ -507,6 +509,17 @@ update_action(action_t * then)
             if (then_node) {
                 crm_trace("Then: Found node %s for %s", then_node->details->uname, then->uuid);
             }
+        }
+
+        /* Disable constraint if it only applies when on same node, but isn't */
+        if (is_set(other->type, pe_order_same_node) && first_node && then_node
+            && (first_node->details != then_node->details)) {
+
+            crm_trace("Disabled constraint %s on %s -> %s on %s",
+                       other->action->uuid, first_node->details->uname,
+                       then->uuid, then_node->details->uname);
+            other->type = pe_order_none;
+            continue;
         }
 
         clear_bit(changed, pe_graph_updated_first);
@@ -1257,7 +1270,7 @@ check_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper)
         return FALSE;
 
     } else if ((wrapper->type == pe_order_optional)
-               && strstr(wrapper->action->uuid, "_stop_0")
+               && crm_ends_with(wrapper->action->uuid, "_stop_0")
                && is_set(wrapper->action->flags, pe_action_migrate_runnable)) {
 
         /* for optional only ordering, ordering is not preserved for
@@ -1327,7 +1340,7 @@ check_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper)
                && wrapper->action->rsc != action->rsc
                && is_set(wrapper->action->rsc->flags, pe_rsc_failed)
                && is_not_set(wrapper->action->rsc->flags, pe_rsc_managed)
-               && strstr(wrapper->action->uuid, "_stop_0")
+               && crm_ends_with(wrapper->action->uuid, "_stop_0")
                && action->rsc && action->rsc->variant >= pe_clone) {
         crm_warn("Ignoring requirement that %s complete before %s:"
                  " unmanaged failed resources cannot prevent clone shutdown",
