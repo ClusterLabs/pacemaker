@@ -2640,13 +2640,17 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
          * setting role=slave is not dangerous because no master will be
          * promoted until the failed resource has been fully stopped
          */
-        rsc->next_role = RSC_ROLE_STOPPED;
         if (action->on_fail == action_fail_block) {
             rsc->role = RSC_ROLE_MASTER;
+            rsc->next_role = RSC_ROLE_STOPPED;
+
+        } else if(rc == PCMK_OCF_NOT_RUNNING) {
+            rsc->role = RSC_ROLE_STOPPED;
 
         } else {
             crm_warn("Forcing %s to stop after a failed demote action", rsc->id);
             rsc->role = RSC_ROLE_SLAVE;
+            rsc->next_role = RSC_ROLE_STOPPED;
         }
 
     } else if (compare_version("2.0", op_version) > 0 && safe_str_eq(task, CRMD_ACTION_START)) {
@@ -3051,6 +3055,7 @@ update_resource_state(resource_t * rsc, node_t * node, xmlNode * xml_op, const c
     }
 }
 
+
 gboolean
 unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last_failure,
               enum action_fail_response * on_fail, pe_working_set_t * data_set)
@@ -3265,7 +3270,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
     }
 
   done:
-    pe_rsc_trace(rsc, "Resource %s after %s: role=%s", rsc->id, task, role2text(rsc->role));
+    pe_rsc_trace(rsc, "Resource %s after %s: role=%s, next=%s", rsc->id, task, role2text(rsc->role), role2text(rsc->next_role));
     return TRUE;
 }
 
