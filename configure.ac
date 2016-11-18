@@ -1251,7 +1251,7 @@ if test "x${enable_systemd}" = xyes; then
 	PCMK_FEATURES="$PCMK_FEATURES systemd"
 
 	AC_MSG_CHECKING([for systemd path for system unit files])
-	systemdunitdir="${systemdunitdir:}"
+	systemdunitdir="${systemdunitdir-}"
 	PKG_CHECK_VAR([systemdunitdir], [systemd],
 		      [systemdsystemunitdir], [],[
 	   systemdunitdir=no

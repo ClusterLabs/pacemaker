@@ -305,11 +305,11 @@ class crm_cs_v0(BasePatterns):
         self.components["corosync"] = [
             r"pacemakerd.*error:.*Connection destroyed",
             r"attrd.*:\s*crit:.*Lost connection to Corosync service",
-            r"stonith.*:\s*Corosync connection terminated",
+            r"stonith.*:\s*(Corosync connection terminated|Shutting down)",
             r"cib.*:\s*Corosync connection lost!\s+Exiting.",
-            r"crmd.*:\s*connection terminated",
+            r"crmd.*:\s*(connection terminated|Disconnected from Corosync)",
             r"pengine.*Scheduling Node .* for STONITH",
-            r"crmd.*:\s*Peer %s was terminated \(.*\) by .* for .*:\s*OK",
+            r"crmd.*:\s*Peer .* was terminated \(.*\) by .* for .*:\s*OK",
         ]
 
         self.components["cib-ignore"] = [

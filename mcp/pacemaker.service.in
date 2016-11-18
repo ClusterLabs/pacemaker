@@ -7,6 +7,7 @@ After=basic.target
 After=syslog.service
 After=rsyslog.service
 After=network.target
+After=time-sync.target
 After=corosync.service
 
 Requires=dbus.service

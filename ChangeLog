@@ -1,3 +1,14 @@
+* Wed Nov 16 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.16-1
+- Update source tarball to revision: a145ce1
+- Changesets: 9
+- Diff:       12 files changed, 40 insertions(+), 56 deletions(-)
+
+- Changes since Pacemaker-1.1.16-rc1
+  + Fix minor build issue
+  + Correct license specified for some library source files to LGPL
+  + systemd: order pacemaker after time-sync target
+
+
 * Thu Nov 03 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.16-rc1
 - Update source tarball to revision: 2fc4716
 - Changesets: 360
