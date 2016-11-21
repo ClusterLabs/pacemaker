@@ -3026,7 +3026,8 @@ write_xml_stream(xmlNode * xml_node, const char *filename, FILE * stream, gboole
         res = -1;
     }
 
-    if (fsync(fileno(stream)) < 0) {
+    /* Don't report error if the file does not support synchronization */
+    if (fsync(fileno(stream)) < 0 && errno != EROFS  && errno != EINVAL) {
         crm_perror(LOG_ERR, "fsync for %s failed", filename);
         res = -1;
     }
