@@ -3022,12 +3022,12 @@ write_xml_stream(xmlNode * xml_node, const char *filename, FILE * stream, gboole
   bail:
 
     if (fflush(stream) != 0) {
-        crm_perror(LOG_ERR, "fflush for %s failed:", filename);
+        crm_perror(LOG_ERR, "fflush for %s failed", filename);
         res = -1;
     }
 
     if (fsync(fileno(stream)) < 0) {
-        crm_perror(LOG_ERR, "fsync for %s failed:", filename);
+        crm_perror(LOG_ERR, "fsync for %s failed", filename);
         res = -1;
     }
 
