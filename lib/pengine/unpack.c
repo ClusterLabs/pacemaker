@@ -1402,14 +1402,16 @@ determine_remote_online_status(pe_working_set_t * data_set, node_t * this_node)
     resource_t *rsc = this_node->details->remote_rsc;
     resource_t *container = NULL;
 
+    /* If there is a node state entry for a (former) Pacemaker Remote node
+     * but no resource creating that node, the node's connection resource will
+     * be NULL. Consider it an offline remote node in that case.
+     */
     if (rsc == NULL) {
         this_node->details->online = FALSE;
         goto remote_online_done;
     }
 
     container = rsc->container;
-
-    CRM_ASSERT(rsc != NULL);
 
     /* If the resource is currently started, mark it online. */
     if (rsc->role == RSC_ROLE_STARTED) {
