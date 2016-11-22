@@ -1374,10 +1374,7 @@ stage6(pe_working_set_t * data_set)
          * guest's host.
          */
         if (is_container_remote_node(node)) {
-            /* Guest */
-            if (need_stonith
-                && node->details->remote_requires_reset
-                && pe_can_fence(data_set, node)) {
+            if (node->details->remote_requires_reset && need_stonith) {
                 resource_t *container = node->details->remote_rsc->container;
                 char *key = stop_key(container);
                 GListPtr stop_list = find_actions(container->actions, key, NULL);
