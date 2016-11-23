@@ -1406,6 +1406,7 @@ determine_remote_online_status(pe_working_set_t * data_set, node_t * this_node)
 {
     resource_t *rsc = this_node->details->remote_rsc;
     resource_t *container = NULL;
+    pe_node_t *host = NULL;
 
     /* If there is a node state entry for a (former) Pacemaker Remote node
      * but no resource creating that node, the node's connection resource will
@@ -1417,6 +1418,10 @@ determine_remote_online_status(pe_working_set_t * data_set, node_t * this_node)
     }
 
     container = rsc->container;
+
+    if (container && (g_list_length(rsc->running_on) == 1)) {
+        host = rsc->running_on->data;
+    }
 
     /* If the resource is currently started, mark it online. */
     if (rsc->role == RSC_ROLE_STARTED) {
@@ -1451,6 +1456,13 @@ determine_remote_online_status(pe_working_set_t * data_set, node_t * this_node)
                   (container? "Guest" : "Remote"), this_node->details->id);
         this_node->details->online = FALSE;
         this_node->details->remote_requires_reset = FALSE;
+
+    } else if (host && (host->details->online == FALSE)
+               && host->details->unclean) {
+        crm_trace("Guest node %s UNCLEAN because host is unclean",
+                  this_node->details->id);
+        this_node->details->online = FALSE;
+        this_node->details->remote_requires_reset = TRUE;
     }
 
 remote_online_done:
