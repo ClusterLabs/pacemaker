@@ -70,10 +70,15 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
     /* A guest node is fenced by marking its container as failed */
     if (is_container_remote_node(node)) {
         resource_t *rsc = node->details->remote_rsc->container;
+
         if (is_set(rsc->flags, pe_rsc_failed) == FALSE) {
             crm_warn("Guest node %s will be fenced (by recovering %s) %s",
                 node->details->uname, rsc->id, reason);
-            /* node->details->unclean = TRUE; */
+
+            /* We don't mark the node as unclean, because that would prevent the
+             * node from running resources. We want to allow it to run resources
+             * in this transition if the recovery succeeds.
+             */
             node->details->remote_requires_reset = TRUE;
             set_bit(rsc->flags, pe_rsc_failed);
         }
@@ -1415,30 +1420,35 @@ determine_remote_online_status(pe_working_set_t * data_set, node_t * this_node)
 
     /* If the resource is currently started, mark it online. */
     if (rsc->role == RSC_ROLE_STARTED) {
-        crm_trace("Remote node %s is set to ONLINE. role == started", this_node->details->id);
+        crm_trace("%s node %s presumed ONLINE because connection resource is started",
+                  (container? "Guest" : "Remote"), this_node->details->id);
         this_node->details->online = TRUE;
     }
 
     /* consider this node shutting down if transitioning start->stop */
     if (rsc->role == RSC_ROLE_STARTED && rsc->next_role == RSC_ROLE_STOPPED) {
-        crm_trace("Remote node %s shutdown. transition from start to stop role", this_node->details->id);
+        crm_trace("%s node %s shutting down because connection resource is stopping",
+                  (container? "Guest" : "Remote"), this_node->details->id);
         this_node->details->shutdown = TRUE;
     }
 
     /* Now check all the failure conditions. */
     if(container && is_set(container->flags, pe_rsc_failed)) {
-        crm_trace("Remote node %s is set to UNCLEAN. rsc failed.", this_node->details->id);
+        crm_trace("Guest node %s UNCLEAN because guest resource failed",
+                  this_node->details->id);
         this_node->details->online = FALSE;
         this_node->details->remote_requires_reset = TRUE;
 
     } else if(is_set(rsc->flags, pe_rsc_failed)) {
-        crm_trace("Remote node %s is set to OFFLINE. rsc failed.", this_node->details->id);
+        crm_trace("%s node %s OFFLINE because connection resource failed",
+                  (container? "Guest" : "Remote"), this_node->details->id);
         this_node->details->online = FALSE;
 
     } else if (rsc->role == RSC_ROLE_STOPPED
         || (container && container->role == RSC_ROLE_STOPPED)) {
 
-        crm_trace("Remote node %s is set to OFFLINE. node is stopped.", this_node->details->id);
+        crm_trace("%s node %s OFFLINE because its resource is stopped",
+                  (container? "Guest" : "Remote"), this_node->details->id);
         this_node->details->online = FALSE;
         this_node->details->remote_requires_reset = FALSE;
     }
