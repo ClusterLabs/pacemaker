@@ -154,6 +154,6 @@ case "$CRM_alert_kind" in
 esac
 
 if [ $rc -ne 0 ]; then
-    echo "${trap_binary} returned error"
+    echo "${trap_binary} returned error. rc=${rc}"
 fi
 
