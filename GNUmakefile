@@ -69,6 +69,13 @@ COUNT           = $(shell expr 1 + $(LAST_COUNT))
 
 SPECVERSION	?= $(COUNT)
 
+# toplevel rsync destination for www targets (without trailing slash)
+RSYNC_DEST      ?= root@www.clusterlabs.org:/var/www/html
+
+# recursive, preserve symlinks/permissions/times, verbose, compress,
+# don't cross filesystems, sparse, show progress
+RSYNC_OPTS      = -rlptvzxS --progress
+
 # rpmbuild wrapper that translates "--with[out] FEATURE" into RPM macros
 #
 # Unfortunately, at least recent versions of rpm do not support mentioned
@@ -254,7 +261,7 @@ dirty:
 	make TAG=dirty mock
 
 COVERITY_DIR	 = $(shell pwd)/coverity-$(TAG)
-COVFILE          = pacemaker-coverity-$(TAG).tgz
+COVFILE          = $(PACKAGE)-coverity-$(TAG).tgz
 COVHOST		?= scan5.coverity.com
 COVPASS		?= password
 
@@ -280,7 +287,7 @@ coverity-corp:
 	cov-analyze --dir $(COVERITY_DIR) --wait-for-license
 	cov-format-errors --dir $(COVERITY_DIR) --emacs-style > $(TAG).coverity
 	cov-format-errors --dir $(COVERITY_DIR)
-	rsync -avzxlSD --progress $(COVERITY_DIR)/c/output/errors/ root@www.clusterlabs.org:/var/www/html/coverity/$(PACKAGE)/$(TAG)
+	rsync $(RSYNC_OPTS) "$(COVERITY_DIR)/c/output/errors/" "$(RSYNC_DEST)/coverity/$(PACKAGE)/$(TAG)"
 	make core-clean
 #	cov-commit-defects --host $(COVHOST) --dir $(COVERITY_DIR) --stream $(PACKAGE) --user auto --password $(COVPASS)
 	rm -rf $(COVERITY_DIR)
@@ -291,12 +298,12 @@ global: clean-generic
 %.8.html: %.8
 	echo groff -mandoc `man -w ./$<` -T html > $@
 	groff -mandoc `man -w ./$<` -T html > $@
-	rsync -azxlSD --progress $@ root@www.clusterlabs.org:/var/www/html/man/
+	rsync $(RSYNC_OPTS) "$@" "$(RSYNC_DEST)/man/$(PACKAGE)/"
 
 %.7.html: %.7
 	echo groff -mandoc `man -w ./$<` -T html > $@
 	groff -mandoc `man -w ./$<` -T html > $@
-	rsync -azxlSD --progress $@ root@www.clusterlabs.org:/var/www/html/man/
+	rsync $(RSYNC_OPTS) "$@" "$(RSYNC_DEST)/man/$(PACKAGE)/"
 
 doxygen: Doxyfile
 	doxygen Doxyfile
@@ -307,13 +314,11 @@ abi-www:
 	abi-check -u pacemaker $(LAST_RELEASE) $(TAG)
 
 www:	all global doxygen
-	find . -name "[a-z]*.8" -exec make \{\}.html \;
-	find . -name "[a-z]*.7" -exec make \{\}.html \;
+	find . -name "[a-z]*.[78]" -exec make \{\}.html \;
 	htags -sanhIT
-	rsync -avzxlSD --progress HTML/ root@www.clusterlabs.org:/var/www/html/global/$(PACKAGE)/$(TAG)
-	rsync -avzxlSD --progress doc/api/html/ root@www.clusterlabs.org:/var/www/html/doxygen/$(PACKAGE)/$(TAG)
-	make -C doc www
-	make coverity
+	rsync $(RSYNC_OPTS) HTML/ "$(RSYNC_DEST)/global/$(PACKAGE)/$(TAG)"
+	rsync $(RSYNC_OPTS) doc/api/html/ "$(RSYNC_DEST)/doxygen/$(PACKAGE)/$(TAG)"
+	make RSYNC_DEST=$(RSYNC_DEST) -C doc www
 
 summary:
 	@printf "\n* `date +"%a %b %d %Y"` `git config user.name` <`git config user.email`> $(NEXT_RELEASE)-1"
