@@ -69,6 +69,9 @@ COUNT           = $(shell expr 1 + $(LAST_COUNT))
 
 SPECVERSION	?= $(COUNT)
 
+# toplevel rsync destination for www targets (without trailing slash)
+RSYNC_DEST      ?= root@www.clusterlabs.org:/var/www/html
+
 # rpmbuild wrapper that translates "--with[out] FEATURE" into RPM macros
 #
 # Unfortunately, at least recent versions of rpm do not support mentioned
@@ -280,7 +283,7 @@ coverity-corp:
 	cov-analyze --dir $(COVERITY_DIR) --wait-for-license
 	cov-format-errors --dir $(COVERITY_DIR) --emacs-style > $(TAG).coverity
 	cov-format-errors --dir $(COVERITY_DIR)
-	rsync -avzxlSD --progress $(COVERITY_DIR)/c/output/errors/ root@www.clusterlabs.org:/var/www/html/coverity/$(PACKAGE)/$(TAG)
+	rsync -avzxlSD --progress "$(COVERITY_DIR)/c/output/errors/" "$(RSYNC_DEST)/coverity/$(PACKAGE)/$(TAG)"
 	make core-clean
 #	cov-commit-defects --host $(COVHOST) --dir $(COVERITY_DIR) --stream $(PACKAGE) --user auto --password $(COVPASS)
 	rm -rf $(COVERITY_DIR)
@@ -291,12 +294,12 @@ global: clean-generic
 %.8.html: %.8
 	echo groff -mandoc `man -w ./$<` -T html > $@
 	groff -mandoc `man -w ./$<` -T html > $@
-	rsync -azxlSD --progress $@ root@www.clusterlabs.org:/var/www/html/man/
+	rsync -azxlSD --progress "$@" "$(RSYNC_DEST)/man/"
 
 %.7.html: %.7
 	echo groff -mandoc `man -w ./$<` -T html > $@
 	groff -mandoc `man -w ./$<` -T html > $@
-	rsync -azxlSD --progress $@ root@www.clusterlabs.org:/var/www/html/man/
+	rsync -azxlSD --progress "$@" "$(RSYNC_DEST)/man/"
 
 doxygen: Doxyfile
 	doxygen Doxyfile
@@ -310,9 +313,9 @@ www:	all global doxygen
 	find . -name "[a-z]*.8" -exec make \{\}.html \;
 	find . -name "[a-z]*.7" -exec make \{\}.html \;
 	htags -sanhIT
-	rsync -avzxlSD --progress HTML/ root@www.clusterlabs.org:/var/www/html/global/$(PACKAGE)/$(TAG)
-	rsync -avzxlSD --progress doc/api/html/ root@www.clusterlabs.org:/var/www/html/doxygen/$(PACKAGE)/$(TAG)
-	make -C doc www
+	rsync -avzxlSD --progress HTML/ "$(RSYNC_DEST)/global/$(PACKAGE)/$(TAG)"
+	rsync -avzxlSD --progress doc/api/html/ "$(RSYNC_DEST)/doxygen/$(PACKAGE)/$(TAG)"
+	make RSYNC_DEST=$(RSYNC_DEST) -C doc www
 	make coverity
 
 summary:
