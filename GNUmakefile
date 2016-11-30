@@ -95,10 +95,10 @@ rpmbuild-with = \
 	eval set -- "$${WITH}"; \
 	while true; do \
 		case "$$1" in \
-		--with) CMD="$${CMD} --define \"_with_$$2 --with-$$2\""; shift 2; \
-			[ "$$2" != pre_release ] || PREREL=1;; \
-		--without) CMD="$${CMD} --define \"_without_$$2 --without-$$2\""; shift 2; \
-		        [ "$$2" != pre_release ] || PREREL=0;; \
+		--with) CMD="$${CMD} --define \"_with_$$2 --with-$$2\""; \
+			[ "$$2" != pre_release ] || PREREL=1; shift 2;; \
+		--without) CMD="$${CMD} --define \"_without_$$2 --without-$$2\""; \
+		        [ "$$2" != pre_release ] || PREREL=0; shift 2;; \
 		--) shift ; break ;; \
 		*) echo "cannot parse WITH: $$1"; exit 1;; \
 		esac; \
@@ -187,7 +187,6 @@ srpm-%:	export $(PACKAGE)-%.spec
 	fi
 	sed -i 's/global\ specversion.*/global\ specversion\ $(SPECVERSION)/' $(PACKAGE).spec
 	sed -i 's/global\ commit.*/global\ commit\ $(TAG)/' $(PACKAGE).spec
-	@WITH=$$(getopt -o "" -l with:,without: -n '$@' -- $(WITH)) || exit 1; \
 	$(call rpmbuild-with,$(WITH),-bs --define "dist .$*" $(RPM_OPTS),$(PACKAGE).spec)
 
 chroot: mock-$(MOCK_CFG) mock-install-$(MOCK_CFG) mock-sh-$(MOCK_CFG)
