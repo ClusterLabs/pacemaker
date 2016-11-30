@@ -1,3 +1,4 @@
+ifelse(HAVE_INITSCRIPT, 1,
 # If pacemaker is started via init script, the script may attempt to detect the
 # cluster layer in use. This option forces it to recognize a particular type,
 # in case its detection is inaccurate. Currently, the only value that is
@@ -6,6 +7,7 @@
 # reliably shut down. Any other value is ignored. The default is unset.
 # PCMK_STACK=cman
 
+)dnl
 #==#==# Variables that control logging
 
 # Enable debug logging globally or per-subsystem.

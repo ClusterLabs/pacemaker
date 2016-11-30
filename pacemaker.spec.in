@@ -75,6 +75,9 @@
   } || %(test -f /usr/lib/os-release; test $? -ne 0; echo $?))
 
 
+## Whether this platform defaults to using Upstart as an init system
+%define upstart_native (!%{systemd_native} && %{with upstart} && !%{cman_native})
+
 # Definitions for backward compatibility with older RPM versions
 
 ## Ensure %license macro behaves consistently (older RPM will otherwise
@@ -108,8 +111,11 @@
 ## (so later "official" packages will be considered updates)
 %bcond_with pre_release
 
-## Add option to ship Upstart job files
-%bcond_with upstart_job
+%if !%{systemd_native}
+# Enable Upstart support (resource management and pacemaker daemon jobs);
+# only available when systemd support not detected + omits daemon init scripts
+%bcond_with upstart
+%endif
 
 ## Add option to turn off CMAN support on CMAN-native platforms
 %bcond_without cman
@@ -125,6 +131,13 @@
 %define debug_package %{nil}
 
 %endif
+
+
+# Define what "initdir" boils down to for particular init systems
+%if %{upstart_native}
+%define upstartdir %{_sysconfdir}/init
+%endif
+%define initdir %{?_unitdir}%{?!_unitdir:%{?upstartdir}%{?!upstartdir:%{_initrddir}}}
 
 
 # Define the release version
@@ -177,7 +190,7 @@ Requires:      libqb >= 0.13.0
 BuildRequires: libqb-devel >= 0.13.0
 
 # Basics required for the build (even if usually satisfied through other BRs)
-BuildRequires: coreutils findutils grep sed
+BuildRequires: coreutils findutils grep m4 sed
 
 # Required for core functionality
 BuildRequires: automake autoconf libtool pkgconfig libtool-ltdl-devel
@@ -189,10 +202,15 @@ BuildRequires: resource-agents
 
 # Enables optional functionality
 BuildRequires: ncurses-devel docbook-style-xsl
-BuildRequires: bison byacc flex help2man gnutls-devel pkgconfig(dbus-1)
+BuildRequires: bison byacc flex help2man gnutls-devel
 
 %if %{systemd_native}
+BuildRequires: pkgconfig(dbus-1)
 BuildRequires: pkgconfig(systemd)
+%else
+%if %{upstart_native}
+BuildRequires: pkgconfig(dbus-1)
+%endif
 %endif
 
 %if %{with cman} && %{cman_native}
@@ -229,7 +247,9 @@ resource health.
 
 Available rpmbuild rebuild options:
   --with(out) : cman coverage doc stonithd hardening pre_release profiling
-                upstart_job
+%if !%{systemd_native}
+                upstart
+%endif
 
 %package cli
 License:       GPLv2+ and LGPLv2+
@@ -363,8 +383,6 @@ find . -exec touch \{\} \;
 # Early versions of autotools (e.g. RHEL <= 5) do not support --docdir
 export docdir=%{pcmk_docdir}
 
-export systemdunitdir=%{?_unitdir}%{?!_unitdir:no}
-
 %if %{with hardening}
 # prefer distro-provided hardening flags in case they are defined
 # through _hardening_{c,ld}flags macros, configure script will
@@ -386,7 +404,16 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
         --without-heartbeat                        \
         %{!?with_doc:        --with-brand=}        \
         %{!?with_hardening:  --disable-hardening}  \
-        --with-initdir=%{_initrddir}               \
+%if %{defined _unitdir}
+        --enable-systemd                           \
+%else
+%if %{with upstart_native}
+        --enable-upstart                           \
+%else
+        --disable-upstart                          \
+%endif
+%endif
+        --with-initdir=%{initdir}                  \
         --localstatedir=%{_var}                    \
         --with-version=%{version}-%{release}
 
@@ -401,17 +428,6 @@ make %{_smp_mflags} V=1 all
 %install
 rm -rf %{buildroot}
 make DESTDIR=%{buildroot} docdir=%{pcmk_docdir} V=1 install
-
-mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig
-install -m 644 mcp/pacemaker.sysconfig ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig/pacemaker
-install -m 644 tools/crm_mon.sysconfig ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig/crm_mon
-
-%if %{with upstart_job}
-mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/init
-install -m 644 mcp/pacemaker.upstart ${RPM_BUILD_ROOT}%{_sysconfdir}/init/pacemaker.conf
-install -m 644 mcp/pacemaker.combined.upstart ${RPM_BUILD_ROOT}%{_sysconfdir}/init/pacemaker.combined.conf
-install -m 644 tools/crm_mon.upstart ${RPM_BUILD_ROOT}%{_sysconfdir}/init/crm_mon.conf
-%endif
 
 %if %{defined _unitdir}
 mkdir -p ${RPM_BUILD_ROOT}%{_localstatedir}/lib/rpm-state/%{name}
@@ -429,12 +445,6 @@ find %{buildroot} -name '*.la' -type f -print0 | xargs -0 rm -f
 
 # Do not package these either
 rm -f %{buildroot}/%{_libdir}/service_crm.so
-
-# Don't ship init scripts for systemd based platforms
-%if %{defined _unitdir}
-rm -f %{buildroot}/%{_initrddir}/pacemaker
-rm -f %{buildroot}/%{_initrddir}/pacemaker_remote
-%endif
 
 # Don't ship fence_pcmk where it has no use
 %if %{without cman}
@@ -458,7 +468,9 @@ rm -rf %{buildroot}
 %if %{defined _unitdir}
 %systemd_post pacemaker.service
 %else
+%if !%{upstart_native}
 /sbin/chkconfig --add pacemaker || :
+%endif
 %if %{with cman} && %{cman_native}
 # make fence_pcmk in cluster.conf valid instantly otherwise tools like ccs may
 # choke (until schema gets auto-regenerated on the next start of cluster),
@@ -471,11 +483,13 @@ rm -rf %{buildroot}
 %if %{defined _unitdir}
 %systemd_preun pacemaker.service
 %else
+%if !%{upstart_native}
 /sbin/service pacemaker stop >/dev/null 2>&1 || :
 if [ $1 -eq 0 ]; then
     # Package removal, not upgrade
     /sbin/chkconfig --del pacemaker || :
 fi
+%endif
 %endif
 
 %postun
@@ -502,18 +516,22 @@ fi
 %if %{defined _unitdir}
 %systemd_post pacemaker_remote.service
 %else
+%if !%{upstart_native}
 /sbin/chkconfig --add pacemaker_remote || :
+%endif
 %endif
 
 %preun remote
 %if %{defined _unitdir}
 %systemd_preun pacemaker_remote.service
 %else
+%if !%{upstart_native}
 /sbin/service pacemaker_remote stop >/dev/null 2>&1 || :
 if [ $1 -eq 0 ]; then
     # Package removal, not upgrade
     /sbin/chkconfig --del pacemaker_remote || :
 fi
+%endif
 %endif
 
 %postun remote
@@ -573,9 +591,14 @@ exit 0
 %{_sbindir}/pacemakerd
 
 %if %{defined _unitdir}
-%{_unitdir}/pacemaker.service
+%{initdir}/pacemaker.service
 %else
-%{_initrddir}/pacemaker
+%if %{upstart_native}
+%config(noreplace) %{initdir}/pacemaker.conf
+%config(noreplace) %{initdir}/pacemaker.combined.conf
+%else
+%{initdir}/pacemaker
+%endif
 %endif
 
 %exclude %{_libexecdir}/pacemaker/lrmd_test
@@ -630,10 +653,6 @@ exit 0
 %endif
 %endif
 
-%if %{with upstart_job}
-%config(noreplace) %{_sysconfdir}/init/pacemaker.conf
-%config(noreplace) %{_sysconfdir}/init/pacemaker.combined.conf
-%endif
 
 %files cli
 %defattr(-,root,root)
@@ -642,11 +661,11 @@ exit 0
 %config(noreplace) %{_sysconfdir}/sysconfig/crm_mon
 
 %if %{defined _unitdir}
-%{_unitdir}/crm_mon.service
+%{initdir}/crm_mon.service
+%else
+%if %{upstart_native}
+%config(noreplace) %{initdir}/crm_mon.conf
 %endif
-
-%if %{with upstart_job}
-%config(noreplace) %{_sysconfdir}/init/crm_mon.conf
 %endif
 
 %{_sbindir}/attrd_updater
@@ -736,7 +755,9 @@ exit 0
 %ghost %dir %{_localstatedir}/lib/rpm-state/%{name}
 %{_unitdir}/pacemaker_remote.service
 %else
-%{_initrddir}/pacemaker_remote
+%if !%{upstart_native}
+%{initdir}/pacemaker_remote
+%endif
 %endif
 
 %{_sbindir}/pacemaker_remoted
