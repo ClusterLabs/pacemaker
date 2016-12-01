@@ -54,6 +54,7 @@ static struct crm_option long_options[] = {
     {"list",            1, 0, 'l', "List devices that can terminate the specified host"},
     {"list-registered", 0, 0, 'L', "List all registered devices"},
     {"list-installed",  0, 0, 'I', "List all installed devices"},
+    {"list-targets",  1, 0, 's', "List the device's target"},
 
     {"-spacer-",    0, 0, '-', ""},
     {"metadata",    0, 0, 'M', "Check the device's metadata"},
@@ -335,6 +336,7 @@ main(int argc, char **argv)
     char *name = NULL;
     char *value = NULL;
     char *target = NULL;
+    char *lists = NULL;
     const char *agent = NULL;
     const char *device = NULL;
     const char *longname = NULL;
@@ -378,6 +380,7 @@ main(int argc, char **argv)
             case 'Q':
             case 'R':
             case 'D':
+            case 's':
                 action = flag;
                 device = optarg;
                 break;
@@ -520,6 +523,33 @@ main(int argc, char **argv)
             rc = st->cmds->monitor(st, st_opts, device, timeout);
             if (rc < 0) {
                 rc = st->cmds->list(st, st_opts, device, NULL, timeout);
+            }
+            break;
+        case 's':
+            rc = st->cmds->list(st, st_opts, device, &lists, timeout);
+            if (rc == 0) {
+                char *source = lists, *dest = lists; 
+
+                while (*dest) {
+                    if ((*dest == '\\') && (*(dest+1) == 'n')) {
+                        *source = '\n';
+                        dest++;
+                        dest++;
+                    } else {
+                        *source = *dest;
+                        dest++;
+                    }
+
+                    source++;
+                    if (!(*dest)) {
+                        *source = 0;
+                    }
+                }
+                if (lists) {
+                    fprintf(stdout, "%s", lists);
+                }
+            } else {
+                fprintf(stderr, "List command returned error. rc : %d\n", rc);
             }
             break;
         case 'R':
