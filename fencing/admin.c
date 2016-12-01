@@ -335,6 +335,7 @@ main(int argc, char **argv)
     char *name = NULL;
     char *value = NULL;
     char *target = NULL;
+    char *lists = NULL;
     const char *agent = NULL;
     const char *device = NULL;
     const char *longname = NULL;
@@ -518,8 +519,11 @@ main(int argc, char **argv)
             break;
         case 'Q':
             rc = st->cmds->monitor(st, st_opts, device, timeout);
-            if (rc < 0) {
-                rc = st->cmds->list(st, st_opts, device, NULL, timeout);
+            if (rc == 0) {
+                rc = st->cmds->list(st, st_opts, device, &lists, timeout);
+                if (rc == 0) {
+                    fprintf(stdout, "%s\n", lists ? lists : "<none>");
+                }
             }
             break;
         case 'R':

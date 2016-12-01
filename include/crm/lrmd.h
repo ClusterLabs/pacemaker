@@ -236,6 +236,10 @@ typedef struct lrmd_event_data_s {
     /*! exit failure reason string from resource agent operation */
     const char *exit_reason;
 
+    /* This is an xmlNode containing the versioned parameters
+     * that should be evaluated */
+    xmlNode *versioned_params;
+
 } lrmd_event_data_t;
 
 lrmd_event_data_t *lrmd_copy_event(lrmd_event_data_t * event);

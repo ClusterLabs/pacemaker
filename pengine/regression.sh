@@ -315,6 +315,8 @@ do_test 11-a-then-bm-b-move-a-clone-starting "Advanced migrate logic, A clone th
 do_test a-promote-then-b-migrate "A promote then B start. migrate B"
 do_test a-demote-then-b-migrate "A demote then B stop. migrate B"
 
+do_test migrate-versioned "Disable migration for versioned resources"
+
 #echo ""
 #do_test complex1 "Complex	"
 
@@ -842,6 +844,9 @@ echo ""
 do_test isolation-start-all   "Start docker isolated resources."
 do_test isolation-restart-all "Restart docker isolated resources."
 do_test isolation-clone       "Cloned isolated primitive."
+
+echo ""
+do_test versioned-resources     "Start resources with #ra-version rules"
 
 echo ""
 test_results
