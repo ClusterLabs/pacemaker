@@ -32,11 +32,11 @@
                       Pacemaker-*%{rparen} echo ${c:10};;
                       *%{rparen} echo ${c:0:7};; esac)
 
-## Whether this is a release candidate
-%define pre_release %(s=%{shortcommit}; [ ${s: -4:3} != -rc ]; echo $?)
+## Whether this is a tagged release
+%define tag_release %([ %{commit} != Pacemaker-%{shortcommit} ]; echo $?)
 
-## Whether this is a development branch
-%define post_release %([ %{commit} = Pacemaker-%{shortcommit} ]; echo $?)
+## Whether this is a release candidate (in case of a tagged release)
+%define pre_release %(s=%{shortcommit};  [ "%{tag_release}" -ne 0 ] && [ ${s: -4:3} != -rc ]; echo $?)
 
 ## Turn off auto-compilation of python files outside site-packages directory,
 ## so that the -devel package is multilib-compliant
@@ -128,17 +128,19 @@
 
 
 # Define the release version
-%if %{with pre_release} || 0%{pre_release}
+# (do not look at externally enforced pre-release flag for tagged releases
+# as only -rc tags, captured with the second condition, implies that then)
+%if (!%{tag_release} && %{with pre_release}) || 0%{pre_release}
 %if 0%{pre_release}
 %define pcmk_release 0.%{specversion}.%(s=%{shortcommit}; echo ${s: -3})
 %else
 %define pcmk_release 0.%{specversion}.%{shortcommit}.git
 %endif
 %else
-%if 0%{post_release}
-%define pcmk_release %{specversion}.%{shortcommit}.git
-%else
+%if 0%{tag_release}
 %define pcmk_release %{specversion}
+%else
+%define pcmk_release %{specversion}.%{shortcommit}.git
 %endif
 %endif
 
