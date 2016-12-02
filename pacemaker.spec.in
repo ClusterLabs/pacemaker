@@ -157,7 +157,8 @@ License:       GPLv2+ and LGPLv2+ and BSD
 Url:           http://www.clusterlabs.org
 Group:         System Environment/Daemons
 
-# eg. https://github.com/ClusterLabs/pacemaker/archive/8ae45302394b039fb098e150f156df29fc0cb576/pacemaker-8ae4530.tar.gz
+# Hint: use "spectool -s 0 pacemaker.spec" (rpmdevtools) to check the final URL:
+# https://github.com/ClusterLabs/pacemaker/archive/e91769e5a39f5cb2f7b097d3c612368f0530535e/pacemaker-e91769e.tar.gz
 Source0:       https://github.com/%{github_owner}/%{name}/archive/%{commit}/%{name}-%{shortcommit}.tar.gz
 BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 AutoReqProv:   on
