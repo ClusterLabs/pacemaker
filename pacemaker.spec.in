@@ -39,7 +39,7 @@
 %define pre_release %(s=%{shortcommit};  [ "%{tag_release}" -ne 0 ] && [ ${s: -4:3} != -rc ]; echo $?)
 
 ## Turn off auto-compilation of python files outside site-packages directory,
-## so that the -devel package is multilib-compliant
+## so that the -libs-devel package is multilib-compliant (no *.py[co] files)
 %define __os_install_post %(echo '%{__os_install_post}' | sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g')
 
 ## Heuristic used to infer bleeding-edge deployments that are
@@ -315,6 +315,7 @@ manager for Corosync, CMAN and/or Linux-HA.
 The %{name}-libs-devel package contains headers and shared libraries
 for developing tools for Pacemaker.
 
+# NOTE: can be noarch if lrmd_test is moved to another subpackage
 %package       cts
 License:       GPLv2+ and LGPLv2+
 Summary:       Test framework for cluster-related technologies like Pacemaker
