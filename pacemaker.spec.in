@@ -329,12 +329,12 @@ Requires:      %{name}-libs = %{version}-%{release}
 # systemd python bindings are separate package in some distros
 %if %{defined systemd_requires}
 
-%if 0%{?fedora} > 20
+%if 0%{?fedora} > 22
+Requires:      python2-systemd
+%else
+%if 0%{?fedora} > 20 || 0%{?rhel} > 6
 Requires:      systemd-python
 %endif
-
-%if 0%{?rhel} > 6
-Requires:      systemd-python
 %endif
 
 %endif
