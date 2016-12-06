@@ -637,7 +637,7 @@ send_cluster_text(int class, const char *data,
     free(target);
 
 #if SUPPORT_PLUGIN
-    /* The plugin is the only time we dont use CPG messaging */
+    /* The plugin is the only time we don't use CPG messaging */
     if(get_cluster_type() == pcmk_cluster_classic_ais) {
         return send_plugin_text(class, iov);
     }

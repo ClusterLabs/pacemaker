@@ -31,7 +31,7 @@ function run_as_root() {
         $CMD
 
     elif [ -z $TRAVIS ]; then
-        # sudo doesn't work in builtbot, su doesn't work in travis
+        # sudo doesn't work in buildbot, su doesn't work in travis
         echo "Enter the root password..."
         su root -c "$CMD"
 

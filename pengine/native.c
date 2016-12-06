@@ -2879,7 +2879,7 @@ native_start_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set
 
         } else if (safe_str_eq(action->task, RSC_START)
                    && NULL == pe_hash_table_lookup(rsc->known_on, target->details->id)) {
-            /* if known == NULL, then we dont know if
+            /* if known == NULL, then we don't know if
              *   the resource is active on the node
              *   we're about to shoot
              *
@@ -2891,7 +2891,7 @@ native_start_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set
              * it's analogous to waiting for all the probes
              *   for rscX to complete before starting rscX
              *
-             * the most likely explaination is that the
+             * the most likely explanation is that the
              *   DC died and took its status with it
              */
 

@@ -363,13 +363,13 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
         && (flags & pe_action_optional) == 0) {
         processed = TRUE;
         crm_trace("%s implies %s printed", first->uuid, then->uuid);
-        update_action_flags(then, pe_action_print_always, __FUNCTION__);      /* dont care about changed */
+        update_action_flags(then, pe_action_print_always, __FUNCTION__);  /* don't care about changed */
     }
 
     if ((type & pe_order_implies_first_printed) && (flags & pe_action_optional) == 0) {
         processed = TRUE;
         crm_trace("%s implies %s printed", then->uuid, first->uuid);
-        update_action_flags(first, pe_action_print_always, __FUNCTION__);     /* dont care about changed */
+        update_action_flags(first, pe_action_print_always, __FUNCTION__); /* don't care about changed */
     }
 
     if ((type & pe_order_implies_then
