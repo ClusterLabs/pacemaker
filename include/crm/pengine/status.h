@@ -232,9 +232,11 @@ enum pe_action_flags {
     pe_action_clear = 0x00400,
     pe_action_dangle = 0x00800,
 
-    pe_action_requires_any = 0x01000, /* This action requires one or mre of its dependencies to be runnable
-                                       * We use this to clear the runnable flag before checking dependencies
-                                       */
+    /* This action requires one or more of its dependencies to be runnable.
+     * We use this to clear the runnable flag before checking dependencies.
+     */
+    pe_action_requires_any = 0x01000,
+
     pe_action_reschedule = 0x02000,
     pe_action_tracking = 0x04000,
 };

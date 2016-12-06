@@ -544,7 +544,7 @@ sync_our_cib(xmlNode * request, gboolean all)
 
     /* remove the "all == FALSE" condition
      *
-     * sync_from was failing, the local client wasnt being notified
+     * sync_from was failing, the local client wasn't being notified
      *    because it didn't know it was a reply
      * setting this does not prevent the other nodes from applying it
      *    if all == TRUE

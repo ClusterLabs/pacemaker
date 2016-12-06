@@ -384,7 +384,7 @@ pcmk_shutdown_worker(gpointer user_data)
     }
 
     for (; phase > 0; phase--) {
-        /* dont stop anything with start_seq < 1 */
+        /* Don't stop anything with start_seq < 1 */
 
         for (lpc = max - 1; lpc >= 0; lpc--) {
             pcmk_child_t *child = &(pcmk_children[lpc]);
@@ -782,7 +782,7 @@ init_children_processes(void)
 
     /* start any children that have not been detected */
     for (start_seq = 1; start_seq < max; start_seq++) {
-        /* dont start anything with start_seq < 1 */
+        /* don't start anything with start_seq < 1 */
         for (lpc = 0; lpc < max; lpc++) {
             if (pcmk_children[lpc].pid) {
                 /* we are already tracking it */

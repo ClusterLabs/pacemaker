@@ -988,7 +988,7 @@ dynamic_list_search_cb(GPid pid, int rc, const char *output, gpointer user_data)
 
 /*!
  * \internal
- * \brief Returns true if any key in first is not is second or second has a different value for key
+ * \brief Returns true if any key in first is not in second or second has a different value for key
  */
 static int
 device_params_diff(GHashTable *first, GHashTable *second) {

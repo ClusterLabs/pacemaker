@@ -1494,7 +1494,7 @@ determine_online_status(xmlNode * node_state, node_t * this_node, pe_working_set
     }
 
     if (online && this_node->details->shutdown) {
-        /* dont run resources here */
+        /* don't run resources here */
         this_node->fixed = TRUE;
         this_node->weight = -INFINITY;
     }
@@ -2381,14 +2381,14 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
 }
 
 static void
-unpack_rsc_migration(resource_t *rsc, node_t *node, xmlNode *xml_op, pe_working_set_t * data_set) 
+unpack_rsc_migration(resource_t *rsc, node_t *node, xmlNode *xml_op, pe_working_set_t * data_set)
 {
-                
+
     /*
      * The normal sequence is (now): migrate_to(Src) -> migrate_from(Tgt) -> stop(Src)
      *
-     * So if a migrate_to is followed by a stop, then we dont need to care what
-     * happended on the target node
+     * So if a migrate_to is followed by a stop, then we don't need to care what
+     * happened on the target node
      *
      * Without the stop, we need to look for a successful migrate_from.
      * This would also imply we're no longer running on the source
@@ -3096,13 +3096,13 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
     if (is_not_set(rsc->flags, pe_rsc_unique)) {
         parent = uber_parent(rsc);
     }
-    
+
     pe_rsc_trace(rsc, "Unpacking task %s/%s (call_id=%d, status=%d, rc=%d) on %s (role=%s)",
                  task_key, task, task_id, status, rc, node->details->uname, role2text(rsc->role));
 
     if (node->details->unclean) {
         pe_rsc_trace(rsc, "Node %s (where %s is running) is unclean."
-                     " Further action depends on the value of the stop's on-fail attribue",
+                     " Further action depends on the value of the stop's on-fail attribute",
                      node->details->uname, rsc->id);
     }
 

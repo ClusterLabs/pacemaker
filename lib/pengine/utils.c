@@ -516,7 +516,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
 #if 0
             /*
              * No point checking this
-             * - if we dont have quorum we can't stonith anyway
+             * - if we don't have quorum we can't stonith anyway
              */
         } else if (action->needs == rsc_req_stonith) {
             crm_trace("Action %s requires only stonith", action->uuid);
@@ -1418,7 +1418,7 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
              *
              * if the UUID from the TE doesn't match then one better
              *   be a pending operation.
-             * pending operations dont survive between elections and joins
+             * pending operations don't survive between elections and joins
              *   because we query the LRM directly
              */
 
@@ -2098,7 +2098,7 @@ trigger_unfencing(
         return;
 
     } else if (rsc != NULL && is_not_set(rsc->flags, pe_rsc_fence_device)) {
-        /* Wasnt a stonith device */
+        /* Wasn't a stonith device */
         return;
 
     } else if(node

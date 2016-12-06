@@ -139,6 +139,13 @@ special, built-in node attributes for each node that can also be used.
  unrelated to the now-common use of "container" for resource isolation).
  '(since 1.1.13)'
 
+|#ra-version
+|The installed version of the resource agent on the node, as defined
+ by the +version+ attribute of the +resource-agent+ tag in the agent's
+ metadata. Valid only within rules controlling resource options. This can be
+ useful during rolling upgrades of a backward-incompatible resource agent.
+ '(coming in 1.1.17)'
+
 |=========================================================
 
 == Time- and Date-Based Expressions ==

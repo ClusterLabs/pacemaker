@@ -295,6 +295,10 @@ coverity-corp:
 global: clean-generic
 	gtags -q
 
+global-upload: global
+	htags -sanhIT
+	rsync $(RSYNC_OPTS) HTML/ "$(RSYNC_DEST)/global/$(PACKAGE)/$(TAG)"
+
 %.8.html: %.8
 	echo groff -mandoc `man -w ./$<` -T html > $@
 	groff -mandoc `man -w ./$<` -T html > $@
@@ -305,19 +309,21 @@ global: clean-generic
 	groff -mandoc `man -w ./$<` -T html > $@
 	rsync $(RSYNC_OPTS) "$@" "$(RSYNC_DEST)/man/$(PACKAGE)/"
 
+manhtml-upload: all
+	find . -name "[a-z]*.[78]" -exec make \{\}.html \;
+
 doxygen: Doxyfile
 	doxygen Doxyfile
 
-abi:
-	abi-check pacemaker $(LAST_RELEASE) $(TAG)
-abi-www:
-	abi-check -u pacemaker $(LAST_RELEASE) $(TAG)
-
-www:	all global doxygen
-	find . -name "[a-z]*.[78]" -exec make \{\}.html \;
-	htags -sanhIT
-	rsync $(RSYNC_OPTS) HTML/ "$(RSYNC_DEST)/global/$(PACKAGE)/$(TAG)"
+doxygen-upload: doxygen
 	rsync $(RSYNC_OPTS) doc/api/html/ "$(RSYNC_DEST)/doxygen/$(PACKAGE)/$(TAG)"
+
+abi:
+	./abi-check pacemaker $(LAST_RELEASE) $(TAG)
+abi-www:
+	./abi-check -u pacemaker $(LAST_RELEASE) $(TAG)
+
+www:	manhtml-upload global-upload doxygen-upload
 	make RSYNC_DEST=$(RSYNC_DEST) -C doc www
 
 summary:
