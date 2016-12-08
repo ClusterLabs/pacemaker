@@ -1058,20 +1058,24 @@ main(int argc, char **argv)
     mkdir(CRM_STATE_DIR, 0750);
     mcp_chown(CRM_STATE_DIR, pcmk_uid, pcmk_gid);
 
+    /* Used to store core/blackbox/pengine/cib files in */
+    crm_build_path(CRM_PACEMAKER_DIR, 0750);
+    mcp_chown(CRM_PACEMAKER_DIR, pcmk_uid, pcmk_gid);
+
     /* Used to store core files in */
-    crm_build_path(CRM_CORE_DIR, 0775);
+    crm_build_path(CRM_CORE_DIR, 0750);
     mcp_chown(CRM_CORE_DIR, pcmk_uid, pcmk_gid);
 
     /* Used to store blackbox dumps in */
-    crm_build_path(CRM_BLACKBOX_DIR, 0755);
+    crm_build_path(CRM_BLACKBOX_DIR, 0750);
     mcp_chown(CRM_BLACKBOX_DIR, pcmk_uid, pcmk_gid);
 
     /* Used to store policy engine inputs in */
-    crm_build_path(PE_STATE_DIR, 0755);
+    crm_build_path(PE_STATE_DIR, 0750);
     mcp_chown(PE_STATE_DIR, pcmk_uid, pcmk_gid);
 
     /* Used to store the cluster configuration */
-    crm_build_path(CRM_CONFIG_DIR, 0755);
+    crm_build_path(CRM_CONFIG_DIR, 0750);
     mcp_chown(CRM_CONFIG_DIR, pcmk_uid, pcmk_gid);
 
     /* Resource agent paths are constructed by the lrmd */
