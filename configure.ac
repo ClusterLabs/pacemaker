@@ -1113,6 +1113,10 @@ CRM_STATE_DIR=${localstatedir}/run/crm
 AC_DEFINE_UNQUOTED(CRM_STATE_DIR,"$CRM_STATE_DIR", Where to keep state files and sockets)
 AC_SUBST(CRM_STATE_DIR)
 
+CRM_PACEMAKER_DIR=${localstatedir}/lib/pacemaker
+AC_DEFINE_UNQUOTED(CRM_PACEMAKER_DIR,"$CRM_PACEMAKER_DIR", Location to store directory produced by Pacemaker daemons)
+AC_SUBST(CRM_PACEMAKER_DIR)
+
 CRM_BLACKBOX_DIR=${localstatedir}/lib/pacemaker/blackbox
 AC_DEFINE_UNQUOTED(CRM_BLACKBOX_DIR,"$CRM_BLACKBOX_DIR", Where to keep blackbox dumps)
 AC_SUBST(CRM_BLACKBOX_DIR)
