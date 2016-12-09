@@ -29,16 +29,16 @@ SSH_RSYNC_OPTS="-o UserKnownHostsFile=/dev/null -o BatchMode=yes -o StrictHostKe
 
 function helptext() {
 	echo "lxc_autogen.sh - A tool for generating libvirt lxc containers for testing purposes."
-	echo ""
+	echo
 	echo "Usage: lxc-autogen [options]"
-	echo ""
+	echo
 	echo "Options:"
 	echo "-g, --generate         Generate libvirt lxc environment in the directory this script is run from."
 	echo "-k, --key-gen          Generate pacemaker remote key only."
 	echo "-r, --restore-libvirt  Restore the default network, and libvirt config to before this script ran."
 	echo "-p, --restore-cib      Remove cib entries this script generated."
 	echo "-R, --restore-all      Restore both libvirt and cib plus clean working directory. This will leave libvirt xml files though so rsc can be stopped properly."
-	echo ""
+	echo
 	echo "-A, --allow-anywhere   Allow the containers to live anywhere in the cluster"
 	echo "-a, --add-cib          Add remote-node entries for each lxc instance into the cib"
 	echo "-m, --add-master       Add master resource shared between remote-nodes"
@@ -47,7 +47,7 @@ function helptext() {
 	echo "-c, --containers       Specify the number of containers to generate, defaults to $containers. Used with -g"
 	echo "-n, --network          What network to override default libvirt network to. Example: -n 192.168.123.1. Used with -g"
 	echo "-v, --verify           Verify environment is capable of running lxc"
-	echo ""
+	echo
 	exit $1
 }
 

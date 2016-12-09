@@ -25,12 +25,12 @@ info Generating test outputs for these tests...
 # do_test file description
 
 info Done.
-echo ""
+echo
 
 info Performing the following tests from $io_dir
 create_mode="false"
 
-echo ""
+echo
 
 do_test simple1 "Offline     "
 do_test simple2 "Start       "
@@ -45,7 +45,7 @@ do_test simple11 "Priority (ne)"
 do_test simple12 "Priority (eq)"
 do_test simple8 "Stickiness"
 
-echo ""
+echo
 do_test group1 "Group		"
 do_test group2 "Group + Native	"
 do_test group3 "Group + Group	"
@@ -69,7 +69,7 @@ do_test group-unmanaged "No need to restart r115 because r114 is unmanaged"
 do_test group-unmanaged-stopped "Make sure r115 is stopped when r114 fails"
 do_test group-dependents "Account for the location preferences of things colocated with a group"
 
-echo ""
+echo
 do_test rsc_dep1 "Must not     "
 do_test rsc_dep3 "Must         "
 do_test rsc_dep5 "Must not 3   "
@@ -80,12 +80,12 @@ do_test rsc_dep8  "Must (running : alt) "
 do_test rsc_dep4  "Must (running + move)"
 do_test asymmetric "Asymmetric - require explicit location constraints"
 
-echo ""
+echo
 do_test orphan-0 "Orphan ignore"
 do_test orphan-1 "Orphan stop"
 do_test orphan-2 "Orphan stop, remove failcount"
 
-echo ""
+echo
 do_test params-0 "Params: No change"
 do_test params-1 "Params: Changed"
 do_test params-2 "Params: Resource definition"
@@ -97,15 +97,15 @@ do_test params-6 "Params: Detect reload in previously migrated resource"
 do_test nvpair-id-ref "Support id-ref in nvpair with optional name"
 do_test not-reschedule-unneeded-monitor "Do not reschedule unneeded monitors while resource definitions have changed"
 
-echo ""
+echo
 do_test target-0 "Target Role : baseline"
 do_test target-1 "Target Role : master"
 do_test target-2 "Target Role : invalid"
 
-echo ""
+echo
 do_test base-score "Set a node's default score for all nodes"
 
-echo ""
+echo
 do_test date-1 "Dates" -t "2005-020"
 do_test date-2 "Date Spec - Pass" -t "2005-020T12:30"
 do_test date-3 "Date Spec - Fail" -t "2005-020T11:30"
@@ -118,7 +118,7 @@ do_test probe-4 "Probe (pending node + stopped resource)"
 do_test standby "Standby"
 do_test comments "Comments"
 
-echo ""
+echo
 do_test one-or-more-0 "Everything starts"
 do_test one-or-more-1 "Nothing starts because of A"
 do_test one-or-more-2 "D can start because of C"
@@ -140,7 +140,7 @@ do_test clone-require-all-no-interleave-2 "C starts on nodes 1, 2, and 4 with on
 do_test clone-require-all-no-interleave-3 "C remains active when instance of B is stopped on one node and started on another."
 do_test one-or-more-unrunnnable-instances "Avoid dependencies on instances that wont ever be started"
 
-echo ""
+echo
 do_test order1 "Order start 1     "
 do_test order2 "Order start 2     "
 do_test order3 "Order stop	  "
@@ -164,7 +164,7 @@ do_test ordered-set-basic-startup "Constraint set with default order settings."
 do_test ordered-set-natural "Allow natural set ordering"
 do_test order-wrong-kind "Order (error)"
 
-echo ""
+echo
 do_test coloc-loop "Colocation - loop"
 do_test coloc-many-one "Colocation - many-to-one"
 do_test coloc-list "Colocation - many-to-one with list"
@@ -184,19 +184,19 @@ do_test anti-colocation-slave "Organize order of actions for slave resources in 
 do_test enforce-colo1 "Always enforce B with A INFINITY."
 do_test complex_enforce_colo "Always enforce B with A INFINITY. (make sure heat-engine stops)"
 
-echo ""
+echo
 do_test rsc-sets-seq-true "Resource Sets - sequential=false"
 do_test rsc-sets-seq-false "Resource Sets - sequential=true"
 do_test rsc-sets-clone "Resource Sets - Clone"
 do_test rsc-sets-master "Resource Sets - Master"
 do_test rsc-sets-clone-1 "Resource Sets - Clone (lf#2404)"
 
-#echo ""
+#echo
 #do_test agent1 "version: lt (empty)"
 #do_test agent2 "version: eq	"
 #do_test agent3 "version: gt	"
 
-echo ""
+echo
 do_test attrs1 "string: eq (and)     "
 do_test attrs2 "string: lt / gt (and)"
 do_test attrs3 "string: ne (or)      "
@@ -207,13 +207,13 @@ do_test attrs7 "is_dc: false         "
 do_test attrs8 "score_attribute      "
 do_test per-node-attrs "Per node resource parameters"
 
-echo ""
+echo
 do_test mon-rsc-1 "Schedule Monitor - start"
 do_test mon-rsc-2 "Schedule Monitor - move "
 do_test mon-rsc-3 "Schedule Monitor - pending start     "
 do_test mon-rsc-4 "Schedule Monitor - move/pending start"
 
-echo ""
+echo
 do_test rec-rsc-0 "Resource Recover - no start     "
 do_test rec-rsc-1 "Resource Recover - start        "
 do_test rec-rsc-2 "Resource Recover - monitor      "
@@ -231,7 +231,7 @@ do_test stop-failure-with-fencing "Stop failure with fencing available"
 do_test multiple-active-block-group "Support of multiple-active=block for resource groups"
 do_test multiple-monitor-one-failed "Consider resource failed if any of the configured monitor operations failed"
 
-echo ""
+echo
 do_test quorum-1 "No quorum - ignore"
 do_test quorum-2 "No quorum - freeze"
 do_test quorum-3 "No quorum - stop  "
@@ -240,7 +240,7 @@ do_test quorum-5 "No quorum - start anyway (group)"
 do_test quorum-6 "No quorum - start anyway (clone)"
 do_test bug-cl-5212 "No promotion with no-quorum-policy=freeze"
 
-echo ""
+echo
 do_test rec-node-1 "Node Recover - Startup   - no fence"
 do_test rec-node-2 "Node Recover - Startup   - fence   "
 do_test rec-node-3 "Node Recover - HA down   - no fence"
@@ -257,10 +257,10 @@ do_test rec-node-13 "Node Recover - failed resource + shutdown - fence   "
 do_test rec-node-15 "Node Recover - unknown lrm section"
 do_test rec-node-14 "Serialize all stonith's"
 
-echo ""
+echo
 do_test multi1 "Multiple Active (stop/start)"
 
-echo ""
+echo
 do_test migrate-begin     "Normal migration"
 do_test migrate-success   "Completed migration"
 do_test migrate-partial-1 "Completed migration, missing stop on source"
@@ -315,12 +315,12 @@ do_test 11-a-then-bm-b-move-a-clone-starting "Advanced migrate logic, A clone th
 do_test a-promote-then-b-migrate "A promote then B start. migrate B"
 do_test a-demote-then-b-migrate "A demote then B stop. migrate B"
 
-#echo ""
+#echo
 #do_test complex1 "Complex	"
 
 do_test bug-lf-2422 "Dependency on partially active group - stop ocfs:*"
 
-echo ""
+echo
 do_test clone-anon-probe-1 "Probe the correct (anonymous) clone instance for each node"
 do_test clone-anon-probe-2 "Avoid needless re-probing of anonymous clones"
 do_test clone-anon-failcount "Merge failcounts for anonymous clones"
@@ -363,7 +363,7 @@ do_test clone-interleave-1 "Clone-3 cannot start on pcmk-1 due to interleaved or
 do_test clone-interleave-2 "Clone-3 must stop on pcmk-1 due to interleaved ordering (no colocation)"
 do_test clone-interleave-3 "Clone-3 must be recovered on pcmk-1 due to interleaved ordering (no colocation)"
 
-echo ""
+echo
 do_test cloned_start_one  "order first clone then clone... first clone_min=2"
 do_test cloned_start_two  "order first clone then clone... first clone_min=2"
 do_test cloned_stop_one   "order first clone then clone... first clone_min=2"
@@ -378,12 +378,12 @@ do_test clone_min_stop_all  "order first clone then primitive... first clone_min
 do_test clone_min_stop_one  "order first clone then primitive... first clone_min=2"
 do_test clone_min_stop_two  "order first clone then primitive... first clone_min=2"
 
-echo ""
+echo
 do_test unfence-startup "Clean unfencing"
 do_test unfence-definition "Unfencing when the agent changes"
 do_test unfence-parameters "Unfencing when the agent parameters changes"
 
-echo ""
+echo
 do_test master-0 "Stopped -> Slave"
 do_test master-1 "Stopped -> Promote"
 do_test master-2 "Stopped -> Promote : notify"
@@ -436,10 +436,10 @@ do_test bug-cl-5219 "Allow unrelated resources with a common colocation target t
 do_test master-asymmetrical-order "Fix the behaviors of multi-state resources with asymmetrical ordering"
 do_test master-notify "Master promotion with notifies"
 
-echo ""
+echo
 do_test history-1 "Correctly parse stateful-1 resource state"
 
-echo ""
+echo
 do_test managed-0 "Managed (reference)"
 do_test managed-1 "Not managed - down "
 do_test managed-2 "Not managed - up   "
@@ -452,7 +452,7 @@ do_test unmanaged-stop-3 "cl#5155 - Block the stop of resources if any depending
 do_test unmanaged-stop-4 "cl#5155 - Block the stop of resources if any depending resource in the middle of a group is unmanaged "
 do_test unmanaged-block-restart "Block restart of resources if any dependent resource in a group is unmanaged"
 
-echo ""
+echo
 do_test interleave-0 "Interleave (reference)"
 do_test interleave-1 "coloc - not interleaved"
 do_test interleave-2 "coloc - interleaved   "
@@ -461,7 +461,7 @@ do_test interleave-pseudo-stop "Interleaved clone during stonith"
 do_test interleave-stop "Interleaved clone during stop"
 do_test interleave-restart "Interleaved clone during dependency restart"
 
-echo ""
+echo
 do_test notify-0 "Notify reference"
 do_test notify-1 "Notify simple"
 do_test notify-2 "Notify simple, confirm"
@@ -469,7 +469,7 @@ do_test notify-3 "Notify move, confirm"
 do_test novell-239079 "Notification priority"
 #do_test notify-2 "Notify - 764"
 
-echo ""
+echo
 do_test 594 "OSDL #594 - Unrunnable actions scheduled in transition"
 do_test 662 "OSDL #662 - Two resources start on one node when incarnation_node_max = 1"
 do_test 696 "OSDL #696 - CRM starts stonith RA without monitor"
@@ -548,7 +548,7 @@ do_test probe-timeout "cl#5099 - Default probe timeout"
 
 do_test concurrent-fencing "Allow performing fencing operations in parallel"
 
-echo ""
+echo
 do_test systemhealth1  "System Health ()               #1"
 do_test systemhealth2  "System Health ()               #2"
 do_test systemhealth3  "System Health ()               #3"
@@ -565,18 +565,18 @@ do_test systemhealthp1 "System Health (Progessive)     #1"
 do_test systemhealthp2 "System Health (Progessive)     #2"
 do_test systemhealthp3 "System Health (Progessive)     #3"
 
-echo ""
+echo
 do_test utilization "Placement Strategy - utilization"
 do_test minimal     "Placement Strategy - minimal"
 do_test balanced    "Placement Strategy - balanced"
 
-echo ""
+echo
 do_test placement-stickiness "Optimized Placement Strategy - stickiness"
 do_test placement-priority   "Optimized Placement Strategy - priority"
 do_test placement-location   "Optimized Placement Strategy - location"
 do_test placement-capacity   "Optimized Placement Strategy - capacity"
 
-echo ""
+echo
 do_test utilization-order1 "Utilization Order - Simple"
 do_test utilization-order2 "Utilization Order - Complex"
 do_test utilization-order3 "Utilization Order - Migrate"
@@ -585,7 +585,7 @@ do_test utilization-shuffle "Don't displace prmExPostgreSQLDB2 on act2, Start pr
 do_test load-stopped-loop "Avoid transition loop due to load_stopped (cl#5044)"
 do_test load-stopped-loop-2 "cl#5235 - Prevent graph loops that can be introduced by load_stopped -> migrate_to ordering"
 
-echo ""
+echo
 do_test colocated-utilization-primitive-1 "Colocated Utilization - Primitive"
 do_test colocated-utilization-primitive-2 "Colocated Utilization - Choose the most capable node"
 do_test colocated-utilization-group "Colocated Utilization - Group"
@@ -593,7 +593,7 @@ do_test colocated-utilization-clone "Colocated Utilization - Clone"
 
 do_test utilization-check-allowed-nodes "Only check the capacities of the nodes that can run the resource"
 
-echo ""
+echo
 do_test reprobe-target_rc "Ensure correct target_rc for reprobe of inactive resources"
 do_test node-maintenance-1 "cl#5128 - Node maintenance"
 do_test node-maintenance-2 "cl#5128 - Node maintenance (coming out of maintenance mode)"
@@ -601,11 +601,11 @@ do_test shutdown-maintenance-node "Do not fence a maintenance node if it shuts d
 
 do_test rsc-maintenance "Per-resource maintenance"
 
-echo ""
+echo
 do_test not-installed-agent "The resource agent is missing"
 do_test not-installed-tools "Something the resource agent needs is missing"
 
-echo ""
+echo
 do_test stopped-monitor-00	"Stopped Monitor - initial start"
 do_test stopped-monitor-01	"Stopped Monitor - failed started"
 do_test stopped-monitor-02	"Stopped Monitor - started multi-up"
@@ -738,7 +738,7 @@ do_test ticket-master-22 "Ticket - Master (loss-policy=freeze, standby, granted)
 do_test ticket-master-23 "Ticket - Master (loss-policy=freeze, granted, standby)"
 do_test ticket-master-24 "Ticket - Master (loss-policy=freeze, standby, revoked)"
 
-echo ""
+echo
 do_test ticket-rsc-sets-1 "Ticket - Resource sets (1 ticket, initial)"
 do_test ticket-rsc-sets-2 "Ticket - Resource sets (1 ticket, granted)"
 do_test ticket-rsc-sets-3 "Ticket - Resource sets (1 ticket, revoked)"
@@ -758,7 +758,7 @@ do_test ticket-rsc-sets-14 "Ticket - Resource sets (2 tickets, standby, revoked)
 do_test cluster-specific-params "Cluster-specific instance attributes based on rules"
 do_test site-specific-params "Site-specific instance attributes based on rules"
 
-echo ""
+echo
 do_test template-1 "Template - 1"
 do_test template-2 "Template - 2"
 do_test template-3 "Template - 3 (merge operations)"
@@ -786,7 +786,7 @@ do_test tags-coloc-order-2 "Tags - Colocation and Order (Resource Sets with Temp
 do_test tags-location      "Tags - Location"
 do_test tags-ticket        "Tags - Ticket"
 
-echo ""
+echo
 do_test container-1 "Container - initial"
 do_test container-2 "Container - monitor failed"
 do_test container-3 "Container - stop failed"
@@ -799,7 +799,7 @@ do_test container-is-remote-node "Place resource within container when container
 do_test bug-rh-1097457 "Kill user defined container/contents ordering"
 do_test bug-cl-5247 "Graph loop when recovering m/s resource in a container"
 
-echo ""
+echo
 do_test whitebox-fail1 "Fail whitebox container rsc."
 do_test whitebox-fail2 "Fail whitebox container rsc lrmd connection."
 do_test whitebox-fail3 "Failed containers should not run nested on remote nodes."
@@ -816,7 +816,7 @@ do_test whitebox-migrate1 "Migrate both container and connection resource"
 do_test whitebox-imply-stop-on-fence "imply stop action on container node rsc when host node is fenced"
 do_test whitebox-nested-group "Verify guest remote-node works nested in a group"
 
-echo ""
+echo
 do_test remote-startup-probes  "Baremetal remote-node startup probes"
 do_test remote-startup         "Startup a newly discovered remote-nodes with no status."
 do_test remote-fence-unclean   "Fence unclean baremetal remote-node"
@@ -834,14 +834,14 @@ do_test remote-start-fail       "Make sure a start failure does not result in fe
 do_test remote-unclean2         "Make monitor failure always results in fencing, even if no rsc are active on remote."
 do_test remote-fence-before-reconnect "Fence before clearing recurring monitor failure"
 
-echo ""
+echo
 do_test resource-discovery      "Exercises resource-discovery location constraint option."
 do_test rsc-discovery-per-node  "Disable resource discovery per node"
 
-echo ""
+echo
 do_test isolation-start-all   "Start docker isolated resources."
 do_test isolation-restart-all "Restart docker isolated resources."
 do_test isolation-clone       "Cloned isolated primitive."
 
-echo ""
+echo
 test_results

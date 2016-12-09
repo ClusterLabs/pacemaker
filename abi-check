@@ -62,7 +62,7 @@ EOF
     if [ $? != 0 ]; then
 	echo "Build for $TAG failed. Repair, populate <libs/> and re-run: "
 	echo "  abi-compliance-checker -l $PACKAGE -dump_abi $DESC"
-	echo ""
+	echo
 	echo "To find libraries after building:"
 	echo "  find $BUILD_ROOT/root -name "*.so" -print"
 

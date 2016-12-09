@@ -34,34 +34,34 @@ function do_test {
     expected=$io_dir/${base}.expected.xml
 
     if [ ! -f $input ]; then
-	echo "Test $name	($base)...	Error (PE : input)";
+	echo "Test $name	($base)...	Error (PE : input)"
 	num_failed=`expr $num_failed + 1`
-	return;
+	return
     fi
 
-    echo "Test $base	:	$name";
+    echo "Test $base	:	$name"
     if [ "$create_mode" != "true" -a ! -f $expected ]; then
-	echo "	Error (PE : expected)";
-	return;
+	echo "	Error (PE : expected)"
+	return
     fi
 
     xsltproc --novalid upgrade06.xsl $input > $output
     if [ $? != 0 ]; then
-	echo "	* Failed (xml : xsltproc)";
+	echo "	* Failed (xml : xsltproc)"
 	num_failed=`expr $num_failed + 1`
     fi
 
      if [ ! -s $output ]; then
-	echo "	Error (xml : no conversion)";
+	echo "	Error (xml : no conversion)"
 	num_failed=`expr $num_failed + 1`
 	rm $output
-	return;
+	return
     fi
 
     xmllint --relaxng pacemaker.rng $output > /dev/null 2>&1
 
     if [ $? != 0 ]; then
-	echo "	* Failed (xml : xmllint)";
+	echo "	* Failed (xml : xmllint)"
 	num_failed=`expr $num_failed + 1`
 	xmllint --relaxng pacemaker.rng $output > /dev/null
 	cat -n $output
@@ -76,9 +76,9 @@ function do_test {
     diff $diff_opts $expected $output >/dev/null
     rc2=$?
     if [ $rc2 != 0 ]; then
-	echo "	* Failed";
+	echo "	* Failed"
 	diff $diff_opts $expected $output 2>/dev/null >> $failed
-	echo "" >> $failed
+	echo >> $failed
 	num_failed=`expr $num_failed + 1`
     else 
 	rm $output

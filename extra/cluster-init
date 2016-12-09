@@ -63,11 +63,11 @@ function name_for_node() {
 
 function helptext() {
     echo "cluster-init - Configure cluster communication for the different infrastructures supported by Pacemaker"
-    echo ""
+    echo
     echo "-g, --group         Specify the group to operate on/with"
     echo "-w, --host          Specify a host to operate on/with.  May be specified multiple times"
     echo "-r, --raw-ip        Supplied nodes were listed as their IP addresses"
-    echo ""
+    echo
     echo "-h, --heartbeat     configure for heartbeat"
     echo "-c, --corosync      configure for corosync"
     echo "-C, --nodelist      configure for corosync with a node list"
@@ -75,12 +75,12 @@ function helptext() {
     echo "--cman              configure for cman"
     echo "-p, --plugin version"
     echo "-u, --unicast       configure point-to-point communication instead of multicast (corosync only)"
-    echo ""
+    echo
     echo "-I, --install       Install packages"
     echo "-R, --repo name     Setup and update/install Pacemaker from the named clusterlabs.org repo"
     echo "                    Known values: rpm, rpm-test, rpm-next, rpm-test-next, rpm-test-rhel"
     echo "-D, --distro        The distro within the --repo.  Defaults to fedora-15"
-    echo ""
+    echo
     echo "-d, --debug         Enable debug logging for the cluster"
     echo "-10                 install stable-1.0 packages, implies: -p 0 -R rpm-test -I"
     echo "--hosts             Copy /etc/hosts from the test master to the nodes"
@@ -197,7 +197,7 @@ for h in $host_list; do
 done
 
 if [ -z $CTYPE ]; then
-    echo ""
+    echo
     read -p "Where should Pacemaker obtain membership and quorum from? [corosync] (corosync, cman, plugin, openais, heartbeat) " -t 60 CTYPE
 fi
 
@@ -209,7 +209,7 @@ case $CTYPE in
     plugin)
 	cs_conf=/etc/corosync/corosync.conf
 	if [ -z $plugin_ver ]; then
-	    echo ""
+	    echo
 	    read -p "Should corosync start Pacemaker? [No]" -t 60 PTYPE
 	    case $PTYPE in
 		[Yy][Ee][Ss]|[Yy]) plugin_ver=0;;
@@ -246,50 +246,50 @@ function get_defaults()
 
 get_defaults
 if [ $accept_defaults = 0 ]; then
-    echo ""
+    echo
     read -p "Shall I install an ssh key to cluster nodes? [$SSH] " -t 60 SSH
-    echo ""
+    echo
     echo "SELinux prevent many things, including password-less ssh logins"
     read -p "Shall I disable selinux? [$SELINUX] " -t 60 SELINUX
-    echo ""
+    echo
     echo "Incorrectly configured firewalls will prevent corosync from starting up"
     read -p "Shall I disable iptables? [$IPTABLES] " -t 60 IPTABLES
     if [ $CMAN = 1 ]; then
-	echo ""
+	echo
 	echo "Without a default domain, cman probably wont start because it can't look up the IP for hosts"
 	read -p "Shall I set one? [No] (domain.name) " -t 60 DOMAIN
     elif [ $pcmk_ver = 10 ]; then
-	echo ""
+	echo
 	echo "Without a default domain, external/ssh fencing probably wont work because it can't find its peers"
 	read -p "Shall I set one? [No] (domain.name) " -t 60 DOMAIN
     fi
 
-    echo ""
+    echo
     read -p "Shall I install/update the relevant packages? [$INSTALL] "  -t 60 INSTALL
 
     case $INSTALL in
 	[Yy][Ee][Ss]|[Yy]|"")
 	    if [ -z $rpm_repo ]; then
-		echo ""
+		echo
 		read -p "Would you like to install packages from ClusterLabs.org? [No] (rpm, rpm-next, rpm-test-next) "  -t 60 rpm_repo
 	    fi
 
 	    if [ ! -z $rpm_repo ]; then
 		if [ -z $distro ]; then
 		    distro=fedora-18
-		    echo ""
+		    echo
 		    read -p "Which distro are you installing for? [$distro] (eg. fedora-17, rhel-6) "  -t 60 distro
 		fi
 	    fi
 	    ;;
     esac
 
-    echo ""
+    echo
     read -p "Shall I sync the date/time? [$DATE] "  -t 60 DATE
 fi
 get_defaults
 
-echo ""
+echo
 echo "Detecting possible fencing options"
 if [ -e /etc/cluster/fence_xvm.key ]; then
     echo "* Found fence_xvm"
@@ -302,9 +302,9 @@ if [ ! -z ${OS_AUTH_URL} ]; then
     fence_conf=/sbin/fence_openstack
     pkgs="$pkgs python-novaclient"
 fi
-echo ""
+echo
 echo "Beginning cluster configuration"
-echo ""
+echo
 
 case $SSH in
     [Yy][Ee][Ss]|[Yy])
@@ -324,7 +324,7 @@ case $DATE in
 	    scp /etc/localtime root@${host}:/etc
 	    now=`date +%s`
 	    ssh -l root ${host} -- date -s @$now
-	    echo ""
+	    echo
 	done
 	;;
 esac
@@ -773,8 +773,8 @@ END
 }
 
 for host in $host_list; do
-    echo ""
-    echo ""
+    echo
+    echo
     echo "* Configuring $host"
 
     cs_short_host=`name_for_node $host`

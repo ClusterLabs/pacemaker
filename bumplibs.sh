@@ -24,7 +24,7 @@ for lib in $libs; do
 	exit 0
     fi
     git diff -w $LAST_RELEASE..HEAD ${headers[$lib]}
-    echo ""
+    echo
 
     am=`find . -name Makefile.am -exec grep -lr "lib${lib}_la.*version-info" \{\} \;`
     am_dir=`dirname $am`
@@ -33,7 +33,7 @@ for lib in $libs; do
 	grep "lib${lib}_la_SOURCES.*\\\\" $am
     then
 	echo -e "\033[1;35m -- Sources list for lib$lib is probably truncated! --\033[0m"
-	echo ""
+	echo
     fi
 
     sources=`grep "lib${lib}_la_SOURCES" $am | sed s/.*=// | sed 's:$(top_builddir)/::' | sed 's:$(top_srcdir)/::' | sed 's:\\\::' | sed 's:$(libpe_rules_la_SOURCES):rules.c\ common.c:'`
@@ -56,14 +56,14 @@ for lib in $libs; do
 	echo "- Sources: $full_sources"
 	echo "- Changed Sources since $LAST_RELEASE:"
 	git diff -w $LAST_RELEASE..HEAD --stat $full_sources
-	echo ""
+	echo
 	echo "New arguments to functions or changes to the middle of structs are incompatible additions"
-	echo ""
+	echo
 	echo "Where possible:"
 	echo "- move new fields to the end of structs"
 	echo "- use bitfields instead of booleans"
 	echo "- when adding arguments, create new functions that the old version can call"
-	echo ""
+	echo
 	read -p "Are the changes to lib$lib: [a]dditions, [i]ncompatible additions, [r]emovals or [f]ixes? [None]: " CHANGE
 
 	git show $LAST_RELEASE:$am | grep version-info
@@ -122,7 +122,7 @@ for lib in $libs; do
     fi
 
     read -p "Continue?"
-    echo ""
+    echo
 done
 
 git diff -w

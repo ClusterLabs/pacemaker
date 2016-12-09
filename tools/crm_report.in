@@ -306,7 +306,7 @@ analyze() {
 	    echo "OK"
 	    [ "$f" != $CIB_F ] && consolidate $1 $f
 	else
-	    echo ""
+	    echo
 	fi
     done
 }

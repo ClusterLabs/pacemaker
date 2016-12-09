@@ -21,7 +21,7 @@
 
 create_mode="false"
 
-echo ""
+echo
 do_test stopfail2 "Stop Failed - Block	"
 do_test stopfail3 "Stop Failed - Ignore (1 node)"
 do_test stopfail4 "Stop Failed - Ignore (2 node)"
