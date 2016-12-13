@@ -160,5 +160,6 @@ int remote_ra_exec(lrm_state_t * lrm_state, const char *rsc_id, const char *acti
                    lrmd_key_value_t * params);
 void remote_ra_cleanup(lrm_state_t * lrm_state);
 void remote_ra_fail(const char *node_name);
+void remote_ra_process_pseudo(xmlNode *xml);
 
 gboolean process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op, struct recurring_op_s *pending);

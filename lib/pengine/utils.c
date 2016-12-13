@@ -36,6 +36,19 @@ void unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * contain
 static xmlNode *find_rsc_op_entry_helper(resource_t * rsc, const char *key,
                                          gboolean include_disabled);
 
+/*!
+ * \internal
+ * \brief Check whether we can fence a particular node
+ *
+ * \param[in] data_set  Working set for cluster
+ * \param[in] node      Name of node to check
+ *
+ * \return TRUE if node can be fenced, FALSE otherwise
+ *
+ * \note This function should only be called for cluster nodes and baremetal
+ *       remote nodes; guest nodes are fenced by stopping their container
+ *       resource, so fence execution requirements do not apply to them.
+ */
 bool pe_can_fence(pe_working_set_t * data_set, node_t *node)
 {
     if(is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
