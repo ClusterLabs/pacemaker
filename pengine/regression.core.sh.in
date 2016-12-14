@@ -161,7 +161,7 @@ function do_test {
 #    ../admin/crm_verify -X $input
     if [ ! -z $single_test ]; then
 	echo CIB_shadow_dir=$io_dir $test_cmd -x $input -D $dot_output -G $output -S $*
-	CIB_shadow_dir=$io_dir $test_cmd -x $input -D $dot_output -G $output -S $*
+	CIB_shadow_dir=$io_dir $test_cmd -x $input -D $dot_output -G $output -S $* 2>&1 | tee $summary_output
     else
 	CIB_shadow_dir=$io_dir $test_cmd -x $input -S &> $summary_output
     fi
