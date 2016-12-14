@@ -36,7 +36,9 @@
 %define tag_release %([ %{commit} != Pacemaker-%{shortcommit} ]; echo $?)
 
 ## Whether this is a release candidate (in case of a tagged release)
-%define pre_release %(s=%{shortcommit}; [ "%{tag_release}" -eq 0 ] || [ ${s: -4:3} != -rc ]; echo $?)
+%define pre_release %(s=%{shortcommit}; [ "%{tag_release}" -eq 0 ] || {
+                                        case %{s} in *-rc[[:digit:]]*%{rparen} false;;
+                                        esac; }; echo $?)
 
 ## Turn off auto-compilation of python files outside site-packages directory,
 ## so that the -libs-devel package is multilib-compliant (no *.py[co] files)
