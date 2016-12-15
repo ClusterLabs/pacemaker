@@ -1078,6 +1078,10 @@ main(int argc, char **argv)
     crm_build_path(CRM_CONFIG_DIR, 0750);
     mcp_chown(CRM_CONFIG_DIR, pcmk_uid, pcmk_gid);
 
+    /* Used to store snmp-tools files in */
+    crm_build_path(CRM_SNMP_TRAP_TOOLS_DIR, 0750);
+    mcp_chown(CRM_SNMP_TRAP_TOOLS_DIR, pcmk_uid, pcmk_gid);
+
     /* Resource agent paths are constructed by the lrmd */
 
     ipcs = mainloop_add_ipc_server(CRM_SYSTEM_MCP, QB_IPC_NATIVE, &mcp_ipc_callbacks);
