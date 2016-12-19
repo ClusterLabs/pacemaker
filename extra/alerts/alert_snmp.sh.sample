@@ -93,6 +93,7 @@ is_in_list() {
     return 1
 }
 
+rc=0
 case "$CRM_alert_kind" in
     node)
         is_in_list "${trap_node_states}" "${CRM_alert_desc}"
@@ -103,7 +104,8 @@ case "$CRM_alert_kind" in
         PACEMAKER-MIB::pacemakerNotificationTrap \
         PACEMAKER-MIB::pacemakerNotificationNode s "${CRM_alert_node}" \
         PACEMAKER-MIB::pacemakerNotificationDescription s "${CRM_alert_desc}" \
-        ${hires_timestamp}
+        ${hires_timestamp} > /dev/null 2>&1
+        rc=$?
         ;;
     fencing)
         is_in_list "${trap_fencing_tasks}" "${CRM_alert_task}"
@@ -116,7 +118,8 @@ case "$CRM_alert_kind" in
         PACEMAKER-MIB::pacemakerNotificationOperation s "${CRM_alert_task}" \
         PACEMAKER-MIB::pacemakerNotificationDescription s "${CRM_alert_desc}" \
         PACEMAKER-MIB::pacemakerNotificationReturnCode i ${CRM_alert_rc} \
-        ${hires_timestamp}
+        ${hires_timestamp} > /dev/null 2>&1
+        rc=$?
         ;;
     resource)
         is_in_list "${trap_resource_tasks}" "${CRM_alert_task}"
@@ -141,10 +144,16 @@ case "$CRM_alert_kind" in
             PACEMAKER-MIB::pacemakerNotificationStatus i ${CRM_alert_status} \
             PACEMAKER-MIB::pacemakerNotificationReturnCode i ${CRM_alert_rc} \
             PACEMAKER-MIB::pacemakerNotificationTargetReturnCode i ${CRM_alert_target_rc} \
-            ${hires_timestamp}
+            ${hires_timestamp} > /dev/null 2>&1
+            rc=$?
             ;;
         esac
         ;;
     *)
         ;;
 esac
+
+if [ $rc -ne 0 ]; then
+    echo "${trap_binary} returned error. rc=${rc}"
+fi
+
