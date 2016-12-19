@@ -1129,6 +1129,10 @@ CRM_CONFIG_DIR="${localstatedir}/lib/pacemaker/cib"
 AC_DEFINE_UNQUOTED(CRM_CONFIG_DIR,"$CRM_CONFIG_DIR", Where to keep configuration files)
 AC_SUBST(CRM_CONFIG_DIR)
 
+CRM_SNMP_TRAP_TOOLS_DIR="${localstatedir}/lib/pacemaker/snmp"
+AC_DEFINE_UNQUOTED(CRM_SNMP_TRAP_TOOLS_DIR,"$CRM_SNMP_TRAP_TOOLS_DIR", Where to keep snmp-trap-tools files)
+AC_SUBST(CRM_SNMP_TRAP_TOOLS_DIR)
+
 CRM_CONFIG_CTS="${localstatedir}/lib/pacemaker/cts"
 AC_DEFINE_UNQUOTED(CRM_CONFIG_CTS,"$CRM_CONFIG_CTS", Where to keep cts stateful data)
 AC_SUBST(CRM_CONFIG_CTS)
@@ -2131,6 +2135,7 @@ lrmd/Makefile                                                   \
         lrmd/pacemaker_remote					\
 extra/Makefile							\
 	extra/alerts/Makefile					\
+        extra/alerts/alert_snmp.sh.sample
 	extra/resources/Makefile				\
 	extra/logrotate/Makefile				\
 	extra/logrotate/pacemaker				\

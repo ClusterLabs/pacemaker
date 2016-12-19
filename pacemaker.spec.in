@@ -712,6 +712,7 @@ exit 0
 %doc ChangeLog
 
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker
+%dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/snmp
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/blackbox
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/cores
 
