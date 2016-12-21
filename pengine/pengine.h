@@ -145,6 +145,7 @@ extern int new_rsc_order(resource_t * lh_rsc, const char *lh_task,
     new_rsc_order(rsc1, CRMD_ACTION_STOP, rsc2, CRMD_ACTION_STOP, type, data_set)
 
 extern void graph_element_from_action(action_t * action, pe_working_set_t * data_set);
+extern void add_maintenance_update(pe_working_set_t *data_set);
 
 extern gboolean show_scores;
 extern int scores_log_level;

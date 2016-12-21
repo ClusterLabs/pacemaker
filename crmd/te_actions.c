@@ -53,8 +53,32 @@ te_start_action_timer(crm_graph_t * graph, crm_action_t * action)
 static gboolean
 te_pseudo_action(crm_graph_t * graph, crm_action_t * pseudo)
 {
-    /* Check action for Pacemaker Remote node side effects */
-    remote_ra_process_pseudo(pseudo->xml);
+    const char *task = crm_element_value(pseudo->xml, XML_LRM_ATTR_TASK);
+
+    /* send to peers as well? */
+    if (safe_str_eq(task, CRM_OP_MAINTENANCE_NODES)) {
+        GHashTableIter iter;
+        crm_node_t *node = NULL;
+
+        g_hash_table_iter_init(&iter, crm_peer_cache);
+        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+            xmlNode *cmd = NULL;
+
+            if (safe_str_eq(fsa_our_uname, node->uname)) {
+                continue;
+            }
+
+            cmd = create_request(task, pseudo->xml, node->uname,
+                                 CRM_SYSTEM_CRMD, CRM_SYSTEM_TENGINE, NULL);
+            send_cluster_message(node, crm_msg_crmd, cmd, FALSE);
+            free_xml(cmd);
+        }
+
+        remote_ra_process_maintenance_nodes(pseudo->xml);
+    } else {
+        /* Check action for Pacemaker Remote node side effects */
+        remote_ra_process_pseudo(pseudo->xml);
+    }
 
     crm_debug("Pseudo-action %d (%s) fired and confirmed", pseudo->id,
               crm_element_value(pseudo->xml, XML_LRM_ATTR_TASK_KEY));

@@ -160,6 +160,7 @@ struct node_shared_s {
     gboolean rsc_discovery_enabled;
     gboolean remote_requires_reset;
     gboolean remote_was_fenced;
+    gboolean remote_maintenance; /* what the remote-rsc is thinking */
 };
 
 struct node_s {

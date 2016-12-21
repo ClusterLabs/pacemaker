@@ -364,11 +364,35 @@ void handle_shutdown_ack()
         crm_info("Received shutdown ack");
         if (shutdown_ack_timer > 0) {
             g_source_remove(shutdown_ack_timer);
+            shutdown_ack_timer = 0;
         }
         return;
     }
 #endif
     crm_debug("Ignoring unexpected shutdown ack");
+}
+
+/*!
+ * \internal
+ * \brief Make short exit timer fire immediately
+ */
+void handle_shutdown_nack()
+{
+#ifdef ENABLE_PCMK_REMOTE
+    if (shutting_down) {
+        crm_info("Received shutdown nack");
+        if (shutdown_ack_timer > 0) {
+            GSource *timer =
+                g_main_context_find_source_by_id(NULL, shutdown_ack_timer);
+
+            if (timer != NULL) {
+                g_source_set_ready_time(timer, 0);
+            }
+        }
+        return;
+    }
+#endif
+    crm_debug("Ignoring unexpected shutdown nack");
 }
 
 /* *INDENT-OFF* */

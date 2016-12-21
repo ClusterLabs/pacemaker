@@ -788,13 +788,15 @@ get_router_node(action_t *action)
  * \param[in]     id      Node UUID to add
  * \param[in,out] xml     Parent XML tag to add to
  */
-static void
+static xmlNode*
 add_node_to_xml_by_id(const char *id, xmlNode *xml)
 {
     xmlNode *node_xml;
 
     node_xml = create_xml_node(xml, XML_CIB_TAG_NODE);
     crm_xml_add(node_xml, XML_ATTR_UUID, id);
+
+    return node_xml;
 }
 
 /*!
@@ -808,6 +810,62 @@ static void
 add_node_to_xml(const node_t *node, void *xml)
 {
     add_node_to_xml_by_id(node->details->id, (xmlNode *) xml);
+}
+
+/*!
+ * \internal
+ * \brief Add XML with nodes that need an update of their maintenance state
+ *
+ * \param[in,out] xml       Parent XML tag to add to
+ * \param[in]     data_set  Working set for cluster
+ */
+static int
+add_maintenance_nodes(xmlNode *xml, const pe_working_set_t *data_set)
+{
+    GListPtr gIter = NULL;
+    xmlNode *maintenance =
+        xml?create_xml_node(xml, XML_GRAPH_TAG_MAINTENANCE):NULL;
+    int count = 0;
+
+    for (gIter = data_set->nodes; gIter != NULL;
+         gIter = gIter->next) {
+        node_t *node = (node_t *) gIter->data;
+        struct node_shared_s *details = node->details;
+
+        if (!(is_remote_node(node))) {
+            continue; /* just remote nodes need to know atm */
+        }
+
+        if (details->maintenance != details->remote_maintenance) {
+            if (maintenance) {
+                crm_xml_add(
+                    add_node_to_xml_by_id(node->details->id, maintenance),
+                    XML_NODE_IS_MAINTENANCE, details->maintenance?"1":"0");
+            }
+            count++;
+        }
+    }
+    crm_trace("%s %d nodes to adjust maintenance-mode "
+              "to transition", maintenance?"Added":"Counted", count);
+    return count;
+}
+
+/*!
+ * \internal
+ * \brief Add pseudo action with nodes needing maintenance state update
+ *
+ * \param[in,out] data_set  Working set for cluster
+ */
+void
+add_maintenance_update(pe_working_set_t *data_set)
+{
+    action_t *action = NULL;
+
+    if (add_maintenance_nodes(NULL, data_set)) {
+        crm_trace("adding maintenance state update pseudo action");
+        action = get_pseudo_op(CRM_OP_MAINTENANCE_NODES, data_set);
+        set_bit(action->flags, pe_action_print_always);
+    }
 }
 
 /*!
@@ -874,6 +932,7 @@ static xmlNode *
 action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
 {
     gboolean needs_node_info = TRUE;
+    gboolean needs_maintenance_info = FALSE;
     xmlNode *action_xml = NULL;
     xmlNode *args_xml = NULL;
 
@@ -901,6 +960,9 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
 /* 		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT); */
 
     } else if (is_set(action->flags, pe_action_pseudo)) {
+        if (safe_str_eq(action->task, CRM_OP_MAINTENANCE_NODES)) {
+            needs_maintenance_info = TRUE;
+        }
         action_xml = create_xml_node(NULL, XML_GRAPH_TAG_PSEUDO_EVENT);
         needs_node_info = FALSE;
 
@@ -1080,6 +1142,10 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
     /* List any nodes this action is expected to make down */
     if (needs_node_info && (action->node != NULL)) {
         add_downed_nodes(action_xml, action, data_set);
+    }
+
+    if (needs_maintenance_info) {
+        add_maintenance_nodes(action_xml, data_set);
     }
 
     crm_log_xml_trace(action_xml, "dumped action");
