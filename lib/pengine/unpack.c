@@ -89,16 +89,22 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
         set_bit(node->details->remote_rsc->flags, pe_rsc_failed);
 
     } else if (is_baremetal_remote_node(node)) {
-        if(pe_can_fence(data_set, node)) {
-            crm_warn("Node %s will be fenced %s", node->details->uname, reason);
+        resource_t *rsc = node->details->remote_rsc;
+
+        if (rsc && (!is_set(rsc->flags, pe_rsc_managed))) {
+            crm_notice("Not fencing node %s because connection is unmanaged, "
+                       "otherwise would %s", node->details->uname, reason);
         } else {
-            crm_warn("Node %s is unclean %s", node->details->uname, reason);
+            if (pe_can_fence(data_set, node)) {
+                crm_warn("Node %s will be fenced %s", node->details->uname, reason);
+            } else {
+                crm_warn("Node %s is unclean %s", node->details->uname, reason);
+            }
+            node->details->remote_requires_reset = TRUE;
         }
         node->details->unclean = TRUE;
-        node->details->remote_requires_reset = TRUE;
-
     } else if (node->details->unclean == FALSE) {
-        if(pe_can_fence(data_set, node)) {
+        if (pe_can_fence(data_set, node)) {
             crm_warn("Node %s will be fenced %s", node->details->uname, reason);
         } else {
             crm_warn("Node %s is unclean %s", node->details->uname, reason);
@@ -1163,6 +1169,7 @@ unpack_remote_status(xmlNode * status, pe_working_set_t * data_set)
     const char *id = NULL;
     const char *uname = NULL;
     const char *shutdown = NULL;
+    resource_t *rsc = NULL;
 
     GListPtr gIter = NULL;
 
@@ -1202,6 +1209,7 @@ unpack_remote_status(xmlNode * status, pe_working_set_t * data_set)
         }
         crm_trace("Processing remote node id=%s, uname=%s", id, uname);
 
+        rsc = this_node->details->remote_rsc;
         if (this_node->details->remote_requires_reset == FALSE) {
             this_node->details->unclean = FALSE;
             this_node->details->unseen = FALSE;
@@ -1211,11 +1219,11 @@ unpack_remote_status(xmlNode * status, pe_working_set_t * data_set)
 
         shutdown = g_hash_table_lookup(this_node->details->attrs, XML_CIB_ATTR_SHUTDOWN);
         if (shutdown != NULL && safe_str_neq("0", shutdown)) {
-            resource_t *rsc = this_node->details->remote_rsc;
-
             crm_info("Node %s is shutting down", this_node->details->uname);
             this_node->details->shutdown = TRUE;
-            rsc->next_role = RSC_ROLE_STOPPED;
+            if (rsc) {
+                rsc->next_role = RSC_ROLE_STOPPED;
+            }
         }
  
         if (crm_is_true(g_hash_table_lookup(this_node->details->attrs, "standby"))) {
@@ -1223,7 +1231,8 @@ unpack_remote_status(xmlNode * status, pe_working_set_t * data_set)
             this_node->details->standby = TRUE;
         }
 
-        if (crm_is_true(g_hash_table_lookup(this_node->details->attrs, "maintenance"))) {
+        if (crm_is_true(g_hash_table_lookup(this_node->details->attrs, "maintenance")) ||
+            (rsc && !is_set(rsc->flags, pe_rsc_managed))) {
             crm_info("Node %s is in maintenance-mode", this_node->details->uname);
             this_node->details->maintenance = TRUE;
         }
@@ -2825,7 +2834,7 @@ determine_op_status(
                 result = PCMK_LRM_OP_NOTSUPPORTED;
                 break;
 
-            } else if(pe_can_fence(data_set, node) == FALSE
+            } else if (pe_can_fence(data_set, node) == FALSE
                && safe_str_eq(task, CRMD_ACTION_STOP)) {
                 /* If a stop fails and we can't fence, there's nothing else we can do */
                 pe_proc_err("No further recovery can be attempted for %s: %s action failed with '%s' (%d)",

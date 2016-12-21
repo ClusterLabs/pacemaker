@@ -485,6 +485,28 @@ monitor_timeout_cb(gpointer data)
     return FALSE;
 }
 
+static void
+synthesize_lrmd_success(lrm_state_t *lrm_state, const char *rsc_id, const char *op_type)
+{
+    lrmd_event_data_t op = { 0, };
+
+    if (lrm_state == NULL) {
+        /* if lrm_state not given assume local */
+        lrm_state = lrm_state_find(fsa_our_uname);
+    }
+    CRM_ASSERT(lrm_state != NULL);
+
+    op.type = lrmd_event_exec_complete;
+    op.rsc_id = rsc_id;
+    op.op_type = op_type;
+    op.rc = PCMK_OCF_OK;
+    op.op_status = PCMK_LRM_OP_DONE;
+    op.t_run = time(NULL);
+    op.t_rcchange = op.t_run;
+    op.call_id = generate_callid();
+    process_lrm_event(lrm_state, &op, NULL);
+}
+
 void
 remote_lrm_op_callback(lrmd_event_data_t * op)
 {
@@ -536,9 +558,18 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
         (ra_data->cur_cmd == NULL) &&
         (ra_data->active == TRUE)) {
 
-        crm_err("Unexpected disconnect on remote-node %s", lrm_state->node_name);
-        ra_data->recurring_cmds = fail_all_monitor_cmds(ra_data->recurring_cmds);
-        ra_data->cmds = fail_all_monitor_cmds(ra_data->cmds);
+        if (crmd_is_rsc_managed(lrm_state->node_name)) {
+            crm_err("Unexpected disconnect on remote-node %s", lrm_state->node_name);
+            ra_data->recurring_cmds = fail_all_monitor_cmds(ra_data->recurring_cmds);
+            ra_data->cmds = fail_all_monitor_cmds(ra_data->cmds);
+        } else {
+            crm_notice("Disconnect on unmanaged remote-node %s", lrm_state->node_name);
+            /* Do roughly what a 'stop' on the remote-resource would do */
+            handle_remote_ra_stop(lrm_state, NULL);
+            remote_node_down(lrm_state->node_name, DOWN_KEEP_LRM);
+            /* now fake the reply of a successful 'stop' */
+            synthesize_lrmd_success(NULL, lrm_state->node_name, "stop");
+        }
         return;
     }
 
@@ -651,8 +682,6 @@ handle_remote_ra_stop(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd)
 
     ra_data->active = FALSE;
     lrm_state_disconnect(lrm_state);
-    cmd->rc = PCMK_OCF_OK;
-    cmd->op_status = PCMK_LRM_OP_DONE;
 
     if (ra_data->cmds) {
         g_list_free_full(ra_data->cmds, free_cmd);
@@ -664,7 +693,12 @@ handle_remote_ra_stop(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd)
     ra_data->recurring_cmds = NULL;
     ra_data->cur_cmd = NULL;
 
-    report_remote_ra_result(cmd);
+    if (cmd) {
+        cmd->rc = PCMK_OCF_OK;
+        cmd->op_status = PCMK_LRM_OP_DONE;
+
+        report_remote_ra_result(cmd);
+    }
 }
 
 static int

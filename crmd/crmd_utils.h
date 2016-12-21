@@ -100,6 +100,7 @@ const char *get_timer_desc(fsa_timer_t * timer);
 gboolean too_many_st_failures(void);
 void st_fail_count_reset(const char * target);
 void crmd_peer_down(crm_node_t *peer, bool full);
+gboolean crmd_is_rsc_managed(const char *rsc);
 
 /* Convenience macro for registering a CIB callback
  * (assumes that data can be freed with free())
