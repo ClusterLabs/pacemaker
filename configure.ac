@@ -92,9 +92,8 @@ AC_PROG_CC_STDC
 gl_EARLY
 gl_INIT
 
-AC_LIBTOOL_DLOPEN               dnl Enable dlopen support...
-AC_LIBLTDL_CONVENIENCE          dnl make libltdl a convenience lib
-AC_PROG_LIBTOOL
+LT_INIT([dlopen])
+LTDL_INIT([convenience])
 
 AC_PROG_YACC
 AM_PROG_LEX
@@ -179,10 +178,6 @@ AC_ARG_ENABLE([quiet],
 [  --enable-quiet
      Supress make output unless there is an error
      [default=no]])
-
-AC_ARG_ENABLE([bundled-ltdl],
-[  --enable-bundled-ltdl  Configure, build and install the standalone ltdl library bundled with ${PACKAGE} [default=no]])
-LTDL_LIBS=""
 
 AC_ARG_ENABLE([no-stack],
     [  --enable-no-stack
@@ -845,38 +840,6 @@ dnl ========================================================================
 AC_CHECK_FUNCS(g_log_set_default_handler)
 AC_CHECK_FUNCS(getopt, AC_DEFINE(HAVE_DECL_GETOPT,  1, [Have getopt function]))
 AC_CHECK_FUNCS(nanosleep, AC_DEFINE(HAVE_DECL_NANOSLEEP,  1, [Have nanosleep function]))
-
-dnl ========================================================================
-dnl   ltdl
-dnl ========================================================================
-
-AC_CHECK_LIB(ltdl, lt_dlopen, [LTDL_foo=1])
-if test "x${enable_bundled_ltdl}" = "xyes"; then
-   if test $ac_cv_lib_ltdl_lt_dlopen = yes; then
-      AC_MSG_NOTICE([Disabling usage of installed ltdl])
-   fi
-   ac_cv_lib_ltdl_lt_dlopen=no
-fi
-
-LIBLTDL_DIR=""
-if test $ac_cv_lib_ltdl_lt_dlopen != yes ; then
-   AC_MSG_NOTICE([Installing local ltdl])
-   LIBLTDL_DIR=libltdl
-   ( cd $srcdir ; $TAR -xvf libltdl.tar )
-   if test "$?" -ne 0; then
-     AC_MSG_ERROR([$TAR of libltdl.tar in $srcdir failed])
-   fi
-   AC_CONFIG_SUBDIRS(libltdl)
-else
-   LIBS="$LIBS -lltdl"
-   AC_MSG_NOTICE([Using installed ltdl])
-   INCLTDL=""
-   LIBLTDL=""
-fi
-
-AC_SUBST(INCLTDL)
-AC_SUBST(LIBLTDL)
-AC_SUBST(LIBLTDL_DIR)
 
 dnl ========================================================================
 dnl   bzip2
@@ -2168,8 +2131,6 @@ AC_MSG_RESULT([  System configuration     = ${sysconfdir}])
 if test $SUPPORT_PLUGIN = 1; then
 AC_MSG_RESULT([  Corosync Plugins         = ${LCRSODIR}])
 fi
-AC_MSG_RESULT([])
-AC_MSG_RESULT([  Use system LTDL          = ${ac_cv_lib_ltdl_lt_dlopen}])
 AC_MSG_RESULT([])
 AC_MSG_RESULT([  HA group name            = ${CRM_DAEMON_GROUP}])
 AC_MSG_RESULT([  HA user name             = ${CRM_DAEMON_USER}])
