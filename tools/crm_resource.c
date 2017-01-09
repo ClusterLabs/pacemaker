@@ -133,7 +133,9 @@ static struct crm_option long_options[] = {
     {"get-parameter",   1, 0, 'g', "Display the named parameter for a resource. See also -m, --meta"},
     {"delete-parameter",1, 0, 'd', "Delete the named parameter for a resource. See also -m, --meta"},
     {"get-property",    1, 0, 'G', "Display the 'class', 'type' or 'provider' of a resource", pcmk_option_hidden},
-    {"set-property",    1, 0, 'S', "(Advanced) Set the class, type or provider of a resource", pcmk_option_hidden},
+    {"set-property",    1, 0, 'S',
+        "(Advanced) Set resource property (e.g. 'class', 'type', or 'provider'). Required: -r, -t, -v",
+        pcmk_option_hidden},
 
     {"-spacer-",	1, 0, '-', "\nResource location:"},
     {
@@ -179,7 +181,7 @@ static struct crm_option long_options[] = {
     {"node",		1, 0, 'N', "\tHost uname"},
     {"recursive",       0, 0,  0,  "\tFollow colocation chains when using --set-parameter"},
     {"resource-type",	1, 0, 't', "Resource type (primitive, clone, group, ...)"},
-    {"parameter-value", 1, 0, 'v', "Value to use with -p or -S"},
+    {"parameter-value", 1, 0, 'v', "Value to use with -p"},
     {"meta",		0, 0, 'm', "\t\tModify a resource's configuration option rather than one which is passed to the resource agent script. For use with -p, -g, -d"},
     {"utilization",	0, 0, 'z', "\tModify a resource's utilization attribute. For use with -p, -g, -d"},
     {"set-name",        1, 0, 's', "\t(Advanced) ID of the instance_attributes object to change"},
@@ -871,8 +873,18 @@ main(int argc, char **argv)
     } else if (rsc_cmd == 'S') {
         xmlNode *msg_data = NULL;
 
-        if (prop_value == NULL || strlen(prop_value) == 0) {
-            CMD_ERR("You need to supply a value with the -v option");
+        if ((rsc_id == NULL) || !strlen(rsc_id)) {
+            CMD_ERR("Must specify -r with resource id");
+            rc = -ENXIO;
+            goto bail;
+
+        } else if ((rsc_type == NULL) || !strlen(rsc_type)) {
+            CMD_ERR("Must specify -t with resource type");
+            rc = -ENXIO;
+            goto bail;
+
+        } else if ((prop_value == NULL) || !strlen(prop_value)) {
+            CMD_ERR("Must supply -v with new value");
             rc = -EINVAL;
             goto bail;
 
@@ -881,14 +893,7 @@ main(int argc, char **argv)
             goto bail;
         }
 
-        if (rsc_id == NULL) {
-            CMD_ERR("Must supply a resource id with -r");
-            rc = -ENXIO;
-            goto bail;
-        }
-        CRM_LOG_ASSERT(rsc_type != NULL);
         CRM_LOG_ASSERT(prop_name != NULL);
-        CRM_LOG_ASSERT(prop_value != NULL);
 
         msg_data = create_xml_node(NULL, rsc_type);
         crm_xml_add(msg_data, XML_ATTR_ID, rsc_id);
