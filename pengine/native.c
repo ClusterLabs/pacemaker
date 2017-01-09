@@ -425,7 +425,7 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 
     set_bit(rsc->flags, pe_rsc_allocating);
     print_resource(alloc_details, "Allocating: ", rsc, FALSE);
-    dump_node_scores(alloc_details, rsc, "Pre-allloc", rsc->allowed_nodes);
+    dump_node_scores(alloc_details, rsc, "Pre-alloc", rsc->allowed_nodes);
 
     for (gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
         rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
@@ -1234,8 +1234,10 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     pe_rsc_trace(rsc, "Creating actions for %s: %s->%s", rsc->id,
                  role2text(rsc->role), role2text(rsc->next_role));
 
+    /* Create any additional actions required when bringing resource down and
+     * back up to same level.
+     */
     role = rsc->role;
-    /* Potentiall optional steps on brining the resource down and back up to the same level */
     while (role != RSC_ROLE_STOPPED) {
         next_role = rsc_state_matrix[role][RSC_ROLE_STOPPED];
         pe_rsc_trace(rsc, "Down: Executing: %s->%s (%s)%s", role2text(role), role2text(next_role),

@@ -79,8 +79,8 @@
 
 # Definitions for backward compatibility with older RPM versions
 
-## Ensure %license macro behaves consistently (older RPM will otherwise
-## overwrite %license once it encounters "License:"). Courtesy Jason Tibbitts:
+## Ensure the license macro behaves consistently (older RPM will otherwise
+## overwrite it once it encounters "License:"). Courtesy Jason Tibbitts:
 ## https://pkgs.fedoraproject.org/cgit/rpms/epel-rpm-macros.git/tree/macros.zzz-epel?h=el6&id=e1adcb77
 %if !%{defined _licensedir}
 %define description %{lua:

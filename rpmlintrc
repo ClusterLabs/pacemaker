@@ -9,7 +9,10 @@ addFilter("mixed-use-of-spaces-and-tabs")
 addFilter("W: only-non-binary-in-usr-lib")
 addFilter("E: hardcoded-library-path in /usr/lib/ocf")
 
-# Its there but rpmlint can't find it for some reason
+# Common location used to guess systemd presence
+addFilter("E: hardcoded-library-path in /usr/lib/os-release")
+
+# It's there but rpmlint can't find it for some reason
 addFilter("no-status-entry /etc/rc.d/init.d/")
 
 # We don't want the cluster to start by default 
