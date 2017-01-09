@@ -503,10 +503,7 @@ pcmk_dbus_watch_dispatch(gpointer userdata)
     mainloop_io_t *client = dbus_watch_get_data(watch);
 
     crm_trace("Dispatching client %p: %s", client, dbus_watch_flags_to_string(flags));
-    if (enabled && is_set(flags, DBUS_WATCH_READABLE)) {
-        oom = !dbus_watch_handle(watch, flags);
-
-    } else if (enabled && is_set(flags, DBUS_WATCH_READABLE)) {
+    if (enabled && (flags & (DBUS_WATCH_READABLE|DBUS_WATCH_WRITABLE))) {
         oom = !dbus_watch_handle(watch, flags);
 
     } else if(enabled) {
