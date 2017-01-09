@@ -363,7 +363,7 @@ check: clang cppcheck
 
 # Extra cppcheck options:  --enable=all --inconclusive --std=posix
 cppcheck:
-	for d in $(LIBLTDL_DIR) replace lib mcp attrd pengine cib crmd fencing lrmd tools; do cppcheck -q $$d; done
+	for d in replace lib mcp attrd pengine cib crmd fencing lrmd tools; do cppcheck -q $$d; done
 
 clang:
 	test -e $(CLANG_analyzer)
