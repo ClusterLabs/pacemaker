@@ -78,6 +78,34 @@ print_patch(xmlNode *patch)
     fflush(stdout);
 }
 
+static int
+apply_patch(xmlNode *input, xmlNode *patch, gboolean as_cib)
+{
+    int rc;
+    xmlNode *output = copy_xml(input);
+
+    rc = xml_apply_patchset(output, patch, as_cib);
+    if (rc != pcmk_ok) {
+        fprintf(stderr, "Could not apply patch: %s\n", pcmk_strerror(rc));
+        free_xml(output);
+        return rc;
+    }
+
+    if (output != NULL) {
+        const char *version;
+        char *buffer;
+
+        print_patch(output);
+        free_xml(output);
+
+        version = crm_element_value(output, XML_ATTR_CRM_VERSION);
+        buffer = calculate_xml_versioned_digest(output, FALSE, TRUE, version);
+        crm_trace("Digest: %s\n", crm_str(buffer));
+        free(buffer);
+    }
+    return pcmk_ok;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -208,25 +236,7 @@ main(int argc, char **argv)
     }
 
     if (apply) {
-        output = copy_xml(object_1);
-        rc = xml_apply_patchset(output, object_2, as_cib);
-        if(rc != pcmk_ok) {
-            fprintf(stderr, "Could not apply patch: %s\n", pcmk_strerror(rc));
-            return rc;
-        }
-        if (output != NULL) {
-            const char *version;
-            char *buffer;
-
-            print_patch(output);
-            free_xml(output);
-
-            version = crm_element_value(output, XML_ATTR_CRM_VERSION);
-            buffer = calculate_xml_versioned_digest(output, FALSE, TRUE, version);
-            crm_trace("Digest: %s\n", crm_str(buffer));
-            free(buffer);
-        }
-
+        rc = apply_patch(object_1, object_2, as_cib);
     } else {
         int lpc = 0;
         const char *vfields[] = {
