@@ -158,6 +158,13 @@ main(int argc, char **argv)
         crm_help('?', EX_USAGE);
     }
 
+    if (apply && no_version) {
+        fprintf(stderr, "warning: -u/--no-version ignored with -p/--patch\n");
+    } else if (as_cib && no_version) {
+        fprintf(stderr, "error: -u/--no-version incompatible with -c/--cib\n");
+        return 1;
+    }
+
     if (raw_1) {
         object_1 = string2xml(xml_file_1);
 
@@ -199,6 +206,21 @@ main(int argc, char **argv)
             return rc;
         }
     } else {
+        int lpc = 0;
+        const char *vfields[] = {
+            XML_ATTR_GENERATION_ADMIN,
+            XML_ATTR_GENERATION,
+            XML_ATTR_NUMUPDATES,
+        };
+
+        /* If we're ignoring the version, make the version information
+         * identical, so it isn't detected as a change. */
+        if (no_version) {
+            for (lpc = 0; lpc < DIMOF(vfields); lpc++) {
+                crm_copy_xml_element(object_1, object_2, vfields[lpc]);
+            }
+        }
+
         xml_track_changes(object_2, NULL, object_2, FALSE);
         xml_calculate_changes(object_1, object_2);
         crm_log_xml_debug(object_2, xml_file_2?xml_file_2:"target");
@@ -247,19 +269,11 @@ main(int argc, char **argv)
                     XML_TAG_DIFF_ADDED,
                 };
 
-                const char *vfields[] = {
-                    XML_ATTR_GENERATION_ADMIN,
-                    XML_ATTR_GENERATION,
-                    XML_ATTR_NUMUPDATES,
-                };
-
                 for (i = 0; i < DIMOF(tags); i++) {
                     xmlNode *tmp = NULL;
 
                     tmp = find_xml_node(output, tags[i], FALSE);
                     if (tmp) {
-                        int lpc = 0;
-
                         for (lpc = 0; lpc < DIMOF(vfields); lpc++) {
                             xml_remove_prop(tmp, vfields[lpc]);
                         }
