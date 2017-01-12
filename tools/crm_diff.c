@@ -68,6 +68,16 @@ static struct crm_option long_options[] = {
 };
 /* *INDENT-ON* */
 
+static void
+print_patch(xmlNode *patch)
+{
+    char *buffer = dump_xml_formatted(patch);
+
+    printf("%s\n", crm_str(buffer));
+    free(buffer);
+    fflush(stdout);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -292,17 +302,11 @@ main(int argc, char **argv)
     }
 
     if (output != NULL) {
-        char *buffer = dump_xml_formatted(output);
-
-        fprintf(stdout, "%s\n", crm_str(buffer));
-        free(buffer);
-
-        fflush(stdout);
-
+        print_patch(output);
         if (apply) {
             const char *version = crm_element_value(output, XML_ATTR_CRM_VERSION);
+            char *buffer = calculate_xml_versioned_digest(output, FALSE, TRUE, version);
 
-            buffer = calculate_xml_versioned_digest(output, FALSE, TRUE, version);
             crm_trace("Digest: %s\n", crm_str(buffer));
             free(buffer);
         }
