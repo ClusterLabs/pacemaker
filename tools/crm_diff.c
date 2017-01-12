@@ -89,8 +89,8 @@ main(int argc, char **argv)
 
     crm_log_cli_init("crm_diff");
     crm_set_options(NULL, "original_xml operation [options]", long_options,
-                    "A utility for comparing Pacemaker configurations (XML format)\n\n"
-                    "The tool produces a custom (diff-like) output which it can also apply like a patch\n");
+                    "crm_diff can compare two Pacemaker configurations (in XML format) to\n"
+                    "produce a custom diff-like output, or apply such an output as a patch\n");
 
     if (argc < 2) {
         crm_help('?', EX_USAGE);
@@ -137,7 +137,7 @@ main(int argc, char **argv)
                 crm_help(flag, EX_OK);
                 break;
             default:
-                printf("Argument code 0%o (%c)" " is not (?yet?) supported\n", flag, flag);
+                printf("Argument %c (0%o) is not (yet?) supported\n", flag, flag);
                 ++argerr;
                 break;
         }
