@@ -107,6 +107,9 @@ version):
 * Support for transient node attributes
 * Support for clusters with mixed endian architectures
 
+.1.1.10
+* remote-connect-timeout for guest nodes
+
 .1.1.9
 * Initial version to include pacemaker_remote
 * Limited to guest nodes in KVM/LXC environments using only IPv4;

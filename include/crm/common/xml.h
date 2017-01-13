@@ -210,6 +210,24 @@ crm_element_name(xmlNode *xml)
 
 const char *crm_element_value(xmlNode * data, const char *name);
 
+/*!
+ * \brief Copy an element from one XML object to another
+ *
+ * \param[in]     obj1     Source XML
+ * \param[in,out] obj2     Destination XML
+ * \param[in]     element  Name of element to copy
+ *
+ * \return Pointer to copied value (from source)
+ */
+static inline const char *
+crm_copy_xml_element(xmlNode *obj1, xmlNode *obj2, const char *element)
+{
+    const char *value = crm_element_value(obj1, element);
+
+    crm_xml_add(obj2, element, value);
+    return value;
+}
+
 void xml_validate(const xmlNode * root);
 
 gboolean xml_has_children(const xmlNode * root);

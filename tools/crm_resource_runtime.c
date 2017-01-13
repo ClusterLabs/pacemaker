@@ -538,22 +538,19 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
         crm_xml_add(xml_rsc, XML_ATTR_ID, rsc->id);
     }
 
-    value = crm_element_value(rsc->xml, XML_ATTR_TYPE);
-    crm_xml_add(xml_rsc, XML_ATTR_TYPE, value);
+    value = crm_copy_xml_element(rsc->xml, xml_rsc, XML_ATTR_TYPE);
     if (value == NULL) {
         CMD_ERR("%s has no type!  Aborting...", rsc_id);
         return -ENXIO;
     }
 
-    value = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-    crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, value);
+    value = crm_copy_xml_element(rsc->xml, xml_rsc, XML_AGENT_ATTR_CLASS);
     if (value == NULL) {
         CMD_ERR("%s has no class!  Aborting...", rsc_id);
         return -ENXIO;
     }
 
-    value = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
-    crm_xml_add(xml_rsc, XML_AGENT_ATTR_PROVIDER, value);
+    crm_copy_xml_element(rsc->xml, xml_rsc, XML_AGENT_ATTR_PROVIDER);
 
     params = create_xml_node(msg_data, XML_TAG_ATTRS);
     crm_xml_add(params, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
