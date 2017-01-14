@@ -190,7 +190,7 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
 
         /* Update the fail count, if we're not ignoring failures */
         if (!ignore_failures) {
-            attr_name = crm_concat("fail-count", rsc_id, '-');
+            attr_name = crm_failcount_name(rsc_id);
             update_attrd(on_uname, attr_name, value, NULL, is_remote_node);
             free(attr_name);
         }
@@ -198,7 +198,7 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
         /* Update the last failure time (even if we're ignoring failures,
          * so that failure can still be detected and shown, e.g. by crm_mon)
          */
-        attr_name = crm_concat("last-failure", rsc_id, '-');
+        attr_name = crm_lastfailure_name(rsc_id);
         update_attrd(on_uname, attr_name, now, NULL, is_remote_node);
         free(attr_name);
 

@@ -45,10 +45,10 @@ get_failcount_by_prefix(gpointer key_p, gpointer value, gpointer user_data)
     if (parent == NULL || parent != search->rsc) {
         return;
     }
-    if (strstr(attr_id, "last-failure-") == attr_id) {
+    if (strstr(attr_id, CRM_LAST_FAILURE_PREFIX "-") == attr_id) {
         search->last = crm_int_helper(value, NULL);
 
-    } else if (strstr(attr_id, "fail-count-") == attr_id) {
+    } else if (strstr(attr_id, CRM_FAIL_COUNT_PREFIX "-") == attr_id) {
         search->count += char2score(value);
     }
 }
@@ -194,15 +194,14 @@ get_failcount_full(node_t *node, resource_t *rsc, time_t *last_failure,
     struct fail_search search = { rsc, data_set, 0, 0, NULL };
 
     /* Optimize the "normal" case */
-    key = crm_concat("fail-count", rsc->clone_name ? rsc->clone_name : rsc->id, '-');
+    key = crm_failcount_name(rsc->clone_name? rsc->clone_name : rsc->id);
     value = g_hash_table_lookup(node->details->attrs, key);
     search.count = char2score(value);
     crm_trace("%s = %s", key, value);
     free(key);
 
     if (value) {
-        key = crm_concat("last-failure",
-                         rsc->clone_name ? rsc->clone_name : rsc->id, '-');
+        key = crm_lastfailure_name(rsc->clone_name? rsc->clone_name : rsc->id);
         value = g_hash_table_lookup(node->details->attrs, key);
         search.last = crm_int_helper(value, NULL);
         free(key);
