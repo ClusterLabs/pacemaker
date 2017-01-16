@@ -992,8 +992,9 @@ main(int argc, char **argv)
 
         crm_debug("Re-checking the state of all resources on %s", host_uname?host_uname:"all nodes");
 
-        rc = attrd_update_delegate(
-            NULL, 'u', host_uname, "fail-count-*", NULL, XML_CIB_TAG_STATUS, NULL, NULL, NULL, attrd_opt_none);
+        rc = attrd_update_delegate(NULL, 'u', host_uname, "^fail-count-", NULL,
+                                   XML_CIB_TAG_STATUS, NULL, NULL, NULL,
+                                   attrd_opt_none);
 
         if (crm_ipc_send(crmd_channel, cmd, 0, 0, NULL) > 0) {
             start_mainloop();
