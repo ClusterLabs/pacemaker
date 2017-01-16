@@ -1595,7 +1595,7 @@ do_lrm_invoke(long long action,
         fsa_cib_update(XML_CIB_TAG_STATUS, fragment, cib_quorum_override, rc, user_name);
         crm_info("Forced a local LRM refresh: call=%d", rc);
 
-        if(strcmp(CRM_SYSTEM_CRMD, from_sys) != 0) {
+        if (safe_str_neq(CRM_SYSTEM_CRMD, from_sys)) {
             xmlNode *reply = create_request(
                 CRM_OP_INVOKE_LRM, fragment,
                 from_host, from_sys, CRM_SYSTEM_LRMD, fsa_our_uuid);
@@ -1629,8 +1629,9 @@ do_lrm_invoke(long long action,
 
         force_reprobe(lrm_state, from_sys, from_host, user_name, is_remote_node);
 
-        if(strcmp(CRM_SYSTEM_TENGINE, from_sys) != 0
-           && strcmp(CRM_SYSTEM_TENGINE, from_sys) != 0) {
+        if (safe_str_neq(CRM_SYSTEM_PENGINE, from_sys)
+           && safe_str_neq(CRM_SYSTEM_TENGINE, from_sys)) {
+
             xmlNode *reply = create_request(
                 CRM_OP_INVOKE_LRM, NULL,
                 from_host, from_sys, CRM_SYSTEM_LRMD, fsa_our_uuid);
