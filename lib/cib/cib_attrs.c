@@ -275,6 +275,7 @@ update_attr_delegate(cib_t * the_cib, int call_options,
             for (lpc = 0; local_attr_id[lpc] != 0; lpc++) {
                 switch (local_attr_id[lpc]) {
                     case ':':
+                    case '#':
                         local_attr_id[lpc] = '.';
                 }
             }

@@ -89,26 +89,35 @@ crm_strlen_zero(const char *s)
  *
  * \param[in] prefix    Start of attribute name
  * \param[in] rsc_id    Resource name
+ * \param[in] op        Operation name
+ * \param[in] interval  Operation interval
  *
  * \return Newly allocated string with attribute name
+ *
+ * \note Failure attributes are named like PREFIX-RSC#OP_INTERVAL (for example,
+ *       "fail-count-myrsc#monitor_30000"). The '#' is used because it is not
+ *       a valid character in a resource ID, to reliably distinguish where the
+ *       operation name begins. The '_' is used simply to be more comparable to
+ *       action labels like "myrsc_monitor_30000".
  */
 static inline char *
-crm_fail_attr_name(const char *prefix, const char *rsc_id)
+crm_fail_attr_name(const char *prefix, const char *rsc_id, const char *op,
+                   int interval)
 {
-    CRM_CHECK(prefix && rsc_id, return NULL);
-    return crm_strdup_printf("%s-%s", prefix, rsc_id);
+    CRM_CHECK(prefix && rsc_id && op, return NULL);
+    return crm_strdup_printf("%s-%s#%s_%d", prefix, rsc_id, op, interval);
 }
 
 static inline char *
-crm_failcount_name(const char *rsc_id)
+crm_failcount_name(const char *rsc_id, const char *op, int interval)
 {
-    return crm_fail_attr_name(CRM_FAIL_COUNT_PREFIX, rsc_id);
+    return crm_fail_attr_name(CRM_FAIL_COUNT_PREFIX, rsc_id, op, interval);
 }
 
 static inline char *
-crm_lastfailure_name(const char *rsc_id)
+crm_lastfailure_name(const char *rsc_id, const char *op, int interval)
 {
-    return crm_fail_attr_name(CRM_LAST_FAILURE_PREFIX, rsc_id);
+    return crm_fail_attr_name(CRM_LAST_FAILURE_PREFIX, rsc_id, op, interval);
 }
 
 #endif /* CRM_COMMON_INTERNAL__H */

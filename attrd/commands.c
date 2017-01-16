@@ -1037,6 +1037,7 @@ build_update_element(xmlNode *parent, attribute_t *a, const char *nodeid, const 
         for (lpc = 0; uuid[lpc] != 0; lpc++) {
             switch (uuid[lpc]) {
                 case ':':
+                case '#':
                     uuid[lpc] = '.';
             }
         }

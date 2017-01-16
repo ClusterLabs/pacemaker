@@ -287,15 +287,26 @@ remote_clear_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
     "/" XML_CIB_TAG_STATE "[@" XML_NODE_IS_REMOTE "='true']" x \
     "/" XML_TAG_TRANSIENT_NODEATTRS "/" XML_TAG_ATTR_SETS "/" XML_CIB_TAG_NVPAIR
 
+/* xpath component to match an attribute name exactly */
+#define XPATH_NAME_IS(x) "@" XML_NVPAIR_ATTR_NAME "='" x "'"
+
+/* xpath component to match an attribute name by prefix */
+#define XPATH_NAME_START(x) "starts-with(@" XML_NVPAIR_ATTR_NAME ", '" x "')"
+
 /* xpath ending to clear all resources */
 #define XPATH_CLEAR_ALL \
-    "[starts-with(@" XML_NVPAIR_ATTR_NAME ", '" CRM_FAIL_COUNT_PREFIX "-') " \
-    "or starts-with(@" XML_NVPAIR_ATTR_NAME ", '" CRM_LAST_FAILURE_PREFIX "-')]"
+    "[" XPATH_NAME_START(CRM_FAIL_COUNT_PREFIX "-") \
+    " or " XPATH_NAME_START(CRM_LAST_FAILURE_PREFIX "-") "]"
 
-/* xpath ending to clear one resource (format takes resource name x 2) */
+/* xpath ending to clear one resource (format takes resource name x 4) */
+/* @COMPAT attributes set < 1.1.17:
+ * also match older attributes that do not have the operation part
+ */
 #define XPATH_CLEAR_ONE \
-    "[@" XML_NVPAIR_ATTR_NAME "='" CRM_FAIL_COUNT_PREFIX "-%s' " \
-    "or @" XML_NVPAIR_ATTR_NAME "='" CRM_LAST_FAILURE_PREFIX "-%s']"
+    "[" XPATH_NAME_IS(CRM_FAIL_COUNT_PREFIX "-%s") \
+    " or " XPATH_NAME_IS(CRM_LAST_FAILURE_PREFIX "-%s") \
+    " or " XPATH_NAME_START(CRM_FAIL_COUNT_PREFIX "-%s#") \
+    " or " XPATH_NAME_START(CRM_LAST_FAILURE_PREFIX "-%s#") "]"
 
 /*!
  * \internal
@@ -326,10 +337,10 @@ remote_clear_failure(xmlNode *xml)
                                   host);
     } else if (host == NULL) {
         xpath = crm_strdup_printf(XPATH_REMOTE_ATTR("") XPATH_CLEAR_ONE,
-                                  rsc, rsc);
+                                  rsc, rsc, rsc, rsc);
     } else {
         xpath = crm_strdup_printf(XPATH_REMOTE_ATTR(XPATH_ID) XPATH_CLEAR_ONE,
-                                  host, rsc, rsc);
+                                  host, rsc, rsc, rsc, rsc);
     }
 
     crm_trace("Clearing attributes matching %s", xpath);

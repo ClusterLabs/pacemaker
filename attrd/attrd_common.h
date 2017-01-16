@@ -27,9 +27,13 @@ int attrd_expand_value(const char *value, const char *old_value);
 #define ATTRD_RE_CLEAR_ALL \
     "^(" CRM_FAIL_COUNT_PREFIX "|" CRM_LAST_FAILURE_PREFIX ")-"
 
-/* regular expression to clear failure of one resource */
-/* format takes resource name */
-#define ATTRD_RE_CLEAR_ONE ATTRD_RE_CLEAR_ALL "%s$"
+/* regular expression to clear failure of one resource
+ * (format takes resource name)
+ *
+ * @COMPAT attributes set < 1.1.17:
+ * also match older attributes that do not have the operation part
+ */
+#define ATTRD_RE_CLEAR_ONE ATTRD_RE_CLEAR_ALL "%s(#.+_[0-9]+)?$"
 
 int attrd_failure_regex(regex_t *regex, const char *rsc);
 
