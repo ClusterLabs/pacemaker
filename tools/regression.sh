@@ -606,7 +606,7 @@ function test_acls() {
     $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow --validate-with pacemaker-1.3 2>&1
     export CIB_shadow=$shadow
 
-    cat<<EOF>/tmp/$$.acls.xml
+    cat <<EOF >/tmp/$$.acls.xml
     <acls>
       <acl_user id="l33t-haxor">
         <deny id="crook-nothing" xpath="/cib"/>
@@ -794,5 +794,9 @@ elif [ $failed = 1 ]; then
     exit 2
 else
     echo $num_passed tests passed
+    for t in $tests; do
+        rm -f "$test_home/regression.$t.out"
+    done
+    crm_shadow --force --delete $shadow >/dev/null 2>&1
     exit 0
 fi
