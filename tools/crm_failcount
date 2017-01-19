@@ -1,62 +1,118 @@
 #!/bin/bash
 
-resource=""
-options=""
-target=`crm_node -n`
+USAGE_TEXT="Usage: crm_failcount <command> [<options>]
+Common options:
+ --help                 Display this text, then exit
+ --version              Display version information, then exit
+ -V, --verbose          Specify multiple times to increase debug output
+ -q, --quiet            Print only the value (if querying)
 
-TEMP=`getopt -o DGQVN:U:v:i:l:r: --long help,version,resource-id:,node:,uname:,attr-value:,delete-attr,get-value,attr-id:,lifetime:,quiet \
-     -n 'crm_failcount' -- "$@"`
+Commands:
+ -G, --query            Query the current value of the resource's fail count
+ -D, --delete           Delete resource's recorded failures
 
-if [ $? != 0 ] ; then echo "crm_failcount - A convenience wrapper for crm_attribute"; echo ""; crm_attribute -?; exit 1 ; fi
+Additional Options:
+ -r, --resource=value   Name of the resource to use (required)
+ -N, --node=value       Set an attribute for the named node (instead of the current one)"
 
-# Note the quotes around `$TEMP': they are essential!
-eval set -- "$TEMP"
 
-function show_help() {
-	    echo "crm_failcount - A convenience wrapper for crm_attribute";
-	    echo "";
-	    echo "Set, update or remove the failcount for the specified resource on the named node";
-	    echo "";
-	    echo "Usage: crm_failcount -r resource_name command [options]";
-	    echo "Options:"
-	    echo " --help 		This text"
-	    echo " --version 		Version information"
-	    echo " -V, --verbose 		Increase debug output"
-	    echo " -q, --quiet 		Print only the value on stdout"
-	    echo ""
-	    echo " -r, --resource-id=value	The resource to update."
-	    echo ""
-	    echo "Commands:"
-	    echo " -G, --query 		Query the current value of the attribute/option"
-	    echo " -v, --update=value	Update the value of the attribute/option"
-	    echo " -D, --delete 		Delete the attribute/option"
-	    echo ""
-	    echo "Additional Options:"
-	    echo " -N, --node=value	Set an attribute for the named node (instead of the current one)."
-	    echo " -l, --lifetime=value	Until when should the setting take affect."
-	    echo "	       		Valid values: reboot, forever"
-	    echo " -i, --id=value		(Advanced) The ID used to identify the attribute"
+HELP_TEXT="crm_failcount - Query or delete resource fail counts
+
+crm_failcount is a convenience wrapper for crm_attribute (if querying)
+and crm_resource --cleanup (if deleting).
+
+$USAGE_TEXT"
+
+
+exit_usage() {
+	if [ $# -gt 0 ]; then
+		echo "error: $@" >&2
+	fi
+	echo
+	echo "$USAGE_TEXT"
+	exit 1
 }
 
+warn() {
+	echo "warning: $@" >&2
+}
+
+command=""
+options=""
+resource=""
+target=$(crm_node -n 2>/dev/null)
+
+LONGOPTS_COMMON="help,version,verbose,quiet"
+LONGOPTS_COMMANDS="query,delete"
+LONGOPTS_OTHER="resource:,node:"
+LONGOPTS_COMPAT="delete-attr,get-value,resource-id:,uname:,lifetime:,attr-value:,attr-id:"
+
+LONGOPTS="$LONGOPTS_COMMON,$LONGOPTS_COMMANDS,$LONGOPTS_OTHER,$LONGOPTS_COMPAT"
+
+TEMP=$(getopt -o qDGQVN:U:v:i:l:r: --long $LONGOPTS -n crm_failcount -- "$@")
+if [ $? != 0 ]; then
+	exit_usage
+fi
+eval set -- "$TEMP" # Quotes around $TEMP are essential
+
 while true ; do
-    case "$1" in
-	-N|--node) target="$2"; shift; shift;;
-	-U|--uname) target="$2"; shift; shift;;
-	-v|--attr-value|-i|--attr-id) options="$options $1 $2"; shift; shift;;
-	-Q|--quiet|-D|--delete-attr|-G|--get-value|-V) options="$options $1"; shift;;
-	-r|--resource-id) options="$options -n fail-count-$2"; resource="$2"; shift; shift;;
-	--version) crm_attribute --version; exit 0;;
-	--help)
-	    show_help
-	    exit 0;;
-	--) shift ; break ;;
-	*) echo "Unknown option: $1. See --help for details." exit 1;;
-    esac
+	case "$1" in
+		--help)
+			echo "$HELP_TEXT"
+			exit 0
+			;;
+		--version)
+			crm_attribute --version
+			exit $?
+			;;
+		-Q|--quiet|-V|--verbose)
+			options="$options $1"
+			shift
+			;;
+		-G|--query|--get-value)
+			command="--query"
+			shift
+			;;
+		-D|--delete|--delete-attr)
+			command="--delete"
+			shift
+			;;
+		-r|--resource|--resource-id)
+			resource="$2"
+			shift 2
+			;;
+		-N|--node|-U|--uname)
+			target="$2"
+			shift 2
+			;;
+		-v|--attr-value)
+			if [ "$2" = "0" ]; then
+				command="--delete"
+			else
+				warn "ignoring deprecated option '$1' with nonzero value"
+			fi
+			shift 2
+			;;
+		-i|--attr-id|-l|--lifetime)
+			warn "ignoring deprecated option '$1'"
+			shift 2
+			;;
+		--)
+			shift
+			break
+			;;
+		*)
+			exit_usage "unknown option '$1'"
+			;;
+	esac
 done
 
-if [ "x$resource" = x ]; then
-    echo "You must supply a resource name to check. See 'crm_failcount --help' for details"
-    exit 1
-fi
+[ -n "$command" ]  || exit_usage "must specify a command"
+[ -n "$resource" ] || exit_usage "resource name required"
+[ -n "$target" ]   || exit_usage "node name required"
 
-crm_attribute -N $target $options -t status -d 0
+if [ "$command" = "--query" ]; then
+	crm_attribute $options $command -N "$target" -n "fail-count-$resource" -t status -d 0
+else
+	crm_resource --cleanup $options -N "$target" -r "$resource"
+fi

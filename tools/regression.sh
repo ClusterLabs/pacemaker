@@ -155,6 +155,18 @@ function test_tools() {
     cmd="cibadmin -Q -o nodes | grep node1-ram"
     test_assert 0
 
+    desc="Set a transient (fail-count) node attribute"
+    cmd="crm_attribute -n fail-count-foo -v 3 -N node1 -t status"
+    test_assert 0
+
+    desc="Query a fail count"
+    cmd="crm_failcount --query -r foo -N node1"
+    test_assert 0
+
+    desc="Delete a transient (fail-count) node attribute"
+    cmd="crm_attribute -n fail-count-foo -D -N node1 -t status"
+    test_assert 0
+
     desc="Digest calculation"
     cmd="cibadmin -Q | cibadmin -5 -p 2>&1 > /dev/null"
     test_assert 0
@@ -202,10 +214,6 @@ function test_tools() {
 
     desc="List the configured resources"
     cmd="crm_resource -L"
-    test_assert 0
-
-    desc="Set a resource's fail-count"
-    cmd="crm_failcount -r dummy -v 10 -N node1"
     test_assert 0
 
     desc="Require a destination when migrating a resource that is stopped"

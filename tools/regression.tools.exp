@@ -419,9 +419,9 @@ Online: [ node1 ]
 </cib>
 =#=#=#= End test: Query new node attribute - OK (0) =#=#=#=
 * Passed: cibadmin       - Query new node attribute
-=#=#=#= Begin test: Digest calculation =#=#=#=
-Digest: =#=#=#= Current cib after: Digest calculation =#=#=#=
-<cib epoch="11" num_updates="0" admin_epoch="1">
+=#=#=#= Begin test: Set a transient (fail-count) node attribute =#=#=#=
+=#=#=#= Current cib after: Set a transient (fail-count) node attribute =#=#=#=
+<cib epoch="11" num_updates="1" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -442,7 +442,114 @@ Digest: =#=#=#= Current cib after: Digest calculation =#=#=#=
     <constraints/>
   </configuration>
   <status>
-    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate"/>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <transient_attributes id="node1">
+        <instance_attributes id="status-node1">
+          <nvpair id="status-node1-fail-count-foo" name="fail-count-foo" value="3"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
+=#=#=#= End test: Set a transient (fail-count) node attribute - OK (0) =#=#=#=
+* Passed: crm_attribute  - Set a transient (fail-count) node attribute
+=#=#=#= Begin test: Query a fail count =#=#=#=
+scope=status  name=fail-count-foo value=3
+=#=#=#= Current cib after: Query a fail count =#=#=#=
+<cib epoch="11" num_updates="1" admin_epoch="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <transient_attributes id="node1">
+        <instance_attributes id="status-node1">
+          <nvpair id="status-node1-fail-count-foo" name="fail-count-foo" value="3"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
+=#=#=#= End test: Query a fail count - OK (0) =#=#=#=
+* Passed: crm_failcount  - Query a fail count
+=#=#=#= Begin test: Delete a transient (fail-count) node attribute =#=#=#=
+Deleted status attribute: id=status-node1-fail-count-foo name=fail-count-foo
+
+=#=#=#= Current cib after: Delete a transient (fail-count) node attribute =#=#=#=
+<cib epoch="11" num_updates="2" admin_epoch="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <transient_attributes id="node1">
+        <instance_attributes id="status-node1"/>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
+=#=#=#= End test: Delete a transient (fail-count) node attribute - OK (0) =#=#=#=
+* Passed: crm_attribute  - Delete a transient (fail-count) node attribute
+=#=#=#= Begin test: Digest calculation =#=#=#=
+Digest: =#=#=#= Current cib after: Digest calculation =#=#=#=
+<cib epoch="11" num_updates="2" admin_epoch="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <transient_attributes id="node1">
+        <instance_attributes id="status-node1"/>
+      </transient_attributes>
+    </node_state>
   </status>
 </cib>
 =#=#=#= End test: Digest calculation - OK (0) =#=#=#=
@@ -450,7 +557,7 @@ Digest: =#=#=#= Current cib after: Digest calculation =#=#=#=
 =#=#=#= Begin test: Replace operation should fail =#=#=#=
 Call failed: Update was older than existing configuration
 =#=#=#= Current cib after: Replace operation should fail =#=#=#=
-<cib epoch="11" num_updates="0" admin_epoch="1">
+<cib epoch="11" num_updates="2" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -471,7 +578,11 @@ Call failed: Update was older than existing configuration
     <constraints/>
   </configuration>
   <status>
-    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate"/>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <transient_attributes id="node1">
+        <instance_attributes id="status-node1"/>
+      </transient_attributes>
+    </node_state>
   </status>
 </cib>
 =#=#=#= End test: Replace operation should fail - Update was older than existing configuration (205) =#=#=#=
@@ -480,7 +591,7 @@ Call failed: Update was older than existing configuration
 Error performing operation: No such device or address
 scope=status  name=standby value=off
 =#=#=#= Current cib after: Default standby value =#=#=#=
-<cib epoch="11" num_updates="0" admin_epoch="1">
+<cib epoch="11" num_updates="2" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -501,7 +612,11 @@ scope=status  name=standby value=off
     <constraints/>
   </configuration>
   <status>
-    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate"/>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <transient_attributes id="node1">
+        <instance_attributes id="status-node1"/>
+      </transient_attributes>
+    </node_state>
   </status>
 </cib>
 =#=#=#= End test: Default standby value - OK (0) =#=#=#=
@@ -530,7 +645,11 @@ scope=status  name=standby value=off
     <constraints/>
   </configuration>
   <status>
-    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate"/>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <transient_attributes id="node1">
+        <instance_attributes id="status-node1"/>
+      </transient_attributes>
+    </node_state>
   </status>
 </cib>
 =#=#=#= End test: Set standby status - OK (0) =#=#=#=
@@ -560,7 +679,11 @@ scope=nodes  name=standby value=true
     <constraints/>
   </configuration>
   <status>
-    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate"/>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <transient_attributes id="node1">
+        <instance_attributes id="status-node1"/>
+      </transient_attributes>
+    </node_state>
   </status>
 </cib>
 =#=#=#= End test: Query standby value - OK (0) =#=#=#=
@@ -590,7 +713,11 @@ Deleted nodes attribute: id=nodes-node1-standby name=standby
     <constraints/>
   </configuration>
   <status>
-    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate"/>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <transient_attributes id="node1">
+        <instance_attributes id="status-node1"/>
+      </transient_attributes>
+    </node_state>
   </status>
 </cib>
 =#=#=#= End test: Delete standby value - OK (0) =#=#=#=
@@ -620,7 +747,11 @@ Deleted nodes attribute: id=nodes-node1-standby name=standby
     <constraints/>
   </configuration>
   <status>
-    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate"/>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <transient_attributes id="node1">
+        <instance_attributes id="status-node1"/>
+      </transient_attributes>
+    </node_state>
   </status>
 </cib>
 =#=#=#= End test: Create a resource - OK (0) =#=#=#=
@@ -656,7 +787,11 @@ Set 'dummy' option: id=dummy-meta_attributes-is-managed set=dummy-meta_attribute
     <constraints/>
   </configuration>
   <status>
-    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate"/>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <transient_attributes id="node1">
+        <instance_attributes id="status-node1"/>
+      </transient_attributes>
+    </node_state>
   </status>
 </cib>
 =#=#=#= End test: Create a resource meta attribute - OK (0) =#=#=#=
@@ -691,7 +826,11 @@ false
     <constraints/>
   </configuration>
   <status>
-    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate"/>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <transient_attributes id="node1">
+        <instance_attributes id="status-node1"/>
+      </transient_attributes>
+    </node_state>
   </status>
 </cib>
 =#=#=#= End test: Query a resource meta attribute - OK (0) =#=#=#=
@@ -724,7 +863,11 @@ Deleted 'dummy' option: id=dummy-meta_attributes-is-managed name=is-managed
     <constraints/>
   </configuration>
   <status>
-    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate"/>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <transient_attributes id="node1">
+        <instance_attributes id="status-node1"/>
+      </transient_attributes>
+    </node_state>
   </status>
 </cib>
 =#=#=#= End test: Remove a resource meta attribute - OK (0) =#=#=#=
@@ -761,7 +904,11 @@ Set 'dummy' option: id=dummy-instance_attributes-delay set=dummy-instance_attrib
     <constraints/>
   </configuration>
   <status>
-    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate"/>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <transient_attributes id="node1">
+        <instance_attributes id="status-node1"/>
+      </transient_attributes>
+    </node_state>
   </status>
 </cib>
 =#=#=#= End test: Create a resource attribute - OK (0) =#=#=#=
@@ -797,58 +944,21 @@ Set 'dummy' option: id=dummy-instance_attributes-delay set=dummy-instance_attrib
     <constraints/>
   </configuration>
   <status>
-    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate"/>
-  </status>
-</cib>
-=#=#=#= End test: List the configured resources - OK (0) =#=#=#=
-* Passed: crm_resource   - List the configured resources
-=#=#=#= Begin test: Set a resource's fail-count =#=#=#=
-=#=#=#= Current cib after: Set a resource's fail-count =#=#=#=
-<cib epoch="17" num_updates="1" admin_epoch="1">
-  <configuration>
-    <crm_config>
-      <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-      </cluster_property_set>
-      <cluster_property_set id="duplicate">
-        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
-      </cluster_property_set>
-    </crm_config>
-    <nodes>
-      <node id="node1" uname="node1">
-        <instance_attributes id="nodes-node1">
-          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
-        </instance_attributes>
-      </node>
-    </nodes>
-    <resources>
-      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-        <meta_attributes id="dummy-meta_attributes"/>
-        <instance_attributes id="dummy-instance_attributes">
-          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
-        </instance_attributes>
-      </primitive>
-    </resources>
-    <constraints/>
-  </configuration>
-  <status>
     <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
       <transient_attributes id="node1">
-        <instance_attributes id="status-node1">
-          <nvpair id="status-node1-fail-count-dummy" name="fail-count-dummy" value="10"/>
-        </instance_attributes>
+        <instance_attributes id="status-node1"/>
       </transient_attributes>
     </node_state>
   </status>
 </cib>
-=#=#=#= End test: Set a resource's fail-count - OK (0) =#=#=#=
-* Passed: crm_failcount  - Set a resource's fail-count
+=#=#=#= End test: List the configured resources - OK (0) =#=#=#=
+* Passed: crm_resource   - List the configured resources
 =#=#=#= Begin test: Require a destination when migrating a resource that is stopped =#=#=#=
 Resource 'dummy' not moved: active in 0 locations.
 You can prevent 'dummy' from running on a specific location with: --ban --host <name>
 Error performing operation: Invalid argument
 =#=#=#= Current cib after: Require a destination when migrating a resource that is stopped =#=#=#=
-<cib epoch="17" num_updates="1" admin_epoch="1">
+<cib epoch="17" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -878,9 +988,7 @@ Error performing operation: Invalid argument
   <status>
     <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
       <transient_attributes id="node1">
-        <instance_attributes id="status-node1">
-          <nvpair id="status-node1-fail-count-dummy" name="fail-count-dummy" value="10"/>
-        </instance_attributes>
+        <instance_attributes id="status-node1"/>
       </transient_attributes>
     </node_state>
   </status>
@@ -891,7 +999,7 @@ Error performing operation: Invalid argument
 Error performing operation: node 'i.dont.exist' is unknown
 Error performing operation: No such device or address
 =#=#=#= Current cib after: Don't support migration to non-existent locations =#=#=#=
-<cib epoch="17" num_updates="1" admin_epoch="1">
+<cib epoch="17" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -921,9 +1029,7 @@ Error performing operation: No such device or address
   <status>
     <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
       <transient_attributes id="node1">
-        <instance_attributes id="status-node1">
-          <nvpair id="status-node1-fail-count-dummy" name="fail-count-dummy" value="10"/>
-        </instance_attributes>
+        <instance_attributes id="status-node1"/>
       </transient_attributes>
     </node_state>
   </status>
@@ -963,9 +1069,7 @@ Error performing operation: No such device or address
   <status>
     <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
       <transient_attributes id="node1">
-        <instance_attributes id="status-node1">
-          <nvpair id="status-node1-fail-count-dummy" name="fail-count-dummy" value="10"/>
-        </instance_attributes>
+        <instance_attributes id="status-node1"/>
       </transient_attributes>
     </node_state>
   </status>
@@ -1028,9 +1132,7 @@ Online: [ node1 ]
   <status>
     <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
       <transient_attributes id="node1">
-        <instance_attributes id="status-node1">
-          <nvpair id="status-node1-fail-count-dummy" name="fail-count-dummy" value="10"/>
-        </instance_attributes>
+        <instance_attributes id="status-node1"/>
       </transient_attributes>
       <lrm id="node1">
         <lrm_resources>
@@ -1082,9 +1184,7 @@ Error performing operation: Invalid argument
   <status>
     <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
       <transient_attributes id="node1">
-        <instance_attributes id="status-node1">
-          <nvpair id="status-node1-fail-count-dummy" name="fail-count-dummy" value="10"/>
-        </instance_attributes>
+        <instance_attributes id="status-node1"/>
       </transient_attributes>
       <lrm id="node1">
         <lrm_resources>
@@ -1140,9 +1240,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
   <status>
     <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
       <transient_attributes id="node1">
-        <instance_attributes id="status-node1">
-          <nvpair id="status-node1-fail-count-dummy" name="fail-count-dummy" value="10"/>
-        </instance_attributes>
+        <instance_attributes id="status-node1"/>
       </transient_attributes>
       <lrm id="node1">
         <lrm_resources>
@@ -1192,9 +1290,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
   <status>
     <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
       <transient_attributes id="node1">
-        <instance_attributes id="status-node1">
-          <nvpair id="status-node1-fail-count-dummy" name="fail-count-dummy" value="10"/>
-        </instance_attributes>
+        <instance_attributes id="status-node1"/>
       </transient_attributes>
       <lrm id="node1">
         <lrm_resources>
@@ -1245,9 +1341,7 @@ false
   <status>
     <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
       <transient_attributes id="node1">
-        <instance_attributes id="status-node1">
-          <nvpair id="status-node1-fail-count-dummy" name="fail-count-dummy" value="10"/>
-        </instance_attributes>
+        <instance_attributes id="status-node1"/>
       </transient_attributes>
       <lrm id="node1">
         <lrm_resources>
@@ -1297,9 +1391,7 @@ false
   <status>
     <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
       <transient_attributes id="node1">
-        <instance_attributes id="status-node1">
-          <nvpair id="status-node1-fail-count-dummy" name="fail-count-dummy" value="10"/>
-        </instance_attributes>
+        <instance_attributes id="status-node1"/>
       </transient_attributes>
       <lrm id="node1">
         <lrm_resources>
@@ -1353,9 +1445,7 @@ false
   <status>
     <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
       <transient_attributes id="node1">
-        <instance_attributes id="status-node1">
-          <nvpair id="status-node1-fail-count-dummy" name="fail-count-dummy" value="10"/>
-        </instance_attributes>
+        <instance_attributes id="status-node1"/>
       </transient_attributes>
       <lrm id="node1">
         <lrm_resources>
@@ -1408,9 +1498,7 @@ false
   <status>
     <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
       <transient_attributes id="node1">
-        <instance_attributes id="status-node1">
-          <nvpair id="status-node1-fail-count-dummy" name="fail-count-dummy" value="10"/>
-        </instance_attributes>
+        <instance_attributes id="status-node1"/>
       </transient_attributes>
       <lrm id="node1">
         <lrm_resources>
@@ -1463,9 +1551,7 @@ false
   <status>
     <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
       <transient_attributes id="node1">
-        <instance_attributes id="status-node1">
-          <nvpair id="status-node1-fail-count-dummy" name="fail-count-dummy" value="10"/>
-        </instance_attributes>
+        <instance_attributes id="status-node1"/>
       </transient_attributes>
       <lrm id="node1">
         <lrm_resources>
@@ -1519,9 +1605,7 @@ true
   <status>
     <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
       <transient_attributes id="node1">
-        <instance_attributes id="status-node1">
-          <nvpair id="status-node1-fail-count-dummy" name="fail-count-dummy" value="10"/>
-        </instance_attributes>
+        <instance_attributes id="status-node1"/>
       </transient_attributes>
       <lrm id="node1">
         <lrm_resources>
@@ -1574,9 +1658,7 @@ true
   <status>
     <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
       <transient_attributes id="node1">
-        <instance_attributes id="status-node1">
-          <nvpair id="status-node1-fail-count-dummy" name="fail-count-dummy" value="10"/>
-        </instance_attributes>
+        <instance_attributes id="status-node1"/>
       </transient_attributes>
       <lrm id="node1">
         <lrm_resources>
@@ -1629,9 +1711,7 @@ true
   <status>
     <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
       <transient_attributes id="node1">
-        <instance_attributes id="status-node1">
-          <nvpair id="status-node1-fail-count-dummy" name="fail-count-dummy" value="10"/>
-        </instance_attributes>
+        <instance_attributes id="status-node1"/>
       </transient_attributes>
       <lrm id="node1">
         <lrm_resources>
@@ -1686,9 +1766,7 @@ Error performing operation: No such device or address
   <status>
     <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
       <transient_attributes id="node1">
-        <instance_attributes id="status-node1">
-          <nvpair id="status-node1-fail-count-dummy" name="fail-count-dummy" value="10"/>
-        </instance_attributes>
+        <instance_attributes id="status-node1"/>
       </transient_attributes>
       <lrm id="node1">
         <lrm_resources>
@@ -1772,9 +1850,7 @@ Online: [ node1 node2 node3 ]
   <status>
     <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
       <transient_attributes id="node1">
-        <instance_attributes id="status-node1">
-          <nvpair id="status-node1-fail-count-dummy" name="fail-count-dummy" value="10"/>
-        </instance_attributes>
+        <instance_attributes id="status-node1"/>
       </transient_attributes>
       <lrm id="node1">
         <lrm_resources>
@@ -1859,9 +1935,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
   <status>
     <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
       <transient_attributes id="node1">
-        <instance_attributes id="status-node1">
-          <nvpair id="status-node1-fail-count-dummy" name="fail-count-dummy" value="10"/>
-        </instance_attributes>
+        <instance_attributes id="status-node1"/>
       </transient_attributes>
       <lrm id="node1">
         <lrm_resources>
@@ -1947,9 +2021,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node2' with a score 
   <status>
     <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
       <transient_attributes id="node1">
-        <instance_attributes id="status-node1">
-          <nvpair id="status-node1-fail-count-dummy" name="fail-count-dummy" value="10"/>
-        </instance_attributes>
+        <instance_attributes id="status-node1"/>
       </transient_attributes>
       <lrm id="node1">
         <lrm_resources>
@@ -2052,9 +2124,7 @@ Online: [ node1 node2 node3 ]
   <status>
     <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
       <transient_attributes id="node1">
-        <instance_attributes id="status-node1">
-          <nvpair id="status-node1-fail-count-dummy" name="fail-count-dummy" value="10"/>
-        </instance_attributes>
+        <instance_attributes id="status-node1"/>
       </transient_attributes>
       <lrm id="node1">
         <lrm_resources>
@@ -2136,9 +2206,7 @@ Online: [ node1 node2 node3 ]
   <status>
     <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
       <transient_attributes id="node1">
-        <instance_attributes id="status-node1">
-          <nvpair id="status-node1-fail-count-dummy" name="fail-count-dummy" value="10"/>
-        </instance_attributes>
+        <instance_attributes id="status-node1"/>
       </transient_attributes>
       <lrm id="node1">
         <lrm_resources>
@@ -2219,9 +2287,7 @@ Online: [ node1 node2 node3 ]
   <status>
     <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
       <transient_attributes id="node1">
-        <instance_attributes id="status-node1">
-          <nvpair id="status-node1-fail-count-dummy" name="fail-count-dummy" value="10"/>
-        </instance_attributes>
+        <instance_attributes id="status-node1"/>
       </transient_attributes>
       <lrm id="node1">
         <lrm_resources>
