@@ -22,46 +22,46 @@ Call failed: Update does not conform to the configured schema
 =#=#=#= End test: Try to make resulting CIB invalid (enum violation) - Update does not conform to the configured schema (203) =#=#=#=
 * Passed: cibadmin       - Try to make resulting CIB invalid (enum violation)
 =#=#=#= Begin test: Run crm_simulate with invalid CIB (enum violation) =#=#=#=
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-1.2' validation (4 of X)
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-1.2' validation (4 of X)
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-(   schemas.c:760   )   trace: update_validation:	pacemaker-1.2 validation failed
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-1.3' validation (5 of X)
+(   schemas.c:NNN   )   trace: update_validation:	pacemaker-1.2 validation failed
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-1.3' validation (5 of X)
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-(   schemas.c:760   )   trace: update_validation:	pacemaker-1.3 validation failed
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-2.0' validation (6 of X)
+(   schemas.c:NNN   )   trace: update_validation:	pacemaker-1.3 validation failed
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-2.0' validation (6 of X)
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-(   schemas.c:760   )   trace: update_validation:	pacemaker-2.0 validation failed
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-2.1' validation (7 of X)
+(   schemas.c:NNN   )   trace: update_validation:	pacemaker-2.0 validation failed
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-2.1' validation (7 of X)
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-(   schemas.c:760   )   trace: update_validation:	pacemaker-2.1 validation failed
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-2.2' validation (8 of X)
+(   schemas.c:NNN   )   trace: update_validation:	pacemaker-2.1 validation failed
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-2.2' validation (8 of X)
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-(   schemas.c:760   )   trace: update_validation:	pacemaker-2.2 validation failed
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-2.3' validation (9 of X)
+(   schemas.c:NNN   )   trace: update_validation:	pacemaker-2.2 validation failed
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-2.3' validation (9 of X)
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-(   schemas.c:760   )   trace: update_validation:	pacemaker-2.3 validation failed
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-2.4' validation (10 of X)
+(   schemas.c:NNN   )   trace: update_validation:	pacemaker-2.3 validation failed
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-2.4' validation (10 of X)
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-(   schemas.c:760   )   trace: update_validation:	pacemaker-2.4 validation failed
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-2.5' validation (11 of X)
+(   schemas.c:NNN   )   trace: update_validation:	pacemaker-2.4 validation failed
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-2.5' validation (11 of X)
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-(   schemas.c:760   )   trace: update_validation:	pacemaker-2.5 validation failed
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-2.6' validation (12 of X)
+(   schemas.c:NNN   )   trace: update_validation:	pacemaker-2.5 validation failed
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-2.6' validation (12 of X)
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-(   schemas.c:760   )   trace: update_validation:	pacemaker-2.6 validation failed
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-2.7' validation (13 of X)
+(   schemas.c:NNN   )   trace: update_validation:	pacemaker-2.6 validation failed
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-2.7' validation (13 of X)
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-(   schemas.c:760   )   trace: update_validation:	pacemaker-2.7 validation failed
+(   schemas.c:NNN   )   trace: update_validation:	pacemaker-2.7 validation failed
 Your current configuration pacemaker-1.2 could not validate with any schema in range [pacemaker-1.2, pacemaker-2.7], cannot upgrade to pacemaker-2.0.
 =#=#=#= End test: Run crm_simulate with invalid CIB (enum violation) - Required key not available (126) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid CIB (enum violation)
@@ -85,57 +85,57 @@ Call failed: Update does not conform to the configured schema
 =#=#=#= End test: Try to make resulting CIB invalid (unrecognized validate-with) - Update does not conform to the configured schema (203) =#=#=#=
 * Passed: cibadmin       - Try to make resulting CIB invalid (unrecognized validate-with)
 =#=#=#= Begin test: Run crm_simulate with invalid CIB (unrecognized validate-with) =#=#=#=
-(   schemas.c:736   )   debug: update_validation:	Unknown validation type
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-0.6' validation (0 of X)
+(   schemas.c:NNN   )   debug: update_validation:	Unknown validation type
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-0.6' validation (0 of X)
 element rsc_order: validity error : Element rsc_order does not carry attribute to
 element rsc_order: validity error : Element rsc_order does not carry attribute from
 element rsc_order: validity error : No declaration for attribute first of element rsc_order
 element rsc_order: validity error : No declaration for attribute first-action of element rsc_order
 element rsc_order: validity error : No declaration for attribute then of element rsc_order
-(   schemas.c:760   )   trace: update_validation:	pacemaker-0.6 validation failed
-(   schemas.c:751   )   debug: update_validation:	Testing 'transitional-0.6' validation (1 of X)
+(   schemas.c:NNN   )   trace: update_validation:	pacemaker-0.6 validation failed
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'transitional-0.6' validation (1 of X)
 element rsc_order: validity error : Element rsc_order does not carry attribute to
 element rsc_order: validity error : Element rsc_order does not carry attribute from
 element rsc_order: validity error : No declaration for attribute first of element rsc_order
 element rsc_order: validity error : No declaration for attribute first-action of element rsc_order
 element rsc_order: validity error : No declaration for attribute then of element rsc_order
-(   schemas.c:760   )   trace: update_validation:	transitional-0.6 validation failed
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-0.7' validation (2 of X)
+(   schemas.c:NNN   )   trace: update_validation:	transitional-0.6 validation failed
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-0.7' validation (2 of X)
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-(   schemas.c:760   )   trace: update_validation:	pacemaker-0.7 validation failed
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-1.0' validation (3 of X)
+(   schemas.c:NNN   )   trace: update_validation:	pacemaker-0.7 validation failed
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-1.0' validation (3 of X)
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-(   schemas.c:760   )   trace: update_validation:	pacemaker-1.0 validation failed
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-1.2' validation (4 of X)
+(   schemas.c:NNN   )   trace: update_validation:	pacemaker-1.0 validation failed
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-1.2' validation (4 of X)
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-(   schemas.c:760   )   trace: update_validation:	pacemaker-1.2 validation failed
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-1.3' validation (5 of X)
+(   schemas.c:NNN   )   trace: update_validation:	pacemaker-1.2 validation failed
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-1.3' validation (5 of X)
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-(   schemas.c:760   )   trace: update_validation:	pacemaker-1.3 validation failed
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-2.0' validation (6 of X)
+(   schemas.c:NNN   )   trace: update_validation:	pacemaker-1.3 validation failed
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-2.0' validation (6 of X)
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-(   schemas.c:760   )   trace: update_validation:	pacemaker-2.0 validation failed
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-2.1' validation (7 of X)
+(   schemas.c:NNN   )   trace: update_validation:	pacemaker-2.0 validation failed
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-2.1' validation (7 of X)
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-(   schemas.c:760   )   trace: update_validation:	pacemaker-2.1 validation failed
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-2.2' validation (8 of X)
+(   schemas.c:NNN   )   trace: update_validation:	pacemaker-2.1 validation failed
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-2.2' validation (8 of X)
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-(   schemas.c:760   )   trace: update_validation:	pacemaker-2.2 validation failed
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-2.3' validation (9 of X)
+(   schemas.c:NNN   )   trace: update_validation:	pacemaker-2.2 validation failed
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-2.3' validation (9 of X)
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-(   schemas.c:760   )   trace: update_validation:	pacemaker-2.3 validation failed
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-2.4' validation (10 of X)
+(   schemas.c:NNN   )   trace: update_validation:	pacemaker-2.3 validation failed
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-2.4' validation (10 of X)
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-(   schemas.c:760   )   trace: update_validation:	pacemaker-2.4 validation failed
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-2.5' validation (11 of X)
+(   schemas.c:NNN   )   trace: update_validation:	pacemaker-2.4 validation failed
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-2.5' validation (11 of X)
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-(   schemas.c:760   )   trace: update_validation:	pacemaker-2.5 validation failed
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-2.6' validation (12 of X)
+(   schemas.c:NNN   )   trace: update_validation:	pacemaker-2.5 validation failed
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-2.6' validation (12 of X)
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-(   schemas.c:760   )   trace: update_validation:	pacemaker-2.6 validation failed
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-2.7' validation (13 of X)
+(   schemas.c:NNN   )   trace: update_validation:	pacemaker-2.6 validation failed
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-2.7' validation (13 of X)
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-(   schemas.c:760   )   trace: update_validation:	pacemaker-2.7 validation failed
+(   schemas.c:NNN   )   trace: update_validation:	pacemaker-2.7 validation failed
 Your current configuration pacemaker-9999.0 could not validate with any schema in range [unknown, pacemaker-2.7], cannot upgrade to pacemaker-2.0.
 =#=#=#= End test: Run crm_simulate with invalid CIB (unrecognized validate-with) - Required key not available (126) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid CIB (unrecognized validate-with)
@@ -159,36 +159,36 @@ Call failed: Update does not conform to the configured schema
 =#=#=#= End test: Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1) - Update does not conform to the configured schema (203) =#=#=#=
 * Passed: cibadmin       - Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1)
 =#=#=#= Begin test: Run crm_simulate with invalid, but possibly recoverable CIB (valid with X.Y+1) =#=#=#=
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-1.2' validation (4 of X)
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-1.2' validation (4 of X)
 element tags: Relax-NG validity error : Element configuration has extra content: tags
-(   schemas.c:760   )   trace: update_validation:	pacemaker-1.2 validation failed
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-1.3' validation (5 of X)
-(   schemas.c:804   )   debug: update_validation:	Upgrading pacemaker-1.3-style configuration to pacemaker-2.0 with upgrade-1.3.xsl
-(   schemas.c:816   )    info: update_validation:	Transformation upgrade-1.3.xsl successful
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-2.0' validation (6 of X)
-(   schemas.c:797   )   debug: update_validation:	pacemaker-2.0-style configuration is also valid for pacemaker-2.1
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-2.1' validation (7 of X)
-(   schemas.c:771   )   debug: update_validation:	Configuration valid for schema: pacemaker-2.1
-(   schemas.c:797   )   debug: update_validation:	pacemaker-2.1-style configuration is also valid for pacemaker-2.2
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-2.2' validation (8 of X)
-(   schemas.c:771   )   debug: update_validation:	Configuration valid for schema: pacemaker-2.2
-(   schemas.c:797   )   debug: update_validation:	pacemaker-2.2-style configuration is also valid for pacemaker-2.3
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-2.3' validation (9 of X)
-(   schemas.c:771   )   debug: update_validation:	Configuration valid for schema: pacemaker-2.3
-(   schemas.c:797   )   debug: update_validation:	pacemaker-2.3-style configuration is also valid for pacemaker-2.4
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-2.4' validation (10 of X)
-(   schemas.c:771   )   debug: update_validation:	Configuration valid for schema: pacemaker-2.4
-(   schemas.c:797   )   debug: update_validation:	pacemaker-2.4-style configuration is also valid for pacemaker-2.5
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-2.5' validation (11 of X)
-(   schemas.c:771   )   debug: update_validation:	Configuration valid for schema: pacemaker-2.5
-(   schemas.c:797   )   debug: update_validation:	pacemaker-2.5-style configuration is also valid for pacemaker-2.6
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-2.6' validation (12 of X)
-(   schemas.c:771   )   debug: update_validation:	Configuration valid for schema: pacemaker-2.6
-(   schemas.c:797   )   debug: update_validation:	pacemaker-2.6-style configuration is also valid for pacemaker-2.7
-(   schemas.c:751   )   debug: update_validation:	Testing 'pacemaker-2.7' validation (13 of X)
-(   schemas.c:771   )   debug: update_validation:	Configuration valid for schema: pacemaker-2.7
-(   schemas.c:787   )   trace: update_validation:	Stopping at pacemaker-2.7
-(   schemas.c:843   )    info: update_validation:	Transformed the configuration from pacemaker-1.2 to pacemaker-2.7
+(   schemas.c:NNN   )   trace: update_validation:	pacemaker-1.2 validation failed
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-1.3' validation (5 of X)
+(   schemas.c:NNN   )   debug: update_validation:	Upgrading pacemaker-1.3-style configuration to pacemaker-2.0 with upgrade-1.3.xsl
+(   schemas.c:NNN   )    info: update_validation:	Transformation upgrade-1.3.xsl successful
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-2.0' validation (6 of X)
+(   schemas.c:NNN   )   debug: update_validation:	pacemaker-2.0-style configuration is also valid for pacemaker-2.1
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-2.1' validation (7 of X)
+(   schemas.c:NNN   )   debug: update_validation:	Configuration valid for schema: pacemaker-2.1
+(   schemas.c:NNN   )   debug: update_validation:	pacemaker-2.1-style configuration is also valid for pacemaker-2.2
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-2.2' validation (8 of X)
+(   schemas.c:NNN   )   debug: update_validation:	Configuration valid for schema: pacemaker-2.2
+(   schemas.c:NNN   )   debug: update_validation:	pacemaker-2.2-style configuration is also valid for pacemaker-2.3
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-2.3' validation (9 of X)
+(   schemas.c:NNN   )   debug: update_validation:	Configuration valid for schema: pacemaker-2.3
+(   schemas.c:NNN   )   debug: update_validation:	pacemaker-2.3-style configuration is also valid for pacemaker-2.4
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-2.4' validation (10 of X)
+(   schemas.c:NNN   )   debug: update_validation:	Configuration valid for schema: pacemaker-2.4
+(   schemas.c:NNN   )   debug: update_validation:	pacemaker-2.4-style configuration is also valid for pacemaker-2.5
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-2.5' validation (11 of X)
+(   schemas.c:NNN   )   debug: update_validation:	Configuration valid for schema: pacemaker-2.5
+(   schemas.c:NNN   )   debug: update_validation:	pacemaker-2.5-style configuration is also valid for pacemaker-2.6
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-2.6' validation (12 of X)
+(   schemas.c:NNN   )   debug: update_validation:	Configuration valid for schema: pacemaker-2.6
+(   schemas.c:NNN   )   debug: update_validation:	pacemaker-2.6-style configuration is also valid for pacemaker-2.7
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-2.7' validation (13 of X)
+(   schemas.c:NNN   )   debug: update_validation:	Configuration valid for schema: pacemaker-2.7
+(   schemas.c:NNN   )   trace: update_validation:	Stopping at pacemaker-2.7
+(   schemas.c:NNN   )    info: update_validation:	Transformed the configuration from pacemaker-1.2 to pacemaker-2.7
 error: unpack_resources:	Resource start-up disabled since no STONITH resources have been defined
 error: unpack_resources:	Either configure some or disable STONITH with the stonith-enabled option
 error: unpack_resources:	NOTE: Clusters with shared data need STONITH to ensure data integrity
