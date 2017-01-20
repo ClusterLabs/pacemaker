@@ -422,7 +422,10 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
 {
     switch (type) {
         case crm_status_processes:
-            if (legacy_mode && is_not_set(node->processes, crm_get_cluster_proc())) {
+#if !SUPPORT_PLUGIN
+            if (cib_legacy_mode()
+                && is_not_set(node->processes, crm_get_cluster_proc())) {
+
                 uint32_t old = data? *(const uint32_t *)data : 0;
 
                 if ((node->processes ^ old) & crm_proc_cpg) {
@@ -431,6 +434,7 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
                     legacy_mode = FALSE;
                 }
             }
+#endif
             break;
 
         case crm_status_uname:

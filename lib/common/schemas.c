@@ -580,6 +580,8 @@ validate_xml_verbose(xmlNode *xml_blob)
     gboolean rc = FALSE;
     char *filename = strdup(CRM_STATE_DIR "/cib-invalid.XXXXXX");
 
+    CRM_CHECK(filename != NULL, return FALSE);
+
     umask(S_IWGRP | S_IWOTH | S_IROTH);
     fd = mkstemp(filename);
     write_xml_fd(xml_blob, filename, fd, FALSE);

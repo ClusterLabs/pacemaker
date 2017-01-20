@@ -383,7 +383,8 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
         }
 
     } else if(rc != pcmk_ok && cib_legacy_mode()) {
-        crm_warn("Something went wrong in compatibility mode, requesting full refresh");
+        crm_warn("Requesting full CIB refresh because update failed: %s"
+                 CRM_XS " rc=%d", pcmk_strerror(rc), rc);
         xml_log_patchset(LOG_INFO, __FUNCTION__, input);
         free_xml(*result_cib);
         *result_cib = NULL;

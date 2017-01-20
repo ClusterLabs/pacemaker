@@ -659,14 +659,14 @@ cli_resource_delete(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_
 
         if(is_not_set(rsc->flags, pe_rsc_unique)) {
             char *id = clone_strip(rsc->id);
-            attr_name = crm_strdup_printf("fail-count-%s", id);
+            attr_name = crm_failcount_name(id);
             free(id);
 
         } else if (rsc->clone_name) {
-            attr_name = crm_strdup_printf("fail-count-%s", rsc->clone_name);
+            attr_name = crm_failcount_name(rsc->clone_name);
 
         } else {
-            attr_name = crm_strdup_printf("fail-count-%s", rsc->id);
+            attr_name = crm_failcount_name(rsc->id);
         }
 
         printf(", removing %s\n", attr_name);
