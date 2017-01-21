@@ -90,10 +90,12 @@ update_attrd_helper(const char *host, const char *name, const char *value,
     int attrd_opts = attrd_opt_none;
 
     if (is_remote_node) {
-#if HAVE_ATOMIC_ATTRD
         attrd_opts |= attrd_opt_remote;
-#else
-        /* Talk directly to cib for remote nodes if it's legacy attrd */
+
+#if !HAVE_ATOMIC_ATTRD
+        /* Legacy attrd can handle remote peer remove ('C') requests,
+         * otherwise talk directly to cib for remote nodes.
+         */
 
         /* host is required for updating a remote node */
         CRM_CHECK(host != NULL, return;);
@@ -105,8 +107,8 @@ update_attrd_helper(const char *host, const char *name, const char *value,
             if (rc < pcmk_ok) {
                 log_attrd_error(host, name, value, is_remote_node, command, rc);
             }
+            return;
         }
-        return;
 #endif
     }
 

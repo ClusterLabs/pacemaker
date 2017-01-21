@@ -296,6 +296,12 @@ process_xml_request(xmlNode *xml)
         crm_info("Update relayed from %s", from);
         attrd_local_callback(xml);
 
+    } else if (safe_str_eq(op, ATTRD_OP_PEER_REMOVE)) {
+        CRM_CHECK(host != NULL, return);
+        crm_debug("Removing %s from peer caches for %s", host, from);
+        crm_remote_peer_cache_remove(host);
+        reap_crm_member(0, host);
+
     } else if ((ignore == NULL) || safe_str_neq(from, attrd_uname)) {
         crm_trace("%s message from %s", op, from);
         hash_entry = find_hash_entry(xml);
@@ -772,8 +778,12 @@ attrd_local_callback(xmlNode * msg)
         crm_notice("Sending full refresh (origin=%s)", from);
         g_hash_table_foreach(attr_hash, update_for_hash_entry, NULL);
         return;
+
     } else if (safe_str_eq(op, ATTRD_OP_PEER_REMOVE)) {
-        /* The legacy code didn't understand this command - swallow silently */
+        if (host) {
+            crm_notice("Broadcasting removal of peer %s", host);
+            send_cluster_message(NULL, crm_msg_attrd, msg, FALSE);
+        }
         return;
     }
 
