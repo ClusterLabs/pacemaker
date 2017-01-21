@@ -763,10 +763,110 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
     return;
 }
 
+/* strlen("value") */
+#define plus_plus_len (5)
+
+/*!
+ * \internal
+ * \brief Expand attribute values that use "++" or "+="
+ *
+ * \param[in] value      Attribute value to expand
+ * \param[in] old_value  Previous value of attribute
+ *
+ * \return Newly allocated string with expanded value, or NULL if not expanded
+ */
+static char *
+expand_attr_value(const char *value, const char *old_value)
+{
+    int value_len = strlen(value);
+    char *expanded = NULL;
+
+    if ((value_len >= (plus_plus_len + 2))
+        && (value[plus_plus_len] == '+')
+        && ((value[plus_plus_len + 1] == '+')
+            || (value[plus_plus_len + 1] == '='))) {
+
+        int offset = 1;
+        int int_value = char2score(old_value);
+
+        if (value[plus_plus_len + 1] != '+') {
+            const char *offset_s = value + (plus_plus_len + 2);
+
+            offset = char2score(offset_s);
+        }
+        int_value += offset;
+
+        if (int_value > INFINITY) {
+            int_value = INFINITY;
+        }
+
+        expanded = crm_itoa(int_value);
+    }
+    return expanded;
+}
+
+/*!
+ * \internal
+ * \brief Update a single node attribute for this node
+ *
+ * \param[in]     msg         XML message with update
+ * \param[in,out] hash_entry  Node attribute structure
+ */
+static void
+update_local_attr(xmlNode *msg, attr_hash_entry_t *hash_entry)
+{
+    const char *value = crm_element_value(msg, F_ATTRD_VALUE);
+    char *expanded = NULL;
+
+    if (hash_entry->uuid == NULL) {
+        const char *key = crm_element_value(msg, F_ATTRD_KEY);
+
+        if (key) {
+            hash_entry->uuid = strdup(key);
+        }
+    }
+
+    crm_debug("Supplied: %s, Current: %s, Stored: %s",
+              value, hash_entry->value, hash_entry->stored_value);
+
+    if (safe_str_eq(value, hash_entry->value)
+        && safe_str_eq(value, hash_entry->stored_value)) {
+        crm_trace("Ignoring non-change");
+        return;
+
+    } else if (value) {
+        expanded = expand_attr_value(value, hash_entry->value);
+        if (expanded) {
+            crm_info("Expanded %s=%s to %s", hash_entry->id, value, expanded);
+            value = expanded;
+        }
+    }
+
+    if (safe_str_eq(value, hash_entry->value) && hash_entry->timer_id) {
+        /* We're already waiting to set this value */
+        free(expanded);
+        return;
+    }
+
+    free(hash_entry->value);
+    hash_entry->value = NULL;
+    if (value != NULL) {
+        hash_entry->value = (expanded? expanded : strdup(value));
+        crm_debug("New value of %s is %s", hash_entry->id, value);
+    }
+
+    stop_attrd_timer(hash_entry);
+
+    if (hash_entry->timeout > 0) {
+        hash_entry->timer_id = g_timeout_add(hash_entry->timeout, attrd_timer_callback, hash_entry);
+    } else {
+        attrd_trigger_update(hash_entry);
+    }
+}
+
 void
 attrd_local_callback(xmlNode * msg)
 {
-    static int plus_plus_len = 5;
     attr_hash_entry_t *hash_entry = NULL;
     const char *from = crm_element_value(msg, F_ORIG);
     const char *op = crm_element_value(msg, F_ATTRD_TASK);
@@ -797,73 +897,7 @@ attrd_local_callback(xmlNode * msg)
     if (hash_entry == NULL) {
         return;
     }
-
-    if (hash_entry->uuid == NULL) {
-        const char *key = crm_element_value(msg, F_ATTRD_KEY);
-
-        if (key) {
-            hash_entry->uuid = strdup(key);
-        }
-    }
-
-    crm_debug("Supplied: %s, Current: %s, Stored: %s",
-              value, hash_entry->value, hash_entry->stored_value);
-
-    if (safe_str_eq(value, hash_entry->value)
-        && safe_str_eq(value, hash_entry->stored_value)) {
-        crm_trace("Ignoring non-change");
-        return;
-
-    } else if (value) {
-        int offset = 1;
-        int int_value = 0;
-        int value_len = strlen(value);
-
-        if (value_len < (plus_plus_len + 2)
-            || value[plus_plus_len] != '+'
-            || (value[plus_plus_len + 1] != '+' && value[plus_plus_len + 1] != '=')) {
-            goto set_unexpanded;
-        }
-
-        int_value = char2score(hash_entry->value);
-        if (value[plus_plus_len + 1] != '+') {
-            const char *offset_s = value + (plus_plus_len + 2);
-
-            offset = char2score(offset_s);
-        }
-        int_value += offset;
-
-        if (int_value > INFINITY) {
-            int_value = INFINITY;
-        }
-
-        crm_info("Expanded %s=%s to %d", attr, value, int_value);
-        crm_xml_add_int(msg, F_ATTRD_VALUE, int_value);
-        value = crm_element_value(msg, F_ATTRD_VALUE);
-    }
-
-  set_unexpanded:
-    if (safe_str_eq(value, hash_entry->value) && hash_entry->timer_id) {
-        /* We're already waiting to set this value */
-        return;
-    }
-
-    free(hash_entry->value);
-    hash_entry->value = NULL;
-    if (value != NULL) {
-        hash_entry->value = strdup(value);
-        crm_debug("New value of %s is %s", attr, value);
-    }
-
-    stop_attrd_timer(hash_entry);
-
-    if (hash_entry->timeout > 0) {
-        hash_entry->timer_id = g_timeout_add(hash_entry->timeout, attrd_timer_callback, hash_entry);
-    } else {
-        attrd_trigger_update(hash_entry);
-    }
-
-    return;
+    update_local_attr(msg, hash_entry);
 }
 
 gboolean
