@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <regex.h>
 
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
@@ -951,6 +952,7 @@ attrd_local_callback(xmlNode * msg)
     const char *from = crm_element_value(msg, F_ORIG);
     const char *op = crm_element_value(msg, F_ATTRD_TASK);
     const char *attr = crm_element_value(msg, F_ATTRD_ATTRIBUTE);
+    const char *pattern = crm_element_value(msg, F_ATTRD_REGEX);
     const char *value = crm_element_value(msg, F_ATTRD_VALUE);
     const char *host = crm_element_value(msg, F_ATTRD_HOST);
     int is_remote = FALSE;
@@ -982,7 +984,16 @@ attrd_local_callback(xmlNode * msg)
         if (section == NULL) {
             section = XML_CIB_TAG_STATUS;
         }
-        update_remote_attr(host, attr, value, section, user_name);
+        if ((attr == NULL) && (pattern != NULL)) {
+            /* Attribute(s) specified by regular expression */
+            /* @TODO query, iterate and update_remote_attr() for matches? */
+            crm_notice("Update %s=%s for %s failed: regular expressions "
+                       "not supported with Pacemaker Remote nodes",
+                       attr, value, host);
+        } else {
+            /* Single attribute specified by exact name */
+            update_remote_attr(host, attr, value, section, user_name);
+        }
         return;
     }
 
@@ -992,12 +1003,40 @@ attrd_local_callback(xmlNode * msg)
         return;
     }
 
-    crm_debug("%s message from %s: %s=%s", op, from, attr, crm_str(value));
-    hash_entry = find_hash_entry(msg);
-    if (hash_entry == NULL) {
-        return;
+    if (attr != NULL) {
+        /* Single attribute specified by exact name */
+        crm_debug("%s message from %s: %s=%s", op, from, attr, crm_str(value));
+        hash_entry = find_hash_entry(msg);
+        if (hash_entry != NULL) {
+            update_local_attr(msg, hash_entry);
+        }
+
+    } else if (pattern != NULL) {
+        /* Attribute(s) specified by regular expression */
+        regex_t regex;
+        GHashTableIter iter;
+
+        if (regcomp(&regex, pattern, REG_EXTENDED|REG_NOSUB)) {
+            crm_err("Update from %s failed: invalid pattern %s",
+                    from, pattern);
+            return;
+        }
+
+        crm_debug("%s message from %s: %s=%s",
+                  op, from, pattern, crm_str(value));
+        g_hash_table_iter_init(&iter, attr_hash);
+        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &hash_entry)) {
+            int rc = regexec(&regex, hash_entry->id, 0, NULL, 0);
+
+            if (rc == 0) {
+                crm_trace("Attribute %s matches %s", hash_entry->id, pattern);
+                update_local_attr(msg, hash_entry);
+            }
+        }
+
+    } else {
+        crm_info("Ignoring message with no attribute name or expression");
     }
-    update_local_attr(msg, hash_entry);
 }
 
 gboolean
