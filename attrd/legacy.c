@@ -53,6 +53,13 @@ gboolean need_shutdown = FALSE;
 GHashTable *attr_hash = NULL;
 cib_t *cib_conn = NULL;
 
+/* Convenience macro for registering a CIB callback.
+ * Check cib_conn != NULL before using.
+ */
+#define register_cib_callback(call_id, data, fn, free_fn) \
+    cib_conn->cmds->register_callback_full(cib_conn, call_id, 120, FALSE, \
+                                           data, #fn, fn, free_fn)
+
 typedef struct attr_hash_entry_s {
     char *uuid;
     char *id;
@@ -756,10 +763,7 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
     if (hash_entry->value != NULL) {
         data->value = strdup(hash_entry->value);
     }
-    cib_conn->cmds->register_callback_full(cib_conn, rc, 120, FALSE, data,
-                                           "attrd_cib_callback",
-                                           attrd_cib_callback,
-                                           free_attrd_callback);
+    register_cib_callback(rc, data, attrd_cib_callback, free_attrd_callback);
     return;
 }
 
@@ -864,6 +868,82 @@ update_local_attr(xmlNode *msg, attr_hash_entry_t *hash_entry)
     }
 }
 
+/*!
+ * \internal
+ * \brief Log the result of a CIB operation for a remote attribute
+ *
+ * \param[in] msg     ignored
+ * \param[in] id      CIB operation ID
+ * \param[in] rc      CIB operation result
+ * \param[in] output  ignored
+ * \param[in] data    User-friendly string describing operation
+ */
+static void
+remote_attr_callback(xmlNode *msg, int id, int rc, xmlNode *output, void *data)
+{
+    if (rc == pcmk_ok) {
+        crm_debug("%s succeeded " CRM_XS " call=%d", data, id);
+    } else {
+        crm_notice("%s failed: %s " CRM_XS " call=%d rc=%d",
+                   data, pcmk_strerror(rc), id, rc);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Update a Pacemaker Remote node attribute via CIB only
+ *
+ * \param[in] host       Pacemaker Remote node name
+ * \param[in] name       Attribute name
+ * \param[in] value      New attribute value
+ * \param[in] section    CIB section to update (defaults to status if NULL)
+ * \param[in] user_name  User to perform operation as
+ *
+ * \note Legacy attrd does not track remote node attributes, so such requests
+ *       are only sent to the CIB. This means that dampening is ignored, and
+ *       updates for the same attribute submitted to different nodes cannot be
+ *       reliably ordered. This is not ideal, but allows remote nodes to
+ *       be supported, and should be acceptable in practice.
+ */
+static void
+update_remote_attr(const char *host, const char *name, const char *value,
+                   const char *section, const char *user_name)
+{
+    int rc = pcmk_ok;
+    char *desc;
+
+    if (value == NULL) {
+        desc = crm_strdup_printf("Delete of %s in %s for %s",
+                                 name, section, host);
+    } else {
+        desc = crm_strdup_printf("Update of %s=%s in %s for %s",
+                                 name, value, section, host);
+    }
+
+    if (name == NULL) {
+        rc = -EINVAL;
+    } else if (cib_conn == NULL) {
+        rc = -ENOTCONN;
+    }
+    if (rc != pcmk_ok) {
+        remote_attr_callback(NULL, rc, rc, NULL, desc);
+        free(desc);
+        return;
+    }
+
+    if (value == NULL) {
+        rc = delete_attr_delegate(cib_conn, cib_none, section,
+                                  host, NULL, NULL, NULL, name, NULL,
+                                  FALSE, user_name);
+    } else {
+        rc = update_attr_delegate(cib_conn, cib_none, section,
+                                  host, NULL, NULL, NULL, name, value,
+                                  FALSE, user_name, "remote");
+    }
+    crm_trace("%s submitted as CIB call %d", desc, rc);
+    register_cib_callback(rc, desc, remote_attr_callback, free);
+}
+
 void
 attrd_local_callback(xmlNode * msg)
 {
@@ -873,6 +953,9 @@ attrd_local_callback(xmlNode * msg)
     const char *attr = crm_element_value(msg, F_ATTRD_ATTRIBUTE);
     const char *value = crm_element_value(msg, F_ATTRD_VALUE);
     const char *host = crm_element_value(msg, F_ATTRD_HOST);
+    int is_remote = FALSE;
+
+    crm_element_value_int(msg, F_ATTRD_IS_REMOTE, &is_remote);
 
     if (safe_str_eq(op, ATTRD_OP_REFRESH)) {
         crm_notice("Sending full refresh (origin=%s)", from);
@@ -891,6 +974,19 @@ attrd_local_callback(xmlNode * msg)
         return;
     }
 
+    /* Handle requests for Pacemaker Remote nodes specially */
+    if (host && is_remote) {
+        const char *section = crm_element_value(msg, F_ATTRD_SECTION);
+        const char *user_name = crm_element_value(msg, F_ATTRD_USER);
+
+        if (section == NULL) {
+            section = XML_CIB_TAG_STATUS;
+        }
+        update_remote_attr(host, attr, value, section, user_name);
+        return;
+    }
+
+    /* Redirect requests for another cluster node to that node */
     if (host != NULL && safe_str_neq(host, attrd_uname)) {
         send_cluster_message(crm_get_peer(0, host), crm_msg_attrd, msg, FALSE);
         return;
