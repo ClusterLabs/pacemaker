@@ -40,6 +40,7 @@
 #include <cibmessages.h>
 #include <callbacks.h>
 
+/* Maximum number of diffs to ignore while waiting for a resync */
 #define MAX_DIFF_RETRY 5
 
 gboolean cib_is_master = FALSE;
@@ -161,14 +162,18 @@ cib_process_readwrite(const char *op, int options, const char *section, xmlNode 
     return result;
 }
 
-int sync_in_progress = 0;
+/* Set to 1 when a sync is requested, incremented when a diff is ignored,
+ * reset to 0 when a sync is received
+ */
+static int sync_in_progress = 0;
+
 void
 send_sync_request(const char *host)
 {
     xmlNode *sync_me = create_xml_node(NULL, "sync-me");
 
-    crm_info("Requesting re-sync from peer");
-    sync_in_progress++;
+    crm_info("Requesting re-sync from %s", (host? host : "all peers"));
+    sync_in_progress = 1;
 
     crm_xml_add(sync_me, F_TYPE, "cib");
     crm_xml_add(sync_me, F_CIB_OPERATION, CIB_OP_SYNC_ONE);
@@ -305,19 +310,15 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
 {
     int rc = pcmk_ok;
 
-    if (cib_is_master) {
-        /* the master is never waiting for a resync */
-        sync_in_progress = 0;
-    }
-
     if (sync_in_progress > MAX_DIFF_RETRY) {
-        /* request another full-sync,
-         * the last request may have been lost
+        /* Don't ignore diffs forever; the last request may have been lost.
+         * If the diff fails, we'll ask for another full resync.
          */
         sync_in_progress = 0;
     }
 
-    if (sync_in_progress) {
+    /* The master should never ignore a diff */
+    if (sync_in_progress && !cib_is_master) {
         int diff_add_updates = 0;
         int diff_add_epoch = 0;
         int diff_add_admin_epoch = 0;
@@ -351,7 +352,7 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
             crm_warn("Not requesting full refresh in R/W mode");
         }
 
-    } else if(rc != pcmk_ok && cib_legacy_mode()) {
+    } else if ((rc != pcmk_ok) && !cib_is_master && cib_legacy_mode()) {
         crm_warn("Requesting full CIB refresh because update failed: %s"
                  CRM_XS " rc=%d", pcmk_strerror(rc), rc);
         xml_log_patchset(LOG_INFO, __FUNCTION__, input);
