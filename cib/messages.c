@@ -42,14 +42,9 @@
 
 #define MAX_DIFF_RETRY 5
 
-#ifdef CIBPIPE
-gboolean cib_is_master = TRUE;
-#else
 gboolean cib_is_master = FALSE;
-#endif
 
 xmlNode *the_cib = NULL;
-gboolean syncd_once = FALSE;
 extern const char *cib_our_uname;
 int revision_check(xmlNode * cib_update, xmlNode * cib_copy, int flags);
 int get_revision(xmlNode * xml_obj, int cur_revision);
@@ -73,9 +68,6 @@ cib_process_shutdown_req(const char *op, int options, const char *section, xmlNo
                          xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                          xmlNode ** answer)
 {
-#ifdef CIBPIPE
-    return -EINVAL;
-#else
     int result = pcmk_ok;
     const char *host = crm_element_value(req, F_ORIG);
 
@@ -96,7 +88,6 @@ cib_process_shutdown_req(const char *op, int options, const char *section, xmlNo
     }
 
     return result;
-#endif
 }
 
 int
@@ -141,9 +132,6 @@ cib_process_readwrite(const char *op, int options, const char *section, xmlNode 
                       xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                       xmlNode ** answer)
 {
-#ifdef CIBPIPE
-    return -EINVAL;
-#else
     int result = pcmk_ok;
 
     crm_trace("Processing \"%s\" event", op);
@@ -161,8 +149,6 @@ cib_process_readwrite(const char *op, int options, const char *section, xmlNode 
         if (cib_is_master == FALSE) {
             crm_info("We are now in R/W mode");
             cib_is_master = TRUE;
-            syncd_once = TRUE;
-
         } else {
             crm_debug("We are still in R/W mode");
         }
@@ -173,7 +159,6 @@ cib_process_readwrite(const char *op, int options, const char *section, xmlNode 
     }
 
     return result;
-#endif
 }
 
 int sync_in_progress = 0;
@@ -197,9 +182,6 @@ int
 cib_process_ping(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                  xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
 {
-#ifdef CIBPIPE
-    return -EINVAL;
-#else
     const char *host = crm_element_value(req, F_ORIG);
     const char *seq = crm_element_value(req, F_CIB_PING_ID);
     char *digest = calculate_xml_versioned_digest(the_cib, FALSE, TRUE, CRM_FEATURE_SET);
@@ -241,27 +223,19 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
     free(digest);
 
     return pcmk_ok;
-#endif
 }
 
 int
 cib_process_sync(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                  xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
 {
-#ifdef CIBPIPE
-    return -EINVAL;
-#else
     return sync_our_cib(req, TRUE);
-#endif
 }
 
 int
 cib_process_upgrade_server(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                            xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
 {
-#ifdef CIBPIPE
-    return -EINVAL;
-#else
     int rc = pcmk_ok;
 
     *answer = NULL;
@@ -314,7 +288,6 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
         free_xml(scratch);
     }
     return rc;
-#endif
 }
 
 int
@@ -322,11 +295,7 @@ cib_process_sync_one(const char *op, int options, const char *section, xmlNode *
                      xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                      xmlNode ** answer)
 {
-#ifdef CIBPIPE
-    return -EINVAL;
-#else
     return sync_our_cib(req, FALSE);
-#endif
 }
 
 int
@@ -524,7 +493,6 @@ check_generation(xmlNode * newCib, xmlNode * oldCib)
     return FALSE;
 }
 
-#ifndef CIBPIPE
 int
 sync_our_cib(xmlNode * request, gboolean all)
 {
@@ -575,4 +543,3 @@ sync_our_cib(xmlNode * request, gboolean all)
     free(digest);
     return result;
 }
-#endif
