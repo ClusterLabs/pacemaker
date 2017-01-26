@@ -283,6 +283,27 @@ find_hash_entry(xmlNode * msg)
     return hash_entry;
 }
 
+static void
+process_xml_request(xmlNode *xml)
+{
+    attr_hash_entry_t *hash_entry = NULL;
+    const char *from = crm_element_value(xml, F_ORIG);
+    const char *op = crm_element_value(xml, F_ATTRD_TASK);
+    const char *host = crm_element_value(xml, F_ATTRD_HOST);
+    const char *ignore = crm_element_value(xml, F_ATTRD_IGNORE_LOCALLY);
+
+    if (host && safe_str_eq(host, attrd_uname)) {
+        crm_info("Update relayed from %s", from);
+        attrd_local_callback(xml);
+
+    } else if ((ignore == NULL) || safe_str_neq(from, attrd_uname)) {
+        crm_trace("%s message from %s", op, from);
+        hash_entry = find_hash_entry(xml);
+        stop_attrd_timer(hash_entry);
+        attrd_perform_update(hash_entry);
+    }
+}
+
 #if SUPPORT_HEARTBEAT
 static void
 attrd_ha_connection_destroy(gpointer user_data)
@@ -305,23 +326,9 @@ attrd_ha_connection_destroy(gpointer user_data)
 static void
 attrd_ha_callback(HA_Message * msg, void *private_data)
 {
-    attr_hash_entry_t *hash_entry = NULL;
     xmlNode *xml = convert_ha_message(NULL, msg, __FUNCTION__);
-    const char *from = crm_element_value(xml, F_ORIG);
-    const char *op = crm_element_value(xml, F_ATTRD_TASK);
-    const char *host = crm_element_value(xml, F_ATTRD_HOST);
-    const char *ignore = crm_element_value(xml, F_ATTRD_IGNORE_LOCALLY);
 
-    if (host != NULL && safe_str_eq(host, attrd_uname)) {
-        crm_info("Update relayed from %s", from);
-        attrd_local_callback(xml);
-
-    } else if (ignore == NULL || safe_str_neq(from, attrd_uname)) {
-        crm_info("%s message from %s", op, from);
-        hash_entry = find_hash_entry(xml);
-        stop_attrd_timer(hash_entry);
-        attrd_perform_update(hash_entry);
-    }
+    process_xml_request(xml);
     free_xml(xml);
 }
 
@@ -349,25 +356,9 @@ attrd_cs_dispatch(cpg_handle_t handle,
     }
 
     if (xml != NULL) {
-        attr_hash_entry_t *hash_entry = NULL;
-        const char *op = crm_element_value(xml, F_ATTRD_TASK);
-        const char *host = crm_element_value(xml, F_ATTRD_HOST);
-        const char *ignore = crm_element_value(xml, F_ATTRD_IGNORE_LOCALLY);
-
         /* crm_xml_add_int(xml, F_SEQ, wrapper->id); */
         crm_xml_add(xml, F_ORIG, from);
-
-        if (host != NULL && safe_str_eq(host, attrd_uname)) {
-            crm_notice("Update relayed from %s", from);
-            attrd_local_callback(xml);
-
-        } else if (ignore == NULL || safe_str_neq(from, attrd_uname)) {
-            crm_trace("%s message from %s", op, from);
-            hash_entry = find_hash_entry(xml);
-            stop_attrd_timer(hash_entry);
-            attrd_perform_update(hash_entry);
-        }
-
+        process_xml_request(xml);
         free_xml(xml);
     }
 
