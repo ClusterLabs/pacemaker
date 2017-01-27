@@ -27,6 +27,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/select.h>
 
 #include <glib.h>
 #include <dirent.h>
@@ -984,17 +985,21 @@ internal_stonith_action_execute(stonith_action_t * action)
         return 0;
 
     } else {
-        /* sync */
-        int timeout = action->remaining_timeout + 1;
+        /* sync, using 100ms sleep periods waiting for process to finish */
+        int timeout = action->remaining_timeout * (1000/100) + 1;
         pid_t p = 0;
+        struct timeval waitsleep;
 
         while (action->remaining_timeout < 0 || timeout > 0) {
             p = waitpid(pid, &status, WNOHANG);
             if (p > 0) {
                 break;
             }
-            sleep(1);
-            timeout--;
+            waitsleep = (struct timeval) { .tv_sec = 0, .tv_usec = 100 };
+            ret = select(0, NULL, NULL, NULL, &waitsleep);
+            if (ret >= 0 || errno != EINTR) {
+                timeout--;
+            }
         }
 
         if (timeout == 0) {
