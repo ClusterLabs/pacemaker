@@ -457,40 +457,37 @@ def main():
 if __name__ == "__main__":
     main()
 """)
-        dummy_fence_agent = ("""#!/usr/bin/python
-from __future__ import print_function, unicode_literals, absolute_import, division
-import sys
-def main():
-    for line in sys.stdin.readlines():
-        if line.count("monitor") > 0:
-            sys.exit(0)
-        if line.count("metadata") > 0:
-            print('<resource-agent name="fence_dummy_monitor" shortdesc="Dummy Fence agent for testing">')
-            print('  <longdesc>dummy description.</longdesc>')
-            print('  <vendor-url>http://www.example.com</vendor-url>')
-            print('  <parameters>')
-            print('    <parameter name="action" unique="0" required="1">')
-            print('      <getopt mixed="-o, --action=[action]"/>')
-            print('      <content type="string" default="reboot"/>')
-            print('      <shortdesc lang="en">Fencing Action</shortdesc>')
-            print('    </parameter>')
-            print('    <parameter name="port" unique="0" required="0">')
-            print('      <getopt mixed="-n, --plug=[id]"/>')
-            print('      <content type="string"/>')
-            print('      <shortdesc lang="en">Physical plug number or name of virtual machine</shortdesc>')
-            print('    </parameter>')
-            print('  </parameters>')
-            print('  <actions>')
-            print('    <action name="on"/>')
-            print('    <action name="off"/>')
-            print('    <action name="monitor"/>')
-            print('    <action name="metadata"/>')
-            print('  </actions>')
-            print('</resource-agent>')
-            sys.exit(0)
-    sys.exit(-1)
-if __name__ == "__main__":
-    main()
+        dummy_fence_agent = ("""#!/bin/sh
+while read line; do
+    case ${line} in
+    *monitor*) exit 0;;
+    *metadata*)
+        echo '<resource-agent name="fence_dummy_monitor" shortdesc="Dummy Fence agent for testing">'
+        echo '  <longdesc>dummy description.</longdesc>'
+        echo '  <vendor-url>http://www.example.com</vendor-url>'
+        echo '  <parameters>'
+        echo '    <parameter name="action" unique="0" required="1">'
+        echo '      <getopt mixed="-o, --action=[action]"/>'
+        echo '      <content type="string" default="reboot"/>'
+        echo '      <shortdesc lang="en">Fencing Action</shortdesc>'
+        echo '    </parameter>'
+        echo '    <parameter name="port" unique="0" required="0">'
+        echo '      <getopt mixed="-n, --plug=[id]"/>'
+        echo '      <content type="string"/>'
+        echo '      <shortdesc lang="en">Physical plug number or name of virtual machine</shortdesc>'
+        echo '    </parameter>'
+        echo '  </parameters>'
+        echo '  <actions>'
+        echo '    <action name="on"/>'
+        echo '    <action name="off"/>'
+        echo '    <action name="monitor"/>'
+        echo '    <action name="metadata"/>'
+        echo '  </actions>'
+        echo '</resource-agent>'
+        exit 0;;
+    esac
+    exit -1
+done
 """)
 
         os.system("cat <<-END >>/etc/init/lrmd_dummy_daemon.conf\n%s\nEND" % (dummy_upstart_job))
@@ -501,7 +498,9 @@ if __name__ == "__main__":
         os.system("cat <<-END >>/usr/sbin/fence_dummy_sleep\n%s\nEND" % (dummy_fence_sleep_agent))
         os.system("chmod 711 /usr/sbin/fence_dummy_sleep")
 
-        os.system("cat <<-END >>/usr/sbin/fence_dummy_monitor\n%s\nEND" % (dummy_fence_agent))
+        f = open("/usr/sbin/fence_dummy_monitor", 'w')
+        f.write(dummy_fence_agent)
+        f.close()
         os.system("chmod 711 /usr/sbin/fence_dummy_monitor")
 
         if os.path.exists("%s/cts/LSBDummy" % BUILD_DIR):
