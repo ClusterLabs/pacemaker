@@ -517,7 +517,7 @@ action_synced_wait(svc_action_t * op, sigset_t *mask)
                 if (1) {
                     /* Clear out the sigchld pipe. */
                     char ch;
-                    while (read(sfd, &ch, 1) == 1);
+                    while (read(sfd, &ch, 1) == 1) /*omit*/;
 #endif
                     wait_rc = waitpid(op->pid, &status, WNOHANG);
 
@@ -567,7 +567,7 @@ action_synced_wait(svc_action_t * op, sigset_t *mask)
          *
          * This makes it safe to skip WNOHANG here
          */
-        waitpid(op->pid, &status, 0);
+        while (waitpid(op->pid, &status, 0) == (pid_t) -1 && errno == EINTR) /*omit*/;
 
     } else if (WIFEXITED(status)) {
         op->status = PCMK_LRM_OP_DONE;
