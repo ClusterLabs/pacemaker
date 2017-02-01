@@ -885,6 +885,10 @@ attrd_local_callback(xmlNode * msg)
             send_cluster_message(NULL, crm_msg_attrd, msg, FALSE);
         }
         return;
+
+    } else if (op && safe_str_neq(op, ATTRD_OP_UPDATE)) {
+        crm_notice("Ignoring unsupported %s request from %s", op, from);
+        return;
     }
 
     if (host != NULL && safe_str_neq(host, attrd_uname)) {
