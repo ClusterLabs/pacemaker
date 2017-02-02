@@ -954,10 +954,10 @@ print_nvpair(FILE *stream, const char *name, const char *value,
 
     /* Otherwise print user-friendly time string */
     } else {
-        char *date_str, *c;
+        static char empty_str[] = "";
+        char *c, *date_str = asctime(localtime(&epoch_time));
 
-        date_str = asctime(localtime(&epoch_time));
-        for (c = date_str; c != '\0'; ++c) {
+        for (c = (date_str != NULL) ? date_str : empty_str; *c != '\0'; ++c) {
             if (*c == '\n') {
                 *c = '\0';
                 break;
