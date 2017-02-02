@@ -42,7 +42,8 @@
 
 ## Turn off auto-compilation of python files outside site-packages directory,
 ## so that the -libs-devel package is multilib-compliant (no *.py[co] files)
-%define __os_install_post %(echo '%{__os_install_post}' | sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g')
+%global __os_install_post %(echo '%{__os_install_post}' | {
+                            sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g'; })
 
 ## Heuristic used to infer bleeding-edge deployments that are
 ## less likely to have working versions of the documentation tools
