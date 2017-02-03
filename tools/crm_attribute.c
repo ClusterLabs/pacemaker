@@ -49,6 +49,7 @@ char *dest_node = NULL;
 char *set_name = NULL;
 char *attr_id = NULL;
 char *attr_name = NULL;
+char *attr_pattern = NULL;
 const char *type = NULL;
 const char *rsc_id = NULL;
 const char *attr_value = NULL;
@@ -64,6 +65,7 @@ static struct crm_option long_options[] = {
     {"quiet",   0, 0, 'q', "\tPrint only the value on stdout\n"},
 
     {"name",    1, 0, 'n', "Name of the attribute/option to operate on"},
+    {"pattern", 1, 0, 'P', "Pattern matching names of attributes (only with -v/-D and -l reboot)"},
 
     {"-spacer-",    0, 0, '-', "\nCommands:"},
     {"query",       0, 0, 'G', "\tQuery the current value of the attribute/option"},
@@ -181,6 +183,9 @@ main(int argc, char **argv)
             case 'n':
                 attr_name = strdup(optarg);
                 break;
+            case 'P':
+                attr_pattern = strdup(optarg);
+                break;
             case 'i':
                 attr_id = strdup(optarg);
                 break;
@@ -254,12 +259,24 @@ main(int argc, char **argv)
         }
     }
 
-    if (attr_name == NULL && command == 'D') {
-        fprintf(stderr, "Error during deletion, no attribute name specified.\n");
+    if ((command == 'D') && (attr_name == NULL) && (attr_pattern == NULL)) {
+        fprintf(stderr, "Error: must specify attribute name or pattern to delete\n");
         return crm_exit(1);
     }
 
-    if ((command == 'v' || command == 'D')
+    if (attr_pattern) {
+        if (((command != 'v') && (command != 'D'))
+            || safe_str_neq(type, XML_CIB_TAG_STATUS)) {
+
+            fprintf(stderr, "Error: pattern can only be used with till-reboot update or delete\n");
+            return crm_exit(1);
+        }
+        command = 'u';
+        free(attr_name);
+        attr_name = attr_pattern;
+    }
+
+    if (((command == 'v') || (command == 'D') || (command == 'u'))
         && safe_str_eq(type, XML_CIB_TAG_STATUS)
         && pcmk_ok == attrd_update_delegate(NULL, command, dest_uname, attr_name,
                                             attr_value, type, set_name, NULL, NULL,

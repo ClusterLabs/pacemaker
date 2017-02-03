@@ -987,9 +987,9 @@ attrd_local_callback(xmlNode * msg)
         if ((attr == NULL) && (pattern != NULL)) {
             /* Attribute(s) specified by regular expression */
             /* @TODO query, iterate and update_remote_attr() for matches? */
-            crm_notice("Update %s=%s for %s failed: regular expressions "
-                       "not supported with Pacemaker Remote nodes",
-                       attr, value, host);
+            crm_notice("Update of %s for %s failed: regular expressions "
+                       "are not supported with Pacemaker Remote nodes",
+                       pattern, host);
         } else {
             /* Single attribute specified by exact name */
             update_remote_attr(host, attr, value, section, user_name);
