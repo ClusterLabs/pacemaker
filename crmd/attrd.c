@@ -31,11 +31,6 @@ update_without_attrd(const char *host_uuid, const char *name, const char *value,
 
     call_opt = crmd_cib_smart_opt();
 
-    if (command == 'C') {
-        erase_status_tag(host_uuid, XML_TAG_TRANSIENT_NODEATTRS, call_opt);
-        return pcmk_ok;
-    }
-
     crm_trace("updating status for host_uuid %s, %s=%s",
               host_uuid, (name? name : "<null>"), (value? value : "<null>"));
     if (value) {
@@ -90,27 +85,30 @@ update_attrd_helper(const char *host, const char *name, const char *value,
                     const char *user_name, gboolean is_remote_node,
                     char command)
 {
-    gboolean rc;
+    int rc;
     int max = 5;
     int attrd_opts = attrd_opt_none;
 
     if (is_remote_node) {
-#if HAVE_ATOMIC_ATTRD
         attrd_opts |= attrd_opt_remote;
-#else
-        /* Talk directly to cib for remote nodes if it's legacy attrd */
-        int rc;
+
+#if !HAVE_ATOMIC_ATTRD
+        /* Legacy attrd can handle remote peer remove ('C') requests,
+         * otherwise talk directly to cib for remote nodes.
+         */
 
         /* host is required for updating a remote node */
         CRM_CHECK(host != NULL, return;);
 
-        /* remote node uname and uuid are equal */
-        rc = update_without_attrd(host, name, value, user_name, is_remote_node,
-                                  command);
-        if (rc < pcmk_ok) {
-            log_attrd_error(host, name, value, is_remote_node, command, rc);
+        if (command != 'C') {
+            /* remote node uname and uuid are equal */
+            rc = update_without_attrd(host, name, value, user_name,
+                                      is_remote_node, command);
+            if (rc < pcmk_ok) {
+                log_attrd_error(host, name, value, is_remote_node, command, rc);
+            }
+            return;
         }
-        return;
 #endif
     }
 

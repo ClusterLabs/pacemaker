@@ -283,6 +283,33 @@ find_hash_entry(xmlNode * msg)
     return hash_entry;
 }
 
+static void
+process_xml_request(xmlNode *xml)
+{
+    attr_hash_entry_t *hash_entry = NULL;
+    const char *from = crm_element_value(xml, F_ORIG);
+    const char *op = crm_element_value(xml, F_ATTRD_TASK);
+    const char *host = crm_element_value(xml, F_ATTRD_HOST);
+    const char *ignore = crm_element_value(xml, F_ATTRD_IGNORE_LOCALLY);
+
+    if (host && safe_str_eq(host, attrd_uname)) {
+        crm_info("Update relayed from %s", from);
+        attrd_local_callback(xml);
+
+    } else if (safe_str_eq(op, ATTRD_OP_PEER_REMOVE)) {
+        CRM_CHECK(host != NULL, return);
+        crm_debug("Removing %s from peer caches for %s", host, from);
+        crm_remote_peer_cache_remove(host);
+        reap_crm_member(0, host);
+
+    } else if ((ignore == NULL) || safe_str_neq(from, attrd_uname)) {
+        crm_trace("%s message from %s", op, from);
+        hash_entry = find_hash_entry(xml);
+        stop_attrd_timer(hash_entry);
+        attrd_perform_update(hash_entry);
+    }
+}
+
 #if SUPPORT_HEARTBEAT
 static void
 attrd_ha_connection_destroy(gpointer user_data)
@@ -305,23 +332,9 @@ attrd_ha_connection_destroy(gpointer user_data)
 static void
 attrd_ha_callback(HA_Message * msg, void *private_data)
 {
-    attr_hash_entry_t *hash_entry = NULL;
     xmlNode *xml = convert_ha_message(NULL, msg, __FUNCTION__);
-    const char *from = crm_element_value(xml, F_ORIG);
-    const char *op = crm_element_value(xml, F_ATTRD_TASK);
-    const char *host = crm_element_value(xml, F_ATTRD_HOST);
-    const char *ignore = crm_element_value(xml, F_ATTRD_IGNORE_LOCALLY);
 
-    if (host != NULL && safe_str_eq(host, attrd_uname)) {
-        crm_info("Update relayed from %s", from);
-        attrd_local_callback(xml);
-
-    } else if (ignore == NULL || safe_str_neq(from, attrd_uname)) {
-        crm_info("%s message from %s", op, from);
-        hash_entry = find_hash_entry(xml);
-        stop_attrd_timer(hash_entry);
-        attrd_perform_update(hash_entry);
-    }
+    process_xml_request(xml);
     free_xml(xml);
 }
 
@@ -349,25 +362,9 @@ attrd_cs_dispatch(cpg_handle_t handle,
     }
 
     if (xml != NULL) {
-        attr_hash_entry_t *hash_entry = NULL;
-        const char *op = crm_element_value(xml, F_ATTRD_TASK);
-        const char *host = crm_element_value(xml, F_ATTRD_HOST);
-        const char *ignore = crm_element_value(xml, F_ATTRD_IGNORE_LOCALLY);
-
         /* crm_xml_add_int(xml, F_SEQ, wrapper->id); */
         crm_xml_add(xml, F_ORIG, from);
-
-        if (host != NULL && safe_str_eq(host, attrd_uname)) {
-            crm_notice("Update relayed from %s", from);
-            attrd_local_callback(xml);
-
-        } else if (ignore == NULL || safe_str_neq(from, attrd_uname)) {
-            crm_trace("%s message from %s", op, from);
-            hash_entry = find_hash_entry(xml);
-            stop_attrd_timer(hash_entry);
-            attrd_perform_update(hash_entry);
-        }
-
+        process_xml_request(xml);
         free_xml(xml);
     }
 
@@ -766,36 +763,60 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
     return;
 }
 
-void
-attrd_local_callback(xmlNode * msg)
+/* strlen("value") */
+#define plus_plus_len (5)
+
+/*!
+ * \internal
+ * \brief Expand attribute values that use "++" or "+="
+ *
+ * \param[in] value      Attribute value to expand
+ * \param[in] old_value  Previous value of attribute
+ *
+ * \return Newly allocated string with expanded value, or NULL if not expanded
+ */
+static char *
+expand_attr_value(const char *value, const char *old_value)
 {
-    static int plus_plus_len = 5;
-    attr_hash_entry_t *hash_entry = NULL;
-    const char *from = crm_element_value(msg, F_ORIG);
-    const char *op = crm_element_value(msg, F_ATTRD_TASK);
-    const char *attr = crm_element_value(msg, F_ATTRD_ATTRIBUTE);
+    int value_len = strlen(value);
+    char *expanded = NULL;
+
+    if ((value_len >= (plus_plus_len + 2))
+        && (value[plus_plus_len] == '+')
+        && ((value[plus_plus_len + 1] == '+')
+            || (value[plus_plus_len + 1] == '='))) {
+
+        int offset = 1;
+        int int_value = char2score(old_value);
+
+        if (value[plus_plus_len + 1] != '+') {
+            const char *offset_s = value + (plus_plus_len + 2);
+
+            offset = char2score(offset_s);
+        }
+        int_value += offset;
+
+        if (int_value > INFINITY) {
+            int_value = INFINITY;
+        }
+
+        expanded = crm_itoa(int_value);
+    }
+    return expanded;
+}
+
+/*!
+ * \internal
+ * \brief Update a single node attribute for this node
+ *
+ * \param[in]     msg         XML message with update
+ * \param[in,out] hash_entry  Node attribute structure
+ */
+static void
+update_local_attr(xmlNode *msg, attr_hash_entry_t *hash_entry)
+{
     const char *value = crm_element_value(msg, F_ATTRD_VALUE);
-    const char *host = crm_element_value(msg, F_ATTRD_HOST);
-
-    if (safe_str_eq(op, ATTRD_OP_REFRESH)) {
-        crm_notice("Sending full refresh (origin=%s)", from);
-        g_hash_table_foreach(attr_hash, update_for_hash_entry, NULL);
-        return;
-    } else if (safe_str_eq(op, ATTRD_OP_PEER_REMOVE)) {
-        /* The legacy code didn't understand this command - swallow silently */
-        return;
-    }
-
-    if (host != NULL && safe_str_neq(host, attrd_uname)) {
-        send_cluster_message(crm_get_peer(0, host), crm_msg_attrd, msg, FALSE);
-        return;
-    }
-
-    crm_debug("%s message from %s: %s=%s", op, from, attr, crm_str(value));
-    hash_entry = find_hash_entry(msg);
-    if (hash_entry == NULL) {
-        return;
-    }
+    char *expanded = NULL;
 
     if (hash_entry->uuid == NULL) {
         const char *key = crm_element_value(msg, F_ATTRD_KEY);
@@ -814,44 +835,24 @@ attrd_local_callback(xmlNode * msg)
         return;
 
     } else if (value) {
-        int offset = 1;
-        int int_value = 0;
-        int value_len = strlen(value);
-
-        if (value_len < (plus_plus_len + 2)
-            || value[plus_plus_len] != '+'
-            || (value[plus_plus_len + 1] != '+' && value[plus_plus_len + 1] != '=')) {
-            goto set_unexpanded;
+        expanded = expand_attr_value(value, hash_entry->value);
+        if (expanded) {
+            crm_info("Expanded %s=%s to %s", hash_entry->id, value, expanded);
+            value = expanded;
         }
-
-        int_value = char2score(hash_entry->value);
-        if (value[plus_plus_len + 1] != '+') {
-            const char *offset_s = value + (plus_plus_len + 2);
-
-            offset = char2score(offset_s);
-        }
-        int_value += offset;
-
-        if (int_value > INFINITY) {
-            int_value = INFINITY;
-        }
-
-        crm_info("Expanded %s=%s to %d", attr, value, int_value);
-        crm_xml_add_int(msg, F_ATTRD_VALUE, int_value);
-        value = crm_element_value(msg, F_ATTRD_VALUE);
     }
 
-  set_unexpanded:
     if (safe_str_eq(value, hash_entry->value) && hash_entry->timer_id) {
         /* We're already waiting to set this value */
+        free(expanded);
         return;
     }
 
     free(hash_entry->value);
     hash_entry->value = NULL;
     if (value != NULL) {
-        hash_entry->value = strdup(value);
-        crm_debug("New value of %s is %s", attr, value);
+        hash_entry->value = (expanded? expanded : strdup(value));
+        crm_debug("New value of %s is %s", hash_entry->id, value);
     }
 
     stop_attrd_timer(hash_entry);
@@ -861,8 +862,46 @@ attrd_local_callback(xmlNode * msg)
     } else {
         attrd_trigger_update(hash_entry);
     }
+}
 
-    return;
+void
+attrd_local_callback(xmlNode * msg)
+{
+    attr_hash_entry_t *hash_entry = NULL;
+    const char *from = crm_element_value(msg, F_ORIG);
+    const char *op = crm_element_value(msg, F_ATTRD_TASK);
+    const char *attr = crm_element_value(msg, F_ATTRD_ATTRIBUTE);
+    const char *value = crm_element_value(msg, F_ATTRD_VALUE);
+    const char *host = crm_element_value(msg, F_ATTRD_HOST);
+
+    if (safe_str_eq(op, ATTRD_OP_REFRESH)) {
+        crm_notice("Sending full refresh (origin=%s)", from);
+        g_hash_table_foreach(attr_hash, update_for_hash_entry, NULL);
+        return;
+
+    } else if (safe_str_eq(op, ATTRD_OP_PEER_REMOVE)) {
+        if (host) {
+            crm_notice("Broadcasting removal of peer %s", host);
+            send_cluster_message(NULL, crm_msg_attrd, msg, FALSE);
+        }
+        return;
+
+    } else if (op && safe_str_neq(op, ATTRD_OP_UPDATE)) {
+        crm_notice("Ignoring unsupported %s request from %s", op, from);
+        return;
+    }
+
+    if (host != NULL && safe_str_neq(host, attrd_uname)) {
+        send_cluster_message(crm_get_peer(0, host), crm_msg_attrd, msg, FALSE);
+        return;
+    }
+
+    crm_debug("%s message from %s: %s=%s", op, from, attr, crm_str(value));
+    hash_entry = find_hash_entry(msg);
+    if (hash_entry == NULL) {
+        return;
+    }
+    update_local_attr(msg, hash_entry);
 }
 
 gboolean
