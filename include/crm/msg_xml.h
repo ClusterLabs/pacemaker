@@ -256,6 +256,7 @@
 
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
 #  define XML_CIB_ATTR_STONITH	    	"stonith"
+#  define XML_CIB_ATTR_STANDBY	    	"standby"
 
 /* LRM is a bit of a misnomer here; the crmd and pengine use these to track
  * actions, which usually but not always are LRM operations

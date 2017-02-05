@@ -113,4 +113,6 @@ extern ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t * orig);
 
 void send_remote_state_message(const char *node_name, gboolean node_up);
 
+void crm_set_join_state(const char *uname, const char *start_state);
+
 #endif

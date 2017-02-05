@@ -127,8 +127,6 @@ crmd_init(void)
     int exit_code = 0;
     enum crmd_fsa_state state;
 
-    const char *start_state = getenv("PCMK_node_start_state");
-
     fsa_state = S_STARTING;
     fsa_input_register = 0;     /* zero out the regester */
 
@@ -140,11 +138,6 @@ crmd_init(void)
     state = s_crmd_fsa(C_STARTUP);
 
     if (state == S_PENDING || state == S_STARTING) {
-        if (safe_str_eq(start_state, "standby")) {
-            const crm_node_t * this_node = crm_get_peer(0, fsa_our_uname);
-            set_standby(fsa_cib_conn, this_node->uuid, XML_CIB_TAG_STATUS, "on");
-        }
-
         /* Create the mainloop and run it... */
         crm_trace("Starting %s's mainloop", crm_system_name);
 
