@@ -2145,6 +2145,9 @@ stage8(pe_working_set_t * data_set)
 
     crm_log_xml_trace(data_set->graph, "created resource-driven action list");
 
+    /* pseudo action to distribute list of nodes with maintenance state update */
+    add_maintenance_update(data_set);
+
     /* catch any non-resource specific actions */
     crm_trace("processing non-resource actions");
 

@@ -1209,6 +1209,9 @@ unpack_remote_status(xmlNode * status, pe_working_set_t * data_set)
         }
         crm_trace("Processing remote node id=%s, uname=%s", id, uname);
 
+        this_node->details->remote_maintenance =
+            crm_atoi(crm_element_value(state, XML_NODE_IS_MAINTENANCE), "0");
+
         rsc = this_node->details->remote_rsc;
         if (this_node->details->remote_requires_reset == FALSE) {
             this_node->details->unclean = FALSE;

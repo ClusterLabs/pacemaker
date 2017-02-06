@@ -1161,36 +1161,3 @@ void crmd_peer_down(crm_node_t *peer, bool full)
     crm_update_peer_join(__FUNCTION__, peer, crm_join_none);
     crm_update_peer_expected(__FUNCTION__, peer, CRMD_JOINSTATE_DOWN);
 }
-
-gboolean
-crmd_is_rsc_managed(const char *rsc)
-{
-    int offset = 0;
-    static int xpath_max = 1024;
-    gboolean rv = TRUE;
-    xmlNode *xml_search = NULL;
-    char *xpath_string = NULL;
-    const char *managed = NULL;
-
-    xpath_string = calloc(1, xpath_max);
-    offset += snprintf(xpath_string + offset, xpath_max - offset,
-                       "%s", get_object_path("resources"));
-    offset += snprintf(xpath_string + offset, xpath_max - offset,
-                       "//*[@id=\"%s\"]", rsc);
-    offset += snprintf(xpath_string + offset, xpath_max - offset, "//nvpair[");
-    offset += snprintf(xpath_string + offset, xpath_max - offset,
-                       "@name=\"%s\"", XML_RSC_ATTR_MANAGED);
-    offset += snprintf(xpath_string + offset, xpath_max - offset, "]");
-
-    if (fsa_cib_conn->cmds->query(fsa_cib_conn, xpath_string, &xml_search,
-            cib_sync_call | cib_scope_local | cib_xpath) == pcmk_ok) {
-        managed = crm_element_value(xml_search, XML_NVPAIR_ATTR_VALUE);
-        if (managed && (crm_is_true(managed) == FALSE)) {
-            rv = FALSE;
-        }
-    }
-
-    free(xpath_string);
-    free_xml(xml_search);
-    return rv;
-}

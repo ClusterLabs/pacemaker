@@ -253,6 +253,7 @@
 #  define XML_NODE_IS_PEER    	"crmd"
 #  define XML_NODE_IS_REMOTE    	"remote_node"
 #  define XML_NODE_IS_FENCED		"node_fenced"
+#  define XML_NODE_IS_MAINTENANCE   "node_in_maintenance"
 
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
 #  define XML_CIB_ATTR_STONITH	    	"stonith"
@@ -294,6 +295,7 @@
 #  define XML_GRAPH_TAG_PSEUDO_EVENT	"pseudo_event"
 #  define XML_GRAPH_TAG_CRM_EVENT	"crm_event"
 #  define XML_GRAPH_TAG_DOWNED            "downed"
+#  define XML_GRAPH_TAG_MAINTENANCE       "maintenance"
 
 #  define XML_TAG_RULE			"rule"
 #  define XML_RULE_ATTR_SCORE		"score"

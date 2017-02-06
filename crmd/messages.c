@@ -868,6 +868,11 @@ handle_request(xmlNode * stored_msg, enum crmd_fsa_cause cause)
             reap_crm_member(id, name);
         }
 
+    } else if (strcmp(op, CRM_OP_MAINTENANCE_NODES) == 0) {
+        xmlNode *xml = get_message_xml(stored_msg, F_CRM_DATA);
+
+        remote_ra_process_maintenance_nodes(xml);
+
     } else {
         crm_err("Unexpected request (%s) sent to %s", op, AM_I_DC ? "the DC" : "non-DC node");
         crm_log_xml_err(stored_msg, "Unexpected");

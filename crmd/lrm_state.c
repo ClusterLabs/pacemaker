@@ -572,7 +572,7 @@ remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
         crm_notice("%s requested shutdown of its remote connection",
                    lrm_state->node_name);
 
-        if (crmd_is_rsc_managed(lrm_state->node_name)) {
+        if (!remote_ra_is_in_maintenance(lrm_state)) {
             now_s = crm_itoa(now);
             update_attrd(lrm_state->node_name, XML_CIB_ATTR_SHUTDOWN, now_s, NULL, TRUE);
             free(now_s);
@@ -860,3 +860,4 @@ lrm_state_unregister_rsc(lrm_state_t * lrm_state,
 
     return ((lrmd_t *) lrm_state->conn)->cmds->unregister_rsc(lrm_state->conn, rsc_id, options);
 }
+
