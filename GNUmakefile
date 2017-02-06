@@ -52,6 +52,7 @@ lparen = (
 rparen = )
 SHORTTAG ?= $(shell case $(TAG) in Pacemaker-*$(rparen) echo '$(TAG)' | cut -c11-;; \
 	      *$(rparen) git log --pretty=format:%h -n 1 '$(TAG)';; esac)
+SHORTTAG_ABBREV = $(shell printf %s '$(SHORTTAG)' | wc -c)
 WITH    ?= --without doc
 #WITH    ?= --without=doc --with=gcov
 
@@ -192,8 +193,9 @@ srpm-%:	export $(PACKAGE)-%.spec
 	if [ -e $(BUILD_COUNTER) ]; then					\
 		echo $(COUNT) > $(BUILD_COUNTER);				\
 	fi
-	sed -e 's/global\ specversion.*/global\ specversion\ $(SPECVERSION)/' \
-	    -e 's/global\ commit.*/global\ commit\ $(TAG)/' \
+	sed -e 's/global\ specversion\ .*/global\ specversion\ $(SPECVERSION)/' \
+	    -e 's/global\ commit\ .*/global\ commit\ $(TAG)/' \
+	    -e 's/global\ commit_abbrev\ .*/global\ commit_abbrev\ $(SHORTTAG_ABBREV)/' \
 	    -i $(PACKAGE).spec
 	$(call rpmbuild-with,$(WITH),-bs --define "dist .$*" $(RPM_OPTS),$(PACKAGE).spec)
 
