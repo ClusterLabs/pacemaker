@@ -45,13 +45,13 @@ ARCH    ?= $(shell test -e /etc/fedora-release && rpm --eval %{_arch})
 MOCK_CFG ?= $(shell test -e /etc/fedora-release && echo fedora-$(F)-$(ARCH))
 DISTRO  ?= $(shell test -e /etc/SuSE-release && echo suse; echo fedora)
 COMMIT  ?= HEAD
-TAG     ?= $(shell T=$$(git describe --all "$(COMMIT)" | sed -n 's|tags/\(.*\)|\1|p'); \
+TAG     ?= $(shell T=$$(git describe --all '$(COMMIT)' | sed -n 's|tags/\(.*\)|\1|p'); \
 	     test -n "$${T}" && echo "$${T}" \
-	       || git log --pretty="format:%H" -n 1 "$(COMMIT)")
+	       || git log --pretty=format:%H -n 1 '$(COMMIT)')
 lparen = (
 rparen = )
-SHORTTAG ?= $(shell case $(TAG) in Pacemaker-*$(rparen) echo $(TAG) | cut -c11-;; \
-	      *$(rparen) git log --pretty="format:%h" -n 1 "$(TAG)";; esac)
+SHORTTAG ?= $(shell case $(TAG) in Pacemaker-*$(rparen) echo '$(TAG)' | cut -c11-;; \
+	      *$(rparen) git log --pretty=format:%h -n 1 '$(TAG)';; esac)
 WITH    ?= --without doc
 #WITH    ?= --without=doc --with=gcov
 
@@ -192,8 +192,9 @@ srpm-%:	export $(PACKAGE)-%.spec
 	if [ -e $(BUILD_COUNTER) ]; then					\
 		echo $(COUNT) > $(BUILD_COUNTER);				\
 	fi
-	sed -i 's/global\ specversion.*/global\ specversion\ $(SPECVERSION)/' $(PACKAGE).spec
-	sed -i 's/global\ commit.*/global\ commit\ $(TAG)/' $(PACKAGE).spec
+	sed -e 's/global\ specversion.*/global\ specversion\ $(SPECVERSION)/' \
+	    -e 's/global\ commit.*/global\ commit\ $(TAG)/' \
+	    -i $(PACKAGE).spec
 	$(call rpmbuild-with,$(WITH),-bs --define "dist .$*" $(RPM_OPTS),$(PACKAGE).spec)
 
 chroot: mock-$(MOCK_CFG) mock-install-$(MOCK_CFG) mock-sh-$(MOCK_CFG)
