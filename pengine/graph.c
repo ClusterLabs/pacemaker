@@ -948,6 +948,9 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
         if (router_node) {
             crm_xml_add(action_xml, XML_LRM_ATTR_ROUTER_NODE, router_node->details->uname);
         }
+
+        g_hash_table_insert(action->meta, strdup(XML_LRM_ATTR_TARGET), strdup(action->node->details->uname));
+        g_hash_table_insert(action->meta, strdup(XML_LRM_ATTR_TARGET_UUID), strdup(action->node->details->id));
     }
 
     /* No details if this action is only being listed in the inputs section */

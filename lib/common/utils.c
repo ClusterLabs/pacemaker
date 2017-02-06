@@ -894,6 +894,8 @@ filter_action_parameters(xmlNode * param_set, const char *version)
         XML_ATTR_ID,
         XML_ATTR_CRM_VERSION,
         XML_LRM_ATTR_OP_DIGEST,
+        XML_LRM_ATTR_TARGET,
+        XML_LRM_ATTR_TARGET_UUID,
     };
 
     gboolean do_delete = FALSE;

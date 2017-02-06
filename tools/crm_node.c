@@ -951,7 +951,11 @@ main(int argc, char **argv)
     }
 
     if (command == 'n') {
-        fprintf(stdout, "%s\n", get_local_node_name());
+        const char *name = getenv("OCF_RESKEY_" CRM_META "_" XML_LRM_ATTR_TARGET);
+        if(name == NULL) {
+            name = get_local_node_name();
+        }
+        fprintf(stdout, "%s\n", name);
         crm_exit(pcmk_ok);
 
     } else if (command == 'N') {
