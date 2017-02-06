@@ -62,6 +62,33 @@
   </synapse>
   <synapse id="5">
     <action_set>
+      <pseudo_event id="8" operation="stonith" operation_key="stonith-remote1-reboot" on_node="remote1" on_node_uuid="remote1">
+        <attributes CRM_meta_on_node="remote1" CRM_meta_on_node_uuid="remote1" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="remote1"/>
+        </downed>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="2" operation="stop" operation_key="FAKE_stop_0" on_node="18builder" on_node_uuid="5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <pseudo_event id="7" operation="stonith_complete" operation_key="stonith_complete">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="8" operation="stonith" operation_key="stonith-remote1-reboot" on_node="remote1" on_node_uuid="remote1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7">
+    <action_set>
       <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped">
         <attributes />
       </pseudo_event>
@@ -69,6 +96,9 @@
     <inputs>
       <trigger>
         <rsc_op id="2" operation="stop" operation_key="FAKE_stop_0" on_node="18builder" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="7" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>

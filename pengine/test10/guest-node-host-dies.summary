@@ -1,0 +1,73 @@
+
+Current cluster status:
+Node rhel7-1 (1): UNCLEAN (offline)
+Online: [ rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
+
+ Fencing	(stonith:fence_xvm):	Started rhel7-4 
+ rsc_rhel7-1	(ocf::heartbeat:IPaddr2):	Started rhel7-1 ( UNCLEAN ) 
+ container1	(ocf::heartbeat:VirtualDomain):	FAILED rhel7-1 (UNCLEAN)
+ container2	(ocf::heartbeat:VirtualDomain):	FAILED rhel7-1 (UNCLEAN)
+ Master/Slave Set: lxc-ms-master [lxc-ms]
+     Stopped: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
+
+Transition Summary:
+ * Restart Fencing	(Started rhel7-4)
+ * Move    rsc_rhel7-1	(Started rhel7-1 -> rhel7-5)
+ * Recover container1	(Started rhel7-1 -> rhel7-2)
+ * Recover container2	(Started rhel7-1 -> rhel7-3)
+ * Recover lxc-ms:0	(Master lxc1)
+ * Recover lxc-ms:1	(Slave lxc2)
+ * Move    lxc1	(Started rhel7-1 -> rhel7-2)
+ * Move    lxc2	(Started rhel7-1 -> rhel7-3)
+
+Executing cluster transition:
+ * Resource action: Fencing         stop on rhel7-4
+ * Pseudo action:   lxc-ms-master_demote_0
+ * Fencing rhel7-1 (reboot)
+ * Pseudo action:   rsc_rhel7-1_stop_0
+ * Pseudo action:   lxc1_stop_0
+ * Pseudo action:   lxc2_stop_0
+ * Pseudo action:   container1_stop_0
+ * Pseudo action:   container2_stop_0
+ * Pseudo action:   stonith-lxc2-reboot on lxc2
+ * Pseudo action:   stonith-lxc1-reboot on lxc1
+ * Pseudo action:   stonith_complete
+ * Resource action: rsc_rhel7-1     start on rhel7-5
+ * Resource action: container1      start on rhel7-2
+ * Resource action: container2      start on rhel7-3
+ * Pseudo action:   lxc-ms_demote_0
+ * Pseudo action:   lxc-ms-master_demoted_0
+ * Pseudo action:   lxc-ms-master_stop_0
+ * Resource action: lxc1            start on rhel7-2
+ * Resource action: lxc2            start on rhel7-3
+ * Resource action: rsc_rhel7-1     monitor=5000 on rhel7-5
+ * Pseudo action:   lxc-ms_stop_0
+ * Pseudo action:   lxc-ms_stop_0
+ * Pseudo action:   lxc-ms-master_stopped_0
+ * Pseudo action:   lxc-ms-master_start_0
+ * Resource action: lxc1            monitor=30000 on rhel7-2
+ * Resource action: lxc2            monitor=30000 on rhel7-3
+ * Pseudo action:   all_stopped
+ * Resource action: Fencing         start on rhel7-4
+ * Resource action: Fencing         monitor=120000 on rhel7-4
+ * Resource action: lxc-ms          start on lxc1
+ * Resource action: lxc-ms          start on lxc2
+ * Pseudo action:   lxc-ms-master_running_0
+ * Resource action: lxc-ms          monitor=10000 on lxc2
+ * Pseudo action:   lxc-ms-master_promote_0
+ * Resource action: lxc-ms          promote on lxc1
+ * Pseudo action:   lxc-ms-master_promoted_0
+
+Revised cluster status:
+Online: [ rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
+OFFLINE: [ rhel7-1 ]
+Containers: [ lxc1:container1 lxc2:container2 ]
+
+ Fencing	(stonith:fence_xvm):	Started rhel7-4 
+ rsc_rhel7-1	(ocf::heartbeat:IPaddr2):	Started rhel7-5 
+ container1	(ocf::heartbeat:VirtualDomain):	Started rhel7-2 
+ container2	(ocf::heartbeat:VirtualDomain):	Started rhel7-3 
+ Master/Slave Set: lxc-ms-master [lxc-ms]
+     Masters: [ lxc1 ]
+     Slaves: [ lxc2 ]
+

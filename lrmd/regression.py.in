@@ -1029,7 +1029,7 @@ if __name__ == "__main__":
         test.add_sys_cmd("rm", "-f %s %s" % (state_file_expected, state_file_default))
 
         # Register and start the resource.
-        test.add_cmd("-c register_rsc -r test_rsc -P heartbeat -C ocf -T Dummy "
+        test.add_cmd("-c register_rsc -r test_rsc -P pacemaker -C ocf -T Dummy "
                      "-l 'NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete' "
                      "%s" % (self.action_timeout))
         test.add_cmd("-c exec -r test_rsc -a start -t 6000 %s" % cmd_params)

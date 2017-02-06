@@ -1,7 +1,7 @@
-* Thu Nov 03 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.16-rc1
-- Update source tarball to revision: 2fc4716
-- Changesets: 360
-- Diff:       148 files changed, 7187 insertions(+), 5592 deletions(-)
+* Wed Nov 30 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.16-1
+- Update source tarball to revision: 76876b3
+- Changesets: 382
+- Diff:       145 files changed, 7200 insertions(+), 5621 deletions(-)
 
 - Features added since Pacemaker-1.1.15
   + Location constraints may use rsc-pattern, with submatches expanded
@@ -42,6 +42,7 @@
   + resources: ping - avoid temporary files for fping check, support FreeBSD
   + resources: SysInfo - better support for FreeBSD
   + resources: variable name typo in docker-wrapper
+  + systemd: order pacemaker after time-sync target
   + tools: correct attrd_updater help and error messages when using CMAN
   + tools: crm_standby --version/--help should work without cluster running
   + tools: make crm_report sanitize CIB before generating readable version

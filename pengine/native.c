@@ -425,7 +425,7 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 
     set_bit(rsc->flags, pe_rsc_allocating);
     print_resource(alloc_details, "Allocating: ", rsc, FALSE);
-    dump_node_scores(alloc_details, rsc, "Pre-allloc", rsc->allowed_nodes);
+    dump_node_scores(alloc_details, rsc, "Pre-alloc", rsc->allowed_nodes);
 
     for (gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
         rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
@@ -1234,8 +1234,10 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     pe_rsc_trace(rsc, "Creating actions for %s: %s->%s", rsc->id,
                  role2text(rsc->role), role2text(rsc->next_role));
 
+    /* Create any additional actions required when bringing resource down and
+     * back up to same level.
+     */
     role = rsc->role;
-    /* Potentiall optional steps on brining the resource down and back up to the same level */
     while (role != RSC_ROLE_STOPPED) {
         next_role = rsc_state_matrix[role][RSC_ROLE_STOPPED];
         pe_rsc_trace(rsc, "Down: Executing: %s->%s (%s)%s", role2text(role), role2text(next_role),
@@ -2879,7 +2881,7 @@ native_start_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set
 
         } else if (safe_str_eq(action->task, RSC_START)
                    && NULL == pe_hash_table_lookup(rsc->known_on, target->details->id)) {
-            /* if known == NULL, then we dont know if
+            /* if known == NULL, then we don't know if
              *   the resource is active on the node
              *   we're about to shoot
              *
@@ -2891,7 +2893,7 @@ native_start_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set
              * it's analogous to waiting for all the probes
              *   for rscX to complete before starting rscX
              *
-             * the most likely explaination is that the
+             * the most likely explanation is that the
              *   DC died and took its status with it
              */
 
@@ -2900,48 +2902,6 @@ native_start_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set
             order_actions(all_stopped, action, pe_order_optional | pe_order_runnable_left);
         }
     }
-}
-
-/* User data to pass to guest node iterator */
-struct action_list_s {
-    GListPtr search_list; /* list of actions to search */
-    GListPtr result_list; /* list of matching actions for this node */
-    const char *key;      /* action key to match */
-};
-
-/*!
- * \internal
- * \brief Prepend a node's actions matching a key to a list
- *
- * \param[in]     node  Guest node
- * \param[in/out] data   User data
- */
-static void prepend_node_actions(const node_t *node, void *data)
-{
-    GListPtr actions;
-    struct action_list_s *info = (struct action_list_s *) data;
-
-    actions = find_actions(info->search_list, info->key, node);
-    info->result_list = g_list_concat(actions, info->result_list);
-}
-
-static GListPtr
-find_fence_target_node_actions(GListPtr search_list, const char *key, node_t *fence_target, pe_working_set_t *data_set)
-{
-    struct action_list_s action_list;
-
-    /* Actions on the target that match the key are implied by the fencing */
-    action_list.search_list = search_list;
-    action_list.result_list = find_actions(search_list, key, fence_target);
-    action_list.key = key;
-
-    /*
-     * If the target is a host for any guest nodes, actions on those nodes
-     * that match the key are also implied by the fencing.
-     */
-    pe_foreach_guest_node(data_set, fence_target, prepend_node_actions, &action_list);
-
-    return action_list.result_list;
 }
 
 static void
@@ -2963,8 +2923,7 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
 
     /* Get a list of stop actions potentially implied by the fencing */
     key = stop_key(rsc);
-    action_list = find_fence_target_node_actions(rsc->actions, key, target,
-                                                 data_set);
+    action_list = find_actions(rsc->actions, key, target);
     free(key);
 
     for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
@@ -3061,8 +3020,7 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
 
     /* Get a list of demote actions potentially implied by the fencing */
     key = demote_key(rsc);
-    action_list = find_fence_target_node_actions(rsc->actions, key, target,
-                                                 data_set);
+    action_list = find_actions(rsc->actions, key, target);
     free(key);
 
     for (gIter = action_list; gIter != NULL; gIter = gIter->next) {

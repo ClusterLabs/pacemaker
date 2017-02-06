@@ -68,6 +68,155 @@ static struct crm_option long_options[] = {
 };
 /* *INDENT-ON* */
 
+static void
+print_patch(xmlNode *patch)
+{
+    char *buffer = dump_xml_formatted(patch);
+
+    printf("%s\n", crm_str(buffer));
+    free(buffer);
+    fflush(stdout);
+}
+
+static int
+apply_patch(xmlNode *input, xmlNode *patch, gboolean as_cib)
+{
+    int rc;
+    xmlNode *output = copy_xml(input);
+
+    rc = xml_apply_patchset(output, patch, as_cib);
+    if (rc != pcmk_ok) {
+        fprintf(stderr, "Could not apply patch: %s\n", pcmk_strerror(rc));
+        free_xml(output);
+        return rc;
+    }
+
+    if (output != NULL) {
+        const char *version;
+        char *buffer;
+
+        print_patch(output);
+        free_xml(output);
+
+        version = crm_element_value(output, XML_ATTR_CRM_VERSION);
+        buffer = calculate_xml_versioned_digest(output, FALSE, TRUE, version);
+        crm_trace("Digest: %s\n", crm_str(buffer));
+        free(buffer);
+    }
+    return pcmk_ok;
+}
+
+static void
+log_patch_cib_versions(xmlNode *patch)
+{
+    int add[] = { 0, 0, 0 };
+    int del[] = { 0, 0, 0 };
+
+    const char *fmt = NULL;
+    const char *digest = NULL;
+
+    xml_patch_versions(patch, add, del);
+    fmt = crm_element_value(patch, "format");
+    digest = crm_element_value(patch, XML_ATTR_DIGEST);
+
+    if (add[2] != del[2] || add[1] != del[1] || add[0] != del[0]) {
+        crm_info("Patch: --- %d.%d.%d %s", del[0], del[1], del[2], fmt);
+        crm_info("Patch: +++ %d.%d.%d %s", add[0], add[1], add[2], digest);
+    }
+}
+
+static void
+strip_patch_cib_version(xmlNode *patch, const char **vfields, size_t nvfields)
+{
+    int format = 1;
+
+    crm_element_value_int(patch, "format", &format);
+    if (format == 2) {
+        xmlNode *version_xml = find_xml_node(patch, "version", FALSE);
+
+        if (version_xml) {
+            free_xml(version_xml);
+        }
+
+    } else {
+        int i = 0;
+
+        const char *tags[] = {
+            XML_TAG_DIFF_REMOVED,
+            XML_TAG_DIFF_ADDED,
+        };
+
+        for (i = 0; i < DIMOF(tags); i++) {
+            xmlNode *tmp = NULL;
+            int lpc;
+
+            tmp = find_xml_node(patch, tags[i], FALSE);
+            if (tmp) {
+                for (lpc = 0; lpc < nvfields; lpc++) {
+                    xml_remove_prop(tmp, vfields[lpc]);
+                }
+
+                tmp = find_xml_node(tmp, XML_TAG_CIB, FALSE);
+                if (tmp) {
+                    for (lpc = 0; lpc < nvfields; lpc++) {
+                        xml_remove_prop(tmp, vfields[lpc]);
+                    }
+                }
+            }
+        }
+    }
+}
+
+static int
+generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
+               gboolean as_cib, gboolean no_version)
+{
+    xmlNode *output = NULL;
+
+    const char *vfields[] = {
+        XML_ATTR_GENERATION_ADMIN,
+        XML_ATTR_GENERATION,
+        XML_ATTR_NUMUPDATES,
+    };
+
+    /* If we're ignoring the version, make the version information
+     * identical, so it isn't detected as a change. */
+    if (no_version) {
+        int lpc;
+
+        for (lpc = 0; lpc < DIMOF(vfields); lpc++) {
+            crm_copy_xml_element(object_1, object_2, vfields[lpc]);
+        }
+    }
+
+    xml_track_changes(object_2, NULL, object_2, FALSE);
+    xml_calculate_changes(object_1, object_2);
+    crm_log_xml_debug(object_2, (xml_file_2? xml_file_2: "target"));
+
+    output = xml_create_patchset(0, object_1, object_2, NULL, FALSE);
+
+    xml_log_changes(LOG_INFO, __FUNCTION__, object_2);
+    xml_accept_changes(object_2);
+
+    if (output == NULL) {
+        return pcmk_ok;
+    }
+
+    patchset_process_digest(output, object_1, object_2, as_cib);
+
+    if (as_cib) {
+        log_patch_cib_versions(output);
+
+    } else if (no_version) {
+        strip_patch_cib_version(output, vfields, DIMOF(vfields));
+    }
+
+    xml_log_patchset(LOG_NOTICE, __FUNCTION__, output);
+    print_patch(output);
+    free_xml(output);
+    return 1;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -79,9 +228,9 @@ main(int argc, char **argv)
     gboolean no_version = FALSE;
     int argerr = 0;
     int flag;
+    int rc = pcmk_ok;
     xmlNode *object_1 = NULL;
     xmlNode *object_2 = NULL;
-    xmlNode *output = NULL;
     const char *xml_file_1 = NULL;
     const char *xml_file_2 = NULL;
 
@@ -89,8 +238,8 @@ main(int argc, char **argv)
 
     crm_log_cli_init("crm_diff");
     crm_set_options(NULL, "original_xml operation [options]", long_options,
-                    "A utility for comparing Pacemaker configurations (XML format)\n\n"
-                    "The tool produces a custom (diff-like) output which it can also apply like a patch\n");
+                    "crm_diff can compare two Pacemaker configurations (in XML format) to\n"
+                    "produce a custom diff-like output, or apply such an output as a patch\n");
 
     if (argc < 2) {
         crm_help('?', EX_USAGE);
@@ -137,7 +286,7 @@ main(int argc, char **argv)
                 crm_help(flag, EX_OK);
                 break;
             default:
-                printf("Argument code 0%o (%c)" " is not (?yet?) supported\n", flag, flag);
+                printf("Argument %c (0%o) is not (yet?) supported\n", flag, flag);
                 ++argerr;
                 break;
         }
@@ -156,6 +305,13 @@ main(int argc, char **argv)
 
     if (argerr) {
         crm_help('?', EX_USAGE);
+    }
+
+    if (apply && no_version) {
+        fprintf(stderr, "warning: -u/--no-version ignored with -p/--patch\n");
+    } else if (as_cib && no_version) {
+        fprintf(stderr, "error: -u/--no-version incompatible with -c/--cib\n");
+        return 1;
     }
 
     if (raw_1) {
@@ -190,117 +346,12 @@ main(int argc, char **argv)
     }
 
     if (apply) {
-        int rc;
-
-        output = copy_xml(object_1);
-        rc = xml_apply_patchset(output, object_2, as_cib);
-        if(rc != pcmk_ok) {
-            fprintf(stderr, "Could not apply patch: %s\n", pcmk_strerror(rc));
-            return rc;
-        }
+        rc = apply_patch(object_1, object_2, as_cib);
     } else {
-        xml_track_changes(object_2, NULL, object_2, FALSE);
-        xml_calculate_changes(object_1, object_2);
-        crm_log_xml_debug(object_2, xml_file_2?xml_file_2:"target");
-
-        output = xml_create_patchset(0, object_1, object_2, NULL, FALSE);
-
-        xml_log_changes(LOG_INFO, __FUNCTION__, object_2);
-        xml_accept_changes(object_2);
-
-        if (output) {
-            patchset_process_digest(output, object_1, object_2, as_cib);
-        }
-
-        if(as_cib && output) {
-            int add[] = { 0, 0, 0 };
-            int del[] = { 0, 0, 0 };
-
-            const char *fmt = NULL;
-            const char *digest = NULL;
-
-            xml_patch_versions(output, add, del);
-            fmt = crm_element_value(output, "format");
-            digest = crm_element_value(output, XML_ATTR_DIGEST);
-
-            if (add[2] != del[2] || add[1] != del[1] || add[0] != del[0]) {
-                crm_info("Patch: --- %d.%d.%d %s", del[0], del[1], del[2], fmt);
-                crm_info("Patch: +++ %d.%d.%d %s", add[0], add[1], add[2], digest);
-            }
-
-        } else if (output && no_version) {
-            int format = 1;
-
-            crm_element_value_int(output, "format", &format);
-            if (format == 2) {
-                xmlNode *version_xml = find_xml_node(output, "version", FALSE);
-
-                if (version_xml) {
-                    free_xml(version_xml);
-                }
-
-            } else {
-                int i = 0;
-
-                const char *tags[] = {
-                    XML_TAG_DIFF_REMOVED,
-                    XML_TAG_DIFF_ADDED,
-                };
-
-                const char *vfields[] = {
-                    XML_ATTR_GENERATION_ADMIN,
-                    XML_ATTR_GENERATION,
-                    XML_ATTR_NUMUPDATES,
-                };
-
-                for (i = 0; i < DIMOF(tags); i++) {
-                    xmlNode *tmp = NULL;
-
-                    tmp = find_xml_node(output, tags[i], FALSE);
-                    if (tmp) {
-                        int lpc = 0;
-
-                        for (lpc = 0; lpc < DIMOF(vfields); lpc++) {
-                            xml_remove_prop(tmp, vfields[lpc]);
-                        }
-
-                        tmp = find_xml_node(tmp, XML_TAG_CIB, FALSE);
-                        if (tmp) {
-                            for (lpc = 0; lpc < DIMOF(vfields); lpc++) {
-                                xml_remove_prop(tmp, vfields[lpc]);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        xml_log_patchset(LOG_NOTICE, __FUNCTION__, output);
-    }
-
-    if (output != NULL) {
-        char *buffer = dump_xml_formatted(output);
-
-        fprintf(stdout, "%s\n", crm_str(buffer));
-        free(buffer);
-
-        fflush(stdout);
-
-        if (apply) {
-            const char *version = crm_element_value(output, XML_ATTR_CRM_VERSION);
-
-            buffer = calculate_xml_versioned_digest(output, FALSE, TRUE, version);
-            crm_trace("Digest: %s\n", crm_str(buffer));
-            free(buffer);
-        }
+        rc = generate_patch(object_1, object_2, xml_file_2, as_cib, no_version);
     }
 
     free_xml(object_1);
     free_xml(object_2);
-    free_xml(output);
-
-    if (apply == FALSE && output != NULL) {
-        return 1;
-    }
-
-    return 0;
+    return rc;
 }

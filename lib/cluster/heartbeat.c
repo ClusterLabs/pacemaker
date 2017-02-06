@@ -117,7 +117,7 @@ convert_ha_field(xmlNode * parent, void *msg_v, int lpc)
 
             if (rc == BZ_OUTBUFF_FULL) {
                 size = size * 2;
-                /* dont try to allocate more memory than we have */
+                /* don't try to allocate more memory than we have */
                 if (size > 0) {
                     goto retry;
                 }
@@ -489,7 +489,7 @@ ha_msg_dispatch(ll_cluster_t * cluster_conn, gpointer user_data)
         if (cluster_conn->llc_ops->msgready(cluster_conn) == 0) {
             crm_trace("no message ready yet");
         }
-        /* invoke the callbacks but dont block.
+        /* invoke the callbacks but don't block.
          * cluster_conn->llc_ops->rcvmsg(cluster_conn, 0); */
         msg = cluster_conn->llc_ops->readmsg(cluster_conn, 0);
         if (msg) {

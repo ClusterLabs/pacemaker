@@ -377,7 +377,7 @@ throttle_handle_load(float load, const char *desc, int cores)
         return throttle_low;
     }
 
-    crm_trace("Negligable %s detected: %f", desc, adjusted_load);
+    crm_trace("Negligible %s detected: %f", desc, adjusted_load);
     return throttle_none;
 }
 
@@ -433,7 +433,7 @@ throttle_mode(void)
             mode |= throttle_low;
 
         } else {
-            crm_trace("Negligable %s detected: %f", desc, load);
+            crm_trace("Negligible %s detected: %f", desc, load);
         }
     }
 

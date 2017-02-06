@@ -10,6 +10,9 @@
       <trigger>
         <rsc_op id="5" operation="stop" operation_key="container1_stop_0" on_node="18node2" on_node_uuid="2"/>
       </trigger>
+      <trigger>
+        <pseudo_event id="45" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
     </inputs>
   </synapse>
   <synapse id="1">
@@ -58,6 +61,9 @@
       <trigger>
         <rsc_op id="42" operation="start" operation_key="lxc1_start_0" on_node="18node2" on_node_uuid="2"/>
       </trigger>
+      <trigger>
+        <pseudo_event id="45" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
     </inputs>
   </synapse>
   <synapse id="4">
@@ -68,10 +74,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="5" operation="stop" operation_key="container1_stop_0" on_node="18node2" on_node_uuid="2"/>
+        <pseudo_event id="30" operation="stop" operation_key="M-clone_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="30" operation="stop" operation_key="M-clone_stop_0"/>
+        <pseudo_event id="46" operation="stonith" operation_key="stonith-lxc1-reboot" on_node="lxc1" on_node_uuid="lxc1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -98,7 +104,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="5" operation="stop" operation_key="container1_stop_0" on_node="18node2" on_node_uuid="2"/>
+        <pseudo_event id="46" operation="stonith" operation_key="stonith-lxc1-reboot" on_node="lxc1" on_node_uuid="lxc1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -159,6 +165,9 @@
       <trigger>
         <rsc_op id="42" operation="start" operation_key="lxc1_start_0" on_node="18node2" on_node_uuid="2"/>
       </trigger>
+      <trigger>
+        <pseudo_event id="45" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
     </inputs>
   </synapse>
   <synapse id="11">
@@ -169,7 +178,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="5" operation="stop" operation_key="container1_stop_0" on_node="18node2" on_node_uuid="2"/>
+        <pseudo_event id="46" operation="stonith" operation_key="stonith-lxc1-reboot" on_node="lxc1" on_node_uuid="lxc1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -186,6 +195,9 @@
       </trigger>
       <trigger>
         <rsc_op id="41" operation="stop" operation_key="lxc1_stop_0" on_node="18node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="45" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -216,6 +228,33 @@
   </synapse>
   <synapse id="15">
     <action_set>
+      <pseudo_event id="46" operation="stonith" operation_key="stonith-lxc1-reboot" on_node="lxc1" on_node_uuid="lxc1">
+        <attributes CRM_meta_on_node="lxc1" CRM_meta_on_node_uuid="lxc1" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="lxc1"/>
+        </downed>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="5" operation="stop" operation_key="container1_stop_0" on_node="18node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="16">
+    <action_set>
+      <pseudo_event id="45" operation="stonith_complete" operation_key="stonith_complete">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="46" operation="stonith" operation_key="stonith-lxc1-reboot" on_node="lxc1" on_node_uuid="lxc1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="17">
+    <action_set>
       <pseudo_event id="11" operation="all_stopped" operation_key="all_stopped">
         <attributes />
       </pseudo_event>
@@ -232,6 +271,9 @@
       </trigger>
       <trigger>
         <rsc_op id="41" operation="stop" operation_key="lxc1_stop_0" on_node="18node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="45" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>

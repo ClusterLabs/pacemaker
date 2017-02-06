@@ -988,14 +988,41 @@ dynamic_list_search_cb(GPid pid, int rc, const char *output, gpointer user_data)
 
 /*!
  * \internal
+ * \brief Returns true if any key in first is not in second or second has a different value for key
+ */
+static int
+device_params_diff(GHashTable *first, GHashTable *second) {
+    char *key = NULL;
+    char *value = NULL;
+    GHashTableIter gIter;
+
+    g_hash_table_iter_init(&gIter, first);
+    while (g_hash_table_iter_next(&gIter, (void **)&key, (void **)&value)) {
+
+        if(strstr(key, "CRM_meta") == key) {
+            continue;
+        } else if(strcmp(key, "crm_feature_set") == 0) {
+            continue;
+        } else {
+            char *other_value = g_hash_table_lookup(second, key);
+
+            if (!other_value || safe_str_neq(other_value, value)) {
+                crm_trace("Different value for %s: %s != %s", key, other_value, value);
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
+
+/*!
+ * \internal
  * \brief Checks to see if an identical device already exists in the device_list
  */
 static stonith_device_t *
 device_has_duplicate(stonith_device_t * device)
 {
-    char *key = NULL;
-    char *value = NULL;
-    GHashTableIter gIter;
     stonith_device_t *dup = g_hash_table_lookup(device_list, device->id);
 
     if (!dup) {
@@ -1008,21 +1035,9 @@ device_has_duplicate(stonith_device_t * device)
     }
 
     /* Use calculate_operation_digest() here? */
-    g_hash_table_iter_init(&gIter, device->params);
-    while (g_hash_table_iter_next(&gIter, (void **)&key, (void **)&value)) {
-
-        if(strstr(key, "CRM_meta") == key) {
-            continue;
-        } else if(strcmp(key, "crm_feature_set") == 0) {
-            continue;
-        } else {
-            char *other_value = g_hash_table_lookup(dup->params, key);
-
-            if (!other_value || safe_str_neq(other_value, value)) {
-                crm_trace("Different value for %s: %s != %s", key, other_value, value);
-                return NULL;
-            }
-        }
+    if (device_params_diff(device->params, dup->params) ||
+        device_params_diff(dup->params, device->params)) {
+        return NULL;
     }
 
     crm_trace("Match");

@@ -517,7 +517,11 @@ indexterm:[Constraints,Resource Sets,sequential]
 |require-all
 |true
 |Whether all members of the set must be active before continuing.
- Meaningful within +rsc_order+. '(since 1.1.13)'
+ With the current implementation, the cluster may continue even if only one
+ member of the set is started, but if more than one member of the set is
+ starting at the same time, the cluster will still wait until all of those have
+ started before continuing (this may change in future versions).
+ Meaningful within +rsc_order+. '(since 1.1.7)'
 indexterm:[require-all,Resource Sets]
 indexterm:[Constraints,Resource Sets,require-all]
 

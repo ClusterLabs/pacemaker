@@ -639,11 +639,11 @@ handle_failcount_op(xmlNode * stored_msg)
 
         crm_info("Removing failcount for %s", rsc);
 
-        attr = crm_concat("fail-count", rsc, '-');
+        attr = crm_failcount_name(rsc);
         update_attrd(uname, attr, NULL, NULL, is_remote_node);
         free(attr);
 
-        attr = crm_concat("last-failure", rsc, '-');
+        attr = crm_lastfailure_name(rsc);
         update_attrd(uname, attr, NULL, NULL, is_remote_node);
         free(attr);
 

@@ -363,13 +363,13 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
         && (flags & pe_action_optional) == 0) {
         processed = TRUE;
         crm_trace("%s implies %s printed", first->uuid, then->uuid);
-        update_action_flags(then, pe_action_print_always, __FUNCTION__);      /* dont care about changed */
+        update_action_flags(then, pe_action_print_always, __FUNCTION__);  /* don't care about changed */
     }
 
     if ((type & pe_order_implies_first_printed) && (flags & pe_action_optional) == 0) {
         processed = TRUE;
         crm_trace("%s implies %s printed", then->uuid, first->uuid);
-        update_action_flags(first, pe_action_print_always, __FUNCTION__);     /* dont care about changed */
+        update_action_flags(first, pe_action_print_always, __FUNCTION__); /* don't care about changed */
     }
 
     if ((type & pe_order_implies_then
@@ -715,13 +715,7 @@ stonith_constraints(node_t * node, action_t * stonith_op, pe_working_set_t * dat
 
     CRM_CHECK(stonith_op != NULL, return FALSE);
     for (r = data_set->resources; r != NULL; r = r->next) {
-        resource_t *rsc = (resource_t *) r->data;
-
-        if ((stonith_op->rsc == NULL)
-            || ((stonith_op->rsc != rsc) && (stonith_op->rsc != rsc->container))) {
-
-            rsc_stonith_ordering(rsc, stonith_op, data_set);
-        }
+        rsc_stonith_ordering((resource_t *) r->data, stonith_op, data_set);
     }
     return TRUE;
 }
@@ -888,7 +882,11 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
     }
 
     if (safe_str_eq(action->task, CRM_OP_FENCE)) {
-        action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
+        /* All fences need node info; guest node fences are pseudo-events */
+        action_xml = create_xml_node(NULL,
+                                     is_set(action->flags, pe_action_pseudo)?
+                                     XML_GRAPH_TAG_PSEUDO_EVENT :
+                                     XML_GRAPH_TAG_CRM_EVENT);
 
     } else if (safe_str_eq(action->task, CRM_OP_SHUTDOWN)) {
         action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);

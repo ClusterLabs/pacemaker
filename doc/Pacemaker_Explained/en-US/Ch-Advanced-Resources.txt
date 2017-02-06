@@ -411,17 +411,16 @@ what is about to happen to it.
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,active_uname]
  indexterm:[active_uname,Notification Environment Variable]
 
-|OCF_RESKEY_CRM_meta_notify_inactive_uname
-|Nodes on which resources are not running
- indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,inactive_uname]
- indexterm:[inactive_uname,Notification Environment Variable]
-
 |=========================================================
 
 The variables come in pairs, such as
 +OCF_RESKEY_CRM_meta_notify_start_resource+ and
 +OCF_RESKEY_CRM_meta_notify_start_uname+ and should be treated as an
 array of whitespace-separated elements.
+
++OCF_RESKEY_CRM_meta_notify_inactive_resource+ is an exception as the
+matching +uname+ variable does not exist since inactive resources
+are not running on any node.
 
 Thus in order to indicate that +clone:0+ will be started on +sles-1+,
 +clone:2+ will be started on +sles-3+, and +clone:3+ will be started
@@ -911,11 +910,6 @@ what is about to happen to it.
 |Nodes on which resources are running
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,active_uname]
  indexterm:[active_uname,Notification Environment Variable]
-
-|OCF_RESKEY_CRM_meta_notify_inactive_uname
-|Nodes on which resources are not running
- indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,inactive_uname]
- indexterm:[inactive_uname,Notification Environment Variable]
 
 |_OCF_RESKEY_CRM_meta_notify_master_uname_
 |Nodes on which resources are running in +Master+ mode

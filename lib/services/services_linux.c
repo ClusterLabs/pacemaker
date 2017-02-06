@@ -517,15 +517,23 @@ action_synced_wait(svc_action_t * op, sigset_t *mask)
                 if (1) {
                     /* Clear out the sigchld pipe. */
                     char ch;
-                    while (read(sfd, &ch, 1) == 1);
+                    while (read(sfd, &ch, 1) == 1) /*omit*/;
 #endif
                     wait_rc = waitpid(op->pid, &status, WNOHANG);
 
-                    if (wait_rc < 0){
-                        crm_perror(LOG_ERR, "waitpid() for %d failed", op->pid);
-
-                    } else if (wait_rc > 0) {
+                    if (wait_rc > 0) {
                         break;
+
+                    } else if (wait_rc < 0){
+                        if (errno == ECHILD) {
+                                /* Here, don't dare to kill and bail out... */
+                                break;
+
+                        } else {
+                                /* ...otherwise pretend process still runs. */
+                                wait_rc = 0;
+                        }
+                        crm_perror(LOG_ERR, "waitpid() for %d failed", op->pid);
                     }
                 }
             }
@@ -547,9 +555,8 @@ action_synced_wait(svc_action_t * op, sigset_t *mask)
 
     crm_trace("Child done: %d", op->pid);
     if (wait_rc <= 0) {
-        int killrc = kill(op->pid, SIGKILL);
-
         op->rc = PCMK_OCF_UNKNOWN_ERROR;
+
         if (op->timeout > 0 && timeout <= 0) {
             op->status = PCMK_LRM_OP_TIMEOUT;
             crm_warn("%s:%d - timed out after %dms", op->id, op->pid, op->timeout);
@@ -558,16 +565,15 @@ action_synced_wait(svc_action_t * op, sigset_t *mask)
             op->status = PCMK_LRM_OP_ERROR;
         }
 
-        if (killrc && errno != ESRCH) {
-            crm_err("kill(%d, KILL) failed: %d", op->pid, errno);
+        /* If only child hasn't been successfully waited for, yet.
+           This is to limit killing wrong target a bit more. */
+        if (wait_rc == 0 && waitpid(op->pid, &status, WNOHANG) == 0) {
+            if (kill(op->pid, SIGKILL)) {
+                crm_err("kill(%d, KILL) failed: %d", op->pid, errno);
+            }
+            /* Safe to skip WNOHANG here as we sent non-ignorable signal. */
+            while (waitpid(op->pid, &status, 0) == (pid_t) -1 && errno == EINTR) /*omit*/;
         }
-        /*
-         * From sigprocmask(2):
-         * It is not possible to block SIGKILL or SIGSTOP.  Attempts to do so are silently ignored.
-         *
-         * This makes it safe to skip WNOHANG here
-         */
-        waitpid(op->pid, &status, 0);
 
     } else if (WIFEXITED(status)) {
         op->status = PCMK_LRM_OP_DONE;
