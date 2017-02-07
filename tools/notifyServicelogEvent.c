@@ -167,11 +167,11 @@ main(int argc, char *argv[])
         if (health_status) {
             gboolean rc;
 
-            rc = attrd_update_no_mainloop(NULL,
-                                          'v',
-                                          NULL, health_component, health_status, NULL, NULL, NULL);
-
-            crm_debug("attrd_update_no_mainloop ('%s', '%s') = %d",
+            /* @TODO pass attrd_opt_remote when appropriate */
+            rc = (attrd_update_delegate(NULL, 'v', NULL, health_component,
+                                        health_status, NULL, NULL, NULL, NULL,
+                                        attrd_opt_none) > 0);
+            crm_debug("Updating attribute ('%s', '%s') = %d",
                       health_component, health_status, rc);
         } else {
             crm_err("Error: status2char failed, status = %d", status);
