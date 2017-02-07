@@ -177,22 +177,6 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
     free_xml(generation);
 }
 
-void
-crm_set_join_state(const char *uname, const char *start_state)
-{
-    if (safe_str_eq(start_state, "standby")) {
-        crm_notice("Starting node in %s state (%s)", start_state, uname);
-        update_attrd(uname, XML_CIB_ATTR_STANDBY, "on", NULL, FALSE);
-    } else if (safe_str_eq(start_state, "online")) {
-        crm_notice("Starting node in %s state (%s)", start_state, uname);
-        update_attrd(uname, XML_CIB_ATTR_STANDBY, "off", NULL, FALSE);
-    } else if (safe_str_eq(start_state, "default")) {
-        crm_notice("Starting node by default (%s)", uname);
-    } else {
-        crm_warn("Unrecognized start state '%s', using 'default' (%s)", start_state, uname);
-    }
-}
-
 /*	A_CL_JOIN_RESULT	*/
 /* aka. this is notification that we have (or have not) been accepted */
 void
@@ -267,13 +251,15 @@ do_cl_join_finalize_respond(long long action,
          */
         if (first_join && is_not_set(fsa_input_register, R_SHUTDOWN)) {
             first_join = FALSE;
-            erase_status_tag(fsa_our_uname, XML_TAG_TRANSIENT_NODEATTRS, cib_sync_call);
-            update_attrd(fsa_our_uname, "terminate", NULL, NULL, FALSE);
-            update_attrd(fsa_our_uname, XML_CIB_ATTR_SHUTDOWN, "0", NULL, FALSE);
 
             if (start_state) {
-                crm_set_join_state(fsa_our_uname, start_state);
+                init_transient_attrs(fsa_our_uname, start_state);
+            } else {
+                erase_status_tag(fsa_our_uname, XML_TAG_TRANSIENT_NODEATTRS, 0);
             }
+
+            update_attrd(fsa_our_uname, "terminate", NULL, NULL, FALSE);
+            update_attrd(fsa_our_uname, XML_CIB_ATTR_SHUTDOWN, "0", NULL, FALSE);
         }
 
         send_cluster_message(crm_get_peer(0, fsa_our_dc), crm_msg_crmd, reply, TRUE);
