@@ -188,7 +188,7 @@ science problems -- a fancy way of saying "it takes a really long time
 to solve".
 
 Clearly in a HA cluster, it's not acceptable to spend minutes, let alone hours
-or days, finding an optional solution while services remain unavailable.
+or days, finding an optimal solution while services remain unavailable.
 
 So instead of trying to solve the problem completely, Pacemaker uses a
 'best effort' algorithm for determining which node should host a particular
