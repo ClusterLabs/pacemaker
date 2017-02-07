@@ -936,7 +936,8 @@ notify_deleted(lrm_state_t * lrm_state, ha_msg_input_t * input, const char *rsc_
     const char *from_host = crm_element_value(input->msg, F_CRM_HOST_FROM);
 
     crm_info("Notifying %s on %s that %s was%s deleted",
-             from_sys, from_host, rsc_id, rc == pcmk_ok ? "" : " not");
+             from_sys, (from_host? from_host : "localhost"), rsc_id,
+             ((rc == pcmk_ok)? "" : " not"));
 
     op = construct_op(lrm_state, input->xml, rsc_id, CRMD_ACTION_DELETE);
     CRM_ASSERT(op != NULL);
