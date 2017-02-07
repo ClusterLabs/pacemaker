@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="32" operation="stop" operation_key="fs-libvirt-VM-xcm_stop_0" internal_operation_key="fs-libvirt-VM-xcm:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04">
         <primitive id="fs-libvirt-VM-xcm" long-id="fs-libvirt-VM-xcm:0" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="110000"  device="cvmstorage-ib:/libvirt/VM-xcm" directory="/srv/libvirt/VM-xcm" fstype="nfs" options="rw,relatime"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="cvmh04" CRM_meta_on_node_uuid="cvmh04" CRM_meta_timeout="110000"  device="cvmstorage-ib:/libvirt/VM-xcm" directory="/srv/libvirt/VM-xcm" fstype="nfs" options="rw,relatime"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -22,7 +22,7 @@
     <action_set>
       <rsc_op id="35" operation="stop" operation_key="fs-libvirt-VM-xcm_stop_0" internal_operation_key="fs-libvirt-VM-xcm:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03">
         <primitive id="fs-libvirt-VM-xcm" long-id="fs-libvirt-VM-xcm:2" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="110000"  device="cvmstorage-ib:/libvirt/VM-xcm" directory="/srv/libvirt/VM-xcm" fstype="nfs" options="rw,relatime"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="cvmh03" CRM_meta_on_node_uuid="cvmh03" CRM_meta_timeout="110000"  device="cvmstorage-ib:/libvirt/VM-xcm" directory="/srv/libvirt/VM-xcm" fstype="nfs" options="rw,relatime"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -68,7 +68,7 @@
     <action_set>
       <rsc_op id="42" operation="stop" operation_key="p-watch-ib0_stop_0" internal_operation_key="p-watch-ib0:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04">
         <primitive id="p-watch-ib0" long-id="p-watch-ib0:0" class="ocf" provider="heartbeat" type="ethmonitor"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000"  interface="ib0"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="cvmh04" CRM_meta_on_node_uuid="cvmh04" CRM_meta_timeout="20000"  interface="ib0"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -84,7 +84,7 @@
     <action_set>
       <rsc_op id="45" operation="stop" operation_key="p-watch-ib0_stop_0" internal_operation_key="p-watch-ib0:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03">
         <primitive id="p-watch-ib0" long-id="p-watch-ib0:2" class="ocf" provider="heartbeat" type="ethmonitor"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000"  interface="ib0"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="cvmh03" CRM_meta_on_node_uuid="cvmh03" CRM_meta_timeout="20000"  interface="ib0"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -123,7 +123,7 @@
     <action_set>
       <rsc_op id="52" operation="stop" operation_key="p-fs-gpfs_stop_0" internal_operation_key="p-fs-gpfs:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04">
         <primitive id="p-fs-gpfs" long-id="p-fs-gpfs:0" class="ocf" provider="ccni" type="gpfs"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="120000"  fspath="/gpfs/lb/utility"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="cvmh04" CRM_meta_on_node_uuid="cvmh04" CRM_meta_timeout="120000"  fspath="/gpfs/lb/utility"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -142,7 +142,7 @@
     <action_set>
       <rsc_op id="55" operation="stop" operation_key="p-fs-gpfs_stop_0" internal_operation_key="p-fs-gpfs:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03">
         <primitive id="p-fs-gpfs" long-id="p-fs-gpfs:2" class="ocf" provider="ccni" type="gpfs"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="120000"  fspath="/gpfs/lb/utility"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="cvmh03" CRM_meta_on_node_uuid="cvmh03" CRM_meta_timeout="120000"  fspath="/gpfs/lb/utility"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -188,7 +188,7 @@
     <action_set>
       <rsc_op id="70" operation="stop" operation_key="p-libvirtd_stop_0" internal_operation_key="p-libvirtd:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04">
         <primitive id="p-libvirtd" long-id="p-libvirtd:0" class="lsb" type="libvirtd"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="cvmh04" CRM_meta_on_node_uuid="cvmh04" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -204,7 +204,7 @@
     <action_set>
       <rsc_op id="73" operation="stop" operation_key="p-libvirtd_stop_0" internal_operation_key="p-libvirtd:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03">
         <primitive id="p-libvirtd" long-id="p-libvirtd:2" class="lsb" type="libvirtd"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="cvmh03" CRM_meta_on_node_uuid="cvmh03" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -250,7 +250,7 @@
     <action_set>
       <rsc_op id="80" operation="stop" operation_key="fs-bind-libvirt-VM-cvmh_stop_0" internal_operation_key="fs-bind-libvirt-VM-cvmh:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04">
         <primitive id="fs-bind-libvirt-VM-cvmh" long-id="fs-bind-libvirt-VM-cvmh:0" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="120000"  device="/gpfs/lb/utility/VM-cvmh" directory="/srv/libvirt/VM-cvmh" fstype="none" options="bind"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="cvmh04" CRM_meta_on_node_uuid="cvmh04" CRM_meta_timeout="120000"  device="/gpfs/lb/utility/VM-cvmh" directory="/srv/libvirt/VM-cvmh" fstype="none" options="bind"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -269,7 +269,7 @@
     <action_set>
       <rsc_op id="83" operation="stop" operation_key="fs-bind-libvirt-VM-cvmh_stop_0" internal_operation_key="fs-bind-libvirt-VM-cvmh:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03">
         <primitive id="fs-bind-libvirt-VM-cvmh" long-id="fs-bind-libvirt-VM-cvmh:2" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="120000"  device="/gpfs/lb/utility/VM-cvmh" directory="/srv/libvirt/VM-cvmh" fstype="none" options="bind"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="cvmh03" CRM_meta_on_node_uuid="cvmh03" CRM_meta_timeout="120000"  device="/gpfs/lb/utility/VM-cvmh" directory="/srv/libvirt/VM-cvmh" fstype="none" options="bind"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -315,7 +315,7 @@
     <action_set>
       <rsc_op id="94" operation="migrate_from" operation_key="vm-compute-test_migrate_from_0" on_node="cvmh01" on_node_uuid="cvmh01">
         <primitive id="vm-compute-test" class="ocf" provider="ccni" type="xcatVirtualDomain"/>
-        <attributes CRM_meta_migrate_source="cvmh03" CRM_meta_migrate_target="cvmh01" CRM_meta_timeout="20000"  migration_network_suffix="-ib" migration_transport="ssh" nodename="compute-test"/>
+        <attributes CRM_meta_migrate_source="cvmh03" CRM_meta_migrate_target="cvmh01" CRM_meta_on_node="cvmh01" CRM_meta_on_node_uuid="cvmh01" CRM_meta_timeout="20000"  migration_network_suffix="-ib" migration_transport="ssh" nodename="compute-test"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -328,7 +328,7 @@
     <action_set>
       <rsc_op id="93" operation="migrate_to" operation_key="vm-compute-test_migrate_to_0" on_node="cvmh03" on_node_uuid="cvmh03">
         <primitive id="vm-compute-test" class="ocf" provider="ccni" type="xcatVirtualDomain"/>
-        <attributes CRM_meta_migrate_source="cvmh03" CRM_meta_migrate_target="cvmh01" CRM_meta_record_pending="true" CRM_meta_timeout="20000"  migration_network_suffix="-ib" migration_transport="ssh" nodename="compute-test"/>
+        <attributes CRM_meta_migrate_source="cvmh03" CRM_meta_migrate_target="cvmh01" CRM_meta_on_node="cvmh03" CRM_meta_on_node_uuid="cvmh03" CRM_meta_record_pending="true" CRM_meta_timeout="20000"  migration_network_suffix="-ib" migration_transport="ssh" nodename="compute-test"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -341,7 +341,7 @@
     <action_set>
       <rsc_op id="92" operation="monitor" operation_key="vm-compute-test_monitor_45000" on_node="cvmh01" on_node_uuid="cvmh01">
         <primitive id="vm-compute-test" class="ocf" provider="ccni" type="xcatVirtualDomain"/>
-        <attributes CRM_meta_interval="45000" CRM_meta_name="monitor" CRM_meta_timeout="30000"  migration_network_suffix="-ib" migration_transport="ssh" nodename="compute-test"/>
+        <attributes CRM_meta_interval="45000" CRM_meta_name="monitor" CRM_meta_on_node="cvmh01" CRM_meta_on_node_uuid="cvmh01" CRM_meta_timeout="30000"  migration_network_suffix="-ib" migration_transport="ssh" nodename="compute-test"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -372,7 +372,7 @@
     <action_set>
       <rsc_op id="90" operation="stop" operation_key="vm-compute-test_stop_0" on_node="cvmh03" on_node_uuid="cvmh03">
         <primitive id="vm-compute-test" class="ocf" provider="ccni" type="xcatVirtualDomain"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="90000"  migration_network_suffix="-ib" migration_transport="ssh" nodename="compute-test"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="cvmh03" CRM_meta_on_node_uuid="cvmh03" CRM_meta_timeout="90000"  migration_network_suffix="-ib" migration_transport="ssh" nodename="compute-test"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -388,7 +388,7 @@
     <action_set>
       <rsc_op id="99" operation="migrate_from" operation_key="vm-swbuildsl6_migrate_from_0" on_node="cvmh02" on_node_uuid="cvmh02">
         <primitive id="vm-swbuildsl6" class="ocf" provider="ccni" type="xcatVirtualDomain"/>
-        <attributes CRM_meta_migrate_source="cvmh04" CRM_meta_migrate_target="cvmh02" CRM_meta_timeout="20000"  migration_network_suffix="-ib" migration_transport="ssh" nodename="swbuildsl6"/>
+        <attributes CRM_meta_migrate_source="cvmh04" CRM_meta_migrate_target="cvmh02" CRM_meta_on_node="cvmh02" CRM_meta_on_node_uuid="cvmh02" CRM_meta_timeout="20000"  migration_network_suffix="-ib" migration_transport="ssh" nodename="swbuildsl6"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -401,7 +401,7 @@
     <action_set>
       <rsc_op id="98" operation="migrate_to" operation_key="vm-swbuildsl6_migrate_to_0" on_node="cvmh04" on_node_uuid="cvmh04">
         <primitive id="vm-swbuildsl6" class="ocf" provider="ccni" type="xcatVirtualDomain"/>
-        <attributes CRM_meta_migrate_source="cvmh04" CRM_meta_migrate_target="cvmh02" CRM_meta_record_pending="true" CRM_meta_timeout="20000"  migration_network_suffix="-ib" migration_transport="ssh" nodename="swbuildsl6"/>
+        <attributes CRM_meta_migrate_source="cvmh04" CRM_meta_migrate_target="cvmh02" CRM_meta_on_node="cvmh04" CRM_meta_on_node_uuid="cvmh04" CRM_meta_record_pending="true" CRM_meta_timeout="20000"  migration_network_suffix="-ib" migration_transport="ssh" nodename="swbuildsl6"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -417,7 +417,7 @@
     <action_set>
       <rsc_op id="97" operation="monitor" operation_key="vm-swbuildsl6_monitor_45000" on_node="cvmh02" on_node_uuid="cvmh02">
         <primitive id="vm-swbuildsl6" class="ocf" provider="ccni" type="xcatVirtualDomain"/>
-        <attributes CRM_meta_interval="45000" CRM_meta_name="monitor" CRM_meta_timeout="30000"  migration_network_suffix="-ib" migration_transport="ssh" nodename="swbuildsl6"/>
+        <attributes CRM_meta_interval="45000" CRM_meta_name="monitor" CRM_meta_on_node="cvmh02" CRM_meta_on_node_uuid="cvmh02" CRM_meta_timeout="30000"  migration_network_suffix="-ib" migration_transport="ssh" nodename="swbuildsl6"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -451,7 +451,7 @@
     <action_set>
       <rsc_op id="95" operation="stop" operation_key="vm-swbuildsl6_stop_0" on_node="cvmh04" on_node_uuid="cvmh04">
         <primitive id="vm-swbuildsl6" class="ocf" provider="ccni" type="xcatVirtualDomain"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="90000"  migration_network_suffix="-ib" migration_transport="ssh" nodename="swbuildsl6"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="cvmh04" CRM_meta_on_node_uuid="cvmh04" CRM_meta_timeout="90000"  migration_network_suffix="-ib" migration_transport="ssh" nodename="swbuildsl6"/>
       </rsc_op>
     </action_set>
     <inputs>

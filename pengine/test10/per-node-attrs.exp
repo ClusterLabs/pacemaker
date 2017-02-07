@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="5" operation="start" operation_key="dummy_start_0" on_node="pcmk-1" on_node_uuid="101">
         <primitive id="dummy" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_timeout="90000"  ip="127.0.0.1" netmask="32" nic="eth1"/>
+        <attributes CRM_meta_on_node="pcmk-1" CRM_meta_on_node_uuid="101" CRM_meta_timeout="90000"  ip="127.0.0.1" netmask="32" nic="eth1"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -22,7 +22,7 @@
     <action_set>
       <rsc_op id="4" operation="monitor" operation_key="dummy_monitor_0" on_node="pcmk-3" on_node_uuid="103">
         <primitive id="dummy" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="90000"  ip="127.0.0.1" netmask="32" nic="eth0"/>
+        <attributes CRM_meta_on_node="pcmk-3" CRM_meta_on_node_uuid="103" CRM_meta_op_target_rc="7" CRM_meta_timeout="90000"  ip="127.0.0.1" netmask="32" nic="eth0"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -31,7 +31,7 @@
     <action_set>
       <rsc_op id="3" operation="monitor" operation_key="dummy_monitor_0" on_node="pcmk-2" on_node_uuid="102">
         <primitive id="dummy" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="90000"  ip="127.0.0.1" netmask="32" nic="eth2"/>
+        <attributes CRM_meta_on_node="pcmk-2" CRM_meta_on_node_uuid="102" CRM_meta_op_target_rc="7" CRM_meta_timeout="90000"  ip="127.0.0.1" netmask="32" nic="eth2"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -40,7 +40,7 @@
     <action_set>
       <rsc_op id="2" operation="monitor" operation_key="dummy_monitor_0" on_node="pcmk-1" on_node_uuid="101">
         <primitive id="dummy" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="90000"  ip="127.0.0.1" netmask="32" nic="eth1"/>
+        <attributes CRM_meta_on_node="pcmk-1" CRM_meta_on_node_uuid="101" CRM_meta_op_target_rc="7" CRM_meta_timeout="90000"  ip="127.0.0.1" netmask="32" nic="eth1"/>
       </rsc_op>
     </action_set>
     <inputs/>

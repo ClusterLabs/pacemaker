@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="7" operation="start" operation_key="S_A:0_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="S_A" long-id="S_A:0" class="stonith" type="fence_xvm"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="fc16-builder" CRM_meta_on_node_uuid="fc16-builder" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="2" operation="monitor" operation_key="S_A:0_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="S_A" long-id="S_A:0" class="stonith" type="fence_xvm"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="fc16-builder" CRM_meta_on_node_uuid="fc16-builder" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -84,7 +84,7 @@
     <action_set>
       <rsc_op id="12" operation="start" operation_key="S_B_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="S_B" class="stonith" type="fence_xvm"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="fc16-builder" CRM_meta_on_node_uuid="fc16-builder" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -100,7 +100,7 @@
     <action_set>
       <rsc_op id="3" operation="monitor" operation_key="S_B_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="S_B" class="stonith" type="fence_xvm"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="fc16-builder" CRM_meta_on_node_uuid="fc16-builder" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -109,7 +109,7 @@
     <action_set>
       <rsc_op id="13" operation="start" operation_key="S_C_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="S_C" class="stonith" type="fence_xvm"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="fc16-builder" CRM_meta_on_node_uuid="fc16-builder" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -128,7 +128,7 @@
     <action_set>
       <rsc_op id="4" operation="monitor" operation_key="S_C_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="S_C" class="stonith" type="fence_xvm"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="fc16-builder" CRM_meta_on_node_uuid="fc16-builder" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -137,7 +137,7 @@
     <action_set>
       <rsc_op id="14" operation="start" operation_key="S_D_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="S_D" class="stonith" type="fence_xvm"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="fc16-builder" CRM_meta_on_node_uuid="fc16-builder" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -156,7 +156,7 @@
     <action_set>
       <rsc_op id="5" operation="monitor" operation_key="S_D_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="S_D" class="stonith" type="fence_xvm"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="fc16-builder" CRM_meta_on_node_uuid="fc16-builder" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -165,7 +165,7 @@
     <action_set>
       <rsc_op id="19" operation="start" operation_key="A_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="A" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="fc16-builder" CRM_meta_on_node_uuid="fc16-builder" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -178,7 +178,7 @@
     <action_set>
       <rsc_op id="6" operation="monitor" operation_key="A_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="A" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="fc16-builder" CRM_meta_on_node_uuid="fc16-builder" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>

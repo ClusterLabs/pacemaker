@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="7" operation="stop" operation_key="PrimitiveResource1_stop_0" on_node="domu1" on_node_uuid="domu1">
         <primitive id="PrimitiveResource1" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_timeout="20000" cidr_netmask="24"  ip="192.168.1.50"/>
+        <attributes CRM_meta_on_node="domu1" CRM_meta_on_node_uuid="domu1" CRM_meta_timeout="20000" cidr_netmask="24"  ip="192.168.1.50"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -12,7 +12,7 @@
     <action_set>
       <rsc_op id="9" operation="stop" operation_key="apache:1_stop_0" internal_operation_key="apache:0_stop_0" on_node="domu1" on_node_uuid="domu1">
         <primitive id="apache" long-id="apache:1" class="ocf" provider="heartbeat" type="apache"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" configfile="/etc/apache2/httpd.conf" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="domu1" CRM_meta_on_node_uuid="domu1" CRM_meta_timeout="20000" configfile="/etc/apache2/httpd.conf" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -25,7 +25,7 @@
     <action_set>
       <rsc_op id="10" operation="stop" operation_key="apache:0_stop_0" internal_operation_key="apache:1_stop_0" on_node="domu2" on_node_uuid="domu2">
         <primitive id="apache" long-id="apache:0" class="ocf" provider="heartbeat" type="apache"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" configfile="/etc/apache2/httpd.conf" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="domu2" CRM_meta_on_node_uuid="domu2" CRM_meta_timeout="20000" configfile="/etc/apache2/httpd.conf" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -68,7 +68,7 @@
     <action_set>
       <rsc_op id="15" operation="stop" operation_key="DummyResource:1_stop_0" internal_operation_key="DummyResource:0_stop_0" on_node="domu1" on_node_uuid="domu1">
         <primitive id="DummyResource" long-id="DummyResource:1" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000"  state="/var/run/DummyResource.log"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="domu1" CRM_meta_on_node_uuid="domu1" CRM_meta_timeout="20000"  state="/var/run/DummyResource.log"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -81,7 +81,7 @@
     <action_set>
       <rsc_op id="17" operation="stop" operation_key="DummyResource:0_stop_0" internal_operation_key="DummyResource:1_stop_0" on_node="domu2" on_node_uuid="domu2">
         <primitive id="DummyResource" long-id="DummyResource:0" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000"  state="/var/run/DummyResource.log"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="domu2" CRM_meta_on_node_uuid="domu2" CRM_meta_timeout="20000"  state="/var/run/DummyResource.log"/>
       </rsc_op>
     </action_set>
     <inputs>

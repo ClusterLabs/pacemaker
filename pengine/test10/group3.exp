@@ -32,7 +32,7 @@
      <action_set>
       <rsc_op id="14" operation="start" operation_key="child_rsc1_start_0" on_node="node1" on_node_uuid="uuid1">
         <primitive id="child_rsc1" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="uuid1" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
     <inputs>
@@ -51,7 +51,7 @@
      <action_set>
       <rsc_op id="8" operation="monitor" operation_key="child_rsc1_monitor_0" on_node="node2" on_node_uuid="uuid2">
         <primitive id="child_rsc1" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="node2" CRM_meta_on_node_uuid="uuid2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
      <inputs/>
@@ -60,7 +60,7 @@
      <action_set>
       <rsc_op id="2" operation="monitor" operation_key="child_rsc1_monitor_0" on_node="node1" on_node_uuid="uuid1">
         <primitive id="child_rsc1" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="uuid1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -69,7 +69,7 @@
     <action_set>
       <rsc_op id="15" operation="start" operation_key="child_rsc2_start_0" on_node="node1" on_node_uuid="uuid1">
         <primitive id="child_rsc2" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="uuid1" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
      <inputs>
@@ -91,7 +91,7 @@
      <action_set>
       <rsc_op id="9" operation="monitor" operation_key="child_rsc2_monitor_0" on_node="node2" on_node_uuid="uuid2">
         <primitive id="child_rsc2" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="node2" CRM_meta_on_node_uuid="uuid2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
      <inputs/>
@@ -100,7 +100,7 @@
      <action_set>
       <rsc_op id="3" operation="monitor" operation_key="child_rsc2_monitor_0" on_node="node1" on_node_uuid="uuid1">
         <primitive id="child_rsc2" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="uuid1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
      <inputs/>
@@ -109,7 +109,7 @@
      <action_set>
       <rsc_op id="16" operation="start" operation_key="child_rsc3_start_0" on_node="node1" on_node_uuid="uuid1">
         <primitive id="child_rsc3" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="uuid1" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
      <inputs>
@@ -131,7 +131,7 @@
     <action_set>
       <rsc_op id="10" operation="monitor" operation_key="child_rsc3_monitor_0" on_node="node2" on_node_uuid="uuid2">
         <primitive id="child_rsc3" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="node2" CRM_meta_on_node_uuid="uuid2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -140,7 +140,7 @@
      <action_set>
       <rsc_op id="4" operation="monitor" operation_key="child_rsc3_monitor_0" on_node="node1" on_node_uuid="uuid1">
         <primitive id="child_rsc3" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="uuid1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
      <inputs/>
@@ -182,7 +182,7 @@
      <action_set>
       <rsc_op id="21" operation="start" operation_key="child_rsc4_start_0" on_node="node2" on_node_uuid="uuid2">
         <primitive id="child_rsc4" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="node2" CRM_meta_on_node_uuid="uuid2" CRM_meta_timeout="20000" />
       </rsc_op>
      </action_set>
      <inputs>
@@ -201,7 +201,7 @@
      <action_set>
       <rsc_op id="11" operation="monitor" operation_key="child_rsc4_monitor_0" on_node="node2" on_node_uuid="uuid2">
         <primitive id="child_rsc4" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="node2" CRM_meta_on_node_uuid="uuid2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
      <inputs/>
@@ -210,7 +210,7 @@
      <action_set>
       <rsc_op id="5" operation="monitor" operation_key="child_rsc4_monitor_0" on_node="node1" on_node_uuid="uuid1">
         <primitive id="child_rsc4" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="uuid1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
      <inputs/>
@@ -219,7 +219,7 @@
      <action_set>
       <rsc_op id="22" operation="start" operation_key="child_rsc5_start_0" on_node="node2" on_node_uuid="uuid2">
         <primitive id="child_rsc5" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="node2" CRM_meta_on_node_uuid="uuid2" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
      <inputs>
@@ -241,7 +241,7 @@
      <action_set>
       <rsc_op id="12" operation="monitor" operation_key="child_rsc5_monitor_0" on_node="node2" on_node_uuid="uuid2">
         <primitive id="child_rsc5" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="node2" CRM_meta_on_node_uuid="uuid2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
      <inputs/>
@@ -250,7 +250,7 @@
      <action_set>
       <rsc_op id="6" operation="monitor" operation_key="child_rsc5_monitor_0" on_node="node1" on_node_uuid="uuid1">
         <primitive id="child_rsc5" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="uuid1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
      <inputs/>
@@ -259,7 +259,7 @@
      <action_set>
       <rsc_op id="23" operation="start" operation_key="child_rsc6_start_0" on_node="node2" on_node_uuid="uuid2">
         <primitive id="child_rsc6" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="node2" CRM_meta_on_node_uuid="uuid2" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
      <inputs>
@@ -281,7 +281,7 @@
     <action_set>
       <rsc_op id="13" operation="monitor" operation_key="child_rsc6_monitor_0" on_node="node2" on_node_uuid="uuid2">
         <primitive id="child_rsc6" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="node2" CRM_meta_on_node_uuid="uuid2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -290,7 +290,7 @@
      <action_set>
       <rsc_op id="7" operation="monitor" operation_key="child_rsc6_monitor_0" on_node="node1" on_node_uuid="uuid1">
         <primitive id="child_rsc6" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="uuid1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
      <inputs/>

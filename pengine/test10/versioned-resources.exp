@@ -14,7 +14,7 @@
             <nvpair id="FencingPass-random_sleep_range" name="random_sleep_range" value="3"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_timeout="90000"  mode="pass" pcmk_host_list="rhel7-3" random_sleep_range="3"/>
+        <attributes CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="90000"  mode="pass" pcmk_host_list="rhel7-3" random_sleep_range="3"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -50,7 +50,7 @@
             <nvpair id="FencingPass-random_sleep_range" name="random_sleep_range" value="3"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="90000"  mode="pass" pcmk_host_list="rhel7-3" random_sleep_range="3"/>
+        <attributes CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_op_target_rc="7" CRM_meta_timeout="90000"  mode="pass" pcmk_host_list="rhel7-3" random_sleep_range="3"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -70,7 +70,7 @@
             <nvpair id="FencingPass-random_sleep_range" name="random_sleep_range" value="3"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="90000"  mode="pass" pcmk_host_list="rhel7-3" random_sleep_range="3"/>
+        <attributes CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_op_target_rc="7" CRM_meta_timeout="90000"  mode="pass" pcmk_host_list="rhel7-3" random_sleep_range="3"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -90,7 +90,7 @@
             <nvpair id="FencingPass-random_sleep_range" name="random_sleep_range" value="3"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="90000"  mode="pass" pcmk_host_list="rhel7-3" random_sleep_range="3"/>
+        <attributes CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="90000"  mode="pass" pcmk_host_list="rhel7-3" random_sleep_range="3"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -110,7 +110,7 @@
             <nvpair id="FencingPass-random_sleep_range" name="random_sleep_range" value="3"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="90000"  mode="pass" pcmk_host_list="rhel7-3" random_sleep_range="3"/>
+        <attributes CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="90000"  mode="pass" pcmk_host_list="rhel7-3" random_sleep_range="3"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -130,7 +130,7 @@
             <nvpair id="FencingPass-random_sleep_range" name="random_sleep_range" value="3"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="90000"  mode="pass" pcmk_host_list="rhel7-3" random_sleep_range="3"/>
+        <attributes CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="90000"  mode="pass" pcmk_host_list="rhel7-3" random_sleep_range="3"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -153,7 +153,7 @@
             <nvpair id="vtest4-instance_attributes-gt-ne-fake" name="new_fake" value="new+false"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest4.env"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest4.env"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -180,7 +180,7 @@
             <nvpair id="vtest4-instance_attributes-gt-ne-fake" name="new_fake" value="new+false"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_name="start" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest4.env"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest4.env"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -219,7 +219,7 @@
             <nvpair id="vtest4-instance_attributes-gt-ne-fake" name="new_fake" value="new+false"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest4.env"/>
+        <attributes CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest4.env"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -242,7 +242,7 @@
             <nvpair id="vtest4-instance_attributes-gt-ne-fake" name="new_fake" value="new+false"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest4.env"/>
+        <attributes CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest4.env"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -265,7 +265,7 @@
             <nvpair id="vtest4-instance_attributes-gt-ne-fake" name="new_fake" value="new+false"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest4.env"/>
+        <attributes CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest4.env"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -288,7 +288,7 @@
             <nvpair id="vtest4-instance_attributes-gt-ne-fake" name="new_fake" value="new+false"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest4.env"/>
+        <attributes CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest4.env"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -311,7 +311,7 @@
             <nvpair id="vtest4-instance_attributes-gt-ne-fake" name="new_fake" value="new+false"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest4.env"/>
+        <attributes CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest4.env"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -329,7 +329,7 @@
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -351,7 +351,7 @@
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="90000"  envfile="/run/resource-agents/vtest5.env"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="90000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -373,7 +373,7 @@
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -391,7 +391,7 @@
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -413,7 +413,7 @@
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="90000"  envfile="/run/resource-agents/vtest5.env"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="90000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -435,7 +435,7 @@
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -453,7 +453,7 @@
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -475,7 +475,7 @@
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="90000"  envfile="/run/resource-agents/vtest5.env"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="90000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -497,7 +497,7 @@
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -515,7 +515,7 @@
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="3" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -537,7 +537,7 @@
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="3" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="90000"  envfile="/run/resource-agents/vtest5.env"/>
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="90000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -559,7 +559,7 @@
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="3" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -577,7 +577,7 @@
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="4" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
+        <attributes CRM_meta_clone="4" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -599,7 +599,7 @@
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="4" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="90000"  envfile="/run/resource-agents/vtest5.env"/>
+        <attributes CRM_meta_clone="4" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="90000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -621,7 +621,7 @@
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="4" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
+        <attributes CRM_meta_clone="4" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -689,7 +689,7 @@
             <nvpair id="vtest7-instance_attributes-gt-fake" name="fake" value="new-ordinary"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_role="Slave" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_role="Slave" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -710,7 +710,7 @@
             <nvpair id="vtest7-instance_attributes-gt-fake" name="fake" value="new-ordinary"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -731,7 +731,7 @@
             <nvpair id="vtest7-instance_attributes-gt-fake" name="fake" value="new-ordinary"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -748,7 +748,7 @@
             <nvpair id="vtest7-instance_attributes-gt-eq-fake" name="fake" value="new-special"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_role="Slave" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_role="Slave" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -769,7 +769,7 @@
             <nvpair id="vtest7-instance_attributes-gt-eq-fake" name="fake" value="new-special"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -790,7 +790,7 @@
             <nvpair id="vtest7-instance_attributes-gt-eq-fake" name="fake" value="new-special"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -807,7 +807,7 @@
             <nvpair id="vtest7-instance_attributes-gt-fake" name="fake" value="new-ordinary"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_role="Slave" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_role="Slave" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -828,7 +828,7 @@
             <nvpair id="vtest7-instance_attributes-gt-fake" name="fake" value="new-ordinary"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -849,7 +849,7 @@
             <nvpair id="vtest7-instance_attributes-gt-fake" name="fake" value="new-ordinary"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -866,7 +866,7 @@
             <nvpair id="vtest7-instance_attributes-gt-fake" name="fake" value="new-ordinary"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="3" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_role="Slave" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_role="Slave" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -887,7 +887,7 @@
             <nvpair id="vtest7-instance_attributes-gt-fake" name="fake" value="new-ordinary"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="3" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -908,7 +908,7 @@
             <nvpair id="vtest7-instance_attributes-gt-fake" name="fake" value="new-ordinary"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="3" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -925,7 +925,7 @@
             <nvpair id="vtest7-instance_attributes-gt-fake" name="fake" value="new-ordinary"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="4" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_role="Slave" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
+        <attributes CRM_meta_clone="4" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_role="Slave" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -946,7 +946,7 @@
             <nvpair id="vtest7-instance_attributes-gt-fake" name="fake" value="new-ordinary"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="4" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
+        <attributes CRM_meta_clone="4" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -967,7 +967,7 @@
             <nvpair id="vtest7-instance_attributes-gt-fake" name="fake" value="new-ordinary"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_clone="4" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
+        <attributes CRM_meta_clone="4" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1073,7 +1073,7 @@
             <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest1.env" fake="2-bad"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest1.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1103,7 +1103,7 @@
             <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_name="start" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest1.env" fake="2-bad"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest1.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1148,7 +1148,7 @@
             <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest1.env" fake="2-bad"/>
+        <attributes CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest1.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1174,7 +1174,7 @@
             <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest1.env" fake="2-bad"/>
+        <attributes CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest1.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1200,7 +1200,7 @@
             <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest1.env" fake="2-bad"/>
+        <attributes CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest1.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1226,7 +1226,7 @@
             <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest1.env" fake="2-bad"/>
+        <attributes CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest1.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1252,7 +1252,7 @@
             <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest1.env" fake="2-bad"/>
+        <attributes CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest1.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1278,7 +1278,7 @@
             <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest2.env" fake="2-bad"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest2.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1308,7 +1308,7 @@
             <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_name="start" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest2.env" fake="2-bad"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest2.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1356,7 +1356,7 @@
             <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest2.env" fake="2-bad"/>
+        <attributes CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest2.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1382,7 +1382,7 @@
             <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest2.env" fake="2-bad"/>
+        <attributes CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest2.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1408,7 +1408,7 @@
             <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest2.env" fake="2-bad"/>
+        <attributes CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest2.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1434,7 +1434,7 @@
             <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest2.env" fake="2-bad"/>
+        <attributes CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest2.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1460,7 +1460,7 @@
             <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest2.env" fake="2-bad"/>
+        <attributes CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest2.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1486,7 +1486,7 @@
             <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest3.env" fake="2-bad"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest3.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1516,7 +1516,7 @@
             <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_name="start" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest3.env" fake="2-bad"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest3.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1564,7 +1564,7 @@
             <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest3.env" fake="2-bad"/>
+        <attributes CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest3.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1590,7 +1590,7 @@
             <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest3.env" fake="2-bad"/>
+        <attributes CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest3.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1616,7 +1616,7 @@
             <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest3.env" fake="2-bad"/>
+        <attributes CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest3.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1642,7 +1642,7 @@
             <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest3.env" fake="2-bad"/>
+        <attributes CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest3.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1668,7 +1668,7 @@
             <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </versioned_attributes>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest3.env" fake="2-bad"/>
+        <attributes CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest3.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
     <inputs/>

@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="4" operation="stop" operation_key="prmDB2_stop_0" on_node="bl460g8n4" on_node_uuid="3232261400">
         <primitive id="prmDB2" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_name="stop" CRM_meta_on_fail="fence" CRM_meta_remote_node="pgsr02" CRM_meta_timeout="120000" config="/etc/libvirt/qemu/pgsr02.xml"  hypervisor="qemu:///system" migration_transport="ssh"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_fail="fence" CRM_meta_on_node="bl460g8n4" CRM_meta_on_node_uuid="3232261400" CRM_meta_remote_node="pgsr02" CRM_meta_timeout="120000" config="/etc/libvirt/qemu/pgsr02.xml"  hypervisor="qemu:///system" migration_transport="ssh"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -66,7 +66,7 @@
     <action_set>
       <rsc_op id="13" operation="stop" operation_key="prmStonith1-2_stop_0" on_node="bl460g8n4" on_node_uuid="3232261400">
         <primitive id="prmStonith1-2" class="stonith" type="external/ipmi"/>
-        <attributes CRM_meta_name="stop" CRM_meta_on_fail="ignore" CRM_meta_timeout="60000"  hostname="bl460g8n3" interface="lanplus" ipaddr="192.168.28.43" passwd="****" pcmk_reboot_timeout="60s" userid="USERID"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_fail="ignore" CRM_meta_on_node="bl460g8n4" CRM_meta_on_node_uuid="3232261400" CRM_meta_timeout="60000"  hostname="bl460g8n3" interface="lanplus" ipaddr="192.168.28.43" passwd="****" pcmk_reboot_timeout="60s" userid="USERID"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -79,7 +79,7 @@
     <action_set>
       <rsc_op id="9" operation="start" operation_key="prmStonith1-2_start_0" on_node="bl460g8n4" on_node_uuid="3232261400">
         <primitive id="prmStonith1-2" class="stonith" type="external/ipmi"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_timeout="60000"  hostname="bl460g8n3" interface="lanplus" ipaddr="192.168.28.43" passwd="****" pcmk_reboot_timeout="60s" userid="USERID"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_on_node="bl460g8n4" CRM_meta_on_node_uuid="3232261400" CRM_meta_timeout="60000"  hostname="bl460g8n3" interface="lanplus" ipaddr="192.168.28.43" passwd="****" pcmk_reboot_timeout="60s" userid="USERID"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -98,7 +98,7 @@
     <action_set>
       <rsc_op id="1" operation="monitor" operation_key="prmStonith1-2_monitor_3600000" on_node="bl460g8n4" on_node_uuid="3232261400">
         <primitive id="prmStonith1-2" class="stonith" type="external/ipmi"/>
-        <attributes CRM_meta_interval="3600000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="60000"  hostname="bl460g8n3" interface="lanplus" ipaddr="192.168.28.43" passwd="****" pcmk_reboot_timeout="60s" userid="USERID"/>
+        <attributes CRM_meta_interval="3600000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_on_node="bl460g8n4" CRM_meta_on_node_uuid="3232261400" CRM_meta_timeout="60000"  hostname="bl460g8n3" interface="lanplus" ipaddr="192.168.28.43" passwd="****" pcmk_reboot_timeout="60s" userid="USERID"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -161,7 +161,7 @@
     <action_set>
       <rsc_op id="18" operation="stop" operation_key="prmStonith2-2_stop_0" on_node="bl460g8n3" on_node_uuid="3232261399">
         <primitive id="prmStonith2-2" class="stonith" type="external/ipmi"/>
-        <attributes CRM_meta_name="stop" CRM_meta_on_fail="ignore" CRM_meta_timeout="60000"  hostname="bl460g8n4" interface="lanplus" ipaddr="192.168.28.44" passwd="****" pcmk_reboot_timeout="60s" userid="USERID"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_fail="ignore" CRM_meta_on_node="bl460g8n3" CRM_meta_on_node_uuid="3232261399" CRM_meta_timeout="60000"  hostname="bl460g8n4" interface="lanplus" ipaddr="192.168.28.44" passwd="****" pcmk_reboot_timeout="60s" userid="USERID"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -174,7 +174,7 @@
     <action_set>
       <rsc_op id="10" operation="start" operation_key="prmStonith2-2_start_0" on_node="bl460g8n3" on_node_uuid="3232261399">
         <primitive id="prmStonith2-2" class="stonith" type="external/ipmi"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_timeout="60000"  hostname="bl460g8n4" interface="lanplus" ipaddr="192.168.28.44" passwd="****" pcmk_reboot_timeout="60s" userid="USERID"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_on_node="bl460g8n3" CRM_meta_on_node_uuid="3232261399" CRM_meta_timeout="60000"  hostname="bl460g8n4" interface="lanplus" ipaddr="192.168.28.44" passwd="****" pcmk_reboot_timeout="60s" userid="USERID"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -193,7 +193,7 @@
     <action_set>
       <rsc_op id="5" operation="monitor" operation_key="prmStonith2-2_monitor_3600000" on_node="bl460g8n3" on_node_uuid="3232261399">
         <primitive id="prmStonith2-2" class="stonith" type="external/ipmi"/>
-        <attributes CRM_meta_interval="3600000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="60000"  hostname="bl460g8n4" interface="lanplus" ipaddr="192.168.28.44" passwd="****" pcmk_reboot_timeout="60s" userid="USERID"/>
+        <attributes CRM_meta_interval="3600000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_on_node="bl460g8n3" CRM_meta_on_node_uuid="3232261399" CRM_meta_timeout="60000"  hostname="bl460g8n4" interface="lanplus" ipaddr="192.168.28.44" passwd="****" pcmk_reboot_timeout="60s" userid="USERID"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -269,7 +269,7 @@
     <action_set>
       <rsc_op id="25" operation="monitor" operation_key="vip-master_monitor_10000" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
         <primitive id="vip-master" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_on_node="pgsr01" CRM_meta_on_node_uuid="pgsr01" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -282,7 +282,7 @@
     <action_set>
       <rsc_op id="24" operation="start" operation_key="vip-master_start_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
         <primitive id="vip-master" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_on_node="pgsr01" CRM_meta_on_node_uuid="pgsr01" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -319,7 +319,7 @@
     <action_set>
       <rsc_op id="28" operation="monitor" operation_key="vip-rep_monitor_10000" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
         <primitive id="vip-rep" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_on_node="pgsr01" CRM_meta_on_node_uuid="pgsr01" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -332,7 +332,7 @@
     <action_set>
       <rsc_op id="27" operation="start" operation_key="vip-rep_start_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
         <primitive id="vip-rep" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_fail="stop" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_name="start" CRM_meta_on_fail="stop" CRM_meta_on_node="pgsr01" CRM_meta_on_node_uuid="pgsr01" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -429,7 +429,7 @@
     <action_set>
       <rsc_op id="81" operation="notify" operation_key="pgsql_post_notify_demote_0" internal_operation_key="pgsql:1_post_notify_demote_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
         <primitive id="pgsql" long-id="pgsql:1" class="ocf" provider="heartbeat" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="pgsql:0 pgsql:1" CRM_meta_notify_active_uname="pgsr02 pgsr01" CRM_meta_notify_all_uname="bl460g8n3 bl460g8n4 pgsr01 pgsr02" CRM_meta_notify_available_uname="bl460g8n4 bl460g8n3 pgsr01 pgsr02" CRM_meta_notify_demote_resource="pgsql:0" CRM_meta_notify_demote_uname="pgsr02" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="pgsql:0 pgsql:1" CRM_meta_notify_master_uname="pgsr02 pgsr01" CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="pgsql:0" CRM_meta_notify_stop_uname="pgsr02" CRM_meta_notify_type="post" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="pgsql:0 pgsql:1" CRM_meta_notify_active_uname="pgsr02 pgsr01" CRM_meta_notify_all_uname="bl460g8n3 bl460g8n4 pgsr01 pgsr02" CRM_meta_notify_available_uname="bl460g8n4 bl460g8n3 pgsr01 pgsr02" CRM_meta_notify_demote_resource="pgsql:0" CRM_meta_notify_demote_uname="pgsr02" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="pgsql:0 pgsql:1" CRM_meta_notify_master_uname="pgsr02 pgsr01" CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="pgsql:0" CRM_meta_notify_stop_uname="pgsr02" CRM_meta_notify_type="post" CRM_meta_on_node="pgsr01" CRM_meta_on_node_uuid="pgsr01" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -442,7 +442,7 @@
     <action_set>
       <rsc_op id="80" operation="notify" operation_key="pgsql_pre_notify_demote_0" internal_operation_key="pgsql:1_pre_notify_demote_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
         <primitive id="pgsql" long-id="pgsql:1" class="ocf" provider="heartbeat" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="pgsql:0 pgsql:1" CRM_meta_notify_active_uname="pgsr02 pgsr01" CRM_meta_notify_all_uname="bl460g8n3 bl460g8n4 pgsr01 pgsr02" CRM_meta_notify_available_uname="bl460g8n4 bl460g8n3 pgsr01 pgsr02" CRM_meta_notify_demote_resource="pgsql:0" CRM_meta_notify_demote_uname="pgsr02" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="pgsql:0 pgsql:1" CRM_meta_notify_master_uname="pgsr02 pgsr01" CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="pgsql:0" CRM_meta_notify_stop_uname="pgsr02" CRM_meta_notify_type="pre" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="pgsql:0 pgsql:1" CRM_meta_notify_active_uname="pgsr02 pgsr01" CRM_meta_notify_all_uname="bl460g8n3 bl460g8n4 pgsr01 pgsr02" CRM_meta_notify_available_uname="bl460g8n4 bl460g8n3 pgsr01 pgsr02" CRM_meta_notify_demote_resource="pgsql:0" CRM_meta_notify_demote_uname="pgsr02" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="pgsql:0 pgsql:1" CRM_meta_notify_master_uname="pgsr02 pgsr01" CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="pgsql:0" CRM_meta_notify_stop_uname="pgsr02" CRM_meta_notify_type="pre" CRM_meta_on_node="pgsr01" CRM_meta_on_node_uuid="pgsr01" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -455,7 +455,7 @@
     <action_set>
       <rsc_op id="77" operation="notify" operation_key="pgsql_pre_notify_stop_0" internal_operation_key="pgsql:1_pre_notify_stop_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
         <primitive id="pgsql" long-id="pgsql:1" class="ocf" provider="heartbeat" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="pgsql:0 pgsql:1" CRM_meta_notify_active_uname="pgsr02 pgsr01" CRM_meta_notify_all_uname="bl460g8n3 bl460g8n4 pgsr01 pgsr02" CRM_meta_notify_available_uname="bl460g8n4 bl460g8n3 pgsr01 pgsr02" CRM_meta_notify_demote_resource="pgsql:0" CRM_meta_notify_demote_uname="pgsr02" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="pgsql:0 pgsql:1" CRM_meta_notify_master_uname="pgsr02 pgsr01" CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="pgsql:0" CRM_meta_notify_stop_uname="pgsr02" CRM_meta_notify_type="pre" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="pgsql:0 pgsql:1" CRM_meta_notify_active_uname="pgsr02 pgsr01" CRM_meta_notify_all_uname="bl460g8n3 bl460g8n4 pgsr01 pgsr02" CRM_meta_notify_available_uname="bl460g8n4 bl460g8n3 pgsr01 pgsr02" CRM_meta_notify_demote_resource="pgsql:0" CRM_meta_notify_demote_uname="pgsr02" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="pgsql:0 pgsql:1" CRM_meta_notify_master_uname="pgsr02 pgsr01" CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="pgsql:0" CRM_meta_notify_stop_uname="pgsr02" CRM_meta_notify_type="pre" CRM_meta_on_node="pgsr01" CRM_meta_on_node_uuid="pgsr01" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -468,7 +468,7 @@
     <action_set>
       <rsc_op id="71" operation="notify" operation_key="pgsql_post_notify_stop_0" internal_operation_key="pgsql:1_post_notify_stop_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
         <primitive id="pgsql" long-id="pgsql:1" class="ocf" provider="heartbeat" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="pgsql:0 pgsql:1" CRM_meta_notify_active_uname="pgsr02 pgsr01" CRM_meta_notify_all_uname="bl460g8n3 bl460g8n4 pgsr01 pgsr02" CRM_meta_notify_available_uname="bl460g8n4 bl460g8n3 pgsr01 pgsr02" CRM_meta_notify_demote_resource="pgsql:0" CRM_meta_notify_demote_uname="pgsr02" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="pgsql:0 pgsql:1" CRM_meta_notify_master_uname="pgsr02 pgsr01" CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="pgsql:0" CRM_meta_notify_stop_uname="pgsr02" CRM_meta_notify_type="post" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="pgsql:0 pgsql:1" CRM_meta_notify_active_uname="pgsr02 pgsr01" CRM_meta_notify_all_uname="bl460g8n3 bl460g8n4 pgsr01 pgsr02" CRM_meta_notify_available_uname="bl460g8n4 bl460g8n3 pgsr01 pgsr02" CRM_meta_notify_demote_resource="pgsql:0" CRM_meta_notify_demote_uname="pgsr02" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="pgsql:0 pgsql:1" CRM_meta_notify_master_uname="pgsr02 pgsr01" CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="pgsql:0" CRM_meta_notify_stop_uname="pgsr02" CRM_meta_notify_type="post" CRM_meta_on_node="pgsr01" CRM_meta_on_node_uuid="pgsr01" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -484,7 +484,7 @@
     <action_set>
       <rsc_op id="39" operation="monitor" operation_key="pgsql_monitor_9000" internal_operation_key="pgsql:1_monitor_9000" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
         <primitive id="pgsql" long-id="pgsql:1" class="ocf" provider="heartbeat" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="9000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_fail="restart" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="9000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_fail="restart" CRM_meta_on_node="pgsr01" CRM_meta_on_node_uuid="pgsr01" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -673,7 +673,7 @@
     <action_set>
       <rsc_op id="66" operation="stop" operation_key="pgsr02_stop_0" on_node="bl460g8n4" on_node_uuid="3232261400">
         <primitive id="pgsr02" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="prmDB2" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_container="prmDB2" CRM_meta_on_node="bl460g8n4" CRM_meta_on_node_uuid="3232261400" CRM_meta_timeout="20000" />
         <downed>
           <node id="pgsr02"/>
         </downed>

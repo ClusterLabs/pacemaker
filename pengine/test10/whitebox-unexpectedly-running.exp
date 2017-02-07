@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="4" operation="monitor" operation_key="FAKE_monitor_60000" on_node="18builder" on_node_uuid="5">
         <primitive id="FAKE" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_remote_node="remote1" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="18builder" CRM_meta_on_node_uuid="5" CRM_meta_remote_node="remote1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="3" operation="start" operation_key="FAKE_start_0" on_node="18builder" on_node_uuid="5">
         <primitive id="FAKE" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_remote_node="remote1" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="18builder" CRM_meta_on_node_uuid="5" CRM_meta_remote_node="remote1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -29,7 +29,7 @@
     <action_set>
       <rsc_op id="2" operation="stop" operation_key="FAKE_stop_0" on_node="18builder" on_node_uuid="5">
         <primitive id="FAKE" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_remote_node="remote1" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="18builder" CRM_meta_on_node_uuid="5" CRM_meta_remote_node="remote1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -38,7 +38,7 @@
     <action_set>
       <rsc_op id="6" operation="monitor" operation_key="remote1_monitor_30000" on_node="18builder" on_node_uuid="5">
         <primitive id="remote1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="FAKE" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" />
+        <attributes CRM_meta_container="FAKE" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="18builder" CRM_meta_on_node_uuid="5" CRM_meta_timeout="30000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -51,7 +51,7 @@
     <action_set>
       <rsc_op id="5" operation="start" operation_key="remote1_start_0" on_node="18builder" on_node_uuid="5">
         <primitive id="remote1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="FAKE" CRM_meta_name="start" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_container="FAKE" CRM_meta_name="start" CRM_meta_on_node="18builder" CRM_meta_on_node_uuid="5" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>

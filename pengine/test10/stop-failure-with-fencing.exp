@@ -45,7 +45,7 @@
     <action_set>
       <rsc_op id="2" operation="monitor" operation_key="Fencing_monitor_0" on_node="pcmk-1" on_node_uuid="101">
         <primitive id="Fencing" class="stonith" type="fence_xvm"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="pcmk-1" CRM_meta_on_node_uuid="101" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
