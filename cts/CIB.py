@@ -203,9 +203,9 @@ class CIB11(ConfigBase):
             st.add_op("start", "0", timeout="60s")
 
             # For remote node tests, a cluster node is stopped and brought back up
-            # as a remote node with the name "remote_OLDNAME". To allow fencing
+            # as a remote node with the name "remote-OLDNAME". To allow fencing
             # devices to fence these nodes, create a list of all possible node names.
-            all_node_names = [ prefix+n for n in self.CM.Env["nodes"] for prefix in ('', 'remote_') ]
+            all_node_names = [ prefix+n for n in self.CM.Env["nodes"] for prefix in ('', 'remote-') ]
 
             # Add all parameters specified by user
             entries = string.split(self.CM.Env["stonith-params"], ',')
@@ -234,7 +234,7 @@ class CIB11(ConfigBase):
                 stl = FencingTopology(self.Factory)
                 for node in self.CM.Env["nodes"]:
                     # Remote node tests will rename the node
-                    remote_node = "remote_" + node
+                    remote_node = "remote-" + node
 
                     # Randomly assign node to a fencing method
                     ftype = self.CM.Env.RandomGen.choice(["levels-and", "levels-or ", "broadcast "])
