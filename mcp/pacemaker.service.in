@@ -7,6 +7,7 @@ After=basic.target
 After=syslog.service
 After=rsyslog.service
 After=network.target
+After=time-sync.target
 After=corosync.service
 
 Requires=dbus.service
@@ -39,7 +40,7 @@ SendSIGKILL=no
 # Although the node will likely end up being fenced as a result so it's
 # not on by default
 #
-# ExecStopPost=/usr/bin/killall -TERM crmd attrd fenced cib pengine lrmd
+# ExecStopPost=/usr/bin/killall -TERM crmd attrd stonithd cib pengine lrmd
 
 # If you want Corosync to stop whenever Pacemaker is stopped,
 # uncomment the next line too:

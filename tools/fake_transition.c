@@ -107,12 +107,12 @@ update_failcounts(xmlNode * cib_node, const char *resource, int interval, int rc
         char *name = NULL;
         char *now = crm_itoa(time(NULL));
 
-        name = crm_concat("fail-count", resource, '-');
+        name = crm_failcount_name(resource);
         inject_transient_attr(cib_node, name, "value++");
+        free(name);
 
-        name = crm_concat("last-failure", resource, '-');
+        name = crm_lastfailure_name(resource);
         inject_transient_attr(cib_node, name, now);
-
         free(name);
         free(now);
     }

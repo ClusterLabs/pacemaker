@@ -20,7 +20,7 @@ dnl     checks for library functions
 dnl     checks for system services
 
 m4_include([version.m4])
-AC_INIT([pacemaker], VERSION_NUMBER, [pacemaker@oss.clusterlabs.org],
+AC_INIT([pacemaker], VERSION_NUMBER, [users@clusterlabs.org],
         [pacemaker], PCMK_URL)
 dnl Workaround autoconf < 2.64
 if test x"${PACKAGE_URL}" = x""; then
@@ -92,9 +92,8 @@ AC_PROG_CC_STDC
 gl_EARLY
 gl_INIT
 
-AC_LIBTOOL_DLOPEN               dnl Enable dlopen support...
-AC_LIBLTDL_CONVENIENCE          dnl make libltdl a convenience lib
-AC_PROG_LIBTOOL
+LT_INIT([dlopen])
+LTDL_INIT([convenience])
 
 AC_PROG_YACC
 AM_PROG_LEX
@@ -180,21 +179,23 @@ AC_ARG_ENABLE([quiet],
      Supress make output unless there is an error
      [default=no]])
 
-AC_ARG_ENABLE([bundled-ltdl],
-[  --enable-bundled-ltdl  Configure, build and install the standalone ltdl library bundled with ${PACKAGE} [default=no]])
-LTDL_LIBS=""
-
 AC_ARG_ENABLE([no-stack],
     [  --enable-no-stack
        Only build the Policy Engine and pieces needed to support it [default=no]])
 
 AC_ARG_ENABLE([upstart],
     [  --enable-upstart
-       Do not build support for the Upstart init system [default=yes]])
+       Enable support for managing resources via Upstart [default=try]],
+    [],
+    [enable_upstart=try],
+)
 
 AC_ARG_ENABLE([systemd],
     [  --enable-systemd
-       Do not build support for the Systemd init system [default=yes]])
+       Enable support for managing resources via systemd [default=try]],
+    [],
+    [enable_systemd=try],
+)
 
 AC_ARG_ENABLE(hardening,
     [  --with-hardening
@@ -291,11 +292,6 @@ AC_ARG_WITH(ais-prefix,
     [  --with-ais-prefix=DIR  Prefix used when Corosync was installed [$prefix]],
     [ CSPREFIX=$withval ],
     [ CSPREFIX=$prefix ])
-
-LCRSODIR=""
-AC_ARG_WITH(lcrso-dir,
-    [  --with-lcrso-dir=DIR   Corosync lcrso files. ],
-    [ LCRSODIR="$withval" ])
 
 INITDIR=""
 AC_ARG_WITH(initdir,
@@ -846,38 +842,6 @@ AC_CHECK_FUNCS(getopt, AC_DEFINE(HAVE_DECL_GETOPT,  1, [Have getopt function]))
 AC_CHECK_FUNCS(nanosleep, AC_DEFINE(HAVE_DECL_NANOSLEEP,  1, [Have nanosleep function]))
 
 dnl ========================================================================
-dnl   ltdl
-dnl ========================================================================
-
-AC_CHECK_LIB(ltdl, lt_dlopen, [LTDL_foo=1])
-if test "x${enable_bundled_ltdl}" = "xyes"; then
-   if test $ac_cv_lib_ltdl_lt_dlopen = yes; then
-      AC_MSG_NOTICE([Disabling usage of installed ltdl])
-   fi
-   ac_cv_lib_ltdl_lt_dlopen=no
-fi
-
-LIBLTDL_DIR=""
-if test $ac_cv_lib_ltdl_lt_dlopen != yes ; then
-   AC_MSG_NOTICE([Installing local ltdl])
-   LIBLTDL_DIR=libltdl
-   ( cd $srcdir ; $TAR -xvf libltdl.tar )
-   if test "$?" -ne 0; then
-     AC_MSG_ERROR([$TAR of libltdl.tar in $srcdir failed])
-   fi
-   AC_CONFIG_SUBDIRS(libltdl)
-else
-   LIBS="$LIBS -lltdl"
-   AC_MSG_NOTICE([Using installed ltdl])
-   INCLTDL=""
-   LIBLTDL=""
-fi
-
-AC_SUBST(INCLTDL)
-AC_SUBST(LIBLTDL)
-AC_SUBST(LIBLTDL_DIR)
-
-dnl ========================================================================
 dnl   bzip2
 dnl ========================================================================
 AC_CHECK_HEADERS(bzlib.h)
@@ -1049,7 +1013,7 @@ if test x${enable_no_stack} = xyes; then
     SUPPORT_CS=no
 fi
 
-PKG_CHECK_MODULES(libqb, libqb >= 0.13, HAVE_libqb=1)
+PKG_CHECK_MODULES(libqb, libqb >= 0.13)
 CPPFLAGS="$libqb_CFLAGS $CPPFLAGS"
 LIBS="$libqb_LIBS $LIBS"
 AC_CHECK_HEADERS(qb/qbipc_common.h)
@@ -1111,6 +1075,10 @@ AC_SUBST(CRM_DAEMON_GROUP)
 CRM_STATE_DIR=${localstatedir}/run/crm
 AC_DEFINE_UNQUOTED(CRM_STATE_DIR,"$CRM_STATE_DIR", Where to keep state files and sockets)
 AC_SUBST(CRM_STATE_DIR)
+
+CRM_PACEMAKER_DIR=${localstatedir}/lib/pacemaker
+AC_DEFINE_UNQUOTED(CRM_PACEMAKER_DIR,"$CRM_PACEMAKER_DIR", Location to store directory produced by Pacemaker daemons)
+AC_SUBST(CRM_PACEMAKER_DIR)
 
 CRM_BLACKBOX_DIR=${localstatedir}/lib/pacemaker/blackbox
 AC_DEFINE_UNQUOTED(CRM_BLACKBOX_DIR,"$CRM_BLACKBOX_DIR", Where to keep blackbox dumps)
@@ -1213,34 +1181,95 @@ AC_SUBST(DBUS_LIBS)
 
 AC_CHECK_TYPES([DBusBasicValue],,,[[#include <dbus/dbus.h>]])
 
-if test $HAVE_dbus = 1 -a "x${enable_upstart}" != xno; then
-   HAVE_upstart=1
-   PCMK_FEATURES="$PCMK_FEATURES upstart"
+if test "x${enable_systemd}" != xno; then
+	if test $HAVE_dbus = 0; then
+		if test "x${enable_systemd}" = xyes; then
+			AC_MSG_FAILURE([cannot enable systemd without DBus])
+		else
+			enable_systemd=no
+		fi
+	fi
+	if test "x${enable_systemd}" = xtry; then
+		AC_MSG_CHECKING([for systemd version query result via dbus-send])
+		ret=$({ dbus-send --system --print-reply \
+		        --dest=org.freedesktop.systemd1 \
+		        /org/freedesktop/systemd1 \
+		        org.freedesktop.DBus.Properties.Get \
+		        string:org.freedesktop.systemd1.Manager \
+		        string:Version 2>/dev/null \
+		        || echo "this borked"; } | tail -n1)
+		# sanitize output a bit (interested just in value, not type),
+		# ret is intentionally unenquoted so as to normalize whitespace
+		ret=$(echo ${ret} | cut -d' ' -f2-)
+		AC_MSG_RESULT([${ret}])
+		if test "x${ret}" != xborked \
+		   || systemctl --version 2>/dev/null | grep -q systemd; then
+			enable_systemd=yes
+		else
+			enable_systemd=no
+		fi
+	fi
+fi
+
+AC_MSG_CHECKING([whether to enable support for managing resources via systemd])
+AC_MSG_RESULT([${enable_systemd}])
+if test "x${enable_systemd}" = xyes; then
+	HAVE_systemd=1
+	PCMK_FEATURES="$PCMK_FEATURES systemd"
+
+	AC_MSG_CHECKING([for systemd path for system unit files])
+	systemdunitdir="${systemdunitdir-}"
+	PKG_CHECK_VAR([systemdunitdir], [systemd],
+		      [systemdsystemunitdir], [],[
+	   systemdunitdir=no
+	])
+	AC_MSG_RESULT([${systemdunitdir}])
+	if test "x${systemdunitdir}" = xno; then
+		AC_MSG_FAILURE([cannot enable systemd when systemdunitdir unresolved])
+	fi
+fi
+
+AC_DEFINE_UNQUOTED(SUPPORT_SYSTEMD, $HAVE_systemd, Support systemd based system services)
+AM_CONDITIONAL(BUILD_SYSTEMD, test $HAVE_systemd = 1)
+AC_SUBST(SUPPORT_SYSTEMD)
+
+if test "x${enable_upstart}" != xno; then
+	if test $HAVE_dbus = 0; then
+		if test "x${enable_upstart}" = xyes; then
+			AC_MSG_FAILURE([cannot enable Upstart without DBus])
+		else
+			enable_upstart=no
+		fi
+	fi
+	if test "x${enable_upstart}" = xtry; then
+		AC_MSG_CHECKING([for Upstart version query result via dbus-send])
+		ret=$({ dbus-send --system --print-reply --dest=com.ubuntu.Upstart \
+		        /com/ubuntu/Upstart org.freedesktop.DBus.Properties.Get \
+		        string:com.ubuntu.Upstart0_6 string:version 2>/dev/null \
+		        || echo "this borked"; } | tail -n1)
+		# sanitize output a bit (interested just in value, not type),
+		# ret is intentionally unenquoted so as to normalize whitespace
+		ret=$(echo ${ret} | cut -d' ' -f2-)
+		AC_MSG_RESULT([${ret}])
+		if test "x${ret}" != xborked \
+		   || initctl --version 2>/dev/null | grep -q upstart; then
+			enable_upstart=yes
+		else
+			enable_upstart=no
+		fi
+	fi
+fi
+AC_MSG_CHECKING([whether to enable support for managing resources via Upstart])
+AC_MSG_RESULT([${enable_upstart}])
+if test "x${enable_upstart}" = xyes; then
+	HAVE_upstart=1
+	PCMK_FEATURES="$PCMK_FEATURES upstart"
 fi
 
 AC_DEFINE_UNQUOTED(SUPPORT_UPSTART, $HAVE_upstart, Support upstart based system services)
 AM_CONDITIONAL(BUILD_UPSTART, test $HAVE_upstart = 1)
 AC_SUBST(SUPPORT_UPSTART)
 
-if
-    $PKGCONFIG --exists systemd
-then
-    systemdunitdir=`$PKGCONFIG --variable=systemdsystemunitdir systemd`
-    AC_SUBST(systemdunitdir)
-else
-    enable_systemd=no
-fi
-
-if test $HAVE_dbus = 1 -a "x${enable_systemd}" != xno; then
-   if test -n "$systemdunitdir" -a "x$systemdunitdir" != xno; then
-      HAVE_systemd=1
-      PCMK_FEATURES="$PCMK_FEATURES systemd"
-   fi
-fi
-
-AC_DEFINE_UNQUOTED(SUPPORT_SYSTEMD, $HAVE_systemd, Support systemd based system services)
-AM_CONDITIONAL(BUILD_SYSTEMD, test $HAVE_systemd = 1)
-AC_SUBST(SUPPORT_SYSTEMD)
 
 case $SUPPORT_NAGIOS in
      1|yes|true|try)
@@ -1320,13 +1349,13 @@ COROSYNC_LIBS=""
 CS_USES_LIBQB=0
 
 PCMK_SERVICE_ID=9
-LCRSODIR="$libdir"
 
 if test $SUPPORT_CS = no; then
     AC_MSG_RESULT(no (disabled))
     SUPPORT_CS=0
 else
     AC_MSG_RESULT($SUPPORT_CS, with '$CSPREFIX')
+    SUPPORT_CS=1
     PKG_CHECK_MODULES(cpg,    libcpg) dnl Fatal
     PKG_CHECK_MODULES(cfg,    libcfg) dnl Fatal
     PKG_CHECK_MODULES(cmap,   libcmap,   HAVE_cmap=1,   HAVE_cmap=0)
@@ -1337,19 +1366,13 @@ else
     PKG_CHECK_MODULES(oldipc, libcoroipcc, HAVE_oldipc=1, HAVE_oldipc=0)
 
     if test $HAVE_oldipc = 1; then
-        SUPPORT_CS=1
 	CFLAGS="$CFLAGS $oldipc_FLAGS $cpg_FLAGS $cfg_FLAGS"
         COROSYNC_LIBS="$COROSYNC_LIBS $oldipc_LIBS $cpg_LIBS $cfg_LIBS"
-
-    elif test $HAVE_libqb = 1; then
-        SUPPORT_CS=1
+    else
         CS_USES_LIBQB=1
 	CFLAGS="$CFLAGS $libqb_FLAGS $cpg_FLAGS $cfg_FLAGS"
         COROSYNC_LIBS="$COROSYNC_LIBS $libqb_LIBS $cpg_LIBS $cfg_LIBS"
         AC_CHECK_LIB(corosync_common, cs_strerror)
-
-    else
-        aisreason="corosync/libqb IPC libraries not found by pkg_config"
     fi
 
     AC_DEFINE_UNQUOTED(HAVE_CONFDB, $HAVE_confdb, Have the old herarchial Corosync config API)
@@ -1373,7 +1396,13 @@ if test $SUPPORT_CS = 1 -a x$HAVE_confdb = x1; then
     dnl Need confdb to support cman and the plugins
     SUPPORT_PLUGIN=1
     BUILD_ATOMIC_ATTRD=0
-    LCRSODIR=`$PKGCONFIG corosync --variable=lcrsodir`
+    AC_MSG_CHECKING([for corosync path for plugins])
+    PKG_CHECK_VAR([LCRSODIR], [corosync], [lcrsodir], [
+       AC_MSG_RESULT([$LCRSODIR])
+    ],[
+       AC_SUBST([LCRSODIR], [$libdir])
+       AC_MSG_RESULT([$LCRSODIR (fallback)])
+    ])
     STACKS="$STACKS corosync-plugin"
     COROSYNC_LIBS="$COROSYNC_LIBS $confdb_LIBS"
 
@@ -1441,7 +1470,6 @@ if test ${BUILD_ATOMIC_ATTRD} = 1; then
     PCMK_FEATURES="$PCMK_FEATURES atomic-attrd"
 fi
 AC_SUBST(CLUSTERLIBS)
-AC_SUBST(LCRSODIR)
 
 dnl ========================================================================
 dnl    SNMP
@@ -2100,9 +2128,9 @@ AC_MSG_RESULT([  Header files             = ${includedir}])
 AC_MSG_RESULT([  Arch-independent files   = ${datadir}])
 AC_MSG_RESULT([  State information        = ${localstatedir}])
 AC_MSG_RESULT([  System configuration     = ${sysconfdir}])
+if test $SUPPORT_PLUGIN = 1; then
 AC_MSG_RESULT([  Corosync Plugins         = ${LCRSODIR}])
-AC_MSG_RESULT([])
-AC_MSG_RESULT([  Use system LTDL          = ${ac_cv_lib_ltdl_lt_dlopen}])
+fi
 AC_MSG_RESULT([])
 AC_MSG_RESULT([  HA group name            = ${CRM_DAEMON_GROUP}])
 AC_MSG_RESULT([  HA user name             = ${CRM_DAEMON_USER}])

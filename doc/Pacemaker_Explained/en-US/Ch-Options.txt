@@ -187,8 +187,8 @@ Should deleted actions be cancelled?
 indexterm:[start-failure-is-fatal,Cluster Option]
 indexterm:[Cluster,Option,start-failure-is-fatal]
 Should a failure to start a resource on a particular node prevent further start
-attempts on that node? If FALSE, the cluster will decide whether to try
-starting on the same node again based on the resource's current failure count
+attempts on that node? If FALSE, the cluster will decide whether the same
+node is still eligible based on the resource's current failure count
 and +migration-threshold+ (see <<s-failure-migration>>).
 
 | enable-startup-probes | TRUE |
@@ -277,6 +277,37 @@ indexterm:[pe-input-series-max,Cluster Option]
 indexterm:[Cluster,Option,pe-input-series-max]
 The number of "normal" PE inputs to save. Used when reporting problems.
 A value of -1 means unlimited (report all).
+
+| node-health-strategy | none |
+indexterm:[node-health-strategy,Cluster Option]
+indexterm:[Cluster,Option,node-health-strategy]
+ How the cluster should react to node health attributes (see <<s-node-health>>).
+ Allowed values are +none+, +migrate-on-red+, +only-green+, +progressive+, and
+ +custom+.
+
+| node-health-base | 0 |
+indexterm:[node-health-base,Cluster Option]
+indexterm:[Cluster,Option,node-health-base]
+ The base health score assigned to a node. Only used when
+ +node-health-strategy+ is +progressive+. '(since 1.1.16)'
+
+| node-health-green | 0 |
+indexterm:[node-health-green,Cluster Option]
+indexterm:[Cluster,Option,node-health-green]
+ The score to use for a node health attribute whose value is +green+.
+ Only used when +node-health-strategy+ is +progressive+ or +custom+.
+
+| node-health-yellow | 0 |
+indexterm:[node-health-yellow,Cluster Option]
+indexterm:[Cluster,Option,node-health-yellow]
+ The score to use for a node health attribute whose value is +yellow+.
+ Only used when +node-health-strategy+ is +progressive+ or +custom+.
+
+| node-health-red | 0 |
+indexterm:[node-health-red,Cluster Option]
+indexterm:[Cluster,Option,node-health-red]
+ The score to use for a node health attribute whose value is +red+.
+ Only used when +node-health-strategy+ is +progressive+ or +custom+.
 
 | remove-after-stop | FALSE |
 indexterm:[remove-after-stop,Cluster Option]

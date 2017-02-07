@@ -29,13 +29,11 @@
 #  include <glib.h>
 #  include <stdbool.h>
 
-#  undef MIN
-#  undef MAX
 #  include <string.h>
 
 #  include <libxml/tree.h>
 
-#  define CRM_FEATURE_SET		"3.0.11"
+#  define CRM_FEATURE_SET		"3.0.12"
 
 #  define EOS		'\0'
 #  define DIMOF(a)	((int) (sizeof(a)/sizeof(a[0])) )
@@ -70,6 +68,14 @@ extern char *crm_system_name;
 #  define DOT_FSA_ACTIONS		1
 #  define DOT_ALL_FSA_INPUTS	1
 /* #define FSA_TRACE		1 */
+
+/* This header defines INFINITY, but it might be defined elsewhere as well
+ * (e.g. math.h), so undefine it first. This, of course, complicates any attempt
+ * to use the other definition in any code that includes this header.
+ *
+ * @TODO: Rename our constant (which will break API backward compatibility).
+ */
+#  undef INFINITY
 
 #  define INFINITY_S        "INFINITY"
 #  define MINUS_INFINITY_S "-INFINITY"

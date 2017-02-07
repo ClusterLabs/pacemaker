@@ -140,10 +140,10 @@ function ocf_exitcode {
 
 function sendsnmp() {
   [ -f /usr/bin/snmptrap ] && /usr/bin/snmptrap -v 2c -c "$SNMPCOMMUNITY" "$SNMPDEST" "" PACEMAKER-MIB::pacemakerNotification \
-        PACEMAKER-MIB::pacemakerNotificationNode s "${node}" \
-        PACEMAKER-MIB::pacemakerNotificationResource s "${rsc}" \
+        PACEMAKER-MIB::pacemakerNotificationNode s "${CRM_notify_node}" \
+        PACEMAKER-MIB::pacemakerNotificationResource s "${CRM_notify_rsc}" \
         PACEMAKER-MIB::pacemakerNotificationOperation s "${CRM_notify_task}" \
-        PACEMAKER-MIB::pacemakerNotificationDescription s "${desc}" \
+        PACEMAKER-MIB::pacemakerNotificationDescription s "${CRM_notify_desc}" \
         PACEMAKER-MIB::pacemakerNotificationStatus i "${CRM_notify_status}" \
         PACEMAKER-MIB::pacemakerNotificationReturnCode i ${CRM_notify_rc} \
         PACEMAKER-MIB::pacemakerNotificationTargetReturnCode i ${CRM_notify_target_rc}

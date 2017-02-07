@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2010 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright (C) 2010-2016 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -763,24 +752,20 @@ resources_list_standards(void)
 
 #if SUPPORT_SYSTEMD
     agents = systemd_unit_listall();
-#else
-    agents = NULL;
-#endif
-
     if (agents) {
         standards = g_list_append(standards, strdup("systemd"));
         g_list_free_full(agents, free);
     }
-#if SUPPORT_UPSTART
-    agents = upstart_job_listall();
-#else
-    agents = NULL;
 #endif
 
+#if SUPPORT_UPSTART
+    agents = upstart_job_listall();
     if (agents) {
         standards = g_list_append(standards, strdup("upstart"));
         g_list_free_full(agents, free);
     }
+#endif
+
 #if SUPPORT_NAGIOS
     agents = resources_os_list_nagios_agents();
     if (agents) {

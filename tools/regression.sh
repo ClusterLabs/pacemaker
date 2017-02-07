@@ -155,6 +155,18 @@ function test_tools() {
     cmd="cibadmin -Q -o nodes | grep node1-ram"
     test_assert 0
 
+    desc="Set a transient (fail-count) node attribute"
+    cmd="crm_attribute -n fail-count-foo -v 3 -N node1 -t status"
+    test_assert 0
+
+    desc="Query a fail count"
+    cmd="crm_failcount --query -r foo -N node1"
+    test_assert 0
+
+    desc="Delete a transient (fail-count) node attribute"
+    cmd="crm_attribute -n fail-count-foo -D -N node1 -t status"
+    test_assert 0
+
     desc="Digest calculation"
     cmd="cibadmin -Q | cibadmin -5 -p 2>&1 > /dev/null"
     test_assert 0
@@ -202,10 +214,6 @@ function test_tools() {
 
     desc="List the configured resources"
     cmd="crm_resource -L"
-    test_assert 0
-
-    desc="Set a resource's fail-count"
-    cmd="crm_failcount -r dummy -v 10 -N node1"
     test_assert 0
 
     desc="Require a destination when migrating a resource that is stopped"
@@ -606,7 +614,7 @@ function test_acls() {
     $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow --validate-with pacemaker-1.3 2>&1
     export CIB_shadow=$shadow
 
-    cat<<EOF>/tmp/$$.acls.xml
+    cat <<EOF >/tmp/$$.acls.xml
     <acls>
       <acl_user id="l33t-haxor">
         <deny id="crook-nothing" xpath="/cib"/>
@@ -754,7 +762,9 @@ for t in $tests; do
         -e 's/.*error: unpack_resources:/error: unpack_resources:/g'\
         -e 's/ last-rc-change=\"[0-9]*\"//'\
         -e 's|^/tmp/[0-9][0-9]*\.||'\
-        -e 's/^Entity: line [0-9][0-9]*: //' $test_home/regression.$t.out
+        -e 's/^Entity: line [0-9][0-9]*: //'\
+        -e 's/schemas\.c:\([0-9][0-9]*\)/schemas.c:NNN/' \
+        -e 's/\(validation ([0-9][0-9]* of \)[0-9][0-9]*\().*\)/\1X\2/' $test_home/regression.$t.out
 
     if [ $do_save = 1 ]; then
 	cp $test_home/regression.$t.out $test_home/regression.$t.exp
@@ -792,5 +802,9 @@ elif [ $failed = 1 ]; then
     exit 2
 else
     echo $num_passed tests passed
+    for t in $tests; do
+        rm -f "$test_home/regression.$t.out"
+    done
+    crm_shadow --force --delete $shadow >/dev/null 2>&1
     exit 0
 fi

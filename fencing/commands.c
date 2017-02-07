@@ -988,14 +988,41 @@ dynamic_list_search_cb(GPid pid, int rc, const char *output, gpointer user_data)
 
 /*!
  * \internal
+ * \brief Returns true if any key in first is not in second or second has a different value for key
+ */
+static int
+device_params_diff(GHashTable *first, GHashTable *second) {
+    char *key = NULL;
+    char *value = NULL;
+    GHashTableIter gIter;
+
+    g_hash_table_iter_init(&gIter, first);
+    while (g_hash_table_iter_next(&gIter, (void **)&key, (void **)&value)) {
+
+        if(strstr(key, "CRM_meta") == key) {
+            continue;
+        } else if(strcmp(key, "crm_feature_set") == 0) {
+            continue;
+        } else {
+            char *other_value = g_hash_table_lookup(second, key);
+
+            if (!other_value || safe_str_neq(other_value, value)) {
+                crm_trace("Different value for %s: %s != %s", key, other_value, value);
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
+
+/*!
+ * \internal
  * \brief Checks to see if an identical device already exists in the device_list
  */
 static stonith_device_t *
 device_has_duplicate(stonith_device_t * device)
 {
-    char *key = NULL;
-    char *value = NULL;
-    GHashTableIter gIter;
     stonith_device_t *dup = g_hash_table_lookup(device_list, device->id);
 
     if (!dup) {
@@ -1008,21 +1035,9 @@ device_has_duplicate(stonith_device_t * device)
     }
 
     /* Use calculate_operation_digest() here? */
-    g_hash_table_iter_init(&gIter, device->params);
-    while (g_hash_table_iter_next(&gIter, (void **)&key, (void **)&value)) {
-
-        if(strstr(key, "CRM_meta") == key) {
-            continue;
-        } else if(strcmp(key, "crm_feature_set") == 0) {
-            continue;
-        } else {
-            char *other_value = g_hash_table_lookup(dup->params, key);
-
-            if (!other_value || safe_str_neq(other_value, value)) {
-                crm_trace("Different value for %s: %s != %s", key, other_value, value);
-                return NULL;
-            }
-        }
+    if (device_params_diff(device->params, dup->params) ||
+        device_params_diff(dup->params, device->params)) {
+        return NULL;
     }
 
     crm_trace("Match");
@@ -2461,30 +2476,30 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
         rc = stonith_fence_history(request, &data);
 
     } else if (crm_str_eq(op, STONITH_OP_DEVICE_ADD, TRUE)) {
-        const char *id = NULL;
+        const char *device_id = NULL;
 
-        rc = stonith_device_register(request, &id, FALSE);
-        do_stonith_notify_device(call_options, op, rc, id);
+        rc = stonith_device_register(request, &device_id, FALSE);
+        do_stonith_notify_device(call_options, op, rc, device_id);
 
     } else if (crm_str_eq(op, STONITH_OP_DEVICE_DEL, TRUE)) {
         xmlNode *dev = get_xpath_object("//" F_STONITH_DEVICE, request, LOG_ERR);
-        const char *id = crm_element_value(dev, XML_ATTR_ID);
+        const char *device_id = crm_element_value(dev, XML_ATTR_ID);
 
-        rc = stonith_device_remove(id, FALSE);
-        do_stonith_notify_device(call_options, op, rc, id);
+        rc = stonith_device_remove(device_id, FALSE);
+        do_stonith_notify_device(call_options, op, rc, device_id);
 
     } else if (crm_str_eq(op, STONITH_OP_LEVEL_ADD, TRUE)) {
-        char *id = NULL;
+        char *device_id = NULL;
 
-        rc = stonith_level_register(request, &id);
-        do_stonith_notify_level(call_options, op, rc, id);
-        free(id);
+        rc = stonith_level_register(request, &device_id);
+        do_stonith_notify_level(call_options, op, rc, device_id);
+        free(device_id);
 
     } else if (crm_str_eq(op, STONITH_OP_LEVEL_DEL, TRUE)) {
-        char *id = NULL;
+        char *device_id = NULL;
 
-        rc = stonith_level_remove(request, &id);
-        do_stonith_notify_level(call_options, op, rc, id);
+        rc = stonith_level_remove(request, &device_id);
+        do_stonith_notify_level(call_options, op, rc, device_id);
 
     } else if (crm_str_eq(op, STONITH_OP_CONFIRM, TRUE)) {
         async_command_t *cmd = create_async_command(request);
@@ -2498,12 +2513,12 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
         free_xml(reply);
 
     } else if(safe_str_eq(op, CRM_OP_RM_NODE_CACHE)) {
-        int id = 0;
+        int node_id = 0;
         const char *name = NULL;
 
-        crm_element_value_int(request, XML_ATTR_ID, &id);
+        crm_element_value_int(request, XML_ATTR_ID, &node_id);
         name = crm_element_value(request, XML_ATTR_UNAME);
-        reap_crm_member(id, name);
+        reap_crm_member(node_id, name);
 
         return pcmk_ok;
 

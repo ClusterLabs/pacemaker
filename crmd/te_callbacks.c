@@ -638,10 +638,10 @@ too_many_st_failures(void)
     g_hash_table_iter_init(&iter, stonith_failures);
     while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
         if (value->count > 10) {
-            crm_notice("Too many failures to fence %s (%d), giving up", key, value->count);
+            crm_warn("Too many failures to fence %s (%d), giving up", key, value->count);
             return TRUE;
         } else if (value->last_rc == -ENODEV) {
-            crm_notice("No devices found in cluster to fence %s, giving up", key);
+            crm_warn("No devices found in cluster to fence %s, giving up", key);
             return TRUE;
         }
     }

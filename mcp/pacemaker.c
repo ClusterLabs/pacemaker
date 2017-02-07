@@ -384,7 +384,7 @@ pcmk_shutdown_worker(gpointer user_data)
     }
 
     for (; phase > 0; phase--) {
-        /* dont stop anything with start_seq < 1 */
+        /* Don't stop anything with start_seq < 1 */
 
         for (lpc = max - 1; lpc >= 0; lpc--) {
             pcmk_child_t *child = &(pcmk_children[lpc]);
@@ -783,7 +783,7 @@ init_children_processes(void)
 
     /* start any children that have not been detected */
     for (start_seq = 1; start_seq < max; start_seq++) {
-        /* dont start anything with start_seq < 1 */
+        /* don't start anything with start_seq < 1 */
         for (lpc = 0; lpc < max; lpc++) {
             if (pcmk_children[lpc].pid) {
                 /* we are already tracking it */
@@ -1062,20 +1062,24 @@ main(int argc, char **argv)
     mkdir(CRM_STATE_DIR, 0750);
     mcp_chown(CRM_STATE_DIR, pcmk_uid, pcmk_gid);
 
+    /* Used to store core/blackbox/pengine/cib files in */
+    crm_build_path(CRM_PACEMAKER_DIR, 0750);
+    mcp_chown(CRM_PACEMAKER_DIR, pcmk_uid, pcmk_gid);
+
     /* Used to store core files in */
-    crm_build_path(CRM_CORE_DIR, 0775);
+    crm_build_path(CRM_CORE_DIR, 0750);
     mcp_chown(CRM_CORE_DIR, pcmk_uid, pcmk_gid);
 
     /* Used to store blackbox dumps in */
-    crm_build_path(CRM_BLACKBOX_DIR, 0755);
+    crm_build_path(CRM_BLACKBOX_DIR, 0750);
     mcp_chown(CRM_BLACKBOX_DIR, pcmk_uid, pcmk_gid);
 
     /* Used to store policy engine inputs in */
-    crm_build_path(PE_STATE_DIR, 0755);
+    crm_build_path(PE_STATE_DIR, 0750);
     mcp_chown(PE_STATE_DIR, pcmk_uid, pcmk_gid);
 
     /* Used to store the cluster configuration */
-    crm_build_path(CRM_CONFIG_DIR, 0755);
+    crm_build_path(CRM_CONFIG_DIR, 0750);
     mcp_chown(CRM_CONFIG_DIR, pcmk_uid, pcmk_gid);
 
     /* Resource agent paths are constructed by the lrmd */

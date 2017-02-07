@@ -1,3 +1,55 @@
+* Wed Nov 30 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.16-1
+- Update source tarball to revision: 76876b3
+- Changesets: 382
+- Diff:       145 files changed, 7200 insertions(+), 5621 deletions(-)
+
+- Features added since Pacemaker-1.1.15
+  + Location constraints may use rsc-pattern, with submatches expanded
+  + node-health-base available with node-health-strategy=progressive
+  + new Pacemaker Development document for working on pacemaker code base
+  + new PCMK_panic_action variable allows crash instead of reboot on panic
+  + resources: add resource agent for managing a node attribute
+  + systemd: include socket units when listing all systemd agents
+
+- Changes since Pacemaker-1.1.15
+  + Important security fix for CVE-2016-7035
+  + Logging is now synchronous when blackboxes are enabled
+  + All python code except CTS is now compatible with python 2.6+ and 3.2+
+  + build: take advantage of compiler features for security and performance
+  + build: update SuSE spec modifications for recent spec changes
+  + build: avoid watchdog reboot when upgrading pacemaker_remote with sbd
+  + build: numerous other improvements in environment detection, etc.
+  + cib: fix infinite loop when no schema validates
+  + crmd: cl#5185 - record pending operations in CIB before they are performed
+  + crmd: don't abort transitions for CIB comment changes
+  + crmd: resend shutdown request if DC loses original request
+  + documentation: install improved README in doc instead of now-removed AUTHORS
+  + documentation: clarify licensing and provide copy of all licenses
+  + documentation: document various features and upgrades better
+  + fence_legacy: use "list" action when searching cluster-glue agents
+  + libcib: don't stop sending alerts after releasing DC role
+  + libcrmcommon: properly handle XML comments when comparing v2 patchset diffs
+  + libcrmcommon: report errors consistently when waiting for data on connection
+  + libpengine: avoid potential use-of-NULL
+  + libservices: use DBusError API properly
+  + pacemaker_remote: init script stop should always return 0
+  + pacemaker_remote: allow remote clients to timeout/reconnect
+  + pacemaker_remote: correctly calculate remaining timeout when receiving messages
+  + pengine: avoid transition loop for start-then-stop + unfencing
+  + pengine: correctly update dependent actions of un-runnable clones
+  + pengine: do not fence a node in maintenance mode if it shuts down cleanly
+  + pengine: set OCF_RESKEY_CRM_meta_notify_active_* for multistate resources
+  + resources: ping - avoid temporary files for fping check, support FreeBSD
+  + resources: SysInfo - better support for FreeBSD
+  + resources: variable name typo in docker-wrapper
+  + systemd: order pacemaker after time-sync target
+  + tools: correct attrd_updater help and error messages when using CMAN
+  + tools: crm_standby --version/--help should work without cluster running
+  + tools: make crm_report sanitize CIB before generating readable version
+  + tools: display pending resource state by default when available
+  + tools: avoid matching other process with same PID in ClusterMon
+
+
 * Tue Jun 21 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.15-1
 - Update source tarball to revision: 32fa6a5
 - Changesets: 533

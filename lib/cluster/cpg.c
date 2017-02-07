@@ -315,8 +315,7 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
         goto badmsg;
 
     } else if (safe_str_eq("identify", data)) {
-        int pid = getpid();
-        char *pid_s = crm_itoa(pid);
+        char *pid_s = crm_itoa((int) getpid());
 
         send_cluster_text(crm_class_cluster, pid_s, TRUE, NULL, crm_msg_ais);
         free(pid_s);
@@ -638,7 +637,7 @@ send_cluster_text(int class, const char *data,
     free(target);
 
 #if SUPPORT_PLUGIN
-    /* The plugin is the only time we dont use CPG messaging */
+    /* The plugin is the only time we don't use CPG messaging */
     if(get_cluster_type() == pcmk_cluster_classic_ais) {
         return send_plugin_text(class, iov);
     }

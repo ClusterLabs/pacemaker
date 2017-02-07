@@ -171,7 +171,7 @@ A partially set up scenario is torn down if it fails during setup.
             else:
                 try:
                     answer = raw_input('Continue? [nY]')
-                except EOFError, e:
+                except EOFError as e:
                     answer = "n"
             if answer and answer == "n":
                 raise ValueError("Teardown of %s on %s failed" % (test.name, nodechoice))
@@ -266,7 +266,7 @@ A partially set up scenario is torn down if it fails during setup.
             else:
                 try:
                     answer = raw_input('Big problems. Continue? [nY]')
-                except EOFError, e:
+                except EOFError as e:
                     answer = "n"
             if answer and answer == "n":
                 self.ClusterManager.log("Shutting down.")

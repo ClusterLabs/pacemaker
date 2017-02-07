@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2016-05-03 17:45-0500\n"
-"PO-Revision-Date: 2016-05-03 17:45-0500\n"
+"POT-Creation-Date: 2016-11-02 17:32-0500\n"
+"PO-Revision-Date: 2016-11-02 17:32-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -109,7 +109,17 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "It is recommended to run Pacemaker 1.1.12 or later when using pacemaker_remote due to important bug fixes. An overview of changes in pacemaker_remote capability by version:"
+msgid "It is recommended to run Pacemaker 1.1.12 or later when using pacemaker_remote due to important bug fixes. An overview of changes in pacemaker_remote capability by version (aside from bug fixes, which are included in every version):"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "1.1.16"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Support for watchdog-based fencing (sbd) on remote nodes"
 msgstr ""
 
 #. Tag: title
@@ -120,11 +130,6 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "If pacemaker_remote is stopped on an active node, it will wait for the cluster to migrate all resources off before exiting, rather than exit immediately and get fenced."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Bug fixes"
 msgstr ""
 
 #. Tag: title
@@ -140,11 +145,6 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "reconnect_interval option for remote nodes"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Bug fixes, including a memory leak"
 msgstr ""
 
 #. Tag: title
@@ -165,6 +165,11 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Running pacemaker_remote within LXC environments is deprecated due to newly added Pacemaker support for isolated resources"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>#kind</literal> built-in node attribute for use with rules"
 msgstr ""
 
 #. Tag: title
@@ -205,11 +210,6 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Support for clusters with mixed endian architectures"
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "1.1.10"
 msgstr ""
 
 #. Tag: title

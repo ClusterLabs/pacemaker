@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2016-05-03 17:45-0500\n"
-"PO-Revision-Date: 2016-05-03 17:45-0500\n"
+"POT-Creation-Date: 2016-11-02 17:32-0500\n"
+"PO-Revision-Date: 2016-11-02 17:32-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -930,12 +930,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "started"
+msgid "Started"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "An additional attribute of colocation constraints that specifies the role that <literal>rsc</literal> must be in. Allowed values: <literal>started</literal>, <literal>master</literal>, <literal>slave</literal>. <indexterm> <primary>rsc-role</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary><tertiary>rsc-role</tertiary> </indexterm> <indexterm> <primary>Ordering</primary><secondary>rsc-role</secondary> </indexterm> <indexterm> <primary>rsc-role</primary> </indexterm>"
+msgid "An additional attribute of colocation constraints that specifies the role that <literal>rsc</literal> must be in. Allowed values: <literal>Started</literal>, <literal>Master</literal>, <literal>Slave</literal>. <indexterm> <primary>rsc-role</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary><tertiary>rsc-role</tertiary> </indexterm> <indexterm> <primary>Ordering</primary><secondary>rsc-role</secondary> </indexterm> <indexterm> <primary>rsc-role</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -945,7 +945,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "An additional attribute of colocation constraints that specifies the role that <literal>with-rsc</literal> must be in. Allowed values: <literal>started</literal>, <literal>master</literal>, <literal>slave</literal>. <indexterm> <primary>with-rsc-role</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary><tertiary>with-rsc-role</tertiary> </indexterm> <indexterm> <primary>Ordering</primary><secondary>with-rsc-role</secondary> </indexterm> <indexterm> <primary>with-rsc-role</primary> </indexterm>"
+msgid "An additional attribute of colocation constraints that specifies the role that <literal>with-rsc</literal> must be in. Allowed values: <literal>Started</literal>, <literal>Master</literal>, <literal>Slave</literal>. <indexterm> <primary>with-rsc-role</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary><tertiary>with-rsc-role</tertiary> </indexterm> <indexterm> <primary>Ordering</primary><secondary>with-rsc-role</secondary> </indexterm> <indexterm> <primary>with-rsc-role</primary> </indexterm>"
 msgstr ""
 
 #. Tag: title
@@ -999,7 +999,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The role that <emphasis>all members</emphasis> of the set must be in. Allowed values: <literal>started</literal>, <literal>master</literal>, <literal>slave</literal>. <indexterm> <primary>role</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary><tertiary>role</tertiary> </indexterm> <indexterm> <primary>Ordering</primary><secondary>role</secondary> </indexterm> <indexterm> <primary>role</primary> </indexterm>"
+msgid "The role that <emphasis>all members</emphasis> of the set must be in. Allowed values: <literal>Started</literal>, <literal>Master</literal>, <literal>Slave</literal>. <indexterm> <primary>role</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary><tertiary>role</tertiary> </indexterm> <indexterm> <primary>Ordering</primary><secondary>role</secondary> </indexterm> <indexterm> <primary>role</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -1220,16 +1220,6 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Resources the that are running <indexterm> <primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_meta_notify_</secondary><tertiary>active_resource</tertiary> </indexterm> <indexterm> <primary>OCF_RESKEY_CRM_meta_notify_</primary><secondary>active_resource</secondary> </indexterm> <indexterm> <primary>active_resource</primary> </indexterm> <indexterm> <primary>active_resource</primary><secondary>Notification Environment Variable</secondary> </indexterm> <indexterm> <primary>Notification Environment Variable</primary> </indexterm>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Resources the that are not running <indexterm> <primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_meta_notify_</secondary><tertiary>inactive_resource</tertiary> </indexterm> <indexterm> <primary>OCF_RESKEY_CRM_meta_notify_</primary><secondary>inactive_resource</secondary> </indexterm> <indexterm> <primary>inactive_resource</primary> </indexterm> <indexterm> <primary>inactive_resource</primary><secondary>Notification Environment Variable</secondary> </indexterm> <indexterm> <primary>Notification Environment Variable</primary> </indexterm>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
 msgid "<emphasis>OCF_RESKEY_CRM_meta_notify_master_resource</emphasis>"
 msgstr ""
 
@@ -1246,16 +1236,6 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Resources that are running in <literal>Slave</literal> mode <indexterm> <primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_meta_notify_</secondary><tertiary>slave_resource</tertiary> </indexterm> <indexterm> <primary>OCF_RESKEY_CRM_meta_notify_</primary><secondary>slave_resource</secondary> </indexterm> <indexterm> <primary>slave_resource</primary> </indexterm> <indexterm> <primary>slave_resource</primary><secondary>Notification Environment Variable</secondary> </indexterm> <indexterm> <primary>Notification Environment Variable</primary> </indexterm>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "<indexterm> <primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_meta_notify_</secondary><tertiary>stop_resource</tertiary> </indexterm> <indexterm> <primary>OCF_RESKEY_CRM_meta_notify_</primary><secondary>stop_resource</secondary> </indexterm> <indexterm> <primary>stop_resource</primary> </indexterm> <indexterm> <primary>stop_resource</primary><secondary>Notification Environment Variable</secondary> </indexterm> <indexterm> <primary>Notification Environment Variable</primary> </indexterm> OCF_RESKEY_CRM_meta_notify_stop_resource"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Resources to be stopped"
 msgstr ""
 
 #. Tag: para
@@ -1285,7 +1265,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Nodes on which resources will be promote <indexterm> <primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_meta_notify_</secondary><tertiary>promote_uname</tertiary> </indexterm> <indexterm> <primary>OCF_RESKEY_CRM_meta_notify_</primary><secondary>promote_uname</secondary> </indexterm> <indexterm> <primary>promote_uname</primary> </indexterm> <indexterm> <primary>promote_uname</primary><secondary>Notification Environment Variable</secondary> </indexterm> <indexterm> <primary>Notification Environment Variable</primary> </indexterm>"
+msgid "Nodes on which resources will be promoted <indexterm> <primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_meta_notify_</secondary><tertiary>promote_uname</tertiary> </indexterm> <indexterm> <primary>OCF_RESKEY_CRM_meta_notify_</primary><secondary>promote_uname</secondary> </indexterm> <indexterm> <primary>promote_uname</primary> </indexterm> <indexterm> <primary>promote_uname</primary><secondary>Notification Environment Variable</secondary> </indexterm> <indexterm> <primary>Notification Environment Variable</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para

@@ -22,20 +22,22 @@ Transition Summary:
 Executing cluster transition:
  * Resource action: lxc1            stop on 18node2
  * Resource action: container1      stop on 18node2
+ * Pseudo action:   stonith-lxc1-reboot on lxc1
+ * Pseudo action:   stonith_complete
+ * Resource action: container1      start on 18node2
  * Pseudo action:   M-clone_stop_0
  * Pseudo action:   B_stop_0
- * Resource action: container1      start on 18node2
+ * Resource action: lxc1            start on 18node2
+ * Resource action: lxc1            monitor=30000 on 18node2
  * Pseudo action:   M_stop_0
  * Pseudo action:   M-clone_stopped_0
  * Pseudo action:   M-clone_start_0
- * Resource action: lxc1            start on 18node2
- * Resource action: lxc1            monitor=30000 on 18node2
+ * Resource action: B               start on lxc1
  * Pseudo action:   all_stopped
  * Resource action: M               start on lxc1
  * Pseudo action:   M-clone_running_0
- * Resource action: B               start on lxc1
- * Resource action: M               monitor=10000 on lxc1
  * Resource action: B               monitor=10000 on lxc1
+ * Resource action: M               monitor=10000 on lxc1
 
 Revised cluster status:
 Online: [ 18node1 18node2 18node3 ]

@@ -24,7 +24,7 @@ Options:
 op=""
 options=""
 lifetime=0
-target=$(crm_node -n)
+target=""
 
 BACKWARD_COMPATIBLE="get-value,attr-value:,delete-attr,uname:,attr-id:"
 TEMP=$(getopt -o qDGQVN:U:v:i:l: \
@@ -55,6 +55,12 @@ while true ; do
         *) echo "crm_standby: unrecognized option '$1'"; echo; echo "$HELPTEXT"; exit 1;;
     esac
 done
+
+# It's important to call cluster commands only after arguments are processed,
+# so --version and --help work without problems even if those commands don't.
+if [ "$target" = "" ]; then
+    target=$(crm_node -n)
+fi
 
 options="-N $target -n standby $options"
 if [ x$op = x ]; then

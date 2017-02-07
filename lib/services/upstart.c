@@ -1,27 +1,9 @@
 /*
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * File: upstart-dbus.c
  * Copyright (C) 2010 Senko Rasic <senko.rasic@dobarkod.hr>
  * Copyright (c) 2010 Ante Karamatic <ivoks@init.hr>
  *
- *
- * Each exported function is standalone, and creates a new connection to
- * the upstart daemon. This is because lrmd plugins fork off for exec,
- * and if we try and share the connection, the whole thing blocks
- * indefinitely.
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -100,9 +82,9 @@ upstart_job_by_name(const gchar * arg_name, gchar ** out_unit, int timeout)
     reply = pcmk_dbus_send_recv(msg, upstart_proxy, &error, timeout);
     dbus_message_unref(msg);
 
-    if(error.name) {
-        /* ignore "already started" or "not running" errors */
-        crm_err("Could not issue %s for %s: %s", method, arg_name, error.name);
+    if (dbus_error_is_set(&error)) {
+        crm_err("Could not issue %s for %s: %s", method, arg_name, error.message);
+        dbus_error_free(&error);
 
     } else if(!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH, __FUNCTION__, __LINE__)) {
         crm_err("Invalid return type for %s", method);
@@ -193,8 +175,9 @@ upstart_job_listall(void)
     reply = pcmk_dbus_send_recv(msg, upstart_proxy, &error, DBUS_TIMEOUT_USE_DEFAULT);
     dbus_message_unref(msg);
 
-    if(error.name) {
-        crm_err("Call to %s failed: %s", method, error.name);
+    if (dbus_error_is_set(&error)) {
+        crm_err("Call to %s failed: %s", method, error.message);
+        dbus_error_free(&error);
         return NULL;
 
     } else if (!dbus_message_iter_init(reply, &args)) {
@@ -271,8 +254,9 @@ get_first_instance(const gchar * job, int timeout)
     reply = pcmk_dbus_send_recv(msg, upstart_proxy, &error, timeout);
     dbus_message_unref(msg);
 
-    if(error.name) {
-        crm_err("Call to %s failed: %s", method, error.name);
+    if (dbus_error_is_set(&error)) {
+        crm_err("Call to %s failed: %s", method, error.message);
+        dbus_error_free(&error);
         goto done;
 
     } else if(reply == NULL) {
@@ -390,12 +374,13 @@ upstart_async_dispatch(DBusPendingCall *pending, void *user_data)
         reply = dbus_pending_call_steal_reply(pending);
     }
 
-    if(pcmk_dbus_find_error(op->action, pending, reply, &error)) {
+    if (pcmk_dbus_find_error(pending, reply, &error)) {
 
         /* ignore "already started" or "not running" errors */
         if (!upstart_mask_error(op, error.name)) {
             crm_err("%s for %s: %s", op->action, op->rsc, error.message);
         }
+        dbus_error_free(&error);
 
     } else if (!g_strcmp0(op->action, "stop")) {
         /* No return vaue */
@@ -536,10 +521,12 @@ upstart_job_exec(svc_action_t * op, gboolean synchronous)
     dbus_error_init(&error);
     reply = pcmk_dbus_send_recv(msg, upstart_proxy, &error, op->timeout);
 
-    if(error.name) {
+    if (dbus_error_is_set(&error)) {
         if(!upstart_mask_error(op, error.name)) {
-            crm_err("Could not issue %s for %s: %s (%s)", action, op->rsc, error.name, job);
+            crm_err("Could not issue %s for %s: %s (%s)",
+                    action, op->rsc, error.message, job);
         }
+        dbus_error_free(&error);
 
     } else if (!g_strcmp0(op->action, "stop")) {
         /* No return vaue */

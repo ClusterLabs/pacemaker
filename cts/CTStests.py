@@ -1659,7 +1659,7 @@ class SplitBrainTest(CTSTest):
             else:
                 try:
                     answer = raw_input('Continue? [nY]')
-                except EOFError, e:
+                except EOFError as e:
                     answer = "n" 
             if answer and answer == "n":
                 raise ValueError("Reformed cluster not stable")
@@ -3032,11 +3032,12 @@ class RemoteDriver(CTSTest):
 
         ret = self.startall(None)
         if not ret:
-            return self.failure("Setup failed, start all nodes failed.")
+            return self.failure("setup failed: could not start all nodes")
 
         self.setup_env(node)
         self.start_metal(node)
         self.add_dummy_rsc(node)
+        return True
 
     def __call__(self, node):
         return self.failure("This base class is not meant to be called directly.")
@@ -3056,7 +3057,9 @@ class RemoteBasic(RemoteDriver):
     def __call__(self, node):
         '''Perform the 'RemoteBaremetal' test. '''
 
-        self.start_new_test(node)
+        if not self.start_new_test(node):
+            return self.failure(self.fail_string)
+
         self.test_attributes(node)
         self.cleanup_metal(node)
 
@@ -3074,7 +3077,9 @@ class RemoteStonithd(RemoteDriver):
     def __call__(self, node):
         '''Perform the 'RemoteStonithd' test. '''
 
-        self.start_new_test(node)
+        if not self.start_new_test(node):
+            return self.failure(self.fail_string)
+
         self.fail_connection(node)
         self.cleanup_metal(node)
 
@@ -3115,7 +3120,9 @@ class RemoteMigrate(RemoteDriver):
     def __call__(self, node):
         '''Perform the 'RemoteMigrate' test. '''
 
-        self.start_new_test(node)
+        if not self.start_new_test(node):
+            return self.failure(self.fail_string)
+
         self.migrate_connection(node)
         self.cleanup_metal(node)
 
@@ -3134,7 +3141,8 @@ class RemoteRscFailure(RemoteDriver):
     def __call__(self, node):
         '''Perform the 'RemoteRscFailure' test. '''
 
-        self.start_new_test(node)
+        if not self.start_new_test(node):
+            return self.failure(self.fail_string)
 
         # This is an important step. We are migrating the connection
         # before failing the resource. This verifies that the migration

@@ -331,6 +331,14 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
             /* The DC always sends updates */
             send_stonith_update(NULL, st_event->target, uuid);
 
+            /* @TODO Ideally, at this point, we'd check whether the fenced node
+             * hosted any guest nodes, and call remote_node_down() for them.
+             * Unfortunately, the crmd doesn't have a simple, reliable way to
+             * map hosts to guests. It might be possible to track this in the
+             * peer cache via crm_remote_peer_cache_refresh(). For now, we rely
+             * on the PE creating fence pseudo-events for the guests.
+             */
+
             if (st_event->client_origin && safe_str_neq(st_event->client_origin, te_client_id)) {
 
                 /* Abort the current transition graph if it wasn't us

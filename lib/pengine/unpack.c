@@ -70,10 +70,15 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
     /* A guest node is fenced by marking its container as failed */
     if (is_container_remote_node(node)) {
         resource_t *rsc = node->details->remote_rsc->container;
+
         if (is_set(rsc->flags, pe_rsc_failed) == FALSE) {
             crm_warn("Guest node %s will be fenced (by recovering %s) %s",
                 node->details->uname, rsc->id, reason);
-            /* node->details->unclean = TRUE; */
+
+            /* We don't mark the node as unclean, because that would prevent the
+             * node from running resources. We want to allow it to run resources
+             * in this transition if the recovery succeeds.
+             */
             node->details->remote_requires_reset = TRUE;
             set_bit(rsc->flags, pe_rsc_failed);
         }
@@ -500,11 +505,13 @@ handle_startup_fencing(pe_working_set_t *data_set, node_t *new_node)
 {
     static const char *blind_faith = NULL;
     static gboolean unseen_are_unclean = TRUE;
+    static gboolean need_warning = TRUE;
 
     if ((new_node->details->type == node_remote) && (new_node->details->remote_rsc == NULL)) {
-        /* ignore fencing remote-nodes that don't have a conneciton resource associated
-         * with them. This happens when remote-node entries get left in the nodes section
-         * after the connection resource is removed */
+        /* Ignore fencing for remote nodes that don't have a connection resource
+         * associated with them. This happens when remote node entries get left
+         * in the nodes section after the connection resource is removed.
+         */
         return;
     }
 
@@ -512,7 +519,12 @@ handle_startup_fencing(pe_working_set_t *data_set, node_t *new_node)
 
     if (crm_is_true(blind_faith) == FALSE) {
         unseen_are_unclean = FALSE;
-        crm_warn("Blind faith: not fencing unseen nodes");
+        if (need_warning) {
+            crm_warn("Blind faith: not fencing unseen nodes");
+
+            /* Warn once per run, not per node and transition */
+            need_warning = FALSE;
+        }
     }
 
     if (is_set(data_set->flags, pe_flag_stonith_enabled) == FALSE
@@ -1394,7 +1406,12 @@ determine_remote_online_status(pe_working_set_t * data_set, node_t * this_node)
 {
     resource_t *rsc = this_node->details->remote_rsc;
     resource_t *container = NULL;
+    pe_node_t *host = NULL;
 
+    /* If there is a node state entry for a (former) Pacemaker Remote node
+     * but no resource creating that node, the node's connection resource will
+     * be NULL. Consider it an offline remote node in that case.
+     */
     if (rsc == NULL) {
         this_node->details->online = FALSE;
         goto remote_online_done;
@@ -1402,36 +1419,50 @@ determine_remote_online_status(pe_working_set_t * data_set, node_t * this_node)
 
     container = rsc->container;
 
-    CRM_ASSERT(rsc != NULL);
+    if (container && (g_list_length(rsc->running_on) == 1)) {
+        host = rsc->running_on->data;
+    }
 
     /* If the resource is currently started, mark it online. */
     if (rsc->role == RSC_ROLE_STARTED) {
-        crm_trace("Remote node %s is set to ONLINE. role == started", this_node->details->id);
+        crm_trace("%s node %s presumed ONLINE because connection resource is started",
+                  (container? "Guest" : "Remote"), this_node->details->id);
         this_node->details->online = TRUE;
     }
 
     /* consider this node shutting down if transitioning start->stop */
     if (rsc->role == RSC_ROLE_STARTED && rsc->next_role == RSC_ROLE_STOPPED) {
-        crm_trace("Remote node %s shutdown. transition from start to stop role", this_node->details->id);
+        crm_trace("%s node %s shutting down because connection resource is stopping",
+                  (container? "Guest" : "Remote"), this_node->details->id);
         this_node->details->shutdown = TRUE;
     }
 
     /* Now check all the failure conditions. */
     if(container && is_set(container->flags, pe_rsc_failed)) {
-        crm_trace("Remote node %s is set to UNCLEAN. rsc failed.", this_node->details->id);
+        crm_trace("Guest node %s UNCLEAN because guest resource failed",
+                  this_node->details->id);
         this_node->details->online = FALSE;
         this_node->details->remote_requires_reset = TRUE;
 
     } else if(is_set(rsc->flags, pe_rsc_failed)) {
-        crm_trace("Remote node %s is set to OFFLINE. rsc failed.", this_node->details->id);
+        crm_trace("%s node %s OFFLINE because connection resource failed",
+                  (container? "Guest" : "Remote"), this_node->details->id);
         this_node->details->online = FALSE;
 
     } else if (rsc->role == RSC_ROLE_STOPPED
         || (container && container->role == RSC_ROLE_STOPPED)) {
 
-        crm_trace("Remote node %s is set to OFFLINE. node is stopped.", this_node->details->id);
+        crm_trace("%s node %s OFFLINE because its resource is stopped",
+                  (container? "Guest" : "Remote"), this_node->details->id);
         this_node->details->online = FALSE;
         this_node->details->remote_requires_reset = FALSE;
+
+    } else if (host && (host->details->online == FALSE)
+               && host->details->unclean) {
+        crm_trace("Guest node %s UNCLEAN because host is unclean",
+                  this_node->details->id);
+        this_node->details->online = FALSE;
+        this_node->details->remote_requires_reset = TRUE;
     }
 
 remote_online_done:
@@ -1487,7 +1518,7 @@ determine_online_status(xmlNode * node_state, node_t * this_node, pe_working_set
     }
 
     if (online && this_node->details->shutdown) {
-        /* dont run resources here */
+        /* don't run resources here */
         this_node->fixed = TRUE;
         this_node->weight = -INFINITY;
     }
@@ -2374,14 +2405,14 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
 }
 
 static void
-unpack_rsc_migration(resource_t *rsc, node_t *node, xmlNode *xml_op, pe_working_set_t * data_set) 
+unpack_rsc_migration(resource_t *rsc, node_t *node, xmlNode *xml_op, pe_working_set_t * data_set)
 {
-                
+
     /*
      * The normal sequence is (now): migrate_to(Src) -> migrate_from(Tgt) -> stop(Src)
      *
-     * So if a migrate_to is followed by a stop, then we dont need to care what
-     * happended on the target node
+     * So if a migrate_to is followed by a stop, then we don't need to care what
+     * happened on the target node
      *
      * Without the stop, we need to look for a successful migrate_from.
      * This would also imply we're no longer running on the source
@@ -3089,13 +3120,13 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
     if (is_not_set(rsc->flags, pe_rsc_unique)) {
         parent = uber_parent(rsc);
     }
-    
+
     pe_rsc_trace(rsc, "Unpacking task %s/%s (call_id=%d, status=%d, rc=%d) on %s (role=%s)",
                  task_key, task, task_id, status, rc, node->details->uname, role2text(rsc->role));
 
     if (node->details->unclean) {
         pe_rsc_trace(rsc, "Node %s (where %s is running) is unclean."
-                     " Further action depends on the value of the stop's on-fail attribue",
+                     " Further action depends on the value of the stop's on-fail attribute",
                      node->details->uname, rsc->id);
     }
 

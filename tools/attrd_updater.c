@@ -44,8 +44,8 @@ static struct crm_option long_options[] = {
 
     {"-spacer-",1, 0, '-', "\nCommands:"},
     {"update",  1, 0, 'U', "Update the attribute's value in attrd.  If this causes the value to change, it will also be updated in the cluster configuration"},
-#ifdef HAVE_ATOMIC_ATTRD
     {"update-both", 1, 0, 'B', "Update the attribute's value and time to wait (dampening) in attrd. If this causes the value or dampening to change, the attribute will also be written to the cluster configuration, so be aware that repeatedly changing the dampening reduces its effectiveness."},
+#if HAVE_ATOMIC_ATTRD
     {"update-delay", 0, 0, 'Y', "Update the attribute's dampening in attrd (requires -d/--delay). If this causes the dampening to change, the attribute will also be written to the cluster configuration, so be aware that repeatedly changing the dampening reduces its effectiveness."},
     {"query",   0, 0, 'Q', "\tQuery the attribute's value from attrd"},
 #endif
@@ -56,7 +56,7 @@ static struct crm_option long_options[] = {
     {"delay",   1, 0, 'd', "The time to wait (dampening) in seconds for further changes before writing"},
     {"set",     1, 0, 's', "(Advanced) The attribute set in which to place the value"},
     {"node",    1, 0, 'N', "Set the attribute for the named node (instead of the local one)"},
-#ifdef HAVE_ATOMIC_ATTRD
+#if HAVE_ATOMIC_ATTRD
     {"all",     0, 0, 'A', "Show values of the attribute for all nodes (query only)"},
     /* lifetime could be implemented for atomic attrd if there is sufficient user demand */
     {"lifetime",1, 0, 'l', "(Deprecated) Lifetime of the node attribute (silently ignored by cluster)"},
@@ -73,7 +73,9 @@ static struct crm_option long_options[] = {
 };
 /* *INDENT-ON* */
 
+#if HAVE_ATOMIC_ATTRD
 static int do_query(const char *attr_name, const char *attr_node, gboolean query_all);
+#endif
 static int do_update(char command, const char *attr_node, const char *attr_name,
                      const char *attr_value, const char *attr_section,
                      const char *attr_set, const char *attr_dampen, int attr_options);
@@ -93,7 +95,7 @@ main(int argc, char **argv)
     const char *attr_dampen = NULL;
     char command = 'Q';
 
-#ifdef HAVE_ATOMIC_ATTRD
+#if HAVE_ATOMIC_ATTRD
     gboolean query_all = FALSE;
 #endif
 
@@ -134,7 +136,7 @@ main(int argc, char **argv)
             case 'N':
                 attr_node = strdup(optarg);
                 break;
-#ifdef HAVE_ATOMIC_ATTRD
+#if HAVE_ATOMIC_ATTRD
             case 'A':
                 query_all = TRUE;
             case 'p':
@@ -143,14 +145,14 @@ main(int argc, char **argv)
 #endif
             case 'q':
                 break;
-#ifdef HAVE_ATOMIC_ATTRD
+#if HAVE_ATOMIC_ATTRD
             case 'Y':
                 command = flag;
                 crm_log_args(argc, argv); /* Too much? */
                 break;
-            case 'B':
             case 'Q':
 #endif
+            case 'B':
             case 'R':
             case 'D':
             case 'U':
@@ -178,7 +180,7 @@ main(int argc, char **argv)
     }
 
     if (command == 'Q') {
-#ifdef HAVE_ATOMIC_ATTRD
+#if HAVE_ATOMIC_ATTRD
         crm_exit(do_query(attr_name, attr_node, query_all));
 #else
         crm_help('?', EX_USAGE);
@@ -189,6 +191,8 @@ main(int argc, char **argv)
     }
     return crm_exit(pcmk_ok);
 }
+
+#if HAVE_ATOMIC_ATTRD
 
 /*!
  * \internal
@@ -362,6 +366,8 @@ do_query(const char *attr_name, const char *attr_node, gboolean query_all)
 
     return pcmk_ok;
 }
+
+#endif
 
 static int
 do_update(char command, const char *attr_node, const char *attr_name,

@@ -71,9 +71,9 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
     crm_ipcs_send_ack(c, id, flags, "ack", __FUNCTION__, __LINE__);
     if (msg != NULL) {
-        xmlNode *data = get_message_xml(msg, F_CRM_DATA);
+        xmlNode *data_xml = get_message_xml(msg, F_CRM_DATA);
 
-        process_pe_message(msg, data, c);
+        process_pe_message(msg, data_xml, c);
         free_xml(msg);
     }
     return 0;

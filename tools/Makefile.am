@@ -87,7 +87,7 @@ crm_simulate_LDADD	= $(top_builddir)/lib/pengine/libpe_status.la		\
 			$(top_builddir)/lib/transition/libtransitioner.la	\
 			$(COMMONLIBS)
 
-crm_diff_SOURCES	= xml_diff.c
+crm_diff_SOURCES	= crm_diff.c
 crm_diff_LDADD		= $(COMMONLIBS)
 
 crm_mon_SOURCES		= crm_mon.c

@@ -31,6 +31,8 @@
 #include <dirent.h>     /* for struct dirent */
 #include <sys/types.h>  /* for uid_t and gid_t */
 
+#include <crm/common/logging.h>
+
 /* internal I/O utilities (from io.c) */
 
 char *generate_series_filename(const char *directory, const char *series, int sequence,
@@ -74,6 +76,39 @@ static inline int
 crm_strlen_zero(const char *s)
 {
     return !s || *s == '\0';
+}
+
+/* convenience functions for failure-related node attributes */
+
+#define CRM_FAIL_COUNT_PREFIX   "fail-count"
+#define CRM_LAST_FAILURE_PREFIX "last-failure"
+
+/*!
+ * \internal
+ * \brief Generate a failure-related node attribute name for a resource
+ *
+ * \param[in] prefix    Start of attribute name
+ * \param[in] rsc_id    Resource name
+ *
+ * \return Newly allocated string with attribute name
+ */
+static inline char *
+crm_fail_attr_name(const char *prefix, const char *rsc_id)
+{
+    CRM_CHECK(prefix && rsc_id, return NULL);
+    return crm_strdup_printf("%s-%s", prefix, rsc_id);
+}
+
+static inline char *
+crm_failcount_name(const char *rsc_id)
+{
+    return crm_fail_attr_name(CRM_FAIL_COUNT_PREFIX, rsc_id);
+}
+
+static inline char *
+crm_lastfailure_name(const char *rsc_id)
+{
+    return crm_fail_attr_name(CRM_LAST_FAILURE_PREFIX, rsc_id);
 }
 
 #endif /* CRM_COMMON_INTERNAL__H */

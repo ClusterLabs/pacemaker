@@ -18,27 +18,30 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-EXTRA_DIST              = autogen.sh ConfigureMe README.in libltdl.tar m4/gnulib-cache.m4
+EXTRA_DIST              = autogen.sh ConfigureMe README.in m4/gnulib-cache.m4
 
 MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
-                        DRF/stamp-h.in libtool.m4 ltdl.m4 libltdl.tar
+                        DRF/stamp-h.in libtool.m4 ltdl.m4
 
-CORE	= $(LIBLTDL_DIR) replace include lib mcp attrd pengine cib crmd fencing lrmd tools xml
-SUBDIRS	= $(CORE) cts extra doc
+CORE	= replace include lib mcp attrd pengine cib crmd fencing lrmd tools xml
+SUBDIRS	= $(CORE) extra doc
 
 doc_DATA = README.markdown COPYING
-noinst_PROGRAMS = scratch
 
 ACLOCAL_AMFLAGS  = -I m4
 
 licensedir              = $(docdir)/licenses/
 license_DATA            = $(wildcard licenses/*)
 
+# Test components
+SUBDIRS	+= cts
+
 testdir			= $(datadir)/$(PACKAGE)/tests/
 test_SCRIPTS		= coverage.sh BasicSanity.sh
 test_DATA		= valgrind-pcmk.suppressions
 
 # Scratch file for ad-hoc testing
+noinst_PROGRAMS = scratch
 nodist_scratch_SOURCES	= scratch.c
 scratch_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la -lm
 
@@ -76,6 +79,3 @@ clean-generic:
 
 dist-clean-local:
 	rm -f autoconf automake autoheader
-
-maintainer-clean-local:
-	rm -f libltdl.tar

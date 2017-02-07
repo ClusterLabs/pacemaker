@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2010 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright (C) 2010-2016 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -528,15 +517,23 @@ action_synced_wait(svc_action_t * op, sigset_t *mask)
                 if (1) {
                     /* Clear out the sigchld pipe. */
                     char ch;
-                    while (read(sfd, &ch, 1) == 1);
+                    while (read(sfd, &ch, 1) == 1) /*omit*/;
 #endif
                     wait_rc = waitpid(op->pid, &status, WNOHANG);
 
-                    if (wait_rc < 0){
-                        crm_perror(LOG_ERR, "waitpid() for %d failed", op->pid);
-
-                    } else if (wait_rc > 0) {
+                    if (wait_rc > 0) {
                         break;
+
+                    } else if (wait_rc < 0){
+                        if (errno == ECHILD) {
+                                /* Here, don't dare to kill and bail out... */
+                                break;
+
+                        } else {
+                                /* ...otherwise pretend process still runs. */
+                                wait_rc = 0;
+                        }
+                        crm_perror(LOG_ERR, "waitpid() for %d failed", op->pid);
                     }
                 }
             }
@@ -558,9 +555,8 @@ action_synced_wait(svc_action_t * op, sigset_t *mask)
 
     crm_trace("Child done: %d", op->pid);
     if (wait_rc <= 0) {
-        int killrc = kill(op->pid, SIGKILL);
-
         op->rc = PCMK_OCF_UNKNOWN_ERROR;
+
         if (op->timeout > 0 && timeout <= 0) {
             op->status = PCMK_LRM_OP_TIMEOUT;
             crm_warn("%s:%d - timed out after %dms", op->id, op->pid, op->timeout);
@@ -569,16 +565,15 @@ action_synced_wait(svc_action_t * op, sigset_t *mask)
             op->status = PCMK_LRM_OP_ERROR;
         }
 
-        if (killrc && errno != ESRCH) {
-            crm_err("kill(%d, KILL) failed: %d", op->pid, errno);
+        /* If only child hasn't been successfully waited for, yet.
+           This is to limit killing wrong target a bit more. */
+        if (wait_rc == 0 && waitpid(op->pid, &status, WNOHANG) == 0) {
+            if (kill(op->pid, SIGKILL)) {
+                crm_err("kill(%d, KILL) failed: %d", op->pid, errno);
+            }
+            /* Safe to skip WNOHANG here as we sent non-ignorable signal. */
+            while (waitpid(op->pid, &status, 0) == (pid_t) -1 && errno == EINTR) /*omit*/;
         }
-        /*
-         * From sigprocmask(2):
-         * It is not possible to block SIGKILL or SIGSTOP.  Attempts to do so are silently ignored.
-         *
-         * This makes it safe to skip WNOHANG here
-         */
-        waitpid(op->pid, &status, 0);
 
     } else if (WIFEXITED(status)) {
         op->status = PCMK_LRM_OP_DONE;

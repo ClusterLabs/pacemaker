@@ -2,19 +2,8 @@
  * Copyright (C) 2013 Lars Marowsky-Bree <lmb@suse.com>
  *               2014 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -140,7 +129,7 @@ pcmk_panic_local(void)
 
     /* We're either pacemakerd, or a pacemaker daemon running as root */
 
-    if (strcmp("crash", getenv("PCMK_panic_action")) == 0) {
+    if (safe_str_eq("crash", getenv("PCMK_panic_action"))) {
         sysrq_trigger('c');
     } else {
         sysrq_trigger('b');

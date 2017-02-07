@@ -30,10 +30,6 @@ test_DATA		= regression.core.sh
 test10dir		= $(datadir)/$(PACKAGE)/tests/pengine/test10
 test10_DATA		= $(PE_TESTS) $(PE_TESTS:%.scores=%.xml) $(PE_TESTS:%.scores=%.exp) $(PE_TESTS:%.scores=%.dot) $(PE_TESTS:%.scores=%.summary) $(wildcard test10/*.stderr)
 
-COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la	\
-		$(top_builddir)/lib/pengine/libpe_status.la	\
-		libpengine.la
-
 beekhof:
 	echo $(shell ls -1 test10/*.xml)
 
@@ -44,6 +40,10 @@ XML_LOG_COMPILER = ./regression.sh
 AM_XML_LOG_FLAGS = -V --run 
 #LOG_COMPILER = 
 #AM_LOG_FLAGS = -V
+
+COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la	\
+		$(top_builddir)/lib/pengine/libpe_status.la	\
+		libpengine.la
 
 
 ## libraries
@@ -60,7 +60,7 @@ endif
 
 noinst_HEADERS	= allocate.h notif.h utils.h pengine.h
 
-libpengine_la_LDFLAGS	= -version-info 11:0:1
+libpengine_la_LDFLAGS	= -version-info 12:0:2
 
 libpengine_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpengine_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)

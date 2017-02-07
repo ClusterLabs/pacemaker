@@ -328,6 +328,9 @@
 #  define XML_COLOC_ATTR_SOURCE_INSTANCE	"rsc-instance"
 #  define XML_COLOC_ATTR_TARGET_INSTANCE	"with-rsc-instance"
 
+#  define XML_LOC_ATTR_SOURCE           "rsc"
+#  define XML_LOC_ATTR_SOURCE_PATTERN   "rsc-pattern"
+
 #  define XML_ORDER_ATTR_FIRST		"first"
 #  define XML_ORDER_ATTR_THEN		"then"
 #  define XML_ORDER_ATTR_FIRST_ACTION	"first-action"

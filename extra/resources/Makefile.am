@@ -37,6 +37,7 @@ ocf_SCRIPTS	     =  ClusterMon 	\
 			Stateful	\
 			SysInfo		\
 			SystemHealth \
+			attribute	\
 			remote
 
 isolationtech_SCRIPTS	= docker-wrapper

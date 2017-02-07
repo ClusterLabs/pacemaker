@@ -37,6 +37,8 @@
 #define START_DELAY_THRESHOLD 5 * 60 * 1000
 #define MAX_LRM_REG_FAILS 30
 
+#define s_if_plural(i) (((i) == 1)? "" : "s")
+
 struct delete_event_s {
     int rc;
     const char *rsc;
@@ -372,8 +374,10 @@ do_lrm_control(long long action,
 
         if (ret != pcmk_ok) {
             if (lrm_state->num_lrm_register_fails < MAX_LRM_REG_FAILS) {
-                crm_warn("Failed to sign on to the LRM %d"
-                         " (%d max) times", lrm_state->num_lrm_register_fails, MAX_LRM_REG_FAILS);
+                crm_warn("Failed to connect to the LRM %d time%s (%d max)",
+                         lrm_state->num_lrm_register_fails,
+                         s_if_plural(lrm_state->num_lrm_register_fails),
+                         MAX_LRM_REG_FAILS);
 
                 crm_timer_start(wait_timer);
                 crmd_fsa_stall(FALSE);
@@ -382,8 +386,9 @@ do_lrm_control(long long action,
         }
 
         if (ret != pcmk_ok) {
-            crm_err("Failed to sign on to the LRM %d" " (max) times",
-                    lrm_state->num_lrm_register_fails);
+            crm_err("Failed to connect to the LRM the max allowed %d time%s",
+                    lrm_state->num_lrm_register_fails,
+                    s_if_plural(lrm_state->num_lrm_register_fails));
             register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
             return;
         }
@@ -425,8 +430,8 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
         guint nremaining = g_hash_table_size(lrm_state->pending_ops);
 
         if (removed || nremaining) {
-            crm_notice("Stopped %u recurring operations at %s (%u operations remaining)",
-                       removed, when, nremaining);
+            crm_notice("Stopped %u recurring operation%s at %s (%u remaining)",
+                       removed, s_if_plural(removed), when, nremaining);
         }
     }
 
@@ -441,7 +446,8 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
     }
 
     if (counter > 0) {
-        do_crm_log(log_level, "%d pending LRM operations at %s", counter, when);
+        do_crm_log(log_level, "%d pending LRM operation%s at %s",
+                   counter, s_if_plural(counter), when);
 
         if (cur_state == S_TERMINATE || !is_set(fsa_input_register, R_SENT_RSC_STOP)) {
             g_hash_table_iter_init(&gIter, lrm_state->pending_ops);
@@ -459,7 +465,7 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
         return rc;
     }
 
-    if (cur_state == S_TERMINATE || is_set(fsa_input_register, R_SHUTDOWN)) {
+    if (is_set(fsa_input_register, R_SHUTDOWN)) {
         /* At this point we're not waiting, we're just shutting down */
         when = "shutdown";
     }
@@ -472,7 +478,11 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
         }
 
         counter++;
-        crm_trace("Found %s active", entry->id);
+        if (log_level == LOG_ERR) {
+            crm_info("Found %s active at %s", entry->id, when);
+        } else {
+            crm_trace("Found %s active at %s", entry->id, when);
+        }
         if (lrm_state->pending_ops) {
             GHashTableIter hIter;
 
@@ -488,7 +498,8 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
     }
 
     if (counter) {
-        crm_err("%d resources were active at %s.", counter, when);
+        crm_err("%d resource%s active at %s",
+                counter, (counter == 1)? " was" : "s were", when);
     }
 
     return rc;
@@ -1405,7 +1416,7 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action, int rc)
     xmlNode *xml_rsc = find_xml_node(action, XML_CIB_TAG_RESOURCE, TRUE);
 
     if(xml_rsc == NULL) {
-        /* Do something else?  driect_ack? */
+        /* @TODO Should we do something else, like direct ack? */
         crm_info("Skipping %s=%d on %s (%p): no resource",
                  crm_element_value(action, XML_LRM_ATTR_TASK_KEY), rc, target_node, lrm_state);
         return;
@@ -1489,8 +1500,8 @@ do_lrm_invoke(long long action,
     lrm_state = lrm_state_find(target_node);
 
     if (lrm_state == NULL && is_remote_node) {
-        crm_err("no lrmd connection for remote node %s found on cluster node %s. Can not process request.",
-            target_node, fsa_our_uname);
+        crm_err("Failing action because remote node %s has no connection to cluster node %s",
+                target_node, fsa_our_uname);
 
         /* The action must be recorded here and in the CIB as failed */
         synthesize_lrmd_failure(NULL, input->xml, PCMK_OCF_CONNECTION_DIED);
@@ -1584,7 +1595,7 @@ do_lrm_invoke(long long action,
         fsa_cib_update(XML_CIB_TAG_STATUS, fragment, cib_quorum_override, rc, user_name);
         crm_info("Forced a local LRM refresh: call=%d", rc);
 
-        if(strcmp(CRM_SYSTEM_CRMD, from_sys) != 0) {
+        if (safe_str_neq(CRM_SYSTEM_CRMD, from_sys)) {
             xmlNode *reply = create_request(
                 CRM_OP_INVOKE_LRM, fragment,
                 from_host, from_sys, CRM_SYSTEM_LRMD, fsa_our_uuid);
@@ -1618,8 +1629,9 @@ do_lrm_invoke(long long action,
 
         force_reprobe(lrm_state, from_sys, from_host, user_name, is_remote_node);
 
-        if(strcmp(CRM_SYSTEM_TENGINE, from_sys) != 0
-           && strcmp(CRM_SYSTEM_TENGINE, from_sys) != 0) {
+        if (safe_str_neq(CRM_SYSTEM_PENGINE, from_sys)
+           && safe_str_neq(CRM_SYSTEM_TENGINE, from_sys)) {
+
             xmlNode *reply = create_request(
                 CRM_OP_INVOKE_LRM, NULL,
                 from_host, from_sys, CRM_SYSTEM_LRMD, fsa_our_uuid);
@@ -1785,7 +1797,7 @@ do_lrm_invoke(long long action,
         lrmd_free_rsc_info(rsc);
 
     } else {
-        crm_err("Operation was neither a lrm_query, nor a rsc op.  %s", crm_str(crm_op));
+        crm_err("Cannot perform operation %s of unknown type", crm_str(crm_op));
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
 }
@@ -2017,6 +2029,44 @@ stop_recurring_actions(gpointer key, gpointer value, gpointer user_data)
 }
 
 static void
+record_pending_op(const char *node_name, lrmd_rsc_info_t *rsc, lrmd_event_data_t *op)
+{
+    CRM_CHECK(node_name != NULL, return);
+    CRM_CHECK(rsc != NULL, return);
+    CRM_CHECK(op != NULL, return);
+
+    if (op->op_type == NULL
+        || safe_str_eq(op->op_type, CRMD_ACTION_CANCEL)
+        || safe_str_eq(op->op_type, CRMD_ACTION_DELETE)) {
+        return;
+    }
+
+    if (op->params == NULL) {
+        return;
+
+    } else {
+        const char *record_pending = crm_meta_value(op->params, XML_OP_ATTR_PENDING);
+
+        if (record_pending == NULL || crm_is_true(record_pending) == FALSE) {
+            return;
+         }
+    }
+
+    op->call_id = -1;
+    op->op_status = PCMK_LRM_OP_PENDING;
+    op->rc = PCMK_OCF_UNKNOWN;
+
+    op->t_run = time(NULL);
+    op->t_rcchange = op->t_run;
+
+    /* write a "pending" entry to the CIB, inhibit notification */
+    crm_debug("Recording pending op %s_%s_%d on %s in the CIB",
+              op->rsc_id, op->op_type, op->interval, node_name);
+
+    do_update_resource(node_name, rsc, op);
+}
+
+static void
 do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operation, xmlNode * msg,
               xmlNode * request)
 {
@@ -2048,7 +2098,7 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
 
         /* pcmk remote connections are a special use case.
          * We never ever want to stop monitoring a connection resource until
-         * the entire migration has completed. If the connection is ever unexpected
+         * the entire migration has completed. If the connection is unexpectedly
          * severed, even during a migration, this is an event we must detect.*/
         stop_recurring = FALSE;
 
@@ -2070,8 +2120,8 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
             lrm_state->pending_ops, stop_recurring_action_by_rsc, &data);
 
         if (removed) {
-            crm_debug("Stopped %u recurring operations in preparation for %s_%s_%d",
-                      removed, rsc->id, operation, op->interval);
+            crm_debug("Stopped %u recurring operation%s in preparation for %s_%s_%d",
+                      removed, s_if_plural(removed), rsc->id, operation, op->interval);
         }
     }
 
@@ -2102,6 +2152,8 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
         free(op_id);
         return;
     }
+
+    record_pending_op(lrm_state->node_name, rsc, op);
 
     op_id = generate_op_key(rsc->id, op->op_type, op->interval);
 

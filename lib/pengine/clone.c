@@ -318,7 +318,7 @@ configured_role_str(resource_t * rsc)
     const char *target_role = g_hash_table_lookup(rsc->meta,
                                                   XML_RSC_ATTR_TARGET_ROLE);
 
-    if (target_role == NULL) {
+    if ((target_role == NULL) && rsc->children && rsc->children->data) {
         target_role = g_hash_table_lookup(((resource_t*)rsc->children->data)->meta,
                                           XML_RSC_ATTR_TARGET_ROLE);
     }

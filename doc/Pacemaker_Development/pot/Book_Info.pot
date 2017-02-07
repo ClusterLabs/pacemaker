@@ -1,0 +1,29 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2016-11-02 17:32-0500\n"
+"PO-Revision-Date: 2016-11-02 17:32-0500\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Pacemaker Development"
+msgstr ""
+
+#. Tag: subtitle
+#, no-c-format
+msgid "Working with the Pacemaker Code Base"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "This document has guidelines and tips for developers interested in editing Pacemaker source code and submitting changes for inclusion in the project."
+msgstr ""
+

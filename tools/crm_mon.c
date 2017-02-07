@@ -133,8 +133,9 @@ gboolean print_clone_detail = FALSE;
 const char *print_neg_location_prefix = "";
 
 /* Never display node attributes whose name starts with one of these prefixes */
-#define FILTER_STR { "shutdown", "terminate", "standby", "fail-count",  \
-                     "last-failure", "probe_complete", "#", NULL }
+#define FILTER_STR { CRM_FAIL_COUNT_PREFIX, CRM_LAST_FAILURE_PREFIX,       \
+                     "shutdown", "terminate", "standby", "probe_complete", \
+                     "#", NULL }
 
 long last_refresh = 0;
 crm_trigger_t *refresh_trigger = NULL;
@@ -953,10 +954,10 @@ print_nvpair(FILE *stream, const char *name, const char *value,
 
     /* Otherwise print user-friendly time string */
     } else {
-        char *date_str, *c;
+        static char empty_str[] = "";
+        char *c, *date_str = asctime(localtime(&epoch_time));
 
-        date_str = asctime(localtime(&epoch_time));
-        for (c = date_str; c != '\0'; ++c) {
+        for (c = (date_str != NULL) ? date_str : empty_str; *c != '\0'; ++c) {
             if (*c == '\n') {
                 *c = '\0';
                 break;
@@ -1300,16 +1301,17 @@ print_rsc_history_start(FILE *stream, pe_working_set_t *data_set, node_t *node,
             switch (output_format) {
                 case mon_output_plain:
                 case mon_output_console:
-                    print_as(" fail-count=%d", failcount);
+                    print_as(" " CRM_FAIL_COUNT_PREFIX "=%d", failcount);
                     break;
 
                 case mon_output_html:
                 case mon_output_cgi:
-                    fprintf(stream, " fail-count=%d", failcount);
+                    fprintf(stream, " " CRM_FAIL_COUNT_PREFIX "=%d", failcount);
                     break;
 
                 case mon_output_xml:
-                    fprintf(stream, " fail-count=\"%d\"", failcount);
+                    fprintf(stream, " " CRM_FAIL_COUNT_PREFIX "=\"%d\"",
+                            failcount);
                     break;
 
                 default:
@@ -1319,7 +1321,8 @@ print_rsc_history_start(FILE *stream, pe_working_set_t *data_set, node_t *node,
 
         /* Print last failure time if any */
         if (last_failure > 0) {
-            print_nvpair(stream, "last-failure", NULL, NULL, last_failure);
+            print_nvpair(stream, CRM_LAST_FAILURE_PREFIX, NULL, NULL,
+                         last_failure);
         }
     }
 

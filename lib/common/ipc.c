@@ -293,7 +293,6 @@ crm_client_disconnect_all(qb_ipcs_service_t *service)
 crm_client_t *
 crm_client_new(qb_ipcs_connection_t * c, uid_t uid_client, gid_t gid_client)
 {
-    static uid_t uid_server = 0;
     static gid_t gid_cluster = 0;
 
     crm_client_t *client = NULL;
@@ -304,7 +303,6 @@ crm_client_new(qb_ipcs_connection_t * c, uid_t uid_client, gid_t gid_client)
     }
 
     if (gid_cluster == 0) {
-        uid_server = getuid();
         if(crm_user_lookup(CRM_DAEMON_USER, NULL, &gid_cluster) < 0) {
             static bool have_error = FALSE;
             if(have_error == FALSE) {
@@ -314,16 +312,10 @@ crm_client_new(qb_ipcs_connection_t * c, uid_t uid_client, gid_t gid_client)
         }
     }
 
-    if(gid_cluster != 0 && gid_client != 0) {
-        uid_t best_uid = -1; /* Passing -1 to chown(2) means don't change */
-
-        if(uid_client == 0 || uid_server == 0) { /* Someone is priveliged, but the other may not be */
-            best_uid = QB_MAX(uid_client, uid_server);
-            crm_trace("Allowing user %u to clean up after disconnect", best_uid);
-        }
-
+    if (uid_client != 0) {
         crm_trace("Giving access to group %u", gid_cluster);
-        qb_ipcs_connection_auth_set(c, best_uid, gid_cluster, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+        /* Passing -1 to chown(2) means don't change */
+        qb_ipcs_connection_auth_set(c, -1, gid_cluster, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     }
 
     crm_client_init();
@@ -910,9 +902,18 @@ crm_ipc_connected(crm_ipc_t * client)
     return rc;
 }
 
+/*!
+ * \brief Check whether an IPC connection is ready to be read
+ *
+ * \param[in] client  Connection to check
+ *
+ * \return Positive value if ready to be read, 0 if not ready, -errno on error
+ */
 int
-crm_ipc_ready(crm_ipc_t * client)
+crm_ipc_ready(crm_ipc_t *client)
 {
+    int rc;
+
     CRM_ASSERT(client != NULL);
 
     if (crm_ipc_connected(client) == FALSE) {
@@ -920,7 +921,8 @@ crm_ipc_ready(crm_ipc_t * client)
     }
 
     client->pfd.revents = 0;
-    return poll(&(client->pfd), 1, 0);
+    rc = poll(&(client->pfd), 1, 0);
+    return (rc < 0)? -errno : rc;
 }
 
 static int

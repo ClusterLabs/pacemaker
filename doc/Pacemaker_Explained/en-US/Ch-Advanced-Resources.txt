@@ -411,17 +411,16 @@ what is about to happen to it.
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,active_uname]
  indexterm:[active_uname,Notification Environment Variable]
 
-|OCF_RESKEY_CRM_meta_notify_inactive_uname
-|Nodes on which resources are not running
- indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,inactive_uname]
- indexterm:[inactive_uname,Notification Environment Variable]
-
 |=========================================================
 
 The variables come in pairs, such as
 +OCF_RESKEY_CRM_meta_notify_start_resource+ and
 +OCF_RESKEY_CRM_meta_notify_start_uname+ and should be treated as an
 array of whitespace-separated elements.
+
++OCF_RESKEY_CRM_meta_notify_inactive_resource+ is an exception as the
+matching +uname+ variable does not exist since inactive resources
+are not running on any node.
 
 Thus in order to indicate that +clone:0+ will be started on +sles-1+,
 +clone:2+ will be started on +sles-3+, and +clone:3+ will be started
@@ -848,12 +847,12 @@ what is about to happen to it.
  indexterm:[operation,Notification Environment Variable]
 
 |OCF_RESKEY_CRM_meta_notify_active_resource
-|Resources the that are running
+|Resources that are running
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,active_resource]
  indexterm:[active_resource,Notification Environment Variable]
 
 |OCF_RESKEY_CRM_meta_notify_inactive_resource
-|Resources the that are not running
+|Resources that are not running
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,inactive_resource]
  indexterm:[inactive_resource,Notification Environment Variable]
   
@@ -872,10 +871,10 @@ what is about to happen to it.
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,start_resource]
  indexterm:[start_resource,Notification Environment Variable]
   
-|indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,stop_resource]
- indexterm:[stop_resource,Notification Environment Variable]
-  OCF_RESKEY_CRM_meta_notify_stop_resource
+|OCF_RESKEY_CRM_meta_notify_stop_resource
 |Resources to be stopped
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,stop_resource]
+ indexterm:[stop_resource,Notification Environment Variable]
 
 |_OCF_RESKEY_CRM_meta_notify_promote_resource_
 |Resources to be promoted
@@ -898,7 +897,7 @@ what is about to happen to it.
  indexterm:[stop_uname,Notification Environment Variable]
 
 |_OCF_RESKEY_CRM_meta_notify_promote_uname_
-|Nodes on which resources will be promote
+|Nodes on which resources will be promoted
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,promote_uname]
  indexterm:[promote_uname,Notification Environment Variable]
 
@@ -911,11 +910,6 @@ what is about to happen to it.
 |Nodes on which resources are running
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,active_uname]
  indexterm:[active_uname,Notification Environment Variable]
-
-|OCF_RESKEY_CRM_meta_notify_inactive_uname
-|Nodes on which resources are not running
- indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,inactive_uname]
- indexterm:[inactive_uname,Notification Environment Variable]
 
 |_OCF_RESKEY_CRM_meta_notify_master_uname_
 |Nodes on which resources are running in +Master+ mode

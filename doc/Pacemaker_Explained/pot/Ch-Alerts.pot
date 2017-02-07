@@ -1,0 +1,486 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2016-11-02 17:32-0500\n"
+"PO-Revision-Date: 2016-11-02 17:32-0500\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Alerts"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<anchor id=\"ch-alerts\" xreflabel=\"Chapter 7, Alerts\"></anchor> <indexterm> <primary>Resource</primary><secondary>Alerts</secondary> </indexterm> <indexterm> <primary>Alerts</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>Alerts</emphasis> may be configured to take some external action when a cluster event occurs (node failure, resource starting or stopping, etc.)."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Alert Agents"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "As with resource agents, the cluster calls an external program (an <emphasis>alert agent</emphasis>) to handle alerts. The cluster passes information about the event to the agent via environment variables. Agents can do anything desired with this information (send an e-mail, log to a file, update a monitoring system, etc.)."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Simple alert configuration"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;configuration&gt;\n"
+"    &lt;alerts&gt;\n"
+"        &lt;alert id=\"my-alert\" path=\"/path/to/my-script.sh\" /&gt;\n"
+"    &lt;/alerts&gt;\n"
+"&lt;/configuration&gt;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In the example above, the cluster will call <literal>my-script.sh</literal> for each event."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Multiple alert agents may be configured; the cluster will call all of them for each event."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Alert agents will be called only on cluster nodes. They will be called for events involving Pacemaker Remote nodes, but they will never be called <emphasis>on</emphasis> those nodes."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Alert Recipients"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Usually alerts are directed towards a recipient. Thus each alert may be additionally configured with one or more recipients. The cluster will call the agent separately for each recipient."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Alert configuration with recipient"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;configuration&gt;\n"
+"    &lt;alerts&gt;\n"
+"        &lt;alert id=\"my-alert\" path=\"/path/to/my-script.sh\"&gt;\n"
+"            &lt;recipient id=\"my-alert-recipient\" value=\"some-address\"/&gt;\n"
+"        &lt;/alert&gt;\n"
+"    &lt;/alerts&gt;\n"
+"&lt;/configuration&gt;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In the above example, the cluster will call <literal>my-script.sh</literal> for each event, passing the recipient <literal>some-address</literal> as an environment variable."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The recipient may be anything the alert agent can recognize — an IP address, an e-mail address, a file name, whatever the particular agent supports."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Alert Meta-Attributes"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "As with resource agents, meta-attributes can be configured for alert agents to affect how Pacemaker calls them."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Meta-Attributes of an Alert"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Meta-Attribute"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Default"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Description"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>timestamp-format</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "%H:%M:%S.%06N"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Format the cluster will use when sending the event’s timestamp to the agent. This is a string as used with the <literal>date(1)</literal> command. <indexterm> <primary>Alert</primary><secondary>Option</secondary><tertiary>timestamp-format</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>timestamp-format</secondary> </indexterm> <indexterm> <primary>timestamp-format</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>timeout</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "30s"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If the alert agent does not complete within this amount of time, it will be terminated. <indexterm> <primary>Alert</primary><secondary>Option</secondary><tertiary>timeout</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>timeout</secondary> </indexterm> <indexterm> <primary>timeout</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Meta-attributes can be configured per alert agent and/or per recipient."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Alert configuration with meta-attributes"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;configuration&gt;\n"
+"    &lt;alerts&gt;\n"
+"        &lt;alert id=\"my-alert\" path=\"/path/to/my-script.sh\"&gt;\n"
+"            &lt;meta_attributes id=\"my-alert-attributes\"&gt;\n"
+"                &lt;nvpair id=\"my-alert-attributes-timeout\" name=\"timeout\"\n"
+"                    value=\"15s\"/&gt;\n"
+"            &lt;/meta_attributes&gt;\n"
+"            &lt;recipient id=\"my-alert-recipient1\" value=\"someuser@example.com\"&gt;\n"
+"                &lt;meta_attributes id=\"my-alert-recipient1-attributes\"&gt;\n"
+"                    &lt;nvpair id=\"my-alert-recipient1-timestamp-format\"\n"
+"                        name=\"timestamp-format\" value=\"%D %H:%M\"/&gt;\n"
+"                &lt;/meta_attributes&gt;\n"
+"            &lt;/recipient&gt;\n"
+"            &lt;recipient id=\"my-alert-recipient2\" value=\"otheruser@example.com\"&gt;\n"
+"                &lt;meta_attributes id=\"my-alert-recipient2-attributes\"&gt;\n"
+"                    &lt;nvpair id=\"my-alert-recipient2-timestamp-format\"\n"
+"                        name=\"timestamp-format\" value=\"%c\"/&gt;\n"
+"                &lt;/meta_attributes&gt;\n"
+"            &lt;/recipient&gt;\n"
+"        &lt;/alert&gt;\n"
+"    &lt;/alerts&gt;\n"
+"&lt;/configuration&gt;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In the above example, the <literal>my-script.sh</literal> will get called twice for each event, with each call using a 15-second timeout. One call will be passed the recipient <literal>someuser@example.com</literal> and a timestamp in the format <literal>%D %H:%M</literal>, while the other call will be passed the recipient <literal>otheruser@example.com</literal> and a timestamp in the format <literal>%c</literal>."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Alert Instance Attributes"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "As with resource agents, agent-specific configuration values may be configured as instance attributes. These will be passed to the agent as additional environment variables. The number, names and allowed values of these instance attributes are completely up to the particular agent."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Alert configuration with instance attributes"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;configuration&gt;\n"
+"    &lt;alerts&gt;\n"
+"        &lt;alert id=\"my-alert\" path=\"/path/to/my-script.sh\"&gt;\n"
+"            &lt;meta_attributes id=\"my-alert-attributes\"&gt;\n"
+"                &lt;nvpair id=\"my-alert-attributes-timeout\" name=\"timeout\"\n"
+"                    value=\"15s\"/&gt;\n"
+"            &lt;/meta_attributes&gt;\n"
+"            &lt;instance_attributes id=\"my-alert-options\"&gt;\n"
+"                &lt;nvpair id=\"my-alert-options-debug\" name=\"debug\" value=\"false\"/&gt;\n"
+"            &lt;/instance_attributes&gt;\n"
+"            &lt;recipient id=\"my-alert-recipient1\" value=\"someuser@example.com\"/&gt;\n"
+"        &lt;/alert&gt;\n"
+"    &lt;/alerts&gt;\n"
+"&lt;/configuration&gt;"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Using the Sample Alert Agents"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Pacemaker provides several sample alert agents, installed in <literal>/usr/share/pacemaker/alerts</literal> by default."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "While these sample scripts may be copied and used as-is, they are provided mainly as templates to be edited to suit your purposes. See their source code for the full set of instance attributes they support."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Sending cluster events as SNMP traps"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;configuration&gt;\n"
+"    &lt;alerts&gt;\n"
+"        &lt;alert id=\"snmp_alert\" path=\"/path/to/alert_snmp.sh\"&gt;\n"
+"            &lt;instance_attributes id=\"config_for_alert_snmp\"&gt;\n"
+"                &lt;nvpair id=\"trap_node_states\" name=\"trap_node_states\" value=\"all\"/&gt;\n"
+"            &lt;/instance_attributes&gt;\n"
+"            &lt;meta_attributes id=\"config_for_timestamp\"&gt;\n"
+"                &lt;nvpair id=\"ts_fmt\" name=\"timestamp-format\"\n"
+"                    value=\"%Y-%m-%d,%H:%M:%S.%01N\"/&gt;\n"
+"            &lt;/meta_attributes&gt;\n"
+"            &lt;recipient id=\"snmp_destination\" value=\"192.168.1.2\"/&gt;\n"
+"        &lt;/alert&gt;\n"
+"    &lt;/alerts&gt;\n"
+"&lt;/configuration&gt;"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Sending cluster events as e-mails"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "    &lt;configuration&gt;\n"
+"        &lt;alerts&gt;\n"
+"            &lt;alert id=\"smtp_alert\" path=\"/path/to/alert_smtp.sh\"&gt;\n"
+"              &lt;instance_attributes id=\"config_for_alert_smtp\"&gt;\n"
+"                  &lt;nvpair id=\"email_sender\" name=\"email_sender\"\n"
+"                      value=\"donotreply@example.com\"/&gt;\n"
+"              &lt;/instance_attributes&gt;\n"
+"              &lt;recipient id=\"smtp_destination\" value=\"admin@example.com\"/&gt;\n"
+"            &lt;/alert&gt;\n"
+"        &lt;/alerts&gt;\n"
+"    &lt;/configuration&gt;"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Writing an Alert Agent"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Environment variables passed to alert agents"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Environment Variable"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CRM_alert_kind</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The type of alert (<literal>node</literal>, <literal>fencing</literal>, or <literal>resource</literal>) <indexterm> <primary>Environment Variable</primary><secondary>CRM_alert_</secondary><tertiary>kind</tertiary> </indexterm> <indexterm> <primary>CRM_alert_</primary><secondary>kind</secondary> </indexterm> <indexterm> <primary>kind</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CRM_alert_version</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The version of Pacemaker sending the alert <indexterm> <primary>Environment Variable</primary><secondary>CRM_alert_</secondary><tertiary>version</tertiary> </indexterm> <indexterm> <primary>CRM_alert_</primary><secondary>version</secondary> </indexterm> <indexterm> <primary>version</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CRM_alert_recipient</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The configured recipient <indexterm> <primary>Environment Variable</primary><secondary>CRM_alert_</secondary><tertiary>recipient</tertiary> </indexterm> <indexterm> <primary>CRM_alert_</primary><secondary>recipient</secondary> </indexterm> <indexterm> <primary>recipient</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CRM_alert_node_sequence</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A sequence number increased whenever an alert is being issued on the local node, which can be used to reference the order in which alerts have been issued by Pacemaker. An alert for an event that happened later in time reliably has a higher sequence number than alerts for earlier events. Be aware that this number has no cluster-wide meaning. <indexterm> <primary>Environment Variable</primary><secondary>CRM_alert_node_</secondary><tertiary>sequence</tertiary> </indexterm> <indexterm> <primary>CRM_alert_node_</primary><secondary>sequence</secondary> </indexterm> <indexterm> <primary>sequence</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CRM_alert_timestamp</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A timestamp created prior to executing the agent, in the format specified by the <literal>timestamp-format</literal> meta-attribute. This allows the agent to have a reliable, high-precision time of when the event occurred, regardless of when the agent itself was invoked (which could potentially be delayed due to system load, etc.). <indexterm> <primary>Environment Variable</primary><secondary>CRM_alert_</secondary><tertiary>timestamp</tertiary> </indexterm> <indexterm> <primary>CRM_alert_</primary><secondary>timestamp</secondary> </indexterm> <indexterm> <primary>timestamp</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CRM_alert_node</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Name of affected node <indexterm> <primary>Environment Variable</primary><secondary>CRM_alert_</secondary><tertiary>node</tertiary> </indexterm> <indexterm> <primary>CRM_alert_</primary><secondary>node</secondary> </indexterm> <indexterm> <primary>node</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CRM_alert_desc</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Detail about event. For <literal>node</literal> alerts, this is the node’s current state (<literal>member</literal> or <literal>lost</literal>). For <literal>fencing</literal> alerts, this is a summary of the requested fencing operation, including origin, target, and fencing operation error code, if any. For <literal>resource</literal> alerts, this is a readable string equivalent of <literal>CRM_alert_status</literal>. <indexterm> <primary>Environment Variable</primary><secondary>CRM_alert_</secondary><tertiary>desc</tertiary> </indexterm> <indexterm> <primary>CRM_alert_</primary><secondary>desc</secondary> </indexterm> <indexterm> <primary>desc</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CRM_alert_nodeid</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "ID of node whose status changed (provided with <literal>node</literal> alerts only) <indexterm> <primary>Environment Variable</primary><secondary>CRM_alert_</secondary><tertiary>nodeid</tertiary> </indexterm> <indexterm> <primary>CRM_alert_</primary><secondary>nodeid</secondary> </indexterm> <indexterm> <primary>nodeid</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CRM_alert_task</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The requested fencing or resource operation (provided with <literal>fencing</literal> and <literal>resource</literal> alerts only) <indexterm> <primary>Environment Variable</primary><secondary>CRM_alert_</secondary><tertiary>task</tertiary> </indexterm> <indexterm> <primary>CRM_alert_</primary><secondary>task</secondary> </indexterm> <indexterm> <primary>task</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CRM_alert_rc</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The numerical return code of the fencing or resource operation (provided with <literal>fencing</literal> and <literal>resource</literal> alerts only) <indexterm> <primary>Environment Variable</primary><secondary>CRM_alert_</secondary><tertiary>rc</tertiary> </indexterm> <indexterm> <primary>CRM_alert_</primary><secondary>rc</secondary> </indexterm> <indexterm> <primary>rc</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CRM_alert_rsc</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The name of the affected resource (<literal>resource</literal> alerts only) <indexterm> <primary>Environment Variable</primary><secondary>CRM_alert_</secondary><tertiary>rsc</tertiary> </indexterm> <indexterm> <primary>CRM_alert_</primary><secondary>rsc</secondary> </indexterm> <indexterm> <primary>rsc</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CRM_alert_interval</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The interval of the resource operation (<literal>resource</literal> alerts only) <indexterm> <primary>Environment Variable</primary><secondary>CRM_alert_</secondary><tertiary>interval</tertiary> </indexterm> <indexterm> <primary>CRM_alert_</primary><secondary>interval</secondary> </indexterm> <indexterm> <primary>interval</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CRM_alert_target_rc</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The expected numerical return code of the operation (<literal>resource</literal> alerts only) <indexterm> <primary>Environment Variable</primary><secondary>CRM_alert_</secondary><tertiary>target_rc</tertiary> </indexterm> <indexterm> <primary>CRM_alert_</primary><secondary>target_rc</secondary> </indexterm> <indexterm> <primary>target_rc</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CRM_alert_status</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A numerical code used by Pacemaker to represent the operation result (<literal>resource</literal> alerts only) <indexterm> <primary>Environment Variable</primary><secondary>CRM_alert_</secondary><tertiary>status</tertiary> </indexterm> <indexterm> <primary>CRM_alert_</primary><secondary>status</secondary> </indexterm> <indexterm> <primary>status</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Special concerns when writing alert agents:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Alert agents may be called with no recipient (if none is configured), so the agent must be able to handle this situation, even if it only exits in that case. (Users may modify the configuration in stages, and add a recipient later.)"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If more than one recipient is configured for an alert, the alert agent will be called once per recipient. If an agent is not able to run concurrently, it should be configured with only a single recipient. The agent is free, however, to interpret the recipient as a list."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "When a cluster event occurs, all alerts are fired off at the same time as separate processes. Depending on how many alerts and recipients are configured, and on what is done within the alert agents, a significant load burst may occur. The agent could be written to take this into consideration, for example by queueing resource-intensive actions into some other instance, instead of directly executing them."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Alert agents are run as the <literal>hacluster</literal> user, which has a minimal set of permissions. If an agent requires additional privileges, it is recommended to configure <literal>sudo</literal> to allow the agent to run the necessary commands as another user with the appropriate privileges."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "As always, take care to validate and sanitize user-configured parameters, such as CRM_alert_timestamp (whose content is specified by the user-configured timestamp-format), CRM_alert_recipient, and all instance attributes. Mostly this is needed simply to protect against configuration errors, but if some user can modify the CIB without having hacluster-level access to the cluster nodes, it is a potential security concern as well, to avoid the possibility of code injection."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The alerts interface is designed to be backward compatible with the external scripts interface used by the <literal>ocf:pacemaker:ClusterMon</literal> resource, which is now deprecated. To preserve this compatibility, the environment variables passed to alert agents are available prepended with <literal>CRM_notify_</literal> as well as <literal>CRM_alert_</literal>. One break in compatibility is that ClusterMon ran external scripts as the <literal>root</literal> user, while alert agents are run as the <literal>hacluster</literal> user."
+msgstr ""
+
