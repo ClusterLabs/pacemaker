@@ -26,7 +26,7 @@
     <action_set>
       <rsc_op id="3" operation="monitor" operation_key="ClusterIP_monitor_30000" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="ClusterIP" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="20000" cidr_netmask="32"  ip="192.168.122.101"/>
+        <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="fc16-builder" CRM_meta_on_node_uuid="fc16-builder" CRM_meta_timeout="20000" cidr_netmask="32"  ip="192.168.122.101"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -39,7 +39,7 @@
     <action_set>
       <rsc_op id="2" operation="start" operation_key="ClusterIP_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="ClusterIP" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_timeout="20000" cidr_netmask="32"  ip="192.168.122.101"/>
+        <attributes CRM_meta_on_node="fc16-builder" CRM_meta_on_node_uuid="fc16-builder" CRM_meta_timeout="20000" cidr_netmask="32"  ip="192.168.122.101"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -79,7 +79,7 @@
     <action_set>
       <rsc_op id="9" operation="monitor" operation_key="ClusterIP2_monitor_30000" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="ClusterIP2" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="20000" cidr_netmask="32"  ip="192.168.122.102"/>
+        <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="fc16-builder" CRM_meta_on_node_uuid="fc16-builder" CRM_meta_timeout="20000" cidr_netmask="32"  ip="192.168.122.102"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -92,7 +92,7 @@
     <action_set>
       <rsc_op id="8" operation="start" operation_key="ClusterIP2_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="ClusterIP2" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_timeout="20000" cidr_netmask="32"  ip="192.168.122.102"/>
+        <attributes CRM_meta_on_node="fc16-builder" CRM_meta_on_node_uuid="fc16-builder" CRM_meta_timeout="20000" cidr_netmask="32"  ip="192.168.122.102"/>
       </rsc_op>
     </action_set>
     <inputs>

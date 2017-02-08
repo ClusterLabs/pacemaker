@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="2" operation="start" operation_key="cups_lsb:0_start_0" on_node="pcw2058.see.ed.ac.uk" on_node_uuid="pcw2058.see.ed.ac.uk">
         <primitive id="cups_lsb" long-id="cups_lsb:0" class="lsb" type="cups"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="pcw2058.see.ed.ac.uk" CRM_meta_on_node_uuid="pcw2058.see.ed.ac.uk" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="3" operation="start" operation_key="cups_lsb:1_start_0" on_node="pcw2059.see.ed.ac.uk" on_node_uuid="pcw2059.see.ed.ac.uk">
         <primitive id="cups_lsb" long-id="cups_lsb:1" class="lsb" type="cups"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="pcw2059.see.ed.ac.uk" CRM_meta_on_node_uuid="pcw2059.see.ed.ac.uk" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -59,7 +59,7 @@
     <action_set>
       <rsc_op id="8" operation="start" operation_key="smb_lsb_start_0" on_node="pcw2688.see.ed.ac.uk" on_node_uuid="pcw2688.see.ed.ac.uk">
         <primitive id="smb_lsb" class="lsb" type="smb"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="pcw2688.see.ed.ac.uk" CRM_meta_on_node_uuid="pcw2688.see.ed.ac.uk" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>

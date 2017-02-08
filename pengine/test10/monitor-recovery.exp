@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="7" operation="stop" operation_key="d_tomcat_stop_0" internal_operation_key="d_tomcat:0_stop_0" on_node="CSE-1" on_node_uuid="CSE-1">
         <primitive id="d_tomcat" long-id="d_tomcat:0" class="ocf" provider="ntc" type="tomcat"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000"  instance_name="NMS" monitor_timeout="120" monitor_urls="/cse/health" monitor_use_ssl="no"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="CSE-1" CRM_meta_on_node_uuid="CSE-1" CRM_meta_timeout="20000"  instance_name="NMS" monitor_timeout="120" monitor_urls="/cse/health" monitor_use_ssl="no"/>
       </rsc_op>
     </action_set>
     <inputs>

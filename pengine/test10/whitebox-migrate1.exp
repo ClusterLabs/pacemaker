@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="14" operation="monitor" operation_key="shooter1_monitor_60000" on_node="rhel7-node2" on_node_uuid="2">
         <primitive id="shooter1" class="stonith" type="fence_xvm"/>
-        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="13" operation="start" operation_key="shooter1_start_0" on_node="rhel7-node2" on_node_uuid="2">
         <primitive id="shooter1" class="stonith" type="fence_xvm"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="rhel7-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -29,7 +29,7 @@
     <action_set>
       <rsc_op id="12" operation="stop" operation_key="shooter1_stop_0" on_node="rhel7-node3" on_node_uuid="3">
         <primitive id="shooter1" class="stonith" type="fence_xvm"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="rhel7-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -38,7 +38,7 @@
     <action_set>
       <rsc_op id="21" operation="monitor" operation_key="FAKE3_monitor_10000" on_node="rhel7-node2" on_node_uuid="2">
         <primitive id="FAKE3" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -51,7 +51,7 @@
     <action_set>
       <rsc_op id="20" operation="start" operation_key="FAKE3_start_0" on_node="rhel7-node2" on_node_uuid="2">
         <primitive id="FAKE3" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="start" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_name="start" CRM_meta_on_node="rhel7-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -64,7 +64,7 @@
     <action_set>
       <rsc_op id="19" operation="stop" operation_key="FAKE3_stop_0" on_node="rhel7-node3" on_node_uuid="3">
         <primitive id="FAKE3" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="rhel7-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -73,7 +73,7 @@
     <action_set>
       <rsc_op id="34" operation="migrate_from" operation_key="remote-rsc_migrate_from_0" on_node="rhel7-node3" on_node_uuid="3">
         <primitive id="remote-rsc" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_migrate_source="rhel7-node2" CRM_meta_migrate_target="rhel7-node3" CRM_meta_remote_node="rhel7-node1" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_migrate_source="rhel7-node2" CRM_meta_migrate_target="rhel7-node3" CRM_meta_on_node="rhel7-node3" CRM_meta_on_node_uuid="3" CRM_meta_remote_node="rhel7-node1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -86,7 +86,7 @@
     <action_set>
       <rsc_op id="33" operation="migrate_to" operation_key="remote-rsc_migrate_to_0" on_node="rhel7-node2" on_node_uuid="2">
         <primitive id="remote-rsc" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_migrate_source="rhel7-node2" CRM_meta_migrate_target="rhel7-node3" CRM_meta_record_pending="true" CRM_meta_remote_node="rhel7-node1" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_migrate_source="rhel7-node2" CRM_meta_migrate_target="rhel7-node3" CRM_meta_on_node="rhel7-node2" CRM_meta_on_node_uuid="2" CRM_meta_record_pending="true" CRM_meta_remote_node="rhel7-node1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -95,7 +95,7 @@
     <action_set>
       <rsc_op id="32" operation="monitor" operation_key="remote-rsc_monitor_10000" on_node="rhel7-node3" on_node_uuid="3">
         <primitive id="remote-rsc" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_remote_node="rhel7-node1" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-node3" CRM_meta_on_node_uuid="3" CRM_meta_remote_node="rhel7-node1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -123,7 +123,7 @@
     <action_set>
       <rsc_op id="30" operation="stop" operation_key="remote-rsc_stop_0" on_node="rhel7-node2" on_node_uuid="2">
         <primitive id="remote-rsc" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_remote_node="rhel7-node1" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="rhel7-node2" CRM_meta_on_node_uuid="2" CRM_meta_remote_node="rhel7-node1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -139,7 +139,7 @@
     <action_set>
       <rsc_op id="39" operation="migrate_from" operation_key="rhel7-node1_migrate_from_0" on_node="rhel7-node3" on_node_uuid="3">
         <primitive id="rhel7-node1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="remote-rsc" CRM_meta_migrate_source="rhel7-node2" CRM_meta_migrate_target="rhel7-node3" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_container="remote-rsc" CRM_meta_migrate_source="rhel7-node2" CRM_meta_migrate_target="rhel7-node3" CRM_meta_on_node="rhel7-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -152,7 +152,7 @@
     <action_set>
       <rsc_op id="38" operation="migrate_to" operation_key="rhel7-node1_migrate_to_0" on_node="rhel7-node2" on_node_uuid="2">
         <primitive id="rhel7-node1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="remote-rsc" CRM_meta_migrate_source="rhel7-node2" CRM_meta_migrate_target="rhel7-node3" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_container="remote-rsc" CRM_meta_migrate_source="rhel7-node2" CRM_meta_migrate_target="rhel7-node3" CRM_meta_on_node="rhel7-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -165,7 +165,7 @@
     <action_set>
       <rsc_op id="37" operation="monitor" operation_key="rhel7-node1_monitor_30000" on_node="rhel7-node3" on_node_uuid="3">
         <primitive id="rhel7-node1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="remote-rsc" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" />
+        <attributes CRM_meta_container="remote-rsc" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="30000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -196,7 +196,7 @@
     <action_set>
       <rsc_op id="35" operation="stop" operation_key="rhel7-node1_stop_0" on_node="rhel7-node2" on_node_uuid="2">
         <primitive id="rhel7-node1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="remote-rsc" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_container="remote-rsc" CRM_meta_on_node="rhel7-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>

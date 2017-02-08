@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="14" operation="start" operation_key="prmDummy_start_0" on_node="bl460g1n6" on_node_uuid="3232261592">
         <primitive id="prmDummy" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="bl460g1n6" CRM_meta_on_node_uuid="3232261592" CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -31,7 +31,7 @@
     <action_set>
       <rsc_op id="17" operation="monitor" operation_key="prmVM2_monitor_10000" on_node="bl460g1n8" on_node_uuid="3232261594">
         <primitive id="prmVM2" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_record_pending="true" CRM_meta_timeout="30000" config="/migrate_test/config/vm2.xml"  hypervisor="qemu:///system" migration_transport="ssh"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_on_node="bl460g1n8" CRM_meta_on_node_uuid="3232261594" CRM_meta_record_pending="true" CRM_meta_timeout="30000" config="/migrate_test/config/vm2.xml"  hypervisor="qemu:///system" migration_transport="ssh"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -44,7 +44,7 @@
     <action_set>
       <rsc_op id="16" operation="start" operation_key="prmVM2_start_0" on_node="bl460g1n8" on_node_uuid="3232261594">
         <primitive id="prmVM2" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_record_pending="true" CRM_meta_timeout="120000" config="/migrate_test/config/vm2.xml"  hypervisor="qemu:///system" migration_transport="ssh"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_on_node="bl460g1n8" CRM_meta_on_node_uuid="3232261594" CRM_meta_record_pending="true" CRM_meta_timeout="120000" config="/migrate_test/config/vm2.xml"  hypervisor="qemu:///system" migration_transport="ssh"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -75,7 +75,7 @@
     <action_set>
       <rsc_op id="1" operation="stop" operation_key="prmVM2_stop_0" on_node="bl460g1n6" on_node_uuid="3232261592">
         <primitive id="prmVM2" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_name="stop" CRM_meta_on_fail="fence" CRM_meta_record_pending="true" CRM_meta_timeout="120000" config="/migrate_test/config/vm2.xml"  hypervisor="qemu:///system" migration_transport="ssh"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_fail="fence" CRM_meta_on_node="bl460g1n6" CRM_meta_on_node_uuid="3232261592" CRM_meta_record_pending="true" CRM_meta_timeout="120000" config="/migrate_test/config/vm2.xml"  hypervisor="qemu:///system" migration_transport="ssh"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -140,7 +140,7 @@
     <action_set>
       <rsc_op id="36" operation="monitor" operation_key="prmStonith8-1_monitor_10000" on_node="bl460g1n6" on_node_uuid="3232261592">
         <primitive id="prmStonith8-1" class="stonith" type="external/stonith-helper"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_record_pending="true" CRM_meta_timeout="60000"  dead_check_target="192.168.133.218 192.168.101.218 192.168.102.218 192.168.201.218 192.168.133.238" hostlist="bl460g1n8" pcmk_reboot_retries="1" pcmk_reboot_timeout="40s" run_standby_wait="no"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_on_node="bl460g1n6" CRM_meta_on_node_uuid="3232261592" CRM_meta_record_pending="true" CRM_meta_timeout="60000"  dead_check_target="192.168.133.218 192.168.101.218 192.168.102.218 192.168.201.218 192.168.133.238" hostlist="bl460g1n8" pcmk_reboot_retries="1" pcmk_reboot_timeout="40s" run_standby_wait="no"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -153,7 +153,7 @@
     <action_set>
       <rsc_op id="35" operation="start" operation_key="prmStonith8-1_start_0" on_node="bl460g1n6" on_node_uuid="3232261592">
         <primitive id="prmStonith8-1" class="stonith" type="external/stonith-helper"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_record_pending="true" CRM_meta_timeout="60000"  dead_check_target="192.168.133.218 192.168.101.218 192.168.102.218 192.168.201.218 192.168.133.238" hostlist="bl460g1n8" pcmk_reboot_retries="1" pcmk_reboot_timeout="40s" run_standby_wait="no"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_on_node="bl460g1n6" CRM_meta_on_node_uuid="3232261592" CRM_meta_record_pending="true" CRM_meta_timeout="60000"  dead_check_target="192.168.133.218 192.168.101.218 192.168.102.218 192.168.201.218 192.168.133.238" hostlist="bl460g1n8" pcmk_reboot_retries="1" pcmk_reboot_timeout="40s" run_standby_wait="no"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -184,7 +184,7 @@
     <action_set>
       <rsc_op id="39" operation="monitor" operation_key="prmStonith8-2_monitor_3600000" on_node="bl460g1n6" on_node_uuid="3232261592">
         <primitive id="prmStonith8-2" class="stonith" type="external/ipmi"/>
-        <attributes CRM_meta_interval="3600000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_record_pending="true" CRM_meta_timeout="60000"  hostname="bl460g1n8" interface="lanplus" ipaddr="192.168.133.238" passwd="PASSW0RD" pcmk_reboot_retries="1" pcmk_reboot_timeout="60s" userid="USERID"/>
+        <attributes CRM_meta_interval="3600000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_on_node="bl460g1n6" CRM_meta_on_node_uuid="3232261592" CRM_meta_record_pending="true" CRM_meta_timeout="60000"  hostname="bl460g1n8" interface="lanplus" ipaddr="192.168.133.238" passwd="PASSW0RD" pcmk_reboot_retries="1" pcmk_reboot_timeout="60s" userid="USERID"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -197,7 +197,7 @@
     <action_set>
       <rsc_op id="38" operation="start" operation_key="prmStonith8-2_start_0" on_node="bl460g1n6" on_node_uuid="3232261592">
         <primitive id="prmStonith8-2" class="stonith" type="external/ipmi"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_record_pending="true" CRM_meta_timeout="60000"  hostname="bl460g1n8" interface="lanplus" ipaddr="192.168.133.238" passwd="PASSW0RD" pcmk_reboot_retries="1" pcmk_reboot_timeout="60s" userid="USERID"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_on_node="bl460g1n6" CRM_meta_on_node_uuid="3232261592" CRM_meta_record_pending="true" CRM_meta_timeout="60000"  hostname="bl460g1n8" interface="lanplus" ipaddr="192.168.133.238" passwd="PASSW0RD" pcmk_reboot_retries="1" pcmk_reboot_timeout="60s" userid="USERID"/>
       </rsc_op>
     </action_set>
     <inputs>

@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="4" operation="monitor" operation_key="sbd_stonith_monitor_15000" on_node="qa-suse-2" on_node_uuid="qa-suse-2">
         <primitive id="sbd_stonith" class="stonith" type="external/sbd"/>
-        <attributes CRM_meta_interval="15000" CRM_meta_name="monitor" CRM_meta_start_delay="15000" CRM_meta_timeout="15000"  sbd_device="/dev/sda1"/>
+        <attributes CRM_meta_interval="15000" CRM_meta_name="monitor" CRM_meta_on_node="qa-suse-2" CRM_meta_on_node_uuid="qa-suse-2" CRM_meta_start_delay="15000" CRM_meta_timeout="15000"  sbd_device="/dev/sda1"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -45,7 +45,7 @@
     <action_set>
       <rsc_op id="13" operation="stop" operation_key="o2cb:1_stop_0" internal_operation_key="o2cb:0_stop_0" on_node="qa-suse-1" on_node_uuid="qa-suse-1">
         <primitive id="o2cb" long-id="o2cb:1" class="ocf" provider="ocfs2" type="o2cb"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="qa-suse-1" CRM_meta_on_node_uuid="qa-suse-1" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -61,7 +61,7 @@
     <action_set>
       <rsc_op id="14" operation="stop" operation_key="cmirror:1_stop_0" internal_operation_key="cmirror:0_stop_0" on_node="qa-suse-1" on_node_uuid="qa-suse-1">
         <primitive id="cmirror" long-id="cmirror:1" class="ocf" provider="lvm2" type="cmirrord"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="qa-suse-1" CRM_meta_on_node_uuid="qa-suse-1" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -107,7 +107,7 @@
     <action_set>
       <rsc_op id="23" operation="stop" operation_key="o2cb:0_stop_0" internal_operation_key="o2cb:1_stop_0" on_node="qa-suse-4" on_node_uuid="qa-suse-4">
         <primitive id="o2cb" long-id="o2cb:0" class="ocf" provider="ocfs2" type="o2cb"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="qa-suse-4" CRM_meta_on_node_uuid="qa-suse-4" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -123,7 +123,7 @@
     <action_set>
       <rsc_op id="24" operation="stop" operation_key="cmirror:0_stop_0" internal_operation_key="cmirror:1_stop_0" on_node="qa-suse-4" on_node_uuid="qa-suse-4">
         <primitive id="cmirror" long-id="cmirror:0" class="ocf" provider="lvm2" type="cmirrord"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="qa-suse-4" CRM_meta_on_node_uuid="qa-suse-4" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -169,7 +169,7 @@
     <action_set>
       <rsc_op id="33" operation="stop" operation_key="o2cb:2_stop_0" on_node="qa-suse-3" on_node_uuid="qa-suse-3">
         <primitive id="o2cb" long-id="o2cb:2" class="ocf" provider="ocfs2" type="o2cb"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="qa-suse-3" CRM_meta_on_node_uuid="qa-suse-3" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -185,7 +185,7 @@
     <action_set>
       <rsc_op id="34" operation="stop" operation_key="cmirror:2_stop_0" on_node="qa-suse-3" on_node_uuid="qa-suse-3">
         <primitive id="cmirror" long-id="cmirror:2" class="ocf" provider="lvm2" type="cmirrord"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="qa-suse-3" CRM_meta_on_node_uuid="qa-suse-3" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -231,7 +231,7 @@
     <action_set>
       <rsc_op id="43" operation="stop" operation_key="o2cb:3_stop_0" on_node="qa-suse-2" on_node_uuid="qa-suse-2">
         <primitive id="o2cb" long-id="o2cb:3" class="ocf" provider="ocfs2" type="o2cb"/>
-        <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="qa-suse-2" CRM_meta_on_node_uuid="qa-suse-2" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -247,7 +247,7 @@
     <action_set>
       <rsc_op id="44" operation="stop" operation_key="cmirror:3_stop_0" on_node="qa-suse-2" on_node_uuid="qa-suse-2">
         <primitive id="cmirror" long-id="cmirror:3" class="ocf" provider="lvm2" type="cmirrord"/>
-        <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="qa-suse-2" CRM_meta_on_node_uuid="qa-suse-2" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -296,7 +296,7 @@
     <action_set>
       <rsc_op id="53" operation="stop" operation_key="ocfs:1_stop_0" internal_operation_key="ocfs:0_stop_0" on_node="qa-suse-1" on_node_uuid="qa-suse-1">
         <primitive id="ocfs" long-id="ocfs:1" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000"  device="/dev/sdb1" directory="/ocfs2" fstype="ocfs2"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="qa-suse-1" CRM_meta_on_node_uuid="qa-suse-1" CRM_meta_timeout="60000"  device="/dev/sdb1" directory="/ocfs2" fstype="ocfs2"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -312,7 +312,7 @@
     <action_set>
       <rsc_op id="54" operation="stop" operation_key="ocfs:0_stop_0" internal_operation_key="ocfs:1_stop_0" on_node="qa-suse-4" on_node_uuid="qa-suse-4">
         <primitive id="ocfs" long-id="ocfs:0" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000"  device="/dev/sdb1" directory="/ocfs2" fstype="ocfs2"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="qa-suse-4" CRM_meta_on_node_uuid="qa-suse-4" CRM_meta_timeout="60000"  device="/dev/sdb1" directory="/ocfs2" fstype="ocfs2"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -328,7 +328,7 @@
     <action_set>
       <rsc_op id="55" operation="stop" operation_key="ocfs:2_stop_0" on_node="qa-suse-3" on_node_uuid="qa-suse-3">
         <primitive id="ocfs" long-id="ocfs:2" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000"  device="/dev/sdb1" directory="/ocfs2" fstype="ocfs2"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="qa-suse-3" CRM_meta_on_node_uuid="qa-suse-3" CRM_meta_timeout="60000"  device="/dev/sdb1" directory="/ocfs2" fstype="ocfs2"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -344,7 +344,7 @@
     <action_set>
       <rsc_op id="56" operation="stop" operation_key="ocfs:3_stop_0" on_node="qa-suse-2" on_node_uuid="qa-suse-2">
         <primitive id="ocfs" long-id="ocfs:3" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000"  device="/dev/sdb1" directory="/ocfs2" fstype="ocfs2"/>
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="qa-suse-2" CRM_meta_on_node_uuid="qa-suse-2" CRM_meta_timeout="60000"  device="/dev/sdb1" directory="/ocfs2" fstype="ocfs2"/>
       </rsc_op>
     </action_set>
     <inputs>

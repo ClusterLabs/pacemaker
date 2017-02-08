@@ -26,7 +26,7 @@
      <action_set>
       <rsc_op id="7" operation="stop" operation_key="IPaddr_192_168_1_102_stop_0" on_node="xen-b" on_node_uuid="6a0b1629-ab27-47c7-a6a4-461c94e477f2">
         <primitive id="IPaddr_192_168_1_102" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="15000"  ip="192.168.1.102"/>
+        <attributes CRM_meta_on_node="xen-b" CRM_meta_on_node_uuid="6a0b1629-ab27-47c7-a6a4-461c94e477f2" CRM_meta_timeout="15000"  ip="192.168.1.102"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -38,7 +38,7 @@
    <synapse id="3">
      <action_set>
       <crm_event id="13" operation="do_shutdown" operation_key="do_shutdown-xen-b" on_node="xen-b" on_node_uuid="6a0b1629-ab27-47c7-a6a4-461c94e477f2">
-        <attributes CRM_meta_op_no_wait="true" />
+        <attributes CRM_meta_on_node="xen-b" CRM_meta_on_node_uuid="6a0b1629-ab27-47c7-a6a4-461c94e477f2" CRM_meta_op_no_wait="true" />
         <downed>
           <node id="6a0b1629-ab27-47c7-a6a4-461c94e477f2"/>
         </downed>

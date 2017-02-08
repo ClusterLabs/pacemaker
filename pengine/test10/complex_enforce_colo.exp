@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="224" operation="stop" operation_key="keystone_stop_0" internal_operation_key="keystone:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="keystone" long-id="keystone:0" class="systemd" type="openstack-keystone"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -28,7 +28,7 @@
     <action_set>
       <rsc_op id="225" operation="stop" operation_key="keystone_stop_0" internal_operation_key="keystone:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="keystone" long-id="keystone:1" class="systemd" type="openstack-keystone"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -53,7 +53,7 @@
     <action_set>
       <rsc_op id="226" operation="stop" operation_key="keystone_stop_0" internal_operation_key="keystone:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="keystone" long-id="keystone:2" class="systemd" type="openstack-keystone"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -126,7 +126,7 @@
     <action_set>
       <rsc_op id="241" operation="stop" operation_key="glance-registry_stop_0" internal_operation_key="glance-registry:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="glance-registry" long-id="glance-registry:0" class="systemd" type="openstack-glance-registry"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -142,7 +142,7 @@
     <action_set>
       <rsc_op id="243" operation="stop" operation_key="glance-registry_stop_0" internal_operation_key="glance-registry:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="glance-registry" long-id="glance-registry:1" class="systemd" type="openstack-glance-registry"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -158,7 +158,7 @@
     <action_set>
       <rsc_op id="245" operation="stop" operation_key="glance-registry_stop_0" internal_operation_key="glance-registry:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="glance-registry" long-id="glance-registry:2" class="systemd" type="openstack-glance-registry"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -207,7 +207,7 @@
     <action_set>
       <rsc_op id="251" operation="stop" operation_key="glance-api_stop_0" internal_operation_key="glance-api:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="glance-api" long-id="glance-api:0" class="systemd" type="openstack-glance-api"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -220,7 +220,7 @@
     <action_set>
       <rsc_op id="253" operation="stop" operation_key="glance-api_stop_0" internal_operation_key="glance-api:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="glance-api" long-id="glance-api:1" class="systemd" type="openstack-glance-api"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -233,7 +233,7 @@
     <action_set>
       <rsc_op id="255" operation="stop" operation_key="glance-api_stop_0" internal_operation_key="glance-api:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="glance-api" long-id="glance-api:2" class="systemd" type="openstack-glance-api"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -275,7 +275,7 @@
     <action_set>
       <rsc_op id="261" operation="stop" operation_key="cinder-api_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="cinder-api" class="systemd" type="openstack-cinder-api"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -288,7 +288,7 @@
     <action_set>
       <rsc_op id="263" operation="stop" operation_key="cinder-scheduler_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="cinder-scheduler" class="systemd" type="openstack-cinder-scheduler"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -301,7 +301,7 @@
     <action_set>
       <rsc_op id="265" operation="stop" operation_key="cinder-volume_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="cinder-volume" class="systemd" type="openstack-cinder-volume"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -310,7 +310,7 @@
     <action_set>
       <rsc_op id="277" operation="stop" operation_key="swift-account_stop_0" internal_operation_key="swift-account:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="swift-account" long-id="swift-account:0" class="systemd" type="openstack-swift-account"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -329,7 +329,7 @@
     <action_set>
       <rsc_op id="279" operation="stop" operation_key="swift-account_stop_0" internal_operation_key="swift-account:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="swift-account" long-id="swift-account:1" class="systemd" type="openstack-swift-account"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -348,7 +348,7 @@
     <action_set>
       <rsc_op id="281" operation="stop" operation_key="swift-account_stop_0" internal_operation_key="swift-account:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="swift-account" long-id="swift-account:2" class="systemd" type="openstack-swift-account"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -403,7 +403,7 @@
     <action_set>
       <rsc_op id="287" operation="stop" operation_key="swift-container_stop_0" internal_operation_key="swift-container:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="swift-container" long-id="swift-container:0" class="systemd" type="openstack-swift-container"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -419,7 +419,7 @@
     <action_set>
       <rsc_op id="289" operation="stop" operation_key="swift-container_stop_0" internal_operation_key="swift-container:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="swift-container" long-id="swift-container:1" class="systemd" type="openstack-swift-container"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -435,7 +435,7 @@
     <action_set>
       <rsc_op id="291" operation="stop" operation_key="swift-container_stop_0" internal_operation_key="swift-container:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="swift-container" long-id="swift-container:2" class="systemd" type="openstack-swift-container"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -484,7 +484,7 @@
     <action_set>
       <rsc_op id="297" operation="stop" operation_key="swift-object_stop_0" internal_operation_key="swift-object:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="swift-object" long-id="swift-object:0" class="systemd" type="openstack-swift-object"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -497,7 +497,7 @@
     <action_set>
       <rsc_op id="299" operation="stop" operation_key="swift-object_stop_0" internal_operation_key="swift-object:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="swift-object" long-id="swift-object:1" class="systemd" type="openstack-swift-object"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -510,7 +510,7 @@
     <action_set>
       <rsc_op id="301" operation="stop" operation_key="swift-object_stop_0" internal_operation_key="swift-object:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="swift-object" long-id="swift-object:2" class="systemd" type="openstack-swift-object"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -552,7 +552,7 @@
     <action_set>
       <rsc_op id="307" operation="stop" operation_key="swift-proxy_stop_0" internal_operation_key="swift-proxy:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="swift-proxy" long-id="swift-proxy:0" class="systemd" type="openstack-swift-proxy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -565,7 +565,7 @@
     <action_set>
       <rsc_op id="309" operation="stop" operation_key="swift-proxy_stop_0" internal_operation_key="swift-proxy:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="swift-proxy" long-id="swift-proxy:1" class="systemd" type="openstack-swift-proxy"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -578,7 +578,7 @@
     <action_set>
       <rsc_op id="311" operation="stop" operation_key="swift-proxy_stop_0" internal_operation_key="swift-proxy:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="swift-proxy" long-id="swift-proxy:2" class="systemd" type="openstack-swift-proxy"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -624,7 +624,7 @@
     <action_set>
       <rsc_op id="317" operation="stop" operation_key="swift-object-expirer_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="swift-object-expirer" class="systemd" type="openstack-swift-object-expirer"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -633,7 +633,7 @@
     <action_set>
       <rsc_op id="319" operation="stop" operation_key="neutron-server_stop_0" internal_operation_key="neutron-server:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="neutron-server" long-id="neutron-server:0" class="systemd" type="neutron-server"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -649,7 +649,7 @@
     <action_set>
       <rsc_op id="321" operation="stop" operation_key="neutron-server_stop_0" internal_operation_key="neutron-server:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="neutron-server" long-id="neutron-server:1" class="systemd" type="neutron-server"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -665,7 +665,7 @@
     <action_set>
       <rsc_op id="323" operation="stop" operation_key="neutron-server_stop_0" internal_operation_key="neutron-server:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="neutron-server" long-id="neutron-server:2" class="systemd" type="neutron-server"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -714,7 +714,7 @@
     <action_set>
       <rsc_op id="329" operation="stop" operation_key="neutron-scale:0_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="neutron-scale:0" class="ocf" provider="neutron" type="NeutronScale"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="300000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="300000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -730,7 +730,7 @@
     <action_set>
       <rsc_op id="331" operation="stop" operation_key="neutron-scale:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="neutron-scale:1" class="ocf" provider="neutron" type="NeutronScale"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="300000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="300000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -746,7 +746,7 @@
     <action_set>
       <rsc_op id="333" operation="stop" operation_key="neutron-scale:2_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="neutron-scale:2" class="ocf" provider="neutron" type="NeutronScale"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="300000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="300000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -795,7 +795,7 @@
     <action_set>
       <rsc_op id="339" operation="stop" operation_key="neutron-ovs-cleanup_stop_0" internal_operation_key="neutron-ovs-cleanup:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="neutron-ovs-cleanup" long-id="neutron-ovs-cleanup:0" class="ocf" provider="neutron" type="OVSCleanup"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="300000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="300000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -811,7 +811,7 @@
     <action_set>
       <rsc_op id="341" operation="stop" operation_key="neutron-ovs-cleanup_stop_0" internal_operation_key="neutron-ovs-cleanup:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="neutron-ovs-cleanup" long-id="neutron-ovs-cleanup:1" class="ocf" provider="neutron" type="OVSCleanup"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="300000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="300000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -827,7 +827,7 @@
     <action_set>
       <rsc_op id="343" operation="stop" operation_key="neutron-ovs-cleanup_stop_0" internal_operation_key="neutron-ovs-cleanup:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="neutron-ovs-cleanup" long-id="neutron-ovs-cleanup:2" class="ocf" provider="neutron" type="OVSCleanup"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="300000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="300000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -876,7 +876,7 @@
     <action_set>
       <rsc_op id="349" operation="stop" operation_key="neutron-netns-cleanup_stop_0" internal_operation_key="neutron-netns-cleanup:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="neutron-netns-cleanup" long-id="neutron-netns-cleanup:0" class="ocf" provider="neutron" type="NetnsCleanup"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="300000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="300000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -892,7 +892,7 @@
     <action_set>
       <rsc_op id="351" operation="stop" operation_key="neutron-netns-cleanup_stop_0" internal_operation_key="neutron-netns-cleanup:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="neutron-netns-cleanup" long-id="neutron-netns-cleanup:1" class="ocf" provider="neutron" type="NetnsCleanup"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="300000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="300000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -908,7 +908,7 @@
     <action_set>
       <rsc_op id="353" operation="stop" operation_key="neutron-netns-cleanup_stop_0" internal_operation_key="neutron-netns-cleanup:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="neutron-netns-cleanup" long-id="neutron-netns-cleanup:2" class="ocf" provider="neutron" type="NetnsCleanup"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="300000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="300000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -957,7 +957,7 @@
     <action_set>
       <rsc_op id="359" operation="stop" operation_key="neutron-openvswitch-agent_stop_0" internal_operation_key="neutron-openvswitch-agent:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="neutron-openvswitch-agent" long-id="neutron-openvswitch-agent:0" class="systemd" type="neutron-openvswitch-agent"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -973,7 +973,7 @@
     <action_set>
       <rsc_op id="361" operation="stop" operation_key="neutron-openvswitch-agent_stop_0" internal_operation_key="neutron-openvswitch-agent:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="neutron-openvswitch-agent" long-id="neutron-openvswitch-agent:1" class="systemd" type="neutron-openvswitch-agent"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -989,7 +989,7 @@
     <action_set>
       <rsc_op id="363" operation="stop" operation_key="neutron-openvswitch-agent_stop_0" internal_operation_key="neutron-openvswitch-agent:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="neutron-openvswitch-agent" long-id="neutron-openvswitch-agent:2" class="systemd" type="neutron-openvswitch-agent"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1038,7 +1038,7 @@
     <action_set>
       <rsc_op id="369" operation="stop" operation_key="neutron-dhcp-agent_stop_0" internal_operation_key="neutron-dhcp-agent:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="neutron-dhcp-agent" long-id="neutron-dhcp-agent:0" class="systemd" type="neutron-dhcp-agent"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1054,7 +1054,7 @@
     <action_set>
       <rsc_op id="371" operation="stop" operation_key="neutron-dhcp-agent_stop_0" internal_operation_key="neutron-dhcp-agent:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="neutron-dhcp-agent" long-id="neutron-dhcp-agent:1" class="systemd" type="neutron-dhcp-agent"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1070,7 +1070,7 @@
     <action_set>
       <rsc_op id="373" operation="stop" operation_key="neutron-dhcp-agent_stop_0" internal_operation_key="neutron-dhcp-agent:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="neutron-dhcp-agent" long-id="neutron-dhcp-agent:2" class="systemd" type="neutron-dhcp-agent"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1119,7 +1119,7 @@
     <action_set>
       <rsc_op id="379" operation="stop" operation_key="neutron-l3-agent_stop_0" internal_operation_key="neutron-l3-agent:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="neutron-l3-agent" long-id="neutron-l3-agent:0" class="systemd" type="neutron-l3-agent"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1135,7 +1135,7 @@
     <action_set>
       <rsc_op id="381" operation="stop" operation_key="neutron-l3-agent_stop_0" internal_operation_key="neutron-l3-agent:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="neutron-l3-agent" long-id="neutron-l3-agent:1" class="systemd" type="neutron-l3-agent"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1151,7 +1151,7 @@
     <action_set>
       <rsc_op id="383" operation="stop" operation_key="neutron-l3-agent_stop_0" internal_operation_key="neutron-l3-agent:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="neutron-l3-agent" long-id="neutron-l3-agent:2" class="systemd" type="neutron-l3-agent"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1200,7 +1200,7 @@
     <action_set>
       <rsc_op id="389" operation="stop" operation_key="neutron-metadata-agent_stop_0" internal_operation_key="neutron-metadata-agent:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="neutron-metadata-agent" long-id="neutron-metadata-agent:0" class="systemd" type="neutron-metadata-agent"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1213,7 +1213,7 @@
     <action_set>
       <rsc_op id="391" operation="stop" operation_key="neutron-metadata-agent_stop_0" internal_operation_key="neutron-metadata-agent:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="neutron-metadata-agent" long-id="neutron-metadata-agent:1" class="systemd" type="neutron-metadata-agent"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1226,7 +1226,7 @@
     <action_set>
       <rsc_op id="393" operation="stop" operation_key="neutron-metadata-agent_stop_0" internal_operation_key="neutron-metadata-agent:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="neutron-metadata-agent" long-id="neutron-metadata-agent:2" class="systemd" type="neutron-metadata-agent"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1268,7 +1268,7 @@
     <action_set>
       <rsc_op id="399" operation="stop" operation_key="nova-consoleauth_stop_0" internal_operation_key="nova-consoleauth:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="nova-consoleauth" long-id="nova-consoleauth:0" class="systemd" type="openstack-nova-consoleauth"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1284,7 +1284,7 @@
     <action_set>
       <rsc_op id="401" operation="stop" operation_key="nova-consoleauth_stop_0" internal_operation_key="nova-consoleauth:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="nova-consoleauth" long-id="nova-consoleauth:1" class="systemd" type="openstack-nova-consoleauth"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1300,7 +1300,7 @@
     <action_set>
       <rsc_op id="403" operation="stop" operation_key="nova-consoleauth_stop_0" internal_operation_key="nova-consoleauth:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="nova-consoleauth" long-id="nova-consoleauth:2" class="systemd" type="openstack-nova-consoleauth"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1349,7 +1349,7 @@
     <action_set>
       <rsc_op id="409" operation="stop" operation_key="nova-novncproxy_stop_0" internal_operation_key="nova-novncproxy:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="nova-novncproxy" long-id="nova-novncproxy:0" class="systemd" type="openstack-nova-novncproxy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1365,7 +1365,7 @@
     <action_set>
       <rsc_op id="411" operation="stop" operation_key="nova-novncproxy_stop_0" internal_operation_key="nova-novncproxy:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="nova-novncproxy" long-id="nova-novncproxy:1" class="systemd" type="openstack-nova-novncproxy"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1381,7 +1381,7 @@
     <action_set>
       <rsc_op id="413" operation="stop" operation_key="nova-novncproxy_stop_0" internal_operation_key="nova-novncproxy:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="nova-novncproxy" long-id="nova-novncproxy:2" class="systemd" type="openstack-nova-novncproxy"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1430,7 +1430,7 @@
     <action_set>
       <rsc_op id="419" operation="stop" operation_key="nova-api_stop_0" internal_operation_key="nova-api:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="nova-api" long-id="nova-api:0" class="systemd" type="openstack-nova-api"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1446,7 +1446,7 @@
     <action_set>
       <rsc_op id="421" operation="stop" operation_key="nova-api_stop_0" internal_operation_key="nova-api:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="nova-api" long-id="nova-api:1" class="systemd" type="openstack-nova-api"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1462,7 +1462,7 @@
     <action_set>
       <rsc_op id="423" operation="stop" operation_key="nova-api_stop_0" internal_operation_key="nova-api:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="nova-api" long-id="nova-api:2" class="systemd" type="openstack-nova-api"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1511,7 +1511,7 @@
     <action_set>
       <rsc_op id="429" operation="stop" operation_key="nova-scheduler_stop_0" internal_operation_key="nova-scheduler:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="nova-scheduler" long-id="nova-scheduler:0" class="systemd" type="openstack-nova-scheduler"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1527,7 +1527,7 @@
     <action_set>
       <rsc_op id="431" operation="stop" operation_key="nova-scheduler_stop_0" internal_operation_key="nova-scheduler:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="nova-scheduler" long-id="nova-scheduler:1" class="systemd" type="openstack-nova-scheduler"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1543,7 +1543,7 @@
     <action_set>
       <rsc_op id="433" operation="stop" operation_key="nova-scheduler_stop_0" internal_operation_key="nova-scheduler:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="nova-scheduler" long-id="nova-scheduler:2" class="systemd" type="openstack-nova-scheduler"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1592,7 +1592,7 @@
     <action_set>
       <rsc_op id="439" operation="stop" operation_key="nova-conductor_stop_0" internal_operation_key="nova-conductor:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="nova-conductor" long-id="nova-conductor:0" class="systemd" type="openstack-nova-conductor"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1605,7 +1605,7 @@
     <action_set>
       <rsc_op id="441" operation="stop" operation_key="nova-conductor_stop_0" internal_operation_key="nova-conductor:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="nova-conductor" long-id="nova-conductor:1" class="systemd" type="openstack-nova-conductor"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1618,7 +1618,7 @@
     <action_set>
       <rsc_op id="443" operation="stop" operation_key="nova-conductor_stop_0" internal_operation_key="nova-conductor:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="nova-conductor" long-id="nova-conductor:2" class="systemd" type="openstack-nova-conductor"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1660,7 +1660,7 @@
     <action_set>
       <rsc_op id="449" operation="stop" operation_key="ceilometer-central_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="ceilometer-central" class="systemd" type="openstack-ceilometer-central"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1673,7 +1673,7 @@
     <action_set>
       <rsc_op id="451" operation="stop" operation_key="ceilometer-collector_stop_0" internal_operation_key="ceilometer-collector:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="ceilometer-collector" long-id="ceilometer-collector:0" class="systemd" type="openstack-ceilometer-collector"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1689,7 +1689,7 @@
     <action_set>
       <rsc_op id="453" operation="stop" operation_key="ceilometer-collector_stop_0" internal_operation_key="ceilometer-collector:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="ceilometer-collector" long-id="ceilometer-collector:1" class="systemd" type="openstack-ceilometer-collector"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1705,7 +1705,7 @@
     <action_set>
       <rsc_op id="455" operation="stop" operation_key="ceilometer-collector_stop_0" internal_operation_key="ceilometer-collector:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="ceilometer-collector" long-id="ceilometer-collector:2" class="systemd" type="openstack-ceilometer-collector"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1754,7 +1754,7 @@
     <action_set>
       <rsc_op id="461" operation="stop" operation_key="ceilometer-api_stop_0" internal_operation_key="ceilometer-api:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="ceilometer-api" long-id="ceilometer-api:0" class="systemd" type="openstack-ceilometer-api"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1770,7 +1770,7 @@
     <action_set>
       <rsc_op id="463" operation="stop" operation_key="ceilometer-api_stop_0" internal_operation_key="ceilometer-api:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="ceilometer-api" long-id="ceilometer-api:1" class="systemd" type="openstack-ceilometer-api"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1786,7 +1786,7 @@
     <action_set>
       <rsc_op id="465" operation="stop" operation_key="ceilometer-api_stop_0" internal_operation_key="ceilometer-api:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="ceilometer-api" long-id="ceilometer-api:2" class="systemd" type="openstack-ceilometer-api"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1835,7 +1835,7 @@
     <action_set>
       <rsc_op id="471" operation="stop" operation_key="ceilometer-delay_stop_0" internal_operation_key="ceilometer-delay:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="ceilometer-delay" long-id="ceilometer-delay:0" class="ocf" provider="heartbeat" type="Delay"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="30000"  startdelay="10"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="30000"  startdelay="10"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1851,7 +1851,7 @@
     <action_set>
       <rsc_op id="473" operation="stop" operation_key="ceilometer-delay_stop_0" internal_operation_key="ceilometer-delay:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="ceilometer-delay" long-id="ceilometer-delay:1" class="ocf" provider="heartbeat" type="Delay"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="30000"  startdelay="10"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="30000"  startdelay="10"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1867,7 +1867,7 @@
     <action_set>
       <rsc_op id="475" operation="stop" operation_key="ceilometer-delay_stop_0" internal_operation_key="ceilometer-delay:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="ceilometer-delay" long-id="ceilometer-delay:2" class="ocf" provider="heartbeat" type="Delay"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="30000"  startdelay="10"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="30000"  startdelay="10"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1916,7 +1916,7 @@
     <action_set>
       <rsc_op id="481" operation="stop" operation_key="ceilometer-alarm-evaluator_stop_0" internal_operation_key="ceilometer-alarm-evaluator:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="ceilometer-alarm-evaluator" long-id="ceilometer-alarm-evaluator:0" class="systemd" type="openstack-ceilometer-alarm-evaluator"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1932,7 +1932,7 @@
     <action_set>
       <rsc_op id="483" operation="stop" operation_key="ceilometer-alarm-evaluator_stop_0" internal_operation_key="ceilometer-alarm-evaluator:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="ceilometer-alarm-evaluator" long-id="ceilometer-alarm-evaluator:1" class="systemd" type="openstack-ceilometer-alarm-evaluator"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1948,7 +1948,7 @@
     <action_set>
       <rsc_op id="485" operation="stop" operation_key="ceilometer-alarm-evaluator_stop_0" internal_operation_key="ceilometer-alarm-evaluator:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="ceilometer-alarm-evaluator" long-id="ceilometer-alarm-evaluator:2" class="systemd" type="openstack-ceilometer-alarm-evaluator"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -1997,7 +1997,7 @@
     <action_set>
       <rsc_op id="491" operation="stop" operation_key="ceilometer-alarm-notifier_stop_0" internal_operation_key="ceilometer-alarm-notifier:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="ceilometer-alarm-notifier" long-id="ceilometer-alarm-notifier:0" class="systemd" type="openstack-ceilometer-alarm-notifier"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -2013,7 +2013,7 @@
     <action_set>
       <rsc_op id="493" operation="stop" operation_key="ceilometer-alarm-notifier_stop_0" internal_operation_key="ceilometer-alarm-notifier:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="ceilometer-alarm-notifier" long-id="ceilometer-alarm-notifier:1" class="systemd" type="openstack-ceilometer-alarm-notifier"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -2029,7 +2029,7 @@
     <action_set>
       <rsc_op id="495" operation="stop" operation_key="ceilometer-alarm-notifier_stop_0" internal_operation_key="ceilometer-alarm-notifier:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="ceilometer-alarm-notifier" long-id="ceilometer-alarm-notifier:2" class="systemd" type="openstack-ceilometer-alarm-notifier"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -2078,7 +2078,7 @@
     <action_set>
       <rsc_op id="501" operation="stop" operation_key="ceilometer-notification_stop_0" internal_operation_key="ceilometer-notification:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="ceilometer-notification" long-id="ceilometer-notification:0" class="systemd" type="openstack-ceilometer-notification"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -2094,7 +2094,7 @@
     <action_set>
       <rsc_op id="503" operation="stop" operation_key="ceilometer-notification_stop_0" internal_operation_key="ceilometer-notification:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="ceilometer-notification" long-id="ceilometer-notification:1" class="systemd" type="openstack-ceilometer-notification"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -2110,7 +2110,7 @@
     <action_set>
       <rsc_op id="505" operation="stop" operation_key="ceilometer-notification_stop_0" internal_operation_key="ceilometer-notification:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="ceilometer-notification" long-id="ceilometer-notification:2" class="systemd" type="openstack-ceilometer-notification"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -2159,7 +2159,7 @@
     <action_set>
       <rsc_op id="511" operation="stop" operation_key="heat-api_stop_0" internal_operation_key="heat-api:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="heat-api" long-id="heat-api:0" class="systemd" type="openstack-heat-api"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -2175,7 +2175,7 @@
     <action_set>
       <rsc_op id="513" operation="stop" operation_key="heat-api_stop_0" internal_operation_key="heat-api:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="heat-api" long-id="heat-api:1" class="systemd" type="openstack-heat-api"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -2191,7 +2191,7 @@
     <action_set>
       <rsc_op id="515" operation="stop" operation_key="heat-api_stop_0" internal_operation_key="heat-api:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="heat-api" long-id="heat-api:2" class="systemd" type="openstack-heat-api"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -2240,7 +2240,7 @@
     <action_set>
       <rsc_op id="521" operation="stop" operation_key="heat-api-cfn_stop_0" internal_operation_key="heat-api-cfn:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="heat-api-cfn" long-id="heat-api-cfn:0" class="systemd" type="openstack-heat-api-cfn"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -2256,7 +2256,7 @@
     <action_set>
       <rsc_op id="523" operation="stop" operation_key="heat-api-cfn_stop_0" internal_operation_key="heat-api-cfn:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="heat-api-cfn" long-id="heat-api-cfn:1" class="systemd" type="openstack-heat-api-cfn"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -2272,7 +2272,7 @@
     <action_set>
       <rsc_op id="525" operation="stop" operation_key="heat-api-cfn_stop_0" internal_operation_key="heat-api-cfn:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="heat-api-cfn" long-id="heat-api-cfn:2" class="systemd" type="openstack-heat-api-cfn"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -2321,7 +2321,7 @@
     <action_set>
       <rsc_op id="531" operation="stop" operation_key="heat-api-cloudwatch_stop_0" internal_operation_key="heat-api-cloudwatch:0_stop_0" on_node="rhos6-node1" on_node_uuid="1">
         <primitive id="heat-api-cloudwatch" long-id="heat-api-cloudwatch:0" class="systemd" type="openstack-heat-api-cloudwatch"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -2334,7 +2334,7 @@
     <action_set>
       <rsc_op id="533" operation="stop" operation_key="heat-api-cloudwatch_stop_0" internal_operation_key="heat-api-cloudwatch:1_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="heat-api-cloudwatch" long-id="heat-api-cloudwatch:1" class="systemd" type="openstack-heat-api-cloudwatch"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -2347,7 +2347,7 @@
     <action_set>
       <rsc_op id="535" operation="stop" operation_key="heat-api-cloudwatch_stop_0" internal_operation_key="heat-api-cloudwatch:2_stop_0" on_node="rhos6-node3" on_node_uuid="3">
         <primitive id="heat-api-cloudwatch" long-id="heat-api-cloudwatch:2" class="systemd" type="openstack-heat-api-cloudwatch"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos6-node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -2393,7 +2393,7 @@
     <action_set>
       <rsc_op id="541" operation="stop" operation_key="heat-engine_stop_0" on_node="rhos6-node2" on_node_uuid="2">
         <primitive id="heat-engine" class="systemd" type="openstack-heat-engine"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="rhos6-node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>

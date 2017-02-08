@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="2" operation="start" operation_key="vm_start_0" on_node="dvossel-laptop2" on_node_uuid="24815808">
         <primitive id="vm" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_remote_node="18builder" CRM_meta_timeout="20000" config="/home/dvossel/virtual_machines/18builder.xml"  hypervisor="qemu:///system"/>
+        <attributes CRM_meta_on_node="dvossel-laptop2" CRM_meta_on_node_uuid="24815808" CRM_meta_remote_node="18builder" CRM_meta_timeout="20000" config="/home/dvossel/virtual_machines/18builder.xml"  hypervisor="qemu:///system"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -12,7 +12,7 @@
     <action_set>
       <rsc_op id="4" operation="start" operation_key="FAKE_start_0" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2">
         <primitive id="FAKE" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="18builder" CRM_meta_on_node_uuid="18builder" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -28,7 +28,7 @@
     <action_set>
       <rsc_op id="3" operation="stop" operation_key="FAKE_stop_0" on_node="dvossel-laptop2" on_node_uuid="24815808">
         <primitive id="FAKE" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="dvossel-laptop2" CRM_meta_on_node_uuid="24815808" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -37,7 +37,7 @@
     <action_set>
       <rsc_op id="10" operation="monitor" operation_key="W:1_monitor_10000" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2">
         <primitive id="W" long-id="W:1" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="18builder" CRM_meta_on_node_uuid="18builder" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -53,7 +53,7 @@
     <action_set>
       <rsc_op id="9" operation="start" operation_key="W:1_start_0" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2">
         <primitive id="W" long-id="W:1" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="18builder" CRM_meta_on_node_uuid="18builder" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -92,7 +92,7 @@
     <action_set>
       <rsc_op id="24" operation="monitor" operation_key="X:1_monitor_10000" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2">
         <primitive id="X" long-id="X:1" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="18builder" CRM_meta_on_node_uuid="18builder" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -108,7 +108,7 @@
     <action_set>
       <rsc_op id="23" operation="start" operation_key="X:1_start_0" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2">
         <primitive id="X" long-id="X:1" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="18builder" CRM_meta_on_node_uuid="18builder" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -147,7 +147,7 @@
     <action_set>
       <rsc_op id="34" operation="monitor" operation_key="18builder_monitor_30000" on_node="dvossel-laptop2" on_node_uuid="24815808">
         <primitive id="18builder" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="vm" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" />
+        <attributes CRM_meta_container="vm" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="dvossel-laptop2" CRM_meta_on_node_uuid="24815808" CRM_meta_timeout="30000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -160,7 +160,7 @@
     <action_set>
       <rsc_op id="33" operation="start" operation_key="18builder_start_0" on_node="dvossel-laptop2" on_node_uuid="24815808">
         <primitive id="18builder" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="vm" CRM_meta_name="start" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_container="vm" CRM_meta_name="start" CRM_meta_on_node="dvossel-laptop2" CRM_meta_on_node_uuid="24815808" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>

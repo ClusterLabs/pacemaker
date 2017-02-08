@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="5" operation="stop" operation_key="rsc1:1_stop_0" internal_operation_key="rsc1:0_stop_0" on_node="node1" on_node_uuid="node1">
         <primitive id="rsc1" long-id="rsc1:1" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="node1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -19,7 +19,7 @@
     <action_set>
       <rsc_op id="4" operation="demote" operation_key="rsc1:1_demote_0" internal_operation_key="rsc1:0_demote_0" on_node="node1" on_node_uuid="node1">
         <primitive id="rsc1" long-id="rsc1:1" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="node1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -32,7 +32,7 @@
     <action_set>
       <rsc_op id="6" operation="stop" operation_key="rsc1:0_stop_0" internal_operation_key="rsc1:1_stop_0" on_node="node2" on_node_uuid="node2">
         <primitive id="rsc1" long-id="rsc1:0" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="node2" CRM_meta_on_node_uuid="node2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>

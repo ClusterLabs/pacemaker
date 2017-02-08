@@ -39,7 +39,7 @@ To disable security measures:
 ----
 # setenforce 0
 # sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/selinux/config
-# systemctl disable firewalld.service
+# systemctl mask firewalld.service
 # systemctl stop firewalld.service
 # iptables --flush
 ----

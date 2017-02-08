@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="10" operation="monitor" operation_key="shooter_monitor_60000" on_node="rhel7-auto2" on_node_uuid="2">
         <primitive id="shooter" class="stonith" type="fence_xvm"/>
-        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-auto2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="9" operation="start" operation_key="shooter_start_0" on_node="rhel7-auto2" on_node_uuid="2">
         <primitive id="shooter" class="stonith" type="fence_xvm"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="rhel7-auto2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -29,7 +29,7 @@
     <action_set>
       <rsc_op id="8" operation="stop" operation_key="shooter_stop_0" on_node="rhel7-auto1" on_node_uuid="1">
         <primitive id="shooter" class="stonith" type="fence_xvm"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="rhel7-auto1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -38,7 +38,7 @@
     <action_set>
       <rsc_op id="11" operation="stop" operation_key="A_stop_0" internal_operation_key="A:0_stop_0" on_node="rhel7-auto1" on_node_uuid="1">
         <primitive id="A" long-id="A:0" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="rhel7-auto1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>

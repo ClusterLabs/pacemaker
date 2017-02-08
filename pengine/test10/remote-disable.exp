@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="10" operation="stop" operation_key="remote1_stop_0" on_node="18builder" on_node_uuid="5">
         <primitive id="remote1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="18builder" CRM_meta_on_node_uuid="5" CRM_meta_timeout="20000" />
         <downed>
           <node id="remote1"/>
         </downed>
@@ -19,7 +19,7 @@
     <action_set>
       <rsc_op id="13" operation="stop" operation_key="FAKE2_stop_0" on_node="remote1" on_node_uuid="remote1" router_node="18builder">
         <primitive id="FAKE2" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="remote1" CRM_meta_on_node_uuid="remote1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>

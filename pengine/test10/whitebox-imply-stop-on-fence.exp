@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="14" operation="monitor" operation_key="fence-kiff-02_monitor_60000" on_node="kiff-02" on_node_uuid="2">
         <primitive id="fence-kiff-02" class="stonith" type="fence_ipmilan"/>
-        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_timeout="20000" action="reboot"  ipaddr="kiff-02-ilo" login="admin" passwd="admin" pcmk_host_check="static-list" pcmk_host_list="kiff-02"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="kiff-02" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" action="reboot"  ipaddr="kiff-02-ilo" login="admin" passwd="admin" pcmk_host_check="static-list" pcmk_host_list="kiff-02"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="13" operation="start" operation_key="fence-kiff-02_start_0" on_node="kiff-02" on_node_uuid="2">
         <primitive id="fence-kiff-02" class="stonith" type="fence_ipmilan"/>
-        <attributes CRM_meta_timeout="20000" action="reboot"  ipaddr="kiff-02-ilo" login="admin" passwd="admin" pcmk_host_check="static-list" pcmk_host_list="kiff-02"/>
+        <attributes CRM_meta_on_node="kiff-02" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" action="reboot"  ipaddr="kiff-02-ilo" login="admin" passwd="admin" pcmk_host_check="static-list" pcmk_host_list="kiff-02"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -184,7 +184,7 @@
     <action_set>
       <rsc_op id="38" operation="monitor" operation_key="R-lxc-01_kiff-01_monitor_10000" on_node="kiff-02" on_node_uuid="2">
         <primitive id="R-lxc-01_kiff-01" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_remote_node="lxc-01_kiff-01" CRM_meta_timeout="30000" config="/mnt/shared0/test-virtual-domain/lxc/lxc-01_kiff-01.xml"  force_stop="true" hypervisor="lxc:///"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="kiff-02" CRM_meta_on_node_uuid="2" CRM_meta_remote_node="lxc-01_kiff-01" CRM_meta_timeout="30000" config="/mnt/shared0/test-virtual-domain/lxc/lxc-01_kiff-01.xml"  force_stop="true" hypervisor="lxc:///"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -197,7 +197,7 @@
     <action_set>
       <rsc_op id="37" operation="start" operation_key="R-lxc-01_kiff-01_start_0" on_node="kiff-02" on_node_uuid="2">
         <primitive id="R-lxc-01_kiff-01" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_name="start" CRM_meta_remote_node="lxc-01_kiff-01" CRM_meta_timeout="90000" config="/mnt/shared0/test-virtual-domain/lxc/lxc-01_kiff-01.xml"  force_stop="true" hypervisor="lxc:///"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="kiff-02" CRM_meta_on_node_uuid="2" CRM_meta_remote_node="lxc-01_kiff-01" CRM_meta_timeout="90000" config="/mnt/shared0/test-virtual-domain/lxc/lxc-01_kiff-01.xml"  force_stop="true" hypervisor="lxc:///"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -228,7 +228,7 @@
     <action_set>
       <rsc_op id="41" operation="monitor" operation_key="R-lxc-02_kiff-01_monitor_10000" on_node="kiff-02" on_node_uuid="2">
         <primitive id="R-lxc-02_kiff-01" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_remote_node="lxc-02_kiff-01" CRM_meta_timeout="30000" config="/mnt/shared0/test-virtual-domain/lxc/lxc-02_kiff-01.xml"  force_stop="true" hypervisor="lxc:///"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="kiff-02" CRM_meta_on_node_uuid="2" CRM_meta_remote_node="lxc-02_kiff-01" CRM_meta_timeout="30000" config="/mnt/shared0/test-virtual-domain/lxc/lxc-02_kiff-01.xml"  force_stop="true" hypervisor="lxc:///"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -241,7 +241,7 @@
     <action_set>
       <rsc_op id="40" operation="start" operation_key="R-lxc-02_kiff-01_start_0" on_node="kiff-02" on_node_uuid="2">
         <primitive id="R-lxc-02_kiff-01" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_name="start" CRM_meta_remote_node="lxc-02_kiff-01" CRM_meta_timeout="90000" config="/mnt/shared0/test-virtual-domain/lxc/lxc-02_kiff-01.xml"  force_stop="true" hypervisor="lxc:///"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="kiff-02" CRM_meta_on_node_uuid="2" CRM_meta_remote_node="lxc-02_kiff-01" CRM_meta_timeout="90000" config="/mnt/shared0/test-virtual-domain/lxc/lxc-02_kiff-01.xml"  force_stop="true" hypervisor="lxc:///"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -272,7 +272,7 @@
     <action_set>
       <rsc_op id="48" operation="monitor" operation_key="vm-fs_monitor_20000" on_node="lxc-01_kiff-01" on_node_uuid="lxc-01_kiff-01" router_node="kiff-02">
         <primitive id="vm-fs" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_interval="20000" CRM_meta_name="monitor" CRM_meta_timeout="40000"  device="/root" directory="/mnt/vm-fs" fstype="none" options="bind"/>
+        <attributes CRM_meta_interval="20000" CRM_meta_name="monitor" CRM_meta_on_node="lxc-01_kiff-01" CRM_meta_on_node_uuid="lxc-01_kiff-01" CRM_meta_timeout="40000"  device="/root" directory="/mnt/vm-fs" fstype="none" options="bind"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -288,7 +288,7 @@
     <action_set>
       <rsc_op id="47" operation="start" operation_key="vm-fs_start_0" on_node="lxc-01_kiff-01" on_node_uuid="lxc-01_kiff-01" router_node="kiff-02">
         <primitive id="vm-fs" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_name="start" CRM_meta_timeout="60000"  device="/root" directory="/mnt/vm-fs" fstype="none" options="bind"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="lxc-01_kiff-01" CRM_meta_on_node_uuid="lxc-01_kiff-01" CRM_meta_timeout="60000"  device="/root" directory="/mnt/vm-fs" fstype="none" options="bind"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -319,7 +319,7 @@
     <action_set>
       <rsc_op id="51" operation="monitor" operation_key="lxc-01_kiff-01_monitor_30000" on_node="kiff-02" on_node_uuid="2">
         <primitive id="lxc-01_kiff-01" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="R-lxc-01_kiff-01" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" />
+        <attributes CRM_meta_container="R-lxc-01_kiff-01" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="kiff-02" CRM_meta_on_node_uuid="2" CRM_meta_timeout="30000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -332,7 +332,7 @@
     <action_set>
       <rsc_op id="50" operation="start" operation_key="lxc-01_kiff-01_start_0" on_node="kiff-02" on_node_uuid="2">
         <primitive id="lxc-01_kiff-01" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="R-lxc-01_kiff-01" CRM_meta_name="start" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_container="R-lxc-01_kiff-01" CRM_meta_name="start" CRM_meta_on_node="kiff-02" CRM_meta_on_node_uuid="2" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -363,7 +363,7 @@
     <action_set>
       <rsc_op id="54" operation="monitor" operation_key="lxc-02_kiff-01_monitor_30000" on_node="kiff-02" on_node_uuid="2">
         <primitive id="lxc-02_kiff-01" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="R-lxc-02_kiff-01" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" />
+        <attributes CRM_meta_container="R-lxc-02_kiff-01" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="kiff-02" CRM_meta_on_node_uuid="2" CRM_meta_timeout="30000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -376,7 +376,7 @@
     <action_set>
       <rsc_op id="53" operation="start" operation_key="lxc-02_kiff-01_start_0" on_node="kiff-02" on_node_uuid="2">
         <primitive id="lxc-02_kiff-01" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="R-lxc-02_kiff-01" CRM_meta_name="start" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_container="R-lxc-02_kiff-01" CRM_meta_name="start" CRM_meta_on_node="kiff-02" CRM_meta_on_node_uuid="2" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>

@@ -30,7 +30,7 @@
      <action_set>
       <rsc_op id="4" operation="stop" operation_key="stateful-1:0_stop_0" on_node="dl380g5b" on_node_uuid="888e539a-c6ef-496d-b79a-77cbf0f9e5e4">
         <primitive id="stateful-1:0" class="ocf" provider="heartbeat" type="Stateful"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_fail="stop" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_fail="stop" CRM_meta_on_node="dl380g5b" CRM_meta_on_node_uuid="888e539a-c6ef-496d-b79a-77cbf0f9e5e4" CRM_meta_timeout="60000" />
        </rsc_op>
      </action_set>
      <inputs>
@@ -70,7 +70,7 @@
      <action_set>
       <rsc_op id="16" operation="monitor" operation_key="stateful-1:1_monitor_10000" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
         <primitive id="stateful-1:1" class="ocf" provider="heartbeat" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="stop" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="stop" CRM_meta_on_node="dl380g5a" CRM_meta_on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_timeout="60000" />
        </rsc_op>
      </action_set>
     <inputs>
@@ -83,7 +83,7 @@
      <action_set>
       <rsc_op id="15" operation="promote" operation_key="stateful-1:1_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
         <primitive id="stateful-1:1" class="ocf" provider="heartbeat" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="120000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="dl380g5a" CRM_meta_on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3" CRM_meta_timeout="120000" />
        </rsc_op>
      </action_set>
      <inputs>
@@ -99,7 +99,7 @@
      <action_set>
       <rsc_op id="1" operation="cancel" operation_key="stateful-1:1_monitor_20000" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
         <primitive id="stateful-1:1" class="ocf" provider="heartbeat" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_interval="20000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="stop" CRM_meta_operation="monitor" CRM_meta_role="Slave" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_interval="20000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="stop" CRM_meta_on_node="dl380g5a" CRM_meta_on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3" CRM_meta_operation="monitor" CRM_meta_role="Slave" CRM_meta_timeout="60000" />
        </rsc_op>
      </action_set>
     <inputs/>
@@ -108,7 +108,7 @@
      <action_set>
       <rsc_op id="20" operation="monitor" operation_key="stateful-2:1_monitor_10000" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
         <primitive id="stateful-2:1" class="ocf" provider="heartbeat" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="stop" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="stop" CRM_meta_on_node="dl380g5a" CRM_meta_on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_timeout="60000" />
        </rsc_op>
      </action_set>
     <inputs>
@@ -121,7 +121,7 @@
      <action_set>
       <rsc_op id="19" operation="promote" operation_key="stateful-2:1_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
         <primitive id="stateful-2:1" class="ocf" provider="heartbeat" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="120000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="dl380g5a" CRM_meta_on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3" CRM_meta_timeout="120000" />
        </rsc_op>
      </action_set>
      <inputs>
@@ -140,7 +140,7 @@
      <action_set>
       <rsc_op id="2" operation="cancel" operation_key="stateful-2:1_monitor_20000" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
         <primitive id="stateful-2:1" class="ocf" provider="heartbeat" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_interval="20000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="stop" CRM_meta_operation="monitor" CRM_meta_role="Slave" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_interval="20000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="stop" CRM_meta_on_node="dl380g5a" CRM_meta_on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3" CRM_meta_operation="monitor" CRM_meta_role="Slave" CRM_meta_timeout="60000" />
        </rsc_op>
      </action_set>
      <inputs/>
