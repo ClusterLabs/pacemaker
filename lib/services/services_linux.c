@@ -606,7 +606,7 @@ action_synced_wait(svc_action_t * op, sigset_t *mask)
 /* For an asynchronous 'op', returns FALSE if 'op' should be free'd by the caller */
 /* For a synchronous 'op', returns FALSE if 'op' fails */
 gboolean
-services_os_action_execute(svc_action_t * op, gboolean synchronous)
+services_os_action_execute(svc_action_t * op)
 {
     int stdout_fd[2];
     int stderr_fd[2];
@@ -641,7 +641,7 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
         int rc = errno;
         crm_warn("Cannot execute '%s': %s (%d)", op->opaque->exec, pcmk_strerror(rc), rc);
         services_handle_exec_error(op, rc);
-        if (!synchronous) {
+        if (!op->synchronous) {
             return operation_finalize(op);
         }
         return FALSE;
@@ -653,7 +653,7 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
         crm_err("pipe(stdout_fd) failed. '%s': %s (%d)", op->opaque->exec, pcmk_strerror(rc), rc);
 
         services_handle_exec_error(op, rc);
-        if (!synchronous) {
+        if (!op->synchronous) {
             return operation_finalize(op);
         }
         return FALSE;
@@ -668,13 +668,13 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
         crm_err("pipe(stderr_fd) failed. '%s': %s (%d)", op->opaque->exec, pcmk_strerror(rc), rc);
 
         services_handle_exec_error(op, rc);
-        if (!synchronous) {
+        if (!op->synchronous) {
             return operation_finalize(op);
         }
         return FALSE;
     }
 
-    if (synchronous) {
+    if (op->synchronous) {
 #ifdef HAVE_SYS_SIGNALFD_H
         sigemptyset(&mask);
         sigaddset(&mask, SIGCHLD);
@@ -717,7 +717,7 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
 
                 crm_err("Could not execute '%s': %s (%d)", op->opaque->exec, pcmk_strerror(rc), rc);
                 services_handle_exec_error(op, rc);
-                if (!synchronous) {
+                if (!op->synchronous) {
                     return operation_finalize(op);
                 }
 
@@ -740,7 +740,7 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
                 close(stderr_fd[1]);
             }
 
-            if (synchronous) {
+            if (op->synchronous) {
                 sigchld_cleanup();
             }
 
@@ -758,7 +758,7 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
     op->opaque->stderr_fd = stderr_fd[0];
     set_fd_opts(op->opaque->stderr_fd, O_NONBLOCK);
 
-    if (synchronous) {
+    if (op->synchronous) {
         action_synced_wait(op, pmask);
         sigchld_cleanup();
     } else {

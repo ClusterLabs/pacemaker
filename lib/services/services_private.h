@@ -49,7 +49,7 @@ G_GNUC_INTERNAL
 GList *services_os_get_directory_list(const char *root, gboolean files, gboolean executable);
 
 G_GNUC_INTERNAL
-gboolean services_os_action_execute(svc_action_t * op, gboolean synchronous);
+gboolean services_os_action_execute(svc_action_t * op);
 
 G_GNUC_INTERNAL
 GList *resources_os_list_lsb_agents(void);

@@ -573,14 +573,14 @@ action_async_helper(svc_action_t * op)
 {
     if (op->standard && strcasecmp(op->standard, "upstart") == 0) {
 #if SUPPORT_UPSTART
-        return upstart_job_exec(op, FALSE);
+        return upstart_job_exec(op);
 #endif
     } else if (op->standard && strcasecmp(op->standard, "systemd") == 0) {
 #if SUPPORT_SYSTEMD
         return systemd_unit_exec(op);
 #endif
     } else {
-        return services_os_action_execute(op, FALSE);
+        return services_os_action_execute(op);
     }
     /* The 'op' has probably been freed if the execution functions return TRUE. */
     /* Avoid using the 'op' in here. */
@@ -701,14 +701,14 @@ services_action_sync(svc_action_t * op)
     op->synchronous = true;
     if (op->standard && strcasecmp(op->standard, "upstart") == 0) {
 #if SUPPORT_UPSTART
-        rc = upstart_job_exec(op, TRUE);
+        rc = upstart_job_exec(op);
 #endif
     } else if (op->standard && strcasecmp(op->standard, "systemd") == 0) {
 #if SUPPORT_SYSTEMD
         rc = systemd_unit_exec(op);
 #endif
     } else {
-        rc = services_os_action_execute(op, TRUE);
+        rc = services_os_action_execute(op);
     }
     crm_trace(" > %s_%s_%d: %s = %d", op->rsc, op->action, op->interval, op->opaque->exec, op->rc);
     if (op->stdout_data) {
