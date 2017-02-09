@@ -8,9 +8,9 @@
 #ifndef PCMK_DBUS__H
 #  define PCMK_DBUS__H
 
-#ifndef DBUS_TIMEOUT_USE_DEFAULT
-#  define DBUS_TIMEOUT_USE_DEFAULT -1
-#endif
+#  ifndef DBUS_TIMEOUT_USE_DEFAULT
+#    define DBUS_TIMEOUT_USE_DEFAULT -1
+#  endif
 
 DBusConnection *pcmk_dbus_connect(void);
 void pcmk_dbus_connection_setup_with_select(DBusConnection *c);
@@ -28,4 +28,4 @@ char *pcmk_dbus_get_property(
 bool pcmk_dbus_find_error(DBusPendingCall *pending, DBusMessage *reply,
                           DBusError *error);
 
-#endif /* PCMK_DBUS__H */
+#endif  /* PCMK_DBUS__H */

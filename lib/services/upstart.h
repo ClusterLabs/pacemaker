@@ -13,12 +13,11 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * File: upstart-dbus.c
  * Copyright (C) 2010 Senko Rasic <senko.rasic@dobarkod.hr>
  * Copyright (c) 2010 Ante Karamatic <ivoks@init.hr>
  */
-#ifndef _UPSTART_DBUS_H_
-#  define _UPSTART_DBUS_H_
+#ifndef UPSTART__H
+#  define UPSTART__H
 
 #  include <glib.h>
 #  include "crm/services.h"
@@ -29,4 +28,4 @@ G_GNUC_INTERNAL gboolean upstart_job_exists(const gchar * name);
 G_GNUC_INTERNAL gboolean upstart_job_running(const gchar * name);
 G_GNUC_INTERNAL void upstart_cleanup(void);
 
-#endif                          /* _UPSTART_DBUS_H_ */
+#endif  /* UPSTART__H */

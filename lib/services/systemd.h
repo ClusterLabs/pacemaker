@@ -16,8 +16,13 @@
  * Copyright (C) 2012 Andrew Beekhof <andrew@beekhof.net>
  */
 
+#ifndef SYSTEMD__H
+#  define SYSTEMD__H
+
 G_GNUC_INTERNAL GList *systemd_unit_listall(void);
 G_GNUC_INTERNAL int systemd_unit_exec(svc_action_t * op);
 G_GNUC_INTERNAL gboolean systemd_unit_exists(const gchar * name);
 G_GNUC_INTERNAL gboolean systemd_unit_running(const gchar * name);
 G_GNUC_INTERNAL void systemd_cleanup(void);
+
+#endif  /* SYSTEMD__H */

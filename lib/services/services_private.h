@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __MH_SERVICES_PRIVATE_H__
-#  define __MH_SERVICES_PRIVATE_H__
+#ifndef SERVICES_PRIVATE__H
+#  define SERVICES_PRIVATE__H
 
 #if SUPPORT_DBUS
 #  include <dbus/dbus.h>
@@ -69,4 +69,4 @@ gboolean is_op_blocked(const char *rsc);
 void services_set_op_pending(svc_action_t *op, DBusPendingCall *pending);
 #endif
 
-#endif                          /* __MH_SERVICES_PRIVATE_H__ */
+#endif  /* SERVICES_PRIVATE__H */
