@@ -19,6 +19,9 @@
 #ifndef SERVICES_PRIVATE__H
 #  define SERVICES_PRIVATE__H
 
+#  include <glib.h>
+#  include "crm/services.h"
+
 #if SUPPORT_DBUS
 #  include <dbus/dbus.h>
 #endif

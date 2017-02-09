@@ -8,6 +8,8 @@
 #ifndef PCMK_DBUS__H
 #  define PCMK_DBUS__H
 
+#  include <dbus/dbus.h>
+
 #  ifndef DBUS_TIMEOUT_USE_DEFAULT
 #    define DBUS_TIMEOUT_USE_DEFAULT -1
 #  endif
