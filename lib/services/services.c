@@ -37,11 +37,11 @@
 /* TODO: Develop a rollover strategy */
 
 static int operations = 0;
-GHashTable *recurring_actions = NULL;
+static GHashTable *recurring_actions = NULL;
 
 /* ops waiting to run async because of conflicting active
- * pending ops*/
-GList *blocked_ops = NULL;
+ * pending ops */
+static GList *blocked_ops = NULL;
 
 /* ops currently active (in-flight) */
 GList *inflight_ops = NULL;
@@ -568,21 +568,23 @@ handle_duplicate_recurring(svc_action_t * op, void (*action_callback) (svc_actio
     return FALSE;
 }
 
-static gboolean
-action_async_helper(svc_action_t * op)
+inline static gboolean
+action_exec_helper(svc_action_t * op)
 {
+    /* Whether a/synchronous must be decided (op->synchronous) beforehand. */
     if (op->standard && strcasecmp(op->standard, "upstart") == 0) {
 #if SUPPORT_UPSTART
-        return upstart_job_exec(op, FALSE);
+        return upstart_job_exec(op);
 #endif
     } else if (op->standard && strcasecmp(op->standard, "systemd") == 0) {
 #if SUPPORT_SYSTEMD
         return systemd_unit_exec(op);
 #endif
     } else {
-        return services_os_action_execute(op, FALSE);
+        return services_os_action_execute(op);
     }
-    /* The 'op' has probably been freed if the execution functions return TRUE. */
+    /* The 'op' has probably been freed if the execution functions return TRUE
+       for the asynchronous 'op'. */
     /* Avoid using the 'op' in here. */
 
     return FALSE;
@@ -625,7 +627,7 @@ services_action_async(svc_action_t * op, void (*action_callback) (svc_action_t *
         return TRUE;
     }
 
-    return action_async_helper(op);
+    return action_exec_helper(op);
 }
 
 
@@ -670,7 +672,7 @@ handle_blocked_ops(void)
             continue;
         }
         executed_ops = g_list_append(executed_ops, op);
-        res = action_async_helper(op);
+        res = action_exec_helper(op);
         if (res == FALSE) {
             op->status = PCMK_LRM_OP_ERROR;
             /* this can cause this function to be called recursively
@@ -699,17 +701,7 @@ services_action_sync(svc_action_t * op)
     }
 
     op->synchronous = true;
-    if (op->standard && strcasecmp(op->standard, "upstart") == 0) {
-#if SUPPORT_UPSTART
-        rc = upstart_job_exec(op, TRUE);
-#endif
-    } else if (op->standard && strcasecmp(op->standard, "systemd") == 0) {
-#if SUPPORT_SYSTEMD
-        rc = systemd_unit_exec(op);
-#endif
-    } else {
-        rc = services_os_action_execute(op, TRUE);
-    }
+    rc = action_exec_helper(op);
     crm_trace(" > %s_%s_%d: %s = %d", op->rsc, op->action, op->interval, op->opaque->exec, op->rc);
     if (op->stdout_data) {
         crm_trace(" >  stdout: %s", op->stdout_data);
