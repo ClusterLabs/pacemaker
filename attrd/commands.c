@@ -213,8 +213,6 @@ void
 attrd_client_update(xmlNode *xml)
 {
     attribute_t *a = NULL;
-    char *key = crm_element_value_copy(xml, F_ATTRD_KEY);
-    char *set = crm_element_value_copy(xml, F_ATTRD_SET);
     char *host = crm_element_value_copy(xml, F_ATTRD_HOST);
     const char *attr = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
     const char *value = crm_element_value(xml, F_ATTRD_VALUE);
@@ -242,8 +240,6 @@ attrd_client_update(xmlNode *xml)
             }
         }
 
-        free(key);
-        free(set);
         free(host);
         regfree(r_patt);
         free(r_patt);
@@ -251,8 +247,6 @@ attrd_client_update(xmlNode *xml)
 
     } else if (attr == NULL) {
         crm_err("Update request did not specify attribute or regular expression");
-        free(key);
-        free(set);
         free(host);
         return;
     }
@@ -293,8 +287,6 @@ attrd_client_update(xmlNode *xml)
     crm_debug("Broadcasting %s[%s] = %s%s", attr, host, value,
               ((election_state(writer) == election_won)? " (writer)" : ""));
 
-    free(key);
-    free(set);
     free(host);
 
     send_attrd_message(NULL, xml); /* ends up at attrd_peer_message() */
