@@ -14,11 +14,9 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
-
-#ifndef LRMD_PVT__H
-#  define LRMD_PVT__H
+#ifndef PCMK_LRMD_LRMD_PRIVATE__H
+#  define PCMK_LRMD_LRMD_PRIVATE__H
 
 #  include <glib.h>
 #  include <regex.h>
@@ -112,5 +110,4 @@ crm_client_t *ipc_proxy_get_provider(void);
 int ipc_proxy_shutdown_req(crm_client_t *ipc_proxy);
 #endif
 
-#endif
-
+#endif  /* PCMK_LRMD_LRMD_PRIVATE__H */

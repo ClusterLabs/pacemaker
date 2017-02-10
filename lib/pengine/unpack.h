@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef PENGINE_UNPACK__H
-#  define PENGINE_UNPACK__H
+#ifndef PCMKPRIV_PESTATUS_UNPACK__H
+#  define PCMKPRIV_PESTATUS_UNPACK__H
 
 extern gboolean unpack_remote_nodes(xmlNode * xml_resources, pe_working_set_t * data_set);
 
@@ -97,4 +97,4 @@ extern const char *param_value(GHashTable * hash, xmlNode * parent, const char *
 		do_crm_log(log_level, fmt, ##args);	\
 	}
 
-#endif
+#endif  /* PCMKPRIV_PESTATUS_UNPACK__H */

@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef PENGINE__H
-#  define PENGINE__H
+#ifndef PCMK_PENGINE_PENGINE__H
+#  define PCMK_PENGINE_PENGINE__H
 
 typedef struct rsc_to_node_s rsc_to_node_t;
 typedef struct rsc_colocation_s rsc_colocation_t;
@@ -152,4 +152,4 @@ extern gboolean show_utilization;
 extern int utilization_log_level;
 extern const char *transition_idle_timeout;
 
-#endif
+#endif  /* PCMK_PENGINE_PENGINE__H */

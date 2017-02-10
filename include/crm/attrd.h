@@ -15,8 +15,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef CRM_ATTRD__H
-#  define CRM_ATTRD__H
+#ifndef PCMKLIB_CRMCOMMON_ATTRD__H
+#  define PCMKLIB_CRMCOMMON_ATTRD__H
+
 #  include <crm/common/ipc.h>
 
 /* attribute options for clients to use with attrd_update_delegate() */
@@ -28,4 +29,4 @@ int attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host,
                           const char *name, const char *value, const char *section,
                           const char *set, const char *dampen, const char *user_name, int options);
 
-#endif
+#endif  /* PCMKLIB_CRMCOMMON_ATTRD__H */

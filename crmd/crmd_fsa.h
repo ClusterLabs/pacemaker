@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef CRMD_FSA__H
-#  define CRMD_FSA__H
+#ifndef PCMK_CRMD_CRMD_FSA__H
+#  define PCMK_CRMD_CRMD_FSA__H
 
 #  include <fsa_defines.h>
 
@@ -129,4 +129,4 @@ extern gboolean ever_had_quorum;
 #  define trigger_fsa(source) crm_trace("Triggering FSA: %s", __FUNCTION__); \
 	mainloop_set_trigger(source);
 
-#endif
+#endif  /* PCMK_CRMD_CRMD_FSA__H */

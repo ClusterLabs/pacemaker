@@ -15,13 +15,14 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef TENGINE__H
-#  define TENGINE__H
+#ifndef PCMK_CRMD_TENGINE__H
+#  define PCMK_CRMD_TENGINE__H
 
 #  include <crm/transition.h>
 #  include <crm/common/mainloop.h>
 #  include <crm/stonith-ng.h>
 #  include <crm/services.h>
+
 extern stonith_t *stonith_api;
 extern void send_stonith_update(crm_action_t * stonith_action, const char *target,
                                 const char *uuid);
@@ -80,4 +81,4 @@ extern int stonith_op_active;
 void te_action_confirmed(crm_action_t * action);
 void te_reset_job_counts(void);
 
-#endif
+#endif  /* PCMK_CRMD_TENGINE__H */

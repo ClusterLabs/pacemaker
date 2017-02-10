@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef PENGINE_RULES__H
-#  define PENGINE_RULES__H
+#ifndef PCMKLIB_PE_RULES__H
+#  define PCMKLIB_PE_RULES__H
 
 #  include <crm/crm.h>
 #  include <crm/common/iso8601.h>
@@ -64,4 +64,4 @@ void pe_unpack_versioned_attributes(xmlNode * top, xmlNode * xml_obj, const char
 
 char *pe_expand_re_matches(const char *string, pe_re_match_data_t * match_data);
 
-#endif
+#endif  /* PCMKLIB_PE_RULES__H */

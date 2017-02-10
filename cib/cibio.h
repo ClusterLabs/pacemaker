@@ -15,9 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-#ifndef CIB_IO__H
-#  define CIB_IO__H
+#ifndef PCMK_CIB_CIBIO__H
+#  define PCMK_CIB_CIBIO__H
 
 #  include <stdio.h>
 #  include <sys/types.h>
@@ -47,4 +46,4 @@ extern gboolean cib_writes_enabled;
 
 /* extern xmlNode *server_get_cib_copy(void); */
 
-#endif
+#endif  /* PCMK_CIB_CIBIO__H */

@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef CRM_COMMON_CLUSTER__H
-#  define CRM_COMMON_CLUSTER__H
+#ifndef PCMKLIB_CRMCLUSTER_CLUSTER__H
+#  define PCMKLIB_CRMCLUSTER_CLUSTER__H
 
 #  include <crm/common/xml.h>
 #  include <crm/common/util.h>
@@ -235,4 +235,4 @@ char *pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid,
                         uint32_t *kind, const char **from);
 #  endif
 
-#endif
+#endif  /* PCMKLIB_CRMCLUSTER_CLUSTER__H */

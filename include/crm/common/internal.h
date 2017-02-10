@@ -16,6 +16,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+#ifndef PCMKPRIV_CRMCOMMON_INTERNAL__H
+#define   PCMKPRIV_CRMCOMMON_INTERNAL__H
 
 /*!
  * \file
@@ -23,9 +25,6 @@
  * \ingroup core
  * \note    Public APIs are declared in util.h
  */
-
-#ifndef CRM_COMMON_INTERNAL__H
-#define CRM_COMMON_INTERNAL__H
 
 #include <glib.h>       /* for gboolean */
 #include <dirent.h>     /* for struct dirent */
@@ -111,4 +110,4 @@ crm_lastfailure_name(const char *rsc_id)
     return crm_fail_attr_name(CRM_LAST_FAILURE_PREFIX, rsc_id);
 }
 
-#endif /* CRM_COMMON_INTERNAL__H */
+#endif  /* PCMKPRIV_CRMCOMMON_INTERNAL__H */

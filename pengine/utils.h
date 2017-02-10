@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef PENGINE_AUTILS__H
-#  define PENGINE_AUTILS__H
+#ifndef PCMK_PENGINE_UTILS__H
+#  define PCMK_PENGINE_UTILS__H
 
 /* Constraint helper functions */
 extern rsc_colocation_t *invert_constraint(rsc_colocation_t * constraint);
@@ -75,4 +75,4 @@ extern void process_utilization(resource_t * rsc, node_t ** prefer, pe_working_s
 #  define ALL_STOPPED "all_stopped"
 #  define LOAD_STOPPED "load_stopped"
 
-#endif
+#endif  /* PCMK_PENGINE_UTILS__H */

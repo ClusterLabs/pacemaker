@@ -15,9 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-#ifndef XML_FSA_PROTO__H
-#  define XML_FSA_PROTO__H
+#ifndef PCMK_CRMD_FSA_PROTO__H
+#  define PCMK_CRMD_FSA_PROTO__H
 
 extern xmlNode *do_lrm_query(gboolean, const char *node_name);
 
@@ -339,4 +338,4 @@ do_dc_join_final(long long action,
                  enum crmd_fsa_state cur_state,
                  enum crmd_fsa_input current_input, fsa_data_t * msg_data);
 
-#endif
+#endif  /* PCMK_CRMD_FSA_PROTO__H */

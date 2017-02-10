@@ -15,8 +15,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef PE_INTERNAL__H
-#  define PE_INTERNAL__H
+#ifndef PCMKPRIV_PESTATUS_INTERNAL__H
+#  define PCMKPRIV_PESTATUS_INTERNAL__H
+
 #  include <crm/pengine/status.h>
 #  include <crm/pengine/remote.h>
 
@@ -282,4 +283,4 @@ void print_rscs_brief(GListPtr rsc_list, const char * pre_text, long options,
                       void * print_data, gboolean print_all);
 void pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason);
 
-#endif
+#endif  /* PCMKPRIV_PESTATUS_INTERNAL__H */

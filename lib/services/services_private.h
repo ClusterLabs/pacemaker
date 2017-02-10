@@ -15,9 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-
-#ifndef SERVICES_PRIVATE__H
-#  define SERVICES_PRIVATE__H
+#ifndef PCMKINT_CRMSERVICE_SERVICES_PRIVATE__H
+#  define PCMKINT_CRMSERVICE_SERVICES_PRIVATE__H
 
 #  include <glib.h>
 #  include "crm/services.h"
@@ -86,4 +85,4 @@ G_GNUC_INTERNAL
 void services_set_op_pending(svc_action_t *op, DBusPendingCall *pending);
 #endif
 
-#endif  /* SERVICES_PRIVATE__H */
+#endif  /* PCMKINT_CRMSERVICE_SERVICES_PRIVATE__H */

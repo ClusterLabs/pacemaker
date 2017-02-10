@@ -1,6 +1,3 @@
-#ifndef PORTABILITY_H
-#  define PORTABILITY_H
-
 /*
  * Copyright (C) 2001 Alan Robertson <alanr@unix.sh>
  * This software licensed under the GNU LGPL.
@@ -20,6 +17,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+#ifndef PCMKPRIV_MIX_PORTABILITY__H
+#  define PCMKPRIV_MIX_PORTABILITY__H
 
 #  define	EOS			'\0'
 #  define	DIMOF(a)		((int) (sizeof(a)/sizeof(a[0])) )
@@ -274,4 +273,4 @@ typedef union
 #    define __FUNCTION__ "__FUNCTION__"
 #  endif
 
-#endif                          /* PORTABILITY_H */
+#endif  /* PCMKPRIV_MIX_PORTABILITY__H */

@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef STONITH_NG_INTERNAL__H
-#  define STONITH_NG_INTERNAL__H
+#ifndef PCMKPRIV_STONITHD_INTERNAL__H
+#  define PCMKPRIV_STONITHD_INTERNAL__H
 
 #  include <crm/common/ipc.h>
 #  include <crm/common/xml.h>
@@ -133,4 +133,4 @@ xmlNode *create_device_registration_xml(const char *id, const char *namespace, c
 
 #  define STONITH_WATCHDOG_AGENT  "#watchdog"
 
-#endif
+#endif  /* PCMKPRIV_STONITHD_INTERNAL__H */

@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef CRM_COMMON_ElECTION__H
-#  define CRM_COMMON_ElECTION__H
+#ifndef PCMKPRIV_CRMCLUSTER_ELECTION__H
+#  define PCMKPRIV_CRMCLUSTER_ELECTION__H
 
 /**
  * \file
@@ -48,4 +48,4 @@ void election_remove(election_t *e, const char *uname);
 enum election_result election_state(election_t *e);
 enum election_result election_count_vote(election_t *e, xmlNode *vote, bool can_win);
 
-#endif
+#endif  /* PCMKPRIV_CRMCLUSTER_ELECTION__H */

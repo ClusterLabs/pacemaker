@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef CRMD_NOTIFY__H
-#  define CRMD_NOTIFY__H
+#ifndef PCMK_CRMD_NOTIFY__H
+#  define PCMK_CRMD_NOTIFY__H
 
 #  include <crm/crm.h>
 #  include <crm/cluster.h>
@@ -35,4 +35,4 @@ void crmd_notify_resource_op(const char *node, lrmd_event_data_t *op);
 void crmd_drain_alerts(GMainContext *ctx);
 void parse_notifications(xmlNode *notifications);
 
-#endif
+#endif  /* PCMK_CRMD_NOTIFY__H */

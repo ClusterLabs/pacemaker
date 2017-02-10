@@ -15,8 +15,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef PE_COMMON__H
-#  define PE_COMMON__H
+#ifndef PCMKLIB_PE_COMMON__H
+#  define PCMKLIB_PE_COMMON__H
+
 #  include <glib.h>
 
 extern gboolean was_processing_error;
@@ -138,4 +139,4 @@ recovery2text(enum rsc_recovery_type type)
     return "Unknown";
 }
 
-#endif
+#endif  /* PCMKLIB_PE_COMMON__H */

@@ -1,5 +1,3 @@
-/* doxygen.h */
-
 /*
  * Copyright (C) 2006 - 2012
  *     Andrew Beekhof <andrew@beekhof.net>
@@ -18,9 +16,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-
-#ifndef DOXYGEN__H
-#  define DOXYGEN__H
+#ifndef PCMKPRIV_MIX_DOXYGEN__H
+#  define PCMKPRIV_MIX_DOXYGEN__H
 
 /**
  * \file
@@ -59,4 +56,4 @@
  * - <a href="http://clusterlabs.org/doc/en-US/Pacemaker/1.1-pcs/html-single/Pacemaker_Development/">Pacemaker Development</a>
  */
 
-#endif                          /* DOXYGEN__H */
+#endif  /* PCMKPRIV_MIX_DOXYGEN__H */

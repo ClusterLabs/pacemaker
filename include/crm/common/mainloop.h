@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef CRM_COMMON_MAINLOOP__H
-#  define CRM_COMMON_MAINLOOP__H
+#ifndef PCMKLIB_CRMCOMMON_MAINLOOP__H
+#  define PCMKLIB_CRMCOMMON_MAINLOOP__H
 
 /**
  * \file
@@ -123,4 +123,4 @@ gboolean mainloop_child_kill(pid_t pid);
 
 #  define G_PRIORITY_MEDIUM (G_PRIORITY_HIGH/2)
 
-#endif
+#endif  /* PCMKLIB_CRMCOMMON_MAINLOOP__H */

@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef CRM_COMMON_IPC__H
-#  define CRM_COMMON_IPC__H
+#ifndef PCMKLIB_CRMCOMMON_IPC__H
+#  define PCMKLIB_CRMCOMMON_IPC__H
 
 /**
  * \file
@@ -81,4 +81,4 @@ unsigned int crm_ipc_default_buffer_size(void);
 xmlNode *create_hello_message(const char *uuid, const char *client_name,
                               const char *major_version, const char *minor_version);
 
-#endif
+#endif  /* PCMKLIB_CRMCOMMON_IPC__H */

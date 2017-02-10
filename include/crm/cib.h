@@ -15,15 +15,14 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+#ifndef PCMKLIB_CIB_CIB__H
+#  define PCMKLIB_CIB_CIB__H
 
 /**
  * \file
  * \brief Cluster Configuration
  * \ingroup cib
  */
-
-#ifndef CIB__H
-#  define CIB__H
 
 #  include <crm/common/ipc.h>
 #  include <crm/common/xml.h>
@@ -186,4 +185,4 @@ void remove_cib_op_callback(int call_id, gboolean all_callbacks);
 
 #  define CIB_LIBRARY "libcib.so.4"
 
-#endif
+#endif  /* PCMKLIB_CIB_CIB__H */

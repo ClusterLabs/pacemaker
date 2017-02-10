@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef TE_CALLBACKS__H
-#  define TE_CALLBACKS__H
+#ifndef PCMK_CRMD_TE_CALLBACKS__H
+#  define PCMK_CRMD_TE_CALLBACKS__H
 
 extern void cib_fencing_updated(xmlNode * msg, int call_id, int rc,
                                 xmlNode * output, void *user_data);
@@ -33,4 +33,4 @@ extern void te_update_diff(const char *event, xmlNode * msg);
 
 extern void tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data);
 
-#endif
+#endif  /* PCMK_CRMD_TE_CALLBACKS__H */

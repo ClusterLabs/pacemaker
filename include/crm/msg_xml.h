@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef XML_TAGS__H
-#  define XML_TAGS__H
+#ifndef PCMKDEF_MSG_XML__H
+#  define PCMKDEF_MSG_XML__H
 
 #  ifndef F_ORIG
 #    define F_ORIG    "src"
@@ -428,4 +428,4 @@
 #  define NAME(x) crm_element_value(x, XML_NVPAIR_ATTR_NAME)
 #  define VALUE(x) crm_element_value(x, XML_NVPAIR_ATTR_VALUE)
 
-#endif
+#endif  /* PCMKDEF_MSG_XML__H */

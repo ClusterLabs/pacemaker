@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef CIB_MESSAGES__H
-#  define CIB_MESSAGES__H
+#ifndef PCMK_CIB_CIBMESSAGES__H
+#  define PCMK_CIB_CIBMESSAGES__H
 
 extern xmlNode *createCibRequest(gboolean isLocal, const char *operation, const char *section,
                                  const char *verbose, xmlNode * data);
@@ -72,5 +72,4 @@ int cib_process_upgrade_server(const char *op, int options, const char *section,
 
 void send_sync_request(const char *host);
 
-
-#endif
+#endif  /* PCMK_CIB_CIBMESSAGES__H */

@@ -16,8 +16,8 @@
  * Copyright (C) 2010 Senko Rasic <senko.rasic@dobarkod.hr>
  * Copyright (c) 2010 Ante Karamatic <ivoks@init.hr>
  */
-#ifndef UPSTART__H
-#  define UPSTART__H
+#ifndef PCMKINT_CRMSERVICE_UPSTART__H
+#  define PCMKINT_CRMSERVICE_UPSTART__H
 
 #  include <glib.h>
 #  include "crm/services.h"
@@ -28,4 +28,4 @@ G_GNUC_INTERNAL gboolean upstart_job_exists(const gchar * name);
 G_GNUC_INTERNAL gboolean upstart_job_running(const gchar * name);
 G_GNUC_INTERNAL void upstart_cleanup(void);
 
-#endif  /* UPSTART__H */
+#endif  /* PCMKINT_CRMSERVICE_UPSTART__H */
