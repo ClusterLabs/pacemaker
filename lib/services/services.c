@@ -37,11 +37,11 @@
 /* TODO: Develop a rollover strategy */
 
 static int operations = 0;
-GHashTable *recurring_actions = NULL;
+static GHashTable *recurring_actions = NULL;
 
 /* ops waiting to run async because of conflicting active
- * pending ops*/
-GList *blocked_ops = NULL;
+ * pending ops */
+static GList *blocked_ops = NULL;
 
 /* ops currently active (in-flight) */
 GList *inflight_ops = NULL;
