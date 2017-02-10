@@ -15,6 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+#ifndef PCMK_CRMD_CRMD_LRM__H
+#  define PCMK_CRMD_CRMD_LRM__H
 
 #include <crmd_messages.h>
 
@@ -163,3 +165,5 @@ void remote_ra_fail(const char *node_name);
 void remote_ra_process_pseudo(xmlNode *xml);
 
 gboolean process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op, struct recurring_op_s *pending);
+
+#endif  /* PCMK_CRMD_CRMD_LRM__H */

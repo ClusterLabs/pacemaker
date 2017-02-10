@@ -15,6 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+#ifndef PCMK_CIB_NOTIFY__H
+#  define PCMK_CIB_NOTIFY__H
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -35,3 +37,5 @@ extern void cib_diff_notify(int options, const char *client, const char *call_id
                             xmlNode * update, int result, xmlNode * old_cib);
 
 extern void cib_replace_notify(const char *origin, xmlNode * update, int result, xmlNode * diff);
+
+#endif  /* PCMK_CIB_NOTIFY__H */

@@ -15,6 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+#ifndef PCMKLIB_TRANSITIONER_TRANSITION__H
+#  define PCMKLIB_TRANSITIONER_TRANSITION__H
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
@@ -144,3 +146,5 @@ bool update_abort_priority(crm_graph_t * graph, int priority,
 const char *actiontype2text(action_type_e type);
 lrmd_event_data_t *convert_graph_action(xmlNode * resource, crm_action_t * action, int status,
                                         int rc);
+
+#endif  /* PCMKLIB_TRANSITIONER_TRANSITION__H */

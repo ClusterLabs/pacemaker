@@ -15,6 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+#ifndef PCMK_ATTRD_INTERNAL__H
+#  define PCMK_ATTRD_INTERNAL__H
 
 cib_t *the_cib;
 GMainLoop *mloop;
@@ -38,3 +40,5 @@ void free_attribute(gpointer data);
 
 gboolean attrd_election_cb(gpointer user_data);
 void attrd_peer_change_cb(enum crm_status_type type, crm_node_t *peer, const void *data);
+
+#endif  /* PCMK_ATTRD_INTERNAL__H */

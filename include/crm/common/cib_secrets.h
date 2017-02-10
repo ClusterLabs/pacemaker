@@ -1,6 +1,4 @@
 /*
- * cib_secrets.h
- *
  * Author: Dejan Muhamedagic <dejan@suse.de>
  * Copyright (c) 2011 SUSE, Attachmate
  *
@@ -18,8 +16,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+#ifndef PCMKPRIV_CRMCOMMON_CIB_SECRETS__H
+#  define PCMKPRIV_CRMCOMMON_CIB_SECRETS__H
 
 /*
  * load parameters from an ini file (cib_secrets.c)
  */
 int replace_secret_params(char * rsc_id, GHashTable * params);
+
+#endif  /* PCMKPRIV_CRMCOMMON_CIB_SECRETS__H */

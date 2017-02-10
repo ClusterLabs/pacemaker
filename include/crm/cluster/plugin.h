@@ -15,5 +15,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+#ifndef PCMKLIB_CRMCLUSTER_PLUGIN__H
+#  define PCMKLIB_CRMCLUSTER_PLUGIN__H
 
 extern int plugin_dispatch(gpointer user_data);
+
+#endif  /* PCMKLIB_CRMCLUSTER_PLUGIN__H */

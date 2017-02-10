@@ -1,3 +1,6 @@
+#ifndef PCMK_FENCING_INTERNAL__H
+#  define PCMK_FENCING_INTERNAL__H
+
 #include <crm/common/mainloop.h>
 
 /*!
@@ -244,3 +247,5 @@ extern GHashTable *topology;
 extern long stonith_watchdog_timeout_ms;
 
 extern GHashTable *known_peer_names;
+
+#endif  /* PCMK_FENCING_INTERNAL__H */
