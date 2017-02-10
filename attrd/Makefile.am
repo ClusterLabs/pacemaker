@@ -21,6 +21,8 @@ halibdir	= $(CRM_DAEMON_DIR)
 halib_PROGRAMS	= attrd
 ## SOURCES
 
+noinst_HEADERS  = internal.h attrd_common.h
+
 attrd_CFLAGS	= $(CFLAGS_HARDENED_EXE)
 attrd_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
 
@@ -31,9 +33,9 @@ attrd_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la	\
 
 attrd_SOURCES	=
 if BUILD_ATOMIC_ATTRD
-attrd_SOURCES	+= main.c commands.c
+attrd_SOURCES	+= main.c commands.c attrd_common.c
 else
-attrd_SOURCES	+= legacy.c
+attrd_SOURCES	+= legacy.c attrd_common.c
 endif
 
 clean-generic:

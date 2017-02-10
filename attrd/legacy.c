@@ -35,21 +35,20 @@
 #include <crm/common/ipc.h>
 #include <crm/common/ipcs.h>
 #include <crm/cluster/internal.h>
-#include <crm/common/mainloop.h>
 
 #include <crm/common/xml.h>
 
 #include <crm/attrd.h>
+
+#include <attrd_common.h>
 
 #define OPTARGS	"hV"
 #if SUPPORT_HEARTBEAT
 ll_cluster_t *attrd_cluster_conn;
 #endif
 
-GMainLoop *mainloop = NULL;
 char *attrd_uname = NULL;
 char *attrd_uuid = NULL;
-gboolean need_shutdown = FALSE;
 
 GHashTable *attr_hash = NULL;
 cib_t *cib_conn = NULL;
@@ -102,27 +101,6 @@ free_hash_entry(gpointer data)
     free(entry);
 }
 
-static int32_t
-attrd_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
-{
-    crm_trace("Connection %p", c);
-    if (need_shutdown) {
-        crm_info("Ignoring new client [%d] during shutdown", crm_ipcs_client_pid(c));
-        return -EPERM;
-    }
-
-    if (crm_client_new(c, uid, gid) == NULL) {
-        return -EIO;
-    }
-    return 0;
-}
-
-static void
-attrd_ipc_created(qb_ipcs_connection_t * c)
-{
-    crm_trace("Connection %p", c);
-}
-
 /* Exit code means? */
 static int32_t
 attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
@@ -149,48 +127,6 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 
     free_xml(msg);
     return 0;
-}
-
-/* Error code means? */
-static int32_t
-attrd_ipc_closed(qb_ipcs_connection_t * c)
-{
-    crm_client_t *client = crm_client_get(c);
-
-    if (client == NULL) {
-        return 0;
-    }
-
-    crm_trace("Connection %p", c);
-    crm_client_destroy(client);
-    return 0;
-}
-
-static void
-attrd_ipc_destroy(qb_ipcs_connection_t * c)
-{
-    crm_trace("Connection %p", c);
-    attrd_ipc_closed(c);
-}
-
-struct qb_ipcs_service_handlers ipc_callbacks = {
-    .connection_accept = attrd_ipc_accept,
-    .connection_created = attrd_ipc_created,
-    .msg_process = attrd_ipc_dispatch,
-    .connection_closed = attrd_ipc_closed,
-    .connection_destroyed = attrd_ipc_destroy
-};
-
-static void
-attrd_shutdown(int nsig)
-{
-    need_shutdown = TRUE;
-    crm_info("Exiting");
-    if (mainloop != NULL && g_main_is_running(mainloop)) {
-        g_main_quit(mainloop);
-    } else {
-        crm_exit(pcmk_ok);
-    }
 }
 
 static void
@@ -323,15 +259,15 @@ static void
 attrd_ha_connection_destroy(gpointer user_data)
 {
     crm_trace("Invoked");
-    if (need_shutdown) {
+    if (attrd_shutting_down()) {
         /* we signed out, so this is expected */
         crm_info("Heartbeat disconnection complete");
         return;
     }
 
     crm_crit("Lost connection to heartbeat service!");
-    if (mainloop != NULL && g_main_is_running(mainloop)) {
-        g_main_quit(mainloop);
+    if (attrd_mainloop_running()) {
+        attrd_quit_mainloop();
         return;
     }
     crm_exit(pcmk_ok);
@@ -382,15 +318,15 @@ attrd_cs_dispatch(cpg_handle_t handle,
 static void
 attrd_cs_destroy(gpointer unused)
 {
-    if (need_shutdown) {
+    if (attrd_shutting_down()) {
         /* we signed out, so this is expected */
         crm_info("Corosync disconnection complete");
         return;
     }
 
     crm_crit("Lost connection to Corosync service!");
-    if (mainloop != NULL && g_main_is_running(mainloop)) {
-        g_main_quit(mainloop);
+    if (attrd_mainloop_running()) {
+        attrd_quit_mainloop();
         return;
     }
     crm_exit(EINVAL);
@@ -404,7 +340,7 @@ attrd_cib_connection_destroy(gpointer user_data)
 
     conn->cmds->signoff(conn);  /* Ensure IPC is cleaned up */
 
-    if (need_shutdown) {
+    if (attrd_shutting_down()) {
         crm_info("Connection to the CIB terminated...");
 
     } else {
@@ -582,12 +518,12 @@ main(int argc, char **argv)
     crm_info("Cluster connection active");
 
     if (was_err == FALSE) {
-        attrd_ipc_server_init(&ipcs, &ipc_callbacks);
+        attrd_init_ipc(&ipcs, attrd_ipc_dispatch);
     }
 
     crm_info("Accepting attribute updates");
 
-    mainloop = g_main_new(FALSE);
+    attrd_init_mainloop();
 
     if (0 == g_timeout_add_full(G_PRIORITY_LOW + 1, 5000, cib_connect, NULL, NULL)) {
         crm_info("Adding timer failed");
@@ -600,7 +536,7 @@ main(int argc, char **argv)
     }
 
     crm_notice("Starting mainloop...");
-    g_main_run(mainloop);
+    attrd_run_mainloop();
     crm_notice("Exiting...");
 
 #if SUPPORT_HEARTBEAT
@@ -768,9 +704,6 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
     return;
 }
 
-/* strlen("value") */
-#define plus_plus_len (5)
-
 /*!
  * \internal
  * \brief Expand attribute values that use "++" or "+="
@@ -783,29 +716,10 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
 static char *
 expand_attr_value(const char *value, const char *old_value)
 {
-    int value_len = strlen(value);
     char *expanded = NULL;
 
-    if ((value_len >= (plus_plus_len + 2))
-        && (value[plus_plus_len] == '+')
-        && ((value[plus_plus_len + 1] == '+')
-            || (value[plus_plus_len + 1] == '='))) {
-
-        int offset = 1;
-        int int_value = char2score(old_value);
-
-        if (value[plus_plus_len + 1] != '+') {
-            const char *offset_s = value + (plus_plus_len + 2);
-
-            offset = char2score(offset_s);
-        }
-        int_value += offset;
-
-        if (int_value > INFINITY) {
-            int_value = INFINITY;
-        }
-
-        expanded = crm_itoa(int_value);
+    if (attrd_value_needs_expansion(value)) {
+        expanded = crm_itoa(attrd_expand_value(value, old_value));
     }
     return expanded;
 }
