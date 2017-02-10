@@ -44,6 +44,4 @@ extern int activateCibXml(xmlNode * doc, gboolean to_disk, const char *op);
 extern crm_trigger_t *cib_writer;
 extern gboolean cib_writes_enabled;
 
-/* extern xmlNode *server_get_cib_copy(void); */
-
 #endif  /* PCMK_CIB_CIBIO__H */
