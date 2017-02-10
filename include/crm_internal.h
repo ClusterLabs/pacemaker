@@ -285,6 +285,7 @@ long crm_read_pidfile(const char *filename);
 #  define ATTRD_OP_FLUSH         "flush"
 #  define ATTRD_OP_SYNC          "sync"
 #  define ATTRD_OP_SYNC_RESPONSE "sync-response"
+#  define ATTRD_OP_CLEAR_FAILURE "clear-failure"
 
 #  if SUPPORT_COROSYNC
 #    if CS_USES_LIBQB

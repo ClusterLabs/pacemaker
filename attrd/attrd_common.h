@@ -8,6 +8,8 @@
 #ifndef PCMK_ATTRD_COMMON__H
 #  define PCMK_ATTRD_COMMON__H
 
+#include <regex.h>
+
 void attrd_init_mainloop(void);
 void attrd_run_mainloop(void);
 gboolean attrd_mainloop_running(void);
@@ -20,5 +22,15 @@ void attrd_init_ipc(qb_ipcs_service_t **ipcs,
 
 gboolean attrd_value_needs_expansion(const char *value);
 int attrd_expand_value(const char *value, const char *old_value);
+
+/* regular expression to clear failures of all resources */
+#define ATTRD_RE_CLEAR_ALL \
+    "^(" CRM_FAIL_COUNT_PREFIX "|" CRM_LAST_FAILURE_PREFIX ")-"
+
+/* regular expression to clear failure of one resource */
+/* format takes resource name */
+#define ATTRD_RE_CLEAR_ONE ATTRD_RE_CLEAR_ALL "%s$"
+
+int attrd_failure_regex(regex_t *regex, const char *rsc);
 
 #endif /* PCMK_ATTRD_COMMON__H */
