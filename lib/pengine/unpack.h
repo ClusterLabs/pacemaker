@@ -43,8 +43,6 @@ extern gboolean add_node_attrs(xmlNode * attrs, node_t * node, gboolean overwrit
 extern gboolean determine_online_status(xmlNode * node_state, node_t * this_node,
                                         pe_working_set_t * data_set);
 
-extern const char *param_value(GHashTable * hash, xmlNode * parent, const char *name);
-
 /*
  * The man pages for both curses and ncurses suggest inclusion of "curses.h".
  * We believe the following to be acceptable and portable.
