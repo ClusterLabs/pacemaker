@@ -98,7 +98,7 @@ static filter_t filter[] = {
 /* *INDENT-ON* */
 
 static xmlNode *subtract_xml_comment(xmlNode * parent, xmlNode * left, xmlNode * right, gboolean * changed);
-static xmlNode *find_xml_comment(xmlNode * root, xmlNode * search_comment);
+static xmlNode *find_xml_comment(xmlNode * root, xmlNode * search_comment, gboolean exact);
 static int add_xml_comment(xmlNode * parent, xmlNode * target, xmlNode * update);
 static bool __xml_acl_check(xmlNode *xml, const char *name, enum xml_private_flags mode);
 const char *__xml_acl_to_text(enum xml_private_flags flags);
@@ -1555,11 +1555,11 @@ xml_accept_changes(xmlNode * xml)
 }
 
 static xmlNode *
-find_element(xmlNode *haystack, xmlNode *needle)
+find_element(xmlNode *haystack, xmlNode *needle, gboolean exact)
 {
     CRM_CHECK(needle != NULL, return NULL);
     return (needle->type == XML_COMMENT_NODE)?
-           find_xml_comment(haystack, needle)
+           find_xml_comment(haystack, needle, exact)
            : find_entity(haystack, crm_element_name(needle), ID(needle));
 }
 
@@ -1615,7 +1615,7 @@ __subtract_xml_object(xmlNode * target, xmlNode * patch)
         xmlNode *target_child = cIter;
 
         cIter = __xml_next(cIter);
-        patch_child = find_element(patch, target_child);
+        patch_child = find_element(patch, target_child, FALSE);
         __subtract_xml_object(target_child, patch_child);
     }
     free(id);
@@ -1677,7 +1677,7 @@ __add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * patch)
     for (patch_child = __xml_first_child(patch); patch_child != NULL;
          patch_child = __xml_next(patch_child)) {
 
-        target_child = find_element(target, patch_child);
+        target_child = find_element(target, patch_child, FALSE);
         __add_xml_object(target, target_child, patch_child);
     }
 }
@@ -4026,7 +4026,7 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
 
     for (cIter = __xml_first_child(old); cIter != NULL; ) {
         xmlNode *old_child = cIter;
-        xmlNode *new_child = find_element(new, cIter);
+        xmlNode *new_child = find_element(new, cIter, TRUE);
 
         cIter = __xml_next(cIter);
         if(new_child) {
@@ -4041,7 +4041,7 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
             __xml_acl_apply(top); /* Make sure any ACLs are applied to 'candidate' */
             free_xml(candidate);
 
-            if (find_element(new, old_child) == NULL) {
+            if (find_element(new, old_child, TRUE) == NULL) {
                 xml_private_t *p = old_child->_private;
 
                 p->flags |= xpf_skip;
@@ -4051,7 +4051,7 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
 
     for (cIter = __xml_first_child(new); cIter != NULL; ) {
         xmlNode *new_child = cIter;
-        xmlNode *old_child = find_element(old, cIter);
+        xmlNode *old_child = find_element(old, cIter, TRUE);
 
         cIter = __xml_next(cIter);
         if(old_child == NULL) {
@@ -4226,18 +4226,36 @@ in_upper_context(int depth, int context, xmlNode * xml_node)
 }
 
 static xmlNode *
-find_xml_comment(xmlNode * root, xmlNode * search_comment)
+find_xml_comment(xmlNode * root, xmlNode * search_comment, gboolean exact)
 {
     xmlNode *a_child = NULL;
+    int search_offset = __xml_offset(search_comment);
 
     CRM_CHECK(search_comment->type == XML_COMMENT_NODE, return NULL);
 
     for (a_child = __xml_first_child(root); a_child != NULL; a_child = __xml_next(a_child)) {
-        if (a_child->type != XML_COMMENT_NODE) {
-            continue;
+        if (exact) {
+            int offset = __xml_offset(a_child);
+            xml_private_t *p = a_child->_private;
+
+            if (offset < search_offset) {
+                continue;
+
+            } else if (offset > search_offset) {
+                return NULL;
+            }
+
+            if (is_set(p->flags, xpf_skip)) {
+                continue;
+            }
         }
-        if (safe_str_eq((const char *)a_child->content, (const char *)search_comment->content)) {
+
+        if (a_child->type == XML_COMMENT_NODE
+            && safe_str_eq((const char *)a_child->content, (const char *)search_comment->content)) {
             return a_child;
+
+        } else if (exact) {
+            return NULL;
         }
     }
 
@@ -4332,7 +4350,7 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
          left_child = __xml_next(left_child)) {
         gboolean child_changed = FALSE;
 
-        right_child = find_element(right, left_child);
+        right_child = find_element(right, left_child, FALSE);
         subtract_xml_object(diff, left_child, right_child, full, &child_changed, marker);
         if (child_changed) {
             *changed = TRUE;
@@ -4458,7 +4476,7 @@ add_xml_comment(xmlNode * parent, xmlNode * target, xmlNode * update)
     CRM_CHECK(update->type == XML_COMMENT_NODE, return 0);
 
     if (target == NULL) {
-        target = find_xml_comment(parent, update);
+        target = find_xml_comment(parent, update, FALSE);
     }
 
     if (target == NULL) {
