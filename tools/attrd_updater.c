@@ -186,6 +186,18 @@ main(int argc, char **argv)
         crm_help('?', EX_USAGE);
 #endif
     } else {
+        /* @TODO We don't know whether the specified node is a Pacemaker Remote
+         * node or not, so we can't set attrd_opt_remote when appropriate.
+         * That's OK with atomic attrd, because it will learn and remember a
+         * node's "remoteness".
+         *
+         * Legacy attrd will simply ignore the request if it's a remote node. A
+         * possible solution would be to call query_node_uuid() (which is the
+         * approach crm_attribute takes), but that would require linking against
+         * libcluster, and would add the overhead of a synchronous CIB call to
+         * every update, even in clusters with no remote nodes. Since we haven't
+         * had user requests for this support, we'll leave it as it is for now.
+         */
         crm_exit(do_update(command, attr_node, attr_name, attr_value,
                            attr_section, attr_set, attr_dampen, attr_options));
     }
