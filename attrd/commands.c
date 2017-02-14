@@ -213,9 +213,6 @@ void
 attrd_client_update(xmlNode *xml)
 {
     attribute_t *a = NULL;
-    attribute_value_t *v = NULL;
-    char *key = crm_element_value_copy(xml, F_ATTRD_KEY);
-    char *set = crm_element_value_copy(xml, F_ATTRD_SET);
     char *host = crm_element_value_copy(xml, F_ATTRD_HOST);
     const char *attr = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
     const char *value = crm_element_value(xml, F_ATTRD_VALUE);
@@ -243,8 +240,6 @@ attrd_client_update(xmlNode *xml)
             }
         }
 
-        free(key);
-        free(set);
         free(host);
         regfree(r_patt);
         free(r_patt);
@@ -252,8 +247,6 @@ attrd_client_update(xmlNode *xml)
 
     } else if (attr == NULL) {
         crm_err("Update request did not specify attribute or regular expression");
-        free(key);
-        free(set);
         free(host);
         return;
     }
@@ -269,30 +262,14 @@ attrd_client_update(xmlNode *xml)
 
     /* If value was specified using ++ or += notation, expand to real value */
     if (value) {
-        int offset = 1;
-        int int_value = 0;
-        static const int plus_plus_len = 5;
-
-        if ((strlen(value) >= (plus_plus_len + 2)) && (value[plus_plus_len] == '+')
-            && ((value[plus_plus_len + 1] == '+') || (value[plus_plus_len + 1] == '='))) {
+        if (attrd_value_needs_expansion(value)) {
+            int int_value;
+            attribute_value_t *v = NULL;
 
             if (a) {
                 v = g_hash_table_lookup(a->values, host);
             }
-            if (v) {
-                int_value = char2score(v->current);
-            }
-
-            if (value[plus_plus_len + 1] != '+') {
-                const char *offset_s = value + (plus_plus_len + 2);
-
-                offset = char2score(offset_s);
-            }
-            int_value += offset;
-
-            if (int_value > INFINITY) {
-                int_value = INFINITY;
-            }
+            int_value = attrd_expand_value(value, (v? v->current : NULL));
 
             crm_info("Expanded %s=%s to %d", attr, value, int_value);
             crm_xml_add_int(xml, F_ATTRD_VALUE, int_value);
@@ -310,8 +287,6 @@ attrd_client_update(xmlNode *xml)
     crm_debug("Broadcasting %s[%s] = %s%s", attr, host, value,
               ((election_state(writer) == election_won)? " (writer)" : ""));
 
-    free(key);
-    free(set);
     free(host);
 
     send_attrd_message(NULL, xml); /* ends up at attrd_peer_message() */

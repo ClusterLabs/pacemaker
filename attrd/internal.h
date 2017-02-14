@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright (C) 2013-2017 Andrew Beekhof <andrew@beekhof.net>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,9 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <attrd_common.h>
+
 cib_t *the_cib;
-GMainLoop *mloop;
-bool shutting_down;
 crm_cluster_t *attrd_cluster;
 GHashTable *attributes;
 election_t *writer;
