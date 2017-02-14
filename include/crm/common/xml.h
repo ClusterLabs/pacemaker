@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef CRM_COMMON_XML__H
-#  define CRM_COMMON_XML__H
+#ifndef PCMKLIB_CRMCOMMON_XML__H
+#  define PCMKLIB_CRMCOMMON_XML__H
 
 /**
  * \file
@@ -373,4 +373,5 @@ void save_xml_to_file(xmlNode * xml, const char *desc, const char *filename);
 char *xml_get_path(xmlNode *xml);
 
 char * crm_xml_escape(const char *text);
-#endif
+
+#endif  /* PCMKLIB_CRMCOMMON_XML__H */

@@ -14,8 +14,9 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+#ifndef PCMKLIB_LRMD_LRMD__H
+#  define PCMKLIB_LRMD_LRMD__H
 
 /**
  * \file
@@ -24,9 +25,6 @@
  */
 #include <stdbool.h>
 #include <crm/services.h>
-
-#ifndef LRMD__H
-#  define LRMD__H
 
 typedef struct lrmd_s lrmd_t;
 typedef struct lrmd_key_value_s {
@@ -476,4 +474,4 @@ lrmd_event_type2str(enum lrmd_callback_event type)
     return "unknown";
 }
 
-#endif
+#endif  /* PCMKLIB_LRMD_LRMD__H */

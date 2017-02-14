@@ -15,6 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+#ifndef PCMK_MCP_PACEMAKER__H
+#  define PCMK_MCP_PACEMAKER__H
 
 #include <crm_internal.h>
 
@@ -58,5 +60,4 @@ void do_crashdump(void);
 void do_reset(void);
 void do_off(void);
 
-
-
+#endif  /* PCMK_MCP_PACEMAKER__H */

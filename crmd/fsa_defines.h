@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef FSA_DEFINES__H
-#  define FSA_DEFINES__H
+#ifndef PCMK_CRMD_FSA_DEFINES__H
+#  define PCMK_CRMD_FSA_DEFINES__H
 
 /*======================================
  *	States the DC/CRMd can be in
@@ -495,4 +495,4 @@ extern const char *fsa_state2string(enum crmd_fsa_state state);
 extern const char *fsa_cause2string(enum crmd_fsa_cause cause);
 extern const char *fsa_action2string(long long action);
 
-#endif
+#endif  /* PCMK_CRMD_FSA_DEFINES__H */

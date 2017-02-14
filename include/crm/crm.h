@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef CRM__H
-#  define CRM__H
+#ifndef PCMKLIB_CRMCOMMON_CRM__H
+#  define PCMKLIB_CRMCOMMON_CRM__H
 
 /**
  * \file
@@ -213,4 +213,4 @@ static inline const char *crm_action_str(const char *task, int interval) {
     return task;
 }
 
-#endif
+#endif  /* PCMKLIB_CRMCOMMON_CRM__H */

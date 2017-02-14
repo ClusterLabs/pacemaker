@@ -4,9 +4,8 @@
  * This source code is licensed under GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
-
-#ifndef PCMK_DBUS__H
-#  define PCMK_DBUS__H
+#ifndef PCMKINT_CRMSERVICE_PCMK_DBUS__H
+#  define PCMKINT_CRMSERVICE_PCMK_DBUS__H
 
 #  include <dbus/dbus.h>
 
@@ -43,4 +42,4 @@ G_GNUC_INTERNAL
 bool pcmk_dbus_find_error(DBusPendingCall *pending, DBusMessage *reply,
                           DBusError *error);
 
-#endif  /* PCMK_DBUS__H */
+#endif  /* PCMKINT_CRMSERVICE_PCMK_DBUS__H */

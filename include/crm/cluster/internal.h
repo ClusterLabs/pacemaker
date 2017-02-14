@@ -15,9 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-#ifndef CRM_CLUSTER_INTERNAL__H
-#  define CRM_CLUSTER_INTERNAL__H
+#ifndef PCMKPRIV_CRMCLUSTER_INTERNAL__H
+#  define PCMKPRIV_CRMCLUSTER_INTERNAL__H
 
 #  include <crm/cluster.h>
 
@@ -474,4 +473,4 @@ gboolean node_name_is_valid(const char *key, const char *name);
 crm_node_t * crm_find_peer_full(unsigned int id, const char *uname, int flags);
 crm_node_t * crm_find_peer(unsigned int id, const char *uname);
 
-#endif
+#endif  /* PCMKPRIV_CRMCLUSTER_INTERNAL__H */

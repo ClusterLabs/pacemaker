@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef CIB_UTIL__H
-#  define CIB_UTIL__H
+#ifndef PCMKLIB_CIB_UTIL__H
+#  define PCMKLIB_CIB_UTIL__H
 
 /* Utility functions */
 const char *get_object_path(const char *object_type);
@@ -67,4 +67,4 @@ void cib_metadata(void);
 const char *cib_pref(GHashTable * options, const char *name);
 int cib_apply_patch_event(xmlNode * event, xmlNode * input, xmlNode ** output, int level);
 
-#endif
+#endif  /* PCMKLIB_CIB_UTIL__H */

@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef PE_VARIANT__H
-#  define PE_VARIANT__H
+#ifndef PCMKPRIV_PESTATUS_VARIANT__H
+#  define PCMKPRIV_PESTATUS_VARIANT__H
 
 #  if VARIANT_CLONE
 
@@ -90,4 +90,4 @@ typedef struct native_variant_data_s {
 
 #  endif
 
-#endif
+#endif  /* PCMKPRIV_PESTATUS_VARIANT__H */

@@ -15,8 +15,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef CRM_ERROR__H
-#  define CRM_ERROR__H
+#ifndef PCMKLIB_CRMCOMMON_ERROR__H
+#  define PCMKLIB_CRMCOMMON_ERROR__H
+
 #  include <crm_config.h>
 #  include <assert.h>
 
@@ -60,4 +61,4 @@ const char *pcmk_strerror(int rc);
 const char *pcmk_errorname(int rc);
 const char *bz2_strerror(int rc);
 
-#endif
+#endif  /* PCMKLIB_CRMCOMMON_ERROR__H */

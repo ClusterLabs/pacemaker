@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef CRMD_UTILS__H
-#  define CRMD_UTILS__H
+#ifndef PCMK_CRMD_CRMD_UTILS__H
+#  define PCMK_CRMD_CRMD_UTILS__H
 
 #  include <crm/crm.h>
 #  include <crm/common/xml.h>
@@ -127,4 +127,4 @@ void crmd_peer_down(crm_node_t *peer, bool full);
 	}								\
     } while(0)
 
-#endif
+#endif  /* PCMK_CRMD_CRMD_UTILS__H */

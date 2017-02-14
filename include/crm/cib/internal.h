@@ -15,8 +15,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef CIB_INTERNAL__H
-#  define CIB_INTERNAL__H
+#ifndef PCMKPRIV_CIB_INTERNAL__H
+#  define PCMKPRIV_CIB_INTERNAL__H
+
 #  include <crm/cib.h>
 #  include <crm/common/ipcs.h>
 
@@ -218,4 +219,4 @@ int cib_file_read_and_verify(const char *filename, const char *sigfile,
 int cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
                                const char *cib_filename);
 
-#endif
+#endif  /* PCMKPRIV_CIB_INTERNAL__H */

@@ -15,7 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
+#ifndef PCMK_CRMD_THROTTLE__H
+#  define PCMK_CRMD_THROTTLE__H
 
 extern float throttle_load_target;
 
@@ -27,3 +28,5 @@ void throttle_update(xmlNode *xml);
 void throttle_update_job_max(const char *preference);
 int throttle_get_job_limit(const char *node);
 int throttle_get_total_job_limit(int l);
+
+#endif  /* PCMK_CRMD_THROTTLE__H */

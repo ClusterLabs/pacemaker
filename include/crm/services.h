@@ -15,15 +15,14 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+#ifndef PCMKLIB_CRMSERVICE_SERVICES__H
+#  define PCMKLIB_CRMSERVICE_SERVICES__H
 
 /**
  * \file
  * \brief Services API
  * \ingroup core
  */
-
-#ifndef __PCMK_SERVICES__
-#  define __PCMK_SERVICES__
 
 #  ifdef __cplusplus
 extern "C" {
@@ -404,4 +403,4 @@ enum svc_action_flags {
 }
 #  endif
 
-#endif                          /* __PCMK_SERVICES__ */
+#endif  /* PCMKLIB_CRMSERVICE_SERVICES__H */

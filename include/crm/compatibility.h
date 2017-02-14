@@ -15,8 +15,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef CRM_COMPATIBILITY__H
-#  define CRM_COMPATIBILITY__H
+#ifndef PCMKLIB_MIX_COMPATIBILITY__H
+#  define PCMKLIB_MIX_COMPATIBILITY__H
+
 #  define LOG_DEBUG_2  LOG_TRACE
 #  define LOG_DEBUG_3  LOG_TRACE
 #  define LOG_DEBUG_4  LOG_TRACE
@@ -344,4 +345,4 @@ log_xml_diff(uint8_t log_level, xmlNode * diff, const char *function)
 }
 #  endif
 
-#endif
+#endif  /* PCMKLIB_MIX_COMPATIBILITY__H */

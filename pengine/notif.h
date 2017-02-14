@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef CRM_PE_NOTIF__H
-#  define CRM_PE_NOTIF__H
+#ifndef PCMK_PENGINE_NOTIF__H
+#  define PCMK_PENGINE_NOTIF__H
 
 #  include <crm/pengine/internal.h>
 
@@ -40,4 +40,4 @@ void create_secondary_notification(pe_action_t *action, resource_t *rsc,
                                    pe_action_t *stonith_op,
                                    pe_working_set_t *data_set);
 
-#endif /* CRM_PE_NOTIF__H */
+#endif  /* PCMK_PENGINE_NOTIF__H */

@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef XML_CRM_MESSAGES__H
-#  define XML_CRM_MESSAGES__H
+#ifndef PCMK_CRMD_CRMD_MESSAGES__H
+#  define PCMK_CRMD_CRMD_MESSAGES__H
 
 #  include <crm/crm.h>
 #  include <crm/common/ipcs.h>
@@ -113,4 +113,4 @@ extern ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t * orig);
 
 void send_remote_state_message(const char *node_name, gboolean node_up);
 
-#endif
+#endif  /* PCMK_CRMD_CRMD_MESSAGES__H */

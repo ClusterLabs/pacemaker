@@ -15,9 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-#ifndef CRM_COMMON_IPCS__H
-#  define CRM_COMMON_IPCS__H
+#ifndef PCMKPRIV_CRMCOMMON_IPCS__H
+#  define PCMKPRIV_CRMCOMMON_IPCS__H
 
 #  include <qb/qbipcs.h>
 #  ifdef HAVE_GNUTLS_GNUTLS_H
@@ -117,4 +116,4 @@ xmlNode *crm_ipcs_recv(crm_client_t * c, void *data, size_t size, uint32_t * id,
 
 int crm_ipcs_client_pid(qb_ipcs_connection_t * c);
 
-#endif
+#endif /* PCMKPRIV_CRMCOMMON_IPCS__H */

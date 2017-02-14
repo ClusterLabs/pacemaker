@@ -15,6 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+#ifndef PCMK_CIB_CALLBACKS__H
+#  define PCMK_CIB_CALLBACKS__H
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -80,3 +82,5 @@ extern void cib_ha_peer_callback(HA_Message * msg, void *private_data);
 extern int cib_ccm_dispatch(gpointer user_data);
 extern void cib_ccm_msg_callback(oc_ed_t event, void *cookie, size_t size, const void *data);
 #endif
+
+#endif  /* PCMK_CIB_CALLBACKS__H */

@@ -15,6 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+#ifndef PCMK_CRMD_CRMD_CALLBACKS__H
+#  define PCMK_CRMD_CRMD_CALLBACKS__H
 
 #include <crm/cluster.h>
 
@@ -43,3 +45,5 @@ extern void peer_update_callback(enum crm_status_type type, crm_node_t * node, c
 #if SUPPORT_HEARTBEAT
 void crmd_ha_msg_callback(HA_Message * hamsg, void *private_data);
 #endif
+
+#endif  /* PCMK_CRMD_CRMD_CALLBACKS__H */

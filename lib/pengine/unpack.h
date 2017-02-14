@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef PENGINE_UNPACK__H
-#  define PENGINE_UNPACK__H
+#ifndef PCMKPRIV_PESTATUS_UNPACK__H
+#  define PCMKPRIV_PESTATUS_UNPACK__H
 
 extern gboolean unpack_remote_nodes(xmlNode * xml_resources, pe_working_set_t * data_set);
 
@@ -25,8 +25,6 @@ extern gboolean unpack_resources(xmlNode * xml_resources, pe_working_set_t * dat
 extern gboolean unpack_config(xmlNode * config, pe_working_set_t * data_set);
 
 extern gboolean unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set);
-
-extern gboolean unpack_domains(xmlNode * xml_domains, pe_working_set_t * data_set);
 
 extern gboolean unpack_tags(xmlNode * xml_tags, pe_working_set_t * data_set);
 
@@ -44,8 +42,6 @@ extern gboolean add_node_attrs(xmlNode * attrs, node_t * node, gboolean overwrit
 
 extern gboolean determine_online_status(xmlNode * node_state, node_t * this_node,
                                         pe_working_set_t * data_set);
-
-extern const char *param_value(GHashTable * hash, xmlNode * parent, const char *name);
 
 /*
  * The man pages for both curses and ncurses suggest inclusion of "curses.h".
@@ -97,4 +93,4 @@ extern const char *param_value(GHashTable * hash, xmlNode * parent, const char *
 		do_crm_log(log_level, fmt, ##args);	\
 	}
 
-#endif
+#endif  /* PCMKPRIV_PESTATUS_UNPACK__H */

@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef PENGINE_COMPLEX__H
-#  define PENGINE_COMPLEX__H
+#ifndef PCMKLIB_PESTATUS_COMPLEX__H
+#  define PCMKLIB_PESTATUS_COMPLEX__H
 
 #  define n_object_classes 3
 
@@ -64,4 +64,4 @@ typedef struct resource_alloc_functions_s resource_alloc_functions_t;
 gboolean is_parent(resource_t *child, resource_t *rsc);
 resource_t *uber_parent(resource_t * rsc);
 
-#endif
+#endif  /* PCMKLIB_PESTATUS_COMPLEX__H */

@@ -15,11 +15,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-#ifndef AIS_CRM_PLUGIN__H
-#  define AIS_CRM_PLUGIN__H
+#ifndef PCMK_AIS_PLUGIN__H
+#  define PCMK_AIS_PLUGIN__H
 
 extern GHashTable *membership_notify_list;
 extern int send_plugin_msg_raw(const AIS_Message * ais_msg);
 
-#endif
+#endif  /* PCMK_AIS_PLUGIN__H */

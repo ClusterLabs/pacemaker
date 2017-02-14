@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef CRM_PENGINE_COMPLEX_ALLOC__H
-#  define CRM_PENGINE_COMPLEX_ALLOC__H
+#ifndef PCMK_PENGINE_ALLOCATE__H
+#  define PCMK_PENGINE_ALLOCATE__H
 
 #  include <glib.h>
 #  include <crm/common/xml.h>
@@ -155,4 +155,4 @@ extern enum pe_graph_flags clone_update_actions(action_t * first, action_t * the
 gboolean update_action_flags(action_t * action, enum pe_action_flags flags, const char *source);
 gboolean update_action(action_t * action);
 
-#endif
+#endif  /* PCMK_PENGINE_ALLOCATE__H */

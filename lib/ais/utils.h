@@ -15,9 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-#ifndef AIS_CRM_UTILS__H
-#  define AIS_CRM_UTILS__H
+#ifndef PCMK_AIS_UTILS__H
+#  define PCMK_AIS_UTILS__H
 
 #  include <syslog.h>
 
@@ -239,4 +238,4 @@ struct pcmk_env_s {
 extern struct pcmk_env_s pcmk_env;
 extern int pcmk_user_lookup(const char *name, uid_t * uid, gid_t * gid);
 
-#endif
+#endif  /* PCMK_AIS_UTILS__H */

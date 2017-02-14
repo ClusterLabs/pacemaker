@@ -15,9 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-#ifndef XML_FSA_MATRIX__H
-#  define XML_FSA_MATRIX__H
+#ifndef PCMK_CRMD_FSA_MATRIX__H
+#  define PCMK_CRMD_FSA_MATRIX__H
 
 /*
  *	The state transition table.  The rows are inputs, and
@@ -1228,4 +1227,4 @@ const long long crmd_fsa_actions[MAXINPUT][MAXSTATE] = {
      },
 };
 
-#endif
+#endif  /* PCMK_CRMD_FSA_MATRIX__H */

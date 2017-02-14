@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef PENGINE_STATUS__H
-#  define PENGINE_STATUS__H
+#ifndef PCMKLIB_PESTATUS_STATUS__H
+#  define PCMKLIB_PESTATUS_STATUS__H
 
 #  include <glib.h>
 #  include <crm/common/iso8601.h>
@@ -433,4 +433,5 @@ node_t *pe_find_node_id(GListPtr node_list, const char *id);
 node_t *pe_find_node_any(GListPtr node_list, const char *id, const char *uname);
 GListPtr find_operations(const char *rsc, const char *node, gboolean active_filter,
                          pe_working_set_t * data_set);
-#endif
+
+#endif  /* PCMKLIB_PESTATUS_STATUS__H */

@@ -15,15 +15,14 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+#ifndef PCMKLIB_STONITHD_STONITH_NG__H
+#  define PCMKLIB_STONITHD_STONITH_NG__H
 
 /**
  * \file
  * \brief Fencing aka. STONITH
  * \ingroup fencing
  */
-
-#ifndef STONITH_NG__H
-#  define STONITH_NG__H
 
 #  include <dlfcn.h>
 #  include <errno.h>
@@ -477,4 +476,4 @@ stonith_api_time_helper(uint32_t nodeid, bool in_progress)
     return (*st_time_fn) (nodeid, NULL, in_progress);
 }
 
-#endif
+#endif  /* PCMKLIB_STONITHD_STONITH_NG__H */

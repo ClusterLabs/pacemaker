@@ -16,9 +16,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-#ifndef STANDALONE_CONFIG__H
-#  define STANDALONE_CONFIG__H
+#ifndef PCMK_FENCING_STANDALONE_CONFIG__H
+#  define PCMK_FENCING_STANDALONE_CONFIG__H
 
 /*! Picking a large number in effort to avoid a dynamic list. */
 #  define STANDALONE_CFG_MAX_KEYVALS 100
@@ -83,4 +82,4 @@ int standalone_cfg_add_node_priority(const char *node, const char *device, unsig
  */
 int standalone_cfg_commit(void);
 
-#endif
+#endif  /* PCMK_FENCING_STANDALONE_CONFIG__H */

@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef PE_REMOTE__H
-#  define PE_REMOTE__H
+#ifndef PCMKLIB_PESTATUS_REMOTE__H
+#  define PCMKLIB_PESTATUS_REMOTE__H
 
 gboolean xml_contains_remote_node(xmlNode *xml);
 gboolean is_baremetal_remote_node(node_t *node);
@@ -27,4 +27,4 @@ resource_t * rsc_contains_remote_node(pe_working_set_t * data_set, resource_t *r
 void pe_foreach_guest_node(const pe_working_set_t *data_set, const node_t *host,
                            void (*helper)(const node_t*, void*), void *user_data);
 
-#endif
+#endif  /* PCMKLIB_PESTATUS_REMOTE__H */

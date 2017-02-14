@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef CRMD__H
-#  define CRMD__H
+#ifndef PCMK_CRMD_CRMD__H
+#  define PCMK_CRMD_CRMD__H
 
 #  define SYS_NAME     CRM_SYSTEM_CRMD
 #  define PID_FILE     WORKING_DIR "/"SYS_NAME".pid"
@@ -28,4 +28,4 @@ extern bool no_quorum_suicide_escalation;
 
 extern void crmd_metadata(void);
 
-#endif
+#endif  /* PCMK_CRMD_CRMD__H */

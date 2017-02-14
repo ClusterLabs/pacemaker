@@ -15,6 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+#ifndef PCMKLIB_CRMCOMMON_ISO8601__H
+#  define PCMKLIB_CRMCOMMON_ISO8601__H
 
 /**
  * \file
@@ -26,9 +28,6 @@
  * http://en.wikipedia.org/wiki/ISO_8601
  *
  */
-
-#ifndef CRM_COMMON_ISO8601
-#  define CRM_COMMON_ISO8601
 
 #  include <time.h>
 #  include <ctype.h>
@@ -122,4 +121,4 @@ int crm_time_days_in_month(int month, int year);
 bool crm_time_leapyear(int year);
 bool crm_time_check(crm_time_t * dt);
 
-#endif
+#endif  /* PCMKLIB_CRMCOMMON_ISO8601__H */

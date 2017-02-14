@@ -1,5 +1,3 @@
-/* crm_internal.h */
-
 /*
  * Copyright (C) 2006 - 2008
  *     Andrew Beekhof <andrew@beekhof.net>
@@ -18,9 +16,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-#ifndef CRM_INTERNAL__H
-#  define CRM_INTERNAL__H
+#ifndef PCMKPRIV_MIX_CRM_INTERNAL__H
+#  define PCMKPRIV_MIX_CRM_INTERNAL__H
 
 #  include <config.h>
 #  include <portability.h>
@@ -373,4 +370,5 @@ int  remote_proxy_check(lrmd_t * lrmd, GHashTable *hash);
 
 char* crm_versioned_param_summary(xmlNode *versioned_params, const char *name);
 void crm_summarize_versioned_params(xmlNode *param_set, xmlNode *versioned_params);
-#endif                          /* CRM_INTERNAL__H */
+
+#endif  /* PCMKPRIV_MIX_CRM_INTERNAL__H */

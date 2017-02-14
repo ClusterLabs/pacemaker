@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  *
@@ -16,6 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+#ifndef PCMK_CRMRESOURCE_CRM_RESOURCE__H
+#  define PCMK_CRMRESOURCE_CRM_RESOURCE__H
 
 #include <crm_internal.h>
 #include <crm/crm.h>
@@ -93,3 +94,4 @@ extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
 	fprintf(stderr, fmt"\n", ##args);		\
     } while(0)
 
+#endif  /* PCMK_CRMRESOURCE_CRM_RESOURCE__H */

@@ -15,6 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+#ifndef PCMKLIB_CRMCOMMON_LOGGING__H
+#  define PCMKLIB_CRMCOMMON_LOGGING__H
 
 /**
  * \file
@@ -22,8 +24,6 @@
  * \ingroup core
  */
 
-#ifndef CRM_LOGGING__H
-#  define CRM_LOGGING__H
 #  include <qb/qblog.h>
 #  ifndef LOG_TRACE
 #    define LOG_TRACE    LOG_DEBUG+1
@@ -273,4 +273,4 @@ unsigned int get_crm_log_level(void);
 
 #  define crm_str(x)    (const char*)(x?x:"<null>")
 
-#endif
+#endif  /* PCMKLIB_CRMCOMMON_LOGGING__H */

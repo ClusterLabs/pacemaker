@@ -15,6 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+#ifndef PCMK_CIB_COMMON__H
+#  define PCMK_CIB_COMMON__H
 
 #include <crm/cib/internal.h>
 
@@ -45,3 +47,4 @@ extern int cib_status;
 extern unsigned long cib_num_ops, cib_num_local, cib_num_updates, cib_num_fail;
 extern unsigned long cib_bad_connects, cib_num_timeouts;
 
+#endif  /* PCMK_CIB_COMMON__H */
