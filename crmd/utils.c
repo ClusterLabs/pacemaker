@@ -1012,13 +1012,13 @@ static void
 crm_set_join_state(const char *uname, const char *start_state)
 {
     if (safe_str_eq(start_state, "standby")) {
-        crm_notice("Starting node in %s state (%s)", start_state, uname);
+        crm_notice("Forcing node %s to join in %s state per configured environment", uname, start_state);
         update_attrd(uname, XML_CIB_ATTR_STANDBY, "on", NULL, FALSE);
     } else if (safe_str_eq(start_state, "online")) {
-        crm_notice("Starting node in %s state (%s)", start_state, uname);
+        crm_notice("Forcing node %s to join in %s state per configured environment", uname, start_state);
         update_attrd(uname, XML_CIB_ATTR_STANDBY, "off", NULL, FALSE);
     } else if (safe_str_eq(start_state, "default")) {
-        crm_notice("Starting node by default (%s)", uname);
+        crm_debug("Not forcing a starting state on node %s", uname);
     } else {
         crm_warn("Unrecognized start state '%s', using 'default' (%s)", start_state, uname);
     }
