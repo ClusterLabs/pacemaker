@@ -17,35 +17,6 @@
 
 crm_ipc_t *attrd_ipc = NULL;
 
-#if !HAVE_ATOMIC_ATTRD
-static int
-update_without_attrd(const char *host_uuid, const char *name, const char *value,
-                     const char *user_name, gboolean is_remote_node,
-                     char command)
-{
-    int call_opt = cib_none;
-
-    if (fsa_cib_conn == NULL) {
-        return -1;
-    }
-
-    call_opt = crmd_cib_smart_opt();
-
-    crm_trace("updating status for host_uuid %s, %s=%s",
-              host_uuid, (name? name : "<null>"), (value? value : "<null>"));
-    if (value) {
-        return update_attr_delegate(fsa_cib_conn, call_opt, XML_CIB_TAG_STATUS,
-                                    host_uuid, NULL, NULL, NULL, name, value,
-                                    FALSE, user_name,
-                                    (is_remote_node? "remote" : NULL));
-    } else {
-        return delete_attr_delegate(fsa_cib_conn, call_opt, XML_CIB_TAG_STATUS,
-                                    host_uuid, NULL, NULL, NULL, name, NULL,
-                                    FALSE, user_name);
-    }
-}
-#endif
-
 static void
 log_attrd_error(const char *host, const char *name, const char *value,
                 gboolean is_remote, char command, int rc)
@@ -91,25 +62,6 @@ update_attrd_helper(const char *host, const char *name, const char *value,
 
     if (is_remote_node) {
         attrd_opts |= attrd_opt_remote;
-
-#if !HAVE_ATOMIC_ATTRD
-        /* Legacy attrd can handle remote peer remove ('C') requests,
-         * otherwise talk directly to cib for remote nodes.
-         */
-
-        /* host is required for updating a remote node */
-        CRM_CHECK(host != NULL, return;);
-
-        if (command != 'C') {
-            /* remote node uname and uuid are equal */
-            rc = update_without_attrd(host, name, value, user_name,
-                                      is_remote_node, command);
-            if (rc < pcmk_ok) {
-                log_attrd_error(host, name, value, is_remote_node, command, rc);
-            }
-            return;
-        }
-#endif
     }
 
     if (attrd_ipc == NULL) {

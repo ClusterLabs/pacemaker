@@ -589,13 +589,7 @@ cli_delete_attr(cib_t * cib_conn, const char * host_uname, const char * attr_nam
     int attr_options = attrd_opt_none;
 
     if (node && is_remote_node(node)) {
-#if HAVE_ATOMIC_ATTRD
         set_bit(attr_options, attrd_opt_remote);
-#else
-        /* Talk directly to cib for remote nodes if it's legacy attrd */
-        return delete_attr_delegate(cib_conn, cib_sync_call, XML_CIB_TAG_STATUS, node->details->id, NULL, NULL,
-                                    NULL, attr_name, NULL, FALSE, NULL);
-#endif
     }
     return attrd_update_delegate(NULL, 'D', host_uname, attr_name, NULL,
                                  XML_CIB_TAG_STATUS, NULL, NULL, NULL,
