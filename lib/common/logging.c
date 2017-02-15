@@ -377,6 +377,9 @@ crm_control_blackbox(int nsig, bool enable)
     if (blackbox_file_prefix == NULL) {
         pid_t pid = getpid();
 
+        /* XXX We can evaluate the exact size needed; it can also be
+               upper bounded relative to its later concatenation use
+               in crm_write_blackbox. */
         blackbox_file_prefix = malloc(NAME_MAX);
 #ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
 #pragma GCC diagnostic push

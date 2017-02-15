@@ -82,6 +82,7 @@ make_stop_id(const char *rsc, int call_id)
 {
     char *op_id = NULL;
 
+    /* XXX +13 should be enough for sizeof(int) == 4 (11+2) */
     op_id = calloc(1, strlen(rsc) + 34);
     if (op_id != NULL) {
 #ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
