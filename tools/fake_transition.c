@@ -190,11 +190,15 @@ static xmlNode *
 inject_node_state(cib_t * cib_conn, const char *node, const char *uuid)
 {
     int rc = pcmk_ok;
-    int max = strlen(rsc_template) + strlen(node) + 1;
+    int max = strlen(node_template) + strlen(node) + 1;
     char *xpath = NULL;
     xmlNode *cib_object = NULL;
 
-    xpath = calloc(1, max);
+    xpath = malloc(max);
+    if (xpath == NULL) {
+        crm_perror(LOG_ERR, "malloc");
+        return cib_object;
+    }
 
     if (bringing_nodes_online) {
         create_node_entry(cib_conn, node);
