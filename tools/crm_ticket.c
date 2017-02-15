@@ -167,8 +167,15 @@ find_ticket_state(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_stat
     offset += snprintf(xpath_string + offset, xpath_max - offset, "%s", "/cib/status/tickets");
 
     if (ticket_id) {
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
         offset += snprintf(xpath_string + offset, xpath_max - offset, "/%s[@id=\"%s\"]",
                            XML_CIB_TAG_TICKET_STATE, ticket_id);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
     }
 
     CRM_LOG_ASSERT(offset > 0);
@@ -208,13 +215,27 @@ find_ticket_constraints(cib_t * the_cib, const char *ticket_id, xmlNode ** ticke
     *ticket_cons_xml = NULL;
 
     xpath_string = calloc(1, xpath_max);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
     offset +=
         snprintf(xpath_string + offset, xpath_max - offset, "%s/%s",
                  get_object_path(XML_CIB_TAG_CONSTRAINTS), XML_CONS_TAG_RSC_TICKET);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
 
     if (ticket_id) {
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
         offset += snprintf(xpath_string + offset, xpath_max - offset, "[@ticket=\"%s\"]",
                            ticket_id);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
     }
 
     CRM_LOG_ASSERT(offset > 0);
@@ -300,13 +321,27 @@ find_ticket_state_attr_legacy(cib_t * the_cib, const char *attr, const char *tic
     if (set_type) {
         offset += snprintf(xpath_string + offset, xpath_max - offset, "/%s", set_type);
         if (set_name) {
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
             offset += snprintf(xpath_string + offset, xpath_max - offset, "[@id=\"%s\"]", set_name);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
         }
     }
 
     offset += snprintf(xpath_string + offset, xpath_max - offset, "//nvpair[");
     if (attr_id) {
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
         offset += snprintf(xpath_string + offset, xpath_max - offset, "@id=\"%s\"", attr_id);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
     }
 
     if (attr_name) {
@@ -323,7 +358,14 @@ find_ticket_state_attr_legacy(cib_t * the_cib, const char *attr, const char *tic
         if (attr_id) {
             offset += snprintf(xpath_string + offset, xpath_max - offset, " and ");
         }
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
         offset += snprintf(xpath_string + offset, xpath_max - offset, "@name=\"%s\"", long_key);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
 
         free(long_key);
     }
@@ -439,12 +481,23 @@ ticket_warning(const char *ticket_id, const char *action)
 
     warning = calloc(1, text_max);
     if (safe_str_eq(action, "grant")) {
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
         offset += snprintf(warning + offset, text_max - offset,
                            "This command cannot help you verify whether '%s' has been already granted elsewhere.\n",
                            ticket_id);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
         word = "to";
 
     } else {
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
         offset += snprintf(warning + offset, text_max - offset,
                            "Revoking '%s' can trigger the specified 'loss-policy'(s) relating to '%s'.\n\n",
                            ticket_id, ticket_id);
@@ -456,12 +509,22 @@ ticket_warning(const char *ticket_id, const char *action)
         offset += snprintf(warning + offset, text_max - offset,
                            "Otherwise before revoking '%s', you may want to make '%s' standby with:\ncrm_ticket --ticket %s --standby\n\n",
                            ticket_id, ticket_id, ticket_id);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
         word = "from";
     }
 
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
     offset += snprintf(warning + offset, text_max - offset,
                        "If you really want to %s '%s' %s this site now, and you know what you are doing,\n",
                        action, ticket_id, word);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
 
     offset += snprintf(warning + offset, text_max - offset, 
                        "please specify --force.");

@@ -520,14 +520,28 @@ make_args(const char *agent, const char *action, const char *victim, uint32_t vi
 
     CRM_CHECK(action != NULL, return NULL);
 
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
     snprintf(buffer, sizeof(buffer), "pcmk_%s_action", action);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
     if (device_args) {
         value = g_hash_table_lookup(device_args, buffer);
     }
 
     if (value == NULL && device_args) {
         /* Legacy support for early 1.1 releases - Remove for 1.4 */
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
         snprintf(buffer, sizeof(buffer), "pcmk_%s_cmd", action);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
         value = g_hash_table_lookup(device_args, buffer);
     }
 
@@ -710,7 +724,14 @@ stonith_action_create(const char *agent,
         char buffer[512];
         const char *value = NULL;
 
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
         snprintf(buffer, sizeof(buffer), "pcmk_%s_retries", _action);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
         value = g_hash_table_lookup(device_args, buffer);
 
         if (value) {

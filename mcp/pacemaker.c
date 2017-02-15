@@ -607,8 +607,15 @@ update_process_peers(void)
     int rc = 0;
 
     if (local_name) {
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
         rc = snprintf(buffer, SIZEOF(buffer), "<node uname=\"%s\" proclist=\"%u\"/>",
                       local_name, get_process_list());
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
     } else {
         rc = snprintf(buffer, SIZEOF(buffer), "<node proclist=\"%u\"/>", get_process_list());
     }

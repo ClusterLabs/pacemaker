@@ -416,7 +416,14 @@ __xml_acl_create(xmlNode * xml, xmlNode *target, enum xml_private_flags mode)
             }
 
             if(ref) {
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
                 offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "@id='%s'", ref);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
             }
 
             if(ref && attr) {
@@ -1476,7 +1483,14 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode * patchset)
                         if(o_set > 0) {
                             o_set += snprintf(buffer_set + o_set, XML_BUFFER_SIZE - o_set, ", ");
                         }
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
                         o_set += snprintf(buffer_set + o_set, XML_BUFFER_SIZE - o_set, "@%s=%s", name, value);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
 
                     } else if(strcmp(op, "unset") == 0) {
                         if(o_unset > 0) {
@@ -2445,7 +2459,14 @@ __xml_acl_check(xmlNode *xml, const char *name, enum xml_private_flags mode)
 
             offset = __get_prefix(NULL, xml, buffer, offset);
             if(name) {
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
                 offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "[@%s]", name);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
             }
             CRM_LOG_ASSERT(offset > 0);
 
@@ -2618,7 +2639,14 @@ __get_prefix(const char *prefix, xmlNode *xml, char *buffer, int offset)
     }
 
     if(id) {
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
         offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "/%s[@id='%s']", (const char *)xml->name, id);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
     } else if(xml->name) {
         offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "/%s", (const char *)xml->name);
     }
@@ -3276,7 +3304,14 @@ dump_xml_attr(xmlAttrPtr attr, int options, char **buffer, int *offset, int *max
 
     p_name = (const char *)attr->name;
     p_value = crm_xml_escape((const char *)attr->children->content);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
     buffer_print(*buffer, *max, *offset, " %s=\"%s\"", p_name, p_value);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
     free(p_value);
 }
 
@@ -3304,7 +3339,14 @@ __xml_log_element(int log_level, const char *file, const char *function, int lin
         insert_prefix(options, &buffer, &offset, &max, depth);
 
         if (data->type == XML_COMMENT_NODE) {
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
             buffer_print(buffer, max, offset, "<!--%s-->", data->content);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
 
         } else {
             buffer_print(buffer, max, offset, "<%s", name);
@@ -3330,7 +3372,14 @@ __xml_log_element(int log_level, const char *file, const char *function, int lin
                     p_copy = crm_xml_escape(p_value);
                 }
 
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
                 buffer_print(buffer, max, offset, " %s=\"%s\"", p_name, p_copy);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
                 free(p_copy);
             }
 
@@ -3368,7 +3417,14 @@ __xml_log_element(int log_level, const char *file, const char *function, int lin
         char *buffer = NULL;
 
         insert_prefix(options, &buffer, &offset, &max, depth);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
         buffer_print(buffer, max, offset, "</%s>", name);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
 
         do_crm_log_alias(log_level, file, function, line, "%s %s", prefix, buffer);
         free(buffer);
@@ -3608,7 +3664,14 @@ dump_xml_element(xmlNode * data, int options, char **buffer, int *offset, int *m
         }
 
         insert_prefix(options, buffer, offset, max, depth);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
         buffer_print(*buffer, *max, *offset, "</%s>", name);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
 
         if (options & xml_log_option_formatted) {
             buffer_print(*buffer, *max, *offset, "\n");
@@ -5063,7 +5126,14 @@ expand_idref(xmlNode * input, xmlNode * top)
 
         xpath_string = calloc(1, xpath_max);
 
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
         offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s[@id='%s']", tag, ref);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
         CRM_LOG_ASSERT(offset > 0);
 
         result = get_xpath_object(xpath_string, top, LOG_ERR);

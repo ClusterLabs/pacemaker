@@ -785,8 +785,15 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
                         break;
 
                     } else if (id) {
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
                         snprintf(new_path, path_len + 1, "/%s[@id='%s']%s", parent->name, id,
                                  path ? path : "");
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
                     } else {
                         snprintf(new_path, path_len + 1, "/%s%s", parent->name, path ? path : "");
                     }

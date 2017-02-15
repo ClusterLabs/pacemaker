@@ -531,9 +531,16 @@ crm_time_as_string(crm_time_t * date_time, int flags)
   done:
     result_s = calloc(1, 100);
 
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
     snprintf(result_s, 100, "%s%s%s%s",
              date_s ? date_s : "", (date_s != NULL && time_s != NULL) ? " " : "",
              time_s ? time_s : "", offset_s ? offset_s : "");
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
 
   cleanup:
     free(date_s);

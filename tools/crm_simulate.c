@@ -571,7 +571,14 @@ profile_all(const char *dir)
             }
 
             lpc++;
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
             snprintf(buffer, sizeof(buffer), "%s/%s", dir, namelist[file_num]->d_name);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
             if (stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
                 profile_one(buffer);
             }

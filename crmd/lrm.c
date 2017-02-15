@@ -84,7 +84,14 @@ make_stop_id(const char *rsc, int call_id)
 
     op_id = calloc(1, strlen(rsc) + 34);
     if (op_id != NULL) {
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
         snprintf(op_id, strlen(rsc) + 34, "%s:%d", rsc, call_id);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
     }
     return op_id;
 }
@@ -536,7 +543,14 @@ get_rsc_metadata(const char *type, const char *rclass, const char *provider, boo
         return NULL;
     }
 
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
     snprintf(key, len, "%s::%s:%s", rclass, provider, type);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
     if(force == FALSE) {
         metadata = g_hash_table_lookup(metadata_hash, key);
         if (metadata) {
@@ -1013,7 +1027,14 @@ delete_rsc_status(lrm_state_t * lrm_state, const char *rsc_id, int call_options,
 
     max = strlen(rsc_template) + strlen(lrm_state->node_name) + strlen(rsc_id) + 1;
     rsc_xpath = calloc(1, max);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
     snprintf(rsc_xpath, max, rsc_template, lrm_state->node_name, rsc_id);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
 
     rc = cib_internal_op(fsa_cib_conn, CIB_OP_DELETE, NULL, rsc_xpath,
                          NULL, NULL, call_options | cib_xpath, user_name);
@@ -1096,14 +1117,28 @@ delete_op_entry(lrm_state_t * lrm_state, lrmd_event_data_t * op, const char *rsc
                 strlen(op_call_template) + strlen(lrm_state->node_name) + strlen(rsc_id) +
                 strlen(key) + 10;
             op_xpath = calloc(1, max);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
             snprintf(op_xpath, max, op_call_template, lrm_state->node_name, rsc_id, key, call_id);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
 
         } else {
             max =
                 strlen(op_template) + strlen(lrm_state->node_name) + strlen(rsc_id) + strlen(key) +
                 1;
             op_xpath = calloc(1, max);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
             snprintf(op_xpath, max, op_template, lrm_state->node_name, rsc_id, key);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
         }
 
         crm_debug("sync: Sending delete op for %s (call=%d)", rsc_id, call_id);

@@ -912,10 +912,17 @@ node_has_attr(const char *node, const char *name, const char *value)
      * use id-ref to reference values elsewhere, that is intended for resources,
      * so we ignore that here.
      */
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
     n = snprintf(xpath, XPATH_MAX, "//" XML_CIB_TAG_NODES
                  "/" XML_CIB_TAG_NODE "[@uname='%s']/" XML_TAG_ATTR_SETS
                  "/" XML_CIB_TAG_NVPAIR "[@name='%s' and @value='%s']",
                  node, name, value);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
     match = get_xpath_object(xpath, local_cib, LOG_TRACE);
 
     CRM_CHECK(n < XPATH_MAX, return FALSE);

@@ -127,7 +127,14 @@ create_node_entry(cib_t * cib_conn, const char *node)
 
     xpath = calloc(1, max);
 
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
     snprintf(xpath, max, new_node_template, node);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
     rc = cib_conn->cmds->query(cib_conn, xpath, NULL, cib_xpath | cib_sync_call | cib_scope_local);
 
     if (rc == -ENXIO) {
@@ -204,7 +211,14 @@ inject_node_state(cib_t * cib_conn, const char *node, const char *uuid)
         create_node_entry(cib_conn, node);
     }
 
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
     snprintf(xpath, max, node_template, node);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
     rc = cib_conn->cmds->query(cib_conn, xpath, &cib_object,
                                cib_xpath | cib_sync_call | cib_scope_local);
 
@@ -273,7 +287,14 @@ find_resource_xml(xmlNode * cib_node, const char *resource)
 
     xpath = calloc(1, max);
 
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
     snprintf(xpath, max, rsc_template, node, resource);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
     match = get_xpath_object(xpath, cib_node, LOG_DEBUG_2);
 
     free(xpath);
@@ -361,8 +382,15 @@ find_ticket_state(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_stat
     offset += snprintf(xpath_string + offset, xpath_max - offset, "%s", "/cib/status/tickets");
 
     if (ticket_id) {
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
         offset += snprintf(xpath_string + offset, xpath_max - offset, "/%s[@id=\"%s\"]",
                            XML_CIB_TAG_TICKET_STATE, ticket_id);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
     }
     CRM_LOG_ASSERT(offset > 0);
     rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
@@ -485,12 +513,26 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
         CRM_ASSERT(rc == pcmk_ok);
         free_xml(cib_node);
 
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
         snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", node, XML_CIB_TAG_LRM);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
         cib->cmds->delete(cib, xpath, NULL,
                                       cib_xpath | cib_sync_call | cib_scope_local);
 
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
         snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", node,
                  XML_TAG_TRANSIENT_NODEATTRS);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
         cib->cmds->delete(cib, xpath, NULL,
                                       cib_xpath | cib_sync_call | cib_scope_local);
 
@@ -716,7 +758,14 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
         char *key = NULL;
 
         key = calloc(1, 1 + strlen(spec));
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
         snprintf(key, strlen(spec), "%s_%s_%d@%s=", resource, op->op_type, op->interval, node);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
 
         if (strncasecmp(key, spec, strlen(key)) == 0) {
             sscanf(spec, "%*[^=]=%d", (int *)&op->rc);
@@ -783,12 +832,26 @@ exec_stonith_action(crm_graph_t * graph, crm_action_t * action)
                                    cib_sync_call | cib_scope_local);
         CRM_ASSERT(rc == pcmk_ok);
 
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
         snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", target, XML_CIB_TAG_LRM);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
         fake_cib->cmds->delete(fake_cib, xpath, NULL,
                                       cib_xpath | cib_sync_call | cib_scope_local);
 
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
         snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", target,
                  XML_TAG_TRANSIENT_NODEATTRS);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
         fake_cib->cmds->delete(fake_cib, xpath, NULL,
                                       cib_xpath | cib_sync_call | cib_scope_local);
 
