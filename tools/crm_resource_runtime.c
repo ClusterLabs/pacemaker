@@ -559,10 +559,9 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
     crm_xml_add(params, key, "60000");  /* 1 minute */
     free(key);
 
-    our_pid = calloc(1, 11);
+    our_pid = malloc(21);
     if (our_pid != NULL) {
-        snprintf(our_pid, 10, "%d", getpid());
-        our_pid[10] = '\0';
+        snprintf(our_pid, 21, "%lu", (unsigned long) getpid());
     }
     cmd = create_request(op, msg_data, router_node, CRM_SYSTEM_CRMD, crm_system_name, our_pid);
 

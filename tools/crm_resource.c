@@ -557,10 +557,9 @@ main(int argc, char **argv)
         return crm_exit(EX_USAGE);
     }
 
-    our_pid = calloc(1, 11);
+    our_pid = malloc(21);
     if (our_pid != NULL) {
-        snprintf(our_pid, 10, "%d", getpid());
-        our_pid[10] = '\0';
+        snprintf(our_pid, 21, "%lu", (unsigned long) getpid());
     }
 
     if (do_force) {
