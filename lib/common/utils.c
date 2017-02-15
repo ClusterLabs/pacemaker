@@ -1610,10 +1610,16 @@ attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const cha
             task = ATTRD_OP_PEER_REMOVE;
             display_command = "purge";
             break;
+        case 'c':
+            task = ATTRD_OP_CLEAR_FAILURE;
+            name_as = F_ATTRD_ATTRIBUTE;
+            section = XML_CIB_TAG_STATUS;
+            value = NULL;
+            break;
     }
 
     if (name_as != NULL) {
-        if (name == NULL) {
+        if ((name == NULL) && (command != 'c')) {
             rc = -EINVAL;
             goto done;
         }
@@ -1670,7 +1676,11 @@ done:
         rc = pcmk_ok;
     }
 
-    if (display_command) {
+    if (command == 'c') {
+        crm_debug("Asked attrd to clear failure of %s on %s: %s (%d)",
+                  (name? name : "all resources"),
+                  (host? host : "all nodes"), pcmk_strerror(rc), rc);
+    } else if (display_command) {
         crm_debug("Asked attrd to %s %s: %s (%d)",
                   display_command, display_host, pcmk_strerror(rc), rc);
     } else {
