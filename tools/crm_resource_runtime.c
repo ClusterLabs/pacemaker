@@ -581,19 +581,21 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
     return rc;
 }
 
-static int
-cli_delete_attr(cib_t * cib_conn, const char * host_uname, const char * attr_name,
-                pe_working_set_t * data_set)
+/*!
+ * \internal
+ * \brief Get resource name as used in failure-related node attributes
+ *
+ * \param[in] rsc  Resource to check
+ *
+ * \return Newly allocated string containing resource's fail name
+ * \note The caller is responsible for freeing the result.
+ */
+static inline char *
+rsc_fail_name(resource_t *rsc)
 {
-    node_t *node = pe_find_node(data_set->nodes, host_uname);
-    int attr_options = attrd_opt_none;
+    const char *name = (rsc->clone_name? rsc->clone_name : rsc->id);
 
-    if (node && is_remote_node(node)) {
-        set_bit(attr_options, attrd_opt_remote);
-    }
-    return attrd_update_delegate(NULL, 'D', host_uname, attr_name, NULL,
-                                 XML_CIB_TAG_STATUS, NULL, NULL, NULL,
-                                 attr_options);
+    return is_set(rsc->flags, pe_rsc_unique)? strdup(name) : clone_strip(name);
 }
 
 int
@@ -602,6 +604,8 @@ cli_resource_delete(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_
 {
     int rc = pcmk_ok;
     node_t *node = NULL;
+    char *rsc_name = NULL;
+    int attr_options = attrd_opt_none;
 
     if (rsc == NULL) {
         return -ENXIO;
@@ -636,40 +640,42 @@ cli_resource_delete(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_
 
     node = pe_find_node(data_set->nodes, host_uname);
 
-    if (node && node->details->rsc_discovery_enabled) {
-        printf("Cleaning up %s on %s", rsc->id, host_uname);
-        rc = send_lrm_rsc_op(crmd_channel, CRM_OP_LRM_DELETE, host_uname, rsc->id, TRUE, data_set);
+    if (node == NULL) {
+        printf("Unable to clean up %s because node %s not found\n",
+               rsc->id, host_uname);
+        return -ENODEV;
+    }
+
+    if (!node->details->rsc_discovery_enabled) {
+        printf("Unable to clean up %s because resource discovery disabled on %s\n",
+               rsc->id, host_uname);
+        return -EOPNOTSUPP;
+    }
+
+    rc = send_lrm_rsc_op(crmd_channel, CRM_OP_LRM_DELETE, host_uname, rsc->id,
+                         TRUE, data_set);
+    if (rc != pcmk_ok) {
+        printf("Unable to clean up %s history on %s: %s\n",
+               rsc->id, host_uname, pcmk_strerror(rc));
+        return rc;
+    }
+    if (node->details->remote_rsc == NULL) {
+        crmd_replies_needed++;
+    }
+
+    rsc_name = rsc_fail_name(rsc);
+    if (is_remote_node(node)) {
+        attr_options |= attrd_opt_remote;
+    }
+    rc = attrd_update_delegate(NULL, 'c', host_uname, rsc_name, NULL,
+                               NULL, NULL, NULL, NULL, attr_options);
+    if (rc != pcmk_ok) {
+        printf("Cleaned %s history on %s, but unable to clear failures: %s\n",
+               rsc->id, host_uname, pcmk_strerror(rc));
     } else {
-        printf("Resource discovery disabled on %s. Unable to delete lrm state.\n", host_uname);
-        rc = -EOPNOTSUPP;
+        printf("Cleaned up %s on %s\n", rsc->id, host_uname);
     }
-
-    if (rc == pcmk_ok) {
-        char *attr_name = NULL;
-
-        if(node && node->details->remote_rsc == NULL && node->details->rsc_discovery_enabled) {
-            crmd_replies_needed++;
-        }
-
-        if(is_not_set(rsc->flags, pe_rsc_unique)) {
-            char *id = clone_strip(rsc->id);
-            attr_name = crm_failcount_name(id);
-            free(id);
-
-        } else if (rsc->clone_name) {
-            attr_name = crm_failcount_name(rsc->clone_name);
-
-        } else {
-            attr_name = crm_failcount_name(rsc->id);
-        }
-
-        printf(", removing %s\n", attr_name);
-        rc = cli_delete_attr(cib_conn, host_uname, attr_name, data_set);
-        free(attr_name);
-
-    } else if(rc != -EOPNOTSUPP) {
-        printf(" - FAILED\n");
-    }
+    free(rsc_name);
 
     return rc;
 }

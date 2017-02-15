@@ -971,6 +971,7 @@ main(int argc, char **argv)
         const char *router_node = host_uname;
         xmlNode *msg_data = NULL;
         xmlNode *cmd = NULL;
+        int attr_options = attrd_opt_none;
 
         if (host_uname) {
             node_t *node = pe_find_node(data_set.nodes, host_uname);
@@ -982,7 +983,7 @@ main(int argc, char **argv)
                 }
                 node = node->details->remote_rsc->running_on->data;
                 router_node = node->details->uname;
-
+                attr_options |= attrd_opt_remote;
             }
         }
 
@@ -998,10 +999,8 @@ main(int argc, char **argv)
 
         crm_debug("Re-checking the state of all resources on %s", host_uname?host_uname:"all nodes");
 
-        rc = attrd_update_delegate(NULL, 'u', host_uname,
-                                   "^" CRM_FAIL_COUNT_PREFIX "-", NULL,
-                                   XML_CIB_TAG_STATUS, NULL, NULL, NULL,
-                                   attrd_opt_none);
+        rc = attrd_update_delegate(NULL, 'c', host_uname, NULL, NULL, NULL,
+                                   NULL, NULL, NULL, attr_options);
 
         if (crm_ipc_send(crmd_channel, cmd, 0, 0, NULL) > 0) {
             start_mainloop();
