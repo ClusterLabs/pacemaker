@@ -269,7 +269,7 @@ find_resource_xml(xmlNode * cib_node, const char *resource)
     char *xpath = NULL;
     xmlNode *match = NULL;
     const char *node = crm_element_value(cib_node, XML_ATTR_UNAME);
-    int max = strlen(rsc_template) + strlen(resource) + strlen(node) + 1;
+    int max = strlen(rsc_template) + strlen(node) + strlen(resource) + 1;
 
     xpath = calloc(1, max);
 
