@@ -606,13 +606,11 @@ update_process_peers(void)
     struct iovec *iov;
     int rc = 0;
 
-    memset(buffer, 0, SIZEOF(buffer));
-
     if (local_name) {
-        rc = snprintf(buffer, SIZEOF(buffer) - 1, "<node uname=\"%s\" proclist=\"%u\"/>",
+        rc = snprintf(buffer, SIZEOF(buffer), "<node uname=\"%s\" proclist=\"%u\"/>",
                       local_name, get_process_list());
     } else {
-        rc = snprintf(buffer, SIZEOF(buffer) - 1, "<node proclist=\"%u\"/>", get_process_list());
+        rc = snprintf(buffer, SIZEOF(buffer), "<node proclist=\"%u\"/>", get_process_list());
     }
 
     crm_trace("Sending %s", buffer);

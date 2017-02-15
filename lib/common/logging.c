@@ -562,7 +562,7 @@ crm_log_filter(struct qb_log_callsite *cs)
             do {
                 offset = next;
                 next = strchrnul(offset, ',');
-                snprintf(token, 499, "%.*s", (int)(next - offset), offset);
+                snprintf(token, sizeof(token), "%.*s", (int)(next - offset), offset);
 
                 tag = g_quark_from_string(token);
                 crm_info("Created GQuark %u from token '%s' in '%s'", tag, token, trace_tags);
