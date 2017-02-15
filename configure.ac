@@ -1813,11 +1813,10 @@ dnl otherwise none of both
 		-Wunsigned-char"
 
         if test "x$gcc_diagnostic_push_pull" = "xyes"; then
-                AC_DEFINE([GCC_FORMAT_NONLITERAL_CHECKING_ENABLED], [],
-			[gcc can complain about nonliterals in format])
                 EXTRA_FLAGS="$EXTRA_FLAGS
                         -Wformat=2 
-                        -Wformat-nonliteral"
+                        -Wformat-nonliteral
+                        -Wformat-truncation=2"
         else
                 if test "x$gcc_format_nonliteral" = "xyes"; then
                         EXTRA_FLAGS="$EXTRA_FLAGS
@@ -1833,7 +1832,22 @@ dnl otherwise none of both
 	  if
 	    cc_supports_flag $CC_EXTRAS $j
 	  then
-	    CC_EXTRAS="$CC_EXTRAS $j"
+	    case $j in
+	      -Wformat-nonliteral)
+	        AC_DEFINE([GCC_FORMAT_NONLITERAL_CHECKING_ENABLED], [],
+	                  [gcc can complain about nonliterals in format])
+	        CC_EXTRAS="$CC_EXTRAS $j"
+	      ;;
+	      -Wformat-truncation=2)
+	        # NOTE: We are not enabling -Wformat-truncation=2 here, it is
+	        #       allegedly not prime-time-ready as of early GCC7, yet
+	        #       (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=79448),
+	        #CC_EXTRAS="$CC_EXTRAS $j"
+	        #AC_DEFINE([GCC_FORMAT_TRUNCATION_CHECKING_ENABLED], [],
+	        #          [gcc can complain about snprintf et al. output truncation])
+	        ;;
+	      *) CC_EXTRAS="$CC_EXTRAS $j";;
+	    esac
 	  fi
 	done
 
