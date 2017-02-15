@@ -1808,6 +1808,8 @@ dnl otherwise none of both
         fi
         
 	# We had to eliminate -Wnested-externs because of libtool changes
+	# Make sure to order options so that the former stand for prerequisites
+	# of the latter (e.g., -Wformat-nonliteral requires -Wformat).
         EXTRA_FLAGS="-fgnu89-inline
 		-Wall
 		-Waggregate-return
@@ -1847,7 +1849,7 @@ dnl otherwise none of both
 	for j in $EXTRA_FLAGS
 	do
 	  if
-	    cc_supports_flag $j
+	    cc_supports_flag $CC_EXTRAS $j
 	  then
 	    CC_EXTRAS="$CC_EXTRAS $j"
 	  fi
