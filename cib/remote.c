@@ -285,7 +285,8 @@ cib_remote_listen(gpointer data)
 {
     int csock = 0;
     unsigned laddr;
-    struct sockaddr_in addr;
+    struct sockaddr_storage addr;
+    char ipstr[INET6_ADDRSTRLEN];
     int ssock = *(int *)data;
     int flag;
 
@@ -300,13 +301,14 @@ cib_remote_listen(gpointer data)
     laddr = sizeof(addr);
     memset(&addr, 0, sizeof(addr));
     csock = accept(ssock, (struct sockaddr *)&addr, &laddr);
-    crm_debug("New %s connection from %s",
-              ssock == remote_tls_fd ? "secure" : "clear-text", inet_ntoa(addr.sin_addr));
-
     if (csock == -1) {
-        crm_err("accept socket failed");
+        crm_perror(LOG_ERR, "Could not accept socket connection");
         return TRUE;
     }
+
+    crm_sockaddr2str(&addr, ipstr);
+    crm_debug("New %s connection from %s",
+              ((ssock == remote_tls_fd)? "secure" : "clear-text"), ipstr);
 
     if ((flag = fcntl(csock, F_GETFL)) >= 0) {
         if (fcntl(csock, F_SETFL, flag | O_NONBLOCK) < 0) {

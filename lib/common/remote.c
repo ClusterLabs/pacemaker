@@ -837,7 +837,7 @@ int
 crm_remote_tcp_connect_async(const char *host, int port, int timeout, /*ms */
                              int *timer_id, void *userdata, void (*callback) (void *userdata, int sock))
 {
-    char buffer[256];
+    char buffer[INET6_ADDRSTRLEN];
     struct addrinfo *res = NULL;
     struct addrinfo *rp = NULL;
     struct addrinfo hints;
@@ -882,20 +882,16 @@ crm_remote_tcp_connect_async(const char *host, int port, int timeout, /*ms */
             continue;
         }
 
-        memset(buffer, 0, DIMOF(buffer));
+        /* Set port appropriately for address family */
+        /* (void*) casts avoid false-positive compiler alignment warnings */
         if (addr->sa_family == AF_INET6) {
-            struct sockaddr_in6 *addr_in = (struct sockaddr_in6 *)(void*)addr;
-
-            addr_in->sin6_port = htons(port);
-            inet_ntop(addr->sa_family, &addr_in->sin6_addr, buffer, DIMOF(buffer));
-
+            ((struct sockaddr_in6 *)(void*)addr)->sin6_port = htons(port);
         } else {
-            struct sockaddr_in *addr_in = (struct sockaddr_in *)(void*)addr;
-
-            addr_in->sin_port = htons(port);
-            inet_ntop(addr->sa_family, &addr_in->sin_addr, buffer, DIMOF(buffer));
+            ((struct sockaddr_in *)(void*)addr)->sin_port = htons(port);
         }
 
+        memset(buffer, 0, DIMOF(buffer));
+        crm_sockaddr2str(addr, buffer);
         crm_info("Attempting to connect to remote server at %s:%d", buffer, port);
 
         if (callback) {
@@ -928,29 +924,33 @@ crm_remote_tcp_connect(const char *host, int port)
     return crm_remote_tcp_connect_async(host, port, -1, NULL, NULL, NULL);
 }
 
-
-/* Convert a struct sockaddr address to a string, IPv4 and IPv6: */
-
-static char *
-get_ip_str(const struct sockaddr_storage * sa, char * s, size_t maxlen)
+/*!
+ * \brief Convert an IP address (IPv4 or IPv6) to a string for logging
+ *
+ * \param[in]  sa  Socket address for IP
+ * \param[out] s   Storage for at least INET6_ADDRSTRLEN bytes
+ *
+ * \note sa The socket address can be a pointer to struct sockaddr_in (IPv4),
+ *          struct sockaddr_in6 (IPv6) or struct sockaddr_storage (either),
+ *          as long as its sa_family member is set correctly.
+ */
+void
+crm_sockaddr2str(void *sa, char *s)
 {
-    switch(((struct sockaddr *)sa)->sa_family) {
+    switch (((struct sockaddr*)sa)->sa_family) {
         case AF_INET:
             inet_ntop(AF_INET, &(((struct sockaddr_in *)sa)->sin_addr),
-                      s, maxlen);
+                      s, INET6_ADDRSTRLEN);
             break;
 
         case AF_INET6:
             inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)sa)->sin6_addr),
-                      s, maxlen);
+                      s, INET6_ADDRSTRLEN);
             break;
 
         default:
-            strncpy(s, "Unknown AF", maxlen);
-            return NULL;
+            strcpy(s, "<invalid>");
     }
-
-    return s;
 }
 
 int
@@ -971,7 +971,7 @@ crm_remote_accept(int ssock)
     laddr = sizeof(addr);
     memset(&addr, 0, sizeof(addr));
     csock = accept(ssock, (struct sockaddr *)&addr, &laddr);
-    get_ip_str(&addr, addr_str, INET6_ADDRSTRLEN);
+    crm_sockaddr2str(&addr, addr_str);
     crm_info("New remote connection from %s", addr_str);
 
     if (csock == -1) {

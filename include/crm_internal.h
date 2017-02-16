@@ -204,6 +204,7 @@ int crm_remote_tcp_connect(const char *host, int port);
 int crm_remote_tcp_connect_async(const char *host, int port, int timeout,       /*ms */
                                  int *timer_id, void *userdata, void (*callback) (void *userdata, int sock));
 int crm_remote_accept(int ssock);
+void crm_sockaddr2str(void *sa, char *s);
 
 #  ifdef HAVE_GNUTLS_GNUTLS_H
 /*!
