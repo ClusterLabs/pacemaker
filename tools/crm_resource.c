@@ -128,7 +128,12 @@ static struct crm_option long_options[] = {
     {"constraints",0, 0, 'a', "\tDisplay the (co)location constraints that apply to a resource"},
 
     {"-spacer-",	1, 0, '-', "\nCommands:"},
-    {"cleanup",         0, 0, 'C', "\t\tDelete the resource history and re-check the current state. Optional: --resource"},
+    {"cleanup",         0, 0, 'C',
+        "\t\tDelete resource's history and re-check its current state. "
+        "Optional: --resource (if not specified, all resources), "
+        "--node (if not specified, all nodes), "
+        "--force (if not specified, resource's group or clone will also be cleaned)"
+    },
     {"set-parameter",   1, 0, 'p', "Set the named parameter for a resource. See also -m, --meta"},
     {"get-parameter",   1, 0, 'g', "Display the named parameter for a resource. See also -m, --meta"},
     {"delete-parameter",1, 0, 'd', "Delete the named parameter for a resource. See also -m, --meta"},
@@ -943,8 +948,9 @@ main(int argc, char **argv)
             rsc = uber_parent(rsc);
         }
 
-        crm_debug("Re-checking the state of %s for %s on %s", rsc->id, rsc_id, host_uname);
         if(rsc) {
+            crm_debug("Re-checking the state of %s (%s requested) on %s",
+                      rsc->id, rsc_id, host_uname);
             crmd_replies_needed = 0;
             rc = cli_resource_delete(cib_conn, crmd_channel, host_uname, rsc, &data_set);
         } else {
