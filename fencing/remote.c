@@ -944,13 +944,14 @@ stonith_get_peer_name(unsigned int nodeid)
 
 /*!
  * \internal
- * \brief Create a new remote stonith op
- * \param client, he local stonith client id that initaited the operation
- * \param request, The request from the client that started the operation
- * \param peer, Is this operation owned by another stonith peer? Operations
- *        owned by other peers are stored on all the stonith nodes, but only the
- *        owner executes the operation.  All the nodes get the results to the operation
- *        once the owner finishes executing it.
+ * \brief Create a new remote stonith operation
+ *
+ * \param[in] client   ID of local stonith client that initiated the operation
+ * \param[in] request  The request from the client that started the operation
+ * \param[in] peer     TRUE if this operation is owned by another stonith peer
+ *                     (an operation owned by one peer is stored on all peers,
+ *                     but only the owner executes it; all nodes get the results
+ *                     once the owner finishes execution)
  */
 void *
 create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
