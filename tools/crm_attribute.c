@@ -44,7 +44,7 @@
 gboolean BE_QUIET = FALSE;
 char command = 'G';
 
-char *dest_uname = NULL;
+const char *dest_uname = NULL;
 char *dest_node = NULL;
 char *set_name = NULL;
 char *attr_id = NULL;
@@ -247,7 +247,14 @@ main(int argc, char **argv)
     } else if (safe_str_eq(type, XML_CIB_TAG_CRMCONFIG)) {
     } else if (safe_str_neq(type, XML_CIB_TAG_TICKETS)) {
         if (dest_uname == NULL) {
-            dest_uname = get_node_name(0);
+            /* If we are being called from a resource agent via the cluster,
+             * the correct local node name will be passed as an environment
+             * variable. Otherwise, we have to ask the cluster.
+             */
+            dest_uname = getenv("OCF_RESKEY_" CRM_META "_" XML_LRM_ATTR_TARGET);
+            if (dest_uname == NULL) {
+                dest_uname = get_local_node_name();
+            }
         }
 
         rc = query_node_uuid(the_cib, dest_uname, &dest_node, &is_remote_node);

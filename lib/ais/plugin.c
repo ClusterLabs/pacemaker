@@ -674,22 +674,6 @@ pcmk_startup(struct corosync_api_v1 *init_with)
     return 0;
 }
 
-/*
-  static void ais_print_node(const char *prefix, struct totem_ip_address *host)
-  {
-  int len = 0;
-  char *buffer = NULL;
-
-  ais_malloc0(buffer, INET6_ADDRSTRLEN+1);
-
-  inet_ntop(host->family, host->addr, buffer, INET6_ADDRSTRLEN);
-
-  len = strlen(buffer);
-  ais_info("%s: %.*s", prefix, len, buffer);
-  ais_free(buffer);
-  }
-*/
-
 #if 0
 /* copied here for reference from exec/totempg.c */
 char *

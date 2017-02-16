@@ -248,17 +248,9 @@ bind_and_listen(struct addrinfo *addr)
     int optval;
     int fd;
     int rc;
-    char buffer[256] = { 0, };
+    char buffer[INET6_ADDRSTRLEN] = { 0, };
 
-    if (addr->ai_family == AF_INET6) {
-        struct sockaddr_in6 *addr_in = (struct sockaddr_in6 *)(void*)addr->ai_addr;
-        inet_ntop(addr->ai_family, &addr_in->sin6_addr, buffer, DIMOF(buffer));
-
-    } else {
-        struct sockaddr_in *addr_in = (struct sockaddr_in *)(void*)addr->ai_addr;
-        inet_ntop(addr->ai_family, &addr_in->sin_addr, buffer, DIMOF(buffer));
-    }
-
+    crm_sockaddr2str(addr->ai_addr, buffer);
     crm_trace("Attempting to bind on address %s", buffer);
 
     fd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
