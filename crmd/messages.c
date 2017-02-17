@@ -629,28 +629,17 @@ handle_failcount_op(xmlNode * stored_msg)
         rsc = ID(xml_rsc);
     }
 
+    if (rsc == NULL) {
+        crm_log_xml_warn(stored_msg, "invalid failcount op");
+        return I_NULL;
+    }
+
     uname = crm_element_value(stored_msg, XML_LRM_ATTR_TARGET);
     if (crm_element_value(stored_msg, XML_LRM_ATTR_ROUTER_NODE)) {
         is_remote_node = TRUE;
     }
-
-    if (rsc) {
-        char *attr = NULL;
-
-        crm_info("Removing failcount for %s", rsc);
-
-        attr = crm_failcount_name(rsc);
-        update_attrd(uname, attr, NULL, NULL, is_remote_node);
-        free(attr);
-
-        attr = crm_lastfailure_name(rsc);
-        update_attrd(uname, attr, NULL, NULL, is_remote_node);
-        free(attr);
-
-        lrm_clear_last_failure(rsc, uname);
-    } else {
-        crm_log_xml_warn(stored_msg, "invalid failcount op");
-    }
+    update_attrd_clear_failures(uname, rsc, is_remote_node);
+    lrm_clear_last_failure(rsc, uname);
 
     return I_NULL;
 }
