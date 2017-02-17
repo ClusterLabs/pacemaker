@@ -75,7 +75,10 @@ GMainLoop *mainloop = NULL;
 const char *cib_root = NULL;
 char *cib_our_uname = NULL;
 gboolean preserve_status = FALSE;
-gboolean cib_writes_enabled = TRUE;
+
+/* volatile because it may be changed in a signal handler */
+volatile gboolean cib_writes_enabled = TRUE;
+
 int remote_fd = 0;
 int remote_tls_fd = 0;
 
