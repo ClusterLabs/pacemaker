@@ -21,7 +21,7 @@ node.
 
 |CIB_user
 |$USER
-|The user to connect as. Needs to be part of the +hacluster+ group on
+|The user to connect as. Needs to be part of the +haclient+ group on
  the target host.
  indexterm:[Environment Variable,CIB_user]
 
@@ -48,7 +48,7 @@ node.
 |=========================================================
 
 So, if *c001n01* is an active cluster node and is listening on port 1234
-for connections, and *someuser* is a member of the *hacluster* group,
+for connections, and *someuser* is a member of the *haclient* group,
 then the following would prompt for *someuser*'s password and return
 the cluster's current configuration:
 
