@@ -2,4 +2,3 @@
 /.*	export-ignore
 /travisci_build_coverity_scan.sh	export-ignore
 /scratch.c	export-ignore
-/.tito*	export-ignore
