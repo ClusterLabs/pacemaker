@@ -253,7 +253,7 @@ do_cl_join_finalize_respond(long long action,
             first_join = FALSE;
 
             if (start_state) {
-                init_transient_attrs(fsa_our_uname, start_state);
+                init_transient_attrs(fsa_our_uname, start_state, 0);
             } else {
                 erase_status_tag(fsa_our_uname, XML_TAG_TRANSIENT_NODEATTRS, 0);
             }

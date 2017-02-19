@@ -1041,18 +1041,19 @@ init_attrs_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
 }
 
 void
-init_transient_attrs(const char *uname, const char *start_state)
+init_transient_attrs(const char *uname, const char *start_state, int options)
 {
     if (fsa_cib_conn && uname) {
         int rc;
         char *xpath = crm_strdup_printf("//node_state[@uname='%s']/%s", uname, XML_TAG_TRANSIENT_NODEATTRS);
+        int cib_opts = cib_quorum_override | cib_xpath | options;
         const char **data = malloc(sizeof(char*)*3);
         data[0] = strdup(uname);
         data[1] = strdup(start_state);
         data[2] = strdup(xpath);
 
         crm_info("Erasing transient attributes for %s", uname);
-        rc = fsa_cib_conn->cmds->delete(fsa_cib_conn, xpath, NULL, cib_quorum_override | cib_xpath);
+        rc = fsa_cib_conn->cmds->delete(fsa_cib_conn, xpath, NULL, cib_opts);
         fsa_register_cib_callback(rc, FALSE, data, init_attrs_callback);
     }
 }
