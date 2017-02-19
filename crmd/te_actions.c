@@ -79,6 +79,8 @@ send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
     /* zero out the node-status & remove all LRM status info */
     xmlNode *node_state = NULL;
 
+    const char *start_state = daemon_option("node_start_state");
+
     CRM_CHECK(target != NULL, return);
     CRM_CHECK(uuid != NULL, return);
 
@@ -127,7 +129,11 @@ send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
     /* fsa_cib_conn->cmds->bump_epoch(fsa_cib_conn, cib_quorum_override|cib_scope_local);    */
 
     erase_status_tag(peer->uname, XML_CIB_TAG_LRM, cib_scope_local);
-    erase_status_tag(peer->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
+    if (start_state) {
+        init_transient_attrs(peer->uname, start_state, cib_scope_local);
+    } else {
+        erase_status_tag(peer->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
+    }
 
     free_xml(node_state);
     return;
