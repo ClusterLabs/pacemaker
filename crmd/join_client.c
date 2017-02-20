@@ -189,6 +189,7 @@ do_cl_join_finalize_respond(long long action,
     gboolean was_nack = TRUE;
     static gboolean first_join = TRUE;
     ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
+    const char *start_state = daemon_option("node_start_state");
 
     int join_id = -1;
     const char *op = crm_element_value(input->msg, F_CRM_TASK);
@@ -250,7 +251,13 @@ do_cl_join_finalize_respond(long long action,
          */
         if (first_join && is_not_set(fsa_input_register, R_SHUTDOWN)) {
             first_join = FALSE;
-            erase_status_tag(fsa_our_uname, XML_TAG_TRANSIENT_NODEATTRS, 0);
+
+            if (start_state) {
+                init_transient_attrs(fsa_our_uname, start_state, 0);
+            } else {
+                erase_status_tag(fsa_our_uname, XML_TAG_TRANSIENT_NODEATTRS, 0);
+            }
+
             update_attrd(fsa_our_uname, "terminate", NULL, NULL, FALSE);
             update_attrd(fsa_our_uname, XML_CIB_ATTR_SHUTDOWN, "0", NULL, FALSE);
         }

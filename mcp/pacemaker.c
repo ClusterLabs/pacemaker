@@ -671,6 +671,7 @@ static struct crm_option long_options[] = {
     {"-spacer-",       1, 0, '-', "\nAdditional Options:"},
     {"foreground",     0, 0, 'f', "\t(Ignored) Pacemaker always runs in the foreground"},
     {"pid-file",       1, 0, 'p', "\t(Ignored) Daemon pid file location"},
+    {"standby",        0, 0, 's', "\tStart node in standby state"},
 
     {NULL, 0, 0, 0}
 };
@@ -940,6 +941,9 @@ main(int argc, char **argv)
                 break;
             case 'p':
                 pid_file = optarg;
+                break;
+            case 's':
+                set_daemon_option("node_start_state", "standby");
                 break;
             case '$':
             case '?':
