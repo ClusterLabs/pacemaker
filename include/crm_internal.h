@@ -361,15 +361,25 @@ typedef struct remote_proxy_s {
     crm_ipc_t *ipc;
     mainloop_io_t *source;
     uint32_t last_request_id;
+    lrmd_t *lrm;
 
 } remote_proxy_t;
-void remote_proxy_notify_destroy(lrmd_t *lrmd, const char *session_id);
+
+remote_proxy_t *remote_proxy_new(
+    lrmd_t *lrmd, struct ipc_client_callbacks proxy_callbacks,
+    const char *node_name, const char *session_id, const char *channel);
+
+int  remote_proxy_check(lrmd_t *lrmd, GHashTable *hash);
+void remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg);
 void remote_proxy_ack_shutdown(lrmd_t *lrmd);
-void remote_proxy_relay_event(lrmd_t *lrmd, const char *session_id, xmlNode *msg);
-void remote_proxy_relay_response(lrmd_t *lrmd, const char *session_id, xmlNode *msg, int msg_id);
-void remote_proxy_end_session(const char *session);
+
+int  remote_proxy_dispatch(const char *buffer, ssize_t length, gpointer userdata);
+void remote_proxy_disconnected(gpointer data);
 void remote_proxy_free(gpointer data);
-int  remote_proxy_check(lrmd_t * lrmd, GHashTable *hash);
+
+void remote_proxy_relay_event(remote_proxy_t *proxy, xmlNode *msg);
+void remote_proxy_relay_response(remote_proxy_t *proxy, xmlNode *msg, int msg_id);
+
 
 char* crm_versioned_param_summary(xmlNode *versioned_params, const char *name);
 void crm_summarize_versioned_params(xmlNode *param_set, xmlNode *versioned_params);
