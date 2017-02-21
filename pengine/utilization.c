@@ -317,7 +317,7 @@ find_colocated_rscs(GListPtr colocated_rscs, resource_t * rsc, resource_t * orig
             continue;
         }
 
-        if (rsc_lh->variant <= pe_group && rsc->variant > pe_group) {
+        if (rsc_lh->variant <= pe_group && rsc->variant >= pe_clone) {
             /* We do not know if rsc_lh will be colocated with orig_rsc in this case */
             continue;
         }

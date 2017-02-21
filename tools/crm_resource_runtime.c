@@ -1109,7 +1109,7 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
     attr_set_type = XML_TAG_META_SETS;
 
     rsc_id = strdup(rsc->id);
-    if(rsc->variant > pe_group) {
+    if(rsc->variant >= pe_clone) {
         is_clone = TRUE;
     }
 
@@ -1624,7 +1624,7 @@ cli_resource_move(const char *rsc_id, const char *host_name, cib_t * cib, pe_wor
             count = g_list_length(rsc->running_on);
         }
 
-    } else if (rsc->variant > pe_group) {
+    } else if (rsc->variant >= pe_clone) {
         count = g_list_length(rsc->running_on);
 
     } else if (g_list_length(rsc->running_on) > 1) {

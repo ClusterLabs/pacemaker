@@ -153,7 +153,7 @@ get_ordering_type(xmlNode * xml_obj)
                 kind_e = pe_order_kind_optional;
             }
 
-            /* } else if(rsc_then->variant == pe_native && rsc_first->variant > pe_group) { */
+            /* } else if(rsc_then->variant == pe_native && rsc_first->variant >= pe_clone) { */
             /*     kind_e = pe_order_kind_optional; */
         }
 
