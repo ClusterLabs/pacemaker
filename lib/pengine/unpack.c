@@ -2934,10 +2934,10 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
     }
 
     if (clear_failcount) {
-        action_t *clear_op = NULL;
+        char *key = generate_op_key(rsc->id, CRM_OP_CLEAR_FAILCOUNT, 0);
+        action_t *clear_op = custom_action(rsc, key, CRM_OP_CLEAR_FAILCOUNT,
+                                           node, FALSE, TRUE, data_set);
 
-        clear_op = custom_action(rsc, crm_concat(rsc->id, CRM_OP_CLEAR_FAILCOUNT, '_'),
-                                 CRM_OP_CLEAR_FAILCOUNT, node, FALSE, TRUE, data_set);
         add_hash_param(clear_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
     }
 
