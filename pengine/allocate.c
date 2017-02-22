@@ -449,6 +449,10 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
             action_clear =
                 custom_action(rsc, key, CRM_OP_CLEAR_FAILCOUNT, node, FALSE, TRUE, data_set);
             set_bit(action_clear->flags, pe_action_runnable);
+
+            crm_notice("Clearing failure of %s on %s "
+                       "because action definition changed " CRM_XS " %s",
+                       rsc->id, node->details->uname, action_clear->uuid);
         }
     }
 
@@ -1200,9 +1204,11 @@ cleanup_orphans(resource_t * rsc, pe_working_set_t * data_set)
                                                node, FALSE, TRUE, data_set);
 
             add_hash_param(clear_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
-            pe_rsc_info(rsc, "Clearing failcount (%d) for orphaned resource %s on %s (%s)",
-                        get_failcount(node, rsc, NULL, data_set), rsc->id, node->details->uname,
-                        clear_op->uuid);
+
+            pe_rsc_info(rsc,
+                        "Clearing failure of %s on %s because it is orphaned "
+                        CRM_XS " %s",
+                        rsc->id, node->details->uname, clear_op->uuid);
 
             custom_action_order(rsc, NULL, clear_op,
                             rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,

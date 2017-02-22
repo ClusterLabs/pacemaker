@@ -2851,11 +2851,11 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
 {
     bool expired = FALSE;
     time_t last_failure = 0;
-    int clear_failcount = 0;
     int interval = 0;
     int failure_timeout = rsc->failure_timeout;
     const char *key = get_op_key(xml_op);
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+    const char *clear_reason = NULL;
 
     /* clearing recurring monitor operation failures automatically
      * needs to be carefully considered */
@@ -2903,15 +2903,14 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
             int fc = get_failcount_full(node, rsc, &last_failure, FALSE, xml_op, data_set);
             if(fc) {
                 if (get_failcount_full(node, rsc, &last_failure, TRUE, xml_op, data_set) == 0) {
-                    clear_failcount = 1;
-                    crm_notice("Clearing expired failcount for %s on %s", rsc->id, node->details->uname);
+                    clear_reason = "it expired";
 
                 } else {
                     expired = FALSE;
                 }
             } else if (rsc->remote_reconnect_interval && strstr(ID(xml_op), "last_failure")) {
                 /* always clear last failure when reconnect interval is set */
-                clear_failcount = 1;
+                clear_reason = "reconnect interval is set";
             }
         }
 
@@ -2926,19 +2925,19 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
             crm_trace("rsc op %s/%s on node %s does not have a op digest to compare against", rsc->id,
                       key, node->details->id);
         } else if (digest_data->rc != RSC_DIGEST_MATCH) {
-            clear_failcount = 1;
-            crm_info
-                ("Clearing failcount for %s on %s, %s failed and now resource parameters have changed.",
-                 task, rsc->id, node->details->uname);
+            clear_reason = "resource parameters have changed";
         }
     }
 
-    if (clear_failcount) {
+    if (clear_reason != NULL) {
         char *key = generate_op_key(rsc->id, CRM_OP_CLEAR_FAILCOUNT, 0);
         action_t *clear_op = custom_action(rsc, key, CRM_OP_CLEAR_FAILCOUNT,
                                            node, FALSE, TRUE, data_set);
 
         add_hash_param(clear_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
+
+        crm_notice("Clearing failure of %s on %s because %s " CRM_XS " %s",
+                   rsc->id, node->details->uname, clear_reason, clear_op->uuid);
     }
 
     crm_element_value_int(xml_op, XML_LRM_ATTR_INTERVAL, &interval);
