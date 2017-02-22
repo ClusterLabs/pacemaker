@@ -623,10 +623,14 @@ handle_failcount_op(xmlNode * stored_msg)
     const char *rsc = NULL;
     const char *uname = NULL;
     gboolean is_remote_node = FALSE;
-    xmlNode *xml_rsc = get_xpath_object("//" XML_CIB_TAG_RESOURCE, stored_msg, LOG_ERR);
+    xmlNode *xml_op = get_message_xml(stored_msg, F_CRM_DATA);
 
-    if (xml_rsc) {
-        rsc = ID(xml_rsc);
+    if (xml_op) {
+        xmlNode *xml_rsc = first_named_child(xml_op, XML_CIB_TAG_RESOURCE);
+
+        if (xml_rsc) {
+            rsc = ID(xml_rsc);
+        }
     }
 
     if (rsc == NULL) {
@@ -634,8 +638,8 @@ handle_failcount_op(xmlNode * stored_msg)
         return I_NULL;
     }
 
-    uname = crm_element_value(stored_msg, XML_LRM_ATTR_TARGET);
-    if (crm_element_value(stored_msg, XML_LRM_ATTR_ROUTER_NODE)) {
+    uname = crm_element_value(xml_op, XML_LRM_ATTR_TARGET);
+    if (crm_element_value(xml_op, XML_LRM_ATTR_ROUTER_NODE)) {
         is_remote_node = TRUE;
     }
     update_attrd_clear_failures(uname, rsc, is_remote_node);
