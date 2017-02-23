@@ -316,15 +316,33 @@ __xml_next(xmlNode * child)
 }
 
 static inline xmlNode *
+__xml_first_child_element(xmlNode * parent)
+{
+    xmlNode *child = NULL;
+
+    if (parent) {
+        child = parent->children;
+    }
+
+    while (child) {
+        if(child->type == XML_ELEMENT_NODE) {
+            return child;
+        }
+        child = child->next;
+    }
+    return NULL;
+}
+
+static inline xmlNode *
 __xml_next_element(xmlNode * child)
 {
-    if (child) {
+    while (child) {
         child = child->next;
-        while (child && child->type != XML_ELEMENT_NODE) {
-            child = child->next;
+        if(child && child->type == XML_ELEMENT_NODE) {
+            return child;
         }
     }
-    return child;
+    return NULL;
 }
 
 void free_xml(xmlNode * child);
