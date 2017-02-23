@@ -173,8 +173,10 @@ extern enum pe_graph_flags container_update_actions(action_t * first, action_t *
                                                     enum pe_action_flags flags,
                                                     enum pe_action_flags filter, enum pe_ordering type);
 
-gboolean update_action_flags(action_t * action, enum pe_action_flags flags, const char *source);
+gboolean update_action_flags(action_t * action, enum pe_action_flags flags, const char *source, int line);
 gboolean update_action(action_t * action);
 void complex_set_cmds(resource_t * rsc);
+
+
 
 #endif

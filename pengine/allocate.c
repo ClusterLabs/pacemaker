@@ -113,7 +113,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 };
 
 gboolean
-update_action_flags(action_t * action, enum pe_action_flags flags, const char *source)
+update_action_flags(action_t * action, enum pe_action_flags flags, const char *source, int line)
 {
     static unsigned long calls = 0;
     gboolean changed = FALSE;
@@ -121,9 +121,9 @@ update_action_flags(action_t * action, enum pe_action_flags flags, const char *s
     enum pe_action_flags last = action->flags;
 
     if (clear) {
-        action->flags = crm_clear_bit(source, action->uuid, action->flags, flags);
+        action->flags = crm_clear_bit(source, line, action->uuid, action->flags, flags);
     } else {
-        action->flags = crm_set_bit(source, action->uuid, action->flags, flags);
+        action->flags = crm_set_bit(source, line, action->uuid, action->flags, flags);
     }
 
     if (last != action->flags) {
@@ -1394,7 +1394,7 @@ fence_guest(pe_node_t *node, pe_action_t *done, pe_working_set_t *data_set)
      */
     stonith_op = pe_fence_op(node, fence_action, FALSE, data_set);
     update_action_flags(stonith_op, pe_action_pseudo | pe_action_runnable,
-                        __FUNCTION__);
+                        __FUNCTION__, __LINE__);
 
     /* We want to imply stops/demotes after the guest is stopped, not wait until
      * it is restarted, so we always order pseudo-fencing after stop, not start
@@ -1660,7 +1660,7 @@ rsc_order_then(action_t * lh_action, resource_t * rsc, order_constraint_t * orde
             order_actions(lh_action, rh_action_iter, type);
 
         } else if (type & pe_order_implies_then) {
-            update_action_flags(rh_action_iter, pe_action_runnable | pe_action_clear, __FUNCTION__);
+            update_action_flags(rh_action_iter, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__);
             crm_warn("Unrunnable %s 0x%.6x", rh_action_iter->uuid, type);
         } else {
             crm_warn("neither %s 0x%.6x", rh_action_iter->uuid, type);

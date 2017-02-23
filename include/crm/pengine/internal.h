@@ -28,8 +28,8 @@
 #  define pe_warn(fmt...) { was_processing_warning = TRUE; crm_config_warning = TRUE; crm_warn(fmt); }
 #  define pe_proc_err(fmt...) { was_processing_error = TRUE; crm_err(fmt); }
 #  define pe_proc_warn(fmt...) { was_processing_warning = TRUE; crm_warn(fmt); }
-#  define pe_set_action_bit(action, bit) action->flags = crm_set_bit(__FUNCTION__, action->uuid, action->flags, bit)
-#  define pe_clear_action_bit(action, bit) action->flags = crm_clear_bit(__FUNCTION__, action->uuid, action->flags, bit)
+#  define pe_set_action_bit(action, bit) action->flags = crm_set_bit(__FUNCTION__, __LINE__, action->uuid, action->flags, bit)
+#  define pe_clear_action_bit(action, bit) action->flags = crm_clear_bit(__FUNCTION__, __LINE__, action->uuid, action->flags, bit)
 
 typedef struct notify_data_s {
     GHashTable *keys;
@@ -286,5 +286,8 @@ gboolean add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj
 void print_rscs_brief(GListPtr rsc_list, const char * pre_text, long options,
                       void * print_data, gboolean print_all);
 void pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason);
+
+node_t *create_node(const char *id, const char *uname, const char *type, const char *score, pe_working_set_t * data_set);
+
 
 #endif

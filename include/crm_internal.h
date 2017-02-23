@@ -157,39 +157,47 @@ char *generate_transition_magic(const char *transition_key, int op_status, int o
 char *generate_transition_key(int action, int transition_id, int target_rc, const char *node);
 
 static inline long long
-crm_clear_bit(const char *function, const char *target, long long word, long long bit)
+crm_clear_bit(const char *function, int line, const char *target, long long word, long long bit)
 {
     long long rc = (word & ~bit);
+
+    /* if(bit == 0x00002) { */
+    /*     crm_err("Bit 0x%.8llx for %s cleared by %s:%d", bit, target, function, line); */
+    /* } */
 
     if (rc == word) {
         /* Unchanged */
     } else if (target) {
-        crm_trace("Bit 0x%.8llx for %s cleared by %s", bit, target, function);
+        crm_trace("Bit 0x%.8llx for %s cleared by %s:%d", bit, target, function, line);
     } else {
-        crm_trace("Bit 0x%.8llx cleared by %s", bit, function);
+        crm_trace("Bit 0x%.8llx cleared by %s:%d", bit, function, line);
     }
 
     return rc;
 }
 
 static inline long long
-crm_set_bit(const char *function, const char *target, long long word, long long bit)
+crm_set_bit(const char *function, int line, const char *target, long long word, long long bit)
 {
     long long rc = (word | bit);
+
+    /* if(bit == 0x00002) { */
+    /*     crm_err("Bit 0x%.8llx for %s set by %s:%d", bit, target, function, line); */
+    /* } */
 
     if (rc == word) {
         /* Unchanged */
     } else if (target) {
-        crm_trace("Bit 0x%.8llx for %s set by %s", bit, target, function);
+        crm_trace("Bit 0x%.8llx for %s set by %s:%d", bit, target, function, line);
     } else {
-        crm_trace("Bit 0x%.8llx set by %s", bit, function);
+        crm_trace("Bit 0x%.8llx set by %s:%d", bit, function, line);
     }
 
     return rc;
 }
 
-#  define set_bit(word, bit) word = crm_set_bit(__FUNCTION__, NULL, word, bit)
-#  define clear_bit(word, bit) word = crm_clear_bit(__FUNCTION__, NULL, word, bit)
+#  define set_bit(word, bit) word = crm_set_bit(__FUNCTION__, __LINE__, NULL, word, bit)
+#  define clear_bit(word, bit) word = crm_clear_bit(__FUNCTION__, __LINE__, NULL, word, bit)
 
 char *generate_hash_key(const char *crm_msg_reference, const char *sys);
 

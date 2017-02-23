@@ -846,12 +846,12 @@ clone_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     started = custom_action(rsc, started_key(rsc),
                             RSC_STARTED, NULL, !child_starting, TRUE, data_set);
 
-    update_action_flags(start, pe_action_pseudo | pe_action_runnable, __FUNCTION__);
-    update_action_flags(started, pe_action_pseudo, __FUNCTION__);
+    update_action_flags(start, pe_action_pseudo | pe_action_runnable, __FUNCTION__, __LINE__);
+    update_action_flags(started, pe_action_pseudo, __FUNCTION__, __LINE__);
     started->priority = INFINITY;
 
     if (child_active || child_starting) {
-        update_action_flags(started, pe_action_runnable, __FUNCTION__);
+        update_action_flags(started, pe_action_runnable, __FUNCTION__, __LINE__);
     }
 
     child_ordering_constraints(rsc, data_set);
@@ -866,11 +866,11 @@ clone_create_actions(resource_t * rsc, pe_working_set_t * data_set)
                             RSC_STOPPED, NULL, !child_stopping, TRUE, data_set);
 
     stopped->priority = INFINITY;
-    update_action_flags(stop, pe_action_pseudo | pe_action_runnable, __FUNCTION__);
+    update_action_flags(stop, pe_action_pseudo | pe_action_runnable, __FUNCTION__, __LINE__);
     if (allow_dependent_migrations) {
-        update_action_flags(stop, pe_action_migrate_runnable, __FUNCTION__);
+        update_action_flags(stop, pe_action_migrate_runnable, __FUNCTION__, __LINE__);
     }
-    update_action_flags(stopped, pe_action_pseudo | pe_action_runnable, __FUNCTION__);
+    update_action_flags(stopped, pe_action_pseudo | pe_action_runnable, __FUNCTION__, __LINE__);
     if (clone_data->stop_notify == NULL) {
         clone_data->stop_notify =
             create_notification_boundaries(rsc, RSC_STOP, stop, stopped, data_set);
@@ -1204,7 +1204,7 @@ clone_action_flags(action_t * action, node_t * node)
                 && is_set(child_flags, pe_action_optional) == FALSE) {
                 pe_rsc_trace(child, "%s is mandatory because of %s", action->uuid,
                              child_action->uuid);
-                flags = crm_clear_bit(__FUNCTION__, action->rsc->id, flags, pe_action_optional);
+                flags = crm_clear_bit(__FUNCTION__, __LINE__, action->rsc->id, flags, pe_action_optional);
                 pe_clear_action_bit(action, pe_action_optional);
             }
             if (is_set(child_flags, pe_action_runnable)) {
@@ -1226,7 +1226,7 @@ clone_action_flags(action_t * action, node_t * node)
 
     if (check_runnable && any_runnable == FALSE) {
         pe_rsc_trace(action->rsc, "%s is not runnable because no children are", action->uuid);
-        flags = crm_clear_bit(__FUNCTION__, action->rsc->id, flags, pe_action_runnable);
+        flags = crm_clear_bit(__FUNCTION__, __LINE__, action->rsc->id, flags, pe_action_runnable);
         if (node == NULL) {
             pe_clear_action_bit(action, pe_action_runnable);
         }

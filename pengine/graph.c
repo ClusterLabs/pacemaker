@@ -190,7 +190,7 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
                                                 pe_action_optional, pe_order_implies_then);
 
         } else if (is_set(flags, pe_action_optional) == FALSE) {
-            if (update_action_flags(then, pe_action_optional | pe_action_clear, __FUNCTION__)) {
+            if (update_action_flags(then, pe_action_optional | pe_action_clear, __FUNCTION__, __LINE__)) {
                 changed |= pe_graph_updated_then;
             }
         }
@@ -223,7 +223,7 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
 
         } else if (is_set(flags, pe_action_optional) == FALSE) {
             pe_rsc_trace(first->rsc, "first unrunnable: %s then %s", first->uuid, then->uuid);
-            if (update_action_flags(first, pe_action_runnable | pe_action_clear, __FUNCTION__)) {
+            if (update_action_flags(first, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__)) {
                 changed |= pe_graph_updated_first;
             }
         }
@@ -268,7 +268,7 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
             /* if the runnable before count for then exceeds the required number
              * of "before" runnable actions... mark then as runnable */
             if (then->runnable_before >= then->required_runnable_before) {
-                if (update_action_flags(then, pe_action_runnable, __FUNCTION__)) {
+                if (update_action_flags(then, pe_action_runnable, __FUNCTION__, __LINE__)) {
                     changed |= pe_graph_updated_then;
                 }
             }
@@ -290,7 +290,7 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
 
         } else if (is_set(flags, pe_action_runnable) == FALSE) {
             pe_rsc_trace(then->rsc, "then unrunnable: %s then %s", first->uuid, then->uuid);
-            if (update_action_flags(then, pe_action_runnable | pe_action_clear, __FUNCTION__)) {
+            if (update_action_flags(then, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__)) {
                 changed |= pe_graph_updated_then;
             }
         }
@@ -363,13 +363,13 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
         && (flags & pe_action_optional) == 0) {
         processed = TRUE;
         crm_trace("%s implies %s printed", first->uuid, then->uuid);
-        update_action_flags(then, pe_action_print_always, __FUNCTION__);  /* don't care about changed */
+        update_action_flags(then, pe_action_print_always, __FUNCTION__, __LINE__);  /* don't care about changed */
     }
 
     if ((type & pe_order_implies_first_printed) && (flags & pe_action_optional) == 0) {
         processed = TRUE;
         crm_trace("%s implies %s printed", then->uuid, first->uuid);
-        update_action_flags(first, pe_action_print_always, __FUNCTION__); /* don't care about changed */
+        update_action_flags(first, pe_action_print_always, __FUNCTION__, __LINE__); /* don't care about changed */
     }
 
     if ((type & pe_order_implies_then
@@ -381,7 +381,7 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
         && is_set(first->rsc->flags, pe_rsc_block)
         && is_not_set(first->flags, pe_action_runnable)) {
 
-        if (update_action_flags(then, pe_action_runnable | pe_action_clear, __FUNCTION__)) {
+        if (update_action_flags(then, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__)) {
             changed |= pe_graph_updated_then;
         }
 

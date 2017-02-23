@@ -845,14 +845,14 @@ master_create_actions(resource_t * rsc, pe_working_set_t * data_set)
                                     RSC_PROMOTED, NULL, !any_promoting, TRUE, data_set);
 
     action_complete->priority = INFINITY;
-    update_action_flags(action, pe_action_pseudo, __FUNCTION__);
-    update_action_flags(action, pe_action_runnable, __FUNCTION__);
-    update_action_flags(action_complete, pe_action_pseudo, __FUNCTION__);
-    update_action_flags(action_complete, pe_action_runnable, __FUNCTION__);
+    update_action_flags(action, pe_action_pseudo, __FUNCTION__, __LINE__);
+    update_action_flags(action, pe_action_runnable, __FUNCTION__, __LINE__);
+    update_action_flags(action_complete, pe_action_pseudo, __FUNCTION__, __LINE__);
+    update_action_flags(action_complete, pe_action_runnable, __FUNCTION__, __LINE__);
 
     if (clone_data->masters_allocated > 0) {
-        update_action_flags(action, pe_action_runnable, __FUNCTION__);
-        update_action_flags(action_complete, pe_action_runnable, __FUNCTION__);
+        update_action_flags(action, pe_action_runnable, __FUNCTION__, __LINE__);
+        update_action_flags(action_complete, pe_action_runnable, __FUNCTION__, __LINE__);
     }
 
     child_promoting_constraints(clone_data, pe_order_optional,
@@ -869,10 +869,10 @@ master_create_actions(resource_t * rsc, pe_working_set_t * data_set)
                                     RSC_DEMOTED, NULL, !any_demoting, TRUE, data_set);
     action_complete->priority = INFINITY;
 
-    update_action_flags(action, pe_action_pseudo, __FUNCTION__);
-    update_action_flags(action, pe_action_runnable, __FUNCTION__);
-    update_action_flags(action_complete, pe_action_pseudo, __FUNCTION__);
-    update_action_flags(action_complete, pe_action_runnable, __FUNCTION__);
+    update_action_flags(action, pe_action_pseudo, __FUNCTION__, __LINE__);
+    update_action_flags(action, pe_action_runnable, __FUNCTION__, __LINE__);
+    update_action_flags(action_complete, pe_action_pseudo, __FUNCTION__, __LINE__);
+    update_action_flags(action_complete, pe_action_runnable, __FUNCTION__, __LINE__);
 
     child_demoting_constraints(clone_data, pe_order_optional, rsc, NULL, last_demote_rsc, data_set);
 
