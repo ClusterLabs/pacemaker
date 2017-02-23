@@ -69,6 +69,20 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      group_append_meta,
      },
     {
+     container_merge_weights,
+     container_color,
+     container_create_actions,
+     container_create_probe,
+     container_internal_constraints,
+     container_rsc_colocation_lh,
+     container_rsc_colocation_rh,
+     container_rsc_location,
+     container_action_flags,
+     container_update_actions,
+     container_expand,
+     container_append_meta,
+     },
+    {
      clone_merge_weights,
      clone_color,
      clone_create_actions,
@@ -704,7 +718,7 @@ common_apply_stickiness(resource_t * rsc, node_t * node, pe_working_set_t * data
     }
 }
 
-static void
+void
 complex_set_cmds(resource_t * rsc)
 {
     GListPtr gIter = rsc->children;

@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+      <ref name="element-resources"/>
+  </start>
+
+  <define name="element-resources">
+    <element name="resources">
+      <zeroOrMore>
+        <choice>
+          <ref name="element-primitive"/>
+          <ref name="element-template"/>
+          <ref name="element-group"/>
+          <ref name="element-clone"/>
+          <ref name="element-master"/>
+          <ref name="element-bucket"/>
+        </choice>
+      </zeroOrMore>
+    </element>
+  </define>
+
+  <define name="element-primitive">
+    <element name="primitive">
+      <interleave>
+        <attribute name="id"><data type="ID"/></attribute>
+        <choice>
+          <group>
+            <ref name="element-resource-class"/>
+            <attribute name="type"><text/></attribute>
+          </group>
+          <attribute name="template"><data type="IDREF"/></attribute>
+        </choice>
+        <optional>
+          <attribute name="description"><text/></attribute>
+        </optional>
+        <ref name="element-resource-extra"/>
+        <ref name="element-operations"/>
+        <zeroOrMore>
+          <element name="utilization">
+            <externalRef href="nvset-1.3.rng"/>
+          </element>
+        </zeroOrMore>
+      </interleave>
+    </element>
+  </define>
+
+  <define name="element-template">
+    <element name="template">
+      <interleave>
+        <attribute name="id"><data type="ID"/></attribute>
+        <ref name="element-resource-class"/>
+        <attribute name="type"><text/></attribute>
+        <optional>
+          <attribute name="description"><text/></attribute>
+        </optional>
+        <ref name="element-resource-extra"/>
+        <ref name="element-operations"/>
+        <zeroOrMore>
+          <element name="utilization">
+            <externalRef href="nvset-1.3.rng"/>
+          </element>
+        </zeroOrMore>
+      </interleave>
+    </element>
+  </define>
+
+
+  <define name="element-bucket">
+    <element name="bucket">
+	<attribute name="id"><data type="ID"/></attribute>
+	<optional>
+          <attribute name="description"><text/></attribute>
+	</optional>
+        <choice>
+	  <group>
+	    <attribute name="class">
+              <value>docker</value>
+	    </attribute>
+	    <attribute name="image"><text/></attribute>
+	    <optional>
+	      <element name="docker">
+		<optional>
+		  <attribute name="replicas"> <text/></attribute>
+		</optional>
+		<optional>
+		  <attribute name="pcmk-remote-bin"> <text/></attribute>
+		</optional>
+		<optional>
+		  <attribute name="options"><text/></attribute>
+		</optional>
+		<optional>
+		  <element name="network">
+		    <attribute name="ip-range-start"><text/></attribute>
+		    <optional>
+		      <attribute name="nic"><text/></attribute>
+		    </optional>
+		    <zeroOrMore>
+		      <element name="port-mapping">
+			<attribute name="id"><data type="ID"/></attribute>
+			<choice>
+			  <attribute name="port"><text/></attribute>
+			  <attribute name="range"><text/></attribute>
+			</choice>
+		      </element>
+		    </zeroOrMore>
+		  </element>
+		</optional>
+		<optional>
+		  <element name="storage">
+		    <zeroOrMore>
+		      <element name="storage-mapping">
+			<attribute name="id"><data type="ID"/></attribute>
+			<choice>
+			  <attribute name="source-dir"><text/></attribute>
+			  <attribute name="source-dir-root"><text/></attribute>
+			</choice>
+			<attribute name="target-dir"><text/></attribute>
+			<optional>
+			  <attribute name="use-bucket-suffix"><data type="boolean"/></attribute>
+			</optional>
+			<optional>
+			  <attribute name="options"><text/></attribute>
+			</optional>
+		      </element>
+		    </zeroOrMore>
+		  </element>
+		</optional>
+	      </element>
+	    </optional>
+	  </group>
+	</choice>
+	<optional>
+          <choice>
+            <ref name="element-primitive"/>
+            <ref name="element-group"/>
+            <ref name="element-clone"/>
+            <ref name="element-master"/>
+          </choice>
+	</optional>
+    </element>
+  </define>
+
+  <define name="element-group">
+    <element name="group">
+      <attribute name="id"><data type="ID"/></attribute>
+      <optional>
+        <attribute name="description"><text/></attribute>
+      </optional>
+      <interleave>
+        <ref name="element-resource-extra"/>
+        <oneOrMore>
+          <ref name="element-primitive"/>
+        </oneOrMore>
+      </interleave>
+    </element>
+  </define>
+
+  <define name="element-clone">
+    <element name="clone">
+      <attribute name="id"><data type="ID"/></attribute>
+      <optional>
+        <attribute name="description"><text/></attribute>
+      </optional>
+      <interleave>
+        <ref name="element-resource-extra"/>
+        <choice>
+          <ref name="element-primitive"/>
+          <ref name="element-group"/>
+        </choice>
+      </interleave>
+    </element>
+  </define>
+
+  <define name="element-master">
+    <element name="master">
+      <attribute name="id"><data type="ID"/></attribute>
+      <optional>
+        <attribute name="description"><text/></attribute>
+      </optional>
+      <interleave>
+        <ref name="element-resource-extra"/>
+        <choice>
+          <ref name="element-primitive"/>
+          <ref name="element-group"/>
+        </choice>
+      </interleave>
+    </element>
+  </define>
+
+  <define name="element-resource-extra">
+      <zeroOrMore>
+        <choice>
+          <element name="meta_attributes">
+            <externalRef href="nvset-1.3.rng"/>
+          </element>
+          <element name="instance_attributes">
+            <externalRef href="nvset-1.3.rng"/>
+          </element>
+        </choice>
+      </zeroOrMore>
+  </define>
+
+  <define name="element-operations">
+    <optional>
+      <element name="operations">
+        <optional>
+          <attribute name="id"><data type="ID"/></attribute>
+        </optional>
+        <optional>
+          <attribute name="id-ref"><data type="IDREF"/></attribute>
+        </optional>
+        <zeroOrMore>
+          <element name="op">
+            <attribute name="id"><data type="ID"/></attribute>
+            <attribute name="name"><text/></attribute>
+            <attribute name="interval"><text/></attribute>
+            <optional>
+              <attribute name="description"><text/></attribute>
+            </optional>
+            <optional>
+              <choice>
+                <attribute name="start-delay"><text/></attribute>
+                <attribute name="interval-origin"><text/></attribute>
+              </choice>
+            </optional>
+            <optional>
+              <attribute name="timeout"><text/></attribute>
+            </optional>
+            <optional>
+              <attribute name="enabled"><data type="boolean"/></attribute>
+            </optional>
+            <optional>
+              <attribute name="record-pending"><data type="boolean"/></attribute>
+            </optional>
+            <optional>
+              <attribute name="role">
+                <choice>
+                  <value>Stopped</value>
+                  <value>Started</value>
+                  <value>Slave</value>
+                  <value>Master</value>
+                </choice>
+              </attribute>
+            </optional>
+            <optional>
+              <attribute name="requires">
+                <choice>
+                  <value>nothing</value>
+                  <value>quorum</value>
+                  <value>fencing</value>
+                  <value>unfencing</value>
+                </choice>
+              </attribute>
+            </optional>
+            <optional>
+              <attribute name="on-fail">
+                <choice>
+                  <value>ignore</value>
+                  <value>block</value>
+                  <value>stop</value>
+                  <value>restart</value>
+                  <value>standby</value>
+                  <value>fence</value>
+                  <value>restart-container</value>
+                </choice>
+              </attribute>
+            </optional>
+            <ref name="element-resource-extra"/>
+          </element>
+        </zeroOrMore>
+      </element>
+    </optional>
+  </define>
+
+  <define name="element-resource-class">
+    <choice>
+      <group>
+        <attribute name="class"><value>ocf</value></attribute>
+        <attribute name="provider"><text/></attribute>
+      </group>
+      <attribute name="class">
+        <choice>
+          <value>lsb</value>
+          <value>heartbeat</value>
+          <value>stonith</value>
+          <value>upstart</value>
+          <value>service</value>
+          <value>systemd</value>
+          <value>nagios</value>
+        </choice>
+      </attribute>
+    </choice>
+  </define>
+</grammar>

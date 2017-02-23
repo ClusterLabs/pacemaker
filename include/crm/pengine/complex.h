@@ -31,8 +31,9 @@ enum pe_obj_types {
     pe_unknown = -1,
     pe_native = 0,
     pe_group = 1,
-    pe_clone = 2,
-    pe_master = 3
+    pe_container = 2,
+    pe_clone = 3,
+    pe_master = 4
 };
 
 enum pe_obj_types get_resource_type(const char *name);

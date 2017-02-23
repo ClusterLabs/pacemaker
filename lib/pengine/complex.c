@@ -33,7 +33,8 @@ resource_object_functions_t resource_class_functions[] = {
      native_active,
      native_resource_state,
      native_location,
-     native_free},
+     native_free
+    },
     {
      group_unpack,
      native_find_rsc,
@@ -42,7 +43,18 @@ resource_object_functions_t resource_class_functions[] = {
      group_active,
      group_resource_state,
      native_location,
-     group_free},
+     group_free
+    },
+    {
+     container_unpack,
+     native_find_rsc,
+     native_parameter,
+     container_print,
+     container_active,
+     container_resource_state,
+     native_location,
+     container_free
+    },
     {
      clone_unpack,
      native_find_rsc,
@@ -51,7 +63,8 @@ resource_object_functions_t resource_class_functions[] = {
      clone_active,
      clone_resource_state,
      native_location,
-     clone_free},
+     clone_free
+    },
     {
      master_unpack,
      native_find_rsc,
@@ -77,6 +90,9 @@ get_resource_type(const char *name)
 
     } else if (safe_str_eq(name, XML_CIB_TAG_MASTER)) {
         return pe_master;
+
+    } else if (safe_str_eq(name, XML_CIB_TAG_CONTAINER)) {
+        return pe_container;
     }
 
     return pe_unknown;
@@ -94,6 +110,8 @@ get_resource_typename(enum pe_obj_types type)
             return XML_CIB_TAG_INCARNATION;
         case pe_master:
             return XML_CIB_TAG_MASTER;
+        case pe_container:
+            return XML_CIB_TAG_CONTAINER;
         case pe_unknown:
             return "unknown";
     }
