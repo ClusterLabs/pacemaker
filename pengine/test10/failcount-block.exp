@@ -10,7 +10,7 @@
   </synapse>
   <synapse id="1">
     <action_set>
-      <crm_event id="1" operation="clear_failcount" operation_key="rsc_pcmk-1_clear_failcount" on_node="pcmk-1" on_node_uuid="101">
+      <crm_event id="1" operation="clear_failcount" operation_key="rsc_pcmk-1_clear_failcount_0" on_node="pcmk-1" on_node_uuid="101">
         <primitive id="rsc_pcmk-1" class="ocf" provider="heartbeat" type="IPaddr2"/>
         <attributes CRM_meta_on_node="pcmk-1" CRM_meta_on_node_uuid="101" CRM_meta_op_no_wait="true" CRM_meta_timeout="90000" cidr_netmask="12"  ip="192.168.122.107"/>
       </crm_event>
@@ -41,7 +41,7 @@
   </synapse>
   <synapse id="4">
     <action_set>
-      <crm_event id="5" operation="clear_failcount" operation_key="rsc_pcmk-3_clear_failcount" on_node="pcmk-1" on_node_uuid="101">
+      <crm_event id="5" operation="clear_failcount" operation_key="rsc_pcmk-3_clear_failcount_0" on_node="pcmk-1" on_node_uuid="101">
         <primitive id="rsc_pcmk-3" class="ocf" provider="heartbeat" type="IPaddr2"/>
         <attributes CRM_meta_on_node="pcmk-1" CRM_meta_on_node_uuid="101" CRM_meta_op_no_wait="true" CRM_meta_timeout="90000" cidr_netmask="32"  ip="192.168.122.107"/>
       </crm_event>
@@ -72,7 +72,7 @@
   </synapse>
   <synapse id="7">
     <action_set>
-      <crm_event id="6" operation="clear_failcount" operation_key="rsc_pcmk-5_clear_failcount" on_node="pcmk-1" on_node_uuid="101">
+      <crm_event id="6" operation="clear_failcount" operation_key="rsc_pcmk-5_clear_failcount_0" on_node="pcmk-1" on_node_uuid="101">
         <primitive id="rsc_pcmk-5" class="ocf" provider="heartbeat" type="IPaddr2"/>
         <attributes CRM_meta_on_node="pcmk-1" CRM_meta_on_node_uuid="101" CRM_meta_op_no_wait="true" CRM_meta_timeout="90000" cidr_netmask="32"  ip="192.168.122.108"/>
       </crm_event>

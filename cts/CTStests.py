@@ -1824,7 +1824,7 @@ class Reattach(CTSTest):
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
         return [
-            r"resources were active at shutdown",
+            r"resource( was|s were) active at shutdown",
         ]
 
     def is_applicable(self):

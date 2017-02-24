@@ -143,16 +143,16 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="20" operation="clear_failcount" operation_key="rsc_c001n08_clear_failcount" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+        <crm_event id="20" operation="clear_failcount" operation_key="rsc_c001n08_clear_failcount_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
       </trigger>
       <trigger>
-        <crm_event id="21" operation="clear_failcount" operation_key="rsc_c001n08_clear_failcount" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+        <crm_event id="21" operation="clear_failcount" operation_key="rsc_c001n08_clear_failcount_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="16">
     <action_set>
-      <crm_event id="21" operation="clear_failcount" operation_key="rsc_c001n08_clear_failcount" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
+      <crm_event id="21" operation="clear_failcount" operation_key="rsc_c001n08_clear_failcount_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
         <primitive id="rsc_c001n08" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_on_node="c001n08" CRM_meta_on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" CRM_meta_op_no_wait="true" CRM_meta_timeout="20000" />
       </crm_event>
@@ -161,7 +161,7 @@
   </synapse>
   <synapse id="17">
     <action_set>
-      <crm_event id="20" operation="clear_failcount" operation_key="rsc_c001n08_clear_failcount" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+      <crm_event id="20" operation="clear_failcount" operation_key="rsc_c001n08_clear_failcount_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
         <primitive id="rsc_c001n08" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_on_node="c001n02" CRM_meta_on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" CRM_meta_op_no_wait="true" CRM_meta_timeout="20000" />
       </crm_event>

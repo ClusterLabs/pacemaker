@@ -96,46 +96,30 @@ extern char *crm_system_name;
 
 /* Valid operations */
 #  define CRM_OP_NOOP		"noop"
-
 #  define CRM_OP_JOIN_ANNOUNCE	"join_announce"
 #  define CRM_OP_JOIN_OFFER	"join_offer"
 #  define CRM_OP_JOIN_REQUEST	"join_request"
 #  define CRM_OP_JOIN_ACKNAK	"join_ack_nack"
 #  define CRM_OP_JOIN_CONFIRM	"join_confirm"
-
-#  define CRM_OP_DIE		"die_no_respawn"
-#  define CRM_OP_RETRIVE_CIB	"retrieve_cib"
 #  define CRM_OP_PING		"ping"
 #  define CRM_OP_THROTTLE	"throttle"
 #  define CRM_OP_VOTE		"vote"
 #  define CRM_OP_NOVOTE		"no-vote"
 #  define CRM_OP_HELLO		"hello"
-#  define CRM_OP_HBEAT		"dc_beat"
 #  define CRM_OP_PECALC		"pe_calc"
-#  define CRM_OP_ABORT		"abort"
 #  define CRM_OP_QUIT		"quit"
 #  define CRM_OP_LOCAL_SHUTDOWN 	"start_shutdown"
 #  define CRM_OP_SHUTDOWN_REQ	"req_shutdown"
 #  define CRM_OP_SHUTDOWN 	"do_shutdown"
 #  define CRM_OP_FENCE	 	"stonith"
-#  define CRM_OP_EVENTCC		"event_cc"
-#  define CRM_OP_TEABORT		"te_abort"
-#  define CRM_OP_TEABORTED	"te_abort_confirmed"    /* we asked */
-#  define CRM_OP_TE_HALT		"te_halt"
-#  define CRM_OP_TECOMPLETE	"te_complete"
-#  define CRM_OP_TETIMEOUT	"te_timeout"
-#  define CRM_OP_TRANSITION	"transition"
 #  define CRM_OP_REGISTER		"register"
 #  define CRM_OP_IPC_FWD		"ipc_fwd"
-#  define CRM_OP_DEBUG_UP		"debug_inc"
-#  define CRM_OP_DEBUG_DOWN	"debug_dec"
 #  define CRM_OP_INVOKE_LRM	"lrm_invoke"
 #  define CRM_OP_LRM_REFRESH	"lrm_refresh" /* Deprecated */
 #  define CRM_OP_LRM_QUERY	"lrm_query"
 #  define CRM_OP_LRM_DELETE	"lrm_delete"
 #  define CRM_OP_LRM_FAIL		"lrm_fail"
 #  define CRM_OP_PROBED		"probe_complete"
-#  define CRM_OP_NODES_PROBED	"probe_nodes_complete"
 #  define CRM_OP_REPROBE		"probe_again"
 #  define CRM_OP_CLEAR_FAILCOUNT  "clear_failcount"
 #  define CRM_OP_REMOTE_STATE     "remote_state"
@@ -143,6 +127,25 @@ extern char *crm_system_name;
 #  define CRM_OP_RELAXED_CLONE  "clone-one-or-more"
 #  define CRM_OP_RM_NODE_CACHE "rm_node_cache"
 
+/* @COMPAT: These symbols are deprecated and not used by Pacemaker,
+ * but they are kept for public API backward compatibility.
+ */
+#  define CRM_OP_DIE		    "die_no_respawn"
+#  define CRM_OP_RETRIVE_CIB	"retrieve_cib"
+#  define CRM_OP_HBEAT		    "dc_beat"
+#  define CRM_OP_ABORT		    "abort"
+#  define CRM_OP_EVENTCC		"event_cc"
+#  define CRM_OP_TEABORT		"te_abort"
+#  define CRM_OP_TEABORTED	    "te_abort_confirmed"
+#  define CRM_OP_TE_HALT		"te_halt"
+#  define CRM_OP_TECOMPLETE	    "te_complete"
+#  define CRM_OP_TETIMEOUT	    "te_timeout"
+#  define CRM_OP_TRANSITION	    "transition"
+#  define CRM_OP_DEBUG_UP		"debug_inc" /* unused since 1.1.8 */
+#  define CRM_OP_DEBUG_DOWN     "debug_dec" /* unused since 1.1.8 */
+#  define CRM_OP_NODES_PROBED	"probe_nodes_complete"
+
+/* Possible cluster membership states */
 #  define CRMD_JOINSTATE_DOWN           "down"
 #  define CRMD_JOINSTATE_PENDING        "pending"
 #  define CRMD_JOINSTATE_MEMBER         "member"

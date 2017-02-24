@@ -112,3 +112,21 @@ update_attrd_remote_node_removed(const char *host, const char *user_name)
     crm_trace("Asking attrd to purge Pacemaker Remote node %s", host);
     update_attrd_helper(host, NULL, NULL, user_name, TRUE, 'C');
 }
+
+void
+update_attrd_clear_failures(const char *host, const char *rsc,
+                            gboolean is_remote_node)
+{
+    char *attr;
+
+    crm_info("Asking attrd to clear failure of %s on %s node %s",
+             rsc, (is_remote_node? "Pacemaker Remote" : "cluster"), host);
+
+    attr = crm_failcount_name(rsc);
+    update_attrd(host, attr, NULL, NULL, is_remote_node);
+    free(attr);
+
+    attr = crm_lastfailure_name(rsc);
+    update_attrd(host, attr, NULL, NULL, is_remote_node);
+    free(attr);
+}

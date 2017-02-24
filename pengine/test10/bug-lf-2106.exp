@@ -43,7 +43,7 @@
   </synapse>
   <synapse id="3">
     <action_set>
-      <crm_event id="2" operation="clear_failcount" operation_key="pingd:0_clear_failcount" on_node="cl-virt-1" on_node_uuid="cl-virt-1">
+      <crm_event id="2" operation="clear_failcount" operation_key="pingd:0_clear_failcount_0" on_node="cl-virt-1" on_node_uuid="cl-virt-1">
         <primitive id="pingd" long-id="pingd:0" class="ocf" provider="pacemaker" type="pingd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="cl-virt-1" CRM_meta_on_node_uuid="cl-virt-1" CRM_meta_op_no_wait="true" CRM_meta_timeout="20000"  dampen="10" host_list="10.2.50.103 10.2.50.11 10.2.50.40 10.2.50.8" interval="5"/>
       </crm_event>
@@ -94,7 +94,7 @@
   </synapse>
   <synapse id="7">
     <action_set>
-      <crm_event id="10" operation="clear_failcount" operation_key="pingd:0_clear_failcount_0" internal_operation_key="pingd:1_clear_failcount" on_node="cl-virt-2" on_node_uuid="cl-virt-2">
+      <crm_event id="10" operation="clear_failcount" operation_key="pingd:0_clear_failcount_0" internal_operation_key="pingd:1_clear_failcount_0" on_node="cl-virt-2" on_node_uuid="cl-virt-2">
         <primitive id="pingd" long-id="pingd:0" class="ocf" provider="pacemaker" type="pingd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="cl-virt-2" CRM_meta_on_node_uuid="cl-virt-2" CRM_meta_op_no_wait="true" CRM_meta_timeout="20000"  dampen="10" host_list="10.2.50.103 10.2.50.11 10.2.50.40 10.2.50.8" interval="5"/>
       </crm_event>

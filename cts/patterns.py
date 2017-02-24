@@ -255,7 +255,7 @@ class crm_cs_v0(BasePatterns):
         self.components["common-ignore"] = [
                     "Pending action:",
                     "error: crm_log_message_adv:",
-                    "resources were active at shutdown",
+                    r"resource( was|s were) active at shutdown",
                     "pending LRM operations at shutdown",
                     "Lost connection to the CIB service",
                     "Connection to the CIB terminated...",
