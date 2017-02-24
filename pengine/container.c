@@ -27,6 +27,18 @@
 #define VARIANT_CONTAINER 1
 #include <lib/pengine/variant.h>
 
+static bool
+is_child_container_node(container_variant_data_t *data, pe_node_t *node)
+{
+    for (GListPtr gIter = data->tuples; gIter != NULL; gIter = gIter->next) {
+        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+        if(node->details == tuple->node->details) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
 node_t *
 container_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 {
@@ -52,6 +64,17 @@ container_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 
         // Explicitly allocate tuple->child before the container->child
         if(tuple->child) {
+            pe_node_t *node = NULL;
+            GHashTableIter iter;
+            g_hash_table_iter_init(&iter, tuple->child->allowed_nodes);
+            while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
+                if(node->details != tuple->node->details) {
+                    node->weight = -INFINITY;
+                } else {
+                    node->weight = INFINITY;
+                }
+            }
+
             set_bit(tuple->child->parent->flags, pe_rsc_allocating);
             tuple->child->cmds->allocate(tuple->child, tuple->node, data_set);
             clear_bit(tuple->child->parent->flags, pe_rsc_allocating);
@@ -59,7 +82,17 @@ container_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     }
 
     if(container_data->child) {
-//        container_data->child->cmds->allocate(container_data->child, prefer, data_set);
+        pe_node_t *node = NULL;
+        GHashTableIter iter;
+        g_hash_table_iter_init(&iter, container_data->child->allowed_nodes);
+        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
+            if(is_child_container_node(container_data, node)) {
+                node->weight = 0;
+            } else {
+                node->weight = -INFINITY;
+            }
+        }
+        container_data->child->cmds->allocate(container_data->child, prefer, data_set);
     }
 
     return NULL;
@@ -107,12 +140,10 @@ container_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 
         CRM_ASSERT(tuple);
         if(tuple->docker) {
-            complex_set_cmds(tuple->docker);
             tuple->docker->cmds->internal_constraints(tuple->docker, data_set);
         }
 
         if(tuple->ip) {
-            complex_set_cmds(tuple->ip);
             tuple->ip->cmds->internal_constraints(tuple->ip, data_set);
 
             // Start ip then docker
@@ -126,7 +157,6 @@ container_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 
         if(tuple->remote) {
             CRM_ASSERT(tuple->ip);
-            complex_set_cmds(tuple->remote);
             tuple->remote->cmds->internal_constraints(tuple->remote, data_set);
             // Start docker then remote
             new_rsc_order(
@@ -246,7 +276,7 @@ container_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         if(tuple->ip) {
             any_created |= tuple->ip->cmds->create_probe(tuple->ip, node, complete, force, data_set);
         }
-        if(tuple->child) {
+        if(tuple->child && node->details == tuple->node->details) {
             any_created |= tuple->child->cmds->create_probe(tuple->child, node, complete, force, data_set);
         }
         if(tuple->docker) {

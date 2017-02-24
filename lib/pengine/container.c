@@ -183,8 +183,8 @@ create_container(
     if(data->ip_last && child) {
         node_t *node = NULL;
         xmlNode *xml_remote = NULL;
-        char *id = crm_strdup_printf("%s-remote-%d", data->prefix, tuple->offset);
         char *nodeid = crm_strdup_printf("%s-%d", data->prefix, tuple->offset);
+        char *id = strdup(nodeid);
 
         if(remote_id_conflict(id, data_set)) {
             // The biggest hammer we have
@@ -234,28 +234,10 @@ create_container(
     }
 
     if(child) {
-        GListPtr list = g_list_append(NULL, tuple->node);
-
         CRM_ASSERT(data->ip_range_start);
         tuple->child = child;
-
-        if(tuple->child->allowed_nodes) {
-            g_hash_table_destroy(tuple->child->allowed_nodes);
-        }
-
-        tuple->child->allowed_nodes = node_hash_from_list(list);
-        g_list_free(list);
-
-#if 0
-        GHashTableIter iter;
-
-        g_hash_table_iter_init(&iter, tuple->child->allowed_nodes);
-        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
-            node->weight = 500;
-        }
-#endif
     }
-#if 1
+
     if(tuple->ip) {
         parent->children = g_list_append(parent->children, tuple->ip);
     }
@@ -265,7 +247,7 @@ create_container(
     if(tuple->remote) {
         parent->children = g_list_append(parent->children, tuple->remote);
     }
-#endif
+
     data->tuples = g_list_append(data->tuples, tuple);
     return tuple;
 }
