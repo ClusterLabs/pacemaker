@@ -2138,6 +2138,11 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
     gboolean moving = FALSE;
     GListPtr possible_matches = NULL;
 
+    if(rsc->variant == pe_container) {
+        container_LogActions(rsc, data_set, terminal);
+        return;
+    }
+
     if (rsc->children) {
         GListPtr gIter = NULL;
 

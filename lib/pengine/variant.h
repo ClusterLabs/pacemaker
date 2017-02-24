@@ -60,10 +60,12 @@ typedef struct clone_variant_data_s {
 typedef struct
 {
         int offset;
+        node_t *node;
         resource_t *ip;
         resource_t *child;
         resource_t *docker;
         resource_t *remote;
+
 } container_grouping_t;
 
 typedef struct container_variant_data_s {

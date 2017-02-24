@@ -35,6 +35,7 @@ container_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     CRM_CHECK(rsc != NULL, return NULL);
 
     get_container_variant_data(container_data, rsc);
+
     for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
         container_grouping_t *tuple = (container_grouping_t *)gIter->data;
 
@@ -49,11 +50,16 @@ container_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
             tuple->remote->cmds->allocate(tuple->remote, prefer, data_set);
         }
 
-        // TODO: Explicitly allocate tuple->child before the container->child?
+        // Explicitly allocate tuple->child before the container->child
+        if(tuple->child) {
+            set_bit(tuple->child->parent->flags, pe_rsc_allocating);
+            tuple->child->cmds->allocate(tuple->child, tuple->node, data_set);
+            clear_bit(tuple->child->parent->flags, pe_rsc_allocating);
+        }
     }
 
     if(container_data->child) {
-        container_data->child->cmds->allocate(container_data->child, prefer, data_set);
+//        container_data->child->cmds->allocate(container_data->child, prefer, data_set);
     }
 
     return NULL;
@@ -264,4 +270,31 @@ container_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, c
                     float factor, enum pe_weights flags)
 {
     return rsc_merge_weights(rsc, rhs, nodes, attr, factor, flags);
+}
+
+void container_LogActions(
+    resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
+{
+    container_variant_data_t *container_data = NULL;
+
+    CRM_CHECK(rsc != NULL, return);
+
+    get_container_variant_data(container_data, rsc);
+    for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
+        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+
+        CRM_ASSERT(tuple);
+        if(tuple->ip) {
+            LogActions(tuple->ip, data_set, terminal);
+        }
+        if(tuple->docker) {
+            LogActions(tuple->docker, data_set, terminal);
+        }
+        if(tuple->remote) {
+            LogActions(tuple->remote, data_set, terminal);
+        }
+        if(tuple->child) {
+            LogActions(tuple->child, data_set, terminal);
+        }
+    }
 }
