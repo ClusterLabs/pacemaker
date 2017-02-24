@@ -1164,7 +1164,8 @@ should_dump_action(action_t * action)
         log_action(LOG_DEBUG, "Unallocated action", action, FALSE);
         return FALSE;
 
-    } else if (action->node->details->online == FALSE) {
+    } else if (action->node->details->online == FALSE
+               && !is_container_remote_node(action->node)) {
         pe_err("action %d was (%s) scheduled for offline node", action->id, action->uuid);
         log_action(LOG_DEBUG, "Action for offline node", action, FALSE);
         return FALSE;

@@ -242,13 +242,24 @@ native_assign_node(resource_t * rsc, GListPtr nodes, node_t * chosen, gboolean f
 {
     CRM_ASSERT(rsc->variant == pe_native);
 
-    if (force == FALSE
-        && chosen != NULL && (can_run_resources(chosen) == FALSE || chosen->weight < 0)) {
-        crm_debug("All nodes for resource %s are unavailable"
-                  ", unclean or shutting down (%s: %d, %d)",
-                  rsc->id, chosen->details->uname, can_run_resources(chosen), chosen->weight);
-        rsc->next_role = RSC_ROLE_STOPPED;
-        chosen = NULL;
+    if (force == FALSE && chosen != NULL) {
+        bool unset = FALSE;
+
+        if(chosen->weight < 0) {
+            unset = TRUE;
+
+            // Allow the graph to assume that the remote resource will come up
+        } else if(can_run_resources(chosen) == FALSE && !is_container_remote_node(chosen)) {
+            unset = TRUE;
+        }
+
+        if(unset) {
+            crm_debug("All nodes for resource %s are unavailable"
+                      ", unclean or shutting down (%s: %d, %d)",
+                      rsc->id, chosen->details->uname, can_run_resources(chosen), chosen->weight);
+            rsc->next_role = RSC_ROLE_STOPPED;
+            chosen = NULL;
+        }
     }
 
     /* todo: update the old node for each resource to reflect its
