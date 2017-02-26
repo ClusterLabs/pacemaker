@@ -74,69 +74,62 @@
 	</optional>
         <choice>
 	  <group>
-	    <attribute name="class">
-              <value>docker</value>
-	    </attribute>
-	    <attribute name="image"><text/></attribute>
+	    <element name="docker">
+	      <attribute name="image"><text/></attribute>
+	      <optional>
+		<attribute name="replicas"><data type="integer"/></attribute>
+	      </optional>
+	      <optional>
+		<attribute name="masters"><data type="integer"/></attribute>
+	      </optional>
+	      <optional>
+		<attribute name="pcmk-remote-bin"> <text/></attribute>
+	      </optional>
+	      <optional>
+		<attribute name="options"><text/></attribute>
+	      </optional>
+	    </element>
+	  </group>
+	</choice>
+	<optional>
+	  <element name="network">
+	    <attribute name="ip-range-start"><text/></attribute>
 	    <optional>
-	      <element name="docker">
+	      <attribute name="nic"><text/></attribute>
+	    </optional>
+	    <zeroOrMore>
+	      <element name="port-mapping">
+		<attribute name="id"><data type="ID"/></attribute>
+		<choice>
+		  <attribute name="port"><text/></attribute>
+		  <attribute name="range"><text/></attribute>
+		</choice>
+	      </element>
+	    </zeroOrMore>
+	  </element>
+	</optional>
+	<optional>
+	  <element name="storage">
+	    <zeroOrMore>
+	      <element name="storage-mapping">
+		<attribute name="id"><data type="ID"/></attribute>
+		<choice>
+		  <attribute name="source-dir"><text/></attribute>
+		  <attribute name="source-dir-root"><text/></attribute>
+		</choice>
+		<attribute name="target-dir"><text/></attribute>
 		<optional>
-		  <attribute name="replicas"> <text/></attribute>
-		</optional>
-		<optional>
-		  <attribute name="pcmk-remote-bin"> <text/></attribute>
+		  <attribute name="use-bucket-suffix"><data type="boolean"/></attribute>
 		</optional>
 		<optional>
 		  <attribute name="options"><text/></attribute>
 		</optional>
-		<optional>
-		  <element name="network">
-		    <attribute name="ip-range-start"><text/></attribute>
-		    <optional>
-		      <attribute name="nic"><text/></attribute>
-		    </optional>
-		    <zeroOrMore>
-		      <element name="port-mapping">
-			<attribute name="id"><data type="ID"/></attribute>
-			<choice>
-			  <attribute name="port"><text/></attribute>
-			  <attribute name="range"><text/></attribute>
-			</choice>
-		      </element>
-		    </zeroOrMore>
-		  </element>
-		</optional>
-		<optional>
-		  <element name="storage">
-		    <zeroOrMore>
-		      <element name="storage-mapping">
-			<attribute name="id"><data type="ID"/></attribute>
-			<choice>
-			  <attribute name="source-dir"><text/></attribute>
-			  <attribute name="source-dir-root"><text/></attribute>
-			</choice>
-			<attribute name="target-dir"><text/></attribute>
-			<optional>
-			  <attribute name="use-bucket-suffix"><data type="boolean"/></attribute>
-			</optional>
-			<optional>
-			  <attribute name="options"><text/></attribute>
-			</optional>
-		      </element>
-		    </zeroOrMore>
-		  </element>
-		</optional>
 	      </element>
-	    </optional>
-	  </group>
-	</choice>
+	    </zeroOrMore>
+	  </element>
+	</optional>
 	<optional>
-          <choice>
-            <ref name="element-primitive"/>
-            <ref name="element-group"/>
-            <ref name="element-clone"/>
-            <ref name="element-master"/>
-          </choice>
+          <ref name="element-primitive"/>
 	</optional>
     </element>
   </define>

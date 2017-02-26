@@ -82,29 +82,18 @@ create_op(xmlNode *parent, const char *prefix, const char *task, const char *int
 }
 
 
-static container_grouping_t *
+static bool
 create_container(
-    resource_t *parent, container_variant_data_t *data, resource_t *child, int index,
+    resource_t *parent, container_variant_data_t *data, container_grouping_t *tuple,
     pe_working_set_t * data_set) 
 {
     xmlNode *xml_obj = NULL;
-    container_grouping_t *tuple = calloc(1, sizeof(container_grouping_t));
 
-    tuple->offset = index;
     if(data->ip_range_start) {
         char *id = NULL;
         xmlNode *xml_ip = NULL;
 
         // Create an IP resource
-        if(data->ip_last) {
-            char *next = next_ip(data->ip_last);
-
-            free(data->ip_last);
-            data->ip_last = next;
-
-        } else {
-            data->ip_last = strdup(data->ip_range_start);
-        }
 
         id = crm_strdup_printf("%s-ip-%s", data->prefix, data->ip_last);
         xml_ip = create_resource(id, "heartbeat", "IPaddr2");
@@ -123,14 +112,13 @@ create_container(
         // TODO: Other ops? Timeouts and intervals from underlying resource?
 
         if (common_unpack(xml_ip, &tuple->ip, NULL, data_set) == false) {
-            tuple_free(tuple);
-            return NULL;
+            return TRUE;
         }
     }
 
     // Create a container
     {
-        int offset = 0, max = 1024;
+        int offset = 0, max = 4096;
         char *buffer = calloc(1, max+1);
         char *id = crm_strdup_printf("%s-docker-%d", data->prefix, tuple->offset);
         xmlNode *xml_docker = create_resource(id, "heartbeat", "docker");
@@ -147,6 +135,7 @@ create_container(
         create_nvp(xml_obj, "force_kill", "false");
         create_nvp(xml_obj, "reuse", "false");
 
+        offset += snprintf(buffer+offset, max-offset, "--restart=no ");
         for(GListPtr pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
             container_mount_t *mount = pIter->data;
 
@@ -175,14 +164,19 @@ create_container(
         if(data->docker_run_options) {
             offset += snprintf(buffer+offset, max-offset, " %s", data->docker_run_options);
         }
+
+        if(data->docker_host_options) {
+            offset += snprintf(buffer+offset, max-offset, " %s", data->docker_host_options);
+        }
+
         create_nvp(xml_obj, "run_opts", buffer);
         free(buffer);
 
         // TODO: How will these directories get created on the host?
-        create_nvp(xml_obj, "directory-list", dbuffer);
+        create_nvp(xml_obj, "directory_list", dbuffer);
         free(dbuffer);
 
-        if(child) {
+        if(tuple->child) {
             // TODO: Use autoconf var
             create_nvp(xml_obj, "run_cmd", "/usr/sbin/pacemaker_remoted");
 
@@ -204,13 +198,12 @@ create_container(
         // TODO: Other ops? Timeouts and intervals from underlying resource?
 
         if (common_unpack(xml_docker, &tuple->docker, NULL, data_set) == false) {
-            tuple_free(tuple);
-            return NULL;
+            return TRUE;
         }
     }
 
     // Create a remote resource
-    if(data->ip_last && child) {
+    if(data->ip_last && tuple->child) {
         node_t *node = NULL;
         xmlNode *xml_remote = NULL;
         char *nodeid = crm_strdup_printf("%s-%d", data->prefix, tuple->offset);
@@ -218,7 +211,7 @@ create_container(
 
         if(remote_id_conflict(id, data_set)) {
             // The biggest hammer we have
-            id = crm_strdup_printf("pcmk-internal-%s-remote-%d", child->id, tuple->offset);
+            id = crm_strdup_printf("pcmk-internal-%s-remote-%d", tuple->child->id, tuple->offset);
         }
 
         CRM_ASSERT(remote_id_conflict(id, data_set) == FALSE);
@@ -256,16 +249,10 @@ create_container(
         id = NULL;
 
         if (common_unpack(xml_remote, &tuple->remote, NULL, data_set) == false) {
-            tuple_free(tuple);
-            return NULL;
+            return TRUE;
         }
 
         tuple->node->details->remote_rsc = tuple->remote;
-    }
-
-    if(child) {
-        CRM_ASSERT(data->ip_range_start);
-        tuple->child = child;
     }
 
     if(tuple->ip) {
@@ -278,8 +265,7 @@ create_container(
         parent->children = g_list_append(parent->children, tuple->remote);
     }
 
-    data->tuples = g_list_append(data->tuples, tuple);
-    return tuple;
+    return FALSE;
 }
 
 static void mount_free(container_mount_t *mount) 
@@ -290,9 +276,28 @@ static void mount_free(container_mount_t *mount)
     free(mount);
 }
 
+static int
+allocate_ip(container_variant_data_t *data, container_grouping_t *tuple, char *buffer, int max) 
+{
+    if(data->ip_range_start == NULL) {
+        return 0;
+        
+    } else if(data->ip_last) {
+        tuple->ipaddr = next_ip(data->ip_last);
+
+    } else {
+        tuple->ipaddr = strdup(data->ip_range_start);
+    }
+
+    free(data->ip_last);
+    data->ip_last = tuple->ipaddr;
+    return snprintf(buffer, max, " --add-host=%s-%d:%s", data->prefix, tuple->offset, tuple->ipaddr);
+}
+
 gboolean
 container_unpack(resource_t * rsc, pe_working_set_t * data_set)
 {
+    const char *value = NULL;
     xmlNode *xml_obj = NULL;
     xmlNode *xml_resource = NULL;
     container_variant_data_t *container_data = NULL;
@@ -302,31 +307,20 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
     container_data = calloc(1, sizeof(container_variant_data_t));
     rsc->variant_opaque = container_data;
     container_data->prefix = strdup(rsc->id);
-    container_data->image = crm_element_value_copy(rsc->xml, "image");
-
-    for (xmlNode *xml_child = __xml_first_child_element(rsc->xml); xml_child != NULL;
-         xml_child = __xml_next_element(xml_child)) {
-
-        const char *id = ID(xml_child);
-
-        if(xml_resource == NULL && id != NULL) {
-            xml_resource = xml_child;
-
-        } else if(id != NULL) {
-            pe_err("Only one child (%s) is per container (%s): Ignoring %s",
-                   crm_element_value(xml_resource, XML_ATTR_ID), rsc->id, id);
-        }
-    }
 
     xml_obj = first_named_child(rsc->xml, "docker");
-    if(xml_obj) {
-        const char *replicas = crm_element_value(xml_obj, "replicas");
-        container_data->replicas = crm_parse_int(replicas, "1");
-        container_data->docker_run_options = crm_element_value_copy(xml_obj, "options");
-
-    } else {
-        container_data->replicas = 1;
+    if(xml_obj == NULL) {
+        return FALSE;
     }
+
+    value = crm_element_value(xml_obj, "replicas");
+    container_data->replicas = crm_parse_int(value, "1");
+
+    value = crm_element_value(xml_obj, "masters");
+    container_data->masters = crm_parse_int(value, "1");
+
+    container_data->docker_run_options = crm_element_value_copy(xml_obj, "options");
+    container_data->image = crm_element_value_copy(xml_obj, "image");
 
     xml_obj = first_named_child(rsc->xml, "network");
     if(xml_obj) {
@@ -372,13 +366,59 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         }
     }
 
-    if(xml_resource && container_data->ip_range_start) {
+    xml_obj = first_named_child(rsc->xml, "primitive");
+    if(xml_obj && container_data->ip_range_start && container_data->replicas > 0) {
+        char *value = NULL;
+        xmlNode *xml_set = NULL;
+
+        // TODO: Ensure xml_resource gets free'd at some point
+        if(container_data->masters > 0) {
+            xml_resource = create_xml_node(NULL, XML_CIB_TAG_MASTER);
+
+        } else {
+            xml_resource = create_xml_node(NULL, XML_CIB_TAG_INCARNATION);
+        }
+
+        value = crm_strdup_printf("%s-%s", container_data->prefix, xml_resource->name);
+        crm_xml_add(xml_resource, XML_ATTR_ID, value);
+        free(value);
+
+        value = crm_strdup_printf("%s-%s-meta", container_data->prefix, xml_resource->name);
+        xml_set = create_xml_node(xml_resource, XML_TAG_META_SETS);
+        free(value);
+
+        create_nvp(xml_set, XML_RSC_ATTR_ORDERED, "true");
+
+        value = crm_itoa(container_data->replicas);
+        create_nvp(xml_set, XML_RSC_ATTR_INCARNATION_MAX, value);
+        free(value);
+
+        if(container_data->masters) {
+            value = crm_itoa(container_data->masters);
+            create_nvp(xml_set, XML_RSC_ATTR_MASTER_MAX, value);
+            free(value);
+        }
+
+        //crm_xml_add(xml_obj, XML_ATTR_ID, container_data->prefix);
+        add_node_copy(xml_resource, xml_obj);
+
+    } else if(xml_obj && container_data->ip_range_start) {
+        xml_resource = copy_xml(xml_resource);
+
+    } else if(xml_obj) {
+        pe_err("Cannot control %s inside container %s without a value for ip-range-start",
+               rsc->id, ID(xml_obj));
+        return FALSE;
+    }
+
+    if(xml_resource) {
         int lpc = 0;
         GListPtr childIter = NULL;
         resource_t *new_rsc = NULL;
-        // TODO: Enforce that clone-max is >= container_data->replicas
-
         container_mount_t *mount = NULL;
+
+        int offset = 0, max = 1024;
+        char *buffer = calloc(1, max+1);
 
         mount = calloc(1, sizeof(container_mount_t));
         mount->source = strdup(DEFAULT_REMOTE_KEY_LOCATION);
@@ -402,30 +442,39 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
                 new_rsc->fns->free(new_rsc);
             }
             return FALSE;
-
-        } else if(container_data->replicas > 1 && new_rsc->variant < pe_clone) {
-            pe_err("%d replicas requested but %s is not a clone", container_data->replicas, new_rsc->id);
-            // fake a clone??
-            // container_data->child = new_rsc;
-            return FALSE;
-
         }
 
         container_data->child = new_rsc;
         for(childIter = container_data->child->children; childIter != NULL; childIter = childIter->next) {
-            create_container(rsc, container_data, childIter->data, lpc++, data_set);
-        }
+            container_grouping_t *tuple = calloc(1, sizeof(container_grouping_t));
+            tuple->child = childIter->data;
+            tuple->offset = lpc++;
 
-    } else if(xml_resource) {
-        pe_err("Cannot control %s inside container %s without a value for ip-range-start",
-               rsc->id, ID(xml_resource));
-        return FALSE;
+            offset += allocate_ip(container_data, tuple, buffer+offset, max-offset);
+            container_data->tuples = g_list_append(container_data->tuples, tuple);
+        }
+        container_data->docker_host_options = buffer;
 
     } else {
         // Just a naked container, no pacemaker-remote
+        int offset = 0, max = 1024;
+        char *buffer = calloc(1, max+1);
+
         for(int lpc = 0; lpc < container_data->replicas; lpc++) {
-            create_container(rsc, container_data, NULL, lpc, data_set);
+            container_grouping_t *tuple = calloc(1, sizeof(container_grouping_t));
+            tuple->offset = lpc;
+            offset += allocate_ip(container_data, tuple, buffer+offset, max-offset);
+            container_data->tuples = g_list_append(container_data->tuples, tuple);
         }
+
+        container_data->docker_host_options = buffer;
+    }
+
+
+    for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
+        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+        // TODO: Remove from list if create_container() returns TRUE
+        create_container(rsc, container_data, tuple, data_set);
     }
 
     if(container_data->child) {

@@ -61,6 +61,7 @@ typedef struct
 {
         int offset;
         node_t *node;
+        char *ipaddr;
         resource_t *ip;
         resource_t *child;
         resource_t *docker;
@@ -78,11 +79,13 @@ typedef struct
 } container_mount_t;
 
 typedef struct container_variant_data_s {
+        int masters;
         int replicas;
         char *prefix;
         char *image;
         char *ip_last;
         char *ip_range_start;
+        char *docker_host_options;
         char *docker_run_options;
 
         resource_t *child;
