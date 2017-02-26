@@ -97,12 +97,19 @@
 	    <optional>
 	      <attribute name="nic"><text/></attribute>
 	    </optional>
+	    <optional>
+	      <attribute name="netmask"><data type="integer"/></attribute>
+	    </optional>
 	    <zeroOrMore>
 	      <element name="port-mapping">
 		<attribute name="id"><data type="ID"/></attribute>
 		<choice>
-		  <attribute name="port"><text/></attribute>
-		  <attribute name="range"><text/></attribute>
+		  <attribute name="port"><data type="integer"/></attribute>
+		  <attribute name="range">
+		    <data type="string">
+		      <param name="pattern">([0-9\-]+)</param>
+		    </data>
+		  </attribute>
 		</choice>
 	      </element>
 	    </zeroOrMore>

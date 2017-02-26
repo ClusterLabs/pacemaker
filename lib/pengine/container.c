@@ -103,8 +103,15 @@ create_container(
         crm_xml_add(xml_obj, XML_ATTR_ID, id); free(id);
 
         create_nvp(xml_obj, "ip", data->ip_last);
+        if(data->ip_nic) {
+            create_nvp(xml_obj, "nic", data->ip_nic);
 
-        // TODO: Support NIC and/or netmask
+        } else if(data->ip_mask) {
+            create_nvp(xml_obj, "cidr_netmask", data->ip_mask);
+
+        } else {
+            create_nvp(xml_obj, "cidr_netmask", "32");
+        }
 
         xml_obj = create_xml_node(xml_ip, "operations");
         create_op(xml_obj, ID(xml_ip), "monitor", "60s");
@@ -326,6 +333,8 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
     if(xml_obj) {
 
         container_data->ip_range_start = crm_element_value_copy(xml_obj, "ip-range-start");
+        container_data->ip_nic = crm_element_value_copy(xml_obj, "nic");
+        container_data->ip_mask = crm_element_value_copy(xml_obj, "netmask");
 
         for (xmlNode *xml_child = __xml_first_child_element(xml_obj); xml_child != NULL;
              xml_child = __xml_next_element(xml_child)) {
