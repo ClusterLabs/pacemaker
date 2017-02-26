@@ -68,6 +68,15 @@ typedef struct
 
 } container_grouping_t;
 
+typedef struct
+{
+        char *source;
+        char *target;
+        char *options;
+        int flags;
+
+} container_mount_t;
+
 typedef struct container_variant_data_s {
         int replicas;
         char *prefix;
@@ -75,9 +84,6 @@ typedef struct container_variant_data_s {
         char *ip_last;
         char *ip_range_start;
         char *docker_run_options;
-        xmlNode *xml_docker_options;
-        xmlNode *xml_network;
-        xmlNode *xml_mounts;
 
         resource_t *child;
 

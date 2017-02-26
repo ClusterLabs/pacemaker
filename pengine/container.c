@@ -177,8 +177,6 @@ container_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
                 tuple->remote, RSC_START, tuple->child, RSC_START, pe_order_runnable_left, data_set);
             new_rsc_order(
                 tuple->child, RSC_STOP, tuple->remote, RSC_STOP, pe_order_implies_first, data_set);
-
-            // TODO: child _in_ remote
         }
 
     }
