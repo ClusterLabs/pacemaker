@@ -31,7 +31,7 @@ void tuple_free(container_grouping_t *tuple);
 
 
 static char *
-next_ip(char *last_ip)
+next_ip(const char *last_ip)
 {
     int oct1 = 0;
     int oct2 = 0;
@@ -47,6 +47,23 @@ next_ip(char *last_ip)
     }
 
     return crm_strdup_printf("%d.%d.%d.%d", oct1, oct2, oct3, oct4+1);
+}
+
+static int
+allocate_ip(container_variant_data_t *data, container_grouping_t *tuple, char *buffer, int max) 
+{
+    if(data->ip_range_start == NULL) {
+        return 0;
+
+    } else if(data->ip_last) {
+        tuple->ipaddr = next_ip(data->ip_last);
+
+    } else {
+        tuple->ipaddr = strdup(data->ip_range_start);
+    }
+
+    data->ip_last = tuple->ipaddr;
+    return snprintf(buffer, max, " --add-host=%s-%d:%s", data->prefix, tuple->offset, tuple->ipaddr);
 }
 
 static xmlNode *
@@ -81,32 +98,31 @@ create_op(xmlNode *parent, const char *prefix, const char *task, const char *int
     crm_xml_add(xml_op, "name", task);
 }
 
-
 static bool
-create_container(
+create_ip_resource(
     resource_t *parent, container_variant_data_t *data, container_grouping_t *tuple,
     pe_working_set_t * data_set) 
 {
-    xmlNode *xml_obj = NULL;
-
     if(data->ip_range_start) {
         char *id = NULL;
+        xmlNode *xml_obj = NULL;
         xmlNode *xml_ip = NULL;
 
         // Create an IP resource
 
-        id = crm_strdup_printf("%s-ip-%s", data->prefix, data->ip_last);
+        id = crm_strdup_printf("%s-ip-%s", data->prefix, tuple->ipaddr);
         xml_ip = create_resource(id, "heartbeat", "IPaddr2");
 
         id = crm_strdup_printf("%s-attributes-%d", data->prefix, tuple->offset);
         xml_obj = create_xml_node(xml_ip, XML_TAG_ATTR_SETS);
         crm_xml_add(xml_obj, XML_ATTR_ID, id); free(id);
 
-        create_nvp(xml_obj, "ip", data->ip_last);
+        create_nvp(xml_obj, "ip", tuple->ipaddr);
         if(data->ip_nic) {
             create_nvp(xml_obj, "nic", data->ip_nic);
+        }
 
-        } else if(data->ip_mask) {
+        if(data->ip_mask) {
             create_nvp(xml_obj, "cidr_netmask", data->ip_mask);
 
         } else {
@@ -119,16 +135,24 @@ create_container(
         // TODO: Other ops? Timeouts and intervals from underlying resource?
 
         if (common_unpack(xml_ip, &tuple->ip, NULL, data_set) == false) {
-            return TRUE;
+            return FALSE;
         }
-    }
 
-    // Create a container
-    {
+        parent->children = g_list_append(parent->children, tuple->ip);
+    }
+    return TRUE;
+}
+
+static bool
+create_docker_resource(
+    resource_t *parent, container_variant_data_t *data, container_grouping_t *tuple,
+    pe_working_set_t * data_set) 
+{
         int offset = 0, max = 4096;
         char *buffer = calloc(1, max+1);
         char *id = crm_strdup_printf("%s-docker-%d", data->prefix, tuple->offset);
         xmlNode *xml_docker = create_resource(id, "heartbeat", "docker");
+        xmlNode *xml_obj = NULL;
 
         int doffset = 0, dmax = 1024;
         char *dbuffer = calloc(1, dmax+1);
@@ -165,7 +189,7 @@ create_container(
             char *port = pIter->data;
 
             offset += snprintf(buffer+offset, max-offset, " -p %s:%s:%s",
-                               data->ip_last, port, port);
+                               tuple->ipaddr, port, port);
         }
 
         if(data->docker_run_options) {
@@ -204,14 +228,21 @@ create_container(
 
         // TODO: Other ops? Timeouts and intervals from underlying resource?
 
-        if (common_unpack(xml_docker, &tuple->docker, NULL, data_set) == false) {
-            return TRUE;
+        if (common_unpack(xml_docker, &tuple->docker, NULL, data_set) == FALSE) {
+            return FALSE;
         }
-    }
+        parent->children = g_list_append(parent->children, tuple->docker);
+        return TRUE;
+}
 
-    // Create a remote resource
-    if(data->ip_last && tuple->child) {
+static bool
+create_remote_resource(
+    resource_t *parent, container_variant_data_t *data, container_grouping_t *tuple,
+    pe_working_set_t * data_set) 
+{
+    if(tuple->ip && tuple->child) {
         node_t *node = NULL;
+        xmlNode *xml_obj = NULL;
         xmlNode *xml_remote = NULL;
         char *nodeid = crm_strdup_printf("%s-%d", data->prefix, tuple->offset);
         char *id = strdup(nodeid);
@@ -231,7 +262,7 @@ create_container(
         xml_obj = create_xml_node(xml_remote, XML_TAG_ATTR_SETS);
         crm_xml_add(xml_obj, XML_ATTR_ID, id); free(id);
 
-        create_nvp(xml_obj, "addr", data->ip_last);
+        create_nvp(xml_obj, "addr", tuple->ipaddr);
         create_nvp(xml_obj, "port", crm_itoa(DEFAULT_REMOTE_PORT));
 
         id = crm_strdup_printf("%s-meta-%d", data->prefix, tuple->offset);
@@ -255,50 +286,41 @@ create_container(
         nodeid = NULL;
         id = NULL;
 
-        if (common_unpack(xml_remote, &tuple->remote, NULL, data_set) == false) {
-            return TRUE;
+        if (common_unpack(xml_remote, &tuple->remote, NULL, data_set) == FALSE) {
+            return FALSE;
         }
 
         tuple->node->details->remote_rsc = tuple->remote;
-    }
-
-    if(tuple->ip) {
-        parent->children = g_list_append(parent->children, tuple->ip);
-    }
-    if(tuple->docker) {
-        parent->children = g_list_append(parent->children, tuple->docker);
-    }
-    if(tuple->remote) {
         parent->children = g_list_append(parent->children, tuple->remote);
+    }
+    return TRUE;
+}
+
+static bool
+create_container(
+    resource_t *parent, container_variant_data_t *data, container_grouping_t *tuple,
+    pe_working_set_t * data_set)
+{
+
+    if(create_docker_resource(parent, data, tuple, data_set) == FALSE) {
+        return TRUE;
+    }
+    if(create_ip_resource(parent, data, tuple, data_set) == FALSE) {
+        return TRUE;
+    }
+    if(create_remote_resource(parent, data, tuple, data_set) == FALSE) {
+        return TRUE;
     }
 
     return FALSE;
 }
 
-static void mount_free(container_mount_t *mount) 
+static void mount_free(container_mount_t *mount)
 {
     free(mount->source);
     free(mount->target);
     free(mount->options);
     free(mount);
-}
-
-static int
-allocate_ip(container_variant_data_t *data, container_grouping_t *tuple, char *buffer, int max) 
-{
-    if(data->ip_range_start == NULL) {
-        return 0;
-        
-    } else if(data->ip_last) {
-        tuple->ipaddr = next_ip(data->ip_last);
-
-    } else {
-        tuple->ipaddr = strdup(data->ip_range_start);
-    }
-
-    free(data->ip_last);
-    data->ip_last = tuple->ipaddr;
-    return snprintf(buffer, max, " --add-host=%s-%d:%s", data->prefix, tuple->offset, tuple->ipaddr);
 }
 
 gboolean
@@ -595,6 +617,12 @@ container_print(resource_t * rsc, const char *pre_text, long options, void *prin
 void
 tuple_free(container_grouping_t *tuple) 
 {
+    if(tuple == NULL) {
+        return;
+    }
+
+    // TODO: Free tuple->node ?
+
     if(tuple->ip) {
         tuple->ip->fns->free(tuple->ip);
         tuple->ip = NULL;
@@ -611,6 +639,7 @@ tuple_free(container_grouping_t *tuple)
         tuple->remote->fns->free(tuple->remote);
         tuple->remote = NULL;
     }
+    free(tuple->ipaddr);
     free(tuple);
 }
 
@@ -622,6 +651,14 @@ container_free(resource_t * rsc)
 
     get_container_variant_data(container_data, rsc);
     pe_rsc_trace(rsc, "Freeing %s", rsc->id);
+
+    free(container_data->prefix);
+    free(container_data->image);
+    free(container_data->ip_nic);
+    free(container_data->ip_mask);
+    free(container_data->ip_range_start);
+    free(container_data->docker_run_options);
+    free(container_data->docker_host_options);
 
     g_list_free_full(container_data->tuples, (GDestroyNotify)tuple_free);
     g_list_free_full(container_data->mounts, (GDestroyNotify)mount_free);
