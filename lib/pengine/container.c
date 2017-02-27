@@ -171,7 +171,8 @@ create_docker_resource(
         create_nvp(xml_obj, "force_kill", "false");
         create_nvp(xml_obj, "reuse", "false");
 
-        offset += snprintf(buffer+offset, max-offset, " --restart=no ");
+        offset += snprintf(buffer+offset, max-offset, "-h %s-%d --restart=no ",
+                           data->prefix, tuple->offset);
 //        offset += snprintf(buffer+offset, max-offset, " --link-local-ip=%s", tuple->ipaddr);
 
         for(GListPtr pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
@@ -199,7 +200,9 @@ create_docker_resource(
 
             offset += snprintf(buffer+offset, max-offset, " -p %s:%s:%s",
                                tuple->ipaddr, port, port);
+#if 0
             offset += snprintf(buffer+offset, max-offset, " --expose %s", port);
+#endif
         }
 
         if(data->docker_run_options) {
@@ -225,11 +228,11 @@ create_docker_resource(
             create_nvp(xml_obj, "monitor_cmd", "/bin/true"); // We just want to know if the container
                                                              // is alive, we'll monitor the child independantly
 
-        /* } else if(child && data->isolated) { */
+        /* } else if(child && data->untrusted) { */
         /*     create_nvp(xml_obj, "run_cmd", "/usr/libexec/pacemaker/lrmd"); */
         /*     create_nvp(xml_obj, "monitor_cmd", "/usr/libexec/pacemaker/lrmd_internal_ctl -c poke"); */
         } else {
-            // TODO: Leave blank to use the built-in one?
+            // TODO: Leave blank to use the built-in monitor?
         }
 
 
