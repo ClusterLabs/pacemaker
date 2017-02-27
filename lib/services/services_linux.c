@@ -36,9 +36,6 @@
 #  include "crm/common/cib_secrets.h"
 #endif
 
-/* ops currently active (in-flight) */
-extern GList *inflight_ops;
-
 static inline void
 set_fd_opts(int fd, int opts)
 {
@@ -248,9 +245,7 @@ operation_finalize(svc_action_t * op)
 
     op->pid = 0;
 
-    inflight_ops = g_list_remove(inflight_ops, op);
-
-    handle_blocked_ops();
+    services_untrack_op(op);
 
     if (!recurring && op->synchronous == FALSE) {
         /*

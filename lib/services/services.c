@@ -44,7 +44,9 @@ static GHashTable *recurring_actions = NULL;
 static GList *blocked_ops = NULL;
 
 /* ops currently active (in-flight) */
-GList *inflight_ops = NULL;
+static GList *inflight_ops = NULL;
+
+static void handle_blocked_ops(void);
 
 svc_action_t *
 services_action_create(const char *name, const char *action, int interval, int timeout)
@@ -605,6 +607,23 @@ services_add_inflight_op(svc_action_t * op)
     }
 }
 
+/*!
+ * \internal
+ * \brief Stop tracking an operation that completed
+ *
+ * \param[in] op  Operation to stop tracking
+ */
+void
+services_untrack_op(svc_action_t *op)
+{
+    /* Op is no longer in-flight or blocked */
+    inflight_ops = g_list_remove(inflight_ops, op);
+    blocked_ops = g_list_remove(blocked_ops, op);
+
+    /* Op is no longer blocking other ops, so check if any need to run */
+    handle_blocked_ops();
+}
+
 gboolean
 services_action_async(svc_action_t * op, void (*action_callback) (svc_action_t *))
 {
@@ -649,7 +668,7 @@ is_op_blocked(const char *rsc)
     return FALSE;
 }
 
-void
+static void
 handle_blocked_ops(void)
 {
     GList *executed_ops = NULL;
