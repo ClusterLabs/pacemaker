@@ -149,10 +149,7 @@ resources_action_create(const char *name, const char *standard, const char *prov
     op->agent = strdup(agent);
     op->sequence = ++operations;
     op->flags = flags;
-
-    if (asprintf(&op->id, "%s_%s_%d", name, action, interval) == -1) {
-        goto return_error;
-    }
+    op->id = generate_op_key(name, action, interval);
 
     if (strcasecmp(op->standard, "service") == 0) {
         const char *expanded = resources_find_service_class(op->agent);
@@ -467,11 +464,10 @@ gboolean
 services_action_cancel(const char *name, const char *action, int interval)
 {
     svc_action_t *op = NULL;
-    char id[512];
-
-    snprintf(id, sizeof(id), "%s_%s_%d", name, action, interval);
+    char *id = generate_op_key(name, action, interval);
 
     if (!(op = g_hash_table_lookup(recurring_actions, id))) {
+        free(id);
         return FALSE;
     }
 
@@ -494,10 +490,12 @@ services_action_cancel(const char *name, const char *action, int interval)
             /* even though the early termination failed,
              * the op will be marked as cancelled once it completes. */
             crm_err("Termination of %s (pid=%d) failed", id, op->pid);
+            free(id);
             return FALSE;
         }
     }
 
+    free(id);
     return TRUE;
 }
 
@@ -505,11 +503,7 @@ gboolean
 services_action_kick(const char *name, const char *action, int interval /* ms */)
 {
     svc_action_t * op = NULL;
-    char *id = NULL;
-
-    if (asprintf(&id, "%s_%s_%d", name, action, interval) == -1) {
-        return FALSE;
-    }
+    char *id = generate_op_key(name, action, interval);
 
     op = g_hash_table_lookup(recurring_actions, id);
     free(id);
