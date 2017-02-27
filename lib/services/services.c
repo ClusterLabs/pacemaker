@@ -410,6 +410,16 @@ services_action_free(svc_action_t * op)
         return;
     }
 
+    /* The operation should be removed from all tracking lists by this point.
+     * If it's not, we have a bug somewhere, so bail. That may lead to a
+     * memory leak, but it's better than a use-after-free segmentation fault.
+     */
+    CRM_CHECK(g_list_find(inflight_ops, op) == NULL, return);
+    CRM_CHECK(g_list_find(blocked_ops, op) == NULL, return);
+    CRM_CHECK((recurring_actions == NULL)
+              || (g_hash_table_lookup(recurring_actions, op->id) == NULL),
+              return);
+
     services_action_cleanup(op);
 
     if (op->opaque->repeat_timer) {
