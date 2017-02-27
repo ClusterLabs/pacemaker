@@ -29,7 +29,6 @@
 
 void tuple_free(container_grouping_t *tuple);
 
-
 static char *
 next_ip(const char *last_ip)
 {
@@ -63,17 +62,26 @@ allocate_ip(container_variant_data_t *data, container_grouping_t *tuple, char *b
     }
 
     data->ip_last = tuple->ipaddr;
-    return snprintf(buffer, max, " --add-host=%s-%d:%s", data->prefix, tuple->offset, tuple->ipaddr);
+#if 0
+    return snprintf(buffer, max, " --add-host=%s-%d:%s --link %s-docker-%d:%s-link-%d",
+                    data->prefix, tuple->offset, tuple->ipaddr,
+                    data->prefix, tuple->offset, data->prefix, tuple->offset);
+#else
+    return snprintf(buffer, max, " --add-host=%s-%d:%s",
+                    data->prefix, tuple->offset, tuple->ipaddr);
+#endif
 }
 
 static xmlNode *
 create_resource(const char *name, const char *provider, const char *kind) 
 {
     xmlNode *rsc = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
+
     crm_xml_add(rsc, XML_ATTR_ID, name);
     crm_xml_add(rsc, XML_AGENT_ATTR_CLASS, "ocf");
     crm_xml_add(rsc, XML_AGENT_ATTR_PROVIDER, provider);
     crm_xml_add(rsc, "type", kind);
+
     return rsc;
 }
 
@@ -82,6 +90,7 @@ create_nvp(xmlNode *parent, const char *name, const char *value)
 {
     char *id = crm_strdup_printf("%s-%s", ID(parent), name);
     xmlNode *xml_nvp = create_xml_node(parent, XML_CIB_TAG_NVPAIR);
+
     crm_xml_add(xml_nvp, XML_ATTR_ID, id); free(id);
     crm_xml_add(xml_nvp, XML_NVPAIR_ATTR_NAME, name);
     crm_xml_add(xml_nvp, XML_NVPAIR_ATTR_VALUE, value);
@@ -104,14 +113,9 @@ create_ip_resource(
     pe_working_set_t * data_set) 
 {
     if(data->ip_range_start) {
-        char *id = NULL;
+        char *id = crm_strdup_printf("%s-ip-%s", data->prefix, tuple->ipaddr);
+        xmlNode *xml_ip = create_resource(id, "heartbeat", "IPaddr2");
         xmlNode *xml_obj = NULL;
-        xmlNode *xml_ip = NULL;
-
-        // Create an IP resource
-
-        id = crm_strdup_printf("%s-ip-%s", data->prefix, tuple->ipaddr);
-        xml_ip = create_resource(id, "heartbeat", "IPaddr2");
 
         id = crm_strdup_printf("%s-attributes-%d", data->prefix, tuple->offset);
         xml_obj = create_xml_node(xml_ip, XML_TAG_ATTR_SETS);
@@ -150,12 +154,13 @@ create_docker_resource(
 {
         int offset = 0, max = 4096;
         char *buffer = calloc(1, max+1);
-        char *id = crm_strdup_printf("%s-docker-%d", data->prefix, tuple->offset);
-        xmlNode *xml_docker = create_resource(id, "heartbeat", "docker");
-        xmlNode *xml_obj = NULL;
 
         int doffset = 0, dmax = 1024;
         char *dbuffer = calloc(1, dmax+1);
+
+        char *id = crm_strdup_printf("%s-docker-%d", data->prefix, tuple->offset);
+        xmlNode *xml_docker = create_resource(id, "heartbeat", "docker");
+        xmlNode *xml_obj = NULL;
 
         id = crm_strdup_printf("%s-attributes-%d", data->prefix, tuple->offset);
         xml_obj = create_xml_node(xml_docker, XML_TAG_ATTR_SETS);
@@ -166,7 +171,9 @@ create_docker_resource(
         create_nvp(xml_obj, "force_kill", "false");
         create_nvp(xml_obj, "reuse", "false");
 
-        offset += snprintf(buffer+offset, max-offset, "--restart=no ");
+        offset += snprintf(buffer+offset, max-offset, " --restart=no ");
+//        offset += snprintf(buffer+offset, max-offset, " --link-local-ip=%s", tuple->ipaddr);
+
         for(GListPtr pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
             container_mount_t *mount = pIter->data;
 
@@ -174,8 +181,10 @@ create_docker_resource(
                 char *source = crm_strdup_printf(
                     "%s/%s-%d", mount->source, data->prefix, tuple->offset);
 
-                offset += snprintf(buffer+offset, max-offset, " -v %s:%s", source, mount->target);
+                // '#' should be sufficiently unlikely in a directory
+                // name and thus safe to use as a separator
                 doffset += snprintf(dbuffer+doffset, dmax-doffset, "#%s", source);
+                offset += snprintf(buffer+offset, max-offset, " -v %s:%s", source, mount->target);
 
             } else {
                 offset += snprintf(buffer+offset, max-offset, " -v %s:%s", mount->source, mount->target);
@@ -190,6 +199,7 @@ create_docker_resource(
 
             offset += snprintf(buffer+offset, max-offset, " -p %s:%s:%s",
                                tuple->ipaddr, port, port);
+            offset += snprintf(buffer+offset, max-offset, " --expose %s", port);
         }
 
         if(data->docker_run_options) {
@@ -203,7 +213,7 @@ create_docker_resource(
         create_nvp(xml_obj, "run_opts", buffer);
         free(buffer);
 
-        // TODO: How will these directories get created on the host?
+        // TODO: Arrange for these directories to get created on the host
         create_nvp(xml_obj, "directory_list", dbuffer);
         free(dbuffer);
 
@@ -402,7 +412,6 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         char *value = NULL;
         xmlNode *xml_set = NULL;
 
-        // TODO: Ensure xml_resource gets free'd at some point
         if(container_data->masters > 0) {
             xml_resource = create_xml_node(NULL, XML_CIB_TAG_MASTER);
 
@@ -476,6 +485,9 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         }
 
         container_data->child = new_rsc;
+        container_data->child->orig_xml = xml_obj; // Also the trigger for common_free()
+                                                   // to free xml_resource as container_data->child->xml
+
         for(childIter = container_data->child->children; childIter != NULL; childIter = childIter->next) {
             container_grouping_t *tuple = calloc(1, sizeof(container_grouping_t));
             tuple->child = childIter->data;
