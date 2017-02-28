@@ -568,7 +568,8 @@ services_action_kick(const char *name, const char *action, int interval /* ms */
         return FALSE;
     }
 
-    if (op->pid) {
+
+    if (op->pid || inflight_systemd_or_upstart(op)) {
         return TRUE;
     } else {
         if (op->opaque->repeat_timer) {
