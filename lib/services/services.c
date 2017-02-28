@@ -89,6 +89,21 @@ resources_find_service_class(const char *agent)
     return NULL;
 }
 
+/*!
+ * \internal
+ * \brief Check whether op is in-flight systemd or upstart op
+ *
+ * \param[in] op  Operation to check
+ *
+ * \return TRUE if op is in-flight systemd or upstart op
+ */
+static inline gboolean
+inflight_systemd_or_upstart(svc_action_t *op)
+{
+    return (safe_str_eq(op->standard, "systemd")
+            || safe_str_eq(op->standard, "upstart"))
+            && (g_list_find(inflight_ops, op) != NULL);
+}
 
 svc_action_t *
 resources_action_create(const char *name, const char *standard, const char *provider,
@@ -510,6 +525,18 @@ services_action_cancel(const char *name, const char *action, int interval)
         if (cancelled == FALSE) {
             crm_err("Termination of %s (pid %d) failed", id, op->pid);
         }
+        goto done;
+    }
+
+    /* In-flight systemd and upstart ops don't have a pid. The relevant handlers
+     * will call operation_finalize() when the operation completes.
+     * @TODO: Can we request early termination, maybe using
+     * dbus_pending_call_cancel()?
+     */
+    if (inflight_systemd_or_upstart(op)) {
+        crm_info("Will cancel %s op %s when in-flight instance completes",
+                 op->standard, op->id);
+        cancelled = FALSE;
         goto done;
     }
 
