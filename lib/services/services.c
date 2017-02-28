@@ -470,43 +470,62 @@ cancel_recurring_action(svc_action_t * op)
     return TRUE;
 }
 
+/*!
+ * \brief Cancel a recurring action
+ *
+ * \param[in] name      Name of resource that operation is for
+ * \param[in] action    Name of operation to cancel
+ * \param[in] interval  Interval of operation to cancel
+ *
+ * \return TRUE if action was successfully cancelled, FALSE otherwise
+ */
 gboolean
 services_action_cancel(const char *name, const char *action, int interval)
 {
-    svc_action_t *op = NULL;
+    gboolean cancelled = FALSE;
     char *id = generate_op_key(name, action, interval);
+    svc_action_t *op = g_hash_table_lookup(recurring_actions, id);
 
-    if (!(op = g_hash_table_lookup(recurring_actions, id))) {
-        free(id);
-        return FALSE;
+    /* We can only cancel a recurring action */
+    if (op == NULL) {
+        goto done;
     }
 
-    /* Always kill the recurring timer */
+    /* Tell operation_finalize() not to reschedule the operation */
+    op->cancel = TRUE;
+
+    /* Stop tracking it as a recurring operation, and stop its timer */
     cancel_recurring_action(op);
 
-    if (op->pid == 0) {
-        op->status = PCMK_LRM_OP_CANCELLED;
-        if (op->opaque->callback) {
-            op->opaque->callback(op);
+    /* If the op has a PID, it's an in-flight child process, so kill it.
+     *
+     * Whether the kill succeeds or fails, the main loop will send the op to
+     * operation_finished() (and thus operation_finalize()) when the process
+     * goes away.
+     */
+    if (op->pid != 0) {
+        crm_info("Terminating in-flight op %s (pid %d) early because it was cancelled",
+                 id, op->pid);
+        cancelled = mainloop_child_kill(op->pid);
+        if (cancelled == FALSE) {
+            crm_err("Termination of %s (pid %d) failed", id, op->pid);
         }
-
-        blocked_ops = g_list_remove(blocked_ops, op);
-        services_action_free(op);
-
-    } else {
-        crm_info("Cancelling in-flight op: performing early termination of %s (pid=%d)", id, op->pid);
-        op->cancel = 1;
-        if (mainloop_child_kill(op->pid) == FALSE) {
-            /* even though the early termination failed,
-             * the op will be marked as cancelled once it completes. */
-            crm_err("Termination of %s (pid=%d) failed", id, op->pid);
-            free(id);
-            return FALSE;
-        }
+        goto done;
     }
 
+    /* Otherwise, operation is not in-flight, just report as cancelled */
+    op->status = PCMK_LRM_OP_CANCELLED;
+    if (op->opaque->callback) {
+        op->opaque->callback(op);
+    }
+
+    blocked_ops = g_list_remove(blocked_ops, op);
+    services_action_free(op);
+    cancelled = TRUE;
+
+done:
     free(id);
-    return TRUE;
+    return cancelled;
 }
 
 gboolean
