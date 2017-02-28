@@ -137,4 +137,6 @@ void crm_gnutls_global_init(void);
 int crm_exit(int rc);
 bool pcmk_acl_required(const char *user);
 
+char *crm_generate_ra_key(const char *class, const char *provider, const char *type);
+
 #endif

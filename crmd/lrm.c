@@ -362,7 +362,7 @@ do_lrm_control(long long action,
         clear_bit(fsa_input_register, R_LRM_CONNECTED);
         crm_info("Disconnecting from the LRM");
         lrm_state_disconnect(lrm_state);
-        lrm_state_reset_tables(lrm_state);
+        lrm_state_reset_tables(lrm_state, FALSE);
         crm_notice("Disconnected from the LRM");
     }
 
@@ -503,63 +503,6 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
     }
 
     return rc;
-}
-
-GHashTable *metadata_hash = NULL;
-
-static char *
-get_rsc_metadata(const char *type, const char *rclass, const char *provider, bool force)
-{
-    int rc = pcmk_ok;
-    int len = 0;
-    char *key = NULL;
-    char *metadata = NULL;
-
-    /* Always use a local connection for this operation */
-    lrm_state_t *lrm_state = lrm_state_find(fsa_our_uname);
-
-    CRM_CHECK(type != NULL, return NULL);
-    CRM_CHECK(rclass != NULL, return NULL);
-    CRM_CHECK(lrm_state != NULL, return NULL);
-
-    if (provider == NULL) {
-        provider = "heartbeat";
-    }
-
-    if (metadata_hash == NULL) {
-        metadata_hash = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
-    }
-
-    len = strlen(type) + strlen(rclass) + strlen(provider) + 4;
-    key = malloc(len);
-    if(key == NULL) {
-        return NULL;
-    }
-
-    snprintf(key, len, "%s::%s:%s", rclass, provider, type);
-    if(force == FALSE) {
-        metadata = g_hash_table_lookup(metadata_hash, key);
-        if (metadata) {
-            crm_trace("Retrieved cached metadata for %s", key);
-        }
-    }
-
-    if(metadata == NULL) {
-        rc = lrm_state_get_metadata(lrm_state, rclass, provider, type, &metadata, 0);
-        if(rc == pcmk_ok) {
-            crm_trace("Retrieved live metadata for %s", key);
-            CRM_LOG_ASSERT(metadata != NULL);
-            g_hash_table_insert(metadata_hash, key, metadata);
-            key = NULL;
-        } else {
-            crm_trace("No metadata found for %s: %s" CRM_XS " rc=%d",
-                     key, pcmk_strerror(rc), rc);
-            CRM_CHECK(metadata == NULL, metadata = NULL);
-        }
-    }
-
-    free(key);
-    return metadata;
 }
 
 static char *
@@ -757,13 +700,13 @@ append_secure_list(lrmd_event_data_t *op, xmlNode *metadata, xmlNode * update, c
 
 static gboolean
 build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_t * op,
-                       const char *src)
+                       const char *node_name, const char *src)
 {
     int target_rc = 0;
     xmlNode *xml_op = NULL;
     xmlNode *metadata = NULL;
-    const char *m_string = NULL;
     const char *caller_version = NULL;
+    lrm_state_t *lrm_state = NULL;
 
     if (op == NULL) {
         return FALSE;
@@ -790,21 +733,37 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
         return TRUE;
     }
 
-    if (rsc == NULL || op->params == NULL || crm_str_eq(CRMD_ACTION_STOP, op->op_type, TRUE)) {
+    if (rsc == NULL || op->params == NULL || crm_str_eq(CRMD_ACTION_STOP, op->op_type, TRUE) ||
+            safe_str_eq(op->op_type, CRMD_ACTION_METADATA)) {
         /* Stopped resources don't need the digest logic */
+        /* As well as meta-data query results */
         crm_trace("No digests needed for %s %p %p %s", op->rsc_id, op->params, rsc, op->op_type);
         return TRUE;
     }
 
-    m_string = get_rsc_metadata(rsc->type, rsc->class, rsc->provider, safe_str_eq(op->op_type, RSC_START));
-    if(m_string == NULL) {
-        crm_err("No metadata for %s::%s:%s", rsc->class, rsc->provider, rsc->type);
+    lrm_state = lrm_state_find(node_name);
+    if (lrm_state == NULL) {
+        crm_warn("Cannot calculate digests for operation %s_%s_%d because we have no LRM connection to %s",
+                 op->rsc_id, op->op_type, op->interval, node_name);
         return TRUE;
     }
 
-    metadata = string2xml(m_string);
-    if(metadata == NULL) {
-        crm_err("Metadata for %s::%s:%s is not valid XML", rsc->class, rsc->provider, rsc->type);
+    metadata = lrm_state_get_rsc_metadata(lrm_state, rsc);
+    if (metadata == NULL && lrm_state_is_local(lrm_state)) {
+        char *metadata_str = NULL;
+        int rc = lrm_state_get_metadata(lrm_state, rsc->class, rsc->provider, rsc->type, &metadata_str, 0);
+
+        if (rc != pcmk_ok) {
+            crm_warn("Cannot get metadata for %s (%s:%s:%s)", rsc->id, rsc->class, rsc->provider, rsc->type);
+            return TRUE;
+        }
+
+        metadata = lrm_state_update_rsc_metadata(lrm_state, rsc, metadata_str);
+        free(metadata_str);
+    }
+
+    if (metadata == NULL) {
+        crm_warn("Cannot update metadata for %s (%s:%s:%s)", rsc->id, rsc->class, rsc->provider, rsc->type);
         return TRUE;
     }
 
@@ -812,7 +771,6 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
     append_restart_list(op, metadata, xml_op, caller_version);
     append_secure_list(op, metadata, xml_op, caller_version);
 
-    free_xml(metadata);
     return TRUE;
 }
 
@@ -873,10 +831,10 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
                 crm_xml_add(xml_rsc, XML_RSC_ATTR_CONTAINER, container);
             }
         }
-        build_operation_update(xml_rsc, &(entry->rsc), entry->failed, __FUNCTION__);
-        build_operation_update(xml_rsc, &(entry->rsc), entry->last, __FUNCTION__);
+        build_operation_update(xml_rsc, &(entry->rsc), entry->failed, lrm_state->node_name, __FUNCTION__);
+        build_operation_update(xml_rsc, &(entry->rsc), entry->last, lrm_state->node_name, __FUNCTION__);
         for (gIter = entry->recurring_op_list; gIter != NULL; gIter = gIter->next) {
-            build_operation_update(xml_rsc, &(entry->rsc), gIter->data, __FUNCTION__);
+            build_operation_update(xml_rsc, &(entry->rsc), gIter->data, lrm_state->node_name, __FUNCTION__);
         }
     }
 
@@ -2021,7 +1979,7 @@ send_direct_ack(const char *to_host, const char *to_sys,
 
     crm_xml_add(iter, XML_ATTR_ID, op->rsc_id);
 
-    build_operation_update(iter, rsc, op, __FUNCTION__);
+    build_operation_update(iter, rsc, op, fsa_our_uname, __FUNCTION__);
     reply = create_request(CRM_OP_INVOKE_LRM, update, to_host, to_sys, CRM_SYSTEM_LRMD, NULL);
 
     crm_log_xml_trace(update, "ACK Update");
@@ -2369,7 +2327,7 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t * rsc, lrmd_event_data
     iter = create_xml_node(iter, XML_LRM_TAG_RESOURCE);
     crm_xml_add(iter, XML_ATTR_ID, op->rsc_id);
 
-    build_operation_update(iter, rsc, op, __FUNCTION__);
+    build_operation_update(iter, rsc, op, node_name, __FUNCTION__);
 
     if (rsc) {
         const char *container = NULL;
@@ -2435,6 +2393,27 @@ do_lrm_event(long long action,
     CRM_CHECK(FALSE, return);
 }
 
+static char *
+unescape_newlines(const char *string)
+{
+    char *pch = NULL;
+    char *ret = NULL;
+    static const char *escaped_newline = "\\n";
+
+    if (!string) {
+        return NULL;
+    }
+
+    ret = strdup(string);
+    pch = strstr(ret, escaped_newline);
+    while (pch != NULL) {
+        strncpy(pch, "\n ", 2);
+        pch = strstr(pch, escaped_newline);
+    }
+
+    return ret;
+}
+
 gboolean
 process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op, struct recurring_op_s *pending)
 {
@@ -2473,8 +2452,8 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op, struct recurr
     }
 
     if (op->op_status != PCMK_LRM_OP_CANCELLED) {
-        if (safe_str_eq(op->op_type, RSC_NOTIFY)) {
-            /* Keep notify ops out of the CIB */
+        if (safe_str_eq(op->op_type, RSC_NOTIFY) || safe_str_eq(op->op_type, RSC_METADATA)) {
+            /* Keep notify and meta-data ops out of the CIB */
             send_direct_ack(NULL, NULL, NULL, op, op->rsc_id);
         } else {
             update_id = do_update_resource(lrm_state->node_name, rsc, op);
@@ -2577,7 +2556,14 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op, struct recurr
         free(prefix);
     }
 
-    crmd_alert_resource_op(lrm_state->node_name, op);
+    if (safe_str_neq(op->op_type, RSC_METADATA)) {
+        crmd_alert_resource_op(lrm_state->node_name, op);
+    } else if (op->rc == PCMK_OCF_OK) {
+        char *metadata = unescape_newlines(op->output);
+
+        lrm_state_update_rsc_metadata(lrm_state, rsc, metadata);
+        free(metadata);
+    }
 
     if (op->rsc_deleted) {
         crm_info("Deletion of resource '%s' complete after %s", op->rsc_id, op_key);

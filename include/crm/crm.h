@@ -174,6 +174,8 @@ extern char *crm_system_name;
 #  define CRMD_ACTION_NOTIFIED		"notified"
 
 #  define CRMD_ACTION_STATUS		"monitor"
+#  define CRMD_ACTION_METADATA		"meta-data"
+#  define CRMD_METADATA_CALL_TIMEOUT   30000
 
 /* short names */
 #  define RSC_DELETE	CRMD_ACTION_DELETE
@@ -197,6 +199,7 @@ extern char *crm_system_name;
 #  define RSC_NOTIFIED	CRMD_ACTION_NOTIFIED
 
 #  define RSC_STATUS	CRMD_ACTION_STATUS
+#  define RSC_METADATA	CRMD_ACTION_METADATA
 /* *INDENT-ON* */
 
 typedef GList *GListPtr;

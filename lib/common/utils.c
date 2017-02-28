@@ -1997,3 +1997,13 @@ crm_gnutls_global_init(void)
     gnutls_global_init();
 }
 #endif
+
+char *
+crm_generate_ra_key(const char *class, const char *provider, const char *type)
+{
+    if (!class && !provider && !type) {
+        return NULL;
+    }
+
+    return crm_strdup_printf("%s:%s:%s", class ? class : "", provider ? provider : "", type ? type : "");
+}

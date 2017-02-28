@@ -3143,7 +3143,8 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
     CRM_CHECK(status <= PCMK_LRM_OP_NOT_INSTALLED, return FALSE);
     CRM_CHECK(status >= PCMK_LRM_OP_PENDING, return FALSE);
 
-    if (safe_str_eq(task, CRMD_ACTION_NOTIFY)) {
+    if (safe_str_eq(task, CRMD_ACTION_NOTIFY) ||
+        safe_str_eq(task, CRMD_ACTION_METADATA)) {
         /* safe to ignore these */
         return TRUE;
     }

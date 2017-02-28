@@ -5151,3 +5151,9 @@ crm_element_value(xmlNode * data, const char *name)
     }
     return (const char *)attr->children->content;
 }
+
+void
+crm_destroy_xml(gpointer data)
+{
+    free_xml(data);
+}

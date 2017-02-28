@@ -67,6 +67,8 @@ typedef struct lrm_state_s {
     GHashTable *rsc_info_cache;
 
     int num_lrm_register_fails;
+
+    GHashTable *metadata_cache;
 } lrm_state_t;
 
 struct pending_deletion_op_s {
@@ -82,9 +84,10 @@ lrm_state_is_local(lrm_state_t *lrm_state);
 
 /*!
  * \brief Clear all state information from a single state entry.
+ * \note It sometimes useful to save metadata cache when it won't go stale.
  * \note This does not close the lrmd connection
  */
-void lrm_state_reset_tables(lrm_state_t * lrm_state);
+void lrm_state_reset_tables(lrm_state_t * lrm_state, gboolean reset_metadata);
 GList *lrm_state_get_list(void);
 
 /*!
@@ -116,6 +119,18 @@ lrm_state_t *lrm_state_find(const char *node_name);
  * \brief Either find or create a new entry
  */
 lrm_state_t *lrm_state_find_or_create(const char *node_name);
+
+/*!
+ * \brief Update metadata cache
+ * \retval metadata XML on success
+ * \retval NULL on failure
+ */
+xmlNode *lrm_state_update_rsc_metadata(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, const char *metadata_str);
+
+/*!
+ * \brief Supply cached metadata XML based on resource's class:provider:type
+ */
+xmlNode *lrm_state_get_rsc_metadata(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc);
 
 /*!
  * The functions below are wrappers for the lrmd api calls the crmd

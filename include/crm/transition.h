@@ -29,6 +29,7 @@ typedef enum {
 } action_type_e;
 
 typedef struct te_timer_s crm_action_timer_t;
+typedef struct crm_graph_s crm_graph_t;
 
 typedef struct synapse_s {
     int id;
@@ -41,6 +42,8 @@ typedef struct synapse_s {
 
     GListPtr actions;           /* crm_action_t* */
     GListPtr inputs;            /* crm_action_t* */
+
+    crm_graph_t *graph;
 } synapse_t;
 
 typedef struct crm_action_s {
@@ -61,6 +64,10 @@ typedef struct crm_action_s {
     gboolean can_fail;
 
     xmlNode *xml;
+
+    char *task;
+
+    lrmd_rsc_info_t *rsc_info;
 
 } crm_action_t;
 
@@ -88,7 +95,7 @@ enum transition_action {
     tg_shutdown,
 };
 
-typedef struct crm_graph_s {
+struct crm_graph_s {
     int id;
     char *source;
     int abort_priority;
@@ -115,7 +122,9 @@ typedef struct crm_graph_s {
 
     int migration_limit;
 
-} crm_graph_t;
+    int max_action_id;
+
+};
 
 typedef struct crm_graph_functions_s {
     gboolean(*pseudo) (crm_graph_t * graph, crm_action_t * action);
@@ -149,5 +158,8 @@ bool update_abort_priority(crm_graph_t * graph, int priority,
 const char *actiontype2text(action_type_e type);
 lrmd_event_data_t *convert_graph_action(xmlNode * resource, crm_action_t * action, int status,
                                         int rc);
+
+void crm_register_cache_check_fn(gboolean (*fn)(lrmd_rsc_info_t *rsc, const char *node_name));
+void crm_unregister_cache_check_fn(void);
 
 #endif
