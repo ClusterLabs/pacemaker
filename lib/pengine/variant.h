@@ -81,6 +81,7 @@ typedef struct
 typedef struct container_variant_data_s {
         int masters;
         int replicas;
+        int replicas_per_host;
         char *prefix;
         char *image;
         const char *ip_last;

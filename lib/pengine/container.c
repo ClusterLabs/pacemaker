@@ -358,6 +358,14 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
     value = crm_element_value(xml_obj, "replicas");
     container_data->replicas = crm_parse_int(value, "1");
 
+    /*
+     * Communication between containers on the same host via the
+     * floating IPs only works if docker is started with:
+     *   --userland-proxy=false --ip-masq=false
+     */
+    value = crm_element_value(xml_obj, "replicas-per-host");
+    container_data->replicas_per_host = crm_parse_int(value, "1");
+
     value = crm_element_value(xml_obj, "masters");
     container_data->masters = crm_parse_int(value, "1");
 
@@ -436,6 +444,10 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         create_nvp(xml_set, XML_RSC_ATTR_INCARNATION_MAX, value);
         free(value);
 
+        value = crm_itoa(container_data->replicas_per_host);
+        create_nvp(xml_set, XML_RSC_ATTR_INCARNATION_NODEMAX, value);
+        free(value);
+
         if(container_data->masters) {
             value = crm_itoa(container_data->masters);
             create_nvp(xml_set, XML_RSC_ATTR_MASTER_MAX, value);
@@ -445,8 +457,8 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         //crm_xml_add(xml_obj, XML_ATTR_ID, container_data->prefix);
         add_node_copy(xml_resource, xml_obj);
 
-    } else if(xml_obj && container_data->ip_range_start) {
-        xml_resource = copy_xml(xml_resource);
+    /* } else if(xml_obj && container_data->ip_range_start) { */
+    /*     xml_resource = copy_xml(xml_resource); */
 
     } else if(xml_obj) {
         pe_err("Cannot control %s inside container %s without a value for ip-range-start",

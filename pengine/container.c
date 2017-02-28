@@ -39,9 +39,15 @@ is_child_container_node(container_variant_data_t *data, pe_node_t *node)
     return FALSE;
 }
 
+gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set);
+void distribute_children(resource_t *rsc, GListPtr children, GListPtr nodes,
+                         int max, int per_host_max, pe_working_set_t * data_set);
+
 node_t *
 container_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 {
+    GListPtr containers = NULL;
+    GListPtr nodes = NULL;
     container_variant_data_t *container_data = NULL;
 
     CRM_CHECK(rsc != NULL, return NULL);
@@ -50,11 +56,23 @@ container_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 
     for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
         container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+        containers = g_list_append(containers, tuple->docker);
+    }
+
+    dump_node_scores(0, rsc, __FUNCTION__, rsc->allowed_nodes);
+
+    nodes = g_hash_table_get_values(rsc->allowed_nodes);
+    nodes = g_list_sort_with_data(nodes, sort_node_weight, NULL);
+    containers = g_list_sort_with_data(containers, sort_clone_instance, data_set);
+    distribute_children(rsc, containers, nodes,
+                        container_data->replicas, container_data->replicas_per_host, data_set);
+    g_list_free(nodes);
+    g_list_free(containers);
+
+    for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
+        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
 
         CRM_ASSERT(tuple);
-        if(tuple->docker) {
-            tuple->docker->cmds->allocate(tuple->docker, prefer, data_set);
-        }
         if(tuple->ip) {
             tuple->ip->cmds->allocate(tuple->ip, prefer, data_set);
         }

@@ -80,6 +80,9 @@
 		<attribute name="replicas"><data type="integer"/></attribute>
 	      </optional>
 	      <optional>
+		<attribute name="replicas-per-host"><data type="integer"/></attribute>
+	      </optional>
+	      <optional>
 		<attribute name="masters"><data type="integer"/></attribute>
 	      </optional>
 	      <optional>
