@@ -42,6 +42,7 @@ CRM_VERIFY_F=crm_verify.txt
 PERMISSIONS_F=permissions.txt
 CIB_F=cib.xml
 CIB_TXT_F=cib.txt
+DRBD_INFO_F=drbd_info.txt
 
 EVENT_PATTERNS="
 state		do_state_transition
