@@ -47,6 +47,7 @@ extern "C" {
 #    define SYSTEMCTL "/bin/systemctl"
 #  endif
 
+/* Deprecated and unused by Pacemaker, kept for API backward compatibility */
 #  ifndef SERVICE_SCRIPT
 #    define SERVICE_SCRIPT "/sbin/service"
 #  endif

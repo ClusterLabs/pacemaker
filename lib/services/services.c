@@ -105,6 +105,41 @@ inflight_systemd_or_upstart(svc_action_t *op)
             && (g_list_find(inflight_ops, op) != NULL);
 }
 
+/*!
+ * \internal
+ * \brief Expand "service" alias to an actual resource class
+ *
+ * \param[in] rsc       Resource name (for logging only)
+ * \param[in] standard  Resource class as configured
+ * \param[in] agent     Agent name to look for
+ *
+ * \return Newly allocated string with actual resource class
+ *
+ * \note The caller is responsible for calling free() on the result.
+ */
+static char *
+expand_resource_class(const char *rsc, const char *standard, const char *agent)
+{
+    char *expanded_class = NULL;
+
+    if (strcasecmp(standard, "service") == 0) {
+        const char *found_class = resources_find_service_class(agent);
+
+        if (found_class) {
+            crm_debug("Found %s agent %s for %s", found_class, agent, rsc);
+            expanded_class = strdup(found_class);
+        } else {
+            crm_info("Assuming resource class lsb for agent %s for %s",
+                     agent, rsc);
+            expanded_class = strdup("lsb");
+        }
+    } else {
+        expanded_class = strdup(standard);
+    }
+    CRM_ASSERT(expanded_class);
+    return expanded_class;
+}
+
 svc_action_t *
 resources_action_create(const char *name, const char *standard, const char *provider,
                         const char *agent, const char *action, int interval, int timeout,
@@ -142,14 +177,6 @@ resources_action_create(const char *name, const char *standard, const char *prov
         goto return_error;
     }
 
-    if (safe_str_eq(action, "monitor") && (
-#if SUPPORT_HEARTBEAT
-        safe_str_eq(standard, "heartbeat") ||
-#endif
-        safe_str_eq(standard, "lsb") || safe_str_eq(standard, "service"))) {
-        action = "status";
-    }
-
     /*
      * Sanity checks passed, proceed!
      */
@@ -157,31 +184,22 @@ resources_action_create(const char *name, const char *standard, const char *prov
     op = calloc(1, sizeof(svc_action_t));
     op->opaque = calloc(1, sizeof(svc_action_private_t));
     op->rsc = strdup(name);
-    op->action = strdup(action);
     op->interval = interval;
     op->timeout = timeout;
-    op->standard = strdup(standard);
+    op->standard = expand_resource_class(name, standard, agent);
     op->agent = strdup(agent);
     op->sequence = ++operations;
     op->flags = flags;
     op->id = generate_op_key(name, action, interval);
 
-    if (strcasecmp(op->standard, "service") == 0) {
-        const char *expanded = resources_find_service_class(op->agent);
-
-        if(expanded) {
-            crm_debug("Found %s agent %s for %s", expanded, op->agent, op->rsc);
-            free(op->standard);
-            op->standard = strdup(expanded);
-
-        } else {
-            crm_info("Assuming resource class lsb for agent %s for %s",
-                     op->agent, op->rsc);
-            free(op->standard);
-            op->standard = strdup("lsb");
-        }
-        CRM_ASSERT(op->standard);
+    if (safe_str_eq(action, "monitor") && (
+#if SUPPORT_HEARTBEAT
+        safe_str_eq(op->standard, "heartbeat") ||
+#endif
+        safe_str_eq(op->standard, "lsb"))) {
+        action = "status";
     }
+    op->action = strdup(action);
 
     if (strcasecmp(op->standard, "ocf") == 0) {
         op->provider = strdup(provider);
@@ -251,12 +269,6 @@ resources_action_create(const char *name, const char *standard, const char *prov
     } else if (strcasecmp(op->standard, "upstart") == 0) {
         op->opaque->exec = strdup("upstart-dbus");
 #endif
-    } else if (strcasecmp(op->standard, "service") == 0) {
-        op->opaque->exec = strdup(SERVICE_SCRIPT);
-        op->opaque->args[0] = strdup(SERVICE_SCRIPT);
-        op->opaque->args[1] = strdup(agent);
-        op->opaque->args[2] = strdup(action);
-
 #if SUPPORT_NAGIOS
     } else if (strcasecmp(op->standard, "nagios") == 0) {
         int index = 0;
@@ -308,7 +320,6 @@ resources_action_create(const char *name, const char *standard, const char *prov
         }
         op->opaque->args[index] = NULL;
 #endif
-
     } else {
         crm_err("Unknown resource standard: %s", op->standard);
         services_action_free(op);
