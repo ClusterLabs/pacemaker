@@ -10,9 +10,6 @@
             </rule>
             <nvpair id="FencingPass-gt-random_sleep_range" name="random_sleep_range" value="4"/>
           </instance_attributes>
-          <instance_attributes id="FencingPass-params">
-            <nvpair id="FencingPass-random_sleep_range" name="random_sleep_range" value="3"/>
-          </instance_attributes>
         </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="90000"  mode="pass" pcmk_host_list="rhel7-3" random_sleep_range="3"/>
       </rsc_op>
@@ -46,9 +43,6 @@
             </rule>
             <nvpair id="FencingPass-gt-random_sleep_range" name="random_sleep_range" value="4"/>
           </instance_attributes>
-          <instance_attributes id="FencingPass-params">
-            <nvpair id="FencingPass-random_sleep_range" name="random_sleep_range" value="3"/>
-          </instance_attributes>
         </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_op_target_rc="7" CRM_meta_timeout="90000"  mode="pass" pcmk_host_list="rhel7-3" random_sleep_range="3"/>
       </rsc_op>
@@ -65,9 +59,6 @@
               <expression id="FencingPass-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="3.5"/>
             </rule>
             <nvpair id="FencingPass-gt-random_sleep_range" name="random_sleep_range" value="4"/>
-          </instance_attributes>
-          <instance_attributes id="FencingPass-params">
-            <nvpair id="FencingPass-random_sleep_range" name="random_sleep_range" value="3"/>
           </instance_attributes>
         </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_op_target_rc="7" CRM_meta_timeout="90000"  mode="pass" pcmk_host_list="rhel7-3" random_sleep_range="3"/>
@@ -86,9 +77,6 @@
             </rule>
             <nvpair id="FencingPass-gt-random_sleep_range" name="random_sleep_range" value="4"/>
           </instance_attributes>
-          <instance_attributes id="FencingPass-params">
-            <nvpair id="FencingPass-random_sleep_range" name="random_sleep_range" value="3"/>
-          </instance_attributes>
         </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="90000"  mode="pass" pcmk_host_list="rhel7-3" random_sleep_range="3"/>
       </rsc_op>
@@ -106,9 +94,6 @@
             </rule>
             <nvpair id="FencingPass-gt-random_sleep_range" name="random_sleep_range" value="4"/>
           </instance_attributes>
-          <instance_attributes id="FencingPass-params">
-            <nvpair id="FencingPass-random_sleep_range" name="random_sleep_range" value="3"/>
-          </instance_attributes>
         </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="90000"  mode="pass" pcmk_host_list="rhel7-3" random_sleep_range="3"/>
       </rsc_op>
@@ -125,9 +110,6 @@
               <expression id="FencingPass-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="3.5"/>
             </rule>
             <nvpair id="FencingPass-gt-random_sleep_range" name="random_sleep_range" value="4"/>
-          </instance_attributes>
-          <instance_attributes id="FencingPass-params">
-            <nvpair id="FencingPass-random_sleep_range" name="random_sleep_range" value="3"/>
           </instance_attributes>
         </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="90000"  mode="pass" pcmk_host_list="rhel7-3" random_sleep_range="3"/>
@@ -1069,9 +1051,6 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
         </rsc_versioned_attrs>
         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest1.env" fake="2-bad"/>
       </rsc_op>
@@ -1098,9 +1077,6 @@
               <expression id="grouptest2-lte-rule-e01" type="version" attribute="#ra-version" operation="lte" value="1.0"/>
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
-          </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </rsc_versioned_attrs>
         <attributes CRM_meta_name="start" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest1.env" fake="2-bad"/>
@@ -1144,9 +1120,6 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
         </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest1.env" fake="2-bad"/>
       </rsc_op>
@@ -1169,9 +1142,6 @@
               <expression id="grouptest2-lte-rule-e01" type="version" attribute="#ra-version" operation="lte" value="1.0"/>
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
-          </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest1.env" fake="2-bad"/>
@@ -1196,9 +1166,6 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
         </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest1.env" fake="2-bad"/>
       </rsc_op>
@@ -1221,9 +1188,6 @@
               <expression id="grouptest2-lte-rule-e01" type="version" attribute="#ra-version" operation="lte" value="1.0"/>
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
-          </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest1.env" fake="2-bad"/>
@@ -1248,9 +1212,6 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
         </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest1.env" fake="2-bad"/>
       </rsc_op>
@@ -1273,9 +1234,6 @@
               <expression id="grouptest2-lte-rule-e01" type="version" attribute="#ra-version" operation="lte" value="1.0"/>
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
-          </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </rsc_versioned_attrs>
         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest2.env" fake="2-bad"/>
@@ -1303,9 +1261,6 @@
               <expression id="grouptest2-lte-rule-e01" type="version" attribute="#ra-version" operation="lte" value="1.0"/>
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
-          </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </rsc_versioned_attrs>
         <attributes CRM_meta_name="start" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest2.env" fake="2-bad"/>
@@ -1352,9 +1307,6 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
         </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest2.env" fake="2-bad"/>
       </rsc_op>
@@ -1377,9 +1329,6 @@
               <expression id="grouptest2-lte-rule-e01" type="version" attribute="#ra-version" operation="lte" value="1.0"/>
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
-          </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest2.env" fake="2-bad"/>
@@ -1404,9 +1353,6 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
         </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest2.env" fake="2-bad"/>
       </rsc_op>
@@ -1429,9 +1375,6 @@
               <expression id="grouptest2-lte-rule-e01" type="version" attribute="#ra-version" operation="lte" value="1.0"/>
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
-          </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest2.env" fake="2-bad"/>
@@ -1456,9 +1399,6 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
         </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest2.env" fake="2-bad"/>
       </rsc_op>
@@ -1481,9 +1421,6 @@
               <expression id="grouptest2-lte-rule-e01" type="version" attribute="#ra-version" operation="lte" value="1.0"/>
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
-          </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </rsc_versioned_attrs>
         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest3.env" fake="2-bad"/>
@@ -1511,9 +1448,6 @@
               <expression id="grouptest2-lte-rule-e01" type="version" attribute="#ra-version" operation="lte" value="1.0"/>
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
-          </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </rsc_versioned_attrs>
         <attributes CRM_meta_name="start" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest3.env" fake="2-bad"/>
@@ -1560,9 +1494,6 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
         </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest3.env" fake="2-bad"/>
       </rsc_op>
@@ -1585,9 +1516,6 @@
               <expression id="grouptest2-lte-rule-e01" type="version" attribute="#ra-version" operation="lte" value="1.0"/>
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
-          </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest3.env" fake="2-bad"/>
@@ -1612,9 +1540,6 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
         </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest3.env" fake="2-bad"/>
       </rsc_op>
@@ -1638,9 +1563,6 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
         </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest3.env" fake="2-bad"/>
       </rsc_op>
@@ -1663,9 +1585,6 @@
               <expression id="grouptest2-lte-rule-e01" type="version" attribute="#ra-version" operation="lte" value="1.0"/>
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
-          </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
           </instance_attributes>
         </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest3.env" fake="2-bad"/>
