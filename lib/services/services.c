@@ -90,6 +90,15 @@ resources_find_service_class(const char *agent)
     return NULL;
 }
 
+static inline void
+init_recurring_actions(void)
+{
+    if (recurring_actions == NULL) {
+        recurring_actions = g_hash_table_new_full(g_str_hash, g_str_equal, NULL,
+                                                  NULL);
+    }
+}
+
 /*!
  * \internal
  * \brief Check whether op is in-flight systemd or upstart op
@@ -513,9 +522,11 @@ services_action_cancel(const char *name, const char *action, int interval)
 {
     gboolean cancelled = FALSE;
     char *id = generate_op_key(name, action, interval);
-    svc_action_t *op = g_hash_table_lookup(recurring_actions, id);
+    svc_action_t *op = NULL;
 
     /* We can only cancel a recurring action */
+    init_recurring_actions();
+    op = g_hash_table_lookup(recurring_actions, id);
     if (op == NULL) {
         goto done;
     }
@@ -575,6 +586,7 @@ services_action_kick(const char *name, const char *action, int interval /* ms */
     svc_action_t * op = NULL;
     char *id = generate_op_key(name, action, interval);
 
+    init_recurring_actions();
     op = g_hash_table_lookup(recurring_actions, id);
     free(id);
 
@@ -603,11 +615,6 @@ static gboolean
 handle_duplicate_recurring(svc_action_t * op, void (*action_callback) (svc_action_t *))
 {
     svc_action_t * dup = NULL;
-
-    if (recurring_actions == NULL) {
-        recurring_actions = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, NULL);
-        return FALSE;
-    }
 
     /* check for duplicates */
     dup = g_hash_table_lookup(recurring_actions, op->id);
@@ -700,6 +707,7 @@ services_action_async(svc_action_t * op, void (*action_callback) (svc_action_t *
     }
 
     if (op->interval > 0) {
+        init_recurring_actions();
         if (handle_duplicate_recurring(op, action_callback) == TRUE) {
             /* entry rescheduled, dup freed */
             /* exit early */
