@@ -85,8 +85,9 @@ typedef struct container_variant_data_s {
         char *prefix;
         char *image;
         const char *ip_last;
-        char *ip_nic;
-        char *ip_mask;
+        char *host_network;
+        char *host_netmask;
+        char *docker_network;
         char *ip_range_start;
         char *docker_host_options;
         char *docker_run_options;

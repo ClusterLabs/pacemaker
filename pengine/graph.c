@@ -909,7 +909,6 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
     }
 
     crm_xml_add_int(action_xml, XML_ATTR_ID, action->id);
-
     crm_xml_add(action_xml, XML_LRM_ATTR_TASK, action->task);
     if (action->rsc != NULL && action->rsc->clone_name != NULL) {
         char *clone_key = NULL;
@@ -1053,6 +1052,7 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
     g_hash_table_foreach(action->meta, hash2metafield, args_xml);
     if (action->rsc != NULL) {
         int isolated = 0;
+        const char *value = g_hash_table_lookup(action->rsc->meta, "external-ip");
         resource_t *parent = action->rsc;
 
         while (parent != NULL) {
@@ -1065,6 +1065,10 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
             char *nodeattr = crm_meta_name(XML_RSC_ATTR_ISOLATION_HOST);
             crm_xml_add(args_xml, nodeattr, action->node->details->uname);
             free(nodeattr);
+        }
+
+        if(value) {
+            hash2smartfield((gpointer)"pcmk_external_ip", (gpointer)value, (gpointer)args_xml);
         }
 
     } else if (safe_str_eq(action->task, CRM_OP_FENCE) && action->node) {

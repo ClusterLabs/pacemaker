@@ -122,12 +122,12 @@ create_ip_resource(
         crm_xml_add(xml_obj, XML_ATTR_ID, id); free(id);
 
         create_nvp(xml_obj, "ip", tuple->ipaddr);
-        if(data->ip_nic) {
-            create_nvp(xml_obj, "nic", data->ip_nic);
+        if(data->host_network) {
+            create_nvp(xml_obj, "nic", data->host_network);
         }
 
-        if(data->ip_mask) {
-            create_nvp(xml_obj, "cidr_netmask", data->ip_mask);
+        if(data->host_netmask) {
+            create_nvp(xml_obj, "cidr_netmask", data->host_netmask);
 
         } else {
             create_nvp(xml_obj, "cidr_netmask", "32");
@@ -173,7 +173,11 @@ create_docker_resource(
 
         offset += snprintf(buffer+offset, max-offset, "-h %s-%d --restart=no ",
                            data->prefix, tuple->offset);
+
+        if(data->docker_network) {
 //        offset += snprintf(buffer+offset, max-offset, " --link-local-ip=%s", tuple->ipaddr);
+            offset += snprintf(buffer+offset, max-offset, " --net=%s", data->docker_network);
+        }
 
         for(GListPtr pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
             container_mount_t *mount = pIter->data;
@@ -324,6 +328,9 @@ create_container(
     if(create_remote_resource(parent, data, tuple, data_set) == FALSE) {
         return TRUE;
     }
+    if(tuple->child && tuple->ipaddr) {
+        add_hash_param(tuple->child->meta, "external-ip", tuple->ipaddr);
+    }
 
     return FALSE;
 }
@@ -376,8 +383,9 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
     if(xml_obj) {
 
         container_data->ip_range_start = crm_element_value_copy(xml_obj, "ip-range-start");
-        container_data->ip_nic = crm_element_value_copy(xml_obj, "nic");
-        container_data->ip_mask = crm_element_value_copy(xml_obj, "netmask");
+        container_data->host_netmask = crm_element_value_copy(xml_obj, "host-netmask");
+        container_data->host_network = crm_element_value_copy(xml_obj, "host-network");
+        container_data->docker_network = crm_element_value_copy(xml_obj, "docker-network");
 
         for (xmlNode *xml_child = __xml_first_child_element(xml_obj); xml_child != NULL;
              xml_child = __xml_next_element(xml_child)) {
@@ -681,9 +689,10 @@ container_free(resource_t * rsc)
 
     free(container_data->prefix);
     free(container_data->image);
-    free(container_data->ip_nic);
-    free(container_data->ip_mask);
+    free(container_data->host_network);
+    free(container_data->host_netmask);
     free(container_data->ip_range_start);
+    free(container_data->docker_network);
     free(container_data->docker_run_options);
     free(container_data->docker_host_options);
 

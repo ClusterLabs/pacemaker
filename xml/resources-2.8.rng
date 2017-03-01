@@ -96,12 +96,17 @@
 	</choice>
 	<optional>
 	  <element name="network">
-	    <attribute name="ip-range-start"><text/></attribute>
 	    <optional>
-	      <attribute name="nic"><text/></attribute>
+	      <attribute name="ip-range-start"><text/></attribute>
 	    </optional>
 	    <optional>
-	      <attribute name="netmask"><data type="integer"/></attribute>
+	      <attribute name="host-network"><text/></attribute>
+	    </optional>
+	    <optional>
+	      <attribute name="host-netmask"><data type="integer"/></attribute>
+	    </optional>
+	    <optional>
+	      <attribute name="docker-network"><text/></attribute>
 	    </optional>
 	    <zeroOrMore>
 	      <element name="port-mapping">
