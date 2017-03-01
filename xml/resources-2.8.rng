@@ -134,9 +134,6 @@
 		</choice>
 		<attribute name="target-dir"><text/></attribute>
 		<optional>
-		  <attribute name="use-bucket-suffix"><data type="boolean"/></attribute>
-		</optional>
-		<optional>
 		  <attribute name="options"><text/></attribute>
 		</optional>
 	      </element>
