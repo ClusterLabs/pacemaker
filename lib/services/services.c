@@ -118,27 +118,27 @@ resources_action_create(const char *name, const char *standard, const char *prov
      */
 
     if (crm_strlen_zero(name)) {
-        crm_err("A service or resource action must have a name.");
+        crm_err("Cannot create operation without resource name");
         goto return_error;
     }
 
     if (crm_strlen_zero(standard)) {
-        crm_err("A service action must have a valid standard.");
+        crm_err("Cannot create operation for %s without resource class", name);
         goto return_error;
     }
 
     if (!strcasecmp(standard, "ocf") && crm_strlen_zero(provider)) {
-        crm_err("An OCF resource action must have a provider.");
+        crm_err("Cannot create OCF operation for %s without provider", name);
         goto return_error;
     }
 
     if (crm_strlen_zero(agent)) {
-        crm_err("A service or resource action must have an agent.");
+        crm_err("Cannot create operation for %s without agent name", name);
         goto return_error;
     }
 
     if (crm_strlen_zero(action)) {
-        crm_err("A service or resource action must specify an action.");
+        crm_err("Cannot create operation for %s without operation name", name);
         goto return_error;
     }
 
@@ -170,12 +170,13 @@ resources_action_create(const char *name, const char *standard, const char *prov
         const char *expanded = resources_find_service_class(op->agent);
 
         if(expanded) {
-            crm_debug("Found a %s agent for %s/%s", expanded, op->rsc, op->agent);
+            crm_debug("Found %s agent %s for %s", expanded, op->agent, op->rsc);
             free(op->standard);
             op->standard = strdup(expanded);
 
         } else {
-            crm_info("Cannot determine the standard for %s (%s)", op->rsc, op->agent);
+            crm_info("Assuming resource class lsb for agent %s for %s",
+                     op->agent, op->rsc);
             free(op->standard);
             op->standard = strdup("lsb");
         }
@@ -226,7 +227,7 @@ resources_action_create(const char *name, const char *standard, const char *prov
         /* The "heartbeat" agent class only has positional arguments,
          * which we keyed by their decimal position number. */
         param_num = 1;
-	for (index = 1; index <= MAX_ARGC - 3; index++ ) {
+        for (index = 1; index <= MAX_ARGC - 3; index++ ) {
             snprintf(buf_tmp, sizeof(buf_tmp), "%d", index);
             value_tmp = g_hash_table_lookup(params, buf_tmp);
             if (value_tmp == NULL) {
@@ -237,8 +238,8 @@ resources_action_create(const char *name, const char *standard, const char *prov
             op->opaque->args[param_num++] = strdup(value_tmp);
         }
 
-	/* Add operation code as the last argument, */
-	/* and the teminating NULL pointer */
+        /* Add operation code as the last argument, */
+        /* and the teminating NULL pointer */
         op->opaque->args[param_num++] = strdup(op->action);
         op->opaque->args[param_num] = NULL;
 #endif
