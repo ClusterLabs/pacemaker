@@ -849,6 +849,8 @@ do_test isolation-clone       "Cloned isolated primitive."
 
 echo ""
 do_test versioned-resources     "Start resources with #ra-version rules"
+do_test restart-versioned       "Restart resources on #ra-version change"
+do_test reload-versioned        "Reload resources on #ra-version change"
 
 echo ""
 test_results
