@@ -52,6 +52,15 @@ extern "C" {
 #    define SERVICE_SCRIPT "/sbin/service"
 #  endif
 
+/* Known resource classes */
+#define PCMK_RESOURCE_CLASS_OCF     "ocf"
+#define PCMK_RESOURCE_CLASS_SERVICE "service"
+#define PCMK_RESOURCE_CLASS_LSB     "lsb"
+#define PCMK_RESOURCE_CLASS_SYSTEMD "systemd"
+#define PCMK_RESOURCE_CLASS_UPSTART "upstart"
+#define PCMK_RESOURCE_CLASS_HB      "heartbeat"
+#define PCMK_RESOURCE_CLASS_NAGIOS  "nagios"
+#define PCMK_RESOURCE_CLASS_STONITH "stonith"
 
 /* This is the string passed in the OCF_EXIT_REASON_PREFIX
  * environment variable. The stderr output that occurs

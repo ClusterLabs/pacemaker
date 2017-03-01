@@ -51,7 +51,8 @@ static void handle_blocked_ops(void);
 svc_action_t *
 services_action_create(const char *name, const char *action, int interval, int timeout)
 {
-    return resources_action_create(name, "lsb", NULL, name, action, interval, timeout, NULL, 0);
+    return resources_action_create(name, PCMK_RESOURCE_CLASS_LSB, NULL, name,
+                                   action, interval, timeout, NULL, 0);
 }
 
 const char *
@@ -70,20 +71,20 @@ resources_find_service_class(const char *agent)
     rc = asprintf(&path, "%s/%s", LSB_ROOT_DIR, agent);
     if (rc > 0 && stat(path, &st) == 0) {
         free(path);
-        return "lsb";
+        return PCMK_RESOURCE_CLASS_LSB;
     }
     free(path);
 #endif
 
 #if SUPPORT_SYSTEMD
     if (systemd_unit_exists(agent)) {
-        return "systemd";
+        return PCMK_RESOURCE_CLASS_SYSTEMD;
     }
 #endif
 
 #if SUPPORT_UPSTART
     if (upstart_job_exists(agent)) {
-        return "upstart";
+        return PCMK_RESOURCE_CLASS_UPSTART;
     }
 #endif
     return NULL;
@@ -100,8 +101,8 @@ resources_find_service_class(const char *agent)
 static inline gboolean
 inflight_systemd_or_upstart(svc_action_t *op)
 {
-    return (safe_str_eq(op->standard, "systemd")
-            || safe_str_eq(op->standard, "upstart"))
+    return (safe_str_eq(op->standard, PCMK_RESOURCE_CLASS_SYSTEMD)
+            || safe_str_eq(op->standard, PCMK_RESOURCE_CLASS_UPSTART))
             && (g_list_find(inflight_ops, op) != NULL);
 }
 
@@ -122,7 +123,7 @@ expand_resource_class(const char *rsc, const char *standard, const char *agent)
 {
     char *expanded_class = NULL;
 
-    if (strcasecmp(standard, "service") == 0) {
+    if (strcasecmp(standard, PCMK_RESOURCE_CLASS_SERVICE) == 0) {
         const char *found_class = resources_find_service_class(agent);
 
         if (found_class) {
@@ -131,7 +132,7 @@ expand_resource_class(const char *rsc, const char *standard, const char *agent)
         } else {
             crm_info("Assuming resource class lsb for agent %s for %s",
                      agent, rsc);
-            expanded_class = strdup("lsb");
+            expanded_class = strdup(PCMK_RESOURCE_CLASS_LSB);
         }
     } else {
         expanded_class = strdup(standard);
@@ -162,7 +163,8 @@ resources_action_create(const char *name, const char *standard, const char *prov
         goto return_error;
     }
 
-    if (!strcasecmp(standard, "ocf") && crm_strlen_zero(provider)) {
+    if (!strcasecmp(standard, PCMK_RESOURCE_CLASS_OCF)
+        && crm_strlen_zero(provider)) {
         crm_err("Cannot create OCF operation for %s without provider", name);
         goto return_error;
     }
@@ -194,14 +196,14 @@ resources_action_create(const char *name, const char *standard, const char *prov
 
     if (safe_str_eq(action, "monitor") && (
 #if SUPPORT_HEARTBEAT
-        safe_str_eq(op->standard, "heartbeat") ||
+        safe_str_eq(op->standard, PCMK_RESOURCE_CLASS_HB) ||
 #endif
-        safe_str_eq(op->standard, "lsb"))) {
+        safe_str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB))) {
         action = "status";
     }
     op->action = strdup(action);
 
-    if (strcasecmp(op->standard, "ocf") == 0) {
+    if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
         op->provider = strdup(provider);
         op->params = params;
         params = NULL;
@@ -213,7 +215,7 @@ resources_action_create(const char *name, const char *standard, const char *prov
         op->opaque->args[0] = strdup(op->opaque->exec);
         op->opaque->args[1] = strdup(action);
 
-    } else if (strcasecmp(op->standard, "lsb") == 0) {
+    } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_LSB) == 0) {
         if (op->agent[0] == '/') {
             /* if given an absolute path, use that instead
              * of tacking on the LSB_ROOT_DIR path to the front */
@@ -226,7 +228,7 @@ resources_action_create(const char *name, const char *standard, const char *prov
         op->opaque->args[1] = strdup(op->action);
         op->opaque->args[2] = NULL;
 #if SUPPORT_HEARTBEAT
-    } else if (strcasecmp(op->standard, "heartbeat") == 0) {
+    } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_HB) == 0) {
         int index;
         int param_num;
         char buf_tmp[20];
@@ -262,15 +264,15 @@ resources_action_create(const char *name, const char *standard, const char *prov
         op->opaque->args[param_num] = NULL;
 #endif
 #if SUPPORT_SYSTEMD
-    } else if (strcasecmp(op->standard, "systemd") == 0) {
+    } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_SYSTEMD) == 0) {
         op->opaque->exec = strdup("systemd-dbus");
 #endif
 #if SUPPORT_UPSTART
-    } else if (strcasecmp(op->standard, "upstart") == 0) {
+    } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_UPSTART) == 0) {
         op->opaque->exec = strdup("upstart-dbus");
 #endif
 #if SUPPORT_NAGIOS
-    } else if (strcasecmp(op->standard, "nagios") == 0) {
+    } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_NAGIOS) == 0) {
         int index = 0;
 
         if (op->agent[0] == '/') {
@@ -637,11 +639,13 @@ inline static gboolean
 action_exec_helper(svc_action_t * op)
 {
     /* Whether a/synchronous must be decided (op->synchronous) beforehand. */
-    if (op->standard && strcasecmp(op->standard, "upstart") == 0) {
+    if (op->standard
+        && (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_UPSTART) == 0)) {
 #if SUPPORT_UPSTART
         return upstart_job_exec(op);
 #endif
-    } else if (op->standard && strcasecmp(op->standard, "systemd") == 0) {
+    } else if (op->standard && strcasecmp(op->standard,
+                                          PCMK_RESOURCE_CLASS_SYSTEMD) == 0) {
 #if SUPPORT_SYSTEMD
         return systemd_unit_exec(op);
 #endif
@@ -803,7 +807,7 @@ get_directory_list(const char *root, gboolean files, gboolean executable)
 GList *
 services_list(void)
 {
-    return resources_list_agents("lsb", NULL);
+    return resources_list_agents(PCMK_RESOURCE_CLASS_LSB, NULL);
 }
 
 #if SUPPORT_HEARTBEAT
@@ -820,14 +824,15 @@ resources_list_standards(void)
     GList *standards = NULL;
     GList *agents = NULL;
 
-    standards = g_list_append(standards, strdup("ocf"));
-    standards = g_list_append(standards, strdup("lsb"));
-    standards = g_list_append(standards, strdup("service"));
+    standards = g_list_append(standards, strdup(PCMK_RESOURCE_CLASS_OCF));
+    standards = g_list_append(standards, strdup(PCMK_RESOURCE_CLASS_LSB));
+    standards = g_list_append(standards, strdup(PCMK_RESOURCE_CLASS_SERVICE));
 
 #if SUPPORT_SYSTEMD
     agents = systemd_unit_listall();
     if (agents) {
-        standards = g_list_append(standards, strdup("systemd"));
+        standards = g_list_append(standards,
+                                  strdup(PCMK_RESOURCE_CLASS_SYSTEMD));
         g_list_free_full(agents, free);
     }
 #endif
@@ -835,7 +840,8 @@ resources_list_standards(void)
 #if SUPPORT_UPSTART
     agents = upstart_job_listall();
     if (agents) {
-        standards = g_list_append(standards, strdup("upstart"));
+        standards = g_list_append(standards,
+                                  strdup(PCMK_RESOURCE_CLASS_UPSTART));
         g_list_free_full(agents, free);
     }
 #endif
@@ -843,13 +849,14 @@ resources_list_standards(void)
 #if SUPPORT_NAGIOS
     agents = resources_os_list_nagios_agents();
     if (agents) {
-        standards = g_list_append(standards, strdup("nagios"));
+        standards = g_list_append(standards,
+                                  strdup(PCMK_RESOURCE_CLASS_NAGIOS));
         g_list_free_full(agents, free);
     }
 #endif
 
 #if SUPPORT_HEARTBEAT
-    standards = g_list_append(standards, strdup("heartbeat"));
+    standards = g_list_append(standards, strdup(PCMK_RESOURCE_CLASS_HB));
 #endif
 
     return standards;
@@ -858,7 +865,7 @@ resources_list_standards(void)
 GList *
 resources_list_providers(const char *standard)
 {
-    if (strcasecmp(standard, "ocf") == 0) {
+    if (strcasecmp(standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
         return resources_os_list_ocf_providers();
     }
 
@@ -868,7 +875,9 @@ resources_list_providers(const char *standard)
 GList *
 resources_list_agents(const char *standard, const char *provider)
 {
-    if (standard == NULL || strcasecmp(standard, "service") == 0) {
+    if ((standard == NULL)
+        || (strcasecmp(standard, PCMK_RESOURCE_CLASS_SERVICE) == 0)) {
+
         GList *tmp1;
         GList *tmp2;
         GList *result = resources_os_list_lsb_agents();
@@ -898,24 +907,24 @@ resources_list_agents(const char *standard, const char *provider)
 
         return result;
 
-    } else if (strcasecmp(standard, "ocf") == 0) {
+    } else if (strcasecmp(standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
         return resources_os_list_ocf_agents(provider);
-    } else if (strcasecmp(standard, "lsb") == 0) {
+    } else if (strcasecmp(standard, PCMK_RESOURCE_CLASS_LSB) == 0) {
         return resources_os_list_lsb_agents();
 #if SUPPORT_HEARTBEAT
-    } else if (strcasecmp(standard, "heartbeat") == 0) {
+    } else if (strcasecmp(standard, PCMK_RESOURCE_CLASS_HB) == 0) {
         return resources_os_list_hb_agents();
 #endif
 #if SUPPORT_SYSTEMD
-    } else if (strcasecmp(standard, "systemd") == 0) {
+    } else if (strcasecmp(standard, PCMK_RESOURCE_CLASS_SYSTEMD) == 0) {
         return systemd_unit_listall();
 #endif
 #if SUPPORT_UPSTART
-    } else if (strcasecmp(standard, "upstart") == 0) {
+    } else if (strcasecmp(standard, PCMK_RESOURCE_CLASS_UPSTART) == 0) {
         return upstart_job_listall();
 #endif
 #if SUPPORT_NAGIOS
-    } else if (strcasecmp(standard, "nagios") == 0) {
+    } else if (strcasecmp(standard, PCMK_RESOURCE_CLASS_NAGIOS) == 0) {
         return resources_os_list_nagios_agents();
 #endif
     }

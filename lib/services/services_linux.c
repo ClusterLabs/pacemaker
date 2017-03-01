@@ -177,7 +177,8 @@ set_ocf_env_with_prefix(gpointer key, gpointer value, gpointer user_data)
 static void
 add_OCF_env_vars(svc_action_t * op)
 {
-    if (!op->standard || strcasecmp("ocf", op->standard) != 0) {
+    if ((op->standard == NULL)
+        || (strcasecmp(PCMK_RESOURCE_CLASS_OCF, op->standard) != 0)) {
         return;
     }
 
@@ -338,13 +339,15 @@ services_handle_exec_error(svc_action_t * op, int error)
     int rc_not_installed, rc_insufficient_priv, rc_exec_error;
 
     /* Mimic the return codes for each standard as that's what we'll convert back from in get_uniform_rc() */
-    if (safe_str_eq(op->standard, "lsb") && safe_str_eq(op->action, "status")) {
+    if (safe_str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB)
+        && safe_str_eq(op->action, "status")) {
+
         rc_not_installed = PCMK_LSB_STATUS_NOT_INSTALLED;
         rc_insufficient_priv = PCMK_LSB_STATUS_INSUFFICIENT_PRIV;
         rc_exec_error = PCMK_LSB_STATUS_UNKNOWN;
 
 #if SUPPORT_NAGIOS
-    } else if (safe_str_eq(op->standard, "nagios")) {
+    } else if (safe_str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS)) {
         rc_not_installed = NAGIOS_NOT_INSTALLED;
         rc_insufficient_priv = NAGIOS_INSUFFICIENT_PRIV;
         rc_exec_error = PCMK_OCF_EXEC_ERROR;

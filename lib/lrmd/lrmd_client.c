@@ -1438,7 +1438,7 @@ lrmd_api_register_rsc(lrmd_t * lrmd,
     if (!class || !type || !rsc_id) {
         return -EINVAL;
     }
-    if (safe_str_eq(class, "ocf") && !provider) {
+    if (safe_str_eq(class, PCMK_RESOURCE_CLASS_OCF) && !provider) {
         return -EINVAL;
     }
 
@@ -1525,7 +1525,7 @@ lrmd_api_get_rsc_info(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options 
     if (!class || !type) {
         free_xml(output);
         return NULL;
-    } else if (safe_str_eq(class, "ocf") && !provider) {
+    } else if (safe_str_eq(class, PCMK_RESOURCE_CLASS_OCF) && !provider) {
         free_xml(output);
         return NULL;
     }
@@ -1969,20 +1969,20 @@ lrmd_api_get_metadata(lrmd_t * lrmd,
         return -EINVAL;
     }
 
-    if (safe_str_eq(class, "service")) {
+    if (safe_str_eq(class, PCMK_RESOURCE_CLASS_SERVICE)) {
         class = resources_find_service_class(type);
     }
 
-    if (safe_str_eq(class, "stonith")) {
+    if (safe_str_eq(class, PCMK_RESOURCE_CLASS_STONITH)) {
         return stonith_get_metadata(provider, type, output);
-    } else if (safe_str_eq(class, "lsb")) {
+    } else if (safe_str_eq(class, PCMK_RESOURCE_CLASS_LSB)) {
         return lsb_get_metadata(type, output);
 #if SUPPORT_NAGIOS
-    } else if (safe_str_eq(class, "nagios")) {
+    } else if (safe_str_eq(class, PCMK_RESOURCE_CLASS_NAGIOS)) {
         return nagios_get_metadata(type, output);
 #endif
 #if SUPPORT_HEARTBEAT
-    } else if (safe_str_eq(class, "heartbeat")) {
+    } else if (safe_str_eq(class, PCMK_RESOURCE_CLASS_HB)) {
 	return heartbeat_get_metadata(type, output);
 #endif
     }
@@ -2073,7 +2073,7 @@ lrmd_api_list_agents(lrmd_t * lrmd, lrmd_list_t ** resources, const char *class,
 {
     int rc = 0;
 
-    if (safe_str_eq(class, "stonith")) {
+    if (safe_str_eq(class, PCMK_RESOURCE_CLASS_STONITH)) {
         rc += list_stonith_agents(resources);
 
     } else {
@@ -2124,11 +2124,12 @@ lrmd_api_list_ocf_providers(lrmd_t * lrmd, const char *agent, lrmd_list_t ** pro
     GList *ocf_providers = NULL;
     GListPtr gIter = NULL;
 
-    ocf_providers = resources_list_providers("ocf");
+    ocf_providers = resources_list_providers(PCMK_RESOURCE_CLASS_OCF);
 
     for (gIter = ocf_providers; gIter != NULL; gIter = gIter->next) {
         provider = gIter->data;
-        if (!agent || does_provider_have_agent(agent, provider, "ocf")) {
+        if (!agent || does_provider_have_agent(agent, provider,
+                                               PCMK_RESOURCE_CLASS_OCF)) {
             *providers = lrmd_list_add(*providers, (const char *)gIter->data);
             rc++;
         }
@@ -2153,7 +2154,7 @@ lrmd_api_list_standards(lrmd_t * lrmd, lrmd_list_t ** supported)
     }
 
     if (list_stonith_agents(NULL) > 0) {
-        *supported = lrmd_list_add(*supported, "stonith");
+        *supported = lrmd_list_add(*supported, PCMK_RESOURCE_CLASS_STONITH);
         rc++;
     }
 

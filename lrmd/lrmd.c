@@ -139,8 +139,9 @@ static const char *
 normalize_action_name(lrmd_rsc_t * rsc, const char *action)
 {
     if (safe_str_eq(action, "monitor") &&
-        (safe_str_eq(rsc->class, "lsb") ||
-         safe_str_eq(rsc->class, "service") || safe_str_eq(rsc->class, "systemd"))) {
+        (safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_LSB) ||
+         safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_SERVICE)
+         || safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_SYSTEMD))) {
         return "status";
     }
     return action;
@@ -435,7 +436,7 @@ merge_dup:
     cmd->userdata_str = NULL;
     dup->call_id = cmd->call_id;
 
-    if (safe_str_eq(rsc->class, "stonith")) {
+    if (safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH)) {
         /* if we are waiting for the next interval, kick it off now */
         if (dup_pending == TRUE) {
             g_source_remove(cmd->stonith_recurring_id);
@@ -854,16 +855,16 @@ nagios2uniform_rc(const char *action, int rc)
 static int
 get_uniform_rc(const char *standard, const char *action, int rc)
 {
-    if (safe_str_eq(standard, "ocf")) {
+    if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_OCF)) {
         return ocf2uniform_rc(rc);
-    } else if (safe_str_eq(standard, "stonith")) {
+    } else if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_STONITH)) {
         return stonith2uniform_rc(action, rc);
-    } else if (safe_str_eq(standard, "systemd")) {
+    } else if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_SYSTEMD)) {
         return rc;
-    } else if (safe_str_eq(standard, "upstart")) {
+    } else if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_UPSTART)) {
         return rc;
 #if SUPPORT_NAGIOS
-    } else if (safe_str_eq(standard, "nagios")) {
+    } else if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_NAGIOS)) {
         return nagios2uniform_rc(action, rc);
 #endif
     } else {
@@ -876,7 +877,7 @@ action_get_uniform_rc(svc_action_t * action)
 {
     lrmd_cmd_t *cmd = action->cb_data;
 #if SUPPORT_HEARTBEAT
-    if (safe_str_eq(action->standard, "heartbeat")) {
+    if (safe_str_eq(action->standard, PCMK_RESOURCE_CLASS_HB)) {
         return hb2uniform_rc(cmd->action, action->rc, action->stdout_data);
     }
 #endif
@@ -991,13 +992,13 @@ action_complete(svc_action_t * action)
     cmd->lrmd_op_status = action->status;
     rsc = cmd->rsc_id ? g_hash_table_lookup(rsc_list, cmd->rsc_id) : NULL;
 
-    if(rsc && safe_str_eq(rsc->class, "service")) {
+    if (rsc && safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_SERVICE)) {
         rclass = resources_find_service_class(rsc->class);
     } else if(rsc) {
         rclass = rsc->class;
     }
 
-    if (safe_str_eq(rclass, "systemd")) {
+    if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_SYSTEMD)) {
         if(cmd->exec_rc == PCMK_OCF_OK && safe_str_eq(cmd->action, "start")) {
             /* systemd I curse thee!
              *
@@ -1042,7 +1043,7 @@ action_complete(svc_action_t * action)
     }
 
 #if SUPPORT_NAGIOS
-    if (rsc && safe_str_eq(rsc->class, "nagios")) {
+    if (rsc && safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_NAGIOS)) {
         if (safe_str_eq(cmd->action, "monitor") &&
             cmd->interval == 0 && cmd->exec_rc == PCMK_OCF_OK) {
             /* Successfully executed --version for the nagios plugin */
@@ -1123,7 +1124,7 @@ stonith_action_complete(lrmd_cmd_t * cmd, int rc)
     int recurring = cmd->interval;
     lrmd_rsc_t *rsc = NULL;
 
-    cmd->exec_rc = get_uniform_rc("stonith", cmd->action, rc);
+    cmd->exec_rc = get_uniform_rc(PCMK_RESOURCE_CLASS_STONITH, cmd->action, rc);
 
     rsc = g_hash_table_lookup(rsc_list, cmd->rsc_id);
 
@@ -1184,7 +1185,7 @@ stonith_connection_failed(void)
 
     g_hash_table_iter_init(&iter, rsc_list);
     while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & rsc)) {
-        if (safe_str_eq(rsc->class, "stonith")) {
+        if (safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH)) {
             if (rsc->active) {
                 cmd_list = g_list_append(cmd_list, rsc->active);
             }
@@ -1219,7 +1220,8 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     stonith_t *stonith_api = get_stonith_connection();
 
     if (!stonith_api) {
-        cmd->exec_rc = get_uniform_rc("stonith", cmd->action, -ENOTCONN);
+        cmd->exec_rc = get_uniform_rc(PCMK_RESOURCE_CLASS_STONITH, cmd->action,
+                                      -ENOTCONN);
         cmd->lrmd_op_status = PCMK_LRM_OP_ERROR;
         cmd_finalize(cmd, rsc);
         return -EUNATCH;
@@ -1302,7 +1304,9 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 
 #if SUPPORT_NAGIOS
     /* Recurring operations are cancelled anyway for a stop operation */
-    if (safe_str_eq(rsc->class, "nagios") && safe_str_eq(cmd->action, "stop")) {
+    if (safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_NAGIOS)
+        && safe_str_eq(cmd->action, "stop")) {
+
         cmd->exec_rc = PCMK_OCF_OK;
         goto exec_done;
     }
@@ -1320,7 +1324,7 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     if (cmd->isolation_wrapper) {
         g_hash_table_remove(params_copy, "CRM_meta_isolation_wrapper");
         action = resources_action_create(rsc->rsc_id,
-                                         "ocf",
+                                         PCMK_RESOURCE_CLASS_OCF,
                                          LRMD_ISOLATION_PROVIDER,
                                          cmd->isolation_wrapper,
                                          cmd->action, /*action will be normalized in wrapper*/
@@ -1417,7 +1421,7 @@ lrmd_rsc_execute(lrmd_rsc_t * rsc)
 
     log_execute(cmd);
 
-    if (safe_str_eq(rsc->class, "stonith")) {
+    if (safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH)) {
         lrmd_rsc_execute_stonith(rsc, cmd);
     } else {
         lrmd_rsc_execute_service_lib(rsc, cmd);
@@ -1437,7 +1441,7 @@ free_rsc(gpointer data)
 {
     GListPtr gIter = NULL;
     lrmd_rsc_t *rsc = data;
-    int is_stonith = safe_str_eq(rsc->class, "stonith");
+    int is_stonith = safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH);
 
     gIter = rsc->pending_ops;
     while (gIter != NULL) {
@@ -1679,7 +1683,7 @@ cancel_op(const char *rsc_id, const char *action, int interval)
         }
     }
 
-    if (safe_str_eq(rsc->class, "stonith")) {
+    if (safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH)) {
         /* The service library does not handle stonith operations.
          * We have to handle recurring stonith operations ourselves. */
         for (gIter = rsc->recurring_ops; gIter != NULL; gIter = gIter->next) {

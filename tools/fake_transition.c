@@ -298,17 +298,18 @@ inject_resource(xmlNode * cib_node, const char *resource, const char *rclass, co
                 "  Please supply the class and type to continue\n", resource, ID(cib_node));
         return NULL;
 
-    } else if (safe_str_neq(rclass, "ocf")
-               && safe_str_neq(rclass, "stonith")
-               && safe_str_neq(rclass, "heartbeat")
-               && safe_str_neq(rclass, "service")
-               && safe_str_neq(rclass, "upstart")
-               && safe_str_neq(rclass, "systemd")
-               && safe_str_neq(rclass, "lsb")) {
+    } else if (safe_str_neq(rclass, PCMK_RESOURCE_CLASS_OCF)
+               && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_STONITH)
+               && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_HB)
+               && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_SERVICE)
+               && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_UPSTART)
+               && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_SYSTEMD)
+               && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_LSB)) {
         fprintf(stderr, "Invalid class for %s: %s\n", resource, rclass);
         return NULL;
 
-    } else if (safe_str_eq(rclass, "ocf") && rprovider == NULL) {
+    } else if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_OCF)
+               && rprovider == NULL) {
         fprintf(stderr, "Please specify the provider for resource %s\n", resource);
         return NULL;
     }
