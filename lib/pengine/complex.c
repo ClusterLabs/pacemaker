@@ -834,7 +834,7 @@ uber_parent(resource_t * rsc)
     if (parent == NULL) {
         return NULL;
     }
-    while (parent->parent != NULL) {
+    while (parent->parent != NULL && parent->parent->variant != pe_container) {
         parent = parent->parent;
     }
     return parent;
