@@ -199,7 +199,14 @@ te_legacy_update_diff(const char *event, xmlNode * diff)
 
         path_max = strlen(rsc_op_template) + strlen(op_id) + 1;
         rsc_op_xpath = calloc(1, path_max);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
         snprintf(rsc_op_xpath, path_max, rsc_op_template, op_id);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
 
         op_match = xpath_search(diff, rsc_op_xpath);
         if (numXpathResults(op_match) == 0) {

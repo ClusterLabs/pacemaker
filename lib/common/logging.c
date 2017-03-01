@@ -196,11 +196,25 @@ set_format_string(int method, const char *daemon)
         struct utsname res;
 
         if (uname(&res) == 0) {
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
             offset +=
                 snprintf(fmt + offset, FMT_MAX - offset, "%%t [%d] %s %10s: ", getpid(),
                          res.nodename, daemon);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
         } else {
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
             offset += snprintf(fmt + offset, FMT_MAX - offset, "%%t [%d] %10s: ", getpid(), daemon);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
         }
     }
 
@@ -363,8 +377,18 @@ crm_control_blackbox(int nsig, bool enable)
     if (blackbox_file_prefix == NULL) {
         pid_t pid = getpid();
 
+        /* XXX We can evaluate the exact size needed; it can also be
+               upper bounded relative to its later concatenation use
+               in crm_write_blackbox. */
         blackbox_file_prefix = malloc(NAME_MAX);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
         snprintf(blackbox_file_prefix, NAME_MAX, "%s/%s-%d", CRM_BLACKBOX_DIR, crm_system_name, pid);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
     }
 
     if (enable && qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
@@ -438,7 +462,14 @@ crm_write_blackbox(int nsig, struct qb_log_callsite *cs)
                 return;
             }
 
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
             snprintf(buffer, NAME_MAX, "%s.%d", blackbox_file_prefix, counter++);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
             if (nsig == SIGTRAP) {
                 crm_notice("Blackbox dump requested, please see %s for contents", buffer);
 
@@ -562,7 +593,14 @@ crm_log_filter(struct qb_log_callsite *cs)
             do {
                 offset = next;
                 next = strchrnul(offset, ',');
-                snprintf(token, 499, "%.*s", (int)(next - offset), offset);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
+                snprintf(token, sizeof(token), "%.*s", (int)(next - offset), offset);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
 
                 tag = g_quark_from_string(token);
                 crm_info("Created GQuark %u from token '%s' in '%s'", tag, token, trace_tags);

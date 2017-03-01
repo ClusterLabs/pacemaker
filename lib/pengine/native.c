@@ -537,7 +537,14 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
         const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
         offset += snprintf(buffer + offset, LINE_MAX - offset, "::%s", prov);
     }
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
     offset += snprintf(buffer + offset, LINE_MAX - offset, ":%s):\t", kind);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
     if(is_set(rsc->flags, pe_rsc_orphan)) {
         offset += snprintf(buffer + offset, LINE_MAX - offset, " ORPHANED ");
     }

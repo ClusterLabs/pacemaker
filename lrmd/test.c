@@ -124,7 +124,14 @@ test_shutdown(int nsig)
 static void
 read_events(lrmd_event_data_t * event)
 {
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
     report_event(event);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
     if (options.listen) {
         if (safe_str_eq(options.listen, event_buf_v0)) {
             print_result(printf("LISTEN EVENT SUCCESSFUL\n"));

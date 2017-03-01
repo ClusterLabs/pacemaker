@@ -350,10 +350,17 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
                 crm_xml_add(new_node, XML_ATTR_UNAME, node->uname);
 
                 /* Search and remove unknown nodes with the conflicting uname from CIB */
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
                 snprintf(xpath, NODE_PATH_MAX,
                          "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_NODES
                          "/" XML_CIB_TAG_NODE "[@uname='%s'][@id!='%s']",
                          node->uname, node->uuid);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
 
                 call_id = fsa_cib_conn->cmds->query(fsa_cib_conn, xpath, NULL,
                                                     cib_scope_local | cib_xpath);

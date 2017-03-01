@@ -807,7 +807,14 @@ services_os_get_directory_list(const char *root, gboolean files, gboolean execut
             continue;
         }
 
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
         snprintf(buffer, sizeof(buffer), "%s/%s", root, namelist[lpc]->d_name);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
 
         if (stat(buffer, &sb)) {
             continue;

@@ -212,7 +212,14 @@ get_ra_version(const char *class, const char *provider, const char *type, gboole
         ra_version_hash = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
     }
 
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
     snprintf(key, len, "%s:%s:%s", class, provider, type);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
 
     version = g_hash_table_lookup(ra_version_hash, key);
 

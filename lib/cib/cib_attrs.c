@@ -110,20 +110,41 @@ find_nvpair_attr_delegate(cib_t * the_cib, const char *attr, const char *section
             node_type = XML_CIB_TAG_STATE;
             set_type = XML_TAG_TRANSIENT_NODEATTRS;
         }
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
         attr_snprintf(xpath_string, offset, xpath_max, "//%s[@id='%s']", node_type,
                       node_uuid);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
     }
 
     if (set_name) {
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
         attr_snprintf(xpath_string, offset, xpath_max, "//%s[@id='%.128s']", set_type,
                       set_name);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
     } else {
         attr_snprintf(xpath_string, offset, xpath_max, "//%s", set_type);
     }
 
     attr_snprintf(xpath_string, offset, xpath_max, "//nvpair[");
     if (attr_id) {
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
         attr_snprintf(xpath_string, offset, xpath_max, "@id='%s'", attr_id);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
     }
 
     if (attr_name) {

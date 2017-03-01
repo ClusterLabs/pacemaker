@@ -1001,7 +1001,14 @@ erase_status_tag(const char *uname, const char *tag, int options)
     int cib_opts = cib_quorum_override | cib_xpath | options;
 
     if (fsa_cib_conn && uname) {
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
         snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", uname, tag);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
         crm_info("Deleting xpath: %s", xpath);
         rc = fsa_cib_conn->cmds->delete(fsa_cib_conn, xpath, NULL, cib_opts);
         fsa_register_cib_callback(rc, FALSE, strdup(xpath), erase_xpath_callback);

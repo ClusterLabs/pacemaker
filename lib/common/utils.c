@@ -1077,7 +1077,13 @@ crm_pid_active(long pid, const char *daemon)
     return 0;
 }
 
-#define	LOCKSTRLEN	11
+/* ceil(log10(2^64)) B (for 8 B longs) + 1 B for trailing '\n'
+   Note that while currently Linux on 64 bit architecture cannot be set
+   to support PIDs 2^22+ by default (hence 8 would be enough), it's unclear
+   whether other OS implementations, perhaps with PID space randomization,
+   cannot run into much bigger PIDs so play on the safe side in accordance
+   to existing (unsigned long) getpid result casting. */
+#define	LOCKSTRLEN	21
 
 long
 crm_read_pidfile(const char *filename)

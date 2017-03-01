@@ -135,25 +135,53 @@ find_resource_attr(cib_t * the_cib, const char *attr, const char *rsc, const cha
     offset +=
         snprintf(xpath_string + offset, xpath_max - offset, "%s", get_object_path("resources"));
 
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
     offset += snprintf(xpath_string + offset, xpath_max - offset, "//*[@id=\"%s\"]", rsc);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
 
     if (set_type) {
         offset += snprintf(xpath_string + offset, xpath_max - offset, "/%s", set_type);
         if (set_name) {
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
             offset += snprintf(xpath_string + offset, xpath_max - offset, "[@id=\"%s\"]", set_name);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
         }
     }
 
     offset += snprintf(xpath_string + offset, xpath_max - offset, "//nvpair[");
     if (attr_id) {
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
         offset += snprintf(xpath_string + offset, xpath_max - offset, "@id=\"%s\"", attr_id);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
     }
 
     if (attr_name) {
         if (attr_id) {
             offset += snprintf(xpath_string + offset, xpath_max - offset, " and ");
         }
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
         offset += snprintf(xpath_string + offset, xpath_max - offset, "@name=\"%s\"", attr_name);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
     }
     offset += snprintf(xpath_string + offset, xpath_max - offset, "]");
     CRM_LOG_ASSERT(offset > 0);
@@ -559,10 +587,9 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
     crm_xml_add(params, key, "60000");  /* 1 minute */
     free(key);
 
-    our_pid = calloc(1, 11);
+    our_pid = malloc(21);
     if (our_pid != NULL) {
-        snprintf(our_pid, 10, "%d", getpid());
-        our_pid[10] = '\0';
+        snprintf(our_pid, 21, "%lu", (unsigned long) getpid());
     }
     cmd = create_request(op, msg_data, router_node, CRM_SYSTEM_CRMD, crm_system_name, our_pid);
 

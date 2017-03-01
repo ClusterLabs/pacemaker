@@ -446,13 +446,13 @@ crm_time_as_string(crm_time_t * date_time, int flags)
         if(dt->seconds) {
             offset += snprintf(date_s+offset, max-offset, "%d seconds ( ", dt->seconds);
             if(h) {
-                offset += snprintf(date_s+offset, max-offset, "%d hour%s ", h, h>1?"s":"");
+                offset += snprintf(date_s+offset, max-offset, "%u hour%s ", h, h>1?"s":"");
             }
             if(m) {
-                offset += snprintf(date_s+offset, max-offset, "%d minute%s ", m, m>1?"s":"");
+                offset += snprintf(date_s+offset, max-offset, "%u minute%s ", m, m>1?"s":"");
             }
             if(s) {
-                offset += snprintf(date_s+offset, max-offset, "%d second%s ", s, s>1?"s":"");
+                offset += snprintf(date_s+offset, max-offset, "%u second%s ", s, s>1?"s":"");
             }
             offset += snprintf(date_s+offset, max-offset, ")");
         }
@@ -460,7 +460,7 @@ crm_time_as_string(crm_time_t * date_time, int flags)
     }
 
     if (flags & crm_time_log_date) {
-        date_s = calloc(1, 32);
+        date_s = calloc(1, 34);
         if (date_s == NULL) {
             goto done;
 
@@ -481,7 +481,7 @@ crm_time_as_string(crm_time_t * date_time, int flags)
             uint y, w, d;
 
             if (crm_time_get_isoweek(dt, &y, &w, &d)) {
-                snprintf(date_s, 31, "%d-W%.2d-%d", y, w, d);
+                snprintf(date_s, 34, "%u-W%.2u-%u", y, w, d);
             }
 
         } else if (flags & crm_time_ordinal) {
@@ -489,7 +489,7 @@ crm_time_as_string(crm_time_t * date_time, int flags)
             uint y, d;
 
             if (crm_time_get_ordinal(dt, &y, &d)) {
-                snprintf(date_s, 31, "%d-%.3d", y, d);
+                snprintf(date_s, 22, "%u-%.3u", y, d);
             }
 
         } else {
@@ -497,7 +497,7 @@ crm_time_as_string(crm_time_t * date_time, int flags)
             uint y, m, d;
 
             if (crm_time_get_gregorian(dt, &y, &m, &d)) {
-                snprintf(date_s, 31, "%.4d-%.2d-%.2d", y, m, d);
+                snprintf(date_s, 33, "%.4u-%.2u-%.2u", y, m, d);
             }
         }
     }
@@ -505,35 +505,42 @@ crm_time_as_string(crm_time_t * date_time, int flags)
     if (flags & crm_time_log_timeofday) {
         uint h, m, s;
 
-        time_s = calloc(1, 32);
+        time_s = calloc(1, 33);
         if (time_s == NULL) {
             goto cleanup;
         }
 
         if (crm_time_get_timeofday(dt, &h, &m, &s)) {
-            snprintf(time_s, 31, "%.2d:%.2d:%.2d", h, m, s);
+            snprintf(time_s, 33, "%.2u:%.2u:%.2u", h, m, s);
         }
 
         if (dt->offset != 0) {
             crm_time_get_sec(dt->offset, &h, &m, &s);
         }
 
-        offset_s = calloc(1, 32);
+        offset_s = calloc(1, 31);
         if ((flags & crm_time_log_with_timezone) == 0 || dt->offset == 0) {
             crm_trace("flags %6x %6x", flags, crm_time_log_with_timezone);
             snprintf(offset_s, 31, "Z");
 
         } else {
-            snprintf(offset_s, 31, " %c%.2d:%.2d", dt->offset < 0 ? '-' : '+', h, m);
+            snprintf(offset_s, 24, " %c%.2u:%.2u", dt->offset < 0 ? '-' : '+', h, m);
         }
     }
 
   done:
     result_s = calloc(1, 100);
 
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
     snprintf(result_s, 100, "%s%s%s%s",
              date_s ? date_s : "", (date_s != NULL && time_s != NULL) ? " " : "",
              time_s ? time_s : "", offset_s ? offset_s : "");
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
 
   cleanup:
     free(date_s);

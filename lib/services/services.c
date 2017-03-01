@@ -467,7 +467,14 @@ services_action_cancel(const char *name, const char *action, int interval)
     svc_action_t *op = NULL;
     char id[512];
 
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
     snprintf(id, sizeof(id), "%s_%s_%d", name, action, interval);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
 
     if (!(op = g_hash_table_lookup(recurring_actions, id))) {
         return FALSE;

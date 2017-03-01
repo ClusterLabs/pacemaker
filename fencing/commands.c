@@ -185,7 +185,14 @@ get_action_timeout(stonith_device_t * device, const char *action, int default_ti
         }
 
         /* If the device config specified an action-specific timeout, use it */
-        snprintf(buffer, sizeof(buffer) - 1, "pcmk_%s_timeout", action);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation=2"
+#endif
+        snprintf(buffer, sizeof(buffer), "pcmk_%s_timeout", action);
+#ifdef GCC_FORMAT_TRUNCATION_CHECKING_ENABLED
+#pragma GCC diagnostic pop
+#endif
         value = g_hash_table_lookup(device->params, buffer);
         if (value) {
             return atoi(value);
