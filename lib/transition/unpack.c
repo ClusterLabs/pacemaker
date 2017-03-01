@@ -134,9 +134,10 @@ unpack_synapse(crm_graph_t * new_graph, xmlNode * xml_synapse)
         new_synapse->priority = crm_parse_int(value, NULL);
     }
 
-    new_graph->num_synapses++;
     CRM_CHECK(new_synapse->id >= 0, free(new_synapse);
               return NULL);
+
+    new_graph->num_synapses++;
 
     new_synapse->graph = new_graph;
 
@@ -151,11 +152,12 @@ unpack_synapse(crm_graph_t * new_graph, xmlNode * xml_synapse)
                  action = __xml_next(action)) {
                 crm_action_t *new_action = unpack_action(new_synapse, action);
 
-                new_graph->num_actions++;
-
                 if (new_action == NULL) {
                     continue;
                 }
+
+                new_graph->num_actions++;
+
                 crm_trace("Adding action %d to synapse %d", new_action->id, new_synapse->id);
 
                 new_synapse->actions = g_list_append(new_synapse->actions, new_action);
