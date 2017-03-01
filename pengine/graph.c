@@ -1094,9 +1094,7 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
     g_hash_table_foreach(action->extra, hash2field, args_xml);
     if (action->rsc != NULL && action->node) {
         GHashTable *p = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
-#ifdef ENABLE_VERSIONED_ATTRS
-        xmlNode *versioned_parameters = create_xml_node(NULL, XML_TAG_VER_ATTRS);
-#endif
+        xmlNode *versioned_parameters = create_xml_node(NULL, XML_TAG_RSC_VER_ATTRS);
 
         get_rsc_attributes(p, action->rsc, action->node, data_set);
         g_hash_table_foreach(p, hash2smartfield, args_xml);

@@ -481,9 +481,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     (*rsc)->parameters =
         g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
 
-#ifdef ENABLE_VERSIONED_ATTRS
-    (*rsc)->versioned_parameters = create_xml_node(NULL, XML_TAG_VER_ATTRS);
-#endif
+    (*rsc)->versioned_parameters = create_xml_node(NULL, XML_TAG_RSC_VER_ATTRS);
 
     (*rsc)->meta =
         g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);

@@ -1927,7 +1927,7 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
             char *value = NULL;
             GHashTableIter iter;
 
-            versioned_attrs = first_named_child(rsc_op, XML_TAG_VER_ATTRS);
+            versioned_attrs = first_named_child(rsc_op, XML_TAG_RSC_VER_ATTRS);
             hash = pe_unpack_versioned_parameters(versioned_attrs, ra_version);
             g_hash_table_iter_init(&iter, hash);
             while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {

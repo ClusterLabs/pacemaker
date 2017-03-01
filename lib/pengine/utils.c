@@ -1770,10 +1770,8 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
     local_rsc_params = g_hash_table_new_full(crm_str_hash, g_str_equal,
                                              g_hash_destroy_str, g_hash_destroy_str);
     get_rsc_attributes(local_rsc_params, rsc, node, data_set);
-#ifdef ENABLE_VERSIONED_ATTRS
-    local_versioned_params = create_xml_node(NULL, XML_TAG_VER_ATTRS);
+    local_versioned_params = create_xml_node(NULL, XML_TAG_RSC_VER_ATTRS);
     pe_get_versioned_attributes(local_versioned_params, rsc, node, data_set);
-#endif
     data->params_all = create_xml_node(NULL, XML_TAG_PARAMS);
 
     if(fix_remote_addr(rsc) && node) {
