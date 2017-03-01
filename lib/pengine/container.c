@@ -171,7 +171,7 @@ create_docker_resource(
         create_nvp(xml_obj, "force_kill", "false");
         create_nvp(xml_obj, "reuse", "false");
 
-        offset += snprintf(buffer+offset, max-offset, "-h %s-%d --restart=no ",
+        offset += snprintf(buffer+offset, max-offset, "-h %s-%d --rm=true --restart=no ",
                            data->prefix, tuple->offset);
 
         if(data->docker_network) {
@@ -204,9 +204,6 @@ create_docker_resource(
 
             offset += snprintf(buffer+offset, max-offset, " -p %s:%s:%s",
                                tuple->ipaddr, port, port);
-#if 0
-            offset += snprintf(buffer+offset, max-offset, " --expose %s", port);
-#endif
         }
 
         if(data->docker_run_options) {
