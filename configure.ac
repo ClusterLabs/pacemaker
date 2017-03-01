@@ -1137,6 +1137,7 @@ AC_SUBST(OCF_RA_DIR)
 
 RH_STONITH_DIR="$sbindir"
 AC_DEFINE_UNQUOTED(RH_STONITH_DIR,"$RH_STONITH_DIR", Location for Red Hat Stonith agents)
+AC_DEFINE_UNQUOTED(SBIN_DIR,"$sbindir", Location for system binaries)
 
 RH_STONITH_PREFIX="fence_"
 AC_DEFINE_UNQUOTED(RH_STONITH_PREFIX,"$RH_STONITH_PREFIX", Prefix for Red Hat Stonith agents)

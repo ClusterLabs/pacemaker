@@ -217,23 +217,37 @@ create_docker_resource(
         create_nvp(xml_obj, "run_opts", buffer);
         free(buffer);
 
-        // TODO: Arrange for these directories to get created on the host
-        create_nvp(xml_obj, "directory_list", dbuffer);
+        create_nvp(xml_obj, "mount_points", dbuffer);
         free(dbuffer);
 
         if(tuple->child) {
-            // TODO: Use autoconf var
-            create_nvp(xml_obj, "run_cmd", "/usr/sbin/pacemaker_remoted");
+            create_nvp(xml_obj, "run_cmd", SBIN_DIR"/pacemaker_remoted");
 
-            // TODO: Allow users to specify their own?
-            create_nvp(xml_obj, "monitor_cmd", "/bin/true"); // We just want to know if the container
-                                                             // is alive, we'll monitor the child independantly
-
-        /* } else if(child && data->untrusted) { */
-        /*     create_nvp(xml_obj, "run_cmd", "/usr/libexec/pacemaker/lrmd"); */
-        /*     create_nvp(xml_obj, "monitor_cmd", "/usr/libexec/pacemaker/lrmd_internal_ctl -c poke"); */
+            /* TODO: Allow users to specify their own?
+             *
+             * We just want to know if the container is alive, we'll
+             * monitor the child independantly
+             */
+            create_nvp(xml_obj, "monitor_cmd", "/bin/true"); 
+        /* } else if(child && data->untrusted) {
+         * Support this use-case?
+         *
+         * The ability to have resources started/stopped by us, but
+         * unable to set attributes, etc.
+         *
+         * Arguably better to control API access this with ACLs like
+         * "normal" remote nodes
+         *
+         *     create_nvp(xml_obj, "run_cmd", "/usr/libexec/pacemaker/lrmd");
+         *     create_nvp(xml_obj, "monitor_cmd", "/usr/libexec/pacemaker/lrmd_internal_ctl -c poke");
+         */
         } else {
-            // TODO: Leave blank to use the built-in monitor?
+            /* TODO: Allow users to specify their own?
+             *
+             * We don't know what's in the container, so we just want
+             * to know if it is alive
+             */
+            create_nvp(xml_obj, "monitor_cmd", "/bin/true");
         }
 
 
