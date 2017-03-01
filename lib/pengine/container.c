@@ -171,7 +171,7 @@ create_docker_resource(
         create_nvp(xml_obj, "force_kill", "false");
         create_nvp(xml_obj, "reuse", "false");
 
-        offset += snprintf(buffer+offset, max-offset, "-h %s-%d --rm=true --restart=no ",
+        offset += snprintf(buffer+offset, max-offset, "-h %s-%d --restart=no ",
                            data->prefix, tuple->offset);
 
         if(data->docker_network) {
@@ -186,9 +186,10 @@ create_docker_resource(
                 char *source = crm_strdup_printf(
                     "%s/%s-%d", mount->source, data->prefix, tuple->offset);
 
-                // '#' should be sufficiently unlikely in a directory
-                // name and thus safe to use as a separator
-                doffset += snprintf(dbuffer+doffset, dmax-doffset, "#%s", source);
+                if(doffset > 0) {
+                    doffset += snprintf(dbuffer+doffset, dmax-doffset, ",");
+                }
+                doffset += snprintf(dbuffer+doffset, dmax-doffset, "%s", source);
                 offset += snprintf(buffer+offset, max-offset, " -v %s:%s", source, mount->target);
 
             } else {
