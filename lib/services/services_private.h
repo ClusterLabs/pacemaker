@@ -76,7 +76,7 @@ G_GNUC_INTERNAL
 void services_add_inflight_op(svc_action_t *op);
 
 G_GNUC_INTERNAL
-void handle_blocked_ops(void);
+void services_untrack_op(svc_action_t *op);
 
 G_GNUC_INTERNAL
 gboolean is_op_blocked(const char *rsc);

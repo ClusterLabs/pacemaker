@@ -422,7 +422,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, GHashTable **rsc_name_
     xml_rsc = create_xml_node(parent, XML_CIB_TAG_RESOURCE);
 
     crm_xml_add(xml_rsc, XML_ATTR_ID, remote_name);
-    crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, "ocf");
+    crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, PCMK_RESOURCE_CLASS_OCF);
     crm_xml_add(xml_rsc, XML_AGENT_ATTR_PROVIDER, "pacemaker");
     crm_xml_add(xml_rsc, XML_ATTR_TYPE, "remote");
 

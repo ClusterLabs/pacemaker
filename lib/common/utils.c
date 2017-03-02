@@ -629,21 +629,24 @@ crm_get_msec(const char *input)
     return msec;
 }
 
+/*!
+ * \brief Generate an operation key
+ *
+ * \param[in] rsc_id    ID of resource being operated on
+ * \param[in] op_type   Operation name
+ * \param[in] interval  Operation interval
+ *
+ * \return Newly allocated memory containing operation key as string
+ *
+ * \note It is the caller's responsibility to free() the result.
+ */
 char *
 generate_op_key(const char *rsc_id, const char *op_type, int interval)
 {
-    int len = 35;
-    char *op_id = NULL;
-
-    CRM_CHECK(rsc_id != NULL, return NULL);
-    CRM_CHECK(op_type != NULL, return NULL);
-
-    len += strlen(op_type);
-    len += strlen(rsc_id);
-    op_id = malloc(len);
-    CRM_CHECK(op_id != NULL, return NULL);
-    sprintf(op_id, "%s_%s_%d", rsc_id, op_type, interval);
-    return op_id;
+    CRM_ASSERT(rsc_id != NULL);
+    CRM_ASSERT(op_type != NULL);
+    CRM_ASSERT(interval >= 0);
+    return crm_strdup_printf("%s_%s_%d", rsc_id, op_type, interval);
 }
 
 gboolean

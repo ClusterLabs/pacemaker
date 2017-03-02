@@ -1496,7 +1496,7 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
     rprov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
     rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
 
-    if(safe_str_eq(rclass, "stonith")){
+    if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH)) {
         CMD_ERR("Sorry, --%s doesn't support %s resources yet", rsc_action, rclass);
         crm_exit(EOPNOTSUPP);
     }
