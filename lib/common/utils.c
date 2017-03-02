@@ -894,6 +894,7 @@ filter_action_parameters(xmlNode * param_set, const char *version)
         XML_ATTR_ID,
         XML_ATTR_CRM_VERSION,
         XML_LRM_ATTR_OP_DIGEST,
+        "pcmk_external_ip"
     };
 
     gboolean do_delete = FALSE;
