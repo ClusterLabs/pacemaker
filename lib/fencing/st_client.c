@@ -394,11 +394,10 @@ stonith_api_register_level(stonith_t * st, int options, const char *node, int le
 }
 
 static void
-append_arg(gpointer key, gpointer value, gpointer user_data)
+append_arg(const char *key, const char *value, char **args)
 {
     int len = 3;                /* =, \n, \0 */
     int last = 0;
-    char **args = user_data;
 
     CRM_CHECK(key != NULL, return);
     CRM_CHECK(value != NULL, return);
@@ -418,22 +417,20 @@ append_arg(gpointer key, gpointer value, gpointer user_data)
     }
 
     *args = realloc_safe(*args, last + len);
-    crm_trace("Appending: %s=%s", (char *)key, (char *)value);
-    sprintf((*args) + last, "%s=%s\n", (char *)key, (char *)value);
+    crm_trace("Appending: %s=%s", key, value);
+    sprintf((*args) + last, "%s=%s\n", key, value);
 }
 
 static void
-append_const_arg(const char *key, const char *value, char **arg_list)
+append_config_arg(gpointer key, gpointer value, gpointer user_data)
 {
-    CRM_LOG_ASSERT(key && value);
-    if(key && value) {
-        char *glib_sucks_key = strdup(key);
-        char *glib_sucks_value = strdup(value);
-
-        append_arg(glib_sucks_key, glib_sucks_value, arg_list);
-
-        free(glib_sucks_value);
-        free(glib_sucks_key);
+    /* stonithd will filter action out when it registers the device,
+     * but ignore it here just in case any other library callers
+     * fail to do so.
+     */
+    if (safe_str_neq(key, STONITH_ATTR_ACTION_OP)) {
+        append_arg(key, value, user_data);
+        return;
     }
 }
 
@@ -446,7 +443,7 @@ append_host_specific_args(const char *victim, const char *map, GHashTable * para
     if (map == NULL) {
         /* The best default there is for now... */
         crm_debug("Using default arg map: port=uname");
-        append_const_arg("port", victim, arg_list);
+        append_arg("port", victim, arg_list);
         return;
     }
 
@@ -489,7 +486,7 @@ append_host_specific_args(const char *victim, const char *map, GHashTable * para
 
             if (value) {
                 crm_debug("Setting '%s'='%s' (%s) for %s", name, value, param, victim);
-                append_const_arg(name, value, arg_list);
+                append_arg(name, value, arg_list);
 
             } else {
                 crm_err("No node attribute '%s' for '%s'", name, victim);
@@ -516,7 +513,6 @@ make_args(const char *agent, const char *action, const char *victim, uint32_t vi
     char buffer[512];
     char *arg_list = NULL;
     const char *value = NULL;
-    const char *_action = action;
 
     CRM_CHECK(action != NULL, return NULL);
 
@@ -542,7 +538,7 @@ make_args(const char *agent, const char *action, const char *victim, uint32_t vi
         action = value;
     }
 
-    append_const_arg(STONITH_ATTR_ACTION_OP, action, &arg_list);
+    append_arg(STONITH_ATTR_ACTION_OP, action, &arg_list);
     if (victim && device_args) {
         const char *alias = victim;
         const char *param = g_hash_table_lookup(device_args, STONITH_ATTR_HOSTARG);
@@ -554,13 +550,13 @@ make_args(const char *agent, const char *action, const char *victim, uint32_t vi
         /* Always supply the node's name too:
          *    https://fedorahosted.org/cluster/wiki/FenceAgentAPI
          */
-        append_const_arg("nodename", victim, &arg_list);
+        append_arg("nodename", victim, &arg_list);
         if (victim_nodeid) {
             char nodeid_str[33] = { 0, };
             if (snprintf(nodeid_str, 33, "%u", (unsigned int)victim_nodeid)) {
                 crm_info("For stonith action (%s) for victim %s, adding nodeid (%s) to parameters",
                          action, victim, nodeid_str);
-                append_const_arg("nodeid", nodeid_str, &arg_list);
+                append_arg("nodeid", nodeid_str, &arg_list);
             }
         }
 
@@ -592,24 +588,12 @@ make_args(const char *agent, const char *action, const char *victim, uint32_t vi
         if (value == NULL || safe_str_eq(value, "dynamic")) {
             crm_debug("Performing %s action for node '%s' as '%s=%s'", action, victim, param,
                       alias);
-            append_const_arg(param, alias, &arg_list);
+            append_arg(param, alias, &arg_list);
         }
     }
 
     if (device_args) {
-        g_hash_table_foreach(device_args, append_arg, &arg_list);
-    }
-
-    if(device_args && g_hash_table_lookup(device_args, STONITH_ATTR_ACTION_OP)) {
-        if(safe_str_eq(_action,"list")
-           || safe_str_eq(_action,"status")
-           || safe_str_eq(_action,"monitor")
-           || safe_str_eq(_action,"metadata")) {
-            /* Force use of the calculated command for support ops
-             * We don't want list or monitor ops initiating fencing, regardless of what the admin configured
-             */
-            append_const_arg(STONITH_ATTR_ACTION_OP, action, &arg_list);
-        }
+        g_hash_table_foreach(device_args, append_config_arg, &arg_list);
     }
 
     return arg_list;
