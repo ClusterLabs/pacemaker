@@ -57,8 +57,8 @@ native_color: migrator allocation score on 18node2: 0
 native_color: migrator allocation score on 18node3: 0
 native_color: ping-1:0 allocation score on 18node1: 1
 native_color: ping-1:0 allocation score on 18node2: -INFINITY
-native_color: ping-1:0 allocation score on 18node3: -INFINITY
-native_color: ping-1:1 allocation score on 18node1: 0
+native_color: ping-1:0 allocation score on 18node3: 0
+native_color: ping-1:1 allocation score on 18node1: -INFINITY
 native_color: ping-1:1 allocation score on 18node2: -INFINITY
 native_color: ping-1:1 allocation score on 18node3: 1
 native_color: ping-1:2 allocation score on 18node1: -INFINITY
@@ -85,9 +85,9 @@ native_color: rsc_18node3 allocation score on 18node2: 0
 native_color: rsc_18node3 allocation score on 18node3: 100
 native_color: stateful-1:0 allocation score on 18node1: 11
 native_color: stateful-1:0 allocation score on 18node2: -INFINITY
-native_color: stateful-1:0 allocation score on 18node3: -INFINITY
+native_color: stateful-1:0 allocation score on 18node3: 0
 native_color: stateful-1:0 allocation score on remote1: -INFINITY
-native_color: stateful-1:1 allocation score on 18node1: 0
+native_color: stateful-1:1 allocation score on 18node1: -INFINITY
 native_color: stateful-1:1 allocation score on 18node2: -INFINITY
 native_color: stateful-1:1 allocation score on 18node3: 6
 native_color: stateful-1:1 allocation score on remote1: -INFINITY

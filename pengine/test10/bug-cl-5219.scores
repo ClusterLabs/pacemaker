@@ -23,18 +23,18 @@ native_color: child2-service allocation score on ha1.test.anchor.net.au: -INFINI
 native_color: child2-service allocation score on ha2.test.anchor.net.au: 11
 native_color: parent-service allocation score on ha1.test.anchor.net.au: -INFINITY
 native_color: parent-service allocation score on ha2.test.anchor.net.au: 11
-native_color: stateful-child1:0 allocation score on ha1.test.anchor.net.au: -INFINITY
+native_color: stateful-child1:0 allocation score on ha1.test.anchor.net.au: 0
 native_color: stateful-child1:0 allocation score on ha2.test.anchor.net.au: 11
 native_color: stateful-child1:1 allocation score on ha1.test.anchor.net.au: 6
-native_color: stateful-child1:1 allocation score on ha2.test.anchor.net.au: 0
-native_color: stateful-child2:0 allocation score on ha1.test.anchor.net.au: -INFINITY
+native_color: stateful-child1:1 allocation score on ha2.test.anchor.net.au: -INFINITY
+native_color: stateful-child2:0 allocation score on ha1.test.anchor.net.au: 0
 native_color: stateful-child2:0 allocation score on ha2.test.anchor.net.au: 11
 native_color: stateful-child2:1 allocation score on ha1.test.anchor.net.au: 6
-native_color: stateful-child2:1 allocation score on ha2.test.anchor.net.au: 0
-native_color: stateful-parent:0 allocation score on ha1.test.anchor.net.au: -INFINITY
+native_color: stateful-child2:1 allocation score on ha2.test.anchor.net.au: -INFINITY
+native_color: stateful-parent:0 allocation score on ha1.test.anchor.net.au: 0
 native_color: stateful-parent:0 allocation score on ha2.test.anchor.net.au: 11
 native_color: stateful-parent:1 allocation score on ha1.test.anchor.net.au: 6
-native_color: stateful-parent:1 allocation score on ha2.test.anchor.net.au: 0
+native_color: stateful-parent:1 allocation score on ha2.test.anchor.net.au: -INFINITY
 stateful-child1:0 promotion score on ha2.test.anchor.net.au: INFINITY
 stateful-child1:1 promotion score on ha1.test.anchor.net.au: -INFINITY
 stateful-child2:0 promotion score on ha2.test.anchor.net.au: INFINITY

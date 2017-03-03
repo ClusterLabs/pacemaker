@@ -56,10 +56,10 @@ native_color: clvmd:3 allocation score on virt-2: -INFINITY
 native_color: clvmd:3 allocation score on virt-3: -INFINITY
 native_color: clvmd:3 allocation score on virt-4: -INFINITY
 native_color: dlm:0 allocation score on virt-1: 1
-native_color: dlm:0 allocation score on virt-2: -INFINITY
+native_color: dlm:0 allocation score on virt-2: 0
 native_color: dlm:0 allocation score on virt-3: 0
 native_color: dlm:0 allocation score on virt-4: -INFINITY
-native_color: dlm:1 allocation score on virt-1: 0
+native_color: dlm:1 allocation score on virt-1: -INFINITY
 native_color: dlm:1 allocation score on virt-2: 1
 native_color: dlm:1 allocation score on virt-3: 0
 native_color: dlm:1 allocation score on virt-4: -INFINITY

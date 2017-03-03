@@ -45,10 +45,10 @@ native_color: res_drbd_mysql1:0 allocation score on alice.demo: -INFINITY
 native_color: res_drbd_mysql1:0 allocation score on bob.demo: 10001
 native_color: res_drbd_mysql1:1 allocation score on alice.demo: 0
 native_color: res_drbd_mysql1:1 allocation score on bob.demo: -INFINITY
-native_color: res_drbd_mysql2:0 allocation score on alice.demo: -INFINITY
+native_color: res_drbd_mysql2:0 allocation score on alice.demo: 0
 native_color: res_drbd_mysql2:0 allocation score on bob.demo: 10001
 native_color: res_drbd_mysql2:1 allocation score on alice.demo: 10001
-native_color: res_drbd_mysql2:1 allocation score on bob.demo: 0
+native_color: res_drbd_mysql2:1 allocation score on bob.demo: -INFINITY
 native_color: res_drbd_nfsexport:0 allocation score on alice.demo: -INFINITY
 native_color: res_drbd_nfsexport:0 allocation score on bob.demo: -INFINITY
 native_color: res_drbd_nfsexport:1 allocation score on alice.demo: -INFINITY

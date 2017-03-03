@@ -10,4 +10,6 @@ group_color: VIP allocation score on ssgtest1b: 0
 native_color: VIP allocation score on ssgtest1a: INFINITY
 native_color: VIP allocation score on ssgtest1b: 0
 native_color: dollies:0 allocation score on ssgtest1a: 0
+native_color: dollies:0 allocation score on ssgtest1a: 0
+native_color: dollies:0 allocation score on ssgtest1b: INFINITY
 native_color: dollies:0 allocation score on ssgtest1b: INFINITY

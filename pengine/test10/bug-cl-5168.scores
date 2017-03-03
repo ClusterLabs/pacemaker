@@ -194,8 +194,11 @@ native_color: drbd-r0:1 allocation score on hex-1: INFINITY
 native_color: drbd-r0:1 allocation score on hex-2: 0
 native_color: drbd-r0:1 allocation score on hex-3: -INFINITY
 native_color: drbd-r1:0 allocation score on hex-1: -INFINITY
+native_color: drbd-r1:0 allocation score on hex-1: -INFINITY
+native_color: drbd-r1:0 allocation score on hex-2: 1001
 native_color: drbd-r1:0 allocation score on hex-2: 1001
 native_color: drbd-r1:0 allocation score on hex-3: -INFINITY
+native_color: drbd-r1:0 allocation score on hex-3: INFINITY
 native_color: drbd-r1:1 allocation score on hex-1: -INFINITY
 native_color: drbd-r1:1 allocation score on hex-2: 0
 native_color: drbd-r1:1 allocation score on hex-3: INFINITY

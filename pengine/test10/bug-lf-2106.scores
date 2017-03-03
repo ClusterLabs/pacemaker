@@ -96,8 +96,8 @@ native_color: itwiki allocation score on cl-virt-2: 176
 native_color: medomus-cvs allocation score on cl-virt-1: -INFINITY
 native_color: medomus-cvs allocation score on cl-virt-2: 226
 native_color: pingd:0 allocation score on cl-virt-1: 1
-native_color: pingd:0 allocation score on cl-virt-2: -INFINITY
-native_color: pingd:1 allocation score on cl-virt-1: 0
+native_color: pingd:0 allocation score on cl-virt-2: 0
+native_color: pingd:1 allocation score on cl-virt-1: -INFINITY
 native_color: pingd:1 allocation score on cl-virt-2: 1
 native_color: servsyslog allocation score on cl-virt-1: -INFINITY
 native_color: servsyslog allocation score on cl-virt-2: 176

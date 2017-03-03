@@ -10,8 +10,8 @@ native_color: dummy1 allocation score on sle12sp2-2: 0
 native_color: st_sbd allocation score on sle12sp2-1: 0
 native_color: st_sbd allocation score on sle12sp2-2: 0
 native_color: state1:0 allocation score on sle12sp2-1: 11
-native_color: state1:0 allocation score on sle12sp2-2: -INFINITY
-native_color: state1:1 allocation score on sle12sp2-1: 0
+native_color: state1:0 allocation score on sle12sp2-2: 0
+native_color: state1:1 allocation score on sle12sp2-1: -INFINITY
 native_color: state1:1 allocation score on sle12sp2-2: 6
 state1:0 promotion score on sle12sp2-1: -INFINITY
 state1:1 promotion score on sle12sp2-2: 5

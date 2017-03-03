@@ -11,11 +11,8 @@ clone_color: p_drbd-dtest1:1 allocation score on c8: -INFINITY
 native_color: p_drbd-dtest1:0 allocation score on c6: -INFINITY
 native_color: p_drbd-dtest1:0 allocation score on c7: 1001
 native_color: p_drbd-dtest1:0 allocation score on c8: -INFINITY
-native_color: p_drbd-dtest1:1 allocation score on c6: -INFINITY
 native_color: p_drbd-dtest1:1 allocation score on c6: 6
 native_color: p_drbd-dtest1:1 allocation score on c7: -INFINITY
-native_color: p_drbd-dtest1:1 allocation score on c7: 0
-native_color: p_drbd-dtest1:1 allocation score on c8: -INFINITY
 native_color: p_drbd-dtest1:1 allocation score on c8: -INFINITY
 native_color: p_dtest1 allocation score on c6: -INFINITY
 native_color: p_dtest1 allocation score on c7: 1001

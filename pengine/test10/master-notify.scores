@@ -15,14 +15,14 @@ fake:0 promotion score on rhel7-auto1: 5
 fake:1 promotion score on rhel7-auto3: 5
 fake:2 promotion score on rhel7-auto2: 5
 native_color: fake:0 allocation score on rhel7-auto1: 6
-native_color: fake:0 allocation score on rhel7-auto2: -INFINITY
-native_color: fake:0 allocation score on rhel7-auto3: -INFINITY
-native_color: fake:1 allocation score on rhel7-auto1: 0
-native_color: fake:1 allocation score on rhel7-auto2: -INFINITY
+native_color: fake:0 allocation score on rhel7-auto2: 0
+native_color: fake:0 allocation score on rhel7-auto3: 0
+native_color: fake:1 allocation score on rhel7-auto1: -INFINITY
+native_color: fake:1 allocation score on rhel7-auto2: 0
 native_color: fake:1 allocation score on rhel7-auto3: 6
-native_color: fake:2 allocation score on rhel7-auto1: 0
+native_color: fake:2 allocation score on rhel7-auto1: -INFINITY
 native_color: fake:2 allocation score on rhel7-auto2: 6
-native_color: fake:2 allocation score on rhel7-auto3: 0
+native_color: fake:2 allocation score on rhel7-auto3: -INFINITY
 native_color: shooter allocation score on rhel7-auto1: 0
 native_color: shooter allocation score on rhel7-auto2: 0
 native_color: shooter allocation score on rhel7-auto3: 0
