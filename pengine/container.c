@@ -54,6 +54,8 @@ container_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 
     get_container_variant_data(container_data, rsc);
 
+    set_bit(rsc->flags, pe_rsc_allocating);
+
     for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
         container_grouping_t *tuple = (container_grouping_t *)gIter->data;
         containers = g_list_append(containers, tuple->docker);
@@ -113,6 +115,7 @@ container_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         container_data->child->cmds->allocate(container_data->child, prefer, data_set);
     }
 
+    clear_bit(rsc->flags, pe_rsc_allocating);
     return NULL;
 }
 
@@ -190,11 +193,7 @@ container_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
         if(tuple->child) {
             CRM_ASSERT(tuple->remote);
 
-            // Start remote then child
-            new_rsc_order(
-                tuple->remote, RSC_START, tuple->child, RSC_START, pe_order_runnable_left, data_set);
-            new_rsc_order(
-                tuple->child, RSC_STOP, tuple->remote, RSC_STOP, pe_order_implies_first, data_set);
+            // Start of the remote then child is implicit in the PE's remote logic
         }
 
     }
