@@ -106,9 +106,17 @@ native_choose_node(resource_t * rsc, node_t * prefer, pe_working_set_t * data_se
         return rsc->allocated_to ? TRUE : FALSE;
     }
 
+    if(rsc->allowed_nodes) {
+        nodes = g_hash_table_get_values(rsc->allowed_nodes);
+        nodes = g_list_sort_with_data(nodes, sort_node_weight, g_list_nth_data(rsc->running_on, 0));
+    }
     if (prefer) {
+        node_t *best = g_list_nth_data(nodes, 0);
+
         chosen = g_hash_table_lookup(rsc->allowed_nodes, prefer->details->id);
-        if (chosen && chosen->weight >= 0 && can_run_resources(chosen)) {
+        if (chosen && chosen->weight >= 0
+            && chosen->weight >= best->weight /* Possible alternative: (chosen->weight >= INFINITY || best->weight < INFINITY) */
+            && can_run_resources(chosen)) {
             pe_rsc_trace(rsc,
                          "Using preferred node %s for %s instead of choosing from %d candidates",
                          chosen->details->uname, rsc->id, length);
@@ -127,8 +135,6 @@ native_choose_node(resource_t * rsc, node_t * prefer, pe_working_set_t * data_se
     }
 
     if (chosen == NULL && rsc->allowed_nodes) {
-        nodes = g_hash_table_get_values(rsc->allowed_nodes);
-        nodes = g_list_sort_with_data(nodes, sort_node_weight, g_list_nth_data(rsc->running_on, 0));
 
         chosen = g_list_nth_data(nodes, 0);
         pe_rsc_trace(rsc, "Chose node %s for %s from %d candidates",
