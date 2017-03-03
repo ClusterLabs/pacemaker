@@ -510,7 +510,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
 /*   			action->runnable = FALSE; */
 
         } else if (action->node->details->online == FALSE
-                   && !is_container_remote_node(action->node)) {
+                   && (!is_container_remote_node(action->node) || action->node->details->remote_requires_reset)) {
             pe_clear_action_bit(action, pe_action_runnable);
             do_crm_log(warn_level, "Action %s on %s is unrunnable (offline)",
                        action->uuid, action->node->details->uname);
