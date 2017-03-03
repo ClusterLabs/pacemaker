@@ -261,6 +261,7 @@ create_docker_resource(
             return FALSE;
         }
         parent->children = g_list_append(parent->children, tuple->docker);
+        tuple->docker->parent = parent;
         return TRUE;
 }
 
