@@ -1944,6 +1944,36 @@ __first_xml_child_match(xmlNode *parent, const char *name, const char *id, int p
     return NULL;
 }
 
+static bool
+must_use_get_xpath_object(const char *xpath)
+{
+    int len;
+
+    if (xpath == NULL) {
+        return false;
+    }
+
+    while (*xpath) {
+        /* required "/xml-tag-name" */
+        len = 0;
+        sscanf(xpath, "/%*1[_A-Za-z]%*[A-Za-z0-9_.-]%n", &len);
+        if (len < 2)
+            break;
+        xpath += len;
+
+        /* optional "[@id='xml-id']", but nothing more fancy. */
+        len = 0;
+        sscanf(xpath, "[@id='%*1[A-Za-z]%*[A-Za-z0-9_.:-]']%n", &len);
+        if (len < 9)
+            continue;
+        xpath += len;
+    }
+    /* if we have not been able to consume the complete xpath,
+     * we must use the real get_xpath_object() */
+    return *xpath != '\0';
+}
+
+
 static xmlNode *
 __xml_find_path(xmlNode *top, const char *key, int target_position)
 {
@@ -2036,11 +2066,11 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset, bool check_version)
         if(strcmp(op, "delete") == 0) {
             crm_element_value_int(change, XML_DIFF_POSITION, &position);
         }
-#if 0
-        match = get_xpath_object(xpath, xml, LOG_TRACE);
-#else
-        match = __xml_find_path(xml, xpath, position);
-#endif
+        if (must_use_get_xpath_object(xpath)) {
+            match = get_xpath_object(xpath, xml, LOG_TRACE);
+        } else {
+            match = __xml_find_path(xml, xpath, position);
+        }
         crm_trace("Performing %s on %s with %p", op, xpath, match);
 
         if(match == NULL && strcmp(op, "delete") == 0) {
