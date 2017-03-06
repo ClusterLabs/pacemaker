@@ -61,7 +61,7 @@ container_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         containers = g_list_append(containers, tuple->docker);
     }
 
-    dump_node_scores(0, rsc, __FUNCTION__, rsc->allowed_nodes);
+    dump_node_scores(show_scores ? 0 : scores_log_level, rsc, __FUNCTION__, rsc->allowed_nodes);
 
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
     nodes = g_list_sort_with_data(nodes, sort_node_weight, NULL);

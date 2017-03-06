@@ -614,6 +614,36 @@ container_print_xml(resource_t * rsc, const char *pre_text, long options, void *
     free(child_text);
 }
 
+static void
+tuple_print(container_grouping_t * tuple, const char *pre_text, long options, void *print_data)
+{
+    node_t *node = NULL;
+    resource_t *rsc = tuple->child;
+
+    int offset = 0;
+    char buffer[LINE_MAX];
+
+    if(rsc == NULL) {
+        rsc = tuple->docker;
+    }
+
+    if(tuple->remote) {
+        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", rsc_printable_id(tuple->remote));
+    } else {
+        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", rsc_printable_id(tuple->docker));
+    }
+    if(tuple->ipaddr) {
+        offset += snprintf(buffer + offset, LINE_MAX - offset, " (%s)", tuple->ipaddr);
+    }
+
+    if(tuple->remote && tuple->remote->running_on != NULL) {
+        node = tuple->remote->running_on->data;
+    } else if (tuple->remote == NULL && rsc->running_on != NULL) {
+        node = rsc->running_on->data;
+    }
+    common_print(rsc, pre_text, buffer, node, options, print_data);
+}
+
 void
 container_print(resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
@@ -642,22 +672,26 @@ container_print(resource_t * rsc, const char *pre_text, long options, void *prin
         container_grouping_t *tuple = (container_grouping_t *)gIter->data;
 
         CRM_ASSERT(tuple);
+        if(is_set(options, pe_print_clone_details)) {
+            if(g_list_length(container_data->tuples) > 1) {
+                status_print("  %sReplica[%d]\n", pre_text, tuple->offset);
+            }
 
-        if(g_list_length(container_data->tuples) > 1) {
-            status_print("  %sReplica[%d]\n", pre_text, tuple->offset);
-        }
-
-        if(tuple->ip) {
-            tuple->ip->fns->print(tuple->ip, child_text, options, print_data);
-        }
-        if(tuple->docker) {
-            tuple->docker->fns->print(tuple->docker, child_text, options, print_data);
-        }
-        if(tuple->remote) {
-            tuple->remote->fns->print(tuple->remote, child_text, options, print_data);
-        }
-        if(tuple->child) {
-            tuple->child->fns->print(tuple->child, child_text, options, print_data);
+            if(tuple->ip) {
+                tuple->ip->fns->print(tuple->ip, child_text, options, print_data);
+            }
+            if(tuple->docker) {
+                tuple->docker->fns->print(tuple->docker, child_text, options, print_data);
+            }
+            if(tuple->remote) {
+                tuple->remote->fns->print(tuple->remote, child_text, options, print_data);
+            }
+            if(tuple->child) {
+                tuple->child->fns->print(tuple->child, child_text, options, print_data);
+            }
+        } else {
+            char *child_text = crm_strdup_printf("%s  ", pre_text);
+            tuple_print(tuple, child_text, options, print_data);
         }
     }
 }
