@@ -376,6 +376,9 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
     }
 
     value = crm_element_value(xml_obj, "replicas");
+    if(value == NULL) {
+        value = crm_element_value(xml_obj, "masters");
+    }
     container_data->replicas = crm_parse_int(value, "1");
 
     /*
