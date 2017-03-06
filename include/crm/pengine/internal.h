@@ -104,7 +104,6 @@ enum rsc_role_e container_resource_state(const resource_t * rsc, gboolean curren
 
 gboolean common_unpack(xmlNode * xml_obj, resource_t ** rsc, resource_t * parent,
                        pe_working_set_t * data_set);
-void common_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
 void common_free(resource_t * rsc);
 
 extern pe_working_set_t *pe_dataset;
@@ -289,6 +288,6 @@ void pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reaso
 
 node_t *create_node(const char *id, const char *uname, const char *type, const char *score, pe_working_set_t * data_set);
 bool remote_id_conflict(const char *remote_name, pe_working_set_t *data);
-
+void common_print(resource_t * rsc, const char *pre_text, const char *name, node_t *node, long options, void *print_data);
 
 #endif

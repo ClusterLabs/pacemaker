@@ -465,9 +465,8 @@ comma_if(int i)
 }
 
 void
-native_print(resource_t * rsc, const char *pre_text, long options, void *print_data)
+common_print(resource_t * rsc, const char *pre_text, const char *name, node_t *node, long options, void *print_data)
 {
-    node_t *node = NULL;
     const char *desc = NULL;
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *kind = crm_element_value(rsc->xml, XML_ATTR_TYPE);
@@ -500,9 +499,6 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
         return;
     }
 
-    if (rsc->running_on != NULL) {
-        node = rsc->running_on->data;
-    }
     if ((options & pe_print_rsconly) || g_list_length(rsc->running_on) > 1) {
         node = NULL;
     }
@@ -531,7 +527,7 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
     if(pre_text) {
         offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", pre_text);
     }
-    offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", rsc_printable_id(rsc));
+    offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", name);
     offset += snprintf(buffer + offset, LINE_MAX - offset, "\t(%s", class);
     if (safe_str_eq(class, "ocf")) {
         const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
@@ -714,6 +710,23 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
             print_node("\t", node, FALSE);
         }
     }
+}
+
+void
+native_print(resource_t * rsc, const char *pre_text, long options, void *print_data)
+{
+    node_t *node = NULL;
+
+    CRM_ASSERT(rsc->variant == pe_native);
+    if (options & pe_print_xml) {
+        native_print_xml(rsc, pre_text, options, print_data);
+        return;
+    }
+
+    if (rsc->running_on != NULL) {
+        node = rsc->running_on->data;
+    }
+    common_print(rsc, pre_text, rsc_printable_id(rsc), node, options, print_data);
 }
 
 void
