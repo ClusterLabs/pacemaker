@@ -386,6 +386,10 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
     value = crm_element_value(xml_obj, "replicas-per-host");
     container_data->replicas_per_host = crm_parse_int(value, "1");
 
+    if(container_data->replicas_per_host == 1) {
+        clear_bit(rsc->flags, pe_rsc_unique);
+    }
+
     value = crm_element_value(xml_obj, "masters");
     container_data->masters = crm_parse_int(value, "1");
 
@@ -468,6 +472,12 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         value = crm_itoa(container_data->replicas_per_host);
         create_nvp(xml_set, XML_RSC_ATTR_INCARNATION_NODEMAX, value);
         free(value);
+
+        if(container_data->replicas_per_host > 1) {
+            create_nvp(xml_set, XML_RSC_ATTR_UNIQUE, "true");
+        } else {
+            create_nvp(xml_set, XML_RSC_ATTR_UNIQUE, "false");
+        }
 
         if(container_data->masters) {
             value = crm_itoa(container_data->masters);
