@@ -578,6 +578,36 @@ container_active(resource_t * rsc, gboolean all)
     return TRUE;
 }
 
+resource_t *
+find_container_child(const char *stem, resource_t * rsc, node_t *node) 
+{
+    container_variant_data_t *container_data = NULL;
+    resource_t *parent = uber_parent(rsc);
+    CRM_ASSERT(parent->parent);
+
+    parent = parent->parent;
+    get_container_variant_data(container_data, parent);
+
+    if (is_not_set(rsc->flags, pe_rsc_unique)) {
+        for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
+            container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+
+            CRM_ASSERT(tuple);
+            if(tuple->node->details == node->details) {
+                rsc = tuple->child;
+                break;
+            }
+        }
+    }
+
+    if (rsc && safe_str_neq(stem, rsc->id)) {
+        free(rsc->clone_name);
+        rsc->clone_name = strdup(stem);
+    }
+
+    return rsc;
+}
+
 static void
 container_print_xml(resource_t * rsc, const char *pre_text, long options, void *print_data)
 {

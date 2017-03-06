@@ -1819,7 +1819,10 @@ unpack_find_resource(pe_working_set_t * data_set, node_t * node, const char *rsc
         parent = uber_parent(rsc);
     }
 
-    if (parent && parent->variant >= pe_clone) {
+    if(parent && parent->parent) {
+        rsc = find_container_child(rsc_id, rsc, node);
+
+    } else if (parent && parent->variant >= pe_clone) {
         if (is_not_set(parent->flags, pe_rsc_unique)) {
             char *base = clone_strip(rsc_id);
 
