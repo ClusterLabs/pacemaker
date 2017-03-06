@@ -23,6 +23,7 @@
  * \ingroup lrmd
  */
 #include <stdbool.h>
+#include <libxml/tree.h>
 #include <crm/services.h>
 
 #ifndef LRMD__H
