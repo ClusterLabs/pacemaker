@@ -342,7 +342,7 @@ process_xml_request(xmlNode *xml)
     const char *ignore = crm_element_value(xml, F_ATTRD_IGNORE_LOCALLY);
 
     if (host && safe_str_eq(host, attrd_uname)) {
-        crm_info("Update relayed from %s", from);
+        crm_info("%s relayed from %s", (op? op : "Request"), from);
         attrd_local_callback(xml);
 
     } else if (safe_str_eq(op, ATTRD_OP_PEER_REMOVE)) {
@@ -853,7 +853,8 @@ update_local_attr(xmlNode *msg, attr_hash_entry_t *hash_entry)
         }
     }
 
-    crm_debug("Supplied: %s, Current: %s, Stored: %s",
+    crm_debug("Request to update %s (%s) to %s from %s (stored: %s)",
+              hash_entry->id, (hash_entry->uuid? hash_entry->uuid : "no uuid"),
               value, hash_entry->value, hash_entry->stored_value);
 
     if (safe_str_eq(value, hash_entry->value)
