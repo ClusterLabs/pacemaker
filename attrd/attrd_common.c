@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <glib.h>
+#include <regex.h>
 #include <sys/types.h>
 
 #include <crm/crm.h>
@@ -239,4 +240,37 @@ attrd_expand_value(const char *value, const char *old_value)
         int_value = INFINITY;
     }
     return int_value;
+}
+
+/*!
+ * \internal
+ * \brief Create regular expression matching failure-related attributes
+ *
+ * \param[out] regex  Where to store created regular expression
+ * \param[in]  rsc    Name of resource to clear (or NULL for all)
+ *
+ * \return pcmk_ok on success, -EINVAL if arguments are invalid
+ *
+ * \note The caller is responsible for freeing the result with regfree().
+ */
+int
+attrd_failure_regex(regex_t *regex, const char *rsc)
+{
+    char *pattern = NULL;
+    int rc;
+
+    /* Create a pattern that matches desired attributes */
+
+    if (rsc == NULL) {
+        pattern = strdup(ATTRD_RE_CLEAR_ALL);
+    } else {
+        pattern = crm_strdup_printf(ATTRD_RE_CLEAR_ONE, rsc);
+    }
+
+    /* Compile pattern into regular expression */
+    crm_trace("Clearing attributes matching %s", pattern);
+    rc = regcomp(regex, pattern, REG_EXTENDED|REG_NOSUB);
+    free(pattern);
+
+    return (rc == 0)? pcmk_ok : -EINVAL;
 }

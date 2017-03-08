@@ -81,6 +81,7 @@ void attrd_local_callback(xmlNode * msg);
 gboolean attrd_timer_callback(void *user_data);
 gboolean attrd_trigger_update(attr_hash_entry_t * hash_entry);
 void attrd_perform_update(attr_hash_entry_t * hash_entry);
+static void update_local_attr(xmlNode *msg, attr_hash_entry_t *hash_entry);
 
 static void
 free_hash_entry(gpointer data)
@@ -227,6 +228,110 @@ find_hash_entry(xmlNode * msg)
     return hash_entry;
 }
 
+/*!
+ * \internal
+ * \brief Clear failure-related attributes for local node
+ *
+ * \param[in] xml  XML of ATTRD_OP_CLEAR_FAILURE request
+ */
+static void
+local_clear_failure(xmlNode *xml)
+{
+    const char *rsc = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
+    const char *what = rsc? rsc : "all resources";
+    regex_t regex;
+    GHashTableIter iter;
+    attr_hash_entry_t *hash_entry = NULL;
+
+    if (attrd_failure_regex(&regex, rsc) != pcmk_ok) {
+        crm_info("Ignoring invalid request to clear %s",
+                 (rsc? rsc : "all resources"));
+        return;
+    }
+    crm_debug("Clearing %s locally", what);
+
+    g_hash_table_iter_init(&iter, attr_hash);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &hash_entry)) {
+        if (regexec(&regex, hash_entry->id, 0, NULL, 0) == 0) {
+            crm_trace("Matched %s when clearing %s", hash_entry->id, what);
+            update_local_attr(xml, hash_entry);
+        }
+    }
+}
+
+static void
+remote_clear_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
+                      void *user_data)
+{
+    if (rc == 0) {
+        crm_debug("Successfully cleared failures using %s", user_data);
+    } else {
+        crm_notice("Failed to clear failures: %s " CRM_XS " call=%d xpath=%s rc=%d",
+                   pcmk_strerror(rc), call_id, user_data, rc);
+    }
+}
+
+/* xpath component to match an id attribute (format takes remote node name) */
+#define XPATH_ID "[@" XML_ATTR_UUID "='%s']"
+
+/* Define the start of an xpath to match a remote node transient attribute
+ * (argument must be either an empty string to match for all remote nodes,
+ * or XPATH_ID to match for a single remote node)
+ */
+#define XPATH_REMOTE_ATTR(x) "/" XML_TAG_CIB "/" XML_CIB_TAG_STATUS \
+    "/" XML_CIB_TAG_STATE "[@" XML_NODE_IS_REMOTE "='true']" x \
+    "/" XML_TAG_TRANSIENT_NODEATTRS "/" XML_TAG_ATTR_SETS "/" XML_CIB_TAG_NVPAIR
+
+/* xpath ending to clear all resources */
+#define XPATH_CLEAR_ALL \
+    "[starts-with(@" XML_NVPAIR_ATTR_NAME ", '" CRM_FAIL_COUNT_PREFIX "-') " \
+    "or starts-with(@" XML_NVPAIR_ATTR_NAME ", '" CRM_LAST_FAILURE_PREFIX "-')]"
+
+/* xpath ending to clear one resource (format takes resource name x 2) */
+#define XPATH_CLEAR_ONE \
+    "[@" XML_NVPAIR_ATTR_NAME "='" CRM_FAIL_COUNT_PREFIX "-%s' " \
+    "or @" XML_NVPAIR_ATTR_NAME "='" CRM_LAST_FAILURE_PREFIX "-%s']"
+
+/*!
+ * \internal
+ * \brief Clear failure-related attributes for Pacemaker Remote node(s)
+ *
+ * \param[in] xml  XML of ATTRD_OP_CLEAR_FAILURE request
+ */
+static void
+remote_clear_failure(xmlNode *xml)
+{
+    const char *rsc = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
+    const char *host = crm_element_value(xml, F_ATTRD_HOST);
+    int rc = pcmk_ok;
+    char *xpath;
+
+    if (cib_conn == NULL) {
+        crm_info("Ignoring request to clear %s on %s because not connected to CIB",
+                 (rsc? rsc : "all resources"),
+                 (host? host: "all remote nodes"));
+        return;
+    }
+
+    if ((rsc == NULL) && (host == NULL)) {
+        xpath = crm_strdup_printf(XPATH_REMOTE_ATTR("") XPATH_CLEAR_ALL);
+
+    } else if (rsc == NULL) {
+        xpath = crm_strdup_printf(XPATH_REMOTE_ATTR(XPATH_ID) XPATH_CLEAR_ALL,
+                                  host);
+    } else if (host == NULL) {
+        xpath = crm_strdup_printf(XPATH_REMOTE_ATTR("") XPATH_CLEAR_ONE,
+                                  rsc, rsc);
+    } else {
+        xpath = crm_strdup_printf(XPATH_REMOTE_ATTR(XPATH_ID) XPATH_CLEAR_ONE,
+                                  host, rsc, rsc);
+    }
+
+    crm_trace("Clearing attributes matching %s", xpath);
+    rc = cib_conn->cmds->delete(cib_conn, xpath, NULL, cib_xpath|cib_multiple);
+    register_cib_callback(rc, xpath, remote_clear_callback, free);
+}
+
 static void
 process_xml_request(xmlNode *xml)
 {
@@ -237,7 +342,7 @@ process_xml_request(xmlNode *xml)
     const char *ignore = crm_element_value(xml, F_ATTRD_IGNORE_LOCALLY);
 
     if (host && safe_str_eq(host, attrd_uname)) {
-        crm_info("Update relayed from %s", from);
+        crm_info("%s relayed from %s", (op? op : "Request"), from);
         attrd_local_callback(xml);
 
     } else if (safe_str_eq(op, ATTRD_OP_PEER_REMOVE)) {
@@ -245,6 +350,9 @@ process_xml_request(xmlNode *xml)
         crm_debug("Removing %s from peer caches for %s", host, from);
         crm_remote_peer_cache_remove(host);
         reap_crm_member(0, host);
+
+    } else if (safe_str_eq(op, ATTRD_OP_CLEAR_FAILURE)) {
+        local_clear_failure(xml);
 
     } else if ((ignore == NULL) || safe_str_neq(from, attrd_uname)) {
         crm_trace("%s message from %s", op, from);
@@ -745,7 +853,8 @@ update_local_attr(xmlNode *msg, attr_hash_entry_t *hash_entry)
         }
     }
 
-    crm_debug("Supplied: %s, Current: %s, Stored: %s",
+    crm_debug("Request to update %s (%s) to %s from %s (stored: %s)",
+              hash_entry->id, (hash_entry->uuid? hash_entry->uuid : "no uuid"),
               value, hash_entry->value, hash_entry->stored_value);
 
     if (safe_str_eq(value, hash_entry->value)
@@ -859,6 +968,53 @@ update_remote_attr(const char *host, const char *name, const char *value,
     register_cib_callback(rc, desc, remote_attr_callback, free);
 }
 
+/*!
+ * \internal
+ * \brief Handle a client request to clear failures
+ *
+ * \param[in] msg  XML of request
+ *
+ * \note Handling is according to the host specified in the request:
+ *       NULL: Relay to all cluster nodes (which do local_clear_failure())
+ *          and also handle all remote nodes here, using remote_clear_failure();
+ *       Our uname: Handle here, using local_clear_failure();
+ *       Known peer: Relay to that peer, which (via process_xml_message() then
+ *          attrd_local_callback()) comes back here as previous case;
+ *       Unknown peer: Handle here as remote node, using remote_clear_failure()
+ */
+static void
+attrd_client_clear_failure(xmlNode *msg)
+{
+    const char *host = crm_element_value(msg, F_ATTRD_HOST);
+
+    if (host == NULL) {
+        /* Clear failure on all cluster nodes */
+        crm_notice("Broadcasting request to clear failure on all hosts");
+        send_cluster_message(NULL, crm_msg_attrd, msg, FALSE);
+
+        /* Clear failure on all remote nodes */
+        remote_clear_failure(msg);
+
+    } else if (safe_str_eq(host, attrd_uname)) {
+        local_clear_failure(msg);
+
+    } else {
+        int is_remote = FALSE;
+        crm_node_t *peer = crm_find_peer(0, host);
+
+        crm_element_value_int(msg, F_ATTRD_IS_REMOTE, &is_remote);
+
+        if (is_remote || (peer == NULL)) {
+            /* If request is not for a known cluster node, assume remote */
+            remote_clear_failure(msg);
+        } else {
+            /* Relay request to proper node */
+            crm_notice("Relaying request to clear failure to %s", host);
+            send_cluster_message(peer, crm_msg_attrd, msg, FALSE);
+        }
+    }
+}
+
 void
 attrd_local_callback(xmlNode * msg)
 {
@@ -883,6 +1039,10 @@ attrd_local_callback(xmlNode * msg)
             crm_notice("Broadcasting removal of peer %s", host);
             send_cluster_message(NULL, crm_msg_attrd, msg, FALSE);
         }
+        return;
+
+    } else if (safe_str_eq(op, ATTRD_OP_CLEAR_FAILURE)) {
+        attrd_client_clear_failure(msg);
         return;
 
     } else if (op && safe_str_neq(op, ATTRD_OP_UPDATE)) {

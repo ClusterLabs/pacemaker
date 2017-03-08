@@ -30,7 +30,24 @@
 
 #include <internal.h>
 
-#define ATTRD_PROTOCOL_VERSION "1"
+/*
+ * Legacy attrd (all pre-1.1.11 Pacemaker versions, plus all versions when using
+ * heartbeat, CMAN, or corosync-plugin stacks) is unversioned.
+ *
+ * With atomic attrd, each attrd will send ATTRD_PROTOCOL_VERSION with every
+ * peer request and reply. Currently, there is no way to know the minimum
+ * version supported by all peers, which limits its usefulness.
+ *
+ * Protocol  Pacemaker  Significant changes
+ * --------  ---------  -------------------
+ *     1       1.1.11   ATTRD_OP_UPDATE (F_ATTRD_ATTRIBUTE only),
+ *                      ATTRD_OP_PEER_REMOVE, ATTRD_OP_REFRESH, ATTRD_OP_FLUSH,
+ *                      ATTRD_OP_SYNC, ATTRD_OP_SYNC_RESPONSE
+ *     1       1.1.13   ATTRD_OP_UPDATE (with F_ATTR_REGEX), ATTRD_OP_QUERY
+ *     1       1.1.15   ATTRD_OP_UPDATE_BOTH, ATTRD_OP_UPDATE_DELAY
+ *     2       1.1.17   ATTRD_OP_CLEAR_FAILCOUNT
+ */
+#define ATTRD_PROTOCOL_VERSION "2"
 
 int last_cib_op_done = 0;
 char *peer_writer = NULL;
@@ -294,6 +311,54 @@ attrd_client_update(xmlNode *xml)
 
 /*!
  * \internal
+ * \brief Respond to client clear-failure request
+ *
+ * \param[in] xml         Request XML
+ */
+void
+attrd_client_clear_failure(xmlNode *xml)
+{
+#if 0
+    /* @TODO This would be most efficient, but there is currently no way to
+     * verify that all peers support the op. If that ever changes, we could
+     * enable this code.
+     */
+    if (all_peers_support_clear_failure) {
+        /* Propagate to all peers (including ourselves).
+         * This ends up at attrd_peer_message().
+         */
+        send_attrd_message(NULL, xml);
+        return;
+    }
+#endif
+
+    const char *rsc = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
+
+    /* Map this to an update that uses a regular expression */
+    crm_xml_add(xml, F_ATTRD_TASK, ATTRD_OP_UPDATE);
+
+    /* Add expression matching one or all resources as appropriate */
+    if (rsc) {
+        char *pattern = crm_strdup_printf(ATTRD_RE_CLEAR_ONE, rsc);
+
+        crm_xml_add(xml, F_ATTRD_REGEX, pattern);
+        crm_xml_replace(xml, F_ATTRD_ATTRIBUTE, NULL);
+        free(pattern);
+
+    } else {
+        crm_xml_add(xml, F_ATTRD_REGEX, ATTRD_RE_CLEAR_ALL);
+    }
+
+    /* Delete the value */
+    if (crm_element_value(xml, F_ATTRD_VALUE)) {
+        crm_xml_replace(xml, F_ATTRD_VALUE, NULL);
+    }
+
+    attrd_client_update(xml);
+}
+
+/*!
+ * \internal
  * \brief Respond to a client refresh request (i.e. write out all attributes)
  *
  * \return void
@@ -429,6 +494,42 @@ attrd_client_query(crm_client_t *client, uint32_t id, uint32_t flags, xmlNode *q
     free_xml(reply);
 }
 
+/*!
+ * \internal
+ * \brief Clear failure-related attributes
+ *
+ * \param[in] peer  Peer that sent clear request
+ * \param[in] xml   Request XML
+ */
+static void
+attrd_peer_clear_failure(crm_node_t *peer, xmlNode *xml)
+{
+    const char *rsc = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
+    const char *host = crm_element_value(xml, F_ATTRD_HOST);
+    char *attr = NULL;
+    GHashTableIter iter;
+    regex_t regex;
+
+    if (attrd_failure_regex(&regex, rsc) != pcmk_ok) {
+        crm_info("Ignoring invalid request to clear failures for %s",
+                 (rsc? rsc : "all resources"));
+        return;
+    }
+
+    crm_xml_add(xml, F_ATTRD_TASK, ATTRD_OP_UPDATE);
+
+    g_hash_table_iter_init(&iter, attributes);
+    while (g_hash_table_iter_next(&iter, (gpointer *) &attr, NULL)) {
+        if (regexec(&regex, attr, 0, NULL, 0) == 0) {
+            crm_trace("Matched %s when clearing %s",
+                      attr, (rsc? rsc : "all resources"));
+            crm_xml_add(xml, F_ATTRD_ATTRIBUTE, attr);
+            attrd_peer_update(peer, xml, host, FALSE);
+        }
+    }
+    regfree(&regex);
+}
+
 void
 attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 {
@@ -515,6 +616,12 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 
     } else if (safe_str_eq(op, ATTRD_OP_PEER_REMOVE)) {
         attrd_peer_remove(host, TRUE, peer->uname);
+
+    } else if (safe_str_eq(op, ATTRD_OP_CLEAR_FAILURE)) {
+        /* It is not currently possible to receive this as a peer command,
+         * but will be, if we one day enable propagating this operation.
+         */
+        attrd_peer_clear_failure(peer, xml);
 
     } else if (safe_str_eq(op, ATTRD_OP_SYNC_RESPONSE)
               && safe_str_neq(peer->uname, attrd_cluster->uname)) {
