@@ -28,6 +28,7 @@ int attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host,
                           const char *name, const char *value, const char *section,
                           const char *set, const char *dampen, const char *user_name, int options);
 int attrd_clear_delegate(crm_ipc_t *ipc, const char *host, const char *resource,
+                         const char *operation, const char *interval,
                          const char *user_name, int options);
 
 #endif

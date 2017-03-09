@@ -234,6 +234,7 @@ done:
  */
 int
 attrd_clear_delegate(crm_ipc_t *ipc, const char *host, const char *resource,
+                     const char *operation, const char *interval,
                      const char *user_name, int options)
 {
     int rc = pcmk_ok;
@@ -242,12 +243,16 @@ attrd_clear_delegate(crm_ipc_t *ipc, const char *host, const char *resource,
     crm_xml_add(clear_op, F_ATTRD_TASK, ATTRD_OP_CLEAR_FAILURE);
     crm_xml_add(clear_op, F_ATTRD_HOST, host);
     crm_xml_add(clear_op, F_ATTRD_RESOURCE, resource);
+    crm_xml_add(clear_op, F_ATTRD_OPERATION, operation);
+    crm_xml_add(clear_op, F_ATTRD_INTERVAL, interval);
     crm_xml_add_int(clear_op, F_ATTRD_IS_REMOTE, is_set(options, attrd_opt_remote));
 
     rc = send_attrd_op(ipc, clear_op);
     free_xml(clear_op);
 
-    crm_debug("Asked attrd to clear failure of %s on %s: %s (%d)",
+    crm_debug("Asked attrd to clear failure of %s (interval %s) for %s on %s: %s (%d)",
+              (operation? operation : "all operations"),
+              (interval? interval : "0"),
               (resource? resource : "all resources"),
               (host? host : "all nodes"), pcmk_strerror(rc), rc);
     return rc;

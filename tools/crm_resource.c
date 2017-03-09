@@ -999,7 +999,8 @@ main(int argc, char **argv)
 
         crm_debug("Re-checking the state of all resources on %s", host_uname?host_uname:"all nodes");
 
-        rc = attrd_clear_delegate(NULL, host_uname, NULL, NULL, attr_options);
+        rc = attrd_clear_delegate(NULL, host_uname, NULL, NULL, NULL, NULL,
+                                  attr_options);
 
         if (crm_ipc_send(crmd_channel, cmd, 0, 0, NULL) > 0) {
             start_mainloop();

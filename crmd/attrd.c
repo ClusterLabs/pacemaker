@@ -83,7 +83,7 @@ update_attrd_helper(const char *host, const char *name, const char *value,
                                        XML_CIB_TAG_STATUS, NULL, NULL,
                                        user_name, attrd_opts);
         } else {
-            rc = attrd_clear_delegate(attrd_ipc, host, name,
+            rc = attrd_clear_delegate(attrd_ipc, host, name, NULL, NULL,
                                       user_name, attrd_opts);
         }
 

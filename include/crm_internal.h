@@ -276,6 +276,8 @@ long crm_read_pidfile(const char *filename);
 #  define F_ATTRD_WRITER	"attr_writer"
 #  define F_ATTRD_VERSION	"attr_version"
 #  define F_ATTRD_RESOURCE          "attr_resource"
+#  define F_ATTRD_OPERATION         "attr_clear_operation"
+#  define F_ATTRD_INTERVAL          "attr_clear_interval"
 
 /* attrd operations */
 #  define ATTRD_OP_PEER_REMOVE   "peer-remove"
