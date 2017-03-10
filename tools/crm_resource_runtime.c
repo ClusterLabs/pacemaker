@@ -1552,6 +1552,10 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
                    action, rsc->id, rclass, rprov ? rprov : "", rtype, op->status);
         }
 
+        /* hide output for validate-all if not in verbose */
+        if (!do_trace && safe_str_eq(action, "validate-all"))
+            goto done;
+
         if (op->stdout_data) {
             local_copy = strdup(op->stdout_data);
             more = strlen(local_copy);
@@ -1581,6 +1585,7 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
             free(local_copy);
         }
     }
+  done:
     rc = op->rc;
     services_action_free(op);
     return rc;
