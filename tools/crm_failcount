@@ -13,7 +13,7 @@ Commands:
 
 Additional Options:
  -r, --resource=value   Name of the resource to use (required)
- -N, --node=value       Set an attribute for the named node (instead of the current one)"
+ -N, --node=value       Use failcount on named node (instead of local node)"
 
 
 HELP_TEXT="crm_failcount - Query or delete resource fail counts
@@ -65,7 +65,7 @@ while true ; do
 			crm_attribute --version
 			exit $?
 			;;
-		-Q|--quiet|-V|--verbose)
+		-q|-Q|--quiet|-V|--verbose)
 			options="$options $1"
 			shift
 			;;
