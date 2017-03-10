@@ -97,6 +97,8 @@ struct ipc_client_callbacks crm_callbacks = {
 };
 
 
+/* short option letters still available: eEJkKXyYZ */
+
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {
     /* Top-level Options */
@@ -189,6 +191,14 @@ static struct crm_option long_options[] = {
     {"parameter-value", 1, 0, 'v', "Value to use with -p"},
     {"meta",		0, 0, 'm', "\t\tModify a resource's configuration option rather than one which is passed to the resource agent script. For use with -p, -g, -d"},
     {"utilization",	0, 0, 'z', "\tModify a resource's utilization attribute. For use with -p, -g, -d"},
+    {
+        "operation",      required_argument, NULL, 'n',
+        "Operation to clear (used with -C -r; default all)"
+    },
+    {
+        "interval",       required_argument, NULL, 'I',
+        "Interval of operation to clear (used with -C -r -n; default 0)"
+    },
     {"set-name",        1, 0, 's', "\t(Advanced) ID of the instance_attributes object to change"},
     {"nvpair",          1, 0, 'i', "\t(Advanced) ID of the nvpair object to change/delete"},
     {"timeout",         1, 0, 'T',  "\t(Advanced) Abort if command does not finish in this time (with --restart or --wait)"},
@@ -254,6 +264,8 @@ main(int argc, char **argv)
     const char *prop_set = NULL;
     const char *rsc_long_cmd = NULL;
     const char *longname = NULL;
+    const char *operation = NULL;
+    const char *interval = NULL;
     GHashTable *override_params = NULL;
 
     char *xml_file = NULL;
@@ -463,6 +475,14 @@ main(int argc, char **argv)
                 require_resource = FALSE;
                 require_crmd = TRUE;
                 rsc_cmd = 'C';
+                break;
+
+            case 'n':
+                operation = optarg;
+                break;
+
+            case 'I':
+                interval = optarg;
                 break;
 
             case 'F':
@@ -952,7 +972,8 @@ main(int argc, char **argv)
             crm_debug("Re-checking the state of %s (%s requested) on %s",
                       rsc->id, rsc_id, host_uname);
             crmd_replies_needed = 0;
-            rc = cli_resource_delete(cib_conn, crmd_channel, host_uname, rsc, &data_set);
+            rc = cli_resource_delete(crmd_channel, host_uname, rsc, operation,
+                                     interval, &data_set);
         } else {
             rc = -ENODEV;
         }
@@ -1013,7 +1034,8 @@ main(int argc, char **argv)
         crmd_replies_needed = 0;
         for (rIter = data_set.resources; rIter; rIter = rIter->next) {
             resource_t *rsc = rIter->data;
-            cli_resource_delete(cib_conn, crmd_channel, host_uname, rsc, &data_set);
+            cli_resource_delete(crmd_channel, host_uname, rsc, NULL, NULL,
+                                &data_set);
         }
 
         start_mainloop();
