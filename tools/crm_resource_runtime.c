@@ -1508,6 +1508,10 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
     }
 
     params = generate_resource_params(rsc, data_set);
+
+    /* add crm_feature_set env needed by some resource agents */
+    g_hash_table_insert(params, strdup(XML_ATTR_CRM_VERSION), strdup(CRM_FEATURE_SET));
+
     op = resources_action_create(rsc->id, rclass, rprov, rtype, action, 0, -1, params, 0);
 
     if(do_trace) {
