@@ -218,6 +218,8 @@
 #  define XML_RSC_ATTR_INTERNAL_RSC	"internal_rsc"
 #  define XML_RSC_ATTR_MAINTENANCE	"maintenance"
 #  define XML_RSC_ATTR_REMOTE_NODE  	"remote-node"
+#  define XML_RSC_ATTR_CLEAR_OP         "clear_failure_op"
+#  define XML_RSC_ATTR_CLEAR_INTERVAL   "clear_failure_interval"
 
 #  define XML_REMOTE_ATTR_RECONNECT_INTERVAL "reconnect_interval"
 

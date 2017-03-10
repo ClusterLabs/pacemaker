@@ -94,6 +94,7 @@ void init_transient_attrs(const char *uname, const char *start_state, int option
 void update_attrd(const char *host, const char *name, const char *value, const char *user_name, gboolean is_remote_node);
 void update_attrd_remote_node_removed(const char *host, const char *user_name);
 void update_attrd_clear_failures(const char *host, const char *rsc,
+                                 const char *op, const char *interval,
                                  gboolean is_remote_node);
 
 int crmd_join_phase_count(enum crm_join_phase phase);

@@ -19,7 +19,8 @@
 #include <crmd_messages.h>
 
 extern gboolean verify_stopped(enum crmd_fsa_state cur_state, int log_level);
-extern void lrm_clear_last_failure(const char *rsc_id, const char *node_name);
+extern void lrm_clear_last_failure(const char *rsc_id, const char *node_name,
+                                   const char *operation, int interval);
 void lrm_op_callback(lrmd_event_data_t * op);
 
 typedef struct resource_history_s {

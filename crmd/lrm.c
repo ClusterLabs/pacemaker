@@ -1098,13 +1098,17 @@ erase_lrm_history_by_op(lrm_state_t *lrm_state, lrmd_event_data_t *op)
     "/" XML_LRM_TAG_RESOURCE "[@" XML_ATTR_ID "='%s']"  \
     "/" XML_LRM_TAG_RSC_OP
 
-/* ... and operation ID */
+/* ... and also by operation key */
 #define XPATH_HISTORY_ID XPATH_HISTORY \
     "[@" XML_ATTR_ID "='%s']"
 
-/* ... and operation call ID */
+/* ... and also by operation key and operation call ID */
 #define XPATH_HISTORY_CALL XPATH_HISTORY \
     "[@" XML_ATTR_ID "='%s' and @" XML_LRM_ATTR_CALLID "='%d']"
+
+/* ... and also by operation key and original operation key */
+#define XPATH_HISTORY_ORIG XPATH_HISTORY \
+    "[@" XML_ATTR_ID "='%s' and @" XML_LRM_ATTR_TASK_KEY "='%s']"
 
 /*!
  * \internal
@@ -1113,11 +1117,12 @@ erase_lrm_history_by_op(lrm_state_t *lrm_state, lrmd_event_data_t *op)
  * \param[in] lrm_state  LRM state of the node to clear history for
  * \param[in] rsc_id     Name of resource to clear history for
  * \param[in] key        Operation key of operation to clear history for
+ * \param[in] orig_op    If specified, delete only if it has this original op
  * \param[in] call_id    If specified, delete entry only if it has this call ID
  */
 static void
 erase_lrm_history_by_id(lrm_state_t *lrm_state, const char *rsc_id,
-                        const char *key, int call_id)
+                        const char *key, const char *orig_op, int call_id)
 {
     char *op_xpath = NULL;
 
@@ -1128,6 +1133,10 @@ erase_lrm_history_by_id(lrm_state_t *lrm_state, const char *rsc_id,
                                      lrm_state->node_name, rsc_id, key,
                                      call_id);
 
+    } else if (orig_op) {
+        op_xpath = crm_strdup_printf(XPATH_HISTORY_ORIG,
+                                     lrm_state->node_name, rsc_id, key,
+                                     orig_op);
     } else {
         op_xpath = crm_strdup_printf(XPATH_HISTORY_ID,
                                      lrm_state->node_name, rsc_id, key);
@@ -1140,6 +1149,19 @@ erase_lrm_history_by_id(lrm_state_t *lrm_state, const char *rsc_id,
     free(op_xpath);
 }
 
+static inline gboolean
+last_failed_matches_op(rsc_history_t *entry, const char *op, int interval)
+{
+    if (entry == NULL) {
+        return FALSE;
+    }
+    if (op == NULL) {
+        return TRUE;
+    }
+    return (safe_str_eq(op, entry->failed->op_type)
+            && (interval == entry->failed->interval));
+}
+
 /*!
  * \internal
  * \brief Clear a resource's last failure
@@ -1150,11 +1172,15 @@ erase_lrm_history_by_id(lrm_state_t *lrm_state, const char *rsc_id,
  *
  * \param[in] rsc_id     Resource name
  * \param[in] node_name  Node name
+ * \param[in] operation  If specified, only clear if matching this operation
+ * \param[in] interval   If operation is specified, it has this interval in ms
  */
 void
-lrm_clear_last_failure(const char *rsc_id, const char *node_name)
+lrm_clear_last_failure(const char *rsc_id, const char *node_name,
+                       const char *operation, int interval)
 {
-    char *attr = NULL;
+    char *op_key = NULL;
+    char *orig_op_key = NULL;
     lrm_state_t *lrm_state = NULL;
 
     lrm_state = lrm_state_find(node_name);
@@ -1162,15 +1188,21 @@ lrm_clear_last_failure(const char *rsc_id, const char *node_name)
         return;
     }
 
-    attr = generate_op_key(rsc_id, "last_failure", 0);
-    erase_lrm_history_by_id(lrm_state, rsc_id, attr, 0);
-    free(attr);
+    /* Erase from CIB */
+    op_key = generate_op_key(rsc_id, "last_failure", 0);
+    if (operation) {
+        orig_op_key = generate_op_key(rsc_id, operation, interval);
+    }
+    erase_lrm_history_by_id(lrm_state, rsc_id, op_key, orig_op_key, 0);
+    free(op_key);
+    free(orig_op_key);
 
+    /* Remove from memory */
     if (lrm_state->resource_history) {
         rsc_history_t *entry = g_hash_table_lookup(lrm_state->resource_history,
                                                    rsc_id);
 
-        if (entry) {
+        if (last_failed_matches_op(entry, operation, interval)) {
             lrmd_free_event(entry->failed);
             entry->failed = NULL;
         }
@@ -1747,7 +1779,7 @@ do_lrm_invoke(long long action,
                 if (is_remote_lrmd_ra(NULL, NULL, rsc->id) == FALSE) {
                     crm_info("Nothing known about operation %d for %s", call, op_key);
                 }
-                erase_lrm_history_by_id(lrm_state, rsc->id, op_key, call);
+                erase_lrm_history_by_id(lrm_state, rsc->id, op_key, NULL, call);
                 send_task_ok_ack(lrm_state, input, rsc->id, rsc, op_task,
                                  from_host, from_sys);
 
