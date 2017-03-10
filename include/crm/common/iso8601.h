@@ -42,6 +42,28 @@ typedef struct crm_time_period_s {
     crm_time_t *diff;
 } crm_time_period_t;
 
+typedef struct crm_time_us crm_time_hr_t;
+
+struct crm_time_us {
+    int years;
+    int months;                 /* Only for durations */
+    int days;
+    int seconds;
+    int offset;                 /* Seconds */
+    bool duration;
+    int useconds;
+};
+
+struct crm_time_s {
+    int years;
+    int months;                 /* Only for durations */
+    int days;
+    int seconds;
+    int offset;                 /* Seconds */
+    bool duration;
+};
+
+
 /* Creates a new date/time object conforming to iso8601:
  *     http://en.wikipedia.org/wiki/ISO_8601
  *
@@ -121,5 +143,10 @@ int crm_time_days_in_month(int month, int year);
 
 bool crm_time_leapyear(int year);
 bool crm_time_check(crm_time_t * dt);
+
+crm_time_hr_t *crm_time_hr_new(const char *date_time);
+void crm_time_hr_free(crm_time_hr_t * hr_dt);
+char *crm_time_format_hr(const char *format, crm_time_hr_t * hr_dt);
+
 
 #endif
