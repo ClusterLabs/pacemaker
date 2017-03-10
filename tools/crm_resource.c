@@ -128,6 +128,7 @@ static struct crm_option long_options[] = {
     {"constraints",0, 0, 'a', "\tDisplay the (co)location constraints that apply to a resource"},
 
     {"-spacer-",	1, 0, '-', "\nCommands:"},
+    {"validate",   0, 0, 0, "\t\tCall the validate-all action of the local given resource"},
     {"cleanup",         0, 0, 'C',
         "\t\tDelete resource's history and re-check its current state. "
         "Optional: --resource (if not specified, all resources), "
@@ -303,7 +304,8 @@ main(int argc, char **argv)
                     require_dataset = FALSE;
 
                 } else if (
-                    safe_str_eq("restart", longname)
+                    safe_str_eq("validate", longname)
+                    || safe_str_eq("restart", longname)
                     || safe_str_eq("force-demote",  longname)
                     || safe_str_eq("force-stop",    longname)
                     || safe_str_eq("force-start",   longname)
@@ -687,7 +689,7 @@ main(int argc, char **argv)
     } else if (rsc_cmd == 0 && rsc_long_cmd && safe_str_eq(rsc_long_cmd, "wait")) {
         rc = wait_till_stable(timeout_ms, cib_conn);
 
-    } else if (rsc_cmd == 0 && rsc_long_cmd) { /* force-(stop|start|check) */
+    } else if (rsc_cmd == 0 && rsc_long_cmd) { /* validate or force-(stop|start|check) */
         rc = cli_resource_execute(rsc_id, rsc_long_cmd, override_params, cib_conn, &data_set);
 
     } else if (rsc_cmd == 'A' || rsc_cmd == 'a') {

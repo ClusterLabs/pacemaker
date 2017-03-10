@@ -1467,7 +1467,10 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
         return -ENXIO;
     }
 
-    if (safe_str_eq(rsc_action, "force-check")) {
+    if (safe_str_eq(rsc_action, "validate")) {
+        action = "validate-all";
+
+    } else if (safe_str_eq(rsc_action, "force-check")) {
         action = "monitor";
 
     } else if (safe_str_eq(rsc_action, "force-stop")) {
