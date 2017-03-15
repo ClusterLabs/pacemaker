@@ -952,6 +952,9 @@ pe_cluster_option crmd_opts[] = {
 	{ "stonith-watchdog-timeout", NULL, "time", NULL, NULL, &check_sbd_timeout,
 	  "How long to wait before we can assume nodes are safely down", NULL
         },
+        { "stonith-max-attempts",NULL,"integer",NULL,"10",&check_positive_number,
+          "The maximum number of stonith attempts before giving up."
+        },   
 	{ "no-quorum-policy", "no_quorum_policy", "enum", "stop, freeze, ignore, suicide", "stop", &check_quorum, NULL, NULL },
 
 #if SUPPORT_PLUGIN
@@ -1050,6 +1053,9 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     if (safe_str_eq(value, "suicide") && pcmk_locate_sbd()) {
         no_quorum_suicide_escalation = TRUE;
     }
+    
+    value = crmd_pref(config_hash,"stonith-max-attempts");
+    update_stonith_max_attempts(value);
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_FORCE_QUIT);
     shutdown_escalation_timer->period_ms = crm_get_msec(value);
