@@ -667,8 +667,7 @@ cli_resource_delete(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_
     if (is_remote_node(node)) {
         attr_options |= attrd_opt_remote;
     }
-    rc = attrd_update_delegate(NULL, 'c', host_uname, rsc_name, NULL,
-                               NULL, NULL, NULL, NULL, attr_options);
+    rc = attrd_clear_delegate(NULL, host_uname, rsc_name, NULL, attr_options);
     if (rc != pcmk_ok) {
         printf("Cleaned %s history on %s, but unable to clear failures: %s\n",
                rsc->id, host_uname, pcmk_strerror(rc));

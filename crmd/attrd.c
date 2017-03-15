@@ -78,9 +78,15 @@ update_attrd_helper(const char *host, const char *name, const char *value,
             }
         }
 
-        rc = attrd_update_delegate(attrd_ipc, command, host, name, value,
-                                   XML_CIB_TAG_STATUS, NULL, NULL, user_name,
-                                   attrd_opts);
+        if (command) {
+            rc = attrd_update_delegate(attrd_ipc, command, host, name, value,
+                                       XML_CIB_TAG_STATUS, NULL, NULL,
+                                       user_name, attrd_opts);
+        } else {
+            rc = attrd_clear_delegate(attrd_ipc, host, name,
+                                      user_name, attrd_opts);
+        }
+
         if (rc == pcmk_ok) {
             break;
 
@@ -119,5 +125,5 @@ update_attrd_clear_failures(const char *host, const char *rsc,
 {
     crm_info("Asking attrd to clear failure of %s on %s node %s",
              rsc, (is_remote_node? "Pacemaker Remote" : "cluster"), host);
-    update_attrd_helper(host, rsc, NULL, NULL, is_remote_node, 'c');
+    update_attrd_helper(host, rsc, NULL, NULL, is_remote_node, 0);
 }

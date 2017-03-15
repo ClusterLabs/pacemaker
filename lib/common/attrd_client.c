@@ -118,9 +118,8 @@ send_attrd_op(crm_ipc_t *ipc, xmlNode *attrd_op)
  *                     Y: update attribute dampening only
  *                     Q: query attribute
  *                     C: remove peer specified by host
- *                     c: clear failure for resource specified by name
  * \param[in] host     Affect only this host (or NULL for all hosts)
- * \param[in] name     Name of attribute to affect (or resource, for 'c')
+ * \param[in] name     Name of attribute to affect
  * \param[in] value    Attribute value to set
  * \param[in] section  Status or nodes
  * \param[in] set      ID of attribute set to use (or NULL to choose first)
@@ -188,16 +187,10 @@ attrd_update_delegate(crm_ipc_t *ipc, char command, const char *host,
             task = ATTRD_OP_PEER_REMOVE;
             display_command = "purge";
             break;
-        case 'c':
-            task = ATTRD_OP_CLEAR_FAILURE;
-            name_as = F_ATTRD_ATTRIBUTE;
-            section = XML_CIB_TAG_STATUS;
-            value = NULL;
-            break;
     }
 
     if (name_as != NULL) {
-        if ((name == NULL) && (command != 'c')) {
+        if (name == NULL) {
             rc = -EINVAL;
             goto done;
         }
@@ -218,16 +211,44 @@ attrd_update_delegate(crm_ipc_t *ipc, char command, const char *host,
 done:
     free_xml(update);
 
-    if (command == 'c') {
-        crm_debug("Asked attrd to clear failure of %s on %s: %s (%d)",
-                  (name? name : "all resources"),
-                  (host? host : "all nodes"), pcmk_strerror(rc), rc);
-    } else if (display_command) {
+    if (display_command) {
         crm_debug("Asked attrd to %s %s: %s (%d)",
                   display_command, display_host, pcmk_strerror(rc), rc);
     } else {
         crm_debug("Asked attrd to update %s=%s for %s: %s (%d)",
                   name, value, display_host, pcmk_strerror(rc), rc);
     }
+    return rc;
+}
+
+/*!
+ * \brief Send a request to attrd to clear resource failure
+ *
+ * \param[in] ipc       Connection to attrd (or NULL to use a local connection)
+ * \param[in] host      Affect only this host (or NULL for all hosts)
+ * \param[in] name      Name of resource to clear
+ * \param[in] user_name ACL user to pass to attrd
+ * \param[in] options   attrd_opt_remote if host is a Pacemaker Remote node
+ *
+ * \return pcmk_ok if request was successfully submitted to attrd, else -errno
+ */
+int
+attrd_clear_delegate(crm_ipc_t *ipc, const char *host, const char *resource,
+                     const char *user_name, int options)
+{
+    int rc = pcmk_ok;
+    xmlNode *clear_op = create_attrd_op(user_name);
+
+    crm_xml_add(clear_op, F_ATTRD_TASK, ATTRD_OP_CLEAR_FAILURE);
+    crm_xml_add(clear_op, F_ATTRD_HOST, host);
+    crm_xml_add(clear_op, F_ATTRD_ATTRIBUTE, resource);
+    crm_xml_add_int(clear_op, F_ATTRD_IS_REMOTE, is_set(options, attrd_opt_remote));
+
+    rc = send_attrd_op(ipc, clear_op);
+    free_xml(clear_op);
+
+    crm_debug("Asked attrd to clear failure of %s on %s: %s (%d)",
+              (resource? resource : "all resources"),
+              (host? host : "all nodes"), pcmk_strerror(rc), rc);
     return rc;
 }
