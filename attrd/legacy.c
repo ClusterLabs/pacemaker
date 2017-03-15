@@ -237,7 +237,7 @@ find_hash_entry(xmlNode * msg)
 static void
 local_clear_failure(xmlNode *xml)
 {
-    const char *rsc = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
+    const char *rsc = crm_element_value(xml, F_ATTRD_RESOURCE);
     const char *what = rsc? rsc : "all resources";
     regex_t regex;
     GHashTableIter iter;
@@ -249,6 +249,11 @@ local_clear_failure(xmlNode *xml)
         return;
     }
     crm_debug("Clearing %s locally", what);
+
+    /* Make sure value is not set, so we delete */
+    if (crm_element_value(xml, F_ATTRD_VALUE)) {
+        crm_xml_replace(xml, F_ATTRD_VALUE, NULL);
+    }
 
     g_hash_table_iter_init(&iter, attr_hash);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &hash_entry)) {
@@ -301,7 +306,7 @@ remote_clear_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
 static void
 remote_clear_failure(xmlNode *xml)
 {
-    const char *rsc = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
+    const char *rsc = crm_element_value(xml, F_ATTRD_RESOURCE);
     const char *host = crm_element_value(xml, F_ATTRD_HOST);
     int rc = pcmk_ok;
     char *xpath;

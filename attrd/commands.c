@@ -332,7 +332,7 @@ attrd_client_clear_failure(xmlNode *xml)
     }
 #endif
 
-    const char *rsc = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
+    const char *rsc = crm_element_value(xml, F_ATTRD_RESOURCE);
 
     /* Map this to an update that uses a regular expression */
     crm_xml_add(xml, F_ATTRD_TASK, ATTRD_OP_UPDATE);
@@ -342,14 +342,16 @@ attrd_client_clear_failure(xmlNode *xml)
         char *pattern = crm_strdup_printf(ATTRD_RE_CLEAR_ONE, rsc);
 
         crm_xml_add(xml, F_ATTRD_REGEX, pattern);
-        crm_xml_replace(xml, F_ATTRD_ATTRIBUTE, NULL);
         free(pattern);
 
     } else {
         crm_xml_add(xml, F_ATTRD_REGEX, ATTRD_RE_CLEAR_ALL);
     }
 
-    /* Delete the value */
+    /* Make sure attribute and value are not set, so we delete via regex */
+    if (crm_element_value(xml, F_ATTRD_ATTRIBUTE)) {
+        crm_xml_replace(xml, F_ATTRD_ATTRIBUTE, NULL);
+    }
     if (crm_element_value(xml, F_ATTRD_VALUE)) {
         crm_xml_replace(xml, F_ATTRD_VALUE, NULL);
     }
@@ -504,7 +506,7 @@ attrd_client_query(crm_client_t *client, uint32_t id, uint32_t flags, xmlNode *q
 static void
 attrd_peer_clear_failure(crm_node_t *peer, xmlNode *xml)
 {
-    const char *rsc = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
+    const char *rsc = crm_element_value(xml, F_ATTRD_RESOURCE);
     const char *host = crm_element_value(xml, F_ATTRD_HOST);
     char *attr = NULL;
     GHashTableIter iter;
@@ -517,6 +519,11 @@ attrd_peer_clear_failure(crm_node_t *peer, xmlNode *xml)
     }
 
     crm_xml_add(xml, F_ATTRD_TASK, ATTRD_OP_UPDATE);
+
+    /* Make sure value is not set, so we delete */
+    if (crm_element_value(xml, F_ATTRD_VALUE)) {
+        crm_xml_replace(xml, F_ATTRD_VALUE, NULL);
+    }
 
     g_hash_table_iter_init(&iter, attributes);
     while (g_hash_table_iter_next(&iter, (gpointer *) &attr, NULL)) {

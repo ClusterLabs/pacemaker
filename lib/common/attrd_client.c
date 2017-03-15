@@ -241,7 +241,7 @@ attrd_clear_delegate(crm_ipc_t *ipc, const char *host, const char *resource,
 
     crm_xml_add(clear_op, F_ATTRD_TASK, ATTRD_OP_CLEAR_FAILURE);
     crm_xml_add(clear_op, F_ATTRD_HOST, host);
-    crm_xml_add(clear_op, F_ATTRD_ATTRIBUTE, resource);
+    crm_xml_add(clear_op, F_ATTRD_RESOURCE, resource);
     crm_xml_add_int(clear_op, F_ATTRD_IS_REMOTE, is_set(options, attrd_opt_remote));
 
     rc = send_attrd_op(ipc, clear_op);
