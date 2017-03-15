@@ -953,7 +953,7 @@ pe_cluster_option crmd_opts[] = {
 	  "How long to wait before we can assume nodes are safely down", NULL
         },
         { "stonith-max-attempts",NULL,"integer",NULL,"10",&check_positive_number,
-          "The maximum number of stonith attempts before giving up."
+          "How many times stonith can fail before it will no longer be attempted on a target"
         },   
 	{ "no-quorum-policy", "no_quorum_policy", "enum", "stop, freeze, ignore, suicide", "stop", &check_quorum, NULL, NULL },
 

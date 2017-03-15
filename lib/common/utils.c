@@ -164,7 +164,7 @@ check_number(const char *value)
 gboolean
 check_positive_number(const char* value)
 {
-    if (check_number(value) && (value[0] != '-') && !(safe_str_eq(value,"0"))) {
+    if (safe_str_eq(value, INFINITY_S) || (crm_int_helper(value, NULL))) {
         return TRUE;
     }
     return FALSE;
