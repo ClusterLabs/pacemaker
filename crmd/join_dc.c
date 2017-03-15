@@ -132,7 +132,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
     }
 
     if (member->uname == NULL) {
-        crm_warn("No recipient for welcome message.(Node uuid:%s)", member->uuid);
+        crm_info("No recipient for welcome message.(Node uuid:%s)", member->uuid);
         return;
     }
 
