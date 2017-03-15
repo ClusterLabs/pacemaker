@@ -40,7 +40,7 @@ libcrmcommon_la_LIBADD	= @LIBADD_DL@ $(GNUTLSLIBS) -lm
 
 libcrmcommon_la_SOURCES	= compat.c digest.c ipc.c io.c procfs.c utils.c xml.c \
 			  iso8601.c remote.c mainloop.c logging.c watchdog.c \
-			  schemas.c strings.c xpath.c
+			  schemas.c strings.c xpath.c attrd_client.c
 if BUILD_CIBSECRETS
 libcrmcommon_la_SOURCES	+= cib_secrets.c
 endif
