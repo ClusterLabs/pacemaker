@@ -162,6 +162,15 @@ check_number(const char *value)
 }
 
 gboolean
+check_positive_number(const char* value)
+{
+    if (safe_str_eq(value, INFINITY_S) || (crm_int_helper(value, NULL))) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
+gboolean
 check_quorum(const char *value)
 {
     if (safe_str_eq(value, "stop")) {

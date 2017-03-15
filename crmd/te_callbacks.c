@@ -37,6 +37,8 @@ gboolean shuttingdown = FALSE;
 crm_graph_t *transition_graph;
 crm_trigger_t *transition_trigger = NULL;
 
+static unsigned long int stonith_max_attempts = 10;
+
 /* #define rsc_op_template "//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB"//"XML_CIB_TAG_STATE"[@uname='%s']"//"XML_LRM_TAG_RSC_OP"[@id='%s]" */
 #define rsc_op_template "//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB"//"XML_LRM_TAG_RSC_OP"[@id='%s']"
 
@@ -53,6 +55,16 @@ get_node_id(xmlNode * rsc_op)
     return ID(node);
 }
 
+void
+update_stonith_max_attempts(const char* value)
+{
+    if (safe_str_eq(value, INFINITY_S)) {
+       stonith_max_attempts = node_score_infinity;
+    }
+    else {
+       stonith_max_attempts = crm_int_helper(value, NULL);
+    }
+}
 static void
 te_legacy_update_diff(const char *event, xmlNode * diff)
 {
@@ -637,7 +649,7 @@ too_many_st_failures(void)
 
     g_hash_table_iter_init(&iter, stonith_failures);
     while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
-        if (value->count > 10) {
+        if (value->count > stonith_max_attempts ) {
             crm_warn("Too many failures to fence %s (%d), giving up", key, value->count);
             return TRUE;
         } else if (value->last_rc == -ENODEV) {
