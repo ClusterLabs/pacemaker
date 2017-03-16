@@ -1120,44 +1120,41 @@ delete_op_entry(lrm_state_t * lrm_state, lrmd_event_data_t * op, const char *rsc
     free_xml(xml_top);
 }
 
+/*!
+ * \internal
+ * \brief Clear a resource's last failure
+ *
+ * Erase a resource's last failure on a particular node from both the
+ * LRM resource history in the CIB, and the resource history remembered
+ * for the LRM state.
+ *
+ * \param[in] rsc_id     Resource name
+ * \param[in] node_name  Node name
+ */
 void
 lrm_clear_last_failure(const char *rsc_id, const char *node_name)
 {
     char *attr = NULL;
-    GHashTableIter iter;
-    GList *lrm_state_list = lrm_state_get_list();
-    GList *state_entry;
-    rsc_history_t *entry = NULL;
+    lrm_state_t *lrm_state = NULL;
+
+    lrm_state = lrm_state_find(node_name);
+    if (lrm_state == NULL) {
+        return;
+    }
 
     attr = generate_op_key(rsc_id, "last_failure", 0);
+    delete_op_entry(lrm_state, NULL, rsc_id, attr, 0);
+    free(attr);
 
-    /* This clears last failure for every lrm state that has this rsc.*/
-    for (state_entry = lrm_state_list; state_entry != NULL; state_entry = state_entry->next) {
-        lrm_state_t *lrm_state = state_entry->data;
+    if (lrm_state->resource_history) {
+        rsc_history_t *entry = g_hash_table_lookup(lrm_state->resource_history,
+                                                   rsc_id);
 
-        if (node_name != NULL) {
-            if (strcmp(node_name, lrm_state->node_name) != 0) {
-                /* filter by node_name if node_name is present */
-                continue;
-            }
-        }
-
-        delete_op_entry(lrm_state, NULL, rsc_id, attr, 0);
-
-        if (!lrm_state->resource_history) {
-            continue;
-        }
-
-        g_hash_table_iter_init(&iter, lrm_state->resource_history);
-        while (g_hash_table_iter_next(&iter, NULL, (void **)&entry)) {
-            if (crm_str_eq(rsc_id, entry->id, TRUE)) {
-                lrmd_free_event(entry->failed);
-                entry->failed = NULL;
-            }
+        if (entry) {
+            lrmd_free_event(entry->failed);
+            entry->failed = NULL;
         }
     }
-    free(attr);
-    g_list_free(lrm_state_list);
 }
 
 /* Returns: gboolean - cancellation is in progress */

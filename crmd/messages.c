@@ -632,13 +632,13 @@ handle_failcount_op(xmlNode * stored_msg)
             rsc = ID(xml_rsc);
         }
     }
+    uname = crm_element_value(xml_op, XML_LRM_ATTR_TARGET);
 
-    if (rsc == NULL) {
+    if ((rsc == NULL) || (uname == NULL)) {
         crm_log_xml_warn(stored_msg, "invalid failcount op");
         return I_NULL;
     }
 
-    uname = crm_element_value(xml_op, XML_LRM_ATTR_TARGET);
     if (crm_element_value(xml_op, XML_LRM_ATTR_ROUTER_NODE)) {
         is_remote_node = TRUE;
     }
