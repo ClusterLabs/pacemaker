@@ -45,8 +45,9 @@ crm_update_peer_join(const char *source, crm_node_t * node, enum crm_join_phase 
     enum crm_join_phase last = 0;
 
     if(node == NULL) {
-        crm_err("Could not update join because node not specified" CRM_XS
-                " join-%u source=%s phase=%d", source, current_join_id, phase);
+        crm_err("Could not update join because node not specified"
+                CRM_XS " join-%u source=%s phase=%s",
+                current_join_id, source, crm_join_phase_str(phase));
         return;
     }
 
@@ -58,23 +59,21 @@ crm_update_peer_join(const char *source, crm_node_t * node, enum crm_join_phase 
     last = node->join;
 
     if(phase == last) {
-        crm_trace("%s: Node %s[%u] - join-%u phase still %u",
-                  source, node->uname, node->id, current_join_id, last);
+        crm_trace("%s: Node %s[%u] - join-%u phase still %s",
+                  source, node->uname, node->id, current_join_id,
+                  crm_join_phase_str(last));
 
-    } else if (phase <= crm_join_none) {
+    } else if ((phase <= crm_join_none) || (phase == (last + 1))) {
         node->join = phase;
-        crm_info("%s: Node %s[%u] - join-%u phase %u -> %u",
-                 source, node->uname, node->id, current_join_id, last, phase);
+        crm_info("%s: Node %s[%u] - join-%u phase %s -> %s",
+                 source, node->uname, node->id, current_join_id,
+                 crm_join_phase_str(last), crm_join_phase_str(phase));
 
-    } else if(phase == last + 1) {
-        node->join = phase;
-        crm_info("%s: Node %s[%u] - join-%u phase %u -> %u",
-                 source, node->uname, node->id, current_join_id, last, phase);
     } else {
         crm_err("Could not update join for node %s because phase transition invalid "
-                CRM_XS " join-%u source=%s node_id=%u last=%u new=%u",
-                node->uname, current_join_id, source, node->id, last, phase);
-
+                CRM_XS " join-%u source=%s node_id=%u last=%s new=%s",
+                node->uname, current_join_id, source, node->id,
+                crm_join_phase_str(last), crm_join_phase_str(phase));
     }
 }
 
@@ -691,27 +690,7 @@ void crmd_join_phase_log(int level)
 
     g_hash_table_iter_init(&iter, crm_peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &peer)) {
-        const char *state = "unknown";
-        switch(peer->join) {
-            case crm_join_nack:
-                state = "nack";
-                break;
-            case crm_join_none:
-                state = "none";
-                break;
-            case crm_join_welcomed:
-                state = "welcomed";
-                break;
-            case crm_join_integrated:
-                state = "integrated";
-                break;
-            case crm_join_finalized:
-                state = "finalized";
-                break;
-            case crm_join_confirmed:
-                state = "confirmed";
-                break;
-        }
-        do_crm_log(level, "join-%d: %s=%s", current_join_id, peer->uname, state);
+        do_crm_log(level, "join-%d: %s=%s", current_join_id, peer->uname,
+                   crm_join_phase_str(peer->join));
     }
 }
