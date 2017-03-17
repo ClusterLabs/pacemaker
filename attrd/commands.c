@@ -1033,31 +1033,8 @@ write_attributes(bool all, bool peer_discovered)
 static void
 build_update_element(xmlNode *parent, attribute_t *a, const char *nodeid, const char *value)
 {
-    char *set = NULL;
-    char *uuid = NULL;
+    const char *set = NULL;
     xmlNode *xml_obj = NULL;
-
-    if(a->set) {
-        set = strdup(a->set);
-    } else {
-        set = crm_strdup_printf("%s-%s", XML_CIB_TAG_STATUS, nodeid);
-    }
-
-    if(a->uuid) {
-        uuid = strdup(a->uuid);
-    } else {
-        int lpc;
-        uuid = crm_strdup_printf("%s-%s", set, a->id);
-
-        /* Minimal attempt at sanitizing automatic IDs */
-        for (lpc = 0; uuid[lpc] != 0; lpc++) {
-            switch (uuid[lpc]) {
-                case ':':
-                case '#':
-                    uuid[lpc] = '.';
-            }
-        }
-    }
 
     xml_obj = create_xml_node(parent, XML_CIB_TAG_STATE);
     crm_xml_add(xml_obj, XML_ATTR_ID, nodeid);
@@ -1066,10 +1043,19 @@ build_update_element(xmlNode *parent, attribute_t *a, const char *nodeid, const 
     crm_xml_add(xml_obj, XML_ATTR_ID, nodeid);
 
     xml_obj = create_xml_node(xml_obj, XML_TAG_ATTR_SETS);
-    crm_xml_add(xml_obj, XML_ATTR_ID, set);
+    if (a->set) {
+        crm_xml_set_id(xml_obj, "%s", a->set);
+    } else {
+        crm_xml_set_id(xml_obj, "%s-%s", XML_CIB_TAG_STATUS, nodeid);
+    }
+    set = ID(xml_obj);
 
     xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_NVPAIR);
-    crm_xml_add(xml_obj, XML_ATTR_ID, uuid);
+    if (a->uuid) {
+        crm_xml_set_id(xml_obj, "%s", a->uuid);
+    } else {
+        crm_xml_set_id(xml_obj, "%s-%s", set, a->id);
+    }
     crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, a->id);
 
     if(value) {
@@ -1079,9 +1065,6 @@ build_update_element(xmlNode *parent, attribute_t *a, const char *nodeid, const 
         crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, "");
         crm_xml_add(xml_obj, "__delete__", XML_NVPAIR_ATTR_VALUE);
     }
-
-    free(uuid);
-    free(set);
 }
 
 void

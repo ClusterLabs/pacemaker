@@ -264,12 +264,12 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
     }
 
     if(max == 0) {
-        char *attr_id = crm_concat(CIB_OPTIONS_FIRST, attr_name, '-');
         xmlNode *configuration = NULL;
         xmlNode *crm_config = NULL;
         xmlNode *cluster_property_set = NULL;
 
-        crm_trace("Creating %s/%s = %s", attr_id, attr_name, attr_value);
+        crm_trace("Creating %s-%s for %s=%s",
+                  CIB_OPTIONS_FIRST, attr_name, attr_name, attr_value);
 
         configuration = find_entity(xml, XML_CIB_TAG_CONFIGURATION, NULL);
         if (configuration == NULL) {
@@ -289,11 +289,9 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
 
         xml = create_xml_node(cluster_property_set, XML_CIB_TAG_NVPAIR);
 
-        crm_xml_add(xml, XML_ATTR_ID, attr_id);
+        crm_xml_set_id(xml, "%s-%s", CIB_OPTIONS_FIRST, attr_name);
         crm_xml_add(xml, XML_NVPAIR_ATTR_NAME, attr_name);
         crm_xml_add(xml, XML_NVPAIR_ATTR_VALUE, attr_value);
-
-        free(attr_id);
     }
     freeXpathObject(xpathObj);
 }
