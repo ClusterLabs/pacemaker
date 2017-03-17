@@ -231,7 +231,7 @@ How long to wait for STONITH actions (reboot, on, off) to complete
 indexterm:[stonith-max-attempts,Cluster Option]
 indexterm:[Cluster,Option,stonith-max-attempts]
 How many times stonith can fail before it will no longer be attempted on a target.
-Positive non-zero values are allowed.
+Positive non-zero values are allowed. '(since 1.1.17)'
 
 | concurrent-fencing | FALSE |
 indexterm:[concurrent-fencing,Cluster Option]
