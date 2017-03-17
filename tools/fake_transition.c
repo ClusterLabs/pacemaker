@@ -70,8 +70,8 @@ inject_transient_attr(xmlNode * cib_node, const char *name, const char *value)
     char *nvp_id = crm_concat(name, node_uuid, '-');
 
     node_path = xmlGetNodePath(cib_node);
-    quiet_log("Injecting attribute %s=%s into %s '%s'", name, value, node_path,
-             ID(cib_node));
+    quiet_log(" + Injecting attribute %s=%s into %s '%s'\n",
+              name, value, node_path, ID(cib_node));
     free(node_path);
 
     attrs = first_named_child(cib_node, XML_TAG_TRANSIENT_NODEATTRS);

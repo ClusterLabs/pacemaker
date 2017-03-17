@@ -231,8 +231,8 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
         }
 
     } else if (did_rsc_op_fail(op, target_rc)) {
-        /* We must store failed monitors here
-         * - otherwise the block below will cause them to be forgetten them when a stop happens
+        /* Store failed monitors here, otherwise the block below will cause them
+         * to be forgotten when a stop happens.
          */
         if (entry->failed) {
             lrmd_free_event(entry->failed);

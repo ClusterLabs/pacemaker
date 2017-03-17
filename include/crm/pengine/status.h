@@ -343,8 +343,8 @@ struct pe_action_s {
      * requires at minimum X number of cloned instances to be running
      * before an order dependency can run. Another option that uses
      * this is 'require-all=false' in ordering constrants. This option
-     * says "only required one instance of a resource to start before
-     * allowing dependencies to start" basicall require-all=false is
+     * says "only require one instance of a resource to start before
+     * allowing dependencies to start" -- basically, require-all=false is
      * the same as clone-min=1.
      */
 
@@ -354,8 +354,8 @@ struct pe_action_s {
      * to be considered runnable */ 
     int required_runnable_before;
 
-    GListPtr actions_before;    /* action_warpper_t* */
-    GListPtr actions_after;     /* action_warpper_t* */
+    GListPtr actions_before;    /* action_wrapper_t* */
+    GListPtr actions_after;     /* action_wrapper_t* */
 };
 
 struct ticket_s {

@@ -1005,7 +1005,7 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
                  *
                  * If anyone toggles the unique flag to 'on', the
                  * 'instance free' name will correspond to an orphan
-                 * and fall into the claus above instead
+                 * and fall into the clause above instead
                  */
                 crm_xml_add(rsc_xml, XML_ATTR_ID, xml_id);
                 if (action->rsc->clone_name && safe_str_neq(xml_id, action->rsc->clone_name)) {

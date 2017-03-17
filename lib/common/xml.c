@@ -3190,7 +3190,7 @@ crm_xml_escape(const char *text)
      * converted back to their escape sequences.
      *
      * However xmlNodeDump() is randomly dog slow, even with the same
-     * input. So we need to replicate the escapeing in our custom
+     * input. So we need to replicate the escaping in our custom
      * version so that the result can be re-parsed by xmlCtxtReadDoc()
      * when necessary.
      */

@@ -1759,7 +1759,7 @@ if test "$GCC" != yes; then
 else
         CFLAGS="$CFLAGS -ggdb"
 
-dnl when we don't have diagnostic push / pull we can't explicitely disable
+dnl When we don't have diagnostic push / pull, we can't explicitly disable
 dnl checking for nonliteral formats in the places where they occur on purpose
 dnl thus we disable nonliteral format checking globally as we are aborting
 dnl on warnings. 

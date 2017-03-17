@@ -385,7 +385,7 @@ do_dc_join_finalize(long long action,
     /* This we can do straight away and avoid clients timing us out
      *  while we compute the latest CIB
      */
-    crm_debug("Finializing join-%d for %d clients",
+    crm_debug("Finalizing join-%d for %d clients",
               current_join_id, crmd_join_phase_count(crm_join_integrated));
 
     crmd_join_phase_log(LOG_INFO);

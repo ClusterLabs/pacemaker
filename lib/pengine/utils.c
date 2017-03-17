@@ -1099,8 +1099,8 @@ pe_free_action(action_t * action)
     if (action == NULL) {
         return;
     }
-    g_list_free_full(action->actions_before, free);     /* action_warpper_t* */
-    g_list_free_full(action->actions_after, free);      /* action_warpper_t* */
+    g_list_free_full(action->actions_before, free);     /* action_wrapper_t* */
+    g_list_free_full(action->actions_after, free);      /* action_wrapper_t* */
     if (action->extra) {
         g_hash_table_destroy(action->extra);
     }
