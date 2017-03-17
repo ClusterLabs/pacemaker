@@ -622,28 +622,39 @@ handle_failcount_op(xmlNode * stored_msg)
 {
     const char *rsc = NULL;
     const char *uname = NULL;
+    const char *op = NULL;
+    const char *interval = NULL;
+    int interval_ms = 0;
     gboolean is_remote_node = FALSE;
     xmlNode *xml_op = get_message_xml(stored_msg, F_CRM_DATA);
 
     if (xml_op) {
         xmlNode *xml_rsc = first_named_child(xml_op, XML_CIB_TAG_RESOURCE);
+        xmlNode *xml_attrs = first_named_child(xml_op, XML_TAG_ATTRS);
 
         if (xml_rsc) {
             rsc = ID(xml_rsc);
         }
+        if (xml_attrs) {
+            op = crm_element_value(xml_attrs,
+                                   CRM_META "_" XML_RSC_ATTR_CLEAR_OP);
+            interval = crm_element_value(xml_attrs,
+                                         CRM_META "_" XML_RSC_ATTR_CLEAR_INTERVAL);
+            interval_ms = crm_parse_int(interval, "0");
+        }
     }
+    uname = crm_element_value(xml_op, XML_LRM_ATTR_TARGET);
 
-    if (rsc == NULL) {
+    if ((rsc == NULL) || (uname == NULL)) {
         crm_log_xml_warn(stored_msg, "invalid failcount op");
         return I_NULL;
     }
 
-    uname = crm_element_value(xml_op, XML_LRM_ATTR_TARGET);
     if (crm_element_value(xml_op, XML_LRM_ATTR_ROUTER_NODE)) {
         is_remote_node = TRUE;
     }
-    update_attrd_clear_failures(uname, rsc, is_remote_node);
-    lrm_clear_last_failure(rsc, uname);
+    update_attrd_clear_failures(uname, rsc, op, interval, is_remote_node);
+    lrm_clear_last_failure(rsc, uname, op, interval_ms);
 
     return I_NULL;
 }

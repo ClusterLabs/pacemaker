@@ -53,8 +53,8 @@ log_attrd_error(const char *host, const char *name, const char *value,
 
 static void
 update_attrd_helper(const char *host, const char *name, const char *value,
-                    const char *user_name, gboolean is_remote_node,
-                    char command)
+                    const char *interval, const char *user_name,
+                    gboolean is_remote_node, char command)
 {
     int rc;
     int max = 5;
@@ -78,9 +78,16 @@ update_attrd_helper(const char *host, const char *name, const char *value,
             }
         }
 
-        rc = attrd_update_delegate(attrd_ipc, command, host, name, value,
-                                   XML_CIB_TAG_STATUS, NULL, NULL, user_name,
-                                   attrd_opts);
+        if (command) {
+            rc = attrd_update_delegate(attrd_ipc, command, host, name, value,
+                                       XML_CIB_TAG_STATUS, NULL, NULL,
+                                       user_name, attrd_opts);
+        } else {
+            /* (ab)using name/value as resource/operation */
+            rc = attrd_clear_delegate(attrd_ipc, host, name, value, interval,
+                                      user_name, attrd_opts);
+        }
+
         if (rc == pcmk_ok) {
             break;
 
@@ -103,21 +110,24 @@ void
 update_attrd(const char *host, const char *name, const char *value,
              const char *user_name, gboolean is_remote_node)
 {
-    update_attrd_helper(host, name, value, user_name, is_remote_node, 'U');
+    update_attrd_helper(host, name, value, NULL, user_name, is_remote_node,
+                        'U');
 }
 
 void
 update_attrd_remote_node_removed(const char *host, const char *user_name)
 {
     crm_trace("Asking attrd to purge Pacemaker Remote node %s", host);
-    update_attrd_helper(host, NULL, NULL, user_name, TRUE, 'C');
+    update_attrd_helper(host, NULL, NULL, NULL, user_name, TRUE, 'C');
 }
 
 void
-update_attrd_clear_failures(const char *host, const char *rsc,
-                            gboolean is_remote_node)
+update_attrd_clear_failures(const char *host, const char *rsc, const char *op,
+                            const char *interval, gboolean is_remote_node)
 {
-    crm_info("Asking attrd to clear failure of %s on %s node %s",
+    crm_info("Asking attrd to clear failure of %s %s for %s on %s node %s",
+             (op? op : "all operations"),
+             (interval? interval : "at all intervals"),
              rsc, (is_remote_node? "Pacemaker Remote" : "cluster"), host);
-    update_attrd_helper(host, rsc, NULL, NULL, is_remote_node, 'c');
+    update_attrd_helper(host, rsc, op, interval, NULL, is_remote_node, 0);
 }

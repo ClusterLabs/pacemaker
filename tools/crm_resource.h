@@ -71,7 +71,9 @@ int cli_resource_print_operations(const char *rsc_id, const char *host_uname, bo
 void cli_resource_check(cib_t * cib, resource_t *rsc);
 int cli_resource_fail(crm_ipc_t * crmd_channel, const char *host_uname, const char *rsc_id, pe_working_set_t * data_set);
 int cli_resource_search(const char *rsc, pe_working_set_t * data_set);
-int cli_resource_delete(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_uname, resource_t * rsc, pe_working_set_t * data_set);
+int cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
+                        resource_t *rsc, const char *operation,
+                        const char *interval, pe_working_set_t *data_set);
 int cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t * cib);
 int cli_resource_move(const char *rsc_id, const char *host_name, cib_t * cib, pe_working_set_t *data_set);
 int cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *override_hash, cib_t * cib, pe_working_set_t *data_set);

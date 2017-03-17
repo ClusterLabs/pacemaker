@@ -1054,110 +1054,159 @@ delete_rsc_entry(lrm_state_t * lrm_state, ha_msg_input_t * input, const char *rs
     g_hash_table_foreach_remove(lrm_state->deletion_ops, lrm_remove_deleted_rsc, &event);
 }
 
-/*
- * Remove the op from the CIB
+/*!
+ * \internal
+ * \brief Erase an LRM history entry from the CIB, given the operation data
  *
- * Avoids refreshing the entire LRM section of this host
+ * \param[in] lrm_state  LRM state of the desired node
+ * \param[in] op         Operation whose history should be deleted
  */
-
-#define op_template "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']/"XML_LRM_TAG_RSC_OP"[@id='%s']"
-#define op_call_template "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']/"XML_LRM_TAG_RSC_OP"[@id='%s' and @"XML_LRM_ATTR_CALLID"='%d']"
-
 static void
-delete_op_entry(lrm_state_t * lrm_state, lrmd_event_data_t * op, const char *rsc_id,
-                const char *key, int call_id)
+erase_lrm_history_by_op(lrm_state_t *lrm_state, lrmd_event_data_t *op)
 {
     xmlNode *xml_top = NULL;
 
-    if (op != NULL) {
-        xml_top = create_xml_node(NULL, XML_LRM_TAG_RSC_OP);
-        crm_xml_add_int(xml_top, XML_LRM_ATTR_CALLID, op->call_id);
-        crm_xml_add(xml_top, XML_ATTR_TRANSITION_KEY, op->user_data);
+    CRM_CHECK(op != NULL, return);
 
-        if (op->interval > 0) {
-            char *op_id = generate_op_key(op->rsc_id, op->op_type, op->interval);
+    xml_top = create_xml_node(NULL, XML_LRM_TAG_RSC_OP);
+    crm_xml_add_int(xml_top, XML_LRM_ATTR_CALLID, op->call_id);
+    crm_xml_add(xml_top, XML_ATTR_TRANSITION_KEY, op->user_data);
 
-            /* Avoid deleting last_failure too (if it was a result of this recurring op failing) */
-            crm_xml_add(xml_top, XML_ATTR_ID, op_id);
-            free(op_id);
-        }
+    if (op->interval > 0) {
+        char *op_id = generate_op_key(op->rsc_id, op->op_type, op->interval);
 
-        crm_debug("async: Sending delete op for %s_%s_%d (call=%d)",
-                  op->rsc_id, op->op_type, op->interval, op->call_id);
-
-        fsa_cib_conn->cmds->delete(fsa_cib_conn, XML_CIB_TAG_STATUS, xml_top, cib_quorum_override);
-
-    } else if (rsc_id != NULL && key != NULL) {
-        int max = 0;
-        char *op_xpath = NULL;
-
-        if (call_id > 0) {
-            max =
-                strlen(op_call_template) + strlen(rsc_id) + strlen(lrm_state->node_name) +
-                strlen(key) + 10;
-            op_xpath = calloc(1, max);
-            snprintf(op_xpath, max, op_call_template, lrm_state->node_name, rsc_id, key, call_id);
-
-        } else {
-            max =
-                strlen(op_template) + strlen(rsc_id) + strlen(lrm_state->node_name) + strlen(key) +
-                1;
-            op_xpath = calloc(1, max);
-            snprintf(op_xpath, max, op_template, lrm_state->node_name, rsc_id, key);
-        }
-
-        crm_debug("sync: Sending delete op for %s (call=%d)", rsc_id, call_id);
-        fsa_cib_conn->cmds->delete(fsa_cib_conn, op_xpath, NULL, cib_quorum_override | cib_xpath);
-
-        free(op_xpath);
-
-    } else {
-        crm_err("Not enough information to delete op entry: rsc=%p key=%p", rsc_id, key);
-        return;
+        /* Avoid deleting last_failure too (if it was a result of this recurring op failing) */
+        crm_xml_add(xml_top, XML_ATTR_ID, op_id);
+        free(op_id);
     }
+
+    crm_debug("Erasing LRM resource history for %s_%s_%d (call=%d)",
+              op->rsc_id, op->op_type, op->interval, op->call_id);
+
+    fsa_cib_conn->cmds->delete(fsa_cib_conn, XML_CIB_TAG_STATUS, xml_top,
+                               cib_quorum_override);
 
     crm_log_xml_trace(xml_top, "op:cancel");
     free_xml(xml_top);
 }
 
-void
-lrm_clear_last_failure(const char *rsc_id, const char *node_name)
+/* Define xpath to find LRM resource history entry by node and resource */
+#define XPATH_HISTORY                                   \
+    "/" XML_TAG_CIB "/" XML_CIB_TAG_STATUS              \
+    "/" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']"  \
+    "/" XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES       \
+    "/" XML_LRM_TAG_RESOURCE "[@" XML_ATTR_ID "='%s']"  \
+    "/" XML_LRM_TAG_RSC_OP
+
+/* ... and also by operation key */
+#define XPATH_HISTORY_ID XPATH_HISTORY \
+    "[@" XML_ATTR_ID "='%s']"
+
+/* ... and also by operation key and operation call ID */
+#define XPATH_HISTORY_CALL XPATH_HISTORY \
+    "[@" XML_ATTR_ID "='%s' and @" XML_LRM_ATTR_CALLID "='%d']"
+
+/* ... and also by operation key and original operation key */
+#define XPATH_HISTORY_ORIG XPATH_HISTORY \
+    "[@" XML_ATTR_ID "='%s' and @" XML_LRM_ATTR_TASK_KEY "='%s']"
+
+/*!
+ * \internal
+ * \brief Erase an LRM history entry from the CIB, given operation identifiers
+ *
+ * \param[in] lrm_state  LRM state of the node to clear history for
+ * \param[in] rsc_id     Name of resource to clear history for
+ * \param[in] key        Operation key of operation to clear history for
+ * \param[in] orig_op    If specified, delete only if it has this original op
+ * \param[in] call_id    If specified, delete entry only if it has this call ID
+ */
+static void
+erase_lrm_history_by_id(lrm_state_t *lrm_state, const char *rsc_id,
+                        const char *key, const char *orig_op, int call_id)
 {
-    char *attr = NULL;
-    GHashTableIter iter;
-    GList *lrm_state_list = lrm_state_get_list();
-    GList *state_entry;
-    rsc_history_t *entry = NULL;
+    char *op_xpath = NULL;
 
-    attr = generate_op_key(rsc_id, "last_failure", 0);
+    CRM_CHECK((rsc_id != NULL) && (key != NULL), return);
 
-    /* This clears last failure for every lrm state that has this rsc.*/
-    for (state_entry = lrm_state_list; state_entry != NULL; state_entry = state_entry->next) {
-        lrm_state_t *lrm_state = state_entry->data;
+    if (call_id > 0) {
+        op_xpath = crm_strdup_printf(XPATH_HISTORY_CALL,
+                                     lrm_state->node_name, rsc_id, key,
+                                     call_id);
 
-        if (node_name != NULL) {
-            if (strcmp(node_name, lrm_state->node_name) != 0) {
-                /* filter by node_name if node_name is present */
-                continue;
-            }
-        }
+    } else if (orig_op) {
+        op_xpath = crm_strdup_printf(XPATH_HISTORY_ORIG,
+                                     lrm_state->node_name, rsc_id, key,
+                                     orig_op);
+    } else {
+        op_xpath = crm_strdup_printf(XPATH_HISTORY_ID,
+                                     lrm_state->node_name, rsc_id, key);
+    }
 
-        delete_op_entry(lrm_state, NULL, rsc_id, attr, 0);
+    crm_debug("Erasing LRM resource history for %s on %s (call=%d)",
+              key, rsc_id, call_id);
+    fsa_cib_conn->cmds->delete(fsa_cib_conn, op_xpath, NULL,
+                               cib_quorum_override | cib_xpath);
+    free(op_xpath);
+}
 
-        if (!lrm_state->resource_history) {
-            continue;
-        }
+static inline gboolean
+last_failed_matches_op(rsc_history_t *entry, const char *op, int interval)
+{
+    if (entry == NULL) {
+        return FALSE;
+    }
+    if (op == NULL) {
+        return TRUE;
+    }
+    return (safe_str_eq(op, entry->failed->op_type)
+            && (interval == entry->failed->interval));
+}
 
-        g_hash_table_iter_init(&iter, lrm_state->resource_history);
-        while (g_hash_table_iter_next(&iter, NULL, (void **)&entry)) {
-            if (crm_str_eq(rsc_id, entry->id, TRUE)) {
-                lrmd_free_event(entry->failed);
-                entry->failed = NULL;
-            }
+/*!
+ * \internal
+ * \brief Clear a resource's last failure
+ *
+ * Erase a resource's last failure on a particular node from both the
+ * LRM resource history in the CIB, and the resource history remembered
+ * for the LRM state.
+ *
+ * \param[in] rsc_id     Resource name
+ * \param[in] node_name  Node name
+ * \param[in] operation  If specified, only clear if matching this operation
+ * \param[in] interval   If operation is specified, it has this interval in ms
+ */
+void
+lrm_clear_last_failure(const char *rsc_id, const char *node_name,
+                       const char *operation, int interval)
+{
+    char *op_key = NULL;
+    char *orig_op_key = NULL;
+    lrm_state_t *lrm_state = NULL;
+
+    lrm_state = lrm_state_find(node_name);
+    if (lrm_state == NULL) {
+        return;
+    }
+
+    /* Erase from CIB */
+    op_key = generate_op_key(rsc_id, "last_failure", 0);
+    if (operation) {
+        orig_op_key = generate_op_key(rsc_id, operation, interval);
+    }
+    erase_lrm_history_by_id(lrm_state, rsc_id, op_key, orig_op_key, 0);
+    free(op_key);
+    free(orig_op_key);
+
+    /* Remove from memory */
+    if (lrm_state->resource_history) {
+        rsc_history_t *entry = g_hash_table_lookup(lrm_state->resource_history,
+                                                   rsc_id);
+
+        if (last_failed_matches_op(entry, operation, interval)) {
+            lrmd_free_event(entry->failed);
+            entry->failed = NULL;
         }
     }
-    free(attr);
-    g_list_free(lrm_state_list);
 }
 
 /* Returns: gboolean - cancellation is in progress */
@@ -1730,7 +1779,7 @@ do_lrm_invoke(long long action,
                 if (is_remote_lrmd_ra(NULL, NULL, rsc->id) == FALSE) {
                     crm_info("Nothing known about operation %d for %s", call, op_key);
                 }
-                delete_op_entry(lrm_state, NULL, rsc->id, op_key, call);
+                erase_lrm_history_by_id(lrm_state, rsc->id, op_key, NULL, call);
                 send_task_ok_ack(lrm_state, input, rsc->id, rsc, op_task,
                                  from_host, from_sys);
 
@@ -2431,7 +2480,7 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op, struct recurr
 
     } else if (pending->remove) {
         /* The tengine canceled this op, we have been waiting for the cancel to finish. */
-        delete_op_entry(lrm_state, op, op->rsc_id, op_key, op->call_id);
+        erase_lrm_history_by_op(lrm_state, op);
 
     } else if (pending && op->rsc_deleted) {
         /* The tengine initiated this op, but it was cancelled outside of the

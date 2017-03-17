@@ -332,24 +332,39 @@ attrd_client_clear_failure(xmlNode *xml)
     }
 #endif
 
-    const char *rsc = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
+    const char *rsc = crm_element_value(xml, F_ATTRD_RESOURCE);
+    const char *op = crm_element_value(xml, F_ATTRD_OPERATION);
+    const char *interval_s = crm_element_value(xml, F_ATTRD_INTERVAL);
 
-    /* Map this to an update that uses a regular expression */
+    /* Map this to an update */
     crm_xml_add(xml, F_ATTRD_TASK, ATTRD_OP_UPDATE);
 
-    /* Add expression matching one or all resources as appropriate */
+    /* Add regular expression matching desired attributes */
+
     if (rsc) {
-        char *pattern = crm_strdup_printf(ATTRD_RE_CLEAR_ONE, rsc);
+        char *pattern;
+
+        if (op == NULL) {
+            pattern = crm_strdup_printf(ATTRD_RE_CLEAR_ONE, rsc);
+
+        } else {
+            int interval = crm_get_interval(interval_s);
+
+            pattern = crm_strdup_printf(ATTRD_RE_CLEAR_OP,
+                                        rsc, op, interval);
+        }
 
         crm_xml_add(xml, F_ATTRD_REGEX, pattern);
-        crm_xml_replace(xml, F_ATTRD_ATTRIBUTE, NULL);
         free(pattern);
 
     } else {
         crm_xml_add(xml, F_ATTRD_REGEX, ATTRD_RE_CLEAR_ALL);
     }
 
-    /* Delete the value */
+    /* Make sure attribute and value are not set, so we delete via regex */
+    if (crm_element_value(xml, F_ATTRD_ATTRIBUTE)) {
+        crm_xml_replace(xml, F_ATTRD_ATTRIBUTE, NULL);
+    }
     if (crm_element_value(xml, F_ATTRD_VALUE)) {
         crm_xml_replace(xml, F_ATTRD_VALUE, NULL);
     }
@@ -504,19 +519,27 @@ attrd_client_query(crm_client_t *client, uint32_t id, uint32_t flags, xmlNode *q
 static void
 attrd_peer_clear_failure(crm_node_t *peer, xmlNode *xml)
 {
-    const char *rsc = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
+    const char *rsc = crm_element_value(xml, F_ATTRD_RESOURCE);
     const char *host = crm_element_value(xml, F_ATTRD_HOST);
+    const char *op = crm_element_value(xml, F_ATTRD_OPERATION);
+    const char *interval_s = crm_element_value(xml, F_ATTRD_INTERVAL);
+    int interval = crm_get_interval(interval_s);
     char *attr = NULL;
     GHashTableIter iter;
     regex_t regex;
 
-    if (attrd_failure_regex(&regex, rsc) != pcmk_ok) {
+    if (attrd_failure_regex(&regex, rsc, op, interval) != pcmk_ok) {
         crm_info("Ignoring invalid request to clear failures for %s",
                  (rsc? rsc : "all resources"));
         return;
     }
 
     crm_xml_add(xml, F_ATTRD_TASK, ATTRD_OP_UPDATE);
+
+    /* Make sure value is not set, so we delete */
+    if (crm_element_value(xml, F_ATTRD_VALUE)) {
+        crm_xml_replace(xml, F_ATTRD_VALUE, NULL);
+    }
 
     g_hash_table_iter_init(&iter, attributes);
     while (g_hash_table_iter_next(&iter, (gpointer *) &attr, NULL)) {
@@ -1030,6 +1053,7 @@ build_update_element(xmlNode *parent, attribute_t *a, const char *nodeid, const 
         for (lpc = 0; uuid[lpc] != 0; lpc++) {
             switch (uuid[lpc]) {
                 case ':':
+                case '#':
                     uuid[lpc] = '.';
             }
         }

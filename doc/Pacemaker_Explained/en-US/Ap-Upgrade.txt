@@ -350,7 +350,7 @@ cluster running, and any validation errors are often more informative.
 
 ==== New ====
 
-* Failure timeouts. See <<s-failure-migration>>
+* Failure timeouts. See <<s-failure-handling>>
 * New section for resource and operation defaults. See <<s-resource-defaults>> and <<s-operation-defaults>>
 * Tool for making offline configuration changes. See <<s-config-sandboxes>>
 * +Rules, instance_attributes, meta_attributes+ and sets of operations can be defined once and referenced in multiple places. See <<s-reusing-config-elements>>
@@ -371,7 +371,7 @@ cluster running, and any validation errors are often more informative.
 * The +stonith-enabled+ option now defaults to true.
 * The cluster will refuse to start resources if +stonith-enabled+ is true (or unset) and no STONITH resources have been defined
 * The attributes of colocation and ordering constraints were renamed for clarity. See <<s-resource-ordering>> and <<s-resource-colocation>>
-* +resource-failure-stickiness+ has been replaced by +migration-threshold+. See <<s-failure-migration>>
+* +resource-failure-stickiness+ has been replaced by +migration-threshold+. See <<s-failure-handling>>
 * The parameters for command-line tools have been made consistent
 * Switched to 'RelaxNG' schema validation and 'libxml2' parser
 ** id fields are now XML IDs which have the following limitations:

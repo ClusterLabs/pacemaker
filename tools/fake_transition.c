@@ -95,7 +95,8 @@ inject_transient_attr(xmlNode * cib_node, const char *name, const char *value)
 }
 
 static void
-update_failcounts(xmlNode * cib_node, const char *resource, int interval, int rc)
+update_failcounts(xmlNode * cib_node, const char *resource, const char *task,
+                  int interval, int rc)
 {
     if (rc == 0) {
         return;
@@ -107,11 +108,11 @@ update_failcounts(xmlNode * cib_node, const char *resource, int interval, int rc
         char *name = NULL;
         char *now = crm_itoa(time(NULL));
 
-        name = crm_failcount_name(resource);
+        name = crm_failcount_name(resource, task, interval);
         inject_transient_attr(cib_node, name, "value++");
         free(name);
 
-        name = crm_lastfailure_name(resource);
+        name = crm_lastfailure_name(resource, task, interval);
         inject_transient_attr(cib_node, name, now);
         free(name);
         free(now);
@@ -590,7 +591,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
             cib_node = inject_node_state(cib, node, NULL);
             CRM_ASSERT(cib_node != NULL);
 
-            update_failcounts(cib_node, resource, interval, outcome);
+            update_failcounts(cib_node, resource, task, interval, outcome);
 
             cib_resource = inject_resource(cib_node, resource, rclass, rtype, rprovider);
             CRM_ASSERT(cib_resource != NULL);
@@ -721,7 +722,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
             action->failed = TRUE;
             graph->abort_priority = INFINITY;
             printf("\tPretending action %d failed with rc=%d\n", action->id, op->rc);
-            update_failcounts(cib_node, resource, op->interval, op->rc);
+            update_failcounts(cib_node, resource, op->op_type, op->interval, op->rc);
             free(key);
             break;
         }

@@ -237,18 +237,26 @@ find_hash_entry(xmlNode * msg)
 static void
 local_clear_failure(xmlNode *xml)
 {
-    const char *rsc = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
+    const char *rsc = crm_element_value(xml, F_ATTRD_RESOURCE);
     const char *what = rsc? rsc : "all resources";
+    const char *op = crm_element_value(xml, F_ATTRD_OPERATION);
+    const char *interval_s = crm_element_value(xml, F_ATTRD_INTERVAL);
+    int interval = crm_get_interval(interval_s);
     regex_t regex;
     GHashTableIter iter;
     attr_hash_entry_t *hash_entry = NULL;
 
-    if (attrd_failure_regex(&regex, rsc) != pcmk_ok) {
+    if (attrd_failure_regex(&regex, rsc, op, interval) != pcmk_ok) {
         crm_info("Ignoring invalid request to clear %s",
                  (rsc? rsc : "all resources"));
         return;
     }
     crm_debug("Clearing %s locally", what);
+
+    /* Make sure value is not set, so we delete */
+    if (crm_element_value(xml, F_ATTRD_VALUE)) {
+        crm_xml_replace(xml, F_ATTRD_VALUE, NULL);
+    }
 
     g_hash_table_iter_init(&iter, attr_hash);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &hash_entry)) {
@@ -282,15 +290,40 @@ remote_clear_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
     "/" XML_CIB_TAG_STATE "[@" XML_NODE_IS_REMOTE "='true']" x \
     "/" XML_TAG_TRANSIENT_NODEATTRS "/" XML_TAG_ATTR_SETS "/" XML_CIB_TAG_NVPAIR
 
+/* xpath component to match an attribute name exactly */
+#define XPATH_NAME_IS(x) "@" XML_NVPAIR_ATTR_NAME "='" x "'"
+
+/* xpath component to match an attribute name by prefix */
+#define XPATH_NAME_START(x) "starts-with(@" XML_NVPAIR_ATTR_NAME ", '" x "')"
+
 /* xpath ending to clear all resources */
 #define XPATH_CLEAR_ALL \
-    "[starts-with(@" XML_NVPAIR_ATTR_NAME ", '" CRM_FAIL_COUNT_PREFIX "-') " \
-    "or starts-with(@" XML_NVPAIR_ATTR_NAME ", '" CRM_LAST_FAILURE_PREFIX "-')]"
+    "[" XPATH_NAME_START(CRM_FAIL_COUNT_PREFIX "-") \
+    " or " XPATH_NAME_START(CRM_LAST_FAILURE_PREFIX "-") "]"
 
-/* xpath ending to clear one resource (format takes resource name x 2) */
+/* xpath ending to clear all operations for one resource
+ * (format takes resource name x 4)
+ *
+ * @COMPAT attributes set < 1.1.17:
+ * also match older attributes that do not have the operation part
+ */
 #define XPATH_CLEAR_ONE \
-    "[@" XML_NVPAIR_ATTR_NAME "='" CRM_FAIL_COUNT_PREFIX "-%s' " \
-    "or @" XML_NVPAIR_ATTR_NAME "='" CRM_LAST_FAILURE_PREFIX "-%s']"
+    "[" XPATH_NAME_IS(CRM_FAIL_COUNT_PREFIX "-%s") \
+    " or " XPATH_NAME_IS(CRM_LAST_FAILURE_PREFIX "-%s") \
+    " or " XPATH_NAME_START(CRM_FAIL_COUNT_PREFIX "-%s#") \
+    " or " XPATH_NAME_START(CRM_LAST_FAILURE_PREFIX "-%s#") "]"
+
+/* xpath ending to clear one operation for one resource
+ * (format takes resource name x 2, resource name + operation + interval x 2)
+ *
+ * @COMPAT attributes set < 1.1.17:
+ * also match older attributes that do not have the operation part
+ */
+#define XPATH_CLEAR_OP \
+    "[" XPATH_NAME_IS(CRM_FAIL_COUNT_PREFIX "-%s") \
+    " or " XPATH_NAME_IS(CRM_LAST_FAILURE_PREFIX "-%s") \
+    " or " XPATH_NAME_IS(CRM_FAIL_COUNT_PREFIX "-%s#%s_%d") \
+    " or " XPATH_NAME_IS(CRM_LAST_FAILURE_PREFIX "-%s#%s_%d") "]"
 
 /*!
  * \internal
@@ -301,8 +334,9 @@ remote_clear_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
 static void
 remote_clear_failure(xmlNode *xml)
 {
-    const char *rsc = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
+    const char *rsc = crm_element_value(xml, F_ATTRD_RESOURCE);
     const char *host = crm_element_value(xml, F_ATTRD_HOST);
+    const char *op = crm_element_value(xml, F_ATTRD_OPERATION);
     int rc = pcmk_ok;
     char *xpath;
 
@@ -313,18 +347,44 @@ remote_clear_failure(xmlNode *xml)
         return;
     }
 
-    if ((rsc == NULL) && (host == NULL)) {
-        xpath = crm_strdup_printf(XPATH_REMOTE_ATTR("") XPATH_CLEAR_ALL);
+    /* Build an xpath to clear appropriate attributes */
 
-    } else if (rsc == NULL) {
-        xpath = crm_strdup_printf(XPATH_REMOTE_ATTR(XPATH_ID) XPATH_CLEAR_ALL,
-                                  host);
-    } else if (host == NULL) {
-        xpath = crm_strdup_printf(XPATH_REMOTE_ATTR("") XPATH_CLEAR_ONE,
-                                  rsc, rsc);
+    if (rsc == NULL) {
+        /* No resource specified, clear all resources */
+
+        if (host == NULL) {
+            xpath = crm_strdup_printf(XPATH_REMOTE_ATTR("") XPATH_CLEAR_ALL);
+        } else {
+            xpath = crm_strdup_printf(XPATH_REMOTE_ATTR(XPATH_ID) XPATH_CLEAR_ALL,
+                                      host);
+        }
+
+    } else if (op == NULL) {
+        /* Resource but no operation specified, clear all operations */
+
+        if (host == NULL) {
+            xpath = crm_strdup_printf(XPATH_REMOTE_ATTR("") XPATH_CLEAR_ONE,
+                                      rsc, rsc, rsc, rsc);
+        } else {
+            xpath = crm_strdup_printf(XPATH_REMOTE_ATTR(XPATH_ID) XPATH_CLEAR_ONE,
+                                      host, rsc, rsc, rsc, rsc);
+        }
+
     } else {
-        xpath = crm_strdup_printf(XPATH_REMOTE_ATTR(XPATH_ID) XPATH_CLEAR_ONE,
-                                  host, rsc, rsc);
+        /* Resource and operation specified */
+
+        const char *interval_s = crm_element_value(xml, F_ATTRD_INTERVAL);
+        int interval = crm_get_interval(interval_s);
+
+        if (host == NULL) {
+            xpath = crm_strdup_printf(XPATH_REMOTE_ATTR("") XPATH_CLEAR_OP,
+                                      rsc, rsc, rsc, op, interval,
+                                      rsc, op, interval);
+        } else {
+            xpath = crm_strdup_printf(XPATH_REMOTE_ATTR(XPATH_ID) XPATH_CLEAR_OP,
+                                      host, rsc, rsc, rsc, op, interval,
+                                      rsc, op, interval);
+        }
     }
 
     crm_trace("Clearing attributes matching %s", xpath);

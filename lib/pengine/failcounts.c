@@ -7,6 +7,8 @@
 
 #include <crm_internal.h>
 
+#include <sys/types.h>
+#include <regex.h>
 #include <glib.h>
 
 #include <crm/crm.h>
@@ -14,44 +16,6 @@
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
 #include <crm/pengine/internal.h>
-
-struct fail_search {
-    resource_t *rsc;
-    pe_working_set_t *data_set;
-    int count;
-    long long last;
-    char *key;
-};
-
-static void
-get_failcount_by_prefix(gpointer key_p, gpointer value, gpointer user_data)
-{
-    struct fail_search *search = user_data;
-    const char *attr_id = key_p;
-    const char *match = strstr(attr_id, search->key);
-    resource_t *parent = NULL;
-
-    if (match == NULL) {
-        return;
-    }
-
-    /* we are only incrementing the failcounts here if the rsc
-     * that matches our prefix has the same uber parent as the rsc we're
-     * calculating the failcounts for. This prevents false positive matches
-     * where unrelated resources may have similar prefixes in their names.
-     *
-     * search->rsc is already set to be the uber parent. */
-    parent = uber_parent(pe_find_resource(search->data_set->resources, match));
-    if (parent == NULL || parent != search->rsc) {
-        return;
-    }
-    if (strstr(attr_id, CRM_LAST_FAILURE_PREFIX "-") == attr_id) {
-        search->last = crm_int_helper(value, NULL);
-
-    } else if (strstr(attr_id, CRM_FAIL_COUNT_PREFIX "-") == attr_id) {
-        search->count += char2score(value);
-    }
-}
 
 int
 get_failcount(node_t *node, resource_t *rsc, time_t *last_failure,
@@ -124,6 +88,14 @@ block_failure(node_t *node, resource_t *rsc, xmlNode *xml_op,
 
     free(xpath);
 
+#if 0
+    /* A good idea? */
+    if (rsc->container == NULL && is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
+        /* In this case, stop on-fail defaults to block in unpack_operation() */
+        return TRUE;
+    }
+#endif
+
     if (xpathObj) {
         int max = numXpathResults(xpathObj);
         int lpc = 0;
@@ -185,83 +157,141 @@ block_failure(node_t *node, resource_t *rsc, xmlNode *xml_op,
     return should_block;
 }
 
+/*!
+ * \internal
+ * \brief Get resource name as used in failure-related node attributes
+ *
+ * \param[in] rsc  Resource to check
+ *
+ * \return Newly allocated string containing resource's fail name
+ * \note The caller is responsible for freeing the result.
+ */
+static inline char *
+rsc_fail_name(resource_t *rsc)
+{
+    const char *name = (rsc->clone_name? rsc->clone_name : rsc->id);
+
+    return is_set(rsc->flags, pe_rsc_unique)? strdup(name) : clone_strip(name);
+}
+
+/*!
+ * \internal
+ * \brief Compile regular expression to match a failure-related node attribute
+ *
+ * \param[in]  prefix    Attribute prefix to match
+ * \param[in]  rsc_name  Resource name to match as used in failure attributes
+ * \param[in]  is_legacy Whether DC uses per-resource fail counts
+ * \param[in]  is_unique Whether the resource is a globally unique clone
+ * \param[out] re        Where to store resulting regular expression
+ *
+ * \note Fail attributes are named like PREFIX-RESOURCE#OP_INTERVAL.
+ */
+static void
+generate_fail_regex(const char *prefix, const char *rsc_name,
+                    gboolean is_legacy, gboolean is_unique, regex_t *re)
+{
+    char *pattern;
+
+    /* @COMPAT DC < 1.1.17: Fail counts used to be per-resource rather than
+     * per-operation.
+     */
+    const char *op_pattern = (is_legacy? "" : "#.+_[0-9]+");
+
+    /* Ignore instance numbers for anything other than globally unique clones.
+     * Anonymous clone fail counts could contain an instance number if the
+     * clone was initially unique, failed, then was converted to anonymous.
+     * @COMPAT Also, before 1.1.8, anonymous clone fail counts always contained
+     * clone instance numbers.
+     */
+    const char *instance_pattern = (is_unique? "" : "(:[0-9]+)?");
+
+    pattern = crm_strdup_printf("^%s-%s%s%s$", prefix, rsc_name,
+                                instance_pattern, op_pattern);
+    CRM_LOG_ASSERT(regcomp(re, pattern, REG_EXTENDED|REG_NOSUB) == 0);
+    free(pattern);
+}
+
+/*!
+ * \internal
+ * \brief Compile regular expressions to match failure-related node attributes
+ *
+ * \param[in]  rsc       Resource being checked for failures
+ * \param[in]  data_set  Data set (for CRM feature set version)
+ * \param[out] re        Where to store resulting regular expression
+ */
+static void
+generate_fail_regexes(resource_t *rsc, pe_working_set_t *data_set,
+                      regex_t *failcount_re, regex_t *lastfailure_re)
+{
+    char *rsc_name = rsc_fail_name(rsc);
+    const char *version = crm_element_value(data_set->input, XML_ATTR_CRM_VERSION);
+    gboolean is_legacy = (compare_version(version, "3.0.13") < 0);
+
+    generate_fail_regex(CRM_FAIL_COUNT_PREFIX, rsc_name, is_legacy,
+                        is_set(rsc->flags, pe_rsc_unique), failcount_re);
+
+    generate_fail_regex(CRM_LAST_FAILURE_PREFIX, rsc_name, is_legacy,
+                        is_set(rsc->flags, pe_rsc_unique), lastfailure_re);
+
+    free(rsc_name);
+}
+
 int
 get_failcount_full(node_t *node, resource_t *rsc, time_t *last_failure,
                    bool effective, xmlNode *xml_op, pe_working_set_t *data_set)
 {
     char *key = NULL;
     const char *value = NULL;
-    struct fail_search search = { rsc, data_set, 0, 0, NULL };
+    regex_t failcount_re, lastfailure_re;
+    int failcount = 0;
+    time_t last = 0;
+    GHashTableIter iter;
 
-    /* Optimize the "normal" case */
-    key = crm_failcount_name(rsc->clone_name? rsc->clone_name : rsc->id);
-    value = g_hash_table_lookup(node->details->attrs, key);
-    search.count = char2score(value);
-    crm_trace("%s = %s", key, value);
-    free(key);
+    generate_fail_regexes(rsc, data_set, &failcount_re, &lastfailure_re);
 
-    if (value) {
-        key = crm_lastfailure_name(rsc->clone_name? rsc->clone_name : rsc->id);
-        value = g_hash_table_lookup(node->details->attrs, key);
-        search.last = crm_int_helper(value, NULL);
-        free(key);
-
-        /* This block is still relevant once we omit anonymous instance numbers
-         * because stopped clones won't have clone_name set
-         */
-    } else if (is_not_set(rsc->flags, pe_rsc_unique)) {
-        search.rsc = uber_parent(rsc);
-        search.key = clone_strip(rsc->id);
-
-        g_hash_table_foreach(node->details->attrs, get_failcount_by_prefix,
-                             &search);
-        free(search.key);
-        search.key = NULL;
-    }
-
-    if (search.count != 0 && search.last != 0 && last_failure) {
-        *last_failure = search.last;
-    }
-
-    if (search.count && rsc->failure_timeout) {
-        /* Never time-out if blocking failures are configured */
-        if (block_failure(node, rsc, xml_op, data_set)) {
-            pe_warn("Setting %s.failure-timeout=%d conflicts with on-fail=block: ignoring timeout",
-                    rsc->id, rsc->failure_timeout);
-            rsc->failure_timeout = 0;
-#if 0
-            /* A good idea? */
-        } else if (rsc->container == NULL && is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
-            /* In this case, stop.on-fail defaults to block in unpack_operation() */
-            rsc->failure_timeout = 0;
-#endif
+    /* Resource fail count is sum of all matching operation fail counts */
+    g_hash_table_iter_init(&iter, node->details->attrs);
+    while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
+        if (regexec(&failcount_re, key, 0, NULL, 0) == 0) {
+            failcount = merge_weights(failcount, char2score(value));
+        } else if (regexec(&lastfailure_re, key, 0, NULL, 0) == 0) {
+            last = QB_MAX(last, crm_int_helper(value, NULL));
         }
     }
 
-    if (effective && (search.count != 0) && (search.last != 0)
-        && rsc->failure_timeout) {
+    if ((failcount > 0) && (last > 0) && (last_failure != NULL)) {
+        *last_failure = last;
+    }
 
-        if (search.last > 0) {
-            time_t now = get_effective_time(data_set);
+    /* If failure blocks the resource, disregard any failure timeout */
+    if ((failcount > 0) && rsc->failure_timeout
+        && block_failure(node, rsc, xml_op, data_set)) {
 
-            if (now > (search.last + rsc->failure_timeout)) {
-                crm_debug("Failcount for %s on %s has expired (limit was %ds)",
-                          search.rsc->id, node->details->uname,
-                          rsc->failure_timeout);
-                search.count = 0;
-            }
+        pe_warn("Ignoring failure timeout %d for %s because it conflicts with on-fail=block",
+                rsc->id, rsc->failure_timeout);
+        rsc->failure_timeout = 0;
+    }
+
+    /* If all failures have expired, ignore fail count */
+    if (effective && (failcount > 0) && (last > 0) && rsc->failure_timeout) {
+        time_t now = get_effective_time(data_set);
+
+        if (now > (last + rsc->failure_timeout)) {
+            crm_debug("Failcount for %s on %s expired after %ds",
+                      rsc->id, node->details->uname, rsc->failure_timeout);
+            failcount = 0;
         }
     }
 
-    if (search.count != 0) {
-        char *score = score2char(search.count);
+    if (failcount > 0) {
+        char *score = score2char(failcount);
 
         crm_info("%s has failed %s times on %s",
-                 search.rsc->id, score, node->details->uname);
+                 rsc->id, score, node->details->uname);
         free(score);
     }
 
-    return search.count;
+    return failcount;
 }
 
 /* If it's a resource container, get its failcount plus all the failcounts of

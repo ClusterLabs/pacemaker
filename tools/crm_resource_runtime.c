@@ -599,8 +599,9 @@ rsc_fail_name(resource_t *rsc)
 }
 
 int
-cli_resource_delete(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_uname,
-               resource_t * rsc, pe_working_set_t * data_set)
+cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
+                    resource_t *rsc, const char *operation,
+                    const char *interval, pe_working_set_t *data_set)
 {
     int rc = pcmk_ok;
     node_t *node = NULL;
@@ -616,7 +617,8 @@ cli_resource_delete(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_
         for (lpc = rsc->children; lpc != NULL; lpc = lpc->next) {
             resource_t *child = (resource_t *) lpc->data;
 
-            rc = cli_resource_delete(cib_conn, crmd_channel, host_uname, child, data_set);
+            rc = cli_resource_delete(crmd_channel, host_uname, child, operation,
+                                     interval, data_set);
             if(rc != pcmk_ok
                || (rsc->variant >= pe_clone && is_not_set(rsc->flags, pe_rsc_unique))) {
                 return rc;
@@ -631,7 +633,8 @@ cli_resource_delete(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_
             node = (node_t *) lpc->data;
 
             if (node->details->online) {
-                cli_resource_delete(cib_conn, crmd_channel, node->details->uname, rsc, data_set);
+                cli_resource_delete(crmd_channel, node->details->uname, rsc,
+                                    operation, interval, data_set);
             }
         }
 
@@ -652,6 +655,11 @@ cli_resource_delete(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_
         return -EOPNOTSUPP;
     }
 
+    /* Erase the resource's entire LRM history in the CIB, even if we're only
+     * clearing a single operation's fail count. If we erased only entries for a
+     * single operation, we might wind up with a wrong idea of the current
+     * resource state, and we might not re-probe the resource.
+     */
     rc = send_lrm_rsc_op(crmd_channel, CRM_OP_LRM_DELETE, host_uname, rsc->id,
                          TRUE, data_set);
     if (rc != pcmk_ok) {
@@ -667,8 +675,8 @@ cli_resource_delete(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_
     if (is_remote_node(node)) {
         attr_options |= attrd_opt_remote;
     }
-    rc = attrd_update_delegate(NULL, 'c', host_uname, rsc_name, NULL,
-                               NULL, NULL, NULL, NULL, attr_options);
+    rc = attrd_clear_delegate(NULL, host_uname, rsc_name, operation, interval,
+                              NULL, attr_options);
     if (rc != pcmk_ok) {
         printf("Cleaned %s history on %s, but unable to clear failures: %s\n",
                rsc->id, host_uname, pcmk_strerror(rc));

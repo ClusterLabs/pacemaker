@@ -19,7 +19,7 @@
 #  define CRM_ATTRD__H
 #  include <crm/common/ipc.h>
 
-/* attribute options for clients to use with attrd_update_delegate() */
+/* attribute options for clients to use with these functions */
 #define attrd_opt_none    0x000
 #define attrd_opt_remote  0x001
 #define attrd_opt_private 0x002
@@ -27,5 +27,8 @@
 int attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host,
                           const char *name, const char *value, const char *section,
                           const char *set, const char *dampen, const char *user_name, int options);
+int attrd_clear_delegate(crm_ipc_t *ipc, const char *host, const char *resource,
+                         const char *operation, const char *interval,
+                         const char *user_name, int options);
 
 #endif
