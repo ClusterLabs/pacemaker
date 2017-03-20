@@ -3036,6 +3036,51 @@ crm_xml_add_last_written(xmlNode *xml_node)
     return crm_xml_add(xml_node, XML_CIB_ATTR_WRITTEN, now_str);
 }
 
+/*!
+ * \brief Sanitize a string so it is usable as an XML ID
+ *
+ * \param[in,out] id  String to sanitize
+ */
+void
+crm_xml_sanitize_id(char *id)
+{
+    char *c;
+
+    for (c = id; *c; ++c) {
+        /* @TODO Sanitize more comprehensively */
+        switch (*c) {
+            case ':':
+            case '#':
+                *c = '.';
+        }
+    }
+}
+
+/*!
+ * \brief Set the ID of an XML element using a format
+ *
+ * \param[in,out] xml  XML element
+ * \param[in]     fmt  printf-style format
+ * \param[in]     ...  any arguments required by format
+ */
+void
+crm_xml_set_id(xmlNode *xml, const char *format, ...)
+{
+    va_list ap;
+    int len = 0;
+    char *id = NULL;
+
+    /* equivalent to crm_strdup_printf() */
+    va_start(ap, format);
+    len = vasprintf(&id, format, ap);
+    va_end(ap);
+    CRM_ASSERT(len > 0);
+
+    crm_xml_sanitize_id(id);
+    crm_xml_add(xml, XML_ATTR_ID, id);
+    free(id);
+}
+
 static int
 write_xml_stream(xmlNode * xml_node, const char *filename, FILE * stream, gboolean compress)
 {
@@ -3190,7 +3235,7 @@ crm_xml_escape(const char *text)
      * converted back to their escape sequences.
      *
      * However xmlNodeDump() is randomly dog slow, even with the same
-     * input. So we need to replicate the escapeing in our custom
+     * input. So we need to replicate the escaping in our custom
      * version so that the result can be re-parsed by xmlCtxtReadDoc()
      * when necessary.
      */

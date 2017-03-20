@@ -1647,7 +1647,7 @@ colocation_match(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * co
 
     } else if (constraint->score < 0) {
         /* nothing to do:
-         *   anti-colocation with something thats not running
+         *   anti-colocation with something that is not running
          */
         return;
     }

@@ -608,11 +608,16 @@ services_action_kick(const char *name, const char *action, int interval /* ms */
 
 }
 
-/* add new recurring operation, check for duplicates. 
- * - if duplicate found, return TRUE, immediately reschedule op.
- * - if no dup, return FALSE, inserve into recurring op list.*/
+/*!
+ * \internal
+ * \brief Add a new recurring operation, checking for duplicates
+ *
+ * \param[in] op               Operation to add
+ *
+ * \return TRUE if duplicate found (and reschedule), FALSE otherwise
+ */
 static gboolean
-handle_duplicate_recurring(svc_action_t * op, void (*action_callback) (svc_action_t *))
+handle_duplicate_recurring(svc_action_t * op)
 {
     svc_action_t * dup = NULL;
 
@@ -634,7 +639,7 @@ handle_duplicate_recurring(svc_action_t * op, void (*action_callback) (svc_actio
             }
             recurring_action_timer(dup);
         }
-        /* free the dup.  */
+        /* free the duplicate */
         services_action_free(op);
         return TRUE;
     }
@@ -708,7 +713,7 @@ services_action_async(svc_action_t * op, void (*action_callback) (svc_action_t *
 
     if (op->interval > 0) {
         init_recurring_actions();
-        if (handle_duplicate_recurring(op, action_callback) == TRUE) {
+        if (handle_duplicate_recurring(op) == TRUE) {
             /* entry rescheduled, dup freed */
             /* exit early */
             return TRUE;

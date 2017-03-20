@@ -373,7 +373,6 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, GHashTable **rsc_name_
     const char *remote_port = NULL;
     const char *connect_timeout = "60s";
     const char *remote_allow_migrate=NULL;
-    char *tmp_id = NULL;
 
     for (attr_set = __xml_first_child(xml_obj); attr_set != NULL; attr_set = __xml_next_element(attr_set)) {
         if (safe_str_neq((const char *)attr_set->name, XML_TAG_META_SETS)) {
@@ -427,73 +426,55 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, GHashTable **rsc_name_
     crm_xml_add(xml_rsc, XML_ATTR_TYPE, "remote");
 
     xml_tmp = create_xml_node(xml_rsc, XML_TAG_META_SETS);
-    tmp_id = crm_concat(remote_name, XML_TAG_META_SETS, '_');
-    crm_xml_add(xml_tmp, XML_ATTR_ID, tmp_id);
-    free(tmp_id);
+    crm_xml_set_id(xml_tmp, "%s_%s", remote_name, XML_TAG_META_SETS);
 
     attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
-    tmp_id = crm_concat(remote_name, "meta-attributes-container", '_');
-    crm_xml_add(attr, XML_ATTR_ID, tmp_id);
+    crm_xml_set_id(attr, "%s_%s", remote_name, "meta-attributes-container");
     crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_RSC_ATTR_CONTAINER);
     crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, container_id);
-    free(tmp_id);
 
     attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
-    tmp_id = crm_concat(remote_name, "meta-attributes-internal", '_');
-    crm_xml_add(attr, XML_ATTR_ID, tmp_id);
+    crm_xml_set_id(attr, "%s_%s", remote_name, "meta-attributes-internal");
     crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_RSC_ATTR_INTERNAL_RSC);
     crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, "true");
-    free(tmp_id);
 
     if (remote_allow_migrate) {
         attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
-        tmp_id = crm_concat(remote_name, "meta-attributes-container", '_');
-        crm_xml_add(attr, XML_ATTR_ID, tmp_id);
+        crm_xml_set_id(attr, "%s_%s", remote_name, "meta-attributes-container");
         crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_OP_ATTR_ALLOW_MIGRATE);
         crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, remote_allow_migrate);
-        free(tmp_id);
     }
 
     xml_tmp = create_xml_node(xml_rsc, "operations");
     attr = create_xml_node(xml_tmp, XML_ATTR_OP);
-    tmp_id = crm_concat(remote_name, "monitor-interval-30s", '_');
-    crm_xml_add(attr, XML_ATTR_ID, tmp_id);
+    crm_xml_set_id(attr, "%s_%s", remote_name, "monitor-interval-30s");
     crm_xml_add(attr, XML_ATTR_TIMEOUT, "30s");
     crm_xml_add(attr, XML_LRM_ATTR_INTERVAL, "30s");
     crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, "monitor");
-    free(tmp_id);
 
     if (connect_timeout) {
         attr = create_xml_node(xml_tmp, XML_ATTR_OP);
-        tmp_id = crm_concat(remote_name, "start-interval-0", '_');
-        crm_xml_add(attr, XML_ATTR_ID, tmp_id);
+        crm_xml_set_id(attr, "%s_%s", remote_name, "start-interval-0");
         crm_xml_add(attr, XML_ATTR_TIMEOUT, connect_timeout);
         crm_xml_add(attr, XML_LRM_ATTR_INTERVAL, "0");
         crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, "start");
-        free(tmp_id);
     }
 
     if (remote_port || remote_server) {
         xml_tmp = create_xml_node(xml_rsc, XML_TAG_ATTR_SETS);
-        tmp_id = crm_concat(remote_name, XML_TAG_ATTR_SETS, '_');
-        crm_xml_add(xml_tmp, XML_ATTR_ID, tmp_id);
-        free(tmp_id);
+        crm_xml_set_id(xml_tmp, "%s_%s", remote_name, XML_TAG_ATTR_SETS);
 
         if (remote_server) {
             attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
-            tmp_id = crm_concat(remote_name, "instance-attributes-addr", '_');
-            crm_xml_add(attr, XML_ATTR_ID, tmp_id);
+            crm_xml_set_id(attr, "%s_%s", remote_name, "instance-attributes-addr");
             crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, "addr");
             crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, remote_server);
-            free(tmp_id);
         }
         if (remote_port) {
             attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
-            tmp_id = crm_concat(remote_name, "instance-attributes-port", '_');
-            crm_xml_add(attr, XML_ATTR_ID, tmp_id);
+            crm_xml_set_id(attr, "%s_%s", remote_name, "instance-attributes-port");
             crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, "port");
             crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, remote_port);
-            free(tmp_id);
         }
     }
 

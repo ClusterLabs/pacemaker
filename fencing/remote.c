@@ -1558,13 +1558,13 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
         }
 
         if (op->state == st_query) {
-           crm_info("None of the %d peers have devices capable of fencing (%s) %s for %s (%d)",
+           crm_info("No peers (out of %d) have devices capable of fencing (%s) %s for %s (%d)",
                    op->replies, op->action, op->target, op->client_name,
                    op->state);
 
             rc = -ENODEV;
         } else {
-           crm_info("None of the %d peers are capable of fencing (%s) %s for %s (%d)",
+           crm_info("No peers (out of %d) are capable of fencing (%s) %s for %s (%d)",
                    op->replies, op->action, op->target, op->client_name,
                    op->state);
         }
