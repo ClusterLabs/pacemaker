@@ -153,7 +153,7 @@ resources. If you omit the node, it will clear failures on all nodes. If you
 omit the operation and interval, it will clear the failures for all operations
 on the resource.
 
-[[NOTE]]
+[NOTE]
 ====
 Even when cleaning up only a single operation, all failed operations will
 disappear from the status display. This allows us to trigger a re-check of the
@@ -188,7 +188,7 @@ most common example of resources that can be migrated in this manner.
 If you define +migration-threshold=pass:[<replaceable>N</replaceable>]+ for a
 resource, it will be banned from the original node after 'N' failures.
 
-[[NOTE]]
+[NOTE]
 ====
 The +migration-threshold+ is per 'resource', even though fail counts are
 tracked per 'operation'. The operation fail counts are added together
@@ -213,7 +213,7 @@ would cause the resource to move to a new node after 2 failures, and
 allow it to move back (depending on stickiness and constraint scores) after one
 minute.
 
-[[NOTE]]
+[NOTE]
 ====
 +failure-timeout+ is measured since the most recent failure. That is, older
 failures do not individually time out and lower the fail count. Instead, all
