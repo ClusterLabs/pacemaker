@@ -164,6 +164,11 @@ ipc_proxy_forward_client(crm_client_t *ipc_proxy, xmlNode *xml)
         return;
     }
 
+    if (safe_str_eq(msg_type, LRMD_IPC_OP_SHUTDOWN_NACK)) {
+        handle_shutdown_nack();
+        return;
+    }
+
     ipc_client = crm_client_get_by_id(session);
     if (ipc_client == NULL) {
         xmlNode *msg = create_xml_node(NULL, T_LRMD_IPC_PROXY);
