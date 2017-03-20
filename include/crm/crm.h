@@ -126,6 +126,7 @@ extern char *crm_system_name;
 #  define CRM_OP_RELAXED_SET  "one-or-more"
 #  define CRM_OP_RELAXED_CLONE  "clone-one-or-more"
 #  define CRM_OP_RM_NODE_CACHE "rm_node_cache"
+#  define CRM_OP_MAINTENANCE_NODES "maintenance_nodes"
 
 /* @COMPAT: These symbols are deprecated and not used by Pacemaker,
  * but they are kept for public API backward compatibility.

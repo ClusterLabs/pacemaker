@@ -99,6 +99,7 @@ typedef struct lrmd_key_value_s {
 #define LRMD_IPC_OP_RESPONSE      "response"
 #define LRMD_IPC_OP_SHUTDOWN_REQ  "shutdown_req"
 #define LRMD_IPC_OP_SHUTDOWN_ACK  "shutdown_ack"
+#define LRMD_IPC_OP_SHUTDOWN_NACK "shutdown_nack"
 
 #define F_LRMD_IPC_OP           "lrmd_ipc_op"
 #define F_LRMD_IPC_IPC_SERVER   "lrmd_ipc_server"
