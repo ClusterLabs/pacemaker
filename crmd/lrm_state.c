@@ -582,11 +582,10 @@ remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
             crm_warn("Reconnection attempts to %s may result in failures that must be cleared",
                     lrm_state->node_name);
         } else {
-            crm_notice("Remote resource for %s is not managed so ignore shutdown-req",
+            remote_proxy_nack_shutdown(lrmd);
+
+            crm_notice("Remote resource for %s is not managed so no ordered shutdown happening",
                     lrm_state->node_name);
-            /* would be nice to ack here to make pacemaker_remoted proceed
-             * immediately - but the timeout is short and like this the
-             * API can stay as is */
         }
         return;
 
