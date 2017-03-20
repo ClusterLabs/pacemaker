@@ -1475,7 +1475,10 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
         return -ENXIO;
     }
 
-    if (safe_str_eq(rsc_action, "force-check")) {
+    if (safe_str_eq(rsc_action, "validate")) {
+        action = "validate-all";
+
+    } else if (safe_str_eq(rsc_action, "force-check")) {
         action = "monitor";
 
     } else if (safe_str_eq(rsc_action, "force-stop")) {
@@ -1516,6 +1519,10 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
     }
 
     params = generate_resource_params(rsc, data_set);
+
+    /* add crm_feature_set env needed by some resource agents */
+    g_hash_table_insert(params, strdup(XML_ATTR_CRM_VERSION), strdup(CRM_FEATURE_SET));
+
     op = resources_action_create(rsc->id, rclass, rprov, rtype, action, 0, -1, params, 0);
 
     if(do_trace) {
@@ -1553,6 +1560,10 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
                    action, rsc->id, rclass, rprov ? rprov : "", rtype, op->status);
         }
 
+        /* hide output for validate-all if not in verbose */
+        if (!do_trace && safe_str_eq(action, "validate-all"))
+            goto done;
+
         if (op->stdout_data) {
             local_copy = strdup(op->stdout_data);
             more = strlen(local_copy);
@@ -1582,6 +1593,7 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
             free(local_copy);
         }
     }
+  done:
     rc = op->rc;
     services_action_free(op);
     return rc;
