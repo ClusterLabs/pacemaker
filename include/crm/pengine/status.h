@@ -19,6 +19,7 @@
 #  define PENGINE_STATUS__H
 
 #  include <glib.h>
+#  include <stdbool.h>
 #  include <crm/common/iso8601.h>
 #  include <crm/pengine/common.h>
 
@@ -433,4 +434,44 @@ node_t *pe_find_node_id(GListPtr node_list, const char *id);
 node_t *pe_find_node_any(GListPtr node_list, const char *id, const char *uname);
 GListPtr find_operations(const char *rsc, const char *node, gboolean active_filter,
                          pe_working_set_t * data_set);
+
+/*!
+ * \brief Check whether a resource is any clone type
+ *
+ * \param[in] rsc  Resource to check
+ *
+ * \return TRUE if resource is clone, FALSE otherwise
+ */
+static inline bool
+pe_rsc_is_clone(resource_t *rsc)
+{
+    return rsc && ((rsc->variant == pe_clone) || (rsc->variant == pe_master));
+}
+
+/*!
+ * \brief Check whether a resource is a globally unique clone
+ *
+ * \param[in] rsc  Resource to check
+ *
+ * \return TRUE if resource is unique clone, FALSE otherwise
+ */
+static inline bool
+pe_rsc_is_unique_clone(resource_t *rsc)
+{
+    return pe_rsc_is_clone(rsc) && is_set(rsc->flags, pe_rsc_unique);
+}
+
+/*!
+ * \brief Check whether a resource is an anonymous clone
+ *
+ * \param[in] rsc  Resource to check
+ *
+ * \return TRUE if resource is anonymous clone, FALSE otherwise
+ */
+static inline bool
+pe_rsc_is_anon_clone(resource_t *rsc)
+{
+    return pe_rsc_is_clone(rsc) && is_not_set(rsc->flags, pe_rsc_unique);
+}
+
 #endif
