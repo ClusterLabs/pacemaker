@@ -32,20 +32,28 @@ void tuple_free(container_grouping_t *tuple);
 static char *
 next_ip(const char *last_ip)
 {
-    int oct1 = 0;
-    int oct2 = 0;
-    int oct3 = 0;
-    int oct4 = 0;
+    unsigned int oct1 = 0;
+    unsigned int oct2 = 0;
+    unsigned int oct3 = 0;
+    unsigned int oct4 = 0;
+    int rc = sscanf(last_ip, "%u.%u.%u.%u", &oct1, &oct2, &oct3, &oct4);
 
-    int rc = sscanf(last_ip, "%d.%d.%d.%d", &oct1, &oct2, &oct3, &oct4);
     if (rc != 4) {
+        /*@ TODO check for IPv6 */
         return NULL;
 
-    } else if(oct4 > 255) {
+    } else if (oct3 > 253) {
         return NULL;
+
+    } else if (oct4 > 253) {
+        ++oct3;
+        oct4 = 1;
+
+    } else {
+        ++oct4;
     }
 
-    return crm_strdup_printf("%d.%d.%d.%d", oct1, oct2, oct3, oct4+1);
+    return crm_strdup_printf("%u.%u.%u.%u", oct1, oct2, oct3, oct4);
 }
 
 static int
