@@ -162,10 +162,6 @@ crm_clear_bit(const char *function, int line, const char *target, long long word
 {
     long long rc = (word & ~bit);
 
-    /* if(bit == 0x00002) { */
-    /*     crm_err("Bit 0x%.8llx for %s cleared by %s:%d", bit, target, function, line); */
-    /* } */
-
     if (rc == word) {
         /* Unchanged */
     } else if (target) {
@@ -181,10 +177,6 @@ static inline long long
 crm_set_bit(const char *function, int line, const char *target, long long word, long long bit)
 {
     long long rc = (word | bit);
-
-    /* if(bit == 0x00002) { */
-    /*     crm_err("Bit 0x%.8llx for %s set by %s:%d", bit, target, function, line); */
-    /* } */
 
     if (rc == word) {
         /* Unchanged */
