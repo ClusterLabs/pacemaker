@@ -408,7 +408,8 @@ crmd_remote_proxy_new(lrmd_t *lrmd, const char *node_name, const char *session_i
         .dispatch = remote_proxy_dispatch,
         .destroy = remote_proxy_disconnected
     };
-    remote_proxy_t *proxy = remote_proxy_new(lrmd, proxy_callbacks, node_name, session_id, channel);
+    remote_proxy_t *proxy = remote_proxy_new(lrmd, &proxy_callbacks, node_name,
+                                             session_id, channel);
 
     if (safe_str_eq(channel, CRM_SYSTEM_CRMD)) {
         proxy->is_local = TRUE;

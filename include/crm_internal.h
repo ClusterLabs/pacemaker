@@ -380,7 +380,7 @@ typedef struct remote_proxy_s {
 } remote_proxy_t;
 
 remote_proxy_t *remote_proxy_new(
-    lrmd_t *lrmd, struct ipc_client_callbacks proxy_callbacks,
+    lrmd_t *lrmd, struct ipc_client_callbacks *proxy_callbacks,
     const char *node_name, const char *session_id, const char *channel);
 
 int  remote_proxy_check(lrmd_t *lrmd, GHashTable *hash);

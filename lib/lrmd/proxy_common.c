@@ -172,7 +172,7 @@ remote_proxy_disconnected(gpointer userdata)
 }
 
 remote_proxy_t *
-remote_proxy_new(lrmd_t *lrmd, struct ipc_client_callbacks proxy_callbacks,
+remote_proxy_new(lrmd_t *lrmd, struct ipc_client_callbacks *proxy_callbacks,
                  const char *node_name, const char *session_id, const char *channel)
 {
     remote_proxy_t *proxy = NULL;
@@ -188,7 +188,7 @@ remote_proxy_new(lrmd_t *lrmd, struct ipc_client_callbacks proxy_callbacks,
     proxy->node_name = strdup(node_name);
     proxy->session_id = strdup(session_id);
 
-    proxy->source = mainloop_add_ipc_client(channel, G_PRIORITY_LOW, 0, proxy, &proxy_callbacks);
+    proxy->source = mainloop_add_ipc_client(channel, G_PRIORITY_LOW, 0, proxy, proxy_callbacks);
     proxy->ipc = mainloop_get_ipc_client(proxy->source);
     proxy->lrm = lrmd;
 

@@ -259,7 +259,7 @@ ctl_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
             .destroy = remote_proxy_disconnected
         };
 
-        remote_proxy_new(lrmd, proxy_callbacks, options.node_name, session, channel);
+        remote_proxy_new(lrmd, &proxy_callbacks, options.node_name, session, channel);
 
     } else {
         remote_proxy_cb(lrmd, options.node_name, msg);
