@@ -186,7 +186,7 @@
 #  define XML_CIB_TAG_GROUP	  	"group"
 #  define XML_CIB_TAG_INCARNATION	"clone"
 #  define XML_CIB_TAG_MASTER		"master"
-#  define XML_CIB_TAG_CONTAINER		"bucket"
+#  define XML_CIB_TAG_CONTAINER		"bundle"
 
 #  define XML_CIB_TAG_RSC_TEMPLATE	"template"
 
