@@ -216,7 +216,7 @@ pcmk_locate_sbd(void)
 
     /* Look for the pid file */
     pidfile = crm_strdup_printf("%s/sbd.pid", HA_STATE_DIR);
-    sbd_path = crm_strdup_printf("%s/sbd", SBINDIR);
+    sbd_path = crm_strdup_printf("%s/sbd", SBIN_DIR);
 
     /* Read the pid file */
     CRM_ASSERT(pidfile);
