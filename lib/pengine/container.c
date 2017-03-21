@@ -88,10 +88,9 @@ create_resource(const char *name, const char *provider, const char *kind)
 static void
 create_nvp(xmlNode *parent, const char *name, const char *value) 
 {
-    char *id = crm_strdup_printf("%s-%s", ID(parent), name);
     xmlNode *xml_nvp = create_xml_node(parent, XML_CIB_TAG_NVPAIR);
 
-    crm_xml_add(xml_nvp, XML_ATTR_ID, id); free(id);
+    crm_xml_set_id(xml_nvp, "%s-%s", ID(parent), name);
     crm_xml_add(xml_nvp, XML_NVPAIR_ATTR_NAME, name);
     crm_xml_add(xml_nvp, XML_NVPAIR_ATTR_VALUE, value);
 }
@@ -99,10 +98,9 @@ create_nvp(xmlNode *parent, const char *name, const char *value)
 static void
 create_op(xmlNode *parent, const char *prefix, const char *task, const char *interval) 
 {
-    char *id = crm_strdup_printf("%s-%s-%s", prefix, task, interval);
     xmlNode *xml_op = create_xml_node(parent, "op");
 
-    crm_xml_add(xml_op, XML_ATTR_ID, id); free(id);
+    crm_xml_set_id(xml_op, "%s-%s-%s", prefix, task, interval);
     crm_xml_add(xml_op, XML_LRM_ATTR_INTERVAL, interval);
     crm_xml_add(xml_op, "name", task);
 }
@@ -113,13 +111,16 @@ create_ip_resource(
     pe_working_set_t * data_set) 
 {
     if(data->ip_range_start) {
-        char *id = crm_strdup_printf("%s-ip-%s", data->prefix, tuple->ipaddr);
-        xmlNode *xml_ip = create_resource(id, "heartbeat", "IPaddr2");
+        char *id = NULL;
+        xmlNode *xml_ip = NULL;
         xmlNode *xml_obj = NULL;
 
-        id = crm_strdup_printf("%s-attributes-%d", data->prefix, tuple->offset);
+        id = crm_strdup_printf("%s-ip-%s", data->prefix, tuple->ipaddr);
+        crm_xml_sanitize_id(id);
+        xml_ip = create_resource(id, "heartbeat", "IPaddr2");
+
         xml_obj = create_xml_node(xml_ip, XML_TAG_ATTR_SETS);
-        crm_xml_add(xml_obj, XML_ATTR_ID, id); free(id);
+        crm_xml_set_id(xml_obj, "%s-attributes-%d", data->prefix, tuple->offset);
 
         create_nvp(xml_obj, "ip", tuple->ipaddr);
         if(data->host_network) {
@@ -158,13 +159,16 @@ create_docker_resource(
         int doffset = 0, dmax = 1024;
         char *dbuffer = calloc(1, dmax+1);
 
-        char *id = crm_strdup_printf("%s-docker-%d", data->prefix, tuple->offset);
-        xmlNode *xml_docker = create_resource(id, "heartbeat", "docker");
+        char *id = NULL;
+        xmlNode *xml_docker = NULL;
         xmlNode *xml_obj = NULL;
 
-        id = crm_strdup_printf("%s-attributes-%d", data->prefix, tuple->offset);
+        id = crm_strdup_printf("%s-docker-%d", data->prefix, tuple->offset);
+        crm_xml_sanitize_id(id);
+        xml_docker = create_resource(id, "heartbeat", "docker");
+
         xml_obj = create_xml_node(xml_docker, XML_TAG_ATTR_SETS);
-        crm_xml_add(xml_obj, XML_ATTR_ID, id); free(id);
+        crm_xml_set_id(xml_obj, "%s-attributes-%d", data->prefix, tuple->offset);
 
         create_nvp(xml_obj, "image", data->image);
         create_nvp(xml_obj, "allow_pull", "true");
@@ -288,16 +292,14 @@ create_remote_resource(
         xml_obj = create_xml_node(xml_remote, "operations");
         create_op(xml_obj, ID(xml_remote), "monitor", "60s");
 
-        id = crm_strdup_printf("%s-attributes-%d", data->prefix, tuple->offset);
         xml_obj = create_xml_node(xml_remote, XML_TAG_ATTR_SETS);
-        crm_xml_add(xml_obj, XML_ATTR_ID, id); free(id);
+        crm_xml_set_id(xml_obj, "%s-attributes-%d", data->prefix, tuple->offset);
 
         create_nvp(xml_obj, "addr", tuple->ipaddr);
         create_nvp(xml_obj, "port", crm_itoa(DEFAULT_REMOTE_PORT));
 
-        id = crm_strdup_printf("%s-meta-%d", data->prefix, tuple->offset);
         xml_obj = create_xml_node(xml_remote, XML_TAG_META_SETS);
-        crm_xml_add(xml_obj, XML_ATTR_ID, id); free(id);
+        crm_xml_set_id(xml_obj, "%s-meta-%d", data->prefix, tuple->offset);
 
         create_nvp(xml_obj, XML_OP_ATTR_ALLOW_MIGRATE, "false");
 
@@ -458,13 +460,10 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
             xml_resource = create_xml_node(NULL, XML_CIB_TAG_INCARNATION);
         }
 
-        value = crm_strdup_printf("%s-%s", container_data->prefix, xml_resource->name);
-        crm_xml_add(xml_resource, XML_ATTR_ID, value);
-        free(value);
+        crm_xml_set_id(xml_resource, "%s-%s", container_data->prefix, xml_resource->name);
 
-        value = crm_strdup_printf("%s-%s-meta", container_data->prefix, xml_resource->name);
         xml_set = create_xml_node(xml_resource, XML_TAG_META_SETS);
-        free(value);
+        crm_xml_set_id(xml_resource, "%s-%s-meta", container_data->prefix, xml_resource->name);
 
         create_nvp(xml_set, XML_RSC_ATTR_ORDERED, "true");
 
