@@ -20,7 +20,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/pengine/rules.h>
-#include "notify.h"
+#include "crmd_alerts.h"
 #include "crmd_messages.h"
 #include <crm/common/alerts_internal.h>
 #include <crm/common/iso8601_internal.h>
