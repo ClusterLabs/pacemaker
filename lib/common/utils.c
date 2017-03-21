@@ -1549,6 +1549,15 @@ attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const cha
     static crm_ipc_t *local_ipc = NULL;
     static enum crm_ipc_flags flags = crm_ipc_flags_none;
 
+    /* Cut connection to let the update of the attribute from a client complete and connect it again. */
+    /* The attrd_opt_client_reconnect is an option to a client using attrd_update_delegate. */
+    if (ipc == NULL && is_set(options, attrd_opt_client_reconnect)) {
+        if (local_ipc != NULL) {
+            crm_ipc_close(local_ipc);
+            local_ipc = NULL;
+        }
+    }
+
     if (ipc == NULL && local_ipc == NULL) {
         local_ipc = crm_ipc_new(T_ATTRD, 0);
         flags |= crm_ipc_client_response;

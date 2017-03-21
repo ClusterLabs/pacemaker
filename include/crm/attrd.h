@@ -23,6 +23,7 @@
 #define attrd_opt_none    0x000
 #define attrd_opt_remote  0x001
 #define attrd_opt_private 0x002
+#define attrd_opt_client_reconnect 0x004
 
 int attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host,
                           const char *name, const char *value, const char *section,
