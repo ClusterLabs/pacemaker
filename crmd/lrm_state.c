@@ -410,10 +410,6 @@ crmd_remote_proxy_new(lrmd_t *lrmd, const char *node_name, const char *session_i
     };
     remote_proxy_t *proxy = remote_proxy_new(lrmd, &proxy_callbacks, node_name,
                                              session_id, channel);
-
-    if (safe_str_eq(channel, CRM_SYSTEM_CRMD)) {
-        proxy->is_local = TRUE;
-    }
     return proxy;
 }
 
@@ -526,7 +522,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
         }
         return;
 
-    } else if (safe_str_eq(op, LRMD_IPC_OP_REQUEST) && proxy->is_local) {
+    } else if (safe_str_eq(op, LRMD_IPC_OP_REQUEST) && proxy && proxy->is_local) {
         /* this is for the crmd, which we are, so don't try
          * and connect/send to ourselves over ipc. instead
          * do it directly.
@@ -534,9 +530,15 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
         int flags = 0;
         xmlNode *request = get_message_xml(msg, F_LRMD_IPC_MSG);
 
+        CRM_CHECK(request != NULL, return);
+#if ENABLE_ACL
+        CRM_CHECK(lrm_state->node_name, return);
+        crm_xml_add(request, XML_ACL_TAG_ROLE, "pacemaker-remote");
+        crm_acl_get_set_user(request, F_LRMD_IPC_USER, lrm_state->node_name);
+#endif
         crmd_proxy_dispatch(session, request);
-        crm_element_value_int(msg, F_LRMD_IPC_MSG_FLAGS, &flags);
 
+        crm_element_value_int(msg, F_LRMD_IPC_MSG_FLAGS, &flags);
         if (flags & crm_ipc_client_response) {
             int msg_id = 0;
             xmlNode *op_reply = create_xml_node(NULL, "ack");
