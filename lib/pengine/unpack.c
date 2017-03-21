@@ -303,7 +303,8 @@ destroy_digest_cache(gpointer ptr)
 }
 
 node_t *
-create_node(const char *id, const char *uname, const char *type, const char *score, pe_working_set_t * data_set)
+pe_create_node(const char *id, const char *uname, const char *type,
+               const char *score, pe_working_set_t * data_set)
 {
     node_t *new_node = NULL;
 
@@ -571,7 +572,7 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
                 crm_config_err("Must specify id tag in <node>");
                 continue;
             }
-            new_node = create_node(id, uname, type, score, data_set);
+            new_node = pe_create_node(id, uname, type, score, data_set);
 
             if (new_node == NULL) {
                 return FALSE;
@@ -595,7 +596,8 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
 
     if (data_set->localhost && pe_find_node(data_set->nodes, data_set->localhost) == NULL) {
         crm_info("Creating a fake local node");
-        create_node(data_set->localhost, data_set->localhost, NULL, 0, data_set);
+        pe_create_node(data_set->localhost, data_set->localhost, NULL, 0,
+                       data_set);
     }
 
     return TRUE;
@@ -649,7 +651,8 @@ unpack_remote_nodes(xmlNode * xml_resources, pe_working_set_t * data_set)
              * an expanded node that has already been added to the node list. */
             if (new_node_id && pe_find_node(data_set->nodes, new_node_id) == NULL) {
                 crm_trace("Found baremetal remote node %s in container resource %s", new_node_id, ID(xml_obj));
-                create_node(new_node_id, new_node_id, "remote", NULL, data_set);
+                pe_create_node(new_node_id, new_node_id, "remote", NULL,
+                               data_set);
             }
             continue;
         }
@@ -668,7 +671,8 @@ unpack_remote_nodes(xmlNode * xml_resources, pe_working_set_t * data_set)
 
             if (new_node_id && pe_find_node(data_set->nodes, new_node_id) == NULL) {
                 crm_trace("Found guest remote node %s in container resource %s", new_node_id, ID(xml_obj));
-                create_node(new_node_id, new_node_id, "remote", NULL, data_set);
+                pe_create_node(new_node_id, new_node_id, "remote", NULL,
+                               data_set);
             }
             continue;
 
@@ -681,7 +685,8 @@ unpack_remote_nodes(xmlNode * xml_resources, pe_working_set_t * data_set)
 
                 if (new_node_id && pe_find_node(data_set->nodes, new_node_id) == NULL) {
                     crm_trace("Found guest remote node %s in container resource %s which is in group %s", new_node_id, ID(xml_obj2), ID(xml_obj));
-                    create_node(new_node_id, new_node_id, "remote", NULL, data_set);
+                    pe_create_node(new_node_id, new_node_id, "remote", NULL,
+                                   data_set);
                 }
             }
         }
@@ -1661,7 +1666,7 @@ create_fake_resource(const char *rsc_id, xmlNode * rsc_entry, pe_working_set_t *
         rsc->is_remote_node = TRUE;
         node = pe_find_node(data_set->nodes, rsc_id);
         if (node == NULL) {
-	        node = create_node(rsc_id, rsc_id, "remote", NULL, data_set);
+	        node = pe_create_node(rsc_id, rsc_id, "remote", NULL, data_set);
         }
         link_rsc2remotenode(data_set, rsc);
 

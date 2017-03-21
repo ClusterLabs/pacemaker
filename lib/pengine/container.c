@@ -326,7 +326,8 @@ create_remote_resource(
         // tuple->docker->fillers = g_list_append(tuple->docker->fillers, child);
 
         // -INFINITY prevents anyone else from running here
-        node = create_node(strdup(nodeid), nodeid, "remote", "-INFINITY", data_set);
+        node = pe_create_node(strdup(nodeid), nodeid, "remote", "-INFINITY",
+                              data_set);
         tuple->node = node_copy(node);
         tuple->node->weight = 500;
         nodeid = NULL;

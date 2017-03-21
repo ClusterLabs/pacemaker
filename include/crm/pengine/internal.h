@@ -286,7 +286,8 @@ void print_rscs_brief(GListPtr rsc_list, const char * pre_text, long options,
                       void * print_data, gboolean print_all);
 void pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason);
 
-node_t *create_node(const char *id, const char *uname, const char *type, const char *score, pe_working_set_t * data_set);
+node_t *pe_create_node(const char *id, const char *uname, const char *type,
+                       const char *score, pe_working_set_t * data_set);
 bool remote_id_conflict(const char *remote_name, pe_working_set_t *data);
 void common_print(resource_t * rsc, const char *pre_text, const char *name, node_t *node, long options, void *print_data);
 resource_t *find_container_child(const char *stem, resource_t * rsc, node_t *node);
