@@ -88,7 +88,7 @@ create_resource(const char *name, const char *provider, const char *kind)
     crm_xml_add(rsc, XML_ATTR_ID, name);
     crm_xml_add(rsc, XML_AGENT_ATTR_CLASS, "ocf");
     crm_xml_add(rsc, XML_AGENT_ATTR_PROVIDER, provider);
-    crm_xml_add(rsc, "type", kind);
+    crm_xml_add(rsc, XML_ATTR_TYPE, kind);
 
     return rsc;
 }
@@ -126,6 +126,7 @@ create_ip_resource(
         id = crm_strdup_printf("%s-ip-%s", data->prefix, tuple->ipaddr);
         crm_xml_sanitize_id(id);
         xml_ip = create_resource(id, "heartbeat", "IPaddr2");
+        free(id);
 
         xml_obj = create_xml_node(xml_ip, XML_TAG_ATTR_SETS);
         crm_xml_set_id(xml_obj, "%s-attributes-%d", data->prefix, tuple->offset);
@@ -174,6 +175,7 @@ create_docker_resource(
         id = crm_strdup_printf("%s-docker-%d", data->prefix, tuple->offset);
         crm_xml_sanitize_id(id);
         xml_docker = create_resource(id, "heartbeat", "docker");
+        free(id);
 
         xml_obj = create_xml_node(xml_docker, XML_TAG_ATTR_SETS);
         crm_xml_set_id(xml_obj, "%s-attributes-%d", data->prefix, tuple->offset);
@@ -203,6 +205,7 @@ create_docker_resource(
                 }
                 doffset += snprintf(dbuffer+doffset, dmax-doffset, "%s", source);
                 offset += snprintf(buffer+offset, max-offset, " -v %s:%s", source, mount->target);
+                free(source);
 
             } else {
                 offset += snprintf(buffer+offset, max-offset, " -v %s:%s", mount->source, mount->target);
@@ -287,16 +290,19 @@ create_remote_resource(
         xmlNode *xml_obj = NULL;
         xmlNode *xml_remote = NULL;
         char *nodeid = crm_strdup_printf("%s-%d", data->prefix, tuple->offset);
-        char *id = strdup(nodeid);
+        char *id = NULL;
 
-        if(remote_id_conflict(id, data_set)) {
+        if (remote_id_conflict(nodeid, data_set)) {
             // The biggest hammer we have
             id = crm_strdup_printf("pcmk-internal-%s-remote-%d", tuple->child->id, tuple->offset);
+            CRM_ASSERT(remote_id_conflict(id, data_set) == FALSE);
+        } else {
+            id = strdup(nodeid);
         }
 
-        CRM_ASSERT(remote_id_conflict(id, data_set) == FALSE);
-
         xml_remote = create_resource(id, "pacemaker", "remote");
+        free(id);
+
         xml_obj = create_xml_node(xml_remote, "operations");
         create_op(xml_obj, ID(xml_remote), "monitor", "60s");
 
