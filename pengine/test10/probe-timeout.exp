@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="8" operation="monitor" operation_key="rsc1_monitor_5000" on_node="node1" on_node_uuid="node1">
         <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="15000" />
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="node1" CRM_meta_timeout="15000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="7" operation="monitor" operation_key="rsc1_monitor_10000" on_node="node1" on_node_uuid="node1">
         <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="30000" />
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="node1" CRM_meta_timeout="30000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -29,7 +29,7 @@
     <action_set>
       <rsc_op id="6" operation="start" operation_key="rsc1_start_0" on_node="node1" on_node_uuid="node1">
         <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="node1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -45,7 +45,7 @@
     <action_set>
       <rsc_op id="4" operation="monitor" operation_key="rsc1_monitor_0" on_node="node2" on_node_uuid="node2">
         <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="15000" />
+        <attributes CRM_meta_on_node="node2" CRM_meta_on_node_uuid="node2" CRM_meta_op_target_rc="7" CRM_meta_timeout="15000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -54,7 +54,7 @@
     <action_set>
       <rsc_op id="2" operation="monitor" operation_key="rsc1_monitor_0" on_node="node1" on_node_uuid="node1">
         <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="15000" />
+        <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="node1" CRM_meta_op_target_rc="7" CRM_meta_timeout="15000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -63,7 +63,7 @@
     <action_set>
       <rsc_op id="11" operation="monitor" operation_key="rsc2_monitor_10000" on_node="node2" on_node_uuid="node2">
         <primitive id="rsc2" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="30000" />
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="node2" CRM_meta_on_node_uuid="node2" CRM_meta_timeout="30000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -76,7 +76,7 @@
     <action_set>
       <rsc_op id="10" operation="monitor" operation_key="rsc2_monitor_5000" on_node="node2" on_node_uuid="node2">
         <primitive id="rsc2" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="15000" />
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_node="node2" CRM_meta_on_node_uuid="node2" CRM_meta_timeout="15000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -89,7 +89,7 @@
     <action_set>
       <rsc_op id="9" operation="start" operation_key="rsc2_start_0" on_node="node2" on_node_uuid="node2">
         <primitive id="rsc2" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="node2" CRM_meta_on_node_uuid="node2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -105,7 +105,7 @@
     <action_set>
       <rsc_op id="5" operation="monitor" operation_key="rsc2_monitor_0" on_node="node2" on_node_uuid="node2">
         <primitive id="rsc2" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_name="monitor" CRM_meta_op_target_rc="7" CRM_meta_timeout="25000" />
+        <attributes CRM_meta_name="monitor" CRM_meta_on_node="node2" CRM_meta_on_node_uuid="node2" CRM_meta_op_target_rc="7" CRM_meta_timeout="25000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -114,7 +114,7 @@
     <action_set>
       <rsc_op id="3" operation="monitor" operation_key="rsc2_monitor_0" on_node="node1" on_node_uuid="node1">
         <primitive id="rsc2" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_name="monitor" CRM_meta_op_target_rc="7" CRM_meta_timeout="25000" />
+        <attributes CRM_meta_name="monitor" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="node1" CRM_meta_op_target_rc="7" CRM_meta_timeout="25000" />
       </rsc_op>
     </action_set>
     <inputs/>

@@ -944,13 +944,14 @@ stonith_get_peer_name(unsigned int nodeid)
 
 /*!
  * \internal
- * \brief Create a new remote stonith op
- * \param client, he local stonith client id that initaited the operation
- * \param request, The request from the client that started the operation
- * \param peer, Is this operation owned by another stonith peer? Operations
- *        owned by other peers are stored on all the stonith nodes, but only the
- *        owner executes the operation.  All the nodes get the results to the operation
- *        once the owner finishes executing it.
+ * \brief Create a new remote stonith operation
+ *
+ * \param[in] client   ID of local stonith client that initiated the operation
+ * \param[in] request  The request from the client that started the operation
+ * \param[in] peer     TRUE if this operation is owned by another stonith peer
+ *                     (an operation owned by one peer is stored on all peers,
+ *                     but only the owner executes it; all nodes get the results
+ *                     once the owner finishes execution)
  */
 void *
 create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
@@ -1557,13 +1558,13 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
         }
 
         if (op->state == st_query) {
-           crm_info("None of the %d peers have devices capable of fencing (%s) %s for %s (%d)",
+           crm_info("No peers (out of %d) have devices capable of fencing (%s) %s for %s (%d)",
                    op->replies, op->action, op->target, op->client_name,
                    op->state);
 
             rc = -ENODEV;
         } else {
-           crm_info("None of the %d peers are capable of fencing (%s) %s for %s (%d)",
+           crm_info("No peers (out of %d) are capable of fencing (%s) %s for %s (%d)",
                    op->replies, op->action, op->target, op->client_name,
                    op->state);
         }

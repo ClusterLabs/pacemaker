@@ -89,16 +89,22 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
         set_bit(node->details->remote_rsc->flags, pe_rsc_failed);
 
     } else if (is_baremetal_remote_node(node)) {
-        if(pe_can_fence(data_set, node)) {
-            crm_warn("Node %s will be fenced %s", node->details->uname, reason);
+        resource_t *rsc = node->details->remote_rsc;
+
+        if (rsc && (!is_set(rsc->flags, pe_rsc_managed))) {
+            crm_notice("Not fencing node %s because connection is unmanaged, "
+                       "otherwise would %s", node->details->uname, reason);
         } else {
-            crm_warn("Node %s is unclean %s", node->details->uname, reason);
+            if (pe_can_fence(data_set, node)) {
+                crm_warn("Node %s will be fenced %s", node->details->uname, reason);
+            } else {
+                crm_warn("Node %s is unclean %s", node->details->uname, reason);
+            }
+            node->details->remote_requires_reset = TRUE;
         }
         node->details->unclean = TRUE;
-        node->details->remote_requires_reset = TRUE;
-
     } else if (node->details->unclean == FALSE) {
-        if(pe_can_fence(data_set, node)) {
+        if (pe_can_fence(data_set, node)) {
             crm_warn("Node %s will be fenced %s", node->details->uname, reason);
         } else {
             crm_warn("Node %s is unclean %s", node->details->uname, reason);
@@ -402,7 +408,6 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data
     const char *remote_port = NULL;
     const char *connect_timeout = "60s";
     const char *remote_allow_migrate=NULL;
-    char *tmp_id = NULL;
 
     for (attr_set = __xml_first_child(xml_obj); attr_set != NULL; attr_set = __xml_next_element(attr_set)) {
         if (safe_str_neq((const char *)attr_set->name, XML_TAG_META_SETS)) {
@@ -438,78 +443,60 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data
     xml_rsc = create_xml_node(parent, XML_CIB_TAG_RESOURCE);
 
     crm_xml_add(xml_rsc, XML_ATTR_ID, remote_name);
-    crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, "ocf");
+    crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, PCMK_RESOURCE_CLASS_OCF);
     crm_xml_add(xml_rsc, XML_AGENT_ATTR_PROVIDER, "pacemaker");
     crm_xml_add(xml_rsc, XML_ATTR_TYPE, "remote");
 
     xml_tmp = create_xml_node(xml_rsc, XML_TAG_META_SETS);
-    tmp_id = crm_concat(remote_name, XML_TAG_META_SETS, '_');
-    crm_xml_add(xml_tmp, XML_ATTR_ID, tmp_id);
-    free(tmp_id);
+    crm_xml_set_id(xml_tmp, "%s_%s", remote_name, XML_TAG_META_SETS);
 
     attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
-    tmp_id = crm_concat(remote_name, "meta-attributes-container", '_');
-    crm_xml_add(attr, XML_ATTR_ID, tmp_id);
+    crm_xml_set_id(attr, "%s_%s", remote_name, "meta-attributes-container");
     crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_RSC_ATTR_CONTAINER);
     crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, container_id);
-    free(tmp_id);
 
     attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
-    tmp_id = crm_concat(remote_name, "meta-attributes-internal", '_');
-    crm_xml_add(attr, XML_ATTR_ID, tmp_id);
+    crm_xml_set_id(attr, "%s_%s", remote_name, "meta-attributes-internal");
     crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_RSC_ATTR_INTERNAL_RSC);
     crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, "true");
-    free(tmp_id);
 
     if (remote_allow_migrate) {
         attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
-        tmp_id = crm_concat(remote_name, "meta-attributes-container", '_');
-        crm_xml_add(attr, XML_ATTR_ID, tmp_id);
+        crm_xml_set_id(attr, "%s_%s", remote_name, "meta-attributes-container");
         crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_OP_ATTR_ALLOW_MIGRATE);
         crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, remote_allow_migrate);
-        free(tmp_id);
     }
 
     xml_tmp = create_xml_node(xml_rsc, "operations");
     attr = create_xml_node(xml_tmp, XML_ATTR_OP);
-    tmp_id = crm_concat(remote_name, "monitor-interval-30s", '_');
-    crm_xml_add(attr, XML_ATTR_ID, tmp_id);
+    crm_xml_set_id(attr, "%s_%s", remote_name, "monitor-interval-30s");
     crm_xml_add(attr, XML_ATTR_TIMEOUT, "30s");
     crm_xml_add(attr, XML_LRM_ATTR_INTERVAL, "30s");
     crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, "monitor");
-    free(tmp_id);
 
     if (connect_timeout) {
         attr = create_xml_node(xml_tmp, XML_ATTR_OP);
-        tmp_id = crm_concat(remote_name, "start-interval-0", '_');
-        crm_xml_add(attr, XML_ATTR_ID, tmp_id);
+        crm_xml_set_id(attr, "%s_%s", remote_name, "start-interval-0");
         crm_xml_add(attr, XML_ATTR_TIMEOUT, connect_timeout);
         crm_xml_add(attr, XML_LRM_ATTR_INTERVAL, "0");
         crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, "start");
-        free(tmp_id);
     }
 
     if (remote_port || remote_server) {
         xml_tmp = create_xml_node(xml_rsc, XML_TAG_ATTR_SETS);
-        tmp_id = crm_concat(remote_name, XML_TAG_ATTR_SETS, '_');
-        crm_xml_add(xml_tmp, XML_ATTR_ID, tmp_id);
-        free(tmp_id);
+        crm_xml_set_id(xml_tmp, "%s_%s", remote_name, XML_TAG_ATTR_SETS);
 
         if (remote_server) {
             attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
-            tmp_id = crm_concat(remote_name, "instance-attributes-addr", '_');
-            crm_xml_add(attr, XML_ATTR_ID, tmp_id);
+            crm_xml_set_id(attr, "%s_%s", remote_name, "instance-attributes-addr");
             crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, "addr");
             crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, remote_server);
-            free(tmp_id);
         }
         if (remote_port) {
             attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
-            tmp_id = crm_concat(remote_name, "instance-attributes-port", '_');
-            crm_xml_add(attr, XML_ATTR_ID, tmp_id);
+            crm_xml_set_id(attr, "%s_%s", remote_name, "instance-attributes-port");
             crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, "port");
             crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, remote_port);
-            free(tmp_id);
         }
     }
 
@@ -1179,6 +1166,7 @@ unpack_remote_status(xmlNode * status, pe_working_set_t * data_set)
     const char *id = NULL;
     const char *uname = NULL;
     const char *shutdown = NULL;
+    resource_t *rsc = NULL;
 
     GListPtr gIter = NULL;
 
@@ -1218,6 +1206,10 @@ unpack_remote_status(xmlNode * status, pe_working_set_t * data_set)
         }
         crm_trace("Processing remote node id=%s, uname=%s", id, uname);
 
+        this_node->details->remote_maintenance =
+            crm_atoi(crm_element_value(state, XML_NODE_IS_MAINTENANCE), "0");
+
+        rsc = this_node->details->remote_rsc;
         if (this_node->details->remote_requires_reset == FALSE) {
             this_node->details->unclean = FALSE;
             this_node->details->unseen = FALSE;
@@ -1227,11 +1219,11 @@ unpack_remote_status(xmlNode * status, pe_working_set_t * data_set)
 
         shutdown = g_hash_table_lookup(this_node->details->attrs, XML_CIB_ATTR_SHUTDOWN);
         if (shutdown != NULL && safe_str_neq("0", shutdown)) {
-            resource_t *rsc = this_node->details->remote_rsc;
-
             crm_info("Node %s is shutting down", this_node->details->uname);
             this_node->details->shutdown = TRUE;
-            rsc->next_role = RSC_ROLE_STOPPED;
+            if (rsc) {
+                rsc->next_role = RSC_ROLE_STOPPED;
+            }
         }
  
         if (crm_is_true(g_hash_table_lookup(this_node->details->attrs, "standby"))) {
@@ -1239,7 +1231,8 @@ unpack_remote_status(xmlNode * status, pe_working_set_t * data_set)
             this_node->details->standby = TRUE;
         }
 
-        if (crm_is_true(g_hash_table_lookup(this_node->details->attrs, "maintenance"))) {
+        if (crm_is_true(g_hash_table_lookup(this_node->details->attrs, "maintenance")) ||
+            (rsc && !is_set(rsc->flags, pe_rsc_managed))) {
             crm_info("Node %s is in maintenance-mode", this_node->details->uname);
             this_node->details->maintenance = TRUE;
         }
@@ -2848,7 +2841,7 @@ determine_op_status(
                 result = PCMK_LRM_OP_NOTSUPPORTED;
                 break;
 
-            } else if(pe_can_fence(data_set, node) == FALSE
+            } else if (pe_can_fence(data_set, node) == FALSE
                && safe_str_eq(task, CRMD_ACTION_STOP)) {
                 /* If a stop fails and we can't fence, there's nothing else we can do */
                 pe_proc_err("No further recovery can be attempted for %s: %s action failed with '%s' (%d)",
@@ -2874,11 +2867,11 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
 {
     bool expired = FALSE;
     time_t last_failure = 0;
-    int clear_failcount = 0;
     int interval = 0;
     int failure_timeout = rsc->failure_timeout;
     const char *key = get_op_key(xml_op);
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+    const char *clear_reason = NULL;
 
     /* clearing recurring monitor operation failures automatically
      * needs to be carefully considered */
@@ -2926,15 +2919,14 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
             int fc = get_failcount_full(node, rsc, &last_failure, FALSE, xml_op, data_set);
             if(fc) {
                 if (get_failcount_full(node, rsc, &last_failure, TRUE, xml_op, data_set) == 0) {
-                    clear_failcount = 1;
-                    crm_notice("Clearing expired failcount for %s on %s", rsc->id, node->details->uname);
+                    clear_reason = "it expired";
 
                 } else {
                     expired = FALSE;
                 }
             } else if (rsc->remote_reconnect_interval && strstr(ID(xml_op), "last_failure")) {
                 /* always clear last failure when reconnect interval is set */
-                clear_failcount = 1;
+                clear_reason = "reconnect interval is set";
             }
         }
 
@@ -2949,19 +2941,19 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
             crm_trace("rsc op %s/%s on node %s does not have a op digest to compare against", rsc->id,
                       key, node->details->id);
         } else if (digest_data->rc != RSC_DIGEST_MATCH) {
-            clear_failcount = 1;
-            crm_info
-                ("Clearing failcount for %s on %s, %s failed and now resource parameters have changed.",
-                 task, rsc->id, node->details->uname);
+            clear_reason = "resource parameters have changed";
         }
     }
 
-    if (clear_failcount) {
-        action_t *clear_op = NULL;
+    if (clear_reason != NULL) {
+        char *key = generate_op_key(rsc->id, CRM_OP_CLEAR_FAILCOUNT, 0);
+        action_t *clear_op = custom_action(rsc, key, CRM_OP_CLEAR_FAILCOUNT,
+                                           node, FALSE, TRUE, data_set);
 
-        clear_op = custom_action(rsc, crm_concat(rsc->id, CRM_OP_CLEAR_FAILCOUNT, '_'),
-                                 CRM_OP_CLEAR_FAILCOUNT, node, FALSE, TRUE, data_set);
         add_hash_param(clear_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
+
+        crm_notice("Clearing failure of %s on %s because %s " CRM_XS " %s",
+                   rsc->id, node->details->uname, clear_reason, clear_op->uuid);
     }
 
     crm_element_value_int(xml_op, XML_LRM_ATTR_INTERVAL, &interval);

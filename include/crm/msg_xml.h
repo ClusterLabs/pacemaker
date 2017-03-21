@@ -219,6 +219,8 @@
 #  define XML_RSC_ATTR_INTERNAL_RSC	"internal_rsc"
 #  define XML_RSC_ATTR_MAINTENANCE	"maintenance"
 #  define XML_RSC_ATTR_REMOTE_NODE  	"remote-node"
+#  define XML_RSC_ATTR_CLEAR_OP         "clear_failure_op"
+#  define XML_RSC_ATTR_CLEAR_INTERVAL   "clear_failure_interval"
 
 #  define XML_REMOTE_ATTR_RECONNECT_INTERVAL "reconnect_interval"
 
@@ -254,9 +256,11 @@
 #  define XML_NODE_IS_PEER    	"crmd"
 #  define XML_NODE_IS_REMOTE    	"remote_node"
 #  define XML_NODE_IS_FENCED		"node_fenced"
+#  define XML_NODE_IS_MAINTENANCE   "node_in_maintenance"
 
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
 #  define XML_CIB_ATTR_STONITH	    	"stonith"
+#  define XML_CIB_ATTR_STANDBY	    	"standby"
 
 /* LRM is a bit of a misnomer here; the crmd and pengine use these to track
  * actions, which usually but not always are LRM operations
@@ -295,6 +299,7 @@
 #  define XML_GRAPH_TAG_PSEUDO_EVENT	"pseudo_event"
 #  define XML_GRAPH_TAG_CRM_EVENT	"crm_event"
 #  define XML_GRAPH_TAG_DOWNED            "downed"
+#  define XML_GRAPH_TAG_MAINTENANCE       "maintenance"
 
 #  define XML_TAG_RULE			"rule"
 #  define XML_RULE_ATTR_SCORE		"score"

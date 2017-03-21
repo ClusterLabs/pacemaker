@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="5" operation="start" operation_key="dummy1_start_0" on_node="sle12sp2-1" on_node_uuid="1084783155">
         <primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="sle12sp2-1" CRM_meta_on_node_uuid="1084783155" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -19,7 +19,7 @@
     <action_set>
       <rsc_op id="4" operation="stop" operation_key="dummy1_stop_0" on_node="sle12sp2-2" on_node_uuid="1084783156">
         <primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="sle12sp2-2" CRM_meta_on_node_uuid="1084783156" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -28,7 +28,7 @@
     <action_set>
       <rsc_op id="8" operation="promote" operation_key="state1_promote_0" internal_operation_key="state1:0_promote_0" on_node="sle12sp2-2" on_node_uuid="1084783156">
         <primitive id="state1" long-id="state1:0" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="sle12sp2-2" CRM_meta_on_node_uuid="1084783156" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -41,7 +41,7 @@
     <action_set>
       <rsc_op id="10" operation="demote" operation_key="state1_demote_0" internal_operation_key="state1:1_demote_0" on_node="sle12sp2-1" on_node_uuid="1084783155">
         <primitive id="state1" long-id="state1:1" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="sle12sp2-1" CRM_meta_on_node_uuid="1084783155" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>

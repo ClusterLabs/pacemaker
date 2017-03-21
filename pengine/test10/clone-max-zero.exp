@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="4" operation="stop" operation_key="dlm:1_stop_0" internal_operation_key="dlm:0_stop_0" on_node="c001n12" on_node_uuid="c001n12">
         <primitive id="dlm:1" long-id="dlm:0" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="0" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="0" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="c001n12" CRM_meta_on_node_uuid="c001n12" CRM_meta_timeout="120000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -19,7 +19,7 @@
     <action_set>
       <rsc_op id="5" operation="stop" operation_key="dlm:0_stop_0" internal_operation_key="dlm:1_stop_0" on_node="c001n11" on_node_uuid="c001n11">
         <primitive id="dlm:0" long-id="dlm:1" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="0" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="0" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="c001n11" CRM_meta_on_node_uuid="c001n11" CRM_meta_timeout="120000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -65,7 +65,7 @@
     <action_set>
       <rsc_op id="10" operation="stop" operation_key="o2cb:1_stop_0" internal_operation_key="o2cb:0_stop_0" on_node="c001n12" on_node_uuid="c001n12">
         <primitive id="o2cb" long-id="o2cb:1" class="ocf" provider="ocfs2" type="o2cb"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="c001n12" CRM_meta_on_node_uuid="c001n12" CRM_meta_timeout="120000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -81,7 +81,7 @@
     <action_set>
       <rsc_op id="11" operation="stop" operation_key="o2cb:0_stop_0" internal_operation_key="o2cb:1_stop_0" on_node="c001n11" on_node_uuid="c001n11">
         <primitive id="o2cb" long-id="o2cb:0" class="ocf" provider="ocfs2" type="o2cb"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="c001n11" CRM_meta_on_node_uuid="c001n11" CRM_meta_timeout="120000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -127,7 +127,7 @@
     <action_set>
       <rsc_op id="24" operation="stop" operation_key="ocfs2-1:1_stop_0" internal_operation_key="ocfs2-1:0_stop_0" on_node="c001n12" on_node_uuid="c001n12">
         <primitive id="ocfs2-1" long-id="ocfs2-1:1" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000"  device="/dev/drbd0" directory="/mnt" fstype="ocfs2"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="c001n12" CRM_meta_on_node_uuid="c001n12" CRM_meta_timeout="120000"  device="/dev/drbd0" directory="/mnt" fstype="ocfs2"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -140,7 +140,7 @@
     <action_set>
       <rsc_op id="25" operation="stop" operation_key="ocfs2-1:0_stop_0" internal_operation_key="ocfs2-1:1_stop_0" on_node="c001n11" on_node_uuid="c001n11">
         <primitive id="ocfs2-1" long-id="ocfs2-1:0" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000"  device="/dev/drbd0" directory="/mnt" fstype="ocfs2"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="c001n11" CRM_meta_on_node_uuid="c001n11" CRM_meta_timeout="120000"  device="/dev/drbd0" directory="/mnt" fstype="ocfs2"/>
       </rsc_op>
     </action_set>
     <inputs>

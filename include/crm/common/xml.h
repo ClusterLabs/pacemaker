@@ -391,4 +391,8 @@ void save_xml_to_file(xmlNode * xml, const char *desc, const char *filename);
 char *xml_get_path(xmlNode *xml);
 
 char * crm_xml_escape(const char *text);
+void crm_xml_sanitize_id(char *id);
+void crm_xml_set_id(xmlNode *xml, const char *format, ...)
+    __attribute__ ((__format__ (__printf__, 2, 3)));
+
 #endif

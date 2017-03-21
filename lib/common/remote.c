@@ -601,13 +601,16 @@ crm_remote_recv_once(crm_remote_t * remote)
 
 /*!
  * \internal
- * \brief Read data off the socket until at least one full message is present or timeout occures.
- * \retval TRUE message read
- * \retval FALSE full message not read
+ * \brief Read message(s) from a remote connection
+ *
+ * \param[in]  remote         Remote connection to read
+ * \param[in]  total_timeout  Fail if message not read in this time (ms)
+ * \param[out] disconnected   Will be set to 1 if disconnect detected
+ *
+ * \return TRUE if at least one full message read, FALSE otherwise
  */
-
 gboolean
-crm_remote_recv(crm_remote_t * remote, int total_timeout /*ms */ , int *disconnected)
+crm_remote_recv(crm_remote_t *remote, int total_timeout, int *disconnected)
 {
     int rc;
     time_t start = time(NULL);
@@ -623,28 +626,32 @@ crm_remote_recv(crm_remote_t * remote, int total_timeout /*ms */ , int *disconne
     remaining_timeout = total_timeout;
     while ((remaining_timeout > 0) && !(*disconnected)) {
 
-        /* read some more off the tls buffer if we still have time left. */
-        crm_trace("waiting to receive remote msg, starting timeout %d, remaining_timeout %d",
-                  total_timeout, remaining_timeout);
+        crm_trace("Waiting for remote data (%d of %d ms timeout remaining)",
+                  remaining_timeout, total_timeout);
         rc = crm_remote_ready(remote, remaining_timeout);
 
         if (rc == 0) {
-            crm_err("poll timed out (%d ms) while waiting to receive msg", remaining_timeout);
+            crm_err("Timed out (%d ms) while waiting for remote data",
+                    remaining_timeout);
             return FALSE;
 
-        } else if(rc < 0) {
-            crm_debug("could not poll: %s (%d)", pcmk_strerror(rc), rc);
+        } else if (rc < 0) {
+            crm_debug("Wait for remote data aborted, will try again: %s "
+                      CRM_XS " rc=%d", pcmk_strerror(rc), rc);
 
         } else {
             rc = crm_remote_recv_once(remote);
-            if(rc > 0) {
+            if (rc > 0) {
                 return TRUE;
+            } else if (rc == -EAGAIN) {
+                crm_trace("Still waiting for remote data");
             } else if (rc < 0) {
-                crm_debug("recv() failed: %s (%d)", pcmk_strerror(rc), rc);
+                crm_debug("Could not receive remote data: %s " CRM_XS " rc=%d",
+                          pcmk_strerror(rc), rc);
             }
         }
 
-        if(rc == -ENOTCONN) {
+        if (rc == -ENOTCONN) {
             *disconnected = 1;
             return FALSE;
         }
@@ -837,7 +844,7 @@ int
 crm_remote_tcp_connect_async(const char *host, int port, int timeout, /*ms */
                              int *timer_id, void *userdata, void (*callback) (void *userdata, int sock))
 {
-    char buffer[256];
+    char buffer[INET6_ADDRSTRLEN];
     struct addrinfo *res = NULL;
     struct addrinfo *rp = NULL;
     struct addrinfo hints;
@@ -882,20 +889,16 @@ crm_remote_tcp_connect_async(const char *host, int port, int timeout, /*ms */
             continue;
         }
 
-        memset(buffer, 0, DIMOF(buffer));
+        /* Set port appropriately for address family */
+        /* (void*) casts avoid false-positive compiler alignment warnings */
         if (addr->sa_family == AF_INET6) {
-            struct sockaddr_in6 *addr_in = (struct sockaddr_in6 *)(void*)addr;
-
-            addr_in->sin6_port = htons(port);
-            inet_ntop(addr->sa_family, &addr_in->sin6_addr, buffer, DIMOF(buffer));
-
+            ((struct sockaddr_in6 *)(void*)addr)->sin6_port = htons(port);
         } else {
-            struct sockaddr_in *addr_in = (struct sockaddr_in *)(void*)addr;
-
-            addr_in->sin_port = htons(port);
-            inet_ntop(addr->sa_family, &addr_in->sin_addr, buffer, DIMOF(buffer));
+            ((struct sockaddr_in *)(void*)addr)->sin_port = htons(port);
         }
 
+        memset(buffer, 0, DIMOF(buffer));
+        crm_sockaddr2str(addr, buffer);
         crm_info("Attempting to connect to remote server at %s:%d", buffer, port);
 
         if (callback) {
@@ -928,29 +931,33 @@ crm_remote_tcp_connect(const char *host, int port)
     return crm_remote_tcp_connect_async(host, port, -1, NULL, NULL, NULL);
 }
 
-
-/* Convert a struct sockaddr address to a string, IPv4 and IPv6: */
-
-static char *
-get_ip_str(const struct sockaddr_storage * sa, char * s, size_t maxlen)
+/*!
+ * \brief Convert an IP address (IPv4 or IPv6) to a string for logging
+ *
+ * \param[in]  sa  Socket address for IP
+ * \param[out] s   Storage for at least INET6_ADDRSTRLEN bytes
+ *
+ * \note sa The socket address can be a pointer to struct sockaddr_in (IPv4),
+ *          struct sockaddr_in6 (IPv6) or struct sockaddr_storage (either),
+ *          as long as its sa_family member is set correctly.
+ */
+void
+crm_sockaddr2str(void *sa, char *s)
 {
-    switch(((struct sockaddr *)sa)->sa_family) {
+    switch (((struct sockaddr*)sa)->sa_family) {
         case AF_INET:
             inet_ntop(AF_INET, &(((struct sockaddr_in *)sa)->sin_addr),
-                      s, maxlen);
+                      s, INET6_ADDRSTRLEN);
             break;
 
         case AF_INET6:
             inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)sa)->sin6_addr),
-                      s, maxlen);
+                      s, INET6_ADDRSTRLEN);
             break;
 
         default:
-            strncpy(s, "Unknown AF", maxlen);
-            return NULL;
+            strcpy(s, "<invalid>");
     }
-
-    return s;
 }
 
 int
@@ -971,7 +978,7 @@ crm_remote_accept(int ssock)
     laddr = sizeof(addr);
     memset(&addr, 0, sizeof(addr));
     csock = accept(ssock, (struct sockaddr *)&addr, &laddr);
-    get_ip_str(&addr, addr_str, INET6_ADDRSTRLEN);
+    crm_sockaddr2str(&addr, addr_str);
     crm_info("New remote connection from %s", addr_str);
 
     if (csock == -1) {

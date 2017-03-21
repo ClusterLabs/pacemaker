@@ -60,6 +60,13 @@
 
 #==#==# Advanced use only
 
+# By default, nodes will join the cluster in an online state when they first
+# start, unless they were previously put into standby mode. If this variable is
+# set to "standby" or "online", it will force this node to join in the
+# specified state when starting.
+# (experimental; currently ignored for Pacemaker Remote nodes)
+# PCMK_node_start_state=default
+
 # If the cluster uses an older version of corosync (prior to 2.0), set this to
 # "true", which will use a node's uname as its UUID. The default, "false", is
 # appropriate for newer versions of corosync, and will use a node's corosync ID

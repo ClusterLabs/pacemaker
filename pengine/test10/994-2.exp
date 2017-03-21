@@ -57,7 +57,7 @@
      <action_set>
       <rsc_op id="13" operation="start" operation_key="postfix_9_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
         <primitive id="postfix_9" class="lsb" type="postfix"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="paul" CRM_meta_on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
      <inputs>
@@ -73,7 +73,7 @@
      <action_set>
        <rsc_op id="3" operation="stop" operation_key="postfix_9_stop_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
         <primitive id="postfix_9" class="lsb" type="postfix"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="paul" CRM_meta_on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
      <inputs>
@@ -86,7 +86,7 @@
      <action_set>
       <rsc_op id="2" operation="monitor" operation_key="postfix_9_monitor_120000" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
         <primitive id="postfix_9" class="lsb" type="postfix"/>
-        <attributes CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_on_node="paul" CRM_meta_on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90" CRM_meta_timeout="60000" />
        </rsc_op>
      </action_set>
      <inputs>
@@ -99,7 +99,7 @@
      <action_set>
       <rsc_op id="19" operation="start" operation_key="depends_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
         <primitive id="depends" class="lsb" type="postfix"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="paul" CRM_meta_on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
     <inputs>
@@ -115,7 +115,7 @@
     <action_set>
       <rsc_op id="18" operation="stop" operation_key="depends_stop_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
         <primitive id="depends" class="lsb" type="postfix"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="paul" CRM_meta_on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>

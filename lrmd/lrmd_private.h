@@ -85,6 +85,8 @@ void free_rsc(gpointer data);
 
 void handle_shutdown_ack(void);
 
+void handle_shutdown_nack(void);
+
 void lrmd_client_destroy(crm_client_t *client);
 
 void client_disconnect_cleanup(const char *client_id);

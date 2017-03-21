@@ -414,7 +414,7 @@ upstart_async_dispatch(DBusPendingCall *pending, void *user_data)
 /* For an asynchronous 'op', returns FALSE if 'op' should be free'd by the caller */
 /* For a synchronous 'op', returns FALSE if 'op' fails */
 gboolean
-upstart_job_exec(svc_action_t * op, gboolean synchronous)
+upstart_job_exec(svc_action_t * op)
 {
     char *job = NULL;
     int arg_wait = TRUE;

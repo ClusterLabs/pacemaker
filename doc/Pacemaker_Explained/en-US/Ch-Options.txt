@@ -189,7 +189,7 @@ indexterm:[Cluster,Option,start-failure-is-fatal]
 Should a failure to start a resource on a particular node prevent further start
 attempts on that node? If FALSE, the cluster will decide whether the same
 node is still eligible based on the resource's current failure count
-and +migration-threshold+ (see <<s-failure-migration>>).
+and +migration-threshold+ (see <<s-failure-handling>>).
 
 | enable-startup-probes | TRUE |
 indexterm:[enable-startup-probes,Cluster Option]
@@ -226,6 +226,12 @@ legacy devices.
 indexterm:[stonith-timeout,Cluster Option]
 indexterm:[Cluster,Option,stonith-timeout]
 How long to wait for STONITH actions (reboot, on, off) to complete
+
+| stonith-max-attempts | 10 |
+indexterm:[stonith-max-attempts,Cluster Option]
+indexterm:[Cluster,Option,stonith-max-attempts]
+How many times stonith can fail before it will no longer be attempted on a target.
+Positive non-zero values are allowed. '(since 1.1.17)'
 
 | concurrent-fencing | FALSE |
 indexterm:[concurrent-fencing,Cluster Option]

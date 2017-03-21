@@ -16,8 +16,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __MH_SERVICES_PRIVATE_H__
-#  define __MH_SERVICES_PRIVATE_H__
+#ifndef SERVICES_PRIVATE__H
+#  define SERVICES_PRIVATE__H
+
+#  include <glib.h>
+#  include "crm/services.h"
 
 #if SUPPORT_DBUS
 #  include <dbus/dbus.h>
@@ -42,31 +45,45 @@ struct svc_action_private_s {
 #endif
 };
 
+G_GNUC_INTERNAL
 GList *services_os_get_directory_list(const char *root, gboolean files, gboolean executable);
 
-gboolean services_os_action_execute(svc_action_t * op, gboolean synchronous);
+G_GNUC_INTERNAL
+gboolean services_os_action_execute(svc_action_t * op);
 
+G_GNUC_INTERNAL
 GList *resources_os_list_lsb_agents(void);
 
+G_GNUC_INTERNAL
 GList *resources_os_list_ocf_providers(void);
 
+G_GNUC_INTERNAL
 GList *resources_os_list_ocf_agents(const char *provider);
 
+G_GNUC_INTERNAL
 GList *resources_os_list_nagios_agents(void);
 
+G_GNUC_INTERNAL
 gboolean cancel_recurring_action(svc_action_t * op);
 
+G_GNUC_INTERNAL
 gboolean recurring_action_timer(gpointer data);
+
+G_GNUC_INTERNAL
 gboolean operation_finalize(svc_action_t * op);
 
+G_GNUC_INTERNAL
 void services_add_inflight_op(svc_action_t *op);
 
-void handle_blocked_ops(void);
+G_GNUC_INTERNAL
+void services_untrack_op(svc_action_t *op);
 
+G_GNUC_INTERNAL
 gboolean is_op_blocked(const char *rsc);
 
 #if SUPPORT_DBUS
+G_GNUC_INTERNAL
 void services_set_op_pending(svc_action_t *op, DBusPendingCall *pending);
 #endif
 
-#endif                          /* __MH_SERVICES_PRIVATE_H__ */
+#endif  /* SERVICES_PRIVATE__H */

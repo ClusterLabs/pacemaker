@@ -52,7 +52,6 @@
 #include <crm/common/ipc.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/mainloop.h>
-#include <crm/attrd.h>
 #include <libxml2/libxml/relaxng.h>
 
 #ifndef MAXLINE
@@ -159,6 +158,15 @@ check_number(const char *value)
         return FALSE;
     }
     return TRUE;
+}
+
+gboolean
+check_positive_number(const char* value)
+{
+    if (safe_str_eq(value, INFINITY_S) || (crm_int_helper(value, NULL))) {
+        return TRUE;
+    }
+    return FALSE;
 }
 
 gboolean
@@ -629,21 +637,24 @@ crm_get_msec(const char *input)
     return msec;
 }
 
+/*!
+ * \brief Generate an operation key
+ *
+ * \param[in] rsc_id    ID of resource being operated on
+ * \param[in] op_type   Operation name
+ * \param[in] interval  Operation interval
+ *
+ * \return Newly allocated memory containing operation key as string
+ *
+ * \note It is the caller's responsibility to free() the result.
+ */
 char *
 generate_op_key(const char *rsc_id, const char *op_type, int interval)
 {
-    int len = 35;
-    char *op_id = NULL;
-
-    CRM_CHECK(rsc_id != NULL, return NULL);
-    CRM_CHECK(op_type != NULL, return NULL);
-
-    len += strlen(op_type);
-    len += strlen(rsc_id);
-    op_id = malloc(len);
-    CRM_CHECK(op_id != NULL, return NULL);
-    sprintf(op_id, "%s_%s_%d", rsc_id, op_type, interval);
-    return op_id;
+    CRM_ASSERT(rsc_id != NULL);
+    CRM_ASSERT(op_type != NULL);
+    CRM_ASSERT(interval >= 0);
+    return crm_strdup_printf("%s_%s_%d", rsc_id, op_type, interval);
 }
 
 gboolean
@@ -894,6 +905,8 @@ filter_action_parameters(xmlNode * param_set, const char *version)
         XML_ATTR_ID,
         XML_ATTR_CRM_VERSION,
         XML_LRM_ATTR_OP_DIGEST,
+        XML_LRM_ATTR_TARGET,
+        XML_LRM_ATTR_TARGET_UUID,
         "pcmk_external_ip"
     };
 
@@ -1531,149 +1544,6 @@ stonith_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handler
         crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
         crm_exit(DAEMON_RESPAWN_STOP);
     }
-}
-
-int
-attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const char *name,
-                      const char *value, const char *section, const char *set, const char *dampen,
-                      const char *user_name, int options)
-{
-    int rc = -ENOTCONN;
-    int max = 5;
-    const char *task = NULL;
-    const char *name_as = NULL;
-    const char *display_host = (host ? host : "localhost");
-    const char *display_command = NULL; /* for commands without name/value */
-    xmlNode *update = create_xml_node(NULL, __FUNCTION__);
-
-    static gboolean connected = TRUE;
-    static crm_ipc_t *local_ipc = NULL;
-    static enum crm_ipc_flags flags = crm_ipc_flags_none;
-
-    if (ipc == NULL && local_ipc == NULL) {
-        local_ipc = crm_ipc_new(T_ATTRD, 0);
-        flags |= crm_ipc_client_response;
-        connected = FALSE;
-    }
-
-    if (ipc == NULL) {
-        ipc = local_ipc;
-    }
-
-    /* remap common aliases */
-    if (safe_str_eq(section, "reboot")) {
-        section = XML_CIB_TAG_STATUS;
-
-    } else if (safe_str_eq(section, "forever")) {
-        section = XML_CIB_TAG_NODES;
-    }
-
-    crm_xml_add(update, F_TYPE, T_ATTRD);
-    crm_xml_add(update, F_ORIG, crm_system_name?crm_system_name:"unknown");
-
-    if (name == NULL && command == 'U') {
-        command = 'R';
-    }
-
-    switch (command) {
-        case 'u':
-            task = ATTRD_OP_UPDATE;
-            name_as = F_ATTRD_REGEX;
-            break;
-        case 'D':
-        case 'U':
-        case 'v':
-            task = ATTRD_OP_UPDATE;
-            name_as = F_ATTRD_ATTRIBUTE;
-            break;
-        case 'R':
-            task = ATTRD_OP_REFRESH;
-            display_command = "refresh";
-            break;
-        case 'B':
-            task = ATTRD_OP_UPDATE_BOTH;
-            name_as = F_ATTRD_ATTRIBUTE;
-            break;
-        case 'Y':
-            task = ATTRD_OP_UPDATE_DELAY;
-            name_as = F_ATTRD_ATTRIBUTE;
-            break;
-        case 'Q':
-            task = ATTRD_OP_QUERY;
-            name_as = F_ATTRD_ATTRIBUTE;
-            break;
-        case 'C':
-            task = ATTRD_OP_PEER_REMOVE;
-            display_command = "purge";
-            break;
-    }
-
-    if (name_as != NULL) {
-        if (name == NULL) {
-            rc = -EINVAL;
-            goto done;
-        }
-        crm_xml_add(update, name_as, name);
-    }
-
-    crm_xml_add(update, F_ATTRD_TASK, task);
-    crm_xml_add(update, F_ATTRD_VALUE, value);
-    crm_xml_add(update, F_ATTRD_DAMPEN, dampen);
-    crm_xml_add(update, F_ATTRD_SECTION, section);
-    crm_xml_add(update, F_ATTRD_HOST, host);
-    crm_xml_add(update, F_ATTRD_SET, set);
-    crm_xml_add_int(update, F_ATTRD_IS_REMOTE, is_set(options, attrd_opt_remote));
-    crm_xml_add_int(update, F_ATTRD_IS_PRIVATE, is_set(options, attrd_opt_private));
-#if ENABLE_ACL
-    if (user_name) {
-        crm_xml_add(update, F_ATTRD_USER, user_name);
-    }
-#endif
-
-    while (max > 0) {
-        if (connected == FALSE) {
-            crm_info("Connecting to cluster... %d retries remaining", max);
-            connected = crm_ipc_connect(ipc);
-        }
-
-        if (connected) {
-            rc = crm_ipc_send(ipc, update, flags, 0, NULL);
-        } else {
-            crm_perror(LOG_INFO, "Connection to cluster attribute manager failed");
-        }
-
-        if (ipc != local_ipc) {
-            break;
-
-        } else if (rc > 0) {
-            break;
-
-        } else if (rc == -EAGAIN || rc == -EALREADY) {
-            sleep(5 - max);
-            max--;
-
-        } else {
-            crm_ipc_close(ipc);
-            connected = FALSE;
-            sleep(5 - max);
-            max--;
-        }
-    }
-
-done:
-    free_xml(update);
-    if (rc > 0) {
-        rc = pcmk_ok;
-    }
-
-    if (display_command) {
-        crm_debug("Asked attrd to %s %s: %s (%d)",
-                  display_command, display_host, pcmk_strerror(rc), rc);
-    } else {
-        crm_debug("Asked attrd to update %s=%s for %s: %s (%d)",
-                  name, value, display_host, pcmk_strerror(rc), rc);
-    }
-    return rc;
 }
 
 #define FAKE_TE_ID	"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"

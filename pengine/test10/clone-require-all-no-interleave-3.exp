@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="13" operation="monitor" operation_key="A_monitor_10000" internal_operation_key="A:0_monitor_10000" on_node="rhel7-auto3" on_node_uuid="3">
         <primitive id="A" long-id="A:0" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-auto3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="12" operation="start" operation_key="A_start_0" internal_operation_key="A:0_start_0" on_node="rhel7-auto3" on_node_uuid="3">
         <primitive id="A" long-id="A:0" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="rhel7-auto3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -32,7 +32,7 @@
     <action_set>
       <rsc_op id="11" operation="stop" operation_key="A_stop_0" internal_operation_key="A:0_stop_0" on_node="rhel7-auto4" on_node_uuid="4">
         <primitive id="A" long-id="A:0" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="rhel7-auto4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -99,7 +99,7 @@
     <action_set>
       <rsc_op id="20" operation="monitor" operation_key="B_monitor_10000" internal_operation_key="B:0_monitor_10000" on_node="rhel7-auto3" on_node_uuid="3">
         <primitive id="B" long-id="B:0" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-auto3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -112,7 +112,7 @@
     <action_set>
       <rsc_op id="19" operation="start" operation_key="B_start_0" internal_operation_key="B:0_start_0" on_node="rhel7-auto3" on_node_uuid="3">
         <primitive id="B" long-id="B:0" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="rhel7-auto3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -128,7 +128,7 @@
     <action_set>
       <rsc_op id="18" operation="stop" operation_key="B_stop_0" internal_operation_key="B:0_stop_0" on_node="rhel7-auto4" on_node_uuid="4">
         <primitive id="B" long-id="B:0" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="rhel7-auto4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -198,7 +198,7 @@
     <action_set>
       <rsc_op id="27" operation="monitor" operation_key="C_monitor_10000" internal_operation_key="C:0_monitor_10000" on_node="rhel7-auto3" on_node_uuid="3">
         <primitive id="C" long-id="C:0" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-auto3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -211,7 +211,7 @@
     <action_set>
       <rsc_op id="26" operation="start" operation_key="C_start_0" internal_operation_key="C:0_start_0" on_node="rhel7-auto3" on_node_uuid="3">
         <primitive id="C" long-id="C:0" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="rhel7-auto3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -227,7 +227,7 @@
     <action_set>
       <rsc_op id="25" operation="stop" operation_key="C_stop_0" internal_operation_key="C:0_stop_0" on_node="rhel7-auto4" on_node_uuid="4">
         <primitive id="C" long-id="C:0" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="rhel7-auto4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>

@@ -13,13 +13,12 @@ Commands:
 
 Additional Options:
  -r, --resource=value   Name of the resource to use (required)
- -N, --node=value       Set an attribute for the named node (instead of the current one)"
+ -n, --operation=value  Name of operation to use (instead of all operations)
+ -I, --interval=value   If operation is specified, its interval (MUST be in milliseconds)
+ -N, --node=value       Use failcount on named node (instead of local node)"
 
 
 HELP_TEXT="crm_failcount - Query or delete resource fail counts
-
-crm_failcount is a convenience wrapper for crm_attribute (if querying)
-and crm_resource --cleanup (if deleting).
 
 $USAGE_TEXT"
 
@@ -37,20 +36,158 @@ warn() {
 	echo "warning: $@" >&2
 }
 
+interval_re() {
+	echo "^[[:blank:]]*([0-9]+)[[:blank:]]*(${1})[[:blank:]]*$"
+}
+
+# This function should follow crm_get_interval() as closely as possible
+parse_interval() {
+	INT_S="$1"
+
+	INT_8601RE="^P(([0-9]+)Y)?(([0-9]+)M)?(([0-9]+)D)?T?(([0-9]+)H)?(([0-9]+)M)?(([0-9]+)S)?$"
+	
+	if [[ $INT_S =~ $(interval_re "s|sec|") ]]; then
+		echo $(( ${BASH_REMATCH[1]} * 1000 ))
+
+	elif [[ $INT_S =~ $(interval_re "ms|msec") ]]; then
+		echo "${BASH_REMATCH[1]}"
+
+	elif [[ $INT_S =~ $(interval_re "m|min") ]]; then
+		echo $(( ${BASH_REMATCH[1]} * 60000 ))
+
+	elif [[ $INT_S =~ $(interval_re "h|hr") ]]; then
+		echo $(( ${BASH_REMATCH[1]} * 3600000 ))
+
+	elif [[ $INT_S =~ $(interval_re "us|usec") ]]; then
+		echo $(( ${BASH_REMATCH[1]} / 1000 ))
+
+	elif [[ $INT_S =~ ^P([0-9]+)W$ ]]; then
+		echo $(( ${BASH_REMATCH[1]} * 604800000 ))
+
+	elif [[ $INT_S =~ $INT_8601RE ]]; then
+		echo $(( ( ${BASH_REMATCH[2]:-0} * 31536000000 ) \
+			+ ( ${BASH_REMATCH[4]:-0} * 2592000000 ) \
+			+ ( ${BASH_REMATCH[6]:-0} * 86400000 ) \
+			+ ( ${BASH_REMATCH[8]:-0} * 3600000 ) \
+			+ ( ${BASH_REMATCH[10]:-0} * 60000 ) \
+			+ ( ${BASH_REMATCH[12]:-0} * 1000 ) ))
+
+	else
+		warn "Unrecognized interval, using 0"
+		echo "0"
+	fi
+}
+
+query_single_attr() {
+	QSR_TARGET="$1"
+	QSR_ATTR="$2"
+
+	crm_attribute $VERBOSE -Q --query -t status -d 0 \
+		-N "$QSR_TARGET" -n "$QSR_ATTR"
+}
+
+query_attr_sum() {
+	QAS_TARGET="$1"
+	QAS_PREFIX="$2"
+
+	# Build xpath to match all transient node attributes with prefix
+	QAS_XPATH="/cib/status/node_state[@uname='${QAS_TARGET}']"
+	QAS_XPATH="${QAS_XPATH}/transient_attributes/instance_attributes"
+	QAS_XPATH="${QAS_XPATH}/nvpair[starts-with(@name,'$QAS_PREFIX')]"
+
+	# Query attributes that match xpath
+	# @TODO We ignore stderr because we don't want "no results" to look
+	# like an error, but that also makes $VERBOSE pointless.
+	QAS_ALL=$(cibadmin --query --sync-call --local \
+		--xpath="$QAS_XPATH" 2>/dev/null)
+
+	# @TODO There is currently no reliable way to distinguish "no results"
+	# from actual CIB errors. For now, treat any error as "no results".
+	#
+	#if [ $? -ne 0 ]; then
+	#	echo error >&2
+	#	return
+	#fi
+
+	# Extract the attribute values (one per line) from the output
+	QAS_VALUE=$(echo "$QAS_ALL" | sed -n -e \
+		's/.*<nvpair.*value="\([0-9][0-9]*\)".*>.*/\1/p')
+
+	# Sum the values
+	QAS_SUM=0
+	for i in 0 $QAS_VALUE; do
+		QAS_SUM=$(($QAS_SUM + $i))
+	done
+	echo $QAS_SUM
+}
+
+query_failcount() {
+	QF_TARGET="$1"
+	QF_RESOURCE="$2"
+	QF_OPERATION="$3"
+	QF_INTERVAL="$4"
+
+	QF_ATTR_RSC="fail-count-${QF_RESOURCE}"
+
+	if [ -n "$QF_OPERATION" ]; then
+		QF_ATTR_DISPLAY="${QF_ATTR_RSC}#${QF_OPERATION}_${QF_INTERVAL}"
+		QF_COUNT=$(query_single_attr "$QF_TARGET" "$QF_ATTR_DISPLAY")
+	else
+		QF_ATTR_DISPLAY="$QF_ATTR_RSC"
+		QF_COUNT=$(query_attr_sum "$QF_TARGET" "${QF_ATTR_RSC}#")
+	fi
+
+	# @COMPAT attributes set < 1.1.17:
+	# If we didn't find any per-operation failcount,
+	# check whether there is a legacy per-resource failcount.
+	if [ "$QF_COUNT" = "0" ]; then
+		QF_COUNT=$(query_single_attr "$QF_TARGET" "$QF_ATTR_RSC")
+		if [ "$QF_COUNT" != "0" ]; then
+			QF_ATTR_DISPLAY="$QF_ATTR_RSC"
+		fi
+	fi
+
+	# Echo result (comparable to crm_attribute, for backward compatibility)
+	if [ -n "$QUIET" ]; then
+		echo $QF_COUNT
+	else
+		echo "scope=status  name=$QF_ATTR_DISPLAY value=$QF_COUNT"
+	fi
+}
+
+clear_failcount() {
+	CF_TARGET="$1"
+	CF_RESOURCE="$2"
+	CF_OPERATION="$3"
+	CF_INTERVAL="$4"
+
+	if [ -n "$CF_OPERATION" ]; then
+		CF_OPERATION="-n $CF_OPERATION -I ${CF_INTERVAL}ms"
+	fi
+	crm_resource $QUIET $VERBOSE --cleanup \
+		-N "$CF_TARGET" -r "$CF_RESOURCE" $CF_OPERATION
+}
+
+QUIET=""
+VERBOSE=""
+
 command=""
-options=""
 resource=""
+operation=""
+interval="0"
 target=$(crm_node -n 2>/dev/null)
+
+SHORTOPTS="qDGQVN:U:v:i:l:r:n:I:"
 
 LONGOPTS_COMMON="help,version,verbose,quiet"
 LONGOPTS_COMMANDS="query,delete"
-LONGOPTS_OTHER="resource:,node:"
+LONGOPTS_OTHER="resource:,node:,operation:,interval:"
 LONGOPTS_COMPAT="delete-attr,get-value,resource-id:,uname:,lifetime:,attr-value:,attr-id:"
 
 LONGOPTS="$LONGOPTS_COMMON,$LONGOPTS_COMMANDS,$LONGOPTS_OTHER,$LONGOPTS_COMPAT"
 
-TEMP=$(getopt -o qDGQVN:U:v:i:l:r: --long $LONGOPTS -n crm_failcount -- "$@")
-if [ $? != 0 ]; then
+TEMP=$(getopt -o $SHORTOPTS --long $LONGOPTS -n crm_failcount -- "$@")
+if [ $? -ne 0 ]; then
 	exit_usage
 fi
 eval set -- "$TEMP" # Quotes around $TEMP are essential
@@ -65,8 +202,12 @@ while true ; do
 			crm_attribute --version
 			exit $?
 			;;
-		-Q|--quiet|-V|--verbose)
-			options="$options $1"
+		-q|-Q|--quiet)
+			QUIET="--quiet"
+			shift
+			;;
+		-V|--verbose)
+			VERBOSE="$VERBOSE $1"
 			shift
 			;;
 		-G|--query|--get-value)
@@ -79,6 +220,14 @@ while true ; do
 			;;
 		-r|--resource|--resource-id)
 			resource="$2"
+			shift 2
+			;;
+		-n|--operation)
+			operation="$2"
+			shift 2
+			;;
+		-I|--interval)
+			interval="$2"
 			shift 2
 			;;
 		-N|--node|-U|--uname)
@@ -111,8 +260,10 @@ done
 [ -n "$resource" ] || exit_usage "resource name required"
 [ -n "$target" ]   || exit_usage "node name required"
 
+interval=$(parse_interval $interval)
+
 if [ "$command" = "--query" ]; then
-	crm_attribute $options $command -N "$target" -n "fail-count-$resource" -t status -d 0
+	query_failcount "$target" "$resource" "$operation" "$interval"
 else
-	crm_resource --cleanup $options -N "$target" -r "$resource"
+	clear_failcount "$target" "$resource" "$operation" "$interval"
 fi

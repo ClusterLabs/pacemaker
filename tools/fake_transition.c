@@ -67,11 +67,10 @@ inject_transient_attr(xmlNode * cib_node, const char *name, const char *value)
     xmlNode *nvp = NULL;
     xmlChar *node_path;
     const char *node_uuid = ID(cib_node);
-    char *nvp_id = crm_concat(name, node_uuid, '-');
 
     node_path = xmlGetNodePath(cib_node);
-    quiet_log("Injecting attribute %s=%s into %s '%s'", name, value, node_path,
-             ID(cib_node));
+    quiet_log(" + Injecting attribute %s=%s into %s '%s'\n",
+              name, value, node_path, ID(cib_node));
     free(node_path);
 
     attrs = first_named_child(cib_node, XML_TAG_TRANSIENT_NODEATTRS);
@@ -87,15 +86,14 @@ inject_transient_attr(xmlNode * cib_node, const char *name, const char *value)
     }
 
     nvp = create_xml_node(container, XML_CIB_TAG_NVPAIR);
-    crm_xml_add(nvp, XML_ATTR_ID, nvp_id);
+    crm_xml_set_id(nvp, "%s-%s", name, node_uuid);
     crm_xml_add(nvp, XML_NVPAIR_ATTR_NAME, name);
     crm_xml_add(nvp, XML_NVPAIR_ATTR_VALUE, value);
-
-    free(nvp_id);
 }
 
 static void
-update_failcounts(xmlNode * cib_node, const char *resource, int interval, int rc)
+update_failcounts(xmlNode * cib_node, const char *resource, const char *task,
+                  int interval, int rc)
 {
     if (rc == 0) {
         return;
@@ -107,11 +105,11 @@ update_failcounts(xmlNode * cib_node, const char *resource, int interval, int rc
         char *name = NULL;
         char *now = crm_itoa(time(NULL));
 
-        name = crm_failcount_name(resource);
+        name = crm_failcount_name(resource, task, interval);
         inject_transient_attr(cib_node, name, "value++");
         free(name);
 
-        name = crm_lastfailure_name(resource);
+        name = crm_lastfailure_name(resource, task, interval);
         inject_transient_attr(cib_node, name, now);
         free(name);
         free(now);
@@ -298,17 +296,18 @@ inject_resource(xmlNode * cib_node, const char *resource, const char *rclass, co
                 "  Please supply the class and type to continue\n", resource, ID(cib_node));
         return NULL;
 
-    } else if (safe_str_neq(rclass, "ocf")
-               && safe_str_neq(rclass, "stonith")
-               && safe_str_neq(rclass, "heartbeat")
-               && safe_str_neq(rclass, "service")
-               && safe_str_neq(rclass, "upstart")
-               && safe_str_neq(rclass, "systemd")
-               && safe_str_neq(rclass, "lsb")) {
+    } else if (safe_str_neq(rclass, PCMK_RESOURCE_CLASS_OCF)
+               && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_STONITH)
+               && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_HB)
+               && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_SERVICE)
+               && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_UPSTART)
+               && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_SYSTEMD)
+               && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_LSB)) {
         fprintf(stderr, "Invalid class for %s: %s\n", resource, rclass);
         return NULL;
 
-    } else if (safe_str_eq(rclass, "ocf") && rprovider == NULL) {
+    } else if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_OCF)
+               && rprovider == NULL) {
         fprintf(stderr, "Please specify the provider for resource %s\n", resource);
         return NULL;
     }
@@ -589,7 +588,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
             cib_node = inject_node_state(cib, node, NULL);
             CRM_ASSERT(cib_node != NULL);
 
-            update_failcounts(cib_node, resource, interval, outcome);
+            update_failcounts(cib_node, resource, task, interval, outcome);
 
             cib_resource = inject_resource(cib_node, resource, rclass, rtype, rprovider);
             CRM_ASSERT(cib_resource != NULL);
@@ -720,7 +719,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
             action->failed = TRUE;
             graph->abort_priority = INFINITY;
             printf("\tPretending action %d failed with rc=%d\n", action->id, op->rc);
-            update_failcounts(cib_node, resource, op->interval, op->rc);
+            update_failcounts(cib_node, resource, op->op_type, op->interval, op->rc);
             free(key);
             break;
         }

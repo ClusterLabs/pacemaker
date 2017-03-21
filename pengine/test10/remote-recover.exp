@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="3" operation="monitor" operation_key="shooter_monitor_60000" on_node="rhel7-alt1" on_node_uuid="1">
         <primitive id="shooter" class="stonith" type="fence_xvm"/>
-        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-alt1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="2" operation="start" operation_key="shooter_start_0" on_node="rhel7-alt1" on_node_uuid="1">
         <primitive id="shooter" class="stonith" type="fence_xvm"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="rhel7-alt1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -25,7 +25,7 @@
     <action_set>
       <rsc_op id="5" operation="monitor" operation_key="rhel7-alt4_monitor_60000" on_node="rhel7-alt1" on_node_uuid="1">
         <primitive id="rhel7-alt4" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_timeout="15000" />
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-alt1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="15000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -38,7 +38,7 @@
     <action_set>
       <rsc_op id="4" operation="start" operation_key="rhel7-alt4_start_0" on_node="rhel7-alt1" on_node_uuid="1">
         <primitive id="rhel7-alt4" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_name="start" CRM_meta_timeout="15000" />
+        <attributes CRM_meta_name="start" CRM_meta_on_node="rhel7-alt1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="15000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -47,7 +47,7 @@
     <action_set>
       <rsc_op id="8" operation="monitor" operation_key="fake_monitor_10000" on_node="rhel7-alt4" on_node_uuid="rhel7-alt4" router_node="rhel7-alt1">
         <primitive id="fake" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-alt4" CRM_meta_on_node_uuid="rhel7-alt4" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -63,7 +63,7 @@
     <action_set>
       <rsc_op id="7" operation="start" operation_key="fake_start_0" on_node="rhel7-alt4" on_node_uuid="rhel7-alt4" router_node="rhel7-alt1">
         <primitive id="fake" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="start" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_name="start" CRM_meta_on_node="rhel7-alt4" CRM_meta_on_node_uuid="rhel7-alt4" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -79,7 +79,7 @@
     <action_set>
       <rsc_op id="6" operation="stop" operation_key="fake_stop_0" on_node="rhel7-alt4" on_node_uuid="rhel7-alt4" router_node="rhel7-alt1">
         <primitive id="fake" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="rhel7-alt4" CRM_meta_on_node_uuid="rhel7-alt4" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>

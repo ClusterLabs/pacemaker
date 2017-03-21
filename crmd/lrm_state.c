@@ -508,14 +508,22 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
         crm_notice("%s requested shutdown of its remote connection",
                    lrm_state->node_name);
 
-        now_s = crm_itoa(now);
-        update_attrd(lrm_state->node_name, XML_CIB_ATTR_SHUTDOWN, now_s, NULL, TRUE);
-        free(now_s);
+        if (!remote_ra_is_in_maintenance(lrm_state)) {
+            now_s = crm_itoa(now);
+            update_attrd(lrm_state->node_name, XML_CIB_ATTR_SHUTDOWN, now_s, NULL, TRUE);
+            free(now_s);
 
-        remote_proxy_ack_shutdown(lrmd);
+            remote_proxy_ack_shutdown(lrmd);
 
-        crm_warn("Reconnection attempts to %s may result in failures that must be cleared",
-                 lrm_state->node_name);
+            crm_warn("Reconnection attempts to %s may result in failures that must be cleared",
+                    lrm_state->node_name);
+        } else {
+            remote_proxy_nack_shutdown(lrmd);
+
+            crm_notice("Remote resource for %s is not managed so no ordered shutdown happening",
+                    lrm_state->node_name);
+        }
+        return;
 
     } else if (safe_str_eq(op, LRMD_IPC_OP_REQUEST) && proxy->is_local) {
         /* this is for the crmd, which we are, so don't try
@@ -703,3 +711,4 @@ lrm_state_unregister_rsc(lrm_state_t * lrm_state,
 
     return ((lrmd_t *) lrm_state->conn)->cmds->unregister_rsc(lrm_state->conn, rsc_id, options);
 }
+

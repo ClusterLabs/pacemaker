@@ -669,7 +669,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
         }
     }
 
-    if (safe_str_eq(rclass, "stonith")) {
+    if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH)) {
         set_bit(data_set->flags, pe_flag_have_stonith_resource);
         set_bit((*rsc)->flags, pe_rsc_fence_device);
     }

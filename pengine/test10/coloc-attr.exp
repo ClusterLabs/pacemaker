@@ -26,7 +26,7 @@
     <action_set>
       <rsc_op id="2" operation="start" operation_key="resource_t11_start_0" on_node="power720-3" on_node_uuid="0e3b1105-0152-4dc3-9dcd-4fb9dbefd64f">
         <primitive id="resource_t11" class="lsb" type="nfsserver"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="power720-3" CRM_meta_on_node_uuid="0e3b1105-0152-4dc3-9dcd-4fb9dbefd64f" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -66,7 +66,7 @@
     <action_set>
       <rsc_op id="7" operation="start" operation_key="resource_t21_start_0" on_node="power720-4" on_node_uuid="1e626dc7-fa07-492e-bb21-8c838bfe7f46">
         <primitive id="resource_t21" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="power720-4" CRM_meta_on_node_uuid="1e626dc7-fa07-492e-bb21-8c838bfe7f46" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>

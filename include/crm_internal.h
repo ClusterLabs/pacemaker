@@ -126,6 +126,7 @@ gboolean check_time(const char *value);
 gboolean check_timer(const char *value);
 gboolean check_boolean(const char *value);
 gboolean check_number(const char *value);
+gboolean check_positive_number(const char *value);
 gboolean check_quorum(const char *value);
 gboolean check_script(const char *value);
 gboolean check_utilization(const char *value);
@@ -212,6 +213,7 @@ int crm_remote_tcp_connect(const char *host, int port);
 int crm_remote_tcp_connect_async(const char *host, int port, int timeout,       /*ms */
                                  int *timer_id, void *userdata, void (*callback) (void *userdata, int sock));
 int crm_remote_accept(int ssock);
+void crm_sockaddr2str(void *sa, char *s);
 
 #  ifdef HAVE_GNUTLS_GNUTLS_H
 /*!
@@ -281,6 +283,9 @@ long crm_read_pidfile(const char *filename);
 #  define F_ATTRD_USER		"attr_user"
 #  define F_ATTRD_WRITER	"attr_writer"
 #  define F_ATTRD_VERSION	"attr_version"
+#  define F_ATTRD_RESOURCE          "attr_resource"
+#  define F_ATTRD_OPERATION         "attr_clear_operation"
+#  define F_ATTRD_INTERVAL          "attr_clear_interval"
 
 /* attrd operations */
 #  define ATTRD_OP_PEER_REMOVE   "peer-remove"
@@ -292,6 +297,7 @@ long crm_read_pidfile(const char *filename);
 #  define ATTRD_OP_FLUSH         "flush"
 #  define ATTRD_OP_SYNC          "sync"
 #  define ATTRD_OP_SYNC_RESPONSE "sync-response"
+#  define ATTRD_OP_CLEAR_FAILURE "clear-failure"
 
 #  if SUPPORT_COROSYNC
 #    if CS_USES_LIBQB
@@ -380,11 +386,13 @@ remote_proxy_t *remote_proxy_new(
 int  remote_proxy_check(lrmd_t *lrmd, GHashTable *hash);
 void remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg);
 void remote_proxy_ack_shutdown(lrmd_t *lrmd);
+void remote_proxy_nack_shutdown(lrmd_t *lrmd);
 
 int  remote_proxy_dispatch(const char *buffer, ssize_t length, gpointer userdata);
 void remote_proxy_disconnected(gpointer data);
 void remote_proxy_free(gpointer data);
 
+void remote_proxy_end_session(remote_proxy_t *proxy);
 void remote_proxy_relay_event(remote_proxy_t *proxy, xmlNode *msg);
 void remote_proxy_relay_response(remote_proxy_t *proxy, xmlNode *msg, int msg_id);
 

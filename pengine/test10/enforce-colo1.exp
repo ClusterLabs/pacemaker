@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="10" operation="stop" operation_key="engine_stop_0" on_node="rhel7-auto3" on_node_uuid="3">
         <primitive id="engine" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="rhel7-auto3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -12,7 +12,7 @@
     <action_set>
       <rsc_op id="12" operation="stop" operation_key="keystone_stop_0" internal_operation_key="keystone:0_stop_0" on_node="rhel7-auto2" on_node_uuid="2">
         <primitive id="keystone" long-id="keystone:0" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="rhel7-auto2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -25,7 +25,7 @@
     <action_set>
       <rsc_op id="13" operation="stop" operation_key="keystone_stop_0" internal_operation_key="keystone:1_stop_0" on_node="rhel7-auto3" on_node_uuid="3">
         <primitive id="keystone" long-id="keystone:1" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="rhel7-auto3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -38,7 +38,7 @@
     <action_set>
       <rsc_op id="14" operation="stop" operation_key="keystone_stop_0" internal_operation_key="keystone:2_stop_0" on_node="rhel7-auto1" on_node_uuid="1">
         <primitive id="keystone" long-id="keystone:2" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="rhel7-auto1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -84,7 +84,7 @@
     <action_set>
       <rsc_op id="19" operation="stop" operation_key="central_stop_0" on_node="rhel7-auto3" on_node_uuid="3">
         <primitive id="central" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="rhel7-auto3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>

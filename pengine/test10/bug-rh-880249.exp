@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="12" operation="start" operation_key="dummystateful_start_0" on_node="18node3" on_node_uuid="3">
         <primitive id="dummystateful" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="18node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -22,7 +22,7 @@
     <action_set>
       <rsc_op id="11" operation="stop" operation_key="dummystateful_stop_0" on_node="18node3" on_node_uuid="3">
         <primitive id="dummystateful" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="18node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -41,7 +41,7 @@
     <action_set>
       <rsc_op id="10" operation="stop" operation_key="dummystateful_stop_0" on_node="18node1" on_node_uuid="1">
         <primitive id="dummystateful" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="18node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -60,7 +60,7 @@
     <action_set>
       <rsc_op id="9" operation="stop" operation_key="dummystateful_stop_0" on_node="18node2" on_node_uuid="2">
         <primitive id="dummystateful" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="18node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -79,7 +79,7 @@
     <action_set>
       <rsc_op id="8" operation="demote" operation_key="dummystateful_demote_0" on_node="18node3" on_node_uuid="3">
         <primitive id="dummystateful" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="18node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -88,7 +88,7 @@
     <action_set>
       <rsc_op id="7" operation="demote" operation_key="dummystateful_demote_0" on_node="18node1" on_node_uuid="1">
         <primitive id="dummystateful" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="18node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -97,7 +97,7 @@
     <action_set>
       <rsc_op id="6" operation="demote" operation_key="dummystateful_demote_0" on_node="18node2" on_node_uuid="2">
         <primitive id="dummystateful" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="18node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>

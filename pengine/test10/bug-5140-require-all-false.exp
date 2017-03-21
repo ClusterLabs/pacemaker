@@ -36,7 +36,7 @@
     <action_set>
       <rsc_op id="2" operation="stop" operation_key="dlm_stop_0" internal_operation_key="dlm:0_stop_0" on_node="hex-2" on_node_uuid="hex-2">
         <primitive id="dlm" long-id="dlm:0" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="true" CRM_meta_timeout="120000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="hex-2" CRM_meta_on_node_uuid="hex-2" CRM_meta_record_pending="true" CRM_meta_timeout="120000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -52,7 +52,7 @@
     <action_set>
       <rsc_op id="3" operation="stop" operation_key="clvmd_stop_0" internal_operation_key="clvmd:0_stop_0" on_node="hex-2" on_node_uuid="hex-2">
         <primitive id="clvmd" long-id="clvmd:0" class="ocf" provider="lvm2" type="clvmd"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="true" CRM_meta_timeout="120000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="hex-2" CRM_meta_on_node_uuid="hex-2" CRM_meta_record_pending="true" CRM_meta_timeout="120000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -68,7 +68,7 @@
     <action_set>
       <rsc_op id="4" operation="stop" operation_key="o2cb_stop_0" internal_operation_key="o2cb:0_stop_0" on_node="hex-2" on_node_uuid="hex-2">
         <primitive id="o2cb" long-id="o2cb:0" class="ocf" provider="ocfs2" type="o2cb"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="true" CRM_meta_timeout="120000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="hex-2" CRM_meta_on_node_uuid="hex-2" CRM_meta_record_pending="true" CRM_meta_timeout="120000" />
       </rsc_op>
     </action_set>
     <inputs>

@@ -825,20 +825,28 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
      * 2. start - a start failure indicates that an active connection does not already
      * exist. The user can set op on-fail=fence if they really want to fence start
      * failures. */
-    } else if (value == NULL &&
-               is_rsc_baremetal_remote_node(action->rsc, data_set) &&
+    } else if (((value == NULL) || !is_set(action->rsc->flags, pe_rsc_managed)) &&
+                (is_rsc_baremetal_remote_node(action->rsc, data_set) &&
                !(safe_str_eq(action->task, CRMD_ACTION_STATUS) && interval == 0) &&
-                (safe_str_neq(action->task, CRMD_ACTION_START))) {
+                (safe_str_neq(action->task, CRMD_ACTION_START)))) {
 
-        if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            value = "fence baremetal remote node (default)";
-        } else {
-            value = "recover baremetal remote node connection (default)";
-        }
-        if (action->rsc->remote_reconnect_interval) {
+        if (!is_set(action->rsc->flags, pe_rsc_managed)) {
+            action->on_fail = action_fail_stop;
             action->fail_role = RSC_ROLE_STOPPED;
+            value = "stop unmanaged baremetal remote node (enforcing default)";
+
+        } else {
+            if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+                value = "fence baremetal remote node (default)";
+            } else {
+                value = "recover baremetal remote node connection (default)";
+            }
+
+            if (action->rsc->remote_reconnect_interval) {
+                action->fail_role = RSC_ROLE_STOPPED;
+            }
+            action->on_fail = action_fail_reset_remote;
         }
-        action->on_fail = action_fail_reset_remote;
 
     } else if (value == NULL && safe_str_eq(action->task, CRMD_ACTION_STOP)) {
         if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
@@ -1100,8 +1108,8 @@ pe_free_action(action_t * action)
     if (action == NULL) {
         return;
     }
-    g_list_free_full(action->actions_before, free);     /* action_warpper_t* */
-    g_list_free_full(action->actions_after, free);      /* action_warpper_t* */
+    g_list_free_full(action->actions_before, free);     /* action_wrapper_t* */
+    g_list_free_full(action->actions_after, free);      /* action_wrapper_t* */
     if (action->extra) {
         g_hash_table_destroy(action->extra);
     }

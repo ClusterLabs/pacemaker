@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <regex.h>
 
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
@@ -34,24 +35,30 @@
 #include <crm/common/ipc.h>
 #include <crm/common/ipcs.h>
 #include <crm/cluster/internal.h>
-#include <crm/common/mainloop.h>
 
 #include <crm/common/xml.h>
 
 #include <crm/attrd.h>
+
+#include <attrd_common.h>
 
 #define OPTARGS	"hV"
 #if SUPPORT_HEARTBEAT
 ll_cluster_t *attrd_cluster_conn;
 #endif
 
-GMainLoop *mainloop = NULL;
 char *attrd_uname = NULL;
 char *attrd_uuid = NULL;
-gboolean need_shutdown = FALSE;
 
 GHashTable *attr_hash = NULL;
 cib_t *cib_conn = NULL;
+
+/* Convenience macro for registering a CIB callback.
+ * Check cib_conn != NULL before using.
+ */
+#define register_cib_callback(call_id, data, fn, free_fn) \
+    cib_conn->cmds->register_callback_full(cib_conn, call_id, 120, FALSE, \
+                                           data, #fn, fn, free_fn)
 
 typedef struct attr_hash_entry_s {
     char *uuid;
@@ -74,6 +81,7 @@ void attrd_local_callback(xmlNode * msg);
 gboolean attrd_timer_callback(void *user_data);
 gboolean attrd_trigger_update(attr_hash_entry_t * hash_entry);
 void attrd_perform_update(attr_hash_entry_t * hash_entry);
+static void update_local_attr(xmlNode *msg, attr_hash_entry_t *hash_entry);
 
 static void
 free_hash_entry(gpointer data)
@@ -92,27 +100,6 @@ free_hash_entry(gpointer data)
     free(entry->stored_value);
     free(entry->user);
     free(entry);
-}
-
-static int32_t
-attrd_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
-{
-    crm_trace("Connection %p", c);
-    if (need_shutdown) {
-        crm_info("Ignoring new client [%d] during shutdown", crm_ipcs_client_pid(c));
-        return -EPERM;
-    }
-
-    if (crm_client_new(c, uid, gid) == NULL) {
-        return -EIO;
-    }
-    return 0;
-}
-
-static void
-attrd_ipc_created(qb_ipcs_connection_t * c)
-{
-    crm_trace("Connection %p", c);
 }
 
 /* Exit code means? */
@@ -141,48 +128,6 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 
     free_xml(msg);
     return 0;
-}
-
-/* Error code means? */
-static int32_t
-attrd_ipc_closed(qb_ipcs_connection_t * c)
-{
-    crm_client_t *client = crm_client_get(c);
-
-    if (client == NULL) {
-        return 0;
-    }
-
-    crm_trace("Connection %p", c);
-    crm_client_destroy(client);
-    return 0;
-}
-
-static void
-attrd_ipc_destroy(qb_ipcs_connection_t * c)
-{
-    crm_trace("Connection %p", c);
-    attrd_ipc_closed(c);
-}
-
-struct qb_ipcs_service_handlers ipc_callbacks = {
-    .connection_accept = attrd_ipc_accept,
-    .connection_created = attrd_ipc_created,
-    .msg_process = attrd_ipc_dispatch,
-    .connection_closed = attrd_ipc_closed,
-    .connection_destroyed = attrd_ipc_destroy
-};
-
-static void
-attrd_shutdown(int nsig)
-{
-    need_shutdown = TRUE;
-    crm_info("Exiting");
-    if (mainloop != NULL && g_main_is_running(mainloop)) {
-        g_main_quit(mainloop);
-    } else {
-        crm_exit(pcmk_ok);
-    }
 }
 
 static void
@@ -283,6 +228,170 @@ find_hash_entry(xmlNode * msg)
     return hash_entry;
 }
 
+/*!
+ * \internal
+ * \brief Clear failure-related attributes for local node
+ *
+ * \param[in] xml  XML of ATTRD_OP_CLEAR_FAILURE request
+ */
+static void
+local_clear_failure(xmlNode *xml)
+{
+    const char *rsc = crm_element_value(xml, F_ATTRD_RESOURCE);
+    const char *what = rsc? rsc : "all resources";
+    const char *op = crm_element_value(xml, F_ATTRD_OPERATION);
+    const char *interval_s = crm_element_value(xml, F_ATTRD_INTERVAL);
+    int interval = crm_get_interval(interval_s);
+    regex_t regex;
+    GHashTableIter iter;
+    attr_hash_entry_t *hash_entry = NULL;
+
+    if (attrd_failure_regex(&regex, rsc, op, interval) != pcmk_ok) {
+        crm_info("Ignoring invalid request to clear %s",
+                 (rsc? rsc : "all resources"));
+        return;
+    }
+    crm_debug("Clearing %s locally", what);
+
+    /* Make sure value is not set, so we delete */
+    if (crm_element_value(xml, F_ATTRD_VALUE)) {
+        crm_xml_replace(xml, F_ATTRD_VALUE, NULL);
+    }
+
+    g_hash_table_iter_init(&iter, attr_hash);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &hash_entry)) {
+        if (regexec(&regex, hash_entry->id, 0, NULL, 0) == 0) {
+            crm_trace("Matched %s when clearing %s", hash_entry->id, what);
+            update_local_attr(xml, hash_entry);
+        }
+    }
+}
+
+static void
+remote_clear_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
+                      void *user_data)
+{
+    if (rc == 0) {
+        crm_debug("Successfully cleared failures using %s", user_data);
+    } else {
+        crm_notice("Failed to clear failures: %s " CRM_XS " call=%d xpath=%s rc=%d",
+                   pcmk_strerror(rc), call_id, user_data, rc);
+    }
+}
+
+/* xpath component to match an id attribute (format takes remote node name) */
+#define XPATH_ID "[@" XML_ATTR_UUID "='%s']"
+
+/* Define the start of an xpath to match a remote node transient attribute
+ * (argument must be either an empty string to match for all remote nodes,
+ * or XPATH_ID to match for a single remote node)
+ */
+#define XPATH_REMOTE_ATTR(x) "/" XML_TAG_CIB "/" XML_CIB_TAG_STATUS \
+    "/" XML_CIB_TAG_STATE "[@" XML_NODE_IS_REMOTE "='true']" x \
+    "/" XML_TAG_TRANSIENT_NODEATTRS "/" XML_TAG_ATTR_SETS "/" XML_CIB_TAG_NVPAIR
+
+/* xpath component to match an attribute name exactly */
+#define XPATH_NAME_IS(x) "@" XML_NVPAIR_ATTR_NAME "='" x "'"
+
+/* xpath component to match an attribute name by prefix */
+#define XPATH_NAME_START(x) "starts-with(@" XML_NVPAIR_ATTR_NAME ", '" x "')"
+
+/* xpath ending to clear all resources */
+#define XPATH_CLEAR_ALL \
+    "[" XPATH_NAME_START(CRM_FAIL_COUNT_PREFIX "-") \
+    " or " XPATH_NAME_START(CRM_LAST_FAILURE_PREFIX "-") "]"
+
+/* xpath ending to clear all operations for one resource
+ * (format takes resource name x 4)
+ *
+ * @COMPAT attributes set < 1.1.17:
+ * also match older attributes that do not have the operation part
+ */
+#define XPATH_CLEAR_ONE \
+    "[" XPATH_NAME_IS(CRM_FAIL_COUNT_PREFIX "-%s") \
+    " or " XPATH_NAME_IS(CRM_LAST_FAILURE_PREFIX "-%s") \
+    " or " XPATH_NAME_START(CRM_FAIL_COUNT_PREFIX "-%s#") \
+    " or " XPATH_NAME_START(CRM_LAST_FAILURE_PREFIX "-%s#") "]"
+
+/* xpath ending to clear one operation for one resource
+ * (format takes resource name x 2, resource name + operation + interval x 2)
+ *
+ * @COMPAT attributes set < 1.1.17:
+ * also match older attributes that do not have the operation part
+ */
+#define XPATH_CLEAR_OP \
+    "[" XPATH_NAME_IS(CRM_FAIL_COUNT_PREFIX "-%s") \
+    " or " XPATH_NAME_IS(CRM_LAST_FAILURE_PREFIX "-%s") \
+    " or " XPATH_NAME_IS(CRM_FAIL_COUNT_PREFIX "-%s#%s_%d") \
+    " or " XPATH_NAME_IS(CRM_LAST_FAILURE_PREFIX "-%s#%s_%d") "]"
+
+/*!
+ * \internal
+ * \brief Clear failure-related attributes for Pacemaker Remote node(s)
+ *
+ * \param[in] xml  XML of ATTRD_OP_CLEAR_FAILURE request
+ */
+static void
+remote_clear_failure(xmlNode *xml)
+{
+    const char *rsc = crm_element_value(xml, F_ATTRD_RESOURCE);
+    const char *host = crm_element_value(xml, F_ATTRD_HOST);
+    const char *op = crm_element_value(xml, F_ATTRD_OPERATION);
+    int rc = pcmk_ok;
+    char *xpath;
+
+    if (cib_conn == NULL) {
+        crm_info("Ignoring request to clear %s on %s because not connected to CIB",
+                 (rsc? rsc : "all resources"),
+                 (host? host: "all remote nodes"));
+        return;
+    }
+
+    /* Build an xpath to clear appropriate attributes */
+
+    if (rsc == NULL) {
+        /* No resource specified, clear all resources */
+
+        if (host == NULL) {
+            xpath = crm_strdup_printf(XPATH_REMOTE_ATTR("") XPATH_CLEAR_ALL);
+        } else {
+            xpath = crm_strdup_printf(XPATH_REMOTE_ATTR(XPATH_ID) XPATH_CLEAR_ALL,
+                                      host);
+        }
+
+    } else if (op == NULL) {
+        /* Resource but no operation specified, clear all operations */
+
+        if (host == NULL) {
+            xpath = crm_strdup_printf(XPATH_REMOTE_ATTR("") XPATH_CLEAR_ONE,
+                                      rsc, rsc, rsc, rsc);
+        } else {
+            xpath = crm_strdup_printf(XPATH_REMOTE_ATTR(XPATH_ID) XPATH_CLEAR_ONE,
+                                      host, rsc, rsc, rsc, rsc);
+        }
+
+    } else {
+        /* Resource and operation specified */
+
+        const char *interval_s = crm_element_value(xml, F_ATTRD_INTERVAL);
+        int interval = crm_get_interval(interval_s);
+
+        if (host == NULL) {
+            xpath = crm_strdup_printf(XPATH_REMOTE_ATTR("") XPATH_CLEAR_OP,
+                                      rsc, rsc, rsc, op, interval,
+                                      rsc, op, interval);
+        } else {
+            xpath = crm_strdup_printf(XPATH_REMOTE_ATTR(XPATH_ID) XPATH_CLEAR_OP,
+                                      host, rsc, rsc, rsc, op, interval,
+                                      rsc, op, interval);
+        }
+    }
+
+    crm_trace("Clearing attributes matching %s", xpath);
+    rc = cib_conn->cmds->delete(cib_conn, xpath, NULL, cib_xpath|cib_multiple);
+    register_cib_callback(rc, xpath, remote_clear_callback, free);
+}
+
 static void
 process_xml_request(xmlNode *xml)
 {
@@ -293,7 +402,7 @@ process_xml_request(xmlNode *xml)
     const char *ignore = crm_element_value(xml, F_ATTRD_IGNORE_LOCALLY);
 
     if (host && safe_str_eq(host, attrd_uname)) {
-        crm_info("Update relayed from %s", from);
+        crm_info("%s relayed from %s", (op? op : "Request"), from);
         attrd_local_callback(xml);
 
     } else if (safe_str_eq(op, ATTRD_OP_PEER_REMOVE)) {
@@ -301,6 +410,9 @@ process_xml_request(xmlNode *xml)
         crm_debug("Removing %s from peer caches for %s", host, from);
         crm_remote_peer_cache_remove(host);
         reap_crm_member(0, host);
+
+    } else if (safe_str_eq(op, ATTRD_OP_CLEAR_FAILURE)) {
+        local_clear_failure(xml);
 
     } else if ((ignore == NULL) || safe_str_neq(from, attrd_uname)) {
         crm_trace("%s message from %s", op, from);
@@ -315,15 +427,15 @@ static void
 attrd_ha_connection_destroy(gpointer user_data)
 {
     crm_trace("Invoked");
-    if (need_shutdown) {
+    if (attrd_shutting_down()) {
         /* we signed out, so this is expected */
         crm_info("Heartbeat disconnection complete");
         return;
     }
 
     crm_crit("Lost connection to heartbeat service!");
-    if (mainloop != NULL && g_main_is_running(mainloop)) {
-        g_main_quit(mainloop);
+    if (attrd_mainloop_running()) {
+        attrd_quit_mainloop();
         return;
     }
     crm_exit(pcmk_ok);
@@ -374,15 +486,15 @@ attrd_cs_dispatch(cpg_handle_t handle,
 static void
 attrd_cs_destroy(gpointer unused)
 {
-    if (need_shutdown) {
+    if (attrd_shutting_down()) {
         /* we signed out, so this is expected */
         crm_info("Corosync disconnection complete");
         return;
     }
 
     crm_crit("Lost connection to Corosync service!");
-    if (mainloop != NULL && g_main_is_running(mainloop)) {
-        g_main_quit(mainloop);
+    if (attrd_mainloop_running()) {
+        attrd_quit_mainloop();
         return;
     }
     crm_exit(EINVAL);
@@ -396,7 +508,7 @@ attrd_cib_connection_destroy(gpointer user_data)
 
     conn->cmds->signoff(conn);  /* Ensure IPC is cleaned up */
 
-    if (need_shutdown) {
+    if (attrd_shutting_down()) {
         crm_info("Connection to the CIB terminated...");
 
     } else {
@@ -574,12 +686,12 @@ main(int argc, char **argv)
     crm_info("Cluster connection active");
 
     if (was_err == FALSE) {
-        attrd_ipc_server_init(&ipcs, &ipc_callbacks);
+        attrd_init_ipc(&ipcs, attrd_ipc_dispatch);
     }
 
     crm_info("Accepting attribute updates");
 
-    mainloop = g_main_new(FALSE);
+    attrd_init_mainloop();
 
     if (0 == g_timeout_add_full(G_PRIORITY_LOW + 1, 5000, cib_connect, NULL, NULL)) {
         crm_info("Adding timer failed");
@@ -592,7 +704,7 @@ main(int argc, char **argv)
     }
 
     crm_notice("Starting mainloop...");
-    g_main_run(mainloop);
+    attrd_run_mainloop();
     crm_notice("Exiting...");
 
 #if SUPPORT_HEARTBEAT
@@ -756,15 +868,9 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
     if (hash_entry->value != NULL) {
         data->value = strdup(hash_entry->value);
     }
-    cib_conn->cmds->register_callback_full(cib_conn, rc, 120, FALSE, data,
-                                           "attrd_cib_callback",
-                                           attrd_cib_callback,
-                                           free_attrd_callback);
+    register_cib_callback(rc, data, attrd_cib_callback, free_attrd_callback);
     return;
 }
-
-/* strlen("value") */
-#define plus_plus_len (5)
 
 /*!
  * \internal
@@ -778,29 +884,10 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
 static char *
 expand_attr_value(const char *value, const char *old_value)
 {
-    int value_len = strlen(value);
     char *expanded = NULL;
 
-    if ((value_len >= (plus_plus_len + 2))
-        && (value[plus_plus_len] == '+')
-        && ((value[plus_plus_len + 1] == '+')
-            || (value[plus_plus_len + 1] == '='))) {
-
-        int offset = 1;
-        int int_value = char2score(old_value);
-
-        if (value[plus_plus_len + 1] != '+') {
-            const char *offset_s = value + (plus_plus_len + 2);
-
-            offset = char2score(offset_s);
-        }
-        int_value += offset;
-
-        if (int_value > INFINITY) {
-            int_value = INFINITY;
-        }
-
-        expanded = crm_itoa(int_value);
+    if (attrd_value_needs_expansion(value)) {
+        expanded = crm_itoa(attrd_expand_value(value, old_value));
     }
     return expanded;
 }
@@ -826,7 +913,8 @@ update_local_attr(xmlNode *msg, attr_hash_entry_t *hash_entry)
         }
     }
 
-    crm_debug("Supplied: %s, Current: %s, Stored: %s",
+    crm_debug("Request to update %s (%s) to %s from %s (stored: %s)",
+              hash_entry->id, (hash_entry->uuid? hash_entry->uuid : "no uuid"),
               value, hash_entry->value, hash_entry->stored_value);
 
     if (safe_str_eq(value, hash_entry->value)
@@ -864,6 +952,129 @@ update_local_attr(xmlNode *msg, attr_hash_entry_t *hash_entry)
     }
 }
 
+/*!
+ * \internal
+ * \brief Log the result of a CIB operation for a remote attribute
+ *
+ * \param[in] msg     ignored
+ * \param[in] id      CIB operation ID
+ * \param[in] rc      CIB operation result
+ * \param[in] output  ignored
+ * \param[in] data    User-friendly string describing operation
+ */
+static void
+remote_attr_callback(xmlNode *msg, int id, int rc, xmlNode *output, void *data)
+{
+    if (rc == pcmk_ok) {
+        crm_debug("%s succeeded " CRM_XS " call=%d", data, id);
+    } else {
+        crm_notice("%s failed: %s " CRM_XS " call=%d rc=%d",
+                   data, pcmk_strerror(rc), id, rc);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Update a Pacemaker Remote node attribute via CIB only
+ *
+ * \param[in] host       Pacemaker Remote node name
+ * \param[in] name       Attribute name
+ * \param[in] value      New attribute value
+ * \param[in] section    CIB section to update (defaults to status if NULL)
+ * \param[in] user_name  User to perform operation as
+ *
+ * \note Legacy attrd does not track remote node attributes, so such requests
+ *       are only sent to the CIB. This means that dampening is ignored, and
+ *       updates for the same attribute submitted to different nodes cannot be
+ *       reliably ordered. This is not ideal, but allows remote nodes to
+ *       be supported, and should be acceptable in practice.
+ */
+static void
+update_remote_attr(const char *host, const char *name, const char *value,
+                   const char *section, const char *user_name)
+{
+    int rc = pcmk_ok;
+    char *desc;
+
+    if (value == NULL) {
+        desc = crm_strdup_printf("Delete of %s in %s for %s",
+                                 name, section, host);
+    } else {
+        desc = crm_strdup_printf("Update of %s=%s in %s for %s",
+                                 name, value, section, host);
+    }
+
+    if (name == NULL) {
+        rc = -EINVAL;
+    } else if (cib_conn == NULL) {
+        rc = -ENOTCONN;
+    }
+    if (rc != pcmk_ok) {
+        remote_attr_callback(NULL, rc, rc, NULL, desc);
+        free(desc);
+        return;
+    }
+
+    if (value == NULL) {
+        rc = delete_attr_delegate(cib_conn, cib_none, section,
+                                  host, NULL, NULL, NULL, name, NULL,
+                                  FALSE, user_name);
+    } else {
+        rc = update_attr_delegate(cib_conn, cib_none, section,
+                                  host, NULL, NULL, NULL, name, value,
+                                  FALSE, user_name, "remote");
+    }
+    crm_trace("%s submitted as CIB call %d", desc, rc);
+    register_cib_callback(rc, desc, remote_attr_callback, free);
+}
+
+/*!
+ * \internal
+ * \brief Handle a client request to clear failures
+ *
+ * \param[in] msg  XML of request
+ *
+ * \note Handling is according to the host specified in the request:
+ *       NULL: Relay to all cluster nodes (which do local_clear_failure())
+ *          and also handle all remote nodes here, using remote_clear_failure();
+ *       Our uname: Handle here, using local_clear_failure();
+ *       Known peer: Relay to that peer, which (via process_xml_message() then
+ *          attrd_local_callback()) comes back here as previous case;
+ *       Unknown peer: Handle here as remote node, using remote_clear_failure()
+ */
+static void
+attrd_client_clear_failure(xmlNode *msg)
+{
+    const char *host = crm_element_value(msg, F_ATTRD_HOST);
+
+    if (host == NULL) {
+        /* Clear failure on all cluster nodes */
+        crm_notice("Broadcasting request to clear failure on all hosts");
+        send_cluster_message(NULL, crm_msg_attrd, msg, FALSE);
+
+        /* Clear failure on all remote nodes */
+        remote_clear_failure(msg);
+
+    } else if (safe_str_eq(host, attrd_uname)) {
+        local_clear_failure(msg);
+
+    } else {
+        int is_remote = FALSE;
+        crm_node_t *peer = crm_find_peer(0, host);
+
+        crm_element_value_int(msg, F_ATTRD_IS_REMOTE, &is_remote);
+
+        if (is_remote || (peer == NULL)) {
+            /* If request is not for a known cluster node, assume remote */
+            remote_clear_failure(msg);
+        } else {
+            /* Relay request to proper node */
+            crm_notice("Relaying request to clear failure to %s", host);
+            send_cluster_message(peer, crm_msg_attrd, msg, FALSE);
+        }
+    }
+}
+
 void
 attrd_local_callback(xmlNode * msg)
 {
@@ -871,8 +1082,12 @@ attrd_local_callback(xmlNode * msg)
     const char *from = crm_element_value(msg, F_ORIG);
     const char *op = crm_element_value(msg, F_ATTRD_TASK);
     const char *attr = crm_element_value(msg, F_ATTRD_ATTRIBUTE);
+    const char *pattern = crm_element_value(msg, F_ATTRD_REGEX);
     const char *value = crm_element_value(msg, F_ATTRD_VALUE);
     const char *host = crm_element_value(msg, F_ATTRD_HOST);
+    int is_remote = FALSE;
+
+    crm_element_value_int(msg, F_ATTRD_IS_REMOTE, &is_remote);
 
     if (safe_str_eq(op, ATTRD_OP_REFRESH)) {
         crm_notice("Sending full refresh (origin=%s)", from);
@@ -886,22 +1101,76 @@ attrd_local_callback(xmlNode * msg)
         }
         return;
 
+    } else if (safe_str_eq(op, ATTRD_OP_CLEAR_FAILURE)) {
+        attrd_client_clear_failure(msg);
+        return;
+
     } else if (op && safe_str_neq(op, ATTRD_OP_UPDATE)) {
         crm_notice("Ignoring unsupported %s request from %s", op, from);
         return;
     }
 
+    /* Handle requests for Pacemaker Remote nodes specially */
+    if (host && is_remote) {
+        const char *section = crm_element_value(msg, F_ATTRD_SECTION);
+        const char *user_name = crm_element_value(msg, F_ATTRD_USER);
+
+        if (section == NULL) {
+            section = XML_CIB_TAG_STATUS;
+        }
+        if ((attr == NULL) && (pattern != NULL)) {
+            /* Attribute(s) specified by regular expression */
+            /* @TODO query, iterate and update_remote_attr() for matches? */
+            crm_notice("Update of %s for %s failed: regular expressions "
+                       "are not supported with Pacemaker Remote nodes",
+                       pattern, host);
+        } else {
+            /* Single attribute specified by exact name */
+            update_remote_attr(host, attr, value, section, user_name);
+        }
+        return;
+    }
+
+    /* Redirect requests for another cluster node to that node */
     if (host != NULL && safe_str_neq(host, attrd_uname)) {
         send_cluster_message(crm_get_peer(0, host), crm_msg_attrd, msg, FALSE);
         return;
     }
 
-    crm_debug("%s message from %s: %s=%s", op, from, attr, crm_str(value));
-    hash_entry = find_hash_entry(msg);
-    if (hash_entry == NULL) {
-        return;
+    if (attr != NULL) {
+        /* Single attribute specified by exact name */
+        crm_debug("%s message from %s: %s=%s", op, from, attr, crm_str(value));
+        hash_entry = find_hash_entry(msg);
+        if (hash_entry != NULL) {
+            update_local_attr(msg, hash_entry);
+        }
+
+    } else if (pattern != NULL) {
+        /* Attribute(s) specified by regular expression */
+        regex_t regex;
+        GHashTableIter iter;
+
+        if (regcomp(&regex, pattern, REG_EXTENDED|REG_NOSUB)) {
+            crm_err("Update from %s failed: invalid pattern %s",
+                    from, pattern);
+            return;
+        }
+
+        crm_debug("%s message from %s: %s=%s",
+                  op, from, pattern, crm_str(value));
+        g_hash_table_iter_init(&iter, attr_hash);
+        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &hash_entry)) {
+            int rc = regexec(&regex, hash_entry->id, 0, NULL, 0);
+
+            if (rc == 0) {
+                crm_trace("Attribute %s matches %s", hash_entry->id, pattern);
+                update_local_attr(msg, hash_entry);
+            }
+        }
+
+    } else {
+        crm_info("Ignoring message with no attribute name or expression");
     }
-    update_local_attr(msg, hash_entry);
 }
 
 gboolean

@@ -136,14 +136,14 @@ native_unpack(resource_t * rsc, pe_working_set_t * data_set)
 
     if (is_set(rsc->flags, pe_rsc_unique) && rsc->parent) {
 
-        if (safe_str_eq(class, "lsb")) {
+        if (safe_str_eq(class, PCMK_RESOURCE_CLASS_LSB)) {
             resource_t *top = uber_parent(rsc);
 
             force_non_unique_clone(top, rsc->id, data_set);
         }
     }
 
-    if (safe_str_eq(class, "ocf") == FALSE) {
+    if (safe_str_eq(class, PCMK_RESOURCE_CLASS_OCF) == FALSE) {
         const char *stateful = g_hash_table_lookup(parent->meta, "stateful");
 
         if (safe_str_eq(stateful, XML_BOOLEAN_TRUE)) {
@@ -529,7 +529,7 @@ common_print(resource_t * rsc, const char *pre_text, const char *name, node_t *n
     }
     offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", name);
     offset += snprintf(buffer + offset, LINE_MAX - offset, "\t(%s", class);
-    if (safe_str_eq(class, "ocf")) {
+    if (safe_str_eq(class, PCMK_RESOURCE_CLASS_OCF)) {
         const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
         offset += snprintf(buffer + offset, LINE_MAX - offset, "::%s", prov);
     }
@@ -812,7 +812,7 @@ get_rscs_brief(GListPtr rsc_list, GHashTable * rsc_table, GHashTable * active_ta
         }
 
         offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", class);
-        if (safe_str_eq(class, "ocf")) {
+        if (safe_str_eq(class, PCMK_RESOURCE_CLASS_OCF)) {
             const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
             offset += snprintf(buffer + offset, LINE_MAX - offset, "::%s", prov);
         }

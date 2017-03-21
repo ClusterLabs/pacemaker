@@ -62,6 +62,9 @@ typedef struct crm_action_s {
 
 } crm_action_t;
 
+/* @COMPAT: This enum has deprecated. It has apparently never been used in a
+ * Pacemaker release, but it is kept for API backward compatibility.
+ */
 enum timer_reason {
     timeout_action,
     timeout_action_warn,
@@ -71,7 +74,7 @@ enum timer_reason {
 struct te_timer_s {
     int source_id;
     int timeout;
-    enum timer_reason reason;
+    enum timer_reason reason; /* @COMPAT: unused, API backward compatibility */
     crm_action_t *action;
 };
 

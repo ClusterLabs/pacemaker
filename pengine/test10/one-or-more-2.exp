@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="7" operation="start" operation_key="A_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="A" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="fc16-builder" CRM_meta_on_node_uuid="fc16-builder" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="3" operation="monitor" operation_key="A_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="A" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="fc16-builder" CRM_meta_on_node_uuid="fc16-builder" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -25,7 +25,7 @@
     <action_set>
       <rsc_op id="4" operation="monitor" operation_key="B_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="B" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="fc16-builder" CRM_meta_on_node_uuid="fc16-builder" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -34,7 +34,7 @@
     <action_set>
       <rsc_op id="8" operation="start" operation_key="C_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="C" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="fc16-builder" CRM_meta_on_node_uuid="fc16-builder" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -50,7 +50,7 @@
     <action_set>
       <rsc_op id="5" operation="monitor" operation_key="C_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="C" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="fc16-builder" CRM_meta_on_node_uuid="fc16-builder" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -59,7 +59,7 @@
     <action_set>
       <rsc_op id="9" operation="start" operation_key="D_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="D" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="fc16-builder" CRM_meta_on_node_uuid="fc16-builder" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -75,7 +75,7 @@
     <action_set>
       <rsc_op id="6" operation="monitor" operation_key="D_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="D" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="fc16-builder" CRM_meta_on_node_uuid="fc16-builder" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>

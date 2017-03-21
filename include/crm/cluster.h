@@ -235,4 +235,18 @@ char *pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid,
                         uint32_t *kind, const char **from);
 #  endif
 
+static inline const char *
+crm_join_phase_str(enum crm_join_phase phase)
+{
+    switch (phase) {
+        case crm_join_nack:         return "nack";
+        case crm_join_none:         return "none";
+        case crm_join_welcomed:     return "welcomed";
+        case crm_join_integrated:   return "integrated";
+        case crm_join_finalized:    return "finalized";
+        case crm_join_confirmed:    return "confirmed";
+    }
+    return "invalid";
+}
+
 #endif

@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <crm_event id="89" operation="do_shutdown" operation_key="do_shutdown-pcmk-2" on_node="pcmk-2" on_node_uuid="pcmk-2">
-        <attributes CRM_meta_op_no_wait="true" />
+        <attributes CRM_meta_on_node="pcmk-2" CRM_meta_on_node_uuid="pcmk-2" CRM_meta_op_no_wait="true" />
         <downed>
           <node id="pcmk-2"/>
         </downed>
@@ -13,7 +13,7 @@
   <synapse id="1">
     <action_set>
       <crm_event id="88" operation="do_shutdown" operation_key="do_shutdown-pcmk-1" on_node="pcmk-1" on_node_uuid="pcmk-1">
-        <attributes CRM_meta_op_no_wait="true" />
+        <attributes CRM_meta_on_node="pcmk-1" CRM_meta_on_node_uuid="pcmk-1" CRM_meta_op_no_wait="true" />
         <downed>
           <node id="pcmk-1"/>
         </downed>

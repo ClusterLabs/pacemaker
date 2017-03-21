@@ -548,12 +548,9 @@ corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode * xml
             any = TRUE;
 
             if (xml_parent) {
-                char buffer[64];
                 xmlNode *node = create_xml_node(xml_parent, XML_CIB_TAG_NODE);
 
-                if(snprintf(buffer, 63, "%u", nodeid) > 0) {
-                    crm_xml_add(node, XML_ATTR_ID, buffer);
-                }
+                crm_xml_set_id(node, "%u", nodeid);
                 crm_xml_add(node, XML_ATTR_UNAME, name);
                 if (force_member) {
                     crm_xml_add(node, XML_ATTR_TYPE, CRM_NODE_MEMBER);

@@ -59,6 +59,21 @@ remote_proxy_ack_shutdown(lrmd_t *lrmd)
     free_xml(msg);
 }
 
+/*!
+ * \brief We're not gonna shutdown as response to
+ *        a remote proxy shutdown request.
+ *
+ * \param[in] lrmd  Connection to proxy
+ */
+void
+remote_proxy_nack_shutdown(lrmd_t *lrmd)
+{
+    xmlNode *msg = create_xml_node(NULL, T_LRMD_IPC_PROXY);
+    crm_xml_add(msg, F_LRMD_IPC_OP, LRMD_IPC_OP_SHUTDOWN_NACK);
+    lrmd_internal_proxy_send(lrmd, msg);
+    free_xml(msg);
+}
+
 void
 remote_proxy_relay_event(remote_proxy_t *proxy, xmlNode *msg)
 {
@@ -85,7 +100,7 @@ remote_proxy_relay_response(remote_proxy_t *proxy, xmlNode *msg, int msg_id)
     free_xml(response);
 }
 
-static void
+void
 remote_proxy_end_session(remote_proxy_t *proxy)
 {
     if (proxy == NULL) {

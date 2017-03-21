@@ -69,7 +69,7 @@ cli_resource_print_cts(resource_t * rsc)
     const char *rprov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
     const char *rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
-    if (safe_str_eq(rclass, "stonith")) {
+    if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH)) {
         xmlNode *op = NULL;
 
         needs_quorum = FALSE;

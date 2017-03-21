@@ -19,6 +19,9 @@
 ## Upstream commit (or git tag, such as "Pacemaker-" plus the
 ## {pcmkversion} macro for an official release) to use for this package
 %global commit HEAD
+## Since git v2.11, the extent of abbreviation is autoscaled by default
+## (used to be constant of 7), so we need to convey it for non-tags, too.
+%global commit_abbrev 7
 
 
 # Define globals for convenient use later
@@ -30,7 +33,7 @@
 ## Short version of git commit
 %define shortcommit %(c=%{commit}; case ${c} in
                       Pacemaker-*%{rparen} echo ${c:10};;
-                      *%{rparen} echo ${c:0:7};; esac)
+                      *%{rparen} echo ${c:0:%{commit_abbrev}};; esac)
 
 ## Whether this is a tagged release
 %define tag_release %([ %{commit} != Pacemaker-%{shortcommit} ]; echo $?)
@@ -187,7 +190,9 @@ BuildRequires: coreutils findutils grep sed
 
 # Required for core functionality
 BuildRequires: automake autoconf libtool pkgconfig libtool-ltdl-devel
-BuildRequires: pkgconfig(glib-2.0) libxml2-devel libxslt-devel libuuid-devel
+## version lower bound for: G_GNUC_INTERNAL
+BuildRequires: pkgconfig(glib-2.0) >= 2.6
+BuildRequires: libxml2-devel libxslt-devel libuuid-devel
 BuildRequires: bzip2-devel pam-devel
 
 # Required for agent_config.h which specifies the correct scratch directory
