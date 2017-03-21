@@ -2827,7 +2827,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
     if(is_set(rsc->flags, pe_rsc_fence_device) && is_set(data_set->flags, pe_flag_enable_unfencing)) {
         top = rsc;
 
-    } else if (top->variant < pe_clone) {
+    } else if (pe_rsc_is_clone(top) == FALSE) {
         top = rsc;
 
     } else {
@@ -3221,7 +3221,7 @@ native_append_meta(resource_t * rsc, xmlNode * xml)
 
         /* instance name for isolated environment */
         name = crm_meta_name(XML_RSC_ATTR_ISOLATION_INSTANCE);
-        if (iso_parent->variant >= pe_clone) { 
+        if (pe_rsc_is_clone(iso_parent)) { 
             /* if isolation is set at the clone/master level, we have to 
              * give this resource the unique isolation instance associated
              * with the clone child (last_parent)*/

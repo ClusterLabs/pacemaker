@@ -620,7 +620,7 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
         GListPtr gIter = NULL;
         for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
             cib_device_update(gIter->data, data_set);
-            if(rsc->variant == pe_clone || rsc->variant == pe_master) {
+            if(pe_rsc_is_clone(rsc)) {
                 crm_trace("Only processing one copy of the clone %s", rsc->id);
                 break;
             }

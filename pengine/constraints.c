@@ -316,13 +316,13 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         crm_config_err("Constraint %s: no resource found for name '%s'", id, id_first);
         return FALSE;
 
-    } else if (instance_then && rsc_then->variant < pe_clone) {
+    } else if (instance_then && pe_rsc_is_clone(rsc_then) == FALSE) {
         crm_config_err("Invalid constraint '%s':"
                        " Resource '%s' is not a clone but instance %s was requested",
                        id, id_then, instance_then);
         return FALSE;
 
-    } else if (instance_first && rsc_first->variant < pe_clone) {
+    } else if (instance_first && pe_rsc_is_clone(rsc_first) == FALSE) {
         crm_config_err("Invalid constraint '%s':"
                        " Resource '%s' is not a clone but instance %s was requested",
                        id, id_first, instance_first);
@@ -350,11 +350,11 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     require_all_s = crm_element_value(xml_obj, "require-all");
     if (require_all_s
         && crm_is_true(require_all_s) == FALSE
-        && rsc_first->variant >= pe_clone) {
+        && pe_rsc_is_clone(rsc_first)) {
 
         /* require-all=false means only one instance of the clone is required */
         min_required_before = 1;
-    } else if (rsc_first->variant >= pe_clone) {
+    } else if (pe_rsc_is_clone(rsc_first)) {
         const char *min_clones_s = g_hash_table_lookup(rsc_first->meta, XML_RSC_ATTR_INCARNATION_MIN);
         if (min_clones_s) {
             /* if clone min is set, we require at a minimum X number of instances
@@ -2343,13 +2343,13 @@ unpack_simple_colocation(xmlNode * xml_obj, pe_working_set_t * data_set)
         crm_config_err("Invalid constraint '%s': No resource named '%s'", id, id_rh);
         return FALSE;
 
-    } else if (instance_lh && rsc_lh->variant < pe_clone) {
+    } else if (instance_lh && pe_rsc_is_clone(rsc_lh) == FALSE) {
         crm_config_err
             ("Invalid constraint '%s': Resource '%s' is not a clone but instance %s was requested",
              id, id_lh, instance_lh);
         return FALSE;
 
-    } else if (instance_rh && rsc_rh->variant < pe_clone) {
+    } else if (instance_rh && pe_rsc_is_clone(rsc_rh) == FALSE) {
         crm_config_err
             ("Invalid constraint '%s': Resource '%s' is not a clone but instance %s was requested",
              id, id_rh, instance_rh);
@@ -2721,7 +2721,7 @@ unpack_simple_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
         crm_config_err("Invalid constraint '%s': No resource named '%s'", id, id_lh);
         return FALSE;
 
-    } else if (instance_lh && rsc_lh->variant < pe_clone) {
+    } else if (instance_lh && pe_rsc_is_clone(rsc_lh) == FALSE) {
         crm_config_err
             ("Invalid constraint '%s': Resource '%s' is not a clone but instance %s was requested",
              id, id_lh, instance_lh);

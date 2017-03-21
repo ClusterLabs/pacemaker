@@ -47,7 +47,7 @@ mark_as_orphan(resource_t * rsc)
 void
 force_non_unique_clone(resource_t * rsc, const char *rid, pe_working_set_t * data_set)
 {
-    if (rsc->variant == pe_clone || rsc->variant == pe_master) {
+    if (pe_rsc_is_clone(rsc)) {
         clone_variant_data_t *clone_data = NULL;
 
         get_clone_variant_data(clone_data, rsc);

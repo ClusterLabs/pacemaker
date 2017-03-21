@@ -69,20 +69,6 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      group_append_meta,
      },
     {
-     container_merge_weights,
-     container_color,
-     container_create_actions,
-     container_create_probe,
-     container_internal_constraints,
-     container_rsc_colocation_lh,
-     container_rsc_colocation_rh,
-     container_rsc_location,
-     container_action_flags,
-     container_update_actions,
-     container_expand,
-     container_append_meta,
-     },
-    {
      clone_merge_weights,
      clone_color,
      clone_create_actions,
@@ -109,6 +95,20 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      clone_update_actions,
      clone_expand,
      master_append_meta,
+     },
+    {
+     container_merge_weights,
+     container_color,
+     container_create_actions,
+     container_create_probe,
+     container_internal_constraints,
+     container_rsc_colocation_lh,
+     container_rsc_colocation_rh,
+     container_rsc_location,
+     container_action_flags,
+     container_update_actions,
+     container_expand,
+     container_append_meta,
      }
 };
 
@@ -389,7 +389,7 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
     if (is_set(rsc->flags, pe_rsc_orphan)) {
         resource_t *parent = uber_parent(rsc);
         if(parent == NULL
-           || parent->variant < pe_clone
+           || pe_rsc_is_clone(parent) == FALSE
            || is_set(parent->flags, pe_rsc_unique)) {
             pe_rsc_trace(rsc, "Skipping param check for %s and deleting: orphan", rsc->id);
             DeleteRsc(rsc, node, FALSE, data_set);
@@ -2022,7 +2022,7 @@ order_probes(pe_working_set_t * data_set)
                 crm_trace("Same parent %s for %s", first_rsc->id, start->uuid);
                 continue;
 
-            } else if(FALSE && uber_parent(first_rsc)->variant < pe_clone) {
+            } else if(FALSE && pe_rsc_is_clone(uber_parent(first_rsc)) == FALSE) {
                 crm_trace("Not a clone %s for %s", first_rsc->id, start->uuid);
                 continue;
             }

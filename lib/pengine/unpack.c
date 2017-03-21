@@ -1692,7 +1692,7 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
     gboolean skip_inactive = FALSE;
 
     CRM_ASSERT(parent != NULL);
-    CRM_ASSERT(parent->variant == pe_clone || parent->variant == pe_master);
+    CRM_ASSERT(pe_rsc_is_clone(parent));
     CRM_ASSERT(is_not_set(parent->flags, pe_rsc_unique));
 
     /* Find an instance active (or partially active for grouped clones) on the specified node */
@@ -1815,7 +1815,7 @@ unpack_find_resource(pe_working_set_t * data_set, node_t * node, const char *rsc
     if(parent && parent->parent) {
         rsc = find_container_child(rsc_id, rsc, node);
 
-    } else if (parent && parent->variant >= pe_clone) {
+    } else if (pe_rsc_is_clone(parent)) {
         if (is_not_set(parent->flags, pe_rsc_unique)) {
             char *base = clone_strip(rsc_id);
 
@@ -2721,7 +2721,7 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
         if (fail_rsc->parent) {
             resource_t *parent = uber_parent(fail_rsc);
 
-            if ((parent->variant == pe_clone || parent->variant == pe_master)
+            if (pe_rsc_is_clone(parent)
                 && is_not_set(parent->flags, pe_rsc_unique)) {
                 /* for clone and master resources, if a child fails on an operation
                  * with on-fail = stop, all the resources fail.  Do this by preventing

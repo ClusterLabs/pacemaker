@@ -1071,7 +1071,7 @@ clone_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
     pe_rsc_trace(rsc_rh, "Processing constraint %s: %s -> %s %d",
                  constraint->id, rsc_lh->id, rsc_rh->id, constraint->score);
 
-    if (constraint->rsc_lh->variant >= pe_clone) {
+    if (pe_rsc_is_clone(constraint->rsc_lh)) {
 
         get_clone_variant_data(clone_data_lh, constraint->rsc_lh);
         if (clone_data_lh->interleave
@@ -1339,8 +1339,8 @@ clone_update_actions(action_t * first, action_t * then, node_t * node, enum pe_a
     enum pe_graph_flags changed = pe_graph_none;
 
     if (first->rsc != then->rsc
-        && first->rsc && first->rsc->variant >= pe_clone
-        && then->rsc && then->rsc->variant >= pe_clone) {
+        && pe_rsc_is_clone(first->rsc)
+        && pe_rsc_is_clone(then->rsc)) {
         clone_variant_data_t *clone_data = NULL;
 
         if (crm_ends_with(then->uuid, "_stop_0")

@@ -201,8 +201,7 @@ add_unallocated_utilization(GHashTable * all_utilization, resource_t * rsc,
                      orig_rsc->id, rsc->id);
         group_add_unallocated_utilization(all_utilization, rsc, all_rscs);
 
-    } else if (rsc->variant == pe_clone ||
-               rsc->variant == pe_master) {
+    } else if (pe_rsc_is_clone(rsc)) {
         GListPtr gIter1 = NULL;
         gboolean existing = FALSE;
 
@@ -317,7 +316,7 @@ find_colocated_rscs(GListPtr colocated_rscs, resource_t * rsc, resource_t * orig
             continue;
         }
 
-        if (rsc_lh->variant <= pe_group && rsc->variant >= pe_clone) {
+        if (pe_rsc_is_clone(rsc_lh) == FALSE && pe_rsc_is_clone(rsc)) {
             /* We do not know if rsc_lh will be colocated with orig_rsc in this case */
             continue;
         }
@@ -427,9 +426,7 @@ group_find_colocated_rscs(GListPtr colocated_rscs, resource_t * rsc, resource_t 
     group_variant_data_t *group_data = NULL;
 
     get_group_variant_data(group_data, rsc);
-    if (group_data->colocated ||
-        (rsc->parent &&
-         (rsc->parent->variant == pe_clone || rsc->parent->variant == pe_master))) {
+    if (group_data->colocated || pe_rsc_is_clone(rsc->parent)) {
         GListPtr gIter = rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
@@ -456,9 +453,7 @@ group_add_unallocated_utilization(GHashTable * all_utilization, resource_t * rsc
     group_variant_data_t *group_data = NULL;
 
     get_group_variant_data(group_data, rsc);
-    if (group_data->colocated ||
-        (rsc->parent &&
-         (rsc->parent->variant == pe_clone || rsc->parent->variant == pe_master))) {
+    if (group_data->colocated || pe_rsc_is_clone(rsc->parent)) {
         GListPtr gIter = rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {

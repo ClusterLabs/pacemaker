@@ -46,16 +46,6 @@ resource_object_functions_t resource_class_functions[] = {
      group_free
     },
     {
-     container_unpack,
-     native_find_rsc,
-     native_parameter,
-     container_print,
-     container_active,
-     container_resource_state,
-     native_location,
-     container_free
-    },
-    {
      clone_unpack,
      native_find_rsc,
      native_parameter,
@@ -73,7 +63,18 @@ resource_object_functions_t resource_class_functions[] = {
      clone_active,
      clone_resource_state,
      native_location,
-     clone_free}
+     clone_free
+    },
+    {
+     container_unpack,
+     native_find_rsc,
+     native_parameter,
+     container_print,
+     container_active,
+     container_resource_state,
+     native_location,
+     container_free
+    }
 };
 
 enum pe_obj_types
@@ -404,7 +405,7 @@ handle_rsc_isolation(resource_t *rsc)
      * at the clone level. this is really the only sane thing to do in this situation.
      * This allows someone to clone an isolated resource without having to shuffle
      * around the isolation attributes to the clone parent */
-    if (top == rsc->parent && top->variant >= pe_clone) {
+    if (top == rsc->parent && pe_rsc_is_clone(top)) {
         iso = top;
     }
 
@@ -414,7 +415,7 @@ handle_rsc_isolation(resource_t *rsc)
 set_rsc_opts:
     clear_bit(rsc->flags, pe_rsc_allow_migrate);
     set_bit(rsc->flags, pe_rsc_unique);
-    if (top->variant >= pe_clone) {
+    if (pe_rsc_is_clone(top)) {
         add_hash_param(rsc->meta, XML_RSC_ATTR_UNIQUE, XML_BOOLEAN_TRUE);
     }
 }
@@ -591,7 +592,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
 
     top = uber_parent(*rsc);
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_UNIQUE);
-    if (crm_is_true(value) || top->variant < pe_clone) {
+    if (crm_is_true(value) || pe_rsc_is_clone(top) == FALSE) {
         set_bit((*rsc)->flags, pe_rsc_unique);
     }
 

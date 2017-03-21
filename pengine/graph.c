@@ -40,7 +40,7 @@ get_action_flags(action_t * action, node_t * node)
     if (action->rsc) {
         flags = action->rsc->cmds->action_flags(action, NULL);
 
-        if (action->rsc->variant >= pe_clone && node) {
+        if (pe_rsc_is_clone(action->rsc) && node) {
 
             /* We only care about activity on $node */
             enum pe_action_flags clone_flags = action->rsc->cmds->action_flags(action, node);
@@ -1426,7 +1426,7 @@ check_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper)
                && is_set(wrapper->action->rsc->flags, pe_rsc_failed)
                && is_not_set(wrapper->action->rsc->flags, pe_rsc_managed)
                && crm_ends_with(wrapper->action->uuid, "_stop_0")
-               && action->rsc && action->rsc->variant >= pe_clone) {
+               && action->rsc && pe_rsc_is_clone(action->rsc)) {
         crm_warn("Ignoring requirement that %s complete before %s:"
                  " unmanaged failed resources cannot prevent clone shutdown",
                  wrapper->action->uuid, action->uuid);

@@ -40,7 +40,7 @@ do_find_resource(const char *rsc, resource_t * the_rsc, pe_working_set_t * data_
         } else {
             const char *state = "";
 
-            if (the_rsc->variant < pe_clone && the_rsc->fns->state(the_rsc, TRUE) == RSC_ROLE_MASTER) {
+            if (!pe_rsc_is_clone(the_rsc) && the_rsc->fns->state(the_rsc, TRUE) == RSC_ROLE_MASTER) {
                 state = "Master";
             }
             fprintf(stdout, "resource %s is running on: %s %s\n", rsc, node->details->uname, state);
@@ -71,7 +71,7 @@ cli_resource_search(const char *rsc, pe_working_set_t * data_set)
         return -ENXIO;
     }
 
-    if (the_rsc->variant >= pe_clone) {
+    if (pe_rsc_is_clone(the_rsc)) {
         GListPtr gIter = the_rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
@@ -80,7 +80,7 @@ cli_resource_search(const char *rsc, pe_working_set_t * data_set)
 
     /* The anonymous clone children's common ID is supplied */
     } else if ((parent = uber_parent(the_rsc)) != NULL
-               && parent->variant >= pe_clone
+               && pe_rsc_is_clone(parent)
                && is_not_set(the_rsc->flags, pe_rsc_unique)
                && the_rsc->clone_name
                && safe_str_eq(rsc, the_rsc->clone_name)
@@ -619,8 +619,7 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
 
             rc = cli_resource_delete(crmd_channel, host_uname, child, operation,
                                      interval, data_set);
-            if(rc != pcmk_ok
-               || (rsc->variant >= pe_clone && is_not_set(rsc->flags, pe_rsc_unique))) {
+            if(rc != pcmk_ok || (pe_rsc_is_clone(rsc) && is_not_set(rsc->flags, pe_rsc_unique))) {
                 return rc;
             }
         }
@@ -711,7 +710,7 @@ cli_resource_check(cib_t * cib_conn, resource_t *rsc)
             printf("\n  * The configuration specifies that '%s' should remain stopped\n", parent->id);
             need_nl++;
 
-        } else if(parent->variant > pe_clone && role == RSC_ROLE_SLAVE) {
+        } else if(parent->variant == pe_master && role == RSC_ROLE_SLAVE) {
             printf("\n  * The configuration specifies that '%s' should not be promoted\n", parent->id);
             need_nl++;
         }
@@ -1117,7 +1116,7 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
     attr_set_type = XML_TAG_META_SETS;
 
     rsc_id = strdup(rsc->id);
-    if(rsc->variant >= pe_clone) {
+    if(pe_rsc_is_clone(rsc)) {
         is_clone = TRUE;
     }
 
@@ -1489,7 +1488,7 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
                || safe_str_eq(rsc_action, "force-promote")) {
         action = rsc_action+6;
 
-        if(rsc->variant >= pe_clone) {
+        if(pe_rsc_is_clone(rsc)) {
             rc = cli_resource_search(rsc_id, data_set);
             if(rc > 0 && do_force == FALSE) {
                 CMD_ERR("It is not safe to %s %s here: the cluster claims it is already active", action, rsc_id);
@@ -1499,7 +1498,7 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
         }
     }
 
-    if(rsc->variant == pe_clone || rsc->variant == pe_master) {
+    if(pe_rsc_is_clone(rsc)) {
         /* Grab the first child resource in the hope it's not a group */
         rsc = rsc->children->data;
     }
@@ -1613,7 +1612,7 @@ cli_resource_move(const char *rsc_id, const char *host_name, cib_t * cib, pe_wor
         CMD_ERR("Resource '%s' not moved: not found", rsc_id);
         return -ENXIO;
 
-    } else if (scope_master && rsc->variant < pe_master) {
+    } else if (scope_master && rsc->variant != pe_master) {
         resource_t *p = uber_parent(rsc);
         if(p->variant == pe_master) {
             CMD_ERR("Using parent '%s' for --move command instead of '%s'.", rsc->id, rsc_id);
@@ -1644,7 +1643,7 @@ cli_resource_move(const char *rsc_id, const char *host_name, cib_t * cib, pe_wor
             count = g_list_length(rsc->running_on);
         }
 
-    } else if (rsc->variant >= pe_clone) {
+    } else if (pe_rsc_is_clone(rsc)) {
         count = g_list_length(rsc->running_on);
 
     } else if (g_list_length(rsc->running_on) > 1) {
