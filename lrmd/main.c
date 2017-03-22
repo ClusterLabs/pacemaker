@@ -403,6 +403,9 @@ static struct crm_option long_options[] = {
     {"verbose", 0, 0,    'V', "\tIncrease debug output"},
 
     {"logfile", 1, 0,    'l', "\tSend logs to the additional named logfile"},
+#ifndef ENABLE_PCMK_REMOTE
+    {"port", 1, 0,       'p', "\tPort to listen on"},
+#endif
 
     /* For compatibility with the original lrmd */
     {"dummy",  0, 0, 'r', NULL, 1},
@@ -439,6 +442,9 @@ main(int argc, char **argv)
                 break;
             case 'l':
                 crm_add_logfile(optarg);
+                break;
+            case 'p':
+                setenv("PCMK_remote_port", optarg, 1);
                 break;
             case 'V':
                 crm_bump_log_level(argc, argv);
