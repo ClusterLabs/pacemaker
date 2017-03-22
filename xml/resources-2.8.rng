@@ -67,7 +67,7 @@
 
 
   <define name="element-bucket">
-    <element name="bucket">
+    <element name="bundle">
 	<attribute name="id"><data type="ID"/></attribute>
 	<optional>
           <attribute name="description"><text/></attribute>
