@@ -100,6 +100,9 @@
 	      <attribute name="ip-range-start"><text/></attribute>
 	    </optional>
 	    <optional>
+	      <attribute name="control-port"><data type="integer"/></attribute>
+	    </optional>
+	    <optional>
 	      <attribute name="host-network"><text/></attribute>
 	    </optional>
 	    <optional>

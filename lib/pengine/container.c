@@ -108,6 +108,22 @@ create_op(xmlNode *parent, const char *prefix, const char *task, const char *int
 }
 
 static bool
+valid_network(container_variant_data_t *data)
+{
+    if(data->ip_range_start) {
+        return TRUE;
+    }
+    if(data->control_port && crm_str_eq(data->docker_network, "host", TRUE)) {
+        if(data->replicas_per_host > 1) {
+            pe_err("Specifying the 'control-port' with 'internal-network=host' for %s requires 'replicas-per-host=1'", data->prefix);
+            data->replicas_per_host = 1;
+        }
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static bool
 create_ip_resource(
     resource_t *parent, container_variant_data_t *data, container_grouping_t *tuple,
     pe_working_set_t * data_set) 
@@ -203,8 +219,12 @@ create_docker_resource(
         for(GListPtr pIter = data->ports; pIter != NULL; pIter = pIter->next) {
             char *port = pIter->data;
 
-            offset += snprintf(buffer+offset, max-offset, " -p %s:%s:%s",
-                               tuple->ipaddr, port, port);
+            if(tuple->ipaddr) {
+                offset += snprintf(buffer+offset, max-offset, " -p %s:%s:%s",
+                                   tuple->ipaddr, port, port);
+            } else {
+                offset += snprintf(buffer+offset, max-offset, " -p %s:%s", port, port);
+            }
         }
 
         if(data->docker_run_options) {
@@ -222,7 +242,15 @@ create_docker_resource(
         free(dbuffer);
 
         if(tuple->child) {
-            create_nvp(xml_obj, "run_cmd", SBIN_DIR"/pacemaker_remoted");
+            char *command = NULL;
+
+            if(data->control_port) {
+                command = crm_strdup_printf(SBIN_DIR"/pacemaker_remoted -p %s", data->control_port);
+            } else {
+                command = crm_strdup_printf(SBIN_DIR"/pacemaker_remoted -p %d", DEFAULT_REMOTE_PORT);
+            }
+            create_nvp(xml_obj, "run_cmd", command);
+            free(command);
 
             /* TODO: Allow users to specify their own?
              *
@@ -270,7 +298,7 @@ create_remote_resource(
     resource_t *parent, container_variant_data_t *data, container_grouping_t *tuple,
     pe_working_set_t * data_set) 
 {
-    if(tuple->ip && tuple->child) {
+    if(valid_network(data) && tuple->child) {
         node_t *node = NULL;
         xmlNode *xml_obj = NULL;
         xmlNode *xml_remote = NULL;
@@ -292,8 +320,17 @@ create_remote_resource(
         xml_obj = create_xml_node(xml_remote, XML_TAG_ATTR_SETS);
         crm_xml_add(xml_obj, XML_ATTR_ID, id); free(id);
 
-        create_nvp(xml_obj, "addr", tuple->ipaddr);
-        create_nvp(xml_obj, "port", crm_itoa(DEFAULT_REMOTE_PORT));
+        if(tuple->ipaddr) {
+            create_nvp(xml_obj, "addr", tuple->ipaddr);
+        } else {
+            create_nvp(xml_obj, "addr", "localhost");
+        }
+
+        if(data->control_port) {
+            create_nvp(xml_obj, "port", data->control_port);
+        } else {
+            create_nvp(xml_obj, "port", crm_itoa(DEFAULT_REMOTE_PORT));
+        }
 
         id = crm_strdup_printf("%s-meta-%d", data->prefix, tuple->offset);
         xml_obj = create_xml_node(xml_remote, XML_TAG_META_SETS);
@@ -405,6 +442,7 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         container_data->ip_range_start = crm_element_value_copy(xml_obj, "ip-range-start");
         container_data->host_netmask = crm_element_value_copy(xml_obj, "host-netmask");
         container_data->host_network = crm_element_value_copy(xml_obj, "host-network");
+        container_data->control_port = crm_element_value_copy(xml_obj, "control-port");
         container_data->docker_network = crm_element_value_copy(xml_obj, "docker-network");
 
         for (xmlNode *xml_child = __xml_first_child_element(xml_obj); xml_child != NULL;
@@ -447,7 +485,7 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
     }
 
     xml_obj = first_named_child(rsc->xml, "primitive");
-    if(xml_obj && container_data->ip_range_start && container_data->replicas > 0) {
+    if(xml_obj && valid_network(container_data) && container_data->replicas > 0) {
         char *value = NULL;
         xmlNode *xml_set = NULL;
 
@@ -523,7 +561,11 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         mount->flags = 1;
         container_data->mounts = g_list_append(container_data->mounts, mount);
 
-        container_data->ports = g_list_append(container_data->ports, crm_itoa(DEFAULT_REMOTE_PORT));
+        if(container_data->control_port) {
+            container_data->ports = g_list_append(container_data->ports, container_data->control_port);
+        } else {
+            container_data->ports = g_list_append(container_data->ports, crm_itoa(DEFAULT_REMOTE_PORT));
+        }
 
         if (common_unpack(xml_resource, &new_rsc, rsc, data_set) == FALSE) {
             pe_err("Failed unpacking resource %s", crm_element_value(rsc->xml, XML_ATTR_ID));
@@ -779,6 +821,7 @@ container_free(resource_t * rsc)
 
     free(container_data->prefix);
     free(container_data->image);
+    free(container_data->control_port);
     free(container_data->host_network);
     free(container_data->host_netmask);
     free(container_data->ip_range_start);

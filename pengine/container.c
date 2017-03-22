@@ -177,7 +177,6 @@ container_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
         }
 
         if(tuple->remote) {
-            CRM_ASSERT(tuple->ip);
             tuple->remote->cmds->internal_constraints(tuple->remote, data_set);
             // Start docker then remote
             new_rsc_order(
@@ -185,9 +184,15 @@ container_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
             new_rsc_order(
                 tuple->remote, RSC_STOP, tuple->docker, RSC_STOP, pe_order_implies_first, data_set);
 
-            id = crm_strdup_printf("%s-remote-with-ip-%d", rsc->id, tuple->offset);
-            rsc_colocation_new(id, NULL, INFINITY, tuple->remote, tuple->ip, NULL, NULL, data_set);
-            free(id);
+            if(tuple->ip) {
+                id = crm_strdup_printf("%s-remote-with-ip-%d", rsc->id, tuple->offset);
+                rsc_colocation_new(id, NULL, INFINITY, tuple->remote, tuple->ip, NULL, NULL, data_set);
+                free(id);
+            } else {
+                id = crm_strdup_printf("%s-remote-with-docker-%d", rsc->id, tuple->offset);
+                rsc_colocation_new(id, NULL, INFINITY, tuple->remote, tuple->docker, NULL, NULL, data_set);
+                free(id);
+            }
         }
 
         if(tuple->child) {

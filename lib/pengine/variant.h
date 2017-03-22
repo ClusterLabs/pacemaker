@@ -87,6 +87,7 @@ typedef struct container_variant_data_s {
         const char *ip_last;
         char *host_network;
         char *host_netmask;
+        char *control_port;
         char *docker_network;
         char *ip_range_start;
         char *docker_host_options;
