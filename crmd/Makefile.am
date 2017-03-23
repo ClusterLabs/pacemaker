@@ -24,9 +24,10 @@ halib_PROGRAMS	= crmd
 
 ## SOURCES
 
-noinst_HEADERS	= crmd.h crmd_fsa.h crmd_messages.h fsa_defines.h	\
-		fsa_matrix.h fsa_proto.h crmd_utils.h crmd_callbacks.h	\
-		crmd_lrm.h te_callbacks.h tengine.h
+noinst_HEADERS	= crmd_alerts.h crmd_callbacks.h crmd_fsa.h crmd.h \
+		crmd_lrm.h crmd_messages.h crmd_utils.h fsa_defines.h \
+		fsa_matrix.h fsa_proto.h membership.h te_callbacks.h \
+		tengine.h throttle.h
 
 crmd_CFLAGS	= $(CFLAGS_HARDENED_EXE)
 crmd_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
