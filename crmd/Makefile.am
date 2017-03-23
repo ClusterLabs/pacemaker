@@ -41,7 +41,7 @@ crmd_LDADD	= $(top_builddir)/lib/fencing/libstonithd.la		\
 		$(top_builddir)/lib/lrmd/liblrmd.la			\
 		$(CLUSTERLIBS)
 
-crmd_SOURCES	= main.c crmd.c corosync.c notify.c				\
+crmd_SOURCES	= main.c crmd.c corosync.c crmd_alerts.c				\
 		fsa.c control.c messages.c membership.c callbacks.c attrd.c	\
 		election.c join_client.c join_dc.c subsystems.c throttle.c	\
 		cib.c pengine.c tengine.c lrm.c lrm_state.c remote_lrmd_ra.c	\
