@@ -399,7 +399,7 @@ static struct crm_option long_options[] = {
     {"verbose", 0, 0,    'V', "\tIncrease debug output"},
 
     {"logfile", 1, 0,    'l', "\tSend logs to the additional named logfile"},
-#ifndef ENABLE_PCMK_REMOTE
+#ifdef ENABLE_PCMK_REMOTE
     {"port", 1, 0,       'p', "\tPort to listen on"},
 #endif
 
