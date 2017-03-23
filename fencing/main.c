@@ -710,7 +710,6 @@ update_done:
 }
 
 extern xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
-extern node_t *create_node(const char *id, const char *uname, const char *type, const char *score, pe_working_set_t * data_set);
 
 /*!
  * \internal

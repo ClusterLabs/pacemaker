@@ -382,12 +382,8 @@ void handle_shutdown_nack()
     if (shutting_down) {
         crm_info("Received shutdown nack");
         if (shutdown_ack_timer > 0) {
-            GSource *timer =
-                g_main_context_find_source_by_id(NULL, shutdown_ack_timer);
-
-            if (timer != NULL) {
-                g_source_set_ready_time(timer, 0);
-            }
+            g_source_remove(shutdown_ack_timer);
+            shutdown_ack_timer = g_timeout_add(0, lrmd_exit, NULL);
         }
         return;
     }

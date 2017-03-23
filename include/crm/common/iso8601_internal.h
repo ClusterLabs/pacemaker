@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#ifndef CRM_COMMON_ISO8601_INTERNAL
+#  define CRM_COMMON_ISO8601_INTERNAL
 #include <time.h>
 #include <sys/time.h>
 #include <ctype.h>
@@ -42,3 +44,4 @@ struct crm_time_us {
     bool duration;
     int useconds;
 };
+#endif

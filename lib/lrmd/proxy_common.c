@@ -172,7 +172,7 @@ remote_proxy_disconnected(gpointer userdata)
 }
 
 remote_proxy_t *
-remote_proxy_new(lrmd_t *lrmd, struct ipc_client_callbacks proxy_callbacks,
+remote_proxy_new(lrmd_t *lrmd, struct ipc_client_callbacks *proxy_callbacks,
                  const char *node_name, const char *session_id, const char *channel)
 {
     remote_proxy_t *proxy = NULL;
@@ -187,15 +187,21 @@ remote_proxy_new(lrmd_t *lrmd, struct ipc_client_callbacks proxy_callbacks,
 
     proxy->node_name = strdup(node_name);
     proxy->session_id = strdup(session_id);
-
-    proxy->source = mainloop_add_ipc_client(channel, G_PRIORITY_LOW, 0, proxy, &proxy_callbacks);
-    proxy->ipc = mainloop_get_ipc_client(proxy->source);
     proxy->lrm = lrmd;
 
-    if (proxy->source == NULL) {
-        remote_proxy_free(proxy);
-        remote_proxy_notify_destroy(lrmd, session_id);
-        return NULL;
+    if (safe_str_eq(crm_system_name, CRM_SYSTEM_CRMD)
+        && safe_str_eq(channel, CRM_SYSTEM_CRMD)) {
+        /* The crmd doesn't need to connect to itself */
+        proxy->is_local = TRUE;
+
+    } else {
+        proxy->source = mainloop_add_ipc_client(channel, G_PRIORITY_LOW, 0, proxy, proxy_callbacks);
+        proxy->ipc = mainloop_get_ipc_client(proxy->source);
+        if (proxy->source == NULL) {
+            remote_proxy_free(proxy);
+            remote_proxy_notify_destroy(lrmd, session_id);
+            return NULL;
+        }
     }
 
     crm_trace("new remote proxy client established to %s on %s, session id %s",
@@ -237,7 +243,13 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
             /* proxy connection no longer exists */
             remote_proxy_notify_destroy(lrmd, session);
             return;
-        } else if ((proxy->is_local == FALSE) && (crm_ipc_connected(proxy->ipc) == FALSE)) {
+        }
+
+        /* crmd requests MUST be handled by the crmd, not us */
+        CRM_CHECK(proxy->is_local == FALSE,
+                  remote_proxy_end_session(proxy); return);
+
+        if (crm_ipc_connected(proxy->ipc) == FALSE) {
             remote_proxy_end_session(proxy);
             return;
         }

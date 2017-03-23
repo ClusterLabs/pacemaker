@@ -14,7 +14,7 @@
           <ref name="element-group"/>
           <ref name="element-clone"/>
           <ref name="element-master"/>
-          <ref name="element-bucket"/>
+          <ref name="element-bundle"/>
         </choice>
       </zeroOrMore>
     </element>
@@ -66,7 +66,7 @@
   </define>
 
 
-  <define name="element-bucket">
+  <define name="element-bundle">
     <element name="bundle">
 	<attribute name="id"><data type="ID"/></attribute>
 	<optional>

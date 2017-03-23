@@ -17,8 +17,7 @@
 #
 include $(top_srcdir)/Makefile.common
 
-AM_CPPFLAGS		+= -I$(top_builddir)/lib/gnu -I$(top_srcdir)/lib/gnu \
-			-DSBINDIR=\"$(sbindir)\"
+AM_CPPFLAGS		+= -I$(top_builddir)/lib/gnu -I$(top_srcdir)/lib/gnu
 
 ## libraries
 lib_LTLIBRARIES	= libcrmcommon.la
