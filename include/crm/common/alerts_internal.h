@@ -18,10 +18,10 @@
 
 #ifndef ALERT_INTERNAL_H
 #define ALERT_INTERNAL_H
-/* Default-Timeout to use before killing a notification script (in milliseconds) */
+/* Default-Timeout to use before killing a alerts script (in milliseconds) */
 #  define CRM_ALERT_DEFAULT_TIMEOUT_MS (30000)
 
-/* Default-Format-String used to pass timestamps to the notification scripts */
+/* Default-Format-String used to pass timestamps to the alerts scripts */
 #  define CRM_ALERT_DEFAULT_TSTAMP_FORMAT "%H:%M:%S.%06N"
 
 typedef struct {
@@ -54,9 +54,9 @@ extern GListPtr crm_alert_list;
 extern guint crm_alert_max_alert_timeout;
 extern const char *crm_alert_keys[14][3];
 
-void crm_free_notify_list(void);
+void crm_free_alert_list(void);
 GListPtr crm_drop_envvars(crm_alert_entry_t *entry, int count);
-void crm_add_dup_notify_list_entry(crm_alert_entry_t *entry);
+void crm_add_dup_alert_list_entry(crm_alert_entry_t *entry);
 GListPtr crm_get_envvars_from_cib(xmlNode *basenode, crm_alert_entry_t *entry, int *count);
 void crm_set_alert_key(enum crm_alert_keys_e name, const char *value);
 void crm_set_alert_key_int(enum crm_alert_keys_e name, int value);

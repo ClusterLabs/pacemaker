@@ -80,16 +80,16 @@ get_meta_attrs_from_cib(xmlNode *basenode, crm_alert_entry_t *entry,
 }
 
 void
-parse_notifications(xmlNode *notifications)
+parse_alerts(xmlNode *alerts)
 {
-    xmlNode *notify;
+    xmlNode *alert;
     crm_alert_entry_t entry;
     guint max_timeout = 0;
 
-    crm_free_notify_list();
+    crm_free_alert_list();
     crm_alert_max_alert_timeout = CRM_ALERT_DEFAULT_TIMEOUT_MS;
 
-    if (notifications) {
+    if (alerts) {
         crm_info("We have an alerts section in the cib");
 
         if (notify_script) {
@@ -106,39 +106,39 @@ parse_notifications(xmlNode *notifications)
                 .timeout = CRM_ALERT_DEFAULT_TIMEOUT_MS,
                 .recipient = notify_target
             };
-            crm_add_dup_notify_list_entry(&entry);
+            crm_add_dup_alert_list_entry(&entry);
             crm_info("Legacy Notifications enabled");
         }
 
         return;
     }
 
-    for (notify = first_named_child(notifications, XML_CIB_TAG_ALERT);
-         notify; notify = __xml_next(notify)) {
+    for (alert = first_named_child(alerts, XML_CIB_TAG_ALERT);
+         alert; alert = __xml_next(alert)) {
         xmlNode *recipient;
         int recipients = 0, envvars = 0;
         GHashTable *config_hash = NULL;
 
         entry = (crm_alert_entry_t) {
-            .id = (char *) crm_element_value(notify, XML_ATTR_ID),
-            .path = (char *) crm_element_value(notify, XML_ALERT_ATTR_PATH),
+            .id = (char *) crm_element_value(alert, XML_ATTR_ID),
+            .path = (char *) crm_element_value(alert, XML_ALERT_ATTR_PATH),
             .timeout = CRM_ALERT_DEFAULT_TIMEOUT_MS,
             .tstamp_format = (char *) CRM_ALERT_DEFAULT_TSTAMP_FORMAT
         };
 
-        crm_get_envvars_from_cib(notify,
+        crm_get_envvars_from_cib(alert,
                                  &entry,
                                  &envvars);
 
         config_hash =
-            get_meta_attrs_from_cib(notify, &entry, &max_timeout);
+            get_meta_attrs_from_cib(alert, &entry, &max_timeout);
 
         crm_debug("Found alert: id=%s, path=%s, timeout=%d, "
                    "tstamp_format=%s, %d additional environment variables",
                    entry.id, entry.path, entry.timeout,
                    entry.tstamp_format, envvars);
 
-        for (recipient = first_named_child(notify,
+        for (recipient = first_named_child(alert,
                                            XML_CIB_TAG_ALERT_RECIPIENT);
              recipient; recipient = __xml_next(recipient)) {
             int envvars_added = 0;
@@ -158,7 +158,7 @@ parse_notifications(xmlNode *notifications)
                                             &recipient_entry,
                                             &max_timeout);
 
-                crm_add_dup_notify_list_entry(&recipient_entry);
+                crm_add_dup_alert_list_entry(&recipient_entry);
 
                 crm_debug("Alert has recipient: id=%s, value=%s, "
                           "%d additional environment variables",
@@ -172,7 +172,7 @@ parse_notifications(xmlNode *notifications)
         }
 
         if (recipients == 0) {
-            crm_add_dup_notify_list_entry(&entry);
+            crm_add_dup_alert_list_entry(&entry);
         }
 
         crm_drop_envvars(&entry, -1);
@@ -189,7 +189,7 @@ parse_notifications(xmlNode *notifications)
  */
 
 void
-crmd_enable_notifications(const char *script, const char *target)
+crmd_enable_alerts(const char *script, const char *target)
 {
     free(notify_script);
     notify_script = ((script) &&
@@ -200,7 +200,7 @@ crmd_enable_notifications(const char *script, const char *target)
 }
 
 static void
-crmd_notify_complete(svc_action_t *op)
+crmd_alert_complete(svc_action_t *op)
 {
     alerts_inflight--;
     if(op->rc == 0) {
@@ -212,9 +212,9 @@ crmd_notify_complete(svc_action_t *op)
 }
 
 static void
-send_notifications(const char *kind)
+send_alerts(const char *kind)
 {
-    svc_action_t *notify = NULL;
+    svc_action_t *alert = NULL;
     static int operations = 0;
     GListPtr l;
     crm_time_hr_t *now = crm_time_hr_new(NULL);
@@ -235,19 +235,19 @@ send_notifications(const char *kind)
             crm_set_alert_key_int(CRM_alert_node_sequence, operations);
             crm_set_alert_key(CRM_alert_timestamp, timestamp);
 
-            notify = services_action_create_generic(entry->path, NULL);
+            alert = services_action_create_generic(entry->path, NULL);
 
-            notify->timeout = entry->timeout;
-            notify->standard = strdup("event");
-            notify->id = strdup(entry->id);
-            notify->agent = strdup(entry->path);
-            notify->sequence = operations;
+            alert->timeout = entry->timeout;
+            alert->standard = strdup("event");
+            alert->id = strdup(entry->id);
+            alert->agent = strdup(entry->path);
+            alert->sequence = operations;
 
             crm_set_envvar_list(entry);
 
             alerts_inflight++;
-            if(services_action_async(notify, &crmd_notify_complete) == FALSE) {
-                services_action_free(notify);
+            if(services_action_async(alert, &crmd_alert_complete) == FALSE) {
+                services_action_free(alert);
                 alerts_inflight--;
             }
 
@@ -268,7 +268,7 @@ send_notifications(const char *kind)
 }
 
 void
-crmd_notify_node_event(crm_node_t *node)
+crmd_alert_node_event(crm_node_t *node)
 {
     if(!crm_alert_list) {
         return;
@@ -278,11 +278,11 @@ crmd_notify_node_event(crm_node_t *node)
     crm_set_alert_key_int(CRM_alert_nodeid, node->id);
     crm_set_alert_key(CRM_alert_desc, node->state);
 
-    send_notifications("node");
+    send_alerts("node");
 }
 
 void
-crmd_notify_fencing_op(stonith_event_t * e)
+crmd_alert_fencing_op(stonith_event_t * e)
 {
     char *desc = NULL;
 
@@ -300,12 +300,12 @@ crmd_notify_fencing_op(stonith_event_t * e)
     crm_set_alert_key(CRM_alert_desc, desc);
     crm_set_alert_key_int(CRM_alert_rc, e->result);
 
-    send_notifications("fencing");
+    send_alerts("fencing");
     free(desc);
 }
 
 void
-crmd_notify_resource_op(const char *node, lrmd_event_data_t * op)
+crmd_alert_resource_op(const char *node, lrmd_event_data_t * op)
 {
     int target_rc = 0;
 
@@ -316,7 +316,7 @@ crmd_notify_resource_op(const char *node, lrmd_event_data_t * op)
     target_rc = rsc_op_expected_rc(op);
     if(op->interval == 0 && target_rc == op->rc &&
        safe_str_eq(op->op_type, RSC_STATUS)) {
-        /* Leave it up to the script if they want to notify for
+        /* Leave it up to the script if they want to alert for
          * 'failed' probes, only swallow ones for which the result was
          * unexpected.
          *
@@ -342,7 +342,7 @@ crmd_notify_resource_op(const char *node, lrmd_event_data_t * op)
         crm_set_alert_key(CRM_alert_desc, services_lrm_status_str(op->op_status));
     }
 
-    send_notifications("resource");
+    send_alerts("resource");
 }
 
 static gboolean

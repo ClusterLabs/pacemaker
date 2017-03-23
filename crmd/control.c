@@ -1035,7 +1035,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 #ifdef RHEL7_COMPAT
     script = crmd_pref(config_hash, "notification-agent");
     value  = crmd_pref(config_hash, "notification-recipient");
-    crmd_enable_notifications(script, value);
+    crmd_enable_alerts(script, value);
 #endif
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
@@ -1095,7 +1095,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     }
 
     alerts = first_named_child(output, XML_CIB_TAG_ALERTS);
-    parse_notifications(alerts);
+    parse_alerts(alerts);
 
     set_bit(fsa_input_register, R_READ_CONFIG);
     crm_trace("Triggering FSA: %s", __FUNCTION__);

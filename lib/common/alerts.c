@@ -60,7 +60,7 @@ free_envvar_entry(envvar_t *entry)
 }		
 
 static void		
-crm_free_notify_list_entry(crm_alert_entry_t *entry)		
+crm_free_alert_list_entry(crm_alert_entry_t *entry)		
 {		
     free(entry->id);		
     free(entry->path);		
@@ -74,10 +74,10 @@ crm_free_notify_list_entry(crm_alert_entry_t *entry)
 }		
 
 void		
-crm_free_notify_list()		
+crm_free_alert_list()		
 {		
     if (crm_alert_list) {		
-        g_list_free_full(crm_alert_list, (GDestroyNotify) crm_free_notify_list_entry);		
+        g_list_free_full(crm_alert_list, (GDestroyNotify) crm_free_alert_list_entry);		
         crm_alert_list = NULL;		
     }		
 }		
@@ -147,7 +147,7 @@ copy_envvar_list_remove_dupes(crm_alert_entry_t *entry)
 }		
 
 void		
-crm_add_dup_notify_list_entry(crm_alert_entry_t *entry)		
+crm_add_dup_alert_list_entry(crm_alert_entry_t *entry)		
 {		
     crm_alert_entry_t *new_entry =		
         (crm_alert_entry_t *) calloc(1, sizeof(crm_alert_entry_t));		

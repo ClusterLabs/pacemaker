@@ -22,11 +22,11 @@
 #  include <crm/cluster.h>
 #  include <crm/stonith-ng.h>
 
-void crmd_enable_notifications(const char *script, const char *target);
-void crmd_notify_node_event(crm_node_t *node);
-void crmd_notify_fencing_op(stonith_event_t *e);
-void crmd_notify_resource_op(const char *node, lrmd_event_data_t *op);
+void crmd_enable_alerts(const char *script, const char *target);
+void crmd_alert_node_event(crm_node_t *node);
+void crmd_alert_fencing_op(stonith_event_t *e);
+void crmd_alert_resource_op(const char *node, lrmd_event_data_t *op);
 void crmd_drain_alerts(GMainContext *ctx);
-void parse_notifications(xmlNode *notifications);
+void parse_alerts(xmlNode *alerts);
 
 #endif
