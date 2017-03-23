@@ -146,7 +146,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 }
             }
 
-            crmd_notify_node_event(node);
+            crmd_alert_node_event(node);
             break;
 
         case crm_status_processes:
