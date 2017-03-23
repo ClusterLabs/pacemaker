@@ -576,7 +576,7 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         container_data->mounts = g_list_append(container_data->mounts, mount);
 
         if(container_data->control_port) {
-            container_data->ports = g_list_append(container_data->ports, container_data->control_port);
+            container_data->ports = g_list_append(container_data->ports, strdup(container_data->control_port));
         } else {
             container_data->ports = g_list_append(container_data->ports, crm_itoa(DEFAULT_REMOTE_PORT));
         }
