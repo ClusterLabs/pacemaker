@@ -95,29 +95,30 @@ copy_envvar_entry(envvar_t * src,
 }		
 
 static GListPtr		
-add_dup_envvar(GListPtr envvar_list,		
+add_dup_envvar(crm_alert_entry_t *entrys,		
                envvar_t *entry)		
 {		
-    return g_list_prepend(envvar_list, copy_envvar_entry(entry, NULL));		
+    entrys->envvars = g_list_prepend(entrys->envvars, copy_envvar_entry(entry, NULL));		
+    return entrys->envvars;
 }		
 
 GListPtr		
-crm_drop_envvars(GListPtr envvar_list, int count)		
+crm_drop_envvars(crm_alert_entry_t *entry, int count)		
 {		
     int i;		
 		
     for (i = 0;		
-         (envvar_list) && ((count < 0) || (i < count));		
+         (entry->envvars) && ((count < 0) || (i < count));		
          i++) {		
-        free_envvar_entry((envvar_t *) g_list_first(envvar_list)->data);		
-        envvar_list = g_list_delete_link(envvar_list,		
-                                         g_list_first(envvar_list));		
+        free_envvar_entry((envvar_t *) g_list_first(entry->envvars)->data);		
+        entry->envvars = g_list_delete_link(entry->envvars,		
+                                         g_list_first(entry->envvars));		
     }		
-    return envvar_list;		
+    return entry->envvars;		
 }		
 
 static GListPtr		
-copy_envvar_list_remove_dupes(GListPtr src)		
+copy_envvar_list_remove_dupes(crm_alert_entry_t *entry)		
 {		
     GListPtr dst = NULL, ls, ld;		
 
@@ -129,7 +130,7 @@ copy_envvar_list_remove_dupes(GListPtr src)
      * with the variables than cycling through them		
      */		
 
-    for (ls = g_list_first(src); ls; ls = g_list_next(ls)) {		
+    for (ls = g_list_first(entry->envvars); ls; ls = g_list_next(ls)) {		
         for (ld = g_list_first(dst); ld; ld = g_list_next(ld)) {		
             if (!strcmp(((envvar_t *)(ls->data))->name,		
                         ((envvar_t *)(ld->data))->name)) {		
@@ -159,21 +160,21 @@ crm_add_dup_notify_list_entry(crm_alert_entry_t *entry)
         .tstamp_format = entry->tstamp_format?strdup(entry->tstamp_format):NULL,		
         .recipient = entry->recipient?strdup(entry->recipient):NULL,		
         .envvars = entry->envvars?		
-            copy_envvar_list_remove_dupes(entry->envvars)		
+            copy_envvar_list_remove_dupes(entry)		
             :NULL		
     };		
     crm_alert_list = g_list_prepend(crm_alert_list, new_entry);		
 }		
 
 GListPtr		
-crm_get_envvars_from_cib(xmlNode *basenode, GListPtr list, int *count)		
+crm_get_envvars_from_cib(xmlNode *basenode, crm_alert_entry_t *entry, int *count)		
 {		
     xmlNode *envvar;		
     xmlNode *pair;		
 
     if ((!basenode) ||		
         (!(envvar = first_named_child(basenode, XML_TAG_ATTR_SETS)))) {		
-        return list;		
+        return entry->envvars;		
     }		
 
     for (pair = first_named_child(envvar, XML_CIB_TAG_NVPAIR);		
@@ -186,10 +187,10 @@ crm_get_envvars_from_cib(xmlNode *basenode, GListPtr list, int *count)
         crm_trace("Found environment variable %s = '%s'", envvar_entry.name,		
                   envvar_entry.value?envvar_entry.value:"");		
         (*count)++;		
-        list = add_dup_envvar(list, &envvar_entry);		
+        add_dup_envvar(entry, &envvar_entry);		
     }		
 
-    return list;		
+    return entry->envvars;		
 }
 
 void
@@ -231,32 +232,32 @@ crm_unset_alert_keys()
 }
 
 void
-crm_set_envvar_list(GListPtr envvars)
+crm_set_envvar_list(crm_alert_entry_t *entry)
 {
     GListPtr l;
 
-    for (l = g_list_first(envvars); l; l = g_list_next(l)) {
-        envvar_t *entry = (envvar_t *)(l->data);
+    for (l = g_list_first(entry->envvars); l; l = g_list_next(l)) {
+        envvar_t *env = (envvar_t *)(l->data);
 
-        crm_trace("Setting environment variable %s = '%s'", entry->name,
-                  entry->value?entry->value:"");
-        if (entry->value) {
-            setenv(entry->name, entry->value, 1);
+        crm_trace("Setting environment variable %s = '%s'", env->name,
+                  env->value?env->value:"");
+        if (env->value) {
+            setenv(env->name, env->value, 1);
         } else {
-            unsetenv(entry->name);
+            unsetenv(env->name);
         }
     }
 }
 
 void
-crm_unset_envvar_list(GListPtr envvars)
+crm_unset_envvar_list(crm_alert_entry_t *entry)
 {
     GListPtr l;
 
-    for (l = g_list_first(envvars); l; l = g_list_next(l)) {
-        envvar_t *entry = (envvar_t *)(l->data);
+    for (l = g_list_first(entry->envvars); l; l = g_list_next(l)) {
+        envvar_t *env = (envvar_t *)(l->data);
 
-        crm_trace("Unsetting environment variable %s", entry->name);
-        unsetenv(entry->name);
+        crm_trace("Unsetting environment variable %s", env->name);
+        unsetenv(env->name);
     }
 }

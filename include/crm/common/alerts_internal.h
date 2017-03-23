@@ -55,12 +55,12 @@ extern guint crm_alert_max_alert_timeout;
 extern const char *crm_alert_keys[14][3];
 
 void crm_free_notify_list(void);
-GListPtr crm_drop_envvars(GListPtr envvar_list, int count);
+GListPtr crm_drop_envvars(crm_alert_entry_t *entry, int count);
 void crm_add_dup_notify_list_entry(crm_alert_entry_t *entry);
-GListPtr crm_get_envvars_from_cib(xmlNode *basenode, GListPtr list, int *count);
+GListPtr crm_get_envvars_from_cib(xmlNode *basenode, crm_alert_entry_t *entry, int *count);
 void crm_set_alert_key(enum crm_alert_keys_e name, const char *value);
 void crm_set_alert_key_int(enum crm_alert_keys_e name, int value);
 void crm_unset_alert_keys(void);
-void crm_set_envvar_list(GListPtr envvars);
-void crm_unset_envvar_list(GListPtr envvars);
+void crm_set_envvar_list(crm_alert_entry_t *entry);
+void crm_unset_envvar_list(crm_alert_entry_t *entry);
 #endif

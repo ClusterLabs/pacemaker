@@ -126,9 +126,8 @@ parse_notifications(xmlNode *notifications)
             .tstamp_format = (char *) CRM_ALERT_DEFAULT_TSTAMP_FORMAT
         };
 
-        entry.envvars =
-            crm_get_envvars_from_cib(notify,
-                                 entry.envvars,
+        crm_get_envvars_from_cib(notify,
+                                 &entry,
                                  &envvars);
 
         config_hash =
@@ -148,9 +147,8 @@ parse_notifications(xmlNode *notifications)
                                                 XML_ALERT_ATTR_REC_VALUE);
             recipients++;
 
-            entry.envvars =
-                crm_get_envvars_from_cib(recipient,
-                                     entry.envvars,
+            crm_get_envvars_from_cib(recipient,
+                                     &entry,
                                      &envvars_added);
 
             {
@@ -170,15 +168,14 @@ parse_notifications(xmlNode *notifications)
                 g_hash_table_destroy(config_hash);
             }
 
-            entry.envvars =
-                crm_drop_envvars(entry.envvars, envvars_added);
+            crm_drop_envvars(&entry, envvars_added);
         }
 
         if (recipients == 0) {
             crm_add_dup_notify_list_entry(&entry);
         }
 
-        crm_drop_envvars(entry.envvars, -1);
+        crm_drop_envvars(&entry, -1);
         g_hash_table_destroy(config_hash);
     }
 
@@ -246,7 +243,7 @@ send_notifications(const char *kind)
             notify->agent = strdup(entry->path);
             notify->sequence = operations;
 
-            crm_set_envvar_list(entry->envvars);
+            crm_set_envvar_list(entry);
 
             alerts_inflight++;
             if(services_action_async(notify, &crmd_notify_complete) == FALSE) {
@@ -254,7 +251,7 @@ send_notifications(const char *kind)
                 alerts_inflight--;
             }
 
-            crm_unset_envvar_list(entry->envvars);
+            crm_unset_envvar_list(entry);
         } else {
             crm_warn("Ignoring '%s' alert to '%s' via '%s' received "
                      "while shutting down",
