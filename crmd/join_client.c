@@ -251,15 +251,26 @@ do_cl_join_finalize_respond(long long action,
          */
         if (first_join && is_not_set(fsa_input_register, R_SHUTDOWN)) {
             first_join = FALSE;
-
-            if (start_state) {
-                init_transient_attrs(fsa_our_uname, start_state, 0);
-            } else {
-                erase_status_tag(fsa_our_uname, XML_TAG_TRANSIENT_NODEATTRS, 0);
-            }
-
+            erase_status_tag(fsa_our_uname, XML_TAG_TRANSIENT_NODEATTRS, 0);
             update_attrd(fsa_our_uname, "terminate", NULL, NULL, FALSE);
             update_attrd(fsa_our_uname, XML_CIB_ATTR_SHUTDOWN, "0", NULL, FALSE);
+
+            if (start_state) {
+                if (safe_str_eq(start_state, "standby")) {
+                    crm_notice("Forcing node %s to join in %s state per configured environment", fsa_our_uname, start_state);
+                    set_standby(fsa_cib_conn, fsa_our_uuid, NULL, "on");
+
+                } else if (safe_str_eq(start_state, "online")) {
+                    crm_notice("Forcing node %s to join in %s state per configured environment", fsa_our_uname, start_state);
+                    set_standby(fsa_cib_conn, fsa_our_uuid, NULL, "off");
+
+                } else if (safe_str_eq(start_state, "default")) {
+                    crm_debug("Not forcing a starting state on node %s", fsa_our_uname);
+
+                } else {
+                    crm_warn("Unrecognized start state '%s', using 'default' (%s)", start_state, fsa_our_uname);
+                }
+            }
         }
 
         send_cluster_message(crm_get_peer(0, fsa_our_dc), crm_msg_crmd, reply, TRUE);
