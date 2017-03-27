@@ -119,9 +119,9 @@ valid_network(container_variant_data_t *data)
     if(data->ip_range_start) {
         return TRUE;
     }
-    if(data->control_port && crm_str_eq(data->docker_network, "host", TRUE)) {
+    if(data->control_port) {
         if(data->replicas_per_host > 1) {
-            pe_err("Specifying the 'control-port' with 'internal-network=host' for %s requires 'replicas-per-host=1'", data->prefix);
+            pe_err("Specifying the 'control-port' for %s requires 'replicas-per-host=1'", data->prefix);
             data->replicas_per_host = 1;
         }
         return TRUE;
