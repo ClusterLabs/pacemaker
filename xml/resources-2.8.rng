@@ -73,7 +73,6 @@
         <attribute name="description"><text/></attribute>
       </optional>
       <choice>
-        <group>
         <element name="docker">
           <attribute name="image"><text/></attribute>
           <optional>
@@ -86,13 +85,12 @@
             <attribute name="masters"><data type="integer"/></attribute>
           </optional>
           <optional>
-            <attribute name="pcmk-remote-bin"> <text/></attribute>
+            <attribute name="network"><text/></attribute>
           </optional>
           <optional>
             <attribute name="options"><text/></attribute>
           </optional>
         </element>
-        </group>
       </choice>
       <optional>
         <element name="network">
@@ -103,13 +101,10 @@
             <attribute name="control-port"><data type="integer"/></attribute>
           </optional>
           <optional>
-            <attribute name="host-network"><text/></attribute>
+            <attribute name="host-interface"><text/></attribute>
           </optional>
           <optional>
             <attribute name="host-netmask"><data type="integer"/></attribute>
-          </optional>
-          <optional>
-            <attribute name="docker-network"><text/></attribute>
           </optional>
           <zeroOrMore>
             <element name="port-mapping">

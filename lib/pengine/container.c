@@ -459,15 +459,15 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
 
     container_data->docker_run_options = crm_element_value_copy(xml_obj, "options");
     container_data->image = crm_element_value_copy(xml_obj, "image");
+    container_data->docker_network = crm_element_value_copy(xml_obj, "network");
 
     xml_obj = first_named_child(rsc->xml, "network");
     if(xml_obj) {
 
         container_data->ip_range_start = crm_element_value_copy(xml_obj, "ip-range-start");
         container_data->host_netmask = crm_element_value_copy(xml_obj, "host-netmask");
-        container_data->host_network = crm_element_value_copy(xml_obj, "host-network");
+        container_data->host_network = crm_element_value_copy(xml_obj, "host-interface");
         container_data->control_port = crm_element_value_copy(xml_obj, "control-port");
-        container_data->docker_network = crm_element_value_copy(xml_obj, "docker-network");
 
         for (xmlNode *xml_child = __xml_first_child_element(xml_obj); xml_child != NULL;
              xml_child = __xml_next_element(xml_child)) {
