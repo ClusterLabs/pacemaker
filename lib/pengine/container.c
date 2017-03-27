@@ -123,6 +123,7 @@ valid_network(container_variant_data_t *data)
         if(data->replicas_per_host > 1) {
             pe_err("Specifying the 'control-port' for %s requires 'replicas-per-host=1'", data->prefix);
             data->replicas_per_host = 1;
+            /* @TODO to be sure: clear_bit(rsc->flags, pe_rsc_unique); */
         }
         return TRUE;
     }
@@ -436,11 +437,24 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         return FALSE;
     }
 
-    value = crm_element_value(xml_obj, "replicas");
-    if(value == NULL) {
-        value = crm_element_value(xml_obj, "masters");
+    value = crm_element_value(xml_obj, "masters");
+    container_data->masters = crm_parse_int(value, "0");
+    if (container_data->masters < 0) {
+        pe_err("'masters' for %s must be nonnegative integer, using 0",
+               rsc->id);
+        container_data->masters = 0;
     }
-    container_data->replicas = crm_parse_int(value, "1");
+
+    value = crm_element_value(xml_obj, "replicas");
+    if ((value == NULL) && (container_data->masters > 0)) {
+        container_data->replicas = container_data->masters;
+    } else {
+        container_data->replicas = crm_parse_int(value, "1");
+    }
+    if (container_data->replicas < 1) {
+        pe_err("'replicas' for %s must be positive integer, using 1", rsc->id);
+        container_data->replicas = 1;
+    }
 
     /*
      * Communication between containers on the same host via the
@@ -449,13 +463,14 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
      */
     value = crm_element_value(xml_obj, "replicas-per-host");
     container_data->replicas_per_host = crm_parse_int(value, "1");
-
-    if(container_data->replicas_per_host == 1) {
+    if (container_data->replicas_per_host < 1) {
+        pe_err("'replicas-per-host' for %s must be positive integer, using 1",
+               rsc->id);
+        container_data->replicas_per_host = 1;
+    }
+    if (container_data->replicas_per_host == 1) {
         clear_bit(rsc->flags, pe_rsc_unique);
     }
-
-    value = crm_element_value(xml_obj, "masters");
-    container_data->masters = crm_parse_int(value, "1");
 
     container_data->docker_run_options = crm_element_value_copy(xml_obj, "options");
     container_data->image = crm_element_value_copy(xml_obj, "image");
@@ -517,7 +532,7 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
     }
 
     xml_obj = first_named_child(rsc->xml, "primitive");
-    if(xml_obj && valid_network(container_data) && container_data->replicas > 0) {
+    if (xml_obj && valid_network(container_data)) {
         char *value = NULL;
         xmlNode *xml_set = NULL;
 
