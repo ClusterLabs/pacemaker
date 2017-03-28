@@ -300,7 +300,32 @@ container_create_probe(resource_t * rsc, node_t * node, action_t * complete,
             any_created |= tuple->child->cmds->create_probe(tuple->child, node, complete, force, data_set);
         }
         if(tuple->docker) {
-            any_created |= tuple->docker->cmds->create_probe(tuple->docker, node, complete, force, data_set);
+            bool created = tuple->docker->cmds->create_probe(tuple->docker, node, complete, force, data_set);
+
+            if(created) {
+                any_created = TRUE;
+                /* If we're limited to one replica per host (due to
+                 * the lack of an IP range probably), then we don't
+                 * want any of our peer containers starting until
+                 * we've established that no other copies are already
+                 * running.
+                 *
+                 * Partly this is to ensure that replicas_per_host is
+                 * observed, but also to ensure that the containers
+                 * don't fail to start because the necessary port
+                 * mappings (which wont include an IP for uniqueness)
+                 * are already taken
+                 */
+
+                for (GListPtr tIter = container_data->tuples; tIter != NULL && container_data->replicas_per_host == 1; tIter = tIter->next) {
+                    container_grouping_t *other = (container_grouping_t *)tIter->data;
+                    if(other != tuple) {
+                        custom_action_order(tuple->docker, generate_op_key(tuple->docker->id, RSC_STATUS, 0), NULL,
+                                            other->docker, generate_op_key(other->docker->id, RSC_START, 0), NULL,
+                                            pe_order_optional, data_set);
+                    }
+                }
+            }
         }
         if(FALSE && tuple->remote) {
             // TODO: Needed?
