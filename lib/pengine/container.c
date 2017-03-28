@@ -232,13 +232,13 @@ create_docker_resource(
         }
 
         for(GListPtr pIter = data->ports; pIter != NULL; pIter = pIter->next) {
-            char *port = pIter->data;
+            container_port_t *port = pIter->data;
 
             if(tuple->ipaddr) {
                 offset += snprintf(buffer+offset, max-offset, " -p %s:%s:%s",
-                                   tuple->ipaddr, port, port);
+                                   tuple->ipaddr, port->source, port->target);
             } else {
-                offset += snprintf(buffer+offset, max-offset, " -p %s:%s", port, port);
+                offset += snprintf(buffer+offset, max-offset, " -p %s:%s", port->source, port->target);
             }
         }
 
@@ -410,6 +410,13 @@ static void mount_free(container_mount_t *mount)
     free(mount);
 }
 
+static void port_free(container_port_t *port)
+{
+    free(port->source);
+    free(port->target);
+    free(port);
+}
+
 gboolean
 container_unpack(resource_t * rsc, pe_working_set_t * data_set)
 {
@@ -465,16 +472,24 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         for (xmlNode *xml_child = __xml_first_child_element(xml_obj); xml_child != NULL;
              xml_child = __xml_next_element(xml_child)) {
 
-            char *port = crm_element_value_copy(xml_child, "port");
+            container_port_t *port = calloc(1, sizeof(container_port_t));
+            port->source = crm_element_value_copy(xml_child, "port");
 
-            if(port == NULL) {
-                port = crm_element_value_copy(xml_child, "range");
+            if(port->source == NULL) {
+                port->source = crm_element_value_copy(xml_child, "range");
+            } else {
+                port->target = crm_element_value_copy(xml_child, "internal-port");
             }
 
-            if(port != NULL) {
+            if(port->source != NULL && strlen(port->source) > 0) {
+                if(port->target == NULL) {
+                    port->target = strdup(port->source);
+                }
                 container_data->ports = g_list_append(container_data->ports, port);
+
             } else {
                 pe_err("Invalid port directive %s", ID(xml_child));
+                port_free(port);
             }
         }
     }
@@ -557,6 +572,7 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         GListPtr childIter = NULL;
         resource_t *new_rsc = NULL;
         container_mount_t *mount = NULL;
+        container_port_t *port = calloc(1, sizeof(container_port_t));
 
         int offset = 0, max = 1024;
         char *buffer = calloc(1, max+1);
@@ -576,10 +592,13 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         container_data->mounts = g_list_append(container_data->mounts, mount);
 
         if(container_data->control_port) {
-            container_data->ports = g_list_append(container_data->ports, strdup(container_data->control_port));
+            port->source = strdup(container_data->control_port);
         } else {
-            container_data->ports = g_list_append(container_data->ports, crm_itoa(DEFAULT_REMOTE_PORT));
+            port->source = crm_itoa(DEFAULT_REMOTE_PORT);
         }
+
+        port->target = strdup(port->source);
+        container_data->ports = g_list_append(container_data->ports, port);
 
         if (common_unpack(xml_resource, &new_rsc, rsc, data_set) == FALSE) {
             pe_err("Failed unpacking resource %s", crm_element_value(rsc->xml, XML_ATTR_ID));
@@ -845,7 +864,7 @@ container_free(resource_t * rsc)
 
     g_list_free_full(container_data->tuples, (GDestroyNotify)tuple_free);
     g_list_free_full(container_data->mounts, (GDestroyNotify)mount_free);
-    g_list_free_full(container_data->ports, free);
+    g_list_free_full(container_data->ports, (GDestroyNotify)port_free);
     common_free(rsc);
 }
 

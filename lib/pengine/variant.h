@@ -78,6 +78,13 @@ typedef struct
 
 } container_mount_t;
 
+typedef struct
+{
+        char *source;
+        char *target;
+
+} container_port_t;
+
 typedef struct container_variant_data_s {
         int masters;
         int replicas;

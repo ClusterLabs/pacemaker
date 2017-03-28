@@ -115,7 +115,12 @@
 	      <element name="port-mapping">
 		<attribute name="id"><data type="ID"/></attribute>
 		<choice>
-		  <attribute name="port"><data type="integer"/></attribute>
+		  <group>
+		    <attribute name="port"><data type="integer"/></attribute>
+		    <optional>
+		      <attribute name="internal-port"><data type="integer"/></attribute>
+		    </optional>
+		  </group>
 		  <attribute name="range">
 		    <data type="string">
 		      <param name="pattern">([0-9\-]+)</param>
