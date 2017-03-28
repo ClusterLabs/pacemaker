@@ -1008,56 +1008,6 @@ erase_status_tag(const char *uname, const char *tag, int options)
     }
 }
 
-static void
-crm_set_join_state(const char *uname, const char *start_state)
-{
-    if (safe_str_eq(start_state, "standby")) {
-        crm_notice("Forcing node %s to join in %s state per configured environment", uname, start_state);
-        update_attrd(uname, XML_CIB_ATTR_STANDBY, "on", NULL, FALSE);
-    } else if (safe_str_eq(start_state, "online")) {
-        crm_notice("Forcing node %s to join in %s state per configured environment", uname, start_state);
-        update_attrd(uname, XML_CIB_ATTR_STANDBY, "off", NULL, FALSE);
-    } else if (safe_str_eq(start_state, "default")) {
-        crm_debug("Not forcing a starting state on node %s", uname);
-    } else {
-        crm_warn("Unrecognized start state '%s', using 'default' (%s)", start_state, uname);
-    }
-}
-
-static void
-init_attrs_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
-{
-    char **data = (char**)user_data;
-    char *uname = data[0];
-    char *start_state = data[1];
-    char *xpath = data[2];
-
-    do_crm_log_unlikely(rc == 0 ? LOG_DEBUG : LOG_NOTICE,
-                        "Erasing of \"%s\": %s (rc=%d)", xpath, pcmk_strerror(rc), rc);
-    crm_set_join_state(uname, start_state);
-    free(data[0]);
-    free(data[1]);
-    free(data[2]);
-}
-
-void
-init_transient_attrs(const char *uname, const char *start_state, int options)
-{
-    if (fsa_cib_conn && uname) {
-        int rc;
-        char *xpath = crm_strdup_printf("//node_state[@uname='%s']/%s", uname, XML_TAG_TRANSIENT_NODEATTRS);
-        int cib_opts = cib_quorum_override | cib_xpath | options;
-        const char **data = malloc(sizeof(char*)*3);
-        data[0] = strdup(uname);
-        data[1] = strdup(start_state);
-        data[2] = strdup(xpath);
-
-        crm_info("Erasing transient attributes for %s", uname);
-        rc = fsa_cib_conn->cmds->delete(fsa_cib_conn, xpath, NULL, cib_opts);
-        fsa_register_cib_callback(rc, FALSE, data, init_attrs_callback);
-    }
-}
-
 void crmd_peer_down(crm_node_t *peer, bool full) 
 {
     if(full && peer->state == NULL) {
