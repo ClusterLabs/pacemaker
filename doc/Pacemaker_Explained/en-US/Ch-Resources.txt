@@ -1,5 +1,6 @@
 = Cluster Resources =
 
+[[s-resource-primitive]]
 == What is a Cluster Resource? ==
 
 indexterm:[Resource]

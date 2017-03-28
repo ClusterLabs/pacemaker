@@ -1523,12 +1523,24 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
     g_hash_table_insert(params, strdup(XML_ATTR_CRM_VERSION), strdup(CRM_FEATURE_SET));
 
     op = resources_action_create(rsc->id, rclass, rprov, rtype, action, 0, -1, params, 0);
+    if (op == NULL) {
+        /* Re-run with stderr enabled so we can display a sane error message */
+        crm_enable_stderr(TRUE);
+        op = resources_action_create(rsc->id, rclass, rprov, rtype, action, 0,
+                                     -1, params, 0);
+
+        /* We know op will be NULL, but this makes static analysis happy */
+        services_action_free(op);
+
+        return crm_exit(EINVAL);
+    }
+
 
     if(do_trace) {
         setenv("OCF_TRACE_RA", "1", 1);
     }
 
-    if(op && override_hash) {
+    if (override_hash) {
         GHashTableIter iter;
         char *name = NULL;
         char *value = NULL;
@@ -1541,13 +1553,7 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
         }
     }
 
-    if(op == NULL) {
-        /* Re-run but with stderr enabled so we can display a sane error message */
-        crm_enable_stderr(TRUE);
-        resources_action_create(rsc->id, rclass, rprov, rtype, action, 0, -1, params, 0);
-        return crm_exit(EINVAL);
-
-    } else if (services_action_sync(op)) {
+    if (services_action_sync(op)) {
         int more, lpc, last;
         char *local_copy = NULL;
 

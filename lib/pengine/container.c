@@ -113,6 +113,18 @@ create_op(xmlNode *parent, const char *prefix, const char *task, const char *int
     crm_xml_add(xml_op, "name", task);
 }
 
+/*!
+ * \internal
+ * \brief Check whether cluster can manage resource inside container
+ *
+ * \param[in] data  Container variant data
+ *
+ * \return TRUE if networking configuration is acceptable, FALSE otherwise
+ *
+ * \note The resource is manageable if an IP range or control port has been
+ *       specified. If a control port is used without an IP range, replicas per
+ *       host must be 1.
+ */
 static bool
 valid_network(container_variant_data_t *data)
 {
@@ -123,6 +135,7 @@ valid_network(container_variant_data_t *data)
         if(data->replicas_per_host > 1) {
             pe_err("Specifying the 'control-port' for %s requires 'replicas-per-host=1'", data->prefix);
             data->replicas_per_host = 1;
+            /* @TODO to be sure: clear_bit(rsc->flags, pe_rsc_unique); */
         }
         return TRUE;
     }
@@ -313,7 +326,7 @@ create_remote_resource(
     resource_t *parent, container_variant_data_t *data, container_grouping_t *tuple,
     pe_working_set_t * data_set) 
 {
-    if(valid_network(data) && tuple->child) {
+    if (tuple->child && valid_network(data)) {
         node_t *node = NULL;
         xmlNode *xml_obj = NULL;
         xmlNode *xml_remote = NULL;
@@ -436,11 +449,24 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         return FALSE;
     }
 
-    value = crm_element_value(xml_obj, "replicas");
-    if(value == NULL) {
-        value = crm_element_value(xml_obj, "masters");
+    value = crm_element_value(xml_obj, "masters");
+    container_data->masters = crm_parse_int(value, "0");
+    if (container_data->masters < 0) {
+        pe_err("'masters' for %s must be nonnegative integer, using 0",
+               rsc->id);
+        container_data->masters = 0;
     }
-    container_data->replicas = crm_parse_int(value, "1");
+
+    value = crm_element_value(xml_obj, "replicas");
+    if ((value == NULL) && (container_data->masters > 0)) {
+        container_data->replicas = container_data->masters;
+    } else {
+        container_data->replicas = crm_parse_int(value, "1");
+    }
+    if (container_data->replicas < 1) {
+        pe_err("'replicas' for %s must be positive integer, using 1", rsc->id);
+        container_data->replicas = 1;
+    }
 
     /*
      * Communication between containers on the same host via the
@@ -449,25 +475,26 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
      */
     value = crm_element_value(xml_obj, "replicas-per-host");
     container_data->replicas_per_host = crm_parse_int(value, "1");
-
-    if(container_data->replicas_per_host == 1) {
+    if (container_data->replicas_per_host < 1) {
+        pe_err("'replicas-per-host' for %s must be positive integer, using 1",
+               rsc->id);
+        container_data->replicas_per_host = 1;
+    }
+    if (container_data->replicas_per_host == 1) {
         clear_bit(rsc->flags, pe_rsc_unique);
     }
 
-    value = crm_element_value(xml_obj, "masters");
-    container_data->masters = crm_parse_int(value, "1");
-
     container_data->docker_run_options = crm_element_value_copy(xml_obj, "options");
     container_data->image = crm_element_value_copy(xml_obj, "image");
+    container_data->docker_network = crm_element_value_copy(xml_obj, "network");
 
     xml_obj = first_named_child(rsc->xml, "network");
     if(xml_obj) {
 
         container_data->ip_range_start = crm_element_value_copy(xml_obj, "ip-range-start");
         container_data->host_netmask = crm_element_value_copy(xml_obj, "host-netmask");
-        container_data->host_network = crm_element_value_copy(xml_obj, "host-network");
+        container_data->host_network = crm_element_value_copy(xml_obj, "host-interface");
         container_data->control_port = crm_element_value_copy(xml_obj, "control-port");
-        container_data->docker_network = crm_element_value_copy(xml_obj, "docker-network");
 
         for (xmlNode *xml_child = __xml_first_child_element(xml_obj); xml_child != NULL;
              xml_child = __xml_next_element(xml_child)) {
@@ -517,7 +544,7 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
     }
 
     xml_obj = first_named_child(rsc->xml, "primitive");
-    if(xml_obj && valid_network(container_data) && container_data->replicas > 0) {
+    if (xml_obj && valid_network(container_data)) {
         char *value = NULL;
         xmlNode *xml_set = NULL;
 
@@ -558,11 +585,8 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         //crm_xml_add(xml_obj, XML_ATTR_ID, container_data->prefix);
         add_node_copy(xml_resource, xml_obj);
 
-    /* } else if(xml_obj && container_data->ip_range_start) { */
-    /*     xml_resource = copy_xml(xml_resource); */
-
     } else if(xml_obj) {
-        pe_err("Cannot control %s inside container %s without a value for ip-range-start",
+        pe_err("Cannot control %s inside %s without either ip-range-start or control-port",
                rsc->id, ID(xml_obj));
         return FALSE;
     }

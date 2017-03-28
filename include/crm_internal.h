@@ -384,7 +384,6 @@ int  remote_proxy_dispatch(const char *buffer, ssize_t length, gpointer userdata
 void remote_proxy_disconnected(gpointer data);
 void remote_proxy_free(gpointer data);
 
-void remote_proxy_end_session(remote_proxy_t *proxy);
 void remote_proxy_relay_event(remote_proxy_t *proxy, xmlNode *msg);
 void remote_proxy_relay_response(remote_proxy_t *proxy, xmlNode *msg, int msg_id);
 

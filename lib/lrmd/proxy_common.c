@@ -100,7 +100,7 @@ remote_proxy_relay_response(remote_proxy_t *proxy, xmlNode *msg, int msg_id)
     free_xml(response);
 }
 
-void
+static void
 remote_proxy_end_session(remote_proxy_t *proxy)
 {
     if (proxy == NULL) {

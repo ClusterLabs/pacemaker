@@ -3,7 +3,7 @@
 [[group-resources]]
 == Groups - A Syntactic Shortcut ==
 indexterm:[Group Resources]
-indexterm:[Resources,Groups]
+indexterm:[Resource,Groups]
 
 
 One of the most common elements of a cluster is a set of resources
@@ -134,7 +134,7 @@ current location with a score of 500.
 [[s-resource-clone]]
 == Clones - Resources That Get Active on Multiple Hosts ==
 indexterm:[Clone Resources]
-indexterm:[Resources,Clones]
+indexterm:[Resource,Clones]
 
 Clones were initially conceived as a convenient way to start multiple
 instances of an IP address resource and have them distributed throughout the
@@ -474,7 +474,7 @@ OCF_RESKEY_CRM_meta_notify_start_uname="sles-1 sles-3 sles-2"
 == Multi-state - Resources That Have Multiple Modes ==
 
 indexterm:[Multi-state Resources]
-indexterm:[Resources,Multi-state]
+indexterm:[Resource,Multi-state]
 
 Multi-state resources are a specialization of clone resources; please
 ensure you understand <<s-resource-clone>> before continuing!
@@ -1027,3 +1027,329 @@ what is about to happen to it.
 * Resources that were promoted: +$OCF_RESKEY_CRM_meta_notify_promote_resource+
 * Resources that were demoted: +$OCF_RESKEY_CRM_meta_notify_demote_resource+
 * Resources that were stopped: +$OCF_RESKEY_CRM_meta_notify_stop_resource+
+
+[[s-resource-bundle]]
+== Bundles - Isolated Environments ==
+indexterm:[bundle]
+indexterm:[Resource,bundle]
+indexterm:[Docker,bundle]
+
+Pacemaker (version 1.1.17 and later) supports a special syntax for combining an
+isolated environment with the infrastructure support that it needs: the
+'bundle'.
+
+The only isolation technology currently supported by Pacemaker bundles
+is https://www.docker.com/[Docker] containers.
+footnote:[Docker is a trademark of Docker, Inc. No endorsement by or
+association with Docker, Inc. is implied.]
+
+.A bundle for a containerized web server
+====
+[source,XML]
+----
+<bundle id="httpd-containers">
+   <docker image="pcmk:http" replicas="3"/>
+   <network ip-range-start="192.168.122.131"
+            host-netmask="24"
+            host-interface="eth0">
+      <port-mapping id="httpd-port" port="80"/>
+   </network>
+   <storage>
+      <storage-mapping id="httpd-root"
+                       source-dir-root="/var/local/containers"
+                       target-dir="/var/www/html"
+                       options="rw"/>
+      <storage-mapping id="httpd-logs"
+                       source-dir-root="/var/log/containers"
+                       target-dir="/etc/httpd/logs"
+                       options="rw"/>
+   </storage>
+   <primitive class="ocf" id="httpd" provider="heartbeat" type="apache"/>
+</bundle>
+----
+====
+
+=== Bundle Properties ===
+
+.Properties of a Bundle
+[width="95%",cols="3m,5<",options="header",align="center"]
+|=========================================================
+
+|Field
+|Description
+
+|id
+|A unique name for the bundle (required)
+ indexterm:[id,bundle]
+ indexterm:[bundle,Property,id]
+
+|description
+|Arbitrary text (not used by Pacemaker)
+ indexterm:[description,bundle]
+ indexterm:[bundle,Property,description]
+
+|=========================================================
+
+=== Docker Properties ===
+
+A bundle must contain exactly one +<docker>+ element.
+
+Before configuring a bundle in Pacemaker, the user must install Docker and
+supply a fully configured Docker image on every node allowed to run the bundle.
+
+Pacemaker will create an implicit +ocf:heartbeat:docker+ resource to manage
+a bundle's Docker container.
+
+.Properties of a Bundle's Docker Element
+[width="95%",cols="2m,1,4<",options="header",align="center"]
+|=========================================================
+
+|Field
+|Default
+|Description
+
+|image
+|
+|Docker image tag (required)
+ indexterm:[image,Docker]
+ indexterm:[Docker,Property,image]
+
+|replicas
+|Value of +masters+ if that is positive, else 1
+|A positive integer specifying the number of container instances to launch
+ indexterm:[replicas,Docker]
+ indexterm:[Docker,Property,replicas]
+
+|replicas-per-host
+|1
+|A positive integer specifying the number of container instances allowed to run
+ on a single node
+ indexterm:[replicas-per-host,Docker]
+ indexterm:[Docker,Property,replicas-per-host]
+
+|masters
+|0
+|A non-negative integer that, if positive, indicates that the containerized
+ service should be treated as a master/slave service, with this many master
+ instances allowed
+ indexterm:[masters,Docker]
+ indexterm:[Docker,Property,masters]
+
+|network
+|
+|If specified, this will be passed to +docker run+ as the
+ https://docs.docker.com/engine/reference/run/#network-settings[network setting]
+ for the Docker container.
+ indexterm:[network,Docker]
+ indexterm:[Docker,Property,network]
+
+|options
+|
+|Extra command-line options to pass to `docker run`
+ indexterm:[options,Docker]
+ indexterm:[Docker,Property,options]
+
+|=========================================================
+
+=== Bundle Network Properties ===
+
+A bundle may optionally contain one +<network>+ element.
+indexterm:[bundle,network]
+
+.Properties of a Bundle's Network Element
+[width="95%",cols="2m,1,4<",options="header",align="center"]
+|=========================================================
+
+|Field
+|Default
+|Description
+
+|ip-range-start
+|
+|If specified, Pacemaker will create an implicit +ocf:heartbeat:IPaddr2+
+ resource for each container instance, starting with this IP address,
+ using up to +replicas+ sequential addresses. These addresses can be used
+ from the host's network to reach the service inside the container, though
+ it is not visible within the container itself. Only IPv4 addresses are
+ currently supported.
+ indexterm:[ip-range-start,network]
+ indexterm:[network,Property,ip-range-start]
+
+|host-netmask
+|32
+|If +ip-range-start+ is specified, the IP addresses are created with this
+ CIDR netmask (as a number of bits).
+ indexterm:[host-netmask,network]
+ indexterm:[network,Property,host-netmask]
+
+|host-interface
+|
+|If +ip-range-start+ is specified, the IP addresses are created on this
+ host interface (by default, it will be determined from the IP address).
+ indexterm:[host-interface,network]
+ indexterm:[network,Property,host-interface]
+
+|control-port
+|
+|If the bundle contains a +primitive+, the cluster will use this integer TCP
+ port for communication with Pacemaker Remote inside the container. This takes
+ precedence over the value of any PCMK_remote_port environment variable set
+ in the container image. This can allow a +primitive+ to be specified without
+ using +ip-start-range+, in which case +replicas-per-host+ must be 1.
+ indexterm:[control-port,network]
+ indexterm:[network,Property,control-port]
+
+|=========================================================
+
+Additionally, a +<network>+ element may optionally contain one or more
++<port-mapping>+ elements.
+indexterm:[bundle,network,port-mapping]
+
+.Properties of a Bundle's Port-Mapping Element
+[width="95%",cols="2m,1,4<",options="header",align="center"]
+|=========================================================
+
+|Field
+|Default
+|Description
+
+|id
+|
+|A unique name for the port mapping (required)
+ indexterm:[id,port-mapping]
+ indexterm:[port-mapping,Property,id]
+
+|port
+|
+|If this is specified, connections to this TCP port number on the host network
+ (on the container's assigned IP address, if +ip-range-start+ is specified)
+ will be forwarded to the container network. Exactly one of +port+ or +range+
+ must be specified in a +port-mapping+.
+ indexterm:[port,port-mapping]
+ indexterm:[port-mapping,Property,port]
+
+|internal-port
+|value of +port+
+|If +port+ and this are specified, connections to +port+ on the host's network
+ will be forwarded to this port on the container network.
+ indexterm:[internal-port,port-mapping]
+ indexterm:[port-mapping,Property,internal-port]
+
+|range
+|
+|If this is specified, connections to these TCP port numbers (expressed as
+ 'first_port'-'last_port') on the host network (on the container's assigned IP
+ address, if +ip-range-start+ is specified) will be forwarded to the same ports
+ in the container network. Exactly one of +port+ or +range+ must be specified
+ in a +port-mapping+.
+ indexterm:[range,port-mapping]
+ indexterm:[port-mapping,Property,range]
+
+|=========================================================
+
+[NOTE]
+====
+If the bundle contains a +primitive+, Pacemaker will automatically map the
++control-port+, so it is not necessary to specify that port in a
++port-mapping+.
+====
+
+=== Bundle Storage Properties ===
+
+A bundle may optionally contain one +<storage>+ element. A +<storage>+ element
+has no properties of its own, but may contain one or more +<storage-mapping>+
+elements.
+indexterm:[bundle,storage,storage-mapping]
+
+.Properties of a Bundle's Storage-Mapping Element
+[width="95%",cols="2m,1,4<",options="header",align="center"]
+|=========================================================
+
+|Field
+|Default
+|Description
+
+|id
+|
+|A unique name for the storage mapping (required)
+ indexterm:[id,storage-mapping]
+ indexterm:[storage-mapping,Property,id]
+
+|source-dir
+|
+|The absolute path on the host's filesystem that will be mapped into the
+ container. Exactly one of +source-dir+ and +source-dir-root+ must be specified
+ in a +storage-mapping+.
+ indexterm:[source-dir,storage-mapping]
+ indexterm:[storage-mapping,Property,source-dir]
+
+|source-dir-root
+|
+|The start of a path on the host's filesystem that will be mapped into the
+ container, using a different subdirectory on the host for each container
+ instance. Exactly one of +source-dir+ and +source-dir-root+ must be specified
+ in a +storage-mapping+.
+ indexterm:[source-dir-root,storage-mapping]
+ indexterm:[storage-mapping,Property,source-dir-root]
+
+|target-dir
+|
+|The path name within the container where the host storage will be mapped
+ (required)
+ indexterm:[target-dir,storage-mapping]
+ indexterm:[storage-mapping,Property,target-dir]
+
+|options
+|
+|File system mount options to use when mapping the storage
+ indexterm:[options,storage-mapping]
+ indexterm:[storage-mapping,Property,options]
+
+|=========================================================
+
+[NOTE]
+====
+If the bundle contains a +primitive+,
+Pacemaker will automatically map the equivalent of
++source-dir=/etc/pacemaker/authkey target-dir=/etc/pacemaker/authkey+
+and +source-dir-root=/var/log/container target-dir=/var/log+ into the
+container, so it is not necessary to specify those paths in a
++storage-mapping+.
+====
+
+=== Bundle Primitive ===
+
+A bundle may optionally contain one +<primitive>+ resource
+(see <<s-resource-primitive>>). The primitive may have operations,
+instance attributes and meta-attributes defined, as usual.
+
+If a bundle contains a primitive resource, the container image must include
+the Pacemaker Remote daemon, and either +ip-range-start+ or +control-port+
+must be configured in the bundle. Pacemaker will create an implicit
++ocf:pacemaker:remote+ resource for the connection, launch Pacemaker Remote
+within the container, and monitor and manage the primitive resource via
+Pacemaker Remote.
+
+If the bundle has more than one container instance (replica), the primitive
+resource will function as an implicit clone (see <<s-resource-clone>>) --
+a multistate clone if the bundle has +masters+ greater than zero
+(see <<s-resource-multistate>>).
+ 
+[IMPORTANT]
+====
+If Pacemaker Remote nodes are used in a cluster with bundle resources that
+contain a +primitive+, it is strongly recommended to configure location
+constraints prohibiting the bundles from running on those nodes. Running a
+bundle with a +primitive+ on a Pacemaker Remote node might work if
++ip-range-start+ is used, but that configuration has not yet been tested.
+====
+
+=== Limitations of Bundles ===
+
+Currently, bundles may not be cloned, or included in groups or colocation
+constraints. This includes the bundle's primitive and any resources
+implicitly created by Pacemaker for the bundle.
+
+Bundles do not have instance attributes, meta-attributes, utilization
+attributes, or operations of their own, though a primitive included in a bundle
+may.

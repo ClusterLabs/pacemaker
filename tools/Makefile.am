@@ -26,6 +26,8 @@ COMMONLIBS	= 							\
 		$(top_builddir)/lib/cib/libcib.la			\
 		$(CURSESLIBS) $(CLUSTERLIBS)
 
+noinst_HEADERS		= crm_resource.h fake_transition.h
+
 pcmkdir			= $(datadir)/$(PACKAGE)
 pcmk_DATA		= report.common report.collector
 
