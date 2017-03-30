@@ -609,7 +609,7 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         container_data->mounts = g_list_append(container_data->mounts, mount);
 
         mount = calloc(1, sizeof(container_mount_t));
-        mount->source = strdup("/var/log/containers");
+        mount->source = strdup(CRM_LOG_DIR "/bundles");
         mount->target = strdup("/var/log");
         mount->options = NULL;
         mount->flags = 1;
