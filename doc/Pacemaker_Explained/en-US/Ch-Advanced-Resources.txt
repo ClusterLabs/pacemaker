@@ -1047,7 +1047,7 @@ association with Docker, Inc. is implied.]
 ====
 [source,XML]
 ----
-<bundle id="httpd-containers">
+<bundle id="httpd-bundle">
    <docker image="pcmk:http" replicas="3"/>
    <network ip-range-start="192.168.122.131"
             host-netmask="24"
@@ -1055,12 +1055,16 @@ association with Docker, Inc. is implied.]
       <port-mapping id="httpd-port" port="80"/>
    </network>
    <storage>
+      <storage-mapping id="httpd-syslog"
+                       source-dir="/dev/log"
+                       target-dir="/dev/log"
+                       options="rw"/>
       <storage-mapping id="httpd-root"
-                       source-dir-root="/var/local/containers"
+                       source-dir="/srv/html"
                        target-dir="/var/www/html"
                        options="rw"/>
       <storage-mapping id="httpd-logs"
-                       source-dir-root="/var/log/containers"
+                       source-dir-root="/var/log/pacemaker/bundles"
                        target-dir="/etc/httpd/logs"
                        options="rw"/>
    </storage>
@@ -1130,8 +1134,8 @@ a bundle's Docker container.
 |masters
 |0
 |A non-negative integer that, if positive, indicates that the containerized
- service should be treated as a master/slave service, with this many master
- instances allowed
+ service should be treated as a multistate service, with this many replicas
+ allowed to run the service in the master role
  indexterm:[masters,Docker]
  indexterm:[Docker,Property,masters]
 
@@ -1200,6 +1204,16 @@ indexterm:[bundle,network]
  indexterm:[network,Property,control-port]
 
 |=========================================================
+
+[NOTE]
+====
+If +ip-range-start+ is used, Pacemaker will automatically ensure that
++/etc/hosts+ inside the containers has entries for each replica and its
+assigned IP. Replicas are named by the bundle id plus a dash and an integer
+counter starting with zero. For example, if a bundle named +httpd-bundle+ has
++replicas=2+, its containers will be named +httpd-bundle-0+ and
++httpd-bundle-1+.
+====
 
 Additionally, a +<network>+ element may optionally contain one or more
 +<port-mapping>+ elements.
@@ -1312,9 +1326,11 @@ indexterm:[bundle,storage,storage-mapping]
 If the bundle contains a +primitive+,
 Pacemaker will automatically map the equivalent of
 +source-dir=/etc/pacemaker/authkey target-dir=/etc/pacemaker/authkey+
-and +source-dir-root=/var/log/container target-dir=/var/log+ into the
+and +source-dir-root=/var/log/pacemaker/bundles target-dir=/var/log+ into the
 container, so it is not necessary to specify those paths in a
-+storage-mapping+.
++storage-mapping+. Newer versions of +ocf:heartbeat:docker+ will automatically
+create the source directories if they do not exist, but the user may want to
+ensure they exist beforehand.
 ====
 
 === Bundle Primitive ===

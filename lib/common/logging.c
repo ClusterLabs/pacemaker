@@ -223,6 +223,10 @@ crm_add_logfile(const char *filename)
     bool is_default = false;
     static int default_fd = -1;
     static gboolean have_logfile = FALSE;
+
+    /* @COMPAT This should be CRM_LOG_DIR "/pacemaker.log". We aren't changing
+     * it yet because it will be a significant user-visible change to publicize.
+     */
     const char *default_logfile = "/var/log/pacemaker.log";
 
     struct stat parent;
