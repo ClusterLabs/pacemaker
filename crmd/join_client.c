@@ -177,6 +177,32 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
     free_xml(generation);
 }
 
+static void
+set_join_state(const char * start_state)
+{
+    if (safe_str_eq(start_state, "standby")) {
+        char *attr_id = crm_strdup_printf("nodes-%.256s-standby", fsa_our_uuid);
+        crm_notice("Forcing node %s to join in %s state per configured environment",
+                   fsa_our_uname, start_state);
+        update_attr_delegate(fsa_cib_conn, cib_sync_call, XML_CIB_TAG_NODES, fsa_our_uuid,
+                             NULL, NULL, attr_id, "standby", "on", TRUE, NULL, NULL);
+
+    } else if (safe_str_eq(start_state, "online")) {
+        char *attr_id = crm_strdup_printf("nodes-%.256s-standby", fsa_our_uuid);
+        crm_notice("Forcing node %s to join in %s state per configured environment",
+                   fsa_our_uname, start_state);
+        update_attr_delegate(fsa_cib_conn, cib_sync_call, XML_CIB_TAG_NODES, fsa_our_uuid,
+                             NULL, NULL, attr_id, "standby", "off", TRUE, NULL, NULL);
+
+    } else if (safe_str_eq(start_state, "default")) {
+        crm_debug("Not forcing a starting state on node %s", fsa_our_uname);
+
+    } else {
+        crm_warn("Unrecognized start state '%s', using 'default' (%s)",
+                 start_state, fsa_our_uname);
+    }
+}
+
 /*	A_CL_JOIN_RESULT	*/
 /* aka. this is notification that we have (or have not) been accepted */
 void
@@ -256,27 +282,7 @@ do_cl_join_finalize_respond(long long action,
             update_attrd(fsa_our_uname, XML_CIB_ATTR_SHUTDOWN, "0", NULL, FALSE);
 
             if (start_state) {
-                if (safe_str_eq(start_state, "standby")) {
-                    char *attr_id = crm_strdup_printf("nodes-%.256s-standby", fsa_our_uuid);
-                    crm_notice("Forcing node %s to join in %s state per configured environment",
-                               fsa_our_uname, start_state);
-                    update_attr_delegate(fsa_cib_conn, cib_sync_call, XML_CIB_TAG_NODES, fsa_our_uuid,
-                                         NULL, NULL, attr_id, "standby", "on", TRUE, NULL, NULL);
-
-                } else if (safe_str_eq(start_state, "online")) {
-                    char *attr_id = crm_strdup_printf("nodes-%.256s-standby", fsa_our_uuid);
-                    crm_notice("Forcing node %s to join in %s state per configured environment",
-                               fsa_our_uname, start_state);
-                    update_attr_delegate(fsa_cib_conn, cib_sync_call, XML_CIB_TAG_NODES, fsa_our_uuid,
-                               NULL, NULL, attr_id, "standby", "off", TRUE, NULL, NULL);
-
-                } else if (safe_str_eq(start_state, "default")) {
-                    crm_debug("Not forcing a starting state on node %s", fsa_our_uname);
-
-                } else {
-                    crm_warn("Unrecognized start state '%s', using 'default' (%s)",
-                             start_state, fsa_our_uname);
-                }
+                set_join_state(start_state);
             }
         }
 
