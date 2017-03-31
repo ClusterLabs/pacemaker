@@ -1,5 +1,7 @@
 = Utilization and Placement Strategy =
 
+[[s-utilization]]
+
 Pacemaker decides where to place a resource according to the resource
 allocation scores on every node. The resource will be allocated to the
 node where the resource has the highest score.

@@ -284,6 +284,13 @@ indexterm:[Cluster,Option,pe-input-series-max]
 The number of "normal" PE inputs to save. Used when reporting problems.
 A value of -1 means unlimited (report all).
 
+| placement-strategy | default |
+indexterm:[placement-strategy,Cluster Option]
+indexterm:[Cluster,Option,placement-strategy]
+ How the cluster should allocate resources to nodes (see <<s-utilization>>).
+ Allowed values are +default+, +utilization+, +balanced+, and +minimal+.
+ '(since 1.1.0)'
+
 | node-health-strategy | none |
 indexterm:[node-health-strategy,Cluster Option]
 indexterm:[Cluster,Option,node-health-strategy]
