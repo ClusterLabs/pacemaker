@@ -99,6 +99,7 @@ typedef struct container_variant_data_s {
         char *ip_range_start;
         char *docker_host_options;
         char *docker_run_options;
+        char *docker_run_command;
 
         resource_t *child;
 

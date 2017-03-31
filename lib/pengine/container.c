@@ -209,6 +209,12 @@ create_docker_resource(
             offset += snprintf(buffer+offset, max-offset, " --net=%s", data->docker_network);
         }
 
+        if(data->control_port) {
+            offset += snprintf(buffer+offset, max-offset, " -e PCMK_remote_port=%s", data->control_port);
+        } else {
+            offset += snprintf(buffer+offset, max-offset, " -e PCMK_remote_port=%d", DEFAULT_REMOTE_PORT);
+        }
+
         for(GListPtr pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
             container_mount_t *mount = pIter->data;
 
@@ -257,15 +263,11 @@ create_docker_resource(
         free(dbuffer);
 
         if(tuple->child) {
-            char *command = NULL;
-
-            if(data->control_port) {
-                command = crm_strdup_printf(SBIN_DIR"/pacemaker_remoted -p %s", data->control_port);
+            if(data->docker_run_command) {
+                create_nvp(xml_obj, "run_cmd", data->docker_run_command);
             } else {
-                command = crm_strdup_printf(SBIN_DIR"/pacemaker_remoted -p %d", DEFAULT_REMOTE_PORT);
+                create_nvp(xml_obj, "run_cmd", SBIN_DIR"/pacemaker_remoted");
             }
-            create_nvp(xml_obj, "run_cmd", command);
-            free(command);
 
             /* TODO: Allow users to specify their own?
              *
@@ -468,6 +470,7 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         container_data->host_network = crm_element_value_copy(xml_obj, "host-network");
         container_data->control_port = crm_element_value_copy(xml_obj, "control-port");
         container_data->docker_network = crm_element_value_copy(xml_obj, "docker-network");
+        container_data->docker_run_command = crm_element_value_copy(xml_obj, "run-command");
 
         for (xmlNode *xml_child = __xml_first_child_element(xml_obj); xml_child != NULL;
              xml_child = __xml_next_element(xml_child)) {
@@ -860,6 +863,7 @@ container_free(resource_t * rsc)
     free(container_data->ip_range_start);
     free(container_data->docker_network);
     free(container_data->docker_run_options);
+    free(container_data->docker_run_command);
     free(container_data->docker_host_options);
 
     g_list_free_full(container_data->tuples, (GDestroyNotify)tuple_free);

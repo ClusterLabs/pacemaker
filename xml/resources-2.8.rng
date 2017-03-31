@@ -86,7 +86,7 @@
 		<attribute name="masters"><data type="integer"/></attribute>
 	      </optional>
 	      <optional>
-		<attribute name="pcmk-remote-bin"> <text/></attribute>
+		<attribute name="run-command"> <text/></attribute>
 	      </optional>
 	      <optional>
 		<attribute name="options"><text/></attribute>
