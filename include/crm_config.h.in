@@ -43,6 +43,9 @@
 
 /****** Directories ******/
 
+/* Where Pacemaker can store log files */
+#undef CRM_LOG_DIR
+
 /* Location for Pacemaker daemons */
 #undef CRM_DAEMON_DIR
 

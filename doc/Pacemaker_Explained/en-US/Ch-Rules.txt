@@ -336,7 +336,7 @@ value (hour) still matches!
 ====
 [source,XML]
 -------
-<rule id="rule4" boolean_op="or">
+<rule id="rule4" boolean-op="or">
    <date_expression id="date_expr4-1" operation="date_spec">
     <date_spec hours="9-16" days="1-5"/>
    </date_expression>
@@ -351,8 +351,8 @@ value (hour) still matches!
 ====
 [source,XML]
 -------
-<rule id="rule5" boolean_op="and">
-   <rule id="rule5-nested1" boolean_op="or">
+<rule id="rule5" boolean-op="and">
+   <rule id="rule5-nested1" boolean-op="or">
     <date_expression id="date_expr5-1" operation="date_spec">
      <date_spec hours="9-16"/>
     </date_expression>
@@ -371,7 +371,7 @@ value (hour) still matches!
 ====
 [source,XML]
 -------
-<rule id="rule6" boolean_op="and">
+<rule id="rule6" boolean-op="and">
    <date_expression id="date_expr6-1" operation="date_spec">
     <date_spec weekdays="1"/>
    </date_expression>
@@ -392,7 +392,7 @@ You may wish to write +end="2005-03-31T23:59:59"+ to avoid confusion.
 =====
 [source,XML]
 -------
-<rule id="rule7" boolean_op="and">
+<rule id="rule7" boolean-op="and">
    <date_expression id="date_expr7" operation="date_spec">
     <date_spec weekdays="5" monthdays="13" moon="4"/>
    </date_expression>

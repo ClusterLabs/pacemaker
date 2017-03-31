@@ -29,6 +29,32 @@
 }
 
 {
+   Bash leak in cli regression testing
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:xmalloc
+   obj:/usr/bin/bash
+   fun:execute_command_internal
+   obj:/usr/bin/bash
+   fun:execute_command_internal
+   fun:parse_and_execute
+   fun:command_substitute
+   obj:/usr/bin/bash
+   obj:/usr/bin/bash
+   obj:/usr/bin/bash
+   fun:expand_string_assignment
+   obj:/usr/bin/bash
+   obj:/usr/bin/bash
+   obj:/usr/bin/bash
+   obj:/usr/bin/bash
+   fun:execute_command_internal
+   fun:execute_command_internal
+   fun:execute_command
+   fun:execute_command_internal
+}
+
+{
    Ignore option parsing
    Memcheck:Leak
    fun:realloc

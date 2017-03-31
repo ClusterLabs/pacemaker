@@ -185,6 +185,7 @@ rsc_fail_name(resource_t *rsc)
  * \param[out] re        Where to store resulting regular expression
  *
  * \note Fail attributes are named like PREFIX-RESOURCE#OP_INTERVAL.
+ *       The caller is responsible for freeing re with regfree().
  */
 static void
 generate_fail_regex(const char *prefix, const char *rsc_name,
@@ -215,9 +216,12 @@ generate_fail_regex(const char *prefix, const char *rsc_name,
  * \internal
  * \brief Compile regular expressions to match failure-related node attributes
  *
- * \param[in]  rsc       Resource being checked for failures
- * \param[in]  data_set  Data set (for CRM feature set version)
- * \param[out] re        Where to store resulting regular expression
+ * \param[in]  rsc             Resource being checked for failures
+ * \param[in]  data_set        Data set (for CRM feature set version)
+ * \param[out] failcount_re    Storage for regular expression for fail count
+ * \param[out] lastfailure_re  Storage for regular expression for last failure
+ *
+ * \note The caller is responsible for freeing the expressions with regfree().
  */
 static void
 generate_fail_regexes(resource_t *rsc, pe_working_set_t *data_set,
@@ -258,6 +262,9 @@ get_failcount_full(node_t *node, resource_t *rsc, time_t *last_failure,
             last = QB_MAX(last, crm_int_helper(value, NULL));
         }
     }
+
+    regfree(&failcount_re);
+    regfree(&lastfailure_re);
 
     if ((failcount > 0) && (last > 0) && (last_failure != NULL)) {
         *last_failure = last;
