@@ -258,21 +258,24 @@ do_cl_join_finalize_respond(long long action,
             if (start_state) {
                 if (safe_str_eq(start_state, "standby")) {
                     char *attr_id = crm_strdup_printf("nodes-%.256s-standby", fsa_our_uuid);
-                    crm_notice("Forcing node %s to join in %s state per configured environment", fsa_our_uname, start_state);
-                    update_attr_delegate(fsa_cib_conn, cib_sync_call, XML_CIB_TAG_NODES, fsa_our_uuid, NULL, NULL, 
-                                         attr_id, "standby", "on", TRUE, NULL, NULL);
+                    crm_notice("Forcing node %s to join in %s state per configured environment",
+                               fsa_our_uname, start_state);
+                    update_attr_delegate(fsa_cib_conn, cib_sync_call, XML_CIB_TAG_NODES, fsa_our_uuid,
+                                         NULL, NULL, attr_id, "standby", "on", TRUE, NULL, NULL);
 
                 } else if (safe_str_eq(start_state, "online")) {
                     char *attr_id = crm_strdup_printf("nodes-%.256s-standby", fsa_our_uuid);
-                    crm_notice("Forcing node %s to join in %s state per configured environment", fsa_our_uname, start_state);
-                    update_attr_delegate(fsa_cib_conn, cib_sync_call, XML_CIB_TAG_NODES, fsa_our_uuid, NULL, NULL, 
-                                         attr_id, "standby", "off", TRUE, NULL, NULL);
+                    crm_notice("Forcing node %s to join in %s state per configured environment",
+                               fsa_our_uname, start_state);
+                    update_attr_delegate(fsa_cib_conn, cib_sync_call, XML_CIB_TAG_NODES, fsa_our_uuid,
+                               NULL, NULL, attr_id, "standby", "off", TRUE, NULL, NULL);
 
                 } else if (safe_str_eq(start_state, "default")) {
                     crm_debug("Not forcing a starting state on node %s", fsa_our_uname);
 
                 } else {
-                    crm_warn("Unrecognized start state '%s', using 'default' (%s)", start_state, fsa_our_uname);
+                    crm_warn("Unrecognized start state '%s', using 'default' (%s)",
+                             start_state, fsa_our_uname);
                 }
             }
         }
