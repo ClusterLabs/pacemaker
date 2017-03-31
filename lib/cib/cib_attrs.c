@@ -591,7 +591,8 @@ set_standby(cib_t * the_cib, const char *uuid, const char *scope, const char *st
 
     } else {
         scope = XML_CIB_TAG_NODES;
-        attr_id = crm_strdup_printf("nodes-%.256s-standby", uuid);
+        attr_id = crm_strdup_printf("standby-%.256s", uuid);
+        // attr_id = crm_strdup_printf("nodes-%.256s-standby", uuid);
     }
 
     rc = update_attr_delegate(the_cib, cib_sync_call, scope, uuid, NULL, NULL,
