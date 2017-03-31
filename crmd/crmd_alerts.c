@@ -31,7 +31,7 @@ static int alerts_inflight = 0;
 static gboolean draining_alerts = FALSE;
 
 /*
- * syncronize local data with cib
+ * synchronize local data with cib
  */
 
 static GHashTable *

@@ -285,7 +285,7 @@ create_docker_resource(
             /* TODO: Allow users to specify their own?
              *
              * We just want to know if the container is alive, we'll
-             * monitor the child independantly
+             * monitor the child independently
              */
             create_nvp(xml_obj, "monitor_cmd", "/bin/true"); 
         /* } else if(child && data->untrusted) {
