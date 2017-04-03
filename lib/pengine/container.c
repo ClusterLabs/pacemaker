@@ -440,6 +440,7 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
     xmlNode *xml_resource = NULL;
     container_variant_data_t *container_data = NULL;
 
+    CRM_ASSERT(rsc != NULL);
     pe_rsc_trace(rsc, "Processing resource %s...", rsc->id);
 
     container_data = calloc(1, sizeof(container_variant_data_t));
