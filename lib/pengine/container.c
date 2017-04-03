@@ -301,6 +301,10 @@ create_docker_resource(
          *     create_nvp(xml_obj, "monitor_cmd", "/usr/libexec/pacemaker/lrmd_internal_ctl -c poke");
          */
         } else {
+            if(data->docker_run_command) {
+                create_nvp(xml_obj, "run_cmd", data->docker_run_command);
+            }
+
             /* TODO: Allow users to specify their own?
              *
              * We don't know what's in the container, so we just want
