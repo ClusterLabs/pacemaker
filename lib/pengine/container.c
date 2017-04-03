@@ -683,10 +683,58 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
     return TRUE;
 }
 
+static int
+tuple_rsc_active(resource_t *rsc, gboolean all)
+{
+    if (rsc) {
+        gboolean child_active = rsc->fns->active(rsc, all);
+
+        if (child_active && !all) {
+            return TRUE;
+        } else if (!child_active && all) {
+            return FALSE;
+        }
+    }
+    return -1;
+}
+
 gboolean
 container_active(resource_t * rsc, gboolean all)
 {
-    return TRUE;
+    container_variant_data_t *container_data = NULL;
+    GListPtr iter = NULL;
+
+    get_container_variant_data(container_data, rsc);
+    for (iter = container_data->tuples; iter != NULL; iter = iter->next) {
+        container_grouping_t *tuple = (container_grouping_t *)(iter->data);
+        int rsc_active;
+
+        rsc_active = tuple_rsc_active(tuple->ip, all);
+        if (rsc_active >= 0) {
+            return (gboolean) rsc_active;
+        }
+
+        rsc_active = tuple_rsc_active(tuple->child, all);
+        if (rsc_active >= 0) {
+            return (gboolean) rsc_active;
+        }
+
+        rsc_active = tuple_rsc_active(tuple->docker, all);
+        if (rsc_active >= 0) {
+            return (gboolean) rsc_active;
+        }
+
+        rsc_active = tuple_rsc_active(tuple->remote, all);
+        if (rsc_active >= 0) {
+            return (gboolean) rsc_active;
+        }
+    }
+
+    /* If "all" is TRUE, we've already checked that no resources were inactive,
+     * so return TRUE; if "all" is FALSE, we didn't find any active resources,
+     * so return FALSE.
+     */
+    return all;
 }
 
 resource_t *
