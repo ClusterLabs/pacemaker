@@ -599,10 +599,22 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         GListPtr childIter = NULL;
         resource_t *new_rsc = NULL;
         container_mount_t *mount = NULL;
-        container_port_t *port = calloc(1, sizeof(container_port_t));
+        container_port_t *port = NULL;
 
         int offset = 0, max = 1024;
-        char *buffer = calloc(1, max+1);
+        char *buffer = NULL;
+
+        if (common_unpack(xml_resource, &new_rsc, rsc, data_set) == FALSE) {
+            pe_err("Failed unpacking resource %s", ID(rsc->xml));
+            if (new_rsc != NULL && new_rsc->fns != NULL) {
+                new_rsc->fns->free(new_rsc);
+            }
+            return FALSE;
+        }
+
+        container_data->child = new_rsc;
+        container_data->child->orig_xml = xml_obj; // Also the trigger for common_free()
+                                                   // to free xml_resource as container_data->child->xml
 
         mount = calloc(1, sizeof(container_mount_t));
         mount->source = strdup(DEFAULT_REMOTE_KEY_LOCATION);
@@ -618,27 +630,16 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         mount->flags = 1;
         container_data->mounts = g_list_append(container_data->mounts, mount);
 
+        port = calloc(1, sizeof(container_port_t));
         if(container_data->control_port) {
             port->source = strdup(container_data->control_port);
         } else {
             port->source = crm_itoa(DEFAULT_REMOTE_PORT);
         }
-
         port->target = strdup(port->source);
         container_data->ports = g_list_append(container_data->ports, port);
 
-        if (common_unpack(xml_resource, &new_rsc, rsc, data_set) == FALSE) {
-            pe_err("Failed unpacking resource %s", crm_element_value(rsc->xml, XML_ATTR_ID));
-            if (new_rsc != NULL && new_rsc->fns != NULL) {
-                new_rsc->fns->free(new_rsc);
-            }
-            return FALSE;
-        }
-
-        container_data->child = new_rsc;
-        container_data->child->orig_xml = xml_obj; // Also the trigger for common_free()
-                                                   // to free xml_resource as container_data->child->xml
-
+        buffer = calloc(1, max+1);
         for(childIter = container_data->child->children; childIter != NULL; childIter = childIter->next) {
             container_grouping_t *tuple = calloc(1, sizeof(container_grouping_t));
             tuple->child = childIter->data;
