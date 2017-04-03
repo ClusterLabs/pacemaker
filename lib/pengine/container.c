@@ -716,6 +716,21 @@ find_container_child(const char *stem, resource_t * rsc, node_t *node)
 }
 
 static void
+print_rsc_in_list(resource_t *rsc, const char *pre_text, long options,
+                  void *print_data)
+{
+    if (rsc != NULL) {
+        if (options & pe_print_html) {
+            status_print("<li>");
+        }
+        rsc->fns->print(rsc, pre_text, options, print_data);
+        if (options & pe_print_html) {
+            status_print("</li>\n");
+        }
+    }
+}
+
+static void
 container_print_xml(resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
     container_variant_data_t *container_data = NULL;
@@ -725,39 +740,31 @@ container_print_xml(resource_t * rsc, const char *pre_text, long options, void *
     if (pre_text == NULL) {
         pre_text = "";
     }
-    child_text = crm_concat(pre_text, "   ", ' ');
-
-    status_print("%s<container ", pre_text);
-    status_print("id=\"%s\" ", rsc->id);
-    status_print("managed=\"%s\" ", is_set(rsc->flags, pe_rsc_managed) ? "true" : "false");
-    status_print("failed=\"%s\" ", is_set(rsc->flags, pe_rsc_failed) ? "true" : "false");
-    status_print(">\n");
+    child_text = crm_concat(pre_text, "       ", ' ');
 
     get_container_variant_data(container_data, rsc);
 
-    status_print("%sDocker container: %s [%s]%s%s",
-                 pre_text, rsc->id, container_data->image,
-                 is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
-                 is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
+    status_print("%s<bundle ", pre_text);
+    status_print("id=\"%s\" ", rsc->id);
+    status_print("type=\"docker\" ");
+    status_print("image=\"%s\" ", container_data->image);
+    status_print("unique=\"%s\" ", is_set(rsc->flags, pe_rsc_unique)? "true" : "false");
+    status_print("managed=\"%s\" ", is_set(rsc->flags, pe_rsc_managed) ? "true" : "false");
+    status_print("failed=\"%s\" ", is_set(rsc->flags, pe_rsc_failed) ? "true" : "false");
+    status_print(">\n");
 
     for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
         container_grouping_t *tuple = (container_grouping_t *)gIter->data;
 
         CRM_ASSERT(tuple);
-        if(tuple->ip) {
-            tuple->ip->fns->print(tuple->ip, child_text, options, print_data);
-        }
-        if(tuple->child) {
-            tuple->child->fns->print(tuple->child, child_text, options, print_data);
-        }
-        if(tuple->docker) {
-            tuple->docker->fns->print(tuple->docker, child_text, options, print_data);
-        }
-        if(tuple->remote) {
-            tuple->remote->fns->print(tuple->remote, child_text, options, print_data);
-        }
+        status_print("%s    <replica id=\"%d\">\n", pre_text, tuple->offset);
+        print_rsc_in_list(tuple->ip, child_text, options, print_data);
+        print_rsc_in_list(tuple->child, child_text, options, print_data);
+        print_rsc_in_list(tuple->docker, child_text, options, print_data);
+        print_rsc_in_list(tuple->remote, child_text, options, print_data);
+        status_print("%s    </replica>\n", pre_text);
     }
-    status_print("%s</container>\n", pre_text);
+    status_print("%s</bundle>\n", pre_text);
     free(child_text);
 }
 
@@ -809,37 +816,50 @@ container_print(resource_t * rsc, const char *pre_text, long options, void *prin
         pre_text = " ";
     }
 
-    child_text = crm_strdup_printf("     %s", pre_text);
     status_print("%sDocker container%s: %s [%s]%s%s\n",
                  pre_text, container_data->replicas>1?" set":"", rsc->id, container_data->image,
                  is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
                  is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
+    if (options & pe_print_html) {
+        status_print("<br />\n<ul>\n");
+    }
+
 
     for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
         container_grouping_t *tuple = (container_grouping_t *)gIter->data;
 
         CRM_ASSERT(tuple);
+        if (options & pe_print_html) {
+            status_print("<li>");
+        }
+
         if(is_set(options, pe_print_clone_details)) {
+            child_text = crm_strdup_printf("     %s", pre_text);
             if(g_list_length(container_data->tuples) > 1) {
                 status_print("  %sReplica[%d]\n", pre_text, tuple->offset);
             }
-
-            if(tuple->ip) {
-                tuple->ip->fns->print(tuple->ip, child_text, options, print_data);
+            if (options & pe_print_html) {
+                status_print("<br />\n<ul>\n");
             }
-            if(tuple->docker) {
-                tuple->docker->fns->print(tuple->docker, child_text, options, print_data);
-            }
-            if(tuple->remote) {
-                tuple->remote->fns->print(tuple->remote, child_text, options, print_data);
-            }
-            if(tuple->child) {
-                tuple->child->fns->print(tuple->child, child_text, options, print_data);
+            print_rsc_in_list(tuple->ip, child_text, options, print_data);
+            print_rsc_in_list(tuple->docker, child_text, options, print_data);
+            print_rsc_in_list(tuple->remote, child_text, options, print_data);
+            print_rsc_in_list(tuple->child, child_text, options, print_data);
+            if (options & pe_print_html) {
+                status_print("</ul>\n");
             }
         } else {
-            char *child_text = crm_strdup_printf("%s  ", pre_text);
+            child_text = crm_strdup_printf("%s  ", pre_text);
             tuple_print(tuple, child_text, options, print_data);
         }
+        free(child_text);
+
+        if (options & pe_print_html) {
+            status_print("</li>\n");
+        }
+    }
+    if (options & pe_print_html) {
+        status_print("</ul>\n");
     }
 }
 
