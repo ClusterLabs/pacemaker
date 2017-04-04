@@ -31,7 +31,6 @@
 {
    Bash leak in cli regression testing
    Memcheck:Leak
-   match-leak-kinds: definite
    fun:malloc
    fun:xmalloc
    obj:/usr/bin/bash
