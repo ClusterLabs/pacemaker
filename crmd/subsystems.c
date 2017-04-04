@@ -150,7 +150,7 @@ start_subsystem(struct crm_subsystem_s * the_subsystem)
 
         case 0:                /* Child */
             /* create a new process group to avoid
-             * being interupted by heartbeat
+             * being interrupted by heartbeat
              */
             setpgid(0, 0);
             break;

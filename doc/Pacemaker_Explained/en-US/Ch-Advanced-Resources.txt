@@ -1147,6 +1147,14 @@ a bundle's Docker container.
  indexterm:[network,Docker]
  indexterm:[Docker,Property,network]
 
+|run-command
+|`/usr/sbin/pacemaker_remoted` if bundle contains a +primitive+, otherwise none
+|This command will be run inside the container when launching it ("PID 1"). If
+ the bundle contains a +primitive+, this command 'must' start pacemaker_remoted
+ (but could, for example, be a script that does other stuff, too).
+ indexterm:[network,Docker]
+ indexterm:[Docker,Property,network]
+
 |options
 |
 |Extra command-line options to pass to `docker run`

@@ -637,7 +637,6 @@ gboolean
 unpack_remote_nodes(xmlNode * xml_resources, pe_working_set_t * data_set)
 {
     xmlNode *xml_obj = NULL;
-    GHashTable *rsc_name_check = NULL;
 
     /* generate remote nodes from resource config before unpacking resources */
     for (xml_obj = __xml_first_child(xml_resources); xml_obj != NULL; xml_obj = __xml_next_element(xml_obj)) {
@@ -691,10 +690,6 @@ unpack_remote_nodes(xmlNode * xml_resources, pe_working_set_t * data_set)
             }
         }
     }
-    if (rsc_name_check) {
-        g_hash_table_destroy(rsc_name_check);
-    }
-
     return TRUE;
 }
 

@@ -285,7 +285,7 @@ create_docker_resource(
             /* TODO: Allow users to specify their own?
              *
              * We just want to know if the container is alive, we'll
-             * monitor the child independantly
+             * monitor the child independently
              */
             create_nvp(xml_obj, "monitor_cmd", "/bin/true"); 
         /* } else if(child && data->untrusted) {
@@ -301,6 +301,10 @@ create_docker_resource(
          *     create_nvp(xml_obj, "monitor_cmd", "/usr/libexec/pacemaker/lrmd_internal_ctl -c poke");
          */
         } else {
+            if(data->docker_run_command) {
+                create_nvp(xml_obj, "run_cmd", data->docker_run_command);
+            }
+
             /* TODO: Allow users to specify their own?
              *
              * We don't know what's in the container, so we just want
@@ -440,6 +444,7 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
     xmlNode *xml_resource = NULL;
     container_variant_data_t *container_data = NULL;
 
+    CRM_ASSERT(rsc != NULL);
     pe_rsc_trace(rsc, "Processing resource %s...", rsc->id);
 
     container_data = calloc(1, sizeof(container_variant_data_t));
@@ -599,10 +604,22 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         GListPtr childIter = NULL;
         resource_t *new_rsc = NULL;
         container_mount_t *mount = NULL;
-        container_port_t *port = calloc(1, sizeof(container_port_t));
+        container_port_t *port = NULL;
 
         int offset = 0, max = 1024;
-        char *buffer = calloc(1, max+1);
+        char *buffer = NULL;
+
+        if (common_unpack(xml_resource, &new_rsc, rsc, data_set) == FALSE) {
+            pe_err("Failed unpacking resource %s", ID(rsc->xml));
+            if (new_rsc != NULL && new_rsc->fns != NULL) {
+                new_rsc->fns->free(new_rsc);
+            }
+            return FALSE;
+        }
+
+        container_data->child = new_rsc;
+        container_data->child->orig_xml = xml_obj; // Also the trigger for common_free()
+                                                   // to free xml_resource as container_data->child->xml
 
         mount = calloc(1, sizeof(container_mount_t));
         mount->source = strdup(DEFAULT_REMOTE_KEY_LOCATION);
@@ -618,27 +635,16 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         mount->flags = 1;
         container_data->mounts = g_list_append(container_data->mounts, mount);
 
+        port = calloc(1, sizeof(container_port_t));
         if(container_data->control_port) {
             port->source = strdup(container_data->control_port);
         } else {
             port->source = crm_itoa(DEFAULT_REMOTE_PORT);
         }
-
         port->target = strdup(port->source);
         container_data->ports = g_list_append(container_data->ports, port);
 
-        if (common_unpack(xml_resource, &new_rsc, rsc, data_set) == FALSE) {
-            pe_err("Failed unpacking resource %s", crm_element_value(rsc->xml, XML_ATTR_ID));
-            if (new_rsc != NULL && new_rsc->fns != NULL) {
-                new_rsc->fns->free(new_rsc);
-            }
-            return FALSE;
-        }
-
-        container_data->child = new_rsc;
-        container_data->child->orig_xml = xml_obj; // Also the trigger for common_free()
-                                                   // to free xml_resource as container_data->child->xml
-
+        buffer = calloc(1, max+1);
         for(childIter = container_data->child->children; childIter != NULL; childIter = childIter->next) {
             container_grouping_t *tuple = calloc(1, sizeof(container_grouping_t));
             tuple->child = childIter->data;
@@ -677,10 +683,58 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
     return TRUE;
 }
 
+static int
+tuple_rsc_active(resource_t *rsc, gboolean all)
+{
+    if (rsc) {
+        gboolean child_active = rsc->fns->active(rsc, all);
+
+        if (child_active && !all) {
+            return TRUE;
+        } else if (!child_active && all) {
+            return FALSE;
+        }
+    }
+    return -1;
+}
+
 gboolean
 container_active(resource_t * rsc, gboolean all)
 {
-    return TRUE;
+    container_variant_data_t *container_data = NULL;
+    GListPtr iter = NULL;
+
+    get_container_variant_data(container_data, rsc);
+    for (iter = container_data->tuples; iter != NULL; iter = iter->next) {
+        container_grouping_t *tuple = (container_grouping_t *)(iter->data);
+        int rsc_active;
+
+        rsc_active = tuple_rsc_active(tuple->ip, all);
+        if (rsc_active >= 0) {
+            return (gboolean) rsc_active;
+        }
+
+        rsc_active = tuple_rsc_active(tuple->child, all);
+        if (rsc_active >= 0) {
+            return (gboolean) rsc_active;
+        }
+
+        rsc_active = tuple_rsc_active(tuple->docker, all);
+        if (rsc_active >= 0) {
+            return (gboolean) rsc_active;
+        }
+
+        rsc_active = tuple_rsc_active(tuple->remote, all);
+        if (rsc_active >= 0) {
+            return (gboolean) rsc_active;
+        }
+    }
+
+    /* If "all" is TRUE, we've already checked that no resources were inactive,
+     * so return TRUE; if "all" is FALSE, we didn't find any active resources,
+     * so return FALSE.
+     */
+    return all;
 }
 
 resource_t *
@@ -714,6 +768,21 @@ find_container_child(const char *stem, resource_t * rsc, node_t *node)
 }
 
 static void
+print_rsc_in_list(resource_t *rsc, const char *pre_text, long options,
+                  void *print_data)
+{
+    if (rsc != NULL) {
+        if (options & pe_print_html) {
+            status_print("<li>");
+        }
+        rsc->fns->print(rsc, pre_text, options, print_data);
+        if (options & pe_print_html) {
+            status_print("</li>\n");
+        }
+    }
+}
+
+static void
 container_print_xml(resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
     container_variant_data_t *container_data = NULL;
@@ -723,39 +792,31 @@ container_print_xml(resource_t * rsc, const char *pre_text, long options, void *
     if (pre_text == NULL) {
         pre_text = "";
     }
-    child_text = crm_concat(pre_text, "   ", ' ');
-
-    status_print("%s<container ", pre_text);
-    status_print("id=\"%s\" ", rsc->id);
-    status_print("managed=\"%s\" ", is_set(rsc->flags, pe_rsc_managed) ? "true" : "false");
-    status_print("failed=\"%s\" ", is_set(rsc->flags, pe_rsc_failed) ? "true" : "false");
-    status_print(">\n");
+    child_text = crm_concat(pre_text, "       ", ' ');
 
     get_container_variant_data(container_data, rsc);
 
-    status_print("%sDocker container: %s [%s]%s%s",
-                 pre_text, rsc->id, container_data->image,
-                 is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
-                 is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
+    status_print("%s<bundle ", pre_text);
+    status_print("id=\"%s\" ", rsc->id);
+    status_print("type=\"docker\" ");
+    status_print("image=\"%s\" ", container_data->image);
+    status_print("unique=\"%s\" ", is_set(rsc->flags, pe_rsc_unique)? "true" : "false");
+    status_print("managed=\"%s\" ", is_set(rsc->flags, pe_rsc_managed) ? "true" : "false");
+    status_print("failed=\"%s\" ", is_set(rsc->flags, pe_rsc_failed) ? "true" : "false");
+    status_print(">\n");
 
     for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
         container_grouping_t *tuple = (container_grouping_t *)gIter->data;
 
         CRM_ASSERT(tuple);
-        if(tuple->ip) {
-            tuple->ip->fns->print(tuple->ip, child_text, options, print_data);
-        }
-        if(tuple->child) {
-            tuple->child->fns->print(tuple->child, child_text, options, print_data);
-        }
-        if(tuple->docker) {
-            tuple->docker->fns->print(tuple->docker, child_text, options, print_data);
-        }
-        if(tuple->remote) {
-            tuple->remote->fns->print(tuple->remote, child_text, options, print_data);
-        }
+        status_print("%s    <replica id=\"%d\">\n", pre_text, tuple->offset);
+        print_rsc_in_list(tuple->ip, child_text, options, print_data);
+        print_rsc_in_list(tuple->child, child_text, options, print_data);
+        print_rsc_in_list(tuple->docker, child_text, options, print_data);
+        print_rsc_in_list(tuple->remote, child_text, options, print_data);
+        status_print("%s    </replica>\n", pre_text);
     }
-    status_print("%s</container>\n", pre_text);
+    status_print("%s</bundle>\n", pre_text);
     free(child_text);
 }
 
@@ -807,37 +868,50 @@ container_print(resource_t * rsc, const char *pre_text, long options, void *prin
         pre_text = " ";
     }
 
-    child_text = crm_strdup_printf("     %s", pre_text);
     status_print("%sDocker container%s: %s [%s]%s%s\n",
                  pre_text, container_data->replicas>1?" set":"", rsc->id, container_data->image,
                  is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
                  is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
+    if (options & pe_print_html) {
+        status_print("<br />\n<ul>\n");
+    }
+
 
     for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
         container_grouping_t *tuple = (container_grouping_t *)gIter->data;
 
         CRM_ASSERT(tuple);
+        if (options & pe_print_html) {
+            status_print("<li>");
+        }
+
         if(is_set(options, pe_print_clone_details)) {
+            child_text = crm_strdup_printf("     %s", pre_text);
             if(g_list_length(container_data->tuples) > 1) {
                 status_print("  %sReplica[%d]\n", pre_text, tuple->offset);
             }
-
-            if(tuple->ip) {
-                tuple->ip->fns->print(tuple->ip, child_text, options, print_data);
+            if (options & pe_print_html) {
+                status_print("<br />\n<ul>\n");
             }
-            if(tuple->docker) {
-                tuple->docker->fns->print(tuple->docker, child_text, options, print_data);
-            }
-            if(tuple->remote) {
-                tuple->remote->fns->print(tuple->remote, child_text, options, print_data);
-            }
-            if(tuple->child) {
-                tuple->child->fns->print(tuple->child, child_text, options, print_data);
+            print_rsc_in_list(tuple->ip, child_text, options, print_data);
+            print_rsc_in_list(tuple->docker, child_text, options, print_data);
+            print_rsc_in_list(tuple->remote, child_text, options, print_data);
+            print_rsc_in_list(tuple->child, child_text, options, print_data);
+            if (options & pe_print_html) {
+                status_print("</ul>\n");
             }
         } else {
-            char *child_text = crm_strdup_printf("%s  ", pre_text);
+            child_text = crm_strdup_printf("%s  ", pre_text);
             tuple_print(tuple, child_text, options, print_data);
         }
+        free(child_text);
+
+        if (options & pe_print_html) {
+            status_print("</li>\n");
+        }
+    }
+    if (options & pe_print_html) {
+        status_print("</ul>\n");
     }
 }
 

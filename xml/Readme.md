@@ -61,7 +61,7 @@ one and must be named `upgrade-${Xold}.${Yold}.xsl`.
 
 See `xml/upgrade06.xsl` for an example.
 
-### General Proceedure
+### General Procedure
 
 1. Copy the most recent version of `${base}-*.rng` to `${base}-${X}.${Y}.rng` 
 1. Commit the copy, eg. `"Clone the latest ${base} schema in preparation for changes"`.  

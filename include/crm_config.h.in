@@ -30,9 +30,6 @@
 /* Build version */
 #undef BUILD_VERSION
 
-/* Current version of the Pacemaker Relax-NG Schema */
-#undef CRM_DTD_VERSION
-
 /****** Other ******/
 
 /* Group to run Pacemaker daemons as */

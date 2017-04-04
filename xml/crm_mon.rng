@@ -241,6 +241,9 @@
             <zeroOrMore>
                 <ref name="element-clone" />
             </zeroOrMore>
+            <zeroOrMore>
+                <ref name="element-bundle" />
+            </zeroOrMore>
         </interleave>
     </define>
 
@@ -295,6 +298,29 @@
                 <attribute name="target_role"> <text/> </attribute>
             </optional>
             <ref name="resource_list" />
+        </element>
+    </define>
+
+    <define name="element-bundle">
+        <element name="bundle">
+            <attribute name="id"> <text/> </attribute>
+            <attribute name="type">
+                <choice>
+                    <value>docker</value>
+                </choice>
+            </attribute>
+            <attribute name="image"> <text/> </attribute>
+            <attribute name="unique"> <data type="boolean" /> </attribute>
+            <attribute name="managed"> <data type="boolean" /> </attribute>
+            <attribute name="failed"> <data type="boolean" /> </attribute>
+            <zeroOrMore>
+                <element name="replica">
+                    <attribute name="id"> <data type="int" /> </attribute>
+                    <zeroOrMore>
+                        <ref name="element-resource" />
+                    </zeroOrMore>
+                </element>
+            </zeroOrMore>
         </element>
     </define>
 
