@@ -266,19 +266,9 @@ update_attr_delegate(cib_t * the_cib, int call_options,
         }
 
         if (attr_id == NULL) {
-            int lpc = 0;
-
             local_attr_id = crm_concat(set_name, attr_name, '-');
+            crm_xml_sanitize_id(local_attr_id);
             attr_id = local_attr_id;
-
-            /* Minimal attempt at sanitizing automatic IDs */
-            for (lpc = 0; local_attr_id[lpc] != 0; lpc++) {
-                switch (local_attr_id[lpc]) {
-                    case ':':
-                    case '#':
-                        local_attr_id[lpc] = '.';
-                }
-            }
 
         } else if (attr_name == NULL) {
             attr_name = attr_id;
