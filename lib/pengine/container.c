@@ -214,8 +214,17 @@ create_docker_resource(
         create_nvp(xml_obj, "force_kill", "false");
         create_nvp(xml_obj, "reuse", "false");
 
-        offset += snprintf(buffer+offset, max-offset, "-h %s-%d --restart=no ",
-                           data->prefix, tuple->offset);
+        offset += snprintf(buffer+offset, max-offset, " --restart=no");
+
+        /* Set a container hostname only if we have an IP to map it to.
+         * The user can set -h or --uts=host themselves if they want a nicer
+         * name for logs, but this makes applications happy who need their
+         * hostname to match the IP they bind to.
+         */
+        if (data->ip_range_start != NULL) {
+            offset += snprintf(buffer+offset, max-offset, " -h %s-%d",
+                               data->prefix, tuple->offset);
+        }
 
         if(data->docker_network) {
 //        offset += snprintf(buffer+offset, max-offset, " --link-local-ip=%s", tuple->ipaddr);
