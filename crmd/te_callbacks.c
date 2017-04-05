@@ -633,7 +633,6 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
 GHashTable *stonith_failures = NULL;
 struct st_fail_rec {
     int count;
-    int last_rc;
 };
 
 gboolean
@@ -652,9 +651,6 @@ too_many_st_failures(void)
         if (value->count > stonith_max_attempts ) {
             crm_warn("Too many failures to fence %s (%d), giving up", key, value->count);
             return TRUE;
-        } else if (value->last_rc == -ENODEV) {
-            crm_warn("No devices found in cluster to fence %s, giving up", key);
-            return TRUE;
         }
     }
     return FALSE;
@@ -671,7 +667,6 @@ st_fail_count_reset(const char *target)
 
     if (rec) {
         rec->count = 0;
-        rec->last_rc = 0;
     }
 }
 
@@ -697,8 +692,6 @@ st_fail_count_increment(const char *target, int rc)
         rec->count = 1;
         g_hash_table_insert(stonith_failures, strdup(target), rec);
     }
-    rec->last_rc = rc;
-
 }
 
 void

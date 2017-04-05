@@ -553,7 +553,10 @@ dump_file(const char *filename)
     CRM_CHECK(filename != NULL, return);
 
     fp = fopen(filename, "r");
-    CRM_CHECK(fp != NULL, return);
+    if (fp == NULL) {
+        crm_perror(LOG_ERR, "Could not open %s for reading", filename);
+        return;
+    }
 
     fprintf(stderr, "%4d ", ++line);
     do {
