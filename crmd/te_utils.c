@@ -162,7 +162,7 @@ fail_incompletable_stonith(crm_graph_t * graph)
 
     if (last_action != NULL) {
         crm_warn("STONITHd failure resulted in un-runnable actions");
-        abort_transition(INFINITY, tg_restart, "Stonith failure", last_action);
+        abort_for_stonith_failure(last_action);
         return TRUE;
     }
 

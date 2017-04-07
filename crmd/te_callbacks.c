@@ -635,7 +635,7 @@ struct st_fail_rec {
     int count;
 };
 
-gboolean
+static gboolean
 too_many_st_failures(void)
 {
     GHashTableIter iter;
@@ -692,6 +692,26 @@ st_fail_count_increment(const char *target, int rc)
         rec->count = 1;
         g_hash_table_insert(stonith_failures, strdup(target), rec);
     }
+}
+
+/*!
+ * \internal
+ * \brief Abort transition due to stonith failure
+ *
+ * \param[in] reason  Failed stonith action XML, or NULL
+ */
+void
+abort_for_stonith_failure(xmlNode *reason)
+{
+    enum transition_action abort_action = tg_restart;
+
+    /* If stonith repeatedly fails, we eventually give up on starting a new
+     * transition for that reason.
+     */
+    if (too_many_st_failures()) {
+        abort_action = tg_stop;
+    }
+    abort_transition(INFINITY, abort_action, "Stonith failed", reason);
 }
 
 void
@@ -759,7 +779,7 @@ tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
         action->failed = TRUE;
         crm_notice("Stonith operation %d for %s failed (%s): aborting transition.",
                    call_id, target, pcmk_strerror(rc));
-        abort_transition(INFINITY, tg_restart, "Stonith failed", NULL);
+        abort_for_stonith_failure(NULL);
         st_fail_count_increment(target, rc);
     }
 

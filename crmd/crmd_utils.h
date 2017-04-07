@@ -100,8 +100,8 @@ int crmd_join_phase_count(enum crm_join_phase phase);
 void crmd_join_phase_log(int level);
 
 const char *get_timer_desc(fsa_timer_t * timer);
-gboolean too_many_st_failures(void);
 void st_fail_count_reset(const char * target);
+void abort_for_stonith_failure(xmlNode *reason);
 void crmd_peer_down(crm_node_t *peer, bool full);
 
 /* Convenience macro for registering a CIB callback
