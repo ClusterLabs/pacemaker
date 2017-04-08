@@ -636,7 +636,7 @@ struct st_fail_rec {
 };
 
 static gboolean
-too_many_st_failures(void)
+too_many_st_failures(const char *target)
 {
     GHashTableIter iter;
     const char *key = NULL;
@@ -646,14 +646,26 @@ too_many_st_failures(void)
         return FALSE;
     }
 
-    g_hash_table_iter_init(&iter, stonith_failures);
-    while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
-        if (value->count > stonith_max_attempts ) {
-            crm_warn("Too many failures to fence %s (%d), giving up", key, value->count);
-            return TRUE;
+    if (target == NULL) {
+        g_hash_table_iter_init(&iter, stonith_failures);
+        while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
+            if (value->count > stonith_max_attempts) {
+                target = (const char*)key;
+                goto too_many;
+            }
+        }
+    } else {
+        value = g_hash_table_lookup(stonith_failures, target);
+        if ((value != NULL) && (value->count > stonith_max_attempts)) {
+            goto too_many;
         }
     }
     return FALSE;
+
+too_many:
+    crm_warn("Too many failures (%d) to fence %s, giving up",
+             value->count, target);
+    return TRUE;
 }
 
 void
@@ -698,17 +710,18 @@ st_fail_count_increment(const char *target, int rc)
  * \internal
  * \brief Abort transition due to stonith failure
  *
- * \param[in] reason  Failed stonith action XML, or NULL
+ * \param[in] target  Don't restart if this (NULL for any) has too many failures
+ * \param[in] reason  Log this stonith action XML as abort reason (or NULL)
  */
 void
-abort_for_stonith_failure(xmlNode *reason)
+abort_for_stonith_failure(const char *target, xmlNode *reason)
 {
     enum transition_action abort_action = tg_restart;
 
     /* If stonith repeatedly fails, we eventually give up on starting a new
      * transition for that reason.
      */
-    if (too_many_st_failures()) {
+    if (too_many_st_failures(target)) {
         abort_action = tg_stop;
     }
     abort_transition(INFINITY, abort_action, "Stonith failed", reason);
@@ -779,7 +792,7 @@ tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
         action->failed = TRUE;
         crm_notice("Stonith operation %d for %s failed (%s): aborting transition.",
                    call_id, target, pcmk_strerror(rc));
-        abort_for_stonith_failure(NULL);
+        abort_for_stonith_failure(target, NULL);
         st_fail_count_increment(target, rc);
     }
 
