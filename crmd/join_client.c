@@ -177,6 +177,30 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
     free_xml(generation);
 }
 
+static void
+set_join_state(const char * start_state)
+{
+    if (safe_str_eq(start_state, "standby")) {
+        crm_notice("Forcing node %s to join in %s state per configured environment",
+                   fsa_our_uname, start_state);
+        update_attr_delegate(fsa_cib_conn, cib_sync_call, XML_CIB_TAG_NODES, fsa_our_uuid,
+                             NULL, NULL, NULL, "standby", "on", TRUE, NULL, NULL);
+
+    } else if (safe_str_eq(start_state, "online")) {
+        crm_notice("Forcing node %s to join in %s state per configured environment",
+                   fsa_our_uname, start_state);
+        update_attr_delegate(fsa_cib_conn, cib_sync_call, XML_CIB_TAG_NODES, fsa_our_uuid,
+                             NULL, NULL, NULL, "standby", "off", TRUE, NULL, NULL);
+
+    } else if (safe_str_eq(start_state, "default")) {
+        crm_debug("Not forcing a starting state on node %s", fsa_our_uname);
+
+    } else {
+        crm_warn("Unrecognized start state '%s', using 'default' (%s)",
+                 start_state, fsa_our_uname);
+    }
+}
+
 /*	A_CL_JOIN_RESULT	*/
 /* aka. this is notification that we have (or have not) been accepted */
 void
@@ -251,15 +275,13 @@ do_cl_join_finalize_respond(long long action,
          */
         if (first_join && is_not_set(fsa_input_register, R_SHUTDOWN)) {
             first_join = FALSE;
-
-            if (start_state) {
-                init_transient_attrs(fsa_our_uname, start_state, 0);
-            } else {
-                erase_status_tag(fsa_our_uname, XML_TAG_TRANSIENT_NODEATTRS, 0);
-            }
-
+            erase_status_tag(fsa_our_uname, XML_TAG_TRANSIENT_NODEATTRS, 0);
             update_attrd(fsa_our_uname, "terminate", NULL, NULL, FALSE);
             update_attrd(fsa_our_uname, XML_CIB_ATTR_SHUTDOWN, "0", NULL, FALSE);
+
+            if (start_state) {
+                set_join_state(start_state);
+            }
         }
 
         send_cluster_message(crm_get_peer(0, fsa_our_dc), crm_msg_crmd, reply, TRUE);
