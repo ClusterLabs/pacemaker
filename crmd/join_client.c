@@ -181,18 +181,16 @@ static void
 set_join_state(const char * start_state)
 {
     if (safe_str_eq(start_state, "standby")) {
-        char *attr_id = crm_strdup_printf("nodes-%.256s-standby", fsa_our_uuid);
         crm_notice("Forcing node %s to join in %s state per configured environment",
                    fsa_our_uname, start_state);
         update_attr_delegate(fsa_cib_conn, cib_sync_call, XML_CIB_TAG_NODES, fsa_our_uuid,
-                             NULL, NULL, attr_id, "standby", "on", TRUE, NULL, NULL);
+                             NULL, NULL, NULL, "standby", "on", TRUE, NULL, NULL);
 
     } else if (safe_str_eq(start_state, "online")) {
-        char *attr_id = crm_strdup_printf("nodes-%.256s-standby", fsa_our_uuid);
         crm_notice("Forcing node %s to join in %s state per configured environment",
                    fsa_our_uname, start_state);
         update_attr_delegate(fsa_cib_conn, cib_sync_call, XML_CIB_TAG_NODES, fsa_our_uuid,
-                             NULL, NULL, attr_id, "standby", "off", TRUE, NULL, NULL);
+                             NULL, NULL, NULL, "standby", "off", TRUE, NULL, NULL);
 
     } else if (safe_str_eq(start_state, "default")) {
         crm_debug("Not forcing a starting state on node %s", fsa_our_uname);
