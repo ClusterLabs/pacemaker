@@ -668,17 +668,36 @@ too_many:
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Reset a stonith fail count
+ *
+ * \param[in] target  Name of node to reset, or NULL for all
+ */
 void
 st_fail_count_reset(const char *target)
 {
-    struct st_fail_rec *rec = NULL;
-
-    if (stonith_failures) {
-        rec = g_hash_table_lookup(stonith_failures, target);
+    if (stonith_failures == NULL) {
+        return;
     }
 
-    if (rec) {
-        rec->count = 0;
+    if (target) {
+        struct st_fail_rec *rec = NULL;
+
+        rec = g_hash_table_lookup(stonith_failures, target);
+        if (rec) {
+            rec->count = 0;
+        }
+    } else {
+        GHashTableIter iter;
+        const char *key = NULL;
+        struct st_fail_rec *rec = NULL;
+
+        g_hash_table_iter_init(&iter, stonith_failures);
+        while (g_hash_table_iter_next(&iter, (gpointer *) &key,
+                                      (gpointer *) &rec)) {
+            rec->count = 0;
+        }
     }
 }
 
