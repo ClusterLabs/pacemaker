@@ -682,8 +682,8 @@ st_fail_count_reset(const char *target)
     }
 }
 
-static void
-st_fail_count_increment(const char *target, int rc)
+void
+st_fail_count_increment(const char *target)
 {
     struct st_fail_rec *rec = NULL;
 
@@ -793,7 +793,6 @@ tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
         crm_notice("Stonith operation %d for %s failed (%s): aborting transition.",
                    call_id, target, pcmk_strerror(rc));
         abort_for_stonith_failure(target, NULL);
-        st_fail_count_increment(target, rc);
     }
 
     update_graph(transition_graph, action);
