@@ -36,7 +36,7 @@ attrd_SOURCES	=
 if BUILD_ATOMIC_ATTRD
 attrd_SOURCES	+= main.c commands.c attrd_common.c attrd_alerts.c
 else
-attrd_SOURCES	+= legacy.c attrd_common.c
+attrd_SOURCES	+= legacy.c attrd_common.c attrd_alerts.c
 endif
 
 clean-generic:
