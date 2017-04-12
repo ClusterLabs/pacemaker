@@ -53,6 +53,7 @@ ll_cluster_t *attrd_cluster_conn;
 
 char *attrd_uname = NULL;
 char *attrd_uuid = NULL;
+uint32_t attrd_nodeid = 0;
 
 GHashTable *attr_hash = NULL;
 cib_t *the_cib = NULL;
@@ -728,6 +729,7 @@ main(int argc, char **argv)
 
         attrd_uname = cluster.uname;
         attrd_uuid = cluster.uuid;
+        attrd_nodeid = cluster.nodeid;
 #if SUPPORT_HEARTBEAT
         attrd_cluster_conn = cluster.hb_conn;
 #endif
@@ -909,7 +911,7 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
                       hash_entry->uuid ? hash_entry->uuid : "<n/a>", hash_entry->set,
                       hash_entry->section);
         }
-        attrd_send_alerts(the_lrmd, attrd_uname, attrd_uuid, hash_entry->id, hash_entry->value, crm_alert_list);
+        attrd_send_alerts(the_lrmd, attrd_uname, attrd_nodeid, hash_entry->id, hash_entry->value, crm_alert_list);
 
     } else {
         /* send update */
@@ -925,7 +927,7 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
         } else {
             crm_trace("Sent update %d: %s=%s", rc, hash_entry->id, hash_entry->value);
         }
-        attrd_send_alerts(the_lrmd, attrd_uname, attrd_uuid, hash_entry->id, hash_entry->value, crm_alert_list);
+        attrd_send_alerts(the_lrmd, attrd_uname, attrd_nodeid, hash_entry->id, hash_entry->value, crm_alert_list);
     }
 
     data = calloc(1, sizeof(struct attrd_callback_s));
