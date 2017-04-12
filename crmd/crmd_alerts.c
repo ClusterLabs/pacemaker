@@ -75,6 +75,18 @@ get_meta_attrs_from_cib(xmlNode *basenode, crm_alert_entry_t *entry,
         crm_trace("Found timestamp format string '%s'", value);
     }
 
+    value = g_hash_table_lookup(config_hash, XML_ALERT_ATTR_SELECT_KIND);
+    if (value) {
+        entry->select_kind = (char *) value;
+        crm_trace("Found select_kind string '%s'", entry->select_kind);
+    }
+
+    value = g_hash_table_lookup(config_hash, XML_ALERT_ATTR_SELECT_ATTRIBUTE_NAME);
+    if (value) {
+        entry->select_attribute_name = (char *) value;
+        crm_trace("Found attribute_name string '%s'", entry->select_attribute_name);
+    }
+
     crm_time_free(now);
     return config_hash; /* keep hash as long as strings are needed */
 }
@@ -104,7 +116,9 @@ parse_alerts(xmlNode *alerts)
                 .id = (char *) "legacy_notification",
                 .path = notify_script,
                 .timeout = CRM_ALERT_DEFAULT_TIMEOUT_MS,
-                .recipient = notify_target
+                .recipient = notify_target,
+                .select_kind = NULL,
+                .select_attribute_name = NULL
             };
             crm_add_dup_alert_list_entry(&entry);
             crm_info("Legacy Notifications enabled");
@@ -123,7 +137,9 @@ parse_alerts(xmlNode *alerts)
             .id = (char *) crm_element_value(alert, XML_ATTR_ID),
             .path = (char *) crm_element_value(alert, XML_ALERT_ATTR_PATH),
             .timeout = CRM_ALERT_DEFAULT_TIMEOUT_MS,
-            .tstamp_format = (char *) CRM_ALERT_DEFAULT_TSTAMP_FORMAT
+            .tstamp_format = (char *) CRM_ALERT_DEFAULT_TSTAMP_FORMAT,
+            .select_kind = NULL,
+            .select_attribute_name = NULL
         };
 
         crm_get_envvars_from_cib(alert,
@@ -134,9 +150,9 @@ parse_alerts(xmlNode *alerts)
             get_meta_attrs_from_cib(alert, &entry, &max_timeout);
 
         crm_debug("Found alert: id=%s, path=%s, timeout=%d, "
-                   "tstamp_format=%s, %d additional environment variables",
+                   "tstamp_format=%s, select_kind=%s, select_attribute_name=%s, %d additional environment variables",
                    entry.id, entry.path, entry.timeout,
-                   entry.tstamp_format, envvars);
+                   entry.tstamp_format, entry.select_kind, entry.select_attribute_name, envvars);
 
         for (recipient = first_named_child(alert,
                                            XML_CIB_TAG_ALERT_RECIPIENT);
@@ -234,6 +250,8 @@ send_alerts(const char *kind)
             crm_set_alert_key(CRM_alert_recipient, entry->recipient);
             crm_set_alert_key_int(CRM_alert_node_sequence, operations);
             crm_set_alert_key(CRM_alert_timestamp, timestamp);
+            crm_set_alert_key(CRM_alert_select_kind, entry->select_kind);
+            crm_set_alert_key(CRM_alert_select_attribute_name, entry->select_attribute_name);
 
             alert = services_action_create_generic(entry->path, NULL);
 
