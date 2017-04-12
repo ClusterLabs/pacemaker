@@ -18,6 +18,7 @@
 
 #include <crm_internal.h>
 #include <crm/crm.h>
+#include <crm/lrmd.h>
 #include <crm/msg_xml.h>
 #include <crm/common/alerts_internal.h>
 
@@ -33,7 +34,7 @@ guint crm_alert_max_alert_timeout = CRM_ALERT_DEFAULT_TIMEOUT_MS;
  * to allow script compatibility we can have more than one		
  * set of environment variables		
  */
-const char *crm_alert_keys[14][3] =		
+const char *crm_alert_keys[CRM_ALERT_INTERNAL_KEY_MAX][3] =		
 {		
     [CRM_alert_recipient]     = {"CRM_notify_recipient",     "CRM_alert_recipient",     NULL},		
     [CRM_alert_node]          = {"CRM_notify_node",          "CRM_alert_node",          NULL},		
@@ -48,7 +49,11 @@ const char *crm_alert_keys[14][3] =
     [CRM_alert_kind]          = {"CRM_notify_kind",          "CRM_alert_kind",          NULL},		
     [CRM_alert_version]       = {"CRM_notify_version",       "CRM_alert_version",       NULL},		
     [CRM_alert_node_sequence] = {"CRM_notify_node_sequence", "CRM_alert_node_sequence", NULL},		
-    [CRM_alert_timestamp]     = {"CRM_notify_timestamp",     "CRM_alert_timestamp",     NULL}		
+    [CRM_alert_timestamp]     = {"CRM_notify_timestamp",     "CRM_alert_timestamp",     NULL},
+    [CRM_alert_attribute_name]     = {"CRM_notify_attribute_name",     "CRM_alert_attribute_name",     NULL},
+    [CRM_alert_attribute_value]     = {"CRM_notify_attribute_value",     "CRM_alert_attribute_value",     NULL},
+    [CRM_alert_select_kind]     = {"CRM_notify_select_kind",     "CRM_alert_select_kind",     NULL},
+    [CRM_alert_select_attribute_name]     = {"CRM_notify_select_attribute_name",     "CRM_alert_select_attribute_name",     NULL}
 };
 
 static void		
@@ -66,6 +71,8 @@ crm_free_alert_list_entry(crm_alert_entry_t *entry)
     free(entry->path);		
     free(entry->tstamp_format);		
     free(entry->recipient);		
+    free(entry->select_kind);		
+    free(entry->select_attribute_name);		
     if (entry->envvars) {		
         g_list_free_full(entry->envvars,		
                          (GDestroyNotify) free_envvar_entry);		
@@ -159,6 +166,8 @@ crm_add_dup_alert_list_entry(crm_alert_entry_t *entry)
         .timeout = entry->timeout,		
         .tstamp_format = entry->tstamp_format?strdup(entry->tstamp_format):NULL,		
         .recipient = entry->recipient?strdup(entry->recipient):NULL,		
+        .select_kind = entry->select_kind?strdup(entry->select_kind):NULL,		
+        .select_attribute_name = entry->select_attribute_name?strdup(entry->select_attribute_name):NULL,		
         .envvars = entry->envvars?		
             copy_envvar_list_remove_dupes(entry)		
             :NULL		
@@ -261,3 +270,54 @@ crm_unset_envvar_list(crm_alert_entry_t *entry)
         unsetenv(env->name);
     }
 }
+
+static lrmd_key_value_t *
+set_alert_key_to_lrmd_params(lrmd_key_value_t * head, const char *key, const char *value)
+{
+    lrmd_key_value_t *p, *end;
+
+    p = calloc(1, sizeof(lrmd_key_value_t));
+    p->key = strdup(key);
+    p->value = strdup(value);
+
+    end = head;
+    while (end && end->next) {
+        end = end->next;
+    }
+
+    if (end) {
+        end->next = p;
+    } else {
+        head = p;
+    }
+
+    return head;
+}
+
+lrmd_key_value_t *
+crm_set_alert_key_to_lrmd_params(lrmd_key_value_t *head, enum crm_alert_keys_e name, const char *value)
+{
+    const char **key;
+
+    for (key = crm_alert_keys[name]; *key; key++) {
+        crm_trace("Setting alert key %s = '%s'", *key, value);
+        head = set_alert_key_to_lrmd_params(head, *key, value);
+    }
+    return head;
+}
+
+void
+crm_set_alert_envvar_to_lrmd_params(crm_alert_entry_t *entry, lrmd_key_value_t *head)
+{
+    GListPtr l;
+
+    for (l = g_list_first(entry->envvars); l; l = g_list_next(l)) {
+        envvar_t *ev = (envvar_t *)(l->data);
+
+        crm_trace("Setting environment variable %s = '%s'", ev->name,
+                  ev->value?ev->value:"");
+        head = set_alert_key_to_lrmd_params(head, ev->name, ev->value);
+    }
+    
+}
+

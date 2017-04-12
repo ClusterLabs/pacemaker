@@ -362,6 +362,8 @@
 #  define XML_ALERT_ATTR_TIMEOUT	"timeout"
 #  define XML_ALERT_ATTR_TSTAMP_FORMAT	"timestamp-format"
 #  define XML_ALERT_ATTR_REC_VALUE	"value"
+#  define XML_ALERT_ATTR_SELECT_KIND	"kind"
+#  define XML_ALERT_ATTR_SELECT_ATTRIBUTE_NAME	"attribute_name"
 
 #  define XML_CIB_TAG_GENERATION_TUPPLE	"generation_tuple"
 

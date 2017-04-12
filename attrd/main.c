@@ -31,20 +31,26 @@
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
 #include <crm/msg_xml.h>
+#include <crm/pengine/rules.h>
+#include <crm/common/iso8601.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipcs.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster/election.h>
+#include <crm/common/alerts_internal.h>
 
 #include <crm/common/xml.h>
 
 #include <crm/attrd.h>
 #include <internal.h>
+#include "attrd_alerts.h"
 
 cib_t *the_cib = NULL;
+lrmd_t *the_lrmd = NULL;
 crm_cluster_t *attrd_cluster = NULL;
 election_t *writer = NULL;
 int attrd_error = pcmk_ok;
+crm_trigger_t *attrd_config_read = NULL;
 
 static void
 attrd_cpg_dispatch(cpg_handle_t handle,
@@ -86,6 +92,40 @@ attrd_cpg_destroy(gpointer unused)
         crm_crit("Lost connection to Corosync service!");
         attrd_error = ECONNRESET;
         attrd_shutdown(0);
+    }
+}
+
+static void
+lrm_op_callback(lrmd_event_data_t * op)
+{
+    const char *nodename = NULL;
+
+    CRM_CHECK(op != NULL, return);
+
+    nodename = op->remote_nodename ? op->remote_nodename : attrd_cluster->uname;
+
+    if (op->type == lrmd_event_disconnect && (safe_str_eq(nodename, attrd_cluster->uname))) {
+        crm_err("Lost connection to LRMD service!");
+        attrd_error = ECONNRESET;
+        attrd_shutdown(0);
+        return;
+    } else if (op->type != lrmd_event_exec_complete) {
+        return;
+    }
+
+
+    if (op->params != NULL) {
+        void *value_tmp1, *value_tmp2;
+
+        value_tmp1 = g_hash_table_lookup(op->params, "CRM_alert_path");
+        if (value_tmp1 != NULL) {
+            value_tmp2 = g_hash_table_lookup(op->params, "CRM_alert_node_sequence");
+            if(op->rc == 0) {
+                crm_info("Alert %s (%s) complete", value_tmp2, value_tmp1);
+            } else {
+                crm_warn("Alert %s (%s) failed: %d", value_tmp2, value_tmp1, op->rc);
+            }
+        }
     }
 }
 
@@ -156,6 +196,12 @@ attrd_cib_connect(int max_retry)
     rc = connection->cmds->add_notify_callback(connection, T_CIB_REPLACE_NOTIFY, attrd_cib_replaced_cb);
     if(rc != pcmk_ok) {
         crm_err("Could not set CIB notification callback");
+        goto cleanup;
+    }
+
+    rc = connection->cmds->add_notify_callback(connection, T_CIB_DIFF_NOTIFY, attrd_cib_updated_cb);
+    if (rc != pcmk_ok) {
+        crm_err("Could not set CIB notification callback (update)");
         goto cleanup;
     }
 
@@ -314,6 +360,20 @@ main(int argc, char **argv)
     }
 
     crm_info("CIB connection active");
+
+    attrd_config_read = mainloop_add_trigger(G_PRIORITY_HIGH, attrd_read_options, NULL);
+
+    the_lrmd = attrd_lrmd_connect(10, lrm_op_callback);
+    if (the_lrmd == NULL) {
+        rc = DAEMON_RESPAWN_STOP;
+        goto done;
+    }
+
+    crm_info("LRMD connection active");
+
+    /* Reading of cib(Alert section) after the start */
+    mainloop_set_trigger(attrd_config_read);
+
     attrd_run_mainloop();
 
   done:
@@ -324,6 +384,14 @@ main(int argc, char **argv)
         crm_client_disconnect_all(ipcs);
         qb_ipcs_destroy(ipcs);
         g_hash_table_destroy(attributes);
+    }
+
+    attrd_alert_fini();
+
+    if (the_lrmd) {
+        the_lrmd->cmds->disconnect(the_lrmd);
+        lrmd_api_delete(the_lrmd);
+        the_lrmd = NULL;
     }
 
     if (the_cib) {
