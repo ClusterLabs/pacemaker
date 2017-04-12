@@ -57,10 +57,12 @@ trap_binary_default="/usr/bin/snmptrap"
 trap_version_default="2c"
 trap_options_default=""
 trap_community_default="public"
+trap_select_kind_default="node,fencing,resource"
 trap_node_states_default="all"
 trap_fencing_tasks_default="all"
 trap_resource_tasks_default="all"
 trap_monitor_success_default="false"
+trap_select_attribute_name_default="all"
 trap_add_hires_timestamp_oid_default="true"
 trap_snmp_persistent_dir_default="/var/lib/pacemaker/snmp"
 
@@ -68,10 +70,12 @@ trap_snmp_persistent_dir_default="/var/lib/pacemaker/snmp"
 : ${trap_version=${trap_version_default}}
 : ${trap_options=${trap_options_default}}
 : ${trap_community=${trap_community_default}}
+: ${CRM_alert_select_kind=${trap_select_kind_default}}
 : ${trap_node_states=${trap_node_states_default}}
 : ${trap_fencing_tasks=${trap_fencing_tasks_default}}
 : ${trap_resource_tasks=${trap_resource_tasks_default}}
 : ${trap_monitor_success=${trap_monitor_success_default}}
+: ${CRM_alert_select_attribute_name=${trap_select_attribute_name_default}}
 : ${trap_add_hires_timestamp_oid=${trap_add_hires_timestamp_oid_default}}
 : ${trap_snmp_persistent_dir=${trap_snmp_persistent_dir_default}}
 
@@ -87,7 +91,9 @@ is_in_list() {
     else
         for act in $item_list
         do
-            act=`echo "$act" | tr A-Z a-z`
+            if [ -z "$3" ]; then
+                act=`echo "$act" | tr A-Z a-z`
+            fi
             [ "$act" != "$2" ] && continue
             return 0
         done
@@ -102,6 +108,9 @@ if [ -z ${SNMP_PERSISTENT_DIR} ]; then
         mkdir -p ${SNMP_PERSISTENT_DIR}
     fi
 fi
+
+is_in_list "${CRM_alert_select_kind}" "${CRM_alert_kind}"
+[ $? -ne 0 ] && exit 0
 
 rc=0
 case "$CRM_alert_kind" in
@@ -158,6 +167,19 @@ case "$CRM_alert_kind" in
             rc=$?
             ;;
         esac
+        ;;
+    attribute)
+        is_in_list "${CRM_alert_select_attribute_name}" "${CRM_alert_attribute_name}" "no-list-tr"
+        [ $? -ne 0 ] && exit 0
+
+        output=`"${trap_binary}" -v "${trap_version}" ${trap_options} \
+        -c "${trap_community}" "${CRM_alert_recipient}" "" \
+        PACEMAKER-MIB::pacemakerNotificationTrap \
+        PACEMAKER-MIB::pacemakerNotificationNode s "${CRM_alert_node}" \
+        PACEMAKER-MIB::pacemakerNotificationAttributeName s "${CRM_alert_attribute_name}" \
+        PACEMAKER-MIB::pacemakerNotificationAttributeValue s "${CRM_alert_attribute_value}" \
+        ${hires_timestamp} 2>&1`
+        rc=$?
         ;;
     *)
         ;;
