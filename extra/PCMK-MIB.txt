@@ -14,12 +14,15 @@ IMPORTS
 ;
 
 pacemaker MODULE-IDENTITY
-    LAST-UPDATED "201601052100Z"
+    LAST-UPDATED "201703242100Z"
     ORGANIZATION "www.clusterlabs.org"
     CONTACT-INFO    
         "name:  Andrew Beekhof
         email:  users@clusterlabs.org"
     DESCRIPTION "MIB objects for the Pacemaker cluster manager implementation"
+
+    REVISION    "201703242100Z"
+    DESCRIPTION "Add pacemakerNotificationAttributeName and pacemakerNotificationAttributeValue"
 
     REVISION    "201601052100Z"
     DESCRIPTION "Add pacemakerTrap and pacemakerNotificationTrap"
@@ -98,6 +101,22 @@ pacemakerNotificationTargetReturnCode OBJECT-TYPE
         "The expected return code of the operation."
 ::= { pacemakerNotification 7 }
 
+pacemakerNotificationAttributeName OBJECT-TYPE
+    SYNTAX      OCTET STRING (SIZE(1..256))
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The name of the attribute."
+::= { pacemakerNotification 8 }
+
+pacemakerNotificationAttributeValue OBJECT-TYPE
+    SYNTAX      OCTET STRING (SIZE(1..256))
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The value of the attribute."
+::= { pacemakerNotification 9 }
+
 --
 --  pacemaker Traps
 --
@@ -110,7 +129,9 @@ pacemakerNotificationTrap NOTIFICATION-TYPE
         pacemakerNotificationDescription,
         pacemakerNotificationStatus,
         pacemakerNotificationReturnCode,
-        pacemakerNotificationTargetReturnCode
+        pacemakerNotificationTargetReturnCode,
+        pacemakerNotificationAttributeName,
+        pacemakerNotificationAttributeValue
     }
     STATUS      current
     DESCRIPTION
