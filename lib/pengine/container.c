@@ -368,7 +368,8 @@ create_remote_resource(
         if(tuple->ipaddr) {
             create_nvp(xml_obj, "addr", tuple->ipaddr);
         } else {
-            create_nvp(xml_obj, "addr", "localhost");
+            // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
+            create_nvp(xml_obj, "addr", "#uname");
         }
 
         if(data->control_port) {

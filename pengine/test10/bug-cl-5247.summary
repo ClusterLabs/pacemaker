@@ -90,8 +90,8 @@ Containers: [ pgsr01:prmDB1 ]
  Resource Group: grpStonith2
      prmStonith2-2	(stonith:external/ipmi):	Started bl460g8n3
  Resource Group: master-group
-     vip-master	(ocf::heartbeat:Dummy):	FAILED[ pgsr02 pgsr01 ]
-     vip-rep	(ocf::heartbeat:Dummy):	FAILED[ pgsr02 pgsr01 ]
+     vip-master	(ocf::heartbeat:Dummy):	FAILED[ pgsr01 pgsr02 ]
+     vip-rep	(ocf::heartbeat:Dummy):	FAILED[ pgsr01 pgsr02 ]
  Master/Slave Set: msPostgresql [pgsql]
      Masters: [ pgsr01 ]
      Stopped: [ bl460g8n3 bl460g8n4 ]

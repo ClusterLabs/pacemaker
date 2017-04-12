@@ -1017,6 +1017,133 @@ get_ticket_state_legacy(gpointer key, gpointer value, gpointer user_data)
     }
 }
 
+static void
+unpack_handle_remote_attrs(node_t *this_node, xmlNode *state, pe_working_set_t * data_set) 
+{
+    const char *resource_discovery_enabled = NULL;
+    xmlNode *attrs = NULL;
+    resource_t *rsc = NULL;
+    const char *shutdown = NULL;
+
+    if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE) == FALSE) {
+        return;
+    }
+
+    if ((this_node == NULL) || (is_remote_node(this_node) == FALSE)) {
+        return;
+    }
+    crm_trace("Processing remote node id=%s, uname=%s", this_node->details->id, this_node->details->uname);
+
+    this_node->details->remote_maintenance =
+        crm_atoi(crm_element_value(state, XML_NODE_IS_MAINTENANCE), "0");
+
+    rsc = this_node->details->remote_rsc;
+    if (this_node->details->remote_requires_reset == FALSE) {
+        this_node->details->unclean = FALSE;
+        this_node->details->unseen = FALSE;
+    }
+    attrs = find_xml_node(state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
+    add_node_attrs(attrs, this_node, TRUE, data_set);
+
+    shutdown = g_hash_table_lookup(this_node->details->attrs, XML_CIB_ATTR_SHUTDOWN);
+    if (shutdown != NULL && safe_str_neq("0", shutdown)) {
+        crm_info("Node %s is shutting down", this_node->details->uname);
+        this_node->details->shutdown = TRUE;
+        if (rsc) {
+            rsc->next_role = RSC_ROLE_STOPPED;
+        }
+    }
+ 
+    if (crm_is_true(g_hash_table_lookup(this_node->details->attrs, "standby"))) {
+        crm_info("Node %s is in standby-mode", this_node->details->uname);
+        this_node->details->standby = TRUE;
+    }
+
+    if (crm_is_true(g_hash_table_lookup(this_node->details->attrs, "maintenance")) ||
+        (rsc && !is_set(rsc->flags, pe_rsc_managed))) {
+        crm_info("Node %s is in maintenance-mode", this_node->details->uname);
+        this_node->details->maintenance = TRUE;
+    }
+
+    resource_discovery_enabled = g_hash_table_lookup(this_node->details->attrs, XML_NODE_ATTR_RSC_DISCOVERY);
+    if (resource_discovery_enabled && !crm_is_true(resource_discovery_enabled)) {
+        if (is_baremetal_remote_node(this_node) && is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
+            crm_warn("ignoring %s attribute on baremetal remote node %s, disabling resource discovery requires stonith to be enabled.",
+                     XML_NODE_ATTR_RSC_DISCOVERY, this_node->details->uname);
+        } else {
+            /* if we're here, this is either a baremetal node and fencing is enabled,
+             * or this is a container node which we don't care if fencing is enabled 
+             * or not on. container nodes are 'fenced' by recovering the container resource
+             * regardless of whether fencing is enabled. */
+            crm_info("Node %s has resource discovery disabled", this_node->details->uname);
+            this_node->details->rsc_discovery_enabled = FALSE;
+        }
+    }
+}
+
+static bool
+unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set) 
+{
+    bool changed = false;
+    xmlNode *lrm_rsc = NULL;
+
+    for (xmlNode *state = __xml_first_child(status); state != NULL; state = __xml_next_element(state)) {
+        const char *id = NULL;
+        const char *uname = NULL;
+        node_t *this_node = NULL;
+        bool process = FALSE;
+
+        if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE) == FALSE) {
+            continue;
+        }
+
+        id = crm_element_value(state, XML_ATTR_ID);
+        uname = crm_element_value(state, XML_ATTR_UNAME);
+        this_node = pe_find_node_any(data_set->nodes, id, uname);
+
+        if (this_node == NULL) {
+            crm_info("Node %s is unknown", id);
+            continue;
+
+        } else if (this_node->details->unpacked) {
+            crm_info("Node %s is already processed", id);
+            continue;
+
+        } else if (is_remote_node(this_node) == FALSE && is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            // A redundant test, but preserves the order for regression tests
+            process = TRUE;
+
+        } else if (is_remote_node(this_node)) {
+            resource_t *rsc = this_node->details->remote_rsc;
+
+            if (fence || (rsc && rsc->role == RSC_ROLE_STARTED)) {
+                determine_remote_online_status(data_set, this_node);
+                unpack_handle_remote_attrs(this_node, state, data_set);
+                process = TRUE;
+            }
+
+        } else if (this_node->details->online) {
+            process = TRUE;
+
+        } else if (fence) {
+            process = TRUE;
+        }
+
+        if(process) {
+            crm_trace("Processing lrm resource entries on %shealthy%s node: %s",
+                      fence?"un":"", is_remote_node(this_node)?" remote":"",
+                      this_node->details->uname);
+            changed = TRUE;
+            this_node->details->unpacked = TRUE;
+
+            lrm_rsc = find_xml_node(state, XML_CIB_TAG_LRM, FALSE);
+            lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
+            unpack_lrm_resources(this_node, lrm_rsc, data_set);
+        }
+    }
+    return changed;
+}
+
 /* remove nodes that are down, stopping */
 /* create +ve rsc_to_node constraints between resources and the nodes they are running on */
 /* anything else? */
@@ -1027,7 +1154,6 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
     const char *uname = NULL;
 
     xmlNode *state = NULL;
-    xmlNode *lrm_rsc = NULL;
     node_t *this_node = NULL;
 
     crm_trace("Beginning unpack");
@@ -1125,152 +1251,25 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
         }
     }
 
-    /* Now that we know all node states, we can safely handle migration ops */
-    for (state = __xml_first_child(status); state != NULL; state = __xml_next_element(state)) {
-        if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE) == FALSE) {
-            continue;
-        }
 
-        id = crm_element_value(state, XML_ATTR_ID);
-        uname = crm_element_value(state, XML_ATTR_UNAME);
-        this_node = pe_find_node_any(data_set->nodes, id, uname);
+    while(unpack_node_loop(status, FALSE, data_set)) {
+        crm_trace("Start another loop");
+    }
+
+    // Now catch any nodes we didnt see
+    unpack_node_loop(status, is_set(data_set->flags, pe_flag_stonith_enabled), data_set);
+
+    for (GListPtr gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+        node_t *this_node = gIter->data;
 
         if (this_node == NULL) {
-            crm_info("Node %s is unknown", id);
             continue;
-
-        } else if (is_remote_node(this_node)) {
-
-            /* online status of remote node can not be determined until all other
-             * resource status is unpacked. */
+        } else if(is_remote_node(this_node) == FALSE) {
             continue;
-        } else if (this_node->details->online || is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            crm_trace("Processing lrm resource entries on healthy node: %s",
-                      this_node->details->uname);
-            lrm_rsc = find_xml_node(state, XML_CIB_TAG_LRM, FALSE);
-            lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
-            unpack_lrm_resources(this_node, lrm_rsc, data_set);
-        }
-    }
-
-    /* now that the rest of the cluster's status is determined
-     * calculate remote-nodes */
-    unpack_remote_status(status, data_set);
-
-    return TRUE;
-}
-
-gboolean
-unpack_remote_status(xmlNode * status, pe_working_set_t * data_set)
-{
-    const char *id = NULL;
-    const char *uname = NULL;
-    const char *shutdown = NULL;
-    resource_t *rsc = NULL;
-
-    GListPtr gIter = NULL;
-
-    xmlNode *state = NULL;
-    xmlNode *lrm_rsc = NULL;
-    node_t *this_node = NULL;
-
-    if (is_set(data_set->flags, pe_flag_have_remote_nodes) == FALSE) {
-        crm_trace("no remote nodes to unpack");
-        return TRUE;
-    }
-
-    /* get online status */
-    for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        this_node = gIter->data;
-
-        if ((this_node == NULL) || (is_remote_node(this_node) == FALSE)) {
+        } else if(this_node->details->unpacked) {
             continue;
         }
         determine_remote_online_status(data_set, this_node);
-    }
-
-    /* process attributes */
-    for (state = __xml_first_child(status); state != NULL; state = __xml_next_element(state)) {
-        const char *resource_discovery_enabled = NULL;
-        xmlNode *attrs = NULL;
-        if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE) == FALSE) {
-            continue;
-        }
-
-        id = crm_element_value(state, XML_ATTR_ID);
-        uname = crm_element_value(state, XML_ATTR_UNAME);
-        this_node = pe_find_node_any(data_set->nodes, id, uname);
-
-        if ((this_node == NULL) || (is_remote_node(this_node) == FALSE)) {
-            continue;
-        }
-        crm_trace("Processing remote node id=%s, uname=%s", id, uname);
-
-        this_node->details->remote_maintenance =
-            crm_atoi(crm_element_value(state, XML_NODE_IS_MAINTENANCE), "0");
-
-        rsc = this_node->details->remote_rsc;
-        if (this_node->details->remote_requires_reset == FALSE) {
-            this_node->details->unclean = FALSE;
-            this_node->details->unseen = FALSE;
-        }
-        attrs = find_xml_node(state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
-        add_node_attrs(attrs, this_node, TRUE, data_set);
-
-        shutdown = g_hash_table_lookup(this_node->details->attrs, XML_CIB_ATTR_SHUTDOWN);
-        if (shutdown != NULL && safe_str_neq("0", shutdown)) {
-            crm_info("Node %s is shutting down", this_node->details->uname);
-            this_node->details->shutdown = TRUE;
-            if (rsc) {
-                rsc->next_role = RSC_ROLE_STOPPED;
-            }
-        }
- 
-        if (crm_is_true(g_hash_table_lookup(this_node->details->attrs, "standby"))) {
-            crm_info("Node %s is in standby-mode", this_node->details->uname);
-            this_node->details->standby = TRUE;
-        }
-
-        if (crm_is_true(g_hash_table_lookup(this_node->details->attrs, "maintenance")) ||
-            (rsc && !is_set(rsc->flags, pe_rsc_managed))) {
-            crm_info("Node %s is in maintenance-mode", this_node->details->uname);
-            this_node->details->maintenance = TRUE;
-        }
-
-        resource_discovery_enabled = g_hash_table_lookup(this_node->details->attrs, XML_NODE_ATTR_RSC_DISCOVERY);
-        if (resource_discovery_enabled && !crm_is_true(resource_discovery_enabled)) {
-            if (is_baremetal_remote_node(this_node) && is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
-                crm_warn("ignoring %s attribute on baremetal remote node %s, disabling resource discovery requires stonith to be enabled.",
-                    XML_NODE_ATTR_RSC_DISCOVERY, this_node->details->uname);
-            } else {
-                /* if we're here, this is either a baremetal node and fencing is enabled,
-                 * or this is a container node which we don't care if fencing is enabled 
-                 * or not on. container nodes are 'fenced' by recovering the container resource
-                 * regardless of whether fencing is enabled. */
-                crm_info("Node %s has resource discovery disabled", this_node->details->uname);
-                this_node->details->rsc_discovery_enabled = FALSE;
-            }
-        }
-    }
-
-    /* process node rsc status */
-    for (state = __xml_first_child(status); state != NULL; state = __xml_next_element(state)) {
-        if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE) == FALSE) {
-            continue;
-        }
-
-        id = crm_element_value(state, XML_ATTR_ID);
-        uname = crm_element_value(state, XML_ATTR_UNAME);
-        this_node = pe_find_node_any(data_set->nodes, id, uname);
-
-        if ((this_node == NULL) || (is_remote_node(this_node) == FALSE)) {
-            continue;
-        }
-        crm_trace("Processing lrm resource entries on healthy remote node: %s",
-                  this_node->details->uname);
-        lrm_rsc = find_xml_node(state, XML_CIB_TAG_LRM, FALSE);
-        lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
-        unpack_lrm_resources(this_node, lrm_rsc, data_set);
     }
 
     return TRUE;

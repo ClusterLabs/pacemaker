@@ -142,6 +142,7 @@ struct node_shared_s {
     gboolean shutdown;
     gboolean expected_up;
     gboolean is_dc;
+    gboolean unpacked;
 
     int num_resources;
     GListPtr running_rsc;       /* resource_t* */

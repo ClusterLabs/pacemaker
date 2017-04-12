@@ -263,7 +263,15 @@ container_expand(resource_t * rsc, pe_working_set_t * data_set)
     for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
         container_grouping_t *tuple = (container_grouping_t *)gIter->data;
 
+
         CRM_ASSERT(tuple);
+        if(fix_remote_addr(tuple->remote) && tuple->docker->allocated_to) {
+            // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
+            xmlNode *nvpair = get_xpath_object("//nvpair[@name='addr']", tuple->remote->xml, LOG_ERR);
+
+            g_hash_table_replace(tuple->remote->parameters, strdup("addr"), strdup(tuple->docker->allocated_to->details->uname));
+            crm_xml_add(nvpair, "value", tuple->docker->allocated_to->details->uname);
+        }
         if(tuple->ip) {
             tuple->ip->cmds->expand(tuple->ip, data_set);
         }
