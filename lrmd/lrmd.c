@@ -27,6 +27,7 @@
 #include <crm/common/mainloop.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipcs.h>
+#include <crm/common/alerts_internal.h>
 #include <crm/msg_xml.h>
 #include <crm/pengine/rules.h>
 
@@ -1321,7 +1322,25 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
         }
     }
 
-    if (cmd->isolation_wrapper) {
+    if (safe_str_eq(rsc->class, "alert")) {
+        /* In the case of Alert, lrmd always set rsc->type from CRM_alert_path parameter. */
+        void *value_lookup = g_hash_table_lookup(params_copy, CRM_ALERT_KEY_PATH);
+        if (value_lookup != NULL) { 
+            action = services_action_create_generic((char*)value_lookup, NULL);
+            action->rsc = strdup(rsc->rsc_id);
+            action->action = strdup(cmd->action);
+            action->timeout = cmd->timeout;
+            action->standard = strdup("event");
+            action->id = strdup(rsc->rsc_id);
+            action->agent = strdup((char*)value_lookup);
+            action->params = params_copy;
+
+            value_lookup = g_hash_table_lookup(params_copy, "CRM_alert_node_sequence");        
+            if (value_lookup != NULL) {
+                action->sequence = crm_atoi(value_lookup, "");
+            }
+        } 
+    } else if (cmd->isolation_wrapper) {
         g_hash_table_remove(params_copy, "CRM_meta_isolation_wrapper");
         action = resources_action_create(rsc->rsc_id,
                                          PCMK_RESOURCE_CLASS_OCF,
@@ -1654,6 +1673,36 @@ process_lrmd_rsc_exec(crm_client_t * client, uint32_t id, xmlNode * request)
 }
 
 static int
+process_lrmd_alert_exec(crm_client_t * client, uint32_t id, xmlNode * request)
+{
+    lrmd_rsc_t *alert = NULL;
+    lrmd_cmd_t *cmd = NULL;
+    xmlNode *alert_xml = get_xpath_object("//" F_LRMD_RSC, request, LOG_ERR);
+    const char *alert_id = crm_element_value(alert_xml, F_LRMD_RSC_ID);
+    int call_id;
+
+    if (!alert_id) {
+        return -EINVAL;
+    }
+
+    if (!(alert = g_hash_table_lookup(rsc_list, alert_id))) {
+        crm_info("Alert '%s' not found (%d active resources)",
+                 alert_id, g_hash_table_size(rsc_list));
+        return -ENODEV;
+    }
+
+    call_id = pcmk_ok;
+    cmd = create_lrmd_cmd(request, client, alert);
+    call_id = cmd->call_id;
+
+    /* Don't reference cmd after handing it off to be scheduled.
+     * The cmd could get merged and freed. */
+    schedule_lrmd_cmd(alert, cmd);
+
+    return call_id;
+}
+
+static int
 cancel_op(const char *rsc_id, const char *action, int interval)
 {
     GListPtr gIter = NULL;
@@ -1811,6 +1860,9 @@ process_lrmd_message(crm_client_t * client, uint32_t id, xmlNode * request)
         const char *timeout = crm_element_value(data, F_LRMD_WATCHDOG);
         CRM_LOG_ASSERT(data != NULL);
         check_sbd_timeout(timeout);
+    } else if (crm_str_eq(op, LRMD_OP_ALERT_EXEC, TRUE)) {
+        rc = process_lrmd_alert_exec(client, id, request);
+        do_reply = 1;
     } else {
         rc = -EOPNOTSUPP;
         do_reply = 1;
