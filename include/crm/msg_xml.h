@@ -64,6 +64,7 @@
 #  define F_CRM_ORIGIN			"origin"
 #  define F_CRM_USER			"crm_user"
 #  define F_CRM_JOIN_ID			"join_id"
+#  define F_CRM_DC_LEAVING      "dc-leaving"
 #  define F_CRM_ELECTION_ID		"election-id"
 #  define F_CRM_ELECTION_AGE_S		"election-age-sec"
 #  define F_CRM_ELECTION_AGE_US		"election-age-nano-sec"
