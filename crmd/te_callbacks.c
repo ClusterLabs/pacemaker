@@ -649,14 +649,14 @@ too_many_st_failures(const char *target)
     if (target == NULL) {
         g_hash_table_iter_init(&iter, stonith_failures);
         while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
-            if (value->count > stonith_max_attempts) {
+            if (value->count >= stonith_max_attempts) {
                 target = (const char*)key;
                 goto too_many;
             }
         }
     } else {
         value = g_hash_table_lookup(stonith_failures, target);
-        if ((value != NULL) && (value->count > stonith_max_attempts)) {
+        if ((value != NULL) && (value->count >= stonith_max_attempts)) {
             goto too_many;
         }
     }
