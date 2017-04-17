@@ -729,18 +729,18 @@ st_fail_count_increment(const char *target)
  * \internal
  * \brief Abort transition due to stonith failure
  *
+ * \param[in] abort_action  Whether to restart or stop transition
  * \param[in] target  Don't restart if this (NULL for any) has too many failures
  * \param[in] reason  Log this stonith action XML as abort reason (or NULL)
  */
 void
-abort_for_stonith_failure(const char *target, xmlNode *reason)
+abort_for_stonith_failure(enum transition_action abort_action,
+                          const char *target, xmlNode *reason)
 {
-    enum transition_action abort_action = tg_restart;
-
     /* If stonith repeatedly fails, we eventually give up on starting a new
      * transition for that reason.
      */
-    if (too_many_st_failures(target)) {
+    if ((abort_action != tg_stop) && too_many_st_failures(target)) {
         abort_action = tg_stop;
     }
     abort_transition(INFINITY, abort_action, "Stonith failed", reason);
@@ -807,11 +807,22 @@ tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
 
     } else {
         const char *target = crm_element_value_const(action->xml, XML_LRM_ATTR_TARGET);
+        enum transition_action abort_action = tg_restart;
 
         action->failed = TRUE;
         crm_notice("Stonith operation %d for %s failed (%s): aborting transition.",
                    call_id, target, pcmk_strerror(rc));
-        abort_for_stonith_failure(target, NULL);
+
+        /* If no fence devices were available, there's no use in immediately
+         * checking again, so don't start a new transition in that case.
+         */
+        if (rc == -ENODEV) {
+            crm_warn("No devices found in cluster to fence %s, giving up",
+                     target);
+            abort_action = tg_stop;
+        }
+
+        abort_for_stonith_failure(abort_action, target, NULL);
     }
 
     update_graph(transition_graph, action);
