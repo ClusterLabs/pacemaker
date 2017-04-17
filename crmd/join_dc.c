@@ -242,8 +242,10 @@ do_dc_join_offer_one(long long action,
     /* always offer to the DC (ourselves)
      * this ensures the correct value for max_generation_from
      */
-    member = crm_get_peer(0, fsa_our_uname);
-    join_make_offer(NULL, member, NULL);
+    if (strcmp(join_to, fsa_our_uname) != 0) {
+        member = crm_get_peer(0, fsa_our_uname);
+        join_make_offer(NULL, member, NULL);
+    }
 
     /* this was a genuine join request, cancel any existing
      * transition and invoke the PE
