@@ -776,6 +776,8 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
             if (search != NULL) {
                 *search = 0;
                 stonith_device_remove(rsc_id, TRUE);
+                if (strstr(xpath, XML_TAG_ATTR_SETS))
+                    needs_update = TRUE;
             } else {
                 crm_warn("Ignoring malformed CIB update (resource deletion)");
             }
