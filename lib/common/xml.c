@@ -4903,10 +4903,15 @@ hash2metafield(gpointer key, gpointer value, gpointer user_data)
 
     if (key == NULL || value == NULL) {
         return;
-    } else if (((char *)key)[0] == '#') {
-        return;
-    } else if (strstr(key, ":")) {
-        return;
+    }
+
+    /* Filter out cluster-generated attributes that contain a '#' or ':'
+     * (like fail-count and last-failure).
+     */
+    for (crm_name = key; *crm_name; ++crm_name) {
+        if ((*crm_name == '#') || (*crm_name == ':')) {
+            return;
+        }
     }
 
     crm_name = crm_meta_name(key);

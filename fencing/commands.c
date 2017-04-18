@@ -829,7 +829,10 @@ xml2device_params(const char *name, xmlNode *dev)
         crm_warn("%s has '%s' parameter, which should never be specified in configuration",
                  name, STONITH_ATTR_ACTION_OP);
 
-        if (strcmp(value, "reboot") == 0) {
+        if (*value == '\0') {
+            crm_warn("Ignoring empty '%s' parameter", STONITH_ATTR_ACTION_OP);
+
+        } else if (strcmp(value, "reboot") == 0) {
             crm_warn("Ignoring %s='reboot' (see stonith-action cluster property instead)",
                      STONITH_ATTR_ACTION_OP);
 

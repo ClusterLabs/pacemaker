@@ -162,7 +162,7 @@ fail_incompletable_stonith(crm_graph_t * graph)
 
     if (last_action != NULL) {
         crm_warn("STONITHd failure resulted in un-runnable actions");
-        abort_transition(INFINITY, tg_restart, "Stonith failure", last_action);
+        abort_for_stonith_failure(tg_restart, NULL, last_action);
         return TRUE;
     }
 
@@ -259,9 +259,12 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
         return;
     }
 
-    if (st_event->result == pcmk_ok &&
-        safe_str_eq(st_event->operation, T_STONITH_NOTIFY_FENCE)) {
-        st_fail_count_reset(st_event->target);
+    if (safe_str_eq(st_event->operation, T_STONITH_NOTIFY_FENCE)) {
+        if (st_event->result == pcmk_ok) {
+            st_fail_count_reset(st_event->target);
+        } else {
+            st_fail_count_increment(st_event->target);
+        }
     }
 
     crm_notice("Peer %s was%s terminated (%s) by %s for %s: %s (ref=%s) by client %s",

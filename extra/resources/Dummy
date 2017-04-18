@@ -1,8 +1,8 @@
 #!/bin/sh
 #
 #
-#	Dummy OCF RA. Does nothing but wait a few seconds, can be
-#	configured to fail occassionally.
+# Dummy OCF RA. Does nothing but wait a few seconds, can be
+# configured to fail occassionally.
 #
 # Copyright (c) 2004 SUSE LINUX AG, Lars Marowsky-Brée
 #                    All Rights Reserved.
@@ -37,7 +37,7 @@
 #######################################################################
 
 meta_data() {
-	cat <<END
+    cat <<END
 <?xml version="1.0"?>
 <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
 <resource-agent name="Dummy" version="1.0">
@@ -130,12 +130,12 @@ END
 # don't exit on TERM, to test that lrmd makes sure that we do exit
 trap sigterm_handler TERM
 sigterm_handler() {
-	ocf_log info "They use TERM to bring us down. No such luck."
-	return
+    ocf_log info "They use TERM to bring us down. No such luck."
+    return
 }
 
 dummy_usage() {
-	cat <<END
+    cat <<END
 usage: $0 {start|stop|monitor|migrate_to|migrate_from|validate-all|meta-data}
 
 Expects to have a fully populated OCF RA-compliant environment set.
@@ -172,36 +172,36 @@ dummy_start() {
 }
 
 dummy_stop() {
-    dummy_monitor
+    dummy_monitor --force
     if [ $? -eq $OCF_SUCCESS ]; then
-	rm ${OCF_RESKEY_state}
+        rm ${OCF_RESKEY_state}
     fi
     rm -f "${VERIFY_SERIALIZED_FILE}"
     return $OCF_SUCCESS
 }
 
 dummy_monitor() {
-	# Monitor _MUST!_ differentiate correctly between running
-	# (SUCCESS), failed (ERROR) or _cleanly_ stopped (NOT RUNNING).
-	# That is THREE states, not just yes/no.
+    # Monitor _MUST!_ differentiate correctly between running
+    # (SUCCESS), failed (ERROR) or _cleanly_ stopped (NOT RUNNING).
+    # That is THREE states, not just yes/no.
 
-	if [ $OCF_RESKEY_op_sleep -ne 0 ]; then
-		if [ -f "${VERIFY_SERIALIZED_FILE}" ]; then
-			# two monitor ops have occurred at the same time.
-			# this is to verify a condition in the lrmd regression tests.
-			ocf_log err "$VERIFY_SERIALIZED_FILE exists already"
-			return $OCF_ERR_GENERIC
-		fi
+    if [ $OCF_RESKEY_op_sleep -ne 0 ]; then
+        if [ "$1" = "" -a -f "${VERIFY_SERIALIZED_FILE}" ]; then
+            # two monitor ops have occurred at the same time.
+            # this is to verify a condition in the lrmd regression tests.
+            ocf_log err "$VERIFY_SERIALIZED_FILE exists already"
+            return $OCF_ERR_GENERIC
+        fi
 
-		touch "${VERIFY_SERIALIZED_FILE}"
-		sleep ${OCF_RESKEY_op_sleep}
-		rm "${VERIFY_SERIALIZED_FILE}"
-	fi
-	
-	if [ -f "${OCF_RESKEY_state}" ]; then
-		return $OCF_SUCCESS
-	fi
-	return $OCF_NOT_RUNNING
+        touch "${VERIFY_SERIALIZED_FILE}"
+        sleep ${OCF_RESKEY_op_sleep}
+        rm "${VERIFY_SERIALIZED_FILE}"
+    fi
+    
+    if [ -f "${OCF_RESKEY_state}" ]; then
+        return $OCF_SUCCESS
+    fi
+    return $OCF_NOT_RUNNING
 }
 
 dummy_validate() {
@@ -210,7 +210,7 @@ dummy_validate() {
     state_dir=`dirname "$OCF_RESKEY_state"`
     touch "$state_dir/$$"
     if [ $? -ne 0 ]; then
-	return $OCF_ERR_ARGS
+        return $OCF_ERR_ARGS
     fi
     rm "$state_dir/$$"
 
@@ -235,28 +235,28 @@ VERIFY_SERIALIZED_FILE="${OCF_RESKEY_state}.serialized"
 dump_env
 
 case $__OCF_ACTION in
-meta-data)	meta_data
-		exit $OCF_SUCCESS
-		;;
-start)		dummy_start;;
-stop)		dummy_stop;;
-monitor)	dummy_monitor;;
-migrate_to)	ocf_log info "Migrating ${OCF_RESOURCE_INSTANCE} to ${OCF_RESKEY_CRM_meta_migrate_target}."
-	        dummy_stop
-		;;
-migrate_from)	ocf_log info "Migrating ${OCF_RESOURCE_INSTANCE} from ${OCF_RESKEY_CRM_meta_migrate_source}."
-	        dummy_start
-		;;
-reload)		ocf_log err "Reloading..."
-	        dummy_start
-		;;
-validate-all)	dummy_validate;;
-usage|help)	dummy_usage
-		exit $OCF_SUCCESS
-		;;
-*)		dummy_usage
-		exit $OCF_ERR_UNIMPLEMENTED
-		;;
+meta-data)      meta_data
+                exit $OCF_SUCCESS
+                ;;
+start)          dummy_start;;
+stop)           dummy_stop;;
+monitor)        dummy_monitor;;
+migrate_to)     ocf_log info "Migrating ${OCF_RESOURCE_INSTANCE} to ${OCF_RESKEY_CRM_meta_migrate_target}."
+                dummy_stop
+                ;;
+migrate_from)   ocf_log info "Migrating ${OCF_RESOURCE_INSTANCE} from ${OCF_RESKEY_CRM_meta_migrate_source}."
+                dummy_start
+                ;;
+reload)         ocf_log err "Reloading..."
+                dummy_start
+                ;;
+validate-all)   dummy_validate;;
+usage|help)     dummy_usage
+                exit $OCF_SUCCESS
+                ;;
+*)              dummy_usage
+                exit $OCF_ERR_UNIMPLEMENTED
+                ;;
 esac
 rc=$?
 ocf_log debug "${OCF_RESOURCE_INSTANCE} $__OCF_ACTION : $rc"

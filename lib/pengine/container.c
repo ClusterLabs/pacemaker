@@ -390,9 +390,18 @@ create_remote_resource(
 
         // tuple->docker->fillers = g_list_append(tuple->docker->fillers, child);
 
-        // -INFINITY prevents anyone else from running here
-        node = pe_create_node(strdup(nodeid), nodeid, "remote", "-INFINITY",
-                              data_set);
+        /* Ensure a node has been created for the guest (it may have already
+         * been, if it has a permanent node attribute), and ensure its weight is
+         * -INFINITY so no other resources can run on it.
+         */
+        node = pe_find_node(data_set->nodes, nodeid);
+        if (node == NULL) {
+            node = pe_create_node(strdup(nodeid), nodeid, "remote", "-INFINITY",
+                                  data_set);
+        } else {
+            node->weight = -INFINITY;
+        }
+
         tuple->node = node_copy(node);
         tuple->node->weight = 500;
         nodeid = NULL;
