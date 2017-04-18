@@ -29,28 +29,26 @@
 }
 
 {
-   Bash leak in cli regression testing
+   Bash leak in cli regression testing on epel-6-i386
    Memcheck:Leak
    fun:malloc
    fun:xmalloc
-   obj:/usr/bin/bash
+   obj:*/bash
    fun:execute_command_internal
-   obj:/usr/bin/bash
+   ...
    fun:execute_command_internal
    fun:parse_and_execute
    fun:command_substitute
-   obj:/usr/bin/bash
-   obj:/usr/bin/bash
-   obj:/usr/bin/bash
+   obj:*/bash
+   obj:*/bash
+   obj:*/bash
    fun:expand_string_assignment
-   obj:/usr/bin/bash
-   obj:/usr/bin/bash
-   obj:/usr/bin/bash
-   obj:/usr/bin/bash
+   obj:*/bash
+   obj:*/bash
+   obj:*/bash
+   obj:*/bash
    fun:execute_command_internal
-   fun:execute_command_internal
-   fun:execute_command
-   fun:execute_command_internal
+   ...
 }
 
 {
