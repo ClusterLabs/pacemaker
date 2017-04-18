@@ -237,6 +237,7 @@ immediately re-attempt it. '(since 1.1.17)'
 indexterm:[concurrent-fencing,Cluster Option]
 indexterm:[Cluster,Option,concurrent-fencing]
 Is the cluster allowed to initiate multiple fence actions concurrently?
+'(since 1.1.15)'
 
 | cluster-delay | 60s |
 indexterm:[cluster-delay,Cluster Option]
