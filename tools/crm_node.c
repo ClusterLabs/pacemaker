@@ -337,9 +337,9 @@ try_pacemaker(int command, enum cluster_type_e stack)
         case 'p':
             /* Go to pacemakerd */
             {
+                mainloop_io_t *ipc;
                 GMainLoop *amainloop = g_main_loop_new(NULL, FALSE);
-                mainloop_io_t *ipc =
-                    mainloop_add_ipc_client(CRM_SYSTEM_MCP, G_PRIORITY_DEFAULT, 0, NULL, &node_callbacks);
+                ipc = mainloop_add_ipc_client(CRM_SYSTEM_MCP, G_PRIORITY_DEFAULT, 0, NULL, &node_callbacks);
                 if (ipc != NULL) {
                     /* Sending anything will get us a list of nodes */
                     xmlNode *poke = create_xml_node(NULL, "poke");
