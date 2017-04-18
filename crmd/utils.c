@@ -162,7 +162,7 @@ gboolean
 is_timer_started(fsa_timer_t * timer)
 {
     if (timer->period_ms > 0) {
-        if (transition_timer->source_id == 0) {
+        if (timer->source_id == 0) {
             return FALSE;
         } else {
             return TRUE;
