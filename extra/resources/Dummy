@@ -172,7 +172,7 @@ dummy_start() {
 }
 
 dummy_stop() {
-    dummy_monitor
+    dummy_monitor --force
     if [ $? -eq $OCF_SUCCESS ]; then
         rm ${OCF_RESKEY_state}
     fi
@@ -186,7 +186,7 @@ dummy_monitor() {
     # That is THREE states, not just yes/no.
 
     if [ $OCF_RESKEY_op_sleep -ne 0 ]; then
-        if [ -f "${VERIFY_SERIALIZED_FILE}" ]; then
+        if [ "$1" = "" -a -f "${VERIFY_SERIALIZED_FILE}" ]; then
             # two monitor ops have occurred at the same time.
             # this is to verify a condition in the lrmd regression tests.
             ocf_log err "$VERIFY_SERIALIZED_FILE exists already"
