@@ -823,6 +823,16 @@ if test "$ac_cv_header_libxslt_xslt_h" != "yes"; then
    AC_MSG_ERROR(The libxslt developement headers were not found)
 fi
 
+AC_CACHE_CHECK(whether __progname and __progname_full are available,
+                pf_cv_var_progname,
+                AC_TRY_LINK([extern char *__progname, *__progname_full;],
+                    [__progname = "foo"; __progname_full = "foo bar";],
+                    pf_cv_var_progname="yes", pf_cv_var_progname="no"))
+
+if test "$pf_cv_var_progname" = "yes"; then
+    AC_DEFINE(HAVE___PROGNAME,1,[ ])
+fi
+
 dnl ========================================================================
 dnl Structures
 dnl ========================================================================
