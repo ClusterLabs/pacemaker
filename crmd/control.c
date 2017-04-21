@@ -388,7 +388,6 @@ crmd_exit(int rc)
     free(integration_timer); integration_timer = NULL;
     free(finalization_timer); finalization_timer = NULL;
     free(election_trigger); election_trigger = NULL;
-    election_fini(fsa_election);
     free(shutdown_escalation_timer); shutdown_escalation_timer = NULL;
     free(wait_timer); wait_timer = NULL;
     free(recheck_timer); recheck_timer = NULL;
