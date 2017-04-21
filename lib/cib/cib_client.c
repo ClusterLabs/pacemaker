@@ -406,24 +406,37 @@ cib_new_variant(void)
     return new_cib;
 }
 
+/*!
+ * \brief Free all callbacks for a CIB connection
+ *
+ * \param[in] cib  CIB connection to clean up
+ */
 void
-cib_delete(cib_t * cib)
+cib_free_callbacks(cib_t *cib)
 {
-    GList *list = NULL;
-    if(cib) {
-        list = cib->notify_list;
+    if (cib) {
+        GList *list = cib->notify_list;
+
+        while (list != NULL) {
+            cib_notify_client_t *client = g_list_nth_data(list, 0);
+
+            list = g_list_remove(list, client);
+            free(client);
+        }
     }
-
-    while (list != NULL) {
-        cib_notify_client_t *client = g_list_nth_data(list, 0);
-
-        list = g_list_remove(list, client);
-        free(client);
-    }
-
     destroy_op_callback_table();
+}
 
-    if(cib) {
+/*!
+ * \brief Free all memory used by CIB connection
+ *
+ * \param[in] cib  CIB connection to delete
+ */
+void
+cib_delete(cib_t *cib)
+{
+    cib_free_callbacks(cib);
+    if (cib) {
         cib->cmds->free(cib);
     }
 }

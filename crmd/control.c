@@ -355,8 +355,11 @@ crmd_exit(int rc)
     election_fini(fsa_election);
     fsa_election = NULL;
 
-    cib_delete(fsa_cib_conn);
-    fsa_cib_conn = NULL;
+    /* Tear down the CIB connection, but don't free it yet -- it could be used
+     * when we drain the mainloop later.
+     */
+    cib_free_callbacks(fsa_cib_conn);
+    fsa_cib_conn->cmds->signoff(fsa_cib_conn);
 
     verify_stopped(fsa_state, LOG_WARNING);
     clear_bit(fsa_input_register, R_LRM_CONNECTED);
@@ -484,6 +487,9 @@ crmd_exit(int rc)
     } else {
         mainloop_destroy_signal(SIGCHLD);
     }
+
+    cib_delete(fsa_cib_conn);
+    fsa_cib_conn = NULL;
 
     /* Graceful */
     return rc;

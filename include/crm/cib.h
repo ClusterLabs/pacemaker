@@ -172,6 +172,7 @@ cib_t *cib_new_no_shadow(void);
 char *get_shadow_file(const char *name);
 cib_t *cib_shadow_new(const char *name);
 
+void cib_free_callbacks(cib_t *cib);
 void cib_delete(cib_t * cib);
 
 void cib_dump_pending_callbacks(void);
