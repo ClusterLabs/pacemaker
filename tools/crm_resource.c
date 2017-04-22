@@ -102,6 +102,7 @@ struct ipc_client_callbacks crm_callbacks = {
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {
     /* Top-level Options */
+	/* */
     {"help",    0, 0, '?', "\t\tThis text"},
     {"version", 0, 0, '$', "\t\tVersion information"  },
     {"verbose", 0, 0, 'V', "\t\tIncrease debug output"},
@@ -128,7 +129,7 @@ static struct crm_option long_options[] = {
     {"locate",     0, 0, 'W', "\t\tDisplay the current location(s) of a resource"},
     {"stack",      0, 0, 'A', "\t\tDisplay the prerequisites and dependents of a resource"},
     {"constraints",0, 0, 'a', "\tDisplay the (co)location constraints that apply to a resource"},
-
+	{"why", 0, 0,'Y', "\t Display why a resource is not running"},
     {"-spacer-",	1, 0, '-', "\nCommands:"},
     {"validate",   0, 0, 0, "\t\tCall the validate-all action of the local given resource"},
     {"cleanup",         0, 0, 'C',
@@ -511,6 +512,7 @@ main(int argc, char **argv)
             case 'o':
             case 'A':
             case 'a':
+            case 'Y':
                 rsc_cmd = flag;
                 break;
 
@@ -800,6 +802,17 @@ main(int argc, char **argv)
         }
         rc = cli_resource_print(rsc_id, &data_set, FALSE);
 
+    } else if(rsc_cmd == 'Y') {
+        node_t *dest = NULL;
+        if (host_uname) {
+            dest = pe_find_node(data_set.nodes, host_uname);
+            if (dest == NULL) {
+                CMD_ERR("Unknown node: %s", host_uname);
+                rc = -ENXIO;
+                goto bail;
+            }
+        }
+        cli_resource_why(cib_conn,data_set.resources,rsc_id,dest);
     } else if (rsc_cmd == 'U') {
         node_t *dest = NULL;
 
@@ -963,7 +976,7 @@ main(int argc, char **argv)
         /* coverity[var_deref_model] False positive */
         rc = cli_resource_delete_attribute(rsc_id, prop_set, prop_id, prop_name, cib_conn, &data_set);
 
-    } else if (rsc_cmd == 'C' && rsc_id) {
+	}else if ((rsc_cmd == 'C') && (rsc_id)) {
         resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
 
         if(do_force == FALSE) {

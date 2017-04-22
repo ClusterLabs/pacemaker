@@ -853,7 +853,8 @@ get_active_resources(const char *host, GList *rsc_list)
     return active;
 }
 
-static GList *subtract_lists(GList *from, GList *items) 
+static GList*
+subtract_lists(GList *from, GList *items) 
 {
     GList *item = NULL;
     GList *result = g_list_copy(from);
@@ -1712,4 +1713,101 @@ cli_resource_move(const char *rsc_id, const char *host_name, cib_t * cib, pe_wor
     }
 
     return rc;
+}
+
+static void
+cli_resource_why_without_rsc_and_host(cib_t *cib_conn,GListPtr resources)
+{
+    GListPtr lpc = NULL;
+    GListPtr hosts = NULL;
+
+    for (lpc = resources; lpc != NULL; lpc = lpc->next) {
+        resource_t *rsc = (resource_t *) lpc->data;
+        rsc->fns->location(rsc, &hosts, TRUE);
+
+	if ( hosts == NULL ) {
+	    printf("Resource %s is not running\n",rsc->id);
+	} else {
+	    printf("Resource %s is running\n",rsc->id);
+	}
+
+        cli_resource_check(cib_conn, rsc);
+        g_list_free(hosts);
+        hosts = NULL;
+     }
+
+}
+
+static void
+cli_resource_why_with_rsc_and_host(cib_t *cib_conn,GListPtr resources,const char* rsc_id,const char* host_uname)
+{
+    resource_t *rsc = NULL;
+
+    rsc = pe_find_resource(resources, rsc_id);
+    if((resource_is_running_on(rsc,host_uname))) {
+        printf("Resource %s is running on host %s\n",rsc->id,host_uname);
+    } else {
+        printf("Resource %s is assigned host %s but not running\n",rsc->id,host_uname);
+    }     
+    cli_resource_check(cib_conn, rsc);
+}
+
+static void 
+cli_resource_why_without_rsc_with_host(cib_t *cib_conn,GListPtr resources,node_t *node)
+{
+    const char* host_uname =  node->details->uname;
+    GListPtr allResources = node->details->allocated_rsc; 
+    GListPtr activeResources = node->details->running_rsc;
+    GListPtr unactiveResources = subtract_lists(allResources,activeResources);
+    GListPtr lpc = NULL;
+
+    for (lpc = activeResources; lpc != NULL; lpc = lpc->next) {
+        resource_t *rsc = (resource_t *) lpc->data;
+        printf("Resource %s is running on host %s\n",rsc->id,host_uname);
+        cli_resource_check(cib_conn,rsc);
+    }
+    
+    for(lpc = unactiveResources; lpc != NULL; lpc = lpc->next) {
+        resource_t *rsc = (resource_t *) lpc->data;
+        printf("Resource %s is assigned host %s but not running\n",rsc->id,host_uname);
+        cli_resource_check(cib_conn,rsc);
+     }
+
+     g_list_free(allResources);
+     g_list_free(activeResources);
+     g_list_free(unactiveResources);
+}
+
+static void
+cli_resource_why_with_rsc_without_host(cib_t *cib_conn,GListPtr resources,const char* rsc_id)
+{
+    resource_t *rsc = NULL;
+    GListPtr hosts = NULL;
+
+    rsc = pe_find_resource(resources, rsc_id);
+    rsc->fns->location(rsc, &hosts, TRUE);
+    if ( hosts == NULL ) {
+        printf("Resource %s is not running\n", rsc->id);
+    } else {
+	printf("Resource %s is running\n",rsc->id);
+    }
+    cli_resource_check(cib_conn, rsc);
+
+    g_list_free(hosts);
+    hosts = NULL;
+}
+
+void cli_resource_why(cib_t *cib_conn,GListPtr resources,const char* rsc_id,node_t *node)
+{
+    const char* host_uname = node == NULL ? NULL : node->details->uname; 
+
+    if (rsc_id == NULL && host_uname == NULL) {
+        cli_resource_why_without_rsc_and_host(cib_conn,resources); 
+    } else if (rsc_id != NULL && host_uname != NULL) {
+        cli_resource_why_with_rsc_and_host(cib_conn,resources,rsc_id,host_uname);
+    } else if (rsc_id == NULL && host_uname != NULL) {
+        cli_resource_why_without_rsc_with_host(cib_conn,resources,node);
+    } else if (rsc_id != NULL && host_uname == NULL) {
+        cli_resource_why_with_rsc_without_host(cib_conn,resources,rsc_id);
+    } 
 }
