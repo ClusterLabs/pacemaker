@@ -33,8 +33,7 @@
 #include <throttle.h>
 
 
-enum throttle_state_e 
-{
+enum throttle_state_e {
     throttle_extreme = 0x1000,
     throttle_high = 0x0100,
     throttle_med  = 0x0010,
@@ -42,24 +41,24 @@ enum throttle_state_e
     throttle_none = 0x0000,
 };
 
-struct throttle_record_s 
-{
-        int max;
-        enum throttle_state_e mode;
-        char *node;
+struct throttle_record_s {
+    int max;
+    enum throttle_state_e mode;
+    char *node;
 };
 
-int throttle_job_max = 0;
-float throttle_load_target = 0.0;
+static int throttle_job_max = 0;
+static float throttle_load_target = 0.0;
 
 #define THROTTLE_FACTOR_LOW    1.2
 #define THROTTLE_FACTOR_MEDIUM 1.6
 #define THROTTLE_FACTOR_HIGH   2.0
 
-GHashTable *throttle_records = NULL;
-mainloop_timer_t *throttle_timer = NULL;
+static GHashTable *throttle_records = NULL;
+static mainloop_timer_t *throttle_timer = NULL;
 
-int throttle_num_cores(void)
+static int
+throttle_num_cores(void)
 {
     static int cores = 0;
     char buffer[256];
@@ -102,14 +101,16 @@ int throttle_num_cores(void)
  *       This will return NULL if the daemon is being run via valgrind.
  *       This should be called only on Linux systems.
  */
-static char *find_cib_loadfile(void) 
+static char *
+find_cib_loadfile(void)
 {
     int pid = crm_procfs_pid_of("cib");
 
     return pid? crm_strdup_printf("/proc/%d/stat", pid) : NULL;
 }
 
-static bool throttle_cib_load(float *load) 
+static bool
+throttle_cib_load(float *load)
 {
 /*
        /proc/[pid]/stat
@@ -233,7 +234,8 @@ static bool throttle_cib_load(float *load)
     return FALSE;
 }
 
-static bool throttle_load_avg(float *load)
+static bool
+throttle_load_avg(float *load)
 {
     char buffer[256];
     FILE *stream = NULL;
@@ -266,7 +268,8 @@ static bool throttle_load_avg(float *load)
     return FALSE;
 }
 
-static bool throttle_io_load(float *load, unsigned int *blocked)
+static bool
+throttle_io_load(float *load, unsigned int *blocked)
 {
     char buffer[64*1024];
     FILE *stream = NULL;
@@ -514,7 +517,13 @@ throttle_record_free(gpointer p)
 }
 
 void
-throttle_update_job_max(const char *preference) 
+throttle_set_load_target(float target)
+{
+    throttle_load_target = target;
+}
+
+void
+throttle_update_job_max(const char *preference)
 {
     int max = 0;
 
@@ -547,7 +556,6 @@ throttle_update_job_max(const char *preference)
     }
 }
 
-
 void
 throttle_init(void)
 {
@@ -567,7 +575,6 @@ throttle_fini(void)
     mainloop_timer_del(throttle_timer); throttle_timer = NULL;
     g_hash_table_destroy(throttle_records); throttle_records = NULL;
 }
-
 
 int
 throttle_get_total_job_limit(int l)
@@ -673,4 +680,3 @@ throttle_update(xmlNode *xml)
     crm_debug("Host %s supports a maximum of %d jobs and throttle mode %.4x.  New job limit is %d",
               from, max, mode, throttle_get_job_limit(from));
 }
-
