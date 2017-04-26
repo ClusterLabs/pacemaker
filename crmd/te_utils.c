@@ -267,12 +267,14 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
         }
     }
 
-    crm_notice("Peer %s was%s terminated (%s) by %s for %s: %s (ref=%s) by client %s",
+    crm_notice("Peer %s was%s terminated (%s) by %s on behalf of %s: %s "
+               CRM_XS " initiator=%s ref=%s",
                st_event->target, st_event->result == pcmk_ok ? "" : " not",
                st_event->action,
                st_event->executioner ? st_event->executioner : "<anyone>",
-               st_event->origin, pcmk_strerror(st_event->result), st_event->id,
-               st_event->client_origin ? st_event->client_origin : "<unknown>");
+               (st_event->client_origin? st_event->client_origin : "<unknown>"),
+               pcmk_strerror(st_event->result),
+               st_event->origin, st_event->id);
 
 #if SUPPORT_CMAN
     if (st_event->result == pcmk_ok && is_cman_cluster()) {

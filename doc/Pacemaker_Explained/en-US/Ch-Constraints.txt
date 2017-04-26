@@ -97,9 +97,10 @@ indexterm:[Constraints,Location,node]
 
 |score
 |
-|Positive values indicate the resource should run on this
- node. Negative values indicate the resource should not run on this node.
- Values of \+/- +INFINITY+ change "should"/"should not" to "must"/"must not".
+|Positive values indicate a preference for running the affected resource(s) on
+ this node -- the higher the value, the stronger the preference. Negative values
+ indicate the resource(s) should avoid this node (a value of +-INFINITY+
+ changes "should" to "must").
 indexterm:[score,Location Constraints]
 indexterm:[Constraints,Location,score]
 

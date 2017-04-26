@@ -148,6 +148,7 @@ indexterm:[Fencing,Property,pcmk_delay_max]
 |1
 |The maximum number of actions that can be performed in parallel on this
  device, if the cluster option +concurrent-fencing+ is +true+. -1 is unlimited.
+ '(since 1.1.15)'
 
 indexterm:[pcmk_action_limit,Fencing]
 indexterm:[Fencing,Property,pcmk_action_limit]
