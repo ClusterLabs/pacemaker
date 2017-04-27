@@ -18,6 +18,33 @@
 
 #include <attrd_common.h>
 
+typedef struct attribute_s {
+    char *uuid; /* TODO: Remove if at all possible */
+    char *id;
+    char *set;
+    GHashTable *values;
+    int update;
+    int timeout_ms;
+
+    /* TODO: refactor these three as a bitmask */
+    bool changed; /* whether attribute value has changed since last write */
+    bool unknown_peer_uuids; /* whether we know we're missing a peer uuid */
+    gboolean is_private; /* whether to keep this attribute out of the CIB */
+
+    mainloop_timer_t *timer;
+
+    char *user;
+
+} attribute_t;
+
+typedef struct attribute_value_s {
+        uint32_t nodeid;
+        gboolean is_remote;
+        char *nodename;
+        char *current;
+        char *requested;
+} attribute_value_t;
+
 cib_t *the_cib;
 crm_cluster_t *attrd_cluster;
 GHashTable *attributes;
