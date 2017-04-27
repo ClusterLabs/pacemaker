@@ -159,6 +159,16 @@ case "$CRM_alert_kind" in
             ;;
         esac
         ;;
+    attribute)
+        output=`"${trap_binary}" -v "${trap_version}" ${trap_options} \
+        -c "${trap_community}" "${CRM_alert_recipient}" "" \
+        PACEMAKER-MIB::pacemakerNotificationTrap \
+        PACEMAKER-MIB::pacemakerNotificationNode s "${CRM_alert_node}" \
+        PACEMAKER-MIB::pacemakerNotificationAttributeName s "${CRM_alert_attribute_name}" \
+        PACEMAKER-MIB::pacemakerNotificationAttributeValue s "${CRM_alert_attribute_value}" \
+        ${hires_timestamp} 2>&1`
+        rc=$?
+        ;;
     *)
         ;;
 esac
