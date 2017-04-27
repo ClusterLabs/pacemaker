@@ -2029,6 +2029,32 @@ lrmd_api_exec(lrmd_t * lrmd, const char *rsc_id, const char *action, const char 
 }
 
 static int
+lrmd_api_exec_alert(lrmd_t * lrmd, const char *alert_id,
+              int timeout,      /* ms */
+              enum lrmd_call_options options, lrmd_key_value_t * params)
+{
+    int rc = pcmk_ok;
+    xmlNode *data = create_xml_node(NULL, F_LRMD_RSC);
+    xmlNode *args = create_xml_node(data, XML_TAG_ATTRS);
+    lrmd_key_value_t *tmp = NULL;
+
+    crm_xml_add(data, F_LRMD_ORIGIN, __FUNCTION__);
+    crm_xml_add(data, F_LRMD_RSC_ID, alert_id);
+    crm_xml_add(data, F_LRMD_RSC_ACTION, "start");
+    crm_xml_add_int(data, F_LRMD_TIMEOUT, timeout);
+
+    for (tmp = params; tmp; tmp = tmp->next) {
+        hash2smartfield((gpointer) tmp->key, (gpointer) tmp->value, args);
+    }
+
+    rc = lrmd_send_command(lrmd, LRMD_OP_ALERT_EXEC, data, NULL, timeout, options, TRUE);
+    free_xml(data);
+
+    lrmd_key_value_freeall(params);
+    return rc;
+}
+
+static int
 lrmd_api_cancel(lrmd_t * lrmd, const char *rsc_id, const char *action, int interval)
 {
     int rc = pcmk_ok;
@@ -2191,6 +2217,7 @@ lrmd_api_new(void)
     new_lrmd->cmds->list_agents = lrmd_api_list_agents;
     new_lrmd->cmds->list_ocf_providers = lrmd_api_list_ocf_providers;
     new_lrmd->cmds->list_standards = lrmd_api_list_standards;
+    new_lrmd->cmds->exec_alert = lrmd_api_exec_alert;
 
     return new_lrmd;
 }
