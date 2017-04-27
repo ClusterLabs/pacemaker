@@ -21,6 +21,7 @@
 #  include <crm/crm.h>
 #  include <crm/common/iso8601.h>
 #  include <crm/pengine/common.h>
+#  include <crm/pengine/status.h>
 
 #  include <regex.h>
 
@@ -40,6 +41,12 @@ typedef struct pe_re_match_data {
     regmatch_t *pmatch;
 } pe_re_match_data_t;
 
+typedef struct pe_match_data {
+    pe_re_match_data_t *re;
+    GHashTable *params;
+    GHashTable *meta;
+} pe_match_data_t;
+
 enum expression_type find_expression_type(xmlNode * expr);
 
 gboolean test_ruleset(xmlNode * ruleset, GHashTable * node_hash, crm_time_t * now);
@@ -47,13 +54,19 @@ gboolean test_ruleset(xmlNode * ruleset, GHashTable * node_hash, crm_time_t * no
 gboolean test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now);
 
 gboolean pe_test_rule_re(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now,
-                         pe_re_match_data_t * match_data);
+                         pe_re_match_data_t * re_match_data);
+
+gboolean pe_test_rule_full(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now,
+                         pe_match_data_t * match_data);
 
 gboolean test_expression(xmlNode * expr, GHashTable * node_hash,
                          enum rsc_role_e role, crm_time_t * now);
 
 gboolean pe_test_expression_re(xmlNode * expr, GHashTable * node_hash,
-                         enum rsc_role_e role, crm_time_t * now, pe_re_match_data_t * match_data);
+                         enum rsc_role_e role, crm_time_t * now, pe_re_match_data_t * re_match_data);
+
+gboolean pe_test_expression_full(xmlNode * expr, GHashTable * node_hash,
+                         enum rsc_role_e role, crm_time_t * now, pe_match_data_t * match_data);
 
 void unpack_instance_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_name,
                                 GHashTable * node_hash, GHashTable * hash,

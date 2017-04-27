@@ -104,7 +104,11 @@
     <element name="rsc_colocation">
       <attribute name="id"><data type="ID"/></attribute>
       <optional>
-        <externalRef href="score.rng"/>
+        <choice>
+          <externalRef href="score.rng"/>
+          <attribute name="score-attribute"><text/></attribute>
+          <attribute name="score-attribute-mangle"><text/></attribute>
+        </choice>
       </optional>
       <optional>
         <ref name="element-lifetime"/>
@@ -128,12 +132,6 @@
             <attribute name="with-rsc-role">
               <ref name="attribute-roles"/>
             </attribute>
-          </optional>
-          <optional>
-            <attribute name="rsc-instance"><data type="integer"/></attribute>
-          </optional>
-          <optional>
-            <attribute name="with-rsc-instance"><data type="integer"/></attribute>
           </optional>
         </group>
       </choice>
@@ -176,12 +174,6 @@
             <attribute name="then-action">
               <ref name="attribute-actions"/>
             </attribute>
-          </optional>
-          <optional>
-            <attribute name="first-instance"><data type="integer"/></attribute>
-          </optional>
-          <optional>
-            <attribute name="then-instance"><data type="integer"/></attribute>
           </optional>
         </group>
       </choice>

@@ -38,7 +38,7 @@
         <ref name="element-operations"/>
         <zeroOrMore>
           <element name="utilization">
-            <externalRef href="nvset-1.3.rng"/>
+            <externalRef href="nvset-2.8.rng"/>
           </element>
         </zeroOrMore>
       </interleave>
@@ -58,7 +58,7 @@
         <ref name="element-operations"/>
         <zeroOrMore>
           <element name="utilization">
-            <externalRef href="nvset-1.3.rng"/>
+            <externalRef href="nvset-2.8.rng"/>
           </element>
         </zeroOrMore>
       </interleave>
@@ -203,10 +203,10 @@
       <zeroOrMore>
         <choice>
           <element name="meta_attributes">
-            <externalRef href="nvset-1.3.rng"/>
+            <externalRef href="nvset-2.8.rng"/>
           </element>
           <element name="instance_attributes">
-            <externalRef href="nvset-1.3.rng"/>
+            <externalRef href="nvset-2.8.rng"/>
           </element>
         </choice>
       </zeroOrMore>
