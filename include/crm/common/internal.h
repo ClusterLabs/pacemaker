@@ -54,6 +54,7 @@ int crm_write_sync(int fd, const char *contents);
 
 int crm_procfs_process_info(struct dirent *entry, char *name, int *pid);
 int crm_procfs_pid_of(const char *name);
+unsigned int crm_procfs_num_cores(void);
 
 
 /* internal XML schema functions (from xml.c) */
