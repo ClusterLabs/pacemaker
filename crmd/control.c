@@ -1046,14 +1046,14 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     value = crmd_pref(config_hash, "load-threshold");
     if(value) {
-        throttle_load_target = strtof(value, NULL) / 100;
+        throttle_set_load_target(strtof(value, NULL) / 100.0);
     }
 
     value = crmd_pref(config_hash, "no-quorum-policy");
     if (safe_str_eq(value, "suicide") && pcmk_locate_sbd()) {
         no_quorum_suicide_escalation = TRUE;
     }
-    
+
     value = crmd_pref(config_hash,"stonith-max-attempts");
     update_stonith_max_attempts(value);
 
