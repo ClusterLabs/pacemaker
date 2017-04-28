@@ -350,38 +350,60 @@ throttle_io_load(float *load, unsigned int *blocked)
     return FALSE;
 }
 
+/*!
+ * \internal
+ * \brief Check a load value against throttling thresholds
+ *
+ * \param[in] load        Load value to check
+ * \param[in] desc        Description of metric (for logging)
+ * \param[in] thresholds  Low/medium/high/extreme thresholds
+ *
+ * \return Throttle mode corresponding to load value
+ */
 static enum throttle_state_e
-throttle_handle_load(float load, const char *desc, int cores)
+throttle_check_thresholds(float load, const char *desc, float thresholds[4])
 {
-    float adjusted_load = load;
+    if (load > thresholds[3]) {
+        crm_notice("Extreme %s detected: %f", desc, load);
+        return throttle_extreme;
 
-    if(cores <= 0) {
-        /* No fudging of the supplied load value */
-
-    } else if(cores == 1) {
-        /* On a single core machine, a load of 1.0 is already too high */
-        adjusted_load = load * THROTTLE_FACTOR_MEDIUM;
-
-    } else {
-        /* Normalize the load to be per-core */
-        adjusted_load = load / cores;
-    }
-
-    if(adjusted_load > THROTTLE_FACTOR_HIGH * throttle_load_target) {
+    } else if (load > thresholds[2]) {
         crm_notice("High %s detected: %f", desc, load);
         return throttle_high;
 
-    } else if(adjusted_load > THROTTLE_FACTOR_MEDIUM * throttle_load_target) {
+    } else if (load > thresholds[1]) {
         crm_info("Moderate %s detected: %f", desc, load);
         return throttle_med;
 
-    } else if(adjusted_load > THROTTLE_FACTOR_LOW * throttle_load_target) {
+    } else if (load > thresholds[0]) {
         crm_debug("Noticeable %s detected: %f", desc, load);
         return throttle_low;
     }
 
-    crm_trace("Negligible %s detected: %f", desc, adjusted_load);
+    crm_trace("Negligible %s detected: %f", desc, load);
     return throttle_none;
+}
+
+static enum throttle_state_e
+throttle_handle_load(float load, const char *desc, int cores)
+{
+    float normalize;
+    float thresholds[4];
+
+    if (cores == 1) {
+        /* On a single core machine, a load of 1.0 is already too high */
+        normalize = 0.6;
+
+    } else {
+        /* Normalize the load to be per-core */
+        normalize = cores;
+    }
+    thresholds[0] = throttle_load_target * normalize * THROTTLE_FACTOR_LOW;
+    thresholds[1] = throttle_load_target * normalize * THROTTLE_FACTOR_MEDIUM;
+    thresholds[2] = throttle_load_target * normalize * THROTTLE_FACTOR_HIGH;
+    thresholds[3] = load + 1.0; /* never extreme */
+
+    return throttle_check_thresholds(load, desc, thresholds);
 }
 
 static enum throttle_state_e
@@ -389,6 +411,7 @@ throttle_mode(void)
 {
     int cores;
     float load;
+    float thresholds[4];
     unsigned int blocked = 0;
     enum throttle_state_e mode = throttle_none;
 
@@ -399,16 +422,16 @@ throttle_mode(void)
     cores = throttle_num_cores();
     if(throttle_cib_load(&load)) {
         float cib_max_cpu = 0.95;
-        const char *desc = "CIB load";
-        /* The CIB is a single threaded task and thus cannot consume
+
+        /* The CIB is a single-threaded task and thus cannot consume
          * more than 100% of a CPU (and 1/cores of the overall system
          * load).
          *
-         * On a many cored system, the CIB might therefor be maxed out
+         * On a many-cored system, the CIB might therefore be maxed out
          * (causing operations to fail or appear to fail) even though
          * the overall system load is still reasonable.
          *
-         * Therefor the 'normal' thresholds can not apply here and we
+         * Therefore, the 'normal' thresholds can not apply here, and we
          * need a special case.
          */
         if(cores == 1) {
@@ -418,26 +441,13 @@ throttle_mode(void)
             cib_max_cpu = throttle_load_target;
         }
 
-        if(load > 1.5 * cib_max_cpu) {
-            /* Can only happen on machines with a low number of cores */
-            crm_notice("Extreme %s detected: %f", desc, load);
-            mode |= throttle_extreme;
+        thresholds[0] = cib_max_cpu * 0.8;
+        thresholds[1] = cib_max_cpu * 0.9;
+        thresholds[2] = cib_max_cpu;
+        /* Can only happen on machines with a low number of cores */
+        thresholds[3] = cib_max_cpu * 1.5;
 
-        } else if(load > cib_max_cpu) {
-            crm_notice("High %s detected: %f", desc, load);
-            mode |= throttle_high;
-
-        } else if(load > cib_max_cpu * 0.9) {
-            crm_info("Moderate %s detected: %f", desc, load);
-            mode |= throttle_med;
-
-        } else if(load > cib_max_cpu * 0.8) {
-            crm_debug("Noticeable %s detected: %f", desc, load);
-            mode |= throttle_low;
-
-        } else {
-            crm_trace("Negligible %s detected: %f", desc, load);
-        }
+        mode |= throttle_check_thresholds(load, "CIB load", thresholds);
     }
 
     if(throttle_load_target <= 0) {
