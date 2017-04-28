@@ -57,40 +57,6 @@ static float throttle_load_target = 0.0;
 static GHashTable *throttle_records = NULL;
 static mainloop_timer_t *throttle_timer = NULL;
 
-static int
-throttle_num_cores(void)
-{
-    static int cores = 0;
-    char buffer[256];
-    FILE *stream = NULL;
-    const char *cpufile = "/proc/cpuinfo";
-
-    if(cores) {
-        return cores;
-    }
-    stream = fopen(cpufile, "r");
-    if(stream == NULL) {
-        int rc = errno;
-        crm_warn("Couldn't read %s, assuming a single processor: %s (%d)", cpufile, pcmk_strerror(rc), rc);
-        return 1;
-    }
-
-    while (fgets(buffer, sizeof(buffer), stream)) {
-        if(strstr(buffer, "processor") == buffer) {
-            cores++;
-        }
-    }
-
-    fclose(stream);
-
-    if(cores == 0) {
-        crm_warn("No processors found in %s, assuming 1", cpufile);
-        return 1;
-    }
-
-    return cores;
-}
-
 /*!
  * \internal
  * \brief Return name of /proc file containing the CIB deamon's load statistics
@@ -259,7 +225,6 @@ throttle_load_avg(float *load)
         *load = strtof(buffer, NULL);
         if(nl) { nl[0] = 0; }
 
-        crm_debug("Current load is %f (full: %s)", *load, buffer);
         fclose(stream);
         return TRUE;
     }
@@ -327,7 +292,7 @@ throttle_handle_load(float load, const char *desc, int cores)
 static enum throttle_state_e
 throttle_mode(void)
 {
-    int cores;
+    unsigned int cores;
     float load;
     float thresholds[4];
     enum throttle_state_e mode = throttle_none;
@@ -336,7 +301,7 @@ throttle_mode(void)
     return throttle_none;
 #endif
 
-    cores = throttle_num_cores();
+    cores = crm_procfs_num_cores();
     if(throttle_cib_load(&load)) {
         float cib_max_cpu = 0.95;
 
@@ -373,6 +338,7 @@ throttle_mode(void)
     }
 
     if(throttle_load_avg(&load)) {
+        crm_debug("Current load is %f across %u core(s)", load, cores);
         mode |= throttle_handle_load(load, "CPU load", cores);
     }
 
@@ -449,7 +415,7 @@ throttle_update_job_max(const char *preference)
 {
     int max = 0;
 
-    throttle_job_max = 2 * throttle_num_cores();
+    throttle_job_max = 2 * crm_procfs_num_cores();
 
     if(preference) {
         /* Global preference from the CIB */
