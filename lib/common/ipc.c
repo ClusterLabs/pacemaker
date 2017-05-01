@@ -463,12 +463,28 @@ crm_ipcs_flush_events_cb(gpointer data)
     return FALSE;
 }
 
+/*!
+ * \internal
+ * \brief Add progressive delay before next event queue flush
+ *
+ * \param[in,out] c          Client connection to add delay to
+ * \param[in]     queue_len  Current event queue length
+ */
+static inline void
+delay_next_flush(crm_client_t *c, unsigned int queue_len)
+{
+    /* Delay a maximum of 5 seconds */
+    guint delay = (queue_len < 40)? (1000 + 100 * queue_len) : 5000;
+
+    c->event_timer = g_timeout_add(delay, crm_ipcs_flush_events_cb, c);
+}
+
 ssize_t
 crm_ipcs_flush_events(crm_client_t * c)
 {
-    int sent = 0;
     ssize_t rc = 0;
-    int queue_len = 0;
+    unsigned int sent = 0;
+    unsigned int queue_len = 0;
 
     if (c == NULL) {
         return pcmk_ok;
@@ -523,8 +539,8 @@ crm_ipcs_flush_events(crm_client_t * c)
             qb_ipcs_disconnect(c->ipcs);
             return rc;
         }
+        delay_next_flush(c, queue_len);
 
-        c->event_timer = g_timeout_add(1000 + 100 * queue_len, crm_ipcs_flush_events_cb, c);
     }
 
     return rc;
