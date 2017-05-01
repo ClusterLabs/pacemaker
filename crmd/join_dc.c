@@ -106,6 +106,30 @@ initialize_join(gboolean before)
     }
 }
 
+/*!
+ * \internal
+ * \brief Create a join message from the DC
+ *
+ * \param[in] join_op  Join operation name
+ * \param[in] host_to  Recipient of message
+ */
+static xmlNode *
+create_dc_message(const char *join_op, const char *host_to)
+{
+    xmlNode *msg = create_request(join_op, NULL, host_to, CRM_SYSTEM_CRMD,
+                                  CRM_SYSTEM_DC, NULL);
+
+    /* Identify which election this is a part of */
+    crm_xml_add_int(msg, F_CRM_JOIN_ID, current_join_id);
+
+    /* Add a field specifying whether the DC is shutting down. This keeps the
+     * joining node from fencing the old DC if it becomes the new DC.
+     */
+    crm_xml_add_boolean(msg, F_CRM_DC_LEAVING,
+                        is_set(fsa_input_register, R_SHUTDOWN));
+    return msg;
+}
+
 static void
 join_make_offer(gpointer key, gpointer value, gpointer user_data)
 {
@@ -147,10 +171,8 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
 
     crm_update_peer_join(__FUNCTION__, (crm_node_t*)member, crm_join_none);
 
-    offer = create_request(CRM_OP_JOIN_OFFER, NULL, member->uname,
-                           CRM_SYSTEM_CRMD, CRM_SYSTEM_DC, NULL);
+    offer = create_dc_message(CRM_OP_JOIN_OFFER, member->uname);
 
-    crm_xml_add_int(offer, F_CRM_JOIN_ID, current_join_id);
     /* send the welcome */
     crm_info("join-%d: Sending offer to %s", current_join_id, member->uname);
 
@@ -242,8 +264,10 @@ do_dc_join_offer_one(long long action,
     /* always offer to the DC (ourselves)
      * this ensures the correct value for max_generation_from
      */
-    member = crm_get_peer(0, fsa_our_uname);
-    join_make_offer(NULL, member, NULL);
+    if (strcmp(join_to, fsa_our_uname) != 0) {
+        member = crm_get_peer(0, fsa_our_uname);
+        join_make_offer(NULL, member, NULL);
+    }
 
     /* this was a genuine join request, cancel any existing
      * transition and invoke the PE
@@ -586,9 +610,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
     }
 
     /* send the ack/nack to the node */
-    acknak = create_request(CRM_OP_JOIN_ACKNAK, NULL, join_to,
-                            CRM_SYSTEM_CRMD, CRM_SYSTEM_DC, NULL);
-    crm_xml_add_int(acknak, F_CRM_JOIN_ID, current_join_id);
+    acknak = create_dc_message(CRM_OP_JOIN_ACKNAK, join_to);
 
     crm_debug("join-%d: ACK'ing join request from %s",
               current_join_id, join_to);

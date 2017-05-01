@@ -30,6 +30,26 @@ void join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, v
 
 extern ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t * orig);
 
+/*!
+ * \internal
+ * \brief Remember if DC is shutting down as we join
+ *
+ * If we're joining while the current DC is shutting down, update its expected
+ * state, so we don't fence it if we become the new DC. (We weren't a peer
+ * when it broadcast its shutdown request.)
+ *
+ * \param[in] msg  A join message from the DC
+ */
+static void
+update_dc_expected(xmlNode *msg)
+{
+    if (fsa_our_dc && crm_is_true(crm_element_value(msg, F_CRM_DC_LEAVING))) {
+        crm_node_t *dc_node = crm_get_peer(0, fsa_our_dc);
+
+        crm_update_peer_expected(__FUNCTION__, dc_node, CRMD_JOINSTATE_DOWN);
+    }
+}
+
 /*	A_CL_JOIN_QUERY		*/
 /* is there a DC out there? */
 void
@@ -127,6 +147,8 @@ do_cl_join_offer_respond(long long action,
                  welcome_from, fsa_our_dc);
         return;
     }
+
+    update_dc_expected(input->msg);
 
     CRM_LOG_ASSERT(input != NULL);
     query_call_id =
@@ -249,6 +271,8 @@ do_cl_join_finalize_respond(long long action,
                  op, welcome_from, fsa_our_dc);
         return;
     }
+
+    update_dc_expected(input->msg);
 
     /* send our status section to the DC */
     tmp1 = do_lrm_query(TRUE, fsa_our_uname);

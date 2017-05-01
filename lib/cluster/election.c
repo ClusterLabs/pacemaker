@@ -19,7 +19,6 @@
 #include <crm/crm.h>
 
 #define STORM_INTERVAL   2      /* in seconds */
-#define STORM_MULTIPLIER 5      /* multiplied by the number of nodes */
 
 struct election_s
 {

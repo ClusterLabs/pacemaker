@@ -1,0 +1,105 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="5" operation="monitor" operation_key="prmDummy_monitor_10000" on_node="rh73-02-snmp" on_node_uuid="3232238266">
+        <primitive id="prmDummy" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_on_node="rh73-02-snmp" CRM_meta_on_node_uuid="3232238266" CRM_meta_timeout="60000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="4" operation="start" operation_key="prmDummy_start_0" on_node="rh73-02-snmp" on_node_uuid="3232238266"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="4" operation="start" operation_key="prmDummy_start_0" on_node="rh73-02-snmp" on_node_uuid="3232238266">
+        <primitive id="prmDummy" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_on_node="rh73-02-snmp" CRM_meta_on_node_uuid="3232238266" CRM_meta_timeout="60000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="3" operation="stop" operation_key="prmDummy_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="10" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <pseudo_event id="3" operation="stop" operation_key="prmDummy_stop_0">
+        <attributes CRM_meta_name="stop" CRM_meta_on_fail="fence" CRM_meta_timeout="60000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="11" operation="stonith" operation_key="stonith-rh73-01-snmp-reboot" on_node="rh73-01-snmp" on_node_uuid="3232238265"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <rsc_op id="9" operation="start" operation_key="prmStonith2-1_start_0" on_node="rh73-02-snmp" on_node_uuid="3232238266">
+        <primitive id="prmStonith2-1" class="stonith" type="external/ssh"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_on_node="rh73-02-snmp" CRM_meta_on_node_uuid="3232238266" CRM_meta_timeout="60000"  hostlist="rh73-02-snmp" pcmk_reboot_retries="1" pcmk_reboot_timeout="40s"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="8" operation="stop" operation_key="prmStonith2-1_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <pseudo_event id="8" operation="stop" operation_key="prmStonith2-1_stop_0">
+        <attributes CRM_meta_name="stop" CRM_meta_on_fail="ignore" CRM_meta_timeout="60000"  hostlist="rh73-02-snmp" pcmk_reboot_retries="1" pcmk_reboot_timeout="40s"/>
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <crm_event id="11" operation="stonith" operation_key="stonith-rh73-01-snmp-reboot" on_node="rh73-01-snmp" on_node_uuid="3232238265">
+        <attributes CRM_meta_on_node="rh73-01-snmp" CRM_meta_on_node_uuid="3232238265" CRM_meta_op_no_wait="true" CRM_meta_shutdown="0" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="3232238265"/>
+        </downed>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <pseudo_event id="10" operation="stonith_complete" operation_key="stonith_complete">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="11" operation="stonith" operation_key="stonith-rh73-01-snmp-reboot" on_node="rh73-01-snmp" on_node_uuid="3232238265"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <pseudo_event id="2" operation="all_stopped" operation_key="all_stopped">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="3" operation="stop" operation_key="prmDummy_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="8" operation="stop" operation_key="prmStonith2-1_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="10" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>

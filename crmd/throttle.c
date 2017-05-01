@@ -33,8 +33,7 @@
 #include <throttle.h>
 
 
-enum throttle_state_e 
-{
+enum throttle_state_e {
     throttle_extreme = 0x1000,
     throttle_high = 0x0100,
     throttle_med  = 0x0010,
@@ -42,55 +41,21 @@ enum throttle_state_e
     throttle_none = 0x0000,
 };
 
-struct throttle_record_s 
-{
-        int max;
-        enum throttle_state_e mode;
-        char *node;
+struct throttle_record_s {
+    int max;
+    enum throttle_state_e mode;
+    char *node;
 };
 
-int throttle_job_max = 0;
-float throttle_load_target = 0.0;
+static int throttle_job_max = 0;
+static float throttle_load_target = 0.0;
 
 #define THROTTLE_FACTOR_LOW    1.2
 #define THROTTLE_FACTOR_MEDIUM 1.6
 #define THROTTLE_FACTOR_HIGH   2.0
 
-GHashTable *throttle_records = NULL;
-mainloop_timer_t *throttle_timer = NULL;
-
-int throttle_num_cores(void)
-{
-    static int cores = 0;
-    char buffer[256];
-    FILE *stream = NULL;
-    const char *cpufile = "/proc/cpuinfo";
-
-    if(cores) {
-        return cores;
-    }
-    stream = fopen(cpufile, "r");
-    if(stream == NULL) {
-        int rc = errno;
-        crm_warn("Couldn't read %s, assuming a single processor: %s (%d)", cpufile, pcmk_strerror(rc), rc);
-        return 1;
-    }
-
-    while (fgets(buffer, sizeof(buffer), stream)) {
-        if(strstr(buffer, "processor") == buffer) {
-            cores++;
-        }
-    }
-
-    fclose(stream);
-
-    if(cores == 0) {
-        crm_warn("No processors found in %s, assuming 1", cpufile);
-        return 1;
-    }
-
-    return cores;
-}
+static GHashTable *throttle_records = NULL;
+static mainloop_timer_t *throttle_timer = NULL;
 
 /*!
  * \internal
@@ -102,14 +67,16 @@ int throttle_num_cores(void)
  *       This will return NULL if the daemon is being run via valgrind.
  *       This should be called only on Linux systems.
  */
-static char *find_cib_loadfile(void) 
+static char *
+find_cib_loadfile(void)
 {
     int pid = crm_procfs_pid_of("cib");
 
     return pid? crm_strdup_printf("/proc/%d/stat", pid) : NULL;
 }
 
-static bool throttle_cib_load(float *load) 
+static bool
+throttle_cib_load(float *load)
 {
 /*
        /proc/[pid]/stat
@@ -233,7 +200,8 @@ static bool throttle_cib_load(float *load)
     return FALSE;
 }
 
-static bool throttle_load_avg(float *load)
+static bool
+throttle_load_avg(float *load)
 {
     char buffer[256];
     FILE *stream = NULL;
@@ -257,7 +225,6 @@ static bool throttle_load_avg(float *load)
         *load = strtof(buffer, NULL);
         if(nl) { nl[0] = 0; }
 
-        crm_debug("Current load is %f (full: %s)", *load, buffer);
         fclose(stream);
         return TRUE;
     }
@@ -266,146 +233,87 @@ static bool throttle_load_avg(float *load)
     return FALSE;
 }
 
-static bool throttle_io_load(float *load, unsigned int *blocked)
+/*!
+ * \internal
+ * \brief Check a load value against throttling thresholds
+ *
+ * \param[in] load        Load value to check
+ * \param[in] desc        Description of metric (for logging)
+ * \param[in] thresholds  Low/medium/high/extreme thresholds
+ *
+ * \return Throttle mode corresponding to load value
+ */
+static enum throttle_state_e
+throttle_check_thresholds(float load, const char *desc, float thresholds[4])
 {
-    char buffer[64*1024];
-    FILE *stream = NULL;
-    const char *loadfile = "/proc/stat";
+    if (load > thresholds[3]) {
+        crm_notice("Extreme %s detected: %f", desc, load);
+        return throttle_extreme;
 
-    if(load == NULL) {
-        return FALSE;
+    } else if (load > thresholds[2]) {
+        crm_notice("High %s detected: %f", desc, load);
+        return throttle_high;
+
+    } else if (load > thresholds[1]) {
+        crm_info("Moderate %s detected: %f", desc, load);
+        return throttle_med;
+
+    } else if (load > thresholds[0]) {
+        crm_debug("Noticeable %s detected: %f", desc, load);
+        return throttle_low;
     }
 
-    stream = fopen(loadfile, "r");
-    if(stream == NULL) {
-        int rc = errno;
-        crm_warn("Couldn't read %s: %s (%d)", loadfile, pcmk_strerror(rc), rc);
-        return FALSE;
-    }
-
-    if(fgets(buffer, sizeof(buffer), stream)) {
-        /* Borrowed from procps-ng's sysinfo.c */
-
-        char *b = NULL;
-        unsigned long long cpu_use = 0;
-        unsigned long long cpu_nic = 0;
-        unsigned long long cpu_sys = 0;
-        unsigned long long cpu_idl = 0;
-        unsigned long long cpu_iow = 0; /* not separated out until the 2.5.41 kernel */
-        unsigned long long cpu_xxx = 0; /* not separated out until the 2.6.0-test4 kernel */
-        unsigned long long cpu_yyy = 0; /* not separated out until the 2.6.0-test4 kernel */
-        unsigned long long cpu_zzz = 0; /* not separated out until the 2.6.11 kernel */
-
-        long long divo2 = 0;
-        long long duse = 0;
-        long long dsys = 0;
-        long long didl =0;
-        long long diow =0;
-        long long dstl = 0;
-        long long Div = 0;
-
-        b = strstr(buffer, "cpu ");
-        if(b) sscanf(b,  "cpu  %Lu %Lu %Lu %Lu %Lu %Lu %Lu %Lu",
-               &cpu_use, &cpu_nic, &cpu_sys, &cpu_idl, &cpu_iow, &cpu_xxx, &cpu_yyy, &cpu_zzz);
-
-        if(blocked) {
-            b = strstr(buffer, "procs_blocked ");
-            if(b) sscanf(b,  "procs_blocked %u", blocked);
-        }
-
-        duse = cpu_use + cpu_nic;
-        dsys = cpu_sys + cpu_xxx + cpu_yyy;
-        didl = cpu_idl;
-        diow = cpu_iow;
-        dstl = cpu_zzz;
-        Div = duse + dsys + didl + diow + dstl;
-        if (!Div) Div = 1, didl = 1;
-        divo2 = Div / 2UL;
-
-        /* vmstat output:
-         *
-         * procs -----------memory---------- ---swap-- -----io---- -system-- ----cpu---- 
-         * r  b   swpd   free   buff  cache     si   so    bi    bo   in   cs us sy id wa
-         * 1  0 5537800 958592 204180 1737740    1    1    12    15    0    0  2  1 97  0
-         *
-         * The last four columns are calculated as:
-         *
-         * (unsigned)( (100*duse			+ divo2) / Div ),
-         * (unsigned)( (100*dsys			+ divo2) / Div ),
-         * (unsigned)( (100*didl			+ divo2) / Div ),
-         * (unsigned)( (100*diow			+ divo2) / Div )
-         *
-         */
-        *load = (diow + divo2) / Div;
-        crm_debug("Current IO load is %f", *load);
-
-        fclose(stream);
-        return TRUE;
-    }
-
-    fclose(stream);
-    return FALSE;
+    crm_trace("Negligible %s detected: %f", desc, load);
+    return throttle_none;
 }
 
 static enum throttle_state_e
 throttle_handle_load(float load, const char *desc, int cores)
 {
-    float adjusted_load = load;
+    float normalize;
+    float thresholds[4];
 
-    if(cores <= 0) {
-        /* No fudging of the supplied load value */
-
-    } else if(cores == 1) {
+    if (cores == 1) {
         /* On a single core machine, a load of 1.0 is already too high */
-        adjusted_load = load * THROTTLE_FACTOR_MEDIUM;
+        normalize = 0.6;
 
     } else {
         /* Normalize the load to be per-core */
-        adjusted_load = load / cores;
+        normalize = cores;
     }
+    thresholds[0] = throttle_load_target * normalize * THROTTLE_FACTOR_LOW;
+    thresholds[1] = throttle_load_target * normalize * THROTTLE_FACTOR_MEDIUM;
+    thresholds[2] = throttle_load_target * normalize * THROTTLE_FACTOR_HIGH;
+    thresholds[3] = load + 1.0; /* never extreme */
 
-    if(adjusted_load > THROTTLE_FACTOR_HIGH * throttle_load_target) {
-        crm_notice("High %s detected: %f", desc, load);
-        return throttle_high;
-
-    } else if(adjusted_load > THROTTLE_FACTOR_MEDIUM * throttle_load_target) {
-        crm_info("Moderate %s detected: %f", desc, load);
-        return throttle_med;
-
-    } else if(adjusted_load > THROTTLE_FACTOR_LOW * throttle_load_target) {
-        crm_debug("Noticeable %s detected: %f", desc, load);
-        return throttle_low;
-    }
-
-    crm_trace("Negligible %s detected: %f", desc, adjusted_load);
-    return throttle_none;
+    return throttle_check_thresholds(load, desc, thresholds);
 }
 
 static enum throttle_state_e
 throttle_mode(void)
 {
-    int cores;
+    unsigned int cores;
     float load;
-    unsigned int blocked = 0;
+    float thresholds[4];
     enum throttle_state_e mode = throttle_none;
 
 #if defined(ON_BSD) || defined(ON_SOLARIS)
     return throttle_none;
 #endif
 
-    cores = throttle_num_cores();
+    cores = crm_procfs_num_cores();
     if(throttle_cib_load(&load)) {
         float cib_max_cpu = 0.95;
-        const char *desc = "CIB load";
-        /* The CIB is a single threaded task and thus cannot consume
+
+        /* The CIB is a single-threaded task and thus cannot consume
          * more than 100% of a CPU (and 1/cores of the overall system
          * load).
          *
-         * On a many cored system, the CIB might therefor be maxed out
+         * On a many-cored system, the CIB might therefore be maxed out
          * (causing operations to fail or appear to fail) even though
          * the overall system load is still reasonable.
          *
-         * Therefor the 'normal' thresholds can not apply here and we
+         * Therefore, the 'normal' thresholds can not apply here, and we
          * need a special case.
          */
         if(cores == 1) {
@@ -415,26 +323,13 @@ throttle_mode(void)
             cib_max_cpu = throttle_load_target;
         }
 
-        if(load > 1.5 * cib_max_cpu) {
-            /* Can only happen on machines with a low number of cores */
-            crm_notice("Extreme %s detected: %f", desc, load);
-            mode |= throttle_extreme;
+        thresholds[0] = cib_max_cpu * 0.8;
+        thresholds[1] = cib_max_cpu * 0.9;
+        thresholds[2] = cib_max_cpu;
+        /* Can only happen on machines with a low number of cores */
+        thresholds[3] = cib_max_cpu * 1.5;
 
-        } else if(load > cib_max_cpu) {
-            crm_notice("High %s detected: %f", desc, load);
-            mode |= throttle_high;
-
-        } else if(load > cib_max_cpu * 0.9) {
-            crm_info("Moderate %s detected: %f", desc, load);
-            mode |= throttle_med;
-
-        } else if(load > cib_max_cpu * 0.8) {
-            crm_debug("Noticeable %s detected: %f", desc, load);
-            mode |= throttle_low;
-
-        } else {
-            crm_trace("Negligible %s detected: %f", desc, load);
-        }
+        mode |= throttle_check_thresholds(load, "CIB load", thresholds);
     }
 
     if(throttle_load_target <= 0) {
@@ -443,12 +338,8 @@ throttle_mode(void)
     }
 
     if(throttle_load_avg(&load)) {
+        crm_debug("Current load is %f across %u core(s)", load, cores);
         mode |= throttle_handle_load(load, "CPU load", cores);
-    }
-
-    if(throttle_io_load(&load, &blocked)) {
-        mode |= throttle_handle_load(load, "IO load", 0);
-        mode |= throttle_handle_load(blocked, "blocked IO ratio", cores);
     }
 
     if(mode & throttle_extreme) {
@@ -514,11 +405,17 @@ throttle_record_free(gpointer p)
 }
 
 void
-throttle_update_job_max(const char *preference) 
+throttle_set_load_target(float target)
+{
+    throttle_load_target = target;
+}
+
+void
+throttle_update_job_max(const char *preference)
 {
     int max = 0;
 
-    throttle_job_max = 2 * throttle_num_cores();
+    throttle_job_max = 2 * crm_procfs_num_cores();
 
     if(preference) {
         /* Global preference from the CIB */
@@ -547,7 +444,6 @@ throttle_update_job_max(const char *preference)
     }
 }
 
-
 void
 throttle_init(void)
 {
@@ -567,7 +463,6 @@ throttle_fini(void)
     mainloop_timer_del(throttle_timer); throttle_timer = NULL;
     g_hash_table_destroy(throttle_records); throttle_records = NULL;
 }
-
 
 int
 throttle_get_total_job_limit(int l)
@@ -673,4 +568,3 @@ throttle_update(xmlNode *xml)
     crm_debug("Host %s supports a maximum of %d jobs and throttle mode %.4x.  New job limit is %d",
               from, max, mode, throttle_get_job_limit(from));
 }
-

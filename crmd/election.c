@@ -31,9 +31,6 @@
 #include <crmd_callbacks.h>
 #include <tengine.h>
 
-#define STORM_INTERVAL   2      /* in seconds */
-#define STORM_MULTIPLIER 5      /* multiplied by the number of nodes */
-
 /*	A_ELECTION_VOTE	*/
 void
 do_election_vote(long long action,

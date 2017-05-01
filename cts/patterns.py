@@ -62,7 +62,7 @@ class BasePatterns:
 
             "Pat:RscOpOK"       : r"crmd.*:\s+Result of %s operation for %s.*: (0 \()?ok",
             "Pat:RscRemoteOpOK" : r"crmd.*:\s+Result of %s operation for %s on %s: (0 \()?ok",
-            "Pat:NodeFenced"    : r"crmd.*:\s*Peer\s+%s\s+was\s+terminated\s+\(.*\)\s+by\s+.*\s+for\s+.*:\s+OK",
+            "Pat:NodeFenced"    : r"crmd.*:\s* Peer %s was terminated \(.*\) by .* on behalf of .*: OK",
             "Pat:FenceOpOK"     : "Operation .* for host '%s' with device .* returned: 0",
         }
 
@@ -286,25 +286,21 @@ class crm_cs_v0(BasePatterns):
             r"error:.*Child process cib .* exited: Invalid argument",
             r"error:.*Child process attrd .* exited: Transport endpoint is not connected",
             r"error:.*Child process crmd .* exited: Link has been severed",
-            r"lrmd.*error:.*Connection to stonith-ng failed",
-            r"lrmd.*error:.*Connection to stonith-ng.* closed",
+            r"lrmd.*error:.*Connection to stonith-ng.* (failed|closed)",
             r"lrmd.*error:.*LRMD lost STONITH connection",
             r"crmd.*State transition .* S_RECOVERY",
-            r"crmd.*error:.*Input I_ERROR .*received in state",
-            r"crmd.*error:.*Input I_TERMINATE .*received in state",
+            r"crmd.*error:.*Input (I_ERROR|I_TERMINATE ) .*received in state",
             r"crmd.*error:.*Connection to cman failed",
             r"crmd.*error:.*Could not recover from internal error",
-            r"error:.*Connection to cib_shm failed",
-            r"error:.*Connection to cib_shm.* closed",
+            r"error:.*Connection to cib_(shm|rw).* (failed|closed)",
             r"error:.*STONITH connection failed",
-            r"error: Connection to stonith-ng failed",
+            r"error: Connection to stonith-ng.* (failed|closed)",
             r"crit: Fencing daemon connection failed",
-            r"error: Connection to stonith-ng.* closed",
             ]
 
         self.components["corosync"] = [
             r"pacemakerd.*error:.*Connection destroyed",
-            r"attrd.*:\s*crit:.*Lost connection to Corosync service",
+            r"attrd.*:\s*(crit|error):.*Lost connection to (Corosync|CIB) service",
             r"stonith.*:\s*(Corosync connection terminated|Shutting down)",
             r"cib.*:\s*Corosync connection lost!\s+Exiting.",
             r"crmd.*:\s*(connection terminated|Disconnected from Corosync)",

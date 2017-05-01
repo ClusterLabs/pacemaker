@@ -1137,6 +1137,12 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
         }
 
     } else if (safe_str_eq(action->task, CRM_OP_FENCE) && action->node) {
+        /* Pass the node's attributes as meta-attributes.
+         *
+         * @TODO: Determine whether it is still necessary to do this. It was
+         * added in 33d99707, probably for the libfence-based implementation in
+         * c9a90bd, which is no longer used.
+         */
         g_hash_table_foreach(action->node->details->attrs, hash2metafield, args_xml);
     }
 
