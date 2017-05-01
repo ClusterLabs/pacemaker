@@ -37,6 +37,9 @@
 
 #define PCMK_IPC_VERSION 1
 
+/* Evict clients whose event queue grows this large */
+#define PCMK_IPC_MAX_QUEUE 500
+
 struct crm_ipc_response_header {
     struct qb_ipc_response_header qb;
     uint32_t size_uncompressed;
@@ -523,24 +526,44 @@ crm_ipcs_flush_events(crm_client_t * c)
     }
 
     queue_len -= sent;
-    if (sent > 0 || c->event_queue) {
+    if (sent > 0 || queue_len) {
         crm_trace("Sent %d events (%d remaining) for %p[%d]: %s (%lld)",
                   sent, queue_len, c->ipcs, c->pid,
                   pcmk_strerror(rc < 0 ? rc : 0), (long long) rc);
     }
 
-    if (c->event_queue) {
-        if (queue_len % 100 == 0 && queue_len > 99) {
-            crm_warn("Event queue for %p[%d] has grown to %d", c->ipcs, c->pid, queue_len);
+    if (queue_len) {
+        /* We want to allow clients to briefly fall behind on processing
+         * incoming messages, but drop completely unresponsive clients so the
+         * connection doesn't consume resources indefinitely.
+         *
+         * @TODO It is possible that the queue could reasonably grow large in a
+         * short time. An example is a reprobe of hundreds of resources on many
+         * nodes resulting in a surge of CIB replies to the crmd. We could
+         * possibly give cluster daemons a higher threshold here, and/or prevent
+         * such a surge by throttling LRM history writes in the crmd.
+         */
 
-        } else if (queue_len > 500) {
-            crm_err("Evicting slow client %p[%d]: event queue reached %d entries",
-                    c->ipcs, c->pid, queue_len);
-            qb_ipcs_disconnect(c->ipcs);
-            return rc;
+        if (queue_len > PCMK_IPC_MAX_QUEUE) {
+            if ((c->backlog_len <= 1) || (queue_len < c->backlog_len)) {
+                /* Don't evict for a new or shrinking backlog */
+                crm_warn("Client with process ID %u has a backlog of %u messages "
+                         CRM_XS " %p", c->pid, queue_len, c->ipcs);
+            } else {
+                crm_err("Evicting client with process ID %u due to backlog of %u messages "
+                         CRM_XS " %p", c->pid, queue_len, c->ipcs);
+                c->backlog_len = 0;
+                qb_ipcs_disconnect(c->ipcs);
+                return rc;
+            }
         }
+
+        c->backlog_len = queue_len;
         delay_next_flush(c, queue_len);
 
+    } else {
+        /* Event queue is empty, there is no backlog */
+        c->backlog_len = 0;
     }
 
     return rc;
