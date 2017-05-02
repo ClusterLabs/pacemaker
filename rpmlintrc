@@ -39,3 +39,9 @@ addFilter("E: incoherent-logrotate-file /etc/logrotate.d/pacemaker")
 
 # buildbot builds the not-yet-released version
 addFilter("W: incoherent-version-in-changelog")
+
+# pacemaker_remote scriptlets use a state file
+addFilter("W: dangerous-command-in-%(pre|postun|posttrans) rm")
+
+# We should really use "pacemaker-remote", but we don't
+addFilter("W: incoherent-init-script-name pacemaker_remote")
