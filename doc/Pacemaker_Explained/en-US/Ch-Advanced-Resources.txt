@@ -1361,11 +1361,13 @@ a multistate clone if the bundle has +masters+ greater than zero
  
 [IMPORTANT]
 ====
-If Pacemaker Remote nodes are used in a cluster with bundle resources that
-contain a +primitive+, it is strongly recommended to configure location
-constraints prohibiting the bundles from running on those nodes. Running a
-bundle with a +primitive+ on a Pacemaker Remote node might work if
-+ip-range-start+ is used, but that configuration has not yet been tested.
+Containers in bundles with a +primitive+ must have an accessible networking
+environment, so that Pacemaker can contact Pacemaker Remote inside the
+container. For example, the Docker option `--net=none` should not be used with
+a +primitive+. The default (using a distinct network space inside the
+container) works with +ip-range-start+. If the Docker option `--net=host` is
+used (making the container share the host's network space), a unique
++control-port+ should be specified for each bundle.
 ====
 
 === Limitations of Bundles ===
