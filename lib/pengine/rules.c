@@ -37,7 +37,7 @@ crm_time_t *parse_xml_duration(crm_time_t * start, xmlNode * duration_spec);
 gboolean test_date_expression(xmlNode * time_expr, crm_time_t * now);
 gboolean cron_range_satisfied(crm_time_t * now, xmlNode * cron_spec);
 gboolean test_attr_expression(xmlNode * expr, GHashTable * hash, crm_time_t * now);
-gboolean pe_test_attr_expression_re(xmlNode * expr, GHashTable * hash, crm_time_t * now, pe_re_match_data_t * match_data);
+gboolean pe_test_attr_expression_full(xmlNode * expr, GHashTable * hash, crm_time_t * now, pe_match_data_t * match_data);
 gboolean test_role_expression(xmlNode * expr, enum rsc_role_e role, crm_time_t * now);
 
 gboolean
@@ -61,11 +61,22 @@ test_ruleset(xmlNode * ruleset, GHashTable * node_hash, crm_time_t * now)
 gboolean
 test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
 {
-    return pe_test_rule_re(rule, node_hash, role, now, NULL);
+    return pe_test_rule_full(rule, node_hash, role, now, NULL);
 }
 
 gboolean
-pe_test_rule_re(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now, pe_re_match_data_t * match_data)
+pe_test_rule_re(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now, pe_re_match_data_t * re_match_data)
+{
+    pe_match_data_t match_data = {
+                                    .re = re_match_data,
+                                    .params = NULL,
+                                    .meta = NULL,
+                                 };
+    return pe_test_rule_full(rule, node_hash, role, now, &match_data);
+}
+
+gboolean
+pe_test_rule_full(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now, pe_match_data_t * match_data)
 {
     xmlNode *expr = NULL;
     gboolean test = TRUE;
@@ -83,7 +94,7 @@ pe_test_rule_re(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, cr
 
     crm_trace("Testing rule %s", ID(rule));
     for (expr = __xml_first_child(rule); expr != NULL; expr = __xml_next_element(expr)) {
-        test = pe_test_expression_re(expr, node_hash, role, now, match_data);
+        test = pe_test_expression_full(expr, node_hash, role, now, match_data);
         empty = FALSE;
 
         if (test && do_and == FALSE) {
@@ -107,18 +118,29 @@ pe_test_rule_re(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, cr
 gboolean
 test_expression(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
 {
-    return pe_test_expression_re(expr, node_hash, role, now, NULL);
+    return pe_test_expression_full(expr, node_hash, role, now, NULL);
 }
 
 gboolean
-pe_test_expression_re(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now, pe_re_match_data_t * match_data)
+pe_test_expression_re(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now, pe_re_match_data_t * re_match_data)
+{
+    pe_match_data_t match_data = {
+                                    .re = re_match_data,
+                                    .params = NULL,
+                                    .meta = NULL,
+                                 };
+    return pe_test_expression_full(expr, node_hash, role, now, &match_data);
+}
+
+gboolean
+pe_test_expression_full(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now, pe_match_data_t * match_data)
 {
     gboolean accept = FALSE;
     const char *uname = NULL;
 
     switch (find_expression_type(expr)) {
         case nested_rule:
-            accept = pe_test_rule_re(expr, node_hash, role, now, match_data);
+            accept = pe_test_rule_full(expr, node_hash, role, now, match_data);
             break;
         case attr_expr:
         case loc_expr:
@@ -126,7 +148,7 @@ pe_test_expression_re(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e ro
              * no node to compare with
              */
             if (node_hash != NULL) {
-                accept = pe_test_attr_expression_re(expr, node_hash, now, match_data);
+                accept = pe_test_attr_expression_full(expr, node_hash, now, match_data);
             }
             break;
 
@@ -236,26 +258,29 @@ test_role_expression(xmlNode * expr, enum rsc_role_e role, crm_time_t * now)
 gboolean
 test_attr_expression(xmlNode * expr, GHashTable * hash, crm_time_t * now)
 {
-    return pe_test_attr_expression_re(expr, hash, now, NULL);
+    return pe_test_attr_expression_full(expr, hash, now, NULL);
 }
 
 gboolean
-pe_test_attr_expression_re(xmlNode * expr, GHashTable * hash, crm_time_t * now, pe_re_match_data_t * match_data)
+pe_test_attr_expression_full(xmlNode * expr, GHashTable * hash, crm_time_t * now, pe_match_data_t * match_data)
 {
     gboolean accept = FALSE;
     gboolean attr_allocated = FALSE;
     int cmp = 0;
     const char *h_val = NULL;
+    GHashTable *table = NULL;
 
     const char *op = NULL;
     const char *type = NULL;
     const char *attr = NULL;
     const char *value = NULL;
+    const char *value_source = NULL;
 
     attr = crm_element_value(expr, XML_EXPR_ATTR_ATTRIBUTE);
     op = crm_element_value(expr, XML_EXPR_ATTR_OPERATION);
     value = crm_element_value(expr, XML_EXPR_ATTR_VALUE);
     type = crm_element_value(expr, XML_EXPR_ATTR_TYPE);
+    value_source = crm_element_value(expr, XML_EXPR_ATTR_VALUE_SOURCE);
 
     if (attr == NULL || op == NULL) {
         pe_err("Invalid attribute or operation in expression"
@@ -264,12 +289,31 @@ pe_test_attr_expression_re(xmlNode * expr, GHashTable * hash, crm_time_t * now, 
     }
 
     if (match_data) {
-        char *resolved_attr = pe_expand_re_matches(attr, match_data);
+        if (match_data->re) {
+            char *resolved_attr = pe_expand_re_matches(attr, match_data->re);
 
-       if (resolved_attr) {
-           attr = (const char *) resolved_attr;
-           attr_allocated = TRUE;
-       }
+            if (resolved_attr) {
+                attr = (const char *) resolved_attr;
+                attr_allocated = TRUE;
+            }
+        }
+
+        if (safe_str_eq(value_source, "param")) {
+            table = match_data->params;
+        } else if (safe_str_eq(value_source, "meta")) {
+            table = match_data->meta;
+        }
+    }
+
+    if (table) {
+        const char *param_name = value;
+        const char *param_value = NULL;
+
+        if (param_name && param_name[0]) {
+            if ((param_value = (const char *)g_hash_table_lookup(table, param_name))) {
+                value = param_value;
+            }
+        }
     }
 
     if (hash != NULL) {

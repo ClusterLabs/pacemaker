@@ -54,7 +54,7 @@ enum pe_ordering get_flags(const char *id, enum pe_order_kind kind,
 enum pe_ordering get_asymmetrical_flags(enum pe_order_kind kind);
 static rsc_to_node_t *generate_location_rule(resource_t * rsc, xmlNode * rule_xml,
                                              const char *discovery, pe_working_set_t * data_set,
-                                             pe_re_match_data_t * match_data);
+                                             pe_match_data_t * match_data);
 
 gboolean
 unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set)
@@ -647,7 +647,7 @@ tag_to_set(xmlNode * xml_obj, xmlNode ** rsc_set, const char * attr,
 }
 
 static gboolean unpack_rsc_location(xmlNode * xml_obj, resource_t * rsc_lh, const char * role,
-                             const char * score, pe_working_set_t * data_set, pe_re_match_data_t * match_data);
+                             const char * score, pe_working_set_t * data_set, pe_match_data_t * match_data);
 
 static gboolean
 unpack_simple_location(xmlNode * xml_obj, pe_working_set_t * data_set)
@@ -695,11 +695,16 @@ unpack_simple_location(xmlNode * xml_obj, pe_working_set_t * data_set)
             status = regexec(r_patt, r->id, nregs, pmatch, 0);
 
             if(invert == FALSE && status == 0) {
-                pe_re_match_data_t match_data = {
+                pe_re_match_data_t re_match_data = {
                                                 .string = r->id,
                                                 .nregs = nregs,
                                                 .pmatch = pmatch
                                                };
+                pe_match_data_t match_data = {
+                                                .re = &re_match_data,
+                                                .params = r->parameters,
+                                                .meta = r->meta,
+                                             };
                 crm_debug("'%s' matched '%s' for %s", r->id, value, id);
                 unpack_rsc_location(xml_obj, r, NULL, NULL, data_set, &match_data);
 
@@ -723,7 +728,7 @@ unpack_simple_location(xmlNode * xml_obj, pe_working_set_t * data_set)
 
 static gboolean
 unpack_rsc_location(xmlNode * xml_obj, resource_t * rsc_lh, const char * role,
-                    const char * score, pe_working_set_t * data_set, pe_re_match_data_t * match_data)
+                    const char * score, pe_working_set_t * data_set, pe_match_data_t * match_data)
 {
     gboolean empty = TRUE;
     rsc_to_node_t *location = NULL;
@@ -981,7 +986,7 @@ get_node_score(const char *rule, const char *score, gboolean raw, node_t * node)
 
 static rsc_to_node_t *
 generate_location_rule(resource_t * rsc, xmlNode * rule_xml, const char *discovery, pe_working_set_t * data_set,
-                       pe_re_match_data_t * match_data)
+                       pe_match_data_t * match_data)
 {
     const char *rule_id = NULL;
     const char *score = NULL;
@@ -1027,9 +1032,9 @@ generate_location_rule(resource_t * rsc, xmlNode * rule_xml, const char *discove
         return NULL;
     }
 
-    if (match_data && match_data->nregs > 0 && match_data->pmatch[0].rm_so != -1) {
+    if (match_data && match_data->re && match_data->re->nregs > 0 && match_data->re->pmatch[0].rm_so != -1) {
         if (raw_score == FALSE) {
-            char *result = pe_expand_re_matches(score, match_data);
+            char *result = pe_expand_re_matches(score, match_data->re);
 
             if (result) {
                 score = (const char *) result;
@@ -1063,7 +1068,7 @@ generate_location_rule(resource_t * rsc, xmlNode * rule_xml, const char *discove
         int score_f = 0;
         node_t *node = (node_t *) gIter->data;
 
-        accept = pe_test_rule_re(rule_xml, node->details->attrs, RSC_ROLE_UNKNOWN, data_set->now, match_data);
+        accept = pe_test_rule_full(rule_xml, node->details->attrs, RSC_ROLE_UNKNOWN, data_set->now, match_data);
 
         crm_trace("Rule %s %s on %s", ID(rule_xml), accept ? "passed" : "failed",
                   node->details->uname);
