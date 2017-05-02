@@ -73,6 +73,8 @@ struct crm_client_s {
     char *name;
     char *user;
 
+    /* Provided for server use (not used by library) */
+    /* @TODO merge options, flags, and kind (reserving lower bits for server) */
     long long options;
 
     int request_id;
@@ -80,7 +82,7 @@ struct crm_client_s {
     void *userdata;
 
     int event_timer;
-    GList *event_queue;
+    GList *event_queue; /* @TODO use GQueue instead */
 
     /* Depending on the value of kind, only some of the following
      * will be populated/valid
@@ -91,6 +93,7 @@ struct crm_client_s {
 
     struct crm_remote_s *remote;        /* TCP/TLS */
 
+    unsigned int backlog_len; /* IPC queue length after last flush */
 };
 
 extern GHashTable *client_connections;

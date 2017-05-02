@@ -206,6 +206,15 @@ cib_destroy_op_callback(gpointer data)
     free(blob);
 }
 
+static void
+destroy_op_callback_table()
+{
+    if (cib_op_callback_table != NULL) {
+        g_hash_table_destroy(cib_op_callback_table);
+        cib_op_callback_table = NULL;
+    }
+}
+
 char *
 get_shadow_file(const char *suffix)
 {
@@ -348,14 +357,7 @@ cib_new_variant(void)
 
     new_cib = calloc(1, sizeof(cib_t));
 
-    if (cib_op_callback_table != NULL) {
-        g_hash_table_destroy(cib_op_callback_table);
-        cib_op_callback_table = NULL;
-    }
-    if (cib_op_callback_table == NULL) {
-        cib_op_callback_table = g_hash_table_new_full(g_direct_hash, g_direct_equal,
-                                                      NULL, cib_destroy_op_callback);
-    }
+    remove_cib_op_callback(0, TRUE); /* remove all */
 
     new_cib->call_id = 1;
     new_cib->variant = cib_undefined;
@@ -404,27 +406,37 @@ cib_new_variant(void)
     return new_cib;
 }
 
+/*!
+ * \brief Free all callbacks for a CIB connection
+ *
+ * \param[in] cib  CIB connection to clean up
+ */
 void
-cib_delete(cib_t * cib)
+cib_free_callbacks(cib_t *cib)
 {
-    GList *list = NULL;
-    if(cib) {
-        list = cib->notify_list;
+    if (cib) {
+        GList *list = cib->notify_list;
+
+        while (list != NULL) {
+            cib_notify_client_t *client = g_list_nth_data(list, 0);
+
+            list = g_list_remove(list, client);
+            free(client);
+        }
     }
+    destroy_op_callback_table();
+}
 
-    while (list != NULL) {
-        cib_notify_client_t *client = g_list_nth_data(list, 0);
-
-        list = g_list_remove(list, client);
-        free(client);
-    }
-
-    if(cib_op_callback_table) {
-        g_hash_table_destroy(cib_op_callback_table);
-        cib_op_callback_table = NULL;
-    }
-
-    if(cib) {
+/*!
+ * \brief Free all memory used by CIB connection
+ *
+ * \param[in] cib  CIB connection to delete
+ */
+void
+cib_delete(cib_t *cib)
+{
+    cib_free_callbacks(cib);
+    if (cib) {
         cib->cmds->free(cib);
     }
 }
@@ -639,13 +651,9 @@ void
 remove_cib_op_callback(int call_id, gboolean all_callbacks)
 {
     if (all_callbacks) {
-        if (cib_op_callback_table != NULL) {
-            g_hash_table_destroy(cib_op_callback_table);
-        }
-
+        destroy_op_callback_table();
         cib_op_callback_table = g_hash_table_new_full(g_direct_hash, g_direct_equal,
                                                       NULL, cib_destroy_op_callback);
-
     } else {
         g_hash_table_remove(cib_op_callback_table, GINT_TO_POINTER(call_id));
     }

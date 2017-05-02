@@ -159,19 +159,16 @@ do_cib_replaced(const char *event, xmlNode * msg)
     register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
 }
 
-/*	 A_CIB_STOP, A_CIB_START, A_CIB_RESTART,	*/
+/* A_CIB_STOP, A_CIB_START, O_CIB_RESTART */
 void
 do_cib_control(long long action,
                enum crmd_fsa_cause cause,
                enum crmd_fsa_state cur_state,
                enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    struct crm_subsystem_s *this_subsys = cib_subsystem;
+    CRM_ASSERT(fsa_cib_conn != NULL);
 
-    long long stop_actions = A_CIB_STOP;
-    long long start_actions = A_CIB_START;
-
-    if (action & stop_actions) {
+    if (action & A_CIB_STOP) {
 
         if (fsa_cib_conn->state != cib_disconnected && last_resource_update != 0) {
             crm_info("Waiting for resource update %d to complete", last_resource_update);
@@ -181,7 +178,6 @@ do_cib_control(long long action,
 
         crm_info("Disconnecting CIB");
         clear_bit(fsa_input_register, R_CIB_CONNECTED);
-        CRM_ASSERT(fsa_cib_conn != NULL);
 
         fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_DIFF_NOTIFY, do_cib_updated);
 
@@ -189,15 +185,14 @@ do_cib_control(long long action,
             fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
             fsa_cib_conn->cmds->signoff(fsa_cib_conn);
         }
+        crm_notice("Disconnected from the CIB");
     }
 
-    if (action & start_actions) {
+    if (action & A_CIB_START) {
         int rc = pcmk_ok;
 
-        CRM_ASSERT(fsa_cib_conn != NULL);
-
         if (cur_state == S_STOPPING) {
-            crm_err("Ignoring request to start %s after shutdown", this_subsys->name);
+            crm_err("Ignoring request to start the CIB after shutdown");
             return;
         }
 
