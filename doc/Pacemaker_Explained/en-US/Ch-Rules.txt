@@ -34,6 +34,12 @@ context in which the rule is being used.
 |Default
 |Description
 
+|id
+|
+|A unique name for the rule (required)
+ indexterm:[id,Constraint Rule]
+ indexterm:[Constraint,Rule,id]
+
 |role
 |+Started+
 |Limits the rule to apply only when the resource is in the specified
@@ -76,22 +82,22 @@ Expression objects are used to control a resource based on the
 attributes defined by a node or nodes.
 
 .Properties of an Expression
-[width="95%",cols="1m,1,5<a",options="header",align="center"]
+[width="95%",cols="2m,1,5<a",options="header",align="center"]
 |=========================================================
 
 |Field
 |Default
 |Description
 
-|value
+|id
 |
-|User-supplied value for comparison
- indexterm:[value,Constraint Expression]
- indexterm:[Constraint,Attribute Expression,value]
+|A unique name for the expression (required)
+ indexterm:[id,Constraint Expression]
+ indexterm:[Constraint,Attribute Expression,id]
 
 |attribute
 |
-|The node attribute to test
+|The node attribute to test (required)
  indexterm:[attribute,Constraint Expression]
  indexterm:[Constraint,Attribute Expression,attribute]
 
@@ -104,7 +110,7 @@ attributes defined by a node or nodes.
 
 |operation
 |
-|The comparison to perform. Allowed values:
+|The comparison to perform (required). Allowed values:
 
 * +lt:+ True if the value of the node's +attribute+ is less than +value+
 * +gt:+ True if the value of the node's +attribute+ is greater than +value+
@@ -116,6 +122,24 @@ attributes defined by a node or nodes.
 * +not_defined:+ True if the node does not have the named attribute
  indexterm:[operation,Constraint Expression]
  indexterm:[Constraint,Attribute Expression,operation]
+
+|value
+|
+|User-supplied value for comparison (required)
+ indexterm:[value,Constraint Expression]
+ indexterm:[Constraint,Attribute Expression,value]
+
+|value-source
+|+literal+
+|How the +value+ is derived '(since 1.1.17)'. Allowed values:
+
+* +literal+: +value+ is a literal string to compare against
+* +param+: +value+ is the name of a resource parameter to compare against (only
+  valid in location constraints)
+* +meta+: +value+ is the name of a resource meta-attribute to compare against
+  (only valid in location constraints)
+ indexterm:[value,Constraint Expression]
+ indexterm:[Constraint,Attribute Expression,value]
 
 |=========================================================
 
