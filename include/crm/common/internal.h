@@ -17,13 +17,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-/*!
- * \file
- * \brief   internal common utilities
- * \ingroup core
- * \note    Public APIs are declared in util.h
- */
-
 #ifndef CRM_COMMON_INTERNAL__H
 #define CRM_COMMON_INTERNAL__H
 
