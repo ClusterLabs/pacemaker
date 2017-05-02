@@ -423,6 +423,7 @@ cib_free_callbacks(cib_t *cib)
             list = g_list_remove(list, client);
             free(client);
         }
+        cib->notify_list = NULL;
     }
     destroy_op_callback_table();
 }
