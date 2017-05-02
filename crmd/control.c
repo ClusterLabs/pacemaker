@@ -490,6 +490,8 @@ crmd_exit(int rc)
     cib_delete(fsa_cib_conn);
     fsa_cib_conn = NULL;
 
+    throttle_fini();
+
     /* Graceful */
     return rc;
 }
