@@ -72,83 +72,85 @@
       <optional>
         <attribute name="description"><text/></attribute>
       </optional>
-      <choice>
-        <element name="docker">
-          <attribute name="image"><text/></attribute>
-          <optional>
-            <attribute name="replicas"><data type="integer"/></attribute>
-          </optional>
-          <optional>
-            <attribute name="replicas-per-host"><data type="integer"/></attribute>
-          </optional>
-          <optional>
-            <attribute name="masters"><data type="integer"/></attribute>
-          </optional>
-	  <optional>
-	    <attribute name="run-command"> <text/></attribute>
-	  </optional>
-          <optional>
-            <attribute name="network"><text/></attribute>
-          </optional>
-          <optional>
-            <attribute name="options"><text/></attribute>
-          </optional>
-        </element>
-      </choice>
-      <optional>
-        <element name="network">
-          <optional>
-            <attribute name="ip-range-start"><text/></attribute>
-          </optional>
-          <optional>
-            <attribute name="control-port"><data type="integer"/></attribute>
-          </optional>
-          <optional>
-            <attribute name="host-interface"><text/></attribute>
-          </optional>
-          <optional>
-            <attribute name="host-netmask"><data type="integer"/></attribute>
-          </optional>
-          <zeroOrMore>
-            <element name="port-mapping">
-              <attribute name="id"><data type="ID"/></attribute>
-              <choice>
-                <group>
-                  <attribute name="port"><data type="integer"/></attribute>
-                  <optional>
-                    <attribute name="internal-port"><data type="integer"/></attribute>
-                  </optional>
-                </group>
-                <attribute name="range">
-                  <data type="string">
-                    <param name="pattern">([0-9\-]+)</param>
-                  </data>
-                </attribute>
-              </choice>
-            </element>
-          </zeroOrMore>
-        </element>
-      </optional>
-      <optional>
-        <element name="storage">
-          <zeroOrMore>
-            <element name="storage-mapping">
-              <attribute name="id"><data type="ID"/></attribute>
-              <choice>
-                <attribute name="source-dir"><text/></attribute>
-                <attribute name="source-dir-root"><text/></attribute>
-              </choice>
-              <attribute name="target-dir"><text/></attribute>
-              <optional>
-                <attribute name="options"><text/></attribute>
-              </optional>
-            </element>
-          </zeroOrMore>
-        </element>
-      </optional>
-      <optional>
-        <ref name="element-primitive"/>
-      </optional>
+      <interleave>
+        <choice>
+          <element name="docker">
+            <attribute name="image"><text/></attribute>
+            <optional>
+              <attribute name="replicas"><data type="integer"/></attribute>
+            </optional>
+            <optional>
+              <attribute name="replicas-per-host"><data type="integer"/></attribute>
+            </optional>
+            <optional>
+              <attribute name="masters"><data type="integer"/></attribute>
+            </optional>
+            <optional>
+              <attribute name="run-command"> <text/></attribute>
+            </optional>
+            <optional>
+              <attribute name="network"><text/></attribute>
+            </optional>
+            <optional>
+              <attribute name="options"><text/></attribute>
+            </optional>
+          </element>
+        </choice>
+        <optional>
+          <element name="network">
+            <optional>
+              <attribute name="ip-range-start"><text/></attribute>
+            </optional>
+            <optional>
+              <attribute name="control-port"><data type="integer"/></attribute>
+            </optional>
+            <optional>
+              <attribute name="host-interface"><text/></attribute>
+            </optional>
+            <optional>
+              <attribute name="host-netmask"><data type="integer"/></attribute>
+            </optional>
+            <zeroOrMore>
+              <element name="port-mapping">
+                <attribute name="id"><data type="ID"/></attribute>
+                <choice>
+                  <group>
+                    <attribute name="port"><data type="integer"/></attribute>
+                    <optional>
+                      <attribute name="internal-port"><data type="integer"/></attribute>
+                    </optional>
+                  </group>
+                  <attribute name="range">
+                    <data type="string">
+                      <param name="pattern">([0-9\-]+)</param>
+                    </data>
+                  </attribute>
+                </choice>
+              </element>
+            </zeroOrMore>
+          </element>
+        </optional>
+        <optional>
+          <element name="storage">
+            <zeroOrMore>
+              <element name="storage-mapping">
+                <attribute name="id"><data type="ID"/></attribute>
+                <choice>
+                  <attribute name="source-dir"><text/></attribute>
+                  <attribute name="source-dir-root"><text/></attribute>
+                </choice>
+                <attribute name="target-dir"><text/></attribute>
+                <optional>
+                  <attribute name="options"><text/></attribute>
+                </optional>
+              </element>
+            </zeroOrMore>
+          </element>
+        </optional>
+        <optional>
+          <ref name="element-primitive"/>
+        </optional>
+      </interleave>
     </element>
   </define>
 
