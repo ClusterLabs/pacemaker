@@ -18,12 +18,12 @@
 #ifndef PENGINE_RULES__H
 #  define PENGINE_RULES__H
 
+#  include <glib.h>
+#  include <regex.h>
+
 #  include <crm/crm.h>
 #  include <crm/common/iso8601.h>
 #  include <crm/pengine/common.h>
-#  include <crm/pengine/status.h>
-
-#  include <regex.h>
 
 enum expression_type {
     not_expr,

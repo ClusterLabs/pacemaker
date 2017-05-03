@@ -30,10 +30,10 @@
           <zeroOrMore>
             <choice>
               <element name="instance_attributes">
-                <externalRef href="nvset-2.8.rng"/>
+                <externalRef href="nvset-2.9.rng"/>
               </element>
               <element name="utilization">
-                <externalRef href="nvset-2.8.rng"/>
+                <externalRef href="nvset-2.9.rng"/>
               </element>
             </choice>
           </zeroOrMore>
