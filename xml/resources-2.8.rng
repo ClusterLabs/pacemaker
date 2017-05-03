@@ -65,14 +65,14 @@
     </element>
   </define>
 
-
   <define name="element-bundle">
     <element name="bundle">
-      <attribute name="id"><data type="ID"/></attribute>
-      <optional>
-        <attribute name="description"><text/></attribute>
-      </optional>
       <interleave>
+        <attribute name="id"><data type="ID"/></attribute>
+        <optional>
+          <attribute name="description"><text/></attribute>
+        </optional>
+        <ref name="element-resource-extra"/>
         <choice>
           <element name="docker">
             <attribute name="image"><text/></attribute>
