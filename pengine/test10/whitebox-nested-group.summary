@@ -52,6 +52,9 @@ Executing cluster transition:
  * Resource action: fake_fs         monitor on c7auto3
  * Resource action: fake_fs         monitor on c7auto2
  * Resource action: fake_fs         monitor on c7auto1
+ * Resource action: c7auto4         monitor on c7auto3
+ * Resource action: c7auto4         monitor on c7auto2
+ * Resource action: c7auto4         monitor on c7auto1
  * Resource action: fake1           start on c7auto3
  * Resource action: fake3           start on c7auto2
  * Resource action: fake4           start on c7auto3

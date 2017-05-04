@@ -32,8 +32,8 @@ Executing cluster transition:
  * Pseudo action:   grpStonith2_stop_0
  * Resource action: prmStonith2-2   stop on bl460g8n3
  * Pseudo action:   msPostgresql_pre_notify_demote_0
- * Resource action: pgsr02          stop on bl460g8n4
- * Resource action: prmDB2          stop on bl460g8n4
+ * Resource action: pgsr01          monitor on bl460g8n4
+ * Resource action: pgsr02          monitor on bl460g8n3
  * Pseudo action:   grpStonith1_stopped_0
  * Pseudo action:   grpStonith1_start_0
  * Pseudo action:   grpStonith2_stopped_0
@@ -41,6 +41,8 @@ Executing cluster transition:
  * Resource action: pgsql           notify on pgsr01
  * Pseudo action:   msPostgresql_confirmed-pre_notify_demote_0
  * Pseudo action:   msPostgresql_demote_0
+ * Resource action: pgsr02          stop on bl460g8n4
+ * Resource action: prmDB2          stop on bl460g8n4
  * Pseudo action:   stonith-pgsr02-off on pgsr02
  * Pseudo action:   stonith_complete
  * Pseudo action:   pgsql_post_notify_stop_0

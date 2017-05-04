@@ -23,6 +23,7 @@ Executing cluster transition:
  * Resource action: shooter1        stop on rhel7-node3
  * Resource action: FAKE3           stop on rhel7-node3
  * Resource action: remote-rsc      migrate_to on rhel7-node2
+ * Resource action: rhel7-node1     monitor on rhel7-node3
  * Resource action: shooter1        start on rhel7-node2
  * Resource action: FAKE3           start on rhel7-node2
  * Resource action: remote-rsc      migrate_from on rhel7-node3
