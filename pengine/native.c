@@ -2737,7 +2737,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
 
         return any_created;
 
-    } else if (rsc->container) {
+    } else if ((rsc->container) && (!rsc->is_remote_node)) {
         pe_rsc_trace(rsc, "Skipping %s: it is within container %s", rsc->id, rsc->container->id);
         return FALSE;
     }
