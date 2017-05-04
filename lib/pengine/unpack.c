@@ -463,7 +463,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data
 
     if (remote_allow_migrate) {
         attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
-        crm_xml_set_id(attr, "%s_%s", remote_name, "meta-attributes-container");
+        crm_xml_set_id(attr, "%s_%s", remote_name, "meta-attributes-migrate");
         crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_OP_ATTR_ALLOW_MIGRATE);
         crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, remote_allow_migrate);
     }
