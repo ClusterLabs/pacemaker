@@ -72,15 +72,21 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
         resource_t *rsc = node->details->remote_rsc->container;
 
         if (is_set(rsc->flags, pe_rsc_failed) == FALSE) {
-            crm_warn("Guest node %s will be fenced (by recovering %s) %s",
-                node->details->uname, rsc->id, reason);
+            if (!is_set(rsc->flags, pe_rsc_managed)) {
+                crm_notice("Not fencing guest node %s because the container is "
+                           "unmanaged, otherwise we would do so recovering %s "
+                           "%s", node->details->uname, rsc->id, reason);
+            } else {
+                crm_warn("Guest node %s will be fenced (by recovering %s) %s",
+                    node->details->uname, rsc->id, reason);
 
-            /* We don't mark the node as unclean, because that would prevent the
-             * node from running resources. We want to allow it to run resources
-             * in this transition if the recovery succeeds.
-             */
-            node->details->remote_requires_reset = TRUE;
-            set_bit(rsc->flags, pe_rsc_failed);
+                /* We don't mark the node as unclean because that would prevent the
+                 * node from running resources. We want to allow it to run resources
+                 * in this transition if the recovery succeeds.
+                 */
+                node->details->remote_requires_reset = TRUE;
+                set_bit(rsc->flags, pe_rsc_failed);
+            }
         }
     } else if (is_dangling_container_remote_node(node)) {
         crm_info("Cleaning up dangling connection resource for guest node %s %s"
@@ -409,6 +415,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data
     const char *remote_port = NULL;
     const char *connect_timeout = "60s";
     const char *remote_allow_migrate=NULL;
+    const char *container_managed = NULL;
 
     for (attr_set = __xml_first_child(xml_obj); attr_set != NULL; attr_set = __xml_next_element(attr_set)) {
         if (safe_str_neq((const char *)attr_set->name, XML_TAG_META_SETS)) {
@@ -429,6 +436,8 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data
                 connect_timeout = value;
             } else if (safe_str_eq(name, "remote-allow-migrate")) {
                 remote_allow_migrate=value;
+            } else if (safe_str_eq(name, XML_RSC_ATTR_MANAGED)) {
+                container_managed = value;
             }
         }
     }
@@ -466,6 +475,13 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data
         crm_xml_set_id(attr, "%s_%s", remote_name, "meta-attributes-migrate");
         crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_OP_ATTR_ALLOW_MIGRATE);
         crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, remote_allow_migrate);
+    }
+
+    if (container_managed) {
+        attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
+        crm_xml_set_id(attr, "%s_%s", remote_name, "meta-attributes-managed");
+        crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_RSC_ATTR_MANAGED);
+        crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, container_managed);
     }
 
     xml_tmp = create_xml_node(xml_rsc, "operations");
