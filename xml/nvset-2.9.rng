@@ -13,7 +13,7 @@
     <attribute name="id"><data type="ID"/></attribute>
     <interleave>
       <optional>
-        <externalRef href="rule-2.8.rng"/>
+        <externalRef href="rule-2.9.rng"/>
       </optional>
         <zeroOrMore>
           <element name="nvpair">

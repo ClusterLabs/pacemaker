@@ -1,6 +1,7 @@
 [Unit]
 Description=Daemon for pacemaker monitor
 Documentation=man:crm_mon
+After=pacemaker.service
 
 [Service]
 Type=forking

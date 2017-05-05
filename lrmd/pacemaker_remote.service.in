@@ -1,8 +1,13 @@
 [Unit]
 Description=Pacemaker Remote Service
 Documentation=man:pacemaker_remoted http://clusterlabs.org/doc/en-US/Pacemaker/1.1-pcs/html/Pacemaker_Remote/index.html
+
 After=network.target
 After=time-sync.target
+After=resource-agents-deps.target
+Wants=resource-agents-deps.target
+After=syslog.service
+After=rsyslog.service
 
 [Install]
 WantedBy=multi-user.target

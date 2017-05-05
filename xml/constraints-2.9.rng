@@ -43,7 +43,7 @@
           <attribute name="node"><text/></attribute>
         </group>
         <oneOrMore>
-          <externalRef href="rule-2.8.rng"/>
+          <externalRef href="rule-2.9.rng"/>
         </oneOrMore>
       </choice>
       <optional>
@@ -247,7 +247,7 @@
   <define name="element-lifetime">
     <element name="lifetime">
       <oneOrMore>
-        <externalRef href="rule-2.8.rng"/>
+        <externalRef href="rule-2.9.rng"/>
       </oneOrMore>
     </element>
   </define>
