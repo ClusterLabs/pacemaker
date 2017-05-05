@@ -1,4 +1,10 @@
  digraph "g" {
+"c7auto4_monitor_0 c7auto1" -> "c7auto4_start_0 c7auto1" [ style = bold]
+"c7auto4_monitor_0 c7auto1" [ style=bold color="green" fontcolor="black"]
+"c7auto4_monitor_0 c7auto2" -> "c7auto4_start_0 c7auto1" [ style = bold]
+"c7auto4_monitor_0 c7auto2" [ style=bold color="green" fontcolor="black"]
+"c7auto4_monitor_0 c7auto3" -> "c7auto4_start_0 c7auto1" [ style = bold]
+"c7auto4_monitor_0 c7auto3" [ style=bold color="green" fontcolor="black"]
 "c7auto4_monitor_30000 c7auto1" [ style=bold color="green" fontcolor="black"]
 "c7auto4_start_0 c7auto1" -> "c7auto4_monitor_30000 c7auto1" [ style = bold]
 "c7auto4_start_0 c7auto1" -> "fake2_monitor_10000 c7auto4" [ style = bold]

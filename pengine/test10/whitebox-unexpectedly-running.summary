@@ -10,6 +10,7 @@ Transition Summary:
 
 Executing cluster transition:
  * Resource action: FAKE            stop on 18builder
+ * Resource action: remote1         monitor on 18builder
  * Pseudo action:   stonith-remote1-reboot on remote1
  * Pseudo action:   stonith_complete
  * Pseudo action:   all_stopped
