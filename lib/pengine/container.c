@@ -446,6 +446,19 @@ create_container(
         add_hash_param(tuple->child->meta, "external-ip", tuple->ipaddr);
     }
 
+    if(tuple->remote) {
+        /*
+         * Allow the remote connection resource to be allocated to a
+         * different node than the one on which the docker container
+         * is active.
+         *
+         * Makes it possible to have remote nodes, running docker
+         * containers with pacemaker_remoted inside in order to start
+         * services inside those containers.
+         */
+        set_bit(tuple->remote->flags, pe_rsc_allow_remote_remotes);
+    }
+
     return FALSE;
 }
 

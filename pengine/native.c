@@ -1466,7 +1466,7 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
                 }
             }
         } else {
-
+            int score = 10000; /* Highly preferred but not essential */
             crm_trace("Generating order and colocation rules for rsc %s with container %s", rsc->id, rsc->container->id);
             custom_action_order(rsc->container, generate_op_key(rsc->container->id, RSC_START, 0), NULL,
                                 rsc, generate_op_key(rsc->id, RSC_START, 0), NULL,
@@ -1476,7 +1476,10 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
                                 rsc->container, generate_op_key(rsc->container->id, RSC_STOP, 0), NULL,
                                 pe_order_implies_first, data_set);
 
-            rsc_colocation_new("resource-with-container", NULL, INFINITY, rsc, rsc->container, NULL,
+            if(is_not_set(rsc->flags, pe_rsc_allow_remote_remotes)) {
+                score = INFINITY; /* Force them to run on the same host */ 
+            }
+            rsc_colocation_new("resource-with-container", NULL, score, rsc, rsc->container, NULL,
                                NULL, data_set);
         }
     }
