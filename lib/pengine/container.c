@@ -342,6 +342,7 @@ create_remote_resource(
     pe_working_set_t * data_set) 
 {
     if (tuple->child && valid_network(data)) {
+        GHashTableIter gIter;
         node_t *node = NULL;
         xmlNode *xml_obj = NULL;
         xmlNode *xml_remote = NULL;
@@ -410,6 +411,14 @@ create_remote_resource(
 
         if (common_unpack(xml_remote, &tuple->remote, NULL, data_set) == FALSE) {
             return FALSE;
+        }
+
+        g_hash_table_iter_init(&gIter, tuple->remote->allowed_nodes);
+        while (g_hash_table_iter_next(&gIter, NULL, (void **)&node)) {
+            if(is_remote_node(node)) {
+                /* Remote resources can only run on 'normal' cluster node */
+                node->weight = -INFINITY;
+            }
         }
 
         tuple->node->details->remote_rsc = tuple->remote;
