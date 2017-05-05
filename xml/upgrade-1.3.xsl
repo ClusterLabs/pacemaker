@@ -70,20 +70,10 @@
 
 </xsl:template>
 
-<xsl:template match="@*">
-  <xsl:attribute name="{name()}">
-    <xsl:value-of select="."/>
-  </xsl:attribute>
-</xsl:template>
-
-<xsl:template match="/">
-  <xsl:apply-templates select="@*|node()"/>
-</xsl:template>
-
-<xsl:template match="*">
-  <xsl:element name="{name()}">
+<xsl:template match="@*|*">
+  <xsl:copy>
     <xsl:apply-templates select="@*|node()"/>
-  </xsl:element>
+  </xsl:copy>
 </xsl:template>
 
 </xsl:stylesheet>
