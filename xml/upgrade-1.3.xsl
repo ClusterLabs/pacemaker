@@ -57,14 +57,7 @@
       <xsl:attribute name="id">
         <xsl:value-of select="concat('auto-', @id)"/>
       </xsl:attribute>
-      <xsl:for-each select="node()"> 
-        <xsl:choose>
-          <xsl:when test="starts-with(name(), 'role_ref')"/>
-          <xsl:otherwise>
-            <xsl:apply-templates select="."/>
-          </xsl:otherwise>
-        </xsl:choose>
-      </xsl:for-each>
+      <xsl:apply-templates select="*"/>
     </xsl:element>
   </xsl:if>
 
