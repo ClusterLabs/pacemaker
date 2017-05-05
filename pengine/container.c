@@ -188,10 +188,8 @@ container_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
                 id = crm_strdup_printf("%s-remote-with-ip-%d", rsc->id, tuple->offset);
                 rsc_colocation_new(id, NULL, INFINITY, tuple->remote, tuple->ip, NULL, NULL, data_set);
                 free(id);
-            } else {
-                id = crm_strdup_printf("%s-remote-with-docker-%d", rsc->id, tuple->offset);
-                rsc_colocation_new(id, NULL, INFINITY, tuple->remote, tuple->docker, NULL, NULL, data_set);
-                free(id);
+//            } else {
+                // remote-with-docker is already handled in native_internal_constraints() by 'resource-with-container'
             }
         }
 
