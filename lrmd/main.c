@@ -532,6 +532,7 @@ main(int argc, char **argv, char **envp)
 {
     int flag = 0;
     int index = 0;
+    int bump_log_num = 0;
     const char *option = NULL;
 
     /* If necessary, create PID1 now before any FDs are opened */
@@ -563,7 +564,7 @@ main(int argc, char **argv, char **envp)
                 setenv("PCMK_remote_port", optarg, 1);
                 break;
             case 'V':
-                crm_bump_log_level(argc, argv);
+                bump_log_num++;
                 break;
             case '?':
             case '$':
@@ -576,6 +577,11 @@ main(int argc, char **argv, char **envp)
     }
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+
+    while (bump_log_num > 0) {
+        crm_bump_log_level(argc, argv);
+        bump_log_num--;
+    }
 
     option = daemon_option("logfacility");
     if(option && safe_str_neq(option, "none")) {
