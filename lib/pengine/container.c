@@ -883,9 +883,9 @@ tuple_print(container_grouping_t * tuple, const char *pre_text, long options, vo
         offset += snprintf(buffer + offset, LINE_MAX - offset, " (%s)", tuple->ipaddr);
     }
 
-    if(tuple->remote && tuple->remote->running_on != NULL) {
-        node = tuple->remote->running_on->data;
-    } else if (tuple->remote == NULL && rsc->running_on != NULL) {
+    if(tuple->docker && tuple->docker->running_on != NULL) {
+        node = tuple->docker->running_on->data;
+    } else if (tuple->docker == NULL && rsc->running_on != NULL) {
         node = rsc->running_on->data;
     }
     common_print(rsc, pre_text, buffer, node, options, print_data);
