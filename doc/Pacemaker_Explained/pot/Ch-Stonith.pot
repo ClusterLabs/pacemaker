@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2016-11-02 17:32-0500\n"
-"PO-Revision-Date: 2016-11-02 17:32-0500\n"
+"POT-Creation-Date: 2017-05-08 11:19-0500\n"
+"PO-Revision-Date: 2017-05-08 11:19-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -274,7 +274,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The maximum number of actions that can be performed in parallel on this device, if the cluster option <literal>concurrent-fencing</literal> is <literal>true</literal>. -1 is unlimited."
+msgid "The maximum number of actions that can be performed in parallel on this device, if the cluster option <literal>concurrent-fencing</literal> is <literal>true</literal>. -1 is unlimited. <emphasis>(since 1.1.15)</emphasis>"
 msgstr ""
 
 #. Tag: para

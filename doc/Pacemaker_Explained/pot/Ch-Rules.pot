@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2016-11-02 17:32-0500\n"
-"PO-Revision-Date: 2016-11-02 17:32-0500\n"
+"POT-Creation-Date: 2017-05-08 11:19-0500\n"
+"PO-Revision-Date: 2017-05-08 11:19-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -60,6 +60,16 @@ msgstr ""
 #. Tag: entry
 #, no-c-format
 msgid "Description"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>id</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A unique name for the rule (required) <indexterm> <primary>id</primary><secondary>Constraint Rule</secondary> </indexterm> <indexterm> <primary>Constraint Rule</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Rule</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>Rule</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -134,12 +144,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<literal>value</literal>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "User-supplied value for comparison <indexterm> <primary>value</primary><secondary>Constraint Expression</secondary> </indexterm> <indexterm> <primary>Constraint Expression</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Attribute Expression</secondary><tertiary>value</tertiary> </indexterm> <indexterm> <primary>Attribute Expression</primary><secondary>value</secondary> </indexterm> <indexterm> <primary>value</primary> </indexterm>"
+msgid "A unique name for the expression (required) <indexterm> <primary>id</primary><secondary>Constraint Expression</secondary> </indexterm> <indexterm> <primary>Constraint Expression</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Attribute Expression</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>Attribute Expression</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -149,7 +154,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The node attribute to test <indexterm> <primary>attribute</primary><secondary>Constraint Expression</secondary> </indexterm> <indexterm> <primary>Constraint Expression</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Attribute Expression</secondary><tertiary>attribute</tertiary> </indexterm> <indexterm> <primary>Attribute Expression</primary><secondary>attribute</secondary> </indexterm> <indexterm> <primary>attribute</primary> </indexterm>"
+msgid "The node attribute to test (required) <indexterm> <primary>attribute</primary><secondary>Constraint Expression</secondary> </indexterm> <indexterm> <primary>Constraint Expression</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Attribute Expression</secondary><tertiary>attribute</tertiary> </indexterm> <indexterm> <primary>Attribute Expression</primary><secondary>attribute</secondary> </indexterm> <indexterm> <primary>attribute</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -174,7 +179,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The comparison to perform. Allowed values:"
+msgid "The comparison to perform (required). Allowed values:"
 msgstr ""
 
 #. Tag: para
@@ -219,6 +224,46 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
+msgid "<literal>value</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "User-supplied value for comparison (required) <indexterm> <primary>value</primary><secondary>Constraint Expression</secondary> </indexterm> <indexterm> <primary>Constraint Expression</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Attribute Expression</secondary><tertiary>value</tertiary> </indexterm> <indexterm> <primary>Attribute Expression</primary><secondary>value</secondary> </indexterm> <indexterm> <primary>value</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>value-source</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>literal</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "How the <literal>value</literal> is derived <emphasis>(since 1.1.17)</emphasis>. Allowed values:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>literal</literal>: <literal>value</literal> is a literal string to compare against"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>param</literal>: <literal>value</literal> is the name of a resource parameter to compare against (only valid in location constraints)"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>meta</literal>: <literal>value</literal> is the name of a resource meta-attribute to compare against (only valid in location constraints) <indexterm> <primary>value</primary><secondary>Constraint Expression</secondary> </indexterm> <indexterm> <primary>Constraint Expression</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Attribute Expression</secondary><tertiary>value</tertiary> </indexterm> <indexterm> <primary>Attribute Expression</primary><secondary>value</secondary> </indexterm> <indexterm> <primary>value</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
 msgid "In addition to any attributes added by the administrator, the cluster defines special, built-in node attributes for each node that can also be used."
 msgstr ""
 
@@ -255,16 +300,6 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Node type. Possible values are <literal>cluster</literal>, <literal>remote</literal>, and <literal>container</literal>. Kind is <literal>remote</literal> for Pacemaker Remote nodes created with the <literal>ocf:pacemaker:remote</literal> resource, and <literal>container</literal> for Pacemaker Remote guest nodes (a legacy name unrelated to the now-common use of \"container\" for resource isolation). <emphasis>(since 1.1.13)</emphasis>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "<literal>#ra-version</literal>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "The installed version of the resource agent on the node, as defined by the <literal>version</literal> attribute of the <literal>resource-agent</literal> tag in the agent’s metadata. Valid only within rules controlling resource options. This can be useful during rolling upgrades of a backward-incompatible resource agent. <emphasis>(coming in 1.1.17)</emphasis>"
 msgstr ""
 
 #. Tag: title
@@ -360,11 +395,6 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Properties of a Date Specification"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "<literal>id</literal>"
 msgstr ""
 
 #. Tag: para
@@ -541,7 +571,7 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "&lt;rule id=\"rule4\" boolean_op=\"or\"&gt;\n"
+msgid "&lt;rule id=\"rule4\" boolean-op=\"or\"&gt;\n"
 "   &lt;date_expression id=\"date_expr4-1\" operation=\"date_spec\"&gt;\n"
 "    &lt;date_spec hours=\"9-16\" days=\"1-5\"/&gt;\n"
 "   &lt;/date_expression&gt;\n"
@@ -558,8 +588,8 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "&lt;rule id=\"rule5\" boolean_op=\"and\"&gt;\n"
-"   &lt;rule id=\"rule5-nested1\" boolean_op=\"or\"&gt;\n"
+msgid "&lt;rule id=\"rule5\" boolean-op=\"and\"&gt;\n"
+"   &lt;rule id=\"rule5-nested1\" boolean-op=\"or\"&gt;\n"
 "    &lt;date_expression id=\"date_expr5-1\" operation=\"date_spec\"&gt;\n"
 "     &lt;date_spec hours=\"9-16\"/&gt;\n"
 "    &lt;/date_expression&gt;\n"
@@ -580,7 +610,7 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "&lt;rule id=\"rule6\" boolean_op=\"and\"&gt;\n"
+msgid "&lt;rule id=\"rule6\" boolean-op=\"and\"&gt;\n"
 "   &lt;date_expression id=\"date_expr6-1\" operation=\"date_spec\"&gt;\n"
 "    &lt;date_spec weekdays=\"1\"/&gt;\n"
 "   &lt;/date_expression&gt;\n"
@@ -601,7 +631,7 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "&lt;rule id=\"rule7\" boolean_op=\"and\"&gt;\n"
+msgid "&lt;rule id=\"rule7\" boolean-op=\"and\"&gt;\n"
 "   &lt;date_expression id=\"date_expr7\" operation=\"date_spec\"&gt;\n"
 "    &lt;date_spec weekdays=\"5\" monthdays=\"13\" moon=\"4\"/&gt;\n"
 "   &lt;/date_expression&gt;\n"

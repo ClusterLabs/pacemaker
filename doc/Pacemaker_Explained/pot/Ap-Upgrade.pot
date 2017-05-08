@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2016-11-02 17:32-0500\n"
-"PO-Revision-Date: 2016-11-02 17:32-0500\n"
+"POT-Creation-Date: 2017-05-08 11:19-0500\n"
+"PO-Revision-Date: 2017-05-08 11:19-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -580,7 +580,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Failure timeouts. See <xref linkend=\"s-failure-migration\" />"
+msgid "Failure timeouts. See <xref linkend=\"s-failure-handling\" />"
 msgstr ""
 
 #. Tag: para
@@ -670,7 +670,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<literal>resource-failure-stickiness</literal> has been replaced by <literal>migration-threshold</literal>. See <xref linkend=\"s-failure-migration\" />"
+msgid "<literal>resource-failure-stickiness</literal> has been replaced by <literal>migration-threshold</literal>. See <xref linkend=\"s-failure-handling\" />"
 msgstr ""
 
 #. Tag: para
