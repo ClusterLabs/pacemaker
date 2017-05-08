@@ -132,7 +132,8 @@ typedef struct pe_working_set_s {
 struct node_shared_s {
     const char *id;
     const char *uname;
-/* Make all these flags into a bitfield one day */
+
+    /* @TODO convert these flags (and the ones at the end) into a bitfield */
     gboolean online;
     gboolean standby;
     gboolean standby_onfail;
@@ -142,7 +143,6 @@ struct node_shared_s {
     gboolean shutdown;
     gboolean expected_up;
     gboolean is_dc;
-    gboolean unpacked;
 
     int num_resources;
     GListPtr running_rsc;       /* resource_t* */
@@ -163,6 +163,7 @@ struct node_shared_s {
     gboolean remote_requires_reset;
     gboolean remote_was_fenced;
     gboolean remote_maintenance; /* what the remote-rsc is thinking */
+    gboolean unpacked;
 };
 
 struct node_s {
