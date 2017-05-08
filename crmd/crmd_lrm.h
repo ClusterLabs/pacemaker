@@ -19,7 +19,8 @@
 #include <crmd_messages.h>
 
 extern gboolean verify_stopped(enum crmd_fsa_state cur_state, int log_level);
-extern void lrm_clear_last_failure(const char *rsc_id, const char *node_name);
+extern void lrm_clear_last_failure(const char *rsc_id, const char *node_name,
+                                   const char *operation, int interval);
 void lrm_op_callback(lrmd_event_data_t * op);
 
 typedef struct resource_history_s {
@@ -160,5 +161,8 @@ int remote_ra_exec(lrm_state_t * lrm_state, const char *rsc_id, const char *acti
                    lrmd_key_value_t * params);
 void remote_ra_cleanup(lrm_state_t * lrm_state);
 void remote_ra_fail(const char *node_name);
+void remote_ra_process_pseudo(xmlNode *xml);
+gboolean remote_ra_is_in_maintenance(lrm_state_t * lrm_state);
+void remote_ra_process_maintenance_nodes(xmlNode *xml);
 
 gboolean process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op, struct recurring_op_s *pending);

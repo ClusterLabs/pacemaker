@@ -138,7 +138,7 @@ do_test clone-require-all-7 "clone A and B both start at the same time. all inst
 do_test clone-require-all-no-interleave-1 "C starts everywhere after A and B"
 do_test clone-require-all-no-interleave-2 "C starts on nodes 1, 2, and 4 with only one active instance of B"
 do_test clone-require-all-no-interleave-3 "C remains active when instance of B is stopped on one node and started on another."
-do_test one-or-more-unrunnnable-instances "Avoid dependencies on instances that wont ever be started"
+do_test one-or-more-unrunnnable-instances "Avoid dependencies on instances that won't ever be started"
 
 echo ""
 do_test order1 "Order start 1     "
@@ -314,6 +314,8 @@ do_test 11-a-then-bm-b-move-a-clone-starting "Advanced migrate logic, A clone th
 
 do_test a-promote-then-b-migrate "A promote then B start. migrate B"
 do_test a-demote-then-b-migrate "A demote then B stop. migrate B"
+
+#do_test migrate-versioned "Disable migration for versioned resources"
 
 #echo ""
 #do_test complex1 "Complex	"
@@ -526,6 +528,7 @@ do_test bug-5025-3 "Automatically clean up failcount after resource config chang
 do_test bug-5025-4 "Clear failcount when last failure is a start op and rsc attributes changed."
 do_test failcount "Ensure failcounts are correctly expired"
 do_test failcount-block "Ensure failcounts are not expired when on-fail=block is present"
+do_test per-op-failcount "Ensure per-operation failcount is handled and not passed to fence agent"
 do_test monitor-onfail-restart "bug-5058 - Monitor failure with on-fail set to restart"
 do_test monitor-onfail-stop    "bug-5058 - Monitor failure wiht on-fail set to stop"
 do_test bug-5059 "No need to restart p_stateful1:*"
@@ -815,6 +818,7 @@ do_test whitebox-unexpectedly-running "Recover container nodes the cluster did n
 do_test whitebox-migrate1 "Migrate both container and connection resource"
 do_test whitebox-imply-stop-on-fence "imply stop action on container node rsc when host node is fenced"
 do_test whitebox-nested-group "Verify guest remote-node works nested in a group"
+do_test guest-node-host-dies "Verify guest node is recovered if host goes away"
 
 echo ""
 do_test remote-startup-probes  "Baremetal remote-node startup probes"
@@ -842,6 +846,9 @@ echo ""
 do_test isolation-start-all   "Start docker isolated resources."
 do_test isolation-restart-all "Restart docker isolated resources."
 do_test isolation-clone       "Cloned isolated primitive."
+
+#echo ""
+#do_test versioned-resources     "Start resources with #ra-version rules"
 
 echo ""
 test_results

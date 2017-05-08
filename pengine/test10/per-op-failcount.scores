@@ -1,0 +1,8 @@
+Allocation scores:
+Using the original execution date of: 2017-04-06 09:04:22Z
+native_color: prmDummy allocation score on rh73-01-snmp: -INFINITY
+native_color: prmDummy allocation score on rh73-02-snmp: 200
+native_color: prmStonith1-1 allocation score on rh73-01-snmp: 0
+native_color: prmStonith1-1 allocation score on rh73-02-snmp: INFINITY
+native_color: prmStonith2-1 allocation score on rh73-01-snmp: INFINITY
+native_color: prmStonith2-1 allocation score on rh73-02-snmp: 0

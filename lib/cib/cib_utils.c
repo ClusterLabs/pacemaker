@@ -282,7 +282,7 @@ cib_acl_enabled(xmlNode *xml, const char *user)
         g_hash_table_destroy(options);
     }
 
-    crm_debug("CIB ACL is %s", rc ? "enabled" : "disabled");
+    crm_trace("CIB ACL is %s", rc ? "enabled" : "disabled");
 #endif
     return rc;
 }

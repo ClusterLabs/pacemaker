@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright (C) 2013-2017 Andrew Beekhof <andrew@beekhof.net>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,9 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <attrd_common.h>
+
 cib_t *the_cib;
-GMainLoop *mloop;
-bool shutting_down;
 crm_cluster_t *attrd_cluster;
 GHashTable *attributes;
 election_t *writer;
@@ -30,6 +30,7 @@ int attrd_error;
 void write_attributes(bool all, bool peer_discovered);
 void attrd_peer_message(crm_node_t *client, xmlNode *msg);
 void attrd_client_peer_remove(const char *client_name, xmlNode *xml);
+void attrd_client_clear_failure(xmlNode *xml);
 void attrd_client_update(xmlNode *xml);
 void attrd_client_refresh(void);
 void attrd_client_query(crm_client_t *client, uint32_t id, uint32_t flags, xmlNode *query);

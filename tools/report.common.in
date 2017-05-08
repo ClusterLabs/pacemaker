@@ -42,6 +42,7 @@ CRM_VERIFY_F=crm_verify.txt
 PERMISSIONS_F=permissions.txt
 CIB_F=cib.xml
 CIB_TXT_F=cib.txt
+DRBD_INFO_F=drbd_info.txt
 
 EVENT_PATTERNS="
 state		do_state_transition
@@ -421,8 +422,26 @@ findmsg() {
     # Check each log file for matches.
     logfiles=""
     for f in $candidates; do
-        local cat=$(find_decompressor "$f")
-        $cat "$f" 2>/dev/null | grep -q -e "$pattern"
+        local cat=""
+
+        # We only care about readable files with something in them.
+        if [ ! -f "$f" ] || [ ! -r "$f" ] || [ ! -s "$f" ] ; then
+            continue
+        fi
+
+        cat=$(find_decompressor "$f")
+
+        # We want to avoid grepping through potentially huge binary logs such
+        # as lastlog. However, control characters sometimes find their way into
+        # text logs, so we use a heuristic of more than 256 nonprintable
+        # characters in the file's first kilobyte.
+        if [ $($cat "$f" 2>/dev/null | head -c 1024 | tr -d '[:print:][:space:]' | wc -c) -gt 256 ]
+        then
+            continue
+        fi
+
+        # Our patterns are ASCII, so we can use LC_ALL="C" to speed up grep
+        $cat "$f" 2>/dev/null | LC_ALL="C" grep -q -e "$pattern"
         if [ $? -eq 0 ]; then
 
             # Add this file to the list of hits

@@ -45,13 +45,14 @@ ARCH    ?= $(shell test -e /etc/fedora-release && rpm --eval %{_arch})
 MOCK_CFG ?= $(shell test -e /etc/fedora-release && echo fedora-$(F)-$(ARCH))
 DISTRO  ?= $(shell test -e /etc/SuSE-release && echo suse; echo fedora)
 COMMIT  ?= HEAD
-TAG     ?= $(shell T=$$(git describe --all "$(COMMIT)" | sed -n 's|tags/\(.*\)|\1|p'); \
+TAG     ?= $(shell T=$$(git describe --all '$(COMMIT)' | sed -n 's|tags/\(.*\)|\1|p'); \
 	     test -n "$${T}" && echo "$${T}" \
-	       || git log --pretty="format:%H" -n 1 "$(COMMIT)")
+	       || git log --pretty=format:%H -n 1 '$(COMMIT)')
 lparen = (
 rparen = )
-SHORTTAG ?= $(shell case $(TAG) in Pacemaker-*$(rparen) echo $(TAG) | cut -c11-;; \
-	      *$(rparen) git log --pretty="format:%h" -n 1 "$(TAG)";; esac)
+SHORTTAG ?= $(shell case $(TAG) in Pacemaker-*$(rparen) echo '$(TAG)' | cut -c11-;; \
+	      *$(rparen) git log --pretty=format:%h -n 1 '$(TAG)';; esac)
+SHORTTAG_ABBREV = $(shell printf %s '$(SHORTTAG)' | wc -c)
 WITH    ?= --without doc
 #WITH    ?= --without=doc --with=gcov
 
@@ -111,7 +112,7 @@ rpmbuild-with = \
 		esac; \
 	done; \
 	case "$(3)" in \
-	*.spec) [ $${PREREL} -eq 0 ] \
+	*.spec) { [ $${PREREL} -eq 0 ] || [ $(LAST_RELEASE) = $(TAG) ]; } \
 		&& sed -i "s/^\(%global pcmkversion \).*/\1$$(echo $(LAST_RELEASE) | sed -e s:Pacemaker-:: -e s:-.*::)/" $(3) \
 		|| sed -i "s/^\(%global pcmkversion \).*/\1$$(echo $(NEXT_RELEASE) | sed -e s:Pacemaker-:: -e s:-.*::)/" $(3);; \
 	esac; \
@@ -192,8 +193,10 @@ srpm-%:	export $(PACKAGE)-%.spec
 	if [ -e $(BUILD_COUNTER) ]; then					\
 		echo $(COUNT) > $(BUILD_COUNTER);				\
 	fi
-	sed -i 's/global\ specversion.*/global\ specversion\ $(SPECVERSION)/' $(PACKAGE).spec
-	sed -i 's/global\ commit.*/global\ commit\ $(TAG)/' $(PACKAGE).spec
+	sed -e 's/global\ specversion\ .*/global\ specversion\ $(SPECVERSION)/' \
+	    -e 's/global\ commit\ .*/global\ commit\ $(TAG)/' \
+	    -e 's/global\ commit_abbrev\ .*/global\ commit_abbrev\ $(SHORTTAG_ABBREV)/' \
+	    -i $(PACKAGE).spec
 	$(call rpmbuild-with,$(WITH),-bs --define "dist .$*" $(RPM_OPTS),$(PACKAGE).spec)
 
 chroot: mock-$(MOCK_CFG) mock-install-$(MOCK_CFG) mock-sh-$(MOCK_CFG)
@@ -295,6 +298,10 @@ coverity-corp:
 global: clean-generic
 	gtags -q
 
+global-upload: global
+	htags -sanhIT
+	rsync $(RSYNC_OPTS) HTML/ "$(RSYNC_DEST)/global/$(PACKAGE)/$(TAG)"
+
 %.8.html: %.8
 	echo groff -mandoc `man -w ./$<` -T html > $@
 	groff -mandoc `man -w ./$<` -T html > $@
@@ -305,19 +312,21 @@ global: clean-generic
 	groff -mandoc `man -w ./$<` -T html > $@
 	rsync $(RSYNC_OPTS) "$@" "$(RSYNC_DEST)/man/$(PACKAGE)/"
 
+manhtml-upload: all
+	find . -name "[a-z]*.[78]" -exec make \{\}.html \;
+
 doxygen: Doxyfile
 	doxygen Doxyfile
 
-abi:
-	abi-check pacemaker $(LAST_RELEASE) $(TAG)
-abi-www:
-	abi-check -u pacemaker $(LAST_RELEASE) $(TAG)
-
-www:	all global doxygen
-	find . -name "[a-z]*.[78]" -exec make \{\}.html \;
-	htags -sanhIT
-	rsync $(RSYNC_OPTS) HTML/ "$(RSYNC_DEST)/global/$(PACKAGE)/$(TAG)"
+doxygen-upload: doxygen
 	rsync $(RSYNC_OPTS) doc/api/html/ "$(RSYNC_DEST)/doxygen/$(PACKAGE)/$(TAG)"
+
+abi:
+	./abi-check pacemaker $(LAST_RELEASE) $(TAG)
+abi-www:
+	./abi-check -u pacemaker $(LAST_RELEASE) $(TAG)
+
+www:	manhtml-upload global-upload doxygen-upload
 	make RSYNC_DEST=$(RSYNC_DEST) -C doc www
 
 summary:
@@ -357,7 +366,7 @@ check: clang cppcheck
 
 # Extra cppcheck options:  --enable=all --inconclusive --std=posix
 cppcheck:
-	for d in $(LIBLTDL_DIR) replace lib mcp attrd pengine cib crmd fencing lrmd tools; do cppcheck -q $$d; done
+	for d in replace lib mcp attrd pengine cib crmd fencing lrmd tools; do cppcheck -q $$d; done
 
 clang:
 	test -e $(CLANG_analyzer)

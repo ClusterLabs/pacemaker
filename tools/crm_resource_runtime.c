@@ -40,7 +40,7 @@ do_find_resource(const char *rsc, resource_t * the_rsc, pe_working_set_t * data_
         } else {
             const char *state = "";
 
-            if (the_rsc->variant < pe_clone && the_rsc->fns->state(the_rsc, TRUE) == RSC_ROLE_MASTER) {
+            if (!pe_rsc_is_clone(the_rsc) && the_rsc->fns->state(the_rsc, TRUE) == RSC_ROLE_MASTER) {
                 state = "Master";
             }
             fprintf(stdout, "resource %s is running on: %s %s\n", rsc, node->details->uname, state);
@@ -71,7 +71,7 @@ cli_resource_search(const char *rsc, pe_working_set_t * data_set)
         return -ENXIO;
     }
 
-    if (the_rsc->variant >= pe_clone) {
+    if (pe_rsc_is_clone(the_rsc)) {
         GListPtr gIter = the_rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
@@ -80,7 +80,7 @@ cli_resource_search(const char *rsc, pe_working_set_t * data_set)
 
     /* The anonymous clone children's common ID is supplied */
     } else if ((parent = uber_parent(the_rsc)) != NULL
-               && parent->variant >= pe_clone
+               && pe_rsc_is_clone(parent)
                && is_not_set(the_rsc->flags, pe_rsc_unique)
                && the_rsc->clone_name
                && safe_str_eq(rsc, the_rsc->clone_name)
@@ -538,22 +538,19 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
         crm_xml_add(xml_rsc, XML_ATTR_ID, rsc->id);
     }
 
-    value = crm_element_value(rsc->xml, XML_ATTR_TYPE);
-    crm_xml_add(xml_rsc, XML_ATTR_TYPE, value);
+    value = crm_copy_xml_element(rsc->xml, xml_rsc, XML_ATTR_TYPE);
     if (value == NULL) {
         CMD_ERR("%s has no type!  Aborting...", rsc_id);
         return -ENXIO;
     }
 
-    value = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-    crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, value);
+    value = crm_copy_xml_element(rsc->xml, xml_rsc, XML_AGENT_ATTR_CLASS);
     if (value == NULL) {
         CMD_ERR("%s has no class!  Aborting...", rsc_id);
         return -ENXIO;
     }
 
-    value = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
-    crm_xml_add(xml_rsc, XML_AGENT_ATTR_PROVIDER, value);
+    crm_copy_xml_element(rsc->xml, xml_rsc, XML_AGENT_ATTR_PROVIDER);
 
     params = create_xml_node(msg_data, XML_TAG_ATTRS);
     crm_xml_add(params, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
@@ -584,33 +581,32 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
     return rc;
 }
 
-static int
-cli_delete_attr(cib_t * cib_conn, const char * host_uname, const char * attr_name,
-                pe_working_set_t * data_set)
+/*!
+ * \internal
+ * \brief Get resource name as used in failure-related node attributes
+ *
+ * \param[in] rsc  Resource to check
+ *
+ * \return Newly allocated string containing resource's fail name
+ * \note The caller is responsible for freeing the result.
+ */
+static inline char *
+rsc_fail_name(resource_t *rsc)
 {
-    node_t *node = pe_find_node(data_set->nodes, host_uname);
-    int attr_options = attrd_opt_none;
+    const char *name = (rsc->clone_name? rsc->clone_name : rsc->id);
 
-    if (node && is_remote_node(node)) {
-#if HAVE_ATOMIC_ATTRD
-        set_bit(attr_options, attrd_opt_remote);
-#else
-        /* Talk directly to cib for remote nodes if it's legacy attrd */
-        return delete_attr_delegate(cib_conn, cib_sync_call, XML_CIB_TAG_STATUS, node->details->id, NULL, NULL,
-                                    NULL, attr_name, NULL, FALSE, NULL);
-#endif
-    }
-    return attrd_update_delegate(NULL, 'D', host_uname, attr_name, NULL,
-                                 XML_CIB_TAG_STATUS, NULL, NULL, NULL,
-                                 attr_options);
+    return is_set(rsc->flags, pe_rsc_unique)? strdup(name) : clone_strip(name);
 }
 
 int
-cli_resource_delete(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_uname,
-               resource_t * rsc, pe_working_set_t * data_set)
+cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
+                    resource_t *rsc, const char *operation,
+                    const char *interval, pe_working_set_t *data_set)
 {
     int rc = pcmk_ok;
     node_t *node = NULL;
+    char *rsc_name = NULL;
+    int attr_options = attrd_opt_none;
 
     if (rsc == NULL) {
         return -ENXIO;
@@ -621,9 +617,9 @@ cli_resource_delete(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_
         for (lpc = rsc->children; lpc != NULL; lpc = lpc->next) {
             resource_t *child = (resource_t *) lpc->data;
 
-            rc = cli_resource_delete(cib_conn, crmd_channel, host_uname, child, data_set);
-            if(rc != pcmk_ok
-               || (rsc->variant >= pe_clone && is_not_set(rsc->flags, pe_rsc_unique))) {
+            rc = cli_resource_delete(crmd_channel, host_uname, child, operation,
+                                     interval, data_set);
+            if(rc != pcmk_ok || (pe_rsc_is_clone(rsc) && is_not_set(rsc->flags, pe_rsc_unique))) {
                 return rc;
             }
         }
@@ -636,7 +632,8 @@ cli_resource_delete(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_
             node = (node_t *) lpc->data;
 
             if (node->details->online) {
-                cli_resource_delete(cib_conn, crmd_channel, node->details->uname, rsc, data_set);
+                cli_resource_delete(crmd_channel, node->details->uname, rsc,
+                                    operation, interval, data_set);
             }
         }
 
@@ -645,40 +642,47 @@ cli_resource_delete(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_
 
     node = pe_find_node(data_set->nodes, host_uname);
 
-    if (node && node->details->rsc_discovery_enabled) {
-        printf("Cleaning up %s on %s", rsc->id, host_uname);
-        rc = send_lrm_rsc_op(crmd_channel, CRM_OP_LRM_DELETE, host_uname, rsc->id, TRUE, data_set);
+    if (node == NULL) {
+        printf("Unable to clean up %s because node %s not found\n",
+               rsc->id, host_uname);
+        return -ENODEV;
+    }
+
+    if (!node->details->rsc_discovery_enabled) {
+        printf("Unable to clean up %s because resource discovery disabled on %s\n",
+               rsc->id, host_uname);
+        return -EOPNOTSUPP;
+    }
+
+    /* Erase the resource's entire LRM history in the CIB, even if we're only
+     * clearing a single operation's fail count. If we erased only entries for a
+     * single operation, we might wind up with a wrong idea of the current
+     * resource state, and we might not re-probe the resource.
+     */
+    rc = send_lrm_rsc_op(crmd_channel, CRM_OP_LRM_DELETE, host_uname, rsc->id,
+                         TRUE, data_set);
+    if (rc != pcmk_ok) {
+        printf("Unable to clean up %s history on %s: %s\n",
+               rsc->id, host_uname, pcmk_strerror(rc));
+        return rc;
+    }
+    if (node->details->remote_rsc == NULL) {
+        crmd_replies_needed++;
+    }
+
+    rsc_name = rsc_fail_name(rsc);
+    if (is_remote_node(node)) {
+        attr_options |= attrd_opt_remote;
+    }
+    rc = attrd_clear_delegate(NULL, host_uname, rsc_name, operation, interval,
+                              NULL, attr_options);
+    if (rc != pcmk_ok) {
+        printf("Cleaned %s history on %s, but unable to clear failures: %s\n",
+               rsc->id, host_uname, pcmk_strerror(rc));
     } else {
-        printf("Resource discovery disabled on %s. Unable to delete lrm state.\n", host_uname);
-        rc = -EOPNOTSUPP;
+        printf("Cleaned up %s on %s\n", rsc->id, host_uname);
     }
-
-    if (rc == pcmk_ok) {
-        char *attr_name = NULL;
-
-        if(node && node->details->remote_rsc == NULL && node->details->rsc_discovery_enabled) {
-            crmd_replies_needed++;
-        }
-
-        if(is_not_set(rsc->flags, pe_rsc_unique)) {
-            char *id = clone_strip(rsc->id);
-            attr_name = crm_strdup_printf("fail-count-%s", id);
-            free(id);
-
-        } else if (rsc->clone_name) {
-            attr_name = crm_strdup_printf("fail-count-%s", rsc->clone_name);
-
-        } else {
-            attr_name = crm_strdup_printf("fail-count-%s", rsc->id);
-        }
-
-        printf(", removing %s\n", attr_name);
-        rc = cli_delete_attr(cib_conn, host_uname, attr_name, data_set);
-        free(attr_name);
-
-    } else if(rc != -EOPNOTSUPP) {
-        printf(" - FAILED\n");
-    }
+    free(rsc_name);
 
     return rc;
 }
@@ -706,7 +710,7 @@ cli_resource_check(cib_t * cib_conn, resource_t *rsc)
             printf("\n  * The configuration specifies that '%s' should remain stopped\n", parent->id);
             need_nl++;
 
-        } else if(parent->variant > pe_clone && role == RSC_ROLE_SLAVE) {
+        } else if(parent->variant == pe_master && role == RSC_ROLE_SLAVE) {
             printf("\n  * The configuration specifies that '%s' should not be promoted\n", parent->id);
             need_nl++;
         }
@@ -1112,7 +1116,7 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
     attr_set_type = XML_TAG_META_SETS;
 
     rsc_id = strdup(rsc->id);
-    if(rsc->variant > pe_group) {
+    if(pe_rsc_is_clone(rsc)) {
         is_clone = TRUE;
     }
 
@@ -1470,7 +1474,10 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
         return -ENXIO;
     }
 
-    if (safe_str_eq(rsc_action, "force-check")) {
+    if (safe_str_eq(rsc_action, "validate")) {
+        action = "validate-all";
+
+    } else if (safe_str_eq(rsc_action, "force-check")) {
         action = "monitor";
 
     } else if (safe_str_eq(rsc_action, "force-stop")) {
@@ -1481,7 +1488,7 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
                || safe_str_eq(rsc_action, "force-promote")) {
         action = rsc_action+6;
 
-        if(rsc->variant >= pe_clone) {
+        if(pe_rsc_is_clone(rsc)) {
             rc = cli_resource_search(rsc_id, data_set);
             if(rc > 0 && do_force == FALSE) {
                 CMD_ERR("It is not safe to %s %s here: the cluster claims it is already active", action, rsc_id);
@@ -1491,7 +1498,7 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
         }
     }
 
-    if(rsc->variant == pe_clone || rsc->variant == pe_master) {
+    if(pe_rsc_is_clone(rsc)) {
         /* Grab the first child resource in the hope it's not a group */
         rsc = rsc->children->data;
     }
@@ -1505,19 +1512,35 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
     rprov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
     rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
 
-    if(safe_str_eq(rclass, "stonith")){
+    if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH)) {
         CMD_ERR("Sorry, --%s doesn't support %s resources yet", rsc_action, rclass);
         crm_exit(EOPNOTSUPP);
     }
 
     params = generate_resource_params(rsc, data_set);
+
+    /* add crm_feature_set env needed by some resource agents */
+    g_hash_table_insert(params, strdup(XML_ATTR_CRM_VERSION), strdup(CRM_FEATURE_SET));
+
     op = resources_action_create(rsc->id, rclass, rprov, rtype, action, 0, -1, params, 0);
+    if (op == NULL) {
+        /* Re-run with stderr enabled so we can display a sane error message */
+        crm_enable_stderr(TRUE);
+        op = resources_action_create(rsc->id, rclass, rprov, rtype, action, 0,
+                                     -1, params, 0);
+
+        /* We know op will be NULL, but this makes static analysis happy */
+        services_action_free(op);
+
+        return crm_exit(EINVAL);
+    }
+
 
     if(do_trace) {
         setenv("OCF_TRACE_RA", "1", 1);
     }
 
-    if(op && override_hash) {
+    if (override_hash) {
         GHashTableIter iter;
         char *name = NULL;
         char *value = NULL;
@@ -1530,13 +1553,7 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
         }
     }
 
-    if(op == NULL) {
-        /* Re-run but with stderr enabled so we can display a sane error message */
-        crm_enable_stderr(TRUE);
-        resources_action_create(rsc->id, rclass, rprov, rtype, action, 0, -1, params, 0);
-        return crm_exit(EINVAL);
-
-    } else if (services_action_sync(op)) {
+    if (services_action_sync(op)) {
         int more, lpc, last;
         char *local_copy = NULL;
 
@@ -1547,6 +1564,10 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
             printf("Operation %s for %s (%s:%s:%s) failed: %d\n",
                    action, rsc->id, rclass, rprov ? rprov : "", rtype, op->status);
         }
+
+        /* hide output for validate-all if not in verbose */
+        if (!do_trace && safe_str_eq(action, "validate-all"))
+            goto done;
 
         if (op->stdout_data) {
             local_copy = strdup(op->stdout_data);
@@ -1577,6 +1598,7 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
             free(local_copy);
         }
     }
+  done:
     rc = op->rc;
     services_action_free(op);
     return rc;
@@ -1596,7 +1618,7 @@ cli_resource_move(const char *rsc_id, const char *host_name, cib_t * cib, pe_wor
         CMD_ERR("Resource '%s' not moved: not found", rsc_id);
         return -ENXIO;
 
-    } else if (scope_master && rsc->variant < pe_master) {
+    } else if (scope_master && rsc->variant != pe_master) {
         resource_t *p = uber_parent(rsc);
         if(p->variant == pe_master) {
             CMD_ERR("Using parent '%s' for --move command instead of '%s'.", rsc->id, rsc_id);
@@ -1627,7 +1649,7 @@ cli_resource_move(const char *rsc_id, const char *host_name, cib_t * cib, pe_wor
             count = g_list_length(rsc->running_on);
         }
 
-    } else if (rsc->variant > pe_group) {
+    } else if (pe_rsc_is_clone(rsc)) {
         count = g_list_length(rsc->running_on);
 
     } else if (g_list_length(rsc->running_on) > 1) {

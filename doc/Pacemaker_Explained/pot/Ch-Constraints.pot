@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2016-11-02 17:32-0500\n"
-"PO-Revision-Date: 2016-11-02 17:32-0500\n"
+"POT-Creation-Date: 2017-05-08 11:19-0500\n"
+"PO-Revision-Date: 2017-05-08 11:19-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -169,7 +169,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Positive values indicate the resource should run on this node. Negative values indicate the resource should not run on this node. Values of +/- <literal>INFINITY</literal> change \"should\"/\"should not\" to \"must\"/\"must not\". <indexterm> <primary>score</primary><secondary>Location Constraints</secondary> </indexterm> <indexterm> <primary>Location Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Location</secondary><tertiary>score</tertiary> </indexterm> <indexterm> <primary>Location</primary><secondary>score</secondary> </indexterm> <indexterm> <primary>score</primary> </indexterm>"
+msgid "Positive values indicate a preference for running the affected resource(s) on this node — the higher the value, the stronger the preference. Negative values indicate the resource(s) should avoid this node (a value of <literal>-INFINITY</literal> changes \"should\" to \"must\"). <indexterm> <primary>score</primary><secondary>Location Constraints</secondary> </indexterm> <indexterm> <primary>Location Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Location</secondary><tertiary>score</tertiary> </indexterm> <indexterm> <primary>Location</primary><secondary>score</secondary> </indexterm> <indexterm> <primary>score</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -702,7 +702,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Whether all members of the set must be active before continuing. Meaningful within <literal>rsc_order</literal>. <emphasis>(since 1.1.13)</emphasis> <indexterm> <primary>require-all</primary><secondary>Resource Sets</secondary> </indexterm> <indexterm> <primary>Resource Sets</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Resource Sets</secondary><tertiary>require-all</tertiary> </indexterm> <indexterm> <primary>Resource Sets</primary><secondary>require-all</secondary> </indexterm> <indexterm> <primary>require-all</primary> </indexterm>"
+msgid "Whether all members of the set must be active before continuing. With the current implementation, the cluster may continue even if only one member of the set is started, but if more than one member of the set is starting at the same time, the cluster will still wait until all of those have started before continuing (this may change in future versions). Meaningful within <literal>rsc_order</literal>. <emphasis>(since 1.1.7)</emphasis> <indexterm> <primary>require-all</primary><secondary>Resource Sets</secondary> </indexterm> <indexterm> <primary>Resource Sets</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Resource Sets</secondary><tertiary>require-all</tertiary> </indexterm> <indexterm> <primary>Resource Sets</primary><secondary>require-all</secondary> </indexterm> <indexterm> <primary>require-all</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para

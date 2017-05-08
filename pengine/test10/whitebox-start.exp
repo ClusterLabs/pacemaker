@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="11" operation="start" operation_key="container1_start_0" on_node="18node1" on_node_uuid="1">
         <primitive id="container1" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_remote_node="lxc1" CRM_meta_timeout="20000" config="/home/dvossel/virtual_machines/lxc/lxc1.xml"  force_stop="true" hypervisor="lxc:///"/>
+        <attributes CRM_meta_on_node="18node1" CRM_meta_on_node_uuid="1" CRM_meta_remote_node="lxc1" CRM_meta_timeout="20000" config="/home/dvossel/virtual_machines/lxc/lxc1.xml"  force_stop="true" hypervisor="lxc:///"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -12,7 +12,7 @@
     <action_set>
       <rsc_op id="25" operation="monitor" operation_key="M_monitor_10000" internal_operation_key="M:4_monitor_10000" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1">
         <primitive id="M" long-id="M:4" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_clone="4" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="4" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="lxc1" CRM_meta_on_node_uuid="lxc1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -28,7 +28,7 @@
     <action_set>
       <rsc_op id="24" operation="start" operation_key="M_start_0" internal_operation_key="M:4_start_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1">
         <primitive id="M" long-id="M:4" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_clone="4" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="4" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="lxc1" CRM_meta_on_node_uuid="lxc1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -67,7 +67,7 @@
     <action_set>
       <rsc_op id="32" operation="monitor" operation_key="A_monitor_10000" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1">
         <primitive id="A" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="lxc1" CRM_meta_on_node_uuid="lxc1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -83,7 +83,7 @@
     <action_set>
       <rsc_op id="31" operation="start" operation_key="A_start_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1">
         <primitive id="A" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="lxc1" CRM_meta_on_node_uuid="lxc1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -99,7 +99,7 @@
     <action_set>
       <rsc_op id="30" operation="stop" operation_key="A_stop_0" on_node="18node1" on_node_uuid="1">
         <primitive id="A" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="18node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -108,7 +108,7 @@
     <action_set>
       <rsc_op id="35" operation="monitor" operation_key="B_monitor_10000" on_node="18node3" on_node_uuid="3">
         <primitive id="B" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="18node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -121,7 +121,7 @@
     <action_set>
       <rsc_op id="34" operation="start" operation_key="B_start_0" on_node="18node3" on_node_uuid="3">
         <primitive id="B" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="18node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -134,7 +134,7 @@
     <action_set>
       <rsc_op id="33" operation="stop" operation_key="B_stop_0" on_node="lxc2" on_node_uuid="lxc2" router_node="18node2">
         <primitive id="B" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="lxc2" CRM_meta_on_node_uuid="lxc2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -143,7 +143,7 @@
     <action_set>
       <rsc_op id="41" operation="monitor" operation_key="lxc1_monitor_30000" on_node="18node1" on_node_uuid="1">
         <primitive id="lxc1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="container1" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" />
+        <attributes CRM_meta_container="container1" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="18node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="30000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -156,7 +156,7 @@
     <action_set>
       <rsc_op id="40" operation="start" operation_key="lxc1_start_0" on_node="18node1" on_node_uuid="1">
         <primitive id="lxc1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="container1" CRM_meta_name="start" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_container="container1" CRM_meta_name="start" CRM_meta_on_node="18node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>

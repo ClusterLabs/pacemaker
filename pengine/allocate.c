@@ -95,11 +95,25 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      clone_update_actions,
      clone_expand,
      master_append_meta,
+     },
+    {
+     container_merge_weights,
+     container_color,
+     container_create_actions,
+     container_create_probe,
+     container_internal_constraints,
+     container_rsc_colocation_lh,
+     container_rsc_colocation_rh,
+     container_rsc_location,
+     container_action_flags,
+     container_update_actions,
+     container_expand,
+     container_append_meta,
      }
 };
 
 gboolean
-update_action_flags(action_t * action, enum pe_action_flags flags, const char *source)
+update_action_flags(action_t * action, enum pe_action_flags flags, const char *source, int line)
 {
     static unsigned long calls = 0;
     gboolean changed = FALSE;
@@ -107,9 +121,9 @@ update_action_flags(action_t * action, enum pe_action_flags flags, const char *s
     enum pe_action_flags last = action->flags;
 
     if (clear) {
-        action->flags = crm_clear_bit(source, action->uuid, action->flags, flags);
+        action->flags = crm_clear_bit(source, line, action->uuid, action->flags, flags);
     } else {
-        action->flags = crm_set_bit(source, action->uuid, action->flags, flags);
+        action->flags = crm_set_bit(source, line, action->uuid, action->flags, flags);
     }
 
     if (last != action->flags) {
@@ -375,7 +389,7 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
     if (is_set(rsc->flags, pe_rsc_orphan)) {
         resource_t *parent = uber_parent(rsc);
         if(parent == NULL
-           || parent->variant < pe_clone
+           || pe_rsc_is_clone(parent) == FALSE
            || is_set(parent->flags, pe_rsc_unique)) {
             pe_rsc_trace(rsc, "Skipping param check for %s and deleting: orphan", rsc->id);
             DeleteRsc(rsc, node, FALSE, data_set);
@@ -449,6 +463,10 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
             action_clear =
                 custom_action(rsc, key, CRM_OP_CLEAR_FAILCOUNT, node, FALSE, TRUE, data_set);
             set_bit(action_clear->flags, pe_action_runnable);
+
+            crm_notice("Clearing failure of %s on %s "
+                       "because action definition changed " CRM_XS " %s",
+                       rsc->id, node->details->uname, action_clear->uuid);
         }
     }
 
@@ -596,7 +614,7 @@ static gboolean
 failcount_clear_action_exists(node_t * node, resource_t * rsc)
 {
     gboolean rc = FALSE;
-    char *key = crm_concat(rsc->id, CRM_OP_CLEAR_FAILCOUNT, '_');
+    char *key = generate_op_key(rsc->id, CRM_OP_CLEAR_FAILCOUNT, 0);
     GListPtr list = find_actions_exact(rsc->actions, key, node);
 
     if (list) {
@@ -704,7 +722,7 @@ common_apply_stickiness(resource_t * rsc, node_t * node, pe_working_set_t * data
     }
 }
 
-static void
+void
 complex_set_cmds(resource_t * rsc)
 {
     GListPtr gIter = rsc->children;
@@ -1195,15 +1213,16 @@ cleanup_orphans(resource_t * rsc, pe_working_set_t * data_set)
         node_t *node = (node_t *) gIter->data;
 
         if (node->details->online && get_failcount(node, rsc, NULL, data_set)) {
-            action_t *clear_op = NULL;
-
-            clear_op = custom_action(rsc, crm_concat(rsc->id, CRM_OP_CLEAR_FAILCOUNT, '_'),
-                                     CRM_OP_CLEAR_FAILCOUNT, node, FALSE, TRUE, data_set);
+            char *key = generate_op_key(rsc->id, CRM_OP_CLEAR_FAILCOUNT, 0);
+            action_t *clear_op = custom_action(rsc, key, CRM_OP_CLEAR_FAILCOUNT,
+                                               node, FALSE, TRUE, data_set);
 
             add_hash_param(clear_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
-            pe_rsc_info(rsc, "Clearing failcount (%d) for orphaned resource %s on %s (%s)",
-                        get_failcount(node, rsc, NULL, data_set), rsc->id, node->details->uname,
-                        clear_op->uuid);
+
+            pe_rsc_info(rsc,
+                        "Clearing failure of %s on %s because it is orphaned "
+                        CRM_XS " %s",
+                        rsc->id, node->details->uname, clear_op->uuid);
 
             custom_action_order(rsc, NULL, clear_op,
                             rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
@@ -1341,6 +1360,70 @@ any_managed_resources(pe_working_set_t * data_set)
     return FALSE;
 }
 
+/*!
+ * \internal
+ * \brief Create pseudo-op for guest node fence, and order relative to it
+ *
+ * \param[in] node      Guest node to fence
+ * \param[in] done      STONITH_DONE operation
+ * \param[in] data_set  Working set of CIB state
+ */
+static void
+fence_guest(pe_node_t *node, pe_action_t *done, pe_working_set_t *data_set)
+{
+    resource_t *container = node->details->remote_rsc->container;
+    pe_action_t *stop = NULL;
+    pe_action_t *stonith_op = NULL;
+
+    /* The fence action is just a label; we don't do anything differently for
+     * off vs. reboot. We specify it explicitly, rather than let it default to
+     * cluster's default action, because we are not _initiating_ fencing -- we
+     * are creating a pseudo-event to describe fencing that is already occurring
+     * by other means (container recovery).
+     */
+    const char *fence_action = "off";
+
+    /* Check whether guest's container resource is has any explicit stop or
+     * start (the stop may be implied by fencing of the guest's host).
+     */
+    if (container) {
+        stop = find_first_action(container->actions, NULL, CRMD_ACTION_STOP, NULL);
+
+        if (find_first_action(container->actions, NULL, CRMD_ACTION_START, NULL)) {
+            fence_action = "reboot";
+        }
+    }
+
+    /* Create a fence pseudo-event, so we have an event to order actions
+     * against, and crmd can always detect it.
+     */
+    stonith_op = pe_fence_op(node, fence_action, FALSE, data_set);
+    update_action_flags(stonith_op, pe_action_pseudo | pe_action_runnable,
+                        __FUNCTION__, __LINE__);
+
+    /* We want to imply stops/demotes after the guest is stopped, not wait until
+     * it is restarted, so we always order pseudo-fencing after stop, not start
+     * (even though start might be closer to what is done for a real reboot).
+     */
+    if (stop) {
+        order_actions(stop, stonith_op,
+                      pe_order_runnable_left|pe_order_implies_then);
+        crm_info("Implying guest node %s is down (action %d) "
+                 "after container %s is stopped (action %d)",
+                 node->details->uname, stonith_op->id,
+                 container->id, stop->id);
+    } else {
+        crm_info("Implying guest node %s is down (action %d) ",
+                 node->details->uname, stonith_op->id);
+    }
+
+    /* @TODO: Order pseudo-fence after any (optional) fence of guest's host */
+
+    /* Order/imply other actions relative to pseudo-fence as with real fence */
+    stonith_constraints(node, stonith_op, data_set);
+    order_actions(stonith_op, done, pe_order_implies_then);
+}
+
 /*
  * Create dependencies for stonith and shutdown operations
  */
@@ -1369,27 +1452,12 @@ stage6(pe_working_set_t * data_set)
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
 
-        /* Guest nodes are "fenced" by recovering their container resource.
-         * The container stop may be explicit, or implied by the fencing of the
-         * guest's host.
+        /* Guest nodes are "fenced" by recovering their container resource,
+         * so handle them separately.
          */
         if (is_container_remote_node(node)) {
-            /* Guest */
-            if (need_stonith
-                && node->details->remote_requires_reset
-                && pe_can_fence(data_set, node)) {
-                resource_t *container = node->details->remote_rsc->container;
-                char *key = stop_key(container);
-                GListPtr stop_list = find_actions(container->actions, key, NULL);
-
-                crm_info("Implying node %s is down when container %s is stopped (%p)",
-                         node->details->uname, container->id, stop_list);
-                if(stop_list) {
-                    stonith_constraints(node, stop_list->data, data_set);
-                }
-
-                g_list_free(stop_list);
-                free(key);
+            if (node->details->remote_requires_reset && need_stonith) {
+                fence_guest(node, done, data_set);
             }
             continue;
         }
@@ -1597,7 +1665,7 @@ rsc_order_then(action_t * lh_action, resource_t * rsc, order_constraint_t * orde
             order_actions(lh_action, rh_action_iter, type);
 
         } else if (type & pe_order_implies_then) {
-            update_action_flags(rh_action_iter, pe_action_runnable | pe_action_clear, __FUNCTION__);
+            update_action_flags(rh_action_iter, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__);
             crm_warn("Unrunnable %s 0x%.6x", rh_action_iter->uuid, type);
         } else {
             crm_warn("neither %s 0x%.6x", rh_action_iter->uuid, type);
@@ -1954,7 +2022,7 @@ order_probes(pe_working_set_t * data_set)
                 crm_trace("Same parent %s for %s", first_rsc->id, start->uuid);
                 continue;
 
-            } else if(FALSE && uber_parent(first_rsc)->variant < pe_clone) {
+            } else if(FALSE && pe_rsc_is_clone(uber_parent(first_rsc)) == FALSE) {
                 crm_trace("Not a clone %s for %s", first_rsc->id, start->uuid);
                 continue;
             }
@@ -2095,6 +2163,9 @@ stage8(pe_working_set_t * data_set)
     }
 
     crm_log_xml_trace(data_set->graph, "created resource-driven action list");
+
+    /* pseudo action to distribute list of nodes with maintenance state update */
+    add_maintenance_update(data_set);
 
     /* catch any non-resource specific actions */
     crm_trace("processing non-resource actions");

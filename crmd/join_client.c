@@ -30,6 +30,26 @@ void join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, v
 
 extern ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t * orig);
 
+/*!
+ * \internal
+ * \brief Remember if DC is shutting down as we join
+ *
+ * If we're joining while the current DC is shutting down, update its expected
+ * state, so we don't fence it if we become the new DC. (We weren't a peer
+ * when it broadcast its shutdown request.)
+ *
+ * \param[in] msg  A join message from the DC
+ */
+static void
+update_dc_expected(xmlNode *msg)
+{
+    if (fsa_our_dc && crm_is_true(crm_element_value(msg, F_CRM_DC_LEAVING))) {
+        crm_node_t *dc_node = crm_get_peer(0, fsa_our_dc);
+
+        crm_update_peer_expected(__FUNCTION__, dc_node, CRMD_JOINSTATE_DOWN);
+    }
+}
+
 /*	A_CL_JOIN_QUERY		*/
 /* is there a DC out there? */
 void
@@ -128,6 +148,8 @@ do_cl_join_offer_respond(long long action,
         return;
     }
 
+    update_dc_expected(input->msg);
+
     CRM_LOG_ASSERT(input != NULL);
     query_call_id =
         fsa_cib_conn->cmds->query(fsa_cib_conn, NULL, NULL, cib_scope_local | cib_no_children);
@@ -177,6 +199,30 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
     free_xml(generation);
 }
 
+static void
+set_join_state(const char * start_state)
+{
+    if (safe_str_eq(start_state, "standby")) {
+        crm_notice("Forcing node %s to join in %s state per configured environment",
+                   fsa_our_uname, start_state);
+        update_attr_delegate(fsa_cib_conn, cib_sync_call, XML_CIB_TAG_NODES, fsa_our_uuid,
+                             NULL, NULL, NULL, "standby", "on", TRUE, NULL, NULL);
+
+    } else if (safe_str_eq(start_state, "online")) {
+        crm_notice("Forcing node %s to join in %s state per configured environment",
+                   fsa_our_uname, start_state);
+        update_attr_delegate(fsa_cib_conn, cib_sync_call, XML_CIB_TAG_NODES, fsa_our_uuid,
+                             NULL, NULL, NULL, "standby", "off", TRUE, NULL, NULL);
+
+    } else if (safe_str_eq(start_state, "default")) {
+        crm_debug("Not forcing a starting state on node %s", fsa_our_uname);
+
+    } else {
+        crm_warn("Unrecognized start state '%s', using 'default' (%s)",
+                 start_state, fsa_our_uname);
+    }
+}
+
 /*	A_CL_JOIN_RESULT	*/
 /* aka. this is notification that we have (or have not) been accepted */
 void
@@ -189,6 +235,7 @@ do_cl_join_finalize_respond(long long action,
     gboolean was_nack = TRUE;
     static gboolean first_join = TRUE;
     ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
+    const char *start_state = daemon_option("node_start_state");
 
     int join_id = -1;
     const char *op = crm_element_value(input->msg, F_CRM_TASK);
@@ -225,6 +272,8 @@ do_cl_join_finalize_respond(long long action,
         return;
     }
 
+    update_dc_expected(input->msg);
+
     /* send our status section to the DC */
     tmp1 = do_lrm_query(TRUE, fsa_our_uname);
     if (tmp1 != NULL) {
@@ -253,6 +302,10 @@ do_cl_join_finalize_respond(long long action,
             erase_status_tag(fsa_our_uname, XML_TAG_TRANSIENT_NODEATTRS, 0);
             update_attrd(fsa_our_uname, "terminate", NULL, NULL, FALSE);
             update_attrd(fsa_our_uname, XML_CIB_ATTR_SHUTDOWN, "0", NULL, FALSE);
+
+            if (start_state) {
+                set_join_state(start_state);
+            }
         }
 
         send_cluster_message(crm_get_peer(0, fsa_our_dc), crm_msg_crmd, reply, TRUE);

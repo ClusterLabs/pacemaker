@@ -60,10 +60,10 @@ native_color: p_glusterd:0 allocation score on xfc1: 0
 native_color: p_glusterd:0 allocation score on xfc2: 0
 native_color: p_glusterd:0 allocation score on xfc3: 1
 native_color: p_glusterd:1 allocation score on xfc0: 1
-native_color: p_glusterd:1 allocation score on xfc1: -INFINITY
+native_color: p_glusterd:1 allocation score on xfc1: 0
 native_color: p_glusterd:1 allocation score on xfc2: 0
 native_color: p_glusterd:1 allocation score on xfc3: -INFINITY
-native_color: p_glusterd:2 allocation score on xfc0: 0
+native_color: p_glusterd:2 allocation score on xfc0: -INFINITY
 native_color: p_glusterd:2 allocation score on xfc1: 1
 native_color: p_glusterd:2 allocation score on xfc2: 0
 native_color: p_glusterd:2 allocation score on xfc3: -INFINITY

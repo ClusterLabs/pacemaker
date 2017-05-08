@@ -455,7 +455,7 @@ remove_cib_device(xmlXPathObjectPtr xpathObj)
             standard = crm_element_value(match, XML_AGENT_ATTR_CLASS);
         }
 
-        if (safe_str_neq(standard, "stonith")) {
+        if (safe_str_neq(standard, PCMK_RESOURCE_CLASS_STONITH)) {
             continue;
         }
 
@@ -620,7 +620,7 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
         GListPtr gIter = NULL;
         for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
             cib_device_update(gIter->data, data_set);
-            if(rsc->variant == pe_clone || rsc->variant == pe_master) {
+            if(pe_rsc_is_clone(rsc)) {
                 crm_trace("Only processing one copy of the clone %s", rsc->id);
                 break;
             }
@@ -630,7 +630,7 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
 
     /* We only care about STONITH resources. */
     rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-    if(safe_str_neq(rclass, "stonith")) {
+    if (safe_str_neq(rclass, PCMK_RESOURCE_CLASS_STONITH)) {
         return;
     }
 
@@ -710,7 +710,6 @@ update_done:
 }
 
 extern xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
-extern node_t *create_node(const char *id, const char *uname, const char *type, const char *score, pe_working_set_t * data_set);
 
 /*!
  * \internal
@@ -848,7 +847,7 @@ update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
             rsc_id = crm_element_value(match, XML_ATTR_ID);
             standard = crm_element_value(match, XML_AGENT_ATTR_CLASS);
 
-            if (safe_str_neq(standard, "stonith")) {
+            if (safe_str_neq(standard, PCMK_RESOURCE_CLASS_STONITH)) {
                 continue;
             }
 

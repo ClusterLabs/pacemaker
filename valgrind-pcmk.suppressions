@@ -29,6 +29,29 @@
 }
 
 {
+   Bash leak in cli regression testing on epel-6-i386
+   Memcheck:Leak
+   fun:malloc
+   fun:xmalloc
+   obj:*/bash
+   fun:execute_command_internal
+   ...
+   fun:execute_command_internal
+   fun:parse_and_execute
+   fun:command_substitute
+   obj:*/bash
+   obj:*/bash
+   obj:*/bash
+   fun:expand_string_assignment
+   obj:*/bash
+   obj:*/bash
+   obj:*/bash
+   obj:*/bash
+   fun:execute_command_internal
+   ...
+}
+
+{
    Ignore option parsing
    Memcheck:Leak
    fun:realloc

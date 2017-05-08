@@ -75,7 +75,10 @@ GMainLoop *mainloop = NULL;
 const char *cib_root = NULL;
 char *cib_our_uname = NULL;
 gboolean preserve_status = FALSE;
-gboolean cib_writes_enabled = TRUE;
+
+/* volatile because it may be changed in a signal handler */
+volatile gboolean cib_writes_enabled = TRUE;
+
 int remote_fd = 0;
 int remote_tls_fd = 0;
 
@@ -422,7 +425,10 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
 {
     switch (type) {
         case crm_status_processes:
-            if (legacy_mode && is_not_set(node->processes, crm_get_cluster_proc())) {
+#if !SUPPORT_PLUGIN
+            if (cib_legacy_mode()
+                && is_not_set(node->processes, crm_get_cluster_proc())) {
+
                 uint32_t old = data? *(const uint32_t *)data : 0;
 
                 if ((node->processes ^ old) & crm_proc_cpg) {
@@ -431,6 +437,7 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
                     legacy_mode = FALSE;
                 }
             }
+#endif
             break;
 
         case crm_status_uname:

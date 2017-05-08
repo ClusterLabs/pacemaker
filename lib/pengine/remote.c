@@ -94,7 +94,8 @@ xml_contains_remote_node(xmlNode *xml)
     const char *provider = crm_element_value(xml, XML_AGENT_ATTR_PROVIDER);
     const char *agent = crm_element_value(xml, XML_ATTR_TYPE);
 
-    if (safe_str_eq(agent, "remote") && safe_str_eq(provider, "pacemaker") && safe_str_eq(class, "ocf")) {
+    if (safe_str_eq(agent, "remote") && safe_str_eq(provider, "pacemaker")
+        && safe_str_eq(class, PCMK_RESOURCE_CLASS_OCF)) {
         return TRUE;
     }
     return FALSE;

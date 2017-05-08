@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="6" operation="stop" operation_key="res_Dummy1:1_stop_0" internal_operation_key="res_Dummy1:0_stop_0" on_node="xenserver1" on_node_uuid="56cfdd8b-b7ce-4420-b0b0-2e9ec84a9b64">
         <primitive id="res_Dummy1" long-id="res_Dummy1:1" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="xenserver1" CRM_meta_on_node_uuid="56cfdd8b-b7ce-4420-b0b0-2e9ec84a9b64" CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="7" operation="stop" operation_key="res_Dummy1:0_stop_0" internal_operation_key="res_Dummy1:1_stop_0" on_node="xenserver2" on_node_uuid="ab2e800a-4e31-42e9-9e33-f6ca81a3e9e6">
         <primitive id="res_Dummy1" long-id="res_Dummy1:0" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="xenserver2" CRM_meta_on_node_uuid="ab2e800a-4e31-42e9-9e33-f6ca81a3e9e6" CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -85,7 +85,7 @@
     <action_set>
       <rsc_op id="12" operation="stop" operation_key="res_Dummy2_stop_0" on_node="xenserver1" on_node_uuid="56cfdd8b-b7ce-4420-b0b0-2e9ec84a9b64">
         <primitive id="res_Dummy2" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="xenserver1" CRM_meta_on_node_uuid="56cfdd8b-b7ce-4420-b0b0-2e9ec84a9b64" CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -98,7 +98,7 @@
     <action_set>
       <rsc_op id="14" operation="stop" operation_key="res_Dummy3_stop_0" on_node="xenserver1" on_node_uuid="56cfdd8b-b7ce-4420-b0b0-2e9ec84a9b64">
         <primitive id="res_Dummy3" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="xenserver1" CRM_meta_on_node_uuid="56cfdd8b-b7ce-4420-b0b0-2e9ec84a9b64" CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>

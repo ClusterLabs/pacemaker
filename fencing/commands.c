@@ -783,6 +783,73 @@ read_action_metadata(stonith_device_t *device)
     freeXpathObject(xpath);
 }
 
+/*!
+ * \internal
+ * \brief Set a pcmk_*_action parameter if not already set
+ *
+ * \param[in,out] params  Device parameters
+ * \param[in]     action  Name of action
+ * \param[in]     value   Value to use if action is not already set
+ */
+static void
+map_action(GHashTable *params, const char *action, const char *value)
+{
+    char *key = crm_strdup_printf("pcmk_%s_action", action);
+
+    if (g_hash_table_lookup(params, key)) {
+        crm_warn("Ignoring %s='%s', see %s instead",
+                 STONITH_ATTR_ACTION_OP, value, key);
+        free(key);
+    } else {
+        crm_warn("Mapping %s='%s' to %s='%s'",
+                 STONITH_ATTR_ACTION_OP, value, key, value);
+        g_hash_table_insert(params, key, strdup(value));
+    }
+}
+
+/*!
+ * \internal
+ * \brief Create device parameter table from XML
+ *
+ * \param[in]     name    Device name (used for logging only)
+ * \param[in,out] params  Device parameters
+ */
+static GHashTable *
+xml2device_params(const char *name, xmlNode *dev)
+{
+    GHashTable *params = xml2list(dev);
+    const char *value;
+
+    /* Action should never be specified in the device configuration,
+     * but we support it for users who are familiar with other software
+     * that worked that way.
+     */
+    value = g_hash_table_lookup(params, STONITH_ATTR_ACTION_OP);
+    if (value != NULL) {
+        crm_warn("%s has '%s' parameter, which should never be specified in configuration",
+                 name, STONITH_ATTR_ACTION_OP);
+
+        if (*value == '\0') {
+            crm_warn("Ignoring empty '%s' parameter", STONITH_ATTR_ACTION_OP);
+
+        } else if (strcmp(value, "reboot") == 0) {
+            crm_warn("Ignoring %s='reboot' (see stonith-action cluster property instead)",
+                     STONITH_ATTR_ACTION_OP);
+
+        } else if (strcmp(value, "off") == 0) {
+            map_action(params, "reboot", value);
+
+        } else {
+            map_action(params, "off", value);
+            map_action(params, "reboot", value);
+        }
+
+        g_hash_table_remove(params, STONITH_ATTR_ACTION_OP);
+    }
+
+    return params;
+}
+
 static stonith_device_t *
 build_device_from_xml(xmlNode * msg)
 {
@@ -794,7 +861,7 @@ build_device_from_xml(xmlNode * msg)
     device->id = crm_element_value_copy(dev, XML_ATTR_ID);
     device->agent = crm_element_value_copy(dev, "agent");
     device->namespace = crm_element_value_copy(dev, "namespace");
-    device->params = xml2list(dev);
+    device->params = xml2device_params(device->id, dev);
 
     value = g_hash_table_lookup(device->params, STONITH_ATTR_HOSTLIST);
     if (value) {
@@ -988,14 +1055,41 @@ dynamic_list_search_cb(GPid pid, int rc, const char *output, gpointer user_data)
 
 /*!
  * \internal
+ * \brief Returns true if any key in first is not in second or second has a different value for key
+ */
+static int
+device_params_diff(GHashTable *first, GHashTable *second) {
+    char *key = NULL;
+    char *value = NULL;
+    GHashTableIter gIter;
+
+    g_hash_table_iter_init(&gIter, first);
+    while (g_hash_table_iter_next(&gIter, (void **)&key, (void **)&value)) {
+
+        if(strstr(key, "CRM_meta") == key) {
+            continue;
+        } else if(strcmp(key, "crm_feature_set") == 0) {
+            continue;
+        } else {
+            char *other_value = g_hash_table_lookup(second, key);
+
+            if (!other_value || safe_str_neq(other_value, value)) {
+                crm_trace("Different value for %s: %s != %s", key, other_value, value);
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
+
+/*!
+ * \internal
  * \brief Checks to see if an identical device already exists in the device_list
  */
 static stonith_device_t *
 device_has_duplicate(stonith_device_t * device)
 {
-    char *key = NULL;
-    char *value = NULL;
-    GHashTableIter gIter;
     stonith_device_t *dup = g_hash_table_lookup(device_list, device->id);
 
     if (!dup) {
@@ -1008,21 +1102,9 @@ device_has_duplicate(stonith_device_t * device)
     }
 
     /* Use calculate_operation_digest() here? */
-    g_hash_table_iter_init(&gIter, device->params);
-    while (g_hash_table_iter_next(&gIter, (void **)&key, (void **)&value)) {
-
-        if(strstr(key, "CRM_meta") == key) {
-            continue;
-        } else if(strcmp(key, "crm_feature_set") == 0) {
-            continue;
-        } else {
-            char *other_value = g_hash_table_lookup(dup->params, key);
-
-            if (!other_value || safe_str_neq(other_value, value)) {
-                crm_trace("Different value for %s: %s != %s", key, other_value, value);
-                return NULL;
-            }
-        }
+    if (device_params_diff(device->params, dup->params) ||
+        device_params_diff(dup->params, device->params)) {
+        return NULL;
     }
 
     crm_trace("Match");

@@ -20,9 +20,6 @@ script
 end script
 
 pre-start script
-    # setup the software watchdog which corosync uses.
-    # rewrite according to environment.
-    [ -c /dev/watchdog ] || modprobe softdog soft_margin=60
     pidof corosync || start corosync
 
     # if you use corosync-notifyd, uncomment the line below.
@@ -51,6 +48,9 @@ post-stop script
     rm -f "$LOCK_FILE"
     rm -f "@localstatedir@/run/$prog.pid"
 
+    # if you use corosync-notifyd, uncomment the line below.
+    #stop corosync-notifyd || true
+
     # if you use watchdog of corosync, uncomment the line below.
     #pidof corosync || false
 
@@ -64,6 +64,4 @@ post-stop script
     # if you use crm_mon, uncomment the line below.
     #stop crm_mon
 
-    # if you use corosync-notifyd, uncomment the line below.
-    #stop corosync-notifyd || true
 end script

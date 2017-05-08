@@ -97,6 +97,8 @@ struct ipc_client_callbacks crm_callbacks = {
 };
 
 
+/* short option letters still available: eEJkKXyYZ */
+
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {
     /* Top-level Options */
@@ -128,12 +130,20 @@ static struct crm_option long_options[] = {
     {"constraints",0, 0, 'a', "\tDisplay the (co)location constraints that apply to a resource"},
 
     {"-spacer-",	1, 0, '-', "\nCommands:"},
-    {"cleanup",         0, 0, 'C', "\t\tDelete the resource history and re-check the current state. Optional: --resource"},
+    {"validate",   0, 0, 0, "\t\tCall the validate-all action of the local given resource"},
+    {"cleanup",         0, 0, 'C',
+        "\t\tDelete resource's history and re-check its current state. "
+        "Optional: --resource (if not specified, all resources), "
+        "--node (if not specified, all nodes), "
+        "--force (if not specified, resource's group or clone will also be cleaned)"
+    },
     {"set-parameter",   1, 0, 'p', "Set the named parameter for a resource. See also -m, --meta"},
     {"get-parameter",   1, 0, 'g', "Display the named parameter for a resource. See also -m, --meta"},
     {"delete-parameter",1, 0, 'd', "Delete the named parameter for a resource. See also -m, --meta"},
     {"get-property",    1, 0, 'G', "Display the 'class', 'type' or 'provider' of a resource", pcmk_option_hidden},
-    {"set-property",    1, 0, 'S', "(Advanced) Set the class, type or provider of a resource", pcmk_option_hidden},
+    {"set-property",    1, 0, 'S',
+        "(Advanced) Set resource property (e.g. 'class', 'type', or 'provider'). Required: -r, -t, -v",
+        pcmk_option_hidden},
 
     {"-spacer-",	1, 0, '-', "\nResource location:"},
     {
@@ -179,9 +189,17 @@ static struct crm_option long_options[] = {
     {"node",		1, 0, 'N', "\tHost uname"},
     {"recursive",       0, 0,  0,  "\tFollow colocation chains when using --set-parameter"},
     {"resource-type",	1, 0, 't', "Resource type (primitive, clone, group, ...)"},
-    {"parameter-value", 1, 0, 'v', "Value to use with -p or -S"},
+    {"parameter-value", 1, 0, 'v', "Value to use with -p"},
     {"meta",		0, 0, 'm', "\t\tModify a resource's configuration option rather than one which is passed to the resource agent script. For use with -p, -g, -d"},
     {"utilization",	0, 0, 'z', "\tModify a resource's utilization attribute. For use with -p, -g, -d"},
+    {
+        "operation",      required_argument, NULL, 'n',
+        "Operation to clear (used with -C -r; default all)"
+    },
+    {
+        "interval",       required_argument, NULL, 'I',
+        "Interval of operation to clear (used with -C -r -n; default 0)"
+    },
     {"set-name",        1, 0, 's', "\t(Advanced) ID of the instance_attributes object to change"},
     {"nvpair",          1, 0, 'i', "\t(Advanced) ID of the nvpair object to change/delete"},
     {"timeout",         1, 0, 'T',  "\t(Advanced) Abort if command does not finish in this time (with --restart or --wait)"},
@@ -247,6 +265,8 @@ main(int argc, char **argv)
     const char *prop_set = NULL;
     const char *rsc_long_cmd = NULL;
     const char *longname = NULL;
+    const char *operation = NULL;
+    const char *interval = NULL;
     GHashTable *override_params = NULL;
 
     char *xml_file = NULL;
@@ -296,7 +316,8 @@ main(int argc, char **argv)
                     require_dataset = FALSE;
 
                 } else if (
-                    safe_str_eq("restart", longname)
+                    safe_str_eq("validate", longname)
+                    || safe_str_eq("restart", longname)
                     || safe_str_eq("force-demote",  longname)
                     || safe_str_eq("force-stop",    longname)
                     || safe_str_eq("force-start",   longname)
@@ -456,6 +477,14 @@ main(int argc, char **argv)
                 require_resource = FALSE;
                 require_crmd = TRUE;
                 rsc_cmd = 'C';
+                break;
+
+            case 'n':
+                operation = optarg;
+                break;
+
+            case 'I':
+                interval = optarg;
                 break;
 
             case 'F':
@@ -680,7 +709,7 @@ main(int argc, char **argv)
     } else if (rsc_cmd == 0 && rsc_long_cmd && safe_str_eq(rsc_long_cmd, "wait")) {
         rc = wait_till_stable(timeout_ms, cib_conn);
 
-    } else if (rsc_cmd == 0 && rsc_long_cmd) { /* force-(stop|start|check) */
+    } else if (rsc_cmd == 0 && rsc_long_cmd) { /* validate or force-(stop|start|check) */
         rc = cli_resource_execute(rsc_id, rsc_long_cmd, override_params, cib_conn, &data_set);
 
     } else if (rsc_cmd == 'A' || rsc_cmd == 'a') {
@@ -871,8 +900,18 @@ main(int argc, char **argv)
     } else if (rsc_cmd == 'S') {
         xmlNode *msg_data = NULL;
 
-        if (prop_value == NULL || strlen(prop_value) == 0) {
-            CMD_ERR("You need to supply a value with the -v option");
+        if ((rsc_id == NULL) || !strlen(rsc_id)) {
+            CMD_ERR("Must specify -r with resource id");
+            rc = -ENXIO;
+            goto bail;
+
+        } else if ((rsc_type == NULL) || !strlen(rsc_type)) {
+            CMD_ERR("Must specify -t with resource type");
+            rc = -ENXIO;
+            goto bail;
+
+        } else if ((prop_value == NULL) || !strlen(prop_value)) {
+            CMD_ERR("Must supply -v with new value");
             rc = -EINVAL;
             goto bail;
 
@@ -881,14 +920,7 @@ main(int argc, char **argv)
             goto bail;
         }
 
-        if (rsc_id == NULL) {
-            CMD_ERR("Must supply a resource id with -r");
-            rc = -ENXIO;
-            goto bail;
-        }
-        CRM_LOG_ASSERT(rsc_type != NULL);
         CRM_LOG_ASSERT(prop_name != NULL);
-        CRM_LOG_ASSERT(prop_value != NULL);
 
         msg_data = create_xml_node(NULL, rsc_type);
         crm_xml_add(msg_data, XML_ATTR_ID, rsc_id);
@@ -938,10 +970,12 @@ main(int argc, char **argv)
             rsc = uber_parent(rsc);
         }
 
-        crm_debug("Re-checking the state of %s for %s on %s", rsc->id, rsc_id, host_uname);
         if(rsc) {
+            crm_debug("Re-checking the state of %s (%s requested) on %s",
+                      rsc->id, rsc_id, host_uname);
             crmd_replies_needed = 0;
-            rc = cli_resource_delete(cib_conn, crmd_channel, host_uname, rsc, &data_set);
+            rc = cli_resource_delete(crmd_channel, host_uname, rsc, operation,
+                                     interval, &data_set);
         } else {
             rc = -ENODEV;
         }
@@ -960,6 +994,7 @@ main(int argc, char **argv)
         const char *router_node = host_uname;
         xmlNode *msg_data = NULL;
         xmlNode *cmd = NULL;
+        int attr_options = attrd_opt_none;
 
         if (host_uname) {
             node_t *node = pe_find_node(data_set.nodes, host_uname);
@@ -971,7 +1006,7 @@ main(int argc, char **argv)
                 }
                 node = node->details->remote_rsc->running_on->data;
                 router_node = node->details->uname;
-
+                attr_options |= attrd_opt_remote;
             }
         }
 
@@ -987,8 +1022,8 @@ main(int argc, char **argv)
 
         crm_debug("Re-checking the state of all resources on %s", host_uname?host_uname:"all nodes");
 
-        rc = attrd_update_delegate(
-            NULL, 'u', host_uname, "fail-count-*", NULL, XML_CIB_TAG_STATUS, NULL, NULL, NULL, attrd_opt_none);
+        rc = attrd_clear_delegate(NULL, host_uname, NULL, NULL, NULL, NULL,
+                                  attr_options);
 
         if (crm_ipc_send(crmd_channel, cmd, 0, 0, NULL) > 0) {
             start_mainloop();
@@ -1001,7 +1036,8 @@ main(int argc, char **argv)
         crmd_replies_needed = 0;
         for (rIter = data_set.resources; rIter; rIter = rIter->next) {
             resource_t *rsc = rIter->data;
-            cli_resource_delete(cib_conn, crmd_channel, host_uname, rsc, &data_set);
+            cli_resource_delete(crmd_channel, host_uname, rsc, NULL, NULL,
+                                &data_set);
         }
 
         start_mainloop();

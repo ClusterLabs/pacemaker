@@ -80,6 +80,10 @@ typedef struct remote_ra_data_s {
     enum remote_migration_status migrate_status;
 
     gboolean active;
+    gboolean is_maintenance; /* kind of complex to determine from crmd-context
+                              * so we have it signalled back with the
+                              * transition from pengine
+                              */
 } remote_ra_data_t;
 
 static int handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeout_ms);
@@ -226,14 +230,20 @@ remote_node_up(const char *node_name)
     free_xml(update);
 }
 
+enum down_opts {
+    DOWN_KEEP_LRM,
+    DOWN_ERASE_LRM
+};
+
 /*!
  * \internal
  * \brief Handle cluster communication related to pacemaker_remote node leaving
  *
  * \param[in] node_name  Name of lost node
+ * \param[in] opts       Whether to keep or erase LRM history
  */
 static void
-remote_node_down(const char *node_name)
+remote_node_down(const char *node_name, const enum down_opts opts)
 {
     xmlNode *update;
     int call_id = 0;
@@ -245,6 +255,14 @@ remote_node_down(const char *node_name)
 
     /* Purge node's transient attributes */
     erase_status_tag(node_name, XML_TAG_TRANSIENT_NODEATTRS, call_opt);
+
+    /* Normally, the LRM operation history should be kept until the node comes
+     * back up. However, after a successful fence, we want to clear it, so we
+     * don't think resources are still running on the node.
+     */
+    if (opts == DOWN_ERASE_LRM) {
+        erase_status_tag(node_name, XML_CIB_TAG_LRM, call_opt);
+    }
 
     /* Ensure node is in the remote peer cache with lost state */
     node = crm_remote_peer_get(node_name);
@@ -301,7 +319,7 @@ check_remote_node_state(remote_ra_cmd_t *cmd)
         if (ra_data) {
             if (ra_data->migrate_status != takeover_complete) {
                 /* Stop means down if we didn't successfully migrate elsewhere */
-                remote_node_down(cmd->rsc_id);
+                remote_node_down(cmd->rsc_id, DOWN_KEEP_LRM);
             } else if (AM_I_DC == FALSE) {
                 /* Only the connection host and DC track node state,
                  * so if the connection migrated elsewhere and we aren't DC,
@@ -471,6 +489,28 @@ monitor_timeout_cb(gpointer data)
     return FALSE;
 }
 
+static void
+synthesize_lrmd_success(lrm_state_t *lrm_state, const char *rsc_id, const char *op_type)
+{
+    lrmd_event_data_t op = { 0, };
+
+    if (lrm_state == NULL) {
+        /* if lrm_state not given assume local */
+        lrm_state = lrm_state_find(fsa_our_uname);
+    }
+    CRM_ASSERT(lrm_state != NULL);
+
+    op.type = lrmd_event_exec_complete;
+    op.rsc_id = rsc_id;
+    op.op_type = op_type;
+    op.rc = PCMK_OCF_OK;
+    op.op_status = PCMK_LRM_OP_DONE;
+    op.t_run = time(NULL);
+    op.t_rcchange = op.t_run;
+    op.call_id = generate_callid();
+    process_lrm_event(lrm_state, &op, NULL);
+}
+
 void
 remote_lrm_op_callback(lrmd_event_data_t * op)
 {
@@ -522,9 +562,18 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
         (ra_data->cur_cmd == NULL) &&
         (ra_data->active == TRUE)) {
 
-        crm_err("Unexpected disconnect on remote-node %s", lrm_state->node_name);
-        ra_data->recurring_cmds = fail_all_monitor_cmds(ra_data->recurring_cmds);
-        ra_data->cmds = fail_all_monitor_cmds(ra_data->cmds);
+        if (!remote_ra_is_in_maintenance(lrm_state)) {
+            crm_err("Unexpected disconnect on remote-node %s", lrm_state->node_name);
+            ra_data->recurring_cmds = fail_all_monitor_cmds(ra_data->recurring_cmds);
+            ra_data->cmds = fail_all_monitor_cmds(ra_data->cmds);
+        } else {
+            crm_notice("Disconnect on unmanaged remote-node %s", lrm_state->node_name);
+            /* Do roughly what a 'stop' on the remote-resource would do */
+            handle_remote_ra_stop(lrm_state, NULL);
+            remote_node_down(lrm_state->node_name, DOWN_KEEP_LRM);
+            /* now fake the reply of a successful 'stop' */
+            synthesize_lrmd_success(NULL, lrm_state->node_name, "stop");
+        }
         return;
     }
 
@@ -637,8 +686,6 @@ handle_remote_ra_stop(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd)
 
     ra_data->active = FALSE;
     lrm_state_disconnect(lrm_state);
-    cmd->rc = PCMK_OCF_OK;
-    cmd->op_status = PCMK_LRM_OP_DONE;
 
     if (ra_data->cmds) {
         g_list_free_full(ra_data->cmds, free_cmd);
@@ -650,7 +697,12 @@ handle_remote_ra_stop(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd)
     ra_data->recurring_cmds = NULL;
     ra_data->cur_cmd = NULL;
 
-    report_remote_ra_result(cmd);
+    if (cmd) {
+        cmd->rc = PCMK_OCF_OK;
+        cmd->op_status = PCMK_LRM_OP_DONE;
+
+        report_remote_ra_result(cmd);
+    }
 }
 
 static int
@@ -827,7 +879,7 @@ remote_ra_get_rsc_info(lrm_state_t * lrm_state, const char *rsc_id)
 
         info->id = strdup(rsc_id);
         info->type = strdup(REMOTE_LRMD_RA);
-        info->class = strdup("ocf");
+        info->class = strdup(PCMK_RESOURCE_CLASS_OCF);
         info->provider = strdup("pacemaker");
     }
 
@@ -1072,3 +1124,131 @@ remote_ra_fail(const char *node_name)
     }
 }
 
+/* A guest node fencing implied by host fencing looks like:
+ *
+ *  <pseudo_event id="103" operation="stonith" operation_key="stonith-lxc1-off"
+ *                on_node="lxc1" on_node_uuid="lxc1">
+ *     <attributes CRM_meta_master_lxc_ms="10" CRM_meta_on_node="lxc1"
+ *                 CRM_meta_on_node_uuid="lxc1" CRM_meta_stonith_action="off"
+ *                 crm_feature_set="3.0.12"/>
+ *     <downed>
+ *       <node id="lxc1"/>
+ *     </downed>
+ *  </pseudo_event>
+ */
+#define XPATH_PSEUDO_FENCE "//" XML_GRAPH_TAG_PSEUDO_EVENT \
+    "[@" XML_LRM_ATTR_TASK "='stonith']/" XML_GRAPH_TAG_DOWNED \
+    "/" XML_CIB_TAG_NODE
+
+/*!
+ * \internal
+ * \brief Check a pseudo-action for Pacemaker Remote node side effects
+ *
+ * \param[in] xml  XML of pseudo-action to check
+ */
+void
+remote_ra_process_pseudo(xmlNode *xml)
+{
+    xmlXPathObjectPtr search = xpath_search(xml, XPATH_PSEUDO_FENCE);
+
+    if (numXpathResults(search) == 1) {
+        xmlNode *result = getXpathResult(search, 0);
+
+        /* Normally, we handle the necessary side effects of a guest node stop
+         * action when reporting the remote agent's result. However, if the stop
+         * is implied due to fencing, it will be a fencing pseudo-event, and
+         * there won't be a result to report. Handle that case here.
+         *
+         * This will result in a duplicate call to remote_node_down() if the
+         * guest stop was real instead of implied, but that shouldn't hurt.
+         *
+         * There is still one corner case that isn't handled: if a guest node
+         * isn't running any resources when its host is fenced, it will appear
+         * to be cleanly stopped, so there will be no pseudo-fence, and our
+         * peer cache state will be incorrect unless and until the guest is
+         * recovered.
+         */
+        if (result) {
+            const char *remote = ID(result);
+
+            if (remote) {
+                remote_node_down(remote, DOWN_ERASE_LRM);
+            }
+        }
+    }
+    freeXpathObject(search);
+}
+
+static void
+remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
+{
+    remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
+    xmlNode *update, *state;
+    int call_opt, call_id = 0;
+    crm_node_t *node;
+
+    call_opt = crmd_cib_smart_opt();
+    node = crm_remote_peer_get(lrm_state->node_name);
+    CRM_CHECK(node != NULL, return);
+    update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
+    state = create_node_state_update(node, node_update_none, update,
+                                     __FUNCTION__);
+    crm_xml_add(state, XML_NODE_IS_MAINTENANCE, maintenance?"1":"0");
+    fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, call_id, NULL);
+    if (call_id < 0) {
+        crm_perror(LOG_WARNING, "%s CIB node state update failed", lrm_state->node_name);
+    } else {
+        /* TODO: still not 100% sure that async update will succeed ... */
+        ra_data->is_maintenance = maintenance;
+    }
+    free_xml(update);
+}
+
+#define XPATH_PSEUDO_MAINTENANCE "//" XML_GRAPH_TAG_PSEUDO_EVENT \
+    "[@" XML_LRM_ATTR_TASK "='" CRM_OP_MAINTENANCE_NODES "']/" \
+    XML_GRAPH_TAG_MAINTENANCE
+
+/*!
+ * \internal
+ * \brief Check a pseudo-action holding updates for maintenance state
+ *
+ * \param[in] xml  XML of pseudo-action to check
+ */
+
+void
+remote_ra_process_maintenance_nodes(xmlNode *xml)
+{
+    xmlXPathObjectPtr search = xpath_search(xml, XPATH_PSEUDO_MAINTENANCE);
+
+    if (numXpathResults(search) == 1) {
+        xmlNode *node;
+        int cnt = 0, cnt_remote = 0;
+
+        for (node =
+                first_named_child(getXpathResult(search, 0), XML_CIB_TAG_NODE);
+            node; node = __xml_next(node)) {
+            lrm_state_t *lrm_state = lrm_state_find(ID(node));
+
+            cnt++;
+            if (lrm_state && lrm_state->remote_ra_data &&
+                ((remote_ra_data_t *) lrm_state->remote_ra_data)->active) {
+                cnt_remote++;
+                remote_ra_maintenance(lrm_state,
+                                        crm_atoi(crm_element_value(node,
+                                            XML_NODE_IS_MAINTENANCE), "0"));
+
+            }
+        }
+        crm_trace("Action holds %d nodes (%d remotes found) "
+                    "adjusting maintenance-mode", cnt, cnt_remote);
+    }
+    freeXpathObject(search);
+}
+
+gboolean
+remote_ra_is_in_maintenance(lrm_state_t * lrm_state)
+{
+    remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
+
+    return ra_data->is_maintenance;
+}

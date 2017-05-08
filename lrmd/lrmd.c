@@ -28,6 +28,9 @@
 #include <crm/common/ipc.h>
 #include <crm/common/ipcs.h>
 #include <crm/msg_xml.h>
+#ifdef ENABLE_VERSIONED_ATTRS
+#include <crm/pengine/rules.h>
+#endif
 
 #include <lrmd_private.h>
 
@@ -38,6 +41,10 @@
 #define EXIT_REASON_MAX_LEN 128
 
 GHashTable *rsc_list = NULL;
+#ifdef ENABLE_VERSIONED_ATTRS
+regex_t *version_format_regex = NULL;
+GHashTable *ra_version_hash = NULL;
+#endif
 
 typedef struct lrmd_cmd_s {
     int timeout;
@@ -87,6 +94,7 @@ typedef struct lrmd_cmd_s {
     int last_pid;
 
     GHashTable *params;
+    xmlNode *versioned_attrs;
 } lrmd_cmd_t;
 
 static void cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc);
@@ -135,8 +143,9 @@ static const char *
 normalize_action_name(lrmd_rsc_t * rsc, const char *action)
 {
     if (safe_str_eq(action, "monitor") &&
-        (safe_str_eq(rsc->class, "lsb") ||
-         safe_str_eq(rsc->class, "service") || safe_str_eq(rsc->class, "systemd"))) {
+        (safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_LSB) ||
+         safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_SERVICE)
+         || safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_SYSTEMD))) {
         return "status";
     }
     return action;
@@ -159,6 +168,99 @@ build_rsc_from_xml(xmlNode * msg)
     rsc->work = mainloop_add_trigger(G_PRIORITY_HIGH, lrmd_rsc_dispatch, rsc);
     return rsc;
 }
+
+static void
+dup_attr(gpointer key, gpointer value, gpointer user_data)
+{
+    g_hash_table_replace(user_data, strdup(key), strdup(value));
+}
+
+#ifdef ENABLE_VERSIONED_ATTRS
+static gboolean
+valid_version_format(const char *version)
+{
+    if (version == NULL) {
+        return FALSE;
+    }
+
+    if (version_format_regex == NULL) {
+        const char *regex_string = "^[[:digit:]]+([.][[:digit:]]+)*$";
+        version_format_regex = calloc(1, sizeof(regex_t));
+        regcomp(version_format_regex, regex_string, REG_EXTENDED);
+    }
+
+    return regexec(version_format_regex, version, 0, NULL, 0) == 0;
+}
+
+static const char*
+get_ra_version(const char *class, const char *provider, const char *type, gboolean update_hash)
+{
+    int len = 0;
+    char *key = NULL;
+    static const char *default_version = "0.1";
+    const char *version = NULL;
+
+    CRM_CHECK(type != NULL, return default_version);
+    CRM_CHECK(class != NULL, return default_version);
+
+    if (!provider) {
+        provider = "heartbeat";
+    }
+    
+    len = strlen(class) + strlen(provider) + strlen(type) + 3;
+    key = calloc(len, sizeof(char));
+
+    if (!key) {
+        return default_version;
+    }
+    
+    if (!ra_version_hash) {
+        ra_version_hash = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+    }
+
+    snprintf(key, len, "%s:%s:%s", class, provider, type);
+
+    version = g_hash_table_lookup(ra_version_hash, key);
+
+    if (!version || update_hash) {
+        char *metadata = NULL;
+        lrmd_t *lrmd = lrmd_api_new();
+
+        lrmd->cmds->get_metadata(lrmd, class, provider, type, &metadata, 0);
+        lrmd_api_delete(lrmd);
+
+        if (metadata) {
+            xmlNode *metadata_xml = string2xml(metadata);
+            xmlNode *version_xml = get_xpath_object("//resource-agent/@version", metadata_xml, LOG_TRACE);
+
+            if (version_xml) {
+                version = crm_element_value(version_xml, XML_ATTR_VERSION);
+
+                if (valid_version_format(version)) {
+                    crm_info("Resource agent version for %s:%s:%s is %s", class, provider, type, version);
+                    version = strdup(version);
+                    g_hash_table_replace(ra_version_hash, strdup(key), (gpointer) version);
+                } else {
+                    crm_notice("Resource agent version for %s:%s:%s has unrecognized format: %s", class, provider, type, version);
+                    version = default_version;
+                }
+            } else {
+                crm_trace("Resource agent version for %s:%s:%s does not specified", class, provider, type);
+                version = default_version;
+            }
+
+            free_xml(metadata_xml);
+            free(metadata);
+        } else {
+            version = default_version;
+        }
+    }
+
+    free(key);
+
+    return version;
+}
+#endif
 
 static lrmd_cmd_t *
 create_lrmd_cmd(xmlNode * msg, crm_client_t * client, lrmd_rsc_t *rsc)
@@ -185,6 +287,25 @@ create_lrmd_cmd(xmlNode * msg, crm_client_t * client, lrmd_rsc_t *rsc)
     cmd->rsc_id = crm_element_value_copy(rsc_xml, F_LRMD_RSC_ID);
 
     cmd->params = xml2list(rsc_xml);
+
+#ifdef ENABLE_VERSIONED_ATTRS
+    cmd->versioned_attrs = first_named_child(rsc_xml, XML_TAG_VER_ATTRS);
+
+    if (cmd->versioned_attrs) {
+        const char *ra_version = get_ra_version(rsc->class, rsc->provider, rsc->type, safe_str_eq(cmd->action, "start"));
+        GHashTable *node_hash = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+        GHashTable *hash = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+
+        cmd->versioned_attrs = copy_xml(cmd->versioned_attrs);
+        g_hash_table_insert(node_hash, strdup("#ra-version"), strdup(ra_version));
+        unpack_instance_attributes(NULL, cmd->versioned_attrs, XML_TAG_ATTR_SETS, node_hash, hash, NULL, FALSE, NULL);
+        g_hash_table_foreach(hash, dup_attr, cmd->params);
+
+        g_hash_table_destroy(node_hash);
+        g_hash_table_destroy(hash);
+    }
+#endif
+
     cmd->isolation_wrapper = g_hash_table_lookup(cmd->params, "CRM_meta_isolation_wrapper");
 
     if (cmd->isolation_wrapper) {
@@ -217,6 +338,11 @@ free_lrmd_cmd(lrmd_cmd_t * cmd)
     if (cmd->params) {
         g_hash_table_destroy(cmd->params);
     }
+#ifdef ENABLE_VERSIONED_ATTRS
+    if (cmd->versioned_attrs) {
+        free_xml(cmd->versioned_attrs);
+    }
+#endif
     free(cmd->origin);
     free(cmd->action);
     free(cmd->real_action);
@@ -320,7 +446,7 @@ merge_dup:
     cmd->userdata_str = NULL;
     dup->call_id = cmd->call_id;
 
-    if (safe_str_eq(rsc->class, "stonith")) {
+    if (safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH)) {
         /* if we are waiting for the next interval, kick it off now */
         if (dup_pending == TRUE) {
             g_source_remove(cmd->stonith_recurring_id);
@@ -534,7 +660,13 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
             hash2smartfield((gpointer) key, (gpointer) value, args);
         }
     }
-
+#ifdef ENABLE_VERSIONED_ATTRS
+    
+    if (cmd->versioned_attrs) {
+        add_node_copy(notify, cmd->versioned_attrs);
+    }
+    
+#endif
     if (cmd->client_id && (cmd->call_opts & lrmd_opt_notify_orig_only)) {
         crm_client_t *client = crm_client_get_by_id(cmd->client_id);
 
@@ -735,16 +867,16 @@ nagios2uniform_rc(const char *action, int rc)
 static int
 get_uniform_rc(const char *standard, const char *action, int rc)
 {
-    if (safe_str_eq(standard, "ocf")) {
+    if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_OCF)) {
         return ocf2uniform_rc(rc);
-    } else if (safe_str_eq(standard, "stonith")) {
+    } else if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_STONITH)) {
         return stonith2uniform_rc(action, rc);
-    } else if (safe_str_eq(standard, "systemd")) {
+    } else if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_SYSTEMD)) {
         return rc;
-    } else if (safe_str_eq(standard, "upstart")) {
+    } else if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_UPSTART)) {
         return rc;
 #if SUPPORT_NAGIOS
-    } else if (safe_str_eq(standard, "nagios")) {
+    } else if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_NAGIOS)) {
         return nagios2uniform_rc(action, rc);
 #endif
     } else {
@@ -757,7 +889,7 @@ action_get_uniform_rc(svc_action_t * action)
 {
     lrmd_cmd_t *cmd = action->cb_data;
 #if SUPPORT_HEARTBEAT
-    if (safe_str_eq(action->standard, "heartbeat")) {
+    if (safe_str_eq(action->standard, PCMK_RESOURCE_CLASS_HB)) {
         return hb2uniform_rc(cmd->action, action->rc, action->stdout_data);
     }
 #endif
@@ -872,13 +1004,13 @@ action_complete(svc_action_t * action)
     cmd->lrmd_op_status = action->status;
     rsc = cmd->rsc_id ? g_hash_table_lookup(rsc_list, cmd->rsc_id) : NULL;
 
-    if(rsc && safe_str_eq(rsc->class, "service")) {
+    if (rsc && safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_SERVICE)) {
         rclass = resources_find_service_class(rsc->class);
     } else if(rsc) {
         rclass = rsc->class;
     }
 
-    if (safe_str_eq(rclass, "systemd")) {
+    if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_SYSTEMD)) {
         if(cmd->exec_rc == PCMK_OCF_OK && safe_str_eq(cmd->action, "start")) {
             /* systemd I curse thee!
              *
@@ -923,7 +1055,7 @@ action_complete(svc_action_t * action)
     }
 
 #if SUPPORT_NAGIOS
-    if (rsc && safe_str_eq(rsc->class, "nagios")) {
+    if (rsc && safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_NAGIOS)) {
         if (safe_str_eq(cmd->action, "monitor") &&
             cmd->interval == 0 && cmd->exec_rc == PCMK_OCF_OK) {
             /* Successfully executed --version for the nagios plugin */
@@ -1004,7 +1136,7 @@ stonith_action_complete(lrmd_cmd_t * cmd, int rc)
     int recurring = cmd->interval;
     lrmd_rsc_t *rsc = NULL;
 
-    cmd->exec_rc = get_uniform_rc("stonith", cmd->action, rc);
+    cmd->exec_rc = get_uniform_rc(PCMK_RESOURCE_CLASS_STONITH, cmd->action, rc);
 
     rsc = g_hash_table_lookup(rsc_list, cmd->rsc_id);
 
@@ -1065,7 +1197,7 @@ stonith_connection_failed(void)
 
     g_hash_table_iter_init(&iter, rsc_list);
     while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & rsc)) {
-        if (safe_str_eq(rsc->class, "stonith")) {
+        if (safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH)) {
             if (rsc->active) {
                 cmd_list = g_list_append(cmd_list, rsc->active);
             }
@@ -1100,7 +1232,8 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     stonith_t *stonith_api = get_stonith_connection();
 
     if (!stonith_api) {
-        cmd->exec_rc = get_uniform_rc("stonith", cmd->action, -ENOTCONN);
+        cmd->exec_rc = get_uniform_rc(PCMK_RESOURCE_CLASS_STONITH, cmd->action,
+                                      -ENOTCONN);
         cmd->lrmd_op_status = PCMK_LRM_OP_ERROR;
         cmd_finalize(cmd, rsc);
         return -EUNATCH;
@@ -1169,12 +1302,6 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     return rc;
 }
 
-static void
-dup_attr(gpointer key, gpointer value, gpointer user_data)
-{
-    g_hash_table_replace(user_data, strdup(key), strdup(value));
-}
-
 static int
 lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 {
@@ -1189,7 +1316,9 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 
 #if SUPPORT_NAGIOS
     /* Recurring operations are cancelled anyway for a stop operation */
-    if (safe_str_eq(rsc->class, "nagios") && safe_str_eq(cmd->action, "stop")) {
+    if (safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_NAGIOS)
+        && safe_str_eq(cmd->action, "stop")) {
+
         cmd->exec_rc = PCMK_OCF_OK;
         goto exec_done;
     }
@@ -1207,7 +1336,7 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     if (cmd->isolation_wrapper) {
         g_hash_table_remove(params_copy, "CRM_meta_isolation_wrapper");
         action = resources_action_create(rsc->rsc_id,
-                                         "ocf",
+                                         PCMK_RESOURCE_CLASS_OCF,
                                          LRMD_ISOLATION_PROVIDER,
                                          cmd->isolation_wrapper,
                                          cmd->action, /*action will be normalized in wrapper*/
@@ -1304,7 +1433,7 @@ lrmd_rsc_execute(lrmd_rsc_t * rsc)
 
     log_execute(cmd);
 
-    if (safe_str_eq(rsc->class, "stonith")) {
+    if (safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH)) {
         lrmd_rsc_execute_stonith(rsc, cmd);
     } else {
         lrmd_rsc_execute_service_lib(rsc, cmd);
@@ -1324,7 +1453,7 @@ free_rsc(gpointer data)
 {
     GListPtr gIter = NULL;
     lrmd_rsc_t *rsc = data;
-    int is_stonith = safe_str_eq(rsc->class, "stonith");
+    int is_stonith = safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH);
 
     gIter = rsc->pending_ops;
     while (gIter != NULL) {
@@ -1347,9 +1476,10 @@ free_rsc(gpointer data)
 
         if (is_stonith) {
             cmd->lrmd_op_status = PCMK_LRM_OP_CANCELLED;
-            /* if a stonith cmd is in-flight, mark just mark it as cancelled,
+            /* If a stonith command is in-flight, just mark it as cancelled;
              * it is not safe to finalize/free the cmd until the stonith api
-             * says it has either completed or timed out.*/ 
+             * says it has either completed or timed out.
+             */
             if (rsc->active != cmd) {
                 cmd_finalize(cmd, NULL);
             }
@@ -1566,7 +1696,7 @@ cancel_op(const char *rsc_id, const char *action, int interval)
         }
     }
 
-    if (safe_str_eq(rsc->class, "stonith")) {
+    if (safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH)) {
         /* The service library does not handle stonith operations.
          * We have to handle recurring stonith operations ourselves. */
         for (gIter = rsc->recurring_ops; gIter != NULL; gIter = gIter->next) {

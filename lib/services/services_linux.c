@@ -36,9 +36,6 @@
 #  include "crm/common/cib_secrets.h"
 #endif
 
-/* ops currently active (in-flight) */
-extern GList *inflight_ops;
-
 static inline void
 set_fd_opts(int fd, int opts)
 {
@@ -180,7 +177,8 @@ set_ocf_env_with_prefix(gpointer key, gpointer value, gpointer user_data)
 static void
 add_OCF_env_vars(svc_action_t * op)
 {
-    if (!op->standard || strcasecmp("ocf", op->standard) != 0) {
+    if ((op->standard == NULL)
+        || (strcasecmp(PCMK_RESOURCE_CLASS_OCF, op->standard) != 0)) {
         return;
     }
 
@@ -248,9 +246,7 @@ operation_finalize(svc_action_t * op)
 
     op->pid = 0;
 
-    inflight_ops = g_list_remove(inflight_ops, op);
-
-    handle_blocked_ops();
+    services_untrack_op(op);
 
     if (!recurring && op->synchronous == FALSE) {
         /*
@@ -343,13 +339,15 @@ services_handle_exec_error(svc_action_t * op, int error)
     int rc_not_installed, rc_insufficient_priv, rc_exec_error;
 
     /* Mimic the return codes for each standard as that's what we'll convert back from in get_uniform_rc() */
-    if (safe_str_eq(op->standard, "lsb") && safe_str_eq(op->action, "status")) {
+    if (safe_str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB)
+        && safe_str_eq(op->action, "status")) {
+
         rc_not_installed = PCMK_LSB_STATUS_NOT_INSTALLED;
         rc_insufficient_priv = PCMK_LSB_STATUS_INSUFFICIENT_PRIV;
         rc_exec_error = PCMK_LSB_STATUS_UNKNOWN;
 
 #if SUPPORT_NAGIOS
-    } else if (safe_str_eq(op->standard, "nagios")) {
+    } else if (safe_str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS)) {
         rc_not_installed = NAGIOS_NOT_INSTALLED;
         rc_insufficient_priv = NAGIOS_INSUFFICIENT_PRIV;
         rc_exec_error = PCMK_OCF_EXEC_ERROR;
@@ -517,15 +515,23 @@ action_synced_wait(svc_action_t * op, sigset_t *mask)
                 if (1) {
                     /* Clear out the sigchld pipe. */
                     char ch;
-                    while (read(sfd, &ch, 1) == 1);
+                    while (read(sfd, &ch, 1) == 1) /*omit*/;
 #endif
                     wait_rc = waitpid(op->pid, &status, WNOHANG);
 
-                    if (wait_rc < 0){
-                        crm_perror(LOG_ERR, "waitpid() for %d failed", op->pid);
-
-                    } else if (wait_rc > 0) {
+                    if (wait_rc > 0) {
                         break;
+
+                    } else if (wait_rc < 0){
+                        if (errno == ECHILD) {
+                                /* Here, don't dare to kill and bail out... */
+                                break;
+
+                        } else {
+                                /* ...otherwise pretend process still runs. */
+                                wait_rc = 0;
+                        }
+                        crm_perror(LOG_ERR, "waitpid() for %d failed", op->pid);
                     }
                 }
             }
@@ -547,9 +553,8 @@ action_synced_wait(svc_action_t * op, sigset_t *mask)
 
     crm_trace("Child done: %d", op->pid);
     if (wait_rc <= 0) {
-        int killrc = kill(op->pid, SIGKILL);
-
         op->rc = PCMK_OCF_UNKNOWN_ERROR;
+
         if (op->timeout > 0 && timeout <= 0) {
             op->status = PCMK_LRM_OP_TIMEOUT;
             crm_warn("%s:%d - timed out after %dms", op->id, op->pid, op->timeout);
@@ -558,16 +563,15 @@ action_synced_wait(svc_action_t * op, sigset_t *mask)
             op->status = PCMK_LRM_OP_ERROR;
         }
 
-        if (killrc && errno != ESRCH) {
-            crm_err("kill(%d, KILL) failed: %d", op->pid, errno);
+        /* If only child hasn't been successfully waited for, yet.
+           This is to limit killing wrong target a bit more. */
+        if (wait_rc == 0 && waitpid(op->pid, &status, WNOHANG) == 0) {
+            if (kill(op->pid, SIGKILL)) {
+                crm_err("kill(%d, KILL) failed: %d", op->pid, errno);
+            }
+            /* Safe to skip WNOHANG here as we sent non-ignorable signal. */
+            while (waitpid(op->pid, &status, 0) == (pid_t) -1 && errno == EINTR) /*omit*/;
         }
-        /*
-         * From sigprocmask(2):
-         * It is not possible to block SIGKILL or SIGSTOP.  Attempts to do so are silently ignored.
-         *
-         * This makes it safe to skip WNOHANG here
-         */
-        waitpid(op->pid, &status, 0);
 
     } else if (WIFEXITED(status)) {
         op->status = PCMK_LRM_OP_DONE;
@@ -600,7 +604,7 @@ action_synced_wait(svc_action_t * op, sigset_t *mask)
 /* For an asynchronous 'op', returns FALSE if 'op' should be free'd by the caller */
 /* For a synchronous 'op', returns FALSE if 'op' fails */
 gboolean
-services_os_action_execute(svc_action_t * op, gboolean synchronous)
+services_os_action_execute(svc_action_t * op)
 {
     int stdout_fd[2];
     int stderr_fd[2];
@@ -635,7 +639,7 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
         int rc = errno;
         crm_warn("Cannot execute '%s': %s (%d)", op->opaque->exec, pcmk_strerror(rc), rc);
         services_handle_exec_error(op, rc);
-        if (!synchronous) {
+        if (!op->synchronous) {
             return operation_finalize(op);
         }
         return FALSE;
@@ -647,7 +651,7 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
         crm_err("pipe(stdout_fd) failed. '%s': %s (%d)", op->opaque->exec, pcmk_strerror(rc), rc);
 
         services_handle_exec_error(op, rc);
-        if (!synchronous) {
+        if (!op->synchronous) {
             return operation_finalize(op);
         }
         return FALSE;
@@ -662,13 +666,13 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
         crm_err("pipe(stderr_fd) failed. '%s': %s (%d)", op->opaque->exec, pcmk_strerror(rc), rc);
 
         services_handle_exec_error(op, rc);
-        if (!synchronous) {
+        if (!op->synchronous) {
             return operation_finalize(op);
         }
         return FALSE;
     }
 
-    if (synchronous) {
+    if (op->synchronous) {
 #ifdef HAVE_SYS_SIGNALFD_H
         sigemptyset(&mask);
         sigaddset(&mask, SIGCHLD);
@@ -711,7 +715,7 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
 
                 crm_err("Could not execute '%s': %s (%d)", op->opaque->exec, pcmk_strerror(rc), rc);
                 services_handle_exec_error(op, rc);
-                if (!synchronous) {
+                if (!op->synchronous) {
                     return operation_finalize(op);
                 }
 
@@ -734,7 +738,7 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
                 close(stderr_fd[1]);
             }
 
-            if (synchronous) {
+            if (op->synchronous) {
                 sigchld_cleanup();
             }
 
@@ -752,7 +756,7 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
     op->opaque->stderr_fd = stderr_fd[0];
     set_fd_opts(op->opaque->stderr_fd, O_NONBLOCK);
 
-    if (synchronous) {
+    if (op->synchronous) {
         action_synced_wait(op, pmask);
         sigchld_cleanup();
     } else {

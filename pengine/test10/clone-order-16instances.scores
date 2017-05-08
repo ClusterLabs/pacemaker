@@ -801,7 +801,7 @@ native_color: clvmd:9 allocation score on virt-033.cluster-qe.lab.eng.brq.redhat
 native_color: clvmd:9 allocation score on virt-034.cluster-qe.lab.eng.brq.redhat.com: -INFINITY
 native_color: dlm:0 allocation score on virt-009.cluster-qe.lab.eng.brq.redhat.com: 0
 native_color: dlm:0 allocation score on virt-010.cluster-qe.lab.eng.brq.redhat.com: 1
-native_color: dlm:0 allocation score on virt-012.cluster-qe.lab.eng.brq.redhat.com: -INFINITY
+native_color: dlm:0 allocation score on virt-012.cluster-qe.lab.eng.brq.redhat.com: 0
 native_color: dlm:0 allocation score on virt-013.cluster-qe.lab.eng.brq.redhat.com: 0
 native_color: dlm:0 allocation score on virt-014.cluster-qe.lab.eng.brq.redhat.com: 0
 native_color: dlm:0 allocation score on virt-015.cluster-qe.lab.eng.brq.redhat.com: 0
@@ -816,7 +816,7 @@ native_color: dlm:0 allocation score on virt-032.cluster-qe.lab.eng.brq.redhat.c
 native_color: dlm:0 allocation score on virt-033.cluster-qe.lab.eng.brq.redhat.com: 0
 native_color: dlm:0 allocation score on virt-034.cluster-qe.lab.eng.brq.redhat.com: 0
 native_color: dlm:1 allocation score on virt-009.cluster-qe.lab.eng.brq.redhat.com: 0
-native_color: dlm:1 allocation score on virt-010.cluster-qe.lab.eng.brq.redhat.com: 0
+native_color: dlm:1 allocation score on virt-010.cluster-qe.lab.eng.brq.redhat.com: -INFINITY
 native_color: dlm:1 allocation score on virt-012.cluster-qe.lab.eng.brq.redhat.com: 1
 native_color: dlm:1 allocation score on virt-013.cluster-qe.lab.eng.brq.redhat.com: 0
 native_color: dlm:1 allocation score on virt-014.cluster-qe.lab.eng.brq.redhat.com: 0

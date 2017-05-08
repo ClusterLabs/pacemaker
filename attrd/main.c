@@ -35,7 +35,6 @@
 #include <crm/common/ipcs.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster/election.h>
-#include <crm/common/mainloop.h>
 
 #include <crm/common/xml.h>
 
@@ -43,23 +42,9 @@
 #include <internal.h>
 
 cib_t *the_cib = NULL;
-GMainLoop *mloop = NULL;
-bool shutting_down = FALSE;
 crm_cluster_t *attrd_cluster = NULL;
 election_t *writer = NULL;
 int attrd_error = pcmk_ok;
-
-static void
-attrd_shutdown(int nsig) {
-    shutting_down = TRUE;
-    crm_info("Shutting down");
-
-    if (mloop != NULL && g_main_is_running(mloop)) {
-        g_main_quit(mloop);
-    } else {
-        crm_exit(pcmk_ok);
-    }
-}
 
 static void
 attrd_cpg_dispatch(cpg_handle_t handle,
@@ -94,7 +79,7 @@ attrd_cpg_dispatch(cpg_handle_t handle,
 static void
 attrd_cpg_destroy(gpointer unused)
 {
-    if (shutting_down) {
+    if (attrd_shutting_down()) {
         crm_info("Corosync disconnection complete");
 
     } else {
@@ -120,7 +105,7 @@ attrd_cib_destroy_cb(gpointer user_data)
 
     conn->cmds->signoff(conn);  /* Ensure IPC is cleaned up */
 
-    if (shutting_down) {
+    if (attrd_shutting_down()) {
         crm_info("Connection disconnection complete");
 
     } else {
@@ -183,27 +168,6 @@ attrd_cib_connect(int max_retry)
 }
 
 static int32_t
-attrd_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
-{
-    crm_trace("Connection %p", c);
-    if (shutting_down) {
-        crm_info("Ignoring new client [%d] during shutdown", crm_ipcs_client_pid(c));
-        return -EPERM;
-    }
-
-    if (crm_client_new(c, uid, gid) == NULL) {
-        return -EIO;
-    }
-    return 0;
-}
-
-static void
-attrd_ipc_created(qb_ipcs_connection_t * c)
-{
-    crm_trace("Connection %p", c);
-}
-
-static int32_t
 attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 {
     uint32_t id = 0;
@@ -235,6 +199,10 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         attrd_send_ack(client, id, flags);
         attrd_client_peer_remove(client->name, xml);
 
+    } else if (safe_str_eq(op, ATTRD_OP_CLEAR_FAILURE)) {
+        attrd_send_ack(client, id, flags);
+        attrd_client_clear_failure(xml);
+
     } else if (safe_str_eq(op, ATTRD_OP_UPDATE)) {
         attrd_send_ack(client, id, flags);
         attrd_client_update(xml);
@@ -264,35 +232,6 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     return 0;
 }
 
-/* Error code means? */
-static int32_t
-attrd_ipc_closed(qb_ipcs_connection_t * c)
-{
-    crm_client_t *client = crm_client_get(c);
-    if (client == NULL) {
-        return 0;
-    }
-
-    crm_trace("Connection %p", c);
-    crm_client_destroy(client);
-    return 0;
-}
-
-static void
-attrd_ipc_destroy(qb_ipcs_connection_t * c)
-{
-    crm_trace("Connection %p", c);
-    attrd_ipc_closed(c);
-}
-
-struct qb_ipcs_service_handlers ipc_callbacks = {
-    .connection_accept = attrd_ipc_accept,
-    .connection_created = attrd_ipc_created,
-    .msg_process = attrd_ipc_dispatch,
-    .connection_closed = attrd_ipc_closed,
-    .connection_destroyed = attrd_ipc_destroy
-};
-
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {
     /* Top-level Options */
@@ -312,7 +251,7 @@ main(int argc, char **argv)
     int argerr = 0;
     qb_ipcs_service_t *ipcs = NULL;
 
-    mloop = g_main_new(FALSE);
+    attrd_init_mainloop();
     crm_log_preinit(NULL, argc, argv);
     crm_set_options(NULL, "[options]", long_options,
                     "Daemon for aggregating and atomically storing node attribute updates into the CIB");
@@ -365,7 +304,7 @@ main(int argc, char **argv)
     crm_info("Cluster connection active");
 
     writer = election_init(T_ATTRD, attrd_cluster->uname, 120000, attrd_election_cb);
-    attrd_ipc_server_init(&ipcs, &ipc_callbacks);
+    attrd_init_ipc(&ipcs, attrd_ipc_dispatch);
     crm_info("Accepting attribute updates");
 
     the_cib = attrd_cib_connect(10);
@@ -375,7 +314,7 @@ main(int argc, char **argv)
     }
 
     crm_info("CIB connection active");
-    g_main_run(mloop);
+    attrd_run_mainloop();
 
   done:
     crm_info("Shutting down attribute manager");

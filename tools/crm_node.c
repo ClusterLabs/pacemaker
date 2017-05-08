@@ -105,11 +105,8 @@ cib_remove_node(uint32_t id, const char *name)
     crm_xml_add(node, XML_ATTR_UNAME, name);
     crm_xml_add(node_state, XML_ATTR_UNAME, name);
     if(id) {
-        char buffer[64];
-        if(snprintf(buffer, 63, "%u", id) > 0) {
-            crm_xml_add(node, XML_ATTR_ID, buffer);
-            crm_xml_add(node_state, XML_ATTR_ID, buffer);
-        }
+        crm_xml_set_id(node, "%u", id);
+        crm_xml_add(node_state, XML_ATTR_ID, ID(node));
     }
 
     cib = cib_new();
@@ -200,10 +197,7 @@ int tools_remove_node_cache(const char *node, const char *target)
         cmd = create_request(CRM_OP_RM_NODE_CACHE,
                              NULL, NULL, target, crm_system_name, admin_uuid);
         if (n) {
-            char buffer[64];
-            if(snprintf(buffer, 63, "%u", n) > 0) {
-                crm_xml_add(cmd, XML_ATTR_ID, buffer);
-            }
+            crm_xml_set_id(cmd, "%u", n);
         }
         crm_xml_add(cmd, XML_ATTR_UNAME, name);
     }
@@ -951,7 +945,11 @@ main(int argc, char **argv)
     }
 
     if (command == 'n') {
-        fprintf(stdout, "%s\n", get_local_node_name());
+        const char *name = getenv("OCF_RESKEY_" CRM_META "_" XML_LRM_ATTR_TARGET);
+        if(name == NULL) {
+            name = get_local_node_name();
+        }
+        fprintf(stdout, "%s\n", name);
         crm_exit(pcmk_ok);
 
     } else if (command == 'N') {

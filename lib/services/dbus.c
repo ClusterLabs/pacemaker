@@ -13,6 +13,8 @@
 
 #define BUS_PROPERTY_IFACE "org.freedesktop.DBus.Properties"
 
+static GList *conn_dispatches = NULL;
+
 struct db_getall_data {
     char *name;
     char *target;
@@ -445,17 +447,31 @@ pcmk_dbus_get_property(DBusConnection *connection, const char *target,
 }
 
 static void
-pcmk_dbus_connection_dispatch(DBusConnection *connection,
+pcmk_dbus_connection_dispatch_status(DBusConnection *connection,
                               DBusDispatchStatus new_status, void *data)
 {
-    crm_trace("status %d for %p", new_status, data);
+    crm_trace("New status %d for connection %p", new_status, connection);
     if (new_status == DBUS_DISPATCH_DATA_REMAINS){
-        dbus_connection_dispatch(connection);
+        conn_dispatches = g_list_prepend(conn_dispatches, connection);
+    }
+}
+
+static void
+pcmk_dbus_connections_dispatch()
+{
+    GList *gIter = NULL;
+
+    for (gIter = conn_dispatches; gIter != NULL; gIter = gIter->next) {
+        DBusConnection *connection = gIter->data;
 
         while (dbus_connection_get_dispatch_status(connection) == DBUS_DISPATCH_DATA_REMAINS) {
+            crm_trace("Dispatching for connection %p", connection);
             dbus_connection_dispatch(connection);
         }
     }
+
+    g_list_free(conn_dispatches);
+    conn_dispatches = NULL;
 }
 
 /* Copied from dbus-watch.c */
@@ -487,10 +503,7 @@ pcmk_dbus_watch_dispatch(gpointer userdata)
     mainloop_io_t *client = dbus_watch_get_data(watch);
 
     crm_trace("Dispatching client %p: %s", client, dbus_watch_flags_to_string(flags));
-    if (enabled && is_set(flags, DBUS_WATCH_READABLE)) {
-        oom = !dbus_watch_handle(watch, flags);
-
-    } else if (enabled && is_set(flags, DBUS_WATCH_READABLE)) {
+    if (enabled && (flags & (DBUS_WATCH_READABLE|DBUS_WATCH_WRITABLE))) {
         oom = !dbus_watch_handle(watch, flags);
 
     } else if(enabled) {
@@ -506,7 +519,11 @@ pcmk_dbus_watch_dispatch(gpointer userdata)
     if(oom) {
         crm_err("DBus encountered OOM while attempting to dispatch %p (%s)",
                 client, dbus_watch_flags_to_string(flags));
+
+    } else {
+        pcmk_dbus_connections_dispatch();
     }
+
     return 0;
 }
 
@@ -616,6 +633,6 @@ pcmk_dbus_connection_setup_with_select(DBusConnection *c)
     dbus_connection_set_watch_functions(c, pcmk_dbus_watch_add,
                                         pcmk_dbus_watch_remove,
                                         pcmk_dbus_watch_toggle, NULL, NULL);
-    dbus_connection_set_dispatch_status_function(c, pcmk_dbus_connection_dispatch, NULL, NULL);
-    pcmk_dbus_connection_dispatch(c, dbus_connection_get_dispatch_status(c), NULL);
+    dbus_connection_set_dispatch_status_function(c, pcmk_dbus_connection_dispatch_status, NULL, NULL);
+    pcmk_dbus_connection_dispatch_status(c, dbus_connection_get_dispatch_status(c), NULL);
 }

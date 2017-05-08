@@ -1824,7 +1824,7 @@ class Reattach(CTSTest):
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
         return [
-            r"resources were active at shutdown",
+            r"resource( was|s were) active at shutdown",
         ]
 
     def is_applicable(self):
@@ -2785,7 +2785,7 @@ class RemoteDriver(CTSTest):
             self.fail("Failed to start pacemaker_remote on node %s" % node)
             return
 
-        # convert node to baremetal node now that it has shutdow the cluster stack
+        # Convert node to baremetal now that it has shutdown the cluster stack
         pats = [ ]
         watch = self.create_watch(pats, 120)
         watch.setwatch()
@@ -2992,7 +2992,7 @@ class RemoteDriver(CTSTest):
 
     def setup_env(self, node):
 
-        self.remote_node = "remote_%s" % (node)
+        self.remote_node = "remote-%s" % (node)
 
         # we are assuming if all nodes have a key, that it is
         # the right key... If any node doesn't have a remote
@@ -3032,11 +3032,12 @@ class RemoteDriver(CTSTest):
 
         ret = self.startall(None)
         if not ret:
-            return self.failure("Setup failed, start all nodes failed.")
+            return self.failure("setup failed: could not start all nodes")
 
         self.setup_env(node)
         self.start_metal(node)
         self.add_dummy_rsc(node)
+        return True
 
     def __call__(self, node):
         return self.failure("This base class is not meant to be called directly.")
@@ -3056,7 +3057,9 @@ class RemoteBasic(RemoteDriver):
     def __call__(self, node):
         '''Perform the 'RemoteBaremetal' test. '''
 
-        self.start_new_test(node)
+        if not self.start_new_test(node):
+            return self.failure(self.fail_string)
+
         self.test_attributes(node)
         self.cleanup_metal(node)
 
@@ -3074,7 +3077,9 @@ class RemoteStonithd(RemoteDriver):
     def __call__(self, node):
         '''Perform the 'RemoteStonithd' test. '''
 
-        self.start_new_test(node)
+        if not self.start_new_test(node):
+            return self.failure(self.fail_string)
+
         self.fail_connection(node)
         self.cleanup_metal(node)
 
@@ -3097,9 +3102,9 @@ class RemoteStonithd(RemoteDriver):
     def errorstoignore(self):
         ignore_pats = [
             r"Unexpected disconnect on remote-node",
-            r"crmd.*:\s+error.*: Operation remote_.*_monitor",
-            r"crmd.*:\s+error.*: Result of monitor operation for remote_.*",
-            r"pengine.*:\s+Recover remote_.*\s*\(.*\)",
+            r"crmd.*:\s+error.*: Operation remote-.*_monitor",
+            r"crmd.*:\s+error.*: Result of monitor operation for remote-.*",
+            r"pengine.*:\s+Recover remote-.*\s*\(.*\)",
             r"Calculated [Tt]ransition .* /var/lib/pacemaker/pengine/pe-error",
             r"error.*: Resource .*ocf::.* is active on 2 nodes attempting recovery",
         ]
@@ -3115,7 +3120,9 @@ class RemoteMigrate(RemoteDriver):
     def __call__(self, node):
         '''Perform the 'RemoteMigrate' test. '''
 
-        self.start_new_test(node)
+        if not self.start_new_test(node):
+            return self.failure(self.fail_string)
+
         self.migrate_connection(node)
         self.cleanup_metal(node)
 
@@ -3134,7 +3141,8 @@ class RemoteRscFailure(RemoteDriver):
     def __call__(self, node):
         '''Perform the 'RemoteRscFailure' test. '''
 
-        self.start_new_test(node)
+        if not self.start_new_test(node):
+            return self.failure(self.fail_string)
 
         # This is an important step. We are migrating the connection
         # before failing the resource. This verifies that the migration

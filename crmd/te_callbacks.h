@@ -33,4 +33,6 @@ extern void te_update_diff(const char *event, xmlNode * msg);
 
 extern void tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data);
 
+void update_stonith_max_attempts(const char* value);
+
 #endif

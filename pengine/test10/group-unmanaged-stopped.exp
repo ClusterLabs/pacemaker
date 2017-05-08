@@ -26,7 +26,7 @@
     <action_set>
       <rsc_op id="8" operation="stop" operation_key="r192.168.122.115_stop_0" on_node="pcmk-1" on_node_uuid="1">
         <primitive id="r192.168.122.115" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_timeout="90000" cidr_netmask="32"  ip="192.168.122.115"/>
+        <attributes CRM_meta_on_node="pcmk-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="90000" cidr_netmask="32"  ip="192.168.122.115"/>
       </rsc_op>
     </action_set>
     <inputs>

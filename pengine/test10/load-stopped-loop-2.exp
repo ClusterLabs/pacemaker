@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="59" operation="migrate_from" operation_key="xu-test12_migrate_from_0" on_node="xfc3" on_node_uuid="16843011">
         <primitive id="xu-test12" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="xfc2" CRM_meta_migrate_target="xfc3" CRM_meta_name="migrate_from" CRM_meta_timeout="120000"  name="test12" xmfile="/shared/domu/test12.cfg"/>
+        <attributes CRM_meta_migrate_source="xfc2" CRM_meta_migrate_target="xfc3" CRM_meta_name="migrate_from" CRM_meta_on_node="xfc3" CRM_meta_on_node_uuid="16843011" CRM_meta_timeout="120000"  name="test12" xmfile="/shared/domu/test12.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="58" operation="migrate_to" operation_key="xu-test12_migrate_to_0" on_node="xfc2" on_node_uuid="16843010">
         <primitive id="xu-test12" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="xfc2" CRM_meta_migrate_target="xfc3" CRM_meta_name="migrate_to" CRM_meta_record_pending="true" CRM_meta_timeout="120000"  name="test12" xmfile="/shared/domu/test12.cfg"/>
+        <attributes CRM_meta_migrate_source="xfc2" CRM_meta_migrate_target="xfc3" CRM_meta_name="migrate_to" CRM_meta_on_node="xfc2" CRM_meta_on_node_uuid="16843010" CRM_meta_record_pending="true" CRM_meta_timeout="120000"  name="test12" xmfile="/shared/domu/test12.cfg"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -25,7 +25,7 @@
     <action_set>
       <rsc_op id="57" operation="monitor" operation_key="xu-test12_monitor_10000" on_node="xfc3" on_node_uuid="16843011">
         <primitive id="xu-test12" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="30000"  name="test12" xmfile="/shared/domu/test12.cfg"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="xfc3" CRM_meta_on_node_uuid="16843011" CRM_meta_timeout="30000"  name="test12" xmfile="/shared/domu/test12.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -56,7 +56,7 @@
     <action_set>
       <rsc_op id="55" operation="stop" operation_key="xu-test12_stop_0" on_node="xfc2" on_node_uuid="16843010">
         <primitive id="xu-test12" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="300000"  name="test12" xmfile="/shared/domu/test12.cfg"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="xfc2" CRM_meta_on_node_uuid="16843010" CRM_meta_timeout="300000"  name="test12" xmfile="/shared/domu/test12.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -69,7 +69,7 @@
     <action_set>
       <rsc_op id="64" operation="migrate_from" operation_key="xu-test2_migrate_from_0" on_node="xfc1" on_node_uuid="16843009">
         <primitive id="xu-test2" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="xfc3" CRM_meta_migrate_target="xfc1" CRM_meta_name="migrate_from" CRM_meta_timeout="120000"  name="test2" xmfile="/shared/domu/test2.cfg"/>
+        <attributes CRM_meta_migrate_source="xfc3" CRM_meta_migrate_target="xfc1" CRM_meta_name="migrate_from" CRM_meta_on_node="xfc1" CRM_meta_on_node_uuid="16843009" CRM_meta_timeout="120000"  name="test2" xmfile="/shared/domu/test2.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -82,7 +82,7 @@
     <action_set>
       <rsc_op id="63" operation="migrate_to" operation_key="xu-test2_migrate_to_0" on_node="xfc3" on_node_uuid="16843011">
         <primitive id="xu-test2" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="xfc3" CRM_meta_migrate_target="xfc1" CRM_meta_name="migrate_to" CRM_meta_record_pending="true" CRM_meta_timeout="120000"  name="test2" xmfile="/shared/domu/test2.cfg"/>
+        <attributes CRM_meta_migrate_source="xfc3" CRM_meta_migrate_target="xfc1" CRM_meta_name="migrate_to" CRM_meta_on_node="xfc3" CRM_meta_on_node_uuid="16843011" CRM_meta_record_pending="true" CRM_meta_timeout="120000"  name="test2" xmfile="/shared/domu/test2.cfg"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -91,7 +91,7 @@
     <action_set>
       <rsc_op id="62" operation="monitor" operation_key="xu-test2_monitor_10000" on_node="xfc1" on_node_uuid="16843009">
         <primitive id="xu-test2" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="30000"  name="test2" xmfile="/shared/domu/test2.cfg"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="xfc1" CRM_meta_on_node_uuid="16843009" CRM_meta_timeout="30000"  name="test2" xmfile="/shared/domu/test2.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -122,7 +122,7 @@
     <action_set>
       <rsc_op id="60" operation="stop" operation_key="xu-test2_stop_0" on_node="xfc3" on_node_uuid="16843011">
         <primitive id="xu-test2" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="300000"  name="test2" xmfile="/shared/domu/test2.cfg"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="xfc3" CRM_meta_on_node_uuid="16843011" CRM_meta_timeout="300000"  name="test2" xmfile="/shared/domu/test2.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -135,7 +135,7 @@
     <action_set>
       <rsc_op id="69" operation="migrate_from" operation_key="xu-test3_migrate_from_0" on_node="xfc0" on_node_uuid="16843008">
         <primitive id="xu-test3" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="xfc1" CRM_meta_migrate_target="xfc0" CRM_meta_name="migrate_from" CRM_meta_timeout="120000"  name="test3" xmfile="/shared/domu/test3.cfg"/>
+        <attributes CRM_meta_migrate_source="xfc1" CRM_meta_migrate_target="xfc0" CRM_meta_name="migrate_from" CRM_meta_on_node="xfc0" CRM_meta_on_node_uuid="16843008" CRM_meta_timeout="120000"  name="test3" xmfile="/shared/domu/test3.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -148,7 +148,7 @@
     <action_set>
       <rsc_op id="68" operation="migrate_to" operation_key="xu-test3_migrate_to_0" on_node="xfc1" on_node_uuid="16843009">
         <primitive id="xu-test3" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="xfc1" CRM_meta_migrate_target="xfc0" CRM_meta_name="migrate_to" CRM_meta_record_pending="true" CRM_meta_timeout="120000"  name="test3" xmfile="/shared/domu/test3.cfg"/>
+        <attributes CRM_meta_migrate_source="xfc1" CRM_meta_migrate_target="xfc0" CRM_meta_name="migrate_to" CRM_meta_on_node="xfc1" CRM_meta_on_node_uuid="16843009" CRM_meta_record_pending="true" CRM_meta_timeout="120000"  name="test3" xmfile="/shared/domu/test3.cfg"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -157,7 +157,7 @@
     <action_set>
       <rsc_op id="67" operation="monitor" operation_key="xu-test3_monitor_10000" on_node="xfc0" on_node_uuid="16843008">
         <primitive id="xu-test3" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="30000"  name="test3" xmfile="/shared/domu/test3.cfg"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="xfc0" CRM_meta_on_node_uuid="16843008" CRM_meta_timeout="30000"  name="test3" xmfile="/shared/domu/test3.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -188,7 +188,7 @@
     <action_set>
       <rsc_op id="65" operation="stop" operation_key="xu-test3_stop_0" on_node="xfc1" on_node_uuid="16843009">
         <primitive id="xu-test3" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="300000"  name="test3" xmfile="/shared/domu/test3.cfg"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="xfc1" CRM_meta_on_node_uuid="16843009" CRM_meta_timeout="300000"  name="test3" xmfile="/shared/domu/test3.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -201,7 +201,7 @@
     <action_set>
       <rsc_op id="74" operation="migrate_from" operation_key="xu-test4_migrate_from_0" on_node="xfc2" on_node_uuid="16843010">
         <primitive id="xu-test4" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="xfc0" CRM_meta_migrate_target="xfc2" CRM_meta_name="migrate_from" CRM_meta_timeout="120000"  name="test4" xmfile="/shared/domu/test4.cfg"/>
+        <attributes CRM_meta_migrate_source="xfc0" CRM_meta_migrate_target="xfc2" CRM_meta_name="migrate_from" CRM_meta_on_node="xfc2" CRM_meta_on_node_uuid="16843010" CRM_meta_timeout="120000"  name="test4" xmfile="/shared/domu/test4.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -214,7 +214,7 @@
     <action_set>
       <rsc_op id="73" operation="migrate_to" operation_key="xu-test4_migrate_to_0" on_node="xfc0" on_node_uuid="16843008">
         <primitive id="xu-test4" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="xfc0" CRM_meta_migrate_target="xfc2" CRM_meta_name="migrate_to" CRM_meta_record_pending="true" CRM_meta_timeout="120000"  name="test4" xmfile="/shared/domu/test4.cfg"/>
+        <attributes CRM_meta_migrate_source="xfc0" CRM_meta_migrate_target="xfc2" CRM_meta_name="migrate_to" CRM_meta_on_node="xfc0" CRM_meta_on_node_uuid="16843008" CRM_meta_record_pending="true" CRM_meta_timeout="120000"  name="test4" xmfile="/shared/domu/test4.cfg"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -223,7 +223,7 @@
     <action_set>
       <rsc_op id="72" operation="monitor" operation_key="xu-test4_monitor_10000" on_node="xfc2" on_node_uuid="16843010">
         <primitive id="xu-test4" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="30000"  name="test4" xmfile="/shared/domu/test4.cfg"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="xfc2" CRM_meta_on_node_uuid="16843010" CRM_meta_timeout="30000"  name="test4" xmfile="/shared/domu/test4.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -254,7 +254,7 @@
     <action_set>
       <rsc_op id="70" operation="stop" operation_key="xu-test4_stop_0" on_node="xfc0" on_node_uuid="16843008">
         <primitive id="xu-test4" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="300000"  name="test4" xmfile="/shared/domu/test4.cfg"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="xfc0" CRM_meta_on_node_uuid="16843008" CRM_meta_timeout="300000"  name="test4" xmfile="/shared/domu/test4.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -267,7 +267,7 @@
     <action_set>
       <rsc_op id="79" operation="migrate_from" operation_key="xu-test5_migrate_from_0" on_node="xfc3" on_node_uuid="16843011">
         <primitive id="xu-test5" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="xfc2" CRM_meta_migrate_target="xfc3" CRM_meta_name="migrate_from" CRM_meta_timeout="120000"  name="test5" xmfile="/shared/domu/test5.cfg"/>
+        <attributes CRM_meta_migrate_source="xfc2" CRM_meta_migrate_target="xfc3" CRM_meta_name="migrate_from" CRM_meta_on_node="xfc3" CRM_meta_on_node_uuid="16843011" CRM_meta_timeout="120000"  name="test5" xmfile="/shared/domu/test5.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -280,7 +280,7 @@
     <action_set>
       <rsc_op id="78" operation="migrate_to" operation_key="xu-test5_migrate_to_0" on_node="xfc2" on_node_uuid="16843010">
         <primitive id="xu-test5" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="xfc2" CRM_meta_migrate_target="xfc3" CRM_meta_name="migrate_to" CRM_meta_record_pending="true" CRM_meta_timeout="120000"  name="test5" xmfile="/shared/domu/test5.cfg"/>
+        <attributes CRM_meta_migrate_source="xfc2" CRM_meta_migrate_target="xfc3" CRM_meta_name="migrate_to" CRM_meta_on_node="xfc2" CRM_meta_on_node_uuid="16843010" CRM_meta_record_pending="true" CRM_meta_timeout="120000"  name="test5" xmfile="/shared/domu/test5.cfg"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -289,7 +289,7 @@
     <action_set>
       <rsc_op id="77" operation="monitor" operation_key="xu-test5_monitor_10000" on_node="xfc3" on_node_uuid="16843011">
         <primitive id="xu-test5" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="30000"  name="test5" xmfile="/shared/domu/test5.cfg"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="xfc3" CRM_meta_on_node_uuid="16843011" CRM_meta_timeout="30000"  name="test5" xmfile="/shared/domu/test5.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -320,7 +320,7 @@
     <action_set>
       <rsc_op id="75" operation="stop" operation_key="xu-test5_stop_0" on_node="xfc2" on_node_uuid="16843010">
         <primitive id="xu-test5" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="300000"  name="test5" xmfile="/shared/domu/test5.cfg"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="xfc2" CRM_meta_on_node_uuid="16843010" CRM_meta_timeout="300000"  name="test5" xmfile="/shared/domu/test5.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -333,7 +333,7 @@
     <action_set>
       <rsc_op id="84" operation="migrate_from" operation_key="xu-test6_migrate_from_0" on_node="xfc1" on_node_uuid="16843009">
         <primitive id="xu-test6" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="xfc3" CRM_meta_migrate_target="xfc1" CRM_meta_name="migrate_from" CRM_meta_timeout="120000"  name="test6" xmfile="/shared/domu/test6.cfg"/>
+        <attributes CRM_meta_migrate_source="xfc3" CRM_meta_migrate_target="xfc1" CRM_meta_name="migrate_from" CRM_meta_on_node="xfc1" CRM_meta_on_node_uuid="16843009" CRM_meta_timeout="120000"  name="test6" xmfile="/shared/domu/test6.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -346,7 +346,7 @@
     <action_set>
       <rsc_op id="83" operation="migrate_to" operation_key="xu-test6_migrate_to_0" on_node="xfc3" on_node_uuid="16843011">
         <primitive id="xu-test6" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="xfc3" CRM_meta_migrate_target="xfc1" CRM_meta_name="migrate_to" CRM_meta_record_pending="true" CRM_meta_timeout="120000"  name="test6" xmfile="/shared/domu/test6.cfg"/>
+        <attributes CRM_meta_migrate_source="xfc3" CRM_meta_migrate_target="xfc1" CRM_meta_name="migrate_to" CRM_meta_on_node="xfc3" CRM_meta_on_node_uuid="16843011" CRM_meta_record_pending="true" CRM_meta_timeout="120000"  name="test6" xmfile="/shared/domu/test6.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -359,7 +359,7 @@
     <action_set>
       <rsc_op id="82" operation="monitor" operation_key="xu-test6_monitor_10000" on_node="xfc1" on_node_uuid="16843009">
         <primitive id="xu-test6" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="30000"  name="test6" xmfile="/shared/domu/test6.cfg"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="xfc1" CRM_meta_on_node_uuid="16843009" CRM_meta_timeout="30000"  name="test6" xmfile="/shared/domu/test6.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -390,7 +390,7 @@
     <action_set>
       <rsc_op id="80" operation="stop" operation_key="xu-test6_stop_0" on_node="xfc3" on_node_uuid="16843011">
         <primitive id="xu-test6" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="300000"  name="test6" xmfile="/shared/domu/test6.cfg"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="xfc3" CRM_meta_on_node_uuid="16843011" CRM_meta_timeout="300000"  name="test6" xmfile="/shared/domu/test6.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -403,7 +403,7 @@
     <action_set>
       <rsc_op id="89" operation="migrate_from" operation_key="xu-test7_migrate_from_0" on_node="xfc0" on_node_uuid="16843008">
         <primitive id="xu-test7" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="xfc1" CRM_meta_migrate_target="xfc0" CRM_meta_name="migrate_from" CRM_meta_timeout="120000"  name="test7" xmfile="/shared/domu/test7.cfg"/>
+        <attributes CRM_meta_migrate_source="xfc1" CRM_meta_migrate_target="xfc0" CRM_meta_name="migrate_from" CRM_meta_on_node="xfc0" CRM_meta_on_node_uuid="16843008" CRM_meta_timeout="120000"  name="test7" xmfile="/shared/domu/test7.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -416,7 +416,7 @@
     <action_set>
       <rsc_op id="88" operation="migrate_to" operation_key="xu-test7_migrate_to_0" on_node="xfc1" on_node_uuid="16843009">
         <primitive id="xu-test7" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="xfc1" CRM_meta_migrate_target="xfc0" CRM_meta_name="migrate_to" CRM_meta_record_pending="true" CRM_meta_timeout="120000"  name="test7" xmfile="/shared/domu/test7.cfg"/>
+        <attributes CRM_meta_migrate_source="xfc1" CRM_meta_migrate_target="xfc0" CRM_meta_name="migrate_to" CRM_meta_on_node="xfc1" CRM_meta_on_node_uuid="16843009" CRM_meta_record_pending="true" CRM_meta_timeout="120000"  name="test7" xmfile="/shared/domu/test7.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -429,7 +429,7 @@
     <action_set>
       <rsc_op id="87" operation="monitor" operation_key="xu-test7_monitor_10000" on_node="xfc0" on_node_uuid="16843008">
         <primitive id="xu-test7" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="30000"  name="test7" xmfile="/shared/domu/test7.cfg"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="xfc0" CRM_meta_on_node_uuid="16843008" CRM_meta_timeout="30000"  name="test7" xmfile="/shared/domu/test7.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -460,7 +460,7 @@
     <action_set>
       <rsc_op id="85" operation="stop" operation_key="xu-test7_stop_0" on_node="xfc1" on_node_uuid="16843009">
         <primitive id="xu-test7" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="300000"  name="test7" xmfile="/shared/domu/test7.cfg"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="xfc1" CRM_meta_on_node_uuid="16843009" CRM_meta_timeout="300000"  name="test7" xmfile="/shared/domu/test7.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -473,7 +473,7 @@
     <action_set>
       <rsc_op id="94" operation="migrate_from" operation_key="xu-test9_migrate_from_0" on_node="xfc2" on_node_uuid="16843010">
         <primitive id="xu-test9" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="xfc0" CRM_meta_migrate_target="xfc2" CRM_meta_name="migrate_from" CRM_meta_timeout="120000"  name="test9" xmfile="/shared/domu/test9.cfg"/>
+        <attributes CRM_meta_migrate_source="xfc0" CRM_meta_migrate_target="xfc2" CRM_meta_name="migrate_from" CRM_meta_on_node="xfc2" CRM_meta_on_node_uuid="16843010" CRM_meta_timeout="120000"  name="test9" xmfile="/shared/domu/test9.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -486,7 +486,7 @@
     <action_set>
       <rsc_op id="93" operation="migrate_to" operation_key="xu-test9_migrate_to_0" on_node="xfc0" on_node_uuid="16843008">
         <primitive id="xu-test9" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="xfc0" CRM_meta_migrate_target="xfc2" CRM_meta_name="migrate_to" CRM_meta_record_pending="true" CRM_meta_timeout="120000"  name="test9" xmfile="/shared/domu/test9.cfg"/>
+        <attributes CRM_meta_migrate_source="xfc0" CRM_meta_migrate_target="xfc2" CRM_meta_name="migrate_to" CRM_meta_on_node="xfc0" CRM_meta_on_node_uuid="16843008" CRM_meta_record_pending="true" CRM_meta_timeout="120000"  name="test9" xmfile="/shared/domu/test9.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -499,7 +499,7 @@
     <action_set>
       <rsc_op id="92" operation="monitor" operation_key="xu-test9_monitor_10000" on_node="xfc2" on_node_uuid="16843010">
         <primitive id="xu-test9" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="30000"  name="test9" xmfile="/shared/domu/test9.cfg"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="xfc2" CRM_meta_on_node_uuid="16843010" CRM_meta_timeout="30000"  name="test9" xmfile="/shared/domu/test9.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -530,7 +530,7 @@
     <action_set>
       <rsc_op id="90" operation="stop" operation_key="xu-test9_stop_0" on_node="xfc0" on_node_uuid="16843008">
         <primitive id="xu-test9" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="300000"  name="test9" xmfile="/shared/domu/test9.cfg"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="xfc0" CRM_meta_on_node_uuid="16843008" CRM_meta_timeout="300000"  name="test9" xmfile="/shared/domu/test9.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -543,7 +543,7 @@
     <action_set>
       <rsc_op id="96" operation="monitor" operation_key="xu-test13_monitor_10000" on_node="xfc3" on_node_uuid="16843011">
         <primitive id="xu-test13" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="30000"  name="test13" xmfile="/shared/domu/test13.cfg"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="xfc3" CRM_meta_on_node_uuid="16843011" CRM_meta_timeout="30000"  name="test13" xmfile="/shared/domu/test13.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -556,7 +556,7 @@
     <action_set>
       <rsc_op id="95" operation="start" operation_key="xu-test13_start_0" on_node="xfc3" on_node_uuid="16843011">
         <primitive id="xu-test13" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_name="start" CRM_meta_timeout="60000"  name="test13" xmfile="/shared/domu/test13.cfg"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="xfc3" CRM_meta_on_node_uuid="16843011" CRM_meta_timeout="60000"  name="test13" xmfile="/shared/domu/test13.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>

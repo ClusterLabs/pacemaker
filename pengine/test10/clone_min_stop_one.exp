@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="12" operation="stop" operation_key="FAKECLONE_stop_0" internal_operation_key="FAKECLONE:1_stop_0" on_node="c7auto2" on_node_uuid="2">
         <primitive id="FAKECLONE" long-id="FAKECLONE:1" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="c7auto2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>

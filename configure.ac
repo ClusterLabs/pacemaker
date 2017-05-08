@@ -92,9 +92,8 @@ AC_PROG_CC_STDC
 gl_EARLY
 gl_INIT
 
-AC_LIBTOOL_DLOPEN               dnl Enable dlopen support...
-AC_LIBLTDL_CONVENIENCE          dnl make libltdl a convenience lib
-AC_PROG_LIBTOOL
+LT_INIT([dlopen])
+LTDL_INIT([convenience])
 
 AC_PROG_YACC
 AM_PROG_LEX
@@ -179,10 +178,6 @@ AC_ARG_ENABLE([quiet],
 [  --enable-quiet
      Supress make output unless there is an error
      [default=no]])
-
-AC_ARG_ENABLE([bundled-ltdl],
-[  --enable-bundled-ltdl  Configure, build and install the standalone ltdl library bundled with ${PACKAGE} [default=no]])
-LTDL_LIBS=""
 
 AC_ARG_ENABLE([no-stack],
     [  --enable-no-stack
@@ -828,6 +823,16 @@ if test "$ac_cv_header_libxslt_xslt_h" != "yes"; then
    AC_MSG_ERROR(The libxslt developement headers were not found)
 fi
 
+AC_CACHE_CHECK(whether __progname and __progname_full are available,
+                pf_cv_var_progname,
+                AC_TRY_LINK([extern char *__progname, *__progname_full;],
+                    [__progname = "foo"; __progname_full = "foo bar";],
+                    pf_cv_var_progname="yes", pf_cv_var_progname="no"))
+
+if test "$pf_cv_var_progname" = "yes"; then
+    AC_DEFINE(HAVE___PROGNAME,1,[ ])
+fi
+
 dnl ========================================================================
 dnl Structures
 dnl ========================================================================
@@ -845,38 +850,6 @@ dnl ========================================================================
 AC_CHECK_FUNCS(g_log_set_default_handler)
 AC_CHECK_FUNCS(getopt, AC_DEFINE(HAVE_DECL_GETOPT,  1, [Have getopt function]))
 AC_CHECK_FUNCS(nanosleep, AC_DEFINE(HAVE_DECL_NANOSLEEP,  1, [Have nanosleep function]))
-
-dnl ========================================================================
-dnl   ltdl
-dnl ========================================================================
-
-AC_CHECK_LIB(ltdl, lt_dlopen, [LTDL_foo=1])
-if test "x${enable_bundled_ltdl}" = "xyes"; then
-   if test $ac_cv_lib_ltdl_lt_dlopen = yes; then
-      AC_MSG_NOTICE([Disabling usage of installed ltdl])
-   fi
-   ac_cv_lib_ltdl_lt_dlopen=no
-fi
-
-LIBLTDL_DIR=""
-if test $ac_cv_lib_ltdl_lt_dlopen != yes ; then
-   AC_MSG_NOTICE([Installing local ltdl])
-   LIBLTDL_DIR=libltdl
-   ( cd $srcdir ; $TAR -xvf libltdl.tar )
-   if test "$?" -ne 0; then
-     AC_MSG_ERROR([$TAR of libltdl.tar in $srcdir failed])
-   fi
-   AC_CONFIG_SUBDIRS(libltdl)
-else
-   LIBS="$LIBS -lltdl"
-   AC_MSG_NOTICE([Using installed ltdl])
-   INCLTDL=""
-   LIBLTDL=""
-fi
-
-AC_SUBST(INCLTDL)
-AC_SUBST(LIBLTDL)
-AC_SUBST(LIBLTDL_DIR)
 
 dnl ========================================================================
 dnl   bzip2
@@ -1113,6 +1086,14 @@ CRM_STATE_DIR=${localstatedir}/run/crm
 AC_DEFINE_UNQUOTED(CRM_STATE_DIR,"$CRM_STATE_DIR", Where to keep state files and sockets)
 AC_SUBST(CRM_STATE_DIR)
 
+CRM_LOG_DIR="${localstatedir}/log/pacemaker"
+AC_DEFINE_UNQUOTED(CRM_LOG_DIR,"$CRM_LOG_DIR", Where Pacemaker can store log files)
+AC_SUBST(CRM_LOG_DIR)
+
+CRM_PACEMAKER_DIR=${localstatedir}/lib/pacemaker
+AC_DEFINE_UNQUOTED(CRM_PACEMAKER_DIR,"$CRM_PACEMAKER_DIR", Location to store directory produced by Pacemaker daemons)
+AC_SUBST(CRM_PACEMAKER_DIR)
+
 CRM_BLACKBOX_DIR=${localstatedir}/lib/pacemaker/blackbox
 AC_DEFINE_UNQUOTED(CRM_BLACKBOX_DIR,"$CRM_BLACKBOX_DIR", Where to keep blackbox dumps)
 AC_SUBST(CRM_BLACKBOX_DIR)
@@ -1170,6 +1151,7 @@ AC_SUBST(OCF_RA_DIR)
 
 RH_STONITH_DIR="$sbindir"
 AC_DEFINE_UNQUOTED(RH_STONITH_DIR,"$RH_STONITH_DIR", Location for Red Hat Stonith agents)
+AC_DEFINE_UNQUOTED(SBIN_DIR,"$sbindir", Location for system binaries)
 
 RH_STONITH_PREFIX="fence_"
 AC_DEFINE_UNQUOTED(RH_STONITH_PREFIX,"$RH_STONITH_PREFIX", Prefix for Red Hat Stonith agents)
@@ -1792,7 +1774,7 @@ if test "$GCC" != yes; then
 else
         CFLAGS="$CFLAGS -ggdb"
 
-dnl when we don't have diagnostic push / pull we can't explicitely disable
+dnl When we don't have diagnostic push / pull, we can't explicitly disable
 dnl checking for nonliteral formats in the places where they occur on purpose
 dnl thus we disable nonliteral format checking globally as we are aborting
 dnl on warnings. 
@@ -2164,8 +2146,6 @@ AC_MSG_RESULT([  System configuration     = ${sysconfdir}])
 if test $SUPPORT_PLUGIN = 1; then
 AC_MSG_RESULT([  Corosync Plugins         = ${LCRSODIR}])
 fi
-AC_MSG_RESULT([])
-AC_MSG_RESULT([  Use system LTDL          = ${ac_cv_lib_ltdl_lt_dlopen}])
 AC_MSG_RESULT([])
 AC_MSG_RESULT([  HA group name            = ${CRM_DAEMON_GROUP}])
 AC_MSG_RESULT([  HA user name             = ${CRM_DAEMON_USER}])

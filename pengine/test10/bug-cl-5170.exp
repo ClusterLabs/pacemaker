@@ -29,7 +29,7 @@
     <action_set>
       <rsc_op id="5" operation="stop" operation_key="ip_trf_stop_0" on_node="TCS-2" on_node_uuid="TCS-2">
         <primitive id="ip_trf" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_timeout="20000" broadcast="172.18.19.51"  iflabel="ha" ip="172.18.19.51" nic="bond0.3019"/>
+        <attributes CRM_meta_on_node="TCS-2" CRM_meta_on_node_uuid="TCS-2" CRM_meta_timeout="20000" broadcast="172.18.19.51"  iflabel="ha" ip="172.18.19.51" nic="bond0.3019"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -45,7 +45,7 @@
     <action_set>
       <rsc_op id="6" operation="stop" operation_key="ip_mgmt_stop_0" on_node="TCS-2" on_node_uuid="TCS-2">
         <primitive id="ip_mgmt" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_timeout="20000" broadcast="172.20.1.51"  iflabel="ha" ip="172.20.1.51" nic="bond0"/>
+        <attributes CRM_meta_on_node="TCS-2" CRM_meta_on_node_uuid="TCS-2" CRM_meta_timeout="20000" broadcast="172.20.1.51"  iflabel="ha" ip="172.20.1.51" nic="bond0"/>
       </rsc_op>
     </action_set>
     <inputs>

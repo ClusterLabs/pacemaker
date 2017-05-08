@@ -38,7 +38,6 @@ configure
 depcomp
 install-sh
 include/stamp-*
-libltdl.tar
 libtool
 libtool.m4
 ltdl.m4

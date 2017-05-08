@@ -55,6 +55,67 @@ typedef struct clone_variant_data_s {
 	CRM_ASSERT(rsc->variant == pe_clone || rsc->variant == pe_master); \
 	data = (clone_variant_data_t *)rsc->variant_opaque;
 
+#  elif VARIANT_CONTAINER
+
+typedef struct
+{
+        int offset;
+        node_t *node;
+        char *ipaddr;
+        resource_t *ip;
+        resource_t *child;
+        resource_t *docker;
+        resource_t *remote;
+
+} container_grouping_t;
+
+typedef struct
+{
+        char *source;
+        char *target;
+        char *options;
+        int flags;
+
+} container_mount_t;
+
+typedef struct
+{
+        char *source;
+        char *target;
+
+} container_port_t;
+
+typedef struct container_variant_data_s {
+        int masters;
+        int replicas;
+        int replicas_per_host;
+        char *prefix;
+        char *image;
+        const char *ip_last;
+        char *host_network;
+        char *host_netmask;
+        char *control_port;
+        char *docker_network;
+        char *ip_range_start;
+        char *docker_host_options;
+        char *docker_run_options;
+        char *docker_run_command;
+
+        resource_t *child;
+
+        GListPtr tuples;     /* container_grouping_t *       */
+        GListPtr ports;      /*        */
+        GListPtr mounts;     /*        */
+
+
+} container_variant_data_t;
+
+#    define get_container_variant_data(data, rsc)                       \
+	CRM_ASSERT(rsc != NULL);					\
+	CRM_ASSERT(rsc->variant == pe_container);                       \
+	CRM_ASSERT(rsc->variant_opaque != NULL);			\
+	data = (container_variant_data_t *)rsc->variant_opaque;		\
+
 #  elif VARIANT_GROUP
 
 typedef struct group_variant_data_s {

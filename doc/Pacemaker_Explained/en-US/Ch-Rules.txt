@@ -34,6 +34,12 @@ context in which the rule is being used.
 |Default
 |Description
 
+|id
+|
+|A unique name for the rule (required)
+ indexterm:[id,Constraint Rule]
+ indexterm:[Constraint,Rule,id]
+
 |role
 |+Started+
 |Limits the rule to apply only when the resource is in the specified
@@ -76,22 +82,22 @@ Expression objects are used to control a resource based on the
 attributes defined by a node or nodes.
 
 .Properties of an Expression
-[width="95%",cols="1m,1,5<a",options="header",align="center"]
+[width="95%",cols="2m,1,5<a",options="header",align="center"]
 |=========================================================
 
 |Field
 |Default
 |Description
 
-|value
+|id
 |
-|User-supplied value for comparison
- indexterm:[value,Constraint Expression]
- indexterm:[Constraint,Attribute Expression,value]
+|A unique name for the expression (required)
+ indexterm:[id,Constraint Expression]
+ indexterm:[Constraint,Attribute Expression,id]
 
 |attribute
 |
-|The node attribute to test
+|The node attribute to test (required)
  indexterm:[attribute,Constraint Expression]
  indexterm:[Constraint,Attribute Expression,attribute]
 
@@ -104,7 +110,7 @@ attributes defined by a node or nodes.
 
 |operation
 |
-|The comparison to perform. Allowed values:
+|The comparison to perform (required). Allowed values:
 
 * +lt:+ True if the value of the node's +attribute+ is less than +value+
 * +gt:+ True if the value of the node's +attribute+ is greater than +value+
@@ -116,6 +122,24 @@ attributes defined by a node or nodes.
 * +not_defined:+ True if the node does not have the named attribute
  indexterm:[operation,Constraint Expression]
  indexterm:[Constraint,Attribute Expression,operation]
+
+|value
+|
+|User-supplied value for comparison (required)
+ indexterm:[value,Constraint Expression]
+ indexterm:[Constraint,Attribute Expression,value]
+
+|value-source
+|+literal+
+|How the +value+ is derived '(since 1.1.17)'. Allowed values:
+
+* +literal+: +value+ is a literal string to compare against
+* +param+: +value+ is the name of a resource parameter to compare against (only
+  valid in location constraints)
+* +meta+: +value+ is the name of a resource meta-attribute to compare against
+  (only valid in location constraints)
+ indexterm:[value,Constraint Expression]
+ indexterm:[Constraint,Attribute Expression,value]
 
 |=========================================================
 
@@ -138,6 +162,16 @@ special, built-in node attributes for each node that can also be used.
  resource, and +container+ for Pacemaker Remote guest nodes (a legacy name
  unrelated to the now-common use of "container" for resource isolation).
  '(since 1.1.13)'
+
+////
+// put a pipe in front of first two lines
+ #ra-version
+ The installed version of the resource agent on the node, as defined
+ by the +version+ attribute of the +resource-agent+ tag in the agent's
+ metadata. Valid only within rules controlling resource options. This can be
+ useful during rolling upgrades of a backward-incompatible resource agent.
+ '(coming in 1.1.18)'
+////
 
 |=========================================================
 
@@ -329,7 +363,7 @@ value (hour) still matches!
 ====
 [source,XML]
 -------
-<rule id="rule4" boolean_op="or">
+<rule id="rule4" boolean-op="or">
    <date_expression id="date_expr4-1" operation="date_spec">
     <date_spec hours="9-16" days="1-5"/>
    </date_expression>
@@ -344,8 +378,8 @@ value (hour) still matches!
 ====
 [source,XML]
 -------
-<rule id="rule5" boolean_op="and">
-   <rule id="rule5-nested1" boolean_op="or">
+<rule id="rule5" boolean-op="and">
+   <rule id="rule5-nested1" boolean-op="or">
     <date_expression id="date_expr5-1" operation="date_spec">
      <date_spec hours="9-16"/>
     </date_expression>
@@ -364,7 +398,7 @@ value (hour) still matches!
 ====
 [source,XML]
 -------
-<rule id="rule6" boolean_op="and">
+<rule id="rule6" boolean-op="and">
    <date_expression id="date_expr6-1" operation="date_spec">
     <date_spec weekdays="1"/>
    </date_expression>
@@ -385,7 +419,7 @@ You may wish to write +end="2005-03-31T23:59:59"+ to avoid confusion.
 =====
 [source,XML]
 -------
-<rule id="rule7" boolean_op="and">
+<rule id="rule7" boolean-op="and">
    <date_expression id="date_expr7" operation="date_spec">
     <date_spec weekdays="5" monthdays="13" moon="4"/>
    </date_expression>

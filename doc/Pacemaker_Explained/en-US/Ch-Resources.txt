@@ -1,5 +1,6 @@
 = Cluster Resources =
 
+[[s-resource-primitive]]
 == What is a Cluster Resource? ==
 
 indexterm:[Resource]
@@ -401,33 +402,30 @@ to be moved (see <<s-migrating-resources>>)
 
 |remote-node
 |
-|The name of the remote-node this resource defines.  This both enables the
-resource as a remote-node and defines the unique name used to identify the
-remote-node. If no other parameters are set, this value will also be assumed as
-the hostname to connect to at the port specified by +remote-port+. +WARNING:+
-This value cannot overlap with any resource or node IDs. If not specified,
-this feature is disabled.
+|The name of the Pacemaker Remote guest node this resource is associated with,
+ if any. If specified, this both enables the resource as a guest node and
+ defines the unique name used to identify the guest node. The guest must be
+ configured to run the Pacemaker Remote daemon when it is started. +WARNING:+
+ This value cannot overlap with any resource or node IDs. '(since 1.1.9)'
 
 |remote-port
 |3121
-|Port to use for the guest connection to pacemaker_remote
+|If +remote-node+ is specified, the port on the guest used for its
+ Pacemaker Remote connection. The Pacemaker Remote daemon on the guest must be
+ configured to listen on this port. '(since 1.1.9)'
 
 |remote-addr
 |value of +remote-node+
-|The IP address or hostname to connect to if remote-node's name is not the
-hostname of the guest.
+|If +remote-node+ is specified, the IP address or hostname used to connect to
+ the guest via Pacemaker Remote. The Pacemaker Remote daemon on the guest
+ must be configured to accept connections on this address. '(since 1.1.9)'
 
-|+remote-connect-timeout+
+|remote-connect-timeout
 |60s
-|How long before a pending guest connection will time out.
+|If +remote-node+ is specified, how long before a pending guest connection will
+ time out. '(since 1.1.10)'
 
 |=========================================================
-
-[NOTE]
-====
-Support for remote nodes was added in pacemaker 1.1.10. If you are using an
-earlier version, options related to remote nodes will not be available.
-====
 
 As an example of setting resource options, if you performed the following
 commands on an LSB Email resource:
@@ -668,7 +666,7 @@ indexterm:[Action,Property,on-fail]
 |FALSE
 |If +true+, the intention to perform the operation is recorded so that
  GUIs and CLI tools can indicate that an operation is in progress.
- This is best set as an 'operation default' (see next section).
+ This is best set as an _operation default_ (see next section).
  Allowed values: +true+, +false+.
  indexterm:[enabled,Action Property]
  indexterm:[Action,Property,enabled]

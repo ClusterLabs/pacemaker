@@ -32,7 +32,8 @@ enum pe_obj_types {
     pe_native = 0,
     pe_group = 1,
     pe_clone = 2,
-    pe_master = 3
+    pe_master = 3,
+    pe_container = 4,
 };
 
 enum pe_obj_types get_resource_type(const char *name);
@@ -55,6 +56,11 @@ void get_meta_attributes(GHashTable * meta_hash, resource_t * rsc, node_t * node
                          pe_working_set_t * data_set);
 void get_rsc_attributes(GHashTable * meta_hash, resource_t * rsc, node_t * node,
                         pe_working_set_t * data_set);
+
+#ifdef ENABLE_VERSIONED_ATTRS
+void pe_get_versioned_attributes(xmlNode * meta_hash, resource_t * rsc, node_t * node,
+                                 pe_working_set_t * data_set);
+#endif
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;
 

@@ -28,8 +28,8 @@ native_color: rsc4:0 allocation score on node2: -INFINITY
 native_color: rsc4:1 allocation score on node1: -INFINITY
 native_color: rsc4:1 allocation score on node2: -INFINITY
 native_color: rsc5:0 allocation score on node1: 1
-native_color: rsc5:0 allocation score on node2: -INFINITY
-native_color: rsc5:1 allocation score on node1: 0
+native_color: rsc5:0 allocation score on node2: 0
+native_color: rsc5:1 allocation score on node1: -INFINITY
 native_color: rsc5:1 allocation score on node2: 1
 native_color: rsc_stonith allocation score on node1: 0
 native_color: rsc_stonith allocation score on node2: 0

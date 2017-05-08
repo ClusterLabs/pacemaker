@@ -210,6 +210,7 @@ client_start(gpointer user_data)
             client_exit(PCMK_OCF_UNKNOWN_ERROR);
         }
         wait_poke = 1;
+
     } else {
         lrmd_rsc_info_t *rsc_info = NULL;
 
@@ -244,156 +245,24 @@ client_start(gpointer user_data)
     return 0;
 }
 
-static int
-remote_proxy_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
-{
-    /* Async responses from cib and friends back to clients via pacemaker_remoted */
-    xmlNode *xml = NULL;
-    remote_proxy_t *proxy = userdata;
-    uint32_t flags;
-
-    xml = string2xml(buffer);
-    if (xml == NULL) {
-        crm_warn("Received a NULL msg from IPC service.");
-        return 1;
-    }
-
-    flags = crm_ipc_buffer_flags(proxy->ipc);
-    if (flags & crm_ipc_proxied_relay_response) {
-        crm_trace("Passing response back to %.8s on %s: %.200s - request id: %d", proxy->session_id, proxy->node_name, buffer, proxy->last_request_id);
-        remote_proxy_relay_response(lrmd_conn, proxy->session_id, xml, proxy->last_request_id);
-        proxy->last_request_id = 0;
-
-    } else {
-        crm_trace("Passing event back to %.8s on %s: %.200s", proxy->session_id, proxy->node_name, buffer);
-        remote_proxy_relay_event(lrmd_conn, proxy->session_id, xml);
-    }
-    free_xml(xml);
-    return 1;
-}
-
 static void
-remote_proxy_disconnected(void *userdata)
-{
-    remote_proxy_t *proxy = userdata;
-
-    crm_trace("destroying %p", userdata);
-
-    proxy->source = NULL;
-    proxy->ipc = NULL;
-
-    remote_proxy_notify_destroy(lrmd_conn, proxy->session_id);
-    g_hash_table_remove(proxy_table, proxy->session_id);
-}
-
-static remote_proxy_t *
-remote_proxy_new(const char *node_name, const char *session_id, const char *channel)
-{
-    static struct ipc_client_callbacks proxy_callbacks = {
-        .dispatch = remote_proxy_dispatch_internal,
-        .destroy = remote_proxy_disconnected
-    };
-    remote_proxy_t *proxy = calloc(1, sizeof(remote_proxy_t));
-
-    proxy->node_name = strdup(node_name);
-    proxy->session_id = strdup(session_id);
-
-    if (safe_str_eq(channel, CRM_SYSTEM_CRMD)) {
-        proxy->is_local = TRUE;
-    } else {
-        proxy->source = mainloop_add_ipc_client(channel, G_PRIORITY_LOW, 0, proxy, &proxy_callbacks);
-        proxy->ipc = mainloop_get_ipc_client(proxy->source);
-
-        if (proxy->source == NULL) {
-            remote_proxy_free(proxy);
-            return NULL;
-        }
-    }
-
-    crm_trace("created proxy session ID %s", proxy->session_id);
-    g_hash_table_insert(proxy_table, proxy->session_id, proxy);
-
-    return proxy;
-}
-
-static void
-remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
+ctl_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 {
     const char *op = crm_element_value(msg, F_LRMD_IPC_OP);
     const char *session = crm_element_value(msg, F_LRMD_IPC_SESSION);
-    int msg_id = 0;
 
-    /* sessions are raw ipc connections to IPC,
-     * all we do is proxy requests/responses exactly
-     * like they are given to us at the ipc level. */
-
-    CRM_CHECK(op != NULL, return);
-    CRM_CHECK(session != NULL, return);
-
-    crm_element_value_int(msg, F_LRMD_IPC_MSG_ID, &msg_id);
-
-    /* This is msg from remote ipc client going to real ipc server */
     if (safe_str_eq(op, LRMD_IPC_OP_NEW)) {
         const char *channel = crm_element_value(msg, F_LRMD_IPC_IPC_SERVER);
 
-        CRM_CHECK(channel != NULL, return);
+        static struct ipc_client_callbacks proxy_callbacks = {
+            .dispatch = remote_proxy_dispatch,
+            .destroy = remote_proxy_disconnected
+        };
 
-        if (remote_proxy_new(options.node_name, session, channel) == NULL) {
-            remote_proxy_notify_destroy(lrmd, session);
-        }
-        crm_info("new remote proxy client established to %s, session id %s", channel, session);
-    } else if (safe_str_eq(op, LRMD_IPC_OP_DESTROY)) {
-        remote_proxy_end_session(session);
+        remote_proxy_new(lrmd, &proxy_callbacks, options.node_name, session, channel);
 
-    } else if (safe_str_eq(op, LRMD_IPC_OP_REQUEST)) {
-        int flags = 0;
-        xmlNode *request = get_message_xml(msg, F_LRMD_IPC_MSG);
-        const char *name = crm_element_value(msg, F_LRMD_IPC_CLIENT);
-        remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
-
-        CRM_CHECK(request != NULL, return);
-
-        if (proxy == NULL) {
-            /* proxy connection no longer exists */
-            remote_proxy_notify_destroy(lrmd, session);
-            return;
-        } else if ((proxy->is_local == FALSE) && (crm_ipc_connected(proxy->ipc) == FALSE)) {
-            remote_proxy_end_session(session);
-            return;
-        }
-        proxy->last_request_id = 0;
-        crm_element_value_int(msg, F_LRMD_IPC_MSG_FLAGS, &flags);
-        crm_xml_add(request, XML_ACL_TAG_ROLE, "pacemaker-remote");
-
-#if ENABLE_ACL
-        CRM_ASSERT(options.node_name);
-        crm_acl_get_set_user(request, F_LRMD_IPC_USER, options.node_name);
-#endif
-
-        if (is_set(flags, crm_ipc_proxied)) {
-            int rc = crm_ipc_send(proxy->ipc, request, flags, 5000, NULL);
-
-            if(rc < 0) {
-                xmlNode *op_reply = create_xml_node(NULL, "nack");
-
-                crm_err("Could not relay %s request %d from %s to %s for %s: %s (%d)",
-                         op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name, pcmk_strerror(rc), rc);
-
-                /* Send a n'ack so the caller doesn't block */
-                crm_xml_add(op_reply, "function", __FUNCTION__);
-                crm_xml_add_int(op_reply, "line", __LINE__);
-                crm_xml_add_int(op_reply, "rc", rc);
-                remote_proxy_relay_response(lrmd, session, op_reply, msg_id);
-                free_xml(op_reply);
-
-            } else {
-                crm_trace("Relayed %s request %d from %s to %s for %s",
-                          op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name);
-                proxy->last_request_id = msg_id;
-            }
-        }
     } else {
-        crm_err("Unknown proxy operation: %s", op);
+        remote_proxy_cb(lrmd, options.node_name, msg);
     }
 }
 
@@ -510,7 +379,7 @@ main(int argc, char **argv)
         proxy_table =
             g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, NULL, remote_proxy_free);
         lrmd_conn = lrmd_remote_api_new(NULL, options.tls_host ? options.tls_host : "localhost", options.port);
-        lrmd_internal_set_proxy_callback(lrmd_conn, NULL,  remote_proxy_cb);
+        lrmd_internal_set_proxy_callback(lrmd_conn, NULL,  ctl_remote_proxy_cb);
     } else {
         lrmd_conn = lrmd_api_new();
     }

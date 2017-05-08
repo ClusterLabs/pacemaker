@@ -28,8 +28,8 @@
 #  define pe_warn(fmt...) { was_processing_warning = TRUE; crm_config_warning = TRUE; crm_warn(fmt); }
 #  define pe_proc_err(fmt...) { was_processing_error = TRUE; crm_err(fmt); }
 #  define pe_proc_warn(fmt...) { was_processing_warning = TRUE; crm_warn(fmt); }
-#  define pe_set_action_bit(action, bit) action->flags = crm_set_bit(__FUNCTION__, action->uuid, action->flags, bit)
-#  define pe_clear_action_bit(action, bit) action->flags = crm_clear_bit(__FUNCTION__, action->uuid, action->flags, bit)
+#  define pe_set_action_bit(action, bit) action->flags = crm_set_bit(__FUNCTION__, __LINE__, action->uuid, action->flags, bit)
+#  define pe_clear_action_bit(action, bit) action->flags = crm_clear_bit(__FUNCTION__, __LINE__, action->uuid, action->flags, bit)
 
 typedef struct notify_data_s {
     GHashTable *keys;
@@ -74,6 +74,7 @@ gboolean native_unpack(resource_t * rsc, pe_working_set_t * data_set);
 gboolean group_unpack(resource_t * rsc, pe_working_set_t * data_set);
 gboolean clone_unpack(resource_t * rsc, pe_working_set_t * data_set);
 gboolean master_unpack(resource_t * rsc, pe_working_set_t * data_set);
+gboolean container_unpack(resource_t * rsc, pe_working_set_t * data_set);
 
 resource_t *native_find_rsc(resource_t * rsc, const char *id, node_t * node, int flags);
 
@@ -81,31 +82,36 @@ gboolean native_active(resource_t * rsc, gboolean all);
 gboolean group_active(resource_t * rsc, gboolean all);
 gboolean clone_active(resource_t * rsc, gboolean all);
 gboolean master_active(resource_t * rsc, gboolean all);
+gboolean container_active(resource_t * rsc, gboolean all);
 
 void native_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
 void group_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
 void clone_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
 void master_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
+void container_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
 
 void native_free(resource_t * rsc);
 void group_free(resource_t * rsc);
 void clone_free(resource_t * rsc);
 void master_free(resource_t * rsc);
+void container_free(resource_t * rsc);
 
 enum rsc_role_e native_resource_state(const resource_t * rsc, gboolean current);
 enum rsc_role_e group_resource_state(const resource_t * rsc, gboolean current);
 enum rsc_role_e clone_resource_state(const resource_t * rsc, gboolean current);
 enum rsc_role_e master_resource_state(const resource_t * rsc, gboolean current);
+enum rsc_role_e container_resource_state(const resource_t * rsc, gboolean current);
 
 gboolean common_unpack(xmlNode * xml_obj, resource_t ** rsc, resource_t * parent,
                        pe_working_set_t * data_set);
-void common_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
 void common_free(resource_t * rsc);
 
 extern pe_working_set_t *pe_dataset;
 
 extern node_t *node_copy(const node_t *this_node);
 extern time_t get_effective_time(pe_working_set_t * data_set);
+
+/* Failure handling utilities (from failcounts.c) */
 extern int get_failcount(node_t * node, resource_t * rsc, time_t *last_failure,
                          pe_working_set_t * data_set);
 extern int get_failcount_full(node_t * node, resource_t * rsc, time_t *last_failure,
@@ -279,5 +285,12 @@ gboolean add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj
 void print_rscs_brief(GListPtr rsc_list, const char * pre_text, long options,
                       void * print_data, gboolean print_all);
 void pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason);
+
+node_t *pe_create_node(const char *id, const char *uname, const char *type,
+                       const char *score, pe_working_set_t * data_set);
+bool remote_id_conflict(const char *remote_name, pe_working_set_t *data);
+void common_print(resource_t * rsc, const char *pre_text, const char *name, node_t *node, long options, void *print_data);
+resource_t *find_container_child(const char *stem, resource_t * rsc, node_t *node);
+bool fix_remote_addr(resource_t * rsc);
 
 #endif

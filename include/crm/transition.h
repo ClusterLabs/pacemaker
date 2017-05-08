@@ -15,6 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+#ifndef CRM_TRANSITION__H
+#  define CRM_TRANSITION__H
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
@@ -62,6 +64,9 @@ typedef struct crm_action_s {
 
 } crm_action_t;
 
+/* @COMPAT: This enum has deprecated. It has apparently never been used in a
+ * Pacemaker release, but it is kept for API backward compatibility.
+ */
 enum timer_reason {
     timeout_action,
     timeout_action_warn,
@@ -71,7 +76,7 @@ enum timer_reason {
 struct te_timer_s {
     int source_id;
     int timeout;
-    enum timer_reason reason;
+    enum timer_reason reason; /* @COMPAT: unused, API backward compatibility */
     crm_action_t *action;
 };
 
@@ -144,3 +149,5 @@ bool update_abort_priority(crm_graph_t * graph, int priority,
 const char *actiontype2text(action_type_e type);
 lrmd_event_data_t *convert_graph_action(xmlNode * resource, crm_action_t * action, int status,
                                         int rc);
+
+#endif

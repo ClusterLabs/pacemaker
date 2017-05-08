@@ -64,6 +64,7 @@
 #  define F_CRM_ORIGIN			"origin"
 #  define F_CRM_USER			"crm_user"
 #  define F_CRM_JOIN_ID			"join_id"
+#  define F_CRM_DC_LEAVING      "dc-leaving"
 #  define F_CRM_ELECTION_ID		"election-id"
 #  define F_CRM_ELECTION_AGE_S		"election-age-sec"
 #  define F_CRM_ELECTION_AGE_US		"election-age-nano-sec"
@@ -176,6 +177,9 @@
 #  define XML_TAG_ATTR_SETS	   	"instance_attributes"
 #  define XML_TAG_META_SETS	   	"meta_attributes"
 #  define XML_TAG_ATTRS			"attributes"
+#ifdef ENABLE_VERSIONED_ATTRS
+#  define XML_TAG_VER_ATTRS		"versioned_attributes"
+#endif
 #  define XML_TAG_PARAMS		"parameters"
 #  define XML_TAG_PARAM			"param"
 #  define XML_TAG_UTILIZATION		"utilization"
@@ -185,6 +189,7 @@
 #  define XML_CIB_TAG_GROUP	  	"group"
 #  define XML_CIB_TAG_INCARNATION	"clone"
 #  define XML_CIB_TAG_MASTER		"master"
+#  define XML_CIB_TAG_CONTAINER		"bundle"
 
 #  define XML_CIB_TAG_RSC_TEMPLATE	"template"
 
@@ -217,6 +222,8 @@
 #  define XML_RSC_ATTR_INTERNAL_RSC	"internal_rsc"
 #  define XML_RSC_ATTR_MAINTENANCE	"maintenance"
 #  define XML_RSC_ATTR_REMOTE_NODE  	"remote-node"
+#  define XML_RSC_ATTR_CLEAR_OP         "clear_failure_op"
+#  define XML_RSC_ATTR_CLEAR_INTERVAL   "clear_failure_interval"
 
 #  define XML_REMOTE_ATTR_RECONNECT_INTERVAL "reconnect_interval"
 
@@ -252,9 +259,11 @@
 #  define XML_NODE_IS_PEER    	"crmd"
 #  define XML_NODE_IS_REMOTE    	"remote_node"
 #  define XML_NODE_IS_FENCED		"node_fenced"
+#  define XML_NODE_IS_MAINTENANCE   "node_in_maintenance"
 
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
 #  define XML_CIB_ATTR_STONITH	    	"stonith"
+#  define XML_CIB_ATTR_STANDBY	    	"standby"
 
 /* LRM is a bit of a misnomer here; the crmd and pengine use these to track
  * actions, which usually but not always are LRM operations
@@ -293,6 +302,7 @@
 #  define XML_GRAPH_TAG_PSEUDO_EVENT	"pseudo_event"
 #  define XML_GRAPH_TAG_CRM_EVENT	"crm_event"
 #  define XML_GRAPH_TAG_DOWNED            "downed"
+#  define XML_GRAPH_TAG_MAINTENANCE       "maintenance"
 
 #  define XML_TAG_RULE			"rule"
 #  define XML_RULE_ATTR_SCORE		"score"
@@ -308,6 +318,7 @@
 #  define XML_EXPR_ATTR_OPERATION	"operation"
 #  define XML_EXPR_ATTR_VALUE		"value"
 #  define XML_EXPR_ATTR_TYPE		"type"
+#  define XML_EXPR_ATTR_VALUE_SOURCE	"value-source"
 
 #  define XML_CONS_TAG_RSC_DEPEND	"rsc_colocation"
 #  define XML_CONS_TAG_RSC_ORDER	"rsc_order"

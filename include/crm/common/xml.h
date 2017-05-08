@@ -37,13 +37,13 @@
 #  include <libxml/tree.h>
 #  include <libxml/xpath.h>
 
-/* Compression costs a LOT, don't do it unless we're hitting message limits
+/* Define compression parameters for IPC messages
  *
- * For now, use 256k as the lower size, which means we can have 4 big data fields
- *  before we hit heartbeat's message limit
- *
- * The previous limit was 10k, compressing 184 of 1071 messages accounted for 23%
- *  of the total CPU used by the cib
+ * Compression costs a LOT, so we don't want to do it unless we're hitting
+ * message limits. Currently, we use 128KB as the threshold, because higher
+ * values don't play well with the heartbeat stack. With an earlier limit of
+ * 10KB, compressing 184 of 1071 messages accounted for 23% of the total CPU
+ * used by the cib.
  */
 #  define CRM_BZ2_BLOCKS		4
 #  define CRM_BZ2_WORK		20
@@ -210,6 +210,24 @@ crm_element_name(xmlNode *xml)
 
 const char *crm_element_value(xmlNode * data, const char *name);
 
+/*!
+ * \brief Copy an element from one XML object to another
+ *
+ * \param[in]     obj1     Source XML
+ * \param[in,out] obj2     Destination XML
+ * \param[in]     element  Name of element to copy
+ *
+ * \return Pointer to copied value (from source)
+ */
+static inline const char *
+crm_copy_xml_element(xmlNode *obj1, xmlNode *obj2, const char *element)
+{
+    const char *value = crm_element_value(obj1, element);
+
+    crm_xml_add(obj2, element, value);
+    return value;
+}
+
 void xml_validate(const xmlNode * root);
 
 gboolean xml_has_children(const xmlNode * root);
@@ -298,15 +316,33 @@ __xml_next(xmlNode * child)
 }
 
 static inline xmlNode *
+__xml_first_child_element(xmlNode * parent)
+{
+    xmlNode *child = NULL;
+
+    if (parent) {
+        child = parent->children;
+    }
+
+    while (child) {
+        if(child->type == XML_ELEMENT_NODE) {
+            return child;
+        }
+        child = child->next;
+    }
+    return NULL;
+}
+
+static inline xmlNode *
 __xml_next_element(xmlNode * child)
 {
-    if (child) {
+    while (child) {
         child = child->next;
-        while (child && child->type != XML_ELEMENT_NODE) {
-            child = child->next;
+        if(child && child->type == XML_ELEMENT_NODE) {
+            return child;
         }
     }
-    return child;
+    return NULL;
 }
 
 void free_xml(xmlNode * child);
@@ -355,4 +391,8 @@ void save_xml_to_file(xmlNode * xml, const char *desc, const char *filename);
 char *xml_get_path(xmlNode *xml);
 
 char * crm_xml_escape(const char *text);
+void crm_xml_sanitize_id(char *id);
+void crm_xml_set_id(xmlNode *xml, const char *format, ...)
+    __attribute__ ((__format__ (__printf__, 2, 3)));
+
 #endif

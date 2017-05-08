@@ -36,6 +36,19 @@ void unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * contain
 static xmlNode *find_rsc_op_entry_helper(resource_t * rsc, const char *key,
                                          gboolean include_disabled);
 
+/*!
+ * \internal
+ * \brief Check whether we can fence a particular node
+ *
+ * \param[in] data_set  Working set for cluster
+ * \param[in] node      Name of node to check
+ *
+ * \return TRUE if node can be fenced, FALSE otherwise
+ *
+ * \note This function should only be called for cluster nodes and baremetal
+ *       remote nodes; guest nodes are fenced by stopping their container
+ *       resource, so fence execution requirements do not apply to them.
+ */
 bool pe_can_fence(pe_working_set_t * data_set, node_t *node)
 {
     if(is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
@@ -496,7 +509,8 @@ custom_action(resource_t * rsc, char *key, const char *task,
             pe_set_action_bit(action, pe_action_optional);
 /*   			action->runnable = FALSE; */
 
-        } else if (action->node->details->online == FALSE) {
+        } else if (action->node->details->online == FALSE
+                   && (!is_container_remote_node(action->node) || action->node->details->remote_requires_reset)) {
             pe_clear_action_bit(action, pe_action_runnable);
             do_crm_log(warn_level, "Action %s on %s is unrunnable (offline)",
                        action->uuid, action->node->details->uname);
@@ -516,7 +530,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
 #if 0
             /*
              * No point checking this
-             * - if we dont have quorum we can't stonith anyway
+             * - if we don't have quorum we can't stonith anyway
              */
         } else if (action->needs == rsc_req_stonith) {
             crm_trace("Action %s requires only stonith", action->uuid);
@@ -811,20 +825,28 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
      * 2. start - a start failure indicates that an active connection does not already
      * exist. The user can set op on-fail=fence if they really want to fence start
      * failures. */
-    } else if (value == NULL &&
-               is_rsc_baremetal_remote_node(action->rsc, data_set) &&
+    } else if (((value == NULL) || !is_set(action->rsc->flags, pe_rsc_managed)) &&
+                (is_rsc_baremetal_remote_node(action->rsc, data_set) &&
                !(safe_str_eq(action->task, CRMD_ACTION_STATUS) && interval == 0) &&
-                (safe_str_neq(action->task, CRMD_ACTION_START))) {
+                (safe_str_neq(action->task, CRMD_ACTION_START)))) {
 
-        if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            value = "fence baremetal remote node (default)";
-        } else {
-            value = "recover baremetal remote node connection (default)";
-        }
-        if (action->rsc->remote_reconnect_interval) {
+        if (!is_set(action->rsc->flags, pe_rsc_managed)) {
+            action->on_fail = action_fail_stop;
             action->fail_role = RSC_ROLE_STOPPED;
+            value = "stop unmanaged baremetal remote node (enforcing default)";
+
+        } else {
+            if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+                value = "fence baremetal remote node (default)";
+            } else {
+                value = "recover baremetal remote node connection (default)";
+            }
+
+            if (action->rsc->remote_reconnect_interval) {
+                action->fail_role = RSC_ROLE_STOPPED;
+            }
+            action->on_fail = action_fail_reset_remote;
         }
-        action->on_fail = action_fail_reset_remote;
 
     } else if (value == NULL && safe_str_eq(action->task, CRMD_ACTION_STOP)) {
         if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
@@ -1086,8 +1108,8 @@ pe_free_action(action_t * action)
     if (action == NULL) {
         return;
     }
-    g_list_free_full(action->actions_before, free);     /* action_warpper_t* */
-    g_list_free_full(action->actions_after, free);      /* action_warpper_t* */
+    g_list_free_full(action->actions_before, free);     /* action_wrapper_t* */
+    g_list_free_full(action->actions_after, free);      /* action_wrapper_t* */
     if (action->extra) {
         g_hash_table_destroy(action->extra);
     }
@@ -1418,7 +1440,7 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
              *
              * if the UUID from the TE doesn't match then one better
              *   be a pending operation.
-             * pending operations dont survive between elections and joins
+             * pending operations don't survive between elections and joins
              *   because we query the LRM directly
              */
 
@@ -1455,277 +1477,6 @@ get_effective_time(pe_working_set_t * data_set)
 
     crm_trace("Defaulting to 'now'");
     return time(NULL);
-}
-
-struct fail_search {
-    resource_t *rsc;
-    pe_working_set_t * data_set;
-
-    int count;
-    long long last;
-    char *key;
-};
-
-static void
-get_failcount_by_prefix(gpointer key_p, gpointer value, gpointer user_data)
-{
-    struct fail_search *search = user_data;
-    const char *attr_id = key_p;
-    const char *match = strstr(attr_id, search->key);
-    resource_t *parent = NULL;
-
-    if (match == NULL) {
-        return;
-    }
-
-    /* we are only incrementing the failcounts here if the rsc
-     * that matches our prefix has the same uber parent as the rsc we're
-     * calculating the failcounts for. This prevents false positive matches
-     * where unrelated resources may have similar prefixes in their names.
-     *
-     * search->rsc is already set to be the uber parent. */
-    parent = uber_parent(pe_find_resource(search->data_set->resources, match));
-    if (parent == NULL || parent != search->rsc) {
-        return;
-    }
-    if (strstr(attr_id, "last-failure-") == attr_id) {
-        search->last = crm_int_helper(value, NULL);
-
-    } else if (strstr(attr_id, "fail-count-") == attr_id) {
-        search->count += char2score(value);
-    }
-}
-
-int
-get_failcount(node_t * node, resource_t * rsc, time_t *last_failure, pe_working_set_t * data_set)
-{
-    return get_failcount_full(node, rsc, last_failure, TRUE, NULL, data_set);
-}
-
-static gboolean
-is_matched_failure(const char * rsc_id, xmlNode * conf_op_xml, xmlNode * lrm_op_xml)
-{
-    gboolean matched = FALSE;
-    const char *conf_op_name = NULL;
-    int conf_op_interval = 0;
-    const char *lrm_op_task = NULL;
-    int lrm_op_interval = 0;
-    const char *lrm_op_id = NULL;
-    char *last_failure_key = NULL;
-
-    if (rsc_id == NULL || conf_op_xml == NULL || lrm_op_xml == NULL) {
-        return FALSE;
-    }
-
-    conf_op_name = crm_element_value(conf_op_xml, "name");
-    conf_op_interval = crm_get_msec(crm_element_value(conf_op_xml, "interval"));
-    lrm_op_task = crm_element_value(lrm_op_xml, XML_LRM_ATTR_TASK);
-    crm_element_value_int(lrm_op_xml, XML_LRM_ATTR_INTERVAL, &lrm_op_interval);
-
-    if (safe_str_eq(conf_op_name, lrm_op_task) == FALSE
-        || conf_op_interval != lrm_op_interval) {
-        return FALSE;
-    }
-
-    lrm_op_id = ID(lrm_op_xml);
-    last_failure_key = generate_op_key(rsc_id, "last_failure", 0);
-
-    if (safe_str_eq(last_failure_key, lrm_op_id)) {
-        matched = TRUE;
-
-    } else {
-        char *expected_op_key = generate_op_key(rsc_id, conf_op_name, conf_op_interval);
-
-        if (safe_str_eq(expected_op_key, lrm_op_id)) {
-            int rc = 0;
-            int target_rc = get_target_rc(lrm_op_xml);
-
-            crm_element_value_int(lrm_op_xml, XML_LRM_ATTR_RC, &rc);
-            if (rc != target_rc) {
-                matched = TRUE;
-            }
-        }
-        free(expected_op_key);
-    }
-
-    free(last_failure_key);
-    return matched;
-}
-
-static gboolean
-block_failure(node_t * node, resource_t * rsc, xmlNode * xml_op, pe_working_set_t * data_set)
-{
-    char *xml_name = clone_strip(rsc->id);
-    char *xpath = crm_strdup_printf("//primitive[@id='%s']//op[@on-fail='block']", xml_name);
-    xmlXPathObject *xpathObj = xpath_search(rsc->xml, xpath);
-    gboolean should_block = FALSE;
-
-    free(xpath);
-
-    if (xpathObj) {
-        int max = numXpathResults(xpathObj);
-        int lpc = 0;
-
-        for (lpc = 0; lpc < max; lpc++) {
-            xmlNode *pref = getXpathResult(xpathObj, lpc);
-
-            if (xml_op) {
-                should_block = is_matched_failure(xml_name, pref, xml_op);
-                if (should_block) {
-                    break;
-                }
-
-            } else {
-                const char *conf_op_name = NULL;
-                int conf_op_interval = 0;
-                char *lrm_op_xpath = NULL;
-                xmlXPathObject *lrm_op_xpathObj = NULL;
-
-                conf_op_name = crm_element_value(pref, "name");
-                conf_op_interval = crm_get_msec(crm_element_value(pref, "interval"));
-
-                lrm_op_xpath = crm_strdup_printf("//node_state[@uname='%s']"
-                                               "//lrm_resource[@id='%s']"
-                                               "/lrm_rsc_op[@operation='%s'][@interval='%d']",
-                                               node->details->uname, xml_name,
-                                               conf_op_name, conf_op_interval);
-                lrm_op_xpathObj = xpath_search(data_set->input, lrm_op_xpath);
-
-                free(lrm_op_xpath);
-
-                if (lrm_op_xpathObj) {
-                    int max2 = numXpathResults(lrm_op_xpathObj);
-                    int lpc2 = 0;
-
-                    for (lpc2 = 0; lpc2 < max2; lpc2++) {
-                        xmlNode *lrm_op_xml = getXpathResult(lrm_op_xpathObj, lpc2);
-
-                        should_block = is_matched_failure(xml_name, pref, lrm_op_xml);
-                        if (should_block) {
-                            break;
-                        }
-                    }
-                }
-                freeXpathObject(lrm_op_xpathObj);
-
-                if (should_block) {
-                    break;
-                }
-            }
-        }
-    }
-
-    free(xml_name);
-    freeXpathObject(xpathObj);
-
-    return should_block;
-}
-
-int
-get_failcount_full(node_t * node, resource_t * rsc, time_t *last_failure,
-                   bool effective, xmlNode * xml_op, pe_working_set_t * data_set)
-{
-    char *key = NULL;
-    const char *value = NULL;
-    struct fail_search search = { rsc, data_set, 0, 0, NULL };
-
-    /* Optimize the "normal" case */
-    key = crm_concat("fail-count", rsc->clone_name ? rsc->clone_name : rsc->id, '-');
-    value = g_hash_table_lookup(node->details->attrs, key);
-    search.count = char2score(value);
-    crm_trace("%s = %s", key, value);
-    free(key);
-
-    if (value) {
-        key = crm_concat("last-failure", rsc->clone_name ? rsc->clone_name : rsc->id, '-');
-        value = g_hash_table_lookup(node->details->attrs, key);
-        search.last = crm_int_helper(value, NULL);
-        free(key);
-
-        /* This block is still relevant once we omit anonymous instance numbers
-         * because stopped clones won't have clone_name set
-         */
-    } else if (is_not_set(rsc->flags, pe_rsc_unique)) {
-        search.rsc = uber_parent(rsc);
-        search.key = clone_strip(rsc->id);
-
-        g_hash_table_foreach(node->details->attrs, get_failcount_by_prefix, &search);
-        free(search.key);
-        search.key = NULL;
-    }
-
-    if (search.count != 0 && search.last != 0 && last_failure) {
-        *last_failure = search.last;
-    }
-
-    if(search.count && rsc->failure_timeout) {
-        /* Never time-out if blocking failures are configured */
-        if (block_failure(node, rsc, xml_op, data_set)) {
-            pe_warn("Setting %s.failure-timeout=%d conflicts with on-fail=block: ignoring timeout", rsc->id, rsc->failure_timeout);
-            rsc->failure_timeout = 0;
-#if 0
-            /* A good idea? */
-        } else if (rsc->container == NULL && is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
-            /* In this case, stop.on-fail defaults to block in unpack_operation() */
-            rsc->failure_timeout = 0;
-#endif
-        }
-    }
-
-    if (effective && search.count != 0 && search.last != 0 && rsc->failure_timeout) {
-        if (search.last > 0) {
-            time_t now = get_effective_time(data_set);
-
-            if (now > (search.last + rsc->failure_timeout)) {
-                crm_debug("Failcount for %s on %s has expired (limit was %ds)",
-                          search.rsc->id, node->details->uname, rsc->failure_timeout);
-                search.count = 0;
-            }
-        }
-    }
-
-    if (search.count != 0) {
-        char *score = score2char(search.count);
-
-        crm_info("%s has failed %s times on %s", search.rsc->id, score, node->details->uname);
-        free(score);
-    }
-
-    return search.count;
-}
-
-/* If it's a resource container, get its failcount plus all the failcounts of the resources within it */
-int
-get_failcount_all(node_t * node, resource_t * rsc, time_t *last_failure, pe_working_set_t * data_set)
-{
-    int failcount_all = 0;
-
-    failcount_all = get_failcount(node, rsc, last_failure, data_set);
-
-    if (rsc->fillers) {
-        GListPtr gIter = NULL;
-
-        for (gIter = rsc->fillers; gIter != NULL; gIter = gIter->next) {
-            resource_t *filler = (resource_t *) gIter->data;
-            time_t filler_last_failure = 0;
-
-            failcount_all += get_failcount(node, filler, &filler_last_failure, data_set);
-
-            if (last_failure && filler_last_failure > *last_failure) {
-                *last_failure = filler_last_failure;
-            }
-        }
-
-        if (failcount_all != 0) {
-            char *score = score2char(failcount_all);
-
-            crm_info("Container %s and the resources within it have failed %s times on %s",
-                     rsc->id, score, node->details->uname);
-            free(score);
-        }
-    }
-
-    return failcount_all;
 }
 
 gboolean
@@ -1924,6 +1675,38 @@ filter_parameters(xmlNode * param_set, const char *param_string, bool need_prese
     }
 }
 
+bool fix_remote_addr(resource_t * rsc)
+{
+    const char *name;
+    const char *value;
+    const char *attr_list[] = {
+        XML_ATTR_TYPE,
+        XML_AGENT_ATTR_CLASS,
+        XML_AGENT_ATTR_PROVIDER
+    };
+    const char *value_list[] = {
+        "remote",
+        "ocf",
+        "pacemaker"
+    };
+
+    name = "addr";
+    value = g_hash_table_lookup(rsc->parameters, name);
+    if (safe_str_eq(value, "#uname") == FALSE) {
+        return FALSE;
+    }
+
+    for (int lpc = 0; rsc && lpc < DIMOF(attr_list); lpc++) {
+        name = attr_list[lpc];
+        value = crm_element_value(rsc->xml, attr_list[lpc]);
+        if (safe_str_eq(value, value_list[lpc]) == FALSE) {
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
 op_digest_cache_t *
 rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
                       pe_working_set_t * data_set)
@@ -1931,6 +1714,9 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
     op_digest_cache_t *data = NULL;
 
     GHashTable *local_rsc_params = NULL;
+#ifdef ENABLE_VERSIONED_ATTRS
+    xmlNode *local_versioned_params = NULL;
+#endif
 
     action_t *action = NULL;
     char *key = NULL;
@@ -1969,12 +1755,27 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
     local_rsc_params = g_hash_table_new_full(crm_str_hash, g_str_equal,
                                              g_hash_destroy_str, g_hash_destroy_str);
     get_rsc_attributes(local_rsc_params, rsc, node, data_set);
+#ifdef ENABLE_VERSIONED_ATTRS
+    local_versioned_params = create_xml_node(NULL, XML_TAG_VER_ATTRS);
+    pe_get_versioned_attributes(local_versioned_params, rsc, node, data_set);
+#endif
     data->params_all = create_xml_node(NULL, XML_TAG_PARAMS);
+
+    if(fix_remote_addr(rsc) && node) {
+        // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
+        crm_xml_add(data->params_all, "addr", node->details->uname);
+        crm_trace("Fixing addr for %s on %s", rsc->id, node->details->uname);
+    }
+
     g_hash_table_foreach(local_rsc_params, hash2field, data->params_all);
     g_hash_table_foreach(action->extra, hash2field, data->params_all);
     g_hash_table_foreach(rsc->parameters, hash2field, data->params_all);
     g_hash_table_foreach(action->meta, hash2metafield, data->params_all);
     filter_action_parameters(data->params_all, op_version);
+#ifdef ENABLE_VERSIONED_ATTRS
+    crm_summarize_versioned_params(data->params_all, rsc->versioned_parameters);
+    crm_summarize_versioned_params(data->params_all, local_versioned_params);
+#endif
 
     data->digest_all_calc = calculate_operation_digest(data->params_all, op_version);
 
@@ -2010,6 +1811,9 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
 
     g_hash_table_insert(node->details->digest_cache, strdup(op_id), data);
     g_hash_table_destroy(local_rsc_params);
+#ifdef ENABLE_VERSIONED_ATTRS
+    free_xml(local_versioned_params);
+#endif
     pe_free_action(action);
 
     return data;
@@ -2092,7 +1896,7 @@ trigger_unfencing(
         return;
 
     } else if (rsc != NULL && is_not_set(rsc->flags, pe_rsc_fence_device)) {
-        /* Wasnt a stonith device */
+        /* Wasn't a stonith device */
         return;
 
     } else if(node

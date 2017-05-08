@@ -36,6 +36,14 @@ Transition Summary:
 
 Executing cluster transition:
  * Pseudo action:   lxc-ms-master_demote_0
+ * Resource action: lxc1            monitor on rhel7-5
+ * Resource action: lxc1            monitor on rhel7-4
+ * Resource action: lxc1            monitor on rhel7-3
+ * Resource action: lxc1            monitor on rhel7-2
+ * Resource action: lxc2            monitor on rhel7-5
+ * Resource action: lxc2            monitor on rhel7-4
+ * Resource action: lxc2            monitor on rhel7-3
+ * Resource action: lxc2            monitor on rhel7-2
  * Resource action: lxc-ms          demote on lxc1
  * Pseudo action:   lxc-ms-master_demoted_0
  * Pseudo action:   lxc-ms-master_stop_0

@@ -220,6 +220,12 @@ lrmd_copy_event(lrmd_event_data_t * event)
         }
     }
 
+#ifdef ENABLE_VERSIONED_ATTRS
+    if (event->versioned_params) {
+        copy->versioned_params = copy_xml(event->versioned_params);
+    }
+#endif
+
     return copy;
 }
 
@@ -240,6 +246,11 @@ lrmd_free_event(lrmd_event_data_t * event)
     if (event->params) {
         g_hash_table_destroy(event->params);
     }
+#ifdef ENABLE_VERSIONED_ATTRS
+    if (event->versioned_params) {
+        free_xml(event->versioned_params);
+    }
+#endif
     free(event);
 }
 
@@ -290,6 +301,9 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
         event.type = lrmd_event_exec_complete;
 
         event.params = xml2list(msg);
+#ifdef ENABLE_VERSIONED_ATTRS
+        event.versioned_params = first_named_child(msg, XML_TAG_VER_ATTRS); 
+#endif
     } else if (crm_str_eq(type, LRMD_OP_NEW_CLIENT, TRUE)) {
         event.type = lrmd_event_new_client;
     } else if (crm_str_eq(type, LRMD_OP_POKE, TRUE)) {
@@ -1430,7 +1444,7 @@ lrmd_api_register_rsc(lrmd_t * lrmd,
     if (!class || !type || !rsc_id) {
         return -EINVAL;
     }
-    if (safe_str_eq(class, "ocf") && !provider) {
+    if (safe_str_eq(class, PCMK_RESOURCE_CLASS_OCF) && !provider) {
         return -EINVAL;
     }
 
@@ -1517,7 +1531,7 @@ lrmd_api_get_rsc_info(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options 
     if (!class || !type) {
         free_xml(output);
         return NULL;
-    } else if (safe_str_eq(class, "ocf") && !provider) {
+    } else if (safe_str_eq(class, PCMK_RESOURCE_CLASS_OCF) && !provider) {
         free_xml(output);
         return NULL;
     }
@@ -1961,20 +1975,20 @@ lrmd_api_get_metadata(lrmd_t * lrmd,
         return -EINVAL;
     }
 
-    if (safe_str_eq(class, "service")) {
+    if (safe_str_eq(class, PCMK_RESOURCE_CLASS_SERVICE)) {
         class = resources_find_service_class(type);
     }
 
-    if (safe_str_eq(class, "stonith")) {
+    if (safe_str_eq(class, PCMK_RESOURCE_CLASS_STONITH)) {
         return stonith_get_metadata(provider, type, output);
-    } else if (safe_str_eq(class, "lsb")) {
+    } else if (safe_str_eq(class, PCMK_RESOURCE_CLASS_LSB)) {
         return lsb_get_metadata(type, output);
 #if SUPPORT_NAGIOS
-    } else if (safe_str_eq(class, "nagios")) {
+    } else if (safe_str_eq(class, PCMK_RESOURCE_CLASS_NAGIOS)) {
         return nagios_get_metadata(type, output);
 #endif
 #if SUPPORT_HEARTBEAT
-    } else if (safe_str_eq(class, "heartbeat")) {
+    } else if (safe_str_eq(class, PCMK_RESOURCE_CLASS_HB)) {
 	return heartbeat_get_metadata(type, output);
 #endif
     }
@@ -1991,6 +2005,9 @@ lrmd_api_exec(lrmd_t * lrmd, const char *rsc_id, const char *action, const char 
     xmlNode *data = create_xml_node(NULL, F_LRMD_RSC);
     xmlNode *args = create_xml_node(data, XML_TAG_ATTRS);
     lrmd_key_value_t *tmp = NULL;
+#ifdef ENABLE_VERSIONED_ATTRS
+    const char *versioned_args_key = "#" XML_TAG_VER_ATTRS;
+#endif
 
     crm_xml_add(data, F_LRMD_ORIGIN, __FUNCTION__);
     crm_xml_add(data, F_LRMD_RSC_ID, rsc_id);
@@ -2001,7 +2018,19 @@ lrmd_api_exec(lrmd_t * lrmd, const char *rsc_id, const char *action, const char 
     crm_xml_add_int(data, F_LRMD_RSC_START_DELAY, start_delay);
 
     for (tmp = params; tmp; tmp = tmp->next) {
-        hash2smartfield((gpointer) tmp->key, (gpointer) tmp->value, args);
+#ifdef ENABLE_VERSIONED_ATTRS
+        if (safe_str_eq(tmp->key, versioned_args_key)) {
+            xmlNode *versioned_args = string2xml(tmp->value);
+
+            if (versioned_args) {
+                add_node_nocopy(data, NULL, versioned_args);
+            }
+        } else {
+#endif
+            hash2smartfield((gpointer) tmp->key, (gpointer) tmp->value, args);
+#ifdef ENABLE_VERSIONED_ATTRS
+        }
+#endif
     }
 
     rc = lrmd_send_command(lrmd, LRMD_OP_RSC_EXEC, data, NULL, timeout, options, TRUE);
@@ -2056,7 +2085,7 @@ lrmd_api_list_agents(lrmd_t * lrmd, lrmd_list_t ** resources, const char *class,
 {
     int rc = 0;
 
-    if (safe_str_eq(class, "stonith")) {
+    if (safe_str_eq(class, PCMK_RESOURCE_CLASS_STONITH)) {
         rc += list_stonith_agents(resources);
 
     } else {
@@ -2107,11 +2136,12 @@ lrmd_api_list_ocf_providers(lrmd_t * lrmd, const char *agent, lrmd_list_t ** pro
     GList *ocf_providers = NULL;
     GListPtr gIter = NULL;
 
-    ocf_providers = resources_list_providers("ocf");
+    ocf_providers = resources_list_providers(PCMK_RESOURCE_CLASS_OCF);
 
     for (gIter = ocf_providers; gIter != NULL; gIter = gIter->next) {
         provider = gIter->data;
-        if (!agent || does_provider_have_agent(agent, provider, "ocf")) {
+        if (!agent || does_provider_have_agent(agent, provider,
+                                               PCMK_RESOURCE_CLASS_OCF)) {
             *providers = lrmd_list_add(*providers, (const char *)gIter->data);
             rc++;
         }
@@ -2136,7 +2166,7 @@ lrmd_api_list_standards(lrmd_t * lrmd, lrmd_list_t ** supported)
     }
 
     if (list_stonith_agents(NULL) > 0) {
-        *supported = lrmd_list_add(*supported, "stonith");
+        *supported = lrmd_list_add(*supported, PCMK_RESOURCE_CLASS_STONITH);
         rc++;
     }
 

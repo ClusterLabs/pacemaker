@@ -28,6 +28,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <ctype.h>
 
 /*!
  * \internal
@@ -139,4 +140,33 @@ crm_procfs_pid_of(const char *name)
     }
     closedir(dp);
     return pid;
+}
+
+/*!
+ * \internal
+ * \brief Calculate number of logical CPU cores from procfs
+ *
+ * \return Number of cores (or 1 if unable to determine)
+ */
+unsigned int
+crm_procfs_num_cores(void)
+{
+    int cores = 0;
+    FILE *stream = NULL;
+
+    /* Parse /proc/stat instead of /proc/cpuinfo because it's smaller */
+    stream = fopen("/proc/stat", "r");
+    if (stream == NULL) {
+        crm_perror(LOG_INFO, "Could not open /proc/stat");
+    } else {
+        char buffer[2048];
+
+        while (fgets(buffer, sizeof(buffer), stream)) {
+            if (!strncmp(buffer, "cpu", 3) && isdigit(buffer[3])) {
+                ++cores;
+            }
+        }
+        fclose(stream);
+    }
+    return cores? cores : 1;
 }

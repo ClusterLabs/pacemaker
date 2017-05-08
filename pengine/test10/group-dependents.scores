@@ -58,8 +58,8 @@ native_color: asterisk allocation score on asttest2: 0
 native_color: dahdi allocation score on asttest1: -INFINITY
 native_color: dahdi allocation score on asttest2: 0
 native_color: drbd:0 allocation score on asttest1: 6
-native_color: drbd:0 allocation score on asttest2: -INFINITY
-native_color: drbd:1 allocation score on asttest1: 0
+native_color: drbd:0 allocation score on asttest2: 0
+native_color: drbd:1 allocation score on asttest1: -INFINITY
 native_color: drbd:1 allocation score on asttest2: 6
 native_color: fonulator allocation score on asttest1: -INFINITY
 native_color: fonulator allocation score on asttest2: 0

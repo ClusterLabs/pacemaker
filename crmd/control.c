@@ -355,8 +355,11 @@ crmd_exit(int rc)
     election_fini(fsa_election);
     fsa_election = NULL;
 
-    cib_delete(fsa_cib_conn);
-    fsa_cib_conn = NULL;
+    /* Tear down the CIB connection, but don't free it yet -- it could be used
+     * when we drain the mainloop later.
+     */
+    cib_free_callbacks(fsa_cib_conn);
+    fsa_cib_conn->cmds->signoff(fsa_cib_conn);
 
     verify_stopped(fsa_state, LOG_WARNING);
     clear_bit(fsa_input_register, R_LRM_CONNECTED);
@@ -385,7 +388,6 @@ crmd_exit(int rc)
     free(integration_timer); integration_timer = NULL;
     free(finalization_timer); finalization_timer = NULL;
     free(election_trigger); election_trigger = NULL;
-    election_fini(fsa_election);
     free(shutdown_escalation_timer); shutdown_escalation_timer = NULL;
     free(wait_timer); wait_timer = NULL;
     free(recheck_timer); recheck_timer = NULL;
@@ -484,6 +486,11 @@ crmd_exit(int rc)
     } else {
         mainloop_destroy_signal(SIGCHLD);
     }
+
+    cib_delete(fsa_cib_conn);
+    fsa_cib_conn = NULL;
+
+    throttle_fini();
 
     /* Graceful */
     return rc;
@@ -952,6 +959,9 @@ pe_cluster_option crmd_opts[] = {
 	{ "stonith-watchdog-timeout", NULL, "time", NULL, NULL, &check_sbd_timeout,
 	  "How long to wait before we can assume nodes are safely down", NULL
         },
+        { "stonith-max-attempts",NULL,"integer",NULL,"10",&check_positive_number,
+          "How many times stonith can fail before it will no longer be attempted on a target"
+        },   
 	{ "no-quorum-policy", "no_quorum_policy", "enum", "stop, freeze, ignore, suicide", "stop", &check_quorum, NULL, NULL },
 
 #if SUPPORT_PLUGIN
@@ -1032,7 +1042,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 #ifdef RHEL7_COMPAT
     script = crmd_pref(config_hash, "notification-agent");
     value  = crmd_pref(config_hash, "notification-recipient");
-    crmd_enable_notifications(script, value);
+    crmd_enable_alerts(script, value);
 #endif
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
@@ -1043,13 +1053,16 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     value = crmd_pref(config_hash, "load-threshold");
     if(value) {
-        throttle_load_target = strtof(value, NULL) / 100;
+        throttle_set_load_target(strtof(value, NULL) / 100.0);
     }
 
     value = crmd_pref(config_hash, "no-quorum-policy");
     if (safe_str_eq(value, "suicide") && pcmk_locate_sbd()) {
         no_quorum_suicide_escalation = TRUE;
     }
+
+    value = crmd_pref(config_hash,"stonith-max-attempts");
+    update_stonith_max_attempts(value);
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_FORCE_QUIT);
     shutdown_escalation_timer->period_ms = crm_get_msec(value);
@@ -1089,7 +1102,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     }
 
     alerts = first_named_child(output, XML_CIB_TAG_ALERTS);
-    parse_notifications(alerts);
+    parse_alerts(alerts);
 
     set_bit(fsa_input_register, R_READ_CONFIG);
     crm_trace("Triggering FSA: %s", __FUNCTION__);

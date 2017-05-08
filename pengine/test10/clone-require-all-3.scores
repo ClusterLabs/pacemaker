@@ -58,10 +58,10 @@ native_color: A:3 allocation score on rhel7-auto4: -INFINITY
 native_color: B:0 allocation score on rhel7-auto1: -INFINITY
 native_color: B:0 allocation score on rhel7-auto2: -INFINITY
 native_color: B:0 allocation score on rhel7-auto3: 1
-native_color: B:0 allocation score on rhel7-auto4: -INFINITY
+native_color: B:0 allocation score on rhel7-auto4: 0
 native_color: B:1 allocation score on rhel7-auto1: -INFINITY
 native_color: B:1 allocation score on rhel7-auto2: -INFINITY
-native_color: B:1 allocation score on rhel7-auto3: 0
+native_color: B:1 allocation score on rhel7-auto3: -INFINITY
 native_color: B:1 allocation score on rhel7-auto4: 1
 native_color: B:2 allocation score on rhel7-auto1: -INFINITY
 native_color: B:2 allocation score on rhel7-auto2: -INFINITY

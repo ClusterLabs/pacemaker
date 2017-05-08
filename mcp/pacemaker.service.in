@@ -2,22 +2,34 @@
 Description=Pacemaker High Availability Cluster Manager
 Documentation=man:pacemakerd http://clusterlabs.org/doc/en-US/Pacemaker/1.1-pcs/html/Pacemaker_Explained/index.html
 
-After=dbus.service
-After=basic.target
+# DefaultDependencies takes care of sysinit.target,
+# basic.target, and shutdown.target
+
+# We need networking to bind to a network address. It is recommended not to
+# use Wants or Requires with network.target, and not to use
+# network-online.target for server daemons.
+After=network.target
+
+# Time syncs can make the clock jump backward, which messes with logging
+# and failure timestamps, so wait until it's done.
+After=time-sync.target
+
+# Some OCF resources may have dependencies that aren't managed by the cluster;
+# these must be started before Pacemaker and stopped after it. The
+# resource-agents package provides this target, which lets system adminstrators
+# add drop-ins for those dependencies.
+After=resource-agents-deps.target
+Wants=resource-agents-deps.target
+
 After=syslog.service
 After=rsyslog.service
-After=network.target
-After=time-sync.target
 After=corosync.service
-
-Requires=dbus.service
-Requires=basic.target
 Requires=corosync.service
-# if you use crm_mon, uncomment the line below.
-# Wants=crm_mon.service
+
 
 [Install]
 WantedBy=multi-user.target
+
 
 [Service]
 Type=simple
@@ -62,6 +74,3 @@ Restart=on-failure
 # crm_perror() writes directly to stderr, so ignore it here
 # to avoid double-logging with the wrong format
 StandardError=null
-
-# if you use crm_mon, uncomment the line below.
-# ExecStopPost=/bin/sh -c 'systemctl status crm_mon >/dev/null && systemctl stop crm_mon'

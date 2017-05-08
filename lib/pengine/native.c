@@ -136,14 +136,14 @@ native_unpack(resource_t * rsc, pe_working_set_t * data_set)
 
     if (is_set(rsc->flags, pe_rsc_unique) && rsc->parent) {
 
-        if (safe_str_eq(class, "lsb")) {
+        if (safe_str_eq(class, PCMK_RESOURCE_CLASS_LSB)) {
             resource_t *top = uber_parent(rsc);
 
             force_non_unique_clone(top, rsc->id, data_set);
         }
     }
 
-    if (safe_str_eq(class, "ocf") == FALSE) {
+    if (safe_str_eq(class, PCMK_RESOURCE_CLASS_OCF) == FALSE) {
         const char *stateful = g_hash_table_lookup(parent->meta, "stateful");
 
         if (safe_str_eq(stateful, XML_BOOLEAN_TRUE)) {
@@ -465,9 +465,8 @@ comma_if(int i)
 }
 
 void
-native_print(resource_t * rsc, const char *pre_text, long options, void *print_data)
+common_print(resource_t * rsc, const char *pre_text, const char *name, node_t *node, long options, void *print_data)
 {
-    node_t *node = NULL;
     const char *desc = NULL;
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *kind = crm_element_value(rsc->xml, XML_ATTR_TYPE);
@@ -500,9 +499,6 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
         return;
     }
 
-    if (rsc->running_on != NULL) {
-        node = rsc->running_on->data;
-    }
     if ((options & pe_print_rsconly) || g_list_length(rsc->running_on) > 1) {
         node = NULL;
     }
@@ -531,9 +527,9 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
     if(pre_text) {
         offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", pre_text);
     }
-    offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", rsc_printable_id(rsc));
+    offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", name);
     offset += snprintf(buffer + offset, LINE_MAX - offset, "\t(%s", class);
-    if (safe_str_eq(class, "ocf")) {
+    if (safe_str_eq(class, PCMK_RESOURCE_CLASS_OCF)) {
         const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
         offset += snprintf(buffer + offset, LINE_MAX - offset, "::%s", prov);
     }
@@ -717,6 +713,23 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
 }
 
 void
+native_print(resource_t * rsc, const char *pre_text, long options, void *print_data)
+{
+    node_t *node = NULL;
+
+    CRM_ASSERT(rsc->variant == pe_native);
+    if (options & pe_print_xml) {
+        native_print_xml(rsc, pre_text, options, print_data);
+        return;
+    }
+
+    if (rsc->running_on != NULL) {
+        node = rsc->running_on->data;
+    }
+    common_print(rsc, pre_text, rsc_printable_id(rsc), node, options, print_data);
+}
+
+void
 native_free(resource_t * rsc)
 {
     pe_rsc_trace(rsc, "Freeing resource action list (not the data)");
@@ -799,7 +812,7 @@ get_rscs_brief(GListPtr rsc_list, GHashTable * rsc_table, GHashTable * active_ta
         }
 
         offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", class);
-        if (safe_str_eq(class, "ocf")) {
+        if (safe_str_eq(class, PCMK_RESOURCE_CLASS_OCF)) {
             const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
             offset += snprintf(buffer + offset, LINE_MAX - offset, "::%s", prov);
         }

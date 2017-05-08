@@ -622,35 +622,39 @@ handle_failcount_op(xmlNode * stored_msg)
 {
     const char *rsc = NULL;
     const char *uname = NULL;
+    const char *op = NULL;
+    const char *interval = NULL;
+    int interval_ms = 0;
     gboolean is_remote_node = FALSE;
-    xmlNode *xml_rsc = get_xpath_object("//" XML_CIB_TAG_RESOURCE, stored_msg, LOG_ERR);
+    xmlNode *xml_op = get_message_xml(stored_msg, F_CRM_DATA);
 
-    if (xml_rsc) {
-        rsc = ID(xml_rsc);
+    if (xml_op) {
+        xmlNode *xml_rsc = first_named_child(xml_op, XML_CIB_TAG_RESOURCE);
+        xmlNode *xml_attrs = first_named_child(xml_op, XML_TAG_ATTRS);
+
+        if (xml_rsc) {
+            rsc = ID(xml_rsc);
+        }
+        if (xml_attrs) {
+            op = crm_element_value(xml_attrs,
+                                   CRM_META "_" XML_RSC_ATTR_CLEAR_OP);
+            interval = crm_element_value(xml_attrs,
+                                         CRM_META "_" XML_RSC_ATTR_CLEAR_INTERVAL);
+            interval_ms = crm_parse_int(interval, "0");
+        }
+    }
+    uname = crm_element_value(xml_op, XML_LRM_ATTR_TARGET);
+
+    if ((rsc == NULL) || (uname == NULL)) {
+        crm_log_xml_warn(stored_msg, "invalid failcount op");
+        return I_NULL;
     }
 
-    uname = crm_element_value(stored_msg, XML_LRM_ATTR_TARGET);
-    if (crm_element_value(stored_msg, XML_LRM_ATTR_ROUTER_NODE)) {
+    if (crm_element_value(xml_op, XML_LRM_ATTR_ROUTER_NODE)) {
         is_remote_node = TRUE;
     }
-
-    if (rsc) {
-        char *attr = NULL;
-
-        crm_info("Removing failcount for %s", rsc);
-
-        attr = crm_concat("fail-count", rsc, '-');
-        update_attrd(uname, attr, NULL, NULL, is_remote_node);
-        free(attr);
-
-        attr = crm_concat("last-failure", rsc, '-');
-        update_attrd(uname, attr, NULL, NULL, is_remote_node);
-        free(attr);
-
-        lrm_clear_last_failure(rsc, uname);
-    } else {
-        crm_log_xml_warn(stored_msg, "invalid failcount op");
-    }
+    update_attrd_clear_failures(uname, rsc, op, interval, is_remote_node);
+    lrm_clear_last_failure(rsc, uname, op, interval_ms);
 
     return I_NULL;
 }
@@ -866,7 +870,18 @@ handle_request(xmlNode * stored_msg, enum crmd_fsa_cause cause)
 
         } else {
             reap_crm_member(id, name);
+
+            /* If we're forgetting this node, also forget any failures to fence
+             * it, so we don't carry that over to any node added later with the
+             * same name.
+             */
+            st_fail_count_reset(name);
         }
+
+    } else if (strcmp(op, CRM_OP_MAINTENANCE_NODES) == 0) {
+        xmlNode *xml = get_message_xml(stored_msg, F_CRM_DATA);
+
+        remote_ra_process_maintenance_nodes(xml);
 
     } else {
         crm_err("Unexpected request (%s) sent to %s", op, AM_I_DC ? "the DC" : "non-DC node");

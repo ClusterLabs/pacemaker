@@ -22,7 +22,7 @@ lib_LTLIBRARIES			= libtransitioner.la
 
 ## SOURCES
 
-libtransitioner_la_LDFLAGS	= -version-info 2:6:0
+libtransitioner_la_LDFLAGS	= -version-info 2:7:0
 libtransitioner_la_CPPFLAGS	= -I$(top_builddir) $(AM_CPPFLAGS)
 
 libtransitioner_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)

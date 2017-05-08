@@ -401,83 +401,15 @@ lrm_state_ipc_connect(lrm_state_t * lrm_state)
     return ret;
 }
 
-static int
-remote_proxy_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
-{
-    /* Async responses from cib and friends back to clients via pacemaker_remoted */
-    xmlNode *xml = NULL;
-    remote_proxy_t *proxy = userdata;
-    lrm_state_t *lrm_state = lrm_state_find(proxy->node_name);
-    uint32_t flags;
-
-    if (lrm_state == NULL) {
-        return 0;
-    }
-
-    xml = string2xml(buffer);
-    if (xml == NULL) {
-        crm_warn("Received a NULL msg from IPC service.");
-        return 1;
-    }
-
-    flags = crm_ipc_buffer_flags(proxy->ipc);
-    if (flags & crm_ipc_proxied_relay_response) {
-        crm_trace("Passing response back to %.8s on %s: %.200s - request id: %d", proxy->session_id, proxy->node_name, buffer, proxy->last_request_id);
-        remote_proxy_relay_response(lrm_state->conn, proxy->session_id, xml, proxy->last_request_id);
-        proxy->last_request_id = 0;
-
-    } else {
-        crm_trace("Passing event back to %.8s on %s: %.200s", proxy->session_id, proxy->node_name, buffer);
-        remote_proxy_relay_event(lrm_state->conn, proxy->session_id, xml);
-    }
-    free_xml(xml);
-    return 1;
-}
-
-static void
-remote_proxy_disconnected(void *userdata)
-{
-    remote_proxy_t *proxy = userdata;
-    lrm_state_t *lrm_state = lrm_state_find(proxy->node_name);
-
-    crm_trace("Destroying %s (%p)", lrm_state->node_name, userdata);
-
-    proxy->source = NULL;
-    proxy->ipc = NULL;
-
-    if (lrm_state && lrm_state->conn) {
-        remote_proxy_notify_destroy(lrm_state->conn, proxy->session_id);
-    }
-    g_hash_table_remove(proxy_table, proxy->session_id);
-}
-
 static remote_proxy_t *
-remote_proxy_new(const char *node_name, const char *session_id, const char *channel)
+crmd_remote_proxy_new(lrmd_t *lrmd, const char *node_name, const char *session_id, const char *channel)
 {
     static struct ipc_client_callbacks proxy_callbacks = {
-        .dispatch = remote_proxy_dispatch_internal,
+        .dispatch = remote_proxy_dispatch,
         .destroy = remote_proxy_disconnected
     };
-    remote_proxy_t *proxy = calloc(1, sizeof(remote_proxy_t));
-
-    proxy->node_name = strdup(node_name);
-    proxy->session_id = strdup(session_id);
-
-    if (safe_str_eq(channel, CRM_SYSTEM_CRMD)) {
-        proxy->is_local = TRUE;
-    } else {
-        proxy->source = mainloop_add_ipc_client(channel, G_PRIORITY_LOW, 0, proxy, &proxy_callbacks);
-        proxy->ipc = mainloop_get_ipc_client(proxy->source);
-
-        if (proxy->source == NULL) {
-            remote_proxy_free(proxy);
-            return NULL;
-        }
-    }
-
-    crm_trace("created proxy session ID %s", proxy->session_id);
-    g_hash_table_insert(proxy_table, proxy->session_id, proxy);
-
+    remote_proxy_t *proxy = remote_proxy_new(lrmd, &proxy_callbacks, node_name,
+                                             session_id, channel);
     return proxy;
 }
 
@@ -500,7 +432,7 @@ crmd_proxy_send(const char *session, xmlNode *msg)
     lrm_state = lrm_state_find(proxy->node_name);
     if (lrm_state) {
         crm_trace("Sending event to %.8s on %s", proxy->session_id, proxy->node_name);
-        remote_proxy_relay_event(lrm_state->conn, session, msg);
+        remote_proxy_relay_event(proxy, msg);
     }
 }
 
@@ -535,7 +467,7 @@ remote_config_check(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
             crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
 
         crm_debug("Call %d : Parsing CIB options", call_id);
-        
+
         unpack_instance_attributes(
             output, output, XML_CIB_TAG_PROPSET, NULL, config_hash, CIB_OPTIONS_FIRST, FALSE, now);
 
@@ -548,153 +480,83 @@ remote_config_check(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
 }
 
 static void
-remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
+crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 {
     lrm_state_t *lrm_state = userdata;
-    const char *op = crm_element_value(msg, F_LRMD_IPC_OP);
     const char *session = crm_element_value(msg, F_LRMD_IPC_SESSION);
-    int msg_id = 0;
+    remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
 
-    /* sessions are raw ipc connections to IPC,
-     * all we do is proxy requests/responses exactly
-     * like they are given to us at the ipc level. */
+    const char *op = crm_element_value(msg, F_LRMD_IPC_OP);
+    if (safe_str_eq(op, LRMD_IPC_OP_NEW)) {
+        const char *channel = crm_element_value(msg, F_LRMD_IPC_IPC_SERVER);
 
-    CRM_CHECK(op != NULL, return);
-    CRM_CHECK(session != NULL, return);
+        proxy = crmd_remote_proxy_new(lrmd, lrm_state->node_name, session, channel);
+        if (proxy != NULL) {
+            /* Look up stonith-watchdog-timeout and send to the remote peer for validation */
+            int rc = fsa_cib_conn->cmds->query(fsa_cib_conn, XML_CIB_TAG_CRMCONFIG, NULL, cib_scope_local);
+            fsa_cib_conn->cmds->register_callback_full(fsa_cib_conn, rc, 10, FALSE, lrmd,
+                                                       "remote_config_check", remote_config_check, NULL);
+        }
 
-    crm_element_value_int(msg, F_LRMD_IPC_MSG_ID, &msg_id);
-    /* This is msg from remote ipc client going to real ipc server */
-
-    if (safe_str_eq(op, LRMD_IPC_OP_SHUTDOWN_REQ)) {
+    } else if (safe_str_eq(op, LRMD_IPC_OP_SHUTDOWN_REQ)) {
         char *now_s = NULL;
         time_t now = time(NULL);
 
         crm_notice("%s requested shutdown of its remote connection",
                    lrm_state->node_name);
 
-        now_s = crm_itoa(now);
-        update_attrd(lrm_state->node_name, XML_CIB_ATTR_SHUTDOWN, now_s, NULL, TRUE);
-        free(now_s);
+        if (!remote_ra_is_in_maintenance(lrm_state)) {
+            now_s = crm_itoa(now);
+            update_attrd(lrm_state->node_name, XML_CIB_ATTR_SHUTDOWN, now_s, NULL, TRUE);
+            free(now_s);
 
-        remote_proxy_ack_shutdown(lrmd);
+            remote_proxy_ack_shutdown(lrmd);
 
-        crm_warn("Reconnection attempts to %s may result in failures that must be cleared",
-                 lrm_state->node_name);
+            crm_warn("Reconnection attempts to %s may result in failures that must be cleared",
+                    lrm_state->node_name);
+        } else {
+            remote_proxy_nack_shutdown(lrmd);
+
+            crm_notice("Remote resource for %s is not managed so no ordered shutdown happening",
+                    lrm_state->node_name);
+        }
         return;
 
-    } else if (safe_str_eq(op, LRMD_IPC_OP_NEW)) {
-        int rc;
-        const char *channel = crm_element_value(msg, F_LRMD_IPC_IPC_SERVER);
-
-        CRM_CHECK(channel != NULL, return);
-
-        if (remote_proxy_new(lrm_state->node_name, session, channel) == NULL) {
-            remote_proxy_notify_destroy(lrmd, session);
-        }
-        crm_trace("new remote proxy client established to %s, session id %s", channel, session);
-
-        /* Look up stonith-watchdog-timeout and send to the remote peer for validation */
-        rc = fsa_cib_conn->cmds->query(fsa_cib_conn, XML_CIB_TAG_CRMCONFIG, NULL, cib_scope_local);
-        fsa_cib_conn->cmds->register_callback_full(fsa_cib_conn, rc, 10, FALSE, lrmd, "remote_config_check", remote_config_check, NULL);
-        
-    } else if (safe_str_eq(op, LRMD_IPC_OP_DESTROY)) {
-        remote_proxy_end_session(session);
-
-    } else if (safe_str_eq(op, LRMD_IPC_OP_REQUEST)) {
+    } else if (safe_str_eq(op, LRMD_IPC_OP_REQUEST) && proxy && proxy->is_local) {
+        /* this is for the crmd, which we are, so don't try
+         * and connect/send to ourselves over ipc. instead
+         * do it directly.
+         */
         int flags = 0;
         xmlNode *request = get_message_xml(msg, F_LRMD_IPC_MSG);
-        const char *name = crm_element_value(msg, F_LRMD_IPC_CLIENT);
-        remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
 
         CRM_CHECK(request != NULL, return);
-
-        if (proxy == NULL) {
-            /* proxy connection no longer exists */
-            remote_proxy_notify_destroy(lrmd, session);
-            return;
-        } else if ((proxy->is_local == FALSE) && (crm_ipc_connected(proxy->ipc) == FALSE)) {
-            remote_proxy_end_session(session);
-            return;
-        }
-        proxy->last_request_id = 0;
-        crm_element_value_int(msg, F_LRMD_IPC_MSG_FLAGS, &flags);
-        crm_xml_add(request, XML_ACL_TAG_ROLE, "pacemaker-remote");
-
 #if ENABLE_ACL
-        CRM_ASSERT(lrm_state->node_name);
+        CRM_CHECK(lrm_state->node_name, return);
+        crm_xml_add(request, XML_ACL_TAG_ROLE, "pacemaker-remote");
         crm_acl_get_set_user(request, F_LRMD_IPC_USER, lrm_state->node_name);
 #endif
+        crmd_proxy_dispatch(session, request);
 
-        if (proxy->is_local) {
-            /* this is for the crmd, which we are, so don't try
-             * and connect/send to ourselves over ipc. instead
-             * do it directly. */
-            crmd_proxy_dispatch(session, request);
-            if (flags & crm_ipc_client_response) {
-                xmlNode *op_reply = create_xml_node(NULL, "ack");
+        crm_element_value_int(msg, F_LRMD_IPC_MSG_FLAGS, &flags);
+        if (flags & crm_ipc_client_response) {
+            int msg_id = 0;
+            xmlNode *op_reply = create_xml_node(NULL, "ack");
 
-                crm_xml_add(op_reply, "function", __FUNCTION__);
-                crm_xml_add_int(op_reply, "line", __LINE__);
-                remote_proxy_relay_response(lrmd, session, op_reply, msg_id);
-                free_xml(op_reply);
-            }
+            crm_xml_add(op_reply, "function", __FUNCTION__);
+            crm_xml_add_int(op_reply, "line", __LINE__);
 
-        } else if(is_set(flags, crm_ipc_proxied)) {
-            const char *type = crm_element_value(request, F_TYPE);
-            int rc = 0;
+            crm_element_value_int(msg, F_LRMD_IPC_MSG_ID, &msg_id);
+            remote_proxy_relay_response(proxy, op_reply, msg_id);
 
-            if (safe_str_eq(type, T_ATTRD)
-                && crm_element_value(request, F_ATTRD_HOST) == NULL) {
-                crm_xml_add(request, F_ATTRD_HOST, proxy->node_name);
-            }
-
-            rc = crm_ipc_send(proxy->ipc, request, flags, 5000, NULL);
-
-            if(rc < 0) {
-                xmlNode *op_reply = create_xml_node(NULL, "nack");
-
-                crm_err("Could not relay %s request %d from %s to %s for %s: %s (%d)",
-                         op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name, pcmk_strerror(rc), rc);
-
-                /* Send a n'ack so the caller doesn't block */
-                crm_xml_add(op_reply, "function", __FUNCTION__);
-                crm_xml_add_int(op_reply, "line", __LINE__);
-                crm_xml_add_int(op_reply, "rc", rc);
-                remote_proxy_relay_response(lrmd, session, op_reply, msg_id);
-                free_xml(op_reply);
-
-            } else {
-                crm_trace("Relayed %s request %d from %s to %s for %s",
-                          op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name);
-                proxy->last_request_id = msg_id;
-            }
-
-        } else {
-            int rc = pcmk_ok;
-            xmlNode *op_reply = NULL;
-            /* For backwards compatibility with pacemaker_remoted <= 1.1.10 */
-
-            crm_trace("Relaying %s request %d from %s to %s for %s",
-                      op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name);
-
-            rc = crm_ipc_send(proxy->ipc, request, flags, 10000, &op_reply);
-            if(rc < 0) {
-                crm_err("Could not relay %s request %d from %s to %s for %s: %s (%d)",
-                         op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name, pcmk_strerror(rc), rc);
-            } else {
-                crm_trace("Relayed %s request %d from %s to %s for %s",
-                          op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name);
-            }
-
-            if(op_reply) {
-                remote_proxy_relay_response(lrmd, session, op_reply, msg_id);
-                free_xml(op_reply);
-            }
+            free_xml(op_reply);
         }
+
     } else {
-        crm_err("Unknown proxy operation: %s", op);
+        remote_proxy_cb(lrmd, lrm_state->node_name, msg);
     }
 }
+
 
 int
 lrm_state_remote_connect_async(lrm_state_t * lrm_state, const char *server, int port,
@@ -708,7 +570,7 @@ lrm_state_remote_connect_async(lrm_state_t * lrm_state, const char *server, int 
             return -1;
         }
         ((lrmd_t *) lrm_state->conn)->cmds->set_callback(lrm_state->conn, remote_lrm_op_callback);
-        lrmd_internal_set_proxy_callback(lrm_state->conn, lrm_state, remote_proxy_cb);
+        lrmd_internal_set_proxy_callback(lrm_state->conn, lrm_state, crmd_remote_proxy_cb);
     }
 
     crm_trace("initiating remote connection to %s at %d with timeout %d", server, port, timeout_ms);
@@ -852,3 +714,4 @@ lrm_state_unregister_rsc(lrm_state_t * lrm_state,
 
     return ((lrmd_t *) lrm_state->conn)->cmds->unregister_rsc(lrm_state->conn, rsc_id, options);
 }
+

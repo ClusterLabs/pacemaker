@@ -9,7 +9,10 @@ addFilter("mixed-use-of-spaces-and-tabs")
 addFilter("W: only-non-binary-in-usr-lib")
 addFilter("E: hardcoded-library-path in /usr/lib/ocf")
 
-# Its there but rpmlint can't find it for some reason
+# Common location used to guess systemd presence
+addFilter("E: hardcoded-library-path in /usr/lib/os-release")
+
+# It's there but rpmlint can't find it for some reason
 addFilter("no-status-entry /etc/rc.d/init.d/")
 
 # We don't want the cluster to start by default 
@@ -36,3 +39,12 @@ addFilter("E: incoherent-logrotate-file /etc/logrotate.d/pacemaker")
 
 # buildbot builds the not-yet-released version
 addFilter("W: incoherent-version-in-changelog")
+
+# pacemaker_remote scriptlets use a state file
+addFilter("W: dangerous-command-in-%(pre|postun|posttrans) rm")
+
+# We should really use "pacemaker-remote", but we don't
+addFilter("W: incoherent-init-script-name pacemaker_remote")
+
+# Some scriptlets have code for systemd systems only
+addFilter("W: empty-%(post|pre|preun|postun|posttrans)")

@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="34" operation="stop" operation_key="qpidd_stop_0" internal_operation_key="qpidd:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4">
         <primitive id="qpidd" long-id="qpidd:0" class="lsb" type="qpidd"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos4-node4" CRM_meta_on_node_uuid="rhos4-node4" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="35" operation="stop" operation_key="qpidd_stop_0" internal_operation_key="qpidd:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3">
         <primitive id="qpidd" long-id="qpidd:1" class="lsb" type="qpidd"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos4-node3" CRM_meta_on_node_uuid="rhos4-node3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -59,7 +59,7 @@
     <action_set>
       <rsc_op id="40" operation="stop" operation_key="keystone_stop_0" internal_operation_key="keystone:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4">
         <primitive id="keystone" long-id="keystone:0" class="lsb" type="openstack-keystone"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos4-node4" CRM_meta_on_node_uuid="rhos4-node4" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -72,7 +72,7 @@
     <action_set>
       <rsc_op id="42" operation="stop" operation_key="keystone_stop_0" internal_operation_key="keystone:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3">
         <primitive id="keystone" long-id="keystone:1" class="lsb" type="openstack-keystone"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos4-node3" CRM_meta_on_node_uuid="rhos4-node3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -148,7 +148,7 @@
     <action_set>
       <rsc_op id="48" operation="stop" operation_key="glance-fs_stop_0" internal_operation_key="glance-fs:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4">
         <primitive id="glance-fs" long-id="glance-fs:0" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000"  device="192.168.0.2:/srv/vms/clusters/nfs-storage/glance" directory="/var/lib/glance/" fstype="nfs" options="v3"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos4-node4" CRM_meta_on_node_uuid="rhos4-node4" CRM_meta_timeout="20000"  device="192.168.0.2:/srv/vms/clusters/nfs-storage/glance" directory="/var/lib/glance/" fstype="nfs" options="v3"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -164,7 +164,7 @@
     <action_set>
       <rsc_op id="50" operation="stop" operation_key="glance-registry_stop_0" internal_operation_key="glance-registry:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4">
         <primitive id="glance-registry" long-id="glance-registry:0" class="lsb" type="openstack-glance-registry"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos4-node4" CRM_meta_on_node_uuid="rhos4-node4" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -180,7 +180,7 @@
     <action_set>
       <rsc_op id="52" operation="stop" operation_key="glance-api_stop_0" internal_operation_key="glance-api:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4">
         <primitive id="glance-api" long-id="glance-api:0" class="lsb" type="openstack-glance-api"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos4-node4" CRM_meta_on_node_uuid="rhos4-node4" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -226,7 +226,7 @@
     <action_set>
       <rsc_op id="58" operation="stop" operation_key="glance-fs_stop_0" internal_operation_key="glance-fs:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3">
         <primitive id="glance-fs" long-id="glance-fs:1" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000"  device="192.168.0.2:/srv/vms/clusters/nfs-storage/glance" directory="/var/lib/glance/" fstype="nfs" options="v3"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos4-node3" CRM_meta_on_node_uuid="rhos4-node3" CRM_meta_timeout="20000"  device="192.168.0.2:/srv/vms/clusters/nfs-storage/glance" directory="/var/lib/glance/" fstype="nfs" options="v3"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -242,7 +242,7 @@
     <action_set>
       <rsc_op id="60" operation="stop" operation_key="glance-registry_stop_0" internal_operation_key="glance-registry:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3">
         <primitive id="glance-registry" long-id="glance-registry:1" class="lsb" type="openstack-glance-registry"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos4-node3" CRM_meta_on_node_uuid="rhos4-node3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -258,7 +258,7 @@
     <action_set>
       <rsc_op id="62" operation="stop" operation_key="glance-api_stop_0" internal_operation_key="glance-api:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3">
         <primitive id="glance-api" long-id="glance-api:1" class="lsb" type="openstack-glance-api"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos4-node3" CRM_meta_on_node_uuid="rhos4-node3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -334,7 +334,7 @@
     <action_set>
       <rsc_op id="72" operation="stop" operation_key="cinder-api_stop_0" internal_operation_key="cinder-api:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4">
         <primitive id="cinder-api" long-id="cinder-api:0" class="lsb" type="openstack-cinder-api"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos4-node4" CRM_meta_on_node_uuid="rhos4-node4" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -350,7 +350,7 @@
     <action_set>
       <rsc_op id="74" operation="stop" operation_key="cinder-scheduler_stop_0" internal_operation_key="cinder-scheduler:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4">
         <primitive id="cinder-scheduler" long-id="cinder-scheduler:0" class="lsb" type="openstack-cinder-scheduler"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos4-node4" CRM_meta_on_node_uuid="rhos4-node4" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -366,7 +366,7 @@
     <action_set>
       <rsc_op id="76" operation="stop" operation_key="cinder-volume_stop_0" internal_operation_key="cinder-volume:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4">
         <primitive id="cinder-volume" long-id="cinder-volume:0" class="lsb" type="openstack-cinder-volume"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos4-node4" CRM_meta_on_node_uuid="rhos4-node4" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -412,7 +412,7 @@
     <action_set>
       <rsc_op id="82" operation="stop" operation_key="cinder-api_stop_0" internal_operation_key="cinder-api:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3">
         <primitive id="cinder-api" long-id="cinder-api:1" class="lsb" type="openstack-cinder-api"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos4-node3" CRM_meta_on_node_uuid="rhos4-node3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -428,7 +428,7 @@
     <action_set>
       <rsc_op id="84" operation="stop" operation_key="cinder-scheduler_stop_0" internal_operation_key="cinder-scheduler:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3">
         <primitive id="cinder-scheduler" long-id="cinder-scheduler:1" class="lsb" type="openstack-cinder-scheduler"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos4-node3" CRM_meta_on_node_uuid="rhos4-node3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -444,7 +444,7 @@
     <action_set>
       <rsc_op id="86" operation="stop" operation_key="cinder-volume_stop_0" internal_operation_key="cinder-volume:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3">
         <primitive id="cinder-volume" long-id="cinder-volume:1" class="lsb" type="openstack-cinder-volume"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhos4-node3" CRM_meta_on_node_uuid="rhos4-node3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>

@@ -82,9 +82,9 @@ native_color: clvmd:2 allocation score on lama2: -INFINITY
 native_color: clvmd:2 allocation score on lama3: -INFINITY
 native_color: dlm:0 allocation score on RNVM1: -INFINITY
 native_color: dlm:0 allocation score on lama2: 1
-native_color: dlm:0 allocation score on lama3: -INFINITY
+native_color: dlm:0 allocation score on lama3: 0
 native_color: dlm:1 allocation score on RNVM1: -INFINITY
-native_color: dlm:1 allocation score on lama2: 0
+native_color: dlm:1 allocation score on lama2: -INFINITY
 native_color: dlm:1 allocation score on lama3: 1
 native_color: dlm:2 allocation score on RNVM1: -INFINITY
 native_color: dlm:2 allocation score on lama2: -INFINITY

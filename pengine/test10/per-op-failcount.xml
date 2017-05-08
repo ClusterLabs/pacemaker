@@ -1,0 +1,118 @@
+<cib crm_feature_set="3.0.13" validate-with="pacemaker-2.8" epoch="4" num_updates="16" admin_epoch="0" cib-last-written="Thu Apr  6 18:04:01 2017" update-origin="rh73-01-snmp" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="3232238265" execution-date="1491469462">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.16-71dbd12"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair name="no-quorum-policy" value="ignore" id="cib-bootstrap-options-no-quorum-policy"/>
+        <nvpair name="stonith-enabled" value="true" id="cib-bootstrap-options-stonith-enabled"/>
+        <nvpair name="startup-fencing" value="false" id="cib-bootstrap-options-startup-fencing"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="3232238265" uname="rh73-01-snmp"/>
+      <node id="3232238266" uname="rh73-02-snmp"/>
+    </nodes>
+    <resources>
+      <primitive id="prmDummy" class="ocf" provider="pacemaker" type="Dummy">
+        <operations>
+          <op name="start" interval="0s" timeout="60s" on-fail="restart" id="prmDummy-start-0s"/>
+          <op name="monitor" interval="10s" timeout="60s" on-fail="restart" id="prmDummy-monitor-10s"/>
+          <op name="stop" interval="0s" timeout="60s" on-fail="fence" id="prmDummy-stop-0s"/>
+        </operations>
+      </primitive>
+      <primitive id="prmStonith1-1" class="stonith" type="external/ssh">
+        <instance_attributes id="prmStonith1-1-instance_attributes">
+          <nvpair name="pcmk_reboot_retries" value="1" id="prmStonith1-1-instance_attributes-pcmk_reboot_retries"/>
+          <nvpair name="pcmk_reboot_timeout" value="40s" id="prmStonith1-1-instance_attributes-pcmk_reboot_timeout"/>
+          <nvpair name="hostlist" value="rh73-01-snmp" id="prmStonith1-1-instance_attributes-hostlist"/>
+        </instance_attributes>
+        <operations>
+          <op name="start" interval="0s" timeout="60s" on-fail="restart" id="prmStonith1-1-start-0s"/>
+          <op name="stop" interval="0s" timeout="60s" on-fail="ignore" id="prmStonith1-1-stop-0s"/>
+        </operations>
+      </primitive>
+      <primitive id="prmStonith2-1" class="stonith" type="external/ssh">
+        <instance_attributes id="prmStonith2-1-instance_attributes">
+          <nvpair name="pcmk_reboot_retries" value="1" id="prmStonith2-1-instance_attributes-pcmk_reboot_retries"/>
+          <nvpair name="pcmk_reboot_timeout" value="40s" id="prmStonith2-1-instance_attributes-pcmk_reboot_timeout"/>
+          <nvpair name="hostlist" value="rh73-02-snmp" id="prmStonith2-1-instance_attributes-hostlist"/>
+        </instance_attributes>
+        <operations>
+          <op name="start" interval="0s" timeout="60s" on-fail="restart" id="prmStonith2-1-start-0s"/>
+          <op name="stop" interval="0s" timeout="60s" on-fail="ignore" id="prmStonith2-1-stop-0s"/>
+        </operations>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_location id="rsc_location-1" rsc="prmDummy">
+        <!--### Resource Location ###-->
+        <rule score="300" id="rsc_location-1-rule">
+          <expression attribute="#uname" operation="eq" value="rh73-01-snmp" id="rsc_location-1-rule-expression"/>
+        </rule>
+        <rule score="200" id="rsc_location-1-rule-0">
+          <expression attribute="#uname" operation="eq" value="rh73-02-snmp" id="rsc_location-1-rule-0-expression"/>
+        </rule>
+      </rsc_location>
+    </constraints>
+    <fencing-topology>
+      <fencing-level devices="prmStonith1-1" index="1" target="rh73-01-snmp" id="fencing"/>
+      <fencing-level devices="prmStonith2-1" index="1" target="rh73-02-snmp" id="fencing-0"/>
+    </fencing-topology>
+    <rsc_defaults>
+      <meta_attributes id="rsc-options">
+        <nvpair name="resource-stickiness" value="INFINITY" id="rsc-options-resource-stickiness"/>
+        <nvpair name="migration-threshold" value="INFINITY" id="rsc-options-migration-threshold"/>
+      </meta_attributes>
+    </rsc_defaults>
+  </configuration>
+  <status>
+    <node_state id="3232238266" uname="rh73-02-snmp" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="3232238266">
+        <lrm_resources>
+          <lrm_resource id="prmStonith1-1" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith1-1_last_0" operation_key="prmStonith1-1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.13" transition-key="10:1:0:b7473df5-063c-4fcb-8a21-ad97057cde4e" transition-magic="0:0;10:1:0:b7473df5-063c-4fcb-8a21-ad97057cde4e" on_node="rh73-02-snmp" call-id="14" rc-code="0" op-status="0" interval="0" last-run="1491469441" last-rc-change="1491469441" exec-time="1095" queue-time="0" op-digest="f5a04fe6e81a361a76eb0c07358e3c8c"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith2-1" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith2-1_last_0" operation_key="prmStonith2-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.13" transition-key="7:1:7:b7473df5-063c-4fcb-8a21-ad97057cde4e" transition-magic="0:7;7:1:7:b7473df5-063c-4fcb-8a21-ad97057cde4e" on_node="rh73-02-snmp" call-id="13" rc-code="7" op-status="0" interval="0" last-run="1491469440" last-rc-change="1491469440" exec-time="0" queue-time="0" op-digest="509683ffd094721b85b9d2805ce42080"/>
+          </lrm_resource>
+          <lrm_resource id="prmDummy" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmDummy_last_0" operation_key="prmDummy_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.13" transition-key="5:1:7:b7473df5-063c-4fcb-8a21-ad97057cde4e" transition-magic="0:7;5:1:7:b7473df5-063c-4fcb-8a21-ad97057cde4e" on_node="rh73-02-snmp" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1491469440" last-rc-change="1491469440" exec-time="41" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state  passwd  op_sleep  envfile " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="3232238266">
+        <instance_attributes id="status-3232238266">
+          <nvpair id="status-3232238266-shutdown" name="shutdown" value="0"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="3232238265" uname="rh73-01-snmp" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="3232238265">
+        <lrm_resources>
+          <lrm_resource id="prmStonith1-1" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith1-1_last_0" operation_key="prmStonith1-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.13" transition-key="3:1:7:b7473df5-063c-4fcb-8a21-ad97057cde4e" transition-magic="0:7;3:1:7:b7473df5-063c-4fcb-8a21-ad97057cde4e" on_node="rh73-01-snmp" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1491469442" last-rc-change="1491469442" exec-time="7" queue-time="0" op-digest="f5a04fe6e81a361a76eb0c07358e3c8c"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith2-1" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith2-1_last_0" operation_key="prmStonith2-1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.13" transition-key="11:1:0:b7473df5-063c-4fcb-8a21-ad97057cde4e" transition-magic="0:0;11:1:0:b7473df5-063c-4fcb-8a21-ad97057cde4e" on_node="rh73-01-snmp" call-id="15" rc-code="0" op-status="0" interval="0" last-run="1491469442" last-rc-change="1491469442" exec-time="1144" queue-time="0" op-digest="509683ffd094721b85b9d2805ce42080"/>
+          </lrm_resource>
+          <lrm_resource id="prmDummy" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmDummy_last_0" operation_key="prmDummy_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.13" transition-key="2:3:0:b7473df5-063c-4fcb-8a21-ad97057cde4e" transition-magic="7:5;2:3:0:b7473df5-063c-4fcb-8a21-ad97057cde4e" on_node="rh73-01-snmp" call-id="18" rc-code="5" op-status="7" interval="0" last-run="1491469462" last-rc-change="1491469462" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state  passwd  op_sleep  envfile " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmDummy_monitor_10000" operation_key="prmDummy_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.13" transition-key="9:1:0:b7473df5-063c-4fcb-8a21-ad97057cde4e" transition-magic="0:0;9:1:0:b7473df5-063c-4fcb-8a21-ad97057cde4e" on_node="rh73-01-snmp" call-id="16" rc-code="0" op-status="0" interval="10000" last-rc-change="1491469442" exec-time="36" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmDummy_last_failure_0" operation_key="prmDummy_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.13" transition-key="2:3:0:b7473df5-063c-4fcb-8a21-ad97057cde4e" transition-magic="7:5;2:3:0:b7473df5-063c-4fcb-8a21-ad97057cde4e" on_node="rh73-01-snmp" call-id="18" rc-code="5" op-status="7" interval="0" last-rc-change="1491469462" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" last-run="1491469462"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="3232238265">
+        <instance_attributes id="status-3232238265">
+          <nvpair id="status-3232238265-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-3232238265-fail-count-prmDummy.monitor_10000" name="fail-count-prmDummy#monitor_10000" value="1"/>
+          <nvpair id="status-3232238265-last-failure-prmDummy.monitor_10000" name="last-failure-prmDummy#monitor_10000" value="1491469462"/>
+          <nvpair id="status-3232238265-fail-count-prmDummy.stop_0" name="fail-count-prmDummy#stop_0" value="INFINITY"/>
+          <nvpair id="status-3232238265-last-failure-prmDummy.stop_0" name="last-failure-prmDummy#stop_0" value="1491469462"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>

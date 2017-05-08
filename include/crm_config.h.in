@@ -30,9 +30,6 @@
 /* Build version */
 #undef BUILD_VERSION
 
-/* Current version of the Pacemaker Relax-NG Schema */
-#undef CRM_DTD_VERSION
-
 /****** Other ******/
 
 /* Group to run Pacemaker daemons as */
@@ -42,6 +39,9 @@
 #undef CRM_DAEMON_USER
 
 /****** Directories ******/
+
+/* Where Pacemaker can store log files */
+#undef CRM_LOG_DIR
 
 /* Location for Pacemaker daemons */
 #undef CRM_DAEMON_DIR

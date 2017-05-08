@@ -36,9 +36,14 @@ endif
 lrmd_CFLAGS		= $(CFLAGS_HARDENED_EXE)
 lrmd_LDFLAGS		= $(LDFLAGS_HARDENED_EXE)
 
+#VERSIONED_LDADD		= $(top_builddir)/lib/lrmd/liblrmd.la		\
+#			$(top_builddir)/lib/pengine/libpe_rules.la
+VERSIONED_LDADD		=
+
 lrmd_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/services/libcrmservice.la	\
-			$(top_builddir)/lib/fencing/libstonithd.la ${COMPAT_LIBS}
+			$(top_builddir)/lib/fencing/libstonithd.la	\
+			$(VERSIONED_LDADD) ${COMPAT_LIBS}
 lrmd_SOURCES		= main.c lrmd.c
 
 pacemaker_remoted_CPPFLAGS	= -DSUPPORT_REMOTE $(AM_CPPFLAGS)

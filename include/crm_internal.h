@@ -126,6 +126,7 @@ gboolean check_time(const char *value);
 gboolean check_timer(const char *value);
 gboolean check_boolean(const char *value);
 gboolean check_number(const char *value);
+gboolean check_positive_number(const char *value);
 gboolean check_quorum(const char *value);
 gboolean check_script(const char *value);
 gboolean check_utilization(const char *value);
@@ -157,39 +158,39 @@ char *generate_transition_magic(const char *transition_key, int op_status, int o
 char *generate_transition_key(int action, int transition_id, int target_rc, const char *node);
 
 static inline long long
-crm_clear_bit(const char *function, const char *target, long long word, long long bit)
+crm_clear_bit(const char *function, int line, const char *target, long long word, long long bit)
 {
     long long rc = (word & ~bit);
 
     if (rc == word) {
         /* Unchanged */
     } else if (target) {
-        crm_trace("Bit 0x%.8llx for %s cleared by %s", bit, target, function);
+        crm_trace("Bit 0x%.8llx for %s cleared by %s:%d", bit, target, function, line);
     } else {
-        crm_trace("Bit 0x%.8llx cleared by %s", bit, function);
+        crm_trace("Bit 0x%.8llx cleared by %s:%d", bit, function, line);
     }
 
     return rc;
 }
 
 static inline long long
-crm_set_bit(const char *function, const char *target, long long word, long long bit)
+crm_set_bit(const char *function, int line, const char *target, long long word, long long bit)
 {
     long long rc = (word | bit);
 
     if (rc == word) {
         /* Unchanged */
     } else if (target) {
-        crm_trace("Bit 0x%.8llx for %s set by %s", bit, target, function);
+        crm_trace("Bit 0x%.8llx for %s set by %s:%d", bit, target, function, line);
     } else {
-        crm_trace("Bit 0x%.8llx set by %s", bit, function);
+        crm_trace("Bit 0x%.8llx set by %s:%d", bit, function, line);
     }
 
     return rc;
 }
 
-#  define set_bit(word, bit) word = crm_set_bit(__FUNCTION__, NULL, word, bit)
-#  define clear_bit(word, bit) word = crm_clear_bit(__FUNCTION__, NULL, word, bit)
+#  define set_bit(word, bit) word = crm_set_bit(__FUNCTION__, __LINE__, NULL, word, bit)
+#  define clear_bit(word, bit) word = crm_clear_bit(__FUNCTION__, __LINE__, NULL, word, bit)
 
 char *generate_hash_key(const char *crm_msg_reference, const char *sys);
 
@@ -204,6 +205,7 @@ int crm_remote_tcp_connect(const char *host, int port);
 int crm_remote_tcp_connect_async(const char *host, int port, int timeout,       /*ms */
                                  int *timer_id, void *userdata, void (*callback) (void *userdata, int sock));
 int crm_remote_accept(int ssock);
+void crm_sockaddr2str(void *sa, char *s);
 
 #  ifdef HAVE_GNUTLS_GNUTLS_H
 /*!
@@ -273,6 +275,9 @@ long crm_read_pidfile(const char *filename);
 #  define F_ATTRD_USER		"attr_user"
 #  define F_ATTRD_WRITER	"attr_writer"
 #  define F_ATTRD_VERSION	"attr_version"
+#  define F_ATTRD_RESOURCE          "attr_resource"
+#  define F_ATTRD_OPERATION         "attr_clear_operation"
+#  define F_ATTRD_INTERVAL          "attr_clear_interval"
 
 /* attrd operations */
 #  define ATTRD_OP_PEER_REMOVE   "peer-remove"
@@ -284,6 +289,7 @@ long crm_read_pidfile(const char *filename);
 #  define ATTRD_OP_FLUSH         "flush"
 #  define ATTRD_OP_SYNC          "sync"
 #  define ATTRD_OP_SYNC_RESPONSE "sync-response"
+#  define ATTRD_OP_CLEAR_FAILURE "clear-failure"
 
 #  if SUPPORT_COROSYNC
 #    if CS_USES_LIBQB
@@ -361,14 +367,29 @@ typedef struct remote_proxy_s {
     crm_ipc_t *ipc;
     mainloop_io_t *source;
     uint32_t last_request_id;
+    lrmd_t *lrm;
 
 } remote_proxy_t;
-void remote_proxy_notify_destroy(lrmd_t *lrmd, const char *session_id);
-void remote_proxy_ack_shutdown(lrmd_t *lrmd);
-void remote_proxy_relay_event(lrmd_t *lrmd, const char *session_id, xmlNode *msg);
-void remote_proxy_relay_response(lrmd_t *lrmd, const char *session_id, xmlNode *msg, int msg_id);
-void remote_proxy_end_session(const char *session);
-void remote_proxy_free(gpointer data);
-int  remote_proxy_check(lrmd_t * lrmd, GHashTable *hash);
 
+remote_proxy_t *remote_proxy_new(
+    lrmd_t *lrmd, struct ipc_client_callbacks *proxy_callbacks,
+    const char *node_name, const char *session_id, const char *channel);
+
+int  remote_proxy_check(lrmd_t *lrmd, GHashTable *hash);
+void remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg);
+void remote_proxy_ack_shutdown(lrmd_t *lrmd);
+void remote_proxy_nack_shutdown(lrmd_t *lrmd);
+
+int  remote_proxy_dispatch(const char *buffer, ssize_t length, gpointer userdata);
+void remote_proxy_disconnected(gpointer data);
+void remote_proxy_free(gpointer data);
+
+void remote_proxy_relay_event(remote_proxy_t *proxy, xmlNode *msg);
+void remote_proxy_relay_response(remote_proxy_t *proxy, xmlNode *msg, int msg_id);
+
+
+#ifdef ENABLE_VERSIONED_ATTRS
+char* crm_versioned_param_summary(xmlNode *versioned_params, const char *name);
+void crm_summarize_versioned_params(xmlNode *param_set, xmlNode *versioned_params);
+#endif
 #endif                          /* CRM_INTERNAL__H */

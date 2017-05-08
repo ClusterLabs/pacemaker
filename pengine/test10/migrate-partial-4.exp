@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="6" operation="start" operation_key="drbd-stacked_start_0" on_node="lustre02-left" on_node_uuid="lustre02-left">
         <primitive id="drbd-stacked" class="ocf" provider="vds-ok" type="Ticketer"/>
-        <attributes CRM_meta_name="start" CRM_meta_timeout="30000"  name="drbd-stacked"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="lustre02-left" CRM_meta_on_node_uuid="lustre02-left" CRM_meta_timeout="30000"  name="drbd-stacked"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -12,7 +12,7 @@
     <action_set>
       <rsc_op id="7" operation="start" operation_key="drbd-testfs-local_start_0" on_node="lustre03-left" on_node_uuid="lustre03-left">
         <primitive id="drbd-testfs-local" class="ocf" provider="vds-ok" type="Ticketer"/>
-        <attributes CRM_meta_name="start" CRM_meta_timeout="30000"  name="drbd-testfs-local"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="lustre03-left" CRM_meta_on_node_uuid="lustre03-left" CRM_meta_timeout="30000"  name="drbd-testfs-local"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -21,7 +21,7 @@
     <action_set>
       <rsc_op id="11" operation="migrate_from" operation_key="lustre_migrate_from_0" on_node="lustre04-left" on_node_uuid="lustre04-left">
         <primitive id="lustre" class="ocf" provider="vds-ok" type="Ticketer"/>
-        <attributes CRM_meta_migrate_source="lustre03-left" CRM_meta_migrate_target="lustre04-left" CRM_meta_timeout="20000"  name="lustre"/>
+        <attributes CRM_meta_migrate_source="lustre03-left" CRM_meta_migrate_target="lustre04-left" CRM_meta_on_node="lustre04-left" CRM_meta_on_node_uuid="lustre04-left" CRM_meta_timeout="20000"  name="lustre"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -34,7 +34,7 @@
     <action_set>
       <rsc_op id="10" operation="migrate_to" operation_key="lustre_migrate_to_0" on_node="lustre03-left" on_node_uuid="lustre03-left">
         <primitive id="lustre" class="ocf" provider="vds-ok" type="Ticketer"/>
-        <attributes CRM_meta_migrate_source="lustre03-left" CRM_meta_migrate_target="lustre04-left" CRM_meta_record_pending="true" CRM_meta_timeout="20000"  name="lustre"/>
+        <attributes CRM_meta_migrate_source="lustre03-left" CRM_meta_migrate_target="lustre04-left" CRM_meta_on_node="lustre03-left" CRM_meta_on_node_uuid="lustre03-left" CRM_meta_record_pending="true" CRM_meta_timeout="20000"  name="lustre"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -58,7 +58,7 @@
     <action_set>
       <rsc_op id="8" operation="stop" operation_key="lustre_stop_0" on_node="lustre03-left" on_node_uuid="lustre03-left">
         <primitive id="lustre" class="ocf" provider="vds-ok" type="Ticketer"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="30000"  name="lustre"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="lustre03-left" CRM_meta_on_node_uuid="lustre03-left" CRM_meta_timeout="30000"  name="lustre"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -71,7 +71,7 @@
     <action_set>
       <rsc_op id="14" operation="start" operation_key="testfs_start_0" on_node="lustre03-left" on_node_uuid="lustre03-left">
         <primitive id="testfs" class="ocf" provider="vds-ok" type="Ticketer"/>
-        <attributes CRM_meta_name="start" CRM_meta_timeout="30000"  name="testfs-operational"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="lustre03-left" CRM_meta_on_node_uuid="lustre03-left" CRM_meta_timeout="30000"  name="testfs-operational"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -87,7 +87,7 @@
     <action_set>
       <rsc_op id="13" operation="stop" operation_key="testfs_stop_0" on_node="lustre02-left" on_node_uuid="lustre02-left">
         <primitive id="testfs" class="ocf" provider="vds-ok" type="Ticketer"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="30000"  name="testfs-operational"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="lustre02-left" CRM_meta_on_node_uuid="lustre02-left" CRM_meta_timeout="30000"  name="testfs-operational"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -96,7 +96,7 @@
     <action_set>
       <rsc_op id="12" operation="stop" operation_key="testfs_stop_0" on_node="lustre01-left" on_node_uuid="lustre01-left">
         <primitive id="testfs" class="ocf" provider="vds-ok" type="Ticketer"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="30000"  name="testfs-operational"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="lustre01-left" CRM_meta_on_node_uuid="lustre01-left" CRM_meta_timeout="30000"  name="testfs-operational"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -105,7 +105,7 @@
     <action_set>
       <rsc_op id="350" operation="notify" operation_key="drbd-mgs:0_post_notify_start_0" on_node="lustre01-left" on_node_uuid="lustre01-left">
         <primitive id="drbd-mgs" long-id="drbd-mgs:0" class="ocf" provider="linbit" type="drbd"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="lustre01-left lustre02-left lustre03-left lustre04-left" CRM_meta_notify_available_uname="lustre01-left lustre02-left lustre04-left lustre03-left" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="drbd-mgs:0 drbd-mgs:1" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd-mgs:0 drbd-mgs:1" CRM_meta_notify_start_uname="lustre01-left lustre02-left" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000"  drbd_resource="mgs-left"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="lustre01-left lustre02-left lustre03-left lustre04-left" CRM_meta_notify_available_uname="lustre01-left lustre02-left lustre04-left lustre03-left" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="drbd-mgs:0 drbd-mgs:1" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd-mgs:0 drbd-mgs:1" CRM_meta_notify_start_uname="lustre01-left lustre02-left" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_on_node="lustre01-left" CRM_meta_on_node_uuid="lustre01-left" CRM_meta_timeout="20000"  drbd_resource="mgs-left"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -118,7 +118,7 @@
     <action_set>
       <rsc_op id="26" operation="monitor" operation_key="drbd-mgs:0_monitor_30000" on_node="lustre01-left" on_node_uuid="lustre01-left">
         <primitive id="drbd-mgs" long-id="drbd-mgs:0" class="ocf" provider="linbit" type="drbd"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_role="Slave" CRM_meta_timeout="20000"  drbd_resource="mgs-left"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="lustre01-left" CRM_meta_on_node_uuid="lustre01-left" CRM_meta_role="Slave" CRM_meta_timeout="20000"  drbd_resource="mgs-left"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -134,7 +134,7 @@
     <action_set>
       <rsc_op id="25" operation="start" operation_key="drbd-mgs:0_start_0" on_node="lustre01-left" on_node_uuid="lustre01-left">
         <primitive id="drbd-mgs" long-id="drbd-mgs:0" class="ocf" provider="linbit" type="drbd"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="lustre01-left lustre02-left lustre03-left lustre04-left" CRM_meta_notify_available_uname="lustre01-left lustre02-left lustre04-left lustre03-left" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="drbd-mgs:0 drbd-mgs:1" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd-mgs:0 drbd-mgs:1" CRM_meta_notify_start_uname="lustre01-left lustre02-left" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_timeout="240000"  drbd_resource="mgs-left"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="lustre01-left lustre02-left lustre03-left lustre04-left" CRM_meta_notify_available_uname="lustre01-left lustre02-left lustre04-left lustre03-left" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="drbd-mgs:0 drbd-mgs:1" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd-mgs:0 drbd-mgs:1" CRM_meta_notify_start_uname="lustre01-left lustre02-left" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_on_node="lustre01-left" CRM_meta_on_node_uuid="lustre01-left" CRM_meta_timeout="240000"  drbd_resource="mgs-left"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -147,7 +147,7 @@
     <action_set>
       <rsc_op id="351" operation="notify" operation_key="drbd-mgs:1_post_notify_start_0" on_node="lustre02-left" on_node_uuid="lustre02-left">
         <primitive id="drbd-mgs" long-id="drbd-mgs:1" class="ocf" provider="linbit" type="drbd"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="lustre01-left lustre02-left lustre03-left lustre04-left" CRM_meta_notify_available_uname="lustre01-left lustre02-left lustre04-left lustre03-left" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="drbd-mgs:0 drbd-mgs:1" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd-mgs:0 drbd-mgs:1" CRM_meta_notify_start_uname="lustre01-left lustre02-left" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000"  drbd_resource="mgs-left"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="lustre01-left lustre02-left lustre03-left lustre04-left" CRM_meta_notify_available_uname="lustre01-left lustre02-left lustre04-left lustre03-left" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="drbd-mgs:0 drbd-mgs:1" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd-mgs:0 drbd-mgs:1" CRM_meta_notify_start_uname="lustre01-left lustre02-left" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_on_node="lustre02-left" CRM_meta_on_node_uuid="lustre02-left" CRM_meta_timeout="20000"  drbd_resource="mgs-left"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -160,7 +160,7 @@
     <action_set>
       <rsc_op id="28" operation="monitor" operation_key="drbd-mgs:1_monitor_30000" on_node="lustre02-left" on_node_uuid="lustre02-left">
         <primitive id="drbd-mgs" long-id="drbd-mgs:1" class="ocf" provider="linbit" type="drbd"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_role="Slave" CRM_meta_timeout="20000"  drbd_resource="mgs-left"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="lustre02-left" CRM_meta_on_node_uuid="lustre02-left" CRM_meta_role="Slave" CRM_meta_timeout="20000"  drbd_resource="mgs-left"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -176,7 +176,7 @@
     <action_set>
       <rsc_op id="27" operation="start" operation_key="drbd-mgs:1_start_0" on_node="lustre02-left" on_node_uuid="lustre02-left">
         <primitive id="drbd-mgs" long-id="drbd-mgs:1" class="ocf" provider="linbit" type="drbd"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="lustre01-left lustre02-left lustre03-left lustre04-left" CRM_meta_notify_available_uname="lustre01-left lustre02-left lustre04-left lustre03-left" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="drbd-mgs:0 drbd-mgs:1" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd-mgs:0 drbd-mgs:1" CRM_meta_notify_start_uname="lustre01-left lustre02-left" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_timeout="240000"  drbd_resource="mgs-left"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="lustre01-left lustre02-left lustre03-left lustre04-left" CRM_meta_notify_available_uname="lustre01-left lustre02-left lustre04-left lustre03-left" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="drbd-mgs:0 drbd-mgs:1" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd-mgs:0 drbd-mgs:1" CRM_meta_notify_start_uname="lustre01-left lustre02-left" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_on_node="lustre02-left" CRM_meta_on_node_uuid="lustre02-left" CRM_meta_timeout="240000"  drbd_resource="mgs-left"/>
       </rsc_op>
     </action_set>
     <inputs>

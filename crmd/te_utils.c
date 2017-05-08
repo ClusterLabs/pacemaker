@@ -162,7 +162,7 @@ fail_incompletable_stonith(crm_graph_t * graph)
 
     if (last_action != NULL) {
         crm_warn("STONITHd failure resulted in un-runnable actions");
-        abort_transition(INFINITY, tg_restart, "Stonith failure", last_action);
+        abort_for_stonith_failure(tg_restart, NULL, last_action);
         return TRUE;
     }
 
@@ -214,7 +214,7 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
         return;
     }
 
-    crmd_notify_fencing_op(st_event);
+    crmd_alert_fencing_op(st_event);
 
     if (st_event->result == pcmk_ok && safe_str_eq("on", st_event->action)) {
         crm_notice("%s was successfully unfenced by %s (at the request of %s)",
@@ -259,17 +259,22 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
         return;
     }
 
-    if (st_event->result == pcmk_ok &&
-        safe_str_eq(st_event->operation, T_STONITH_NOTIFY_FENCE)) {
-        st_fail_count_reset(st_event->target);
+    if (safe_str_eq(st_event->operation, T_STONITH_NOTIFY_FENCE)) {
+        if (st_event->result == pcmk_ok) {
+            st_fail_count_reset(st_event->target);
+        } else {
+            st_fail_count_increment(st_event->target);
+        }
     }
 
-    crm_notice("Peer %s was%s terminated (%s) by %s for %s: %s (ref=%s) by client %s",
+    crm_notice("Peer %s was%s terminated (%s) by %s on behalf of %s: %s "
+               CRM_XS " initiator=%s ref=%s",
                st_event->target, st_event->result == pcmk_ok ? "" : " not",
                st_event->action,
                st_event->executioner ? st_event->executioner : "<anyone>",
-               st_event->origin, pcmk_strerror(st_event->result), st_event->id,
-               st_event->client_origin ? st_event->client_origin : "<unknown>");
+               (st_event->client_origin? st_event->client_origin : "<unknown>"),
+               pcmk_strerror(st_event->result),
+               st_event->origin, st_event->id);
 
 #if SUPPORT_CMAN
     if (st_event->result == pcmk_ok && is_cman_cluster()) {
@@ -330,6 +335,14 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
         if(AM_I_DC) {
             /* The DC always sends updates */
             send_stonith_update(NULL, st_event->target, uuid);
+
+            /* @TODO Ideally, at this point, we'd check whether the fenced node
+             * hosted any guest nodes, and call remote_node_down() for them.
+             * Unfortunately, the crmd doesn't have a simple, reliable way to
+             * map hosts to guests. It might be possible to track this in the
+             * peer cache via crm_remote_peer_cache_refresh(). For now, we rely
+             * on the PE creating fence pseudo-events for the guests.
+             */
 
             if (st_event->client_origin && safe_str_neq(st_event->client_origin, te_client_id)) {
 

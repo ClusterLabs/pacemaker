@@ -26,7 +26,7 @@
      <action_set>
       <rsc_op id="2" operation="stop" operation_key="resource_nfs_stop_0" on_node="jamesltc" on_node_uuid="cd13842c-3f58-4e7d-8126-685259527532">
         <primitive id="resource_nfs" class="lsb" type="nfs"/>
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="jamesltc" CRM_meta_on_node_uuid="cd13842c-3f58-4e7d-8126-685259527532" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
      <inputs>

@@ -242,13 +242,24 @@ native_assign_node(resource_t * rsc, GListPtr nodes, node_t * chosen, gboolean f
 {
     CRM_ASSERT(rsc->variant == pe_native);
 
-    if (force == FALSE
-        && chosen != NULL && (can_run_resources(chosen) == FALSE || chosen->weight < 0)) {
-        crm_debug("All nodes for resource %s are unavailable"
-                  ", unclean or shutting down (%s: %d, %d)",
-                  rsc->id, chosen->details->uname, can_run_resources(chosen), chosen->weight);
-        rsc->next_role = RSC_ROLE_STOPPED;
-        chosen = NULL;
+    if (force == FALSE && chosen != NULL) {
+        bool unset = FALSE;
+
+        if(chosen->weight < 0) {
+            unset = TRUE;
+
+            // Allow the graph to assume that the remote resource will come up
+        } else if(can_run_resources(chosen) == FALSE && !is_container_remote_node(chosen)) {
+            unset = TRUE;
+        }
+
+        if(unset) {
+            crm_debug("All nodes for resource %s are unavailable"
+                      ", unclean or shutting down (%s: %d, %d)",
+                      rsc->id, chosen->details->uname, can_run_resources(chosen), chosen->weight);
+            rsc->next_role = RSC_ROLE_STOPPED;
+            chosen = NULL;
+        }
     }
 
     /* todo: update the old node for each resource to reflect its
@@ -271,10 +282,10 @@ native_assign_node(resource_t * rsc, GListPtr nodes, node_t * chosen, gboolean f
 
             crm_debug("Processing %s", op->uuid);
             if(safe_str_eq(RSC_STOP, op->task)) {
-                update_action_flags(op, pe_action_optional | pe_action_clear, __FUNCTION__);
+                update_action_flags(op, pe_action_optional | pe_action_clear, __FUNCTION__, __LINE__);
 
             } else if(safe_str_eq(RSC_START, op->task)) {
-                update_action_flags(op, pe_action_runnable | pe_action_clear, __FUNCTION__);
+                update_action_flags(op, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__);
                 /* set_bit(rsc->flags, pe_rsc_block); */
 
             } else if(interval && safe_str_neq(interval, "0")) {
@@ -283,7 +294,7 @@ native_assign_node(resource_t * rsc, GListPtr nodes, node_t * chosen, gboolean f
 
                 } else {
                     /* Normal monitor operation, cancel it */
-                    update_action_flags(op, pe_action_runnable | pe_action_clear, __FUNCTION__);
+                    update_action_flags(op, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__);
                 }
             }
         }

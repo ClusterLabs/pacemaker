@@ -54,7 +54,7 @@ enum pe_ordering get_flags(const char *id, enum pe_order_kind kind,
 enum pe_ordering get_asymmetrical_flags(enum pe_order_kind kind);
 static rsc_to_node_t *generate_location_rule(resource_t * rsc, xmlNode * rule_xml,
                                              const char *discovery, pe_working_set_t * data_set,
-                                             pe_re_match_data_t * match_data);
+                                             pe_match_data_t * match_data);
 
 gboolean
 unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set)
@@ -153,7 +153,7 @@ get_ordering_type(xmlNode * xml_obj)
                 kind_e = pe_order_kind_optional;
             }
 
-            /* } else if(rsc_then->variant == pe_native && rsc_first->variant > pe_group) { */
+            /* } else if(rsc_then->variant == pe_native && rsc_first->variant >= pe_clone) { */
             /*     kind_e = pe_order_kind_optional; */
         }
 
@@ -316,13 +316,13 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         crm_config_err("Constraint %s: no resource found for name '%s'", id, id_first);
         return FALSE;
 
-    } else if (instance_then && rsc_then->variant < pe_clone) {
+    } else if (instance_then && pe_rsc_is_clone(rsc_then) == FALSE) {
         crm_config_err("Invalid constraint '%s':"
                        " Resource '%s' is not a clone but instance %s was requested",
                        id, id_then, instance_then);
         return FALSE;
 
-    } else if (instance_first && rsc_first->variant < pe_clone) {
+    } else if (instance_first && pe_rsc_is_clone(rsc_first) == FALSE) {
         crm_config_err("Invalid constraint '%s':"
                        " Resource '%s' is not a clone but instance %s was requested",
                        id, id_first, instance_first);
@@ -350,11 +350,11 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     require_all_s = crm_element_value(xml_obj, "require-all");
     if (require_all_s
         && crm_is_true(require_all_s) == FALSE
-        && rsc_first->variant >= pe_clone) {
+        && pe_rsc_is_clone(rsc_first)) {
 
         /* require-all=false means only one instance of the clone is required */
         min_required_before = 1;
-    } else if (rsc_first->variant >= pe_clone) {
+    } else if (pe_rsc_is_clone(rsc_first)) {
         const char *min_clones_s = g_hash_table_lookup(rsc_first->meta, XML_RSC_ATTR_INCARNATION_MIN);
         if (min_clones_s) {
             /* if clone min is set, we require at a minimum X number of instances
@@ -390,7 +390,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
          * actions to be considered runnable before allowing the pseudo action
          * to be runnable. */ 
         unordered_action->required_runnable_before = min_required_before;
-        update_action_flags(unordered_action, pe_action_requires_any, __FUNCTION__);
+        update_action_flags(unordered_action, pe_action_requires_any, __FUNCTION__, __LINE__);
 
         for (rIter = rsc_first->children; id && rIter; rIter = rIter->next) {
             resource_t *child = rIter->data;
@@ -647,7 +647,7 @@ tag_to_set(xmlNode * xml_obj, xmlNode ** rsc_set, const char * attr,
 }
 
 static gboolean unpack_rsc_location(xmlNode * xml_obj, resource_t * rsc_lh, const char * role,
-                             const char * score, pe_working_set_t * data_set, pe_re_match_data_t * match_data);
+                             const char * score, pe_working_set_t * data_set, pe_match_data_t * match_data);
 
 static gboolean
 unpack_simple_location(xmlNode * xml_obj, pe_working_set_t * data_set)
@@ -695,11 +695,16 @@ unpack_simple_location(xmlNode * xml_obj, pe_working_set_t * data_set)
             status = regexec(r_patt, r->id, nregs, pmatch, 0);
 
             if(invert == FALSE && status == 0) {
-                pe_re_match_data_t match_data = {
+                pe_re_match_data_t re_match_data = {
                                                 .string = r->id,
                                                 .nregs = nregs,
                                                 .pmatch = pmatch
                                                };
+                pe_match_data_t match_data = {
+                                                .re = &re_match_data,
+                                                .params = r->parameters,
+                                                .meta = r->meta,
+                                             };
                 crm_debug("'%s' matched '%s' for %s", r->id, value, id);
                 unpack_rsc_location(xml_obj, r, NULL, NULL, data_set, &match_data);
 
@@ -723,7 +728,7 @@ unpack_simple_location(xmlNode * xml_obj, pe_working_set_t * data_set)
 
 static gboolean
 unpack_rsc_location(xmlNode * xml_obj, resource_t * rsc_lh, const char * role,
-                    const char * score, pe_working_set_t * data_set, pe_re_match_data_t * match_data)
+                    const char * score, pe_working_set_t * data_set, pe_match_data_t * match_data)
 {
     gboolean empty = TRUE;
     rsc_to_node_t *location = NULL;
@@ -981,7 +986,7 @@ get_node_score(const char *rule, const char *score, gboolean raw, node_t * node)
 
 static rsc_to_node_t *
 generate_location_rule(resource_t * rsc, xmlNode * rule_xml, const char *discovery, pe_working_set_t * data_set,
-                       pe_re_match_data_t * match_data)
+                       pe_match_data_t * match_data)
 {
     const char *rule_id = NULL;
     const char *score = NULL;
@@ -1027,9 +1032,9 @@ generate_location_rule(resource_t * rsc, xmlNode * rule_xml, const char *discove
         return NULL;
     }
 
-    if (match_data && match_data->nregs > 0 && match_data->pmatch[0].rm_so != -1) {
+    if (match_data && match_data->re && match_data->re->nregs > 0 && match_data->re->pmatch[0].rm_so != -1) {
         if (raw_score == FALSE) {
-            char *result = pe_expand_re_matches(score, match_data);
+            char *result = pe_expand_re_matches(score, match_data->re);
 
             if (result) {
                 score = (const char *) result;
@@ -1063,7 +1068,7 @@ generate_location_rule(resource_t * rsc, xmlNode * rule_xml, const char *discove
         int score_f = 0;
         node_t *node = (node_t *) gIter->data;
 
-        accept = pe_test_rule_re(rule_xml, node->details->attrs, RSC_ROLE_UNKNOWN, data_set->now, match_data);
+        accept = pe_test_rule_full(rule_xml, node->details->attrs, RSC_ROLE_UNKNOWN, data_set->now, match_data);
 
         crm_trace("Rule %s %s on %s", ID(rule_xml), accept ? "passed" : "failed",
                   node->details->uname);
@@ -1788,7 +1793,7 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
         action_t *unordered_action = get_pseudo_op(task, data_set);
 
         free(task);
-        update_action_flags(unordered_action, pe_action_requires_any, __FUNCTION__);
+        update_action_flags(unordered_action, pe_action_requires_any, __FUNCTION__, __LINE__);
 
         for (xml_rsc = __xml_first_child(set1); xml_rsc != NULL; xml_rsc = __xml_next_element(xml_rsc)) {
             if (!crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
@@ -2343,13 +2348,13 @@ unpack_simple_colocation(xmlNode * xml_obj, pe_working_set_t * data_set)
         crm_config_err("Invalid constraint '%s': No resource named '%s'", id, id_rh);
         return FALSE;
 
-    } else if (instance_lh && rsc_lh->variant < pe_clone) {
+    } else if (instance_lh && pe_rsc_is_clone(rsc_lh) == FALSE) {
         crm_config_err
             ("Invalid constraint '%s': Resource '%s' is not a clone but instance %s was requested",
              id, id_lh, instance_lh);
         return FALSE;
 
-    } else if (instance_rh && rsc_rh->variant < pe_clone) {
+    } else if (instance_rh && pe_rsc_is_clone(rsc_rh) == FALSE) {
         crm_config_err
             ("Invalid constraint '%s': Resource '%s' is not a clone but instance %s was requested",
              id, id_rh, instance_rh);
@@ -2721,7 +2726,7 @@ unpack_simple_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
         crm_config_err("Invalid constraint '%s': No resource named '%s'", id, id_lh);
         return FALSE;
 
-    } else if (instance_lh && rsc_lh->variant < pe_clone) {
+    } else if (instance_lh && pe_rsc_is_clone(rsc_lh) == FALSE) {
         crm_config_err
             ("Invalid constraint '%s': Resource '%s' is not a clone but instance %s was requested",
              id, id_lh, instance_lh);

@@ -19,6 +19,7 @@
 #  define PENGINE_STATUS__H
 
 #  include <glib.h>
+#  include <stdbool.h>
 #  include <crm/common/iso8601.h>
 #  include <crm/pengine/common.h>
 
@@ -131,7 +132,8 @@ typedef struct pe_working_set_s {
 struct node_shared_s {
     const char *id;
     const char *uname;
-/* Make all these flags into a bitfield one day */
+
+    /* @TODO convert these flags (and the ones at the end) into a bitfield */
     gboolean online;
     gboolean standby;
     gboolean standby_onfail;
@@ -160,6 +162,8 @@ struct node_shared_s {
     gboolean rsc_discovery_enabled;
     gboolean remote_requires_reset;
     gboolean remote_was_fenced;
+    gboolean remote_maintenance; /* what the remote-rsc is thinking */
+    gboolean unpacked;
 };
 
 struct node_s {
@@ -188,6 +192,8 @@ struct node_s {
 
 #  define pe_rsc_try_reload     0x00001000ULL
 #  define pe_rsc_reload         0x00002000ULL
+
+#  define pe_rsc_allow_remote_remotes 0x00004000ULL
 
 #  define pe_rsc_failed		0x00010000ULL
 #  define pe_rsc_shutdown	0x00020000ULL
@@ -232,9 +238,11 @@ enum pe_action_flags {
     pe_action_clear = 0x00400,
     pe_action_dangle = 0x00800,
 
-    pe_action_requires_any = 0x01000, /* This action requires one or mre of its dependencies to be runnable
-                                       * We use this to clear the runnable flag before checking dependencies
-                                       */
+    /* This action requires one or more of its dependencies to be runnable.
+     * We use this to clear the runnable flag before checking dependencies.
+     */
+    pe_action_requires_any = 0x01000,
+
     pe_action_reschedule = 0x02000,
     pe_action_tracking = 0x04000,
 };
@@ -301,6 +309,10 @@ struct resource_s {
     int remote_reconnect_interval;
 
     pe_working_set_t *cluster;
+#ifdef ENABLE_VERSIONED_ATTRS
+    
+    xmlNode *versioned_parameters;
+#endif
 };
 
 struct pe_action_s {
@@ -339,8 +351,8 @@ struct pe_action_s {
      * requires at minimum X number of cloned instances to be running
      * before an order dependency can run. Another option that uses
      * this is 'require-all=false' in ordering constrants. This option
-     * says "only required one instance of a resource to start before
-     * allowing dependencies to start" basicall require-all=false is
+     * says "only require one instance of a resource to start before
+     * allowing dependencies to start" -- basically, require-all=false is
      * the same as clone-min=1.
      */
 
@@ -350,8 +362,8 @@ struct pe_action_s {
      * to be considered runnable */ 
     int required_runnable_before;
 
-    GListPtr actions_before;    /* action_warpper_t* */
-    GListPtr actions_after;     /* action_warpper_t* */
+    GListPtr actions_before;    /* action_wrapper_t* */
+    GListPtr actions_after;     /* action_wrapper_t* */
 };
 
 struct ticket_s {
@@ -429,4 +441,44 @@ node_t *pe_find_node_id(GListPtr node_list, const char *id);
 node_t *pe_find_node_any(GListPtr node_list, const char *id, const char *uname);
 GListPtr find_operations(const char *rsc, const char *node, gboolean active_filter,
                          pe_working_set_t * data_set);
+
+/*!
+ * \brief Check whether a resource is any clone type
+ *
+ * \param[in] rsc  Resource to check
+ *
+ * \return TRUE if resource is clone, FALSE otherwise
+ */
+static inline bool
+pe_rsc_is_clone(resource_t *rsc)
+{
+    return rsc && ((rsc->variant == pe_clone) || (rsc->variant == pe_master));
+}
+
+/*!
+ * \brief Check whether a resource is a globally unique clone
+ *
+ * \param[in] rsc  Resource to check
+ *
+ * \return TRUE if resource is unique clone, FALSE otherwise
+ */
+static inline bool
+pe_rsc_is_unique_clone(resource_t *rsc)
+{
+    return pe_rsc_is_clone(rsc) && is_set(rsc->flags, pe_rsc_unique);
+}
+
+/*!
+ * \brief Check whether a resource is an anonymous clone
+ *
+ * \param[in] rsc  Resource to check
+ *
+ * \return TRUE if resource is anonymous clone, FALSE otherwise
+ */
+static inline bool
+pe_rsc_is_anon_clone(resource_t *rsc)
+{
+    return pe_rsc_is_clone(rsc) && is_not_set(rsc->flags, pe_rsc_unique);
+}
+
 #endif

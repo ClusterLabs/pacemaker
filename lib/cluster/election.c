@@ -19,7 +19,6 @@
 #include <crm/crm.h>
 
 #define STORM_INTERVAL   2      /* in seconds */
-#define STORM_MULTIPLIER 5      /* multiplied by the number of nodes */
 
 struct election_s
 {
@@ -461,7 +460,7 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
         int peers = 1 + g_hash_table_size(crm_peer_cache);
 
         /* If every node has to vote down every other node, thats N*(N-1) total elections
-         * Allow some leway before _really_ complaining
+         * Allow some leeway before _really_ complaining
          */
         election_wins++;
         if (election_wins > (peers * peers)) {

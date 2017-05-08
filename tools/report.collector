@@ -543,6 +543,39 @@ dlm_dump() {
     fi
 }
 
+drbd_info() {
+    test -f /proc/drbd && {
+        echo "--- /proc/drbd:"
+        cat /proc/drbd 2>&1
+        echo
+    }
+
+    if which drbd-overview >/dev/null 2>&1; then
+        echo "--- drbd-overview:"
+        drbd-overview 2>&1
+        echo
+    fi
+
+    if which drbdsetup >/dev/null 2>&1; then
+        echo "--- drbdsetup status:"
+        drbdsetup status --verbose --statistics 2>&1
+        echo
+
+        echo "--- drbdsetup events2:"
+        drbdsetup events2 --timestamps --statistics --now 2>&1
+        echo
+    fi
+
+    if which drbdadm >/dev/null 2>&1; then
+        echo "--- drbdadm show-gi:"
+        for res in $(drbdsetup status | grep -e ^\\S | awk '{ print $1 }'); do
+            echo "$res:"
+            drbdadm show-gi $res 2>&1
+            echo
+        done
+    fi
+}
+
 iscfvarset() {
     test "`getcfvar $1 $2`"
 }
@@ -730,6 +763,7 @@ fi
 
 dlm_dump  > $DLM_DUMP_F 2>&1
 sys_stats > $SYSSTATS_F 2>&1
+drbd_info > $DRBD_INFO_F 2>&1
 
 debug "Sanitizing files: $SANITIZE"
 #

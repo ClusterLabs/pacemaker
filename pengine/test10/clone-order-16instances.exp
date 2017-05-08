@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="12" operation="monitor" operation_key="dlm:10_monitor_30000" on_node="virt-009.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="1">
         <primitive id="dlm" long-id="dlm:10" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="10" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="10" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_on_node="virt-009.cluster-qe.lab.eng.brq.redhat.com" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="11" operation="start" operation_key="dlm:10_start_0" on_node="virt-009.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="1">
         <primitive id="dlm" long-id="dlm:10" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="10" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+        <attributes CRM_meta_clone="10" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="virt-009.cluster-qe.lab.eng.brq.redhat.com" CRM_meta_on_node_uuid="1" CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -29,7 +29,7 @@
     <action_set>
       <rsc_op id="14" operation="monitor" operation_key="dlm:11_monitor_30000" on_node="virt-013.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="4">
         <primitive id="dlm" long-id="dlm:11" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="11" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="11" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_on_node="virt-013.cluster-qe.lab.eng.brq.redhat.com" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -42,7 +42,7 @@
     <action_set>
       <rsc_op id="13" operation="start" operation_key="dlm:11_start_0" on_node="virt-013.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="4">
         <primitive id="dlm" long-id="dlm:11" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="11" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+        <attributes CRM_meta_clone="11" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="virt-013.cluster-qe.lab.eng.brq.redhat.com" CRM_meta_on_node_uuid="4" CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -58,7 +58,7 @@
     <action_set>
       <rsc_op id="16" operation="monitor" operation_key="dlm:12_monitor_30000" on_node="virt-014.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="5">
         <primitive id="dlm" long-id="dlm:12" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="12" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="12" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_on_node="virt-014.cluster-qe.lab.eng.brq.redhat.com" CRM_meta_on_node_uuid="5" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -71,7 +71,7 @@
     <action_set>
       <rsc_op id="15" operation="start" operation_key="dlm:12_start_0" on_node="virt-014.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="5">
         <primitive id="dlm" long-id="dlm:12" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="12" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+        <attributes CRM_meta_clone="12" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="virt-014.cluster-qe.lab.eng.brq.redhat.com" CRM_meta_on_node_uuid="5" CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -87,7 +87,7 @@
     <action_set>
       <rsc_op id="18" operation="monitor" operation_key="dlm:13_monitor_30000" on_node="virt-015.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="6">
         <primitive id="dlm" long-id="dlm:13" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="13" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="13" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_on_node="virt-015.cluster-qe.lab.eng.brq.redhat.com" CRM_meta_on_node_uuid="6" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -100,7 +100,7 @@
     <action_set>
       <rsc_op id="17" operation="start" operation_key="dlm:13_start_0" on_node="virt-015.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="6">
         <primitive id="dlm" long-id="dlm:13" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="13" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+        <attributes CRM_meta_clone="13" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="virt-015.cluster-qe.lab.eng.brq.redhat.com" CRM_meta_on_node_uuid="6" CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -116,7 +116,7 @@
     <action_set>
       <rsc_op id="20" operation="monitor" operation_key="dlm:14_monitor_30000" on_node="virt-016.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="7">
         <primitive id="dlm" long-id="dlm:14" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="14" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="14" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_on_node="virt-016.cluster-qe.lab.eng.brq.redhat.com" CRM_meta_on_node_uuid="7" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -129,7 +129,7 @@
     <action_set>
       <rsc_op id="19" operation="start" operation_key="dlm:14_start_0" on_node="virt-016.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="7">
         <primitive id="dlm" long-id="dlm:14" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="14" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+        <attributes CRM_meta_clone="14" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="virt-016.cluster-qe.lab.eng.brq.redhat.com" CRM_meta_on_node_uuid="7" CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -145,7 +145,7 @@
     <action_set>
       <rsc_op id="22" operation="monitor" operation_key="dlm:15_monitor_30000" on_node="virt-020.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="8">
         <primitive id="dlm" long-id="dlm:15" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="15" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="15" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_on_node="virt-020.cluster-qe.lab.eng.brq.redhat.com" CRM_meta_on_node_uuid="8" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -158,7 +158,7 @@
     <action_set>
       <rsc_op id="21" operation="start" operation_key="dlm:15_start_0" on_node="virt-020.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="8">
         <primitive id="dlm" long-id="dlm:15" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="15" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+        <attributes CRM_meta_clone="15" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="virt-020.cluster-qe.lab.eng.brq.redhat.com" CRM_meta_on_node_uuid="8" CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -174,7 +174,7 @@
     <action_set>
       <rsc_op id="24" operation="monitor" operation_key="dlm_monitor_30000" internal_operation_key="dlm:2_monitor_30000" on_node="virt-027.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="9">
         <primitive id="dlm" long-id="dlm:2" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_on_node="virt-027.cluster-qe.lab.eng.brq.redhat.com" CRM_meta_on_node_uuid="9" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -187,7 +187,7 @@
     <action_set>
       <rsc_op id="23" operation="start" operation_key="dlm_start_0" internal_operation_key="dlm:2_start_0" on_node="virt-027.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="9">
         <primitive id="dlm" long-id="dlm:2" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="virt-027.cluster-qe.lab.eng.brq.redhat.com" CRM_meta_on_node_uuid="9" CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -203,7 +203,7 @@
     <action_set>
       <rsc_op id="26" operation="monitor" operation_key="dlm:3_monitor_30000" on_node="virt-028.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="10">
         <primitive id="dlm" long-id="dlm:3" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="3" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_on_node="virt-028.cluster-qe.lab.eng.brq.redhat.com" CRM_meta_on_node_uuid="10" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -216,7 +216,7 @@
     <action_set>
       <rsc_op id="25" operation="start" operation_key="dlm:3_start_0" on_node="virt-028.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="10">
         <primitive id="dlm" long-id="dlm:3" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="3" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="virt-028.cluster-qe.lab.eng.brq.redhat.com" CRM_meta_on_node_uuid="10" CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -232,7 +232,7 @@
     <action_set>
       <rsc_op id="28" operation="monitor" operation_key="dlm:4_monitor_30000" on_node="virt-029.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="11">
         <primitive id="dlm" long-id="dlm:4" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="4" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="4" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_on_node="virt-029.cluster-qe.lab.eng.brq.redhat.com" CRM_meta_on_node_uuid="11" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -245,7 +245,7 @@
     <action_set>
       <rsc_op id="27" operation="start" operation_key="dlm:4_start_0" on_node="virt-029.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="11">
         <primitive id="dlm" long-id="dlm:4" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="4" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+        <attributes CRM_meta_clone="4" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="virt-029.cluster-qe.lab.eng.brq.redhat.com" CRM_meta_on_node_uuid="11" CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -261,7 +261,7 @@
     <action_set>
       <rsc_op id="30" operation="monitor" operation_key="dlm:5_monitor_30000" on_node="virt-030.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="12">
         <primitive id="dlm" long-id="dlm:5" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="5" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="5" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_on_node="virt-030.cluster-qe.lab.eng.brq.redhat.com" CRM_meta_on_node_uuid="12" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -274,7 +274,7 @@
     <action_set>
       <rsc_op id="29" operation="start" operation_key="dlm:5_start_0" on_node="virt-030.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="12">
         <primitive id="dlm" long-id="dlm:5" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="5" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+        <attributes CRM_meta_clone="5" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="virt-030.cluster-qe.lab.eng.brq.redhat.com" CRM_meta_on_node_uuid="12" CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -290,7 +290,7 @@
     <action_set>
       <rsc_op id="32" operation="monitor" operation_key="dlm:6_monitor_30000" on_node="virt-031.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="13">
         <primitive id="dlm" long-id="dlm:6" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="6" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="6" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_on_node="virt-031.cluster-qe.lab.eng.brq.redhat.com" CRM_meta_on_node_uuid="13" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -303,7 +303,7 @@
     <action_set>
       <rsc_op id="31" operation="start" operation_key="dlm:6_start_0" on_node="virt-031.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="13">
         <primitive id="dlm" long-id="dlm:6" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="6" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+        <attributes CRM_meta_clone="6" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="virt-031.cluster-qe.lab.eng.brq.redhat.com" CRM_meta_on_node_uuid="13" CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -319,7 +319,7 @@
     <action_set>
       <rsc_op id="34" operation="monitor" operation_key="dlm:7_monitor_30000" on_node="virt-032.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="14">
         <primitive id="dlm" long-id="dlm:7" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="7" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="7" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_on_node="virt-032.cluster-qe.lab.eng.brq.redhat.com" CRM_meta_on_node_uuid="14" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -332,7 +332,7 @@
     <action_set>
       <rsc_op id="33" operation="start" operation_key="dlm:7_start_0" on_node="virt-032.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="14">
         <primitive id="dlm" long-id="dlm:7" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="7" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+        <attributes CRM_meta_clone="7" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="virt-032.cluster-qe.lab.eng.brq.redhat.com" CRM_meta_on_node_uuid="14" CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -348,7 +348,7 @@
     <action_set>
       <rsc_op id="36" operation="monitor" operation_key="dlm:8_monitor_30000" on_node="virt-033.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="15">
         <primitive id="dlm" long-id="dlm:8" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="8" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="8" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_on_node="virt-033.cluster-qe.lab.eng.brq.redhat.com" CRM_meta_on_node_uuid="15" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -361,7 +361,7 @@
     <action_set>
       <rsc_op id="35" operation="start" operation_key="dlm:8_start_0" on_node="virt-033.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="15">
         <primitive id="dlm" long-id="dlm:8" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="8" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+        <attributes CRM_meta_clone="8" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="virt-033.cluster-qe.lab.eng.brq.redhat.com" CRM_meta_on_node_uuid="15" CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -377,7 +377,7 @@
     <action_set>
       <rsc_op id="38" operation="monitor" operation_key="dlm:9_monitor_30000" on_node="virt-034.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="16">
         <primitive id="dlm" long-id="dlm:9" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="9" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="9" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_on_node="virt-034.cluster-qe.lab.eng.brq.redhat.com" CRM_meta_on_node_uuid="16" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -390,7 +390,7 @@
     <action_set>
       <rsc_op id="37" operation="start" operation_key="dlm:9_start_0" on_node="virt-034.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="16">
         <primitive id="dlm" long-id="dlm:9" class="ocf" provider="pacemaker" type="controld"/>
-        <attributes CRM_meta_clone="9" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+        <attributes CRM_meta_clone="9" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="virt-034.cluster-qe.lab.eng.brq.redhat.com" CRM_meta_on_node_uuid="16" CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>

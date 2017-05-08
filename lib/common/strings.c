@@ -109,7 +109,7 @@ crm_int_helper(const char *text, char **end_text)
             crm_err("Conversion of %s was clipped: %lld", text, result);
 
         } else if (errno != 0) {
-            crm_perror(LOG_ERR, "Conversion of %s failed:", text);
+            crm_perror(LOG_ERR, "Conversion of %s failed", text);
         }
 
         if (local_end_text != NULL && local_end_text[0] != '\0') {

@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2016-11-02 17:32-0500\n"
-"PO-Revision-Date: 2016-11-02 17:32-0500\n"
+"POT-Creation-Date: 2017-05-08 11:19-0500\n"
+"PO-Revision-Date: 2017-05-08 11:19-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -64,7 +64,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The user to connect as. Needs to be part of the <literal>hacluster</literal> group on the target host. <indexterm> <primary>Environment Variable</primary><secondary>CIB_user</secondary> </indexterm> <indexterm> <primary>CIB_user</primary> </indexterm>"
+msgid "The user to connect as. Needs to be part of the <literal>haclient</literal> group on the target host. <indexterm> <primary>Environment Variable</primary><secondary>CIB_user</secondary> </indexterm> <indexterm> <primary>CIB_user</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -119,7 +119,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "So, if <emphasis role=\"strong\">c001n01</emphasis> is an active cluster node and is listening on port 1234 for connections, and <emphasis role=\"strong\">someuser</emphasis> is a member of the <emphasis role=\"strong\">hacluster</emphasis> group, then the following would prompt for <emphasis role=\"strong\">someuser</emphasis>'s password and return the cluster’s current configuration:"
+msgid "So, if <emphasis role=\"strong\">c001n01</emphasis> is an active cluster node and is listening on port 1234 for connections, and <emphasis role=\"strong\">someuser</emphasis> is a member of the <emphasis role=\"strong\">haclient</emphasis> group, then the following would prompt for <emphasis role=\"strong\">someuser</emphasis>'s password and return the cluster’s current configuration:"
 msgstr ""
 
 #. Tag: screen
@@ -201,6 +201,136 @@ msgstr ""
 #. Tag: programlisting
 #, no-c-format
 msgid "&lt;op id=\"my-weekly-action\" name=\"custom-action\" interval=\"P7D\" interval-origin=\"2009-W01-1\"/&gt;"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Handling Resource Failure"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "By default, Pacemaker will attempt to recover failed resources by restarting them. However, failure recovery is highly configurable."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Failure Counts"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Pacemaker tracks resource failures for each combination of node, resource, and operation (start, stop, monitor, etc.)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "You can query the fail count for a particular node, resource, and/or operation using the <literal>crm_failcount</literal> command. For example, to see how many times the 10-second monitor for <literal>myrsc</literal> has failed on <literal>node1</literal>, run:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# crm_failcount --query -r myrsc -N node1 -n monitor -I 10s"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If you omit the node, <literal>crm_failcount</literal> will use the local node. If you omit the operation and interval, <literal>crm_failcount</literal> will display the sum of the fail counts for all operations on the resource."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "You can use <literal>crm_resource --cleanup</literal> or <literal>crm_failcount --delete</literal> to clear fail counts. For example, to clear the above monitor failures, run:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# crm_resource --cleanup -r myrsc -N node1 -n monitor -I 10s"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If you omit the resource, <literal>crm_resource --cleanup</literal> will clear failures for all resources. If you omit the node, it will clear failures on all nodes. If you omit the operation and interval, it will clear the failures for all operations on the resource."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Even when cleaning up only a single operation, all failed operations will disappear from the status display. This allows us to trigger a re-check of the resource’s current status."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Higher-level tools may provide other commands for querying and clearing fail counts."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <literal>crm_mon</literal> tool shows the current cluster status, including any failed operations. To see the current fail counts for any failed resources, call <literal>crm_mon</literal> with the <literal>--failcounts</literal> option. This shows the fail counts per resource (that is, the sum of any operation fail counts for the resource)."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Failure Response"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Normally, if a running resource fails, pacemaker will try to stop it and start it again. Pacemaker will choose the best location to start it each time, which may be the same node that it failed on."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "However, if a resource fails repeatedly, it is possible that there is an underlying problem on that node, and you might desire trying a different node in such a case. Pacemaker allows you to set your preference via the <literal>migration-threshold</literal> resource meta-attribute. <footnote><para> The naming of this option was perhaps unfortunate as it is easily confused with live migration, the process of moving a resource from one node to another without stopping it. Xen virtual guests are the most common example of resources that can be migrated in this manner. </para></footnote>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If you define <literal>migration-threshold=<replaceable>N</replaceable></literal> for a resource, it will be banned from the original node after <emphasis>N</emphasis> failures."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <literal>migration-threshold</literal> is per <emphasis>resource</emphasis>, even though fail counts are tracked per <emphasis>operation</emphasis>. The operation fail counts are added together to compare against the <literal>migration-threshold</literal>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "By default, fail counts remain until manually cleared by an administrator using <literal>crm_resource --cleanup</literal> or <literal>crm_failcount --delete</literal> (hopefully after first fixing the failure’s cause). It is possible to have fail counts expire automatically by setting the <literal>failure-timeout</literal> resource meta-attribute."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A successful operation does not clear past failures. If a recurring monitor operation fails once, succeeds many times, then fails again days later, its fail count is 2. Fail counts are cleared only by manual intervention or falure timeout."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "For example, a setting of <literal>migration-threshold=2</literal> and <literal>failure-timeout=60s</literal> would cause the resource to move to a new node after 2 failures, and allow it to move back (depending on stickiness and constraint scores) after one minute."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>failure-timeout</literal> is measured since the most recent failure. That is, older failures do not individually time out and lower the fail count. Instead, all failures are timed out simultaneously (and the fail count is reset to 0) if there is no new failure for the timeout period."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "There are two exceptions to the migration threshold concept: when a resource either fails to start or fails to stop."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If the cluster property <literal>start-failure-is-fatal</literal> is set to <literal>true</literal> (which is the default), start failures cause the fail count to be set to <literal>INFINITY</literal> and thus always cause the resource to move immediately."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Stop failures are slightly different and crucial. If a resource fails to stop and STONITH is enabled, then the cluster will fence the node in order to be able to start the resource elsewhere. If STONITH is not enabled, then the cluster has no way to continue and will not try to start the resource elsewhere, but will try to stop it again after the failure timeout."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Please read <xref linkend=\"s-rules-recheck\" /> to understand how timeouts work before configuring a <literal>failure-timeout</literal>."
 msgstr ""
 
 #. Tag: title
@@ -378,61 +508,6 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "which has the same long-term consequences as discussed earlier."
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "Moving Resources Due to Failure"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Normally, if a running resource fails, pacemaker will try to start it again on the same node. However if a resource fails repeatedly, it is possible that there is an underlying problem on that node, and you might desire trying a different node in such a case."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "<indexterm> <primary>migration-threshold</primary> </indexterm> <indexterm> <primary>failure-timeout</primary> </indexterm> <indexterm> <primary>start-failure-is-fatal</primary> </indexterm>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Pacemaker allows you to set your preference via the <literal>migration-threshold</literal> resource option. <footnote><para> The naming of this option was perhaps unfortunate as it is easily confused with live migration, the process of moving a resource from one node to another without stopping it. Xen virtual guests are the most common example of resources that can be migrated in this manner. </para></footnote>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Simply define <literal>migration-threshold=<replaceable>N</replaceable></literal> for a resource and it will migrate to a new node after <emphasis>N</emphasis> failures. There is no threshold defined by default. To determine the resource’s current failure status and limits, run <literal>crm_mon --failcounts</literal>."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "By default, once the threshold has been reached, the troublesome node will no longer be allowed to run the failed resource until the administrator manually resets the resource’s failcount using <literal>crm_failcount</literal> (after hopefully first fixing the failure’s cause). Alternatively, it is possible to expire them by setting the <literal>failure-timeout</literal> option for the resource."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "For example, a setting of <literal>migration-threshold=2</literal> and <literal>failure-timeout=60s</literal> would cause the resource to move to a new node after 2 failures, and allow it to move back (depending on stickiness and constraint scores) after one minute."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "There are two exceptions to the migration threshold concept: when a resource either fails to start or fails to stop."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "If the cluster property <literal>start-failure-is-fatal</literal> is set to <literal>true</literal> (which is the default), start failures cause the failcount to be set to <literal>INFINITY</literal> and thus always cause the resource to move immediately."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Stop failures are slightly different and crucial. If a resource fails to stop and STONITH is enabled, then the cluster will fence the node in order to be able to start the resource elsewhere. If STONITH is not enabled, then the cluster has no way to continue and will not try to start the resource elsewhere, but will try to stop it again after the failure timeout."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Please read <xref linkend=\"s-rules-recheck\" /> to understand how timeouts work before configuring a <literal>failure-timeout</literal>."
 msgstr ""
 
 #. Tag: title

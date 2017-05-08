@@ -17,19 +17,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-/*!
- * \file
- * \brief   internal common utilities
- * \ingroup core
- * \note    Public APIs are declared in util.h
- */
-
 #ifndef CRM_COMMON_INTERNAL__H
 #define CRM_COMMON_INTERNAL__H
 
 #include <glib.h>       /* for gboolean */
 #include <dirent.h>     /* for struct dirent */
 #include <sys/types.h>  /* for uid_t and gid_t */
+
+#include <crm/common/logging.h>
 
 /* internal I/O utilities (from io.c) */
 
@@ -52,6 +47,7 @@ int crm_write_sync(int fd, const char *contents);
 
 int crm_procfs_process_info(struct dirent *entry, char *name, int *pid);
 int crm_procfs_pid_of(const char *name);
+unsigned int crm_procfs_num_cores(void);
 
 
 /* internal XML schema functions (from xml.c) */
@@ -74,6 +70,48 @@ static inline int
 crm_strlen_zero(const char *s)
 {
     return !s || *s == '\0';
+}
+
+/* convenience functions for failure-related node attributes */
+
+#define CRM_FAIL_COUNT_PREFIX   "fail-count"
+#define CRM_LAST_FAILURE_PREFIX "last-failure"
+
+/*!
+ * \internal
+ * \brief Generate a failure-related node attribute name for a resource
+ *
+ * \param[in] prefix    Start of attribute name
+ * \param[in] rsc_id    Resource name
+ * \param[in] op        Operation name
+ * \param[in] interval  Operation interval
+ *
+ * \return Newly allocated string with attribute name
+ *
+ * \note Failure attributes are named like PREFIX-RSC#OP_INTERVAL (for example,
+ *       "fail-count-myrsc#monitor_30000"). The '#' is used because it is not
+ *       a valid character in a resource ID, to reliably distinguish where the
+ *       operation name begins. The '_' is used simply to be more comparable to
+ *       action labels like "myrsc_monitor_30000".
+ */
+static inline char *
+crm_fail_attr_name(const char *prefix, const char *rsc_id, const char *op,
+                   int interval)
+{
+    CRM_CHECK(prefix && rsc_id && op, return NULL);
+    return crm_strdup_printf("%s-%s#%s_%d", prefix, rsc_id, op, interval);
+}
+
+static inline char *
+crm_failcount_name(const char *rsc_id, const char *op, int interval)
+{
+    return crm_fail_attr_name(CRM_FAIL_COUNT_PREFIX, rsc_id, op, interval);
+}
+
+static inline char *
+crm_lastfailure_name(const char *rsc_id, const char *op, int interval)
+{
+    return crm_fail_attr_name(CRM_LAST_FAILURE_PREFIX, rsc_id, op, interval);
 }
 
 #endif /* CRM_COMMON_INTERNAL__H */

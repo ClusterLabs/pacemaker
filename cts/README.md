@@ -171,17 +171,17 @@ into a remote node. When the test is done, CTS will turn the node back into
 a cluster node.
 
 To avoid conflicts, CTS will rename the node, prefixing the original node name
-with "remote_". For example, "pcmk-1" will become "remote_pcmk-1".
+with "remote-". For example, "pcmk-1" will become "remote-pcmk-1".
 
 The name change may require special stonith configuration, if the fence agent
 expects the node name to be the same as its hostname. A common approach is to
-specify the "remote_" names in pcmk_host_list. If you use pcmk_host_list=all,
-CTS will expand that to all cluster nodes and their "remote_" names.
-You may additionally need a pcmk_host_map argument to map the "remote_" names
+specify the "remote-" names in pcmk_host_list. If you use pcmk_host_list=all,
+CTS will expand that to all cluster nodes and their "remote-" names.
+You may additionally need a pcmk_host_map argument to map the "remote-" names
 to the hostnames. Example:
 
     --stonith xvm --stonith-args \
-    pcmk_arg_map=domain:uname,pcmk_host_list=all,pcmk_host_map=remote_pcmk-1:pcmk-1;remote_pcmk-2:pcmk-2
+    pcmk_arg_map=domain:uname,pcmk_host_list=all,pcmk_host_map=remote-pcmk-1:pcmk-1;remote-pcmk-2:pcmk-2
 
 ### Remote node testing with valgrind
 

@@ -27,6 +27,7 @@
 #include <tengine.h>
 
 #include <crmd_fsa.h>
+#include <crmd_lrm.h>
 #include <crmd_messages.h>
 #include <crm/cluster.h>
 #include <throttle.h>
@@ -52,6 +53,33 @@ te_start_action_timer(crm_graph_t * graph, crm_action_t * action)
 static gboolean
 te_pseudo_action(crm_graph_t * graph, crm_action_t * pseudo)
 {
+    const char *task = crm_element_value(pseudo->xml, XML_LRM_ATTR_TASK);
+
+    /* send to peers as well? */
+    if (safe_str_eq(task, CRM_OP_MAINTENANCE_NODES)) {
+        GHashTableIter iter;
+        crm_node_t *node = NULL;
+
+        g_hash_table_iter_init(&iter, crm_peer_cache);
+        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+            xmlNode *cmd = NULL;
+
+            if (safe_str_eq(fsa_our_uname, node->uname)) {
+                continue;
+            }
+
+            cmd = create_request(task, pseudo->xml, node->uname,
+                                 CRM_SYSTEM_CRMD, CRM_SYSTEM_TENGINE, NULL);
+            send_cluster_message(node, crm_msg_crmd, cmd, FALSE);
+            free_xml(cmd);
+        }
+
+        remote_ra_process_maintenance_nodes(pseudo->xml);
+    } else {
+        /* Check action for Pacemaker Remote node side effects */
+        remote_ra_process_pseudo(pseudo->xml);
+    }
+
     crm_debug("Pseudo-action %d (%s) fired and confirmed", pseudo->id,
               crm_element_value(pseudo->xml, XML_LRM_ATTR_TASK_KEY));
     te_action_confirmed(pseudo);
@@ -288,8 +316,6 @@ cib_action_update(crm_action_t * action, int status, int op_rc)
 
     int rc = pcmk_ok;
 
-    const char *name = NULL;
-    const char *value = NULL;
     const char *rsc_id = NULL;
     const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
     const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
@@ -337,15 +363,10 @@ cib_action_update(crm_action_t * action, int status, int op_rc)
     rsc = create_xml_node(rsc, XML_LRM_TAG_RESOURCE);
     crm_xml_add(rsc, XML_ATTR_ID, rsc_id);
 
-    name = XML_ATTR_TYPE;
-    value = crm_element_value(action_rsc, name);
-    crm_xml_add(rsc, name, value);
-    name = XML_AGENT_ATTR_CLASS;
-    value = crm_element_value(action_rsc, name);
-    crm_xml_add(rsc, name, value);
-    name = XML_AGENT_ATTR_PROVIDER;
-    value = crm_element_value(action_rsc, name);
-    crm_xml_add(rsc, name, value);
+
+    crm_copy_xml_element(action_rsc, rsc, XML_ATTR_TYPE);
+    crm_copy_xml_element(action_rsc, rsc, XML_AGENT_ATTR_CLASS);
+    crm_copy_xml_element(action_rsc, rsc, XML_AGENT_ATTR_PROVIDER);
 
     op = convert_graph_action(NULL, action, status, op_rc);
     op->call_id = -1;
@@ -705,15 +726,11 @@ notify_crmd(crm_graph_t * graph)
         case tg_restart:
             type = "restart";
             if (fsa_state == S_TRANSITION_ENGINE) {
-                if (too_many_st_failures() == FALSE) {
-                    if (transition_timer->period_ms > 0) {
-                        crm_timer_stop(transition_timer);
-                        crm_timer_start(transition_timer);
-                    } else {
-                        event = I_PE_CALC;
-                    }
+                if (transition_timer->period_ms > 0) {
+                    crm_timer_stop(transition_timer);
+                    crm_timer_start(transition_timer);
                 } else {
-                    event = I_TE_SUCCESS;
+                    event = I_PE_CALC;
                 }
 
             } else if (fsa_state == S_POLICY_ENGINE) {

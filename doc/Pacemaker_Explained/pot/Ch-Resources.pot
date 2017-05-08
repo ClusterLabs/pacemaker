@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2016-11-02 17:32-0500\n"
-"PO-Revision-Date: 2016-11-02 17:32-0500\n"
+"POT-Creation-Date: 2017-05-08 11:19-0500\n"
+"PO-Revision-Date: 2017-05-08 11:19-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -658,7 +658,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The name of the remote-node this resource defines. This both enables the resource as a remote-node and defines the unique name used to identify the remote-node. If no other parameters are set, this value will also be assumed as the hostname to connect to at the port specified by <literal>remote-port</literal>. <literal>WARNING:</literal> This value cannot overlap with any resource or node IDs. If not specified, this feature is disabled."
+msgid "The name of the Pacemaker Remote guest node this resource is associated with, if any. If specified, this both enables the resource as a guest node and defines the unique name used to identify the guest node. The guest must be configured to run the Pacemaker Remote daemon when it is started. <literal>WARNING:</literal> This value cannot overlap with any resource or node IDs. <emphasis>(since 1.1.9)</emphasis>"
 msgstr ""
 
 #. Tag: para
@@ -673,7 +673,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Port to use for the guest connection to pacemaker_remote"
+msgid "If <literal>remote-node</literal> is specified, the port on the guest used for its Pacemaker Remote connection. The Pacemaker Remote daemon on the guest must be configured to listen on this port. <emphasis>(since 1.1.9)</emphasis>"
 msgstr ""
 
 #. Tag: para
@@ -688,12 +688,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The IP address or hostname to connect to if remote-node’s name is not the hostname of the guest."
+msgid "If <literal>remote-node</literal> is specified, the IP address or hostname used to connect to the guest via Pacemaker Remote. The Pacemaker Remote daemon on the guest must be configured to accept connections on this address. <emphasis>(since 1.1.9)</emphasis>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<literal><literal>remote-connect-timeout</literal></literal>"
+msgid "<literal>remote-connect-timeout</literal>"
 msgstr ""
 
 #. Tag: para
@@ -703,12 +703,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "How long before a pending guest connection will time out."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Support for remote nodes was added in pacemaker 1.1.10. If you are using an earlier version, options related to remote nodes will not be available."
+msgid "If <literal>remote-node</literal> is specified, how long before a pending guest connection will time out. <emphasis>(since 1.1.10)</emphasis>"
 msgstr ""
 
 #. Tag: para

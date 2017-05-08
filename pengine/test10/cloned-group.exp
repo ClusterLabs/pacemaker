@@ -66,7 +66,7 @@
      <action_set>
       <rsc_op id="7" operation="stop" operation_key="apache2:1_stop_0" internal_operation_key="apache2:0_stop_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
         <primitive id="apache2" long-id="apache2:1" class="ocf" provider="heartbeat" type="apache"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" configfile="/etc/apache2/apache2.conf"  httpd="/usr/sbin/apache2" options="-k start" target_role="started"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="webcluster01" CRM_meta_on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298" CRM_meta_timeout="20000" configfile="/etc/apache2/apache2.conf"  httpd="/usr/sbin/apache2" options="-k start" target_role="started"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -82,7 +82,7 @@
      <action_set>
       <rsc_op id="6" operation="start" operation_key="apache2:1_start_0" internal_operation_key="apache2:0_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
         <primitive id="apache2" long-id="apache2:1" class="ocf" provider="heartbeat" type="apache"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" configfile="/etc/apache2/apache2.conf"  httpd="/usr/sbin/apache2" options="-k start" target_role="started"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="webcluster01" CRM_meta_on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298" CRM_meta_timeout="20000" configfile="/etc/apache2/apache2.conf"  httpd="/usr/sbin/apache2" options="-k start" target_role="started"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -98,7 +98,7 @@
      <action_set>
       <rsc_op id="3" operation="monitor" operation_key="apache2:1_monitor_10000" internal_operation_key="apache2:0_monitor_10000" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
         <primitive id="apache2" long-id="apache2:1" class="ocf" provider="heartbeat" type="apache"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000" configfile="/etc/apache2/apache2.conf"  httpd="/usr/sbin/apache2" options="-k start" target_role="started"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="webcluster01" CRM_meta_on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298" CRM_meta_timeout="20000" configfile="/etc/apache2/apache2.conf"  httpd="/usr/sbin/apache2" options="-k start" target_role="started"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -111,7 +111,7 @@
      <action_set>
       <rsc_op id="9" operation="start" operation_key="mysql-proxy:1_start_0" internal_operation_key="mysql-proxy:0_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
         <primitive id="mysql-proxy" long-id="mysql-proxy:1" class="lsb" type="mysql-proxy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="webcluster01" CRM_meta_on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
      <inputs>
@@ -130,7 +130,7 @@
      <action_set>
       <rsc_op id="8" operation="stop" operation_key="mysql-proxy:1_stop_0" internal_operation_key="mysql-proxy:0_stop_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
         <primitive id="mysql-proxy" long-id="mysql-proxy:1" class="lsb" type="mysql-proxy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="webcluster01" CRM_meta_on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
      <inputs>
@@ -143,7 +143,7 @@
      <action_set>
       <rsc_op id="1" operation="monitor" operation_key="mysql-proxy:1_monitor_10000" internal_operation_key="mysql-proxy:0_monitor_10000" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
         <primitive id="mysql-proxy" long-id="mysql-proxy:1" class="lsb" type="mysql-proxy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="webcluster01" CRM_meta_on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
      <inputs>
@@ -186,7 +186,7 @@
      <action_set>
       <rsc_op id="18" operation="stop" operation_key="apache2:0_stop_0" internal_operation_key="apache2:2_stop_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
         <primitive id="apache2:0" long-id="apache2:2" class="ocf" provider="heartbeat" type="apache"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" configfile="/etc/apache2/apache2.conf"  httpd="/usr/sbin/apache2" options="-k start" target_role="started"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="webcluster01" CRM_meta_on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298" CRM_meta_timeout="20000" configfile="/etc/apache2/apache2.conf"  httpd="/usr/sbin/apache2" options="-k start" target_role="started"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -202,7 +202,7 @@
      <action_set>
       <rsc_op id="19" operation="stop" operation_key="mysql-proxy:0_stop_0" internal_operation_key="mysql-proxy:2_stop_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
         <primitive id="mysql-proxy:0" long-id="mysql-proxy:2" class="lsb" type="mysql-proxy"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="webcluster01" CRM_meta_on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
      <inputs>

@@ -43,8 +43,6 @@ extern xmlNode *readCibXmlFile(const char *dir, const char *file, gboolean disca
 extern int activateCibBuffer(char *buffer, const char *filename);
 extern int activateCibXml(xmlNode * doc, gboolean to_disk, const char *op);
 extern crm_trigger_t *cib_writer;
-extern gboolean cib_writes_enabled;
-
-/* extern xmlNode *server_get_cib_copy(void); */
+extern volatile gboolean cib_writes_enabled;
 
 #endif

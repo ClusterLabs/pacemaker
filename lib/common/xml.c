@@ -78,13 +78,18 @@ typedef struct xml_private_s
         uint32_t flags;
         char *user;
         GListPtr acls;
-        GListPtr deleted_paths;
+        GListPtr deleted_objs;
 } xml_private_t;
 
 typedef struct xml_acl_s {
         enum xml_private_flags mode;
         char *xpath;
 } xml_acl_t;
+
+typedef struct xml_deleted_obj_s {
+        char *path;
+        int position;
+} xml_deleted_obj_t;
 
 /* *INDENT-OFF* */
 
@@ -98,7 +103,7 @@ static filter_t filter[] = {
 /* *INDENT-ON* */
 
 static xmlNode *subtract_xml_comment(xmlNode * parent, xmlNode * left, xmlNode * right, gboolean * changed);
-static xmlNode *find_xml_comment(xmlNode * root, xmlNode * search_comment);
+static xmlNode *find_xml_comment(xmlNode * root, xmlNode * search_comment, gboolean exact);
 static int add_xml_comment(xmlNode * parent, xmlNode * target, xmlNode * update);
 static bool __xml_acl_check(xmlNode *xml, const char *name, enum xml_private_flags mode);
 const char *__xml_acl_to_text(enum xml_private_flags flags);
@@ -275,6 +280,17 @@ __xml_acl_free(void *data)
 }
 
 static void
+__xml_deleted_obj_free(void *data)
+{
+    if(data) {
+        xml_deleted_obj_t *deleted_obj = data;
+
+        free(deleted_obj->path);
+        free(deleted_obj);
+    }
+}
+
+static void
 __xml_private_clean(xml_private_t *p)
 {
     if(p) {
@@ -288,9 +304,9 @@ __xml_private_clean(xml_private_t *p)
             p->acls = NULL;
         }
 
-        if(p->deleted_paths) {
-            g_list_free_full(p->deleted_paths, free);
-            p->deleted_paths = NULL;
+        if(p->deleted_objs) {
+            g_list_free_full(p->deleted_objs, __xml_deleted_obj_free);
+            p->deleted_objs = NULL;
         }
     }
 }
@@ -1094,10 +1110,10 @@ is_config_change(xmlNode *xml)
 
     if(xml->doc && xml->doc->_private) {
         p = xml->doc->_private;
-        for(gIter = p->deleted_paths; gIter; gIter = gIter->next) {
-            char *path = gIter->data;
+        for(gIter = p->deleted_objs; gIter; gIter = gIter->next) {
+            xml_deleted_obj_t *deleted_obj = gIter->data;
 
-            if(strstr(path, "/"XML_TAG_CIB"/"XML_CIB_TAG_CONFIGURATION) != NULL) {
+            if(strstr(deleted_obj->path, "/"XML_TAG_CIB"/"XML_CIB_TAG_CONFIGURATION) != NULL) {
                 return TRUE;
             }
         }
@@ -1241,11 +1257,15 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
         crm_xml_add(v, vfields[lpc], value);
     }
 
-    for(gIter = doc->deleted_paths; gIter; gIter = gIter->next) {
+    for(gIter = doc->deleted_objs; gIter; gIter = gIter->next) {
+        xml_deleted_obj_t *deleted_obj = gIter->data;
         xmlNode *change = create_xml_node(patchset, XML_DIFF_CHANGE);
 
         crm_xml_add(change, XML_DIFF_OP, "delete");
-        crm_xml_add(change, XML_DIFF_PATH, gIter->data);
+        crm_xml_add(change, XML_DIFF_PATH, deleted_obj->path);
+        if (deleted_obj->position >= 0) {
+            crm_xml_add_int(change, XML_DIFF_POSITION, deleted_obj->position);
+        }
     }
 
     __xml_build_changes(target, patchset);
@@ -1473,7 +1493,15 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode * patchset)
                 }
 
             } else if(strcmp(op, "delete") == 0) {
-                do_crm_log_alias(log_level, __FILE__, function, __LINE__, "-- %s", xpath);
+                int position = -1;
+
+                crm_element_value_int(change, XML_DIFF_POSITION, &position);
+                if (position >= 0) {
+                    do_crm_log_alias(log_level, __FILE__, function, __LINE__, "-- %s (%d)", xpath, position);
+
+                } else {
+                    do_crm_log_alias(log_level, __FILE__, function, __LINE__, "-- %s", xpath);
+                }
             }
         }
         return;
@@ -1521,8 +1549,17 @@ xml_log_changes(uint8_t log_level, const char *function, xmlNode * xml)
         return;
     }
 
-    for(gIter = doc->deleted_paths; gIter; gIter = gIter->next) {
-        do_crm_log_alias(log_level, __FILE__, function, __LINE__, "-- %s", (char*)gIter->data);
+    for(gIter = doc->deleted_objs; gIter; gIter = gIter->next) {
+        xml_deleted_obj_t *deleted_obj = gIter->data;
+
+        if (deleted_obj->position >= 0) {
+            do_crm_log_alias(log_level, __FILE__, function, __LINE__, "-- %s (%d)",
+                             deleted_obj->path, deleted_obj->position);
+
+        } else {
+            do_crm_log_alias(log_level, __FILE__, function, __LINE__, "-- %s",
+                             deleted_obj->path);
+        }
     }
 
     log_data_element(log_level, __FILE__, function, __LINE__, "+ ", xml, 0,
@@ -1555,11 +1592,11 @@ xml_accept_changes(xmlNode * xml)
 }
 
 static xmlNode *
-find_element(xmlNode *haystack, xmlNode *needle)
+find_element(xmlNode *haystack, xmlNode *needle, gboolean exact)
 {
     CRM_CHECK(needle != NULL, return NULL);
     return (needle->type == XML_COMMENT_NODE)?
-           find_xml_comment(haystack, needle)
+           find_xml_comment(haystack, needle, exact)
            : find_entity(haystack, crm_element_name(needle), ID(needle));
 }
 
@@ -1615,7 +1652,7 @@ __subtract_xml_object(xmlNode * target, xmlNode * patch)
         xmlNode *target_child = cIter;
 
         cIter = __xml_next(cIter);
-        patch_child = find_element(patch, target_child);
+        patch_child = find_element(patch, target_child, FALSE);
         __subtract_xml_object(target_child, patch_child);
     }
     free(id);
@@ -1677,7 +1714,7 @@ __add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * patch)
     for (patch_child = __xml_first_child(patch); patch_child != NULL;
          patch_child = __xml_next(patch_child)) {
 
-        target_child = find_element(target, patch_child);
+        target_child = find_element(target, patch_child, FALSE);
         __add_xml_object(target, target_child, patch_child);
     }
 }
@@ -1881,7 +1918,7 @@ xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset, bool check_version)
 }
 
 static xmlNode *
-__first_xml_child_match(xmlNode *parent, const char *name, const char *id)
+__first_xml_child_match(xmlNode *parent, const char *name, const char *id, int position)
 {
     xmlNode *cIter = NULL;
 
@@ -1894,13 +1931,21 @@ __first_xml_child_match(xmlNode *parent, const char *name, const char *id)
                 continue;
             }
         }
+
+        /* The "position" makes sense only for XML comments for now */
+        if (cIter->type == XML_COMMENT_NODE
+            && position >= 0
+            && __xml_offset(cIter) != position) {
+            continue;
+        }
+
         return cIter;
     }
     return NULL;
 }
 
 static xmlNode *
-__xml_find_path(xmlNode *top, const char *key)
+__xml_find_path(xmlNode *top, const char *key, int target_position)
 {
     xmlNode *target = (xmlNode*)top->doc;
     char *id = malloc(XML_BUFFER_SIZE);
@@ -1923,13 +1968,19 @@ __xml_find_path(xmlNode *top, const char *key)
 
         } else if(tag && section) {
             int f = sscanf (section, "%[^[][@id='%[^']", tag, id);
+            int current_position = -1;
+
+            /* The "target_position" is for the target tag */
+            if (rc == 1 && target_position >= 0) {
+                current_position = target_position;
+            }
 
             switch(f) {
                 case 1:
-                    target = __first_xml_child_match(target, tag, NULL);
+                    target = __first_xml_child_match(target, tag, NULL, current_position);
                     break;
                 case 2:
-                    target = __first_xml_child_match(target, tag, id);
+                    target = __first_xml_child_match(target, tag, id, current_position);
                     break;
                 default:
                     crm_trace("Aborting on %s", section);
@@ -1975,16 +2026,20 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset, bool check_version)
         xmlNode *match = NULL;
         const char *op = crm_element_value(change, XML_DIFF_OP);
         const char *xpath = crm_element_value(change, XML_DIFF_PATH);
+        int position = -1;
 
         crm_trace("Processing %s %s", change->name, op);
         if(op == NULL) {
             continue;
         }
 
+        if(strcmp(op, "delete") == 0) {
+            crm_element_value_int(change, XML_DIFF_POSITION, &position);
+        }
 #if 0
         match = get_xpath_object(xpath, xml, LOG_TRACE);
 #else
-        match = __xml_find_path(xml, xpath);
+        match = __xml_find_path(xml, xpath, position);
 #endif
         crm_trace("Performing %s on %s with %p", op, xpath, match);
 
@@ -2583,8 +2638,8 @@ xml_get_path(xmlNode *xml)
     return NULL;
 }
 
-void
-free_xml(xmlNode * child)
+static void
+free_xml_with_position(xmlNode * child, int position)
 {
     if (child != NULL) {
         xmlNode *top = NULL;
@@ -2613,9 +2668,25 @@ free_xml(xmlNode * child)
                 char buffer[XML_BUFFER_SIZE];
 
                 if(__get_prefix(NULL, child, buffer, offset) > 0) {
+                    xml_deleted_obj_t *deleted_obj = calloc(1, sizeof(xml_deleted_obj_t));
+
                     crm_trace("Deleting %s %p from %p", buffer, child, doc);
+
+                    deleted_obj->path = strdup(buffer);
+
+                    deleted_obj->position = -1;
+                    /* Record the "position" only for XML comments for now */
+                    if (child->type == XML_COMMENT_NODE) {
+                        if (position >= 0) {
+                            deleted_obj->position = position;
+
+                        } else {
+                            deleted_obj->position = __xml_offset(child);
+                        }
+                    }
+
                     p = doc->_private;
-                    p->deleted_paths = g_list_append(p->deleted_paths, strdup(buffer));
+                    p->deleted_objs = g_list_append(p->deleted_objs, deleted_obj);
                     set_doc_flag(child, xpf_dirty);
                 }
             }
@@ -2627,6 +2698,13 @@ free_xml(xmlNode * child)
             xmlFreeNode(child);
         }
     }
+}
+
+
+void
+free_xml(xmlNode * child)
+{
+    free_xml_with_position(child, -1);
 }
 
 xmlNode *
@@ -2958,6 +3036,51 @@ crm_xml_add_last_written(xmlNode *xml_node)
     return crm_xml_add(xml_node, XML_CIB_ATTR_WRITTEN, now_str);
 }
 
+/*!
+ * \brief Sanitize a string so it is usable as an XML ID
+ *
+ * \param[in,out] id  String to sanitize
+ */
+void
+crm_xml_sanitize_id(char *id)
+{
+    char *c;
+
+    for (c = id; *c; ++c) {
+        /* @TODO Sanitize more comprehensively */
+        switch (*c) {
+            case ':':
+            case '#':
+                *c = '.';
+        }
+    }
+}
+
+/*!
+ * \brief Set the ID of an XML element using a format
+ *
+ * \param[in,out] xml  XML element
+ * \param[in]     fmt  printf-style format
+ * \param[in]     ...  any arguments required by format
+ */
+void
+crm_xml_set_id(xmlNode *xml, const char *format, ...)
+{
+    va_list ap;
+    int len = 0;
+    char *id = NULL;
+
+    /* equivalent to crm_strdup_printf() */
+    va_start(ap, format);
+    len = vasprintf(&id, format, ap);
+    va_end(ap);
+    CRM_ASSERT(len > 0);
+
+    crm_xml_sanitize_id(id);
+    crm_xml_add(xml, XML_ATTR_ID, id);
+    free(id);
+}
+
 static int
 write_xml_stream(xmlNode * xml_node, const char *filename, FILE * stream, gboolean compress)
 {
@@ -3022,12 +3145,13 @@ write_xml_stream(xmlNode * xml_node, const char *filename, FILE * stream, gboole
   bail:
 
     if (fflush(stream) != 0) {
-        crm_perror(LOG_ERR, "fflush for %s failed:", filename);
+        crm_perror(LOG_ERR, "fflush for %s failed", filename);
         res = -1;
     }
 
-    if (fsync(fileno(stream)) < 0) {
-        crm_perror(LOG_ERR, "fsync for %s failed:", filename);
+    /* Don't report error if the file does not support synchronization */
+    if (fsync(fileno(stream)) < 0 && errno != EROFS  && errno != EINVAL) {
+        crm_perror(LOG_ERR, "fsync for %s failed", filename);
         res = -1;
     }
 
@@ -3111,7 +3235,7 @@ crm_xml_escape(const char *text)
      * converted back to their escape sequences.
      *
      * However xmlNodeDump() is randomly dog slow, even with the same
-     * input. So we need to replicate the escapeing in our custom
+     * input. So we need to replicate the escaping in our custom
      * version so that the result can be re-parsed by xmlCtxtReadDoc()
      * when necessary.
      */
@@ -4025,7 +4149,7 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
 
     for (cIter = __xml_first_child(old); cIter != NULL; ) {
         xmlNode *old_child = cIter;
-        xmlNode *new_child = find_element(new, cIter);
+        xmlNode *new_child = find_element(new, cIter, TRUE);
 
         cIter = __xml_next(cIter);
         if(new_child) {
@@ -4038,9 +4162,10 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
 
             __xml_node_clean(candidate);
             __xml_acl_apply(top); /* Make sure any ACLs are applied to 'candidate' */
-            free_xml(candidate);
+            /* Record the old position */
+            free_xml_with_position(candidate, __xml_offset(old_child));
 
-            if (find_element(new, old_child) == NULL) {
+            if (find_element(new, old_child, TRUE) == NULL) {
                 xml_private_t *p = old_child->_private;
 
                 p->flags |= xpf_skip;
@@ -4050,7 +4175,7 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
 
     for (cIter = __xml_first_child(new); cIter != NULL; ) {
         xmlNode *new_child = cIter;
-        xmlNode *old_child = find_element(old, cIter);
+        xmlNode *old_child = find_element(old, cIter, TRUE);
 
         cIter = __xml_next(cIter);
         if(old_child == NULL) {
@@ -4225,18 +4350,36 @@ in_upper_context(int depth, int context, xmlNode * xml_node)
 }
 
 static xmlNode *
-find_xml_comment(xmlNode * root, xmlNode * search_comment)
+find_xml_comment(xmlNode * root, xmlNode * search_comment, gboolean exact)
 {
     xmlNode *a_child = NULL;
+    int search_offset = __xml_offset(search_comment);
 
     CRM_CHECK(search_comment->type == XML_COMMENT_NODE, return NULL);
 
     for (a_child = __xml_first_child(root); a_child != NULL; a_child = __xml_next(a_child)) {
-        if (a_child->type != XML_COMMENT_NODE) {
-            continue;
+        if (exact) {
+            int offset = __xml_offset(a_child);
+            xml_private_t *p = a_child->_private;
+
+            if (offset < search_offset) {
+                continue;
+
+            } else if (offset > search_offset) {
+                return NULL;
+            }
+
+            if (is_set(p->flags, xpf_skip)) {
+                continue;
+            }
         }
-        if (safe_str_eq((const char *)a_child->content, (const char *)search_comment->content)) {
+
+        if (a_child->type == XML_COMMENT_NODE
+            && safe_str_eq((const char *)a_child->content, (const char *)search_comment->content)) {
             return a_child;
+
+        } else if (exact) {
+            return NULL;
         }
     }
 
@@ -4331,7 +4474,7 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
          left_child = __xml_next(left_child)) {
         gboolean child_changed = FALSE;
 
-        right_child = find_element(right, left_child);
+        right_child = find_element(right, left_child, FALSE);
         subtract_xml_object(diff, left_child, right_child, full, &child_changed, marker);
         if (child_changed) {
             *changed = TRUE;
@@ -4457,7 +4600,7 @@ add_xml_comment(xmlNode * parent, xmlNode * target, xmlNode * update)
     CRM_CHECK(update->type == XML_COMMENT_NODE, return 0);
 
     if (target == NULL) {
-        target = find_xml_comment(parent, update);
+        target = find_xml_comment(parent, update, FALSE);
     }
 
     if (target == NULL) {
@@ -4760,10 +4903,15 @@ hash2metafield(gpointer key, gpointer value, gpointer user_data)
 
     if (key == NULL || value == NULL) {
         return;
-    } else if (((char *)key)[0] == '#') {
-        return;
-    } else if (strstr(key, ":")) {
-        return;
+    }
+
+    /* Filter out cluster-generated attributes that contain a '#' or ':'
+     * (like fail-count and last-failure).
+     */
+    for (crm_name = key; *crm_name; ++crm_name) {
+        if ((*crm_name == '#') || (*crm_name == ':')) {
+            return;
+        }
     }
 
     crm_name = crm_meta_name(key);

@@ -52,6 +52,9 @@ extern GHashTable *rsc_merge_weights(resource_t * rsc, const char *rhs, GHashTab
 extern GHashTable *clone_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes,
                                        const char *attr, float factor, enum pe_weights flags);
 
+extern GHashTable *container_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes,
+                                       const char *attr, float factor, enum pe_weights flags);
+
 extern GHashTable *master_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes,
                                         const char *attr, float factor, enum pe_weights flags);
 
@@ -91,6 +94,21 @@ extern enum pe_action_flags group_action_flags(action_t * action, node_t * node)
 extern void group_rsc_location(resource_t * rsc, rsc_to_node_t * constraint);
 extern void group_expand(resource_t * rsc, pe_working_set_t * data_set);
 extern void group_append_meta(resource_t * rsc, xmlNode * xml);
+
+extern int container_num_allowed_nodes(resource_t * rsc);
+extern node_t *container_color(resource_t * rsc, node_t * preferred, pe_working_set_t * data_set);
+extern void container_create_actions(resource_t * rsc, pe_working_set_t * data_set);
+extern void container_internal_constraints(resource_t * rsc, pe_working_set_t * data_set);
+extern void container_rsc_colocation_lh(resource_t * lh_rsc, resource_t * rh_rsc,
+                                    rsc_colocation_t * constraint);
+extern void container_rsc_colocation_rh(resource_t * lh_rsc, resource_t * rh_rsc,
+                                    rsc_colocation_t * constraint);
+extern void container_rsc_location(resource_t * rsc, rsc_to_node_t * constraint);
+extern enum pe_action_flags container_action_flags(action_t * action, node_t * node);
+extern void container_expand(resource_t * rsc, pe_working_set_t * data_set);
+extern gboolean container_create_probe(resource_t * rsc, node_t * node, action_t * complete,
+                                   gboolean force, pe_working_set_t * data_set);
+extern void container_append_meta(resource_t * rsc, xmlNode * xml);
 
 extern int clone_num_allowed_nodes(resource_t * rsc);
 extern node_t *clone_color(resource_t * rsc, node_t * preferred, pe_working_set_t * data_set);
@@ -135,6 +153,7 @@ extern gboolean unpack_location(xmlNode * xml_obj, pe_working_set_t * data_set);
 extern gboolean unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set);
 
 extern void LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal);
+void container_LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal);
 
 extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
 
@@ -151,8 +170,14 @@ extern enum pe_graph_flags group_update_actions(action_t * first, action_t * the
 extern enum pe_graph_flags clone_update_actions(action_t * first, action_t * then, node_t * node,
                                                 enum pe_action_flags flags,
                                                 enum pe_action_flags filter, enum pe_ordering type);
+extern enum pe_graph_flags container_update_actions(action_t * first, action_t * then, node_t * node,
+                                                    enum pe_action_flags flags,
+                                                    enum pe_action_flags filter, enum pe_ordering type);
 
-gboolean update_action_flags(action_t * action, enum pe_action_flags flags, const char *source);
+gboolean update_action_flags(action_t * action, enum pe_action_flags flags, const char *source, int line);
 gboolean update_action(action_t * action);
+void complex_set_cmds(resource_t * rsc);
+
+
 
 #endif
