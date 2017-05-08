@@ -28,7 +28,9 @@
 #include <crm/common/ipc.h>
 #include <crm/common/ipcs.h>
 #include <crm/msg_xml.h>
+#ifdef ENABLE_VERSIONED_ATTRS
 #include <crm/pengine/rules.h>
+#endif
 
 #include <lrmd_private.h>
 
@@ -39,8 +41,10 @@
 #define EXIT_REASON_MAX_LEN 128
 
 GHashTable *rsc_list = NULL;
+#ifdef ENABLE_VERSIONED_ATTRS
 regex_t *version_format_regex = NULL;
 GHashTable *ra_version_hash = NULL;
+#endif
 
 typedef struct lrmd_cmd_s {
     int timeout;
@@ -171,6 +175,7 @@ dup_attr(gpointer key, gpointer value, gpointer user_data)
     g_hash_table_replace(user_data, strdup(key), strdup(value));
 }
 
+#ifdef ENABLE_VERSIONED_ATTRS
 static gboolean
 valid_version_format(const char *version)
 {
@@ -255,6 +260,7 @@ get_ra_version(const char *class, const char *provider, const char *type, gboole
 
     return version;
 }
+#endif
 
 static lrmd_cmd_t *
 create_lrmd_cmd(xmlNode * msg, crm_client_t * client, lrmd_rsc_t *rsc)
@@ -282,6 +288,7 @@ create_lrmd_cmd(xmlNode * msg, crm_client_t * client, lrmd_rsc_t *rsc)
 
     cmd->params = xml2list(rsc_xml);
 
+#ifdef ENABLE_VERSIONED_ATTRS
     cmd->versioned_attrs = first_named_child(rsc_xml, XML_TAG_VER_ATTRS);
 
     if (cmd->versioned_attrs) {
@@ -297,6 +304,7 @@ create_lrmd_cmd(xmlNode * msg, crm_client_t * client, lrmd_rsc_t *rsc)
         g_hash_table_destroy(node_hash);
         g_hash_table_destroy(hash);
     }
+#endif
 
     cmd->isolation_wrapper = g_hash_table_lookup(cmd->params, "CRM_meta_isolation_wrapper");
 
@@ -330,9 +338,11 @@ free_lrmd_cmd(lrmd_cmd_t * cmd)
     if (cmd->params) {
         g_hash_table_destroy(cmd->params);
     }
+#ifdef ENABLE_VERSIONED_ATTRS
     if (cmd->versioned_attrs) {
         free_xml(cmd->versioned_attrs);
     }
+#endif
     free(cmd->origin);
     free(cmd->action);
     free(cmd->real_action);
@@ -650,11 +660,13 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
             hash2smartfield((gpointer) key, (gpointer) value, args);
         }
     }
+#ifdef ENABLE_VERSIONED_ATTRS
     
     if (cmd->versioned_attrs) {
         add_node_copy(notify, cmd->versioned_attrs);
     }
     
+#endif
     if (cmd->client_id && (cmd->call_opts & lrmd_opt_notify_orig_only)) {
         crm_client_t *client = crm_client_get_by_id(cmd->client_id);
 
