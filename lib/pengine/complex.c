@@ -192,6 +192,7 @@ get_rsc_attributes(GHashTable * meta_hash, resource_t * rsc,
     }
 }
 
+#ifdef ENABLE_VERSIONED_ATTRS
 void
 pe_get_versioned_attributes(xmlNode * meta_hash, resource_t * rsc,
                             node_t * node, pe_working_set_t * data_set)
@@ -215,6 +216,7 @@ pe_get_versioned_attributes(xmlNode * meta_hash, resource_t * rsc,
                                        node_hash, meta_hash, data_set->now);
     }
 }
+#endif
 
 static char *
 template_op_key(xmlNode * op)
@@ -433,6 +435,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
     int container_remote_node = 0;
     int baremetal_remote_node = 0;
+    bool has_versioned_params = FALSE;
 
     crm_log_xml_trace(xml_obj, "Processing resource input...");
 
@@ -480,7 +483,9 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     (*rsc)->parameters =
         g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
 
+#ifdef ENABLE_VERSIONED_ATTRS
     (*rsc)->versioned_parameters = create_xml_node(NULL, XML_TAG_VER_ATTRS);
+#endif
 
     (*rsc)->meta =
         g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
@@ -504,7 +509,9 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
 
     get_meta_attributes((*rsc)->meta, *rsc, NULL, data_set);
     get_rsc_attributes((*rsc)->parameters, *rsc, NULL, data_set);
+#ifdef ENABLE_VERSIONED_ATTRS
     pe_get_versioned_attributes((*rsc)->versioned_parameters, *rsc, NULL, data_set);
+#endif
 
     (*rsc)->flags = 0;
     set_bit((*rsc)->flags, pe_rsc_runnable);
@@ -543,12 +550,14 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_OP_ATTR_ALLOW_MIGRATE);
-    if (crm_is_true(value) && xml_has_children((*rsc)->versioned_parameters)) {
+#ifdef ENABLE_VERSIONED_ATTRS
+    has_versioned_params = xml_has_children((*rsc)->versioned_parameters);
+#endif
+    if (crm_is_true(value) && has_versioned_params) {
         pe_rsc_trace((*rsc), "Migration is disabled for resources with versioned parameters");
     } else if (crm_is_true(value)) {
         set_bit((*rsc)->flags, pe_rsc_allow_migrate);
-    } else if (value == NULL && baremetal_remote_node &&
-               !xml_has_children((*rsc)->versioned_parameters)) {
+    } else if ((value == NULL) && baremetal_remote_node && !has_versioned_params) {
         /* by default, we want baremetal remote-nodes to be able
          * to float around the cluster without having to stop all the
          * resources within the remote-node before moving. Allowing
@@ -858,9 +867,11 @@ common_free(resource_t * rsc)
     if (rsc->parameters != NULL) {
         g_hash_table_destroy(rsc->parameters);
     }
+#ifdef ENABLE_VERSIONED_ATTRS
     if (rsc->versioned_parameters != NULL) {
         free_xml(rsc->versioned_parameters);
     }
+#endif
     if (rsc->meta != NULL) {
         g_hash_table_destroy(rsc->meta);
     }

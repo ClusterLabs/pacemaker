@@ -177,7 +177,9 @@
 #  define XML_TAG_ATTR_SETS	   	"instance_attributes"
 #  define XML_TAG_META_SETS	   	"meta_attributes"
 #  define XML_TAG_ATTRS			"attributes"
+#ifdef ENABLE_VERSIONED_ATTRS
 #  define XML_TAG_VER_ATTRS		"versioned_attributes"
+#endif
 #  define XML_TAG_PARAMS		"parameters"
 #  define XML_TAG_PARAM			"param"
 #  define XML_TAG_UTILIZATION		"utilization"

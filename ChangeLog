@@ -1,3 +1,60 @@
+* Mon May 08 2017 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.17-rc1
+- Update source tarball to revision: 61538e9
+- Changesets: 440
+- Diff:       163 files changed, 10085 insertions(+), 4416 deletions(-)
+
+- Features added since Pacemaker-1.1.16
+  + New "bundle" resource type for Docker container use cases (experimental)
+  + New "PCMK_node_start_state" environment variable to start node in standby
+  + New "value-source" rule expression attribute in location constraints to
+    compare a node attribute against a resource parameter
+  + New "stonith-max-attempts" cluster option to specify how many times
+    fencing can fail for a target before the cluster will no longer
+    immediately re-attempt it (previously hard-coded at 10) 
+  + Failures are now tracked per operation type, as well as per node and
+    resource (the "fail-count" and "last-failure" node attribute names now end
+    in "#OPERATION_INTERVAL")
+  + attrd: Pacemaker Remote node attributes and regular expressions are now
+    supported on legacy cluster stacks (heartbeat, CMAN, and corosync plugin)
+  + tools: New "crm_resource --validate" option
+  + tools: New "stonith_admin --list-targets" option
+  + tools: New "crm_attribute --pattern" option to match a regular expression
+  + tools: "crm_resource --cleanup" and "crm_failcount" can now take
+    --operation and --interval options to operate on a single operation type
+
+- Changes since Pacemaker-1.1.16
+  + Fix multiple memory issues (leaks, use-after-free) in libraries
+  + pengine: unmanaging a guest node resource puts guest in maintenance mode
+  + crmd,libcrmcommon: update throttling when CPUs are hot-plugged
+  + crmd: check for too many stonith failures only when aborting for that reason
+  + crmd: correctly clear failure counts only for a specified node
+  + crmd: don't fence old DC if it's shutting down as soon-to-be DC joins
+  + crmd: forget stonith failures when forgetting node
+  + crmd: all nodes should track stonith failure counts in case they become DC
+  + crmd: update cache status for guest node whose host is fenced
+  + dbus: prevent lrmd from hanging on dbus calls
+  + pengine: quicker recovery from failed demote
+  + libcrmcommon: avoid evicting IPC client if messages spike briefly
+  + libcrmcommon: better XML comment handling prevents infinite election loop
+  + libfencing,fencing: intelligently remap "action" wrongly specified in config
+  + libservices: ensure completed ops aren't on blocked ops list
+  + libservices: properly detect and cancel in-flight systemd/upstart ops
+  + libservices: properly watch writable DBus handles
+  + libservices: systemd service that is reloading doesn't cause monitor failure
+  + pacemaker_remoted: allow graceful shutdown while unmanaged
+  + pengine,libpe_status: don't clear same fail-count twice
+  + pengine: consider guest node unclean if its host is unclean
+  + pengine: better guest node recovery when host fails
+  + pengine: guest node fencing doesn't require stonith enabled
+  + pengine: allow probes of guest node connection resources
+  + pengine: properly handle allow-migrate explicitly set for remote connection
+  + tools: resource agents will now get the correct node name on
+    Pacemaker Remote nodes when using crm_node and crm_attribute
+  + tools: avoid grep crashes in crm_report when looking for system logs
+  + tools: crm_resource -C now clears last-failure as well as fail-count
+  + tools: implement crm_failcount command-line options correctly
+  + tools: properly ignore version with crm_diff --no-version
+
 * Wed Nov 30 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.16-1
 - Update source tarball to revision: 76876b3
 - Changesets: 382

@@ -168,7 +168,7 @@ special, built-in node attributes for each node that can also be used.
  by the +version+ attribute of the +resource-agent+ tag in the agent's
  metadata. Valid only within rules controlling resource options. This can be
  useful during rolling upgrades of a backward-incompatible resource agent.
- '(coming in 1.1.17)'
+ '(coming in 1.1.18)'
 
 |=========================================================
 

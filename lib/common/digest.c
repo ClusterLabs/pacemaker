@@ -242,6 +242,7 @@ crm_digest_verify(xmlNode *input, const char *expected)
     return passed;
 }
 
+#ifdef ENABLE_VERSIONED_ATTRS
 char*
 crm_versioned_param_summary(xmlNode *versioned_params, const char *name)
 {
@@ -307,3 +308,4 @@ crm_summarize_versioned_params(xmlNode *param_set, xmlNode *versioned_params)
         }
     }
 }
+#endif

@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2016-11-02 17:32-0500\n"
-"PO-Revision-Date: 2016-11-02 17:32-0500\n"
+"POT-Creation-Date: 2017-05-08 11:19-0500\n"
+"PO-Revision-Date: 2017-05-08 11:19-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -332,7 +332,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm> <primary>start-failure-is-fatal</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>start-failure-is-fatal</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>start-failure-is-fatal</secondary> </indexterm> <indexterm> <primary>start-failure-is-fatal</primary> </indexterm> Should a failure to start a resource on a particular node prevent further start attempts on that node? If FALSE, the cluster will decide whether the same node is still eligible based on the resource’s current failure count and <literal>migration-threshold</literal> (see <xref linkend=\"s-failure-migration\" />)."
+msgid "<indexterm> <primary>start-failure-is-fatal</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>start-failure-is-fatal</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>start-failure-is-fatal</secondary> </indexterm> <indexterm> <primary>start-failure-is-fatal</primary> </indexterm> Should a failure to start a resource on a particular node prevent further start attempts on that node? If FALSE, the cluster will decide whether the same node is still eligible based on the resource’s current failure count and <literal>migration-threshold</literal> (see <xref linkend=\"s-failure-handling\" />)."
 msgstr ""
 
 #. Tag: para
@@ -402,12 +402,27 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
+msgid "<literal>stonith-max-attempts</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "10"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>stonith-max-attempts</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>stonith-max-attempts</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>stonith-max-attempts</secondary> </indexterm> <indexterm> <primary>stonith-max-attempts</primary> </indexterm> How many times fencing can fail for a target before the cluster will no longer immediately re-attempt it. <emphasis>(since 1.1.17)</emphasis>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
 msgid "<literal>concurrent-fencing</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm> <primary>concurrent-fencing</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>concurrent-fencing</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>concurrent-fencing</secondary> </indexterm> <indexterm> <primary>concurrent-fencing</primary> </indexterm> Is the cluster allowed to initiate multiple fence actions concurrently?"
+msgid "<indexterm> <primary>concurrent-fencing</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>concurrent-fencing</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>concurrent-fencing</secondary> </indexterm> <indexterm> <primary>concurrent-fencing</primary> </indexterm> Is the cluster allowed to initiate multiple fence actions concurrently? <emphasis>(since 1.1.15)</emphasis>"
 msgstr ""
 
 #. Tag: para
@@ -488,6 +503,21 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "<indexterm> <primary>pe-input-series-max</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>pe-input-series-max</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>pe-input-series-max</secondary> </indexterm> <indexterm> <primary>pe-input-series-max</primary> </indexterm> The number of \"normal\" PE inputs to save. Used when reporting problems. A value of -1 means unlimited (report all)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>placement-strategy</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "default"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>placement-strategy</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>placement-strategy</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>placement-strategy</secondary> </indexterm> <indexterm> <primary>placement-strategy</primary> </indexterm> How the cluster should allocate resources to nodes (see <xref linkend=\"s-utilization\" />). Allowed values are <literal>default</literal>, <literal>utilization</literal>, <literal>balanced</literal>, and <literal>minimal</literal>. <emphasis>(since 1.1.0)</emphasis>"
 msgstr ""
 
 #. Tag: para

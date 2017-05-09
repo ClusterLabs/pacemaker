@@ -641,6 +641,7 @@ build_parameter_list(lrmd_event_data_t *op, xmlNode *metadata, xmlNode *result,
                 value = g_hash_table_lookup(op->params, name);
 
                 if(value != NULL) {
+#ifdef ENABLE_VERSIONED_ATTRS
                     char *summary = crm_versioned_param_summary(op->versioned_params, name);
 
                     if (summary) {
@@ -648,9 +649,12 @@ build_parameter_list(lrmd_event_data_t *op, xmlNode *metadata, xmlNode *result,
                         crm_xml_add(result, name, summary);
                         free(summary);
                     } else {
+#endif
                         crm_trace("Adding attr %s=%s to the xml result", name, value);
                         crm_xml_add(result, name, value);
+#ifdef ENABLE_VERSIONED_ATTRS
                     }
+#endif
                 }
             }
         }
@@ -1860,7 +1864,9 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
     const char *op_timeout = NULL;
     const char *op_interval = NULL;
     GHashTable *params = NULL;
+#ifdef ENABLE_VERSIONED_ATTRS
     xmlNode *versioned_params = NULL;
+#endif
 
     const char *transition = NULL;
 
@@ -1895,6 +1901,7 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
 
     params = xml2list(rsc_op);
     g_hash_table_remove(params, CRM_META "_op_target_rc");
+#ifdef ENABLE_VERSIONED_ATTRS
     
     if (!is_remote_lrmd_ra(NULL, NULL, rsc_id)) {
         xmlNode *ptr = first_named_child(rsc_op, XML_TAG_VER_ATTRS);
@@ -1903,6 +1910,7 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
             versioned_params = copy_xml(ptr);
         }
     }
+#endif
 
     op_delay = crm_meta_value(params, XML_OP_ATTR_START_DELAY);
     op_timeout = crm_meta_value(params, XML_ATTR_TIMEOUT);
@@ -1914,7 +1922,9 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
 
     if (safe_str_neq(operation, RSC_STOP)) {
         op->params = params;
+#ifdef ENABLE_VERSIONED_ATTRS
         op->versioned_params = versioned_params;
+#endif
 
     } else {
         rsc_history_t *entry = g_hash_table_lookup(lrm_state->resource_history, rsc_id);
@@ -1923,7 +1933,9 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
          * whatever we are given */
         if (!entry || !entry->stop_params) {
             op->params = params;
+#ifdef ENABLE_VERSIONED_ATTRS
             op->versioned_params = versioned_params;
+#endif
         } else {
             /* Copy the cached parameter list so that we stop the resource
              * with the old attributes, not the new ones */
@@ -1934,12 +1946,15 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
             g_hash_table_foreach(entry->stop_params, copy_instance_keys, op->params);
             g_hash_table_destroy(params);
             params = NULL;
+#ifdef ENABLE_VERSIONED_ATTRS
             
             op->versioned_params = NULL;
             free_xml(versioned_params);
+#endif
         }
     }
 
+#ifdef ENABLE_VERSIONED_ATTRS
     if (op->versioned_params) {
         char *versioned_params_text = dump_xml_unformatted(op->versioned_params);
 
@@ -1947,6 +1962,7 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
             g_hash_table_insert(op->params, strdup("#" XML_TAG_VER_ATTRS), versioned_params_text);
         }
     }
+#endif
 
     /* sanity */
     if (op->interval < 0) {

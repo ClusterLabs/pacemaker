@@ -62,6 +62,9 @@ dnl Older distros may need: AM_INIT_AUTOMAKE($PACKAGE_NAME, $PACKAGE_VERSION)
 AM_INIT_AUTOMAKE([foreign])
 AC_DEFINE_UNQUOTED(PACEMAKER_VERSION, "$PACKAGE_VERSION", Current pacemaker version)
 
+dnl Enable preliminary implementation of versioned attributes in master branch
+AC_DEFINE_UNQUOTED(ENABLE_VERSIONED_ATTRS, "1", Enable versioned attributes)
+
 PACKAGE_SERIES=`echo $PACKAGE_VERSION | awk -F. '{ print $1"."$2 }'`
 AC_SUBST(PACKAGE_SERIES)
 AC_SUBST(PACKAGE_VERSION)

@@ -45,3 +45,6 @@ addFilter("W: dangerous-command-in-%(pre|postun|posttrans) rm")
 
 # We should really use "pacemaker-remote", but we don't
 addFilter("W: incoherent-init-script-name pacemaker_remote")
+
+# Some scriptlets have code for systemd systems only
+addFilter("W: empty-%(post|pre|preun|postun|posttrans)")

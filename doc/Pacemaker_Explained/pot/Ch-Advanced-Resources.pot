@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2016-11-02 17:32-0500\n"
-"PO-Revision-Date: 2016-11-02 17:32-0500\n"
+"POT-Creation-Date: 2017-05-08 11:19-0500\n"
+"PO-Revision-Date: 2017-05-08 11:19-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -24,7 +24,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm> <primary>Group Resources</primary> </indexterm> <indexterm> <primary>Resources</primary><secondary>Groups</secondary> </indexterm> <indexterm> <primary>Groups</primary> </indexterm>"
+msgid "<indexterm> <primary>Group Resources</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Groups</secondary> </indexterm> <indexterm> <primary>Groups</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -223,7 +223,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm> <primary>Clone Resources</primary> </indexterm> <indexterm> <primary>Resources</primary><secondary>Clones</secondary> </indexterm> <indexterm> <primary>Clones</primary> </indexterm>"
+msgid "<indexterm> <primary>Clone Resources</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Clones</secondary> </indexterm> <indexterm> <primary>Clones</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -637,17 +637,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "OCF_RESKEY_CRM_meta_notify_inactive_uname"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Nodes on which resources are not running <indexterm> <primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_meta_notify_</secondary><tertiary>inactive_uname</tertiary> </indexterm> <indexterm> <primary>OCF_RESKEY_CRM_meta_notify_</primary><secondary>inactive_uname</secondary> </indexterm> <indexterm> <primary>inactive_uname</primary> </indexterm> <indexterm> <primary>inactive_uname</primary><secondary>Notification Environment Variable</secondary> </indexterm> <indexterm> <primary>Notification Environment Variable</primary> </indexterm>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
 msgid "The variables come in pairs, such as <literal>OCF_RESKEY_CRM_meta_notify_start_resource</literal> and <literal>OCF_RESKEY_CRM_meta_notify_start_uname</literal> and should be treated as an array of whitespace-separated elements."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>OCF_RESKEY_CRM_meta_notify_inactive_resource</literal> is an exception as the matching <literal>uname</literal> variable does not exist since inactive resources are not running on any node."
 msgstr ""
 
 #. Tag: para
@@ -773,7 +768,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm> <primary>Multi-state Resources</primary> </indexterm> <indexterm> <primary>Resources</primary><secondary>Multi-state</secondary> </indexterm> <indexterm> <primary>Multi-state</primary> </indexterm>"
+msgid "<indexterm> <primary>Multi-state Resources</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Multi-state</secondary> </indexterm> <indexterm> <primary>Multi-state</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -1401,5 +1396,412 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Resources that were promoted: <literal>$OCF_RESKEY_CRM_meta_notify_promote_resource</literal>"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Bundles - Isolated Environments"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>bundle</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>bundle</secondary> </indexterm> <indexterm> <primary>bundle</primary> </indexterm> <indexterm> <primary>Docker</primary><secondary>bundle</secondary> </indexterm> <indexterm> <primary>bundle</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Pacemaker (version 1.1.17 and later) supports a special syntax for combining an isolated environment with the infrastructure support that it needs: the <emphasis>bundle</emphasis>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The only isolation technology currently supported by Pacemaker bundles is <ulink url=\"https://www.docker.com/\">Docker</ulink> containers. <footnote><para>Docker is a trademark of Docker, Inc. No endorsement by or association with Docker, Inc. is implied.</para></footnote>"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "A bundle for a containerized web server"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;bundle id=\"httpd-bundle\"&gt;\n"
+"   &lt;docker image=\"pcmk:http\" replicas=\"3\"/&gt;\n"
+"   &lt;network ip-range-start=\"192.168.122.131\"\n"
+"            host-netmask=\"24\"\n"
+"            host-interface=\"eth0\"&gt;\n"
+"      &lt;port-mapping id=\"httpd-port\" port=\"80\"/&gt;\n"
+"   &lt;/network&gt;\n"
+"   &lt;storage&gt;\n"
+"      &lt;storage-mapping id=\"httpd-syslog\"\n"
+"                       source-dir=\"/dev/log\"\n"
+"                       target-dir=\"/dev/log\"\n"
+"                       options=\"rw\"/&gt;\n"
+"      &lt;storage-mapping id=\"httpd-root\"\n"
+"                       source-dir=\"/srv/html\"\n"
+"                       target-dir=\"/var/www/html\"\n"
+"                       options=\"rw\"/&gt;\n"
+"      &lt;storage-mapping id=\"httpd-logs\"\n"
+"                       source-dir-root=\"/var/log/pacemaker/bundles\"\n"
+"                       target-dir=\"/etc/httpd/logs\"\n"
+"                       options=\"rw\"/&gt;\n"
+"   &lt;/storage&gt;\n"
+"   &lt;primitive class=\"ocf\" id=\"httpd\" provider=\"heartbeat\" type=\"apache\"/&gt;\n"
+"&lt;/bundle&gt;"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Bundle Properties"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Properties of a Bundle"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A unique name for the bundle (required) <indexterm> <primary>id</primary><secondary>bundle</secondary> </indexterm> <indexterm> <primary>bundle</primary> </indexterm> <indexterm> <primary>bundle</primary><secondary>Property</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>description</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Arbitrary text (not used by Pacemaker) <indexterm> <primary>description</primary><secondary>bundle</secondary> </indexterm> <indexterm> <primary>bundle</primary> </indexterm> <indexterm> <primary>bundle</primary><secondary>Property</secondary><tertiary>description</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>description</secondary> </indexterm> <indexterm> <primary>description</primary> </indexterm>"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Docker Properties"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A bundle must contain exactly one <literal>&lt;docker&gt;</literal> element."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Before configuring a bundle in Pacemaker, the user must install Docker and supply a fully configured Docker image on every node allowed to run the bundle."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Pacemaker will create an implicit <literal>ocf:heartbeat:docker</literal> resource to manage a bundle’s Docker container."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Properties of a Bundle’s Docker Element"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>image</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Docker image tag (required) <indexterm> <primary>image</primary><secondary>Docker</secondary> </indexterm> <indexterm> <primary>Docker</primary> </indexterm> <indexterm> <primary>Docker</primary><secondary>Property</secondary><tertiary>image</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>image</secondary> </indexterm> <indexterm> <primary>image</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>replicas</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Value of <literal>masters</literal> if that is positive, else 1"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A positive integer specifying the number of container instances to launch <indexterm> <primary>replicas</primary><secondary>Docker</secondary> </indexterm> <indexterm> <primary>Docker</primary> </indexterm> <indexterm> <primary>Docker</primary><secondary>Property</secondary><tertiary>replicas</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>replicas</secondary> </indexterm> <indexterm> <primary>replicas</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>replicas-per-host</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A positive integer specifying the number of container instances allowed to run on a single node <indexterm> <primary>replicas-per-host</primary><secondary>Docker</secondary> </indexterm> <indexterm> <primary>Docker</primary> </indexterm> <indexterm> <primary>Docker</primary><secondary>Property</secondary><tertiary>replicas-per-host</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>replicas-per-host</secondary> </indexterm> <indexterm> <primary>replicas-per-host</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>masters</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "0"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A non-negative integer that, if positive, indicates that the containerized service should be treated as a multistate service, with this many replicas allowed to run the service in the master role <indexterm> <primary>masters</primary><secondary>Docker</secondary> </indexterm> <indexterm> <primary>Docker</primary> </indexterm> <indexterm> <primary>Docker</primary><secondary>Property</secondary><tertiary>masters</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>masters</secondary> </indexterm> <indexterm> <primary>masters</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>network</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If specified, this will be passed to <literal>docker run</literal> as the <ulink url=\"https://docs.docker.com/engine/reference/run/#network-settings\">network setting</ulink> for the Docker container. <indexterm> <primary>network</primary><secondary>Docker</secondary> </indexterm> <indexterm> <primary>Docker</primary> </indexterm> <indexterm> <primary>Docker</primary><secondary>Property</secondary><tertiary>network</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>network</secondary> </indexterm> <indexterm> <primary>network</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>run-command</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>/usr/sbin/pacemaker_remoted</literal> if bundle contains a <literal>primitive</literal>, otherwise none"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "This command will be run inside the container when launching it (\"PID 1\"). If the bundle contains a <literal>primitive</literal>, this command <emphasis>must</emphasis> start pacemaker_remoted (but could, for example, be a script that does other stuff, too). <indexterm> <primary>network</primary><secondary>Docker</secondary> </indexterm> <indexterm> <primary>Docker</primary> </indexterm> <indexterm> <primary>Docker</primary><secondary>Property</secondary><tertiary>network</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>network</secondary> </indexterm> <indexterm> <primary>network</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>options</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Extra command-line options to pass to <literal>docker run</literal> <indexterm> <primary>options</primary><secondary>Docker</secondary> </indexterm> <indexterm> <primary>Docker</primary> </indexterm> <indexterm> <primary>Docker</primary><secondary>Property</secondary><tertiary>options</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>options</secondary> </indexterm> <indexterm> <primary>options</primary> </indexterm>"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Bundle Network Properties"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A bundle may optionally contain one <literal>&lt;network&gt;</literal> element. <indexterm> <primary>bundle</primary><secondary>network</secondary> </indexterm> <indexterm> <primary>network</primary> </indexterm>"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Properties of a Bundle’s Network Element"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>ip-range-start</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If specified, Pacemaker will create an implicit <literal>ocf:heartbeat:IPaddr2</literal> resource for each container instance, starting with this IP address, using up to <literal>replicas</literal> sequential addresses. These addresses can be used from the host’s network to reach the service inside the container, though it is not visible within the container itself. Only IPv4 addresses are currently supported. <indexterm> <primary>ip-range-start</primary><secondary>network</secondary> </indexterm> <indexterm> <primary>network</primary> </indexterm> <indexterm> <primary>network</primary><secondary>Property</secondary><tertiary>ip-range-start</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>ip-range-start</secondary> </indexterm> <indexterm> <primary>ip-range-start</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>host-netmask</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "32"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If <literal>ip-range-start</literal> is specified, the IP addresses are created with this CIDR netmask (as a number of bits). <indexterm> <primary>host-netmask</primary><secondary>network</secondary> </indexterm> <indexterm> <primary>network</primary> </indexterm> <indexterm> <primary>network</primary><secondary>Property</secondary><tertiary>host-netmask</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>host-netmask</secondary> </indexterm> <indexterm> <primary>host-netmask</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>host-interface</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If <literal>ip-range-start</literal> is specified, the IP addresses are created on this host interface (by default, it will be determined from the IP address). <indexterm> <primary>host-interface</primary><secondary>network</secondary> </indexterm> <indexterm> <primary>network</primary> </indexterm> <indexterm> <primary>network</primary><secondary>Property</secondary><tertiary>host-interface</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>host-interface</secondary> </indexterm> <indexterm> <primary>host-interface</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>control-port</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If the bundle contains a <literal>primitive</literal>, the cluster will use this integer TCP port for communication with Pacemaker Remote inside the container. This takes precedence over the value of any PCMK_remote_port environment variable set in the container image. This can allow a <literal>primitive</literal> to be specified without using <literal>ip-start-range</literal>, in which case <literal>replicas-per-host</literal> must be 1. <indexterm> <primary>control-port</primary><secondary>network</secondary> </indexterm> <indexterm> <primary>network</primary> </indexterm> <indexterm> <primary>network</primary><secondary>Property</secondary><tertiary>control-port</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>control-port</secondary> </indexterm> <indexterm> <primary>control-port</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If <literal>ip-range-start</literal> is used, Pacemaker will automatically ensure that <literal>/etc/hosts</literal> inside the containers has entries for each replica and its assigned IP. Replicas are named by the bundle id plus a dash and an integer counter starting with zero. For example, if a bundle named <literal>httpd-bundle</literal> has <literal>replicas=2</literal>, its containers will be named <literal>httpd-bundle-0</literal> and <literal>httpd-bundle-1</literal>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Additionally, a <literal>&lt;network&gt;</literal> element may optionally contain one or more <literal>&lt;port-mapping&gt;</literal> elements. <indexterm> <primary>bundle</primary><secondary>network</secondary><tertiary>port-mapping</tertiary> </indexterm> <indexterm> <primary>network</primary><secondary>port-mapping</secondary> </indexterm> <indexterm> <primary>port-mapping</primary> </indexterm>"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Properties of a Bundle’s Port-Mapping Element"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A unique name for the port mapping (required) <indexterm> <primary>id</primary><secondary>port-mapping</secondary> </indexterm> <indexterm> <primary>port-mapping</primary> </indexterm> <indexterm> <primary>port-mapping</primary><secondary>Property</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>port</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If this is specified, connections to this TCP port number on the host network (on the container’s assigned IP address, if <literal>ip-range-start</literal> is specified) will be forwarded to the container network. Exactly one of <literal>port</literal> or <literal>range</literal> must be specified in a <literal>port-mapping</literal>. <indexterm> <primary>port</primary><secondary>port-mapping</secondary> </indexterm> <indexterm> <primary>port-mapping</primary> </indexterm> <indexterm> <primary>port-mapping</primary><secondary>Property</secondary><tertiary>port</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>port</secondary> </indexterm> <indexterm> <primary>port</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>internal-port</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "value of <literal>port</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If <literal>port</literal> and this are specified, connections to <literal>port</literal> on the host’s network will be forwarded to this port on the container network. <indexterm> <primary>internal-port</primary><secondary>port-mapping</secondary> </indexterm> <indexterm> <primary>port-mapping</primary> </indexterm> <indexterm> <primary>port-mapping</primary><secondary>Property</secondary><tertiary>internal-port</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>internal-port</secondary> </indexterm> <indexterm> <primary>internal-port</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>range</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If this is specified, connections to these TCP port numbers (expressed as <emphasis>first_port</emphasis>-<emphasis>last_port</emphasis>) on the host network (on the container’s assigned IP address, if <literal>ip-range-start</literal> is specified) will be forwarded to the same ports in the container network. Exactly one of <literal>port</literal> or <literal>range</literal> must be specified in a <literal>port-mapping</literal>. <indexterm> <primary>range</primary><secondary>port-mapping</secondary> </indexterm> <indexterm> <primary>port-mapping</primary> </indexterm> <indexterm> <primary>port-mapping</primary><secondary>Property</secondary><tertiary>range</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>range</secondary> </indexterm> <indexterm> <primary>range</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If the bundle contains a <literal>primitive</literal>, Pacemaker will automatically map the <literal>control-port</literal>, so it is not necessary to specify that port in a <literal>port-mapping</literal>."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Bundle Storage Properties"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A bundle may optionally contain one <literal>&lt;storage&gt;</literal> element. A <literal>&lt;storage&gt;</literal> element has no properties of its own, but may contain one or more <literal>&lt;storage-mapping&gt;</literal> elements. <indexterm> <primary>bundle</primary><secondary>storage</secondary><tertiary>storage-mapping</tertiary> </indexterm> <indexterm> <primary>storage</primary><secondary>storage-mapping</secondary> </indexterm> <indexterm> <primary>storage-mapping</primary> </indexterm>"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Properties of a Bundle’s Storage-Mapping Element"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A unique name for the storage mapping (required) <indexterm> <primary>id</primary><secondary>storage-mapping</secondary> </indexterm> <indexterm> <primary>storage-mapping</primary> </indexterm> <indexterm> <primary>storage-mapping</primary><secondary>Property</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>source-dir</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The absolute path on the host’s filesystem that will be mapped into the container. Exactly one of <literal>source-dir</literal> and <literal>source-dir-root</literal> must be specified in a <literal>storage-mapping</literal>. <indexterm> <primary>source-dir</primary><secondary>storage-mapping</secondary> </indexterm> <indexterm> <primary>storage-mapping</primary> </indexterm> <indexterm> <primary>storage-mapping</primary><secondary>Property</secondary><tertiary>source-dir</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>source-dir</secondary> </indexterm> <indexterm> <primary>source-dir</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>source-dir-root</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The start of a path on the host’s filesystem that will be mapped into the container, using a different subdirectory on the host for each container instance. Exactly one of <literal>source-dir</literal> and <literal>source-dir-root</literal> must be specified in a <literal>storage-mapping</literal>. <indexterm> <primary>source-dir-root</primary><secondary>storage-mapping</secondary> </indexterm> <indexterm> <primary>storage-mapping</primary> </indexterm> <indexterm> <primary>storage-mapping</primary><secondary>Property</secondary><tertiary>source-dir-root</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>source-dir-root</secondary> </indexterm> <indexterm> <primary>source-dir-root</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>target-dir</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The path name within the container where the host storage will be mapped (required) <indexterm> <primary>target-dir</primary><secondary>storage-mapping</secondary> </indexterm> <indexterm> <primary>storage-mapping</primary> </indexterm> <indexterm> <primary>storage-mapping</primary><secondary>Property</secondary><tertiary>target-dir</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>target-dir</secondary> </indexterm> <indexterm> <primary>target-dir</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "File system mount options to use when mapping the storage <indexterm> <primary>options</primary><secondary>storage-mapping</secondary> </indexterm> <indexterm> <primary>storage-mapping</primary> </indexterm> <indexterm> <primary>storage-mapping</primary><secondary>Property</secondary><tertiary>options</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>options</secondary> </indexterm> <indexterm> <primary>options</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If the bundle contains a <literal>primitive</literal>, Pacemaker will automatically map the equivalent of <literal>source-dir=/etc/pacemaker/authkey target-dir=/etc/pacemaker/authkey</literal> and <literal>source-dir-root=/var/log/pacemaker/bundles target-dir=/var/log</literal> into the container, so it is not necessary to specify those paths in a <literal>storage-mapping</literal>. Newer versions of <literal>ocf:heartbeat:docker</literal> will automatically create the source directories if they do not exist, but the user may want to ensure they exist beforehand."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Bundle Primitive"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A bundle may optionally contain one <literal>&lt;primitive&gt;</literal> resource (see <xref linkend=\"s-resource-primitive\" />). The primitive may have operations, instance attributes and meta-attributes defined, as usual."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If a bundle contains a primitive resource, the container image must include the Pacemaker Remote daemon, and either <literal>ip-range-start</literal> or <literal>control-port</literal> must be configured in the bundle. Pacemaker will create an implicit <literal>ocf:pacemaker:remote</literal> resource for the connection, launch Pacemaker Remote within the container, and monitor and manage the primitive resource via Pacemaker Remote."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If the bundle has more than one container instance (replica), the primitive resource will function as an implicit clone (see <xref linkend=\"s-resource-clone\" />) — a multistate clone if the bundle has <literal>masters</literal> greater than zero (see <xref linkend=\"s-resource-multistate\" />)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Containers in bundles with a <literal>primitive</literal> must have an accessible networking environment, so that Pacemaker can contact Pacemaker Remote inside the container. For example, the Docker option <literal>--net=none</literal> should not be used with a <literal>primitive</literal>. The default (using a distinct network space inside the container) works with <literal>ip-range-start</literal>. If the Docker option <literal>--net=host</literal> is used (making the container share the host’s network space), a unique <literal>control-port</literal> should be specified for each bundle."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Limitations of Bundles"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Currently, bundles may not be cloned, or included in groups or colocation constraints. This includes the bundle’s primitive and any resources implicitly created by Pacemaker for the bundle."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Bundles do not have instance attributes, meta-attributes, utilization attributes, or operations of their own, though a primitive included in a bundle may."
 msgstr ""
 
