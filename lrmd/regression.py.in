@@ -1263,7 +1263,7 @@ def main(argv):
     tests.build_generic_tests()
     tests.build_multi_rsc_tests()
     tests.build_negative_tests()
-    #tests.build_versioned_tests()
+    tests.build_versioned_tests()
     tests.build_custom_tests()
     tests.build_stress_tests()
 
