@@ -262,7 +262,9 @@ container_expand(resource_t * rsc, pe_working_set_t * data_set)
 
 
         CRM_ASSERT(tuple);
-        if(fix_remote_addr(tuple->remote) && tuple->docker->allocated_to) {
+        if (tuple->docker && tuple->remote && tuple->docker->allocated_to
+            && fix_remote_addr(tuple->remote)) {
+
             // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
             xmlNode *nvpair = get_xpath_object("//nvpair[@name='addr']", tuple->remote->xml, LOG_ERR);
 
