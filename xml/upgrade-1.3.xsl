@@ -13,19 +13,19 @@
     <xsl:copy-of select="@id"/>
     <xsl:attribute name="kind"><xsl:value-of select="name()"/></xsl:attribute>
 
-    <xsl:if test="@ref">
-      <xsl:attribute name="reference"><xsl:value-of select="@ref"/></xsl:attribute>
-    </xsl:if>
-    <xsl:if test="not(@ref)">
-      <xsl:if test="@tag">
+    <xsl:choose>
+      <xsl:when test="@ref">
+        <xsl:attribute name="reference"><xsl:value-of select="@ref"/></xsl:attribute>
+      </xsl:when>
+      <xsl:when test="@tag">
         <xsl:attribute name="object-type"><xsl:value-of select="@tag"/></xsl:attribute>
         <xsl:copy-of select="@attribute"/>
-      </xsl:if>
-    </xsl:if>
-
-    <xsl:if test="@xpath">
-      <xsl:copy-of select="@xpath"/>
-    </xsl:if>
+      </xsl:when>
+      <xsl:otherwise>
+        <!-- must have been xpath per the schema, then -->
+        <xsl:copy-of select="@xpath"/>
+      </xsl:otherwise>
+    </xsl:choose>
 
   </xsl:element>
 </xsl:template>
