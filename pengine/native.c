@@ -1507,11 +1507,12 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
         rsc_avoids_remote_nodes(rsc);
     }
 
-    /* If this rsc is a remote connection resource associated
-     * with a container ( which will most likely be a virtual guest )
-     * do not allow the container to live on any remote-nodes.
-     * remote-nodes managing nested remote-nodes should not be allowed. */
-    if (rsc->is_remote_node && rsc->container) {
+    /* If this is a guest node's implicit remote connection, do not allow the
+     * guest resource to live on a Pacemaker Remote node, to avoid nesting
+     * remotes. However, allow bundles to run on remote nodes.
+     */
+    if (rsc->is_remote_node && rsc->container
+        && is_not_set(rsc->flags, pe_rsc_allow_remote_remotes)) {
         rsc_avoids_remote_nodes(rsc->container);
     }
 }
