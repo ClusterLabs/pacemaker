@@ -81,6 +81,9 @@ typedef struct lrmd_key_value_s {
 #define F_LRMD_RSC_DELETED      "lrmd_rsc_deleted"
 #define F_LRMD_RSC              "lrmd_rsc"
 
+#define F_LRMD_ALERT_ID           "lrmd_alert_id"
+#define F_LRMD_ALERT              "lrmd_alert"
+
 #define LRMD_OP_RSC_CHK_REG       "lrmd_rsc_check_register"
 #define LRMD_OP_RSC_REG           "lrmd_rsc_register"
 #define LRMD_OP_RSC_EXEC          "lrmd_rsc_exec"
@@ -91,6 +94,7 @@ typedef struct lrmd_key_value_s {
 #define LRMD_OP_POKE              "lrmd_rsc_poke"
 #define LRMD_OP_NEW_CLIENT        "lrmd_rsc_new_client"
 #define LRMD_OP_CHECK             "lrmd_check"
+#define LRMD_OP_ALERT_EXEC        "lrmd_alert_exec"
 
 #define LRMD_IPC_OP_NEW           "new"
 #define LRMD_IPC_OP_DESTROY       "destroy"
@@ -453,6 +457,25 @@ typedef struct lrmd_api_operations_s {
      * \retval negative error code on failure
      */
     int (*list_standards) (lrmd_t * lrmd, lrmd_list_t ** standards);
+
+    /*!
+     * \brief Issue a command on a alert
+     *
+     * \note Asynchronous, command is queued in daemon on function return, but
+     *       execution of command is not synced.
+     *
+     * \note Operations on individual alerts are guaranteed to occur
+     *       in the order the client api calls them in.
+     *
+     * \note Operations between different alerts are not guaranteed
+     *       to occur in any specific order in relation to one another
+     *       regardless of what order the client api is called in.
+     * \retval call_id to track async event result on success
+     * \retval negative error code on failure
+     */
+    int (*exec_alert) (lrmd_t * lrmd, const char *alert_id,
+                 int timeout,   /* ms */
+                 enum lrmd_call_options options, lrmd_key_value_t * params);    /* ownership of params is given up to api here */
 
 } lrmd_api_operations_t;
 
