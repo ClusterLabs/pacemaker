@@ -83,6 +83,10 @@ else
                     ;;
             esac
             ;;
+        attribute)
+            #
+            email_subject="${CRM_alert_timestamp} ${cluster_name}: The '${CRM_alert_attribute_name}' attribute of the '${CRM_alert_node}' node was updated in '${CRM_alert_attribute_value}'"
+            ;;
         *)
             email_subject="${CRM_alert_timestamp} ${cluster_name}: Unhandled $CRM_alert_kind alert"
             ;;
