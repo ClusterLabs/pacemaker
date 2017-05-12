@@ -27,13 +27,15 @@ attrd_CFLAGS	= $(CFLAGS_HARDENED_EXE)
 attrd_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
 
 attrd_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la	\
+                $(top_builddir)/lib/pengine/libpe_rules.la      \
 		$(top_builddir)/lib/common/libcrmcommon.la	\
 		$(top_builddir)/lib/cib/libcib.la		\
+                $(top_builddir)/lib/lrmd/liblrmd.la             \
 		$(CLUSTERLIBS)
 
 attrd_SOURCES	=
 if BUILD_ATOMIC_ATTRD
-attrd_SOURCES	+= main.c commands.c attrd_common.c
+attrd_SOURCES	+= main.c commands.c attrd_common.c attrd_alerts.c
 else
 attrd_SOURCES	+= legacy.c attrd_common.c
 endif
