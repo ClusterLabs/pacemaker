@@ -31,20 +31,26 @@
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
 #include <crm/msg_xml.h>
+#include <crm/pengine/rules.h>
+#include <crm/common/iso8601.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipcs.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster/election.h>
+#include <crm/common/alerts_internal.h>
 
 #include <crm/common/xml.h>
 
 #include <crm/attrd.h>
 #include <internal.h>
+#include "attrd_alerts.h"
 
 cib_t *the_cib = NULL;
+lrmd_t *the_lrmd = NULL;
 crm_cluster_t *attrd_cluster = NULL;
 election_t *writer = NULL;
 int attrd_error = pcmk_ok;
+crm_trigger_t *attrd_config_read = NULL;
 
 static void
 attrd_cpg_dispatch(cpg_handle_t handle,
@@ -156,6 +162,12 @@ attrd_cib_connect(int max_retry)
     rc = connection->cmds->add_notify_callback(connection, T_CIB_REPLACE_NOTIFY, attrd_cib_replaced_cb);
     if(rc != pcmk_ok) {
         crm_err("Could not set CIB notification callback");
+        goto cleanup;
+    }
+
+    rc = connection->cmds->add_notify_callback(connection, T_CIB_DIFF_NOTIFY, attrd_cib_updated_cb);
+    if (rc != pcmk_ok) {
+        crm_err("Could not set CIB notification callback (update)");
         goto cleanup;
     }
 
@@ -314,6 +326,12 @@ main(int argc, char **argv)
     }
 
     crm_info("CIB connection active");
+
+    attrd_config_read = mainloop_add_trigger(G_PRIORITY_HIGH, attrd_read_options, NULL);
+
+    /* Reading of cib(Alert section) after the start */
+    mainloop_set_trigger(attrd_config_read);
+
     attrd_run_mainloop();
 
   done:
@@ -324,6 +342,14 @@ main(int argc, char **argv)
         crm_client_disconnect_all(ipcs);
         qb_ipcs_destroy(ipcs);
         g_hash_table_destroy(attributes);
+    }
+
+    attrd_alert_fini();
+
+    if (the_lrmd) {
+        the_lrmd->cmds->disconnect(the_lrmd);
+        lrmd_api_delete(the_lrmd);
+        the_lrmd = NULL;
     }
 
     if (the_cib) {
