@@ -33,7 +33,7 @@ GHashTable *alert_info_cache = NULL;
 lrmd_t *
 attrd_lrmd_connect(int max_retry, void callback(lrmd_event_data_t * op))
 {
-    int ret;
+    int ret = -ENOTCONN;
     int fails = 0;
 
     if (!the_lrmd) {
