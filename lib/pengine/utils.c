@@ -1729,9 +1729,7 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
     op_digest_cache_t *data = NULL;
 
     GHashTable *local_rsc_params = NULL;
-#ifdef ENABLE_VERSIONED_ATTRS
     xmlNode *local_versioned_params = NULL;
-#endif
 
     action_t *action = NULL;
     char *key = NULL;
@@ -1826,9 +1824,7 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
 
     g_hash_table_insert(node->details->digest_cache, strdup(op_id), data);
     g_hash_table_destroy(local_rsc_params);
-#ifdef ENABLE_VERSIONED_ATTRS
     free_xml(local_versioned_params);
-#endif
     pe_free_action(action);
 
     return data;

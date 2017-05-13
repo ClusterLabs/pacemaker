@@ -309,10 +309,8 @@ struct resource_s {
     int remote_reconnect_interval;
 
     pe_working_set_t *cluster;
-#ifdef ENABLE_VERSIONED_ATTRS
 
     xmlNode *versioned_parameters;
-#endif
 };
 
 struct pe_action_s {
