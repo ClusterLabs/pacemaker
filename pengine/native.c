@@ -1447,16 +1447,24 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
     if (rsc->container) {
         resource_t *remote_rsc = NULL;
 
-        /* find out if the container is associated with remote node connection resource */
+        /* A user can specify that a resource must start on a Pacemaker Remote
+         * node by explicitly configuring it with the container=NODENAME
+         * meta-attribute. This is of questionable merit, since location
+         * constraints can accomplish the same thing. But we support it, so here
+         * we check whether a resource (that is not itself a remote connection)
+         * has container set to a remote node or guest node resource.
+         */
         if (rsc->container->is_remote_node) {
             remote_rsc = rsc->container;
         } else if (rsc->is_remote_node == FALSE) {
             remote_rsc = rsc_contains_remote_node(data_set, rsc->container);
         }
 
-        /* if the container is a remote-node, force the resource within the container
-         * instead of colocating the resource with the container. */
         if (remote_rsc) {
+            /* The container represents a Pacemaker Remote node, so force the
+             * resource on the Pacemaker Remote node instead of colocating the
+             * resource with the container resource.
+             */
             GHashTableIter iter;
             node_t *node = NULL;
             g_hash_table_iter_init(&iter, rsc->allowed_nodes);
@@ -1466,8 +1474,15 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
                 }
             }
         } else {
-            int score = 10000; /* Highly preferred but not essential */
-            crm_trace("Generating order and colocation rules for rsc %s with container %s", rsc->id, rsc->container->id);
+            /* This resource is either a filler for a container that does NOT
+             * represent a Pacemaker Remote node, or a Pacemaker Remote
+             * connection resource for a guest node or bundle.
+             */
+            int score;
+
+            crm_trace("Order and colocate %s relative to its container %s",
+                      rsc->id, rsc->container->id);
+
             custom_action_order(rsc->container, generate_op_key(rsc->container->id, RSC_START, 0), NULL,
                                 rsc, generate_op_key(rsc->id, RSC_START, 0), NULL,
                                 pe_order_implies_then | pe_order_runnable_left, data_set);
@@ -1476,11 +1491,13 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
                                 rsc->container, generate_op_key(rsc->container->id, RSC_STOP, 0), NULL,
                                 pe_order_implies_first, data_set);
 
-            if(is_not_set(rsc->flags, pe_rsc_allow_remote_remotes)) {
-                score = INFINITY; /* Force them to run on the same host */ 
+            if (is_set(rsc->flags, pe_rsc_allow_remote_remotes)) {
+                score = 10000;    /* Highly preferred but not essential */
+            } else {
+                score = INFINITY; /* Force them to run on the same host */
             }
-            rsc_colocation_new("resource-with-container", NULL, score, rsc, rsc->container, NULL,
-                               NULL, data_set);
+            rsc_colocation_new("resource-with-container", NULL, score, rsc,
+                               rsc->container, NULL, NULL, data_set);
         }
     }
 
