@@ -83,7 +83,7 @@ CC_IN_CONFIGURE=yes
 export CC_IN_CONFIGURE
 
 LDD=ldd
-BUILD_ATOMIC_ATTRD=1
+BUILD_ATOMIC_ATTRD=0
 
 dnl ========================================================================
 dnl Compiler characteristics

@@ -61,6 +61,7 @@ extern "C" {
 #define PCMK_RESOURCE_CLASS_HB      "heartbeat"
 #define PCMK_RESOURCE_CLASS_NAGIOS  "nagios"
 #define PCMK_RESOURCE_CLASS_STONITH "stonith"
+#define PCMK_ALERT_CLASS            "alert"
 
 /* This is the string passed in the OCF_EXIT_REASON_PREFIX
  * environment variable. The stderr output that occurs
@@ -170,6 +171,7 @@ enum svc_action_flags {
 
         int timeout;
         GHashTable *params;
+        GHashTable *alert_params;
 
         int rc;
         int pid;
