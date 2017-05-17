@@ -29,6 +29,7 @@
 #include <crm/cib/internal.h>
 
 #include <internal.h>
+#include "attrd_alerts.h"
 
 /*
  * Legacy attrd (all pre-1.1.11 Pacemaker versions, plus all versions when using
@@ -52,36 +53,6 @@
 int last_cib_op_done = 0;
 char *peer_writer = NULL;
 GHashTable *attributes = NULL;
-
-typedef struct attribute_s {
-    char *uuid; /* TODO: Remove if at all possible */
-    char *id;
-    char *set;
-
-    GHashTable *values;
-
-    int update;
-    int timeout_ms;
-
-    /* TODO: refactor these three as a bitmask */
-    bool changed; /* whether attribute value has changed since last write */
-    bool unknown_peer_uuids; /* whether we know we're missing a peer uuid */
-    gboolean is_private; /* whether to keep this attribute out of the CIB */
-
-    mainloop_timer_t *timer;
-
-    char *user;
-
-} attribute_t;
-
-typedef struct attribute_value_s {
-        uint32_t nodeid;
-        gboolean is_remote;
-        char *nodename;
-        char *current;
-        char *requested;
-} attribute_value_t;
-
 
 void write_attribute(attribute_t *a);
 void write_or_elect_attribute(attribute_t *a);
@@ -1075,6 +1046,7 @@ write_attribute(attribute_t *a)
     attribute_value_t *v = NULL;
     GHashTableIter iter;
     enum cib_call_options flags = cib_quorum_override;
+    GHashTable *alert_attribute_value = NULL;
 
     if (a == NULL) {
         return;
@@ -1109,6 +1081,9 @@ write_attribute(attribute_t *a)
 
     /* We will check all peers' uuids shortly, so initialize this to false */
     a->unknown_peer_uuids = FALSE;
+
+    /* Make the table for the attribute trap */
+    alert_attribute_value = g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, NULL, free_attribute_value);;
 
     /* Iterate over each peer value of this attribute */
     g_hash_table_iter_init(&iter, a->values);
@@ -1148,6 +1123,9 @@ write_attribute(attribute_t *a)
         build_update_element(xml_top, a, peer->uuid, v->current);
         cib_updates++;
 
+        /* Preservation of the attribute to transmit alert */
+        set_alert_attribute_value(alert_attribute_value, v);
+
         free(v->requested);
         v->requested = NULL;
         if (v->current) {
@@ -1178,6 +1156,11 @@ write_attribute(attribute_t *a)
                                               strdup(a->id),
                                               "attrd_cib_callback",
                                               attrd_cib_callback, free);
+        /* Transmit alert of the attribute */
+        send_alert_attributes_value(a, alert_attribute_value);
+
     }
+
+    g_hash_table_destroy(alert_attribute_value);
     free_xml(xml_top);
 }

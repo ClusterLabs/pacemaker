@@ -36,14 +36,35 @@
 email_client_default="sendmail"
 email_sender_default="hacluster"
 email_recipient_default="root"
+select_kind_default="node,fencing,resource"
+select_attribute_name_default="all"
 
 : ${email_client=${email_client_default}}
 : ${email_sender=${email_sender_default}}
+: ${CRM_alert_select_kind=${select_kind_default}}
+: ${CRM_alert_select_attribute_name=${select_attribute_name_default}}
 email_recipient="${CRM_alert_recipient-${email_recipient_default}}"
 
 node_name=`uname -n`
 cluster_name=`crm_attribute --query -n cluster-name -q`
 email_body=`env | grep CRM_alert_`
+
+is_in_list() {
+    item_list=`echo "$1" | tr ',' ' '`
+    if [ "${item_list}" = "all" ]; then
+        return 0
+    else
+        for act in $item_list
+        do
+            if [ -z "$3" ]; then
+                act=`echo "$act" | tr A-Z a-z`
+            fi
+            [ "$act" != "$2" ] && continue
+            return 0
+        done
+    fi
+    return 1
+}
 
 if [ ! -z "${email_sender##*@*}" ]; then
     email_sender="${email_sender}@${node_name}"
@@ -56,6 +77,9 @@ fi
 if [ -z ${CRM_alert_version} ]; then
     email_subject="Pacemaker version 1.1.15 or later is required for alerts"
 else
+    is_in_list "${CRM_alert_select_kind}" "${CRM_alert_kind}"
+    [ $? -ne 0 ] && exit 0
+
     case ${CRM_alert_kind} in
         node)
             email_subject="${CRM_alert_timestamp} ${cluster_name}: Node '${CRM_alert_node}' is now '${CRM_alert_desc}'"
@@ -82,6 +106,13 @@ else
                     email_subject="${CRM_alert_timestamp} ${cluster_name}: Resource operation '${CRM_alert_task}${CRM_alert_interval}' for '${CRM_alert_rsc}' on '${CRM_alert_node}': ${CRM_alert_desc}${CRM_alert_target_rc}"
                     ;;
             esac
+            ;;
+        attribute)
+            #
+            is_in_list "${CRM_alert_select_attribute_name}" "${CRM_alert_attribute_name}" "no-list-tr"
+            [ $? -ne 0 ] && exit 0
+            #
+            email_subject="${CRM_alert_timestamp} ${cluster_name}: The '${CRM_alert_attribute_name}' attribute of the '${CRM_alert_node}' node was updated in '${CRM_alert_attribute_value}'"
             ;;
         *)
             email_subject="${CRM_alert_timestamp} ${cluster_name}: Unhandled $CRM_alert_kind alert"
