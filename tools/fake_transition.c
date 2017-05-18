@@ -672,8 +672,8 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
         }
     }
 
-    if (safe_str_eq(operation, "delete")) {
-        quiet_log(" * Resource action: %-15s delete on %s\n", resource, node);
+    if (safe_str_eq(operation, "delete") || safe_str_eq(operation, RSC_METADATA)) {
+        quiet_log(" * Resource action: %-15s %s on %s\n", resource, operation, node);
         goto done;
     }
 

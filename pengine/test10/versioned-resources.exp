@@ -3,17 +3,14 @@
     <action_set>
       <rsc_op id="40" operation="start" operation_key="FencingPass_start_0" on_node="rhel7-2" on_node_uuid="2">
         <primitive id="FencingPass" class="stonith" type="fence_dummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="FencingPass-instance_attributes-gt" score="3">
             <rule id="FencingPass-gt-rule" score="INFINITY">
               <expression id="FencingPass-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="3.5"/>
             </rule>
             <nvpair id="FencingPass-gt-random_sleep_range" name="random_sleep_range" value="4"/>
           </instance_attributes>
-          <instance_attributes id="FencingPass-params">
-            <nvpair id="FencingPass-random_sleep_range" name="random_sleep_range" value="3"/>
-          </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="90000"  mode="pass" pcmk_host_list="rhel7-3" random_sleep_range="3"/>
       </rsc_op>
     </action_set>
@@ -39,17 +36,14 @@
     <action_set>
       <rsc_op id="31" operation="monitor" operation_key="FencingPass_monitor_0" on_node="rhel7-5" on_node_uuid="5">
         <primitive id="FencingPass" class="stonith" type="fence_dummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="FencingPass-instance_attributes-gt" score="3">
             <rule id="FencingPass-gt-rule" score="INFINITY">
               <expression id="FencingPass-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="3.5"/>
             </rule>
             <nvpair id="FencingPass-gt-random_sleep_range" name="random_sleep_range" value="4"/>
           </instance_attributes>
-          <instance_attributes id="FencingPass-params">
-            <nvpair id="FencingPass-random_sleep_range" name="random_sleep_range" value="3"/>
-          </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_op_target_rc="7" CRM_meta_timeout="90000"  mode="pass" pcmk_host_list="rhel7-3" random_sleep_range="3"/>
       </rsc_op>
     </action_set>
@@ -59,17 +53,14 @@
     <action_set>
       <rsc_op id="24" operation="monitor" operation_key="FencingPass_monitor_0" on_node="rhel7-4" on_node_uuid="4">
         <primitive id="FencingPass" class="stonith" type="fence_dummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="FencingPass-instance_attributes-gt" score="3">
             <rule id="FencingPass-gt-rule" score="INFINITY">
               <expression id="FencingPass-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="3.5"/>
             </rule>
             <nvpair id="FencingPass-gt-random_sleep_range" name="random_sleep_range" value="4"/>
           </instance_attributes>
-          <instance_attributes id="FencingPass-params">
-            <nvpair id="FencingPass-random_sleep_range" name="random_sleep_range" value="3"/>
-          </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_op_target_rc="7" CRM_meta_timeout="90000"  mode="pass" pcmk_host_list="rhel7-3" random_sleep_range="3"/>
       </rsc_op>
     </action_set>
@@ -79,17 +70,14 @@
     <action_set>
       <rsc_op id="17" operation="monitor" operation_key="FencingPass_monitor_0" on_node="rhel7-3" on_node_uuid="3">
         <primitive id="FencingPass" class="stonith" type="fence_dummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="FencingPass-instance_attributes-gt" score="3">
             <rule id="FencingPass-gt-rule" score="INFINITY">
               <expression id="FencingPass-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="3.5"/>
             </rule>
             <nvpair id="FencingPass-gt-random_sleep_range" name="random_sleep_range" value="4"/>
           </instance_attributes>
-          <instance_attributes id="FencingPass-params">
-            <nvpair id="FencingPass-random_sleep_range" name="random_sleep_range" value="3"/>
-          </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="90000"  mode="pass" pcmk_host_list="rhel7-3" random_sleep_range="3"/>
       </rsc_op>
     </action_set>
@@ -99,17 +87,14 @@
     <action_set>
       <rsc_op id="10" operation="monitor" operation_key="FencingPass_monitor_0" on_node="rhel7-2" on_node_uuid="2">
         <primitive id="FencingPass" class="stonith" type="fence_dummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="FencingPass-instance_attributes-gt" score="3">
             <rule id="FencingPass-gt-rule" score="INFINITY">
               <expression id="FencingPass-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="3.5"/>
             </rule>
             <nvpair id="FencingPass-gt-random_sleep_range" name="random_sleep_range" value="4"/>
           </instance_attributes>
-          <instance_attributes id="FencingPass-params">
-            <nvpair id="FencingPass-random_sleep_range" name="random_sleep_range" value="3"/>
-          </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="90000"  mode="pass" pcmk_host_list="rhel7-3" random_sleep_range="3"/>
       </rsc_op>
     </action_set>
@@ -119,17 +104,14 @@
     <action_set>
       <rsc_op id="3" operation="monitor" operation_key="FencingPass_monitor_0" on_node="rhel7-1" on_node_uuid="1">
         <primitive id="FencingPass" class="stonith" type="fence_dummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="FencingPass-instance_attributes-gt" score="3">
             <rule id="FencingPass-gt-rule" score="INFINITY">
               <expression id="FencingPass-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="3.5"/>
             </rule>
             <nvpair id="FencingPass-gt-random_sleep_range" name="random_sleep_range" value="4"/>
           </instance_attributes>
-          <instance_attributes id="FencingPass-params">
-            <nvpair id="FencingPass-random_sleep_range" name="random_sleep_range" value="3"/>
-          </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="90000"  mode="pass" pcmk_host_list="rhel7-3" random_sleep_range="3"/>
       </rsc_op>
     </action_set>
@@ -139,7 +121,7 @@
     <action_set>
       <rsc_op id="42" operation="monitor" operation_key="vtest4_monitor_10000" on_node="rhel7-3" on_node_uuid="3">
         <primitive id="vtest4" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest4-instance_attributes-lte-ne" score="3">
             <rule id="vtest4-lte-ne-rule" score="INFINITY" boolean-op="and">
               <expression id="vtest4-lte-ne-rule-e01" type="version" attribute="#ra-version" operation="lte" value="1.0"/>
@@ -152,7 +134,7 @@
             </rule>
             <nvpair id="vtest4-instance_attributes-gt-ne-fake" name="new_fake" value="new+false"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest4.env"/>
       </rsc_op>
     </action_set>
@@ -166,7 +148,7 @@
     <action_set>
       <rsc_op id="41" operation="start" operation_key="vtest4_start_0" on_node="rhel7-3" on_node_uuid="3">
         <primitive id="vtest4" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest4-instance_attributes-lte-ne" score="3">
             <rule id="vtest4-lte-ne-rule" score="INFINITY" boolean-op="and">
               <expression id="vtest4-lte-ne-rule-e01" type="version" attribute="#ra-version" operation="lte" value="1.0"/>
@@ -179,7 +161,7 @@
             </rule>
             <nvpair id="vtest4-instance_attributes-gt-ne-fake" name="new_fake" value="new+false"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_name="start" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest4.env"/>
       </rsc_op>
     </action_set>
@@ -205,7 +187,7 @@
     <action_set>
       <rsc_op id="32" operation="monitor" operation_key="vtest4_monitor_0" on_node="rhel7-5" on_node_uuid="5">
         <primitive id="vtest4" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest4-instance_attributes-lte-ne" score="3">
             <rule id="vtest4-lte-ne-rule" score="INFINITY" boolean-op="and">
               <expression id="vtest4-lte-ne-rule-e01" type="version" attribute="#ra-version" operation="lte" value="1.0"/>
@@ -218,7 +200,7 @@
             </rule>
             <nvpair id="vtest4-instance_attributes-gt-ne-fake" name="new_fake" value="new+false"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest4.env"/>
       </rsc_op>
     </action_set>
@@ -228,7 +210,7 @@
     <action_set>
       <rsc_op id="25" operation="monitor" operation_key="vtest4_monitor_0" on_node="rhel7-4" on_node_uuid="4">
         <primitive id="vtest4" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest4-instance_attributes-lte-ne" score="3">
             <rule id="vtest4-lte-ne-rule" score="INFINITY" boolean-op="and">
               <expression id="vtest4-lte-ne-rule-e01" type="version" attribute="#ra-version" operation="lte" value="1.0"/>
@@ -241,7 +223,7 @@
             </rule>
             <nvpair id="vtest4-instance_attributes-gt-ne-fake" name="new_fake" value="new+false"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest4.env"/>
       </rsc_op>
     </action_set>
@@ -251,7 +233,7 @@
     <action_set>
       <rsc_op id="18" operation="monitor" operation_key="vtest4_monitor_0" on_node="rhel7-3" on_node_uuid="3">
         <primitive id="vtest4" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest4-instance_attributes-lte-ne" score="3">
             <rule id="vtest4-lte-ne-rule" score="INFINITY" boolean-op="and">
               <expression id="vtest4-lte-ne-rule-e01" type="version" attribute="#ra-version" operation="lte" value="1.0"/>
@@ -264,7 +246,7 @@
             </rule>
             <nvpair id="vtest4-instance_attributes-gt-ne-fake" name="new_fake" value="new+false"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest4.env"/>
       </rsc_op>
     </action_set>
@@ -274,7 +256,7 @@
     <action_set>
       <rsc_op id="11" operation="monitor" operation_key="vtest4_monitor_0" on_node="rhel7-2" on_node_uuid="2">
         <primitive id="vtest4" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest4-instance_attributes-lte-ne" score="3">
             <rule id="vtest4-lte-ne-rule" score="INFINITY" boolean-op="and">
               <expression id="vtest4-lte-ne-rule-e01" type="version" attribute="#ra-version" operation="lte" value="1.0"/>
@@ -287,7 +269,7 @@
             </rule>
             <nvpair id="vtest4-instance_attributes-gt-ne-fake" name="new_fake" value="new+false"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest4.env"/>
       </rsc_op>
     </action_set>
@@ -297,7 +279,7 @@
     <action_set>
       <rsc_op id="4" operation="monitor" operation_key="vtest4_monitor_0" on_node="rhel7-1" on_node_uuid="1">
         <primitive id="vtest4" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest4-instance_attributes-lte-ne" score="3">
             <rule id="vtest4-lte-ne-rule" score="INFINITY" boolean-op="and">
               <expression id="vtest4-lte-ne-rule-e01" type="version" attribute="#ra-version" operation="lte" value="1.0"/>
@@ -310,7 +292,7 @@
             </rule>
             <nvpair id="vtest4-instance_attributes-gt-ne-fake" name="new_fake" value="new+false"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest4.env"/>
       </rsc_op>
     </action_set>
@@ -320,7 +302,7 @@
     <action_set>
       <rsc_op id="44" operation="monitor" operation_key="vtest5:0_monitor_10000" on_node="rhel7-4" on_node_uuid="4">
         <primitive id="vtest5" long-id="vtest5:0" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest5-instance_attributes-gt" score="2">
             <rule id="vtest5-gt-rule" score="INFINITY">
               <expression id="vtest5-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -328,7 +310,7 @@
             </rule>
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
@@ -342,7 +324,7 @@
     <action_set>
       <rsc_op id="43" operation="start" operation_key="vtest5:0_start_0" on_node="rhel7-4" on_node_uuid="4">
         <primitive id="vtest5" long-id="vtest5:0" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest5-instance_attributes-gt" score="2">
             <rule id="vtest5-gt-rule" score="INFINITY">
               <expression id="vtest5-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -350,7 +332,7 @@
             </rule>
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="90000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
@@ -364,7 +346,7 @@
     <action_set>
       <rsc_op id="26" operation="monitor" operation_key="vtest5:0_monitor_0" on_node="rhel7-4" on_node_uuid="4">
         <primitive id="vtest5" long-id="vtest5:0" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest5-instance_attributes-gt" score="2">
             <rule id="vtest5-gt-rule" score="INFINITY">
               <expression id="vtest5-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -372,7 +354,7 @@
             </rule>
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
@@ -382,7 +364,7 @@
     <action_set>
       <rsc_op id="46" operation="monitor" operation_key="vtest5:1_monitor_10000" on_node="rhel7-5" on_node_uuid="5">
         <primitive id="vtest5" long-id="vtest5:1" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest5-instance_attributes-gt" score="2">
             <rule id="vtest5-gt-rule" score="INFINITY">
               <expression id="vtest5-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -390,7 +372,7 @@
             </rule>
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
@@ -404,7 +386,7 @@
     <action_set>
       <rsc_op id="45" operation="start" operation_key="vtest5:1_start_0" on_node="rhel7-5" on_node_uuid="5">
         <primitive id="vtest5" long-id="vtest5:1" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest5-instance_attributes-gt" score="2">
             <rule id="vtest5-gt-rule" score="INFINITY">
               <expression id="vtest5-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -412,7 +394,7 @@
             </rule>
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="90000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
@@ -426,7 +408,7 @@
     <action_set>
       <rsc_op id="33" operation="monitor" operation_key="vtest5:1_monitor_0" on_node="rhel7-5" on_node_uuid="5">
         <primitive id="vtest5" long-id="vtest5:1" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest5-instance_attributes-gt" score="2">
             <rule id="vtest5-gt-rule" score="INFINITY">
               <expression id="vtest5-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -434,7 +416,7 @@
             </rule>
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
@@ -444,7 +426,7 @@
     <action_set>
       <rsc_op id="48" operation="monitor" operation_key="vtest5:2_monitor_10000" on_node="rhel7-1" on_node_uuid="1">
         <primitive id="vtest5" long-id="vtest5:2" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest5-instance_attributes-gt" score="2">
             <rule id="vtest5-gt-rule" score="INFINITY">
               <expression id="vtest5-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -452,7 +434,7 @@
             </rule>
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
@@ -466,7 +448,7 @@
     <action_set>
       <rsc_op id="47" operation="start" operation_key="vtest5:2_start_0" on_node="rhel7-1" on_node_uuid="1">
         <primitive id="vtest5" long-id="vtest5:2" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest5-instance_attributes-gt" score="2">
             <rule id="vtest5-gt-rule" score="INFINITY">
               <expression id="vtest5-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -474,7 +456,7 @@
             </rule>
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="90000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
@@ -488,7 +470,7 @@
     <action_set>
       <rsc_op id="5" operation="monitor" operation_key="vtest5:2_monitor_0" on_node="rhel7-1" on_node_uuid="1">
         <primitive id="vtest5" long-id="vtest5:2" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest5-instance_attributes-gt" score="2">
             <rule id="vtest5-gt-rule" score="INFINITY">
               <expression id="vtest5-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -496,7 +478,7 @@
             </rule>
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
@@ -506,7 +488,7 @@
     <action_set>
       <rsc_op id="50" operation="monitor" operation_key="vtest5:3_monitor_10000" on_node="rhel7-2" on_node_uuid="2">
         <primitive id="vtest5" long-id="vtest5:3" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest5-instance_attributes-gt" score="2">
             <rule id="vtest5-gt-rule" score="INFINITY">
               <expression id="vtest5-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -514,7 +496,7 @@
             </rule>
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="3" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
@@ -528,7 +510,7 @@
     <action_set>
       <rsc_op id="49" operation="start" operation_key="vtest5:3_start_0" on_node="rhel7-2" on_node_uuid="2">
         <primitive id="vtest5" long-id="vtest5:3" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest5-instance_attributes-gt" score="2">
             <rule id="vtest5-gt-rule" score="INFINITY">
               <expression id="vtest5-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -536,7 +518,7 @@
             </rule>
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="3" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="90000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
@@ -550,7 +532,7 @@
     <action_set>
       <rsc_op id="12" operation="monitor" operation_key="vtest5:3_monitor_0" on_node="rhel7-2" on_node_uuid="2">
         <primitive id="vtest5" long-id="vtest5:3" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest5-instance_attributes-gt" score="2">
             <rule id="vtest5-gt-rule" score="INFINITY">
               <expression id="vtest5-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -558,7 +540,7 @@
             </rule>
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="3" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
@@ -568,7 +550,7 @@
     <action_set>
       <rsc_op id="52" operation="monitor" operation_key="vtest5:4_monitor_10000" on_node="rhel7-3" on_node_uuid="3">
         <primitive id="vtest5" long-id="vtest5:4" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest5-instance_attributes-gt" score="2">
             <rule id="vtest5-gt-rule" score="INFINITY">
               <expression id="vtest5-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -576,7 +558,7 @@
             </rule>
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="4" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
@@ -590,7 +572,7 @@
     <action_set>
       <rsc_op id="51" operation="start" operation_key="vtest5:4_start_0" on_node="rhel7-3" on_node_uuid="3">
         <primitive id="vtest5" long-id="vtest5:4" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest5-instance_attributes-gt" score="2">
             <rule id="vtest5-gt-rule" score="INFINITY">
               <expression id="vtest5-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -598,7 +580,7 @@
             </rule>
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="4" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="90000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
@@ -612,7 +594,7 @@
     <action_set>
       <rsc_op id="19" operation="monitor" operation_key="vtest5:4_monitor_0" on_node="rhel7-3" on_node_uuid="3">
         <primitive id="vtest5" long-id="vtest5:4" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest5-instance_attributes-gt" score="2">
             <rule id="vtest5-gt-rule" score="INFINITY">
               <expression id="vtest5-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -620,7 +602,7 @@
             </rule>
             <nvpair id="vtest5-instance_attributes-gt-op_sleep" name="new_op_sleep" value="1"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="4" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest5.env"/>
       </rsc_op>
     </action_set>
@@ -681,14 +663,14 @@
     <action_set>
       <rsc_op id="58" operation="monitor" operation_key="vtest7:0_monitor_11000" on_node="rhel7-4" on_node_uuid="4">
         <primitive id="vtest7" long-id="vtest7:0" class="ocf" provider="kgaillot" type="vstateful"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest7-instance_attributes-gt" score="2">
             <rule id="vtest7-gt-rule" score="INFINITY" boolean-op="and">
               <expression id="vtest7-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.2.0"/>
             </rule>
             <nvpair id="vtest7-instance_attributes-gt-fake" name="fake" value="new-ordinary"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_role="Slave" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
@@ -702,14 +684,14 @@
     <action_set>
       <rsc_op id="57" operation="start" operation_key="vtest7:0_start_0" on_node="rhel7-4" on_node_uuid="4">
         <primitive id="vtest7" long-id="vtest7:0" class="ocf" provider="kgaillot" type="vstateful"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest7-instance_attributes-gt" score="2">
             <rule id="vtest7-gt-rule" score="INFINITY" boolean-op="and">
               <expression id="vtest7-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.2.0"/>
             </rule>
             <nvpair id="vtest7-instance_attributes-gt-fake" name="fake" value="new-ordinary"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
@@ -723,14 +705,14 @@
     <action_set>
       <rsc_op id="27" operation="monitor" operation_key="vtest7:0_monitor_0" on_node="rhel7-4" on_node_uuid="4">
         <primitive id="vtest7" long-id="vtest7:0" class="ocf" provider="kgaillot" type="vstateful"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest7-instance_attributes-gt" score="2">
             <rule id="vtest7-gt-rule" score="INFINITY" boolean-op="and">
               <expression id="vtest7-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.2.0"/>
             </rule>
             <nvpair id="vtest7-instance_attributes-gt-fake" name="fake" value="new-ordinary"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
@@ -740,14 +722,14 @@
     <action_set>
       <rsc_op id="60" operation="monitor" operation_key="vtest7:1_monitor_11000" on_node="rhel7-5" on_node_uuid="5">
         <primitive id="vtest7" long-id="vtest7:1" class="ocf" provider="kgaillot" type="vstateful"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest7-instance_attributes-gt-eq" score="3">
             <rule id="vtest7-gt-eq-rule" score="INFINITY" boolean-op="and">
               <expression id="vtest7-gt-eq-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.2.0"/>
             </rule>
             <nvpair id="vtest7-instance_attributes-gt-eq-fake" name="fake" value="new-special"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_role="Slave" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
@@ -761,14 +743,14 @@
     <action_set>
       <rsc_op id="59" operation="start" operation_key="vtest7:1_start_0" on_node="rhel7-5" on_node_uuid="5">
         <primitive id="vtest7" long-id="vtest7:1" class="ocf" provider="kgaillot" type="vstateful"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest7-instance_attributes-gt-eq" score="3">
             <rule id="vtest7-gt-eq-rule" score="INFINITY" boolean-op="and">
               <expression id="vtest7-gt-eq-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.2.0"/>
             </rule>
             <nvpair id="vtest7-instance_attributes-gt-eq-fake" name="fake" value="new-special"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
@@ -782,14 +764,14 @@
     <action_set>
       <rsc_op id="34" operation="monitor" operation_key="vtest7:1_monitor_0" on_node="rhel7-5" on_node_uuid="5">
         <primitive id="vtest7" long-id="vtest7:1" class="ocf" provider="kgaillot" type="vstateful"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest7-instance_attributes-gt-eq" score="3">
             <rule id="vtest7-gt-eq-rule" score="INFINITY" boolean-op="and">
               <expression id="vtest7-gt-eq-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.2.0"/>
             </rule>
             <nvpair id="vtest7-instance_attributes-gt-eq-fake" name="fake" value="new-special"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
@@ -799,14 +781,14 @@
     <action_set>
       <rsc_op id="62" operation="monitor" operation_key="vtest7:2_monitor_11000" on_node="rhel7-1" on_node_uuid="1">
         <primitive id="vtest7" long-id="vtest7:2" class="ocf" provider="kgaillot" type="vstateful"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest7-instance_attributes-gt" score="2">
             <rule id="vtest7-gt-rule" score="INFINITY" boolean-op="and">
               <expression id="vtest7-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.2.0"/>
             </rule>
             <nvpair id="vtest7-instance_attributes-gt-fake" name="fake" value="new-ordinary"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_role="Slave" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
@@ -820,14 +802,14 @@
     <action_set>
       <rsc_op id="61" operation="start" operation_key="vtest7:2_start_0" on_node="rhel7-1" on_node_uuid="1">
         <primitive id="vtest7" long-id="vtest7:2" class="ocf" provider="kgaillot" type="vstateful"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest7-instance_attributes-gt" score="2">
             <rule id="vtest7-gt-rule" score="INFINITY" boolean-op="and">
               <expression id="vtest7-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.2.0"/>
             </rule>
             <nvpair id="vtest7-instance_attributes-gt-fake" name="fake" value="new-ordinary"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
@@ -841,14 +823,14 @@
     <action_set>
       <rsc_op id="6" operation="monitor" operation_key="vtest7:2_monitor_0" on_node="rhel7-1" on_node_uuid="1">
         <primitive id="vtest7" long-id="vtest7:2" class="ocf" provider="kgaillot" type="vstateful"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest7-instance_attributes-gt" score="2">
             <rule id="vtest7-gt-rule" score="INFINITY" boolean-op="and">
               <expression id="vtest7-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.2.0"/>
             </rule>
             <nvpair id="vtest7-instance_attributes-gt-fake" name="fake" value="new-ordinary"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
@@ -858,14 +840,14 @@
     <action_set>
       <rsc_op id="64" operation="monitor" operation_key="vtest7:3_monitor_11000" on_node="rhel7-2" on_node_uuid="2">
         <primitive id="vtest7" long-id="vtest7:3" class="ocf" provider="kgaillot" type="vstateful"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest7-instance_attributes-gt" score="2">
             <rule id="vtest7-gt-rule" score="INFINITY" boolean-op="and">
               <expression id="vtest7-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.2.0"/>
             </rule>
             <nvpair id="vtest7-instance_attributes-gt-fake" name="fake" value="new-ordinary"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="3" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_role="Slave" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
@@ -879,14 +861,14 @@
     <action_set>
       <rsc_op id="63" operation="start" operation_key="vtest7:3_start_0" on_node="rhel7-2" on_node_uuid="2">
         <primitive id="vtest7" long-id="vtest7:3" class="ocf" provider="kgaillot" type="vstateful"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest7-instance_attributes-gt" score="2">
             <rule id="vtest7-gt-rule" score="INFINITY" boolean-op="and">
               <expression id="vtest7-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.2.0"/>
             </rule>
             <nvpair id="vtest7-instance_attributes-gt-fake" name="fake" value="new-ordinary"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="3" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
@@ -900,14 +882,14 @@
     <action_set>
       <rsc_op id="13" operation="monitor" operation_key="vtest7:3_monitor_0" on_node="rhel7-2" on_node_uuid="2">
         <primitive id="vtest7" long-id="vtest7:3" class="ocf" provider="kgaillot" type="vstateful"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest7-instance_attributes-gt" score="2">
             <rule id="vtest7-gt-rule" score="INFINITY" boolean-op="and">
               <expression id="vtest7-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.2.0"/>
             </rule>
             <nvpair id="vtest7-instance_attributes-gt-fake" name="fake" value="new-ordinary"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="3" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
@@ -917,14 +899,14 @@
     <action_set>
       <rsc_op id="66" operation="monitor" operation_key="vtest7:4_monitor_11000" on_node="rhel7-3" on_node_uuid="3">
         <primitive id="vtest7" long-id="vtest7:4" class="ocf" provider="kgaillot" type="vstateful"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest7-instance_attributes-gt" score="2">
             <rule id="vtest7-gt-rule" score="INFINITY" boolean-op="and">
               <expression id="vtest7-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.2.0"/>
             </rule>
             <nvpair id="vtest7-instance_attributes-gt-fake" name="fake" value="new-ordinary"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="4" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_role="Slave" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
@@ -938,14 +920,14 @@
     <action_set>
       <rsc_op id="65" operation="start" operation_key="vtest7:4_start_0" on_node="rhel7-3" on_node_uuid="3">
         <primitive id="vtest7" long-id="vtest7:4" class="ocf" provider="kgaillot" type="vstateful"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest7-instance_attributes-gt" score="2">
             <rule id="vtest7-gt-rule" score="INFINITY" boolean-op="and">
               <expression id="vtest7-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.2.0"/>
             </rule>
             <nvpair id="vtest7-instance_attributes-gt-fake" name="fake" value="new-ordinary"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="4" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
@@ -959,14 +941,14 @@
     <action_set>
       <rsc_op id="20" operation="monitor" operation_key="vtest7:4_monitor_0" on_node="rhel7-3" on_node_uuid="3">
         <primitive id="vtest7" long-id="vtest7:4" class="ocf" provider="kgaillot" type="vstateful"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="vtest7-instance_attributes-gt" score="2">
             <rule id="vtest7-gt-rule" score="INFINITY" boolean-op="and">
               <expression id="vtest7-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.2.0"/>
             </rule>
             <nvpair id="vtest7-instance_attributes-gt-fake" name="fake" value="new-ordinary"/>
           </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_clone="4" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/vtest7.env"/>
       </rsc_op>
     </action_set>
@@ -1056,7 +1038,7 @@
     <action_set>
       <rsc_op id="76" operation="monitor" operation_key="gvtest1_monitor_10000" on_node="rhel7-4" on_node_uuid="4">
         <primitive id="gvtest1" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="grouptest2-instance_attributes-gt" score="3">
             <rule id="grouptest2-gt-rule" score="INFINITY">
               <expression id="grouptest2-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -1069,10 +1051,7 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest1.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
@@ -1086,7 +1065,7 @@
     <action_set>
       <rsc_op id="75" operation="start" operation_key="gvtest1_start_0" on_node="rhel7-4" on_node_uuid="4">
         <primitive id="gvtest1" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="grouptest2-instance_attributes-gt" score="3">
             <rule id="grouptest2-gt-rule" score="INFINITY">
               <expression id="grouptest2-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -1099,10 +1078,7 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_name="start" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest1.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
@@ -1131,7 +1107,7 @@
     <action_set>
       <rsc_op id="35" operation="monitor" operation_key="gvtest1_monitor_0" on_node="rhel7-5" on_node_uuid="5">
         <primitive id="gvtest1" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="grouptest2-instance_attributes-gt" score="3">
             <rule id="grouptest2-gt-rule" score="INFINITY">
               <expression id="grouptest2-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -1144,10 +1120,7 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest1.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
@@ -1157,7 +1130,7 @@
     <action_set>
       <rsc_op id="28" operation="monitor" operation_key="gvtest1_monitor_0" on_node="rhel7-4" on_node_uuid="4">
         <primitive id="gvtest1" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="grouptest2-instance_attributes-gt" score="3">
             <rule id="grouptest2-gt-rule" score="INFINITY">
               <expression id="grouptest2-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -1170,10 +1143,7 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest1.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
@@ -1183,7 +1153,7 @@
     <action_set>
       <rsc_op id="21" operation="monitor" operation_key="gvtest1_monitor_0" on_node="rhel7-3" on_node_uuid="3">
         <primitive id="gvtest1" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="grouptest2-instance_attributes-gt" score="3">
             <rule id="grouptest2-gt-rule" score="INFINITY">
               <expression id="grouptest2-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -1196,10 +1166,7 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest1.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
@@ -1209,7 +1176,7 @@
     <action_set>
       <rsc_op id="14" operation="monitor" operation_key="gvtest1_monitor_0" on_node="rhel7-2" on_node_uuid="2">
         <primitive id="gvtest1" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="grouptest2-instance_attributes-gt" score="3">
             <rule id="grouptest2-gt-rule" score="INFINITY">
               <expression id="grouptest2-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -1222,10 +1189,7 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest1.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
@@ -1235,7 +1199,7 @@
     <action_set>
       <rsc_op id="7" operation="monitor" operation_key="gvtest1_monitor_0" on_node="rhel7-1" on_node_uuid="1">
         <primitive id="gvtest1" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="grouptest2-instance_attributes-gt" score="3">
             <rule id="grouptest2-gt-rule" score="INFINITY">
               <expression id="grouptest2-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -1248,10 +1212,7 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest1.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
@@ -1261,7 +1222,7 @@
     <action_set>
       <rsc_op id="78" operation="monitor" operation_key="gvtest2_monitor_10000" on_node="rhel7-4" on_node_uuid="4">
         <primitive id="gvtest2" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="grouptest2-instance_attributes-gt" score="3">
             <rule id="grouptest2-gt-rule" score="INFINITY">
               <expression id="grouptest2-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -1274,10 +1235,7 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest2.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
@@ -1291,7 +1249,7 @@
     <action_set>
       <rsc_op id="77" operation="start" operation_key="gvtest2_start_0" on_node="rhel7-4" on_node_uuid="4">
         <primitive id="gvtest2" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="grouptest2-instance_attributes-gt" score="3">
             <rule id="grouptest2-gt-rule" score="INFINITY">
               <expression id="grouptest2-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -1304,10 +1262,7 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_name="start" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest2.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
@@ -1339,7 +1294,7 @@
     <action_set>
       <rsc_op id="36" operation="monitor" operation_key="gvtest2_monitor_0" on_node="rhel7-5" on_node_uuid="5">
         <primitive id="gvtest2" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="grouptest2-instance_attributes-gt" score="3">
             <rule id="grouptest2-gt-rule" score="INFINITY">
               <expression id="grouptest2-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -1352,10 +1307,7 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest2.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
@@ -1365,7 +1317,7 @@
     <action_set>
       <rsc_op id="29" operation="monitor" operation_key="gvtest2_monitor_0" on_node="rhel7-4" on_node_uuid="4">
         <primitive id="gvtest2" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="grouptest2-instance_attributes-gt" score="3">
             <rule id="grouptest2-gt-rule" score="INFINITY">
               <expression id="grouptest2-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -1378,10 +1330,7 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest2.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
@@ -1391,7 +1340,7 @@
     <action_set>
       <rsc_op id="22" operation="monitor" operation_key="gvtest2_monitor_0" on_node="rhel7-3" on_node_uuid="3">
         <primitive id="gvtest2" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="grouptest2-instance_attributes-gt" score="3">
             <rule id="grouptest2-gt-rule" score="INFINITY">
               <expression id="grouptest2-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -1404,10 +1353,7 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest2.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
@@ -1417,7 +1363,7 @@
     <action_set>
       <rsc_op id="15" operation="monitor" operation_key="gvtest2_monitor_0" on_node="rhel7-2" on_node_uuid="2">
         <primitive id="gvtest2" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="grouptest2-instance_attributes-gt" score="3">
             <rule id="grouptest2-gt-rule" score="INFINITY">
               <expression id="grouptest2-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -1430,10 +1376,7 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest2.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
@@ -1443,7 +1386,7 @@
     <action_set>
       <rsc_op id="8" operation="monitor" operation_key="gvtest2_monitor_0" on_node="rhel7-1" on_node_uuid="1">
         <primitive id="gvtest2" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="grouptest2-instance_attributes-gt" score="3">
             <rule id="grouptest2-gt-rule" score="INFINITY">
               <expression id="grouptest2-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -1456,10 +1399,7 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest2.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
@@ -1469,7 +1409,7 @@
     <action_set>
       <rsc_op id="80" operation="monitor" operation_key="gvtest3_monitor_10000" on_node="rhel7-4" on_node_uuid="4">
         <primitive id="gvtest3" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="grouptest2-instance_attributes-gt" score="3">
             <rule id="grouptest2-gt-rule" score="INFINITY">
               <expression id="grouptest2-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -1482,10 +1422,7 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest3.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
@@ -1499,7 +1436,7 @@
     <action_set>
       <rsc_op id="79" operation="start" operation_key="gvtest3_start_0" on_node="rhel7-4" on_node_uuid="4">
         <primitive id="gvtest3" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="grouptest2-instance_attributes-gt" score="3">
             <rule id="grouptest2-gt-rule" score="INFINITY">
               <expression id="grouptest2-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -1512,10 +1449,7 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_name="start" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest3.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
@@ -1547,7 +1481,7 @@
     <action_set>
       <rsc_op id="37" operation="monitor" operation_key="gvtest3_monitor_0" on_node="rhel7-5" on_node_uuid="5">
         <primitive id="gvtest3" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="grouptest2-instance_attributes-gt" score="3">
             <rule id="grouptest2-gt-rule" score="INFINITY">
               <expression id="grouptest2-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -1560,10 +1494,7 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest3.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
@@ -1573,7 +1504,7 @@
     <action_set>
       <rsc_op id="30" operation="monitor" operation_key="gvtest3_monitor_0" on_node="rhel7-4" on_node_uuid="4">
         <primitive id="gvtest3" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="grouptest2-instance_attributes-gt" score="3">
             <rule id="grouptest2-gt-rule" score="INFINITY">
               <expression id="grouptest2-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -1586,10 +1517,7 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest3.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
@@ -1599,7 +1527,7 @@
     <action_set>
       <rsc_op id="23" operation="monitor" operation_key="gvtest3_monitor_0" on_node="rhel7-3" on_node_uuid="3">
         <primitive id="gvtest3" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="grouptest2-instance_attributes-gt" score="3">
             <rule id="grouptest2-gt-rule" score="INFINITY">
               <expression id="grouptest2-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -1612,10 +1540,7 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest3.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
@@ -1625,7 +1550,7 @@
     <action_set>
       <rsc_op id="16" operation="monitor" operation_key="gvtest3_monitor_0" on_node="rhel7-2" on_node_uuid="2">
         <primitive id="gvtest3" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="grouptest2-instance_attributes-gt" score="3">
             <rule id="grouptest2-gt-rule" score="INFINITY">
               <expression id="grouptest2-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -1638,10 +1563,7 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest3.env" fake="2-bad"/>
       </rsc_op>
     </action_set>
@@ -1651,7 +1573,7 @@
     <action_set>
       <rsc_op id="9" operation="monitor" operation_key="gvtest3_monitor_0" on_node="rhel7-1" on_node_uuid="1">
         <primitive id="gvtest3" class="ocf" provider="kgaillot" type="vdummy"/>
-        <versioned_attributes>
+        <rsc_versioned_attrs>
           <instance_attributes id="grouptest2-instance_attributes-gt" score="3">
             <rule id="grouptest2-gt-rule" score="INFINITY">
               <expression id="grouptest2-gt-rule-e01" type="version" attribute="#ra-version" operation="gt" value="1.0"/>
@@ -1664,10 +1586,7 @@
             </rule>
             <nvpair id="grouptest2-instance_attributes-lte-fake" name="fake" value="2-old"/>
           </instance_attributes>
-          <instance_attributes id="grouptest2-instance_attributes" score="1">
-            <nvpair id="grouptest2-instance_attributes-fake" name="fake" value="2-bad"/>
-          </instance_attributes>
-        </versioned_attributes>
+        </rsc_versioned_attrs>
         <attributes CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  envfile="/run/resource-agents/gvtest3.env" fake="2-bad"/>
       </rsc_op>
     </action_set>

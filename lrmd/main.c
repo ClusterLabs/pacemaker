@@ -285,15 +285,6 @@ lrmd_exit(gpointer data)
     if (ipcs) {
         mainloop_del_ipc_server(ipcs);
     }
-#ifdef ENABLE_VERSIONED_ATTRS
-    if (version_format_regex) {
-        regfree(version_format_regex);
-        free(version_format_regex);
-    }
-    if (ra_version_hash) {
-        g_hash_table_destroy(ra_version_hash);
-    }
-#endif
 
 #ifdef ENABLE_PCMK_REMOTE
     lrmd_tls_server_destroy();

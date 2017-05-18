@@ -185,10 +185,6 @@ enum lrmd_callback_event {
 
 /* *INDENT-ON* */
 
-#ifdef ENABLE_VERSIONED_ATTRS
-#include <libxml/tree.h>
-#endif
-
 typedef struct lrmd_event_data_s {
     /*! Type of event, register, unregister, call_completed... */
     enum lrmd_callback_event type;
@@ -240,13 +236,6 @@ typedef struct lrmd_event_data_s {
 
     /*! exit failure reason string from resource agent operation */
     const char *exit_reason;
-
-#ifdef ENABLE_VERSIONED_ATTRS
-    /* This is an xmlNode containing the versioned parameters
-     * that should be evaluated */
-    xmlNode *versioned_params;
-#endif
-
 } lrmd_event_data_t;
 
 lrmd_event_data_t *lrmd_copy_event(lrmd_event_data_t * event);

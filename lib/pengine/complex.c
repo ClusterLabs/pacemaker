@@ -192,7 +192,6 @@ get_rsc_attributes(GHashTable * meta_hash, resource_t * rsc,
     }
 }
 
-#ifdef ENABLE_VERSIONED_ATTRS
 void
 pe_get_versioned_attributes(xmlNode * meta_hash, resource_t * rsc,
                             node_t * node, pe_working_set_t * data_set)
@@ -216,7 +215,6 @@ pe_get_versioned_attributes(xmlNode * meta_hash, resource_t * rsc,
                                        node_hash, meta_hash, data_set->now);
     }
 }
-#endif
 
 static char *
 template_op_key(xmlNode * op)
@@ -483,9 +481,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     (*rsc)->parameters =
         g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
 
-#ifdef ENABLE_VERSIONED_ATTRS
-    (*rsc)->versioned_parameters = create_xml_node(NULL, XML_TAG_VER_ATTRS);
-#endif
+    (*rsc)->versioned_parameters = create_xml_node(NULL, XML_TAG_RSC_VER_ATTRS);
 
     (*rsc)->meta =
         g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
@@ -509,9 +505,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
 
     get_meta_attributes((*rsc)->meta, *rsc, NULL, data_set);
     get_rsc_attributes((*rsc)->parameters, *rsc, NULL, data_set);
-#ifdef ENABLE_VERSIONED_ATTRS
     pe_get_versioned_attributes((*rsc)->versioned_parameters, *rsc, NULL, data_set);
-#endif
 
     (*rsc)->flags = 0;
     set_bit((*rsc)->flags, pe_rsc_runnable);
@@ -550,9 +544,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_OP_ATTR_ALLOW_MIGRATE);
-#ifdef ENABLE_VERSIONED_ATTRS
     has_versioned_params = xml_has_children((*rsc)->versioned_parameters);
-#endif
     if (crm_is_true(value) && has_versioned_params) {
         pe_rsc_trace((*rsc), "Migration is disabled for resources with versioned parameters");
     } else if (crm_is_true(value)) {
@@ -867,11 +859,9 @@ common_free(resource_t * rsc)
     if (rsc->parameters != NULL) {
         g_hash_table_destroy(rsc->parameters);
     }
-#ifdef ENABLE_VERSIONED_ATTRS
     if (rsc->versioned_parameters != NULL) {
         free_xml(rsc->versioned_parameters);
     }
-#endif
     if (rsc->meta != NULL) {
         g_hash_table_destroy(rsc->meta);
     }

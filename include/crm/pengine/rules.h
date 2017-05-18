@@ -32,9 +32,7 @@ enum expression_type {
     loc_expr,
     role_expr,
     time_expr,
-#ifdef ENABLE_VERSIONED_ATTRS
     version_expr
-#endif
 };
 
 typedef struct pe_re_match_data {
@@ -74,11 +72,11 @@ void unpack_instance_attributes(xmlNode * top, xmlNode * xml_obj, const char *se
                                 GHashTable * node_hash, GHashTable * hash,
                                 const char *always_first, gboolean overwrite, crm_time_t * now);
 
-#ifdef ENABLE_VERSIONED_ATTRS
 void pe_unpack_versioned_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_name,
                                     GHashTable * node_hash, xmlNode * hash, crm_time_t * now);
-#endif
 
 char *pe_expand_re_matches(const char *string, pe_re_match_data_t * match_data);
+
+GHashTable *pe_unpack_versioned_parameters(xmlNode *versioned_params, const char *ra_version);
 
 #endif

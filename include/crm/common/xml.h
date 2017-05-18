@@ -395,4 +395,9 @@ void crm_xml_sanitize_id(char *id);
 void crm_xml_set_id(xmlNode *xml, const char *format, ...)
     __attribute__ ((__format__ (__printf__, 2, 3)));
 
+/*!
+ * \brief xmlNode destructor which can be used in glib collections
+ */
+void crm_destroy_xml(gpointer data);
+
 #endif

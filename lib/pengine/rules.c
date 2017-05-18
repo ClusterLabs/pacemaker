@@ -160,7 +160,6 @@ pe_test_expression_full(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e 
             accept = test_role_expression(expr, role, now);
             break;
 
-#ifdef ENABLE_VERSIONED_ATTRS
         case version_expr:
             if (node_hash &&
                 g_hash_table_lookup_extended(node_hash, "#ra-version", NULL, NULL)) {
@@ -170,7 +169,6 @@ pe_test_expression_full(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e 
                 accept = TRUE;
             }
             break;
-#endif
 
         default:
             CRM_CHECK(FALSE /* bad type */ , return FALSE);
@@ -209,10 +207,8 @@ find_expression_type(xmlNode * expr)
     } else if (safe_str_eq(attr, "#role")) {
         return role_expr;
 
-#ifdef ENABLE_VERSIONED_ATTRS
     } else if (safe_str_eq(attr, "#ra-version")) {
         return version_expr;
-#endif
     }
 
     return attr_expr;
@@ -759,7 +755,6 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
     }
 }
 
-#ifdef ENABLE_VERSIONED_ATTRS
 static xmlNode*
 get_versioned_rule(xmlNode * attr_set)
 {
@@ -779,75 +774,39 @@ get_versioned_rule(xmlNode * attr_set)
     return NULL;
 }
 
-static gboolean
-versioned_attr(xmlNode * versioned_attrs, const char * name)
-{
-    xmlNode *attrs = NULL;
-    xmlNode *attr = NULL;
-
-    if (!name) {
-        return FALSE;
-    }
-
-    for (attrs = __xml_first_child(versioned_attrs); attrs != NULL; attrs = __xml_next_element(attrs)) {
-        for (attr = __xml_first_child(attrs); attr != NULL; attr = __xml_next_element(attr)) {
-            if (safe_str_eq(crm_element_value(attr, XML_NVPAIR_ATTR_NAME), name)) {
-                return TRUE;
-            }
-        }
-    }
-
-    return FALSE;
-}
-
 static void
 add_versioned_attributes(xmlNode * attr_set, xmlNode * versioned_attrs)
 {
     xmlNode *attr_set_copy = NULL;
     xmlNode *rule = NULL;
+    xmlNode *expr = NULL;
 
-    CRM_CHECK(versioned_attrs != NULL, return);
+    if (!attr_set || !versioned_attrs) {
+        return;
+    }
 
     attr_set_copy = copy_xml(attr_set);
 
     rule = get_versioned_rule(attr_set_copy);
-    if (rule) {
-        xmlNode *expr = __xml_first_child(rule);
+    if (!rule) {
+        free_xml(attr_set_copy);
+        return;
+    }
 
-        while (expr != NULL) {
-            if (find_expression_type(expr) != version_expr) {
-                xmlNode *node = expr;
-                expr = __xml_next_element(expr);
-                free_xml(node);
-            } else {
-                expr = __xml_next_element(expr);
-            }
-        }
-    } else {
-        xmlNode *attr = __xml_first_child(attr_set_copy);
+    expr = __xml_first_child(rule);
+    while (expr != NULL) {
+        if (find_expression_type(expr) != version_expr) {
+            xmlNode *node = expr;
 
-        while (attr != NULL) {
-            if (safe_str_eq((const char*) attr->name, XML_TAG_RULE)) {
-                free_xml(attr_set_copy);
-                return;
-            } else if (!versioned_attr(versioned_attrs, crm_element_value(attr, XML_NVPAIR_ATTR_NAME))) {
-                xmlNode *node = attr;
-                attr = __xml_next_element(attr);
-                free_xml(node);
-            } else {
-                attr = __xml_next_element(attr);
-            }
-        }
-
-        if (!xml_has_children(attr_set_copy)) {
-            free_xml(attr_set_copy);
-            return;
+            expr = __xml_next_element(expr);
+            free_xml(node);
+        } else {
+            expr = __xml_next_element(expr);
         }
     }
 
     add_node_nocopy(versioned_attrs, NULL, attr_set_copy);
 }
-#endif
 
 typedef struct unpack_data_s {
     gboolean overwrite;
@@ -867,19 +826,16 @@ unpack_attr_set(gpointer data, gpointer user_data)
         return;
     }
 
-#ifdef ENABLE_VERSIONED_ATTRS
     if (get_versioned_rule(pair->attr_set) && !(unpack_data->node_hash &&
         g_hash_table_lookup_extended(unpack_data->node_hash, "#ra-version", NULL, NULL))) {
         // we haven't actually tested versioned expressions yet
         return;
     }
-#endif
 
     crm_trace("Adding attributes from %s", pair->name);
     populate_hash(pair->attr_set, unpack_data->hash, unpack_data->overwrite, unpack_data->top);
 }
 
-#ifdef ENABLE_VERSIONED_ATTRS
 static void
 unpack_versioned_attr_set(gpointer data, gpointer user_data)
 {
@@ -889,10 +845,9 @@ unpack_versioned_attr_set(gpointer data, gpointer user_data)
     if (test_ruleset(pair->attr_set, unpack_data->node_hash, unpack_data->now) == FALSE) {
         return;
     }
-    
+
     add_versioned_attributes(pair->attr_set, unpack_data->hash);
 }
-#endif
 
 static GListPtr
 make_pairs_and_populate_data(xmlNode * top, xmlNode * xml_obj, const char *set_name,
@@ -961,7 +916,6 @@ unpack_instance_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_nam
     }
 }
 
-#ifdef ENABLE_VERSIONED_ATTRS
 void
 pe_unpack_versioned_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_name,
                                GHashTable * node_hash, xmlNode * hash, crm_time_t * now)
@@ -975,7 +929,6 @@ pe_unpack_versioned_attributes(xmlNode * top, xmlNode * xml_obj, const char *set
         g_list_free_full(pairs, free);
     }
 }
-#endif
 
 char *
 pe_expand_re_matches(const char *string, pe_re_match_data_t *match_data)
@@ -1032,4 +985,27 @@ pe_expand_re_matches(const char *string, pe_re_match_data_t *match_data)
     }
 
     return result;
+}
+
+GHashTable*
+pe_unpack_versioned_parameters(xmlNode *versioned_params, const char *ra_version)
+{
+    GHashTable *hash = g_hash_table_new_full(crm_str_hash, g_str_equal,
+                               g_hash_destroy_str, g_hash_destroy_str);
+
+    if (versioned_params && ra_version) {
+        GHashTable *node_hash = g_hash_table_new_full(crm_str_hash, g_str_equal,
+                                        g_hash_destroy_str, g_hash_destroy_str);
+        xmlNode *attr_set = __xml_first_child(versioned_params);
+
+        if (attr_set) {
+            g_hash_table_insert(node_hash, strdup("#" XML_ATTR_RA_VERSION), strdup(ra_version));
+            unpack_instance_attributes(NULL, versioned_params, crm_element_name(attr_set),
+                                       node_hash, hash, NULL, FALSE, NULL);
+        }
+
+        g_hash_table_destroy(node_hash);
+    }
+
+    return hash;
 }

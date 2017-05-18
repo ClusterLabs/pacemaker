@@ -1565,9 +1565,6 @@ append_digest(lrmd_event_data_t * op, xmlNode * update, const char *version, con
     args_xml = create_xml_node(NULL, XML_TAG_PARAMS);
     g_hash_table_foreach(op->params, hash2field, args_xml);
     filter_action_parameters(args_xml, version);
-#ifdef ENABLE_VERSIONED_ATTRS
-    crm_summarize_versioned_params(args_xml, op->versioned_params);
-#endif
     digest = calculate_operation_digest(args_xml, version);
 
 #if 0
@@ -1997,3 +1994,13 @@ crm_gnutls_global_init(void)
     gnutls_global_init();
 }
 #endif
+
+char *
+crm_generate_ra_key(const char *class, const char *provider, const char *type)
+{
+    if (!class && !provider && !type) {
+        return NULL;
+    }
+
+    return crm_strdup_printf("%s:%s:%s", class ? class : "", provider ? provider : "", type ? type : "");
+}

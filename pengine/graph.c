@@ -1094,32 +1094,32 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
     g_hash_table_foreach(action->extra, hash2field, args_xml);
     if (action->rsc != NULL && action->node) {
         GHashTable *p = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
-#ifdef ENABLE_VERSIONED_ATTRS
-        xmlNode *versioned_parameters = create_xml_node(NULL, XML_TAG_VER_ATTRS);
-#endif
+        xmlNode *versioned_parameters = create_xml_node(NULL, XML_TAG_RSC_VER_ATTRS);
 
         get_rsc_attributes(p, action->rsc, action->node, data_set);
         g_hash_table_foreach(p, hash2smartfield, args_xml);
 
-#ifdef ENABLE_VERSIONED_ATTRS
         pe_get_versioned_attributes(versioned_parameters, action->rsc, action->node, data_set);
         if (xml_has_children(versioned_parameters)) {
             add_node_copy(action_xml, versioned_parameters);
         }
-#endif
 
         g_hash_table_destroy(p);
-#ifdef ENABLE_VERSIONED_ATTRS
         free_xml(versioned_parameters);
-#endif
     } else if(action->rsc && action->rsc->variant <= pe_native) {
         g_hash_table_foreach(action->rsc->parameters, hash2smartfield, args_xml);
-#ifdef ENABLE_VERSIONED_ATTRS
-        
+
         if (xml_has_children(action->rsc->versioned_parameters)) {
             add_node_copy(action_xml, action->rsc->versioned_parameters);
         }
-#endif
+    }
+
+    if (xml_has_children(action->versioned_parameters)) {
+        add_node_copy(action_xml, action->versioned_parameters);
+    }
+
+    if (xml_has_children(action->versioned_meta)) {
+        add_node_copy(action_xml, action->versioned_meta);
     }
 
     g_hash_table_foreach(action->meta, hash2metafield, args_xml);

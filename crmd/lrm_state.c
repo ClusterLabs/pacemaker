@@ -27,6 +27,7 @@
 #include <crmd_callbacks.h>
 #include <crmd_lrm.h>
 #include <crm/pengine/rules.h>
+#include <crm/transition.h>
 
 GHashTable *lrm_state_table = NULL;
 extern GHashTable *proxy_table;
@@ -140,6 +141,9 @@ lrm_state_create(const char *node_name)
     state->resource_history = g_hash_table_new_full(crm_str_hash,
                                                     g_str_equal, NULL, history_free);
 
+    state->metadata_cache = g_hash_table_new_full(crm_str_hash, g_str_equal,
+                                                  g_hash_destroy_str, crm_destroy_xml);
+
     g_hash_table_insert(lrm_state_table, (char *)state->node_name, state);
     return state;
 
@@ -194,13 +198,17 @@ internal_lrm_state_destroy(gpointer data)
         crm_trace("Destroying pending op cache with %d members", g_hash_table_size(lrm_state->pending_ops));
         g_hash_table_destroy(lrm_state->pending_ops);
     }
+    if (lrm_state->metadata_cache) {
+        crm_trace("Destroying metadata cache with %d members", g_hash_table_size(lrm_state->metadata_cache));
+        g_hash_table_destroy(lrm_state->metadata_cache);
+    }
 
     free((char *)lrm_state->node_name);
     free(lrm_state);
 }
 
 void
-lrm_state_reset_tables(lrm_state_t * lrm_state)
+lrm_state_reset_tables(lrm_state_t * lrm_state, gboolean reset_metadata)
 {
     if (lrm_state->resource_history) {
         crm_trace("Re-setting history op cache with %d members",
@@ -222,6 +230,17 @@ lrm_state_reset_tables(lrm_state_t * lrm_state)
                   g_hash_table_size(lrm_state->rsc_info_cache));
         g_hash_table_remove_all(lrm_state->rsc_info_cache);
     }
+    if (reset_metadata && lrm_state->metadata_cache) {
+        crm_trace("Re-setting metadata cache with %d members",
+                  g_hash_table_size(lrm_state->metadata_cache));
+        g_hash_table_remove_all(lrm_state->metadata_cache);
+    }
+}
+
+static gboolean
+has_cached_metadata_for(lrmd_rsc_info_t *rsc, const char *node_name)
+{
+    return lrm_state_get_rsc_metadata(lrm_state_find(node_name), rsc) != NULL;
 }
 
 gboolean
@@ -245,12 +264,16 @@ lrm_state_init_local(void)
         return FALSE;
     }
 
+    crm_register_cache_check_fn(&has_cached_metadata_for);
+
     return TRUE;
 }
 
 void
 lrm_state_destroy_all(void)
 {
+    crm_unregister_cache_check_fn();
+
     if (lrm_state_table) {
         crm_trace("Destroying state table with %d members", g_hash_table_size(lrm_state_table));
         g_hash_table_destroy(lrm_state_table); lrm_state_table = NULL;
@@ -715,3 +738,46 @@ lrm_state_unregister_rsc(lrm_state_t * lrm_state,
     return ((lrmd_t *) lrm_state->conn)->cmds->unregister_rsc(lrm_state->conn, rsc_id, options);
 }
 
+xmlNode *
+lrm_state_update_rsc_metadata(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, const char *metadata_str)
+{
+    char *key = NULL;
+    xmlNode *metadata = NULL;
+
+    CRM_CHECK(lrm_state && rsc && metadata_str, return NULL);
+
+    key = crm_generate_ra_key(rsc->class, rsc->provider, rsc->type);
+    if (!key) {
+        return NULL;
+    }
+
+    metadata = string2xml(metadata_str);
+    if (!metadata) {
+        crm_err("Metadata for %s (%s:%s:%s) is not valid XML", rsc->id, rsc->class, rsc->provider, rsc->type);
+        free(key);
+        return NULL;
+    }
+
+    g_hash_table_replace(lrm_state->metadata_cache, key, metadata);
+
+    return metadata;
+}
+
+xmlNode *
+lrm_state_get_rsc_metadata(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc)
+{
+    char *key = NULL;
+    xmlNode *metadata = NULL;
+
+    CRM_CHECK(lrm_state && rsc, return NULL);
+
+    key = crm_generate_ra_key(rsc->class, rsc->provider, rsc->type);
+    if (!key) {
+        return NULL;
+    }
+
+    metadata = g_hash_table_lookup(lrm_state->metadata_cache, key);
+    free(key);
+
+    return metadata;
+}
