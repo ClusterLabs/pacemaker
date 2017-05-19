@@ -1836,6 +1836,15 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
                     NULL,
                     pe_order_preserve | pe_order_implies_first,
                     data_set);
+            } else if(container == NULL) {
+                custom_action_order(remote_rsc,
+                    generate_op_key(remote_rsc->id, RSC_START, 0),
+                    NULL,
+                    action->rsc,
+                    NULL,
+                    action,
+                    pe_order_preserve | pe_order_implies_then | pe_order_runnable_left,
+                    data_set);
             }
 
             if(container && is_set(container->flags, pe_rsc_failed)) {
