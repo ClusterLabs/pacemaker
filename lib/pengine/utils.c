@@ -1780,6 +1780,10 @@ bool fix_remote_addr(resource_t * rsc)
         "pacemaker"
     };
 
+    if(rsc == NULL) {
+        return FALSE;
+    }
+
     name = "addr";
     value = g_hash_table_lookup(rsc->parameters, name);
     if (safe_str_eq(value, "#uname") == FALSE) {
