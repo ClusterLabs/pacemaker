@@ -15,7 +15,7 @@ clone_color: ping-1:1 allocation score on 18node3: 1
 clone_color: ping-1:2 allocation score on 18node1: 0
 clone_color: ping-1:2 allocation score on 18node2: 0
 clone_color: ping-1:2 allocation score on 18node3: 0
-clone_color: ping-1:2 allocation score on remote1: 2
+clone_color: ping-1:2 allocation score on remote1: 1
 clone_color: stateful-1:0 allocation score on 18node1: 11
 clone_color: stateful-1:0 allocation score on 18node2: -INFINITY
 clone_color: stateful-1:0 allocation score on 18node3: 0
