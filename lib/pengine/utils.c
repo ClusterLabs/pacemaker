@@ -1299,7 +1299,6 @@ resource_node_score(resource_t * rsc, node_t * node, int score, const char *tag)
     match = pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
     if (match == NULL) {
         match = node_copy(node);
-        match->weight = merge_weights(score, node->weight);
         g_hash_table_insert(rsc->allowed_nodes, (gpointer) match->details->id, match);
     }
     match->weight = merge_weights(match->weight, score);
