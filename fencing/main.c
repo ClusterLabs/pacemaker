@@ -787,7 +787,7 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
             needs_update = TRUE;
             break;
 
-        } else if(strstr(xpath, XML_CONS_TAG_RSC_LOCATION)) {
+        } else if(strstr(xpath, XML_CIB_TAG_CONSTRAINTS)) {
             shortpath = strrchr(xpath, '/'); CRM_ASSERT(shortpath);
             reason = crm_strdup_printf("%s %s", op, shortpath+1);
             needs_update = TRUE;
@@ -798,6 +798,8 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
     if(needs_update) {
         crm_info("Updating device list from the cib: %s", reason);
         cib_devices_update();
+    } else {
+        crm_trace("No updates for device list found in cib");
     }
     free(reason);
 }
