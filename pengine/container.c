@@ -22,7 +22,6 @@
 #include <allocate.h>
 #include <notif.h>
 #include <utils.h>
-#include <allocate.h>
 
 #define VARIANT_CONTAINER 1
 #include <lib/pengine/variant.h>
