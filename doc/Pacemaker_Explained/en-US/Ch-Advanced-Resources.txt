@@ -1105,7 +1105,7 @@ Pacemaker will create an implicit +ocf:heartbeat:docker+ resource to manage
 a bundle's Docker container.
 
 .Properties of a Bundle's Docker Element
-[width="95%",cols="2m,1,4<",options="header",align="center"]
+[width="95%",cols="3m,4,5<",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -1207,7 +1207,9 @@ indexterm:[bundle,network]
  port for communication with Pacemaker Remote inside the container. This takes
  precedence over the value of any PCMK_remote_port environment variable set
  in the container image. This can allow a +primitive+ to be specified without
- using +ip-start-range+, in which case +replicas-per-host+ must be 1.
+ using +ip-range-start+ (in which case +replicas-per-host+ must be 1), or
+ allow a bundle to run on a Pacemaker Remote node that is already listening on
+ the default port.
  indexterm:[control-port,network]
  indexterm:[network,Property,control-port]
 
@@ -1348,11 +1350,11 @@ A bundle may optionally contain one +<primitive>+ resource
 instance attributes and meta-attributes defined, as usual.
 
 If a bundle contains a primitive resource, the container image must include
-the Pacemaker Remote daemon, and either +ip-range-start+ or +control-port+
-must be configured in the bundle. Pacemaker will create an implicit
-+ocf:pacemaker:remote+ resource for the connection, launch Pacemaker Remote
-within the container, and monitor and manage the primitive resource via
-Pacemaker Remote.
+the Pacemaker Remote daemon, and at least one of +ip-range-start+ or
++control-port+ must be configured in the bundle. Pacemaker will create an
+implicit +ocf:pacemaker:remote+ resource for the connection, launch
+Pacemaker Remote within the container, and monitor and manage the primitive
+resource via Pacemaker Remote.
 
 If the bundle has more than one container instance (replica), the primitive
 resource will function as an implicit clone (see <<s-resource-clone>>) --
@@ -1362,12 +1364,14 @@ a multistate clone if the bundle has +masters+ greater than zero
 [IMPORTANT]
 ====
 Containers in bundles with a +primitive+ must have an accessible networking
-environment, so that Pacemaker can contact Pacemaker Remote inside the
-container. For example, the Docker option `--net=none` should not be used with
-a +primitive+. The default (using a distinct network space inside the
-container) works with +ip-range-start+. If the Docker option `--net=host` is
-used (making the container share the host's network space), a unique
-+control-port+ should be specified for each bundle.
+environment, so that Pacemaker on the cluster nodes can contact
+Pacemaker Remote inside the container. For example, the Docker option
+`--net=none` should not be used with a +primitive+. The default (using a
+distinct network space inside the container) works in combination with
++ip-range-start+. If the Docker option `--net=host` is used (making the
+container share the host's network space), a unique +control-port+ should be
+specified for each bundle. Any firewall must allow access to the
++control-port+.
 ====
 
 === Limitations of Bundles ===
@@ -1379,3 +1383,6 @@ implicitly created by Pacemaker for the bundle.
 Bundles do not have instance attributes, meta-attributes, utilization
 attributes, or operations of their own, though a primitive included in a bundle
 may.
+
+A bundle with a primitive can run on a Pacemaker Remote node only if the bundle
+uses a distinct +control-port+.
