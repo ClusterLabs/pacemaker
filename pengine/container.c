@@ -155,7 +155,6 @@ container_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 
     get_container_variant_data(container_data, rsc);
     for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
-        char *id = NULL;
         container_grouping_t *tuple = (container_grouping_t *)gIter->data;
 
         CRM_ASSERT(tuple);
@@ -172,9 +171,7 @@ container_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
             new_rsc_order(tuple->docker, RSC_STOP, tuple->ip, RSC_STOP,
                           pe_order_implies_first|pe_order_preserve, data_set);
 
-            id = crm_strdup_printf("%s-ip-with-docker-%d", rsc->id, tuple->offset);
-            rsc_colocation_new(id, NULL, INFINITY, tuple->ip, tuple->docker, NULL, NULL, data_set);
-            free(id);
+            rsc_colocation_new("ip-with-docker", NULL, INFINITY, tuple->ip, tuple->docker, NULL, NULL, data_set);
         }
 
         if(tuple->remote) {
