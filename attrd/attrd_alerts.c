@@ -159,42 +159,30 @@ attrd_parse_alerts(xmlNode *notifications)
     }
 }
 
-
 static void
 config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
-    GHashTable *config_hash = NULL;
     crm_time_t *now = crm_time_new(NULL);
-    xmlNode *crmconfig = NULL;
-    xmlNode *alerts = NULL;
+    xmlNode *crmalerts = NULL;
 
     if (rc != pcmk_ok) {
         crm_err("Local CIB query resulted in an error: %s", pcmk_strerror(rc));
         goto bail;
     }
 
-    crmconfig = output;
-    if ((crmconfig) &&
-        (crm_element_name(crmconfig)) &&
-        (strcmp(crm_element_name(crmconfig), XML_CIB_TAG_CRMCONFIG) != 0)) {
-        crmconfig = first_named_child(crmconfig, XML_CIB_TAG_CRMCONFIG);
+    crmalerts = output;
+    if ((crmalerts) &&
+        (crm_element_name(crmalerts)) &&
+        (strcmp(crm_element_name(crmalerts), XML_CIB_TAG_ALERTS) != 0)) {
+        crmalerts = first_named_child(crmalerts, XML_CIB_TAG_ALERTS);
     }
-    if (!crmconfig) {
-        crm_err("Local CIB query for " XML_CIB_TAG_CRMCONFIG " section failed");
+    if (!crmalerts) {
+        crm_err("Local CIB query for " XML_CIB_TAG_ALERTS " section failed");
         goto bail;
     }
 
-    crm_debug("Call %d : Parsing CIB options", call_id);
-    config_hash =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+    attrd_parse_alerts(crmalerts);
 
-    unpack_instance_attributes(crmconfig, crmconfig, XML_CIB_TAG_PROPSET, NULL, config_hash,
-                               CIB_OPTIONS_FIRST, FALSE, now);
-
-    alerts = first_named_child(output, XML_CIB_TAG_ALERTS);
-    attrd_parse_alerts(alerts);
-
-    g_hash_table_destroy(config_hash);
   bail:
     crm_time_free(now);
 }
@@ -206,7 +194,7 @@ attrd_read_options(gpointer user_data)
     
     if (the_cib) {
         call_id = the_cib->cmds->query(the_cib,
-            "//" XML_CIB_TAG_CRMCONFIG " | //" XML_CIB_TAG_ALERTS,
+            "//" XML_CIB_TAG_ALERTS,
             NULL, cib_xpath | cib_scope_local);
 
         the_cib->cmds->register_callback_full(the_cib, call_id, 120, FALSE,
@@ -418,7 +406,7 @@ exec_alerts(lrmd_t *lrmd, const char *kind, const char *attribute_name, lrmd_key
         copy_params = lrmd_set_alert_key_to_lrmd_params(copy_params, CRM_alert_node_sequence, crm_itoa(operations));
         copy_params = lrmd_set_alert_key_to_lrmd_params(copy_params, CRM_alert_timestamp, timestamp);
 
-        lrmd_set_alert_envvar_to_lrmd_params(entry, copy_params);
+        lrmd_set_alert_envvar_to_lrmd_params(copy_params, entry);
         
         call_id = lrmd->cmds->exec_alert(lrmd, strdup(entry->id), entry->timeout, lrmd_opt_notify_orig_only, copy_params);
         if (call_id <= 0) {
@@ -448,23 +436,10 @@ free_alert_info(gpointer value)
 static void
 attrd_alert_lrm_op_callback(lrmd_event_data_t * op)
 {
-    const char *nodename = NULL;
-
     CRM_CHECK(op != NULL, return);
 
-#if HAVE_ATOMIC_ATTRD
-    nodename = op->remote_nodename ? op->remote_nodename : attrd_cluster->uname;
-#else
-    nodename = op->remote_nodename ? op->remote_nodename : attrd_uname;
-#endif
-
-#if HAVE_ATOMIC_ATTRD
-    if (op->type == lrmd_event_disconnect && (safe_str_eq(nodename, attrd_cluster->uname))) {
+    if (op->type == lrmd_event_disconnect) {
         crm_info("Lost connection to LRMD service!");
-#else
-    if (op->type == lrmd_event_disconnect && (safe_str_eq(nodename, attrd_uname))) {
-        crm_notice("Lost connection to LRMD service!");
-#endif
         if (the_lrmd->cmds->is_connected(the_lrmd)) {
             the_lrmd->cmds->disconnect(the_lrmd);
             lrmd_api_delete(the_lrmd);
@@ -475,7 +450,6 @@ attrd_alert_lrm_op_callback(lrmd_event_data_t * op)
         return;
     }
 
-
     if (op->params != NULL) {
         void *value_tmp1, *value_tmp2;
 
@@ -483,17 +457,14 @@ attrd_alert_lrm_op_callback(lrmd_event_data_t * op)
         if (value_tmp1 != NULL) {
             value_tmp2 = g_hash_table_lookup(op->params, CRM_ALERT_NODE_SEQUENCE);
             if(op->rc == 0) {
-#if HAVE_ATOMIC_ATTRD
                 crm_info("Alert %s (%s) complete", value_tmp2, value_tmp1);
-#else
-                crm_notice("Alert %s (%s) complete", value_tmp2, value_tmp1);
-#endif
             } else {
                 crm_warn("Alert %s (%s) failed: %d", value_tmp2, value_tmp1, op->rc);
             }
         }
     }
 }
+
 int 
 attrd_send_alerts(lrmd_t *lrmd, const char *node, uint32_t nodeid, const char *attribute_name, const char *attribute_value, GListPtr alert_list)
 {
@@ -530,6 +501,7 @@ attrd_send_alerts(lrmd_t *lrmd, const char *node, uint32_t nodeid, const char *a
 
     return ret;
 }
+
 #if HAVE_ATOMIC_ATTRD
 void
 set_alert_attribute_value(GHashTable *t, attribute_value_t *v)

@@ -33,11 +33,6 @@
 #include <crm/cib.h>
 #include <crm/lrmd.h>
 
-#if 0
-lrmd_key_value_t * lrmd_set_alert_key_to_lrmd_params(lrmd_key_value_t *head, enum crm_alert_keys_e name, const char *value);
-void lrmd_set_alert_envvar_to_lrmd_params(crm_alert_entry_t *entry, lrmd_key_value_t * params);
-#endif
-
 lrmd_key_value_t *
 lrmd_set_alert_key_to_lrmd_params(lrmd_key_value_t *head, enum crm_alert_keys_e name, const char *value)
 {
@@ -51,7 +46,7 @@ lrmd_set_alert_key_to_lrmd_params(lrmd_key_value_t *head, enum crm_alert_keys_e 
 }
 
 void
-lrmd_set_alert_envvar_to_lrmd_params(crm_alert_entry_t *entry, lrmd_key_value_t *head)
+lrmd_set_alert_envvar_to_lrmd_params(lrmd_key_value_t *head, crm_alert_entry_t *entry)
 {
     GListPtr l;
 

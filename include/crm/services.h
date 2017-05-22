@@ -171,7 +171,6 @@ enum svc_action_flags {
 
         int timeout;
         GHashTable *params;
-        GHashTable *alert_params;
 
         int rc;
         int pid;
@@ -194,6 +193,11 @@ enum svc_action_flags {
         void *cb_data;
 
         svc_action_private_t *opaque;
+
+     /*
+      * Store a parameter of Alert.
+     */
+        GHashTable *alert_params;
 
     } svc_action_t;
 
