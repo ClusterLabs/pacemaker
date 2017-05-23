@@ -25,11 +25,20 @@
 #  define CRM_ALERT_DEFAULT_TSTAMP_FORMAT "%H:%M:%S.%06N"
 
 typedef struct {
+    char *name;
+    char *value;
+}  crm_alert_envvar_t;
+
+typedef struct {
     char *id;
     char *path;
     int timeout;
     char *tstamp_format;
     char *recipient;
+    char *select_kind_orig;
+    char **select_kind;
+    char *select_attribute_name_orig;
+    char **select_attribute_name;
     GListPtr envvars;
 } crm_alert_entry_t;
 
@@ -47,12 +56,25 @@ enum crm_alert_keys_e {
     CRM_alert_kind,
     CRM_alert_version,
     CRM_alert_node_sequence,
-    CRM_alert_timestamp
+    CRM_alert_timestamp,
+    CRM_alert_attribute_name,
+    CRM_alert_attribute_value,
+    CRM_alert_select_kind,
+    CRM_alert_select_attribute_name
 };
 
+#define CRM_ALERT_INTERNAL_KEY_MAX 16
+#define CRM_ALERT_KEY_PATH "CRM_alert_path"
+#define CRM_ALERT_NODE_SEQUENCE "CRM_alert_node_sequence"
+#define CRM_ALERT_KIND_DEFAULT "node,fencing,resource"
+
+#if (HAVE_ATOMIC_ATTRD == 0)
+extern char *attrd_uname;
+#endif
 extern GListPtr crm_alert_list;
 extern guint crm_alert_max_alert_timeout;
-extern const char *crm_alert_keys[14][3];
+extern const char *crm_alert_keys[CRM_ALERT_INTERNAL_KEY_MAX][3];
+extern char **crm_alert_kind_default;
 
 void crm_free_alert_list(void);
 GListPtr crm_drop_envvars(crm_alert_entry_t *entry, int count);
@@ -63,4 +85,6 @@ void crm_set_alert_key_int(enum crm_alert_keys_e name, int value);
 void crm_unset_alert_keys(void);
 void crm_set_envvar_list(crm_alert_entry_t *entry);
 void crm_unset_envvar_list(crm_alert_entry_t *entry);
+gboolean crm_is_target_alert(char **list, const char *value);
+
 #endif

@@ -18,22 +18,19 @@
 
 #include <crm_internal.h>
 #include <crm/crm.h>
+#include <crm/lrmd.h>
 #include <crm/msg_xml.h>
 #include <crm/common/alerts_internal.h>
 
-typedef struct {
-    char *name;
-    char *value;
-} envvar_t;
-
 GListPtr crm_alert_list = NULL;
 guint crm_alert_max_alert_timeout = CRM_ALERT_DEFAULT_TIMEOUT_MS;
+char **crm_alert_kind_default = NULL;
 
 /*		
  * to allow script compatibility we can have more than one		
  * set of environment variables		
  */
-const char *crm_alert_keys[14][3] =		
+const char *crm_alert_keys[CRM_ALERT_INTERNAL_KEY_MAX][3] =		
 {		
     [CRM_alert_recipient]     = {"CRM_notify_recipient",     "CRM_alert_recipient",     NULL},		
     [CRM_alert_node]          = {"CRM_notify_node",          "CRM_alert_node",          NULL},		
@@ -47,12 +44,14 @@ const char *crm_alert_keys[14][3] =
     [CRM_alert_rc]            = {"CRM_notify_rc",            "CRM_alert_rc",            NULL},		
     [CRM_alert_kind]          = {"CRM_notify_kind",          "CRM_alert_kind",          NULL},		
     [CRM_alert_version]       = {"CRM_notify_version",       "CRM_alert_version",       NULL},		
-    [CRM_alert_node_sequence] = {"CRM_notify_node_sequence", "CRM_alert_node_sequence", NULL},		
-    [CRM_alert_timestamp]     = {"CRM_notify_timestamp",     "CRM_alert_timestamp",     NULL}		
+    [CRM_alert_node_sequence] = {"CRM_notify_node_sequence", CRM_ALERT_NODE_SEQUENCE, NULL},		
+    [CRM_alert_timestamp]     = {"CRM_notify_timestamp",     "CRM_alert_timestamp",     NULL},
+    [CRM_alert_attribute_name]     = {"CRM_notify_attribute_name",     "CRM_alert_attribute_name",     NULL},
+    [CRM_alert_attribute_value]     = {"CRM_notify_attribute_value",     "CRM_alert_attribute_value",     NULL}
 };
 
 static void		
-free_envvar_entry(envvar_t *entry)		
+free_envvar_entry(crm_alert_envvar_t *entry)		
 {		
     free(entry->name);		
     free(entry->value);		
@@ -66,6 +65,17 @@ crm_free_alert_list_entry(crm_alert_entry_t *entry)
     free(entry->path);		
     free(entry->tstamp_format);		
     free(entry->recipient);		
+
+    free(entry->select_kind_orig);
+    if (entry->select_kind) {
+        g_strfreev(entry->select_kind);
+    }
+
+    free(entry->select_attribute_name_orig);
+    if(entry->select_attribute_name) {
+        g_strfreev(entry->select_attribute_name);
+    }
+
     if (entry->envvars) {		
         g_list_free_full(entry->envvars,		
                          (GDestroyNotify) free_envvar_entry);		
@@ -83,10 +93,10 @@ crm_free_alert_list()
 }		
 
 static gpointer		
-copy_envvar_entry(envvar_t * src,		
+copy_envvar_entry(crm_alert_envvar_t * src,		
                   gpointer data)		
 {		
-    envvar_t *dst = calloc(1, sizeof(envvar_t));		
+    crm_alert_envvar_t *dst = calloc(1, sizeof(crm_alert_envvar_t));		
 
     CRM_ASSERT(dst);		
     dst->name = strdup(src->name);		
@@ -96,7 +106,7 @@ copy_envvar_entry(envvar_t * src,
 
 static GListPtr		
 add_dup_envvar(crm_alert_entry_t *entrys,		
-               envvar_t *entry)		
+               crm_alert_envvar_t *entry)		
 {		
     entrys->envvars = g_list_prepend(entrys->envvars, copy_envvar_entry(entry, NULL));		
     return entrys->envvars;
@@ -110,7 +120,7 @@ crm_drop_envvars(crm_alert_entry_t *entry, int count)
     for (i = 0;		
          (entry->envvars) && ((count < 0) || (i < count));		
          i++) {		
-        free_envvar_entry((envvar_t *) g_list_first(entry->envvars)->data);		
+        free_envvar_entry((crm_alert_envvar_t *) g_list_first(entry->envvars)->data);		
         entry->envvars = g_list_delete_link(entry->envvars,		
                                          g_list_first(entry->envvars));		
     }		
@@ -132,14 +142,14 @@ copy_envvar_list_remove_dupes(crm_alert_entry_t *entry)
 
     for (ls = g_list_first(entry->envvars); ls; ls = g_list_next(ls)) {		
         for (ld = g_list_first(dst); ld; ld = g_list_next(ld)) {		
-            if (!strcmp(((envvar_t *)(ls->data))->name,		
-                        ((envvar_t *)(ld->data))->name)) {		
+            if (!strcmp(((crm_alert_envvar_t *)(ls->data))->name,		
+                        ((crm_alert_envvar_t *)(ld->data))->name)) {		
                 break;		
             }		
         }		
         if (!ld) {		
             dst = g_list_prepend(dst,		
-                    copy_envvar_entry((envvar_t *)(ls->data), NULL));		
+                    copy_envvar_entry((crm_alert_envvar_t *)(ls->data), NULL));		
         }		
     }		
 
@@ -159,6 +169,10 @@ crm_add_dup_alert_list_entry(crm_alert_entry_t *entry)
         .timeout = entry->timeout,		
         .tstamp_format = entry->tstamp_format?strdup(entry->tstamp_format):NULL,		
         .recipient = entry->recipient?strdup(entry->recipient):NULL,		
+        .select_kind_orig = entry->select_kind_orig?g_strdup(entry->select_kind_orig):NULL,		
+        .select_kind = entry->select_kind?g_strdupv(entry->select_kind):NULL,		
+        .select_attribute_name_orig = entry->select_attribute_name_orig?g_strdup(entry->select_attribute_name_orig):NULL,		
+        .select_attribute_name = entry->select_attribute_name?g_strdupv(entry->select_attribute_name):NULL,		
         .envvars = entry->envvars?		
             copy_envvar_list_remove_dupes(entry)		
             :NULL		
@@ -180,7 +194,7 @@ crm_get_envvars_from_cib(xmlNode *basenode, crm_alert_entry_t *entry, int *count
     for (pair = first_named_child(envvar, XML_CIB_TAG_NVPAIR);		
          pair; pair = __xml_next(pair)) {		
 
-        envvar_t envvar_entry = (envvar_t) {		
+        crm_alert_envvar_t envvar_entry = (crm_alert_envvar_t) {		
             .name = (char *) crm_element_value(pair, XML_NVPAIR_ATTR_NAME),		
             .value = (char *) crm_element_value(pair, XML_NVPAIR_ATTR_VALUE)		
         };		
@@ -237,7 +251,7 @@ crm_set_envvar_list(crm_alert_entry_t *entry)
     GListPtr l;
 
     for (l = g_list_first(entry->envvars); l; l = g_list_next(l)) {
-        envvar_t *env = (envvar_t *)(l->data);
+        crm_alert_envvar_t *env = (crm_alert_envvar_t *)(l->data);
 
         crm_trace("Setting environment variable %s = '%s'", env->name,
                   env->value?env->value:"");
@@ -255,9 +269,30 @@ crm_unset_envvar_list(crm_alert_entry_t *entry)
     GListPtr l;
 
     for (l = g_list_first(entry->envvars); l; l = g_list_next(l)) {
-        envvar_t *env = (envvar_t *)(l->data);
+        crm_alert_envvar_t *env = (crm_alert_envvar_t *)(l->data);
 
         crm_trace("Unsetting environment variable %s", env->name);
         unsetenv(env->name);
     }
 }
+
+gboolean 
+crm_is_target_alert(char **list, const char *value)
+{
+    int target_list_num = 0;
+    gboolean rc = FALSE;
+
+    if (list == NULL) return TRUE;
+
+    target_list_num = g_strv_length(list);
+
+    for( int cnt = 0; cnt < target_list_num; cnt++ ) {
+        if (strcmp(list[cnt], value) == 0) {
+            rc = TRUE;
+            break;
+        }
+    } 
+
+    return rc;
+}
+

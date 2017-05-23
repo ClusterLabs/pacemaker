@@ -106,6 +106,11 @@ case $CRM_alert_kind in
                 ;;
         esac
         ;;
+    attribute)
+        #
+        echo "${tstamp}Attribute '${CRM_alert_attribute_name}' on node '${CRM_alert_node}' was updated to '${CRM_alert_attribute_value}'" >> "${CRM_alert_recipient}"
+        ;;
+
     *)
         echo "${tstamp}Unhandled $CRM_alert_kind alert" >> "${CRM_alert_recipient}"
         env | grep CRM_alert >> "${CRM_alert_recipient}"
