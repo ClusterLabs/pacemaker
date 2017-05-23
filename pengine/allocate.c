@@ -276,7 +276,8 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
         key = NULL;
     }
 
-    crm_trace("Testing %s_%s_%d on %s", rsc->id, task, interval, active_node?active_node->details->uname:"N/A");
+    crm_trace("Testing %s_%s_%d on %s",
+              rsc->id, task, interval, active_node->details->uname);
     if (interval == 0 && safe_str_eq(task, RSC_STATUS)) {
         /* Reload based on the start action not a probe */
         task = RSC_START;
@@ -1835,6 +1836,15 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
                     generate_op_key(remote_rsc->id, RSC_STOP, 0),
                     NULL,
                     pe_order_preserve | pe_order_implies_first,
+                    data_set);
+            } else if(container == NULL) {
+                custom_action_order(remote_rsc,
+                    generate_op_key(remote_rsc->id, RSC_START, 0),
+                    NULL,
+                    action->rsc,
+                    NULL,
+                    action,
+                    pe_order_preserve | pe_order_implies_then | pe_order_runnable_left,
                     data_set);
             }
 

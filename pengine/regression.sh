@@ -837,6 +837,7 @@ do_test remote-recover-fail     "Make sure start failure causes fencing if rsc a
 do_test remote-start-fail       "Make sure a start failure does not result in fencing if no active resources are on remote."
 do_test remote-unclean2         "Make monitor failure always results in fencing, even if no rsc are active on remote."
 do_test remote-fence-before-reconnect "Fence before clearing recurring monitor failure"
+do_test remote-recovery		"Recover remote connections before attempting demotion"
 
 echo ""
 do_test resource-discovery      "Exercises resource-discovery location constraint option."

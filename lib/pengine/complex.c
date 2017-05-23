@@ -542,6 +542,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     }
 
     if (xml_contains_remote_node((*rsc)->xml)) {
+        (*rsc)->is_remote_node = TRUE;
         if (g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_CONTAINER)) {
             container_remote_node = 1;
         } else {

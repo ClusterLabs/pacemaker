@@ -1299,7 +1299,6 @@ resource_node_score(resource_t * rsc, node_t * node, int score, const char *tag)
     match = pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
     if (match == NULL) {
         match = node_copy(node);
-        match->weight = merge_weights(score, node->weight);
         g_hash_table_insert(rsc->allowed_nodes, (gpointer) match->details->id, match);
     }
     match->weight = merge_weights(match->weight, score);
@@ -1690,13 +1689,17 @@ bool fix_remote_addr(resource_t * rsc)
         "pacemaker"
     };
 
+    if(rsc == NULL) {
+        return FALSE;
+    }
+
     name = "addr";
     value = g_hash_table_lookup(rsc->parameters, name);
     if (safe_str_eq(value, "#uname") == FALSE) {
         return FALSE;
     }
 
-    for (int lpc = 0; rsc && lpc < DIMOF(attr_list); lpc++) {
+    for (int lpc = 0; lpc < DIMOF(attr_list); lpc++) {
         name = attr_list[lpc];
         value = crm_element_value(rsc->xml, attr_list[lpc]);
         if (safe_str_eq(value, value_list[lpc]) == FALSE) {
@@ -1731,12 +1734,15 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
     const char *restart_list;
     const char *op_version;
 
+    CRM_ASSERT(node != NULL);
+
     data = g_hash_table_lookup(node->details->digest_cache, op_id);
     if (data) {
         return data;
     }
 
     data = calloc(1, sizeof(op_digest_cache_t));
+    CRM_ASSERT(data != NULL);
 
     digest_all = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
     digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);

@@ -1311,20 +1311,13 @@ check_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper)
     type &= ~pe_order_implies_then_printed;
     type &= ~pe_order_optional;
 
-    if (wrapper->action->node
+    if (is_not_set(type, pe_order_preserve)
         && action->rsc && action->rsc->fillers
-        && is_not_set(type, pe_order_preserve)
+        && wrapper->action->rsc && wrapper->action->node
         && wrapper->action->node->details->remote_rsc
-        && uber_parent(action->rsc) != uber_parent(wrapper->action->rsc)
-        ) {
-        /* This prevents user-defined ordering constraints between
-         * resources in remote nodes and the resources that
-         * define/represent a remote node.
-         *
-         * There is no known valid reason to allow this sort of thing
-         * but if one arises, we'd need to change the
-         * action->rsc->fillers clause to be more specific, possibly
-         * to check that it contained wrapper->action->rsc
+        && (wrapper->action->node->details->remote_rsc->container == action->rsc)) {
+        /* This prevents user-defined ordering constraints between resources
+         * running in a guest node and the resource that defines that node.
          */
         crm_warn("Invalid ordering constraint between %s and %s",
                  wrapper->action->rsc->id, action->rsc->id);
