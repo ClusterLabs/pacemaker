@@ -22,7 +22,6 @@
 #include <allocate.h>
 #include <notif.h>
 #include <utils.h>
-#include <allocate.h>
 
 #define VARIANT_CONTAINER 1
 #include <lib/pengine/variant.h>
@@ -167,25 +166,21 @@ container_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
             tuple->ip->cmds->internal_constraints(tuple->ip, data_set);
 
             // Start ip then docker
-            new_rsc_order(tuple->ip, RSC_START, tuple->docker, RSC_START, pe_order_runnable_left, data_set);
-            new_rsc_order(tuple->docker, RSC_STOP, tuple->ip, RSC_STOP, pe_order_implies_first, data_set);
+            new_rsc_order(tuple->ip, RSC_START, tuple->docker, RSC_START,
+                          pe_order_runnable_left|pe_order_preserve, data_set);
+            new_rsc_order(tuple->docker, RSC_STOP, tuple->ip, RSC_STOP,
+                          pe_order_implies_first|pe_order_preserve, data_set);
 
             rsc_colocation_new("ip-with-docker", NULL, INFINITY, tuple->ip, tuple->docker, NULL, NULL, data_set);
         }
 
         if(tuple->remote) {
+            /* This handles ordering and colocating remote relative to docker
+             * (via "resource-with-container"). Since IP is also ordered and
+             * colocated relative to docker, we don't need to do anything
+             * explicit here with IP.
+             */
             tuple->remote->cmds->internal_constraints(tuple->remote, data_set);
-            // Start docker then remote
-            new_rsc_order(
-                tuple->docker, RSC_START, tuple->remote, RSC_START, pe_order_runnable_left, data_set);
-            new_rsc_order(
-                tuple->remote, RSC_STOP, tuple->docker, RSC_STOP, pe_order_implies_first, data_set);
-
-            if(tuple->ip) {
-                rsc_colocation_new("remote-with-ip", NULL, INFINITY, tuple->remote, tuple->ip, NULL, NULL, data_set);
-//            } else {
-                // remote-with-docker is already handled in native_internal_constraints() by 'resource-with-container'
-            }
         }
 
         if(tuple->child) {
@@ -258,7 +253,9 @@ container_expand(resource_t * rsc, pe_working_set_t * data_set)
 
 
         CRM_ASSERT(tuple);
-        if(fix_remote_addr(tuple->remote) && tuple->docker->allocated_to) {
+        if (tuple->docker && tuple->remote && tuple->docker->allocated_to
+            && fix_remote_addr(tuple->remote)) {
+
             // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
             xmlNode *nvpair = get_xpath_object("//nvpair[@name='addr']", tuple->remote->xml, LOG_ERR);
 

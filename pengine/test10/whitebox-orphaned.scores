@@ -26,7 +26,7 @@ native_color: A allocation score on lxc2: 0
 native_color: B allocation score on 18node1: 0
 native_color: B allocation score on 18node2: 0
 native_color: B allocation score on 18node3: 0
-native_color: B allocation score on lxc1: 200
+native_color: B allocation score on lxc1: 100
 native_color: B allocation score on lxc2: 0
 native_color: C allocation score on 18node1: 0
 native_color: C allocation score on 18node2: 0

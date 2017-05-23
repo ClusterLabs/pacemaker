@@ -276,7 +276,8 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
         key = NULL;
     }
 
-    crm_trace("Testing %s_%s_%d on %s", rsc->id, task, interval, active_node?active_node->details->uname:"N/A");
+    crm_trace("Testing %s_%s_%d on %s",
+              rsc->id, task, interval, active_node->details->uname);
     if (interval == 0 && safe_str_eq(task, RSC_STATUS)) {
         /* Reload based on the start action not a probe */
         task = RSC_START;

@@ -1179,6 +1179,10 @@ stonith_device_remove(const char *id, gboolean from_cib)
         g_hash_table_remove(device_list, id);
         crm_info("Removed '%s' from the device list (%d active devices)",
                  id, g_hash_table_size(device_list));
+    } else {
+        crm_trace("Not removing '%s' from the device list (%d active devices) "
+                  "- still %s%s_registered", id, g_hash_table_size(device_list),
+                  device->cib_registered?"cib":"", device->api_registered?"api":"");
     }
     return pcmk_ok;
 }
