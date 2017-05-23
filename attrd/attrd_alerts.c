@@ -230,7 +230,6 @@ attrd_cib_updated_cb(const char *event, xmlNode * msg)
     if (format == 1) {
         if ((xpathObj = xpath_search(
                  msg,
-                 "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_CIB_TAG_CRMCONFIG " | " \
                  "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_CIB_TAG_ALERTS
                  )) != NULL) {
             freeXpathObject(xpathObj);
@@ -245,8 +244,7 @@ attrd_cib_updated_cb(const char *event, xmlNode * msg)
             }
 
             /* modifying properties */
-            if (!strstr(xpath, "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_CRMCONFIG "/") &&
-                !strstr(xpath, "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_ALERTS)) {
+            if (!strstr(xpath, "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_ALERTS)) {
                 xmlNode *section = NULL;
                 const char *name = NULL;
 
