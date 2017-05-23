@@ -243,6 +243,8 @@
 #  define XML_LRM_TAG_RSC_OP		"lrm_rsc_op"
 #  define XML_AGENT_ATTR_CLASS		"class"
 #  define XML_AGENT_ATTR_PROVIDER	"provider"
+
+/* @COMPAT This was never used but is kept for API compatibility */
 #  define XML_LRM_TAG_ATTRIBUTES	"attributes"
 
 #  define XML_CIB_ATTR_REPLACE       	"replace"

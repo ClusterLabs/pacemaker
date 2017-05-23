@@ -184,7 +184,7 @@ do_shutdown(long long action,
         if (is_set(fsa_input_register, pe_subsystem->flag_connected)) {
             crm_info("Terminating the %s", pe_subsystem->name);
             if (stop_subsystem(pe_subsystem, TRUE) == FALSE) {
-                /* its gone... */
+                /* It's gone ... */
                 crm_err("Faking %s exit", pe_subsystem->name);
                 clear_bit(fsa_input_register, pe_subsystem->flag_connected);
             } else {
@@ -590,12 +590,12 @@ do_startup(long long action,
         finalization_timer->callback = crm_timer_popped;
         finalization_timer->repeat = FALSE;
         /* for possible enabling... a bug in the join protocol left
-         *    a slave in S_PENDING while we think its in S_NOT_DC
+         *    a slave in S_PENDING while we think it's in S_NOT_DC
          *
          * raising I_FINALIZED put us into a transition loop which is
          *    never resolved.
          * in this loop we continually send probes which the node
-         *    NACK's because its in S_PENDING
+         *    NACK's because it's in S_PENDING
          *
          * if we have nodes where heartbeat is active but the
          *    CRM is not... then this will be handled in the

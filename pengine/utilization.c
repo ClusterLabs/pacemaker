@@ -152,7 +152,7 @@ check_capacity(gpointer key, gpointer value, gpointer user_data)
         CRM_ASSERT(data->rsc_id);
         CRM_ASSERT(data->node);
 
-        crm_debug("Node %s has no enough %s for %s: required=%d remaining=%d",
+        crm_debug("Node %s does not have enough %s for %s: required=%d remaining=%d",
                   data->node->details->uname, (char *)key, data->rsc_id, required, remaining);
         data->is_enough = FALSE;
     }
@@ -381,7 +381,9 @@ process_utilization(resource_t * rsc, node_t ** prefer, pe_working_set_t * data_
                     }
 
                     if (have_enough_capacity(node, rscs_id, unallocated_utilization) == FALSE) {
-                        pe_rsc_debug(rsc, "Resource %s and its colocated resources cannot be allocated to node %s: no enough capacity",
+                        pe_rsc_debug(rsc,
+                                     "Resource %s and its colocated resources"
+                                     " cannot be allocated to node %s: not enough capacity",
                                      rsc->id, node->details->uname);
                         resource_location(rsc, node, -INFINITY, "__limit_utilization__", data_set);
                     }
@@ -407,7 +409,9 @@ process_utilization(resource_t * rsc, node_t ** prefer, pe_working_set_t * data_
                 }
 
                 if (have_enough_capacity(node, rsc->id, rsc->utilization) == FALSE) {
-                    pe_rsc_debug(rsc, "Resource %s cannot be allocated to node %s: no enough capacity",
+                    pe_rsc_debug(rsc,
+                                 "Resource %s cannot be allocated to node %s:"
+                                 " not enough capacity",
                                  rsc->id, node->details->uname);
                     resource_location(rsc, node, -INFINITY, "__limit_utilization__", data_set);
                 }

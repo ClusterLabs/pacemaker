@@ -1268,7 +1268,7 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
         crm_trace("Start another loop");
     }
 
-    // Now catch any nodes we didnt see
+    // Now catch any nodes we didn't see
     unpack_node_loop(status, is_set(data_set->flags, pe_flag_stonith_enabled), data_set);
 
     for (GListPtr gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {

@@ -1457,7 +1457,7 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
         /* We have duplicate lrm_rsc_op entries in the status
          *    section which is unliklely to be a good thing
          *    - we can handle it easily enough, but we need to get
-         *    to the bottom of why its happening.
+         *    to the bottom of why it's happening.
          */
         pe_err("Duplicate lrm_rsc_op entries named %s", a_xml_id);
         sort_return(0, "duplicate");
@@ -1521,7 +1521,7 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
          * some pending operations (ie. a start) may have been superseded
          *   by a subsequent stop
          *
-         * [a|b]_id == -1 means its a shutdown operation and _always_ comes last
+         * [a|b]_id == -1 means it's a shutdown operation and _always_ comes last
          */
         if (safe_str_neq(a_uuid, b_uuid) || a_id == b_id) {
             /*
@@ -1621,7 +1621,7 @@ order_actions(action_t * lh_action, action_t * rh_action, enum pe_ordering order
 
     crm_trace("Ordering Action %s before %s", lh_action->uuid, rh_action->uuid);
 
-    /* Ensure we never create a dependency on ourselves... its happened */
+    /* Ensure we never create a dependency on ourselves... it's happened */
     CRM_ASSERT(lh_action != rh_action);
 
     /* Filter dups, otherwise update_action_states() has too much work to do */
