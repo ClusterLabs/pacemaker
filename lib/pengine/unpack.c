@@ -789,10 +789,6 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
         crm_trace("Beginning unpack... <%s id=%s... >", crm_element_name(xml_obj), ID(xml_obj));
         if (common_unpack(xml_obj, &new_rsc, NULL, data_set)) {
             data_set->resources = g_list_append(data_set->resources, new_rsc);
-
-            if (xml_contains_remote_node(xml_obj)) {
-                new_rsc->is_remote_node = TRUE;
-            }
             print_resource(LOG_DEBUG_3, "Added ", new_rsc, FALSE);
 
         } else {
@@ -1272,7 +1268,7 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
         crm_trace("Start another loop");
     }
 
-    // Now catch any nodes we didnt see
+    // Now catch any nodes we didn't see
     unpack_node_loop(status, is_set(data_set->flags, pe_flag_stonith_enabled), data_set);
 
     for (GListPtr gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
@@ -1673,7 +1669,6 @@ create_fake_resource(const char *rsc_id, xmlNode * rsc_entry, pe_working_set_t *
         node_t *node;
 
         crm_debug("Detected orphaned remote node %s", rsc_id);
-        rsc->is_remote_node = TRUE;
         node = pe_find_node(data_set->nodes, rsc_id);
         if (node == NULL) {
 	        node = pe_create_node(rsc_id, rsc_id, "remote", NULL, data_set);

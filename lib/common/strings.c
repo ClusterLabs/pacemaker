@@ -317,7 +317,7 @@ crm_compress_string(const char *data, int length, int max, char **result, unsign
     struct timespec before_t;
 
     if(max == 0) {
-        max = (length * 1.1) + 600; /* recomended size */
+        max = (length * 1.1) + 600; /* recommended size */
     }
 
 #ifdef CLOCK_MONOTONIC

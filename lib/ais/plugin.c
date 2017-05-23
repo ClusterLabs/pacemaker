@@ -629,7 +629,7 @@ pcmk_startup(struct corosync_api_v1 *init_with)
         }
 #if 0
         /* system() is not thread-safe, can't call from here
-         * Actually, its a pretty hacky way to try and achieve this anyway
+         * Actually, it's a pretty hacky way to try and achieve this anyway
          */
         if (system("echo 1 > /proc/sys/kernel/core_uses_pid") != 0) {
             ais_perror("Could not enable /proc/sys/kernel/core_uses_pid");
@@ -1144,7 +1144,7 @@ pcmk_shutdown(void)
 
     send_cluster_id();
     ais_notice("Shutdown complete");
-    /* TODO: Add back the logsys flush call once its written */
+    /* TODO: Add back the logsys flush call once it's written */
 
     return 0;
 }

@@ -384,13 +384,12 @@ create_remote_resource(
 
         create_nvp(xml_obj, XML_OP_ATTR_ALLOW_MIGRATE, "false");
 
-        // Sets up node->details->remote_rsc->container == tuple->docker
+        /* This sets tuple->docker as tuple->remote's container, which is
+         * similar to what happens with guest nodes. This is how the PE knows
+         * that the bundle node is fenced by recovering docker, and that
+         * remote should be ordered relative to docker.
+         */
         create_nvp(xml_obj, XML_RSC_ATTR_CONTAINER, tuple->docker->id);
-
-        // TODO: Do this generically, eg with rsc->flags
-        // create_nvp(xml_obj, XML_RSC_ATTR_INTERNAL_RSC, "true"); // Suppress printing
-
-        // tuple->docker->fillers = g_list_append(tuple->docker->fillers, child);
 
         /* Ensure a node has been created for the guest (it may have already
          * been, if it has a permanent node attribute), and ensure its weight is
@@ -422,6 +421,24 @@ create_remote_resource(
         }
 
         tuple->node->details->remote_rsc = tuple->remote;
+
+        /* #kind is irrelevant to bundles since it is only used in location
+         * constraint rules, and those don't matter for resources inside
+         * bundles. But just for clarity, a bundle is closer to "container"
+         * (guest node) than the "remote" set by pe_create_node().
+         */
+        g_hash_table_insert(tuple->node->details->attrs,
+                            strdup("#kind"), strdup("container"));
+
+        /* One effect of this is that setup_container() will add
+         * tuple->remote to tuple->docker's fillers, which will make
+         * rsc_contains_remote_node() true for tuple->docker.
+         *
+         * tuple->child does NOT get added to tuple->docker's fillers.
+         * The only noticeable effect if it did would be for its fail count to
+         * be taken into account when checking tuple->docker's migration
+         * threshold.
+         */
         parent->children = g_list_append(parent->children, tuple->remote);
     }
     return TRUE;

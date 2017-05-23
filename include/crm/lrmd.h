@@ -17,16 +17,16 @@
  *
  */
 
+#ifndef LRMD__H
+#  define LRMD__H
+
 /**
  * \file
- * \brief Local Resource Manager 
+ * \brief Local Resource Manager
  * \ingroup lrmd
  */
 #include <stdbool.h>
 #include <crm/services.h>
-
-#ifndef LRMD__H
-#  define LRMD__H
 
 typedef struct lrmd_s lrmd_t;
 typedef struct lrmd_key_value_s {

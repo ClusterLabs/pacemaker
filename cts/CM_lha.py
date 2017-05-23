@@ -149,7 +149,7 @@ class crm_lha(ClusterManager):
 
         self.ShouldBeStatus[node] = "up"
 
-        # check the output first - because syslog-ng looses messages
+        # check the output first - because syslog-ng loses messages
         if string.find(out, 'S_NOT_DC') != -1:
             # Up and stable
             return 2

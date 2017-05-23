@@ -242,7 +242,7 @@ gboolean validate_xml(xmlNode * xml_blob, const char *validation, gboolean to_lo
 gboolean validate_xml_verbose(xmlNode * xml_blob);
 
 /*!
- * \brief Try update CIB XML to the highest pacemaker's standard if feasible
+ * \brief Update CIB XML to most recent schema version
  *
  * "Update" means either actively employ XSLT-based transformation(s)
  * (if intermediate product to transform valid per its declared schema version,

@@ -267,7 +267,7 @@ convert_xml_child(HA_Message * msg, xmlNode * xml)
         goto done;
     }
 
-    len = (orig * 1.1) + 600;   /* recomended size */
+    len = (orig * 1.1) + 600;   /* recommended size */
 
     compressed = malloc(len);
     rc = BZ2_bzBuffToBuffCompress(compressed, &len, buffer, orig, CRM_BZ2_BLOCKS, 0, CRM_BZ2_WORK);

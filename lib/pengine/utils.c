@@ -1389,7 +1389,6 @@ resource_node_score(resource_t * rsc, node_t * node, int score, const char *tag)
     match = pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
     if (match == NULL) {
         match = node_copy(node);
-        match->weight = merge_weights(score, node->weight);
         g_hash_table_insert(rsc->allowed_nodes, (gpointer) match->details->id, match);
     }
     match->weight = merge_weights(match->weight, score);
@@ -1458,7 +1457,7 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
         /* We have duplicate lrm_rsc_op entries in the status
          *    section which is unliklely to be a good thing
          *    - we can handle it easily enough, but we need to get
-         *    to the bottom of why its happening.
+         *    to the bottom of why it's happening.
          */
         pe_err("Duplicate lrm_rsc_op entries named %s", a_xml_id);
         sort_return(0, "duplicate");
@@ -1522,7 +1521,7 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
          * some pending operations (ie. a start) may have been superseded
          *   by a subsequent stop
          *
-         * [a|b]_id == -1 means its a shutdown operation and _always_ comes last
+         * [a|b]_id == -1 means it's a shutdown operation and _always_ comes last
          */
         if (safe_str_neq(a_uuid, b_uuid) || a_id == b_id) {
             /*
@@ -1622,7 +1621,7 @@ order_actions(action_t * lh_action, action_t * rh_action, enum pe_ordering order
 
     crm_trace("Ordering Action %s before %s", lh_action->uuid, rh_action->uuid);
 
-    /* Ensure we never create a dependency on ourselves... its happened */
+    /* Ensure we never create a dependency on ourselves... it's happened */
     CRM_ASSERT(lh_action != rh_action);
 
     /* Filter dups, otherwise update_action_states() has too much work to do */
@@ -1790,7 +1789,7 @@ bool fix_remote_addr(resource_t * rsc)
         return FALSE;
     }
 
-    for (int lpc = 0; rsc && lpc < DIMOF(attr_list); lpc++) {
+    for (int lpc = 0; lpc < DIMOF(attr_list); lpc++) {
         name = attr_list[lpc];
         value = crm_element_value(rsc->xml, attr_list[lpc]);
         if (safe_str_eq(value, value_list[lpc]) == FALSE) {
@@ -1839,12 +1838,15 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
     const char *op_version;
     const char *ra_version;
 
+    CRM_ASSERT(node != NULL);
+
     data = g_hash_table_lookup(node->details->digest_cache, op_id);
     if (data) {
         return data;
     }
 
     data = calloc(1, sizeof(op_digest_cache_t));
+    CRM_ASSERT(data != NULL);
 
     digest_all = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
     digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
