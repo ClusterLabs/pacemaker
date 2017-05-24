@@ -43,7 +43,7 @@ is_rsc_baremetal_remote_node(resource_t *rsc, pe_working_set_t * data_set)
 gboolean
 is_baremetal_remote_node(node_t *node)
 {
-    if (is_remote_node(node) && (node->details->remote_rsc == FALSE || node->details->remote_rsc->container == FALSE)) {
+    if (is_remote_node(node) && (node->details->remote_rsc == NULL || node->details->remote_rsc->container == FALSE)) {
         return TRUE;
     }
     return FALSE;
