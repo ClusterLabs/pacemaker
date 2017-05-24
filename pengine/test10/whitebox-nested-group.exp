@@ -92,6 +92,9 @@
         <rsc_op id="20" operation="monitor" operation_key="fake2_monitor_0" on_node="c7auto3" on_node_uuid="3"/>
       </trigger>
       <trigger>
+        <rsc_op id="53" operation="start" operation_key="container_start_0" on_node="c7auto1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
         <rsc_op id="59" operation="start" operation_key="c7auto4_start_0" on_node="c7auto1" on_node_uuid="1"/>
       </trigger>
     </inputs>
@@ -275,6 +278,9 @@
         <rsc_op id="23" operation="monitor" operation_key="fake5_monitor_0" on_node="c7auto3" on_node_uuid="3"/>
       </trigger>
       <trigger>
+        <rsc_op id="53" operation="start" operation_key="container_start_0" on_node="c7auto1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
         <rsc_op id="59" operation="start" operation_key="c7auto4_start_0" on_node="c7auto1" on_node_uuid="1"/>
       </trigger>
     </inputs>
@@ -402,6 +408,9 @@
     <inputs>
       <trigger>
         <pseudo_event id="47" operation="start" operation_key="fake_clone_start_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="53" operation="start" operation_key="container_start_0" on_node="c7auto1" on_node_uuid="1"/>
       </trigger>
       <trigger>
         <rsc_op id="59" operation="start" operation_key="c7auto4_start_0" on_node="c7auto1" on_node_uuid="1"/>

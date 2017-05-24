@@ -41,9 +41,6 @@ Transition Summary:
  * Move    messaging-1	(Started controller-1 -> controller-2)
  * Move    galera-0	(Started controller-1 -> controller-2)
  * Move    galera-2	(Started controller-1 -> controller-2)
- * Restart rabbitmq:2	(Started messaging-1)
- * Restart galera:1	(Master galera-2)
- * Restart galera:2	(Master galera-0)
  * Stop    redis:0	(controller-1)
  * Move    ip-172.17.1.14	(Started controller-1 -> controller-2)
  * Move    ip-172.17.1.17	(Started controller-1 -> controller-2)
@@ -54,8 +51,6 @@ Transition Summary:
  * Move    stonith-fence_ipmilan-5254005bdbb5	(Started controller-1 -> controller-2)
 
 Executing cluster transition:
- * Pseudo action:   rabbitmq-clone_stop_0
- * Pseudo action:   galera-master_demote_0
  * Pseudo action:   redis-master_pre_notify_stop_0
  * Resource action: stonith-fence_ipmilan-525400bbf613 stop on controller-0
  * Resource action: stonith-fence_ipmilan-525400bbf613 start on controller-0
@@ -79,10 +74,9 @@ Executing cluster transition:
  * Resource action: messaging-1     start on controller-2
  * Resource action: galera-0        start on controller-2
  * Resource action: galera-2        start on controller-2
- * Resource action: rabbitmq        stop on messaging-1
- * Pseudo action:   rabbitmq-clone_stopped_0
- * Pseudo action:   rabbitmq-clone_start_0
- * Resource action: galera          demote on galera-0
+ * Resource action: rabbitmq        monitor=10000 on messaging-1
+ * Resource action: galera          monitor=10000 on galera-2
+ * Resource action: galera          monitor=10000 on galera-0
  * Pseudo action:   redis_stop_0
  * Pseudo action:   redis-master_stopped_0
  * Pseudo action:   haproxy_stop_0
@@ -91,40 +85,21 @@ Executing cluster transition:
  * Resource action: messaging-1     monitor=20000 on controller-2
  * Resource action: galera-0        monitor=20000 on controller-2
  * Resource action: galera-2        monitor=20000 on controller-2
- * Resource action: rabbitmq        start on messaging-1
- * Resource action: rabbitmq        monitor=10000 on messaging-1
- * Pseudo action:   rabbitmq-clone_running_0
- * Resource action: galera          demote on galera-2
- * Pseudo action:   galera-master_demoted_0
- * Pseudo action:   galera-master_stop_0
  * Pseudo action:   redis-master_post_notify_stopped_0
  * Pseudo action:   ip-172.17.1.14_stop_0
  * Pseudo action:   ip-172.17.1.17_stop_0
  * Pseudo action:   ip-172.17.4.11_stop_0
- * Resource action: galera          stop on galera-0
  * Resource action: redis           notify on controller-0
  * Resource action: redis           notify on controller-2
  * Pseudo action:   redis-master_confirmed-post_notify_stopped_0
  * Resource action: ip-172.17.1.14  start on controller-2
  * Resource action: ip-172.17.1.17  start on controller-2
  * Resource action: ip-172.17.4.11  start on controller-2
- * Resource action: galera          stop on galera-2
- * Pseudo action:   galera-master_stopped_0
- * Pseudo action:   galera-master_start_0
  * Pseudo action:   redis_notified_0
  * Resource action: ip-172.17.1.14  monitor=10000 on controller-2
  * Resource action: ip-172.17.1.17  monitor=10000 on controller-2
  * Resource action: ip-172.17.4.11  monitor=10000 on controller-2
  * Pseudo action:   all_stopped
- * Resource action: galera          start on galera-2
- * Resource action: galera          start on galera-0
- * Pseudo action:   galera-master_running_0
- * Pseudo action:   galera-master_promote_0
- * Resource action: galera          promote on galera-2
- * Resource action: galera          monitor=10000 on galera-2
- * Resource action: galera          promote on galera-0
- * Resource action: galera          monitor=10000 on galera-0
- * Pseudo action:   galera-master_promoted_0
 Using the original execution date of: 2017-05-03 13:33:24Z
 
 Revised cluster status:

@@ -12,17 +12,13 @@ OFFLINE: [ rhel7-alt3 ]
 Transition Summary:
  * Start   shooter	(rhel7-alt1)
  * Start   rhel7-alt4	(rhel7-alt1)
- * Restart fake	(Started rhel7-alt4)
 
 Executing cluster transition:
  * Resource action: shooter         start on rhel7-alt1
  * Resource action: rhel7-alt4      start on rhel7-alt1
- * Resource action: fake            stop on rhel7-alt4
- * Pseudo action:   all_stopped
+ * Resource action: fake            monitor=10000 on rhel7-alt4
  * Resource action: shooter         monitor=60000 on rhel7-alt1
  * Resource action: rhel7-alt4      monitor=60000 on rhel7-alt1
- * Resource action: fake            start on rhel7-alt4
- * Resource action: fake            monitor=10000 on rhel7-alt4
 
 Revised cluster status:
 Node rhel7-alt2 (2): standby

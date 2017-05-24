@@ -2,6 +2,7 @@
 "R-lxc-01_kiff-01_monitor_10000 kiff-02" [ style=bold color="green" fontcolor="black"]
 "R-lxc-01_kiff-01_start_0 kiff-02" -> "R-lxc-01_kiff-01_monitor_10000 kiff-02" [ style = bold]
 "R-lxc-01_kiff-01_start_0 kiff-02" -> "lxc-01_kiff-01_start_0 kiff-02" [ style = bold]
+"R-lxc-01_kiff-01_start_0 kiff-02" -> "vm-fs_start_0 lxc-01_kiff-01" [ style = bold]
 "R-lxc-01_kiff-01_start_0 kiff-02" [ style=bold color="green" fontcolor="black"]
 "R-lxc-01_kiff-01_stop_0 kiff-01" -> "R-lxc-01_kiff-01_start_0 kiff-02" [ style = bold]
 "R-lxc-01_kiff-01_stop_0 kiff-01" -> "all_stopped" [ style = bold]

@@ -17,6 +17,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <rsc_op id="3" operation="start" operation_key="vm_start_0" on_node="dvossel-laptop2" on_node_uuid="24815808"/>
+      </trigger>
+      <trigger>
         <rsc_op id="4" operation="stop" operation_key="FAKE_stop_0" on_node="dvossel-laptop2" on_node_uuid="24815808"/>
       </trigger>
       <trigger>
@@ -57,6 +60,9 @@
       </rsc_op>
     </action_set>
     <inputs>
+      <trigger>
+        <rsc_op id="3" operation="start" operation_key="vm_start_0" on_node="dvossel-laptop2" on_node_uuid="24815808"/>
+      </trigger>
       <trigger>
         <pseudo_event id="12" operation="start" operation_key="W-master_start_0"/>
       </trigger>
@@ -112,6 +118,9 @@
       </rsc_op>
     </action_set>
     <inputs>
+      <trigger>
+        <rsc_op id="3" operation="start" operation_key="vm_start_0" on_node="dvossel-laptop2" on_node_uuid="24815808"/>
+      </trigger>
       <trigger>
         <pseudo_event id="26" operation="start" operation_key="X-master_start_0"/>
       </trigger>

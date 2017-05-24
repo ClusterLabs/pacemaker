@@ -23,6 +23,8 @@ digraph "g" {
 "M_stop_0 lxc1" -> "all_stopped" [ style = bold]
 "M_stop_0 lxc1" [ style=bold color="green" fontcolor="orange"]
 "all_stopped" [ style=bold color="green" fontcolor="orange"]
+"container1_start_0 18node2" -> "B_start_0 lxc1" [ style = bold]
+"container1_start_0 18node2" -> "M_start_0 lxc1" [ style = bold]
 "container1_start_0 18node2" -> "lxc1_start_0 18node2" [ style = bold]
 "container1_start_0 18node2" [ style=bold color="green" fontcolor="black"]
 "container1_stop_0 18node2" -> "all_stopped" [ style = bold]

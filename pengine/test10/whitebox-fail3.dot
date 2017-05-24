@@ -31,5 +31,8 @@ digraph "g" {
 "X:1_start_0 18builder" [ style=bold color="green" fontcolor="black"]
 "all_stopped" [ style=bold color="green" fontcolor="orange"]
 "vm_start_0 dvossel-laptop2" -> "18builder_start_0 dvossel-laptop2" [ style = bold]
+"vm_start_0 dvossel-laptop2" -> "FAKE_start_0 18builder" [ style = bold]
+"vm_start_0 dvossel-laptop2" -> "W:1_start_0 18builder" [ style = bold]
+"vm_start_0 dvossel-laptop2" -> "X:1_start_0 18builder" [ style = bold]
 "vm_start_0 dvossel-laptop2" [ style=bold color="green" fontcolor="black"]
 }

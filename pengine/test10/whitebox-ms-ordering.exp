@@ -106,6 +106,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <rsc_op id="20" operation="start" operation_key="container1_start_0" on_node="18node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="22" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0"/>
       </trigger>
       <trigger>
@@ -130,6 +133,9 @@
       </rsc_op>
     </action_set>
     <inputs>
+      <trigger>
+        <rsc_op id="20" operation="start" operation_key="container1_start_0" on_node="18node1" on_node_uuid="1"/>
+      </trigger>
       <trigger>
         <pseudo_event id="23" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:0_stop_0"/>
       </trigger>
@@ -237,6 +243,9 @@
       </rsc_op>
     </action_set>
     <inputs>
+      <trigger>
+        <rsc_op id="21" operation="start" operation_key="container2_start_0" on_node="18node1" on_node_uuid="1"/>
+      </trigger>
       <trigger>
         <pseudo_event id="26" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:1_stop_0"/>
       </trigger>
