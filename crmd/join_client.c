@@ -313,7 +313,13 @@ do_cl_join_finalize_respond(long long action,
 
         if (AM_I_DC == FALSE) {
             register_fsa_input_adv(cause, I_NOT_DC, NULL, A_NOTHING, TRUE, __FUNCTION__);
+#if !HAVE_ATOMIC_ATTRD
+            /* Ask attrd to write all attributes to disk. This is not needed for
+             * atomic attrd because atomic attrd does a peer sync and write-out
+             * when winning an election.
+             */
             update_attrd(NULL, NULL, NULL, NULL, FALSE);
+#endif
         }
 
         free_xml(tmp1);
