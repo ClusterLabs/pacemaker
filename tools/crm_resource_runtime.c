@@ -34,7 +34,7 @@ do_find_resource(const char *rsc, resource_t * the_rsc, pe_working_set_t * data_
     for (lpc = the_rsc->running_on; lpc != NULL; lpc = lpc->next) {
         node_t *node = (node_t *) lpc->data;
 
-        crm_trace("resource %s is running on: %s", rsc, node->details->uname);
+        crm_trace("resource %s is running on: %s", the_rsc->long_name, node->details->uname);
         if (BE_QUIET) {
             fprintf(stdout, "%s\n", node->details->uname);
         } else {
@@ -43,14 +43,14 @@ do_find_resource(const char *rsc, resource_t * the_rsc, pe_working_set_t * data_
             if (!pe_rsc_is_clone(the_rsc) && the_rsc->fns->state(the_rsc, TRUE) == RSC_ROLE_MASTER) {
                 state = "Master";
             }
-            fprintf(stdout, "resource %s is running on: %s %s\n", rsc, node->details->uname, state);
+            fprintf(stdout, "resource %s is running on: %s %s\n", the_rsc->long_name, node->details->uname, state);
         }
 
         found++;
     }
 
     if (BE_QUIET == FALSE && found == 0) {
-        fprintf(stderr, "resource %s is NOT running\n", rsc);
+        fprintf(stderr, "resource %s is NOT running\n", the_rsc->long_name);
     }
 
     return found;
