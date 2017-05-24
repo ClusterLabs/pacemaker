@@ -2,12 +2,12 @@
 
 These alternative configurations may be appropriate in limited cases, such as a
 test cluster, but are not the best method in most situations. They are
-presented here for completeness and as an example of pacemaker's flexibility
+presented here for completeness and as an example of Pacemaker's flexibility
 to suit your needs.
 
 == Virtual Machines as Cluster Nodes ==
 
-The preferred use of virtual machines in a pacemaker cluster is as a
+The preferred use of virtual machines in a Pacemaker cluster is as a
 cluster resource, whether opaque or as a guest node. However, it is
 possible to run the full cluster stack on a virtual node instead.
 
@@ -45,9 +45,7 @@ and in particular Linux containers (LXC) and Docker, have become a popular
 method of isolating services in a resource-efficient manner.
 
 The preferred means of integrating containers into Pacemaker is as a
-cluster resource, whether opaque or using Pacemaker's built-in
-resource isolation support.footnote:[Documentation for this support is planned
-but not yet available.]
+cluster resource, whether opaque or using Pacemaker's 'bundle' resource type.
 
 However, it is possible to run `pacemaker_remote` inside a container,
 following the process for guest nodes. This is not recommended but can
