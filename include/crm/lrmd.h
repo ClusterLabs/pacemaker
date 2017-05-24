@@ -26,6 +26,7 @@
  * \ingroup lrmd
  */
 #include <stdbool.h>
+#include <libxml/tree.h>
 #include <crm/services.h>
 
 typedef struct lrmd_s lrmd_t;
