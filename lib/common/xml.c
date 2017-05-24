@@ -1726,7 +1726,7 @@ __add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * patch)
  * \param[in]     patchset   XML of patch
  * \param[in]     format     Patch version
  * \param[in]     added      TRUE if looking for additions, FALSE if removals
- * \param[in/out] patch_node Will be set to node if found
+ * \param[in,out] patch_node Will be set to node if found
  *
  * \return TRUE if format is valid, FALSE if invalid
  */
