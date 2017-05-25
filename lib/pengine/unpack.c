@@ -100,15 +100,16 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
         if (rsc && (!is_set(rsc->flags, pe_rsc_managed))) {
             crm_notice("Not fencing node %s because connection is unmanaged, "
                        "otherwise would %s", node->details->uname, reason);
-        } else {
+        } else if(node->details->remote_requires_reset == FALSE) {
+            node->details->remote_requires_reset = TRUE;
             if (pe_can_fence(data_set, node)) {
                 crm_warn("Node %s will be fenced %s", node->details->uname, reason);
             } else {
                 crm_warn("Node %s is unclean %s", node->details->uname, reason);
             }
-            node->details->remote_requires_reset = TRUE;
         }
         node->details->unclean = TRUE;
+
     } else if (node->details->unclean == FALSE) {
         if (pe_can_fence(data_set, node)) {
             crm_warn("Node %s will be fenced %s", node->details->uname, reason);
@@ -116,8 +117,9 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
             crm_warn("Node %s is unclean %s", node->details->uname, reason);
         }
         node->details->unclean = TRUE;
+
     } else {
-        crm_trace("Huh? %s %s", node->details->uname, reason);
+        crm_trace("Node %s would also be fenced '%s'", node->details->uname, reason);
     }
 }
 
