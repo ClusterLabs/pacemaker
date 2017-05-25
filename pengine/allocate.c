@@ -38,6 +38,7 @@ void set_alloc_actions(pe_working_set_t * data_set);
 void migrate_reload_madness(pe_working_set_t * data_set);
 extern void ReloadRsc(resource_t * rsc, node_t *node, pe_working_set_t * data_set);
 extern gboolean DeleteRsc(resource_t * rsc, node_t * node, gboolean optional, pe_working_set_t * data_set);
+static void apply_remote_node_ordering(pe_working_set_t *data_set);
 
 resource_alloc_functions_t resource_class_alloc_functions[] = {
     {
@@ -1442,8 +1443,18 @@ stage6(pe_working_set_t * data_set)
     GListPtr gIter;
     GListPtr stonith_ops = NULL;
 
-    crm_trace("Processing fencing and shutdown cases");
+    /* Remote ordering constraints need to happen prior to calculate
+     * fencing because it is one more place we will mark the node as
+     * dirty.
+     *
+     * A nice side-effect of doing it first is that we can remove a
+     * bunch of special logic from apply_*_ordering() because its
+     * already part of pe_fence_node()
+     */
+    crm_trace("Creating remote ordering constraints");
+    apply_remote_node_ordering(data_set);
 
+    crm_trace("Processing fencing and shutdown cases");
     if (any_managed_resources(data_set) == FALSE) {
         crm_notice("Delaying fencing operations until there are resources to manage");
         need_stonith = FALSE;
@@ -1792,6 +1803,10 @@ apply_container_ordering(action_t *action, pe_working_set_t *data_set)
     container = remote_rsc->container;
     CRM_ASSERT(container);
 
+    if(is_set(container->flags, pe_rsc_failed)) {
+        pe_fence_node(data_set, action->node, " because the container failed");
+    }
+
     crm_trace("%s %s %s %s %d", action->uuid, action->task, remote_rsc->id, container->id, is_set(container->flags, pe_rsc_failed));
     switch (task) {
         case start_rsc:
@@ -1814,10 +1829,6 @@ apply_container_ordering(action_t *action, pe_working_set_t *data_set)
                  * stopping. This is similar to how fencing operations
                  * work for cluster nodes.
                  */
-                custom_action_order(container, generate_op_key(container->id, RSC_STOP, 0), NULL,
-                                    action->rsc, NULL, action,
-                                    pe_order_preserve | pe_order_implies_then | pe_order_runnable_left, data_set);
-                pe_set_action_bit(action, pe_action_pseudo);
             } else {
                 /* Otherwise, ensure the operation happens before the connection is brought down */
                 custom_action_order(action->rsc, NULL, action,
@@ -1835,7 +1846,7 @@ apply_container_ordering(action_t *action, pe_working_set_t *data_set)
                  * stopped (otherwise we re-introduce an ordering
                  * loop)
                  */
-                pe_set_action_bit(action, pe_action_pseudo);
+
             } else {
                 /* Otherwise, ensure the operation happens before the connection is brought down */
                 custom_action_order(action->rsc, NULL, action,
@@ -1894,6 +1905,11 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
          * We must assume the target has failed
          */
         state = remote_state_dead;
+        if(is_set(remote_rsc->flags, pe_rsc_failed)) {
+            pe_fence_node(data_set, action->node, "because the connection is unrecoverable (failed)");
+        } else if(cluster_node && cluster_node->details->unclean) {
+            pe_fence_node(data_set, action->node, "because the connection is unrecoverable (unclean host)");
+        }
 
     } else if (cluster_node == NULL) {
         /* Connection is recoverable but not currently running anywhere, see if we can recover it first */
@@ -1917,7 +1933,7 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
         state = remote_state_alive;
     }
 
-    crm_trace("%s %s %d", action->uuid, action->task, state);
+    crm_trace("%s %s %d %d", action->uuid, action->task, state, is_set(remote_rsc->flags, pe_rsc_failed));
     switch (task) {
         case start_rsc:
         case action_promote:
@@ -2167,7 +2183,6 @@ stage7(pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
 
-    apply_remote_node_ordering(data_set);
     crm_trace("Applying ordering constraints");
 
     /* Don't ask me why, but apparently they need to be processed in
@@ -2310,11 +2325,12 @@ stage8(pe_working_set_t * data_set)
              */
             if (is_set(data_set->flags, pe_flag_have_quorum)
                 || data_set->no_quorum_policy == no_quorum_ignore) {
-                crm_crit("Cannot %s node '%s' because of %s:%s%s",
+                crm_crit("Cannot %s node '%s' because of %s:%s%s (%s)",
                          action->node->details->unclean ? "fence" : "shut down",
                          action->node->details->uname, action->rsc->id,
                          is_not_set(action->rsc->flags, pe_rsc_managed) ? " unmanaged" : " blocked",
-                         is_set(action->rsc->flags, pe_rsc_failed) ? " failed" : "");
+                         is_set(action->rsc->flags, pe_rsc_failed) ? " failed" : "",
+                         action->uuid);
             }
         }
 
