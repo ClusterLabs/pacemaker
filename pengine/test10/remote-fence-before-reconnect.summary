@@ -16,12 +16,12 @@ Transition Summary:
  * Move    fake2	(Started c7auto4 -> c7auto1)
 
 Executing cluster transition:
- * Resource action: c7auto4         stop on c7auto1
  * Fencing c7auto4 (reboot)
  * Pseudo action:   stonith_complete
  * Pseudo action:   fake2_stop_0
- * Pseudo action:   all_stopped
+ * Resource action: c7auto4         stop on c7auto1
  * Resource action: fake2           start on c7auto1
+ * Pseudo action:   all_stopped
  * Resource action: fake2           monitor=10000 on c7auto1
 
 Revised cluster status:

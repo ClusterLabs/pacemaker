@@ -38,7 +38,14 @@
         </downed>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <pseudo_event id="11" operation="stop" operation_key="FAKE2_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="22" operation="stop" operation_key="FAKE6_stop_0"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="3">
     <action_set>
