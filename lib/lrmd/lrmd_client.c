@@ -1660,7 +1660,7 @@ stonith_get_metadata(const char *provider, const char *type, char **output)
  * \brief Grab an LSB header value
  *
  * \param[in]     line    Line read from LSB init script
- * \param[in/out] value   If not set, will be set to XML-safe copy of value
+ * \param[in,out] value   If not set, will be set to XML-safe copy of value
  * \param[in]     prefix  Set value if line starts with this pattern
  *
  * \return TRUE if value was set, FALSE otherwise

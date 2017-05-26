@@ -93,8 +93,6 @@ version):
 * Support for maintenance mode
 * Remote nodes can recover without being fenced when the cluster node
   hosting their connection fails
-* Running pacemaker_remote within LXC environments is deprecated due to
-  newly added Pacemaker support for isolated resources
 * +#kind+ built-in node attribute for use with rules
 
 .1.1.12

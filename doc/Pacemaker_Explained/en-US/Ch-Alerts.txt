@@ -7,8 +7,9 @@ with that construct for chapter headings
 anchor:ch-alerts[Chapter 7, Alerts]
 indexterm:[Resource,Alerts]
 
-'Alerts' may be configured to take some external action when a cluster event
-occurs (node failure, resource starting or stopping, etc.).
+'Alerts' (available since Pacemaker 1.1.15) may be configured to take some
+external action when a cluster event occurs (node failure, resource starting or
+stopping, etc.).
 
 
 == Alert Agents ==

@@ -706,7 +706,7 @@ shutdown_constraints(node_t * node, action_t * shutdown_op, pe_working_set_t * d
  *
  * \param[in]     node        Node to be fenced
  * \param[in]     stonith_op  Fencing operation
- * \param[in/out] data_set    Working set of cluster
+ * \param[in,out] data_set    Working set of cluster
  */
 gboolean
 stonith_constraints(node_t * node, action_t * stonith_op, pe_working_set_t * data_set)
@@ -804,7 +804,7 @@ add_node_to_xml_by_id(const char *id, xmlNode *xml)
  * \brief Add an XML node tag for a specified node
  *
  * \param[in]     node  Node to add
- * \param[in/out] xml   XML to add node to
+ * \param[in,out] xml   XML to add node to
  */
 static void
 add_node_to_xml(const node_t *node, void *xml)

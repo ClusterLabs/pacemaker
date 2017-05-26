@@ -169,7 +169,7 @@ xpath_search(xmlNode * xml_top, const char *path)
  * \param[in] xml            XML to search
  * \param[in] xpath          XPath search string
  * \param[in] helper         Function to call for each result
- * \param[in/out] user_data  Data to pass to supplied function
+ * \param[in,out] user_data  Data to pass to supplied function
  *
  * \note The helper function will be passed the XML node of the result,
  *       and the supplied user_data. This function does not otherwise

@@ -108,7 +108,7 @@ xml_contains_remote_node(xmlNode *xml)
  * \param[in]     data_set   Working set for cluster
  * \param[in]     host       Host node to check
  * \param[in]     helper     Function to call for each guest node
- * \param[in/out] user_data  Pointer to pass to helper function
+ * \param[in,out] user_data  Pointer to pass to helper function
  */
 void
 pe_foreach_guest_node(const pe_working_set_t *data_set, const node_t *host,

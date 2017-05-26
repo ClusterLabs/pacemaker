@@ -251,7 +251,7 @@ status_from_rc(crm_action_t * action, int orig_status, int rc, int target_rc)
  * \internal
  * \brief Confirm action and update transition graph, aborting transition on failures
  *
- * \param[in/out] action           CRM action instance of this operation
+ * \param[in,out] action           CRM action instance of this operation
  * \param[in]     event            Event instance of this operation
  * \param[in]     orig_status      Original reported operation status
  * \param[in]     op_rc            Actual operation return code
