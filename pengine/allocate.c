@@ -899,13 +899,6 @@ probe_resources(pe_working_set_t * data_set)
         } else if (node->details->unclean) {
             continue;
 
-        } else if (is_remote_node(node) && node->details->shutdown) {
-            /* Don't probe a Pacemaker Remote node we're shutting down.
-             * It causes constraint conflicts to try to run any action
-             * other than "stop" on resources living within such a node when
-             * it is shutting down. */
-            continue;
-
         } else if (is_container_remote_node(node)) {
             /* TODO enable guest node probes once ordered probing is implemented */
             continue;
@@ -1761,7 +1754,8 @@ enum remote_connection_state
     remote_state_unknown = 0,
     remote_state_alive = 1,
     remote_state_resting = 2,
-    remote_state_dead= 3
+    remote_state_failed = 3,
+    remote_state_stopped = 4
 };
 
 static int
@@ -1902,13 +1896,20 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
      */
     if(remote_rsc->next_role == RSC_ROLE_STOPPED || remote_rsc->allocated_to == NULL) {
         /* There is no-where left to run the connection resource
-         * We must assume the target has failed
+         * and the resource is in a failed state (either directly
+         * or because it is located on a failed node).
+         *
+         * If there are any resources known to be active on it (stop),
+         * or if there are resources in an unknown state (probe), we
+         * must assume the worst and fence it.
          */
-        state = remote_state_dead;
-        if(is_set(remote_rsc->flags, pe_rsc_failed)) {
-            pe_fence_node(data_set, action->node, "because the connection is unrecoverable (failed)");
+
+        if(is_set(action->node->details->remote_rsc->flags, pe_rsc_failed)) {
+            state = remote_state_failed;
         } else if(cluster_node && cluster_node->details->unclean) {
-            pe_fence_node(data_set, action->node, "because the connection is unrecoverable (unclean host)");
+            state = remote_state_failed;
+        } else {
+            state = remote_state_stopped;
         }
 
     } else if (cluster_node == NULL) {
@@ -1933,11 +1934,11 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
         state = remote_state_alive;
     }
 
-    crm_trace("%s %s %d %d", action->uuid, action->task, state, is_set(remote_rsc->flags, pe_rsc_failed));
+    crm_trace("%s %s %s %d %d", action->uuid, action->task, action->node->details->uname, state, is_set(remote_rsc->flags, pe_rsc_failed));
     switch (task) {
         case start_rsc:
         case action_promote:
-            if(state == remote_state_dead) {
+            if(state == remote_state_failed) {
                 /* Wait for the connection resource to be up and force recovery */
                 custom_action_order(remote_rsc, generate_op_key(remote_rsc->id, RSC_START, 0), NULL,
                                     action->rsc, NULL, action,
@@ -1958,7 +1959,17 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
                 custom_action_order(remote_rsc, generate_op_key(remote_rsc->id, RSC_START, 0), NULL,
                                     action->rsc, NULL, action,
                                     pe_order_preserve | pe_order_runnable_left, data_set);
+
             } else {
+                if(state == remote_state_failed) {
+                    /* We would only be here if the resource is
+                     * running on the remote node.  Since we have no
+                     * way to stop it, it is necessary to fence the
+                     * node.
+                     */
+                    pe_fence_node(data_set, action->node, "because resources are active and the connection is unrecoverable");
+                }
+
                 custom_action_order(action->rsc, NULL, action,
                                     remote_rsc, generate_op_key(remote_rsc->id, RSC_STOP, 0), NULL,
                                     pe_order_preserve | pe_order_implies_first, data_set);
@@ -1990,10 +2001,34 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
                 custom_action_order(remote_rsc, generate_op_key(remote_rsc->id, RSC_START, 0), NULL,
                                     action->rsc, NULL, action,
                                     pe_order_preserve | pe_order_runnable_left | pe_order_implies_then, data_set);
+
             } else {
-                custom_action_order(remote_rsc, generate_op_key(remote_rsc->id, RSC_START, 0), NULL,
-                                    action->rsc, NULL, action,
-                                    pe_order_preserve | pe_order_runnable_left, data_set);
+                if(task == monitor_rsc && state == remote_state_failed) {
+                    /* We would only be here if we do not know the
+                     * state of the resource on the remote node.
+                     * Since we have no way to find out, it is
+                     * necessary to fence the node.
+                     */
+                    pe_fence_node(data_set, action->node, "because resources are in an unknown state and the connection is unrecoverable");
+                }
+
+                if(cluster_node && state == remote_state_stopped) {
+                    /* The connection is currently up, but is going
+                     * down permanently.
+                     *
+                     * Make sure we check services are actually
+                     * stopped _before_ we let the connection get
+                     * closed
+                     */
+                    custom_action_order(action->rsc, NULL, action,
+                                        remote_rsc, generate_op_key(remote_rsc->id, RSC_STOP, 0), NULL,
+                                        pe_order_preserve | pe_order_runnable_left, data_set);
+
+                } else {
+                    custom_action_order(remote_rsc, generate_op_key(remote_rsc->id, RSC_START, 0), NULL,
+                                        action->rsc, NULL, action,
+                                        pe_order_preserve | pe_order_runnable_left, data_set);
+                }
             }
             break;
     }

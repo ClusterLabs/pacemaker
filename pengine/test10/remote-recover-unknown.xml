@@ -592,15 +592,6 @@
           <nvpair id="status-galera-2-master-galera" name="master-galera" value="100"/>
         </instance_attributes>
       </transient_attributes>
-      <lrm id="galera-2">
-        <lrm_resources>
-          <lrm_resource id="galera" type="galera" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="galera_last_failure_0" operation_key="galera_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="4:17:7:e47e0f5b-bac4-432e-9993-f38bc43128ea" transition-magic="0:8;4:17:7:e47e0f5b-bac4-432e-9993-f38bc43128ea" on_node="controller-2" call-id="34779" rc-code="8" op-status="0" interval="0" last-run="1493817766" last-rc-change="1493817766" exec-time="1419" queue-time="0" op-digest="e773372fde8a6c242c1993820114d5c3"/>
-            <lrm_rsc_op id="galera_last_0" operation_key="galera_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="4:17:7:e47e0f5b-bac4-432e-9993-f38bc43128ea" transition-magic="0:8;4:17:7:e47e0f5b-bac4-432e-9993-f38bc43128ea" on_node="controller-2" call-id="34779" rc-code="8" op-status="0" interval="0" last-run="1493817766" last-rc-change="1493817766" exec-time="1419" queue-time="0" op-digest="e773372fde8a6c242c1993820114d5c3" op-secure-params=" user " op-secure-digest="e773372fde8a6c242c1993820114d5c3"/>
-            <lrm_rsc_op id="galera_monitor_10000" operation_key="galera_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="57:18:8:e47e0f5b-bac4-432e-9993-f38bc43128ea" transition-magic="0:8;57:18:8:e47e0f5b-bac4-432e-9993-f38bc43128ea" on_node="controller-2" call-id="34789" rc-code="8" op-status="0" interval="10000" last-rc-change="1493817768" exec-time="61" queue-time="0" op-digest="20ec44e3280211739f6ba9523159629e" op-secure-params=" user " op-secure-digest="e773372fde8a6c242c1993820114d5c3"/>
-          </lrm_resource>
-        </lrm_resources>
-      </lrm>
     </node_state>
     <node_state id="galera-0" remote_node="true" uname="galera-0" crm-debug-origin="post_cache_update" in_ccm="true">
       <transient_attributes id="galera-0">

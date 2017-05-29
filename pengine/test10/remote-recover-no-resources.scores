@@ -21,16 +21,16 @@ clone_color: galera:0 allocation score on messaging-2: -INFINITY
 clone_color: galera:1 allocation score on controller-0: -INFINITY
 clone_color: galera:1 allocation score on controller-1: -INFINITY
 clone_color: galera:1 allocation score on controller-2: -INFINITY
-clone_color: galera:1 allocation score on galera-0: 0
+clone_color: galera:1 allocation score on galera-0: INFINITY
 clone_color: galera:1 allocation score on galera-1: 0
-clone_color: galera:1 allocation score on galera-2: INFINITY
+clone_color: galera:1 allocation score on galera-2: 0
 clone_color: galera:1 allocation score on messaging-0: -INFINITY
 clone_color: galera:1 allocation score on messaging-1: -INFINITY
 clone_color: galera:1 allocation score on messaging-2: -INFINITY
 clone_color: galera:2 allocation score on controller-0: -INFINITY
 clone_color: galera:2 allocation score on controller-1: -INFINITY
 clone_color: galera:2 allocation score on controller-2: -INFINITY
-clone_color: galera:2 allocation score on galera-0: INFINITY
+clone_color: galera:2 allocation score on galera-0: 0
 clone_color: galera:2 allocation score on galera-1: 0
 clone_color: galera:2 allocation score on galera-2: 0
 clone_color: galera:2 allocation score on messaging-0: -INFINITY
@@ -361,8 +361,8 @@ clone_color: redis:8 allocation score on messaging-0: -INFINITY
 clone_color: redis:8 allocation score on messaging-1: -INFINITY
 clone_color: redis:8 allocation score on messaging-2: -INFINITY
 galera:0 promotion score on galera-1: 100
-galera:1 promotion score on none: 0
-galera:2 promotion score on galera-0: 100
+galera:1 promotion score on galera-0: 100
+galera:2 promotion score on none: 0
 galera:3 promotion score on none: 0
 galera:4 promotion score on none: 0
 galera:5 promotion score on none: 0
@@ -408,7 +408,7 @@ native_color: galera:0 allocation score on messaging-2: -INFINITY
 native_color: galera:1 allocation score on controller-0: -INFINITY
 native_color: galera:1 allocation score on controller-1: -INFINITY
 native_color: galera:1 allocation score on controller-2: -INFINITY
-native_color: galera:1 allocation score on galera-0: -INFINITY
+native_color: galera:1 allocation score on galera-0: INFINITY
 native_color: galera:1 allocation score on galera-1: -INFINITY
 native_color: galera:1 allocation score on galera-2: -INFINITY
 native_color: galera:1 allocation score on messaging-0: -INFINITY
@@ -417,7 +417,7 @@ native_color: galera:1 allocation score on messaging-2: -INFINITY
 native_color: galera:2 allocation score on controller-0: -INFINITY
 native_color: galera:2 allocation score on controller-1: -INFINITY
 native_color: galera:2 allocation score on controller-2: -INFINITY
-native_color: galera:2 allocation score on galera-0: INFINITY
+native_color: galera:2 allocation score on galera-0: -INFINITY
 native_color: galera:2 allocation score on galera-1: -INFINITY
 native_color: galera:2 allocation score on galera-2: -INFINITY
 native_color: galera:2 allocation score on messaging-0: -INFINITY

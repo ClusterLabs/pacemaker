@@ -15,8 +15,8 @@ RemoteOnline: [ galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2 ]
      Started: [ messaging-0 messaging-1 messaging-2 ]
      Stopped: [ controller-0 controller-1 controller-2 galera-0 galera-1 galera-2 ]
  Master/Slave Set: galera-master [galera]
-     Masters: [ galera-0 galera-1 galera-2 ]
-     Stopped: [ controller-0 controller-1 controller-2 messaging-0 messaging-1 messaging-2 ]
+     Masters: [ galera-0 galera-1 ]
+     Stopped: [ controller-0 controller-1 controller-2 galera-2 messaging-0 messaging-1 messaging-2 ]
  Master/Slave Set: redis-master [redis]
      redis	(ocf::heartbeat:redis):	Slave controller-1 (UNCLEAN)
      Masters: [ controller-0 ]
@@ -42,7 +42,6 @@ Transition Summary:
  * Move    galera-0	(Started controller-1 -> controller-2)
  * Stop    galera-2	(controller-1)
  * Stop    rabbitmq:2	(messaging-1)
- * Demote  galera:1	(Master -> Stopped galera-2)
  * Stop    redis:0	(controller-1)
  * Move    ip-172.17.1.14	(Started controller-1 -> controller-2)
  * Move    ip-172.17.1.17	(Started controller-1 -> controller-2)
@@ -53,53 +52,46 @@ Transition Summary:
  * Move    stonith-fence_ipmilan-5254005bdbb5	(Started controller-1 -> controller-2)
 
 Executing cluster transition:
- * Pseudo action:   galera-master_demote_0
  * Pseudo action:   redis-master_pre_notify_stop_0
  * Resource action: stonith-fence_ipmilan-525400bbf613 stop on controller-0
  * Resource action: stonith-fence_ipmilan-525400b4f6bd stop on controller-0
  * Pseudo action:   stonith-fence_ipmilan-5254005bdbb5_stop_0
  * Fencing controller-1 (reboot)
  * Pseudo action:   galera-0_stop_0
+ * Pseudo action:   galera-2_stop_0
  * Pseudo action:   redis_post_notify_stop_0
  * Resource action: redis           notify on controller-0
  * Resource action: redis           notify on controller-2
  * Pseudo action:   redis-master_confirmed-pre_notify_stop_0
  * Pseudo action:   redis-master_stop_0
  * Pseudo action:   haproxy-clone_stop_0
- * Fencing galera-2 (reboot)
- * Pseudo action:   galera_demote_0
- * Pseudo action:   galera-master_demoted_0
- * Pseudo action:   galera-master_stop_0
- * Pseudo action:   redis_stop_0
- * Pseudo action:   redis-master_stopped_0
- * Pseudo action:   haproxy_stop_0
- * Pseudo action:   haproxy-clone_stopped_0
  * Fencing messaging-1 (reboot)
  * Pseudo action:   stonith_complete
  * Resource action: galera-0        start on controller-2
  * Pseudo action:   rabbitmq_post_notify_stop_0
  * Pseudo action:   rabbitmq-clone_stop_0
- * Pseudo action:   galera_stop_0
  * Resource action: galera          monitor=10000 on galera-0
- * Pseudo action:   galera-master_stopped_0
- * Pseudo action:   redis-master_post_notify_stopped_0
- * Pseudo action:   ip-172.17.1.14_stop_0
- * Pseudo action:   ip-172.17.1.17_stop_0
- * Pseudo action:   ip-172.17.4.11_stop_0
+ * Pseudo action:   redis_stop_0
+ * Pseudo action:   redis-master_stopped_0
+ * Pseudo action:   haproxy_stop_0
+ * Pseudo action:   haproxy-clone_stopped_0
  * Resource action: galera-0        monitor=20000 on controller-2
- * Pseudo action:   galera-2_stop_0
  * Resource action: rabbitmq        notify on messaging-2
  * Resource action: rabbitmq        notify on messaging-0
  * Pseudo action:   rabbitmq_notified_0
  * Pseudo action:   rabbitmq_stop_0
  * Pseudo action:   rabbitmq-clone_stopped_0
+ * Pseudo action:   redis-master_post_notify_stopped_0
+ * Pseudo action:   ip-172.17.1.14_stop_0
+ * Pseudo action:   ip-172.17.1.17_stop_0
+ * Pseudo action:   ip-172.17.4.11_stop_0
+ * Pseudo action:   messaging-1_stop_0
  * Resource action: redis           notify on controller-0
  * Resource action: redis           notify on controller-2
  * Pseudo action:   redis-master_confirmed-post_notify_stopped_0
  * Resource action: ip-172.17.1.14  start on controller-2
  * Resource action: ip-172.17.1.17  start on controller-2
  * Resource action: ip-172.17.4.11  start on controller-2
- * Pseudo action:   messaging-1_stop_0
  * Pseudo action:   redis_notified_0
  * Resource action: ip-172.17.1.14  monitor=10000 on controller-2
  * Resource action: ip-172.17.1.17  monitor=10000 on controller-2
