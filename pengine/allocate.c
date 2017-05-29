@@ -467,7 +467,7 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
             set_bit(action_clear->flags, pe_action_runnable);
 
             crm_notice("Clearing failure of %s on %s "
-                       "because action definition changed " CRM_XS " %s",
+                       "action definition changed " CRM_XS " %s",
                        rsc->id, node->details->uname, action_clear->uuid);
         }
     }
@@ -1798,7 +1798,7 @@ apply_container_ordering(action_t *action, pe_working_set_t *data_set)
     CRM_ASSERT(container);
 
     if(is_set(container->flags, pe_rsc_failed)) {
-        pe_fence_node(data_set, action->node, " because the container failed");
+        pe_fence_node(data_set, action->node, "container failed");
     }
 
     crm_trace("%s %s %s %s %d", action->uuid, action->task, remote_rsc->id, container->id, is_set(container->flags, pe_rsc_failed));
@@ -1967,7 +1967,7 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
                      * way to stop it, it is necessary to fence the
                      * node.
                      */
-                    pe_fence_node(data_set, action->node, "because resources are active and the connection is unrecoverable");
+                    pe_fence_node(data_set, action->node, "resources are active and the connection is unrecoverable");
                 }
 
                 custom_action_order(action->rsc, NULL, action,
@@ -2009,7 +2009,7 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
                      * Since we have no way to find out, it is
                      * necessary to fence the node.
                      */
-                    pe_fence_node(data_set, action->node, "because resources are in an unknown state and the connection is unrecoverable");
+                    pe_fence_node(data_set, action->node, "resources are in an unknown state and the connection is unrecoverable");
                 }
 
                 if(cluster_node && state == remote_state_stopped) {
@@ -2270,6 +2270,7 @@ stage7(pe_working_set_t * data_set)
 
     crm_trace("Processing reloads");
 
+    LogNodeActions(data_set, FALSE);
     for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
         resource_t *rsc = (resource_t *) gIter->data;
 
@@ -2376,6 +2377,44 @@ stage8(pe_working_set_t * data_set)
     crm_trace("Created transition graph %d.", transition_id);
 
     return TRUE;
+}
+
+void
+LogNodeActions(pe_working_set_t * data_set, gboolean terminal)
+{
+    GListPtr gIter = NULL;
+
+    for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
+        char *node_name = NULL;
+        const char *task = NULL;
+        action_t *action = (action_t *) gIter->data;
+
+        if (action->rsc != NULL) {
+            continue;
+        }
+
+        if (is_container_remote_node(action->node)) {
+            node_name = crm_strdup_printf("%s (resource: %s)", action->node->details->uname, action->node->details->remote_rsc->container->id);
+        } else if(action->node) {
+            node_name = crm_strdup_printf("%s", action->node->details->uname);
+        }
+
+        if (safe_str_eq(action->task, CRM_OP_SHUTDOWN)) {
+            task = "Shutdown";
+        } else if (safe_str_eq(action->task, CRM_OP_FENCE)) {
+            task = "Fence";
+        }
+
+        if(task == NULL) {
+            /* Nothing to report */
+        } else if(terminal) {
+            printf(" * %s %s\n", task, node_name);
+        } else {
+            crm_notice(" * %s %s\n", task, node_name);
+        }
+
+        free(node_name);
+    }
 }
 
 void

@@ -38,6 +38,7 @@ RemoteOnline: [ galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2 ]
  stonith-fence_ipmilan-5254005bdbb5	(stonith:fence_ipmilan):	Started controller-1 (UNCLEAN)
 
 Transition Summary:
+ * Fence controller-1
  * Move    messaging-1	(Started controller-1 -> controller-2)
  * Move    galera-0	(Started controller-1 -> controller-2)
  * Move    galera-2	(Started controller-1 -> controller-2)

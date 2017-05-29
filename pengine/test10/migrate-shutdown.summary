@@ -22,6 +22,10 @@ Online: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
      Stopped: [ pcmk-3 ]
 
 Transition Summary:
+ * Shutdown pcmk-4
+ * Shutdown pcmk-3
+ * Shutdown pcmk-2
+ * Shutdown pcmk-1
  * Stop    Fencing	(pcmk-1)
  * Stop    r192.168.122.105	(pcmk-2)
  * Stop    r192.168.122.106	(pcmk-2)

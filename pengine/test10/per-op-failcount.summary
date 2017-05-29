@@ -9,6 +9,7 @@ Online: [ rh73-02-snmp ]
  prmStonith2-1	(stonith:external/ssh):	Started rh73-01-snmp
 
 Transition Summary:
+ * Fence rh73-01-snmp
  * Recover prmDummy	(Started rh73-01-snmp -> rh73-02-snmp)
  * Move    prmStonith2-1	(Started rh73-01-snmp -> rh73-02-snmp)
 

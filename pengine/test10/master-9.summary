@@ -30,6 +30,7 @@ Online: [ ibm1 va1 ]
      ocf_msdummy:7	(ocf::heartbeat:/usr/lib64/heartbeat/cts/OCFMSDummy):	Stopped 
 
 Transition Summary:
+ * Shutdown ibm1
  * Start   DcIPaddr	(va1 - blocked)
  * Start   ocf_127.0.0.11	(va1 - blocked)
  * Start   heartbeat_127.0.0.12	(va1 - blocked)

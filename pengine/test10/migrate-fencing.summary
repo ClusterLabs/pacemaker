@@ -22,6 +22,7 @@ Online: [ pcmk-1 pcmk-2 pcmk-3 ]
      Slaves: [ pcmk-1 pcmk-2 pcmk-3 ]
 
 Transition Summary:
+ * Fence pcmk-4
  * Stop    FencingChild:0	(pcmk-4)
  * Move    r192.168.101.181	(Started pcmk-4 -> pcmk-1)
  * Move    r192.168.101.182	(Started pcmk-4 -> pcmk-1)

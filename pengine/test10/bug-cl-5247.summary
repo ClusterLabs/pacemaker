@@ -18,6 +18,7 @@ Containers: [ pgsr01:prmDB1 ]
      Stopped: [ bl460g8n3 bl460g8n4 ]
 
 Transition Summary:
+ * Fence pgsr02 (resource: prmDB2)
  * Stop    prmDB2	(bl460g8n4)
  * Restart prmStonith1-2	(Started bl460g8n4)
  * Restart prmStonith2-2	(Started bl460g8n3)

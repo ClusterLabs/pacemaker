@@ -7,6 +7,7 @@ Online: [ star world ]
      test2	(ocf::heartbeat:Xen):	Started star
 
 Transition Summary:
+ * Shutdown star
  * Migrate test1	(Started star -> world)
  * Migrate test2	(Started star -> world)
 

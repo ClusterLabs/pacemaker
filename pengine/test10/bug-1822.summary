@@ -11,6 +11,7 @@ Online: [ process1a process2b ]
          master_slave_procdctl:1	(ocf::heartbeat:procdctl):	Master process1a
 
 Transition Summary:
+ * Shutdown process1a
  * Demote  master_slave_Stateful:1	(Master -> Stopped process1a)
  * Demote  master_slave_procdctl:1	(Master -> Stopped process1a)
 

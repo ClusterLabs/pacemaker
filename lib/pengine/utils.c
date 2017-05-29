@@ -517,7 +517,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
             if (is_set(action->rsc->flags, pe_rsc_managed)
                 && save_action && a_task == stop_rsc
                 && action->node->details->unclean == FALSE) {
-                pe_fence_node(data_set, action->node, "because of unrunnable resource actions");
+                pe_fence_node(data_set, action->node, "resource actions are unrunnable");
             }
 
         } else if (action->node->details->pending) {

@@ -892,6 +892,7 @@ main(int argc, char **argv)
                       || modified ? "\n" : "");
             fflush(stdout);
 
+            LogNodeActions(&data_set, TRUE);
             for (gIter = data_set.resources; gIter != NULL; gIter = gIter->next) {
                 resource_t *rsc = (resource_t *) gIter->data;
 

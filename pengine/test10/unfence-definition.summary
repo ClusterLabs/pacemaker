@@ -12,6 +12,11 @@ Online: [ virt-1 virt-2 virt-3 ]
      Stopped: [ virt-2 virt-3 virt-4 ]
 
 Transition Summary:
+ * Fence virt-4
+ * Fence virt-4
+ * Fence virt-3
+ * Fence virt-2
+ * Fence virt-1
  * Restart fencing	(Started virt-1)
  * Restart dlm:0	(Started virt-1)
  * Start   dlm:2	(virt-3)

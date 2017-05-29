@@ -8,6 +8,9 @@ Node node3 (uuid3): UNCLEAN (offline)
  lsb_dummy	(lsb:/usr/lib/heartbeat/cts/LSBDummy):	Stopped 
 
 Transition Summary:
+ * Fence node3
+ * Fence node2
+ * Fence node1
 
 Executing cluster transition:
  * Fencing node1 (reboot)

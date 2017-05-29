@@ -1818,7 +1818,7 @@ rsc_ticket_constraint(resource_t * rsc_lh, rsc_ticket_t * rsc_ticket, pe_working
                 for (gIter = rsc_lh->running_on; gIter != NULL; gIter = gIter->next) {
                     node_t *node = (node_t *) gIter->data;
 
-                    pe_fence_node(data_set, node, "because deadman ticket was lost");
+                    pe_fence_node(data_set, node, "deadman ticket was lost");
                 }
                 break;
 
@@ -2782,7 +2782,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
 
     if (force == FALSE && running != NULL) {
         /* we already know the status of the resource on this node */
-        pe_rsc_trace(rsc, "Skipping active: %s on %s", rsc->id, node->details->uname);
+        pe_rsc_trace(rsc, "Skipping known: %s on %s", rsc->id, node->details->uname);
         return FALSE;
     }
 

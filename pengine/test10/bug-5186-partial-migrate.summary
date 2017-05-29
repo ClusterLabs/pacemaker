@@ -25,6 +25,7 @@ Online: [ bl460g1n6 bl460g1n8 ]
      Started: [ bl460g1n6 bl460g1n8 ]
 
 Transition Summary:
+ * Fence bl460g1n7
  * Move    prmDummy	(Started bl460g1n7 -> bl460g1n6)
  * Move    prmVM2	(Started bl460g1n7 -> bl460g1n8)
  * Move    prmStonith8-1	(Started bl460g1n7 -> bl460g1n6)

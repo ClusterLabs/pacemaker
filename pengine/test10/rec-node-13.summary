@@ -34,6 +34,7 @@ OFFLINE: [ c001n03 c001n05 ]
      ocf_msdummy:11	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Slave c001n07 
 
 Transition Summary:
+ * Fence c001n04
  * Stop    ocf_msdummy:6	(c001n04)
 
 Executing cluster transition:

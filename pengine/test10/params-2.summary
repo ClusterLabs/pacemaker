@@ -7,6 +7,7 @@ Online: [ node1 node2 node3 ]
  rsc3	(lsb:apache):	Stopped 
 
 Transition Summary:
+ * Shutdown node1
  * Stop    rsc1	(node1)
  * Restart rsc2	(Started node2)
  * Start   rsc3	(node3)
