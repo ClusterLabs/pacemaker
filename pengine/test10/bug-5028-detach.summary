@@ -10,6 +10,7 @@ Online: [ bl460g6a bl460g6b ]
      dummy02	(ocf::heartbeat:Dummy-stop-NG):	FAILED bl460g6a ( blocked ) 
 
 Transition Summary:
+ * Shutdown bl460g6a
 
 Executing cluster transition:
  * Cluster action:  do_shutdown on bl460g6a

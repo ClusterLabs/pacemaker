@@ -53,6 +53,7 @@ Online: [ srv01 srv02 srv03 srv04 ]
      Stopped: [ srv01 ]
 
 Transition Summary:
+ * Shutdown srv01
  * Start   UmVIPcheck	(srv04)
  * Start   UmIPaddr	(srv04)
  * Start   UmDummy01	(srv04)

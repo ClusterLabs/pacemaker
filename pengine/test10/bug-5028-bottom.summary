@@ -7,6 +7,7 @@ Online: [ bl460g6a bl460g6b ]
      dummy02	(ocf::heartbeat:Dummy-stop-NG):	Started bl460g6a
 
 Transition Summary:
+ * Shutdown bl460g6a
  * Stop    dummy02	(bl460g6a)
 
 Executing cluster transition:

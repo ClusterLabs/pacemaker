@@ -107,7 +107,7 @@ const char *crm_xml_add_int(xmlNode * node, const char *name, int value);
  * Add an attribute with the value XML_BOOLEAN_TRUE or XML_BOOLEAN_FALSE
  * as appropriate to an XML object.
  *
- * \param[in/out] node   XML object to add attribute to
+ * \param[in,out] node   XML object to add attribute to
  * \param[in]     name   Name of attribute to add
  * \param[in]     value  Boolean whose value will be tested
  *
@@ -252,7 +252,7 @@ gboolean validate_xml_verbose(xmlNode * xml_blob);
  * such attempt subsequently fails to validate.   Which of the two styles will
  * be used depends on \p transform parameter (positive/negative, respectively).
  *
- * \param[in/out] xml_blob   XML tree representing CIB, may be swapped with
+ * \param[in,out] xml_blob   XML tree representing CIB, may be swapped with
  *                           an "updated" one
  * \param[out]    best       The highest configuration version (per its index
  *                           in the global schemas table) it was possible to

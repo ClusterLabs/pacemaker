@@ -826,7 +826,9 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
                             v->nodename, v->nodeid, v->current);
 
         crm_xml_add_int(sync, F_ATTRD_WRITER, election_state(writer));
-        send_attrd_message(peer, sync);
+
+        /* Broadcast in case any other nodes had the inconsistent value */
+        send_attrd_message(NULL, sync);
         free_xml(sync);
 
     } else if(safe_str_neq(v->current, value)) {

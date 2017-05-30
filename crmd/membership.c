@@ -132,9 +132,9 @@ crmd_node_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output, 
  * \internal
  * \brief Create an XML node state tag with updates
  *
- * \param[in/out] node    Node whose state will be used for update
+ * \param[in,out] node    Node whose state will be used for update
  * \param[in]     flags   Bitmask of node_update_flags indicating what to update
- * \param[in/out] parent  XML node to contain update (or NULL)
+ * \param[in,out] parent  XML node to contain update (or NULL)
  * \param[in]     source  Who requested the update (only used for logging)
  *
  * \return Pointer to created node state tag

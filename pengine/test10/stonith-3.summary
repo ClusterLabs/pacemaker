@@ -8,6 +8,7 @@ Online: [ rh5node2 ]
      Stopped: [ rh5node1 rh5node2 ]
 
 Transition Summary:
+ * Fence rh5node1
  * Start   prmIpPostgreSQLDB	(rh5node2)
  * Start   prmStonith:0	(rh5node2)
 

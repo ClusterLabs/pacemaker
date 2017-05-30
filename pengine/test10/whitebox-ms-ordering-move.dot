@@ -1,5 +1,7 @@
 digraph "g" {
 "all_stopped" [ style=bold color="green" fontcolor="orange"]
+"container1_start_0 rhel7-2" -> "lxc-ms_promote_0 lxc1" [ style = bold]
+"container1_start_0 rhel7-2" -> "lxc-ms_start_0 lxc1" [ style = bold]
 "container1_start_0 rhel7-2" -> "lxc1_start_0 rhel7-2" [ style = bold]
 "container1_start_0 rhel7-2" [ style=bold color="green" fontcolor="black"]
 "container1_stop_0 rhel7-1" -> "all_stopped" [ style = bold]
@@ -29,6 +31,7 @@ digraph "g" {
 "lxc-ms_demote_0 lxc1" -> "lxc-ms-master_demoted_0" [ style = bold]
 "lxc-ms_demote_0 lxc1" -> "lxc-ms_promote_0 lxc1" [ style = bold]
 "lxc-ms_demote_0 lxc1" -> "lxc-ms_stop_0 lxc1" [ style = bold]
+"lxc-ms_demote_0 lxc1" -> "lxc1_stop_0 rhel7-1" [ style = bold]
 "lxc-ms_demote_0 lxc1" [ style=bold color="green" fontcolor="black"]
 "lxc-ms_promote_0 lxc1" -> "lxc-ms-master_promoted_0" [ style = bold]
 "lxc-ms_promote_0 lxc1" [ style=bold color="green" fontcolor="black"]

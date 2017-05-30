@@ -15,6 +15,7 @@ Online: [ c001n01 c001n03 c001n08 ]
      child_DoFencing:3	(stonith:ssh):	Started c001n08
 
 Transition Summary:
+ * Fence c001n02
  * Move    rsc_c001n02	(Started c001n02 -> c001n01)
  * Stop    child_DoFencing:0	(c001n02)
 

@@ -11,6 +11,9 @@ Online: [ rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
      Stopped: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
 
 Transition Summary:
+ * Fence rhel7-1
+ * Fence lxc2 (resource: container2)
+ * Fence lxc1 (resource: container1)
  * Restart Fencing	(Started rhel7-4)
  * Move    rsc_rhel7-1	(Started rhel7-1 -> rhel7-5)
  * Recover container1	(Started rhel7-1 -> rhel7-2)

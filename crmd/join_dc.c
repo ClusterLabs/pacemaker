@@ -686,7 +686,13 @@ do_dc_join_final(long long action,
                  enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     crm_debug("Ensuring DC, quorum and node attributes are up-to-date");
+#if !HAVE_ATOMIC_ATTRD
+    /* Ask attrd to write all attributes to disk. This is not needed for
+     * atomic attrd because atomic attrd does a peer sync and write-out
+     * when winning an election.
+     */
     update_attrd(NULL, NULL, NULL, NULL, FALSE);
+#endif
     crm_update_quorum(crm_have_quorum, TRUE);
 }
 

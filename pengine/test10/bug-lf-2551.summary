@@ -81,6 +81,7 @@ Online: [ hex-0 hex-7 hex-8 ]
  vm-64	(ocf::heartbeat:Xen):	Stopped 
 
 Transition Summary:
+ * Fence hex-9
  * Move    fencing-sbd	(Started hex-9 -> hex-0)
  * Move    dummy1	(Started hex-9 -> hex-0)
  * Stop    dlm:3	(hex-9)

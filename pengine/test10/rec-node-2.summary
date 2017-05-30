@@ -14,6 +14,7 @@ Online: [ node2 ]
      rsc6	(heartbeat:apache):	Stopped 
 
 Transition Summary:
+ * Fence node1
  * Start   stonith-1	(node2)
  * Start   rsc1	(node2)
  * Start   rsc2	(node2)

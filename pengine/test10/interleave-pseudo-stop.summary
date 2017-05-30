@@ -17,6 +17,7 @@ Online: [ node2 ]
      Started: [ node2 ]
 
 Transition Summary:
+ * Fence node1
  * Stop    stonithclone:1	(node1)
  * Stop    evmsclone:1	(node1)
  * Stop    imagestoreclone:1	(node1)

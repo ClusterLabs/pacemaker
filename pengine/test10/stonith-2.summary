@@ -33,6 +33,7 @@ Online: [ sles-1 sles-2 sles-3 sles-4 sles-6 ]
      ocf_msdummy:11	(ocf::heartbeat:Stateful):	Slave sles-3 
 
 Transition Summary:
+ * Fence sles-5
  * Start   rsc_sles-5	(sles-6)
 
 Executing cluster transition:

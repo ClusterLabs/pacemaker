@@ -32,6 +32,7 @@ Containers: [ lamaVM1:VM1 lamaVM2:VM2 lamaVM3:VM3 ]
      Started: [ lamaVM1 lamaVM2 lamaVM3 ]
 
 Transition Summary:
+ * Fence lamaVM2 (resource: VM2)
  * Recover VM2	(Started lama3)
  * Recover FSlun3	(Started lamaVM2 -> lama2)
  * Restart FAKE4	(Started lamaVM2)

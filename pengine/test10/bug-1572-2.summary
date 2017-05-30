@@ -11,6 +11,7 @@ Online: [ arc-dknightlx arc-tkincaidlx.wsicorp.com ]
      IPaddr_147_81_84_133	(ocf::heartbeat:IPaddr):	Started arc-tkincaidlx.wsicorp.com
 
 Transition Summary:
+ * Shutdown arc-dknightlx
  * Stop    rsc_drbd_7788:0	(arc-dknightlx)
  * Demote  rsc_drbd_7788:1	(Master -> Slave arc-tkincaidlx.wsicorp.com)
  * Stop    fs_mirror	(arc-tkincaidlx.wsicorp.com)

@@ -27,6 +27,8 @@ OFFLINE: [ pcmk-3 pcmk-4 ]
      Stopped: [ pcmk-3 pcmk-4 ]
 
 Transition Summary:
+ * Shutdown pcmk-2
+ * Shutdown pcmk-1
 
 Executing cluster transition:
  * Cluster action:  do_shutdown on pcmk-2

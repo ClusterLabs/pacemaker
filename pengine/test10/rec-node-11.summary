@@ -10,6 +10,7 @@ Online: [ node2 ]
  rsc3	(heartbeat:apache):	Started node2
 
 Transition Summary:
+ * Fence node1
  * Start   stonith-1	(node2)
  * Move    rsc1	(Started node1 -> node2)
  * Move    rsc2	(Started node1 -> node2)

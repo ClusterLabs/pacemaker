@@ -33,6 +33,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <rsc_op id="11" operation="start" operation_key="container1_start_0" on_node="18node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="26" operation="start" operation_key="M-clone_start_0"/>
       </trigger>
       <trigger>
@@ -87,6 +90,9 @@
       </rsc_op>
     </action_set>
     <inputs>
+      <trigger>
+        <rsc_op id="11" operation="start" operation_key="container1_start_0" on_node="18node1" on_node_uuid="1"/>
+      </trigger>
       <trigger>
         <rsc_op id="30" operation="stop" operation_key="A_stop_0" on_node="18node1" on_node_uuid="1"/>
       </trigger>

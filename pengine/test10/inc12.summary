@@ -32,6 +32,12 @@ Online: [ c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 ]
      ocf_msdummy:11	(ocf::heartbeat:Stateful):	Slave c001n02 
 
 Transition Summary:
+ * Shutdown c001n07
+ * Shutdown c001n06
+ * Shutdown c001n05
+ * Shutdown c001n04
+ * Shutdown c001n03
+ * Shutdown c001n02
  * Stop    ocf_192.168.100.181	(c001n02)
  * Stop    heartbeat_192.168.100.182	(c001n02)
  * Stop    ocf_192.168.100.183	(c001n02)

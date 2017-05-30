@@ -1,0 +1,13 @@
+digraph "g" {
+"FAKE1_monitor_0 remote1" -> "remote1_stop_0 18builder" [ style = bold]
+"FAKE1_monitor_0 remote1" [ style=bold color="green" fontcolor="black"]
+"FAKE2_monitor_0 remote1" -> "remote1_stop_0 18builder" [ style = bold]
+"FAKE2_monitor_0 remote1" [ style=bold color="green" fontcolor="black"]
+"FAKE3_monitor_0 remote1" -> "remote1_stop_0 18builder" [ style = bold]
+"FAKE3_monitor_0 remote1" [ style=bold color="green" fontcolor="black"]
+"FAKE4_monitor_0 remote1" -> "remote1_stop_0 18builder" [ style = bold]
+"FAKE4_monitor_0 remote1" [ style=bold color="green" fontcolor="black"]
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+"remote1_stop_0 18builder" -> "all_stopped" [ style = bold]
+"remote1_stop_0 18builder" [ style=bold color="green" fontcolor="black"]
+}

@@ -34,6 +34,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <rsc_op id="99" operation="start" operation_key="container1_start_0" on_node="rhel7-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
         <rsc_op id="102" operation="start" operation_key="lxc-ms_start_0" internal_operation_key="lxc-ms:0_start_0" on_node="lxc1" on_node_uuid="lxc1" router_node="rhel7-2"/>
       </trigger>
       <trigger>
@@ -84,6 +87,9 @@
       </rsc_op>
     </action_set>
     <inputs>
+      <trigger>
+        <rsc_op id="99" operation="start" operation_key="container1_start_0" on_node="rhel7-2" on_node_uuid="2"/>
+      </trigger>
       <trigger>
         <rsc_op id="104" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:0_stop_0" on_node="lxc1" on_node_uuid="lxc1" router_node="rhel7-1"/>
       </trigger>
@@ -268,6 +274,9 @@
       </trigger>
       <trigger>
         <rsc_op id="32" operation="monitor" operation_key="lxc1_monitor_0" on_node="rhel7-5" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="103" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="rhel7-1"/>
       </trigger>
       <trigger>
         <rsc_op id="104" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:0_stop_0" on_node="lxc1" on_node_uuid="lxc1" router_node="rhel7-1"/>
