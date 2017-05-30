@@ -1374,15 +1374,22 @@ specified for each bundle. Any firewall must allow access to the
 +control-port+.
 ====
 
+=== Bundle Meta-Attributes ===
+
+Any meta-attribute set on a bundle will be inherited by the bundle's
+primitive and any resources implicitly created by Pacemaker for the bundle.
+
+This includes options such as +priority+, +target-role+, and +is-managed+. See
+<<s-resource-options>> for more information.
+
 === Limitations of Bundles ===
 
 Currently, bundles may not be cloned, or included in groups or colocation
 constraints. This includes the bundle's primitive and any resources
 implicitly created by Pacemaker for the bundle.
 
-Bundles do not have instance attributes, meta-attributes, utilization
-attributes, or operations of their own, though a primitive included in a bundle
-may.
+Bundles do not have instance attributes, utilization attributes, or operations,
+though a bundle's primitive may have them.
 
 A bundle with a primitive can run on a Pacemaker Remote node only if the bundle
 uses a distinct +control-port+.
