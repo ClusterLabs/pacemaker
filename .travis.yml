@@ -62,9 +62,9 @@ after_failure:
 
 notifications:
   irc: "irc.freenode.org#pcmk"
-  email:
-    recipients:
-      - andrew@beekhof.net
+#  email:
+#    recipients:
+#      - developers@clusterlabs.org
 
 # whitelist
 branches:
