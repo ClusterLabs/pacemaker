@@ -63,6 +63,13 @@ is_dangling_container_remote_node(node_t *node)
 }
 
 
+/*!
+ * \brief Schedule a fence action for a node
+ *
+ * \param[in,out] data_set  Current working set of cluster
+ * \param[in,out] node      Node to fence
+ * \param[in]     reason    Text description of why fencing is needed
+ */
 void
 pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
 {
@@ -74,11 +81,13 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
 
         if (is_set(rsc->flags, pe_rsc_failed) == FALSE) {
             if (!is_set(rsc->flags, pe_rsc_managed)) {
-                crm_notice("Not fencing node %s due to '%s': container %s is"
-                           " unmanaged"
-                           "%s", node->details->uname, reason, rsc->id);
+                crm_notice("Not fencing guest node %s "
+                           "(otherwise would because %s): "
+                           "its guest resource %s is unmanaged",
+                           node->details->uname, reason, rsc->id);
             } else {
-                crm_warn("Remote node %s will be fenced due to '%s' by recovering %s",
+                crm_warn("Guest node %s will be fenced "
+                         "(by recovering its guest resource %s): %s",
                          node->details->uname, rsc->id, reason);
 
                 /* We don't mark the node as unclean because that would prevent the
@@ -91,8 +100,9 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
         }
 
     } else if (is_dangling_container_remote_node(node)) {
-        crm_info("Cleaning up dangling connection resource for guest node %s due to '%s'"
-                 " (fencing is already done, guest resource no longer exists)",
+        crm_info("Cleaning up dangling connection for guest node %s: "
+                 "fencing was already done because %s, "
+                 "and guest resource no longer exists",
                  node->details->uname, reason);
         set_bit(node->details->remote_rsc->flags, pe_rsc_failed);
 
@@ -100,31 +110,29 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
         resource_t *rsc = node->details->remote_rsc;
 
         if (rsc && (!is_set(rsc->flags, pe_rsc_managed))) {
-            crm_notice("Not fencing node %s due to '%s': connection is unmanaged",
+            crm_notice("Not fencing remote node %s "
+                       "(otherwise would because %s): connection is unmanaged",
                        node->details->uname, reason);
         } else if(node->details->remote_requires_reset == FALSE) {
             node->details->remote_requires_reset = TRUE;
-            if (pe_can_fence(data_set, node)) {
-                crm_warn("Remote node %s will be fenced due to %s", node->details->uname, reason);
-            } else {
-                crm_warn("Remote node %s is unclean due to %s", node->details->uname, reason);
-            }
+            crm_warn("Remote node %s %s: %s",
+                     node->details->uname,
+                     pe_can_fence(data_set, node)? "will be fenced" : "is unclean",
+                     reason);
         }
         node->details->unclean = TRUE;
 
     } else if (node->details->unclean) {
-        if (pe_can_fence(data_set, node)) {
-            crm_trace("Node %s would also be fenced due to '%s'", node->details->uname, reason);
-        } else {
-            crm_trace("Node %s is also unclean due to '%s'", node->details->uname, reason);
-        }
-
-    } else if (pe_can_fence(data_set, node)) {
-        crm_warn("Node %s will be fenced due to %s", node->details->uname, reason);
-        node->details->unclean = TRUE;
+        crm_trace("Cluster node %s %s because %s",
+                  node->details->uname,
+                  pe_can_fence(data_set, node)? "would also be fenced" : "also is unclean",
+                  reason);
 
     } else {
-        crm_warn("Node %s is unclean due to %s", node->details->uname, reason);
+        crm_warn("Cluster node %s %s: %s",
+                 node->details->uname,
+                 pe_can_fence(data_set, node)? "will be fenced" : "is unclean",
+                 reason);
         node->details->unclean = TRUE;
     }
 }
@@ -1878,6 +1886,8 @@ process_rsc_state(resource_t * rsc, node_t * node,
                   xmlNode * migrate_op, pe_working_set_t * data_set)
 {
     node_t *tmpnode = NULL;
+    char *reason = NULL;
+
     CRM_ASSERT(rsc);
     pe_rsc_trace(rsc, "Resource %s is %s on %s: on_fail=%s",
                  rsc->id, role2text(rsc->role), node->details->uname, fail2text(on_fail));
@@ -1907,7 +1917,6 @@ process_rsc_state(resource_t * rsc, node_t * node,
         && node->details->maintenance == FALSE
         && is_set(rsc->flags, pe_rsc_managed)) {
 
-        char *reason = NULL;
         gboolean should_fence = FALSE;
 
         /* If this is a guest node, fence it (regardless of whether fencing is
@@ -1922,14 +1931,19 @@ process_rsc_state(resource_t * rsc, node_t * node,
             should_fence = TRUE;
 
         } else if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            if (is_baremetal_remote_node(node) && node->details->remote_rsc && is_not_set(node->details->remote_rsc->flags, pe_rsc_failed)) {
+            if (is_baremetal_remote_node(node) && node->details->remote_rsc
+                && is_not_set(node->details->remote_rsc->flags, pe_rsc_failed)) {
+
                 /* setting unseen = true means that fencing of the remote node will
                  * only occur if the connection resource is not going to start somewhere.
                  * This allows connection resources on a failed cluster-node to move to
                  * another node without requiring the baremetal remote nodes to be fenced
                  * as well. */
                 node->details->unseen = TRUE;
-                reason = crm_strdup_printf("%s is active there. Fencing will be revoked if remote-node connection can be re-established on another cluster-node.", rsc->id);
+                reason = crm_strdup_printf("%s is active there (fencing will be"
+                                           " revoked if remote connection can "
+                                           "be re-established elsewhere)",
+                                           rsc->id);
             }
             should_fence = TRUE;
         }
@@ -1959,7 +1973,9 @@ process_rsc_state(resource_t * rsc, node_t * node,
             /* treat it as if it is still running
              * but also mark the node as unclean
              */
-            pe_fence_node(data_set, node, "resource failure(s)");
+            reason = crm_strdup_printf("%s failed there", rsc->id);
+            pe_fence_node(data_set, node, reason);
+            free(reason);
             break;
 
         case action_fail_standby:
@@ -2002,6 +2018,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
                 stop_action(rsc, node, FALSE);
             }
             break;
+
         case action_fail_reset_remote:
             set_bit(rsc->flags, pe_rsc_failed);
             if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
@@ -2015,7 +2032,8 @@ process_rsc_state(resource_t * rsc, node_t * node,
 
                     /* connection resource to baremetal resource failed in a way that
                      * should result in fencing the remote-node. */
-                    pe_fence_node(data_set, tmpnode, "of connection failure(s)");
+                    pe_fence_node(data_set, tmpnode,
+                                  "remote connection is unrecoverable");
                 }
             }
 
