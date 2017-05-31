@@ -467,7 +467,7 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
             set_bit(action_clear->flags, pe_action_runnable);
 
             crm_notice("Clearing failure of %s on %s "
-                       "action definition changed " CRM_XS " %s",
+                       "because action definition changed " CRM_XS " %s",
                        rsc->id, node->details->uname, action_clear->uuid);
         }
     }
@@ -1789,7 +1789,6 @@ apply_container_ordering(action_t *action, pe_working_set_t *data_set)
 
     CRM_ASSERT(action->node);
     CRM_ASSERT(is_remote_node(action->node));
-    CRM_ASSERT(action->node->details->remote_rsc);
 
     remote_rsc = action->node->details->remote_rsc;
     CRM_ASSERT(remote_rsc);
@@ -1801,7 +1800,13 @@ apply_container_ordering(action_t *action, pe_working_set_t *data_set)
         pe_fence_node(data_set, action->node, "container failed");
     }
 
-    crm_trace("%s %s %s %s %d", action->uuid, action->task, remote_rsc->id, container->id, is_set(container->flags, pe_rsc_failed));
+    crm_trace("Order %s action %s relative to %s%s for %s%s",
+              action->task, action->uuid,
+              is_set(remote_rsc->flags, pe_rsc_failed)? "failed " : "",
+              remote_rsc->id,
+              is_set(container->flags, pe_rsc_failed)? "failed " : "",
+              container->id);
+
     switch (task) {
         case start_rsc:
         case action_promote:
@@ -1874,6 +1879,7 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
     node_t *cluster_node = NULL;
     enum action_tasks task = text2task(action->task);
     enum remote_connection_state state = remote_state_unknown;
+    enum pe_ordering order_opts = pe_order_none;
 
     if (action->rsc == NULL) {
         return;
@@ -1881,7 +1887,6 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
 
     CRM_ASSERT(action->node);
     CRM_ASSERT(is_remote_node(action->node));
-    CRM_ASSERT(action->node->details->remote_rsc);
 
     remote_rsc = action->node->details->remote_rsc;
     CRM_ASSERT(remote_rsc);
@@ -1895,7 +1900,7 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
      * on that remote node until after it starts elsewhere.
      */
     if(remote_rsc->next_role == RSC_ROLE_STOPPED || remote_rsc->allocated_to == NULL) {
-        /* There is no-where left to run the connection resource
+        /* There is nowhere left to run the connection resource,
          * and the resource is in a failed state (either directly
          * or because it is located on a failed node).
          *
@@ -1903,8 +1908,7 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
          * or if there are resources in an unknown state (probe), we
          * must assume the worst and fence it.
          */
-
-        if(is_set(action->node->details->remote_rsc->flags, pe_rsc_failed)) {
+        if (is_set(remote_rsc->flags, pe_rsc_failed)) {
             state = remote_state_failed;
         } else if(cluster_node && cluster_node->details->unclean) {
             state = remote_state_failed;
@@ -1934,22 +1938,31 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
         state = remote_state_alive;
     }
 
-    crm_trace("%s %s %s %d %d", action->uuid, action->task, action->node->details->uname, state, is_set(remote_rsc->flags, pe_rsc_failed));
+    crm_trace("Order %s action %s relative to %s%s (state %d)",
+              action->task, action->uuid,
+              is_set(remote_rsc->flags, pe_rsc_failed)? "failed " : "",
+              remote_rsc->id, state);
     switch (task) {
         case start_rsc:
         case action_promote:
-            if(state == remote_state_failed) {
-                /* Wait for the connection resource to be up and force recovery */
-                custom_action_order(remote_rsc, generate_op_key(remote_rsc->id, RSC_START, 0), NULL,
-                                    action->rsc, NULL, action,
-                                    pe_order_preserve | pe_order_implies_then | pe_order_runnable_left, data_set);
-            } else {
-                /* Ensure the connection resource is up and assume everything is as we left it */
-                custom_action_order(remote_rsc, generate_op_key(remote_rsc->id, RSC_START, 0), NULL,
-                                    action->rsc, NULL, action,
-                                    pe_order_preserve | pe_order_runnable_left, data_set);
+            /* This as an internally generated constraint exempt from
+             * user constraint prohibitions, and this action isn't runnable
+             * if the connection start isn't runnable.
+             */
+            order_opts = pe_order_preserve | pe_order_runnable_left;
+
+            if (state == remote_state_failed) {
+                /* Force recovery, by making this action required */
+                order_opts |= pe_order_implies_then;
             }
+
+            /* Ensure connection is up before running this action */
+            custom_action_order(remote_rsc,
+                                generate_op_key(remote_rsc->id, RSC_START, 0),
+                                NULL, action->rsc, NULL, action, order_opts,
+                                data_set);
             break;
+
         case stop_rsc:
             /* Handle special case with remote node where stop actions need to be
              * ordered after the connection resource starts somewhere else.
@@ -1975,22 +1988,19 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
                                     pe_order_preserve | pe_order_implies_first, data_set);
             }
             break;
+
         case action_demote:
-
-            /* If the connection is being torn down, we don't want
-             * to build a constraint between a resource's demotion and
-             * the connection resource starting... because the connection
-             * resource can not start. The connection might already be up,
-             * but the "start" action would not be allowed, which in turn would
-             * block the demotion of any resources living in the node.
+            /* Only order this demote relative to the connection start if the
+             * connection isn't being torn down. Otherwise, the demote would be
+             * blocked because the connection start would not be allowed.
              */
-
             if(state == remote_state_resting || state == remote_state_unknown) {
                 custom_action_order(remote_rsc, generate_op_key(remote_rsc->id, RSC_START, 0), NULL,
                                     action->rsc, NULL, action,
                                     pe_order_preserve, data_set);
             } /* Otherwise we can rely on the stop ordering */
             break;
+
         default:
             /* Wait for the connection resource to be up */
             if (is_recurring_action(action)) {
@@ -2261,14 +2271,11 @@ stage7(pe_working_set_t * data_set)
     order_probes(data_set);
 
     crm_trace("Updating %d actions", g_list_length(data_set->actions));
-
     for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
 
         update_action(action);
     }
-
-    crm_trace("Processing reloads");
 
     LogNodeActions(data_set, FALSE);
     for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
