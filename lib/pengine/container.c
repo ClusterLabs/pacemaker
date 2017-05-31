@@ -177,7 +177,7 @@ create_ip_resource(
 
         // TODO: Other ops? Timeouts and intervals from underlying resource?
 
-        if (common_unpack(xml_ip, &tuple->ip, NULL, data_set) == false) {
+        if (common_unpack(xml_ip, &tuple->ip, parent, data_set) == false) {
             return FALSE;
         }
 
@@ -328,11 +328,10 @@ create_docker_resource(
 
         // TODO: Other ops? Timeouts and intervals from underlying resource?
 
-        if (common_unpack(xml_docker, &tuple->docker, NULL, data_set) == FALSE) {
+        if (common_unpack(xml_docker, &tuple->docker, parent, data_set) == FALSE) {
             return FALSE;
         }
         parent->children = g_list_append(parent->children, tuple->docker);
-        tuple->docker->parent = parent;
         return TRUE;
 }
 
@@ -408,7 +407,7 @@ create_remote_resource(
         nodeid = NULL;
         id = NULL;
 
-        if (common_unpack(xml_remote, &tuple->remote, NULL, data_set) == FALSE) {
+        if (common_unpack(xml_remote, &tuple->remote, parent, data_set) == FALSE) {
             return FALSE;
         }
 

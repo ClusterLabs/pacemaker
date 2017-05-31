@@ -91,10 +91,11 @@ native_add_running(resource_t * rsc, node_t * node, pe_working_set_t * data_set)
                 clear_bit(rsc->flags, pe_rsc_managed);
                 set_bit(rsc->flags, pe_rsc_block);
 
-                /* If the group that the resource belongs to is configured with multiple-active=block, */
-                /* block the whole group. */
+                /* If the resource belongs to a group or bundle configured with
+                 * multiple-active=block, block the entire entity.
+                 */
                 if (rsc->parent
-                    && rsc->parent->variant == pe_group
+                    && (rsc->parent->variant == pe_group || rsc->parent->variant == pe_container)
                     && rsc->parent->recovery_type == recovery_block) {
                     GListPtr gIter = rsc->parent->children;
 

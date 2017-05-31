@@ -1,3 +1,15 @@
+* Wed May 31 2017 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.17-rc3
+- Update source tarball to revision: 9793232
+- Changesets: 21
+- Diff:       19 files changed, 459 insertions(+), 212 deletions(-)
+
+- Features added since Pacemaker-1.1.17-rc2
+  + Support inheritable meta-attributes for bundles
+
+- Changes since Pacemaker-1.1.17-rc2
+  + crmd: avoid attribute write-out on join when atomic attrd is used
+  + pengine: avoid restarting services when recovering remote connection
+
 * Tue May 23 2017 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.17-rc2
 - Update source tarball to revision: 8fdb646
 - Changesets: 19
