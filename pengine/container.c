@@ -258,7 +258,11 @@ find_compatible_tuple(resource_t *rsc_lh, resource_t * rsc, enum rsc_role_e filt
 void
 container_rsc_colocation_lh(resource_t * rsc, resource_t * rsc_rh, rsc_colocation_t * constraint)
 {
-    pe_err("Container %s cannot be colocated with anything", rsc->id);
+    /* -- Never called --
+     *
+     * Instead we add the colocation constraints to the child and call from there
+     */
+    CRM_ASSERT(FALSE);
 }
 
 void
