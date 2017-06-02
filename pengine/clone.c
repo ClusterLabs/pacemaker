@@ -925,23 +925,22 @@ clone_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
     }
 }
 
-static bool
+bool
 assign_node(resource_t * rsc, node_t * node, gboolean force)
 {
     bool changed = FALSE;
 
     if (rsc->children) {
 
-        GListPtr gIter = rsc->children;
-
-        for (; gIter != NULL; gIter = gIter->next) {
+        for (GListPtr gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
             resource_t *child_rsc = (resource_t *) gIter->data;
 
-            changed |= native_assign_node(child_rsc, NULL, node, force);
+            changed |= assign_node(child_rsc, node, force);
         }
 
         return changed;
     }
+
     if (rsc->allocated_to != NULL) {
         changed = true;
     }
@@ -954,7 +953,6 @@ static resource_t *
 find_compatible_child_by_node(resource_t * local_child, node_t * local_node, resource_t * rsc,
                               enum rsc_role_e filter, gboolean current)
 {
-    node_t *node = NULL;
     GListPtr gIter = NULL;
 
     if (local_node == NULL) {
@@ -968,34 +966,45 @@ find_compatible_child_by_node(resource_t * local_child, node_t * local_node, res
     gIter = rsc->children;
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
-        enum rsc_role_e next_role = child_rsc->fns->state(child_rsc, current);
 
-        if (is_set_recursive(child_rsc, pe_rsc_block, TRUE) == FALSE) {
-            /* We only want instances that haven't failed */
-            node = child_rsc->fns->location(child_rsc, NULL, current);
-        }
-
-        if (filter != RSC_ROLE_UNKNOWN && next_role != filter) {
-            crm_trace("Filtered %s", child_rsc->id);
-            continue;
-        }
-
-        if (node && local_node && node->details == local_node->details) {
+        if(is_child_compatible(child_rsc, local_node, filter, current)) {
             crm_trace("Pairing %s with %s on %s",
-                      local_child->id, child_rsc->id, node->details->uname);
+                      local_child->id, child_rsc->id, local_node->details->uname);
             return child_rsc;
-
-        } else if (node) {
-            crm_trace("%s - %s vs %s", child_rsc->id, node->details->uname,
-                      local_node->details->uname);
-
-        } else {
-            crm_trace("%s - not allocated %d", child_rsc->id, current);
         }
     }
 
     crm_trace("Can't pair %s with %s", local_child->id, rsc->id);
     return NULL;
+}
+
+gboolean
+is_child_compatible(resource_t *child_rsc, node_t * local_node, enum rsc_role_e filter, gboolean current) 
+{
+    node_t *node = NULL;
+    enum rsc_role_e next_role = child_rsc->fns->state(child_rsc, current);
+
+    if (is_set_recursive(child_rsc, pe_rsc_block, TRUE) == FALSE) {
+        /* We only want instances that haven't failed */
+        node = child_rsc->fns->location(child_rsc, NULL, current);
+    }
+
+    if (filter != RSC_ROLE_UNKNOWN && next_role != filter) {
+        crm_trace("Filtered %s", child_rsc->id);
+        return FALSE;
+    }
+
+    if (node && local_node && node->details == local_node->details) {
+        return TRUE;
+
+    } else if (node) {
+        crm_trace("%s - %s vs %s", child_rsc->id, node->details->uname,
+                  local_node->details->uname);
+
+    } else {
+        crm_trace("%s - not allocated %d", child_rsc->id, current);
+    }
+    return FALSE;
 }
 
 resource_t *

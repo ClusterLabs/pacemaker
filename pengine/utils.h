@@ -52,6 +52,8 @@ extern void log_action(unsigned int log_level, const char *pre_text,
 extern gboolean can_run_any(GHashTable * nodes);
 extern resource_t *find_compatible_child(resource_t * local_child, resource_t * rsc,
                                          enum rsc_role_e filter, gboolean current);
+gboolean is_child_compatible(resource_t *child_rsc, node_t * local_node, enum rsc_role_e filter, gboolean current);
+bool assign_node(resource_t * rsc, node_t * node, gboolean force);
 
 
 enum filter_colocation_res {
