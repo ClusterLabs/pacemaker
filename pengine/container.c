@@ -115,6 +115,7 @@ container_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     }
 
     clear_bit(rsc->flags, pe_rsc_allocating);
+    clear_bit(rsc->flags, pe_rsc_provisional);
     return NULL;
 }
 
@@ -205,7 +206,46 @@ container_rsc_colocation_lh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_coloca
 void
 container_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * constraint)
 {
-    pe_err("Container %s cannot be colocated with anything", rsc_rh->id);
+    GListPtr allocated_rhs = NULL;
+    container_variant_data_t *container_data = NULL;
+
+    CRM_CHECK(constraint != NULL, return);
+    CRM_CHECK(rsc_lh != NULL, pe_err("rsc_lh was NULL for %s", constraint->id); return);
+    CRM_CHECK(rsc_rh != NULL, pe_err("rsc_rh was NULL for %s", constraint->id); return);
+
+    if (is_set(rsc_rh->flags, pe_rsc_provisional)) {
+        pe_rsc_trace(rsc_rh, "%s is still provisional", rsc_rh->id);
+        return;
+
+    } else if(rsc_lh->variant > pe_group) {
+        pe_err("Only basic resources and groups can be colocated with %s", rsc_rh->id);
+        return;
+    }
+
+    get_container_variant_data(container_data, constraint->rsc_rh);
+    pe_rsc_trace(rsc_rh, "Processing constraint %s: %s -> %s %d",
+                 constraint->id, rsc_lh->id, rsc_rh->id, constraint->score);
+
+    for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
+        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+
+        if (constraint->score < INFINITY) {
+            tuple->docker->cmds->rsc_colocation_rh(rsc_lh, tuple->docker, constraint);
+
+        } else {
+            node_t *chosen = tuple->docker->fns->location(tuple->docker, NULL, FALSE);
+
+            if (chosen != NULL && is_set_recursive(tuple->docker, pe_rsc_block, TRUE) == FALSE) {
+                pe_rsc_trace(rsc_rh, "Allowing %s: %s %d", constraint->id, chosen->details->uname, chosen->weight);
+                allocated_rhs = g_list_prepend(allocated_rhs, chosen);
+            }
+        }
+    }
+
+    if (constraint->score >= INFINITY) {
+        node_list_exclude(rsc_lh->allowed_nodes, allocated_rhs, FALSE);
+    }
+    g_list_free(allocated_rhs);
 }
 
 enum pe_action_flags
