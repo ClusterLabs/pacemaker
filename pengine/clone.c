@@ -1047,20 +1047,7 @@ clone_rsc_colocation_lh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
      *
      * Instead we add the colocation constraints to the child and call from there
      */
-
-    GListPtr gIter = rsc_lh->children;
-
-    CRM_CHECK(FALSE, crm_err("This functionality is not thought to be used. Please report a bug."));
-    CRM_CHECK(rsc_lh, return);
-    CRM_CHECK(rsc_rh, return);
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
-
-        child_rsc->cmds->rsc_colocation_lh(child_rsc, rsc_rh, constraint);
-    }
-
-    return;
+    CRM_ASSERT(FALSE);
 }
 
 void
