@@ -149,13 +149,13 @@ What to do when the cluster does not have quorum.  Allowed values:
 * +stop:+ stop all resources in the affected cluster partition
 * +suicide:+ fence all nodes in the affected cluster partition
 
-| batch-limit | 30 |
+| batch-limit | 0 '(30 before version 1.1.11)' |
 indexterm:[batch-limit,Cluster Option]
 indexterm:[Cluster,Option,batch-limit]
-The number of jobs that the Transition Engine (TE) is allowed to execute in
-parallel. The TE is the logic in pacemaker's CRMd that executes the actions
-determined by the Policy Engine (PE). The "correct" value will depend on the
-speed and load of your network and cluster nodes.
+The maximum number of actions that the cluster may execute in parallel across
+all nodes. The "correct" value will depend on the speed and load of your
+network and cluster nodes. If zero, the cluster will impose a dynamically
+calculated limit only when any node has high load.
 
 | migration-limit | -1 |
 indexterm:[migration-limit,Cluster Option]
