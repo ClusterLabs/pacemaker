@@ -342,16 +342,22 @@ container_update_actions(action_t * first, action_t * then, node_t * node, enum 
 void
 container_rsc_location(resource_t * rsc, rsc_to_node_t * constraint)
 {
-    GListPtr gIter = rsc->children;
+    container_variant_data_t *container_data = NULL;
+    get_container_variant_data(container_data, rsc);
 
     pe_rsc_trace(rsc, "Processing location constraint %s for %s", constraint->id, rsc->id);
 
     native_rsc_location(rsc, constraint);
 
-    for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+    for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
+        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
 
-        child_rsc->cmds->rsc_location(child_rsc, constraint);
+        if (tuple->docker) {
+            tuple->docker->cmds->rsc_location(tuple->docker, constraint);
+        }
+        if(tuple->ip) {
+            tuple->ip->cmds->rsc_location(tuple->ip, constraint);
+        }
     }
 }
 
