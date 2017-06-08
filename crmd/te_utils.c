@@ -259,7 +259,11 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
         return;
     }
 
-    if (safe_str_eq(st_event->operation, T_STONITH_NOTIFY_FENCE)) {
+    /* Update the count of stonith failures for this target, in case we become
+     * DC later. The current DC has already updated its fail count in
+     * tengine_stonith_callback().
+     */
+    if (!AM_I_DC && safe_str_eq(st_event->operation, T_STONITH_NOTIFY_FENCE)) {
         if (st_event->result == pcmk_ok) {
             st_fail_count_reset(st_event->target);
         } else {
