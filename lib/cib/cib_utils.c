@@ -699,10 +699,26 @@ cib_native_notify(gpointer data, gpointer user_data)
 }
 
 pe_cluster_option cib_opts[] = {
-    /* name, old-name, validate, default, description */
-    {"enable-acl", NULL, "boolean", NULL, "false", &check_boolean,
-     "Enable CIB ACL", NULL}
-    ,
+    /*
+     * name, legacy name,
+     * type, allowed values, default, validator,
+     * short description,
+     * long description
+     */
+    {
+        "enable-acl", NULL,
+        "boolean", NULL, "false", &check_boolean,
+        "Enable CIB ACL",
+        NULL
+    },
+    {
+        "cluster-ipc-limit", NULL,
+        "integer", NULL, "500", &check_positive_number,
+        "Maximum IPC message backlog before disconnecting a cluster daemon",
+        "Raise this if log has \"Evicting client\" messages for cluster daemon"
+            " PIDs (a good value is the number of resources in the cluster"
+            " multiplied by the number of nodes)"
+    },
 };
 
 void
