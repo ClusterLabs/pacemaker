@@ -37,8 +37,9 @@
 
 #define PCMK_IPC_VERSION 1
 
-/* Evict clients whose event queue grows this large */
-#define PCMK_IPC_MAX_QUEUE 500
+/* Evict clients whose event queue grows this large (by default) */
+#define PCMK_IPC_DEFAULT_QUEUE_MAX 500
+#define PCMK_IPC_DEFAULT_QUEUE_MAX_S "500"
 
 struct crm_ipc_response_header {
     struct qb_ipc_response_header qb;
@@ -409,6 +410,24 @@ crm_client_destroy(crm_client_t * c)
     free(c);
 }
 
+/*!
+ * \brief Raise IPC eviction threshold for a client, if allowed
+ *
+ * \param[in,out] client     Client to modify
+ * \param[in]     queue_max  New threshold (as string)
+ *
+ * \return TRUE if change was allowed, FALSE otherwise
+ */
+bool
+crm_set_client_queue_max(crm_client_t *client, const char *qmax)
+{
+    if (is_set(client->flags, crm_client_flag_ipc_privileged)) {
+        client->queue_max = crm_parse_int(qmax, PCMK_IPC_DEFAULT_QUEUE_MAX_S);
+        return TRUE;
+    }
+    return FALSE;
+}
+
 int
 crm_ipcs_client_pid(qb_ipcs_connection_t * c)
 {
@@ -553,18 +572,12 @@ crm_ipcs_flush_events(crm_client_t * c)
     }
 
     if (queue_len) {
-        /* We want to allow clients to briefly fall behind on processing
-         * incoming messages, but drop completely unresponsive clients so the
-         * connection doesn't consume resources indefinitely.
-         *
-         * @TODO It is possible that the queue could reasonably grow large in a
-         * short time. An example is a reprobe of hundreds of resources on many
-         * nodes resulting in a surge of CIB replies to the crmd. We could
-         * possibly give cluster daemons a higher threshold here, and/or prevent
-         * such a surge by throttling LRM history writes in the crmd.
-         */
 
-        if (queue_len > PCMK_IPC_MAX_QUEUE) {
+        /* Allow clients to briefly fall behind on processing incoming messages,
+         * but drop completely unresponsive clients so the connection doesn't
+         * consume resources indefinitely.
+         */
+        if (queue_len > QB_MAX(c->queue_max, PCMK_IPC_DEFAULT_QUEUE_MAX)) {
             if ((c->queue_backlog <= 1) || (queue_len < c->queue_backlog)) {
                 /* Don't evict for a new or shrinking backlog */
                 crm_warn("Client with process ID %u has a backlog of %u messages "
