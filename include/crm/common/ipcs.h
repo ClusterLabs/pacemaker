@@ -93,7 +93,7 @@ struct crm_client_s {
 
     struct crm_remote_s *remote;        /* TCP/TLS */
 
-    unsigned int backlog_len; /* IPC queue length after last flush */
+    unsigned int queue_backlog; /* IPC queue length after last flush */
 };
 
 extern GHashTable *client_connections;

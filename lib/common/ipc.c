@@ -558,25 +558,25 @@ crm_ipcs_flush_events(crm_client_t * c)
          */
 
         if (queue_len > PCMK_IPC_MAX_QUEUE) {
-            if ((c->backlog_len <= 1) || (queue_len < c->backlog_len)) {
+            if ((c->queue_backlog <= 1) || (queue_len < c->queue_backlog)) {
                 /* Don't evict for a new or shrinking backlog */
                 crm_warn("Client with process ID %u has a backlog of %u messages "
                          CRM_XS " %p", c->pid, queue_len, c->ipcs);
             } else {
                 crm_err("Evicting client with process ID %u due to backlog of %u messages "
                          CRM_XS " %p", c->pid, queue_len, c->ipcs);
-                c->backlog_len = 0;
+                c->queue_backlog = 0;
                 qb_ipcs_disconnect(c->ipcs);
                 return rc;
             }
         }
 
-        c->backlog_len = queue_len;
+        c->queue_backlog = queue_len;
         delay_next_flush(c, queue_len);
 
     } else {
         /* Event queue is empty, there is no backlog */
-        c->backlog_len = 0;
+        c->queue_backlog = 0;
     }
 
     return rc;
