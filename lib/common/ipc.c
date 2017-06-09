@@ -293,6 +293,24 @@ crm_client_disconnect_all(qb_ipcs_service_t *service)
     }
 }
 
+/*!
+ * \brief Allocate a new crm_client_t object and generate its ID
+ *
+ * \param[in] key  What to use as connections hash table key (NULL to use ID)
+ *
+ * \return Pointer to new crm_client_t (asserts on failure)
+ */
+crm_client_t *
+crm_client_alloc(void *key)
+{
+    crm_client_t *client = calloc(1, sizeof(crm_client_t));
+
+    CRM_ASSERT(client != NULL);
+    client->id = crm_generate_uuid();
+    g_hash_table_insert(client_connections, (key? key : client->id), client);
+    return client;
+}
+
 crm_client_t *
 crm_client_new(qb_ipcs_connection_t * c, uid_t uid_client, gid_t gid_client)
 {
@@ -324,21 +342,16 @@ crm_client_new(qb_ipcs_connection_t * c, uid_t uid_client, gid_t gid_client)
     crm_client_init();
 
     /* TODO: Do our own auth checking, return NULL if unauthorized */
-    client = calloc(1, sizeof(crm_client_t));
-
+    client = crm_client_alloc(c);
     client->ipcs = c;
     client->kind = CRM_CLIENT_IPC;
     client->pid = crm_ipcs_client_pid(c);
-
-    client->id = crm_generate_uuid();
 
     crm_debug("Connecting %p for uid=%d gid=%d pid=%u id=%s", c, uid_client, gid_client, client->pid, client->id);
 
 #if ENABLE_ACL
     client->user = uid2username(uid_client);
 #endif
-
-    g_hash_table_insert(client_connections, c, client);
     return client;
 }
 
