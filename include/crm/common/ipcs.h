@@ -60,7 +60,8 @@ struct crm_remote_s {
 
 enum crm_client_flags
 {
-    crm_client_flag_ipc_proxied = 0x00001, /* ipc_proxy code only */
+    crm_client_flag_ipc_proxied    = 0x00001, /* ipc_proxy code only */
+    crm_client_flag_ipc_privileged = 0x00002, /* root or cluster user */
 };
 
 struct crm_client_s {

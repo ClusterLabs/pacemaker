@@ -314,6 +314,7 @@ crm_client_alloc(void *key)
 crm_client_t *
 crm_client_new(qb_ipcs_connection_t * c, uid_t uid_client, gid_t gid_client)
 {
+    static gid_t uid_cluster = 0;
     static gid_t gid_cluster = 0;
 
     crm_client_t *client = NULL;
@@ -323,11 +324,12 @@ crm_client_new(qb_ipcs_connection_t * c, uid_t uid_client, gid_t gid_client)
         return NULL;
     }
 
-    if (gid_cluster == 0) {
-        if(crm_user_lookup(CRM_DAEMON_USER, NULL, &gid_cluster) < 0) {
+    if (uid_cluster == 0) {
+        if (crm_user_lookup(CRM_DAEMON_USER, &uid_cluster, &gid_cluster) < 0) {
             static bool have_error = FALSE;
             if(have_error == FALSE) {
-                crm_warn("Could not find group for user %s", CRM_DAEMON_USER);
+                crm_warn("Could not find user and group IDs for user %s",
+                         CRM_DAEMON_USER);
                 have_error = TRUE;
             }
         }
@@ -346,6 +348,11 @@ crm_client_new(qb_ipcs_connection_t * c, uid_t uid_client, gid_t gid_client)
     client->ipcs = c;
     client->kind = CRM_CLIENT_IPC;
     client->pid = crm_ipcs_client_pid(c);
+
+    if ((uid_client == 0) || (uid_client == uid_cluster)) {
+        /* Remember when a connection came from root or hacluster */
+        set_bit(client->flags, crm_client_flag_ipc_privileged);
+    }
 
     crm_debug("Connecting %p for uid=%d gid=%d pid=%u id=%s", c, uid_client, gid_client, client->pid, client->id);
 
