@@ -487,24 +487,26 @@ main(int argc, char **argv)
             case 'I':
                 interval = optarg;
                 break;
-
-            case 'F':
+            
+            case 'D':
+                require_dataset = FALSE; 
                 crm_log_args(argc, argv);
-                require_crmd = TRUE;
                 rsc_cmd = flag;
                 break;
 
+            case 'F':
+                require_crmd = TRUE;
             case 'U':
             case 'B':
             case 'M':
-            case 'D':
                 crm_log_args(argc, argv);
                 rsc_cmd = flag;
                 break;
 
-            case 'L':
             case 'c':
+            case 'L':
             case 'l':
+                 require_resource = FALSE;
             case 'q':
             case 'w':
             case 'W':
@@ -519,9 +521,10 @@ main(int argc, char **argv)
             case 'j':
                 print_pending = TRUE;
                 break;
+            case 'S':
+                require_dataset = FALSE;  
             case 'p':
             case 'd':
-            case 'S':
                 crm_log_args(argc, argv);
                 prop_name = optarg;
                 rsc_cmd = flag;
