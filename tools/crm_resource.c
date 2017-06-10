@@ -669,6 +669,7 @@ main(int argc, char **argv)
 
     /* Handle rsc_cmd appropriately */
     if (rsc_cmd == 'L') {
+        require_resource = FALSE;
         rc = pcmk_ok;
         cli_resource_print_list(&data_set, FALSE);
 
@@ -709,6 +710,7 @@ main(int argc, char **argv)
         rc = cli_resource_restart(rsc, host_uname, timeout_ms, cib_conn);
 
     } else if (rsc_cmd == 0 && rsc_long_cmd && safe_str_eq(rsc_long_cmd, "wait")) {
+        require_resource = FALSE; 
         rc = wait_till_stable(timeout_ms, cib_conn);
 
     } else if (rsc_cmd == 0 && rsc_long_cmd) { /* validate or force-(stop|start|check) */
@@ -747,6 +749,7 @@ main(int argc, char **argv)
         cli_resource_print_colocation(rsc, FALSE, rsc_cmd == 'A', 1);
 
     } else if (rsc_cmd == 'c') {
+        require_resource = FALSE; 
         int found = 0;
         GListPtr lpc = NULL;
 
@@ -773,6 +776,7 @@ main(int argc, char **argv)
 
     /* All remaining commands require that resource exist */
     } else if (rc == -ENXIO) {
+        require_dataset = FALSE;
         CMD_ERR("Resource '%s' not found: %s", crm_str(rsc_id), pcmk_strerror(rc));
 
     } else if (rsc_cmd == 'W') {
@@ -912,6 +916,7 @@ main(int argc, char **argv)
 
     } else if (rsc_cmd == 'S') {
         xmlNode *msg_data = NULL;
+        require_dataset = FALSE;  
 
         if ((rsc_id == NULL) || !strlen(rsc_id)) {
             CMD_ERR("Must specify -r with resource id");
@@ -1003,6 +1008,7 @@ main(int argc, char **argv)
         }
 
     } else if (rsc_cmd == 'C') {
+        require_resource = FALSE; 
 #if HAVE_ATOMIC_ATTRD
         const char *router_node = host_uname;
         xmlNode *msg_data = NULL;
@@ -1058,6 +1064,8 @@ main(int argc, char **argv)
 
     } else if (rsc_cmd == 'D') {
         xmlNode *msg_data = NULL;
+        require_crmd = TRUE;    
+        require_dataset = FALSE; 
 
         if (rsc_id == NULL) {
             CMD_ERR("Must supply a resource id with -r");
