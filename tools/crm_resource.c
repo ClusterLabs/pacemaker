@@ -749,10 +749,10 @@ main(int argc, char **argv)
         cli_resource_print_colocation(rsc, FALSE, rsc_cmd == 'A', 1);
 
     } else if (rsc_cmd == 'c') {
-        require_resource = FALSE; 
         int found = 0;
         GListPtr lpc = NULL;
 
+        require_resource = FALSE; 
         rc = pcmk_ok;
         for (lpc = data_set.resources; lpc != NULL; lpc = lpc->next) {
             resource_t *rsc = (resource_t *) lpc->data;
@@ -1008,13 +1008,13 @@ main(int argc, char **argv)
         }
 
     } else if (rsc_cmd == 'C') {
-        require_resource = FALSE; 
 #if HAVE_ATOMIC_ATTRD
         const char *router_node = host_uname;
         xmlNode *msg_data = NULL;
         xmlNode *cmd = NULL;
         int attr_options = attrd_opt_none;
 
+        require_resource = FALSE; 
         if (host_uname) {
             node_t *node = pe_find_node(data_set.nodes, host_uname);
 
@@ -1053,6 +1053,7 @@ main(int argc, char **argv)
         GListPtr rIter = NULL;
 
         crmd_replies_needed = 0;
+        require_resource = FALSE; 
         for (rIter = data_set.resources; rIter; rIter = rIter->next) {
             resource_t *rsc = rIter->data;
             cli_resource_delete(crmd_channel, host_uname, rsc, NULL, NULL,
