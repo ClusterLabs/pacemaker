@@ -472,6 +472,7 @@ main(int argc, char **argv)
                 break;
 
             case 'C':
+                require_resource = FALSE; 
             case 'R':
             case 'P':
                 crm_log_args(argc, argv);
@@ -500,10 +501,14 @@ main(int argc, char **argv)
             case 'D':
                 crm_log_args(argc, argv);
                 rsc_cmd = flag;
+                require_crmd = TRUE;    
+                require_dataset = FALSE; 
                 break;
 
-            case 'L':
+
             case 'c':
+            case 'L':
+                require_resource = FALSE;
             case 'l':
             case 'q':
             case 'w':
@@ -524,6 +529,7 @@ main(int argc, char **argv)
             case 'S':
                 crm_log_args(argc, argv);
                 prop_name = optarg;
+                require_dataset = FALSE;  
                 rsc_cmd = flag;
                 break;
             case 'G':
@@ -669,7 +675,6 @@ main(int argc, char **argv)
 
     /* Handle rsc_cmd appropriately */
     if (rsc_cmd == 'L') {
-        require_resource = FALSE;
         rc = pcmk_ok;
         cli_resource_print_list(&data_set, FALSE);
 
@@ -710,7 +715,6 @@ main(int argc, char **argv)
         rc = cli_resource_restart(rsc, host_uname, timeout_ms, cib_conn);
 
     } else if (rsc_cmd == 0 && rsc_long_cmd && safe_str_eq(rsc_long_cmd, "wait")) {
-        require_resource = FALSE; 
         rc = wait_till_stable(timeout_ms, cib_conn);
 
     } else if (rsc_cmd == 0 && rsc_long_cmd) { /* validate or force-(stop|start|check) */
@@ -752,7 +756,6 @@ main(int argc, char **argv)
         int found = 0;
         GListPtr lpc = NULL;
 
-        require_resource = FALSE; 
         rc = pcmk_ok;
         for (lpc = data_set.resources; lpc != NULL; lpc = lpc->next) {
             resource_t *rsc = (resource_t *) lpc->data;
@@ -776,7 +779,6 @@ main(int argc, char **argv)
 
     /* All remaining commands require that resource exist */
     } else if (rc == -ENXIO) {
-        require_dataset = FALSE;
         CMD_ERR("Resource '%s' not found: %s", crm_str(rsc_id), pcmk_strerror(rc));
 
     } else if (rsc_cmd == 'W') {
@@ -916,7 +918,6 @@ main(int argc, char **argv)
 
     } else if (rsc_cmd == 'S') {
         xmlNode *msg_data = NULL;
-        require_dataset = FALSE;  
 
         if ((rsc_id == NULL) || !strlen(rsc_id)) {
             CMD_ERR("Must specify -r with resource id");
@@ -1014,7 +1015,6 @@ main(int argc, char **argv)
         xmlNode *cmd = NULL;
         int attr_options = attrd_opt_none;
 
-        require_resource = FALSE; 
         if (host_uname) {
             node_t *node = pe_find_node(data_set.nodes, host_uname);
 
@@ -1053,7 +1053,6 @@ main(int argc, char **argv)
         GListPtr rIter = NULL;
 
         crmd_replies_needed = 0;
-        require_resource = FALSE; 
         for (rIter = data_set.resources; rIter; rIter = rIter->next) {
             resource_t *rsc = rIter->data;
             cli_resource_delete(crmd_channel, host_uname, rsc, NULL, NULL,
@@ -1065,8 +1064,6 @@ main(int argc, char **argv)
 
     } else if (rsc_cmd == 'D') {
         xmlNode *msg_data = NULL;
-        require_crmd = TRUE;    
-        require_dataset = FALSE; 
 
         if (rsc_id == NULL) {
             CMD_ERR("Must supply a resource id with -r");
