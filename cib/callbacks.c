@@ -893,6 +893,7 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
         crm_xml_add(msg, F_CIB_ISREPLY, originator);
         crm_xml_add(msg, F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
         crm_xml_add(msg, F_CIB_OPERATION, CIB_OP_APPLY_DIFF);
+        crm_xml_add(msg, F_CIB_USER, CRM_DAEMON_USER);
 
         if (format == 1) {
             CRM_ASSERT(digest != NULL);
