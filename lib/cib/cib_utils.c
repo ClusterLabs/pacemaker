@@ -794,23 +794,24 @@ cib_apply_patch_event(xmlNode * event, xmlNode * input, xmlNode ** output, int l
     return rc;
 }
 
+/* v2 and v2 patch formats */
+#define XPATH_CONFIG_CHANGE \
+    "//" XML_CIB_TAG_CRMCONFIG " | " \
+    "//" XML_DIFF_CHANGE "[contains(@" XML_DIFF_PATH ",'/" XML_CIB_TAG_CRMCONFIG "/')]"
+
 gboolean
-cib_internal_config_changed(xmlNode * diff)
+cib_internal_config_changed(xmlNode *diff)
 {
     gboolean changed = FALSE;
-    xmlXPathObject *xpathObj = NULL;
 
-    if (diff == NULL) {
-        return FALSE;
+    if (diff) {
+        xmlXPathObject *xpathObj = xpath_search(diff, XPATH_CONFIG_CHANGE);
+
+        if (numXpathResults(xpathObj) > 0) {
+            changed = TRUE;
+        }
+        freeXpathObject(xpathObj);
     }
-
-    xpathObj = xpath_search(diff, "//" XML_CIB_TAG_CRMCONFIG);
-    if (numXpathResults(xpathObj) > 0) {
-        changed = TRUE;
-    }
-
-    freeXpathObject(xpathObj);
-
     return changed;
 }
 
