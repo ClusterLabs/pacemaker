@@ -492,10 +492,10 @@ main(int argc, char **argv)
             case 'D':
                 require_crmd = TRUE;    
                 require_dataset = FALSE; 
-            case 'U':
-            case 'B':
             case 'F':
                 require_crmd = TRUE;
+            case 'U':
+            case 'B':
             case 'M':
                 crm_log_args(argc, argv);
                 rsc_cmd = flag;
