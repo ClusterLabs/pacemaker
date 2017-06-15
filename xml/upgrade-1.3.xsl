@@ -13,17 +13,40 @@
     <xsl:copy-of select="@id"/>
     <xsl:attribute name="kind"><xsl:value-of select="name()"/></xsl:attribute>
 
+    <!-- previously, one could have a single element "matched" multiple times,
+         each time using a different attribute (or no attribute at all), which
+         would result, after the generalization (stripping @attribute) in
+         multiple possibly conflicting ACL behaviours for given element(s);
+         we could take this into account by, at the very least, preferring
+         the behavior at attribute-less specification, if any -->
     <xsl:choose>
       <xsl:when test="@ref">
         <xsl:attribute name="reference"><xsl:value-of select="@ref"/></xsl:attribute>
+        <xsl:if test="@attribute">
+          <!-- alternatively, rephrase (generalized a bit) turning it to @xpath -->
+          <xsl:message>ACLs: @attribute cannot accompany @ref for upgrade-1.3.xsl purposes, ignoring</xsl:message>
+        </xsl:if>
       </xsl:when>
       <xsl:when test="@tag">
         <xsl:attribute name="object-type"><xsl:value-of select="@tag"/></xsl:attribute>
-        <xsl:copy-of select="@attribute"/>
+        <xsl:if test="@attribute">
+          <xsl:message>ACLs: @attribute (with @tag) handling generalized a bit for upgrade-1.3.xsl purposes</xsl:message>
+          <xsl:copy-of select="@attribute"/>
+        </xsl:if>
       </xsl:when>
       <xsl:otherwise>
         <!-- must have been xpath per the schema, then -->
-        <xsl:copy-of select="@xpath"/>
+        <xsl:choose>
+          <xsl:when test="@attribute">
+            <xsl:message>ACLs: @attribute (with @xpath) handling generalized a bit for upgrade-1.3.xsl purposes</xsl:message>
+            <xsl:attribute name="xpath">
+              <xsl:value-of select="concat(@xpath,'[@', @attribute, ']')"/>
+            </xsl:attribute>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:copy-of select="@xpath"/>
+          </xsl:otherwise>
+        </xsl:choose>
       </xsl:otherwise>
     </xsl:choose>
 
