@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <glib.h>
 
 #include <crm/crm.h>
 #include <crm/cib.h>
@@ -43,6 +44,9 @@ enum cib_notifications
     cib_notify_replace = 0x0004,
     cib_notify_confirm = 0x0008,
     cib_notify_diff    = 0x0010,
+
+    /* not a notification, but uses the same IPC bitmask */
+    cib_is_daemon      = 0x1000, /* whether client is another cluster daemon */
 };
 /* *INDENT-ON* */
 
@@ -80,3 +84,9 @@ extern void cib_ha_peer_callback(HA_Message * msg, void *private_data);
 extern int cib_ccm_dispatch(gpointer user_data);
 extern void cib_ccm_msg_callback(oc_ed_t event, void *cookie, size_t size, const void *data);
 #endif
+
+static inline const char *
+cib_config_lookup(const char *opt)
+{
+    return g_hash_table_lookup(config_hash, opt);
+}

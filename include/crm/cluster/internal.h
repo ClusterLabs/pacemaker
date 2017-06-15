@@ -338,7 +338,7 @@ ais_error2text(int error)
             text = "Bad flags";
             break;
         case CS_ERR_TOO_BIG:
-            text = "To big";
+            text = "Too big";
             break;
         case CS_ERR_NO_SECTIONS:
             text = "No sections";

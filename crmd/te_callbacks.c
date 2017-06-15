@@ -822,6 +822,10 @@ tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
             abort_action = tg_stop;
         }
 
+        /* Increment the fail count now, so abort_for_stonith_failure() can
+         * check it. Non-DC nodes will increment it in tengine_stonith_notify().
+         */
+        st_fail_count_increment(target);
         abort_for_stonith_failure(abort_action, target, NULL);
     }
 

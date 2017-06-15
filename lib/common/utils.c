@@ -1959,6 +1959,27 @@ crm_generate_uuid(void)
     return buffer;
 }
 
+/*!
+ * \brief Check whether a string represents a cluster daemon name
+ *
+ * \param[in] name  String to check
+ *
+ * \return TRUE if name is standard client name used by daemons, FALSE otherwise
+ */
+bool
+crm_is_daemon_name(const char *name)
+{
+    return (name &&
+            (!strcmp(name, CRM_SYSTEM_CRMD)
+            || !strcmp(name, CRM_SYSTEM_STONITHD)
+            || !strcmp(name, T_ATTRD)
+            || !strcmp(name, CRM_SYSTEM_CIB)
+            || !strcmp(name, CRM_SYSTEM_MCP)
+            || !strcmp(name, CRM_SYSTEM_DC)
+            || !strcmp(name, CRM_SYSTEM_TENGINE)
+            || !strcmp(name, CRM_SYSTEM_LRMD)));
+}
+
 #include <md5.h>
 
 char *

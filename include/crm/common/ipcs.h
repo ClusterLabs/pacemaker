@@ -19,6 +19,7 @@
 #ifndef CRM_COMMON_IPCS__H
 #  define CRM_COMMON_IPCS__H
 
+#  include <stdbool.h>
 #  include <qb/qbipcs.h>
 #  ifdef HAVE_GNUTLS_GNUTLS_H
 #    undef KEYFILE
@@ -60,7 +61,8 @@ struct crm_remote_s {
 
 enum crm_client_flags
 {
-    crm_client_flag_ipc_proxied = 0x00001, /* ipc_proxy code only */
+    crm_client_flag_ipc_proxied    = 0x00001, /* ipc_proxy code only */
+    crm_client_flag_ipc_privileged = 0x00002, /* root or cluster user */
 };
 
 struct crm_client_s {
@@ -93,7 +95,8 @@ struct crm_client_s {
 
     struct crm_remote_s *remote;        /* TCP/TLS */
 
-    unsigned int backlog_len; /* IPC queue length after last flush */
+    unsigned int queue_backlog; /* IPC queue length after last flush */
+    unsigned int queue_max;     /* Evict client whose queue grows this big */
 };
 
 extern GHashTable *client_connections;
@@ -105,9 +108,11 @@ crm_client_t *crm_client_get(qb_ipcs_connection_t * c);
 crm_client_t *crm_client_get_by_id(const char *id);
 const char *crm_client_name(crm_client_t * c);
 
+crm_client_t *crm_client_alloc(void *key);
 crm_client_t *crm_client_new(qb_ipcs_connection_t * c, uid_t uid, gid_t gid);
 void crm_client_destroy(crm_client_t * c);
 void crm_client_disconnect_all(qb_ipcs_service_t *s);
+bool crm_set_client_queue_max(crm_client_t *client, const char *qmax);
 
 void crm_ipcs_send_ack(crm_client_t * c, uint32_t request, uint32_t flags,
                        const char *tag, const char *function, int line);

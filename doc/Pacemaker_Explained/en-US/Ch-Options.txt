@@ -149,13 +149,13 @@ What to do when the cluster does not have quorum.  Allowed values:
 * +stop:+ stop all resources in the affected cluster partition
 * +suicide:+ fence all nodes in the affected cluster partition
 
-| batch-limit | 30 |
+| batch-limit | 0 '(30 before version 1.1.11)' |
 indexterm:[batch-limit,Cluster Option]
 indexterm:[Cluster,Option,batch-limit]
-The number of jobs that the Transition Engine (TE) is allowed to execute in
-parallel. The TE is the logic in pacemaker's CRMd that executes the actions
-determined by the Policy Engine (PE). The "correct" value will depend on the
-speed and load of your network and cluster nodes.
+The maximum number of actions that the cluster may execute in parallel across
+all nodes. The "correct" value will depend on the speed and load of your
+network and cluster nodes. If zero, the cluster will impose a dynamically
+calculated limit only when any node has high load.
 
 | migration-limit | -1 |
 indexterm:[migration-limit,Cluster Option]
@@ -266,6 +266,15 @@ elements that take effect based on the time of day. To ensure these changes
 take effect, we can optionally poll the cluster's status for changes. A value
 of 0 disables polling. Positive values are an interval (in seconds unless other
 SI units are specified, e.g. 5min).
+
+| cluster-ipc-limit | 500 |
+indexterm:[cluster-ipc-limit,Cluster Option]
+indexterm:[Cluster,Option,cluster-ipc-limit]
+The maximum IPC message backlog before one cluster daemon will disconnect
+another. This is of use in large clusters, for which a good value is the number
+of resources in the cluster multiplied by the number of nodes. The default of
+500 is also the minimum. Raise this if you see "Evicting client" messages for
+cluster daemon PIDs in the logs.
 
 | pe-error-series-max | -1 |
 indexterm:[pe-error-series-max,Cluster Option]
