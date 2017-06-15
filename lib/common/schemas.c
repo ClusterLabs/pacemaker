@@ -33,6 +33,7 @@
 #if HAVE_LIBXSLT
 #  include <libxslt/xslt.h>
 #  include <libxslt/transform.h>
+#  include <libxslt/xsltutils.h>
 #endif
 
 #include <crm/msg_xml.h>
@@ -652,8 +653,23 @@ validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs)
 }
 
 #if HAVE_LIBXSLT
+
+static void
+cib_upgrade_err(void *ctx, const char *fmt, ...)
+G_GNUC_PRINTF(2, 3);
+
+static void
+cib_upgrade_err(void *ctx, const char *fmt, ...)
+{
+    va_list ap;
+
+    va_start(ap, fmt);
+    CRM_XML_LOG_BASE(LOG_WARNING, TRUE, 0, "CIB upgrade: ", fmt, ap);
+    va_end(ap);
+}
+
 static xmlNode *
-apply_transformation(xmlNode *xml, const char *transform)
+apply_transformation(xmlNode *xml, const char *transform, gboolean to_logs)
 {
     char *xform = NULL;
     xmlNode *out = NULL;
@@ -668,11 +684,20 @@ apply_transformation(xmlNode *xml, const char *transform)
     xmlLoadExtDtdDefaultValue = 1;
     xmlSubstituteEntitiesDefault(1);
 
+    /* for capturing, e.g., what's emitted via <xsl:message> */
+    if (to_logs) {
+        xsltSetGenericErrorFunc(NULL, cib_upgrade_err);
+    } else {
+        xsltSetGenericErrorFunc((void *) stderr, (xmlGenericErrorFunc) fprintf);
+    }
+
     xslt = xsltParseStylesheetFile((const xmlChar *)xform);
     CRM_CHECK(xslt != NULL, goto cleanup);
 
     res = xsltApplyStylesheet(xslt, doc, NULL);
     CRM_CHECK(res != NULL, goto cleanup);
+
+    xsltSetGenericErrorFunc(NULL, NULL);  /* restore default one */
 
     out = xmlDocGetRootElement(res);
 
@@ -811,7 +836,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
                            known_schemas[lpc].transform ? known_schemas[lpc].transform : "no-op");
 
 #if HAVE_LIBXSLT
-                upgrade = apply_transformation(xml, known_schemas[lpc].transform);
+                upgrade = apply_transformation(xml, known_schemas[lpc].transform, to_logs);
 #endif
                 if (upgrade == NULL) {
                     crm_err("Transformation %s failed",
