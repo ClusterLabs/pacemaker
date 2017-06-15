@@ -146,25 +146,32 @@ convert_non_atomic_uuid(char *old_uuid, resource_t * rsc, gboolean allow_notify,
 static action_t *
 rsc_expand_action(action_t * action)
 {
+    gboolean notify = FALSE;
     action_t *result = action;
+    resource_t *rsc = action->rsc;
 
-    if (action->rsc && action->rsc->variant >= pe_group) {
+    if (rsc == NULL) {
+        return action;
+    }
+
+    if(pe_rsc_is_clone(rsc) || rsc->parent == NULL) {
+        /* Only outermost resources have notification actions.
+         * The exception is those in bundles.
+         */
+        notify = is_set(rsc->flags, pe_rsc_notify);
+    }
+
+    if (rsc->variant >= pe_group) {
         /* Expand 'start' -> 'started' */
         char *uuid = NULL;
-        gboolean notify = FALSE;
 
-        if (action->rsc->parent == NULL) {
-            /* Only outermost resources have notification actions */
-            notify = is_set(action->rsc->flags, pe_rsc_notify);
-        }
-
-        uuid = convert_non_atomic_uuid(action->uuid, action->rsc, notify, FALSE);
+        uuid = convert_non_atomic_uuid(action->uuid, rsc, notify, FALSE);
         if (uuid) {
-            pe_rsc_trace(action->rsc, "Converting %s to %s %d", action->uuid, uuid,
-                         is_set(action->rsc->flags, pe_rsc_notify));
-            result = find_first_action(action->rsc->actions, uuid, NULL, NULL);
+            pe_rsc_trace(rsc, "Converting %s to %s %d", action->uuid, uuid,
+                         is_set(rsc->flags, pe_rsc_notify));
+            result = find_first_action(rsc->actions, uuid, NULL, NULL);
             if (result == NULL) {
-                crm_err("Couldn't expand %s", action->uuid);
+                crm_err("Couldn't expand %s to %s in %s", action->uuid, uuid, rsc->id);
                 result = action;
             }
             free(uuid);
