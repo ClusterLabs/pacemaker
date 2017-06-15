@@ -396,15 +396,76 @@ container_action_flags(action_t * action, node_t * node)
     return flags;
 }
 
-
 enum pe_graph_flags
 container_update_actions(action_t * first, action_t * then, node_t * node, enum pe_action_flags flags,
                      enum pe_action_flags filter, enum pe_ordering type)
 {
+    gboolean current = FALSE;
     enum pe_graph_flags changed = pe_graph_none;
+    container_variant_data_t *first_data = NULL;
+    container_variant_data_t *then_data = NULL;
+
 
     // At the point we need to force container X to stop because
     // resource Y needs to stop, here is where we'd implement that
+    crm_trace("%s -> %s", first->uuid, then->uuid);
+    if(first->rsc == NULL || then->rsc == NULL) {
+        return changed;
+
+    } else if(first->rsc->variant != then->rsc->variant) {
+        return changed; // For now
+    }
+
+    /* Fix this - lazy */
+    if (crm_ends_with(first->uuid, "_stopped_0")
+        || crm_ends_with(first->uuid, "_demoted_0")) {
+        current = TRUE;
+    }
+
+    get_container_variant_data(first_data, first->rsc);
+    get_container_variant_data(then_data, then->rsc);
+
+    if(first_data->child == NULL || then_data->child == NULL) {
+        return changed; // For now
+    }
+
+    for (GListPtr gIter = then_data->tuples; gIter != NULL; gIter = gIter->next) {
+        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+
+        resource_t *first_child = find_compatible_child(tuple->docker, first_data->child, RSC_ROLE_UNKNOWN, current);
+        if (first_child == NULL && current) {
+            crm_trace("Ignore");
+
+        } else if (first_child == NULL) {
+            crm_debug("No match found for %s (%d / %s / %s)", tuple->child->id, current, first->uuid, then->uuid);
+
+            /* Me no like this hack - but what else can we do?
+             *
+             * If there is no-one active or about to be active
+             *   on the same node as then_child, then they must
+             *   not be allowed to start
+             */
+            if (type & (pe_order_runnable_left | pe_order_implies_then) /* Mandatory */ ) {
+                pe_rsc_info(then->rsc, "Inhibiting %s from being active", tuple->child->id);
+                if(assign_node(tuple->child, NULL, TRUE)) {
+                    changed |= pe_graph_updated_then;
+                }
+            }
+
+        } else {
+            enum action_tasks task = get_complex_task(first_child, first->task, TRUE);
+            pe_action_t *first_action = find_first_action(first_child->actions, NULL, task2text(task), node);
+            pe_action_t *then_action = find_first_action(tuple->child->actions, NULL, then->task, node);
+
+            if (order_actions(first_action, then_action, type)) {
+                crm_debug("Created constraint for %s -> %s", first_action->uuid, then_action->uuid);
+                changed |= (pe_graph_updated_first | pe_graph_updated_then);
+            }
+            changed |= tuple->child->cmds->update_actions(first_action, then_action, node,
+                                                          first_child->cmds->action_flags(first_action, node),
+                                                          filter, type);
+        }
+    }
 
     return changed;
 }
