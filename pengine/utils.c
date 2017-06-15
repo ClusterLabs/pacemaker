@@ -422,3 +422,15 @@ can_run_any(GHashTable * nodes)
 
     return FALSE;
 }
+
+pe_action_t *
+create_pseudo_resource_op(resource_t * rsc, const char *task, bool optional, bool runnable, pe_working_set_t *data_set)
+{
+    pe_action_t *action = custom_action(rsc, generate_op_key(rsc->id, task, 0), task, NULL, optional, TRUE, data_set);
+    update_action_flags(action, pe_action_pseudo, __FUNCTION__, __LINE__);
+    update_action_flags(action, pe_action_runnable, __FUNCTION__, __LINE__);
+    if(runnable) {
+        update_action_flags(action, pe_action_runnable, __FUNCTION__, __LINE__);
+    }
+    return action;
+}

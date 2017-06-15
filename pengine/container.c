@@ -122,6 +122,8 @@ container_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 void
 container_create_actions(resource_t * rsc, pe_working_set_t * data_set)
 {
+    pe_action_t *action = NULL;
+    GListPtr containers = NULL;
     container_variant_data_t *container_data = NULL;
 
     CRM_CHECK(rsc != NULL, return);
@@ -136,15 +138,32 @@ container_create_actions(resource_t * rsc, pe_working_set_t * data_set)
         }
         if(tuple->docker) {
             tuple->docker->cmds->create_actions(tuple->docker, data_set);
+            containers = g_list_append(containers, tuple->docker);
         }
         if(tuple->remote) {
             tuple->remote->cmds->create_actions(tuple->remote, data_set);
         }
     }
 
+    clone_create_pseudo_actions(rsc, containers, NULL, NULL,  data_set);
+
     if(container_data->child) {
         container_data->child->cmds->create_actions(container_data->child, data_set);
+
+        if(container_data->child->variant == pe_master) {
+            /* promote */
+            action = create_pseudo_resource_op(rsc, RSC_PROMOTE, TRUE, TRUE, data_set);
+            action = create_pseudo_resource_op(rsc, RSC_PROMOTED, TRUE, TRUE, data_set);
+            action->priority = INFINITY;
+
+            /* demote */
+            action = create_pseudo_resource_op(rsc, RSC_DEMOTE, TRUE, TRUE, data_set);
+            action = create_pseudo_resource_op(rsc, RSC_DEMOTED, TRUE, TRUE, data_set);
+            action->priority = INFINITY;
+        }
     }
+
+    g_list_free(containers);
 }
 
 void
@@ -155,12 +174,38 @@ container_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
     CRM_CHECK(rsc != NULL, return);
 
     get_container_variant_data(container_data, rsc);
+
+    if(container_data->child) {
+        new_rsc_order(rsc, RSC_START, container_data->child, RSC_START, pe_order_implies_first_printed, data_set);
+        new_rsc_order(rsc, RSC_STOP, container_data->child, RSC_STOP, pe_order_implies_first_printed, data_set);
+
+        if(container_data->child->children) {
+            new_rsc_order(container_data->child, RSC_STARTED, rsc, RSC_STARTED, pe_order_implies_then_printed, data_set);
+            new_rsc_order(container_data->child, RSC_STOPPED, rsc, RSC_STOPPED, pe_order_implies_then_printed, data_set);
+        } else {
+            new_rsc_order(container_data->child, RSC_START, rsc, RSC_STARTED, pe_order_implies_then_printed, data_set);
+            new_rsc_order(container_data->child, RSC_STOP, rsc, RSC_STOPPED, pe_order_implies_then_printed, data_set);
+        }
+    }
+
     for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
         container_grouping_t *tuple = (container_grouping_t *)gIter->data;
 
         CRM_ASSERT(tuple);
-        if(tuple->docker) {
-            tuple->docker->cmds->internal_constraints(tuple->docker, data_set);
+        CRM_ASSERT(tuple->docker);
+
+        tuple->docker->cmds->internal_constraints(tuple->docker, data_set);
+
+        order_start_start(rsc, tuple->docker, pe_order_runnable_left | pe_order_implies_first_printed);
+
+        if(tuple->child) {
+            order_stop_stop(rsc, tuple->child, pe_order_implies_first_printed);
+
+        } else {
+            order_stop_stop(rsc, tuple->docker, pe_order_implies_first_printed);
+            new_rsc_order(tuple->docker, RSC_START, rsc, RSC_STARTED, pe_order_implies_then_printed, data_set);
+            new_rsc_order(tuple->docker, RSC_STOP, rsc, RSC_STOPPED, pe_order_implies_then_printed,
+                          data_set);
         }
 
         if(tuple->ip) {
@@ -194,8 +239,29 @@ container_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 
     if(container_data->child) {
         container_data->child->cmds->internal_constraints(container_data->child, data_set);
+        if(container_data->child->variant == pe_master) {
+            master_promotion_constraints(rsc, data_set);
+
+            /* child demoted before global demoted */
+            new_rsc_order(container_data->child, RSC_DEMOTED, rsc, RSC_DEMOTED, pe_order_implies_then_printed, data_set);
+
+            /* global demote before child demote */
+            new_rsc_order(rsc, RSC_DEMOTE, container_data->child, RSC_DEMOTE, pe_order_implies_first_printed, data_set);
+
+            /* child promoted before global promoted */
+            new_rsc_order(container_data->child, RSC_PROMOTED, rsc, RSC_PROMOTED, pe_order_implies_then_printed, data_set);
+
+            /* global promote before child promote */
+            new_rsc_order(rsc, RSC_PROMOTE, container_data->child, RSC_PROMOTE, pe_order_implies_first_printed, data_set);
+        }
+
+    } else {
+//    int type = pe_order_optional | pe_order_implies_then | pe_order_restart;
+//        custom_action_order(rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
+//                            rsc, generate_op_key(rsc->id, RSC_START, 0), NULL, pe_order_optional, data_set);
     }
 }
+
 
 
 static resource_t *
@@ -336,6 +402,10 @@ container_update_actions(action_t * first, action_t * then, node_t * node, enum 
                      enum pe_action_flags filter, enum pe_ordering type)
 {
     enum pe_graph_flags changed = pe_graph_none;
+
+    // At the point we need to force container X to stop because
+    // resource Y needs to stop, here is where we'd implement that
+
     return changed;
 }
 
@@ -358,6 +428,14 @@ container_rsc_location(resource_t * rsc, rsc_to_node_t * constraint)
         if(tuple->ip) {
             tuple->ip->cmds->rsc_location(tuple->ip, constraint);
         }
+    }
+
+    if(container_data->child && (constraint->role_filter == RSC_ROLE_SLAVE || constraint->role_filter == RSC_ROLE_MASTER)) {
+        // Translate the node into container names running on that node
+        crm_err("Applying constraint %s", constraint->id);
+        container_data->child->cmds->rsc_location(container_data->child, constraint);
+        container_data->child->rsc_location = g_list_prepend(container_data->child->rsc_location, constraint);
+        crm_err("Added %d location constraints to %s", g_list_length(container_data->child->rsc_location), container_data->child->id);
     }
 }
 

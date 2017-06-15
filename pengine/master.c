@@ -139,27 +139,26 @@ master_update_pseudo_status(resource_t * rsc, gboolean * demoting, gboolean * pr
     }
 }
 
-#define apply_master_location(list) do {				\
-    gIter2 = list;							\
-    for(; gIter2 != NULL; gIter2 = gIter2->next) {			\
-	rsc_to_node_t *cons = (rsc_to_node_t*)gIter2->data;		\
-									\
-	cons_node = NULL;						\
-	if(cons->role_filter == RSC_ROLE_MASTER) {			\
-	    pe_rsc_trace(rsc, "Applying %s to %s",				\
-			cons->id, child_rsc->id);			\
-	    cons_node = pe_find_node_id(				\
-		cons->node_list_rh, chosen->details->id);		\
-	}								\
-	if(cons_node != NULL) {						\
-	    int new_priority = merge_weights(				\
-		child_rsc->priority, cons_node->weight);		\
-	    pe_rsc_trace(rsc, "\t%s: %d->%d (%d)", child_rsc->id,		\
-			child_rsc->priority, new_priority, cons_node->weight); \
-	    child_rsc->priority = new_priority;				\
-	}								\
-    }									\
-    } while(0)
+static void apply_master_location(resource_t *child, GListPtr location_constraints, pe_node_t *chosen)
+{
+     for(GListPtr gIter = location_constraints; gIter != NULL; gIter = gIter->next) {
+	pe_node_t *cons_node = NULL;
+	rsc_to_node_t *cons = (rsc_to_node_t*)gIter->data;
+
+	if(cons->role_filter == RSC_ROLE_MASTER) {
+	    pe_rsc_trace(child, "Applying %s to %s", cons->id, child->id);
+	    cons_node = pe_find_node_id(cons->node_list_rh, chosen->details->id);
+	}
+	if(cons_node != NULL) {
+	    int new_priority = merge_weights(child->priority, cons_node->weight);
+	    pe_rsc_trace(child, "\t%s[%s]: %d -> %d (%d)", child->id,  cons_node->details->uname,
+			child->priority, new_priority, cons_node->weight);
+	    crm_err("\t%s[%s]: %d -> %d (%d)", child->id,  cons_node->details->uname,
+			child->priority, new_priority, cons_node->weight);
+	    child->priority = new_priority;
+        }
+    }
+}
 
 static node_t *
 can_be_master(resource_t * rsc)
@@ -290,8 +289,7 @@ master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
     pe_rsc_trace(rsc, "Merging weights for %s", rsc->id);
     set_bit(rsc->flags, pe_rsc_merging);
 
-    gIter = rsc->children;
-    for (; gIter != NULL; gIter = gIter->next) {
+    for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         resource_t *child = (resource_t *) gIter->data;
 
         pe_rsc_trace(rsc, "Sort index: %s = %d", child->id, child->sort_index);
@@ -639,7 +637,6 @@ master_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     GHashTableIter iter;
     node_t *node = NULL;
     node_t *chosen = NULL;
-    node_t *cons_node = NULL;
     enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
 
     char score[33];
@@ -672,8 +669,7 @@ master_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     /*
      * assign priority
      */
-    gIter = rsc->children;
-    for (; gIter != NULL; gIter = gIter->next) {
+    for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         GListPtr list = NULL;
         resource_t *child_rsc = (resource_t *) gIter->data;
 
@@ -723,11 +719,11 @@ master_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
                           crm_err("Unknown resource role: %d for %s", next_role, child_rsc->id));
         }
 
-        apply_master_location(child_rsc->rsc_location);
-        apply_master_location(rsc->rsc_location);
+        apply_master_location(child_rsc, child_rsc->rsc_location, chosen);
+        crm_err("Applying %d location constraints for %s", g_list_length(rsc->rsc_location), rsc->id);
+        apply_master_location(child_rsc, rsc->rsc_location, chosen);
 
-        gIter2 = child_rsc->rsc_cons;
-        for (; gIter2 != NULL; gIter2 = gIter2->next) {
+        for (gIter2 = child_rsc->rsc_cons; gIter2 != NULL; gIter2 = gIter2->next) {
             rsc_colocation_t *cons = (rsc_colocation_t *) gIter2->data;
 
             child_rsc->cmds->rsc_colocation_lh(child_rsc, cons->rsc_rh, cons);
@@ -746,8 +742,7 @@ master_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 
     /* mark the first N as masters */
 
-    gIter = rsc->children;
-    for (; gIter != NULL; gIter = gIter->next) {
+    for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
         score2char_stack(child_rsc->sort_index, score, len);
 
@@ -840,20 +835,9 @@ master_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     }
 
     /* promote */
-    action = promote_action(rsc, NULL, !any_promoting);
-    action_complete = custom_action(rsc, promoted_key(rsc),
-                                    RSC_PROMOTED, NULL, !any_promoting, TRUE, data_set);
-
+    action = create_pseudo_resource_op(rsc, RSC_PROMOTE, !any_promoting, TRUE, data_set);
+    action_complete = create_pseudo_resource_op(rsc, RSC_PROMOTED, !any_promoting, TRUE, data_set);
     action_complete->priority = INFINITY;
-    update_action_flags(action, pe_action_pseudo, __FUNCTION__, __LINE__);
-    update_action_flags(action, pe_action_runnable, __FUNCTION__, __LINE__);
-    update_action_flags(action_complete, pe_action_pseudo, __FUNCTION__, __LINE__);
-    update_action_flags(action_complete, pe_action_runnable, __FUNCTION__, __LINE__);
-
-    if (clone_data->masters_allocated > 0) {
-        update_action_flags(action, pe_action_runnable, __FUNCTION__, __LINE__);
-        update_action_flags(action_complete, pe_action_runnable, __FUNCTION__, __LINE__);
-    }
 
     child_promoting_constraints(clone_data, pe_order_optional,
                                 rsc, NULL, last_promote_rsc, data_set);
@@ -864,15 +848,9 @@ master_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     }
 
     /* demote */
-    action = demote_action(rsc, NULL, !any_demoting);
-    action_complete = custom_action(rsc, demoted_key(rsc),
-                                    RSC_DEMOTED, NULL, !any_demoting, TRUE, data_set);
+    action = create_pseudo_resource_op(rsc, RSC_DEMOTE, !any_demoting, TRUE, data_set);
+    action_complete = create_pseudo_resource_op(rsc, RSC_DEMOTED, !any_demoting, TRUE, data_set);
     action_complete->priority = INFINITY;
-
-    update_action_flags(action, pe_action_pseudo, __FUNCTION__, __LINE__);
-    update_action_flags(action, pe_action_runnable, __FUNCTION__, __LINE__);
-    update_action_flags(action_complete, pe_action_pseudo, __FUNCTION__, __LINE__);
-    update_action_flags(action_complete, pe_action_runnable, __FUNCTION__, __LINE__);
 
     child_demoting_constraints(clone_data, pe_order_optional, rsc, NULL, last_demote_rsc, data_set);
 
@@ -908,16 +886,8 @@ master_create_actions(resource_t * rsc, pe_working_set_t * data_set)
 }
 
 void
-master_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
+master_promotion_constraints(resource_t * rsc, pe_working_set_t * data_set)
 {
-    GListPtr gIter = rsc->children;
-    resource_t *last_rsc = NULL;
-    clone_variant_data_t *clone_data = NULL;
-
-    get_clone_variant_data(clone_data, rsc);
-
-    clone_internal_constraints(rsc, data_set);
-
     /* global stopped before start */
     new_rsc_order(rsc, RSC_STOPPED, rsc, RSC_START, pe_order_optional, data_set);
 
@@ -938,6 +908,20 @@ master_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 
     /* global demoted before promote */
     new_rsc_order(rsc, RSC_DEMOTED, rsc, RSC_PROMOTE, pe_order_optional, data_set);
+}
+
+
+void
+master_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
+{
+    GListPtr gIter = rsc->children;
+    resource_t *last_rsc = NULL;
+    clone_variant_data_t *clone_data = NULL;
+
+    get_clone_variant_data(clone_data, rsc);
+
+    clone_internal_constraints(rsc, data_set);
+    master_promotion_constraints(rsc, data_set);
 
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
