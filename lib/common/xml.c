@@ -26,10 +26,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <stdarg.h>
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>  /* CRM_XML_LOG_BASE */
 
 #if HAVE_BZLIB_H
 #  include <bzlib.h>
@@ -2719,55 +2721,30 @@ copy_xml(xmlNode * src)
 }
 
 static void
-crm_xml_err(void *ctx, const char *msg, ...)
+crm_xml_err(void *ctx, const char *fmt, ...)
 G_GNUC_PRINTF(2, 3);
 
 static void
-crm_xml_err(void *ctx, const char *msg, ...)
+crm_xml_err(void *ctx, const char *fmt, ...)
 {
-    int len = 0;
-    va_list args;
-    char *buf = NULL;
-    static int buffer_len = 0;
-    static char *buffer = NULL;
+    va_list ap;
     static struct qb_log_callsite *xml_error_cs = NULL;
 
-    va_start(args, msg);
-    len = vasprintf(&buf, msg, args);
-
-    if(xml_error_cs == NULL) {
+    if (xml_error_cs == NULL) {
         xml_error_cs = qb_log_callsite_get(
             __func__, __FILE__, "xml library error", LOG_TRACE, __LINE__, crm_trace_nonlog);
     }
 
-    if (strchr(buf, '\n')) {
-        buf[len - 1] = 0;
-        if (buffer) {
-            crm_err("XML Error: %s%s", buffer, buf);
-            free(buffer);
-        } else {
-            crm_err("XML Error: %s", buf);
-        }
-        if (xml_error_cs && xml_error_cs->targets) {
-            crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, "xml library error", TRUE, TRUE);
-        }
-        buffer = NULL;
-        buffer_len = 0;
-
-    } else if (buffer == NULL) {
-        buffer_len = len;
-        buffer = buf;
-        buf = NULL;
-
+    va_start(ap, fmt);
+    if (xml_error_cs && xml_error_cs->targets) {
+        CRM_XML_LOG_BASE(LOG_ERR, TRUE,
+                         crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, "xml library error",
+                                   TRUE, TRUE),
+                         "XML Error: ", fmt, ap);
     } else {
-        buffer = realloc_safe(buffer, 1 + buffer_len + len);
-        memcpy(buffer + buffer_len, buf, len);
-        buffer_len += len;
-        buffer[buffer_len] = 0;
+        CRM_XML_LOG_BASE(LOG_ERR, TRUE, 0, "XML Error: ", fmt, ap);
     }
-
-    va_end(args);
-    free(buf);
+    va_end(ap);
 }
 
 xmlNode *

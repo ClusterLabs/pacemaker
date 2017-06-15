@@ -24,6 +24,7 @@
 #include <errno.h>
 #include <math.h>
 #include <sys/stat.h>
+#include <stdarg.h>
 
 #if HAVE_LIBXML2
 #  include <libxml/relaxng.h>
@@ -36,6 +37,7 @@
 
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>  /* CRM_XML_LOG_BASE */
 
 typedef struct {
     xmlRelaxNGPtr rng;
@@ -56,18 +58,18 @@ struct schema_s {
 static struct schema_s *known_schemas = NULL;
 static int xml_schema_max = 0;
 
-void
+static void
 xml_log(int priority, const char *fmt, ...)
 G_GNUC_PRINTF(2, 3);
 
-void
+static void
 xml_log(int priority, const char *fmt, ...)
 {
     va_list ap;
 
     va_start(ap, fmt);
-    qb_log_from_external_source_va(__FUNCTION__, __FILE__, fmt, priority,
-                                   __LINE__, 0, ap);
+    /* XXX should not this enable dechunking as well? */
+    CRM_XML_LOG_BASE(priority, FALSE, 0, NULL, fmt, ap);
     va_end(ap);
 }
 
