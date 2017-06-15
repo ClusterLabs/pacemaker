@@ -1,0 +1,47 @@
+
+Current cluster status:
+Online: [ undercloud ]
+Containers: [ galera-bundle-0:galera-bundle-docker-0 rabbitmq-bundle-0:rabbitmq-bundle-docker-0 redis-bundle-0:redis-bundle-docker-0 ]
+
+ Docker container: rabbitmq-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest]
+   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	Started undercloud
+ Docker container: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]
+   galera-bundle-0	(ocf::heartbeat:galera):	Master undercloud
+ Docker container: redis-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest]
+   redis-bundle-0	(ocf::heartbeat:redis):	Master undercloud
+ ip-192.168.122.254	(ocf::heartbeat:IPaddr2):	Started undercloud
+ ip-192.168.122.250	(ocf::heartbeat:IPaddr2):	Started undercloud
+ ip-192.168.122.249	(ocf::heartbeat:IPaddr2):	Started undercloud
+ ip-192.168.122.253	(ocf::heartbeat:IPaddr2):	Started undercloud
+ ip-192.168.122.247	(ocf::heartbeat:IPaddr2):	Started undercloud
+ ip-192.168.122.248	(ocf::heartbeat:IPaddr2):	Started undercloud
+ Docker container: haproxy-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest]
+   haproxy-bundle-docker-0	(ocf::heartbeat:docker):	Started undercloud
+ Docker container: openstack-cinder-volume [192.168.24.1:8787/tripleoupstream/centos-binary-cinder-volume:latest]
+   openstack-cinder-volume-docker-0	(ocf::heartbeat:docker):	Started undercloud
+
+Transition Summary:
+
+Executing cluster transition:
+
+Revised cluster status:
+Online: [ undercloud ]
+Containers: [ galera-bundle-0:galera-bundle-docker-0 rabbitmq-bundle-0:rabbitmq-bundle-docker-0 redis-bundle-0:redis-bundle-docker-0 ]
+
+ Docker container: rabbitmq-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest]
+   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	Started undercloud
+ Docker container: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]
+   galera-bundle-0	(ocf::heartbeat:galera):	Master undercloud
+ Docker container: redis-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest]
+   redis-bundle-0	(ocf::heartbeat:redis):	Master undercloud
+ ip-192.168.122.254	(ocf::heartbeat:IPaddr2):	Started undercloud
+ ip-192.168.122.250	(ocf::heartbeat:IPaddr2):	Started undercloud
+ ip-192.168.122.249	(ocf::heartbeat:IPaddr2):	Started undercloud
+ ip-192.168.122.253	(ocf::heartbeat:IPaddr2):	Started undercloud
+ ip-192.168.122.247	(ocf::heartbeat:IPaddr2):	Started undercloud
+ ip-192.168.122.248	(ocf::heartbeat:IPaddr2):	Started undercloud
+ Docker container: haproxy-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest]
+   haproxy-bundle-docker-0	(ocf::heartbeat:docker):	Started undercloud
+ Docker container: openstack-cinder-volume [192.168.24.1:8787/tripleoupstream/centos-binary-cinder-volume:latest]
+   openstack-cinder-volume-docker-0	(ocf::heartbeat:docker):	Started undercloud
+

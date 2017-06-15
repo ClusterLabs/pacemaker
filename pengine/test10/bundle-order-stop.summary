@@ -1,0 +1,114 @@
+
+Current cluster status:
+Online: [ undercloud ]
+Containers: [ galera-bundle-0:galera-bundle-docker-0 rabbitmq-bundle-0:rabbitmq-bundle-docker-0 redis-bundle-0:redis-bundle-docker-0 ]
+
+ Docker container: rabbitmq-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest]
+   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	Started undercloud
+ Docker container: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]
+   galera-bundle-0	(ocf::heartbeat:galera):	Master undercloud
+ Docker container: redis-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest]
+   redis-bundle-0	(ocf::heartbeat:redis):	Master undercloud
+ ip-192.168.122.254	(ocf::heartbeat:IPaddr2):	Started undercloud
+ ip-192.168.122.250	(ocf::heartbeat:IPaddr2):	Started undercloud
+ ip-192.168.122.249	(ocf::heartbeat:IPaddr2):	Started undercloud
+ ip-192.168.122.253	(ocf::heartbeat:IPaddr2):	Started undercloud
+ ip-192.168.122.247	(ocf::heartbeat:IPaddr2):	Started undercloud
+ ip-192.168.122.248	(ocf::heartbeat:IPaddr2):	Started undercloud
+ Docker container: haproxy-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest]
+   haproxy-bundle-docker-0	(ocf::heartbeat:docker):	Started undercloud
+ Docker container: openstack-cinder-volume [192.168.24.1:8787/tripleoupstream/centos-binary-cinder-volume:latest]
+   openstack-cinder-volume-docker-0	(ocf::heartbeat:docker):	Started undercloud
+
+Transition Summary:
+ * Shutdown undercloud
+ * Stop    rabbitmq-bundle-docker-0	(undercloud)
+ * Stop    rabbitmq-bundle-0	(undercloud)
+ * Stop    rabbitmq:0	(Started rabbitmq-bundle-0)
+ * Stop    galera-bundle-docker-0	(undercloud)
+ * Stop    galera-bundle-0	(undercloud)
+ * Demote  galera:0	(Master -> Slave galera-bundle-0)
+ * Restart galera:0	(Slave galera-bundle-0)
+ * Stop    redis-bundle-docker-0	(undercloud)
+ * Stop    redis-bundle-0	(undercloud)
+ * Demote  redis:0	(Master -> Slave redis-bundle-0)
+ * Restart redis:0	(Slave redis-bundle-0)
+ * Stop    ip-192.168.122.254	(undercloud)
+ * Stop    ip-192.168.122.250	(undercloud)
+ * Stop    ip-192.168.122.249	(undercloud)
+ * Stop    ip-192.168.122.253	(undercloud)
+ * Stop    ip-192.168.122.247	(undercloud)
+ * Stop    ip-192.168.122.248	(undercloud)
+ * Stop    haproxy-bundle-docker-0	(undercloud)
+ * Stop    openstack-cinder-volume-docker-0	(undercloud)
+
+Executing cluster transition:
+ * Resource action: galera          cancel=10000 on galera-bundle-0
+ * Resource action: redis           cancel=20000 on redis-bundle-0
+ * Pseudo action:   openstack-cinder-volume_stop_0
+ * Pseudo action:   redis-bundle_demote_0
+ * Pseudo action:   redis-bundle-master_demote_0
+ * Pseudo action:   galera-bundle_demote_0
+ * Pseudo action:   galera-bundle-master_demote_0
+ * Pseudo action:   rabbitmq-bundle_stop_0
+ * Resource action: galera          demote on galera-bundle-0
+ * Resource action: redis           demote on redis-bundle-0
+ * Resource action: openstack-cinder-volume-docker-0 stop on undercloud
+ * Pseudo action:   openstack-cinder-volume_stopped_0
+ * Pseudo action:   redis-bundle-master_demoted_0
+ * Pseudo action:   galera-bundle-master_demoted_0
+ * Pseudo action:   rabbitmq-bundle-clone_stop_0
+ * Resource action: rabbitmq        stop on rabbitmq-bundle-0
+ * Resource action: rabbitmq-bundle-0 stop on undercloud
+ * Pseudo action:   redis-bundle_demoted_0
+ * Pseudo action:   galera-bundle_demoted_0
+ * Pseudo action:   galera-bundle_stop_0
+ * Pseudo action:   rabbitmq-bundle-clone_stopped_0
+ * Pseudo action:   rabbitmq-bundle_stopped_0
+ * Resource action: rabbitmq-bundle-docker-0 stop on undercloud
+ * Pseudo action:   galera-bundle-master_stop_0
+ * Resource action: galera          stop on galera-bundle-0
+ * Resource action: galera-bundle-0 stop on undercloud
+ * Pseudo action:   galera-bundle-master_stopped_0
+ * Pseudo action:   galera-bundle_stopped_0
+ * Resource action: galera-bundle-docker-0 stop on undercloud
+ * Pseudo action:   redis-bundle_stop_0
+ * Pseudo action:   redis-bundle-master_stop_0
+ * Resource action: redis           stop on redis-bundle-0
+ * Resource action: redis-bundle-0  stop on undercloud
+ * Pseudo action:   redis-bundle-master_stopped_0
+ * Pseudo action:   redis-bundle_stopped_0
+ * Pseudo action:   redis-bundle_start_0
+ * Resource action: redis-bundle-docker-0 stop on undercloud
+ * Pseudo action:   haproxy-bundle_stop_0
+ * Resource action: haproxy-bundle-docker-0 stop on undercloud
+ * Pseudo action:   haproxy-bundle_stopped_0
+ * Resource action: ip-192.168.122.254 stop on undercloud
+ * Resource action: ip-192.168.122.250 stop on undercloud
+ * Resource action: ip-192.168.122.249 stop on undercloud
+ * Resource action: ip-192.168.122.253 stop on undercloud
+ * Resource action: ip-192.168.122.247 stop on undercloud
+ * Resource action: ip-192.168.122.248 stop on undercloud
+ * Cluster action:  do_shutdown on undercloud
+ * Pseudo action:   all_stopped
+
+Revised cluster status:
+Online: [ undercloud ]
+
+ Docker container: rabbitmq-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest]
+   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	Stopped
+ Docker container: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]
+   galera-bundle-0	(ocf::heartbeat:galera):	Stopped
+ Docker container: redis-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest]
+   redis-bundle-0	(ocf::heartbeat:redis):	Stopped
+ ip-192.168.122.254	(ocf::heartbeat:IPaddr2):	Stopped
+ ip-192.168.122.250	(ocf::heartbeat:IPaddr2):	Stopped
+ ip-192.168.122.249	(ocf::heartbeat:IPaddr2):	Stopped
+ ip-192.168.122.253	(ocf::heartbeat:IPaddr2):	Stopped
+ ip-192.168.122.247	(ocf::heartbeat:IPaddr2):	Stopped
+ ip-192.168.122.248	(ocf::heartbeat:IPaddr2):	Stopped
+ Docker container: haproxy-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest]
+   haproxy-bundle-docker-0	(ocf::heartbeat:docker):	Stopped
+ Docker container: openstack-cinder-volume [192.168.24.1:8787/tripleoupstream/centos-binary-cinder-volume:latest]
+   openstack-cinder-volume-docker-0	(ocf::heartbeat:docker):	Stopped
+
