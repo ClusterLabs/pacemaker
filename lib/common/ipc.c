@@ -39,7 +39,6 @@
 
 /* Evict clients whose event queue grows this large (by default) */
 #define PCMK_IPC_DEFAULT_QUEUE_MAX 500
-#define PCMK_IPC_DEFAULT_QUEUE_MAX_S "500"
 
 struct crm_ipc_response_header {
     struct qb_ipc_response_header qb;
@@ -422,8 +421,12 @@ bool
 crm_set_client_queue_max(crm_client_t *client, const char *qmax)
 {
     if (is_set(client->flags, crm_client_flag_ipc_privileged)) {
-        client->queue_max = crm_parse_int(qmax, PCMK_IPC_DEFAULT_QUEUE_MAX_S);
-        return TRUE;
+        int qmax_int = crm_int_helper(qmax, NULL);
+
+        if ((errno == 0) && (qmax_int > 0)) {
+            client->queue_max = qmax_int;
+            return TRUE;
+        }
     }
     return FALSE;
 }
