@@ -805,6 +805,17 @@ child_ordering_constraints(resource_t * rsc, pe_working_set_t * data_set)
 void
 clone_create_actions(resource_t * rsc, pe_working_set_t * data_set)
 {
+    clone_variant_data_t *clone_data = NULL;
+
+    get_clone_variant_data(clone_data, rsc);
+    clone_create_pseudo_actions(rsc, rsc->children, &clone_data->start_notify, &clone_data->stop_notify,data_set);
+    child_ordering_constraints(rsc, data_set);
+}
+
+void
+clone_create_pseudo_actions(
+    resource_t * rsc, GListPtr children, notify_data_t **start_notify, notify_data_t **stop_notify,  pe_working_set_t * data_set)
+{
     gboolean child_active = FALSE;
     gboolean child_starting = FALSE;
     gboolean child_stopping = FALSE;
@@ -816,14 +827,9 @@ clone_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     action_t *start = NULL;
     action_t *started = NULL;
 
-    GListPtr gIter = rsc->children;
-    clone_variant_data_t *clone_data = NULL;
-
-    get_clone_variant_data(clone_data, rsc);
-
     pe_rsc_trace(rsc, "Creating actions for %s", rsc->id);
 
-    for (; gIter != NULL; gIter = gIter->next) {
+    for (GListPtr gIter = children; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
         gboolean starting = FALSE;
         gboolean stopping = FALSE;
@@ -839,42 +845,31 @@ clone_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     }
 
     /* start */
-    start = start_action(rsc, NULL, !child_starting);
-    started = custom_action(rsc, started_key(rsc),
-                            RSC_STARTED, NULL, !child_starting, TRUE, data_set);
-
-    update_action_flags(start, pe_action_pseudo | pe_action_runnable, __FUNCTION__, __LINE__);
-    update_action_flags(started, pe_action_pseudo, __FUNCTION__, __LINE__);
+    start = create_pseudo_resource_op(rsc, RSC_START, !child_starting, TRUE, data_set);
+    started = create_pseudo_resource_op(rsc, RSC_STARTED, !child_starting, FALSE, data_set);
     started->priority = INFINITY;
 
     if (child_active || child_starting) {
         update_action_flags(started, pe_action_runnable, __FUNCTION__, __LINE__);
     }
 
-    child_ordering_constraints(rsc, data_set);
-    if (clone_data->start_notify == NULL) {
-        clone_data->start_notify =
-            create_notification_boundaries(rsc, RSC_START, start, started, data_set);
+    if (start_notify != NULL && *start_notify == NULL) {
+        *start_notify = create_notification_boundaries(rsc, RSC_START, start, started, data_set);
     }
 
     /* stop */
-    stop = stop_action(rsc, NULL, !child_stopping);
-    stopped = custom_action(rsc, stopped_key(rsc),
-                            RSC_STOPPED, NULL, !child_stopping, TRUE, data_set);
-
+    stop = create_pseudo_resource_op(rsc, RSC_STOP, !child_stopping, TRUE, data_set);
+    stopped = create_pseudo_resource_op(rsc, RSC_STOPPED, !child_stopping, TRUE, data_set);
     stopped->priority = INFINITY;
-    update_action_flags(stop, pe_action_pseudo | pe_action_runnable, __FUNCTION__, __LINE__);
     if (allow_dependent_migrations) {
         update_action_flags(stop, pe_action_migrate_runnable, __FUNCTION__, __LINE__);
     }
-    update_action_flags(stopped, pe_action_pseudo | pe_action_runnable, __FUNCTION__, __LINE__);
-    if (clone_data->stop_notify == NULL) {
-        clone_data->stop_notify =
-            create_notification_boundaries(rsc, RSC_STOP, stop, stopped, data_set);
 
-        if (clone_data->stop_notify && clone_data->start_notify) {
-            order_actions(clone_data->stop_notify->post_done, clone_data->start_notify->pre,
-                          pe_order_optional);
+    if (stop_notify != NULL && *stop_notify == NULL) {
+        *stop_notify = create_notification_boundaries(rsc, RSC_STOP, stop, stopped, data_set);
+
+        if (*stop_notify && *start_notify) {
+            order_actions((*stop_notify)->post_done, (*start_notify)->pre, pe_order_optional);
         }
     }
 }

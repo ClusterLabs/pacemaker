@@ -179,6 +179,8 @@ gboolean update_action_flags(action_t * action, enum pe_action_flags flags, cons
 gboolean update_action(action_t * action);
 void complex_set_cmds(resource_t * rsc);
 
-
+void master_promotion_constraints(resource_t * rsc, pe_working_set_t * data_set);
+void clone_create_pseudo_actions(
+    resource_t * rsc, GListPtr children, notify_data_t **start_notify, notify_data_t **stop_notify,  pe_working_set_t * data_set);
 
 #endif
