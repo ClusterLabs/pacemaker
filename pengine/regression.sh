@@ -802,6 +802,12 @@ do_test container-is-remote-node "Place resource within container when container
 do_test bug-rh-1097457 "Kill user defined container/contents ordering"
 do_test bug-cl-5247 "Graph loop when recovering m/s resource in a container"
 
+do_test bundle-order-startup "Bundle startup ordering"
+do_test bundle-order-partial-start "Bundle startup ordering when some dependancies are already running"
+do_test bundle-order-partial-start-2 "Bundle startup ordering when some dependancies and the container are already running"
+do_test bundle-order-stop    "Bundle stop ordering"
+do_test bundle-order-partial-stop "Bundle startup ordering when some dependancies are already stopped"
+
 echo ""
 do_test whitebox-fail1 "Fail whitebox container rsc."
 do_test whitebox-fail2 "Fail whitebox container rsc lrmd connection."

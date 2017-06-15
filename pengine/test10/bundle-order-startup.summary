@@ -1,0 +1,126 @@
+
+Current cluster status:
+Online: [ undercloud ]
+
+ Docker container: rabbitmq-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest]
+   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	Stopped
+ Docker container: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]
+   galera-bundle-0	(ocf::heartbeat:galera):	Stopped
+ Docker container: redis-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest]
+   redis-bundle-0	(ocf::heartbeat:redis):	Stopped
+ ip-192.168.122.254	(ocf::heartbeat:IPaddr2):	Stopped
+ ip-192.168.122.250	(ocf::heartbeat:IPaddr2):	Stopped
+ ip-192.168.122.249	(ocf::heartbeat:IPaddr2):	Stopped
+ ip-192.168.122.253	(ocf::heartbeat:IPaddr2):	Stopped
+ ip-192.168.122.247	(ocf::heartbeat:IPaddr2):	Stopped
+ ip-192.168.122.248	(ocf::heartbeat:IPaddr2):	Stopped
+ Docker container: haproxy-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest]
+   haproxy-bundle-docker-0	(ocf::heartbeat:docker):	Stopped
+ Docker container: openstack-cinder-volume [192.168.24.1:8787/tripleoupstream/centos-binary-cinder-volume:latest]
+   openstack-cinder-volume-docker-0	(ocf::heartbeat:docker):	Stopped
+
+Transition Summary:
+ * Start   rabbitmq-bundle-docker-0	(undercloud)
+ * Start   rabbitmq-bundle-0	(undercloud)
+ * Start   rabbitmq:0	(rabbitmq-bundle-0)
+ * Start   galera-bundle-docker-0	(undercloud)
+ * Start   galera-bundle-0	(undercloud)
+ * Start   galera:0	(galera-bundle-0)
+ * Start   redis-bundle-docker-0	(undercloud)
+ * Start   redis-bundle-0	(undercloud)
+ * Start   redis:0	(redis-bundle-0)
+ * Start   ip-192.168.122.254	(undercloud)
+ * Start   ip-192.168.122.250	(undercloud)
+ * Start   ip-192.168.122.249	(undercloud)
+ * Start   ip-192.168.122.253	(undercloud)
+ * Start   ip-192.168.122.247	(undercloud)
+ * Start   ip-192.168.122.248	(undercloud)
+ * Start   haproxy-bundle-docker-0	(undercloud)
+ * Start   openstack-cinder-volume-docker-0	(undercloud)
+
+Executing cluster transition:
+ * Resource action: rabbitmq-bundle-docker-0 monitor on undercloud
+ * Resource action: galera-bundle-docker-0 monitor on undercloud
+ * Resource action: redis-bundle-docker-0 monitor on undercloud
+ * Resource action: ip-192.168.122.254 monitor on undercloud
+ * Resource action: ip-192.168.122.250 monitor on undercloud
+ * Resource action: ip-192.168.122.249 monitor on undercloud
+ * Resource action: ip-192.168.122.253 monitor on undercloud
+ * Resource action: ip-192.168.122.247 monitor on undercloud
+ * Resource action: ip-192.168.122.248 monitor on undercloud
+ * Resource action: haproxy-bundle-docker-0 monitor on undercloud
+ * Resource action: openstack-cinder-volume-docker-0 monitor on undercloud
+ * Pseudo action:   openstack-cinder-volume_start_0
+ * Pseudo action:   rabbitmq-bundle_start_0
+ * Resource action: rabbitmq-bundle-docker-0 start on undercloud
+ * Resource action: rabbitmq-bundle-0 start on undercloud
+ * Resource action: ip-192.168.122.254 start on undercloud
+ * Resource action: ip-192.168.122.250 start on undercloud
+ * Resource action: ip-192.168.122.249 start on undercloud
+ * Resource action: ip-192.168.122.253 start on undercloud
+ * Resource action: ip-192.168.122.247 start on undercloud
+ * Resource action: ip-192.168.122.248 start on undercloud
+ * Resource action: openstack-cinder-volume-docker-0 start on undercloud
+ * Pseudo action:   openstack-cinder-volume_running_0
+ * Pseudo action:   haproxy-bundle_start_0
+ * Pseudo action:   rabbitmq-bundle-clone_start_0
+ * Resource action: rabbitmq:0      start on rabbitmq-bundle-0
+ * Resource action: rabbitmq-bundle-docker-0 monitor=60000 on undercloud
+ * Resource action: rabbitmq-bundle-0 monitor=60000 on undercloud
+ * Resource action: ip-192.168.122.254 monitor=10000 on undercloud
+ * Resource action: ip-192.168.122.250 monitor=10000 on undercloud
+ * Resource action: ip-192.168.122.249 monitor=10000 on undercloud
+ * Resource action: ip-192.168.122.253 monitor=10000 on undercloud
+ * Resource action: ip-192.168.122.247 monitor=10000 on undercloud
+ * Resource action: ip-192.168.122.248 monitor=10000 on undercloud
+ * Resource action: haproxy-bundle-docker-0 start on undercloud
+ * Resource action: openstack-cinder-volume-docker-0 monitor=60000 on undercloud
+ * Pseudo action:   haproxy-bundle_running_0
+ * Pseudo action:   redis-bundle_start_0
+ * Pseudo action:   rabbitmq-bundle-clone_running_0
+ * Pseudo action:   rabbitmq-bundle_running_0
+ * Resource action: rabbitmq:0      monitor=10000 on rabbitmq-bundle-0
+ * Resource action: redis-bundle-docker-0 start on undercloud
+ * Resource action: redis-bundle-0  start on undercloud
+ * Resource action: haproxy-bundle-docker-0 monitor=60000 on undercloud
+ * Pseudo action:   redis-bundle-master_start_0
+ * Resource action: redis:0         start on redis-bundle-0
+ * Resource action: redis-bundle-docker-0 monitor=60000 on undercloud
+ * Resource action: redis-bundle-0  monitor=60000 on undercloud
+ * Pseudo action:   redis-bundle-master_running_0
+ * Pseudo action:   redis-bundle_running_0
+ * Pseudo action:   galera-bundle_start_0
+ * Resource action: galera-bundle-docker-0 start on undercloud
+ * Resource action: galera-bundle-0 start on undercloud
+ * Resource action: redis:0         monitor=60000 on redis-bundle-0
+ * Resource action: redis:0         monitor=45000 on redis-bundle-0
+ * Pseudo action:   galera-bundle-master_start_0
+ * Resource action: galera:0        start on galera-bundle-0
+ * Resource action: galera-bundle-docker-0 monitor=60000 on undercloud
+ * Resource action: galera-bundle-0 monitor=60000 on undercloud
+ * Pseudo action:   galera-bundle-master_running_0
+ * Pseudo action:   galera-bundle_running_0
+ * Resource action: galera:0        monitor=30000 on galera-bundle-0
+ * Resource action: galera:0        monitor=20000 on galera-bundle-0
+
+Revised cluster status:
+Online: [ undercloud ]
+Containers: [ galera-bundle-0:galera-bundle-docker-0 rabbitmq-bundle-0:rabbitmq-bundle-docker-0 redis-bundle-0:redis-bundle-docker-0 ]
+
+ Docker container: rabbitmq-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest]
+   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	Started undercloud
+ Docker container: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]
+   galera-bundle-0	(ocf::heartbeat:galera):	Slave undercloud
+ Docker container: redis-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest]
+   redis-bundle-0	(ocf::heartbeat:redis):	Slave undercloud
+ ip-192.168.122.254	(ocf::heartbeat:IPaddr2):	Started undercloud
+ ip-192.168.122.250	(ocf::heartbeat:IPaddr2):	Started undercloud
+ ip-192.168.122.249	(ocf::heartbeat:IPaddr2):	Started undercloud
+ ip-192.168.122.253	(ocf::heartbeat:IPaddr2):	Started undercloud
+ ip-192.168.122.247	(ocf::heartbeat:IPaddr2):	Started undercloud
+ ip-192.168.122.248	(ocf::heartbeat:IPaddr2):	Started undercloud
+ Docker container: haproxy-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest]
+   haproxy-bundle-docker-0	(ocf::heartbeat:docker):	Started undercloud
+ Docker container: openstack-cinder-volume [192.168.24.1:8787/tripleoupstream/centos-binary-cinder-volume:latest]
+   openstack-cinder-volume-docker-0	(ocf::heartbeat:docker):	Started undercloud
+
