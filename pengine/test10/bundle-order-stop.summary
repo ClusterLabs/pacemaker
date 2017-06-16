@@ -64,21 +64,21 @@ Executing cluster transition:
  * Pseudo action:   galera-bundle_demoted_0
  * Pseudo action:   galera-bundle_stop_0
  * Pseudo action:   rabbitmq-bundle-clone_stopped_0
- * Pseudo action:   rabbitmq-bundle_stopped_0
  * Resource action: rabbitmq-bundle-docker-0 stop on undercloud
  * Pseudo action:   galera-bundle-master_stop_0
+ * Pseudo action:   rabbitmq-bundle_stopped_0
  * Resource action: galera          stop on galera-bundle-0
  * Resource action: galera-bundle-0 stop on undercloud
  * Pseudo action:   galera-bundle-master_stopped_0
- * Pseudo action:   galera-bundle_stopped_0
  * Resource action: galera-bundle-docker-0 stop on undercloud
+ * Pseudo action:   galera-bundle_stopped_0
  * Pseudo action:   redis-bundle_stop_0
  * Pseudo action:   redis-bundle-master_stop_0
  * Resource action: redis           stop on redis-bundle-0
  * Resource action: redis-bundle-0  stop on undercloud
  * Pseudo action:   redis-bundle-master_stopped_0
- * Pseudo action:   redis-bundle_stopped_0
  * Resource action: redis-bundle-docker-0 stop on undercloud
+ * Pseudo action:   redis-bundle_stopped_0
  * Pseudo action:   haproxy-bundle_stop_0
  * Resource action: haproxy-bundle-docker-0 stop on undercloud
  * Pseudo action:   haproxy-bundle_stopped_0
