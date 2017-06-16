@@ -209,13 +209,10 @@ container_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 
         if(tuple->child) {
             order_stop_stop(rsc, tuple->child, pe_order_implies_first_printed);
-
-        } else {
-            order_stop_stop(rsc, tuple->docker, pe_order_implies_first_printed);
-            new_rsc_order(tuple->docker, RSC_START, rsc, RSC_STARTED, pe_order_implies_then_printed, data_set);
-            new_rsc_order(tuple->docker, RSC_STOP, rsc, RSC_STOPPED, pe_order_implies_then_printed,
-                          data_set);
         }
+        order_stop_stop(rsc, tuple->docker, pe_order_implies_first_printed);
+        new_rsc_order(tuple->docker, RSC_START, rsc, RSC_STARTED, pe_order_implies_then_printed, data_set);
+        new_rsc_order(tuple->docker, RSC_STOP, rsc, RSC_STOPPED, pe_order_implies_then_printed, data_set);
 
         if(tuple->ip) {
             tuple->ip->cmds->internal_constraints(tuple->ip, data_set);
@@ -416,8 +413,8 @@ container_action_flags(action_t * action, node_t * node)
     return flags;
 }
 
-enum pe_graph_flags
-container_update_actions(action_t * first, action_t * then, node_t * node, enum pe_action_flags flags,
+static enum pe_graph_flags
+container_update_interleave_actions(action_t * first, action_t * then, node_t * node, enum pe_action_flags flags,
                      enum pe_action_flags filter, enum pe_ordering type)
 {
     gboolean current = FALSE;
@@ -425,21 +422,17 @@ container_update_actions(action_t * first, action_t * then, node_t * node, enum 
     container_variant_data_t *then_data = NULL;
     GListPtr containers = NULL;
 
-    // At the point we need to force container X to stop because
-    // resource Y needs to stop, here is where we'd implement that
-    crm_trace("%s -> %s", first->uuid, then->uuid);
-    if(first->rsc == NULL || then->rsc == NULL) {
-        return changed;
-
-    } else if(first->rsc->variant != then->rsc->variant) {
-        return changed; // For now
-    }
-
     /* Fix this - lazy */
     if (crm_ends_with(first->uuid, "_stopped_0")
         || crm_ends_with(first->uuid, "_demoted_0")) {
         current = TRUE;
     }
+
+    /* Eventually we may want to allow interleaving between bundles
+     * and clones, but for now assert both sides are bundles
+     */
+    CRM_ASSERT(first->rsc->variant == pe_container);
+    CRM_ASSERT(then->rsc->variant == pe_container);
 
     get_container_variant_data(then_data, then->rsc);
     containers = get_container_list(first->rsc);
@@ -503,6 +496,66 @@ container_update_actions(action_t * first, action_t * then, node_t * node, enum 
     }
 
     g_list_free(containers);
+    return changed;
+}
+
+enum pe_graph_flags
+container_update_actions(action_t * first, action_t * then, node_t * node, enum pe_action_flags flags,
+                     enum pe_action_flags filter, enum pe_ordering type)
+{
+    bool interleave = FALSE;
+    enum pe_graph_flags changed = pe_graph_none;
+
+    crm_trace("%s -> %s", first->uuid, then->uuid);
+
+    if(first->rsc == NULL || then->rsc == NULL) {
+        return changed;
+
+    } else if(first->rsc->variant == then->rsc->variant) {
+        // When and how to turn on interleaving?
+        // interleave = TRUE;
+    }
+
+    if(interleave) {
+        changed = container_update_interleave_actions(first, then, node, flags, filter, type);
+
+    } else {
+        GListPtr gIter = then->rsc->children;
+        GListPtr containers = NULL;
+
+        // Handle the 'primitive' ordering case
+        changed |= native_update_actions(first, then, node, flags, filter, type);
+
+        // Now any children (or containers in the case of a bundle)
+        if(then->rsc->variant == pe_container) {
+            containers = get_container_list(then->rsc);
+            gIter = containers;
+        }
+
+        for (; gIter != NULL; gIter = gIter->next) {
+            resource_t *then_child = (resource_t *) gIter->data;
+            enum pe_graph_flags then_child_changed = pe_graph_none;
+            action_t *then_child_action = find_first_action(then_child->actions, NULL, then->task, node);
+
+            if (then_child_action) {
+                enum pe_action_flags then_child_flags = then_child->cmds->action_flags(then_child_action, node);
+
+                if (is_set(then_child_flags, pe_action_runnable)) {
+                    then_child_changed |=
+                        then_child->cmds->update_actions(first, then_child_action, node, flags, filter, type);
+                }
+                changed |= then_child_changed;
+                if (then_child_changed & pe_graph_updated_then) {
+                    for (GListPtr lpc = then_child_action->actions_after; lpc != NULL; lpc = lpc->next) {
+                        action_wrapper_t *next = (action_wrapper_t *) lpc->data;
+                        update_action(next->action);
+                    }
+                }
+            }
+        }
+
+        g_list_free(containers);
+    }
     return changed;
 }
 
