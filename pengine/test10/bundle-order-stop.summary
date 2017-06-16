@@ -78,7 +78,6 @@ Executing cluster transition:
  * Resource action: redis-bundle-0  stop on undercloud
  * Pseudo action:   redis-bundle-master_stopped_0
  * Pseudo action:   redis-bundle_stopped_0
- * Pseudo action:   redis-bundle_start_0
  * Resource action: redis-bundle-docker-0 stop on undercloud
  * Pseudo action:   haproxy-bundle_stop_0
  * Resource action: haproxy-bundle-docker-0 stop on undercloud

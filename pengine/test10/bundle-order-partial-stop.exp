@@ -173,6 +173,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <rsc_op id="31" operation="stop" operation_key="galera-bundle-docker-0_stop_0" on_node="undercloud" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
         <rsc_op id="55" operation="stop" operation_key="redis-bundle-0_stop_0" on_node="undercloud" on_node_uuid="1"/>
       </trigger>
     </inputs>
@@ -282,6 +285,9 @@
       </rsc_op>
     </action_set>
     <inputs>
+      <trigger>
+        <rsc_op id="54" operation="stop" operation_key="redis-bundle-docker-0_stop_0" on_node="undercloud" on_node_uuid="1"/>
+      </trigger>
       <trigger>
         <pseudo_event id="86" operation="stop" operation_key="haproxy-bundle_stop_0"/>
       </trigger>
@@ -505,22 +511,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="34">
-    <action_set>
-      <pseudo_event id="56" operation="start" operation_key="redis-bundle_start_0">
-        <attributes CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="59" operation="stopped" operation_key="redis-bundle_stopped_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="76" operation="demoted" operation_key="redis-bundle_demoted_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="35" priority="1000000">
+  <synapse id="34" priority="1000000">
     <action_set>
       <pseudo_event id="53" operation="demoted" operation_key="galera-bundle_demoted_0">
         <attributes CRM_meta_timeout="20000" />
@@ -535,7 +526,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="36">
+  <synapse id="35">
     <action_set>
       <pseudo_event id="52" operation="demote" operation_key="galera-bundle_demote_0">
         <attributes CRM_meta_timeout="20000" />
@@ -543,7 +534,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="37" priority="1000000">
+  <synapse id="36" priority="1000000">
     <action_set>
       <pseudo_event id="49" operation="demoted" operation_key="galera-bundle-master_demoted_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
@@ -558,7 +549,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="38">
+  <synapse id="37">
     <action_set>
       <pseudo_event id="48" operation="demote" operation_key="galera-bundle-master_demote_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
@@ -570,7 +561,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="39" priority="1000000">
+  <synapse id="38" priority="1000000">
     <action_set>
       <pseudo_event id="45" operation="stopped" operation_key="galera-bundle-master_stopped_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
@@ -585,7 +576,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="40">
+  <synapse id="39">
     <action_set>
       <pseudo_event id="44" operation="stop" operation_key="galera-bundle-master_stop_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
@@ -600,7 +591,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="41" priority="1000000">
+  <synapse id="40" priority="1000000">
     <action_set>
       <pseudo_event id="36" operation="stopped" operation_key="galera-bundle_stopped_0">
         <attributes CRM_meta_timeout="20000" />
@@ -612,7 +603,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="42">
+  <synapse id="41">
     <action_set>
       <pseudo_event id="35" operation="stop" operation_key="galera-bundle_stop_0">
         <attributes CRM_meta_timeout="20000" />
@@ -624,7 +615,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="43" priority="1000000">
+  <synapse id="42" priority="1000000">
     <action_set>
       <pseudo_event id="30" operation="stopped" operation_key="rabbitmq-bundle-clone_stopped_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
@@ -639,7 +630,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="44">
+  <synapse id="43">
     <action_set>
       <pseudo_event id="29" operation="stop" operation_key="rabbitmq-bundle-clone_stop_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
@@ -651,7 +642,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="45" priority="1000000">
+  <synapse id="44" priority="1000000">
     <action_set>
       <pseudo_event id="24" operation="stopped" operation_key="rabbitmq-bundle_stopped_0">
         <attributes CRM_meta_timeout="20000" />
@@ -663,7 +654,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="46">
+  <synapse id="45">
     <action_set>
       <pseudo_event id="23" operation="stop" operation_key="rabbitmq-bundle_stop_0">
         <attributes CRM_meta_timeout="20000" />
@@ -671,7 +662,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="47">
+  <synapse id="46">
     <action_set>
       <pseudo_event id="18" operation="all_stopped" operation_key="all_stopped">
         <attributes />

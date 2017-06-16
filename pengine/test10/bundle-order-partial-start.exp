@@ -103,6 +103,9 @@
       <trigger>
         <pseudo_event id="33" operation="start" operation_key="galera-bundle_start_0"/>
       </trigger>
+      <trigger>
+        <rsc_op id="88" operation="start" operation_key="haproxy-bundle-docker-0_start_0" on_node="undercloud" on_node_uuid="1"/>
+      </trigger>
     </inputs>
   </synapse>
   <synapse id="7">

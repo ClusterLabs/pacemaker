@@ -50,11 +50,11 @@ extern void log_action(unsigned int log_level, const char *pre_text,
                        action_t * action, gboolean details);
 
 extern gboolean can_run_any(GHashTable * nodes);
-extern resource_t *find_compatible_child(resource_t * local_child, resource_t * rsc,
+extern resource_t *find_compatible_child(resource_t * local_child, resource_t * rsc, GListPtr children,
                                          enum rsc_role_e filter, gboolean current);
 gboolean is_child_compatible(resource_t *child_rsc, node_t * local_node, enum rsc_role_e filter, gboolean current);
 bool assign_node(resource_t * rsc, node_t * node, gboolean force);
-
+enum pe_action_flags summary_action_flags(action_t * action, GListPtr children, node_t * node);
 
 enum filter_colocation_res {
     influence_nothing = 0,

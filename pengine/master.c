@@ -153,8 +153,6 @@ static void apply_master_location(resource_t *child, GListPtr location_constrain
 	    int new_priority = merge_weights(child->priority, cons_node->weight);
 	    pe_rsc_trace(child, "\t%s[%s]: %d -> %d (%d)", child->id,  cons_node->details->uname,
 			child->priority, new_priority, cons_node->weight);
-	    crm_err("\t%s[%s]: %d -> %d (%d)", child->id,  cons_node->details->uname,
-			child->priority, new_priority, cons_node->weight);
 	    child->priority = new_priority;
         }
     }
@@ -720,7 +718,6 @@ master_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         }
 
         apply_master_location(child_rsc, child_rsc->rsc_location, chosen);
-        crm_err("Applying %d location constraints for %s", g_list_length(rsc->rsc_location), rsc->id);
         apply_master_location(child_rsc, rsc->rsc_location, chosen);
 
         for (gIter2 = child_rsc->rsc_cons; gIter2 != NULL; gIter2 = gIter2->next) {
@@ -1025,7 +1022,7 @@ master_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocatio
         g_list_free(rhs);
 
     } else if (constraint->role_lh == RSC_ROLE_MASTER) {
-        resource_t *rh_child = find_compatible_child(rsc_lh, rsc_rh, constraint->role_rh, FALSE);
+        resource_t *rh_child = find_compatible_child(rsc_lh, rsc_rh, rsc_rh->children, constraint->role_rh, FALSE);
 
         if (rh_child == NULL && constraint->score >= INFINITY) {
             pe_rsc_trace(rsc_lh, "%s can't be promoted %s", rsc_lh->id, constraint->id);
