@@ -30,6 +30,7 @@ digraph "g" {
 "haproxy-bundle-docker-0_monitor_0 undercloud" -> "haproxy-bundle-docker-0_start_0 undercloud" [ style = bold]
 "haproxy-bundle-docker-0_monitor_0 undercloud" [ style=bold color="green" fontcolor="black"]
 "haproxy-bundle-docker-0_monitor_60000 undercloud" [ style=bold color="green" fontcolor="black"]
+"haproxy-bundle-docker-0_start_0 undercloud" -> "galera-bundle-docker-0_start_0 undercloud" [ style = bold]
 "haproxy-bundle-docker-0_start_0 undercloud" -> "haproxy-bundle-docker-0_monitor_60000 undercloud" [ style = bold]
 "haproxy-bundle-docker-0_start_0 undercloud" -> "haproxy-bundle_running_0" [ style = bold]
 "haproxy-bundle-docker-0_start_0 undercloud" [ style=bold color="green" fontcolor="black"]

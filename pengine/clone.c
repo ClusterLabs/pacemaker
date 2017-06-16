@@ -946,7 +946,7 @@ assign_node(resource_t * rsc, node_t * node, gboolean force)
 
 static resource_t *
 find_compatible_child_by_node(resource_t * local_child, node_t * local_node, resource_t * rsc,
-                              enum rsc_role_e filter, gboolean current)
+                              GListPtr children, enum rsc_role_e filter, gboolean current)
 {
     GListPtr gIter = NULL;
 
@@ -958,8 +958,7 @@ find_compatible_child_by_node(resource_t * local_child, node_t * local_node, res
     crm_trace("Looking for compatible child from %s for %s on %s",
               local_child->id, rsc->id, local_node->details->uname);
 
-    gIter = rsc->children;
-    for (; gIter != NULL; gIter = gIter->next) {
+    for (gIter = children; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
 
         if(is_child_compatible(child_rsc, local_node, filter, current)) {
@@ -1003,8 +1002,7 @@ is_child_compatible(resource_t *child_rsc, node_t * local_node, enum rsc_role_e 
 }
 
 resource_t *
-find_compatible_child(resource_t * local_child, resource_t * rsc, enum rsc_role_e filter,
-                      gboolean current)
+find_compatible_child(resource_t * local_child, resource_t * rsc, GListPtr children, enum rsc_role_e filter, gboolean current)
 {
     resource_t *pair = NULL;
     GListPtr gIter = NULL;
@@ -1013,7 +1011,7 @@ find_compatible_child(resource_t * local_child, resource_t * rsc, enum rsc_role_
 
     local_node = local_child->fns->location(local_child, NULL, current);
     if (local_node) {
-        return find_compatible_child_by_node(local_child, local_node, rsc, filter, current);
+        return find_compatible_child_by_node(local_child, local_node, rsc, children, filter, current);
     }
 
     scratch = g_hash_table_get_values(local_child->allowed_nodes);
@@ -1023,7 +1021,7 @@ find_compatible_child(resource_t * local_child, resource_t * rsc, enum rsc_role_
     for (; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
 
-        pair = find_compatible_child_by_node(local_child, node, rsc, filter, current);
+        pair = find_compatible_child_by_node(local_child, node, rsc, children, filter, current);
         if (pair) {
             goto done;
         }
@@ -1084,7 +1082,7 @@ clone_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
     } else if (do_interleave) {
         resource_t *rh_child = NULL;
 
-        rh_child = find_compatible_child(rsc_lh, rsc_rh, RSC_ROLE_UNKNOWN, FALSE);
+        rh_child = find_compatible_child(rsc_lh, rsc_rh, rsc_rh->children, RSC_ROLE_UNKNOWN, FALSE);
 
         if (rh_child) {
             pe_rsc_debug(rsc_rh, "Pairing %s with %s", rsc_lh->id, rh_child->id);
@@ -1167,7 +1165,7 @@ clone_child_action(action_t * action)
 }
 
 enum pe_action_flags
-clone_action_flags(action_t * action, node_t * node)
+summary_action_flags(action_t * action, GListPtr children, node_t * node)
 {
     GListPtr gIter = NULL;
     gboolean any_runnable = FALSE;
@@ -1176,15 +1174,13 @@ clone_action_flags(action_t * action, node_t * node)
     enum pe_action_flags flags = (pe_action_optional | pe_action_runnable | pe_action_pseudo);
     const char *task_s = task2text(task);
 
-    gIter = action->rsc->children;
-    for (; gIter != NULL; gIter = gIter->next) {
+    for (gIter = children; gIter != NULL; gIter = gIter->next) {
         action_t *child_action = NULL;
         resource_t *child = (resource_t *) gIter->data;
 
-        child_action =
-            find_first_action(child->actions, NULL, task_s, child->children ? NULL : node);
-        pe_rsc_trace(action->rsc, "Checking for %s in %s on %s", task_s, child->id,
-                     node ? node->details->uname : "none");
+        child_action = find_first_action(child->actions, NULL, task_s, child->children ? NULL : node);
+        pe_rsc_trace(action->rsc, "Checking for %s in %s on %s (%s)", task_s, child->id,
+                     node ? node->details->uname : "none", child_action?child_action->uuid:"NA");
         if (child_action) {
             enum pe_action_flags child_flags = child->cmds->action_flags(child_action, node);
 
@@ -1223,6 +1219,12 @@ clone_action_flags(action_t * action, node_t * node)
     return flags;
 }
 
+enum pe_action_flags
+clone_action_flags(action_t * action, node_t * node)
+{
+    return summary_action_flags(action, action->rsc->children, node);
+}
+
 static enum pe_graph_flags
 clone_update_actions_interleave(action_t * first, action_t * then, node_t * node,
                                 enum pe_action_flags flags, enum pe_action_flags filter,
@@ -1246,7 +1248,7 @@ clone_update_actions_interleave(action_t * first, action_t * then, node_t * node
         resource_t *then_child = (resource_t *) gIter->data;
 
         CRM_ASSERT(then_child != NULL);
-        first_child = find_compatible_child(then_child, first->rsc, RSC_ROLE_UNKNOWN, current);
+        first_child = find_compatible_child(then_child, first->rsc, first->rsc->children, RSC_ROLE_UNKNOWN, current);
         if (first_child == NULL && current) {
             crm_trace("Ignore");
 

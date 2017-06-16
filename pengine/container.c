@@ -42,6 +42,19 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set);
 void distribute_children(resource_t *rsc, GListPtr children, GListPtr nodes,
                          int max, int per_host_max, pe_working_set_t * data_set);
 
+static GListPtr get_container_list(resource_t *rsc) 
+{
+    GListPtr containers = NULL;
+    container_variant_data_t *data = NULL;
+
+    get_container_variant_data(data, rsc);
+    for (GListPtr gIter = data->tuples; gIter != NULL; gIter = gIter->next) {
+        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+        containers = g_list_append(containers, tuple->docker);
+    }
+    return containers;
+}
+
 node_t *
 container_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 {
@@ -54,11 +67,7 @@ container_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     get_container_variant_data(container_data, rsc);
 
     set_bit(rsc->flags, pe_rsc_allocating);
-
-    for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
-        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
-        containers = g_list_append(containers, tuple->docker);
-    }
+    containers = get_container_list(rsc);
 
     dump_node_scores(show_scores ? 0 : scores_log_level, rsc, __FUNCTION__, rsc->allowed_nodes);
 
@@ -128,6 +137,7 @@ container_create_actions(resource_t * rsc, pe_working_set_t * data_set)
 
     CRM_CHECK(rsc != NULL, return);
 
+    containers = get_container_list(rsc);
     get_container_variant_data(container_data, rsc);
     for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
         container_grouping_t *tuple = (container_grouping_t *)gIter->data;
@@ -138,7 +148,6 @@ container_create_actions(resource_t * rsc, pe_working_set_t * data_set)
         }
         if(tuple->docker) {
             tuple->docker->cmds->create_actions(tuple->docker, data_set);
-            containers = g_list_append(containers, tuple->docker);
         }
         if(tuple->remote) {
             tuple->remote->cmds->create_actions(tuple->remote, data_set);
@@ -392,7 +401,18 @@ container_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc, rsc_colocatio
 enum pe_action_flags
 container_action_flags(action_t * action, node_t * node)
 {
-    enum pe_action_flags flags = (pe_action_optional | pe_action_runnable | pe_action_pseudo);
+    enum pe_action_flags flags = 0;
+    container_variant_data_t *data = NULL;
+
+    get_container_variant_data(data, action->rsc);
+    if(data->child) {
+        flags = summary_action_flags(action, data->child->children, node);
+
+    } else {
+        GListPtr containers = get_container_list(action->rsc);
+        flags = summary_action_flags(action, containers, node);
+        g_list_free(containers);
+    }
     return flags;
 }
 
@@ -402,9 +422,8 @@ container_update_actions(action_t * first, action_t * then, node_t * node, enum 
 {
     gboolean current = FALSE;
     enum pe_graph_flags changed = pe_graph_none;
-    container_variant_data_t *first_data = NULL;
     container_variant_data_t *then_data = NULL;
-
+    GListPtr containers = NULL;
 
     // At the point we need to force container X to stop because
     // resource Y needs to stop, here is where we'd implement that
@@ -422,22 +441,21 @@ container_update_actions(action_t * first, action_t * then, node_t * node, enum 
         current = TRUE;
     }
 
-    get_container_variant_data(first_data, first->rsc);
     get_container_variant_data(then_data, then->rsc);
-
-    if(first_data->child == NULL || then_data->child == NULL) {
-        return changed; // For now
-    }
+    containers = get_container_list(first->rsc);
 
     for (GListPtr gIter = then_data->tuples; gIter != NULL; gIter = gIter->next) {
         container_grouping_t *tuple = (container_grouping_t *)gIter->data;
 
-        resource_t *first_child = find_compatible_child(tuple->docker, first_data->child, RSC_ROLE_UNKNOWN, current);
+        /* We can't do the then_data->child->children trick here,
+         * since the node's wont match
+         */
+        resource_t *first_child = find_compatible_child(tuple->docker, first->rsc, containers, RSC_ROLE_UNKNOWN, current);
         if (first_child == NULL && current) {
             crm_trace("Ignore");
 
         } else if (first_child == NULL) {
-            crm_debug("No match found for %s (%d / %s / %s)", tuple->child->id, current, first->uuid, then->uuid);
+            crm_debug("No match found for %s (%d / %s / %s)", tuple->docker->id, current, first->uuid, then->uuid);
 
             /* Me no like this hack - but what else can we do?
              *
@@ -446,27 +464,45 @@ container_update_actions(action_t * first, action_t * then, node_t * node, enum 
              *   not be allowed to start
              */
             if (type & (pe_order_runnable_left | pe_order_implies_then) /* Mandatory */ ) {
-                pe_rsc_info(then->rsc, "Inhibiting %s from being active", tuple->child->id);
-                if(assign_node(tuple->child, NULL, TRUE)) {
+                pe_rsc_info(then->rsc, "Inhibiting %s from being active", tuple->docker->id);
+                if(assign_node(tuple->docker, NULL, TRUE)) {
                     changed |= pe_graph_updated_then;
                 }
             }
 
         } else {
             enum action_tasks task = get_complex_task(first_child, first->task, TRUE);
+
+            /* Potentially we might want to invovle first_data->child
+             * if present, however we mostly just need the "you need
+             * to stop" signal to flow back up the ordering chain via
+             * the docker resources which are always present
+             *
+             * Almost certain to break if first->task or then->task is
+             * promote or demote
+             */
             pe_action_t *first_action = find_first_action(first_child->actions, NULL, task2text(task), node);
-            pe_action_t *then_action = find_first_action(tuple->child->actions, NULL, then->task, node);
+            pe_action_t *then_action = find_first_action(tuple->docker->actions, NULL, then->task, node);
 
             if (order_actions(first_action, then_action, type)) {
-                crm_debug("Created constraint for %s -> %s", first_action->uuid, then_action->uuid);
+                crm_debug("Created constraint for %s (%d) -> %s (%d) %.6x",
+                          first_action->uuid, is_set(first_action->flags, pe_action_optional),
+                          then_action->uuid, is_set(then_action->flags, pe_action_optional), type);
                 changed |= (pe_graph_updated_first | pe_graph_updated_then);
             }
-            changed |= tuple->child->cmds->update_actions(first_action, then_action, node,
-                                                          first_child->cmds->action_flags(first_action, node),
-                                                          filter, type);
+            if(first_action && then_action) {
+                changed |= tuple->docker->cmds->update_actions(first_action, then_action, node,
+                                                               first_child->cmds->action_flags(first_action, node),
+                                                               filter, type);
+            } else {
+                crm_err("Nothing found either for %s (%p) or %s (%p) %s",
+                        first_child->id, first_action,
+                        tuple->docker->id, then_action, task2text(task));
+            }
         }
     }
 
+    g_list_free(containers);
     return changed;
 }
 
@@ -492,11 +528,8 @@ container_rsc_location(resource_t * rsc, rsc_to_node_t * constraint)
     }
 
     if(container_data->child && (constraint->role_filter == RSC_ROLE_SLAVE || constraint->role_filter == RSC_ROLE_MASTER)) {
-        // Translate the node into container names running on that node
-        crm_err("Applying constraint %s", constraint->id);
         container_data->child->cmds->rsc_location(container_data->child, constraint);
         container_data->child->rsc_location = g_list_prepend(container_data->child->rsc_location, constraint);
-        crm_err("Added %d location constraints to %s", g_list_length(container_data->child->rsc_location), container_data->child->id);
     }
 }
 
