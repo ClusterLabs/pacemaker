@@ -1022,7 +1022,7 @@ master_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocatio
         g_list_free(rhs);
 
     } else if (constraint->role_lh == RSC_ROLE_MASTER) {
-        resource_t *rh_child = find_compatible_child(rsc_lh, rsc_rh, rsc_rh->children, constraint->role_rh, FALSE);
+        resource_t *rh_child = find_compatible_child(rsc_lh, rsc_rh, constraint->role_rh, FALSE);
 
         if (rh_child == NULL && constraint->score >= INFINITY) {
             pe_rsc_trace(rsc_lh, "%s can't be promoted %s", rsc_lh->id, constraint->id);

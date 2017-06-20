@@ -47,12 +47,31 @@ static GListPtr get_container_list(resource_t *rsc)
     GListPtr containers = NULL;
     container_variant_data_t *data = NULL;
 
-    get_container_variant_data(data, rsc);
-    for (GListPtr gIter = data->tuples; gIter != NULL; gIter = gIter->next) {
-        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
-        containers = g_list_append(containers, tuple->docker);
+    if(rsc->variant == pe_container) {
+        get_container_variant_data(data, rsc);
+        for (GListPtr gIter = data->tuples; gIter != NULL; gIter = gIter->next) {
+            container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+            containers = g_list_append(containers, tuple->docker);
+        }
     }
     return containers;
+}
+
+static GListPtr get_containers_or_children(resource_t *rsc) 
+{
+    GListPtr containers = NULL;
+    container_variant_data_t *data = NULL;
+
+    if(rsc->variant == pe_container) {
+        get_container_variant_data(data, rsc);
+        for (GListPtr gIter = data->tuples; gIter != NULL; gIter = gIter->next) {
+            container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+            containers = g_list_append(containers, tuple->docker);
+        }
+        return containers;
+    } else {
+        return rsc->children;
+    }
 }
 
 node_t *
@@ -337,6 +356,39 @@ container_rsc_colocation_lh(resource_t * rsc, resource_t * rsc_rh, rsc_colocatio
     CRM_ASSERT(FALSE);
 }
 
+int copies_per_node(resource_t * rsc) 
+{
+    /* Strictly speaking, there should be a 'copies_per_node' addition
+     * to the resource function table and each case would be a
+     * function.  However that would be serious overkill to return an
+     * int.  In fact, it seems to me that both function tables
+     * could/should be replaced by resources.{c,h} full of
+     * rsc_{some_operation} functions containing a switch as below
+     * which calls out to functions named {variant}_{some_operation}
+     * as needed.
+     */
+    switch(rsc->variant) {
+        case pe_unknown:
+            return 0;
+        case pe_native:
+        case pe_group:
+            return 1;
+        case pe_clone:
+        case pe_master:
+            {
+                const char *max_clones_node = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INCARNATION_NODEMAX);
+                return crm_parse_int(max_clones_node, "1");
+            }
+        case pe_container:
+            {
+                container_variant_data_t *data = NULL;
+                get_container_variant_data(data, rsc);
+                return data->replicas_per_host;
+            }
+    }
+    return 0;
+}
+
 void
 container_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc, rsc_colocation_t * constraint)
 {
@@ -346,6 +398,7 @@ container_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc, rsc_colocatio
     CRM_CHECK(constraint != NULL, return);
     CRM_CHECK(rsc_lh != NULL, pe_err("rsc_lh was NULL for %s", constraint->id); return);
     CRM_CHECK(rsc != NULL, pe_err("rsc was NULL for %s", constraint->id); return);
+    CRM_ASSERT(rsc_lh->variant == pe_native);
 
     if (is_set(rsc->flags, pe_rsc_provisional)) {
         pe_rsc_trace(rsc, "%s is still provisional", rsc->id);
@@ -413,14 +466,65 @@ container_action_flags(action_t * action, node_t * node)
     return flags;
 }
 
+resource_t *
+find_compatible_child_by_node(resource_t * local_child, node_t * local_node, resource_t * rsc,
+                              enum rsc_role_e filter, gboolean current)
+{
+    GListPtr gIter = NULL;
+    GListPtr children = NULL;
+
+    if (local_node == NULL) {
+        crm_err("Can't colocate unrunnable child %s with %s", local_child->id, rsc->id);
+        return NULL;
+    }
+
+    crm_trace("Looking for compatible child from %s for %s on %s",
+              local_child->id, rsc->id, local_node->details->uname);
+
+    children = get_containers_or_children(rsc);
+    for (gIter = children; gIter != NULL; gIter = gIter->next) {
+        resource_t *child_rsc = (resource_t *) gIter->data;
+
+        if(is_child_compatible(child_rsc, local_node, filter, current)) {
+            crm_trace("Pairing %s with %s on %s",
+                      local_child->id, child_rsc->id, local_node->details->uname);
+            return child_rsc;
+        }
+    }
+
+    crm_trace("Can't pair %s with %s", local_child->id, rsc->id);
+    if(children != rsc->children) {
+        g_list_free(children);
+    }
+    return NULL;
+}
+
+static container_grouping_t *
+tuple_for_docker(resource_t *rsc, resource_t *docker, node_t *node)
+{
+    if(rsc->variant == pe_container) {
+        container_variant_data_t *data = NULL;
+        get_container_variant_data(data, rsc);
+        for (GListPtr gIter = data->tuples; gIter != NULL; gIter = gIter->next) {
+            container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+            if(tuple->child
+               && docker == tuple->docker
+               && node->details == tuple->node->details) {
+                return tuple;
+            }
+        }
+    }
+    return NULL;
+}
+
 static enum pe_graph_flags
 container_update_interleave_actions(action_t * first, action_t * then, node_t * node, enum pe_action_flags flags,
                      enum pe_action_flags filter, enum pe_ordering type)
 {
+    GListPtr gIter = NULL;
+    GListPtr children = NULL;
     gboolean current = FALSE;
     enum pe_graph_flags changed = pe_graph_none;
-    container_variant_data_t *then_data = NULL;
-    GListPtr containers = NULL;
 
     /* Fix this - lazy */
     if (crm_ends_with(first->uuid, "_stopped_0")
@@ -428,27 +532,15 @@ container_update_interleave_actions(action_t * first, action_t * then, node_t * 
         current = TRUE;
     }
 
-    /* Eventually we may want to allow interleaving between bundles
-     * and clones, but for now assert both sides are bundles
-     */
-    CRM_ASSERT(first->rsc->variant == pe_container);
-    CRM_ASSERT(then->rsc->variant == pe_container);
-
-    get_container_variant_data(then_data, then->rsc);
-    containers = get_container_list(first->rsc);
-
-    for (GListPtr gIter = then_data->tuples; gIter != NULL; gIter = gIter->next) {
-        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
-
-        /* We can't do the then_data->child->children trick here,
-         * since the node's wont match
-         */
-        resource_t *first_child = find_compatible_child(tuple->docker, first->rsc, containers, RSC_ROLE_UNKNOWN, current);
+    children = get_containers_or_children(then->rsc);
+    for (gIter = children; gIter != NULL; gIter = gIter->next) {
+        resource_t *then_child = (resource_t *) gIter->data;
+        resource_t *first_child = find_compatible_child(then_child, first->rsc, RSC_ROLE_UNKNOWN, current);
         if (first_child == NULL && current) {
             crm_trace("Ignore");
 
         } else if (first_child == NULL) {
-            crm_debug("No match found for %s (%d / %s / %s)", tuple->docker->id, current, first->uuid, then->uuid);
+            crm_debug("No match found for %s (%d / %s / %s)", then_child->id, current, first->uuid, then->uuid);
 
             /* Me no like this hack - but what else can we do?
              *
@@ -457,25 +549,76 @@ container_update_interleave_actions(action_t * first, action_t * then, node_t * 
              *   not be allowed to start
              */
             if (type & (pe_order_runnable_left | pe_order_implies_then) /* Mandatory */ ) {
-                pe_rsc_info(then->rsc, "Inhibiting %s from being active", tuple->docker->id);
-                if(assign_node(tuple->docker, NULL, TRUE)) {
+                pe_rsc_info(then->rsc, "Inhibiting %s from being active", then_child->id);
+                if(assign_node(then_child, NULL, TRUE)) {
                     changed |= pe_graph_updated_then;
                 }
             }
 
         } else {
-            enum action_tasks task = get_complex_task(first_child, first->task, TRUE);
+            pe_action_t *first_action = NULL;
+            pe_action_t *then_action = NULL;
 
-            /* Potentially we might want to invovle first_data->child
-             * if present, however we mostly just need the "you need
-             * to stop" signal to flow back up the ordering chain via
-             * the docker resources which are always present
-             *
-             * Almost certain to break if first->task or then->task is
-             * promote or demote
-             */
-            pe_action_t *first_action = find_first_action(first_child->actions, NULL, task2text(task), node);
-            pe_action_t *then_action = find_first_action(tuple->docker->actions, NULL, then->task, node);
+            enum action_tasks task = clone_child_action(first);
+            const char *first_task = task2text(task);
+
+            container_grouping_t *first_tuple = tuple_for_docker(first->rsc, first_child, node);
+            container_grouping_t *then_tuple = tuple_for_docker(then->rsc, then_child, node);
+
+            if(strstr(first->task, "stop") && first_tuple && first_tuple->child) {
+                /* Except for 'stopped' we should be looking at the
+                 * in-container resource, actions for the child will
+                 * happen later and are therefor more likely to align
+                 * with the user's intent.
+                 */
+                first_action = find_first_action(first_tuple->child->actions, NULL, task2text(task), node);
+            } else {
+                first_action = find_first_action(first_child->actions, NULL, task2text(task), node);
+            }
+
+            if(strstr(then->task, "mote") && then_tuple && then_tuple->child) {
+                /* Promote/demote actions will never be found for the
+                 * docker resource, look in the child instead
+                 *
+                 * Alternatively treat:
+                 *  'XXXX then promote YYYY' as 'XXXX then start container for YYYY', and
+                 *  'demote XXXX then stop YYYY' as 'stop container for XXXX then stop YYYY'
+                 */
+                then_action = find_first_action(then_tuple->child->actions, NULL, then->task, node);
+            } else {
+                then_action = find_first_action(then_child->actions, NULL, then->task, node);
+            }
+
+            if (first_action == NULL) {
+                if (is_not_set(first_child->flags, pe_rsc_orphan)
+                    && crm_str_eq(first_task, RSC_STOP, TRUE) == FALSE
+                    && crm_str_eq(first_task, RSC_DEMOTE, TRUE) == FALSE) {
+                    crm_err("Internal error: No action found for %s in %s (first)",
+                            first_task, first_child->id);
+
+                } else {
+                    crm_trace("No action found for %s in %s%s (first)",
+                              first_task, first_child->id,
+                              is_set(first_child->flags, pe_rsc_orphan) ? " (ORPHAN)" : "");
+                }
+                continue;
+            }
+
+            /* We're only interested if 'then' is neither stopping nor being demoted */ 
+            if (then_action == NULL) {
+                if (is_not_set(then_child->flags, pe_rsc_orphan)
+                    && crm_str_eq(then->task, RSC_STOP, TRUE) == FALSE
+                    && crm_str_eq(then->task, RSC_DEMOTE, TRUE) == FALSE) {
+                    crm_err("Internal error: No action found for %s in %s (then)",
+                            then->task, then_child->id);
+
+                } else {
+                    crm_trace("No action found for %s in %s%s (then)",
+                              then->task, then_child->id,
+                              is_set(then_child->flags, pe_rsc_orphan) ? " (ORPHAN)" : "");
+                }
+                continue;
+            }
 
             if (order_actions(first_action, then_action, type)) {
                 crm_debug("Created constraint for %s (%d) -> %s (%d) %.6x",
@@ -484,55 +627,75 @@ container_update_interleave_actions(action_t * first, action_t * then, node_t * 
                 changed |= (pe_graph_updated_first | pe_graph_updated_then);
             }
             if(first_action && then_action) {
-                changed |= tuple->docker->cmds->update_actions(first_action, then_action, node,
-                                                               first_child->cmds->action_flags(first_action, node),
-                                                               filter, type);
+                changed |= then_child->cmds->update_actions(first_action, then_action, node,
+                                                            first_child->cmds->action_flags(first_action, node),
+                                                            filter, type);
             } else {
                 crm_err("Nothing found either for %s (%p) or %s (%p) %s",
                         first_child->id, first_action,
-                        tuple->docker->id, then_action, task2text(task));
+                        then_child->id, then_action, task2text(task));
             }
         }
     }
 
-    g_list_free(containers);
+    if(children != then->rsc->children) {
+        g_list_free(children);
+    }
     return changed;
+}
+
+bool can_interleave_actions(pe_action_t *first, pe_action_t *then) 
+{
+    bool interleave = FALSE;
+    resource_t *rsc = NULL;
+    const char *interleave_s = NULL;
+
+    if(first->rsc == NULL || then->rsc == NULL) {
+        crm_trace("Not interleaving %s with %s (both must be resources)", first->uuid, then->uuid);
+        return FALSE;
+    } else if(first->rsc == then->rsc) {
+        crm_trace("Not interleaving %s with %s (must belong to different resources)", first->uuid, then->uuid);
+        return FALSE;
+    } else if(first->rsc->variant < pe_clone || then->rsc->variant < pe_clone) {
+        crm_trace("Not interleaving %s with %s (both sides must be clones, masters, or bundles)", first->uuid, then->uuid);
+        return FALSE;
+    }
+
+    if (crm_ends_with(then->uuid, "_stop_0") || crm_ends_with(then->uuid, "_demote_0")) {
+        rsc = first->rsc;
+    } else {
+        rsc = then->rsc;
+    }
+
+    interleave_s = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INTERLEAVE);
+    interleave = crm_is_true(interleave_s);
+    crm_trace("Interleave %s -> %s: %s (based on %s)",
+              first->uuid, then->uuid, interleave ? "yes" : "no", rsc->id);
+
+    return interleave;
 }
 
 enum pe_graph_flags
 container_update_actions(action_t * first, action_t * then, node_t * node, enum pe_action_flags flags,
                      enum pe_action_flags filter, enum pe_ordering type)
 {
-    bool interleave = FALSE;
     enum pe_graph_flags changed = pe_graph_none;
 
     crm_trace("%s -> %s", first->uuid, then->uuid);
 
-    if(first->rsc == NULL || then->rsc == NULL) {
-        return changed;
-
-    } else if(first->rsc->variant == then->rsc->variant) {
-        // When and how to turn on interleaving?
-        // interleave = TRUE;
-    }
-
-    if(interleave) {
+    if(can_interleave_actions(first, then)) {
         changed = container_update_interleave_actions(first, then, node, flags, filter, type);
 
-    } else {
-        GListPtr gIter = then->rsc->children;
-        GListPtr containers = NULL;
+    } else if(then->rsc) {
+        GListPtr gIter = NULL;
+        GListPtr children = NULL;
 
         // Handle the 'primitive' ordering case
         changed |= native_update_actions(first, then, node, flags, filter, type);
 
         // Now any children (or containers in the case of a bundle)
-        if(then->rsc->variant == pe_container) {
-            containers = get_container_list(then->rsc);
-            gIter = containers;
-        }
-
-        for (; gIter != NULL; gIter = gIter->next) {
+        children = get_containers_or_children(then->rsc);
+        for (gIter = children; gIter != NULL; gIter = gIter->next) {
             resource_t *then_child = (resource_t *) gIter->data;
             enum pe_graph_flags then_child_changed = pe_graph_none;
             action_t *then_child_action = find_first_action(then_child->actions, NULL, then->task, node);
@@ -554,7 +717,9 @@ container_update_actions(action_t * first, action_t * then, node_t * node, enum 
             }
         }
 
-        g_list_free(containers);
+        if(children != then->rsc->children) {
+            g_list_free(children);
+        }
     }
     return changed;
 }
