@@ -115,6 +115,7 @@ container_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     }
 
     clear_bit(rsc->flags, pe_rsc_allocating);
+    clear_bit(rsc->flags, pe_rsc_provisional);
     return NULL;
 }
 
@@ -196,16 +197,130 @@ container_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
     }
 }
 
-void
-container_rsc_colocation_lh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * constraint)
+
+static resource_t *
+find_compatible_tuple_by_node(resource_t * rsc_lh, node_t * candidate, resource_t * rsc,
+                              enum rsc_role_e filter, gboolean current)
 {
-    pe_err("Container %s cannot be colocated with anything", rsc_lh->id);
+    container_variant_data_t *container_data = NULL;
+
+    CRM_CHECK(candidate != NULL, return NULL);
+    get_container_variant_data(container_data, rsc);
+
+    crm_trace("Looking for compatible child from %s for %s on %s",
+              rsc_lh->id, rsc->id, candidate->details->uname);
+
+    for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
+        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+
+        if(is_child_compatible(tuple->docker, candidate, filter, current)) {
+            crm_trace("Pairing %s with %s on %s",
+                      rsc_lh->id, tuple->docker->id, candidate->details->uname);
+            return tuple->docker;
+        }
+    }
+
+    crm_trace("Can't pair %s with %s", rsc_lh->id, rsc->id);
+    return NULL;
+}
+
+static resource_t *
+find_compatible_tuple(resource_t *rsc_lh, resource_t * rsc, enum rsc_role_e filter,
+                      gboolean current)
+{
+    GListPtr scratch = NULL;
+    resource_t *pair = NULL;
+    node_t *active_node_lh = NULL;
+
+    active_node_lh = rsc_lh->fns->location(rsc_lh, NULL, current);
+    if (active_node_lh) {
+        return find_compatible_tuple_by_node(rsc_lh, active_node_lh, rsc, filter, current);
+    }
+
+    scratch = g_hash_table_get_values(rsc_lh->allowed_nodes);
+    scratch = g_list_sort_with_data(scratch, sort_node_weight, NULL);
+
+    for (GListPtr gIter = scratch; gIter != NULL; gIter = gIter->next) {
+        node_t *node = (node_t *) gIter->data;
+
+        pair = find_compatible_tuple_by_node(rsc_lh, node, rsc, filter, current);
+        if (pair) {
+            goto done;
+        }
+    }
+
+    pe_rsc_debug(rsc, "Can't pair %s with %s", rsc_lh->id, rsc->id);
+  done:
+    g_list_free(scratch);
+    return pair;
 }
 
 void
-container_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * constraint)
+container_rsc_colocation_lh(resource_t * rsc, resource_t * rsc_rh, rsc_colocation_t * constraint)
 {
-    pe_err("Container %s cannot be colocated with anything", rsc_rh->id);
+    /* -- Never called --
+     *
+     * Instead we add the colocation constraints to the child and call from there
+     */
+    CRM_ASSERT(FALSE);
+}
+
+void
+container_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc, rsc_colocation_t * constraint)
+{
+    GListPtr allocated_rhs = NULL;
+    container_variant_data_t *container_data = NULL;
+
+    CRM_CHECK(constraint != NULL, return);
+    CRM_CHECK(rsc_lh != NULL, pe_err("rsc_lh was NULL for %s", constraint->id); return);
+    CRM_CHECK(rsc != NULL, pe_err("rsc was NULL for %s", constraint->id); return);
+
+    if (is_set(rsc->flags, pe_rsc_provisional)) {
+        pe_rsc_trace(rsc, "%s is still provisional", rsc->id);
+        return;
+
+    } else if(constraint->rsc_lh->variant > pe_group) {
+        resource_t *rh_child = find_compatible_tuple(rsc_lh, rsc, RSC_ROLE_UNKNOWN, FALSE);
+
+        if (rh_child) {
+            pe_rsc_debug(rsc, "Pairing %s with %s", rsc_lh->id, rh_child->id);
+            rsc_lh->cmds->rsc_colocation_lh(rsc_lh, rh_child, constraint);
+
+        } else if (constraint->score >= INFINITY) {
+            crm_notice("Cannot pair %s with instance of %s", rsc_lh->id, rsc->id);
+            assign_node(rsc_lh, NULL, TRUE);
+
+        } else {
+            pe_rsc_debug(rsc, "Cannot pair %s with instance of %s", rsc_lh->id, rsc->id);
+        }
+
+        return;
+    }
+
+    get_container_variant_data(container_data, rsc);
+    pe_rsc_trace(rsc, "Processing constraint %s: %s -> %s %d",
+                 constraint->id, rsc_lh->id, rsc->id, constraint->score);
+
+    for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
+        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+
+        if (constraint->score < INFINITY) {
+            tuple->docker->cmds->rsc_colocation_rh(rsc_lh, tuple->docker, constraint);
+
+        } else {
+            node_t *chosen = tuple->docker->fns->location(tuple->docker, NULL, FALSE);
+
+            if (chosen != NULL && is_set_recursive(tuple->docker, pe_rsc_block, TRUE) == FALSE) {
+                pe_rsc_trace(rsc, "Allowing %s: %s %d", constraint->id, chosen->details->uname, chosen->weight);
+                allocated_rhs = g_list_prepend(allocated_rhs, chosen);
+            }
+        }
+    }
+
+    if (constraint->score >= INFINITY) {
+        node_list_exclude(rsc_lh->allowed_nodes, allocated_rhs, FALSE);
+    }
+    g_list_free(allocated_rhs);
 }
 
 enum pe_action_flags
@@ -227,16 +342,22 @@ container_update_actions(action_t * first, action_t * then, node_t * node, enum 
 void
 container_rsc_location(resource_t * rsc, rsc_to_node_t * constraint)
 {
-    GListPtr gIter = rsc->children;
+    container_variant_data_t *container_data = NULL;
+    get_container_variant_data(container_data, rsc);
 
     pe_rsc_trace(rsc, "Processing location constraint %s for %s", constraint->id, rsc->id);
 
     native_rsc_location(rsc, constraint);
 
-    for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+    for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
+        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
 
-        child_rsc->cmds->rsc_location(child_rsc, constraint);
+        if (tuple->docker) {
+            tuple->docker->cmds->rsc_location(tuple->docker, constraint);
+        }
+        if(tuple->ip) {
+            tuple->ip->cmds->rsc_location(tuple->ip, constraint);
+        }
     }
 }
 
