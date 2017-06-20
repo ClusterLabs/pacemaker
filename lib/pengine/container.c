@@ -342,6 +342,7 @@ create_remote_resource(
 {
     if (tuple->child && valid_network(data)) {
         GHashTableIter gIter;
+        GListPtr rsc_iter = NULL;
         node_t *node = NULL;
         xmlNode *xml_obj = NULL;
         xmlNode *xml_remote = NULL;
@@ -400,6 +401,26 @@ create_remote_resource(
                                   data_set);
         } else {
             node->weight = -INFINITY;
+        }
+
+        /* unpack_remote_nodes() ensures that each remote node and guest node
+         * has a node_t entry. Ideally, it would do the same for bundle nodes.
+         * Unfortunately, a bundle has to be mostly unpacked before it's obvious
+         * what nodes will be needed, so we do it just above.
+         *
+         * Worse, that means that the node may have been utilized while
+         * unpacking other resources, without our weight correction. The most
+         * likely place for this to happen is when common_unpack() calls
+         * resource_location() to set a default score in symmetric clusters.
+         * This adds a node *copy* to each resource's allowed nodes, and these
+         * copies will have the wrong weight.
+         *
+         * As a hacky workaround, clear those copies here.
+         */
+        for (rsc_iter = data_set->resources; rsc_iter; rsc_iter = rsc_iter->next) {
+            resource_t *rsc = (resource_t *) rsc_iter->data;
+
+            g_hash_table_remove(rsc->allowed_nodes, nodeid);
         }
 
         tuple->node = node_copy(node);
