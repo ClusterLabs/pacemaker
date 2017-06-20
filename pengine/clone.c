@@ -944,34 +944,6 @@ assign_node(resource_t * rsc, node_t * node, gboolean force)
     return changed;
 }
 
-static resource_t *
-find_compatible_child_by_node(resource_t * local_child, node_t * local_node, resource_t * rsc,
-                              GListPtr children, enum rsc_role_e filter, gboolean current)
-{
-    GListPtr gIter = NULL;
-
-    if (local_node == NULL) {
-        crm_err("Can't colocate unrunnable child %s with %s", local_child->id, rsc->id);
-        return NULL;
-    }
-
-    crm_trace("Looking for compatible child from %s for %s on %s",
-              local_child->id, rsc->id, local_node->details->uname);
-
-    for (gIter = children; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
-
-        if(is_child_compatible(child_rsc, local_node, filter, current)) {
-            crm_trace("Pairing %s with %s on %s",
-                      local_child->id, child_rsc->id, local_node->details->uname);
-            return child_rsc;
-        }
-    }
-
-    crm_trace("Can't pair %s with %s", local_child->id, rsc->id);
-    return NULL;
-}
-
 gboolean
 is_child_compatible(resource_t *child_rsc, node_t * local_node, enum rsc_role_e filter, gboolean current) 
 {
@@ -1002,7 +974,7 @@ is_child_compatible(resource_t *child_rsc, node_t * local_node, enum rsc_role_e 
 }
 
 resource_t *
-find_compatible_child(resource_t * local_child, resource_t * rsc, GListPtr children, enum rsc_role_e filter, gboolean current)
+find_compatible_child(resource_t * local_child, resource_t * rsc, enum rsc_role_e filter, gboolean current)
 {
     resource_t *pair = NULL;
     GListPtr gIter = NULL;
@@ -1011,7 +983,7 @@ find_compatible_child(resource_t * local_child, resource_t * rsc, GListPtr child
 
     local_node = local_child->fns->location(local_child, NULL, current);
     if (local_node) {
-        return find_compatible_child_by_node(local_child, local_node, rsc, children, filter, current);
+        return find_compatible_child_by_node(local_child, local_node, rsc, filter, current);
     }
 
     scratch = g_hash_table_get_values(local_child->allowed_nodes);
@@ -1021,7 +993,7 @@ find_compatible_child(resource_t * local_child, resource_t * rsc, GListPtr child
     for (; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
 
-        pair = find_compatible_child_by_node(local_child, node, rsc, children, filter, current);
+        pair = find_compatible_child_by_node(local_child, node, rsc, filter, current);
         if (pair) {
             goto done;
         }
@@ -1048,29 +1020,26 @@ clone_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
 {
     GListPtr gIter = NULL;
     gboolean do_interleave = FALSE;
-    clone_variant_data_t *clone_data = NULL;
-    clone_variant_data_t *clone_data_lh = NULL;
+    const char *interleave_s = NULL;
 
     CRM_CHECK(constraint != NULL, return);
     CRM_CHECK(rsc_lh != NULL, pe_err("rsc_lh was NULL for %s", constraint->id); return);
     CRM_CHECK(rsc_rh != NULL, pe_err("rsc_rh was NULL for %s", constraint->id); return);
     CRM_CHECK(rsc_lh->variant == pe_native, return);
 
-    get_clone_variant_data(clone_data, constraint->rsc_rh);
     pe_rsc_trace(rsc_rh, "Processing constraint %s: %s -> %s %d",
                  constraint->id, rsc_lh->id, rsc_rh->id, constraint->score);
 
-    if (pe_rsc_is_clone(constraint->rsc_lh)) {
-
-        get_clone_variant_data(clone_data_lh, constraint->rsc_lh);
-        if (clone_data_lh->interleave
-            && clone_data->clone_node_max != clone_data_lh->clone_node_max) {
-            crm_config_err("Cannot interleave " XML_CIB_TAG_INCARNATION " %s and %s because"
-                           " they do not support the same number of" " resources per node",
+    /* only the LHS side needs to be labeled as interleave */
+    interleave_s = g_hash_table_lookup(constraint->rsc_lh->meta, XML_RSC_ATTR_INTERLEAVE);
+    if(crm_is_true(interleave_s) && constraint->rsc_lh->variant > pe_group) {
+        // TODO: Do we actually care about multiple RH copies sharing a LH copy anymore?
+        if (copies_per_node(constraint->rsc_lh) != copies_per_node(constraint->rsc_rh)) {
+            crm_config_err("Cannot interleave %s and %s because"
+                           " they do not support the same number of copies per node",
                            constraint->rsc_lh->id, constraint->rsc_rh->id);
 
-            /* only the LHS side needs to be labeled as interleave */
-        } else if (clone_data_lh->interleave) {
+        } else {
             do_interleave = TRUE;
         }
     }
@@ -1082,7 +1051,7 @@ clone_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
     } else if (do_interleave) {
         resource_t *rh_child = NULL;
 
-        rh_child = find_compatible_child(rsc_lh, rsc_rh, rsc_rh->children, RSC_ROLE_UNKNOWN, FALSE);
+        rh_child = find_compatible_child(rsc_lh, rsc_rh, RSC_ROLE_UNKNOWN, FALSE);
 
         if (rh_child) {
             pe_rsc_debug(rsc_rh, "Pairing %s with %s", rsc_lh->id, rh_child->id);
@@ -1125,7 +1094,7 @@ clone_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
     }
 }
 
-static enum action_tasks
+enum action_tasks
 clone_child_action(action_t * action)
 {
     enum action_tasks result = no_action;
@@ -1223,167 +1192,6 @@ enum pe_action_flags
 clone_action_flags(action_t * action, node_t * node)
 {
     return summary_action_flags(action, action->rsc->children, node);
-}
-
-static enum pe_graph_flags
-clone_update_actions_interleave(action_t * first, action_t * then, node_t * node,
-                                enum pe_action_flags flags, enum pe_action_flags filter,
-                                enum pe_ordering type)
-{
-    gboolean current = FALSE;
-    resource_t *first_child = NULL;
-    GListPtr gIter = then->rsc->children;
-    enum pe_graph_flags changed = pe_graph_none;        /*pe_graph_disable */
-
-    enum action_tasks task = clone_child_action(first);
-    const char *first_task = task2text(task);
-
-    /* Fix this - lazy */
-    if (crm_ends_with(first->uuid, "_stopped_0")
-        || crm_ends_with(first->uuid, "_demoted_0")) {
-        current = TRUE;
-    }
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *then_child = (resource_t *) gIter->data;
-
-        CRM_ASSERT(then_child != NULL);
-        first_child = find_compatible_child(then_child, first->rsc, first->rsc->children, RSC_ROLE_UNKNOWN, current);
-        if (first_child == NULL && current) {
-            crm_trace("Ignore");
-
-        } else if (first_child == NULL) {
-            crm_debug("No match found for %s (%d / %s / %s)", then_child->id, current, first->uuid,
-                      then->uuid);
-
-            /* Me no like this hack - but what else can we do?
-             *
-             * If there is no-one active or about to be active
-             *   on the same node as then_child, then they must
-             *   not be allowed to start
-             */
-            if (type & (pe_order_runnable_left | pe_order_implies_then) /* Mandatory */ ) {
-                pe_rsc_info(then->rsc, "Inhibiting %s from being active", then_child->id);
-                if(assign_node(then_child, NULL, TRUE)) {
-                    changed |= pe_graph_updated_then;
-                }
-            }
-
-        } else {
-            action_t *first_action = NULL;
-            action_t *then_action = NULL;
-
-            pe_rsc_debug(then->rsc, "Pairing %s with %s", first_child->id, then_child->id);
-
-            first_action = find_first_action(first_child->actions, NULL, first_task, node);
-            then_action = find_first_action(then_child->actions, NULL, then->task, node);
-
-            if (first_action == NULL) {
-                if (is_not_set(first_child->flags, pe_rsc_orphan)
-                    && crm_str_eq(first_task, RSC_STOP, TRUE) == FALSE
-                    && crm_str_eq(first_task, RSC_DEMOTE, TRUE) == FALSE) {
-                    crm_err("Internal error: No action found for %s in %s (first)",
-                            first_task, first_child->id);
-
-                } else {
-                    crm_trace("No action found for %s in %s%s (first)",
-                              first_task, first_child->id,
-                              is_set(first_child->flags, pe_rsc_orphan) ? " (ORPHAN)" : "");
-                }
-                continue;
-            }
-
-            /* We're only interested if 'then' is neither stopping nor being demoted */ 
-            if (then_action == NULL) {
-                if (is_not_set(then_child->flags, pe_rsc_orphan)
-                    && crm_str_eq(then->task, RSC_STOP, TRUE) == FALSE
-                    && crm_str_eq(then->task, RSC_DEMOTE, TRUE) == FALSE) {
-                    crm_err("Internal error: No action found for %s in %s (then)",
-                            then->task, then_child->id);
-
-                } else {
-                    crm_trace("No action found for %s in %s%s (then)",
-                              then->task, then_child->id,
-                              is_set(then_child->flags, pe_rsc_orphan) ? " (ORPHAN)" : "");
-                }
-                continue;
-            }
-
-            if (order_actions(first_action, then_action, type)) {
-                crm_debug("Created constraint for %s -> %s", first_action->uuid, then_action->uuid);
-                changed |= (pe_graph_updated_first | pe_graph_updated_then);
-            }
-            changed |=
-                then_child->cmds->update_actions(first_action, then_action, node,
-                                                 first_child->cmds->action_flags(first_action,
-                                                                                 node), filter,
-                                                 type);
-        }
-    }
-    return changed;
-}
-
-enum pe_graph_flags
-clone_update_actions(action_t * first, action_t * then, node_t * node, enum pe_action_flags flags,
-                     enum pe_action_flags filter, enum pe_ordering type)
-{
-    const char *rsc = "none";
-    gboolean interleave = FALSE;
-    enum pe_graph_flags changed = pe_graph_none;
-
-    if (first->rsc != then->rsc
-        && pe_rsc_is_clone(first->rsc)
-        && pe_rsc_is_clone(then->rsc)) {
-        clone_variant_data_t *clone_data = NULL;
-
-        if (crm_ends_with(then->uuid, "_stop_0")
-            || crm_ends_with(then->uuid, "_demote_0")) {
-            get_clone_variant_data(clone_data, first->rsc);
-            rsc = first->rsc->id;
-        } else {
-            get_clone_variant_data(clone_data, then->rsc);
-            rsc = then->rsc->id;
-        }
-        interleave = clone_data->interleave;
-    }
-
-    crm_trace("Interleave %s -> %s: %s (based on %s)",
-              first->uuid, then->uuid, interleave ? "yes" : "no", rsc);
-
-    if (interleave) {
-        changed = clone_update_actions_interleave(first, then, node, flags, filter, type);
-
-    } else if (then->rsc) {
-        GListPtr gIter = then->rsc->children;
-
-        changed |= native_update_actions(first, then, node, flags, filter, type);
-
-        for (; gIter != NULL; gIter = gIter->next) {
-            enum pe_graph_flags child_changed = pe_graph_none;
-            GListPtr lpc = NULL;
-            resource_t *child = (resource_t *) gIter->data;
-            action_t *child_action = find_first_action(child->actions, NULL, then->task, node);
-
-            if (child_action) {
-                enum pe_action_flags child_flags = child->cmds->action_flags(child_action, node);
-
-                if (is_set(child_flags, pe_action_runnable)) {
-                                     
-                    child_changed |=
-                        child->cmds->update_actions(first, child_action, node, flags, filter, type);
-                }
-                changed |= child_changed;
-                if (child_changed & pe_graph_updated_then) {
-                   for (lpc = child_action->actions_after; lpc != NULL; lpc = lpc->next) {
-                        action_wrapper_t *other = (action_wrapper_t *) lpc->data;
-                        update_action(other->action);
-                    }
-                }
-            }
-        }
-    }
-
-    return changed;
 }
 
 void

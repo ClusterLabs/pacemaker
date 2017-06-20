@@ -168,9 +168,6 @@ extern enum pe_graph_flags native_update_actions(action_t * first, action_t * th
 extern enum pe_graph_flags group_update_actions(action_t * first, action_t * then, node_t * node,
                                                 enum pe_action_flags flags,
                                                 enum pe_action_flags filter, enum pe_ordering type);
-extern enum pe_graph_flags clone_update_actions(action_t * first, action_t * then, node_t * node,
-                                                enum pe_action_flags flags,
-                                                enum pe_action_flags filter, enum pe_ordering type);
 extern enum pe_graph_flags container_update_actions(action_t * first, action_t * then, node_t * node,
                                                     enum pe_action_flags flags,
                                                     enum pe_action_flags filter, enum pe_ordering type);
