@@ -69,6 +69,8 @@ xmlNode *create_device_registration_xml(const char *id, const char *namespace, c
 #  define F_STONITH_ACTION_DISALLOWED     "st_action_disallowed"
 /*! Maximum of random fencing delay for a device */
 #  define F_STONITH_DELAY_MAX            "st_delay_max"
+/*! Base delay used for a fencing delay */
+#  define F_STONITH_DELAY_BASE           "st_delay_base"
 /*! Has this device been verified using a monitor type
  *  operation (monitor, list, status) */
 #  define F_STONITH_DEVICE_VERIFIED   "st_monitor_verified"
@@ -111,6 +113,7 @@ xmlNode *create_device_registration_xml(const char *id, const char *namespace, c
 #  define STONITH_ATTR_HOSTLIST  "pcmk_host_list"
 #  define STONITH_ATTR_HOSTCHECK "pcmk_host_check"
 #  define STONITH_ATTR_DELAY_MAX "pcmk_delay_max"
+#  define STONITH_ATTR_DELAY_BASE   "pcmk_delay_base"
 #  define STONITH_ATTR_ACTION_LIMIT "pcmk_action_limit"
 
 #  define STONITH_ATTR_ACTION_OP   "action"
