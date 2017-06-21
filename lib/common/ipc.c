@@ -37,8 +37,8 @@
 
 #define PCMK_IPC_VERSION 1
 
-/* Evict clients whose event queue grows this large */
-#define PCMK_IPC_MAX_QUEUE 500
+/* Evict clients whose event queue grows this large (by default) */
+#define PCMK_IPC_DEFAULT_QUEUE_MAX 500
 
 struct crm_ipc_response_header {
     struct qb_ipc_response_header qb;
@@ -293,9 +293,28 @@ crm_client_disconnect_all(qb_ipcs_service_t *service)
     }
 }
 
+/*!
+ * \brief Allocate a new crm_client_t object and generate its ID
+ *
+ * \param[in] key  What to use as connections hash table key (NULL to use ID)
+ *
+ * \return Pointer to new crm_client_t (asserts on failure)
+ */
+crm_client_t *
+crm_client_alloc(void *key)
+{
+    crm_client_t *client = calloc(1, sizeof(crm_client_t));
+
+    CRM_ASSERT(client != NULL);
+    client->id = crm_generate_uuid();
+    g_hash_table_insert(client_connections, (key? key : client->id), client);
+    return client;
+}
+
 crm_client_t *
 crm_client_new(qb_ipcs_connection_t * c, uid_t uid_client, gid_t gid_client)
 {
+    static gid_t uid_cluster = 0;
     static gid_t gid_cluster = 0;
 
     crm_client_t *client = NULL;
@@ -305,11 +324,12 @@ crm_client_new(qb_ipcs_connection_t * c, uid_t uid_client, gid_t gid_client)
         return NULL;
     }
 
-    if (gid_cluster == 0) {
-        if(crm_user_lookup(CRM_DAEMON_USER, NULL, &gid_cluster) < 0) {
+    if (uid_cluster == 0) {
+        if (crm_user_lookup(CRM_DAEMON_USER, &uid_cluster, &gid_cluster) < 0) {
             static bool have_error = FALSE;
             if(have_error == FALSE) {
-                crm_warn("Could not find group for user %s", CRM_DAEMON_USER);
+                crm_warn("Could not find user and group IDs for user %s",
+                         CRM_DAEMON_USER);
                 have_error = TRUE;
             }
         }
@@ -324,21 +344,21 @@ crm_client_new(qb_ipcs_connection_t * c, uid_t uid_client, gid_t gid_client)
     crm_client_init();
 
     /* TODO: Do our own auth checking, return NULL if unauthorized */
-    client = calloc(1, sizeof(crm_client_t));
-
+    client = crm_client_alloc(c);
     client->ipcs = c;
     client->kind = CRM_CLIENT_IPC;
     client->pid = crm_ipcs_client_pid(c);
 
-    client->id = crm_generate_uuid();
+    if ((uid_client == 0) || (uid_client == uid_cluster)) {
+        /* Remember when a connection came from root or hacluster */
+        set_bit(client->flags, crm_client_flag_ipc_privileged);
+    }
 
     crm_debug("Connecting %p for uid=%d gid=%d pid=%u id=%s", c, uid_client, gid_client, client->pid, client->id);
 
 #if ENABLE_ACL
     client->user = uid2username(uid_client);
 #endif
-
-    g_hash_table_insert(client_connections, c, client);
     return client;
 }
 
@@ -387,6 +407,28 @@ crm_client_destroy(crm_client_t * c)
         free(c->remote);
     }
     free(c);
+}
+
+/*!
+ * \brief Raise IPC eviction threshold for a client, if allowed
+ *
+ * \param[in,out] client     Client to modify
+ * \param[in]     queue_max  New threshold (as string)
+ *
+ * \return TRUE if change was allowed, FALSE otherwise
+ */
+bool
+crm_set_client_queue_max(crm_client_t *client, const char *qmax)
+{
+    if (is_set(client->flags, crm_client_flag_ipc_privileged)) {
+        int qmax_int = crm_int_helper(qmax, NULL);
+
+        if ((errno == 0) && (qmax_int > 0)) {
+            client->queue_max = qmax_int;
+            return TRUE;
+        }
+    }
+    return FALSE;
 }
 
 int
@@ -533,37 +575,31 @@ crm_ipcs_flush_events(crm_client_t * c)
     }
 
     if (queue_len) {
-        /* We want to allow clients to briefly fall behind on processing
-         * incoming messages, but drop completely unresponsive clients so the
-         * connection doesn't consume resources indefinitely.
-         *
-         * @TODO It is possible that the queue could reasonably grow large in a
-         * short time. An example is a reprobe of hundreds of resources on many
-         * nodes resulting in a surge of CIB replies to the crmd. We could
-         * possibly give cluster daemons a higher threshold here, and/or prevent
-         * such a surge by throttling LRM history writes in the crmd.
-         */
 
-        if (queue_len > PCMK_IPC_MAX_QUEUE) {
-            if ((c->backlog_len <= 1) || (queue_len < c->backlog_len)) {
+        /* Allow clients to briefly fall behind on processing incoming messages,
+         * but drop completely unresponsive clients so the connection doesn't
+         * consume resources indefinitely.
+         */
+        if (queue_len > QB_MAX(c->queue_max, PCMK_IPC_DEFAULT_QUEUE_MAX)) {
+            if ((c->queue_backlog <= 1) || (queue_len < c->queue_backlog)) {
                 /* Don't evict for a new or shrinking backlog */
                 crm_warn("Client with process ID %u has a backlog of %u messages "
                          CRM_XS " %p", c->pid, queue_len, c->ipcs);
             } else {
                 crm_err("Evicting client with process ID %u due to backlog of %u messages "
                          CRM_XS " %p", c->pid, queue_len, c->ipcs);
-                c->backlog_len = 0;
+                c->queue_backlog = 0;
                 qb_ipcs_disconnect(c->ipcs);
                 return rc;
             }
         }
 
-        c->backlog_len = queue_len;
+        c->queue_backlog = queue_len;
         delay_next_flush(c, queue_len);
 
     } else {
         /* Event queue is empty, there is no backlog */
-        c->backlog_len = 0;
+        c->queue_backlog = 0;
     }
 
     return rc;

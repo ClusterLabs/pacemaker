@@ -1,3 +1,21 @@
+* Tue Jun 20 2017 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.17-1
+- Update source tarball to revision: cdba348
+- Changesets: 31
+- Diff:       20 files changed, 416 insertions(+), 151 deletions(-)
+
+- Features added since Pacemaker-1.1.17-rc3
+  + cib,libcib: support option for IPC eviction threshold
+
+- Changes since Pacemaker-1.1.17-rc3
+  + cib: Broadcasts of cib changes should always pass ACLs check
+  + libcib: get remoteness correctly from node status
+  + libpe_status: avoid memory leaks when creating bundle remote resource
+  + libpe_status: disallow resources on bundle nodes
+  + pengine: Bundle location constraints should only apply to the IP and docker resources
+  + pengine: Clones within bundles may also have notifications enabled
+  + pengine: Correctly implement pe_order_implies_first_printed
+  + pengine: Do not re-add a node's default score for each location constraint
+
 * Wed May 31 2017 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.17-rc3
 - Update source tarball to revision: 9793232
 - Changesets: 21

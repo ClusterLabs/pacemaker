@@ -325,12 +325,8 @@ cib_remote_listen(gpointer data)
     num_clients++;
 
     crm_client_init();
-    new_client = calloc(1, sizeof(crm_client_t));
+    new_client = crm_client_alloc(NULL);
     new_client->remote = calloc(1, sizeof(crm_remote_t));
-
-    new_client->id = crm_generate_uuid();
-
-    g_hash_table_insert(client_connections, new_client->id /* Should work */ , new_client);
 
     if (ssock == remote_tls_fd) {
 #ifdef HAVE_GNUTLS_GNUTLS_H

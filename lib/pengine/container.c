@@ -342,25 +342,32 @@ create_remote_resource(
 {
     if (tuple->child && valid_network(data)) {
         GHashTableIter gIter;
+        GListPtr rsc_iter = NULL;
         node_t *node = NULL;
         xmlNode *xml_obj = NULL;
         xmlNode *xml_remote = NULL;
-        char *nodeid = crm_strdup_printf("%s-%d", data->prefix, tuple->offset);
-        char *id = NULL;
+        char *id = crm_strdup_printf("%s-%d", data->prefix, tuple->offset);
+        const char *uname = NULL;
 
-        if (remote_id_conflict(nodeid, data_set)) {
+        if (remote_id_conflict(id, data_set)) {
+            free(id);
             // The biggest hammer we have
             id = crm_strdup_printf("pcmk-internal-%s-remote-%d", tuple->child->id, tuple->offset);
             CRM_ASSERT(remote_id_conflict(id, data_set) == FALSE);
-        } else {
-            id = strdup(nodeid);
         }
 
         xml_remote = create_resource(id, "pacemaker", "remote");
+
+        /* Abandon our created ID, and pull the copy from the XML, because we
+         * need something that will get freed during data set cleanup to use as
+         * the node ID and uname.
+         */
         free(id);
+        id = NULL;
+        uname = ID(xml_remote);
 
         xml_obj = create_xml_node(xml_remote, "operations");
-        create_op(xml_obj, ID(xml_remote), "monitor", "60s");
+        create_op(xml_obj, uname, "monitor", "60s");
 
         xml_obj = create_xml_node(xml_remote, XML_TAG_ATTR_SETS);
         crm_xml_set_id(xml_obj, "%s-attributes-%d", data->prefix, tuple->offset);
@@ -375,7 +382,10 @@ create_remote_resource(
         if(data->control_port) {
             create_nvp(xml_obj, "port", data->control_port);
         } else {
-            create_nvp(xml_obj, "port", crm_itoa(DEFAULT_REMOTE_PORT));
+            char *port_s = crm_itoa(DEFAULT_REMOTE_PORT);
+
+            create_nvp(xml_obj, "port", port_s);
+            free(port_s);
         }
 
         xml_obj = create_xml_node(xml_remote, XML_TAG_META_SETS);
@@ -394,18 +404,36 @@ create_remote_resource(
          * been, if it has a permanent node attribute), and ensure its weight is
          * -INFINITY so no other resources can run on it.
          */
-        node = pe_find_node(data_set->nodes, nodeid);
+        node = pe_find_node(data_set->nodes, uname);
         if (node == NULL) {
-            node = pe_create_node(strdup(nodeid), nodeid, "remote", "-INFINITY",
+            node = pe_create_node(uname, uname, "remote", "-INFINITY",
                                   data_set);
         } else {
             node->weight = -INFINITY;
         }
 
+        /* unpack_remote_nodes() ensures that each remote node and guest node
+         * has a node_t entry. Ideally, it would do the same for bundle nodes.
+         * Unfortunately, a bundle has to be mostly unpacked before it's obvious
+         * what nodes will be needed, so we do it just above.
+         *
+         * Worse, that means that the node may have been utilized while
+         * unpacking other resources, without our weight correction. The most
+         * likely place for this to happen is when common_unpack() calls
+         * resource_location() to set a default score in symmetric clusters.
+         * This adds a node *copy* to each resource's allowed nodes, and these
+         * copies will have the wrong weight.
+         *
+         * As a hacky workaround, clear those copies here.
+         */
+        for (rsc_iter = data_set->resources; rsc_iter; rsc_iter = rsc_iter->next) {
+            resource_t *rsc = (resource_t *) rsc_iter->data;
+
+            g_hash_table_remove(rsc->allowed_nodes, uname);
+        }
+
         tuple->node = node_copy(node);
         tuple->node->weight = 500;
-        nodeid = NULL;
-        id = NULL;
 
         if (common_unpack(xml_remote, &tuple->remote, parent, data_set) == FALSE) {
             return FALSE;

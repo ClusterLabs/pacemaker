@@ -699,10 +699,26 @@ cib_native_notify(gpointer data, gpointer user_data)
 }
 
 pe_cluster_option cib_opts[] = {
-    /* name, old-name, validate, default, description */
-    {"enable-acl", NULL, "boolean", NULL, "false", &check_boolean,
-     "Enable CIB ACL", NULL}
-    ,
+    /*
+     * name, legacy name,
+     * type, allowed values, default, validator,
+     * short description,
+     * long description
+     */
+    {
+        "enable-acl", NULL,
+        "boolean", NULL, "false", &check_boolean,
+        "Enable CIB ACL",
+        NULL
+    },
+    {
+        "cluster-ipc-limit", NULL,
+        "integer", NULL, "500", &check_positive_number,
+        "Maximum IPC message backlog before disconnecting a cluster daemon",
+        "Raise this if log has \"Evicting client\" messages for cluster daemon"
+            " PIDs (a good value is the number of resources in the cluster"
+            " multiplied by the number of nodes)"
+    },
 };
 
 void
@@ -743,7 +759,7 @@ cib_read_config(GHashTable * options, xmlNode * current_cib)
     config = get_object_root(XML_CIB_TAG_CRMCONFIG, current_cib);
     if (config) {
         unpack_instance_attributes(current_cib, config, XML_CIB_TAG_PROPSET, NULL, options,
-                                   CIB_OPTIONS_FIRST, FALSE, now);
+                                   CIB_OPTIONS_FIRST, TRUE, now);
     }
 
     verify_cib_options(options);
@@ -794,23 +810,24 @@ cib_apply_patch_event(xmlNode * event, xmlNode * input, xmlNode ** output, int l
     return rc;
 }
 
+/* v2 and v2 patch formats */
+#define XPATH_CONFIG_CHANGE \
+    "//" XML_CIB_TAG_CRMCONFIG " | " \
+    "//" XML_DIFF_CHANGE "[contains(@" XML_DIFF_PATH ",'/" XML_CIB_TAG_CRMCONFIG "/')]"
+
 gboolean
-cib_internal_config_changed(xmlNode * diff)
+cib_internal_config_changed(xmlNode *diff)
 {
     gboolean changed = FALSE;
-    xmlXPathObject *xpathObj = NULL;
 
-    if (diff == NULL) {
-        return FALSE;
+    if (diff) {
+        xmlXPathObject *xpathObj = xpath_search(diff, XPATH_CONFIG_CHANGE);
+
+        if (numXpathResults(xpathObj) > 0) {
+            changed = TRUE;
+        }
+        freeXpathObject(xpathObj);
     }
-
-    xpathObj = xpath_search(diff, "//" XML_CIB_TAG_CRMCONFIG);
-    if (numXpathResults(xpathObj) > 0) {
-        changed = TRUE;
-    }
-
-    freeXpathObject(xpathObj);
-
     return changed;
 }
 
