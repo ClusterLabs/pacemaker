@@ -1871,7 +1871,7 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
     pe_get_versioned_attributes(local_versioned_params, rsc, node, data_set);
     data->params_all = create_xml_node(NULL, XML_TAG_PARAMS);
 
-    if(fix_remote_addr(rsc) && node) {
+    if (fix_remote_addr(rsc)) {
         // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
         crm_xml_add(data->params_all, "addr", node->details->uname);
         crm_trace("Fixing addr for %s on %s", rsc->id, node->details->uname);

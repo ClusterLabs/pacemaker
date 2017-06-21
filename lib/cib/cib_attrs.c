@@ -452,7 +452,9 @@ get_uuid_from_result(xmlNode *result, char **uuid, int *is_remote)
         /* Result is <node_state> tag from <status> section */
 
         parsed_uuid = crm_element_value(result, XML_ATTR_UNAME);
-        crm_element_value_int(result, F_ATTRD_IS_REMOTE, &parsed_is_remote);
+        if (crm_is_true(crm_element_value(result, XML_NODE_IS_REMOTE))) {
+            parsed_is_remote = TRUE;
+        }
     }
 
     if (parsed_uuid) {
@@ -472,7 +474,7 @@ get_uuid_from_result(xmlNode *result, char **uuid, int *is_remote)
  * - cluster or remote node in nodes section
  * - remote node in resources section
  * - guest node in resources section
- * - orphaned remote node in status section
+ * - orphaned remote node or bundle guest node in status section
  */
 #define XPATH_NODE \
     "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_NODES \

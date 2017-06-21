@@ -26,6 +26,7 @@
 
 #  include <sys/types.h>
 #  include <stdlib.h>
+#  include <stdbool.h>
 #  include <limits.h>
 #  include <signal.h>
 #  include <sysexits.h>
@@ -127,6 +128,7 @@ gboolean did_rsc_op_fail(lrmd_event_data_t * event, int target_rc);
 char *crm_md5sum(const char *buffer);
 
 char *crm_generate_uuid(void);
+bool crm_is_daemon_name(const char *name);
 
 int crm_user_lookup(const char *name, uid_t * uid, gid_t * gid);
 
