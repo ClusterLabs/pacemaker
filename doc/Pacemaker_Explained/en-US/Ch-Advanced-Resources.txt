@@ -1384,7 +1384,9 @@ This includes options such as +priority+, +target-role+, and +is-managed+. See
 
 === Limitations of Bundles ===
 
-Currently, bundles may not be cloned, or included in groups or colocation
+Bundle support is considered experimental in Pacemaker 1.1.17.
+
+Bundles may not be cloned, or included in groups or ordering
 constraints. This includes the bundle's primitive and any resources
 implicitly created by Pacemaker for the bundle.
 
@@ -1393,3 +1395,6 @@ though a bundle's primitive may have them.
 
 A bundle with a primitive can run on a Pacemaker Remote node only if the bundle
 uses a distinct +control-port+.
+
+Interacting directly with any resource or guest node implicitly created by
+Pacemaker for the bundle is strongly discouraged and likely to cause problems.
