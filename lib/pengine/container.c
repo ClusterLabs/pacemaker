@@ -335,6 +335,29 @@ create_docker_resource(
         return TRUE;
 }
 
+/*!
+ * \brief Ban a node from a resource's (and its children's) allowed nodes list
+ *
+ * \param[in,out] rsc    Resource to modify
+ * \param[in]     uname  Name of node to ban
+ */
+static void
+disallow_node(resource_t *rsc, const char *uname)
+{
+    gpointer match = g_hash_table_lookup(rsc->allowed_nodes, uname);
+
+    if (match) {
+        ((pe_node_t *) match)->weight = -INFINITY;
+    }
+    if (rsc->children) {
+        GListPtr child;
+
+        for (child = rsc->children; child != NULL; child = child->next) {
+            disallow_node((resource_t *) (child->data), uname);
+        }
+    }
+}
+
 static bool
 create_remote_resource(
     resource_t *parent, container_variant_data_t *data, container_grouping_t *tuple,
@@ -413,7 +436,7 @@ create_remote_resource(
         }
 
         /* unpack_remote_nodes() ensures that each remote node and guest node
-         * has a node_t entry. Ideally, it would do the same for bundle nodes.
+         * has a pe_node_t entry. Ideally, it would do the same for bundle nodes.
          * Unfortunately, a bundle has to be mostly unpacked before it's obvious
          * what nodes will be needed, so we do it just above.
          *
@@ -424,12 +447,13 @@ create_remote_resource(
          * This adds a node *copy* to each resource's allowed nodes, and these
          * copies will have the wrong weight.
          *
-         * As a hacky workaround, clear those copies here.
+         * As a hacky workaround, fix those copies here.
+         *
+         * @TODO Possible alternative: ensure bundles are unpacked before other
+         * resources, so the weight is correct before any copies are made.
          */
         for (rsc_iter = data_set->resources; rsc_iter; rsc_iter = rsc_iter->next) {
-            resource_t *rsc = (resource_t *) rsc_iter->data;
-
-            g_hash_table_remove(rsc->allowed_nodes, uname);
+            disallow_node((resource_t *) (rsc_iter->data), uname);
         }
 
         tuple->node = node_copy(node);
