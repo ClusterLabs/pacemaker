@@ -618,9 +618,9 @@ validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs)
         int lpc = 0;
         bool valid = FALSE;
 
-        validation = crm_element_value(xml_blob, "ignore-dtd");
+        /* @COMPAT pre-1.0 configs */
+        validation = crm_element_value(xml_blob, "ignore_dtd");
         if (crm_is_true(validation)) {
-            /* Legacy compatibilty */
             crm_xml_add(xml_blob, XML_ATTR_VALIDATION, "none");
             return TRUE;
         }
