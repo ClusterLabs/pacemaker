@@ -272,10 +272,10 @@ remote_clear_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
                       void *user_data)
 {
     if (rc == 0) {
-        crm_debug("Successfully cleared failures using %s", user_data);
+        crm_debug("Successfully cleared failures using %s", (char *) user_data);
     } else {
         crm_notice("Failed to clear failures: %s " CRM_XS " call=%d xpath=%s rc=%d",
-                   pcmk_strerror(rc), call_id, user_data, rc);
+                   pcmk_strerror(rc), call_id, (char *) user_data, rc);
     }
 }
 
@@ -966,10 +966,10 @@ static void
 remote_attr_callback(xmlNode *msg, int id, int rc, xmlNode *output, void *data)
 {
     if (rc == pcmk_ok) {
-        crm_debug("%s succeeded " CRM_XS " call=%d", data, id);
+        crm_debug("%s succeeded " CRM_XS " call=%d", (char *) data, id);
     } else {
         crm_notice("%s failed: %s " CRM_XS " call=%d rc=%d",
-                   data, pcmk_strerror(rc), id, rc);
+                   (char *) data, pcmk_strerror(rc), id, rc);
     }
 }
 
