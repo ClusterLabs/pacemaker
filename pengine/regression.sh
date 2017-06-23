@@ -23,7 +23,6 @@ core=`dirname $0`
 create_mode="true"
 info Generating test outputs for these tests...
 # do_test file description
-
 info Done.
 echo ""
 
@@ -807,6 +806,10 @@ do_test bundle-order-partial-start "Bundle startup ordering when some dependanci
 do_test bundle-order-partial-start-2 "Bundle startup ordering when some dependancies and the container are already running"
 do_test bundle-order-stop    "Bundle stop ordering"
 do_test bundle-order-partial-stop "Bundle startup ordering when some dependancies are already stopped"
+
+do_test bundle-order-startup-clone "Prevent startup because bundle isn't promoted"
+do_test bundle-order-startup-clone-2 "Bundle startup with clones"
+do_test bundle-order-stop-clone "Stop bundle because clone is stopping"
 
 echo ""
 do_test whitebox-fail1 "Fail whitebox container rsc."
