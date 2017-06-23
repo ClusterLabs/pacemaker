@@ -727,8 +727,6 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         }
 
         container_data->child = new_rsc;
-        container_data->child->orig_xml = xml_obj; // Also the trigger for common_free()
-                                                   // to free xml_resource as container_data->child->xml
 
         mount = calloc(1, sizeof(container_mount_t));
         mount->source = strdup(DEFAULT_REMOTE_KEY_LOCATION);
@@ -1035,17 +1033,25 @@ tuple_free(container_grouping_t *tuple)
 
     if(tuple->ip) {
         tuple->ip->fns->free(tuple->ip);
+        tuple->ip->xml = NULL;
+        free_xml(tuple->ip->xml);
         tuple->ip = NULL;
     }
     if(tuple->child) {
+        free_xml(tuple->child->xml);
+        tuple->child->xml = NULL;
         tuple->child->fns->free(tuple->child);
         tuple->child = NULL;
     }
     if(tuple->docker) {
+        free_xml(tuple->docker->xml);
+        tuple->docker->xml = NULL;
         tuple->docker->fns->free(tuple->docker);
         tuple->docker = NULL;
     }
     if(tuple->remote) {
+        free_xml(tuple->remote->xml);
+        tuple->remote->xml = NULL;
         tuple->remote->fns->free(tuple->remote);
         tuple->remote = NULL;
     }
@@ -1073,9 +1079,13 @@ container_free(resource_t * rsc)
     free(container_data->docker_run_command);
     free(container_data->docker_host_options);
 
+    if(container_data->child) {
+        free_xml(container_data->child->xml);
+    }
     g_list_free_full(container_data->tuples, (GDestroyNotify)tuple_free);
     g_list_free_full(container_data->mounts, (GDestroyNotify)mount_free);
     g_list_free_full(container_data->ports, (GDestroyNotify)port_free);
+    g_list_free(rsc->children);
     common_free(rsc);
 }
 
