@@ -154,7 +154,8 @@ rsc_expand_action(action_t * action)
         return action;
     }
 
-    if(pe_rsc_is_clone(rsc) || rsc->parent == NULL) {
+    if ((rsc->parent == NULL)
+        || (pe_rsc_is_clone(rsc) && (rsc->parent->variant == pe_container))) {
         /* Only outermost resources have notification actions.
          * The exception is those in bundles.
          */
@@ -535,7 +536,8 @@ update_action(action_t * then)
 
         clear_bit(changed, pe_graph_updated_first);
 
-        if (first->rsc != then->rsc && is_parent(then->rsc, first->rsc) == FALSE) {
+        if (first->rsc && then->rsc && (first->rsc != then->rsc)
+            && (is_parent(then->rsc, first->rsc) == FALSE)) {
             first = rsc_expand_action(first);
         }
         if (first != other->action) {

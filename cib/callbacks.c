@@ -281,6 +281,19 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
             cib_client->name = crm_itoa(cib_client->pid);
         } else {
             cib_client->name = strdup(value);
+            if (crm_is_daemon_name(value)) {
+                set_bit(cib_client->options, cib_is_daemon);
+            }
+        }
+    }
+
+    /* Allow cluster daemons more leeway before being evicted */
+    if (is_set(cib_client->options, cib_is_daemon)) {
+        const char *qmax = cib_config_lookup("cluster-ipc-limit");
+
+        if (crm_set_client_queue_max(cib_client, qmax)) {
+            crm_trace("IPC threshold for %s[%u] is now %u",
+                      cib_client->name, cib_client->pid, cib_client->queue_max);
         }
     }
 
@@ -893,6 +906,7 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
         crm_xml_add(msg, F_CIB_ISREPLY, originator);
         crm_xml_add(msg, F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
         crm_xml_add(msg, F_CIB_OPERATION, CIB_OP_APPLY_DIFF);
+        crm_xml_add(msg, F_CIB_USER, CRM_DAEMON_USER);
 
         if (format == 1) {
             CRM_ASSERT(digest != NULL);
