@@ -1029,19 +1029,16 @@ tuple_free(container_grouping_t *tuple)
         return;
     }
 
-    // TODO: Free tuple->node ?
+    if(tuple->node) {
+        free(tuple->node);
+        tuple->node = NULL;
+    }
 
     if(tuple->ip) {
         tuple->ip->fns->free(tuple->ip);
         tuple->ip->xml = NULL;
         free_xml(tuple->ip->xml);
         tuple->ip = NULL;
-    }
-    if(tuple->child) {
-        free_xml(tuple->child->xml);
-        tuple->child->xml = NULL;
-        tuple->child->fns->free(tuple->child);
-        tuple->child = NULL;
     }
     if(tuple->docker) {
         free_xml(tuple->docker->xml);
@@ -1079,13 +1076,16 @@ container_free(resource_t * rsc)
     free(container_data->docker_run_command);
     free(container_data->docker_host_options);
 
-    if(container_data->child) {
-        free_xml(container_data->child->xml);
-    }
     g_list_free_full(container_data->tuples, (GDestroyNotify)tuple_free);
     g_list_free_full(container_data->mounts, (GDestroyNotify)mount_free);
     g_list_free_full(container_data->ports, (GDestroyNotify)port_free);
     g_list_free(rsc->children);
+
+    if(container_data->child) {
+        free_xml(container_data->child->xml);
+        container_data->child->xml = NULL;
+        container_data->child->fns->free(container_data->child);
+    }
     common_free(rsc);
 }
 
