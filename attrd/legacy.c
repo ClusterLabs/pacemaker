@@ -265,6 +265,7 @@ local_clear_failure(xmlNode *xml)
             update_local_attr(xml, hash_entry);
         }
     }
+    regfree(&regex);
 }
 
 static void
@@ -1167,6 +1168,7 @@ attrd_local_callback(xmlNode * msg)
                 update_local_attr(msg, hash_entry);
             }
         }
+        regfree(&regex);
 
     } else {
         crm_info("Ignoring message with no attribute name or expression");
