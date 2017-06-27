@@ -437,6 +437,14 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
         crm_debug("Updating quorum status to %s (call=%d)", quorum ? "true" : "false", call_id);
         fsa_register_cib_callback(call_id, FALSE, NULL, cib_quorum_update_complete);
         free_xml(update);
+
+        /* If a node not running any resources is cleanly shut down and drops us
+         * below quorum, we won't necessarily abort the transition, so abort it
+         * here to be safe.
+         */
+        if (quorum == FALSE) {
+            abort_transition(INFINITY, tg_restart, "Quorum loss", NULL);
+        }
     }
     fsa_has_quorum = quorum;
 }
