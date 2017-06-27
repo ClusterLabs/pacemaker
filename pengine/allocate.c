@@ -79,7 +79,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      clone_rsc_colocation_rh,
      clone_rsc_location,
      clone_action_flags,
-     clone_update_actions,
+     container_update_actions,
      clone_expand,
      clone_append_meta,
      },
@@ -93,7 +93,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      master_rsc_colocation_rh,
      clone_rsc_location,
      clone_action_flags,
-     clone_update_actions,
+     container_update_actions,
      clone_expand,
      master_append_meta,
      },
@@ -1860,9 +1860,11 @@ apply_container_ordering(action_t *action, pe_working_set_t *data_set)
                  * recurring monitors to be restarted, even if just
                  * the connection was re-established
                  */
-                custom_action_order(remote_rsc, generate_op_key(remote_rsc->id, RSC_START, 0), NULL,
-                                    action->rsc, NULL, action,
-                                    pe_order_preserve | pe_order_runnable_left | pe_order_implies_then, data_set);
+                if(task != no_action) {
+                    custom_action_order(remote_rsc, generate_op_key(remote_rsc->id, RSC_START, 0), NULL,
+                                        action->rsc, NULL, action,
+                                        pe_order_preserve | pe_order_runnable_left | pe_order_implies_then, data_set);
+                }
             } else {
                 custom_action_order(remote_rsc, generate_op_key(remote_rsc->id, RSC_START, 0), NULL,
                                     action->rsc, NULL, action,

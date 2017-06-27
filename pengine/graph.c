@@ -231,7 +231,9 @@ graph_update_action(action_t * first, action_t * then, node_t * node,
                                                  pe_action_optional, pe_order_implies_first);
 
         } else if (is_set(first_flags, pe_action_optional) == FALSE) {
-            pe_rsc_trace(first->rsc, "first unrunnable: %s then %s", first->uuid, then->uuid);
+            pe_rsc_trace(first->rsc, "first unrunnable: %s (%d) then %s (%d)",
+                         first->uuid, is_set(first_flags, pe_action_optional),
+                         then->uuid, is_set(then_flags, pe_action_optional));
             if (update_action_flags(first, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__)) {
                 changed |= pe_graph_updated_first;
             }
@@ -240,7 +242,9 @@ graph_update_action(action_t * first, action_t * then, node_t * node,
         if (changed) {
             pe_rsc_trace(then->rsc, "implies left: %s then %s: changed", first->uuid, then->uuid);
         } else {
-            crm_trace("implies left: %s then %s", first->uuid, then->uuid);
+            crm_trace("implies left: %s (%d) then %s (%d)",
+                      first->uuid, is_set(first_flags, pe_action_optional),
+                      then->uuid, is_set(then_flags, pe_action_optional));
         }
     }
 
@@ -607,7 +611,8 @@ update_action(action_t * then)
         }
 
         if (changed & pe_graph_disable) {
-            crm_trace("Disabled constraint %s -> %s", other->action->uuid, then->uuid);
+            crm_trace("Disabled constraint %s -> %s in favor of %s -> %s",
+                      other->action->uuid, then->uuid, first->uuid, then->uuid);
             clear_bit(changed, pe_graph_disable);
             other->type = pe_order_none;
         }

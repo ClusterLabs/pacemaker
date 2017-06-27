@@ -23,7 +23,6 @@ core=`dirname $0`
 create_mode="true"
 info Generating test outputs for these tests...
 # do_test file description
-
 info Done.
 echo ""
 
@@ -801,6 +800,16 @@ do_test container-group-4 "Container in group - reached migration-threshold"
 do_test container-is-remote-node "Place resource within container when container is remote-node"
 do_test bug-rh-1097457 "Kill user defined container/contents ordering"
 do_test bug-cl-5247 "Graph loop when recovering m/s resource in a container"
+
+do_test bundle-order-startup "Bundle startup ordering"
+do_test bundle-order-partial-start "Bundle startup ordering when some dependancies are already running"
+do_test bundle-order-partial-start-2 "Bundle startup ordering when some dependancies and the container are already running"
+do_test bundle-order-stop    "Bundle stop ordering"
+do_test bundle-order-partial-stop "Bundle startup ordering when some dependancies are already stopped"
+
+do_test bundle-order-startup-clone "Prevent startup because bundle isn't promoted"
+do_test bundle-order-startup-clone-2 "Bundle startup with clones"
+do_test bundle-order-stop-clone "Stop bundle because clone is stopping"
 
 echo ""
 do_test whitebox-fail1 "Fail whitebox container rsc."

@@ -1,0 +1,179 @@
+
+Current cluster status:
+Online: [ metal-1 metal-2 metal-3 ]
+RemoteOFFLINE: [ rabbitmq-bundle-0 ]
+
+ Clone Set: storage-clone [storage]
+     Stopped: [ metal-1 metal-2 metal-3 rabbitmq-bundle-0 ]
+ Docker container set: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]
+   galera-bundle-0	(ocf::heartbeat:galera):	Stopped
+   galera-bundle-1	(ocf::heartbeat:galera):	Stopped
+   galera-bundle-2	(ocf::heartbeat:galera):	Stopped
+ Docker container set: haproxy-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest]
+   haproxy-bundle-docker-0	(ocf::heartbeat:docker):	Stopped
+   haproxy-bundle-docker-1	(ocf::heartbeat:docker):	Stopped
+   haproxy-bundle-docker-2	(ocf::heartbeat:docker):	Stopped
+ Docker container set: redis-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest]
+   redis-bundle-0	(ocf::heartbeat:redis):	Stopped
+   redis-bundle-1	(ocf::heartbeat:redis):	Stopped
+   redis-bundle-2	(ocf::heartbeat:redis):	Stopped
+
+Transition Summary:
+ * Start   storage:0	(metal-1)
+ * Start   storage:1	(metal-2)
+ * Start   storage:2	(metal-3)
+ * Start   galera-bundle-docker-0	(metal-1)
+ * Start   galera-bundle-0	(metal-1)
+ * Start   galera:0	(galera-bundle-0)
+ * Start   galera-bundle-docker-1	(metal-2)
+ * Start   galera-bundle-1	(metal-2)
+ * Start   galera:1	(galera-bundle-1)
+ * Start   galera-bundle-docker-2	(metal-3)
+ * Start   galera-bundle-2	(metal-3)
+ * Start   galera:2	(galera-bundle-2)
+ * Start   haproxy-bundle-docker-0	(metal-1)
+ * Start   haproxy-bundle-docker-1	(metal-2)
+ * Start   haproxy-bundle-docker-2	(metal-3)
+ * Start   redis-bundle-docker-0	(metal-1)
+ * Start   redis-bundle-0	(metal-1)
+ * Start   redis:0	(redis-bundle-0)
+ * Promote redis:0	(Stopped -> Master redis-bundle-0)
+ * Start   redis-bundle-docker-1	(metal-2)
+ * Start   redis-bundle-1	(metal-2)
+ * Start   redis:1	(redis-bundle-1)
+ * Promote redis:1	(Stopped -> Master redis-bundle-1)
+ * Start   redis-bundle-docker-2	(metal-3)
+ * Start   redis-bundle-2	(metal-3)
+ * Start   redis:2	(redis-bundle-2)
+ * Promote redis:2	(Stopped -> Master redis-bundle-2)
+
+Executing cluster transition:
+ * Resource action: storage:0       monitor on metal-1
+ * Resource action: storage:1       monitor on metal-2
+ * Resource action: storage:2       monitor on metal-3
+ * Pseudo action:   storage-clone_pre_notify_start_0
+ * Resource action: galera-bundle-docker-0 monitor on metal-3
+ * Resource action: galera-bundle-docker-0 monitor on metal-2
+ * Resource action: galera-bundle-docker-0 monitor on metal-1
+ * Resource action: galera-bundle-docker-1 monitor on metal-3
+ * Resource action: galera-bundle-docker-1 monitor on metal-2
+ * Resource action: galera-bundle-docker-1 monitor on metal-1
+ * Resource action: galera-bundle-docker-2 monitor on metal-3
+ * Resource action: galera-bundle-docker-2 monitor on metal-2
+ * Resource action: galera-bundle-docker-2 monitor on metal-1
+ * Resource action: haproxy-bundle-docker-0 monitor on metal-3
+ * Resource action: haproxy-bundle-docker-0 monitor on metal-2
+ * Resource action: haproxy-bundle-docker-0 monitor on metal-1
+ * Resource action: haproxy-bundle-docker-1 monitor on metal-3
+ * Resource action: haproxy-bundle-docker-1 monitor on metal-2
+ * Resource action: haproxy-bundle-docker-1 monitor on metal-1
+ * Resource action: haproxy-bundle-docker-2 monitor on metal-3
+ * Resource action: haproxy-bundle-docker-2 monitor on metal-2
+ * Resource action: haproxy-bundle-docker-2 monitor on metal-1
+ * Resource action: redis-bundle-docker-0 monitor on metal-3
+ * Resource action: redis-bundle-docker-0 monitor on metal-2
+ * Resource action: redis-bundle-docker-0 monitor on metal-1
+ * Resource action: redis-bundle-docker-1 monitor on metal-3
+ * Resource action: redis-bundle-docker-1 monitor on metal-2
+ * Resource action: redis-bundle-docker-1 monitor on metal-1
+ * Resource action: redis-bundle-docker-2 monitor on metal-3
+ * Resource action: redis-bundle-docker-2 monitor on metal-2
+ * Resource action: redis-bundle-docker-2 monitor on metal-1
+ * Pseudo action:   redis-bundle_start_0
+ * Pseudo action:   haproxy-bundle_start_0
+ * Pseudo action:   storage-clone_confirmed-pre_notify_start_0
+ * Resource action: haproxy-bundle-docker-0 start on metal-1
+ * Resource action: haproxy-bundle-docker-1 start on metal-2
+ * Resource action: haproxy-bundle-docker-2 start on metal-3
+ * Resource action: redis-bundle-docker-0 start on metal-1
+ * Resource action: redis-bundle-0  start on metal-1
+ * Resource action: redis-bundle-docker-1 start on metal-2
+ * Resource action: redis-bundle-1  start on metal-2
+ * Resource action: redis-bundle-docker-2 start on metal-3
+ * Resource action: redis-bundle-2  start on metal-3
+ * Pseudo action:   redis-bundle-master_start_0
+ * Pseudo action:   haproxy-bundle_running_0
+ * Resource action: haproxy-bundle-docker-0 monitor=60000 on metal-1
+ * Resource action: haproxy-bundle-docker-1 monitor=60000 on metal-2
+ * Resource action: haproxy-bundle-docker-2 monitor=60000 on metal-3
+ * Resource action: redis:0         start on redis-bundle-0
+ * Resource action: redis-bundle-docker-0 monitor=60000 on metal-1
+ * Resource action: redis-bundle-0  monitor=60000 on metal-1
+ * Resource action: redis:1         start on redis-bundle-1
+ * Resource action: redis-bundle-docker-1 monitor=60000 on metal-2
+ * Resource action: redis-bundle-1  monitor=60000 on metal-2
+ * Resource action: redis:2         start on redis-bundle-2
+ * Resource action: redis-bundle-docker-2 monitor=60000 on metal-3
+ * Resource action: redis-bundle-2  monitor=60000 on metal-3
+ * Pseudo action:   redis-bundle-master_running_0
+ * Pseudo action:   redis-bundle_running_0
+ * Pseudo action:   redis-bundle_promote_0
+ * Pseudo action:   redis-bundle-master_promote_0
+ * Resource action: redis:0         promote on redis-bundle-0
+ * Resource action: redis:1         promote on redis-bundle-1
+ * Resource action: redis:2         promote on redis-bundle-2
+ * Pseudo action:   redis-bundle-master_promoted_0
+ * Resource action: redis:0         monitor=20000 on redis-bundle-0
+ * Resource action: redis:1         monitor=20000 on redis-bundle-1
+ * Resource action: redis:2         monitor=20000 on redis-bundle-2
+ * Pseudo action:   redis-bundle_promoted_0
+ * Pseudo action:   storage-clone_start_0
+ * Resource action: storage:0       start on metal-1
+ * Resource action: storage:1       start on metal-2
+ * Resource action: storage:2       start on metal-3
+ * Pseudo action:   storage-clone_running_0
+ * Pseudo action:   storage-clone_post_notify_running_0
+ * Resource action: storage:0       notify on metal-1
+ * Resource action: storage:1       notify on metal-2
+ * Resource action: storage:2       notify on metal-3
+ * Pseudo action:   storage-clone_confirmed-post_notify_running_0
+ * Pseudo action:   galera-bundle_start_0
+ * Resource action: storage:0       monitor=30000 on metal-1
+ * Resource action: storage:1       monitor=30000 on metal-2
+ * Resource action: storage:2       monitor=30000 on metal-3
+ * Resource action: galera-bundle-docker-0 start on metal-1
+ * Resource action: galera-bundle-0 start on metal-1
+ * Resource action: galera-bundle-docker-1 start on metal-2
+ * Resource action: galera-bundle-1 start on metal-2
+ * Resource action: galera-bundle-docker-2 start on metal-3
+ * Resource action: galera-bundle-2 start on metal-3
+ * Pseudo action:   galera-bundle-master_start_0
+ * Resource action: galera:0        start on galera-bundle-0
+ * Resource action: galera-bundle-docker-0 monitor=60000 on metal-1
+ * Resource action: galera-bundle-0 monitor=60000 on metal-1
+ * Resource action: galera:1        start on galera-bundle-1
+ * Resource action: galera-bundle-docker-1 monitor=60000 on metal-2
+ * Resource action: galera-bundle-1 monitor=60000 on metal-2
+ * Resource action: galera:2        start on galera-bundle-2
+ * Resource action: galera-bundle-docker-2 monitor=60000 on metal-3
+ * Resource action: galera-bundle-2 monitor=60000 on metal-3
+ * Pseudo action:   galera-bundle-master_running_0
+ * Pseudo action:   galera-bundle_running_0
+ * Resource action: galera:0        monitor=30000 on galera-bundle-0
+ * Resource action: galera:0        monitor=20000 on galera-bundle-0
+ * Resource action: galera:1        monitor=30000 on galera-bundle-1
+ * Resource action: galera:1        monitor=20000 on galera-bundle-1
+ * Resource action: galera:2        monitor=30000 on galera-bundle-2
+ * Resource action: galera:2        monitor=20000 on galera-bundle-2
+
+Revised cluster status:
+Online: [ metal-1 metal-2 metal-3 ]
+RemoteOFFLINE: [ rabbitmq-bundle-0 ]
+Containers: [ galera-bundle-0:galera-bundle-docker-0 galera-bundle-1:galera-bundle-docker-1 galera-bundle-2:galera-bundle-docker-2 redis-bundle-0:redis-bundle-docker-0 redis-bundle-1:redis-bundle-docker-1 redis-bundle-2:redis-bundle-docker-2 ]
+
+ Clone Set: storage-clone [storage]
+     Started: [ metal-1 metal-2 metal-3 ]
+     Stopped: [ rabbitmq-bundle-0 ]
+ Docker container set: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]
+   galera-bundle-0	(ocf::heartbeat:galera):	Slave metal-1
+   galera-bundle-1	(ocf::heartbeat:galera):	Slave metal-2
+   galera-bundle-2	(ocf::heartbeat:galera):	Slave metal-3
+ Docker container set: haproxy-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest]
+   haproxy-bundle-docker-0	(ocf::heartbeat:docker):	Started metal-1
+   haproxy-bundle-docker-1	(ocf::heartbeat:docker):	Started metal-2
+   haproxy-bundle-docker-2	(ocf::heartbeat:docker):	Started metal-3
+ Docker container set: redis-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest]
+   redis-bundle-0	(ocf::heartbeat:redis):	Master metal-1
+   redis-bundle-1	(ocf::heartbeat:redis):	Master metal-2
+   redis-bundle-2	(ocf::heartbeat:redis):	Master metal-3
+

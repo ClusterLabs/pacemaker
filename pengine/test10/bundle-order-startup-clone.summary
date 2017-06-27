@@ -1,0 +1,69 @@
+
+Current cluster status:
+Online: [ metal-1 metal-2 metal-3 ]
+RemoteOFFLINE: [ rabbitmq-bundle-0 ]
+
+ Clone Set: storage-clone [storage]
+     Stopped: [ metal-1 metal-2 metal-3 rabbitmq-bundle-0 ]
+ Docker container: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]
+   galera-bundle-0	(ocf::heartbeat:galera):	Stopped
+ Docker container: haproxy-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest]
+   haproxy-bundle-docker-0	(ocf::heartbeat:docker):	Stopped
+ Docker container: redis-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest]
+   redis-bundle-0	(ocf::heartbeat:redis):	Stopped
+
+Transition Summary:
+ * Start   storage:0	(metal-1 - blocked)
+ * Start   storage:1	(metal-2 - blocked)
+ * Start   storage:2	(metal-3 - blocked)
+ * Start   galera-bundle-docker-0	(metal-1 - blocked)
+ * Start   galera-bundle-0	(metal-1 - blocked)
+ * Start   galera:0	(galera-bundle-0 - blocked)
+ * Start   haproxy-bundle-docker-0	(metal-2)
+ * Start   redis-bundle-docker-0	(metal-2)
+ * Start   redis-bundle-0	(metal-2)
+ * Start   redis:0	(redis-bundle-0)
+
+Executing cluster transition:
+ * Resource action: storage:0       monitor on metal-1
+ * Resource action: storage:1       monitor on metal-2
+ * Resource action: storage:2       monitor on metal-3
+ * Resource action: galera-bundle-docker-0 monitor on metal-3
+ * Resource action: galera-bundle-docker-0 monitor on metal-2
+ * Resource action: galera-bundle-docker-0 monitor on metal-1
+ * Resource action: haproxy-bundle-docker-0 monitor on metal-3
+ * Resource action: haproxy-bundle-docker-0 monitor on metal-2
+ * Resource action: haproxy-bundle-docker-0 monitor on metal-1
+ * Resource action: redis-bundle-docker-0 monitor on metal-3
+ * Resource action: redis-bundle-docker-0 monitor on metal-2
+ * Resource action: redis-bundle-docker-0 monitor on metal-1
+ * Pseudo action:   redis-bundle_start_0
+ * Pseudo action:   haproxy-bundle_start_0
+ * Resource action: haproxy-bundle-docker-0 start on metal-2
+ * Resource action: redis-bundle-docker-0 start on metal-2
+ * Resource action: redis-bundle-0  start on metal-2
+ * Pseudo action:   redis-bundle-master_start_0
+ * Pseudo action:   haproxy-bundle_running_0
+ * Resource action: haproxy-bundle-docker-0 monitor=60000 on metal-2
+ * Resource action: redis:0         start on redis-bundle-0
+ * Resource action: redis-bundle-docker-0 monitor=60000 on metal-2
+ * Resource action: redis-bundle-0  monitor=60000 on metal-2
+ * Pseudo action:   redis-bundle-master_running_0
+ * Pseudo action:   redis-bundle_running_0
+ * Resource action: redis:0         monitor=60000 on redis-bundle-0
+ * Resource action: redis:0         monitor=45000 on redis-bundle-0
+
+Revised cluster status:
+Online: [ metal-1 metal-2 metal-3 ]
+RemoteOFFLINE: [ rabbitmq-bundle-0 ]
+Containers: [ redis-bundle-0:redis-bundle-docker-0 ]
+
+ Clone Set: storage-clone [storage]
+     Stopped: [ metal-1 metal-2 metal-3 rabbitmq-bundle-0 ]
+ Docker container: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]
+   galera-bundle-0	(ocf::heartbeat:galera):	Stopped
+ Docker container: haproxy-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest]
+   haproxy-bundle-docker-0	(ocf::heartbeat:docker):	Started metal-2
+ Docker container: redis-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest]
+   redis-bundle-0	(ocf::heartbeat:redis):	Slave metal-2
+

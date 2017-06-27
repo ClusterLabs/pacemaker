@@ -49,12 +49,16 @@ void native_deallocate(resource_t * rsc);
 extern void log_action(unsigned int log_level, const char *pre_text,
                        action_t * action, gboolean details);
 
-extern gboolean can_run_any(GHashTable * nodes);
-extern resource_t *find_compatible_child(resource_t * local_child, resource_t * rsc,
-                                         enum rsc_role_e filter, gboolean current);
+gboolean can_run_any(GHashTable * nodes);
+bool can_interleave_actions(pe_action_t *first, pe_action_t *then);
+resource_t *find_compatible_child(resource_t * local_child, resource_t * rsc, enum rsc_role_e filter, gboolean current);
+resource_t *find_compatible_child_by_node(resource_t * local_child, node_t * local_node, resource_t * rsc,
+                                          enum rsc_role_e filter, gboolean current);
 gboolean is_child_compatible(resource_t *child_rsc, node_t * local_node, enum rsc_role_e filter, gboolean current);
 bool assign_node(resource_t * rsc, node_t * node, gboolean force);
-
+enum pe_action_flags summary_action_flags(action_t * action, GListPtr children, node_t * node);
+enum action_tasks clone_child_action(action_t * action);
+int copies_per_node(resource_t * rsc);
 
 enum filter_colocation_res {
     influence_nothing = 0,
@@ -71,6 +75,7 @@ extern void calculate_utilization(GHashTable * current_utilization,
                                   GHashTable * utilization, gboolean plus);
 
 extern void process_utilization(resource_t * rsc, node_t ** prefer, pe_working_set_t * data_set);
+pe_action_t *create_pseudo_resource_op(resource_t * rsc, const char *task, bool optional, bool runnable, pe_working_set_t *data_set);
 
 #  define STONITH_UP "stonith_up"
 #  define STONITH_DONE "stonith_complete"
