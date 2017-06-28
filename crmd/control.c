@@ -25,6 +25,7 @@
 #include <crm/msg_xml.h>
 
 #include <crm/pengine/rules.h>
+#include <crm/pengine/rules_internal.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster/election.h>
 #include <crm/common/ipcs.h>
@@ -994,9 +995,6 @@ crmd_pref(GHashTable * options, const char *name)
 static void
 config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
-#ifdef RHEL7_COMPAT
-    const char *script = NULL;
-#endif
     const char *value = NULL;
     GHashTable *config_hash = NULL;
     crm_time_t *now = crm_time_new(NULL);
@@ -1040,9 +1038,12 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     verify_crmd_options(config_hash);
 
 #ifdef RHEL7_COMPAT
-    script = crmd_pref(config_hash, "notification-agent");
-    value  = crmd_pref(config_hash, "notification-recipient");
-    crmd_enable_alerts(script, value);
+    {
+        const char *script = crmd_pref(config_hash, "notification-agent");
+        const char *recip  = crmd_pref(config_hash, "notification-recipient");
+
+        pe_enable_legacy_alerts(script, recip);
+    }
 #endif
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
@@ -1102,7 +1103,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     }
 
     alerts = first_named_child(output, XML_CIB_TAG_ALERTS);
-    parse_alerts(alerts);
+    pe_unpack_alerts(alerts);
 
     set_bit(fsa_input_register, R_READ_CONFIG);
     crm_trace("Triggering FSA: %s", __FUNCTION__);

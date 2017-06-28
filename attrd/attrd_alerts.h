@@ -30,7 +30,6 @@ extern crm_trigger_t *attrd_config_read;
 lrmd_t *attrd_lrmd_connect(int max_retry, void callback(lrmd_event_data_t * op));
 gboolean attrd_read_options(gpointer user_data);
 void attrd_cib_updated_cb(const char *event, xmlNode * msg);
-GHashTable *get_meta_attrs_from_cib(xmlNode *basenode, crm_alert_entry_t *entry, guint *max_timeout);
 void attrd_enable_alerts(const char *script, const char *target);
 void attrd_alert_fini(void);
 int attrd_send_alerts(lrmd_t *lrmd, const char *node, uint32_t nodeid, const char *attribute_name, const char *attribute_value, GListPtr alert_list);
