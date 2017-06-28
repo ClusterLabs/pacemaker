@@ -67,6 +67,8 @@ typedef struct device_properties_s {
     int custom_action_timeout[st_phase_max];
     /* Action-specific maximum random delay for each phase */
     int delay_max[st_phase_max];
+    /* Action-specific base delay for each phase */
+    int delay_base[st_phase_max];
 } device_properties_t;
 
 typedef struct st_query_result_s {
@@ -1674,6 +1676,13 @@ parse_action_specific(xmlNode *xml, const char *peer, const char *device,
     if (props->delay_max[phase]) {
         crm_trace("Peer %s with device %s returned maximum of random delay %d for %s",
                   peer, device, props->delay_max[phase], action);
+    }
+
+    props->delay_base[phase] = 0;
+    crm_element_value_int(xml, F_STONITH_DELAY_BASE, &props->delay_base[phase]);
+    if (props->delay_base[phase]) {
+        crm_trace("Peer %s with device %s returned base delay %d for %s",
+                  peer, device, props->delay_base[phase], action);
     }
 
     /* Handle devices with automatic unfencing */

@@ -1381,7 +1381,18 @@ main(int argc, char **argv)
             ("    <shortdesc lang=\"en\">Enable random delay for stonith actions and specify the maximum of random delay</shortdesc>\n");
         printf
             ("    <longdesc lang=\"en\">This prevents double fencing when using slow devices such as sbd.\n"
-             "Use this to enable random delay for stonith actions and specify the maximum of random delay.</longdesc>\n");
+             "Use this to enable random delay for stonith actions.\n"
+             "The overall delay is derived from a random delay value adding a static delay so that the sum is kept below the maximum delay.</longdesc>\n");
+        printf("    <content type=\"time\" default=\"0s\"/>\n");
+        printf("  </parameter>\n");
+
+        printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_DELAY_BASE);
+        printf
+            ("    <shortdesc lang=\"en\">Enable base delay for stonith actions and specify base delay value</shortdesc>\n");
+        printf
+            ("    <longdesc lang=\"en\">This prevents double fencing when different delays are configured on the nodes.\n"
+             "Use this to enable static delay for stonith actions.\n"
+             "The overall delay is derived from a random delay value adding a static delay so that the sum is kept below the maximum delay.</longdesc>\n");
         printf("    <content type=\"time\" default=\"0s\"/>\n");
         printf("  </parameter>\n");
 
