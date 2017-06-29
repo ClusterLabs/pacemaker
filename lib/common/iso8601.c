@@ -1288,15 +1288,17 @@ ha_get_tm_time( struct tm *target, crm_time_t *source)
 {
     *target = (struct tm) {
         .tm_year = source->years - 1900,
-        .tm_yday = source->days - 1,
+        .tm_mday = source->days,
         .tm_sec = source->seconds % 60,
         .tm_min = ( source->seconds / 60 ) % 60,
         .tm_hour = source->seconds / 60 / 60,
+        .tm_isdst = -1, /* don't adjust */
 
 #if defined(HAVE_STRUCT_TM_TM_GMTOFF)
         .tm_gmtoff = source->offset
 #endif
     };
+    mktime(target);
 }
 
 crm_time_hr_t *
