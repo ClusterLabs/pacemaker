@@ -1,0 +1,185 @@
+<cib crm_feature_set="3.0.10" validate-with="pacemaker-2.3" epoch="42" num_updates="0" admin_epoch="0" cib-last-written="Mon Jun 26 02:52:17 2017" update-origin="z1" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="4" execution-date="1498459937">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.13-10.el7-44eb2dd"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="N_M"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-symmetric-cluster" name="symmetric-cluster" value="false"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="z1"/>
+      <node id="2" uname="z2"/>
+      <node id="3" uname="z3"/>
+      <node id="4" uname="z4"/>
+      <node id="5" uname="z5"/>
+    </nodes>
+    <resources>
+      <primitive class="ocf" id="dummy1" provider="pacemaker" type="Dummy">
+        <instance_attributes id="dummy1-instance_attributes"/>
+        <operations>
+          <op id="dummy1-start-interval-0s" interval="0s" name="start" timeout="20"/>
+          <op id="dummy1-stop-interval-0s" interval="0s" name="stop" timeout="20"/>
+          <op id="dummy1-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="dummy2" provider="pacemaker" type="Dummy">
+        <instance_attributes id="dummy2-instance_attributes"/>
+        <operations>
+          <op id="dummy2-start-interval-0s" interval="0s" name="start" timeout="20"/>
+          <op id="dummy2-stop-interval-0s" interval="0s" name="stop" timeout="20"/>
+          <op id="dummy2-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="dummy3" provider="pacemaker" type="Dummy">
+        <instance_attributes id="dummy3-instance_attributes"/>
+        <operations>
+          <op id="dummy3-start-interval-0s" interval="0s" name="start" timeout="20"/>
+          <op id="dummy3-stop-interval-0s" interval="0s" name="stop" timeout="20"/>
+          <op id="dummy3-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+        </operations>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_location id="location-dummy1-z2--INFINITY" node="z2" rsc="dummy1" score="-INFINITY"/>
+      <rsc_location id="location-dummy1-z3--INFINITY" node="z3" rsc="dummy1" score="-INFINITY"/>
+      <rsc_location id="location-dummy2-z1--INFINITY" node="z1" rsc="dummy2" score="-INFINITY"/>
+      <rsc_location id="location-dummy2-z3--INFINITY" node="z3" rsc="dummy2" score="-INFINITY"/>
+      <rsc_location id="location-dummy3-z1--INFINITY" node="z1" rsc="dummy3" score="-INFINITY"/>
+      <rsc_location id="location-dummy3-z2--INFINITY" node="z2" rsc="dummy3" score="-INFINITY"/>
+      <rsc_location id="location-dummy1-z1-200" node="z1" rsc="dummy1" score="200"/>
+      <rsc_location id="location-dummy2-z2-200" node="z2" rsc="dummy2" score="200"/>
+      <rsc_location id="location-dummy3-z3-200" node="z3" rsc="dummy3" score="200"/>
+      <rsc_location id="location-dummy1-z4-0" node="z4" rsc="dummy1" score="0"/>
+      <rsc_location id="location-dummy1-z5-0" node="z5" rsc="dummy1" score="0"/>
+      <rsc_location id="location-dummy2-z4-0" node="z4" rsc="dummy2" score="0"/>
+      <rsc_location id="location-dummy2-z5-0" node="z5" rsc="dummy2" score="0"/>
+      <rsc_location id="location-dummy3-z4-0" node="z4" rsc="dummy3" score="0"/>
+      <rsc_location id="location-dummy3-z5-0" node="z5" rsc="dummy3" score="0"/>
+      <rsc_colocation id="colocation-dummy1-dummy2-INFINITY" rsc="dummy1" score="-INFINITY" with-rsc="dummy2"/>
+      <rsc_colocation id="colocation-dummy1-dummy3-INFINITY" rsc="dummy1" score="-INFINITY" with-rsc="dummy3"/>
+      <rsc_colocation id="colocation-dummy2-dummy3-INFINITY" rsc="dummy2" score="-INFINITY" with-rsc="dummy3"/>
+    </constraints>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-options">
+        <nvpair id="rsc_defaults-options-resource-stickiness" name="resource-stickiness" value="100"/>
+      </meta_attributes>
+    </rsc_defaults>
+  </configuration>
+  <status>
+    <node_state id="1" uname="z1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-1-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="dummy3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummy3_last_0" operation_key="dummy3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.10" transition-key="6:6:7:dcbef669-8c6d-4c24-9e58-26dcedf6b345" transition-magic="0:7;6:6:7:dcbef669-8c6d-4c24-9e58-26dcedf6b345" on_node="z1" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1498206807" last-rc-change="1498206807" exec-time="15" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state  passwd  op_sleep " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummy1_last_0" operation_key="dummy1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="12:314:0:dcbef669-8c6d-4c24-9e58-26dcedf6b345" transition-magic="0:0;12:314:0:dcbef669-8c6d-4c24-9e58-26dcedf6b345" on_node="z1" call-id="26" rc-code="0" op-status="0" interval="0" last-run="1498459746" last-rc-change="1498459746" exec-time="14" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state  passwd  op_sleep " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy1_monitor_10000" operation_key="dummy1_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="13:314:0:dcbef669-8c6d-4c24-9e58-26dcedf6b345" transition-magic="0:0;13:314:0:dcbef669-8c6d-4c24-9e58-26dcedf6b345" on_node="z1" call-id="27" rc-code="0" op-status="0" interval="10000" last-rc-change="1498459746" exec-time="12" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummy2_last_0" operation_key="dummy2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.10" transition-key="5:5:7:dcbef669-8c6d-4c24-9e58-26dcedf6b345" transition-magic="0:7;5:5:7:dcbef669-8c6d-4c24-9e58-26dcedf6b345" on_node="z1" call-id="11" rc-code="7" op-status="0" interval="0" last-run="1498206803" last-rc-change="1498206803" exec-time="11" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state  passwd  op_sleep " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="2" uname="z2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="dummy3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummy3_last_0" operation_key="dummy3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.10" transition-key="8:6:7:dcbef669-8c6d-4c24-9e58-26dcedf6b345" transition-magic="0:7;8:6:7:dcbef669-8c6d-4c24-9e58-26dcedf6b345" on_node="z2" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1498206807" last-rc-change="1498206807" exec-time="13" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state  passwd  op_sleep " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummy1_last_0" operation_key="dummy1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.10" transition-key="6:4:7:dcbef669-8c6d-4c24-9e58-26dcedf6b345" transition-magic="0:7;6:4:7:dcbef669-8c6d-4c24-9e58-26dcedf6b345" on_node="z2" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1498206797" last-rc-change="1498206797" exec-time="14" queue-time="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state  passwd  op_sleep " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummy2_last_0" operation_key="dummy2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="14:316:0:dcbef669-8c6d-4c24-9e58-26dcedf6b345" transition-magic="0:0;14:316:0:dcbef669-8c6d-4c24-9e58-26dcedf6b345" on_node="z2" call-id="22" rc-code="0" op-status="0" interval="0" last-run="1498459754" last-rc-change="1498459754" exec-time="17" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state  passwd  op_sleep " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy2_monitor_10000" operation_key="dummy2_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="15:316:0:dcbef669-8c6d-4c24-9e58-26dcedf6b345" transition-magic="0:0;15:316:0:dcbef669-8c6d-4c24-9e58-26dcedf6b345" on_node="z2" call-id="23" rc-code="0" op-status="0" interval="10000" last-rc-change="1498459754" exec-time="13" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="3" uname="z3" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="3">
+        <instance_attributes id="status-3">
+          <nvpair id="status-3-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-3-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="3">
+        <lrm_resources>
+          <lrm_resource id="dummy3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummy3_last_0" operation_key="dummy3_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="17:313:0:dcbef669-8c6d-4c24-9e58-26dcedf6b345" transition-magic="0:0;17:313:0:dcbef669-8c6d-4c24-9e58-26dcedf6b345" on_node="z3" call-id="22" rc-code="0" op-status="0" interval="0" last-run="1498459737" last-rc-change="1498459737" exec-time="15" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state  passwd  op_sleep " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy3_monitor_10000" operation_key="dummy3_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="18:313:0:dcbef669-8c6d-4c24-9e58-26dcedf6b345" transition-magic="0:0;18:313:0:dcbef669-8c6d-4c24-9e58-26dcedf6b345" on_node="z3" call-id="23" rc-code="0" op-status="0" interval="10000" last-rc-change="1498459737" exec-time="13" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummy1_last_0" operation_key="dummy1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.10" transition-key="8:4:7:dcbef669-8c6d-4c24-9e58-26dcedf6b345" transition-magic="0:7;8:4:7:dcbef669-8c6d-4c24-9e58-26dcedf6b345" on_node="z3" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1498206796" last-rc-change="1498206796" exec-time="16" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state  passwd  op_sleep " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummy2_last_0" operation_key="dummy2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.10" transition-key="9:5:7:dcbef669-8c6d-4c24-9e58-26dcedf6b345" transition-magic="0:7;9:5:7:dcbef669-8c6d-4c24-9e58-26dcedf6b345" on_node="z3" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1498206803" last-rc-change="1498206803" exec-time="21" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state  passwd  op_sleep " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="4" uname="z4" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="4">
+        <instance_attributes id="status-4">
+          <nvpair id="status-4-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-4-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="4">
+        <lrm_resources>
+          <lrm_resource id="dummy3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummy3_last_0" operation_key="dummy3_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="16:313:0:dcbef669-8c6d-4c24-9e58-26dcedf6b345" transition-magic="0:0;16:313:0:dcbef669-8c6d-4c24-9e58-26dcedf6b345" on_node="z4" call-id="17" rc-code="0" op-status="0" interval="0" last-run="1498459737" last-rc-change="1498459737" exec-time="22" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state  passwd  op_sleep " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy3_monitor_10000" operation_key="dummy3_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.10" transition-key="17:25:0:dcbef669-8c6d-4c24-9e58-26dcedf6b345" transition-magic="0:0;17:25:0:dcbef669-8c6d-4c24-9e58-26dcedf6b345" on_node="z4" call-id="15" rc-code="0" op-status="0" interval="10000" last-rc-change="1498206938" exec-time="12" queue-time="1" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummy1_last_0" operation_key="dummy1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.10" transition-key="10:4:7:dcbef669-8c6d-4c24-9e58-26dcedf6b345" transition-magic="0:7;10:4:7:dcbef669-8c6d-4c24-9e58-26dcedf6b345" on_node="z4" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1498206796" last-rc-change="1498206796" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state  passwd  op_sleep " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummy2_last_0" operation_key="dummy2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.10" transition-key="11:5:7:dcbef669-8c6d-4c24-9e58-26dcedf6b345" transition-magic="0:7;11:5:7:dcbef669-8c6d-4c24-9e58-26dcedf6b345" on_node="z4" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1498206803" last-rc-change="1498206803" exec-time="15" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state  passwd  op_sleep " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="5" uname="z5" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="5">
+        <instance_attributes id="status-5">
+          <nvpair id="status-5-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-5-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="5">
+        <lrm_resources>
+          <lrm_resource id="dummy3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummy3_last_0" operation_key="dummy3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.10" transition-key="14:6:7:dcbef669-8c6d-4c24-9e58-26dcedf6b345" transition-magic="0:7;14:6:7:dcbef669-8c6d-4c24-9e58-26dcedf6b345" on_node="z5" call-id="13" rc-code="7" op-status="0" interval="0" last-run="1498206807" last-rc-change="1498206807" exec-time="26" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state  passwd  op_sleep " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummy1_last_0" operation_key="dummy1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="11:314:0:dcbef669-8c6d-4c24-9e58-26dcedf6b345" transition-magic="0:0;11:314:0:dcbef669-8c6d-4c24-9e58-26dcedf6b345" on_node="z5" call-id="19" rc-code="0" op-status="0" interval="0" last-run="1498459746" last-rc-change="1498459746" exec-time="15" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state  passwd  op_sleep " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy1_monitor_10000" operation_key="dummy1_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="13:313:0:dcbef669-8c6d-4c24-9e58-26dcedf6b345" transition-magic="0:0;13:313:0:dcbef669-8c6d-4c24-9e58-26dcedf6b345" on_node="z5" call-id="17" rc-code="0" op-status="0" interval="10000" last-rc-change="1498459737" exec-time="13" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummy2_last_0" operation_key="dummy2_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="13:316:0:dcbef669-8c6d-4c24-9e58-26dcedf6b345" transition-magic="0:0;13:316:0:dcbef669-8c6d-4c24-9e58-26dcedf6b345" on_node="z5" call-id="21" rc-code="0" op-status="0" interval="0" last-run="1498459754" last-rc-change="1498459754" exec-time="15" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state  passwd  op_sleep " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy2_monitor_10000" operation_key="dummy2_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.10" transition-key="15:27:0:dcbef669-8c6d-4c24-9e58-26dcedf6b345" transition-magic="0:0;15:27:0:dcbef669-8c6d-4c24-9e58-26dcedf6b345" on_node="z5" call-id="15" rc-code="0" op-status="0" interval="10000" last-rc-change="1498206957" exec-time="14" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

@@ -1,0 +1,21 @@
+Using the original execution date of: 2017-06-26 06:52:17Z
+
+Current cluster status:
+Online: [ z1 z2 z3 z4 z5 ]
+
+ dummy1	(ocf::pacemaker:Dummy):	Started z1
+ dummy2	(ocf::pacemaker:Dummy):	Started z2
+ dummy3	(ocf::pacemaker:Dummy):	Started z3
+
+Transition Summary:
+
+Executing cluster transition:
+Using the original execution date of: 2017-06-26 06:52:17Z
+
+Revised cluster status:
+Online: [ z1 z2 z3 z4 z5 ]
+
+ dummy1	(ocf::pacemaker:Dummy):	Started z1
+ dummy2	(ocf::pacemaker:Dummy):	Started z2
+ dummy3	(ocf::pacemaker:Dummy):	Started z3
+
