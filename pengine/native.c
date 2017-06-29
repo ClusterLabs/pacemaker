@@ -379,6 +379,12 @@ rsc_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const c
                 other = constraint->rsc_lh;
             }
 
+            if ((multiplier < 0) && (constraint->score < 0)) {
+                pe_rsc_trace(rsc, "Ignoring double-negative transitive constraint %s (%s)",
+                             constraint->id, other->id);
+                continue;
+            }
+
             pe_rsc_trace(rsc, "Applying %s (%s)", constraint->id, other->id);
             work = rsc_merge_weights(other, rhs, work, constraint->node_attribute,
                                      multiplier * (float)constraint->score / INFINITY, flags|pe_weights_rollback);
