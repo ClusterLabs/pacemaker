@@ -254,12 +254,37 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Enable a random delay of up to the time specified before executing stonith actions. This is sometimes used in two-node clusters to ensure that the nodes don’t fence each other at the same time."
+msgid "Enable a random delay of up to the time specified before executing stonith actions. This is sometimes used in two-node clusters to ensure that the nodes don’t fence each other at the same time. The overall delay is derived from this random delay value adding a static delay so that the sum is kept below the maximum delay."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
 msgid "<indexterm> <primary>pcmk_delay_max</primary><secondary>Fencing</secondary> </indexterm> <indexterm> <primary>Fencing</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>Property</secondary><tertiary>pcmk_delay_max</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>pcmk_delay_max</secondary> </indexterm> <indexterm> <primary>pcmk_delay_max</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>pcmk_delay_base</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "time"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "0s"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Enable a base delay for stonith actions and specify base delay value. This prevents double fencing when different delays are configured on the nodes. The overall delay is derived from a random delay value adding this static delay so that the sum is kept below the maximum delay."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>pcmk_delay_base</primary><secondary>Fencing</secondary> </indexterm> <indexterm> <primary>Fencing</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>Property</secondary><tertiary>pcmk_delay_base</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>pcmk_delay_base</secondary> </indexterm> <indexterm> <primary>pcmk_delay_base</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
