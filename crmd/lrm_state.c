@@ -240,7 +240,18 @@ lrm_state_reset_tables(lrm_state_t * lrm_state, gboolean reset_metadata)
 static gboolean
 has_cached_metadata_for(lrmd_rsc_info_t *rsc, const char *node_name)
 {
-    return lrm_state_get_rsc_metadata(lrm_state_find(node_name), rsc) != NULL;
+    lrm_state_t *lrm_state;
+
+    CRM_CHECK((rsc != NULL) && (node_name != NULL), return FALSE);
+
+    lrm_state = lrm_state_find(node_name);
+    if (lrm_state == NULL) {
+        crm_debug("Metadata check requested for %s but we've never connected to it",
+                  node_name);
+        return FALSE;
+    }
+
+    return lrm_state_get_rsc_metadata(lrm_state, rsc) != NULL;
 }
 
 gboolean
