@@ -36,10 +36,11 @@
 #include <crm/msg_xml.h>
 #include <crm/services.h>
 #include <crm/lrmd.h>
-#include <crm/common/util.h>
-#include <crm/common/xml.h>
+#include <crm/common/internal.h>  /* crm_ends_with_ext */
 #include <crm/common/ipc.h>
 #include <crm/common/mainloop.h>
+#include <crm/common/util.h>
+#include <crm/common/xml.h>
 
 #include <crm/cib/internal.h>
 #include <crm/pengine/status.h>
@@ -361,7 +362,7 @@ static struct crm_option long_options[] = {
     {"-spacer-",	1, 0, '-', "\nModes (mutually exclusive):"},
     {"as-html",        1, 0, 'h', "\tWrite cluster status to the named html file"},
     {"as-xml",         0, 0, 'X', "\t\tWrite cluster status as xml to stdout. This will enable one-shot mode."},
-    {"web-cgi",        0, 0, 'w', "\t\tWeb mode with output suitable for cgi"},
+    {"web-cgi",        0, 0, 'w', "\t\tWeb mode with output suitable for CGI (preselected when run as *.cgi)"},
     {"simple-status",  0, 0, 's', "\tDisplay the cluster status once as a simple one line output (suitable for nagios)"},
     {"snmp-traps",     1, 0, 'S', "\tSend SNMP traps to this station", !ENABLE_SNMP},
     {"snmp-community", 1, 0, 'C', "Specify community for SNMP traps(default is NULL)", !ENABLE_SNMP},
@@ -555,7 +556,7 @@ main(int argc, char **argv)
     signal(SIGCLD, SIG_IGN);
 #endif
 
-    if (strcmp(crm_system_name, "crm_mon.cgi") == 0) {
+    if (crm_ends_with_ext(argv[0], ".cgi") == TRUE) {
         output_format = mon_output_cgi;
         one_shot = TRUE;
     }
