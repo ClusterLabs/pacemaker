@@ -39,6 +39,16 @@ void migrate_reload_madness(pe_working_set_t * data_set);
 extern void ReloadRsc(resource_t * rsc, node_t *node, pe_working_set_t * data_set);
 extern gboolean DeleteRsc(resource_t * rsc, node_t * node, gboolean optional, pe_working_set_t * data_set);
 static void apply_remote_node_ordering(pe_working_set_t *data_set);
+static enum remote_connection_state get_remote_node_state(pe_node_t *node);
+enum remote_connection_state 
+{
+    remote_state_unknown = 0,
+    remote_state_alive = 1,
+    remote_state_resting = 2,
+    remote_state_failed = 3,
+    remote_state_stopped = 4
+};
+
 
 resource_alloc_functions_t resource_class_alloc_functions[] = {
     {
@@ -886,21 +896,25 @@ probe_resources(pe_working_set_t * data_set)
 {
     action_t *probe_node_complete = NULL;
 
-    GListPtr gIter = NULL;
-    GListPtr gIter2 = NULL;
-
-    for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+    for (GListPtr gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
         const char *probed = g_hash_table_lookup(node->details->attrs, CRM_OP_PROBED);
 
-        if (node->details->online == FALSE) {
+        if (is_container_remote_node(node)) {
+            /* TODO enable guest node probes once ordered probing is implemented */
+            continue;
+
+        } else if (node->details->online == FALSE && node->details->remote_rsc) {
+            enum remote_connection_state state = get_remote_node_state(node);
+            if(state == remote_state_failed) {
+                pe_fence_node(data_set, node, "the connection is unrecoverable");
+            }
+            continue;
+
+        } else if(node->details->online == FALSE) {
             continue;
 
         } else if (node->details->unclean) {
-            continue;
-
-        } else if (is_container_remote_node(node)) {
-            /* TODO enable guest node probes once ordered probing is implemented */
             continue;
 
         } else if (node->details->rsc_discovery_enabled == FALSE) {
@@ -916,7 +930,7 @@ probe_resources(pe_working_set_t * data_set)
             continue;
         }
 
-        for (gIter2 = data_set->resources; gIter2 != NULL; gIter2 = gIter2->next) {
+        for (GListPtr gIter2 = data_set->resources; gIter2 != NULL; gIter2 = gIter2->next) {
             resource_t *rsc = (resource_t *) gIter2->data;
 
             rsc->cmds->create_probe(rsc, node, probe_node_complete, FALSE, data_set);
@@ -1749,15 +1763,6 @@ rsc_order_first(resource_t * lh_rsc, order_constraint_t * order, pe_working_set_
 extern gboolean update_action(action_t * action);
 extern void update_colo_start_chain(action_t * action);
 
-enum remote_connection_state 
-{
-    remote_state_unknown = 0,
-    remote_state_alive = 1,
-    remote_state_resting = 2,
-    remote_state_failed = 3,
-    remote_state_stopped = 4
-};
-
 static int
 is_recurring_action(action_t *action) 
 {
@@ -1874,28 +1879,23 @@ apply_container_ordering(action_t *action, pe_working_set_t *data_set)
     }
 }
 
-static void
-apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
+static enum remote_connection_state
+get_remote_node_state(pe_node_t *node) 
 {
     resource_t *remote_rsc = NULL;
     node_t *cluster_node = NULL;
-    enum action_tasks task = text2task(action->task);
-    enum remote_connection_state state = remote_state_unknown;
-    enum pe_ordering order_opts = pe_order_none;
 
-    if (action->rsc == NULL) {
-        return;
+    if(node == NULL) {
+        return remote_state_unknown;
     }
 
-    CRM_ASSERT(action->node);
-    CRM_ASSERT(is_remote_node(action->node));
-
-    remote_rsc = action->node->details->remote_rsc;
+    remote_rsc = node->details->remote_rsc;
     CRM_ASSERT(remote_rsc);
 
     if(remote_rsc->running_on) {
         cluster_node = remote_rsc->running_on->data;
     }
+
 
     /* If the cluster node the remote connection resource resides on
      * is unclean or went offline, we can't process any operations
@@ -1911,21 +1911,21 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
          * must assume the worst and fence it.
          */
         if (is_set(remote_rsc->flags, pe_rsc_failed)) {
-            state = remote_state_failed;
+            return remote_state_failed;
         } else if(cluster_node && cluster_node->details->unclean) {
-            state = remote_state_failed;
+            return remote_state_failed;
         } else {
-            state = remote_state_stopped;
+            return remote_state_stopped;
         }
 
     } else if (cluster_node == NULL) {
         /* Connection is recoverable but not currently running anywhere, see if we can recover it first */
-        state = remote_state_unknown;
+        return remote_state_unknown;
 
     } else if(cluster_node->details->unclean == TRUE
               || cluster_node->details->online == FALSE) {
         /* Connection is running on a dead node, see if we can recover it first */
-        state = remote_state_resting;
+        return remote_state_resting;
 
     } else if (g_list_length(remote_rsc->running_on) > 1
                && remote_rsc->partial_migration_source
@@ -1934,10 +1934,34 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
          * wait until after the resource migrates before performing
          * any actions.
          */
-        state = remote_state_resting;
+        return remote_state_resting;
 
-    } else {
-        state = remote_state_alive;
+    }
+    return remote_state_alive;
+}
+
+static void
+apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
+{
+    resource_t *remote_rsc = NULL;
+    node_t *cluster_node = NULL;
+    enum action_tasks task = text2task(action->task);
+    enum remote_connection_state state = get_remote_node_state(action->node);
+
+    enum pe_ordering order_opts = pe_order_none;
+
+    if (action->rsc == NULL) {
+        return;
+    }
+
+    CRM_ASSERT(action->node);
+    CRM_ASSERT(is_remote_node(action->node));
+
+    remote_rsc = action->node->details->remote_rsc;
+    CRM_ASSERT(remote_rsc);
+
+    if(remote_rsc->running_on) {
+        cluster_node = remote_rsc->running_on->data;
     }
 
     crm_trace("Order %s action %s relative to %s%s (state %d)",
@@ -2049,13 +2073,11 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
 static void
 apply_remote_node_ordering(pe_working_set_t *data_set)
 {
-    GListPtr gIter = data_set->actions;
-
     if (is_set(data_set->flags, pe_flag_have_remote_nodes) == FALSE) {
         return;
     }
 
-    for (; gIter != NULL; gIter = gIter->next) {
+    for (GListPtr gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
 
         if (action->rsc == NULL) {
@@ -2092,12 +2114,14 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
             is_remote_node(action->node) == FALSE ||
             action->node->details->remote_rsc == NULL ||
             is_set(action->flags, pe_action_pseudo)) {
-            crm_trace("Nothing required for %s", action->uuid);
+            crm_trace("Nothing required for %s on %s", action->uuid, action->node?action->node->details->uname:"NA");
 
         } else if(action->node->details->remote_rsc->container) {
+            crm_trace("Container ordering for %s", action->uuid);
             apply_container_ordering(action, data_set);
 
         } else {
+            crm_trace("Remote ordering for %s", action->uuid);
             apply_remote_ordering(action, data_set);
         }
     }
