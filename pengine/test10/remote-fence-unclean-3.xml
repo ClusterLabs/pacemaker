@@ -1,0 +1,813 @@
+<cib crm_feature_set="3.0.12" validate-with="pacemaker-2.8" epoch="75" num_updates="5" admin_epoch="0" cib-last-written="Wed Jun 28 17:06:01 2017" update-origin="overcloud-controller-1" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.16-10.1.pidone.bundlemeta1.el7.centos-94ff4df"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="tripleo_cluster"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-maintenance-mode" name="maintenance-mode" value="false"/>
+        <nvpair id="cib-bootstrap-options-st" name="start-failure-is-fatal" value="true"/>
+      </cluster_property_set>
+      <cluster_property_set id="redis_replication">
+        <nvpair id="redis_replication-redis_REPL_INFO" name="redis_REPL_INFO" value="redis-bundle-0"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="overcloud-controller-0">
+        <instance_attributes id="nodes-1">
+          <nvpair id="nodes-1-rabbitmq-role" name="rabbitmq-role" value="true"/>
+          <nvpair id="nodes-1-galera-role" name="galera-role" value="true"/>
+          <nvpair id="nodes-1-redis-role" name="redis-role" value="true"/>
+          <nvpair id="nodes-1-haproxy-role" name="haproxy-role" value="true"/>
+          <nvpair id="nodes-1-cinder-volume-role" name="cinder-volume-role" value="true"/>
+          <nvpair id="nodes-1-cinder-backup-role" name="cinder-backup-role" value="true"/>
+        </instance_attributes>
+      </node>
+      <node id="2" uname="overcloud-controller-1">
+        <instance_attributes id="nodes-2">
+          <nvpair id="nodes-2-rabbitmq-role" name="rabbitmq-role" value="true"/>
+          <nvpair id="nodes-2-galera-role" name="galera-role" value="true"/>
+          <nvpair id="nodes-2-redis-role" name="redis-role" value="true"/>
+          <nvpair id="nodes-2-haproxy-role" name="haproxy-role" value="true"/>
+          <nvpair id="nodes-2-cinder-volume-role" name="cinder-volume-role" value="true"/>
+          <nvpair id="nodes-2-cinder-backup-role" name="cinder-backup-role" value="true"/>
+        </instance_attributes>
+      </node>
+      <node id="3" uname="overcloud-controller-2">
+        <instance_attributes id="nodes-3">
+          <nvpair id="nodes-3-rabbitmq-role" name="rabbitmq-role" value="true"/>
+          <nvpair id="nodes-3-galera-role" name="galera-role" value="true"/>
+          <nvpair id="nodes-3-redis-role" name="redis-role" value="true"/>
+          <nvpair id="nodes-3-haproxy-role" name="haproxy-role" value="true"/>
+          <nvpair id="nodes-3-cinder-volume-role" name="cinder-volume-role" value="true"/>
+          <nvpair id="nodes-3-cinder-backup-role" name="cinder-backup-role" value="true"/>
+        </instance_attributes>
+      </node>
+      <node id="overcloud-novacompute-0" type="remote" uname="overcloud-novacompute-0">
+        <instance_attributes id="nodes-overcloud-novacompute-0">
+          <nvpair id="nodes-overcloud-novacompute-0-osprole" name="compute-role" value="true"/>
+        </instance_attributes>
+      </node>
+      <node id="rabbitmq-bundle-0" type="remote" uname="rabbitmq-bundle-0">
+        <instance_attributes id="nodes-rabbitmq-bundle-0">
+          <nvpair id="nodes-rabbitmq-bundle-0-rmq-node-attr-last-known-rabbitmq" name="rmq-node-attr-last-known-rabbitmq" value="rabbit@overcloud-controller-0"/>
+        </instance_attributes>
+      </node>
+      <node id="rabbitmq-bundle-1" type="remote" uname="rabbitmq-bundle-1">
+        <instance_attributes id="nodes-rabbitmq-bundle-1">
+          <nvpair id="nodes-rabbitmq-bundle-1-rmq-node-attr-last-known-rabbitmq" name="rmq-node-attr-last-known-rabbitmq" value="rabbit@overcloud-controller-1"/>
+        </instance_attributes>
+      </node>
+      <node id="rabbitmq-bundle-2" type="remote" uname="rabbitmq-bundle-2">
+        <instance_attributes id="nodes-rabbitmq-bundle-2">
+          <nvpair id="nodes-rabbitmq-bundle-2-rmq-node-attr-last-known-rabbitmq" name="rmq-node-attr-last-known-rabbitmq" value="rabbit@overcloud-controller-2"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="fence1" type="fence_xvm">
+        <instance_attributes id="fence1-instance_attributes">
+          <nvpair id="fence1-instance_attributes-multicast_address" name="multicast_address" value="225.0.0.2"/>
+        </instance_attributes>
+        <operations>
+          <op id="fence1-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="overcloud-novacompute-0" provider="pacemaker" type="remote">
+        <instance_attributes id="overcloud-novacompute-0-instance_attributes">
+          <nvpair id="overcloud-novacompute-0-instance_attributes-reconnect_interval" name="reconnect_interval" value="240"/>
+        </instance_attributes>
+        <operations>
+          <op id="overcloud-novacompute-0-start-interval-0s" interval="0s" name="start" timeout="60"/>
+          <op id="overcloud-novacompute-0-stop-interval-0s" interval="0s" name="stop" timeout="60"/>
+          <op id="overcloud-novacompute-0-monitor-interval-20" interval="20" name="monitor"/>
+        </operations>
+      </primitive>
+      <bundle id="rabbitmq-bundle">
+        <docker image="192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <network control-port="3121"/>
+        <storage>
+          <storage-mapping id="rabbitmq-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/rabbitmq.json" target-dir="/var/lib/kolla/config_files/config.json"/>
+          <storage-mapping id="rabbitmq-cfg-data" options="ro" source-dir="/var/lib/config-data/rabbitmq/etc/rabbitmq" target-dir="/etc/rabbitmq"/>
+          <storage-mapping id="rabbitmq-hosts" options="ro" source-dir="/etc/hosts" target-dir="/etc/hosts"/>
+          <storage-mapping id="rabbitmq-localtime" options="ro" source-dir="/etc/localtime" target-dir="/etc/localtime"/>
+          <storage-mapping id="rabbitmq-lib" options="rw" source-dir="/var/lib/rabbitmq" target-dir="/var/lib/rabbitmq"/>
+          <storage-mapping id="rabbitmq-pki-extracted" options="ro" source-dir="/etc/pki/ca-trust/extracted" target-dir="/etc/pki/ca-trust/extracted"/>
+          <storage-mapping id="rabbitmq-pki-ca-bundle-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.crt" target-dir="/etc/pki/tls/certs/ca-bundle.crt"/>
+          <storage-mapping id="rabbitmq-pki-ca-bundle-trust-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.trust.crt" target-dir="/etc/pki/tls/certs/ca-bundle.trust.crt"/>
+          <storage-mapping id="rabbitmq-pki-cert" options="ro" source-dir="/etc/pki/tls/cert.pem" target-dir="/etc/pki/tls/cert.pem"/>
+          <storage-mapping id="rabbitmq-dev-log" options="rw" source-dir="/dev/log" target-dir="/dev/log"/>
+        </storage>
+        <primitive class="ocf" id="rabbitmq" provider="heartbeat" type="rabbitmq-cluster">
+          <instance_attributes id="rabbitmq-instance_attributes">
+            <nvpair id="rabbitmq-instance_attributes-set_policy" name="set_policy" value="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
+          </instance_attributes>
+          <meta_attributes id="rabbitmq-meta_attributes">
+            <nvpair id="rabbitmq-meta_attributes-notify" name="notify" value="true"/>
+          </meta_attributes>
+          <operations>
+            <op id="rabbitmq-monitor-interval-10" interval="10" name="monitor" timeout="40"/>
+            <op id="rabbitmq-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="rabbitmq-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+          </operations>
+        </primitive>
+      </bundle>
+      <bundle id="galera-bundle">
+        <docker image="192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest" masters="3" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <network control-port="3123"/>
+        <storage>
+          <storage-mapping id="mysql-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/mysql.json" target-dir="/var/lib/kolla/config_files/config.json"/>
+          <storage-mapping id="mysql-cfg-data" options="ro" source-dir="/var/lib/config-data/mysql" target-dir="/var/lib/kolla/config_files/src"/>
+          <storage-mapping id="mysql-hosts" options="ro" source-dir="/etc/hosts" target-dir="/etc/hosts"/>
+          <storage-mapping id="mysql-localtime" options="ro" source-dir="/etc/localtime" target-dir="/etc/localtime"/>
+          <storage-mapping id="mysql-lib" options="rw" source-dir="/var/lib/mysql" target-dir="/var/lib/mysql"/>
+          <storage-mapping id="mysql-log-mariadb" options="rw" source-dir="/var/log/mariadb" target-dir="/var/log/mariadb"/>
+          <storage-mapping id="mysql-pki-extracted" options="ro" source-dir="/etc/pki/ca-trust/extracted" target-dir="/etc/pki/ca-trust/extracted"/>
+          <storage-mapping id="mysql-pki-ca-bundle-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.crt" target-dir="/etc/pki/tls/certs/ca-bundle.crt"/>
+          <storage-mapping id="mysql-pki-ca-bundle-trust-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.trust.crt" target-dir="/etc/pki/tls/certs/ca-bundle.trust.crt"/>
+          <storage-mapping id="mysql-pki-cert" options="ro" source-dir="/etc/pki/tls/cert.pem" target-dir="/etc/pki/tls/cert.pem"/>
+          <storage-mapping id="mysql-dev-log" options="rw" source-dir="/dev/log" target-dir="/dev/log"/>
+        </storage>
+        <primitive class="ocf" id="galera" provider="heartbeat" type="galera">
+          <instance_attributes id="galera-instance_attributes">
+            <nvpair id="galera-instance_attributes-additional_parameters" name="additional_parameters" value="--open-files-limit=16384"/>
+            <nvpair id="galera-instance_attributes-cluster_host_map" name="cluster_host_map" value="galera-bundle-0:overcloud-controller-0;galera-bundle-1:overcloud-controller-1;galera-bundle-2:overcloud-controller-2"/>
+            <nvpair id="galera-instance_attributes-enable_creation" name="enable_creation" value="true"/>
+            <nvpair id="galera-instance_attributes-wsrep_cluster_address" name="wsrep_cluster_address" value="gcomm://overcloud-controller-0,overcloud-controller-1,overcloud-controller-2"/>
+          </instance_attributes>
+          <meta_attributes id="galera-meta_attributes">
+            <nvpair id="galera-meta_attributes-master-max" name="master-max" value="3"/>
+            <nvpair id="galera-meta_attributes-ordered" name="ordered" value="true"/>
+          </meta_attributes>
+          <operations>
+            <op id="galera-demote-interval-0s" interval="0s" name="demote" timeout="120"/>
+            <op id="galera-monitor-interval-20" interval="20" name="monitor" timeout="30"/>
+            <op id="galera-monitor-interval-10" interval="10" name="monitor" role="Master" timeout="30"/>
+            <op id="galera-monitor-interval-30" interval="30" name="monitor" role="Slave" timeout="30"/>
+            <op id="galera-promote-interval-0s" interval="0s" name="promote" on-fail="block" timeout="300s"/>
+            <op id="galera-start-interval-0s" interval="0s" name="start" timeout="120"/>
+            <op id="galera-stop-interval-0s" interval="0s" name="stop" timeout="120"/>
+          </operations>
+        </primitive>
+      </bundle>
+      <bundle id="redis-bundle">
+        <docker image="192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest" masters="1" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <network control-port="3124"/>
+        <storage>
+          <storage-mapping id="redis-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/redis.json" target-dir="/var/lib/kolla/config_files/config.json"/>
+          <storage-mapping id="redis-cfg-data-redis" options="ro" source-dir="/var/lib/config-data/redis/etc/redis" target-dir="/etc/redis"/>
+          <storage-mapping id="redis-cfg-data-redis-conf" options="ro" source-dir="/var/lib/config-data/redis/etc/redis.conf" target-dir="/etc/redis.conf"/>
+          <storage-mapping id="redis-cfg-data-redis-conf-puppet" options="ro" source-dir="/var/lib/config-data/redis/etc/redis.conf.puppet" target-dir="/etc/redis.conf.puppet"/>
+          <storage-mapping id="redis-cfg-data-redis-sentinel" options="ro" source-dir="/var/lib/config-data/redis/etc/redis-sentinel.conf" target-dir="/etc/redis-sentinel.conf"/>
+          <storage-mapping id="redis-hosts" options="ro" source-dir="/etc/hosts" target-dir="/etc/hosts"/>
+          <storage-mapping id="redis-localtime" options="ro" source-dir="/etc/localtime" target-dir="/etc/localtime"/>
+          <storage-mapping id="redis-lib" options="rw" source-dir="/var/lib/redis" target-dir="/var/lib/redis"/>
+          <storage-mapping id="redis-log" options="rw" source-dir="/var/log/redis" target-dir="/var/log/redis"/>
+          <storage-mapping id="redis-run" options="rw" source-dir="/var/run/redis" target-dir="/var/run/redis"/>
+          <storage-mapping id="redis-pki-extracted" options="ro" source-dir="/etc/pki/ca-trust/extracted" target-dir="/etc/pki/ca-trust/extracted"/>
+          <storage-mapping id="redis-pki-ca-bundle-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.crt" target-dir="/etc/pki/tls/certs/ca-bundle.crt"/>
+          <storage-mapping id="redis-pki-ca-bundle-trust-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.trust.crt" target-dir="/etc/pki/tls/certs/ca-bundle.trust.crt"/>
+          <storage-mapping id="redis-pki-cert" options="ro" source-dir="/etc/pki/tls/cert.pem" target-dir="/etc/pki/tls/cert.pem"/>
+          <storage-mapping id="redis-dev-log" options="rw" source-dir="/dev/log" target-dir="/dev/log"/>
+        </storage>
+        <primitive class="ocf" id="redis" provider="heartbeat" type="redis">
+          <instance_attributes id="redis-instance_attributes">
+            <nvpair id="redis-instance_attributes-wait_last_known_master" name="wait_last_known_master" value="true"/>
+          </instance_attributes>
+          <meta_attributes id="redis-meta_attributes">
+            <nvpair id="redis-meta_attributes-interleave" name="interleave" value="true"/>
+            <nvpair id="redis-meta_attributes-notify" name="notify" value="true"/>
+            <nvpair id="redis-meta_attributes-ordered" name="ordered" value="true"/>
+          </meta_attributes>
+          <operations>
+            <op id="redis-demote-interval-0s" interval="0s" name="demote" timeout="120"/>
+            <op id="redis-monitor-interval-45" interval="45" name="monitor" timeout="60"/>
+            <op id="redis-monitor-interval-20" interval="20" name="monitor" role="Master" timeout="60"/>
+            <op id="redis-monitor-interval-60" interval="60" name="monitor" role="Slave" timeout="60"/>
+            <op id="redis-promote-interval-0s" interval="0s" name="promote" timeout="120"/>
+            <op id="redis-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="redis-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+          </operations>
+        </primitive>
+      </bundle>
+      <primitive class="ocf" id="ip-192.168.24.9" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-192.168.24.9-instance_attributes">
+          <nvpair id="ip-192.168.24.9-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+          <nvpair id="ip-192.168.24.9-instance_attributes-ip" name="ip" value="192.168.24.9"/>
+        </instance_attributes>
+        <operations>
+          <op id="ip-192.168.24.9-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+          <op id="ip-192.168.24.9-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="ip-192.168.24.9-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="ip-10.0.0.7" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-10.0.0.7-instance_attributes">
+          <nvpair id="ip-10.0.0.7-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+          <nvpair id="ip-10.0.0.7-instance_attributes-ip" name="ip" value="10.0.0.7"/>
+        </instance_attributes>
+        <operations>
+          <op id="ip-10.0.0.7-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+          <op id="ip-10.0.0.7-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="ip-10.0.0.7-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="ip-172.16.2.4" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-172.16.2.4-instance_attributes">
+          <nvpair id="ip-172.16.2.4-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+          <nvpair id="ip-172.16.2.4-instance_attributes-ip" name="ip" value="172.16.2.4"/>
+        </instance_attributes>
+        <operations>
+          <op id="ip-172.16.2.4-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+          <op id="ip-172.16.2.4-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="ip-172.16.2.4-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="ip-172.16.2.8" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-172.16.2.8-instance_attributes">
+          <nvpair id="ip-172.16.2.8-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+          <nvpair id="ip-172.16.2.8-instance_attributes-ip" name="ip" value="172.16.2.8"/>
+        </instance_attributes>
+        <operations>
+          <op id="ip-172.16.2.8-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+          <op id="ip-172.16.2.8-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="ip-172.16.2.8-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="ip-172.16.1.9" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-172.16.1.9-instance_attributes">
+          <nvpair id="ip-172.16.1.9-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+          <nvpair id="ip-172.16.1.9-instance_attributes-ip" name="ip" value="172.16.1.9"/>
+        </instance_attributes>
+        <operations>
+          <op id="ip-172.16.1.9-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+          <op id="ip-172.16.1.9-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="ip-172.16.1.9-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="ip-172.16.3.9" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-172.16.3.9-instance_attributes">
+          <nvpair id="ip-172.16.3.9-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+          <nvpair id="ip-172.16.3.9-instance_attributes-ip" name="ip" value="172.16.3.9"/>
+        </instance_attributes>
+        <operations>
+          <op id="ip-172.16.3.9-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+          <op id="ip-172.16.3.9-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="ip-172.16.3.9-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+        </operations>
+      </primitive>
+      <bundle id="haproxy-bundle">
+        <docker image="192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <storage>
+          <storage-mapping id="haproxy-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/haproxy.json" target-dir="/var/lib/kolla/config_files/config.json"/>
+          <storage-mapping id="haproxy-cfg-data" options="ro" source-dir="/var/lib/config-data/haproxy/etc" target-dir="/etc"/>
+          <storage-mapping id="haproxy-hosts" options="ro" source-dir="/etc/hosts" target-dir="/etc/hosts"/>
+          <storage-mapping id="haproxy-localtime" options="ro" source-dir="/etc/localtime" target-dir="/etc/localtime"/>
+          <storage-mapping id="haproxy-pki-extracted" options="ro" source-dir="/etc/pki/ca-trust/extracted" target-dir="/etc/pki/ca-trust/extracted"/>
+          <storage-mapping id="haproxy-pki-ca-bundle-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.crt" target-dir="/etc/pki/tls/certs/ca-bundle.crt"/>
+          <storage-mapping id="haproxy-pki-ca-bundle-trust-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.trust.crt" target-dir="/etc/pki/tls/certs/ca-bundle.trust.crt"/>
+          <storage-mapping id="haproxy-pki-cert" options="ro" source-dir="/etc/pki/tls/cert.pem" target-dir="/etc/pki/tls/cert.pem"/>
+          <storage-mapping id="haproxy-dev-log" options="rw" source-dir="/dev/log" target-dir="/dev/log"/>
+        </storage>
+      </bundle>
+      <bundle id="openstack-cinder-volume">
+        <docker image="192.168.24.1:8787/tripleoupstream/centos-binary-cinder-volume:latest" network="host" options="--ipc=host --privileged=true --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="1" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <storage>
+          <storage-mapping id="cinder-volume-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/cinder_volume.json" target-dir="/var/lib/kolla/config_files/config.json"/>
+          <storage-mapping id="cinder-volume-cfg-data" options="ro" source-dir="/var/lib/config-data/cinder/etc/cinder" target-dir="/etc/cinder"/>
+          <storage-mapping id="cinder-volume-hosts" options="ro" source-dir="/etc/hosts" target-dir="/etc/hosts"/>
+          <storage-mapping id="cinder-volume-localtime" options="ro" source-dir="/etc/localtime" target-dir="/etc/localtime"/>
+          <storage-mapping id="cinder-volume-dev" options="rw" source-dir="/dev" target-dir="/dev"/>
+          <storage-mapping id="cinder-volume-run" options="rw" source-dir="/run" target-dir="/run"/>
+          <storage-mapping id="cinder-volume-sys" options="rw" source-dir="/sys" target-dir="/sys"/>
+          <storage-mapping id="cinder-volume-lib-modules" options="ro" source-dir="/lib/modules" target-dir="/lib/modules"/>
+          <storage-mapping id="cinder-volume-iscsi" options="rw" source-dir="/etc/iscsi" target-dir="/etc/iscsi"/>
+          <storage-mapping id="cinder-volume-var-lib-cinder" options="rw" source-dir="/var/lib/cinder" target-dir="/var/lib/cinder"/>
+          <storage-mapping id="cinder-volume-var-log" options="rw" source-dir="/var/log/containers/cinder" target-dir="/var/log/cinder"/>
+        </storage>
+      </bundle>
+      <bundle id="openstack-cinder-backup">
+        <docker image="192.168.24.1:8787/tripleoupstream/centos-binary-cinder-backup:latest" network="host" options="--ipc=host --privileged=true --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="1" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <storage>
+          <storage-mapping id="cinder-backup-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/cinder_backup.json" target-dir="/var/lib/kolla/config_files/config.json"/>
+          <storage-mapping id="cinder-backup-cfg-data" options="ro" source-dir="/var/lib/config-data/cinder/etc/cinder" target-dir="/etc/cinder"/>
+          <storage-mapping id="cinder-backup-cfg-ceph" options="ro" source-dir="/var/lib/config-data/cinder/etc/ceph" target-dir="/etc/ceph"/>
+          <storage-mapping id="cinder-backup-hosts" options="ro" source-dir="/etc/hosts" target-dir="/etc/hosts"/>
+          <storage-mapping id="cinder-backup-localtime" options="ro" source-dir="/etc/localtime" target-dir="/etc/localtime"/>
+          <storage-mapping id="cinder-backup-dev" options="rw" source-dir="/dev" target-dir="/dev"/>
+          <storage-mapping id="cinder-backup-run" options="rw" source-dir="/run" target-dir="/run"/>
+          <storage-mapping id="cinder-backup-sys" options="rw" source-dir="/sys" target-dir="/sys"/>
+          <storage-mapping id="cinder-backup-lib-modules" options="ro" source-dir="/lib/modules" target-dir="/lib/modules"/>
+          <storage-mapping id="cinder-backup-iscsi" options="rw" source-dir="/etc/iscsi" target-dir="/etc/iscsi"/>
+          <storage-mapping id="cinder-backup-var-lib-cinder" options="rw" source-dir="/var/lib/cinder" target-dir="/var/lib/cinder"/>
+          <storage-mapping id="cinder-backup-var-log" options="rw" source-dir="/var/log/containers/cinder" target-dir="/var/log/cinder"/>
+        </storage>
+      </bundle>
+    </resources>
+    <constraints>
+      <rsc_location id="location-compute-0" resource-discovery="exclusive" rsc="overcloud-novacompute-0">
+        <rule id="location-compute-0-rule" score="0">
+          <expression attribute="#uname" id="location-compute-0-rule-expr" operation="eq" value="overcloud-controller-0"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-rabbitmq-bundle" resource-discovery="exclusive" rsc="rabbitmq-bundle">
+        <rule id="location-rabbitmq-bundle-rule" score="0">
+          <expression attribute="rabbitmq-role" id="location-rabbitmq-bundle-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-galera-bundle" resource-discovery="exclusive" rsc="galera-bundle">
+        <rule id="location-galera-bundle-rule" score="0">
+          <expression attribute="galera-role" id="location-galera-bundle-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-redis-bundle" resource-discovery="exclusive" rsc="redis-bundle">
+        <rule id="location-redis-bundle-rule" score="0">
+          <expression attribute="redis-role" id="location-redis-bundle-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-ip-192.168.24.9" resource-discovery="exclusive" rsc="ip-192.168.24.9">
+        <rule id="location-ip-192.168.24.9-rule" score="0">
+          <expression attribute="haproxy-role" id="location-ip-192.168.24.9-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-ip-10.0.0.7" resource-discovery="exclusive" rsc="ip-10.0.0.7">
+        <rule id="location-ip-10.0.0.7-rule" score="0">
+          <expression attribute="haproxy-role" id="location-ip-10.0.0.7-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-ip-172.16.2.4" resource-discovery="exclusive" rsc="ip-172.16.2.4">
+        <rule id="location-ip-172.16.2.4-rule" score="0">
+          <expression attribute="haproxy-role" id="location-ip-172.16.2.4-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-ip-172.16.2.8" resource-discovery="exclusive" rsc="ip-172.16.2.8">
+        <rule id="location-ip-172.16.2.8-rule" score="0">
+          <expression attribute="haproxy-role" id="location-ip-172.16.2.8-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-ip-172.16.1.9" resource-discovery="exclusive" rsc="ip-172.16.1.9">
+        <rule id="location-ip-172.16.1.9-rule" score="0">
+          <expression attribute="haproxy-role" id="location-ip-172.16.1.9-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-ip-172.16.3.9" resource-discovery="exclusive" rsc="ip-172.16.3.9">
+        <rule id="location-ip-172.16.3.9-rule" score="0">
+          <expression attribute="haproxy-role" id="location-ip-172.16.3.9-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-haproxy-bundle" resource-discovery="exclusive" rsc="haproxy-bundle">
+        <rule id="location-haproxy-bundle-rule" score="0">
+          <expression attribute="haproxy-role" id="location-haproxy-bundle-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_order first="ip-192.168.24.9" first-action="start" id="order-ip-192.168.24.9-haproxy-bundle-Optional" kind="Optional" then="haproxy-bundle" then-action="start"/>
+      <rsc_colocation id="colocation-ip-192.168.24.9-haproxy-bundle-INFINITY" rsc="ip-192.168.24.9" score="INFINITY" with-rsc="haproxy-bundle"/>
+      <rsc_order first="ip-10.0.0.7" first-action="start" id="order-ip-10.0.0.7-haproxy-bundle-Optional" kind="Optional" then="haproxy-bundle" then-action="start"/>
+      <rsc_colocation id="colocation-ip-10.0.0.7-haproxy-bundle-INFINITY" rsc="ip-10.0.0.7" score="INFINITY" with-rsc="haproxy-bundle"/>
+      <rsc_order first="ip-172.16.2.4" first-action="start" id="order-ip-172.16.2.4-haproxy-bundle-Optional" kind="Optional" then="haproxy-bundle" then-action="start"/>
+      <rsc_colocation id="colocation-ip-172.16.2.4-haproxy-bundle-INFINITY" rsc="ip-172.16.2.4" score="INFINITY" with-rsc="haproxy-bundle"/>
+      <rsc_order first="ip-172.16.2.8" first-action="start" id="order-ip-172.16.2.8-haproxy-bundle-Optional" kind="Optional" then="haproxy-bundle" then-action="start"/>
+      <rsc_colocation id="colocation-ip-172.16.2.8-haproxy-bundle-INFINITY" rsc="ip-172.16.2.8" score="INFINITY" with-rsc="haproxy-bundle"/>
+      <rsc_order first="ip-172.16.1.9" first-action="start" id="order-ip-172.16.1.9-haproxy-bundle-Optional" kind="Optional" then="haproxy-bundle" then-action="start"/>
+      <rsc_colocation id="colocation-ip-172.16.1.9-haproxy-bundle-INFINITY" rsc="ip-172.16.1.9" score="INFINITY" with-rsc="haproxy-bundle"/>
+      <rsc_order first="ip-172.16.3.9" first-action="start" id="order-ip-172.16.3.9-haproxy-bundle-Optional" kind="Optional" then="haproxy-bundle" then-action="start"/>
+      <rsc_colocation id="colocation-ip-172.16.3.9-haproxy-bundle-INFINITY" rsc="ip-172.16.3.9" score="INFINITY" with-rsc="haproxy-bundle"/>
+      <rsc_location id="location-openstack-cinder-volume" resource-discovery="exclusive" rsc="openstack-cinder-volume">
+        <rule id="location-openstack-cinder-volume-rule" score="0">
+          <expression attribute="cinder-volume-role" id="location-openstack-cinder-volume-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-openstack-cinder-backup" resource-discovery="exclusive" rsc="openstack-cinder-backup">
+        <rule id="location-openstack-cinder-backup-rule" score="0">
+          <expression attribute="cinder-backup-role" id="location-openstack-cinder-backup-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+    </constraints>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-options">
+        <nvpair id="rsc_defaults-options-resource-stickiness" name="resource-stickiness" value="INFINITY"/>
+      </meta_attributes>
+    </rsc_defaults>
+  </configuration>
+  <status>
+    <node_state id="3" uname="overcloud-controller-2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="3">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-2_last_0" operation_key="rabbitmq-bundle-docker-2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="5:8:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;5:8:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="18" rc-code="0" op-status="0" interval="0" last-run="1498668697" last-rc-change="1498668697" exec-time="320" queue-time="0" op-digest="0cb02c9a71c43ffdbc708a49566e14f0"/>
+            <lrm_rsc_op id="rabbitmq-bundle-docker-2_monitor_60000" operation_key="rabbitmq-bundle-docker-2_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="1:8:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;1:8:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="19" rc-code="0" op-status="0" interval="60000" last-rc-change="1498668697" exec-time="64" queue-time="0" op-digest="af9ee4ff46f0c0d902e2806feb839fc5"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-0_last_0" operation_key="rabbitmq-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="8:6:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;8:6:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1498668675" last-rc-change="1498668675" exec-time="28" queue-time="0" op-digest="a0d694ff5082677ff8994aed84eec10a"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-1_last_0" operation_key="rabbitmq-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="9:6:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;9:6:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1498668675" last-rc-change="1498668675" exec-time="33" queue-time="0" op-digest="a0d694ff5082677ff8994aed84eec10a"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-2" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-2">
+            <lrm_rsc_op id="rabbitmq-bundle-2_last_0" operation_key="rabbitmq-bundle-2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="15:8:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;15:8:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="1" rc-code="0" op-status="0" interval="0" last-run="1498668697" last-rc-change="1498668697" exec-time="0" queue-time="0" op-digest="a85a038c2aaf9611b0123a922f6cc61f" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rabbitmq-bundle-2_monitor_60000" operation_key="rabbitmq-bundle-2_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="19:9:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;19:9:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="2" rc-code="0" op-status="0" interval="60000" last-rc-change="1498668699" exec-time="0" queue-time="0" op-digest="d045859aac223f9d6c1d9ea38434827f"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-1_last_0" operation_key="galera-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="15:10:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;15:10:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="28" rc-code="7" op-status="0" interval="0" last-run="1498668716" last-rc-change="1498668716" exec-time="22" queue-time="0" op-digest="cea4042997161052606b12bff643218c"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-0_last_0" operation_key="galera-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="14:10:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;14:10:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="24" rc-code="7" op-status="0" interval="0" last-run="1498668716" last-rc-change="1498668716" exec-time="28" queue-time="0" op-digest="cea4042997161052606b12bff643218c"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-2_last_0" operation_key="galera-bundle-docker-2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="12:11:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;12:11:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="37" rc-code="0" op-status="0" interval="0" last-run="1498668757" last-rc-change="1498668757" exec-time="371" queue-time="0" op-digest="d382f6658eb81d66313704072c2d9704"/>
+            <lrm_rsc_op id="galera-bundle-docker-2_monitor_60000" operation_key="galera-bundle-docker-2_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="3:11:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;3:11:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="38" rc-code="0" op-status="0" interval="60000" last-rc-change="1498668758" exec-time="66" queue-time="1" op-digest="7c2c0a8373a43288eb9e4c59a8a11546"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-2" type="remote" class="ocf" provider="pacemaker" container="galera-bundle-docker-2">
+            <lrm_rsc_op id="galera-bundle-2_last_0" operation_key="galera-bundle-2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="45:11:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;45:11:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="3" rc-code="0" op-status="0" interval="0" last-run="1498668758" last-rc-change="1498668758" exec-time="0" queue-time="0" op-digest="3f90661d608748039031eecf1b1eccec" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="galera-bundle-2_monitor_60000" operation_key="galera-bundle-2_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="50:12:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;50:12:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="4" rc-code="0" op-status="0" interval="60000" last-rc-change="1498668781" exec-time="0" queue-time="0" op-digest="be2946c3b0185392bb481388655bb5ee"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-docker-0_last_0" operation_key="redis-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="26:22:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;26:22:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="43" rc-code="7" op-status="0" interval="0" last-run="1498668877" last-rc-change="1498668877" exec-time="32" queue-time="0" op-digest="6b370e7f473758a477ba7ba1a1d14fed"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-docker-1_last_0" operation_key="redis-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="27:22:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;27:22:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="47" rc-code="7" op-status="0" interval="0" last-run="1498668877" last-rc-change="1498668877" exec-time="32" queue-time="0" op-digest="6b370e7f473758a477ba7ba1a1d14fed"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-docker-2_last_0" operation_key="redis-bundle-docker-2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="23:24:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;23:24:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="56" rc-code="0" op-status="0" interval="0" last-run="1498668899" last-rc-change="1498668899" exec-time="311" queue-time="0" op-digest="78dfacba4be0b97e9a6426b342bb2fdd"/>
+            <lrm_rsc_op id="redis-bundle-docker-2_monitor_60000" operation_key="redis-bundle-docker-2_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="5:24:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;5:24:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="57" rc-code="0" op-status="0" interval="60000" last-rc-change="1498668899" exec-time="66" queue-time="0" op-digest="24676507e61be2e5cc014443ba54c560"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-2" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-docker-2">
+            <lrm_rsc_op id="redis-bundle-2_last_0" operation_key="redis-bundle-2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="87:24:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;87:24:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="5" rc-code="0" op-status="0" interval="0" last-run="1498668899" last-rc-change="1498668899" exec-time="0" queue-time="0" op-digest="5d2d2dc6340136c5c4c289d812a6e489" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="redis-bundle-2_monitor_60000" operation_key="redis-bundle-2_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="91:25:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;91:25:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="6" rc-code="0" op-status="0" interval="60000" last-rc-change="1498668901" exec-time="0" queue-time="0" op-digest="c11ea9bf482bc6a194ff26b1f3d81523"/>
+          </lrm_resource>
+          <lrm_resource id="ip-192.168.24.9" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-192.168.24.9_last_0" operation_key="ip-192.168.24.9_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="33:30:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;33:30:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="62" rc-code="7" op-status="0" interval="0" last-run="1498668920" last-rc-change="1498668920" exec-time="33" queue-time="0" op-digest="fe7a4d69e1427ab8b5c436557ecc8780"/>
+          </lrm_resource>
+          <lrm_resource id="ip-10.0.0.7" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-10.0.0.7_last_0" operation_key="ip-10.0.0.7_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="34:33:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;34:33:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="66" rc-code="7" op-status="0" interval="0" last-run="1498668928" last-rc-change="1498668928" exec-time="33" queue-time="0" op-digest="c9d74a690415dead8378665307dd5d76"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.16.2.4" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.16.2.4_last_0" operation_key="ip-172.16.2.4_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="119:38:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;119:38:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="71" rc-code="0" op-status="0" interval="0" last-run="1498668939" last-rc-change="1498668939" exec-time="4061" queue-time="0" op-digest="b6d5a31ac7802318282c9666048b0c96"/>
+            <lrm_rsc_op id="ip-172.16.2.4_monitor_10000" operation_key="ip-172.16.2.4_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="120:38:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;120:38:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="72" rc-code="0" op-status="0" interval="10000" last-rc-change="1498668943" exec-time="33" queue-time="0" op-digest="eb8db49266a48b7d0e8ebd82c43d7c8b"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.16.2.8" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.16.2.8_last_0" operation_key="ip-172.16.2.8_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="36:39:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;36:39:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="76" rc-code="7" op-status="0" interval="0" last-run="1498668945" last-rc-change="1498668945" exec-time="37" queue-time="0" op-digest="a05df54a5427c5b7fb217fe365ec47b6"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.16.1.9" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.16.1.9_last_0" operation_key="ip-172.16.1.9_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="37:42:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;37:42:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="80" rc-code="7" op-status="0" interval="0" last-run="1498668953" last-rc-change="1498668953" exec-time="35" queue-time="0" op-digest="0cf2a88115180ddfe68813334ee37f24"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.16.3.9" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.16.3.9_last_0" operation_key="ip-172.16.3.9_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="128:47:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;128:47:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="85" rc-code="0" op-status="0" interval="0" last-run="1498668964" last-rc-change="1498668964" exec-time="4064" queue-time="0" op-digest="bfccf6cd1b96922f4a1da89429ba5d0c"/>
+            <lrm_rsc_op id="ip-172.16.3.9_monitor_10000" operation_key="ip-172.16.3.9_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="129:47:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;129:47:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="86" rc-code="0" op-status="0" interval="10000" last-rc-change="1498668968" exec-time="36" queue-time="0" op-digest="cfa84598b789dc5293a62a1a4142af3a"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="haproxy-bundle-docker-0_last_0" operation_key="haproxy-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="43:48:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;43:48:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="90" rc-code="7" op-status="0" interval="0" last-run="1498668968" last-rc-change="1498668968" exec-time="28" queue-time="0" op-digest="50c5ea783cadafec1f3787e5cf2dcd62"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="haproxy-bundle-docker-1_last_0" operation_key="haproxy-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="44:48:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;44:48:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="94" rc-code="7" op-status="0" interval="0" last-run="1498668968" last-rc-change="1498668968" exec-time="37" queue-time="0" op-digest="50c5ea783cadafec1f3787e5cf2dcd62"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="haproxy-bundle-docker-2_last_0" operation_key="haproxy-bundle-docker-2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="144:48:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;144:48:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="99" rc-code="0" op-status="0" interval="0" last-run="1498668968" last-rc-change="1498668968" exec-time="316" queue-time="0" op-digest="50c5ea783cadafec1f3787e5cf2dcd62"/>
+            <lrm_rsc_op id="haproxy-bundle-docker-2_monitor_60000" operation_key="haproxy-bundle-docker-2_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="145:48:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;145:48:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="100" rc-code="0" op-status="0" interval="60000" last-rc-change="1498668968" exec-time="63" queue-time="0" op-digest="8e98096b4e2923c7be3ce5fa2646c524"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-cinder-volume-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="openstack-cinder-volume-docker-0_last_0" operation_key="openstack-cinder-volume-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="42:65:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;42:65:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="104" rc-code="7" op-status="0" interval="0" last-run="1498669495" last-rc-change="1498669495" exec-time="24" queue-time="1" op-digest="3aa35269c96594499406635b536dcf19"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-cinder-backup-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="openstack-cinder-backup-docker-0_last_0" operation_key="openstack-cinder-backup-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="43:70:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;43:70:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="108" rc-code="7" op-status="0" interval="0" last-run="1498669534" last-rc-change="1498669534" exec-time="24" queue-time="1" op-digest="eedee9a7b2c178272325eaaf87df0b05"/>
+          </lrm_resource>
+          <lrm_resource id="overcloud-novacompute-0" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="overcloud-novacompute-0_last_0" operation_key="overcloud-novacompute-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1499057293" last-rc-change="1499057293" exec-time="0" queue-time="0" op-digest="be548bf9f751c937c78eb61c44187ad2"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="3">
+        <instance_attributes id="status-3">
+          <nvpair id="status-3-shutdown" name="shutdown" value="0"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="2" uname="overcloud-controller-1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-2_last_0" operation_key="rabbitmq-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="7:6:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;7:6:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="13" rc-code="7" op-status="0" interval="0" last-run="1498668675" last-rc-change="1498668675" exec-time="26" queue-time="0" op-digest="a0d694ff5082677ff8994aed84eec10a"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-1_last_0" operation_key="rabbitmq-bundle-docker-1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="6:8:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;6:8:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="18" rc-code="0" op-status="0" interval="0" last-run="1498668696" last-rc-change="1498668696" exec-time="335" queue-time="0" op-digest="90d6c24a6c4e50413a8f5161b9e74aef"/>
+            <lrm_rsc_op id="rabbitmq-bundle-docker-1_monitor_60000" operation_key="rabbitmq-bundle-docker-1_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="2:8:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;2:8:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="19" rc-code="0" op-status="0" interval="60000" last-rc-change="1498668697" exec-time="66" queue-time="0" op-digest="865f07bd3c8ca5d8cf7e768bcbd3c8ec"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-0_last_0" operation_key="rabbitmq-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="5:6:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;5:6:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1498668675" last-rc-change="1498668675" exec-time="32" queue-time="0" op-digest="a0d694ff5082677ff8994aed84eec10a"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-1" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-1">
+            <lrm_rsc_op id="rabbitmq-bundle-1_last_0" operation_key="rabbitmq-bundle-1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="12:8:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;12:8:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="1" rc-code="0" op-status="0" interval="0" last-run="1498668697" last-rc-change="1498668697" exec-time="0" queue-time="0" op-digest="960e0dbbd69f1d30f1b690e4262fd8af" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rabbitmq-bundle-1_monitor_60000" operation_key="rabbitmq-bundle-1_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="14:9:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;14:9:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="2" rc-code="0" op-status="0" interval="60000" last-rc-change="1498668699" exec-time="0" queue-time="0" op-digest="258066a792cfce7951cf9f0634dc1e8c"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-1_last_0" operation_key="galera-bundle-docker-1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="13:11:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;13:11:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="37" rc-code="0" op-status="0" interval="0" last-run="1498668757" last-rc-change="1498668757" exec-time="328" queue-time="0" op-digest="810c6ca70f61efcf84f03ce4ebf1583e"/>
+            <lrm_rsc_op id="galera-bundle-docker-1_monitor_60000" operation_key="galera-bundle-docker-1_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="6:11:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;6:11:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="38" rc-code="0" op-status="0" interval="60000" last-rc-change="1498668758" exec-time="68" queue-time="0" op-digest="9d23f939271b60f65c5d55115613887d"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-0_last_0" operation_key="galera-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="11:10:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;11:10:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="24" rc-code="7" op-status="0" interval="0" last-run="1498668715" last-rc-change="1498668715" exec-time="36" queue-time="0" op-digest="cea4042997161052606b12bff643218c"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-2_last_0" operation_key="galera-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="13:10:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;13:10:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="32" rc-code="7" op-status="0" interval="0" last-run="1498668715" last-rc-change="1498668715" exec-time="36" queue-time="0" op-digest="cea4042997161052606b12bff643218c"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-1" type="remote" class="ocf" provider="pacemaker" container="galera-bundle-docker-1">
+            <lrm_rsc_op id="galera-bundle-1_last_0" operation_key="galera-bundle-1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="42:11:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;42:11:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="3" rc-code="0" op-status="0" interval="0" last-run="1498668758" last-rc-change="1498668758" exec-time="0" queue-time="0" op-digest="3f1ea261ff34138fb419e6c80d7c1e4a" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="galera-bundle-1_monitor_60000" operation_key="galera-bundle-1_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="45:12:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;45:12:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="4" rc-code="0" op-status="0" interval="60000" last-rc-change="1498668781" exec-time="0" queue-time="0" op-digest="466eb8d1221d4e484215032e6b038349"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-docker-2_last_0" operation_key="redis-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="25:22:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;25:22:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="51" rc-code="7" op-status="0" interval="0" last-run="1498668877" last-rc-change="1498668877" exec-time="21" queue-time="0" op-digest="6b370e7f473758a477ba7ba1a1d14fed"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-docker-0_last_0" operation_key="redis-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="23:22:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;23:22:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="43" rc-code="7" op-status="0" interval="0" last-run="1498668877" last-rc-change="1498668877" exec-time="26" queue-time="0" op-digest="6b370e7f473758a477ba7ba1a1d14fed"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-docker-1_last_0" operation_key="redis-bundle-docker-1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="24:24:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;24:24:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="56" rc-code="0" op-status="0" interval="0" last-run="1498668898" last-rc-change="1498668898" exec-time="324" queue-time="0" op-digest="029dcdb8e6d039453207529ddf76e626"/>
+            <lrm_rsc_op id="redis-bundle-docker-1_monitor_60000" operation_key="redis-bundle-docker-1_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="10:24:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;10:24:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="57" rc-code="0" op-status="0" interval="60000" last-rc-change="1498668899" exec-time="66" queue-time="0" op-digest="d37abb44bbe352fe0b7d7664151cc6ab"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-1" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-docker-1">
+            <lrm_rsc_op id="redis-bundle-1_last_0" operation_key="redis-bundle-1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="84:24:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;84:24:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="5" rc-code="0" op-status="0" interval="0" last-run="1498668899" last-rc-change="1498668899" exec-time="0" queue-time="0" op-digest="95609f52b711714180c18c3648531e42" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="redis-bundle-1_monitor_60000" operation_key="redis-bundle-1_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="86:25:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;86:25:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="6" rc-code="0" op-status="0" interval="60000" last-rc-change="1498668901" exec-time="0" queue-time="0" op-digest="7d0de033747ee83d415141819bae6146"/>
+          </lrm_resource>
+          <lrm_resource id="ip-192.168.24.9" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-192.168.24.9_last_0" operation_key="ip-192.168.24.9_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="32:30:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;32:30:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="62" rc-code="7" op-status="0" interval="0" last-run="1498668920" last-rc-change="1498668920" exec-time="46" queue-time="0" op-digest="fe7a4d69e1427ab8b5c436557ecc8780"/>
+          </lrm_resource>
+          <lrm_resource id="ip-10.0.0.7" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-10.0.0.7_last_0" operation_key="ip-10.0.0.7_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="116:35:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;116:35:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="67" rc-code="0" op-status="0" interval="0" last-run="1498668931" last-rc-change="1498668931" exec-time="4060" queue-time="0" op-digest="c9d74a690415dead8378665307dd5d76"/>
+            <lrm_rsc_op id="ip-10.0.0.7_monitor_10000" operation_key="ip-10.0.0.7_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="117:35:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;117:35:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="68" rc-code="0" op-status="0" interval="10000" last-rc-change="1498668935" exec-time="33" queue-time="0" op-digest="2a5bfab310b36fabfe3b684b2a2a45f8"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.16.2.4" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.16.2.4_last_0" operation_key="ip-172.16.2.4_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="34:36:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;34:36:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="72" rc-code="7" op-status="0" interval="0" last-run="1498668936" last-rc-change="1498668936" exec-time="43" queue-time="0" op-digest="b6d5a31ac7802318282c9666048b0c96"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.16.2.8" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.16.2.8_last_0" operation_key="ip-172.16.2.8_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="35:39:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;35:39:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="76" rc-code="7" op-status="0" interval="0" last-run="1498668944" last-rc-change="1498668944" exec-time="35" queue-time="0" op-digest="a05df54a5427c5b7fb217fe365ec47b6"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.16.1.9" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.16.1.9_last_0" operation_key="ip-172.16.1.9_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="125:44:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;125:44:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="81" rc-code="0" op-status="0" interval="0" last-run="1498668956" last-rc-change="1498668956" exec-time="4058" queue-time="0" op-digest="0cf2a88115180ddfe68813334ee37f24"/>
+            <lrm_rsc_op id="ip-172.16.1.9_monitor_10000" operation_key="ip-172.16.1.9_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="126:44:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;126:44:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="82" rc-code="0" op-status="0" interval="10000" last-rc-change="1498668960" exec-time="34" queue-time="0" op-digest="49cd8a3523028c247137c7e20add3aa8"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.16.3.9" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.16.3.9_last_0" operation_key="ip-172.16.3.9_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="37:45:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;37:45:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="86" rc-code="7" op-status="0" interval="0" last-run="1498668961" last-rc-change="1498668961" exec-time="33" queue-time="0" op-digest="bfccf6cd1b96922f4a1da89429ba5d0c"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="haproxy-bundle-docker-1_last_0" operation_key="haproxy-bundle-docker-1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="142:48:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;142:48:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="99" rc-code="0" op-status="0" interval="0" last-run="1498668968" last-rc-change="1498668968" exec-time="293" queue-time="0" op-digest="50c5ea783cadafec1f3787e5cf2dcd62"/>
+            <lrm_rsc_op id="haproxy-bundle-docker-1_monitor_60000" operation_key="haproxy-bundle-docker-1_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="143:48:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;143:48:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="100" rc-code="0" op-status="0" interval="60000" last-rc-change="1498668968" exec-time="61" queue-time="0" op-digest="8e98096b4e2923c7be3ce5fa2646c524"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="haproxy-bundle-docker-0_last_0" operation_key="haproxy-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="40:48:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;40:48:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="90" rc-code="7" op-status="0" interval="0" last-run="1498668968" last-rc-change="1498668968" exec-time="24" queue-time="0" op-digest="50c5ea783cadafec1f3787e5cf2dcd62"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="haproxy-bundle-docker-2_last_0" operation_key="haproxy-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="42:48:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;42:48:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="98" rc-code="7" op-status="0" interval="0" last-run="1498668968" last-rc-change="1498668968" exec-time="26" queue-time="0" op-digest="50c5ea783cadafec1f3787e5cf2dcd62"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-cinder-volume-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="openstack-cinder-volume-docker-0_last_0" operation_key="openstack-cinder-volume-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="41:65:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;41:65:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="104" rc-code="7" op-status="0" interval="0" last-run="1498669495" last-rc-change="1498669495" exec-time="31" queue-time="0" op-digest="3aa35269c96594499406635b536dcf19"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-cinder-backup-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="openstack-cinder-backup-docker-0_last_0" operation_key="openstack-cinder-backup-docker-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="146:70:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;146:70:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="109" rc-code="0" op-status="0" interval="0" last-run="1498669534" last-rc-change="1498669534" exec-time="331" queue-time="0" op-digest="eedee9a7b2c178272325eaaf87df0b05"/>
+            <lrm_rsc_op id="openstack-cinder-backup-docker-0_monitor_60000" operation_key="openstack-cinder-backup-docker-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="147:70:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;147:70:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="110" rc-code="0" op-status="0" interval="60000" last-rc-change="1498669534" exec-time="63" queue-time="0" op-digest="22c1ba2abb8623d212a79f54b6b106d7"/>
+          </lrm_resource>
+          <lrm_resource id="overcloud-novacompute-0" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="overcloud-novacompute-0_last_0" operation_key="overcloud-novacompute-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1499057293" last-rc-change="1499057293" exec-time="0" queue-time="0" op-digest="be548bf9f751c937c78eb61c44187ad2"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="1" uname="overcloud-controller-0" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-2_last_0" operation_key="rabbitmq-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="4:6:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;4:6:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="13" rc-code="7" op-status="0" interval="0" last-run="1498668675" last-rc-change="1498668675" exec-time="27" queue-time="0" op-digest="a0d694ff5082677ff8994aed84eec10a"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-1_last_0" operation_key="rabbitmq-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="3:6:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;3:6:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1498668675" last-rc-change="1498668675" exec-time="36" queue-time="0" op-digest="a0d694ff5082677ff8994aed84eec10a"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-0_last_0" operation_key="rabbitmq-bundle-docker-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="7:8:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;7:8:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="18" rc-code="0" op-status="0" interval="0" last-run="1498668697" last-rc-change="1498668697" exec-time="324" queue-time="0" op-digest="50baee2f0a77a08b0616f0cf07ab724b"/>
+            <lrm_rsc_op id="rabbitmq-bundle-docker-0_monitor_60000" operation_key="rabbitmq-bundle-docker-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="3:8:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;3:8:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="19" rc-code="0" op-status="0" interval="60000" last-rc-change="1498668697" exec-time="67" queue-time="0" op-digest="25cb53ea3977a912bf4c0f70fe9e3c21"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-0" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-0">
+            <lrm_rsc_op id="rabbitmq-bundle-0_last_0" operation_key="rabbitmq-bundle-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="9:8:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;9:8:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="1" rc-code="0" op-status="0" interval="0" last-run="1498668697" last-rc-change="1498668697" exec-time="0" queue-time="0" op-digest="06bf2981855453761a1523f54ea00d6b" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rabbitmq-bundle-0_monitor_60000" operation_key="rabbitmq-bundle-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="9:9:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;9:9:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="2" rc-code="0" op-status="0" interval="60000" last-rc-change="1498668699" exec-time="0" queue-time="0" op-digest="64efd39f257c2f9fd720113e46f87aca"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-0_last_0" operation_key="galera-bundle-docker-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="14:11:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;14:11:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="37" rc-code="0" op-status="0" interval="0" last-run="1498668757" last-rc-change="1498668757" exec-time="342" queue-time="0" op-digest="ed3aad657e7994e60ac4dbd3a200b0b7"/>
+            <lrm_rsc_op id="galera-bundle-docker-0_monitor_60000" operation_key="galera-bundle-docker-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="9:11:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;9:11:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="38" rc-code="0" op-status="0" interval="60000" last-rc-change="1498668758" exec-time="71" queue-time="0" op-digest="f7e456f82e276e07f726e6e86e93bbb3"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-2_last_0" operation_key="galera-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="10:10:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;10:10:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="32" rc-code="7" op-status="0" interval="0" last-run="1498668716" last-rc-change="1498668716" exec-time="60" queue-time="0" op-digest="cea4042997161052606b12bff643218c"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-1_last_0" operation_key="galera-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="9:10:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;9:10:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="28" rc-code="7" op-status="0" interval="0" last-run="1498668716" last-rc-change="1498668716" exec-time="65" queue-time="0" op-digest="cea4042997161052606b12bff643218c"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-0" type="remote" class="ocf" provider="pacemaker" container="galera-bundle-docker-0">
+            <lrm_rsc_op id="galera-bundle-0_last_0" operation_key="galera-bundle-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="39:11:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;39:11:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="3" rc-code="0" op-status="0" interval="0" last-run="1498668758" last-rc-change="1498668758" exec-time="0" queue-time="0" op-digest="d76a68ec298b67d7ce279021bac270e3" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="galera-bundle-0_monitor_60000" operation_key="galera-bundle-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="40:12:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;40:12:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="4" rc-code="0" op-status="0" interval="60000" last-rc-change="1498668781" exec-time="0" queue-time="0" op-digest="41bc06f1f57d6510ee85b7eba6517257"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-docker-0_last_0" operation_key="redis-bundle-docker-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="25:24:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;25:24:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="56" rc-code="0" op-status="0" interval="0" last-run="1498668899" last-rc-change="1498668899" exec-time="335" queue-time="0" op-digest="90ccdc75136c9ebfb1985f14df781477"/>
+            <lrm_rsc_op id="redis-bundle-docker-0_monitor_60000" operation_key="redis-bundle-docker-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="15:24:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;15:24:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="57" rc-code="0" op-status="0" interval="60000" last-rc-change="1498668899" exec-time="74" queue-time="0" op-digest="81e9d490c493f8d22fab2822ec0bed8a"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-docker-2_last_0" operation_key="redis-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="22:22:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;22:22:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="51" rc-code="7" op-status="0" interval="0" last-run="1498668877" last-rc-change="1498668877" exec-time="48" queue-time="0" op-digest="6b370e7f473758a477ba7ba1a1d14fed"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-docker-1_last_0" operation_key="redis-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="21:22:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;21:22:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="47" rc-code="7" op-status="0" interval="0" last-run="1498668877" last-rc-change="1498668877" exec-time="63" queue-time="0" op-digest="6b370e7f473758a477ba7ba1a1d14fed"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-0" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-docker-0">
+            <lrm_rsc_op id="redis-bundle-0_last_0" operation_key="redis-bundle-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="81:24:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;81:24:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="5" rc-code="0" op-status="0" interval="0" last-run="1498668899" last-rc-change="1498668899" exec-time="0" queue-time="0" op-digest="06c11926bd689828bab73e1743a3b004" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="redis-bundle-0_monitor_60000" operation_key="redis-bundle-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="81:25:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;81:25:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="6" rc-code="0" op-status="0" interval="60000" last-rc-change="1498668901" exec-time="0" queue-time="0" op-digest="69f25cce618ac234bdbdeee7c2a3913e"/>
+          </lrm_resource>
+          <lrm_resource id="ip-192.168.24.9" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-192.168.24.9_last_0" operation_key="ip-192.168.24.9_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="113:32:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;113:32:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="63" rc-code="0" op-status="0" interval="0" last-run="1498668923" last-rc-change="1498668923" exec-time="4069" queue-time="0" op-digest="fe7a4d69e1427ab8b5c436557ecc8780"/>
+            <lrm_rsc_op id="ip-192.168.24.9_monitor_10000" operation_key="ip-192.168.24.9_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="114:32:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;114:32:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="64" rc-code="0" op-status="0" interval="10000" last-rc-change="1498668927" exec-time="34" queue-time="1" op-digest="a4d282d03a31307618a4ed166d5c29a0"/>
+          </lrm_resource>
+          <lrm_resource id="ip-10.0.0.7" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-10.0.0.7_last_0" operation_key="ip-10.0.0.7_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="32:33:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;32:33:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="68" rc-code="7" op-status="0" interval="0" last-run="1498668929" last-rc-change="1498668929" exec-time="41" queue-time="0" op-digest="c9d74a690415dead8378665307dd5d76"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.16.2.4" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.16.2.4_last_0" operation_key="ip-172.16.2.4_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="33:36:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;33:36:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="72" rc-code="7" op-status="0" interval="0" last-run="1498668936" last-rc-change="1498668936" exec-time="36" queue-time="0" op-digest="b6d5a31ac7802318282c9666048b0c96"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.16.2.8" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.16.2.8_last_0" operation_key="ip-172.16.2.8_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="122:41:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;122:41:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="77" rc-code="0" op-status="0" interval="0" last-run="1498668948" last-rc-change="1498668948" exec-time="4068" queue-time="0" op-digest="a05df54a5427c5b7fb217fe365ec47b6"/>
+            <lrm_rsc_op id="ip-172.16.2.8_monitor_10000" operation_key="ip-172.16.2.8_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="123:41:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;123:41:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="78" rc-code="0" op-status="0" interval="10000" last-rc-change="1498668952" exec-time="36" queue-time="0" op-digest="1eefb4f5c1ada8362bac03dc9e003138"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.16.1.9" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.16.1.9_last_0" operation_key="ip-172.16.1.9_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="35:42:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;35:42:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="82" rc-code="7" op-status="0" interval="0" last-run="1498668953" last-rc-change="1498668953" exec-time="39" queue-time="0" op-digest="0cf2a88115180ddfe68813334ee37f24"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.16.3.9" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.16.3.9_last_0" operation_key="ip-172.16.3.9_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="36:45:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;36:45:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="86" rc-code="7" op-status="0" interval="0" last-run="1498668961" last-rc-change="1498668961" exec-time="41" queue-time="0" op-digest="bfccf6cd1b96922f4a1da89429ba5d0c"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="haproxy-bundle-docker-2_last_0" operation_key="haproxy-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="39:48:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;39:48:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="98" rc-code="7" op-status="0" interval="0" last-run="1498668968" last-rc-change="1498668968" exec-time="26" queue-time="0" op-digest="50c5ea783cadafec1f3787e5cf2dcd62"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="haproxy-bundle-docker-1_last_0" operation_key="haproxy-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="38:48:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;38:48:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="94" rc-code="7" op-status="0" interval="0" last-run="1498668968" last-rc-change="1498668968" exec-time="30" queue-time="0" op-digest="50c5ea783cadafec1f3787e5cf2dcd62"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="haproxy-bundle-docker-0_last_0" operation_key="haproxy-bundle-docker-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="140:48:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;140:48:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="99" rc-code="0" op-status="0" interval="0" last-run="1498668968" last-rc-change="1498668968" exec-time="350" queue-time="0" op-digest="50c5ea783cadafec1f3787e5cf2dcd62"/>
+            <lrm_rsc_op id="haproxy-bundle-docker-0_monitor_60000" operation_key="haproxy-bundle-docker-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="141:48:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;141:48:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="100" rc-code="0" op-status="0" interval="60000" last-rc-change="1498668968" exec-time="77" queue-time="0" op-digest="8e98096b4e2923c7be3ce5fa2646c524"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-cinder-volume-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="openstack-cinder-volume-docker-0_last_0" operation_key="openstack-cinder-volume-docker-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="143:65:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;143:65:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="105" rc-code="0" op-status="0" interval="0" last-run="1498669495" last-rc-change="1498669495" exec-time="322" queue-time="0" op-digest="3aa35269c96594499406635b536dcf19"/>
+            <lrm_rsc_op id="openstack-cinder-volume-docker-0_monitor_60000" operation_key="openstack-cinder-volume-docker-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="144:65:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;144:65:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="106" rc-code="0" op-status="0" interval="60000" last-rc-change="1498669495" exec-time="73" queue-time="0" op-digest="8bf789d58c162762d2d6f44701785901"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-cinder-backup-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="openstack-cinder-backup-docker-0_last_0" operation_key="openstack-cinder-backup-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="41:70:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;41:70:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="110" rc-code="7" op-status="0" interval="0" last-run="1498669534" last-rc-change="1498669534" exec-time="33" queue-time="0" op-digest="eedee9a7b2c178272325eaaf87df0b05"/>
+          </lrm_resource>
+          <lrm_resource id="overcloud-novacompute-0" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="overcloud-novacompute-0_last_0" operation_key="overcloud-novacompute-0_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="2:-1:1:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:1;2:-1:1:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="1" op-status="0" interval="0" last-run="1499057293" last-rc-change="1499057293" exec-time="0" queue-time="0" op-digest="be548bf9f751c937c78eb61c44187ad2"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-rabbitmq-foo" name="fail-count-overcloud-novacompute-0" value="INFINITY"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state remote_node="true" id="rabbitmq-bundle-0" uname="rabbitmq-bundle-0" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
+      <transient_attributes id="rabbitmq-bundle-0">
+        <instance_attributes id="status-rabbitmq-bundle-0">
+          <nvpair id="status-rabbitmq-bundle-0-rmq-node-attr-rabbitmq" name="rmq-node-attr-rabbitmq" value="rabbit@overcloud-controller-0"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="rabbitmq-bundle-0">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq" type="rabbitmq-cluster" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq_last_0" operation_key="rabbitmq_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="20:9:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;20:9:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="7" rc-code="0" op-status="0" interval="0" last-run="1498668699" last-rc-change="1498668699" exec-time="16111" queue-time="0" op-digest="780d433233eb4f94c1a151623d002e84"/>
+            <lrm_rsc_op id="rabbitmq_monitor_10000" operation_key="rabbitmq_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="31:10:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;31:10:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="49" rc-code="0" op-status="0" interval="10000" last-rc-change="1498668716" exec-time="5817" queue-time="0" op-digest="6b46cdf9111345cbd0460b2540d3b2c7"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="rabbitmq-bundle-2" uname="rabbitmq-bundle-2" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
+      <transient_attributes id="rabbitmq-bundle-2">
+        <instance_attributes id="status-rabbitmq-bundle-2">
+          <nvpair id="status-rabbitmq-bundle-2-rmq-node-attr-rabbitmq" name="rmq-node-attr-rabbitmq" value="rabbit@overcloud-controller-2"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="rabbitmq-bundle-2">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq" type="rabbitmq-cluster" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq_last_0" operation_key="rabbitmq_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="32:11:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;32:11:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="7" rc-code="0" op-status="0" interval="0" last-run="1498668748" last-rc-change="1498668748" exec-time="33151" queue-time="0" op-digest="780d433233eb4f94c1a151623d002e84"/>
+            <lrm_rsc_op id="rabbitmq_monitor_10000" operation_key="rabbitmq_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="31:12:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;31:12:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="68" rc-code="0" op-status="0" interval="10000" last-rc-change="1498668781" exec-time="5461" queue-time="0" op-digest="6b46cdf9111345cbd0460b2540d3b2c7"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="rabbitmq-bundle-1" uname="rabbitmq-bundle-1" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
+      <transient_attributes id="rabbitmq-bundle-1">
+        <instance_attributes id="status-rabbitmq-bundle-1">
+          <nvpair id="status-rabbitmq-bundle-1-rmq-node-attr-rabbitmq" name="rmq-node-attr-rabbitmq" value="rabbit@overcloud-controller-1"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="rabbitmq-bundle-1">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq" type="rabbitmq-cluster" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq_last_0" operation_key="rabbitmq_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="32:10:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;32:10:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="7" rc-code="0" op-status="0" interval="0" last-run="1498668716" last-rc-change="1498668716" exec-time="31256" queue-time="0" op-digest="780d433233eb4f94c1a151623d002e84"/>
+            <lrm_rsc_op id="rabbitmq_monitor_10000" operation_key="rabbitmq_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="31:11:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;31:11:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="67" rc-code="0" op-status="0" interval="10000" last-rc-change="1498668747" exec-time="5540" queue-time="0" op-digest="6b46cdf9111345cbd0460b2540d3b2c7"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="galera-bundle-0" uname="galera-bundle-0" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
+      <transient_attributes id="galera-bundle-0">
+        <instance_attributes id="status-galera-bundle-0">
+          <nvpair id="status-galera-bundle-0-master-galera" name="master-galera" value="100"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="galera-bundle-0">
+        <lrm_resources>
+          <lrm_resource id="galera" type="galera" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera_last_0" operation_key="galera_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="62:16:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;62:16:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="342" rc-code="0" op-status="0" interval="0" last-run="1498668833" last-rc-change="1498668833" exec-time="12680" queue-time="0" op-digest="0cdeb1eb04c758b7106d6290e197ef6f" op-secure-params=" user " op-secure-digest="0cdeb1eb04c758b7106d6290e197ef6f"/>
+            <lrm_rsc_op id="galera_monitor_10000" operation_key="galera_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="56:17:8:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:8;56:17:8:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="390" rc-code="8" op-status="0" interval="10000" last-rc-change="1498668846" exec-time="316" queue-time="0" op-digest="1017efac9e206f9e51dd763f41a7bb37" op-secure-params=" user " op-secure-digest="0cdeb1eb04c758b7106d6290e197ef6f"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="galera-bundle-2" uname="galera-bundle-2" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
+      <transient_attributes id="galera-bundle-2">
+        <instance_attributes id="status-galera-bundle-2">
+          <nvpair id="status-galera-bundle-2-master-galera" name="master-galera" value="100"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="galera-bundle-2">
+        <lrm_resources>
+          <lrm_resource id="galera" type="galera" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera_last_0" operation_key="galera_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="57:15:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;57:15:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="118" rc-code="0" op-status="0" interval="0" last-run="1498668818" last-rc-change="1498668818" exec-time="14415" queue-time="0" op-digest="0cdeb1eb04c758b7106d6290e197ef6f" op-secure-params=" user " op-secure-digest="0cdeb1eb04c758b7106d6290e197ef6f"/>
+            <lrm_rsc_op id="galera_monitor_10000" operation_key="galera_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="59:16:8:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:8;59:16:8:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="271" rc-code="8" op-status="0" interval="10000" last-rc-change="1498668833" exec-time="310" queue-time="0" op-digest="1017efac9e206f9e51dd763f41a7bb37" op-secure-params=" user " op-secure-digest="0cdeb1eb04c758b7106d6290e197ef6f"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="galera-bundle-1" uname="galera-bundle-1" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
+      <transient_attributes id="galera-bundle-1">
+        <instance_attributes id="status-galera-bundle-1">
+          <nvpair id="status-galera-bundle-1-master-galera" name="master-galera" value="100"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="galera-bundle-1">
+        <lrm_resources>
+          <lrm_resource id="galera" type="galera" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera_last_0" operation_key="galera_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="63:17:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;63:17:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="223" rc-code="0" op-status="0" interval="0" last-run="1498668845" last-rc-change="1498668845" exec-time="12614" queue-time="1" op-digest="0cdeb1eb04c758b7106d6290e197ef6f" op-secure-params=" user " op-secure-digest="0cdeb1eb04c758b7106d6290e197ef6f"/>
+            <lrm_rsc_op id="galera_monitor_10000" operation_key="galera_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="61:18:8:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:8;61:18:8:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="270" rc-code="8" op-status="0" interval="10000" last-rc-change="1498668858" exec-time="306" queue-time="0" op-digest="1017efac9e206f9e51dd763f41a7bb37" op-secure-params=" user " op-secure-digest="0cdeb1eb04c758b7106d6290e197ef6f"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="redis-bundle-1" uname="redis-bundle-1" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
+      <transient_attributes id="redis-bundle-1">
+        <instance_attributes id="status-redis-bundle-1">
+          <nvpair id="status-redis-bundle-1-master-redis" name="master-redis" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="redis-bundle-1">
+        <lrm_resources>
+          <lrm_resource id="redis" type="redis" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis_last_0" operation_key="redis_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="96:26:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;96:26:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="7" rc-code="0" op-status="0" interval="0" last-run="1498668907" last-rc-change="1498668907" exec-time="5097" queue-time="1" op-digest="a5b2a4f5c557278af14d6cbffc5a229d" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+            <lrm_rsc_op id="redis_monitor_60000" operation_key="redis_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="99:27:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;99:27:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="58" rc-code="0" op-status="0" interval="60000" last-rc-change="1498668912" exec-time="770" queue-time="0" op-digest="992feffd37882eb5ce9bfc847b2fa75e" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+            <lrm_rsc_op id="redis_monitor_45000" operation_key="redis_monitor_45000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="98:27:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;98:27:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="59" rc-code="0" op-status="0" interval="45000" last-rc-change="1498668913" exec-time="766" queue-time="691" op-digest="992feffd37882eb5ce9bfc847b2fa75e" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="redis-bundle-0" uname="redis-bundle-0" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
+      <transient_attributes id="redis-bundle-0">
+        <instance_attributes id="status-redis-bundle-0">
+          <nvpair id="status-redis-bundle-0-master-redis" name="master-redis" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="redis-bundle-0">
+        <lrm_resources>
+          <lrm_resource id="redis" type="redis" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis_last_0" operation_key="redis_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="96:28:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;96:28:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="58" rc-code="0" op-status="0" interval="0" last-run="1498668918" last-rc-change="1498668918" exec-time="1609" queue-time="0" op-digest="a5b2a4f5c557278af14d6cbffc5a229d" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+            <lrm_rsc_op id="redis_monitor_20000" operation_key="redis_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="100:29:8:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:8;100:29:8:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="80" rc-code="8" op-status="0" interval="20000" last-rc-change="1498668920" exec-time="803" queue-time="0" op-digest="992feffd37882eb5ce9bfc847b2fa75e" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="redis-bundle-2" uname="redis-bundle-2" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
+      <transient_attributes id="redis-bundle-2">
+        <instance_attributes id="status-redis-bundle-2">
+          <nvpair id="status-redis-bundle-2-master-redis" name="master-redis" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="redis-bundle-2">
+        <lrm_resources>
+          <lrm_resource id="redis" type="redis" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis_last_0" operation_key="redis_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="100:27:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;100:27:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="7" rc-code="0" op-status="0" interval="0" last-run="1498668912" last-rc-change="1498668912" exec-time="5091" queue-time="0" op-digest="a5b2a4f5c557278af14d6cbffc5a229d" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+            <lrm_rsc_op id="redis_monitor_60000" operation_key="redis_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="103:28:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;103:28:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="58" rc-code="0" op-status="0" interval="60000" last-rc-change="1498668918" exec-time="766" queue-time="0" op-digest="992feffd37882eb5ce9bfc847b2fa75e" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+            <lrm_rsc_op id="redis_monitor_45000" operation_key="redis_monitor_45000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="102:28:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;102:28:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="59" rc-code="0" op-status="0" interval="45000" last-rc-change="1498668918" exec-time="761" queue-time="687" op-digest="992feffd37882eb5ce9bfc847b2fa75e" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="overcloud-novacompute-0" uname="overcloud-novacompute-0" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0"/>
+  </status>
+</cib>
