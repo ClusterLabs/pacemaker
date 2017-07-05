@@ -872,10 +872,6 @@ native_color: fence1 allocation score on overcloud-controller-0: 0
 native_color: fence1 allocation score on overcloud-controller-1: 0
 native_color: fence1 allocation score on overcloud-controller-2: 0
 native_color: fence1 allocation score on overcloud-novacompute-0: -INFINITY
-native_color: foo allocation score on overcloud-controller-0: 0
-native_color: foo allocation score on overcloud-controller-1: 0
-native_color: foo allocation score on overcloud-controller-2: 0
-native_color: foo allocation score on overcloud-novacompute-0: 0
 native_color: galera-bundle-0 allocation score on galera-bundle-0: -INFINITY
 native_color: galera-bundle-0 allocation score on galera-bundle-1: -INFINITY
 native_color: galera-bundle-0 allocation score on galera-bundle-2: -INFINITY
