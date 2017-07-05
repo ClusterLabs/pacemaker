@@ -18,10 +18,8 @@
 #ifndef CRM_COMMON_XML_INTERNAL__H
 #  define CRM_COMMON_XML_INTERNAL__H
 
-/**
- * \file
- * \brief Internal-only wrappers for and extensions to libxml2 (libxslt)
- * \ingroup core
+/*
+ * Internal-only wrappers for and extensions to libxml2 (libxslt)
  */
 
 #  include <stdlib.h>

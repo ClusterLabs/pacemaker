@@ -867,7 +867,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
         }
     }
 
-    /* Begin compatibility code ("requires" set on start action not resource) */
+    /* @COMPAT data sets < 1.1.10 ("requires" on start action not resource) */
     value = g_hash_table_lookup(action->meta, "requires");
 
     if (safe_str_neq(action->task, RSC_START)
@@ -894,7 +894,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
         if (is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
             crm_notice("%s requires fencing but fencing is disabled", action->rsc->id);
         }
-        /* End compatibility code */
+        /* @COMPAT end compatibility code */
 
     } else if (is_set(action->rsc->flags, pe_rsc_needs_fencing)) {
         action->needs = rsc_req_stonith;
