@@ -1386,9 +1386,8 @@ This includes options such as +priority+, +target-role+, and +is-managed+. See
 
 Bundle support is considered experimental in Pacemaker 1.1.17.
 
-Bundles may not be cloned, or included in groups or ordering
-constraints. This includes the bundle's primitive and any resources
-implicitly created by Pacemaker for the bundle.
+Bundles may not be cloned or included in groups. This includes the bundle's
+primitive and any resources implicitly created by Pacemaker for the bundle.
 
 Bundles do not have instance attributes, utilization attributes, or operations,
 though a bundle's primitive may have them.
