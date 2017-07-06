@@ -868,7 +868,7 @@ clone_create_pseudo_actions(
     if (stop_notify != NULL && *stop_notify == NULL) {
         *stop_notify = create_notification_boundaries(rsc, RSC_STOP, stop, stopped, data_set);
 
-        if (*stop_notify && *start_notify) {
+        if (start_notify && *start_notify && *stop_notify) {
             order_actions((*stop_notify)->post_done, (*start_notify)->pre, pe_order_optional);
         }
     }
