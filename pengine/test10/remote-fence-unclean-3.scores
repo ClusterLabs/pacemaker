@@ -872,6 +872,9 @@ native_color: fence1 allocation score on overcloud-controller-0: 0
 native_color: fence1 allocation score on overcloud-controller-1: 0
 native_color: fence1 allocation score on overcloud-controller-2: 0
 native_color: fence1 allocation score on overcloud-novacompute-0: -INFINITY
+native_color: fence1 allocation score on rabbitmq-bundle-0: -INFINITY
+native_color: fence1 allocation score on rabbitmq-bundle-1: -INFINITY
+native_color: fence1 allocation score on rabbitmq-bundle-2: -INFINITY
 native_color: galera-bundle-0 allocation score on galera-bundle-0: -INFINITY
 native_color: galera-bundle-0 allocation score on galera-bundle-1: -INFINITY
 native_color: galera-bundle-0 allocation score on galera-bundle-2: -INFINITY
@@ -1109,6 +1112,9 @@ native_color: overcloud-novacompute-0 allocation score on overcloud-controller-0
 native_color: overcloud-novacompute-0 allocation score on overcloud-controller-1: -INFINITY
 native_color: overcloud-novacompute-0 allocation score on overcloud-controller-2: -INFINITY
 native_color: overcloud-novacompute-0 allocation score on overcloud-novacompute-0: -INFINITY
+native_color: overcloud-novacompute-0 allocation score on rabbitmq-bundle-0: -INFINITY
+native_color: overcloud-novacompute-0 allocation score on rabbitmq-bundle-1: -INFINITY
+native_color: overcloud-novacompute-0 allocation score on rabbitmq-bundle-2: -INFINITY
 native_color: rabbitmq-bundle-0 allocation score on overcloud-controller-0: INFINITY
 native_color: rabbitmq-bundle-0 allocation score on overcloud-controller-1: 0
 native_color: rabbitmq-bundle-0 allocation score on overcloud-controller-2: 0
