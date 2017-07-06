@@ -1,48 +1,7 @@
-* Tue Jun 20 2017 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.17-1
-- Update source tarball to revision: cdba348
-- Changesets: 31
-- Diff:       20 files changed, 416 insertions(+), 151 deletions(-)
-
-- Features added since Pacemaker-1.1.17-rc3
-  + cib,libcib: support option for IPC eviction threshold
-
-- Changes since Pacemaker-1.1.17-rc3
-  + cib: Broadcasts of cib changes should always pass ACLs check
-  + libcib: get remoteness correctly from node status
-  + libpe_status: avoid memory leaks when creating bundle remote resource
-  + libpe_status: disallow resources on bundle nodes
-  + pengine: Bundle location constraints should only apply to the IP and docker resources
-  + pengine: Clones within bundles may also have notifications enabled
-  + pengine: Correctly implement pe_order_implies_first_printed
-  + pengine: Do not re-add a node's default score for each location constraint
-
-* Wed May 31 2017 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.17-rc3
-- Update source tarball to revision: 9793232
-- Changesets: 21
-- Diff:       19 files changed, 459 insertions(+), 212 deletions(-)
-
-- Features added since Pacemaker-1.1.17-rc2
-  + Support inheritable meta-attributes for bundles
-
-- Changes since Pacemaker-1.1.17-rc2
-  + crmd: avoid attribute write-out on join when atomic attrd is used
-  + pengine: avoid restarting services when recovering remote connection
-
-* Tue May 23 2017 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.17-rc2
-- Update source tarball to revision: 8fdb646
-- Changesets: 19
-- Diff:       10 files changed, 99 insertions(+), 58 deletions(-)
-
-- Changes since Pacemaker-1.1.17-rc1
-  + fencing: Detect newly added constraints for stonith devices
-  + pengine,libpe_status: multiple bug fixes for new bundle feature
-  + pengine: Order remote actions after connection recovery
-    (regression introduced in 1.1.15)
-
-* Mon May 08 2017 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.17-rc1
-- Update source tarball to revision: 61538e9
-- Changesets: 440
-- Diff:       163 files changed, 10085 insertions(+), 4416 deletions(-)
+* Thu Jul 06 2017 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.17-1
+- Update source tarball to revision: 301bc44
+- Changesets: 539
+- Diff:       177 files changed, 11525 insertions(+), 5036 deletions(-)
 
 - Features added since Pacemaker-1.1.16
   + New "bundle" resource type for Docker container use cases (experimental)
@@ -52,6 +11,8 @@
   + New "stonith-max-attempts" cluster option to specify how many times
     fencing can fail for a target before the cluster will no longer
     immediately re-attempt it (previously hard-coded at 10) 
+  + New "cluster-ipc-limit" cluster option to avoid IPC client eviction in
+    large clusters
   + Failures are now tracked per operation type, as well as per node and
     resource (the "fail-count" and "last-failure" node attribute names now end
     in "#OPERATION_INTERVAL")
@@ -66,7 +27,10 @@
 - Changes since Pacemaker-1.1.16
   + Fix multiple memory issues (leaks, use-after-free) in libraries
   + pengine: unmanaging a guest node resource puts guest in maintenance mode
+  + cib: broadcasts of cib changes should always pass ACL checks
   + crmd,libcrmcommon: update throttling when CPUs are hot-plugged
+  + crmd: abort transition whenever we lose quorum
+  + crmd: avoid attribute write-out on join when atomic attrd is used
   + crmd: check for too many stonith failures only when aborting for that reason
   + crmd: correctly clear failure counts only for a specified node
   + crmd: don't fence old DC if it's shutting down as soon-to-be DC joins
@@ -74,9 +38,14 @@
   + crmd: all nodes should track stonith failure counts in case they become DC
   + crmd: update cache status for guest node whose host is fenced
   + dbus: prevent lrmd from hanging on dbus calls
+  + fencing: detect newly added constraints for stonith devices
+  + pengine: order remote actions after connection recovery
+    (regression introduced in 1.1.15)
   + pengine: quicker recovery from failed demote
+  + libcib: determine remote nodes correctly from node status entries
   + libcrmcommon: avoid evicting IPC client if messages spike briefly
   + libcrmcommon: better XML comment handling prevents infinite election loop
+  + libcrmcommon: set month correctly in date/time string sent to alert agents
   + libfencing,fencing: intelligently remap "action" wrongly specified in config
   + libservices: ensure completed ops aren't on blocked ops list
   + libservices: properly detect and cancel in-flight systemd/upstart ops
@@ -85,16 +54,20 @@
   + pacemaker_remoted: allow graceful shutdown while unmanaged
   + pengine,libpe_status: don't clear same fail-count twice
   + pengine: consider guest node unclean if its host is unclean
+  + pengine: do not re-add a node's default score for each location constraint
+  + pengine: avoid restarting services when recovering remote connection
   + pengine: better guest node recovery when host fails
   + pengine: guest node fencing doesn't require stonith enabled
   + pengine: allow probes of guest node connection resources
   + pengine: properly handle allow-migrate explicitly set for remote connection
+  + pengine: fence failed remote nodes even if no resources can run on them
   + tools: resource agents will now get the correct node name on
     Pacemaker Remote nodes when using crm_node and crm_attribute
   + tools: avoid grep crashes in crm_report when looking for system logs
   + tools: crm_resource -C now clears last-failure as well as fail-count
   + tools: implement crm_failcount command-line options correctly
   + tools: properly ignore version with crm_diff --no-version
+
 
 * Wed Nov 30 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.16-1
 - Update source tarball to revision: 76876b3
