@@ -180,17 +180,22 @@ set_alert_env(gpointer key, gpointer value, gpointer user_data)
     set_ocf_env((char*)key, value, user_data);
 }
 
+/*!
+ * \internal
+ * \brief Add environment variables suitable for an action
+ *
+ * \param[in] op  Action to use
+ *
+ * \note Environment variables are added only for alerts and OCF agents.
+ */
 static void
-add_alert_env_vars(svc_action_t * op)
+add_action_env_vars(const svc_action_t *op)
 {
     if (op->alert_params) {
         g_hash_table_foreach(op->alert_params, set_alert_env, NULL);
+        return;
     }
-}
 
-static void
-add_OCF_env_vars(svc_action_t * op)
-{
     if ((op->standard == NULL)
         || (strcasecmp(PCMK_RESOURCE_CLASS_OCF, op->standard) != 0)) {
         return;
@@ -446,11 +451,8 @@ action_launch_child(svc_action_t *op)
         }
     }
 #endif
-    /* Setup environment correctly */
-    add_OCF_env_vars(op);
 
-    /* Setup environment correctly for Alert */
-    add_alert_env_vars(op);
+    add_action_env_vars(op);
 
     /* execute the RA */
     execvp(op->opaque->exec, op->opaque->args);
