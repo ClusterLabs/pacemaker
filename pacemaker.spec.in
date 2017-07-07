@@ -415,7 +415,7 @@ make %{_smp_mflags} V=1 all
   && tools/regression.sh \
   && touch .CHECKED
 } 2>&1 | sed 's/[fF]ail/faiil/g'  # prevent false positives in rpmlint
-[ -f .CHECKED ] && rm -f -- .CHECKED
+[ -f .CHECKED ] && rm -f -- .CHECKED || false
 
 %install
 rm -rf %{buildroot}
