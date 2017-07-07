@@ -191,13 +191,14 @@ set_alert_env(gpointer key, gpointer value, gpointer user_data)
 static void
 add_action_env_vars(const svc_action_t *op)
 {
-    if (op->alert_params) {
-        g_hash_table_foreach(op->alert_params, set_alert_env, NULL);
+    if (safe_str_eq(op->standard, PCMK_ALERT_CLASS)) {
+        if (op->params) {
+            g_hash_table_foreach(op->params, set_alert_env, NULL);
+        }
         return;
     }
 
-    if ((op->standard == NULL)
-        || (strcasecmp(PCMK_RESOURCE_CLASS_OCF, op->standard) != 0)) {
+    if (safe_str_eq(op->standard, PCMK_RESOURCE_CLASS_OCF) == FALSE) {
         return;
     }
 

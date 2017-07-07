@@ -488,11 +488,6 @@ services_action_free(svc_action_t * op)
         op->params = NULL;
     }
 
-    if (op->alert_params) {
-        g_hash_table_destroy(op->alert_params);
-        op->alert_params = NULL;
-    }
-
     free(op);
 }
 

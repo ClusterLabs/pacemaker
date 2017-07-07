@@ -1242,7 +1242,7 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
             action->action = strdup(cmd->action);
             action->timeout = cmd->timeout;
             action->id = strdup(rsc->rsc_id);
-            action->alert_params = params_copy;
+            action->params = params_copy;
 
             value_lookup = g_hash_table_lookup(params_copy, CRM_ALERT_NODE_SEQUENCE);        
             if (value_lookup != NULL) {

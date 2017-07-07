@@ -167,7 +167,7 @@ typedef struct svc_action_s {
     char *agent;
 
     int timeout;
-    GHashTable *params; /* used by OCF agents */
+    GHashTable *params; /* used by OCF agents and alert agents */
 
     int rc;
     int pid;
@@ -190,8 +190,6 @@ typedef struct svc_action_s {
     void *cb_data;
 
     svc_action_private_t *opaque;
-
-    GHashTable *alert_params; /* used by alert agents */
 } svc_action_t;
 
 /**
