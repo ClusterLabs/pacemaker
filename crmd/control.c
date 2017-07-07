@@ -25,7 +25,6 @@
 #include <crm/msg_xml.h>
 
 #include <crm/pengine/rules.h>
-#include <crm/pengine/rules_internal.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster/election.h>
 #include <crm/common/ipcs.h>
@@ -36,6 +35,7 @@
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
 #include <crmd_lrm.h>
+#include <crmd_alerts.h>
 #include <tengine.h>
 #include <throttle.h>
 
@@ -1103,7 +1103,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     }
 
     alerts = first_named_child(output, XML_CIB_TAG_ALERTS);
-    pe_unpack_alerts(alerts);
+    crmd_unpack_alerts(alerts);
 
     set_bit(fsa_input_register, R_READ_CONFIG);
     crm_trace("Triggering FSA: %s", __FUNCTION__);

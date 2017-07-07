@@ -25,8 +25,15 @@
 #include <crm/common/iso8601_internal.h>
 #include <crm/pengine/rules_internal.h>
 
+static GListPtr crmd_alert_list = NULL;
 static int alerts_inflight = 0;
 static gboolean draining_alerts = FALSE;
+
+void crmd_unpack_alerts(xmlNode *alerts)
+{
+    pe_free_alert_list(crmd_alert_list);
+    crmd_alert_list = pe_unpack_alerts(alerts);
+}
 
 static void
 crmd_alert_complete(svc_action_t *op)
@@ -51,7 +58,7 @@ send_alerts(const char *kind)
     crm_set_alert_key(CRM_alert_kind, kind);
     crm_set_alert_key(CRM_alert_version, VERSION);
 
-    for (l = g_list_first(crm_alert_list); l; l = g_list_next(l)) {
+    for (l = g_list_first(crmd_alert_list); l; l = g_list_next(l)) {
         crm_alert_entry_t *entry = (crm_alert_entry_t *)(l->data);
         char *timestamp = crm_time_format_hr(entry->tstamp_format, now);
 
@@ -106,7 +113,7 @@ send_alerts(const char *kind)
 void
 crmd_alert_node_event(crm_node_t *node)
 {
-    if(!crm_alert_list) {
+    if (crmd_alert_list == NULL) {
         return;
     }
 
@@ -122,7 +129,7 @@ crmd_alert_fencing_op(stonith_event_t * e)
 {
     char *desc = NULL;
 
-    if (!crm_alert_list) {
+    if (crmd_alert_list == NULL) {
         return;
     }
 
@@ -145,7 +152,7 @@ crmd_alert_resource_op(const char *node, lrmd_event_data_t * op)
 {
     int target_rc = 0;
 
-    if(!crm_alert_list) {
+    if (crmd_alert_list == NULL) {
         return;
     }
 

@@ -22,7 +22,6 @@
 #include <crm/msg_xml.h>
 #include <crm/common/alerts_internal.h>
 
-GListPtr crm_alert_list = NULL;
 guint crm_alert_max_alert_timeout = CRM_ALERT_DEFAULT_TIMEOUT_MS;
 char **crm_alert_kind_default = NULL;
 
@@ -50,16 +49,16 @@ const char *crm_alert_keys[CRM_ALERT_INTERNAL_KEY_MAX][3] =
     [CRM_alert_attribute_value]     = {"CRM_notify_attribute_value",     "CRM_alert_attribute_value",     NULL}
 };
 
-static void		
-free_envvar_entry(crm_alert_envvar_t *entry)		
+void
+crm_free_alert_envvar(crm_alert_envvar_t *entry)
 {		
     free(entry->name);		
     free(entry->value);		
     free(entry);		
 }		
 
-static void		
-crm_free_alert_list_entry(crm_alert_entry_t *entry)		
+void
+crm_free_alert_entry(crm_alert_entry_t *entry)
 {		
     free(entry->id);		
     free(entry->path);		
@@ -78,53 +77,20 @@ crm_free_alert_list_entry(crm_alert_entry_t *entry)
 
     if (entry->envvars) {		
         g_list_free_full(entry->envvars,		
-                         (GDestroyNotify) free_envvar_entry);		
+                         (GDestroyNotify) crm_free_alert_envvar);
     }		
     free(entry);		
 }		
 
-void		
-crm_free_alert_list()		
-{		
-    if (crm_alert_list) {		
-        g_list_free_full(crm_alert_list, (GDestroyNotify) crm_free_alert_list_entry);		
-        crm_alert_list = NULL;		
-    }		
-}		
-
-static gpointer		
-copy_envvar_entry(crm_alert_envvar_t * src,		
-                  gpointer data)		
+crm_alert_envvar_t *
+crm_dup_alert_envvar(crm_alert_envvar_t *src)
 {		
     crm_alert_envvar_t *dst = calloc(1, sizeof(crm_alert_envvar_t));		
 
     CRM_ASSERT(dst);		
     dst->name = strdup(src->name);		
     dst->value = src->value?strdup(src->value):NULL;		
-    return (gpointer) dst;		
-}		
-
-static GListPtr		
-add_dup_envvar(crm_alert_entry_t *entrys,		
-               crm_alert_envvar_t *entry)		
-{		
-    entrys->envvars = g_list_prepend(entrys->envvars, copy_envvar_entry(entry, NULL));		
-    return entrys->envvars;
-}		
-
-GListPtr		
-crm_drop_envvars(crm_alert_entry_t *entry, int count)		
-{		
-    int i;		
-		
-    for (i = 0;		
-         (entry->envvars) && ((count < 0) || (i < count));		
-         i++) {		
-        free_envvar_entry((crm_alert_envvar_t *) g_list_first(entry->envvars)->data);		
-        entry->envvars = g_list_delete_link(entry->envvars,		
-                                         g_list_first(entry->envvars));		
-    }		
-    return entry->envvars;		
+    return dst;		
 }		
 
 static GListPtr		
@@ -148,16 +114,23 @@ copy_envvar_list_remove_dupes(crm_alert_entry_t *entry)
             }		
         }		
         if (!ld) {		
-            dst = g_list_prepend(dst,		
-                    copy_envvar_entry((crm_alert_envvar_t *)(ls->data), NULL));		
+            dst = g_list_prepend(dst, crm_dup_alert_envvar((crm_alert_envvar_t *)(ls->data)));
         }		
     }		
 
     return dst;		
 }		
 
-void		
-crm_add_dup_alert_list_entry(crm_alert_entry_t *entry)		
+/*!
+ * \internal
+ * \brief Duplicate an alert entry
+ *
+ * \param[in] entry  Alert entry to duplicate
+ *
+ * \return Duplicate of alert entry
+ */
+crm_alert_entry_t *
+crm_dup_alert_entry(crm_alert_entry_t *entry)
 {		
     crm_alert_entry_t *new_entry =		
         (crm_alert_entry_t *) calloc(1, sizeof(crm_alert_entry_t));		
@@ -177,35 +150,8 @@ crm_add_dup_alert_list_entry(crm_alert_entry_t *entry)
             copy_envvar_list_remove_dupes(entry)		
             :NULL		
     };		
-    crm_alert_list = g_list_prepend(crm_alert_list, new_entry);		
+    return new_entry;
 }		
-
-GListPtr		
-crm_get_envvars_from_cib(xmlNode *basenode, crm_alert_entry_t *entry, int *count)		
-{		
-    xmlNode *envvar;		
-    xmlNode *pair;		
-
-    if ((!basenode) ||		
-        (!(envvar = first_named_child(basenode, XML_TAG_ATTR_SETS)))) {		
-        return entry->envvars;		
-    }		
-
-    for (pair = first_named_child(envvar, XML_CIB_TAG_NVPAIR);		
-         pair; pair = __xml_next(pair)) {		
-
-        crm_alert_envvar_t envvar_entry = (crm_alert_envvar_t) {		
-            .name = (char *) crm_element_value(pair, XML_NVPAIR_ATTR_NAME),		
-            .value = (char *) crm_element_value(pair, XML_NVPAIR_ATTR_VALUE)		
-        };		
-        crm_trace("Found environment variable %s = '%s'", envvar_entry.name,		
-                  envvar_entry.value?envvar_entry.value:"");		
-        (*count)++;		
-        add_dup_envvar(entry, &envvar_entry);		
-    }		
-
-    return entry->envvars;		
-}
 
 void
 crm_set_alert_key(enum crm_alert_keys_e name, const char *value)

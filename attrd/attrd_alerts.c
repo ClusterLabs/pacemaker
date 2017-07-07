@@ -28,7 +28,8 @@
 #include <crm/pengine/rules_internal.h>
 #include <crm/lrmd_alerts_internal.h>
 
-GHashTable *alert_info_cache = NULL;
+static GListPtr attrd_alert_list = NULL;
+static GHashTable *alert_info_cache = NULL;
 
 lrmd_t *
 attrd_lrmd_connect(int max_retry, void callback(lrmd_event_data_t * op))
@@ -84,7 +85,8 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         goto bail;
     }
 
-    pe_unpack_alerts(crmalerts);
+    pe_free_alert_list(attrd_alert_list);
+    attrd_alert_list = pe_unpack_alerts(crmalerts);
 
   bail:
     crm_time_free(now);
@@ -185,7 +187,8 @@ attrd_alert_fini()
 }
 
 static int 
-exec_alerts(lrmd_t *lrmd, const char *kind, const char *attribute_name, lrmd_key_value_t * params, GListPtr alert_list, GHashTable *info_cache)
+exec_alerts(lrmd_t *lrmd, const char *kind, const char *attribute_name,
+            lrmd_key_value_t *params)
 {
     int call_id = 0;
     static int operations = 0;
@@ -195,7 +198,7 @@ exec_alerts(lrmd_t *lrmd, const char *kind, const char *attribute_name, lrmd_key
     params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_kind, kind);
     params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_version, VERSION);
 
-    for (l = g_list_first(alert_list); l; l = g_list_next(l)) {
+    for (l = g_list_first(attrd_alert_list); l; l = g_list_next(l)) {
         lrmd_rsc_info_t *rsc = NULL;
         crm_alert_entry_t *entry = (crm_alert_entry_t *)(l->data);
         char *timestamp = crm_time_format_hr(entry->tstamp_format, now);
@@ -307,8 +310,9 @@ attrd_alert_lrm_op_callback(lrmd_event_data_t * op)
     }
 }
 
-int 
-attrd_send_alerts(lrmd_t *lrmd, const char *node, uint32_t nodeid, const char *attribute_name, const char *attribute_value, GListPtr alert_list)
+int
+attrd_send_alerts(lrmd_t *lrmd, const char *node, uint32_t nodeid,
+                  const char *attribute_name, const char *attribute_value)
 {
     int ret = pcmk_ok;
     lrmd_key_value_t *params = NULL;
@@ -333,7 +337,7 @@ attrd_send_alerts(lrmd_t *lrmd, const char *node, uint32_t nodeid, const char *a
     params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_attribute_name, attribute_name);
     params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_attribute_value, attribute_value == NULL ? "null" : attribute_value);
 
-    ret = exec_alerts(lrmd, "attribute", attribute_name, params, alert_list, alert_info_cache); 
+    ret = exec_alerts(lrmd, "attribute", attribute_name, params);
     crm_trace("ret : %d, node : %s, nodeid: %s,  name: %s, value : %s", 
                   ret, node, crm_itoa(nodeid), attribute_name, attribute_value); 
 
@@ -372,7 +376,8 @@ send_alert_attributes_value(attribute_t *a, GHashTable *t)
     g_hash_table_iter_init(&vIter, t);
 
     while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & at)) {
-        call_id = attrd_send_alerts(the_lrmd, at->nodename, at->nodeid, a->id, at->current, crm_alert_list);
+        call_id = attrd_send_alerts(the_lrmd, at->nodename, at->nodeid, a->id,
+                                    at->current);
         crm_trace("call_id : %d, nodename : %s, nodeid: %d,  name: %s, value : %s", 
                   call_id, at->nodename, at->nodeid, a->id, at->current); 
     }

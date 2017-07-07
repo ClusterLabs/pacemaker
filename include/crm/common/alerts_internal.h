@@ -68,18 +68,14 @@ enum crm_alert_keys_e {
 #define CRM_ALERT_NODE_SEQUENCE "CRM_alert_node_sequence"
 #define CRM_ALERT_KIND_DEFAULT "node,fencing,resource"
 
-#if (HAVE_ATOMIC_ATTRD == 0)
-extern char *attrd_uname;
-#endif
-extern GListPtr crm_alert_list;
 extern guint crm_alert_max_alert_timeout;
 extern const char *crm_alert_keys[CRM_ALERT_INTERNAL_KEY_MAX][3];
 extern char **crm_alert_kind_default;
 
-void crm_free_alert_list(void);
-GListPtr crm_drop_envvars(crm_alert_entry_t *entry, int count);
-void crm_add_dup_alert_list_entry(crm_alert_entry_t *entry);
-GListPtr crm_get_envvars_from_cib(xmlNode *basenode, crm_alert_entry_t *entry, int *count);
+crm_alert_entry_t *crm_dup_alert_entry(crm_alert_entry_t *entry);
+crm_alert_envvar_t *crm_dup_alert_envvar(crm_alert_envvar_t *src);
+void crm_free_alert_entry(crm_alert_entry_t *entry);
+void crm_free_alert_envvar(crm_alert_envvar_t *entry);
 void crm_set_alert_key(enum crm_alert_keys_e name, const char *value);
 void crm_set_alert_key_int(enum crm_alert_keys_e name, int value);
 void crm_unset_alert_keys(void);
