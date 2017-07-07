@@ -69,7 +69,6 @@ extern "C" {
  * reason for a completed operationt */
 #define PCMK_OCF_REASON_PREFIX "ocf-exit-reason:"
 
-/* *INDENT-OFF* */
 enum lsb_exitcode {
     PCMK_LSB_OK                  = 0,
     PCMK_LSB_UNKNOWN_ERROR       = 1,
@@ -156,50 +155,44 @@ enum svc_action_flags {
     SVC_ACTION_LEAVE_GROUP = 0x01,
 };
 
-/* *INDENT-ON* */
+typedef struct svc_action_private_s svc_action_private_t;
+typedef struct svc_action_s {
+    char *id;
+    char *rsc;
+    char *action;
+    int interval;
 
-    typedef struct svc_action_private_s svc_action_private_t;
-    typedef struct svc_action_s {
-        char *id;
-        char *rsc;
-        char *action;
-        int interval;
+    char *standard;
+    char *provider;
+    char *agent;
 
-        char *standard;
-        char *provider;
-        char *agent;
+    int timeout;
+    GHashTable *params; /* used by OCF agents */
 
-        int timeout;
-        GHashTable *params;
+    int rc;
+    int pid;
+    int cancel;
+    int status;
+    int sequence;
+    int expected_rc;
+    int synchronous;
+    enum svc_action_flags flags;
 
-        int rc;
-        int pid;
-        int cancel;
-        int status;
-        int sequence;
-        int expected_rc;
-        int synchronous;
-        enum svc_action_flags flags;
+    char *stderr_data;
+    char *stdout_data;
 
-        char *stderr_data;
-        char *stdout_data;
-
-    /**
+    /*!
      * Data stored by the creator of the action.
      *
      * This may be used to hold data that is needed later on by a callback,
      * for example.
      */
-        void *cb_data;
+    void *cb_data;
 
-        svc_action_private_t *opaque;
+    svc_action_private_t *opaque;
 
-     /*
-      * Store a parameter of Alert.
-     */
-        GHashTable *alert_params;
-
-    } svc_action_t;
+    GHashTable *alert_params; /* used by alert agents */
+} svc_action_t;
 
 /**
  * \brief Get a list of files or directories in a given path
