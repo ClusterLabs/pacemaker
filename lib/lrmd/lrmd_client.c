@@ -2027,7 +2027,7 @@ lrmd_api_exec(lrmd_t * lrmd, const char *rsc_id, const char *action, const char 
 }
 
 static int
-lrmd_api_exec_alert(lrmd_t * lrmd, const char *alert_id,
+lrmd_api_exec_alert(lrmd_t *lrmd, const char *alert_id, const char *alert_path,
               int timeout,      /* ms */
               enum lrmd_call_options options, lrmd_key_value_t * params)
 {
@@ -2038,6 +2038,7 @@ lrmd_api_exec_alert(lrmd_t * lrmd, const char *alert_id,
 
     crm_xml_add(data, F_LRMD_ORIGIN, __FUNCTION__);
     crm_xml_add(data, F_LRMD_ALERT_ID, alert_id);
+    crm_xml_add(data, F_LRMD_ALERT_PATH, alert_path);
     crm_xml_add_int(data, F_LRMD_TIMEOUT, timeout);
 
     for (tmp = params; tmp; tmp = tmp->next) {

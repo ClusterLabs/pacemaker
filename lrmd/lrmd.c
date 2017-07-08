@@ -213,32 +213,6 @@ create_lrmd_cmd(xmlNode * msg, crm_client_t * client, lrmd_rsc_t *rsc)
     return cmd;
 }
 
-static lrmd_cmd_t *
-create_alert_cmd(xmlNode * msg, crm_client_t * client, lrmd_rsc_t *rsc)
-{
-    int call_options = 0;
-    xmlNode *rsc_xml = get_xpath_object("//" F_LRMD_ALERT, msg, LOG_ERR);
-    lrmd_cmd_t *cmd = NULL;
-
-    cmd = calloc(1, sizeof(lrmd_cmd_t));
-
-    crm_element_value_int(msg, F_LRMD_CALLOPTS, &call_options);
-    cmd->call_opts = call_options;
-    cmd->client_id = strdup(client->id);
-
-    crm_element_value_int(msg, F_LRMD_CALLID, &cmd->call_id);
-    crm_element_value_int(rsc_xml, F_LRMD_TIMEOUT, &cmd->timeout);
-    cmd->timeout_orig = cmd->timeout;
-
-    cmd->origin = crm_element_value_copy(rsc_xml, F_LRMD_ORIGIN);
-    cmd->action = strdup("start");
-    cmd->rsc_id = crm_element_value_copy(rsc_xml, F_LRMD_ALERT_ID);
-
-    cmd->params = xml2list(rsc_xml);
-
-    return cmd;
-}
-
 static void
 free_lrmd_cmd(lrmd_cmd_t * cmd)
 {
@@ -1234,26 +1208,7 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
         }
     }
 
-    if (safe_str_eq(rsc->class, PCMK_ALERT_CLASS)) {
-        /* In the case of Alert, lrmd always set rsc->type from CRM_alert_path parameter. */
-        void *value_lookup = g_hash_table_lookup(params_copy, CRM_ALERT_KEY_PATH);
-        if (value_lookup != NULL) { 
-            static int alert_sequence_no = 0;
-            const char **key;
-
-            action = services_action_create_generic((char*)value_lookup, NULL);
-            action->action = strdup(cmd->action);
-            action->timeout = cmd->timeout;
-            action->id = strdup(rsc->rsc_id);
-            action->params = params_copy;
-            action->sequence = ++alert_sequence_no;
-            for (key = crm_alert_keys[CRM_alert_node_sequence]; *key; key++) {
-                g_hash_table_insert(action->params, strdup(*key),
-                                    crm_itoa(action->sequence));
-            }
-
-        } 
-    } else if (cmd->isolation_wrapper) {
+    if (cmd->isolation_wrapper) {
         g_hash_table_remove(params_copy, "CRM_meta_isolation_wrapper");
         action = resources_action_create(rsc->rsc_id,
                                          PCMK_RESOURCE_CLASS_OCF,
@@ -1585,35 +1540,56 @@ process_lrmd_rsc_exec(crm_client_t * client, uint32_t id, xmlNode * request)
     return call_id;
 }
 
+struct alert_cb_s {
+    char *client_id;
+};
+
+static void
+alert_complete(svc_action_t *action)
+{
+    struct alert_cb_s *cb_data = (struct alert_cb_s *) (action->cb_data);
+
+    crm_debug("Alert pid %d for %s completed with rc=%d",
+              action->pid, cb_data->client_id, action->rc);
+
+    free(cb_data->client_id);
+    free(action->cb_data);
+    action->cb_data = NULL;
+}
+
 static int
 process_lrmd_alert_exec(crm_client_t * client, uint32_t id, xmlNode * request)
 {
-    lrmd_rsc_t *alert = NULL;
-    lrmd_cmd_t *cmd = NULL;
+    static int alert_sequence_no = 0;
+
     xmlNode *alert_xml = get_xpath_object("//" F_LRMD_ALERT, request, LOG_ERR);
     const char *alert_id = crm_element_value(alert_xml, F_LRMD_ALERT_ID);
-    int call_id;
+    const char *alert_path = crm_element_value(alert_xml, F_LRMD_ALERT_PATH);
+    svc_action_t *action = NULL;
+    int alert_timeout = 0;
+    GHashTable *params = NULL;
+    struct alert_cb_s *cb_data;
 
-    if (!alert_id) {
+    if ((alert_id == NULL) || (alert_path == NULL)) {
         return -EINVAL;
     }
+    crm_element_value_int(alert_xml, F_LRMD_TIMEOUT, &alert_timeout);
 
-    alert = g_hash_table_lookup(rsc_list, alert_id);
-    if (alert == NULL) {
-        crm_info("Alert '%s' not found (%d active resources)",
-                 alert_id, g_hash_table_size(rsc_list));
-        return -ENODEV;
+    crm_info("Executing alert %s for %s", alert_id, client->id);
+
+    params = xml2list(alert_xml);
+    crm_insert_alert_key_int(params, CRM_alert_node_sequence,
+                             ++alert_sequence_no);
+
+    cb_data = calloc(1, sizeof(struct alert_cb_s));
+    cb_data->client_id = strdup(client->id);
+
+    action = services_alert_create(alert_id, alert_path, alert_timeout, params,
+                                   alert_sequence_no, cb_data);
+    if (services_alert_async(action, alert_complete) == FALSE) {
+        services_action_free(action);
     }
-
-    call_id = pcmk_ok;
-    cmd = create_alert_cmd(request, client, alert);
-    call_id = cmd->call_id;
-
-    /* Don't reference cmd after handing it off to be scheduled.
-     * The cmd could get merged and freed. */
-    schedule_lrmd_cmd(alert, cmd);
-
-    return call_id;
+    return pcmk_ok;
 }
 
 static int

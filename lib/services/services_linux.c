@@ -174,30 +174,15 @@ set_ocf_env_with_prefix(gpointer key, gpointer value, gpointer user_data)
     set_ocf_env(buffer, value, user_data);
 }
 
-static void
-set_alert_env(gpointer key, gpointer value, gpointer user_data)
-{
-    set_ocf_env((char*)key, value, user_data);
-}
-
 /*!
  * \internal
  * \brief Add environment variables suitable for an action
  *
  * \param[in] op  Action to use
- *
- * \note Environment variables are added only for alerts and OCF agents.
  */
 static void
 add_action_env_vars(const svc_action_t *op)
 {
-    if (safe_str_eq(op->standard, PCMK_ALERT_CLASS)) {
-        if (op->params) {
-            g_hash_table_foreach(op->params, set_alert_env, NULL);
-        }
-        return;
-    }
-
     if (safe_str_eq(op->standard, PCMK_RESOURCE_CLASS_OCF) == FALSE) {
         return;
     }

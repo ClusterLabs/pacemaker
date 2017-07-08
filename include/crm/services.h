@@ -61,7 +61,6 @@ extern "C" {
 #define PCMK_RESOURCE_CLASS_HB      "heartbeat"
 #define PCMK_RESOURCE_CLASS_NAGIOS  "nagios"
 #define PCMK_RESOURCE_CLASS_STONITH "stonith"
-#define PCMK_ALERT_CLASS            "alert"
 
 /* This is the string passed in the OCF_EXIT_REASON_PREFIX
  * environment variable. The stderr output that occurs
@@ -314,6 +313,13 @@ typedef struct svc_action_s {
     gboolean services_action_async(svc_action_t * op, void (*action_callback) (svc_action_t *));
 
     gboolean services_action_cancel(const char *name, const char *action, int interval);
+
+/* functions for alert agents */
+svc_action_t *services_alert_create(const char *id, const char *exec,
+                                   int timeout, GHashTable *params,
+                                   int sequence, void *cb_data);
+gboolean services_alert_async(svc_action_t *action,
+                              void (*cb)(svc_action_t *op));
 
     static inline const char *services_lrm_status_str(enum op_status status) {
         switch (status) {

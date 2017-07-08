@@ -29,7 +29,6 @@
 #include <crm/lrmd_alerts_internal.h>
 
 static GListPtr attrd_alert_list = NULL;
-static GHashTable *alert_info_cache = NULL;
 
 lrmd_t *
 attrd_lrmd_connect(int max_retry, void callback(lrmd_event_data_t * op))
@@ -175,11 +174,6 @@ attrd_cib_updated_cb(const char *event, xmlNode * msg)
 void 
 attrd_alert_fini()
 {
-    if (alert_info_cache) {
-        g_hash_table_destroy(alert_info_cache);
-        alert_info_cache = NULL;
-    }
-
     if (crm_alert_kind_default) {
        g_strfreev(crm_alert_kind_default);
        crm_alert_kind_default = NULL;
@@ -190,7 +184,7 @@ static int
 exec_alerts(lrmd_t *lrmd, const char *kind, const char *attribute_name,
             lrmd_key_value_t *params)
 {
-    int call_id = 0;
+    int rc = pcmk_ok;
     GListPtr l;
     crm_time_hr_t *now = crm_time_hr_new(NULL);
     
@@ -198,7 +192,6 @@ exec_alerts(lrmd_t *lrmd, const char *kind, const char *attribute_name,
     params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_version, VERSION);
 
     for (l = g_list_first(attrd_alert_list); l; l = g_list_next(l)) {
-        lrmd_rsc_info_t *rsc = NULL;
         crm_alert_entry_t *entry = (crm_alert_entry_t *)(l->data);
         char *timestamp = crm_time_format_hr(entry->tstamp_format, now);
         lrmd_key_value_t * copy_params = NULL;
@@ -218,22 +211,8 @@ exec_alerts(lrmd_t *lrmd, const char *kind, const char *attribute_name,
             continue;
         }
 
-        crm_info("Sending '%s' alert to '%s' via '%s'", kind, entry->recipient, entry->path);
-
-        rsc = g_hash_table_lookup(alert_info_cache, entry->id);
-        if (rsc == NULL) {
-            rsc = lrmd->cmds->get_rsc_info(lrmd, entry->id, 0);
-            if (!rsc) {
-                lrmd->cmds->register_rsc(lrmd, entry->id, PCMK_ALERT_CLASS,  "pacemaker", entry->path, lrmd_opt_drop_recurring);
-                rsc = lrmd->cmds->get_rsc_info(lrmd, entry->id, 0);
-                if (!rsc) {
-                    crm_err("Could not add alert %s : %s", entry->id, entry->path);
-                    return -1; 
-                }
-                /* cache the result */
-                g_hash_table_insert(alert_info_cache, entry->id, rsc);
-            }
-        }
+        crm_info("Sending %s alert to %s via %s",
+                 kind, entry->recipient, entry->id);
 
         /* Because there is a parameter to turn into every transmission, Copy a parameter. */
         head = params;
@@ -249,11 +228,12 @@ exec_alerts(lrmd_t *lrmd, const char *kind, const char *attribute_name,
 
         lrmd_set_alert_envvar_to_lrmd_params(copy_params, entry);
         
-        call_id = lrmd->cmds->exec_alert(lrmd, strdup(entry->id), entry->timeout, lrmd_opt_notify_orig_only, copy_params);
-        if (call_id <= 0) {
-            crm_err("Operation %s on %s failed: %d", "start", rsc->id, call_id);
-        } else {
-            crm_info("Operation %s on %s compete: %d", "start", rsc->id, call_id);
+        rc = lrmd->cmds->exec_alert(lrmd, entry->id, entry->path,
+                                    entry->timeout, lrmd_opt_notify_orig_only,
+                                    copy_params);
+        if (rc < 0) {
+            crm_err("Could not execute alert %s: %s " CRM_XS " rc=%d",
+                    entry->id, pcmk_strerror(rc), rc);
         }
 
         free(timestamp);
@@ -263,15 +243,7 @@ exec_alerts(lrmd_t *lrmd, const char *kind, const char *attribute_name,
         free(now);
     }
 
-    return call_id;
-}
-
-static void
-free_alert_info(gpointer value)
-{
-    lrmd_rsc_info_t *rsc_info = value;
-
-    lrmd_free_rsc_info(rsc_info);
+    return rc;
 }
 
 static void
@@ -323,11 +295,6 @@ attrd_send_alerts(lrmd_t *lrmd, const char *node, uint32_t nodeid,
 
     crm_trace("LRMD connection active");
 
-    if (alert_info_cache == NULL) {
-        alert_info_cache = g_hash_table_new_full(crm_str_hash,
-                                                g_str_equal, NULL, free_alert_info);
-    }
-   
     params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_node, node);
     params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_nodeid, crm_itoa(nodeid));
     params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_attribute_name, attribute_name);
