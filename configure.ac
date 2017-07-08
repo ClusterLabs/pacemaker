@@ -554,7 +554,7 @@ AC_PATH_PROGS(SCP, scp, /usr/bin/scp)
 AC_PATH_PROGS(TAR, tar)
 AC_PATH_PROGS(MD5, md5)
 AC_PATH_PROGS(TEST, test)
-AC_PATH_PROGS(PKGCONFIG, pkg-config)
+PKG_PROG_PKG_CONFIG
 AC_PATH_PROGS(XML2CONFIG, xml2-config)
 AC_PATH_PROGS(VALGRIND_BIN, valgrind, /usr/bin/valgrind)
 AC_DEFINE_UNQUOTED(VALGRIND_BIN, "$VALGRIND_BIN", Valgrind command)
@@ -695,20 +695,20 @@ if test "x$ac_cv_func_uuid_unparse" != xyes; then
    AC_MSG_ERROR(You do not have the libuuid development package installed)
 fi
 
-if test x"${PKGCONFIG}" = x""; then
+if test x"${PKG_CONFIG}" = x""; then
    AC_MSG_ERROR(You need pkgconfig installed in order to build ${PACKAGE})
 fi
 
 if
-   $PKGCONFIG --exists glib-2.0
+   $PKG_CONFIG --exists glib-2.0
 then
-	GLIBCONFIG="$PKGCONFIG glib-2.0"
+	GLIBCONFIG="$PKG_CONFIG glib-2.0"
 else
 	set -x
         echo PKG_CONFIG_PATH=$PKG_CONFIG_PATH
-	$PKGCONFIG --exists glib-2.0; echo $?
-	$PKGCONFIG --cflags glib-2.0; echo $?
-	$PKGCONFIG glib-2.0; echo $?
+	$PKG_CONFIG --exists glib-2.0; echo $?
+	$PKG_CONFIG --cflags glib-2.0; echo $?
+	$PKG_CONFIG glib-2.0; echo $?
 	set +x
 
 	AC_MSG_ERROR(You need glib2-devel installed in order to build ${PACKAGE})
@@ -903,14 +903,14 @@ if test "$ac_cv_header_ncurses_h" = "yes"; then
   AC_CHECK_LIB(ncurses, printw,
     [AC_DEFINE(HAVE_LIBNCURSES,1, have ncurses library)]
   )
-  CURSESLIBS=`$PKGCONFIG --libs ncurses` || CURSESLIBS='-lncurses'
+  CURSESLIBS=`$PKG_CONFIG --libs ncurses` || CURSESLIBS='-lncurses'
 fi
 
 if test "$ac_cv_header_ncurses_ncurses_h" = "yes"; then
   AC_CHECK_LIB(ncurses, printw,
     [AC_DEFINE(HAVE_LIBNCURSES,1, have ncurses library)]
   )
-  CURSESLIBS=`$PKGCONFIG --libs ncurses` || CURSESLIBS='-lncurses'
+  CURSESLIBS=`$PKG_CONFIG --libs ncurses` || CURSESLIBS='-lncurses'
 fi
 
 dnl Only look for non-n-library if there was no n-library.
@@ -1191,10 +1191,10 @@ AC_DEFINE_UNQUOTED(SUPPORT_DBUS, $HAVE_dbus, Support dbus)
 AM_CONDITIONAL(BUILD_DBUS, test $HAVE_dbus = 1)
 
 if test $HAVE_dbus = 1; then
-   CFLAGS="$CFLAGS `$PKGCONFIG --cflags dbus-1`"
+   CFLAGS="$CFLAGS `$PKG_CONFIG --cflags dbus-1`"
 fi
 
-DBUS_LIBS="$CFLAGS `$PKGCONFIG --libs dbus-1`"
+DBUS_LIBS="$CFLAGS `$PKG_CONFIG --libs dbus-1`"
 AC_SUBST(DBUS_LIBS)
 
 AC_CHECK_TYPES([DBusBasicValue],,,[[#include <dbus/dbus.h>]])
@@ -1726,7 +1726,7 @@ SERVICELOG=servicelog-1
 SERVICELOG_EXISTS="no"
 AC_MSG_CHECKING(for $SERVICELOG packages)
 if
-    $PKGCONFIG --exists $SERVICELOG
+    $PKG_CONFIG --exists $SERVICELOG
 then
     PKG_CHECK_MODULES([SERVICELOG], [servicelog-1])
     SERVICELOG_EXISTS="yes"
@@ -1739,7 +1739,7 @@ OPENIPMI="OpenIPMI OpenIPMIposix"
 OPENIPMI_SERVICELOG_EXISTS="no"
 AC_MSG_CHECKING(for $SERVICELOG $OPENIPMI packages)
 if
-    $PKGCONFIG --exists $OPENIPMI $SERVICELOG
+    $PKG_CONFIG --exists $OPENIPMI $SERVICELOG
 then
     PKG_CHECK_MODULES([OPENIPMI_SERVICELOG],[OpenIPMI OpenIPMIposix])
     OPENIPMI_SERVICELOG_EXISTS="yes"
