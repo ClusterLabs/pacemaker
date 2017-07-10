@@ -192,6 +192,30 @@ crm_unset_alert_keys()
 }
 
 void
+crm_insert_alert_key(GHashTable *table, enum crm_alert_keys_e name,
+                     const char *value)
+{
+    for (const char **key = crm_alert_keys[name]; *key; key++) {
+        crm_trace("Inserting alert key %s = '%s'", *key, value);
+        if (value) {
+            g_hash_table_insert(table, strdup(*key), strdup(value));
+        } else {
+            g_hash_table_remove(table, *key);
+        }
+    }
+}
+
+void
+crm_insert_alert_key_int(GHashTable *table, enum crm_alert_keys_e name,
+                         int value)
+{
+    for (const char **key = crm_alert_keys[name]; *key; key++) {
+        crm_trace("Inserting alert key %s = %d", *key, value);
+        g_hash_table_insert(table, strdup(*key), crm_itoa(value));
+    }
+}
+
+void
 crm_set_envvar_list(crm_alert_entry_t *entry)
 {
     GListPtr l;
