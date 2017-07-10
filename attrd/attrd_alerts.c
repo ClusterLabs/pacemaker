@@ -191,7 +191,6 @@ exec_alerts(lrmd_t *lrmd, const char *kind, const char *attribute_name,
             lrmd_key_value_t *params)
 {
     int call_id = 0;
-    static int operations = 0;
     GListPtr l;
     crm_time_hr_t *now = crm_time_hr_new(NULL);
     
@@ -244,11 +243,8 @@ exec_alerts(lrmd_t *lrmd, const char *kind, const char *attribute_name,
             head = p;
         }
 
-        operations++;
-
         copy_params = lrmd_key_value_add(copy_params, CRM_ALERT_KEY_PATH, entry->path);
         copy_params = lrmd_set_alert_key_to_lrmd_params(copy_params, CRM_alert_recipient, entry->recipient);
-        copy_params = lrmd_set_alert_key_to_lrmd_params(copy_params, CRM_alert_node_sequence, crm_itoa(operations));
         copy_params = lrmd_set_alert_key_to_lrmd_params(copy_params, CRM_alert_timestamp, timestamp);
 
         lrmd_set_alert_envvar_to_lrmd_params(copy_params, entry);

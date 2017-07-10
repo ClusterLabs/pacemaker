@@ -1238,16 +1238,20 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
         /* In the case of Alert, lrmd always set rsc->type from CRM_alert_path parameter. */
         void *value_lookup = g_hash_table_lookup(params_copy, CRM_ALERT_KEY_PATH);
         if (value_lookup != NULL) { 
+            static int alert_sequence_no = 0;
+            const char **key;
+
             action = services_action_create_generic((char*)value_lookup, NULL);
             action->action = strdup(cmd->action);
             action->timeout = cmd->timeout;
             action->id = strdup(rsc->rsc_id);
             action->params = params_copy;
-
-            value_lookup = g_hash_table_lookup(params_copy, CRM_ALERT_NODE_SEQUENCE);        
-            if (value_lookup != NULL) {
-                action->sequence = crm_atoi(value_lookup, "");
+            action->sequence = ++alert_sequence_no;
+            for (key = crm_alert_keys[CRM_alert_node_sequence]; *key; key++) {
+                g_hash_table_insert(action->params, strdup(*key),
+                                    crm_itoa(action->sequence));
             }
+
         } 
     } else if (cmd->isolation_wrapper) {
         g_hash_table_remove(params_copy, "CRM_meta_isolation_wrapper");
