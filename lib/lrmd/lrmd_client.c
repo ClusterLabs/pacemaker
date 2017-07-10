@@ -474,7 +474,8 @@ lrmd_dispatch(lrmd_t * lrmd)
 }
 
 static xmlNode *
-lrmd_create_op(const char *token, const char *op, xmlNode * data, enum lrmd_call_options options)
+lrmd_create_op(const char *token, const char *op, xmlNode *data, int timeout,
+               enum lrmd_call_options options)
 {
     xmlNode *op_msg = create_xml_node(NULL, "lrmd_command");
 
@@ -482,17 +483,18 @@ lrmd_create_op(const char *token, const char *op, xmlNode * data, enum lrmd_call
     CRM_CHECK(token != NULL, return NULL);
 
     crm_xml_add(op_msg, F_XML_TAGNAME, "lrmd_command");
-
     crm_xml_add(op_msg, F_TYPE, T_LRMD);
     crm_xml_add(op_msg, F_LRMD_CALLBACK_TOKEN, token);
     crm_xml_add(op_msg, F_LRMD_OPERATION, op);
-    crm_trace("Sending call options: %.8lx, %d", (long)options, options);
+    crm_xml_add_int(op_msg, F_LRMD_TIMEOUT, timeout);
     crm_xml_add_int(op_msg, F_LRMD_CALLOPTS, options);
 
     if (data != NULL) {
         add_message_xml(op_msg, F_LRMD_CALLDATA, data);
     }
 
+    crm_trace("Created lrmd %s command with call options %.8lx (%d)",
+              op, (long)options, options);
     return op_msg;
 }
 
@@ -794,12 +796,28 @@ lrmd_api_is_connected(lrmd_t * lrmd)
     return 0;
 }
 
+/*!
+ * \internal
+ * \brief Send a prepared API command to the lrmd server
+ *
+ * \param[in]  lrmd          Existing connection to the lrmd server
+ * \param[in]  op            Name of API command to send
+ * \param[in]  data          Command data XML to add to the sent command
+ * \param[out] output_data   If expecting a reply, it will be stored here
+ * \param[in]  timeout       Timeout in milliseconds (if 0, defaults to 1000);
+ *                           will be added to the command XML
+ * \param[in]  call_options  Call options to pass to server when sending
+ * \param[in]  expect_reply  If TRUE, wait for a reply from the server;
+ *                           must be TRUE for IPC (as opposed to TLS) clients
+ *
+ * \return pcmk_ok on success, -errno on error
+ */
 static int
-lrmd_send_command(lrmd_t * lrmd, const char *op, xmlNode * data, xmlNode ** output_data, int timeout,   /* ms. defaults to 1000 if set to 0 */
+lrmd_send_command(lrmd_t *lrmd, const char *op, xmlNode *data,
+                  xmlNode **output_data, int timeout,
                   enum lrmd_call_options options, gboolean expect_reply)
-{                               /* TODO we need to reduce usage of this boolean */
+{
     int rc = pcmk_ok;
-    int reply_id = -1;
     lrmd_private_t *native = lrmd->private;
     xmlNode *op_msg = NULL;
     xmlNode *op_reply = NULL;
@@ -817,13 +835,11 @@ lrmd_send_command(lrmd_t * lrmd, const char *op, xmlNode * data, xmlNode ** outp
         );
     crm_trace("sending %s op to lrmd", op);
 
-    op_msg = lrmd_create_op(native->token, op, data, options);
+    op_msg = lrmd_create_op(native->token, op, data, timeout, options);
 
     if (op_msg == NULL) {
         return -EINVAL;
     }
-
-    crm_xml_add_int(op_msg, F_LRMD_TIMEOUT, timeout);
 
     if (expect_reply) {
         rc = lrmd_send_xml(lrmd, op_msg, timeout, &op_reply);
@@ -843,7 +859,6 @@ lrmd_send_command(lrmd_t * lrmd, const char *op, xmlNode * data, xmlNode ** outp
     }
 
     rc = pcmk_ok;
-    crm_element_value_int(op_reply, F_LRMD_CALLID, &reply_id);
     crm_trace("%s op reply received", op);
     if (crm_element_value_int(op_reply, F_LRMD_RC, &rc) != 0) {
         rc = -ENOMSG;
