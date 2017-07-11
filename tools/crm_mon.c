@@ -555,11 +555,6 @@ main(int argc, char **argv)
     signal(SIGCLD, SIG_IGN);
 #endif
 
-    if (strcmp(crm_system_name, "crm_mon.cgi") == 0) {
-        output_format = mon_output_cgi;
-        one_shot = TRUE;
-    }
-
     while (1) {
         flag = crm_get_option(argc, argv, &option_index);
         if (flag == -1)
