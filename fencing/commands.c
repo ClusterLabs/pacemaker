@@ -509,7 +509,6 @@ free_device(gpointer data)
 
         crm_warn("Removal of device '%s' purged operation %s", device->id, cmd->action);
         cmd->done_cb(0, -ENODEV, NULL, cmd);
-        free_async_command(cmd);
     }
     g_list_free(device->pending_ops);
 
