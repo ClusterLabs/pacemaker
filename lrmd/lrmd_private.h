@@ -112,4 +112,5 @@ int ipc_proxy_shutdown_req(crm_client_t *ipc_proxy);
 #endif
 
 int process_lrmd_alert_exec(crm_client_t *client, uint32_t id, xmlNode *request);
+void lrmd_drain_alerts(GMainContext *ctx);
 #endif
