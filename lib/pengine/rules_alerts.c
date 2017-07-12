@@ -74,15 +74,40 @@ get_meta_attrs_from_cib(xmlNode *basenode, crm_alert_entry_t *entry,
 
     value = g_hash_table_lookup(config_hash, XML_ALERT_ATTR_SELECT_KIND);
     if (value) {
-        entry->select_kind_orig = (char *) value;
-        entry->select_kind = g_strsplit((char *) value, ",", 0);
-        crm_trace("Found select_kind string '%s'", (char *) value);
+        int n = 0;
+        uint32_t flags = crm_alert_none;
+
+        crm_debug("Alert %s has event filter: %s", entry->id, value);
+        while (*value != 0) {
+            while (*value == ',') {
+                ++value;
+            }
+            n = 0;
+            while ((value[n] != ',') && (value[n] != 0)) {
+                ++n;
+            }
+            if (!strncmp(value, "node", n)) {
+                flags |= crm_alert_node;
+            } else if (!strncmp(value, "fencing", n)) {
+                flags |= crm_alert_fencing;
+            } else if (!strncmp(value, "resource", n)) {
+                flags |= crm_alert_resource;
+            } else if (!strncmp(value, "attribute", n)) {
+                flags |= crm_alert_attribute;
+            } else {
+                crm_warn("Unrecognized alert type '%s' for %s", value, entry->id);
+            }
+            value += n;
+        }
+        if (flags) {
+            entry->flags = flags;
+        }
     }
 
     value = g_hash_table_lookup(config_hash,
                                 XML_ALERT_ATTR_SELECT_ATTRIBUTE_NAME);
     if (value) {
-        entry->select_attribute_name_orig = (char*) value;
+        crm_debug("Alert %s has attribute filter: %s", entry->id, value);
         entry->select_attribute_name = g_strsplit((char*) value, ",", 0);
         crm_trace("Found attribute_name string '%s'", (char *) value);
     }
@@ -154,9 +179,6 @@ pe_unpack_alerts(xmlNode *alerts)
     GListPtr alert_list = NULL;
 
     crm_alert_max_alert_timeout = CRM_ALERT_DEFAULT_TIMEOUT_MS;
-    if (crm_alert_kind_default == NULL) {
-        crm_alert_kind_default = g_strsplit(CRM_ALERT_KIND_DEFAULT, ",", 0);
-    }
 
     if (alerts) {
 #ifdef RHEL7_COMPAT
@@ -172,9 +194,7 @@ pe_unpack_alerts(xmlNode *alerts)
                 .path = notify_script,
                 .timeout = CRM_ALERT_DEFAULT_TIMEOUT_MS,
                 .recipient = notify_target,
-                .select_kind_orig = NULL,
-                .select_kind = NULL,
-                .select_attribute_name_orig = NULL,
+                .flags = crm_alert_default,
                 .select_attribute_name = NULL
             };
             alert_list = g_list_prepend(alert_list,
@@ -197,20 +217,15 @@ pe_unpack_alerts(xmlNode *alerts)
             .path = (char *) crm_element_value(alert, XML_ALERT_ATTR_PATH),
             .timeout = CRM_ALERT_DEFAULT_TIMEOUT_MS,
             .tstamp_format = (char *) CRM_ALERT_DEFAULT_TSTAMP_FORMAT,
-            .select_kind_orig = NULL,
-            .select_kind = NULL,
-            .select_attribute_name_orig = NULL,
+            .flags = crm_alert_default,
             .select_attribute_name = NULL
         };
 
         get_envvars_from_cib(alert, &entry, &envvars);
         config_hash = get_meta_attrs_from_cib(alert, &entry, &max_timeout);
 
-        crm_debug("Found alert %s with path=%s timeout=%d tstamp_format=%s "
-                  "select_kind=%s select_attribute_name=%s "
-                  "%d additional environment variables",
+        crm_debug("Alert %s: path=%s timeout=%dms tstamp-format='%s' %d vars",
                   entry.id, entry.path, entry.timeout, entry.tstamp_format,
-                  entry.select_kind_orig, entry.select_attribute_name_orig,
                   envvars);
 
         for (recipient = first_named_child(alert, XML_CIB_TAG_ALERT_RECIPIENT);

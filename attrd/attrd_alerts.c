@@ -171,48 +171,40 @@ attrd_cib_updated_cb(const char *event, xmlNode * msg)
 
 }
 
-void 
-attrd_alert_fini()
-{
-    if (crm_alert_kind_default) {
-       g_strfreev(crm_alert_kind_default);
-       crm_alert_kind_default = NULL;
-    }
-}
-
 static int 
-exec_alerts(lrmd_t *lrmd, const char *kind, const char *attribute_name,
+exec_alerts(lrmd_t *lrmd, enum crm_alert_flags kind, const char *attribute_name,
             lrmd_key_value_t *params)
 {
     int rc = pcmk_ok;
     GListPtr l;
     crm_time_hr_t *now = crm_time_hr_new(NULL);
     
-    params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_kind, kind);
+    params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_kind,
+                                               crm_alert_flag2text(kind));
     params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_version, VERSION);
 
     for (l = g_list_first(attrd_alert_list); l; l = g_list_next(l)) {
         crm_alert_entry_t *entry = (crm_alert_entry_t *)(l->data);
-        char *timestamp = crm_time_format_hr(entry->tstamp_format, now);
+        char *timestamp;
         lrmd_key_value_t * copy_params = NULL;
         lrmd_key_value_t *head, *p;
 
-        if (crm_is_target_alert(entry->select_kind == NULL ? crm_alert_kind_default : entry->select_kind, kind) == FALSE) {
-            crm_trace("Cannot sending '%s' alert to '%s' via '%s'(select_kind=%s)", kind, entry->recipient, entry->path, 
-                entry->select_kind == NULL ? CRM_ALERT_KIND_DEFAULT : entry->select_kind_orig);
-            free(timestamp);
+        if (is_not_set(entry->flags, kind)) {
+            crm_trace("Filtering unwanted %s alert to %s via %s",
+                      crm_alert_flag2text(kind), entry->recipient, entry->id);
             continue;
         }
 
-        if (crm_is_target_alert(entry->select_attribute_name, attribute_name) == FALSE) {
-            crm_trace("Cannot sending '%s' alert to '%s' via '%s'(select_attribute_name=%s attribute_name=%s)", kind, entry->recipient, entry->path, 
-                entry->select_attribute_name_orig, attribute_name);
-            free(timestamp);
+        if ((kind == crm_alert_attribute)
+            && !crm_is_target_alert(entry->select_attribute_name, attribute_name)) {
+
+            crm_trace("Filtering unwanted attribute '%s' alert to %s via %s",
+                      attribute_name, entry->recipient, entry->id);
             continue;
         }
 
         crm_info("Sending %s alert to %s via %s",
-                 kind, entry->recipient, entry->id);
+                 crm_alert_flag2text(kind), entry->recipient, entry->id);
 
         /* Because there is a parameter to turn into every transmission, Copy a parameter. */
         head = params;
@@ -221,6 +213,8 @@ exec_alerts(lrmd_t *lrmd, const char *kind, const char *attribute_name,
             copy_params = lrmd_key_value_add(copy_params, head->key, head->value);
             head = p;
         }
+
+        timestamp = crm_time_format_hr(entry->tstamp_format, now);
 
         copy_params = lrmd_key_value_add(copy_params, CRM_ALERT_KEY_PATH, entry->path);
         copy_params = lrmd_set_alert_key_to_lrmd_params(copy_params, CRM_alert_recipient, entry->recipient);
@@ -300,7 +294,7 @@ attrd_send_alerts(lrmd_t *lrmd, const char *node, uint32_t nodeid,
     params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_attribute_name, attribute_name);
     params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_attribute_value, attribute_value == NULL ? "null" : attribute_value);
 
-    ret = exec_alerts(lrmd, "attribute", attribute_name, params);
+    ret = exec_alerts(lrmd, crm_alert_attribute, attribute_name, params);
     crm_trace("ret : %d, node : %s, nodeid: %s,  name: %s, value : %s", 
                   ret, node, crm_itoa(nodeid), attribute_name, attribute_value); 
 

@@ -23,7 +23,6 @@
 #include <crm/common/alerts_internal.h>
 
 guint crm_alert_max_alert_timeout = CRM_ALERT_DEFAULT_TIMEOUT_MS;
-char **crm_alert_kind_default = NULL;
 
 /*		
  * to allow script compatibility we can have more than one		
@@ -65,12 +64,6 @@ crm_free_alert_entry(crm_alert_entry_t *entry)
     free(entry->tstamp_format);		
     free(entry->recipient);		
 
-    free(entry->select_kind_orig);
-    if (entry->select_kind) {
-        g_strfreev(entry->select_kind);
-    }
-
-    free(entry->select_attribute_name_orig);
     if(entry->select_attribute_name) {
         g_strfreev(entry->select_attribute_name);
     }
@@ -142,9 +135,7 @@ crm_dup_alert_entry(crm_alert_entry_t *entry)
         .timeout = entry->timeout,		
         .tstamp_format = entry->tstamp_format?strdup(entry->tstamp_format):NULL,		
         .recipient = entry->recipient?strdup(entry->recipient):NULL,		
-        .select_kind_orig = entry->select_kind_orig?g_strdup(entry->select_kind_orig):NULL,		
-        .select_kind = entry->select_kind?g_strdupv(entry->select_kind):NULL,		
-        .select_attribute_name_orig = entry->select_attribute_name_orig?g_strdup(entry->select_attribute_name_orig):NULL,		
+        .flags = entry->flags,
         .select_attribute_name = entry->select_attribute_name?g_strdupv(entry->select_attribute_name):NULL,		
         .envvars = entry->envvars?		
             copy_envvar_list_remove_dupes(entry)		
