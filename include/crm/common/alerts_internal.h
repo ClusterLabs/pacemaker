@@ -18,6 +18,9 @@
 
 #ifndef ALERT_INTERNAL_H
 #define ALERT_INTERNAL_H
+
+#include <glib.h>
+
 /* Default-Timeout to use before killing a alerts script (in milliseconds) */
 #  define CRM_ALERT_DEFAULT_TIMEOUT_MS (30000)
 
@@ -44,7 +47,7 @@ typedef struct {
     char *tstamp_format;
     char *recipient;
     char **select_attribute_name;
-    GListPtr envvars;
+    GHashTable *envvars;
     int timeout;
     uint32_t flags;
 } crm_alert_entry_t;
@@ -79,6 +82,7 @@ extern const char *crm_alert_keys[CRM_ALERT_INTERNAL_KEY_MAX][3];
 
 crm_alert_entry_t *crm_dup_alert_entry(crm_alert_entry_t *entry);
 crm_alert_envvar_t *crm_dup_alert_envvar(crm_alert_envvar_t *src);
+crm_alert_entry_t *crm_alert_entry_new(const char *id, const char *path);
 void crm_free_alert_entry(crm_alert_entry_t *entry);
 void crm_free_alert_envvar(crm_alert_envvar_t *entry);
 void crm_set_alert_key(enum crm_alert_keys_e name, const char *value);
@@ -108,5 +112,4 @@ crm_alert_flag2text(enum crm_alert_flags flag)
             return "unknown";
     }
 }
-
 #endif

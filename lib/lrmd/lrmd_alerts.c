@@ -45,19 +45,24 @@ lrmd_set_alert_key_to_lrmd_params(lrmd_key_value_t *head, enum crm_alert_keys_e 
     return head;
 }
 
-lrmd_key_value_t *
-lrmd_set_alert_envvar_to_lrmd_params(lrmd_key_value_t *head, crm_alert_entry_t *entry)
+static void
+set_ev_kv(gpointer key, gpointer value, gpointer user_data)
 {
-    GListPtr l;
+    lrmd_key_value_t **head = (lrmd_key_value_t **) user_data;
 
-    for (l = g_list_first(entry->envvars); l; l = g_list_next(l)) {
-        crm_alert_envvar_t *ev = (crm_alert_envvar_t *)(l->data);
+    if (value) {
+        crm_trace("Setting environment variable %s='%s'",
+                  (char*)key, (char*)value);
+        *head = lrmd_key_value_add(*head, key, value);
+    }
+}
 
-        if (ev->value) {
-            crm_trace("Setting environment variable %s='%s'",
-                      ev->name, ev->value);
-            head = lrmd_key_value_add(head, ev->name, ev->value);
-        }
+lrmd_key_value_t *
+lrmd_set_alert_envvar_to_lrmd_params(lrmd_key_value_t *head,
+                                     crm_alert_entry_t *entry)
+{
+    if (entry->envvars) {
+        g_hash_table_foreach(entry->envvars, set_ev_kv, &head);
     }
     return head;
 }
