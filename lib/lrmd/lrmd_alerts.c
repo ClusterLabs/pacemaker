@@ -45,7 +45,7 @@ lrmd_set_alert_key_to_lrmd_params(lrmd_key_value_t *head, enum crm_alert_keys_e 
     return head;
 }
 
-void
+lrmd_key_value_t *
 lrmd_set_alert_envvar_to_lrmd_params(lrmd_key_value_t *head, crm_alert_entry_t *entry)
 {
     GListPtr l;
@@ -55,8 +55,7 @@ lrmd_set_alert_envvar_to_lrmd_params(lrmd_key_value_t *head, crm_alert_entry_t *
 
         crm_trace("Setting environment variable %s = '%s'", ev->name,
                   ev->value?ev->value:"");
-        lrmd_key_value_add(head, ev->name, ev->value);
+        head = lrmd_key_value_add(head, ev->name, ev->value);
     }
-    
+    return head;
 }
-
