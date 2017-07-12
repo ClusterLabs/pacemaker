@@ -222,8 +222,7 @@ exec_alerts(lrmd_t *lrmd, enum crm_alert_flags kind, const char *attribute_name,
         copy_params = lrmd_set_alert_envvar_to_lrmd_params(copy_params, entry);
 
         rc = lrmd->cmds->exec_alert(lrmd, entry->id, entry->path,
-                                    entry->timeout, lrmd_opt_notify_orig_only,
-                                    copy_params);
+                                    entry->timeout, copy_params);
         if (rc < 0) {
             crm_err("Could not execute alert %s: %s " CRM_XS " rc=%d",
                     entry->id, pcmk_strerror(rc), rc);

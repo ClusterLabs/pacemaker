@@ -463,9 +463,9 @@ typedef struct lrmd_api_operations_s {
      * \retval call_id to track async event result on success
      * \retval negative error code on failure
      */
-    int (*exec_alert) (lrmd_t * lrmd, const char *alert_id,
+    int (*exec_alert) (lrmd_t *lrmd, const char *alert_id,
                        const char *alert_path, int timeout, /* ms */
-                 enum lrmd_call_options options, lrmd_key_value_t * params);    /* ownership of params is given up to api here */
+                       lrmd_key_value_t *params); /* ownership of params is given up to api here */
 
 } lrmd_api_operations_t;
 

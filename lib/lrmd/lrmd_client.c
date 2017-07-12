@@ -2012,10 +2012,10 @@ lrmd_api_exec(lrmd_t * lrmd, const char *rsc_id, const char *action, const char 
     return rc;
 }
 
+/* timeout is in ms */
 static int
 lrmd_api_exec_alert(lrmd_t *lrmd, const char *alert_id, const char *alert_path,
-              int timeout,      /* ms */
-              enum lrmd_call_options options, lrmd_key_value_t * params)
+                    int timeout, lrmd_key_value_t *params)
 {
     int rc = pcmk_ok;
     xmlNode *data = create_xml_node(NULL, F_LRMD_ALERT);
@@ -2031,7 +2031,8 @@ lrmd_api_exec_alert(lrmd_t *lrmd, const char *alert_id, const char *alert_path,
         hash2smartfield((gpointer) tmp->key, (gpointer) tmp->value, args);
     }
 
-    rc = lrmd_send_command(lrmd, LRMD_OP_ALERT_EXEC, data, NULL, timeout, options, TRUE);
+    rc = lrmd_send_command(lrmd, LRMD_OP_ALERT_EXEC, data, NULL, timeout,
+                           lrmd_opt_notify_orig_only, TRUE);
     free_xml(data);
 
     lrmd_key_value_freeall(params);
