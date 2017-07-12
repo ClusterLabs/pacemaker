@@ -161,12 +161,6 @@ build_rsc_from_xml(xmlNode * msg)
     return rsc;
 }
 
-static void
-dup_attr(gpointer key, gpointer value, gpointer user_data)
-{
-    g_hash_table_replace(user_data, strdup(key), strdup(value));
-}
-
 static lrmd_cmd_t *
 create_lrmd_cmd(xmlNode * msg, crm_client_t * client, lrmd_rsc_t *rsc)
 {
@@ -1198,14 +1192,7 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     }
 #endif
 
-    if (cmd->params) {
-        params_copy = g_hash_table_new_full(crm_str_hash,
-                                            g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
-
-        if (params_copy != NULL) {
-            g_hash_table_foreach(cmd->params, dup_attr, params_copy);
-        }
-    }
+    params_copy = crm_str_table_dup(cmd->params);
 
     if (cmd->isolation_wrapper) {
         g_hash_table_remove(params_copy, "CRM_meta_isolation_wrapper");

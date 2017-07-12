@@ -529,8 +529,7 @@ build_port_aliases(const char *hostmap, GListPtr * targets)
 {
     char *name = NULL;
     int last = 0, lpc = 0, max = 0, added = 0;
-    GHashTable *aliases =
-        g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, g_hash_destroy_str, g_hash_destroy_str);
+    GHashTable *aliases = crm_strcase_table_new();
 
     if (hostmap == NULL) {
         return aliases;
@@ -692,8 +691,7 @@ get_agent_metadata(const char *agent)
     char *buffer = NULL;
 
     if(metadata_cache == NULL) {
-        metadata_cache = g_hash_table_new_full(
-            crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+        metadata_cache = crm_str_table_new();
     }
 
     buffer = g_hash_table_lookup(metadata_cache, agent);

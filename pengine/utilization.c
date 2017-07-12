@@ -246,8 +246,7 @@ sum_unallocated_utilization(resource_t * rsc, GListPtr colocated_rscs)
 {
     GListPtr gIter = NULL;
     GListPtr all_rscs = NULL;
-    GHashTable *all_utilization = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                          g_hash_destroy_str, g_hash_destroy_str);
+    GHashTable *all_utilization = crm_str_table_new();
 
     all_rscs = g_list_copy(colocated_rscs);
     if (g_list_find(all_rscs, rsc) == FALSE) {

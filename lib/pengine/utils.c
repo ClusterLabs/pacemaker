@@ -448,9 +448,8 @@ custom_action(resource_t * rsc, char *key, const char *task,
   action->seen_count = 0;
 */
 
-        action->extra = g_hash_table_new_full(crm_str_hash, g_str_equal, free, free);
-
-        action->meta = g_hash_table_new_full(crm_str_hash, g_str_equal, free, free);
+        action->extra = crm_str_table_new();
+        action->meta = crm_str_table_new();
 
         action->versioned_parameters = create_xml_node(NULL, XML_TAG_OP_VER_ATTRS);
 
@@ -1715,8 +1714,7 @@ ticket_new(const char *ticket_id, pe_working_set_t * data_set)
         ticket->granted = FALSE;
         ticket->last_granted = -1;
         ticket->standby = FALSE;
-        ticket->state = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                              g_hash_destroy_str, g_hash_destroy_str);
+        ticket->state = crm_str_table_new();
 
         g_hash_table_insert(data_set->tickets, strdup(ticket->id), ticket);
     }
@@ -1864,8 +1862,7 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
     action = custom_action(rsc, key, task, node, TRUE, FALSE, data_set);
     key = NULL;
 
-    local_rsc_params = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                             g_hash_destroy_str, g_hash_destroy_str);
+    local_rsc_params = crm_str_table_new();
     get_rsc_attributes(local_rsc_params, rsc, node, data_set);
     local_versioned_params = create_xml_node(NULL, XML_TAG_RSC_VER_ATTRS);
     pe_get_versioned_attributes(local_versioned_params, rsc, node, data_set);

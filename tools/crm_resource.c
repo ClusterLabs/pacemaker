@@ -550,7 +550,7 @@ main(int argc, char **argv)
         && rsc_cmd == 0
         && rsc_long_cmd) {
 
-        override_params = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+        override_params = crm_str_table_new();
         while (optind < argc && argv[optind] != NULL) {
             char *name = calloc(1, strlen(argv[optind]));
             char *value = calloc(1, strlen(argv[optind]));

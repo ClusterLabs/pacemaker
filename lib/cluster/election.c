@@ -347,8 +347,7 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
 
     if (e->voted == NULL) {
         crm_debug("Created voted hash");
-        e->voted = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                         g_hash_destroy_str, g_hash_destroy_str);
+        e->voted = crm_str_table_new();
     }
 
     if (is_heartbeat_cluster()) {

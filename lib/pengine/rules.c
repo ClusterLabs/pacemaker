@@ -990,12 +990,10 @@ pe_expand_re_matches(const char *string, pe_re_match_data_t *match_data)
 GHashTable*
 pe_unpack_versioned_parameters(xmlNode *versioned_params, const char *ra_version)
 {
-    GHashTable *hash = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                               g_hash_destroy_str, g_hash_destroy_str);
+    GHashTable *hash = crm_str_table_new();
 
     if (versioned_params && ra_version) {
-        GHashTable *node_hash = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                        g_hash_destroy_str, g_hash_destroy_str);
+        GHashTable *node_hash = crm_str_table_new();
         xmlNode *attr_set = __xml_first_child(versioned_params);
 
         if (attr_set) {

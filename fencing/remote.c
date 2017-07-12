@@ -1773,7 +1773,7 @@ add_result(remote_fencing_op_t *op, const char *host, int ndevices, xmlNode *xml
 
     CRM_CHECK(result != NULL, return NULL);
     result->host = strdup(host);
-    result->devices = g_hash_table_new_full(crm_str_hash, g_str_equal, free, free);
+    result->devices = crm_str_table_new();
 
     /* Each child element describes one capable device available to the peer */
     for (child = __xml_first_child(xml); child != NULL; child = __xml_next(child)) {

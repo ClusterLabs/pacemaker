@@ -35,9 +35,7 @@ static GHashTable *
 get_meta_attrs_from_cib(xmlNode *basenode, crm_alert_entry_t *entry,
                         guint *max_timeout)
 {
-    GHashTable *config_hash = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                                    g_hash_destroy_str,
-                                                    g_hash_destroy_str);
+    GHashTable *config_hash = crm_str_table_new();
     crm_time_t *now = crm_time_new(NULL);
     const char *value = NULL;
 

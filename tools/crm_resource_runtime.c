@@ -747,11 +747,9 @@ generate_resource_params(resource_t * rsc, pe_working_set_t * data_set)
         return NULL;
     }
 
-    params =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
-    meta = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
-    combined =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+    params = crm_str_table_new();
+    meta = crm_str_table_new();
+    combined = crm_str_table_new();
 
     get_rsc_attributes(params, rsc, NULL /* TODO: Pass in local node */ , data_set);
     get_meta_attributes(meta, rsc, NULL /* TODO: Pass in local node */ , data_set);

@@ -415,9 +415,8 @@ generate_params(void)
         goto param_gen_bail;
     }
 
-    params = g_hash_table_new_full(crm_str_hash,
-                                   g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
-    meta = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+    params = crm_str_table_new();
+    meta = crm_str_table_new();
 
     get_rsc_attributes(params, rsc, NULL, &data_set);
     get_meta_attributes(meta, rsc, NULL, &data_set);

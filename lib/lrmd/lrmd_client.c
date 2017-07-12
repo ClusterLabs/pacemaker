@@ -186,12 +186,6 @@ lrmd_key_value_freeall(lrmd_key_value_t * head)
     }
 }
 
-static void
-dup_attr(gpointer key, gpointer value, gpointer user_data)
-{
-    g_hash_table_replace(user_data, strdup(key), strdup(value));
-}
-
 lrmd_event_data_t *
 lrmd_copy_event(lrmd_event_data_t * event)
 {
@@ -210,15 +204,7 @@ lrmd_copy_event(lrmd_event_data_t * event)
     copy->output = event->output ? strdup(event->output) : NULL;
     copy->exit_reason = event->exit_reason ? strdup(event->exit_reason) : NULL;
     copy->remote_nodename = event->remote_nodename ? strdup(event->remote_nodename) : NULL;
-
-    if (event->params) {
-        copy->params = g_hash_table_new_full(crm_str_hash,
-                                             g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
-
-        if (copy->params != NULL) {
-            g_hash_table_foreach(event->params, dup_attr, copy->params);
-        }
-    }
+    copy->params = crm_str_table_dup(event->params);
 
     return copy;
 }

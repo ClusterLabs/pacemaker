@@ -141,8 +141,7 @@ gboolean
 unpack_config(xmlNode * config, pe_working_set_t * data_set)
 {
     const char *value = NULL;
-    GHashTable *config_hash =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+    GHashTable *config_hash = crm_str_table_new();
 
     xmlXPathObjectPtr xpathObj = NULL;
 
@@ -366,9 +365,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
         new_node->details->type = node_member;
     }
 
-    new_node->details->attrs = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                                     g_hash_destroy_str,
-                                                     g_hash_destroy_str);
+    new_node->details->attrs = crm_str_table_new();
 
     if (is_remote_node(new_node)) {
         g_hash_table_insert(new_node->details->attrs, strdup("#kind"), strdup("remote"));
@@ -376,9 +373,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
         g_hash_table_insert(new_node->details->attrs, strdup("#kind"), strdup("cluster"));
     }
 
-    new_node->details->utilization =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str,
-                              g_hash_destroy_str);
+    new_node->details->utilization = crm_str_table_new();
 
     new_node->details->digest_cache =
         g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str,
@@ -1198,9 +1193,7 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
 
             /* Compatibility with the deprecated ticket state section:
              * Unpack the attributes in the deprecated "/cib/status/tickets/instance_attributes" if it exists. */
-            state_hash =
-                g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str,
-                                      g_hash_destroy_str);
+            state_hash = crm_str_table_new();
 
             unpack_instance_attributes(data_set->input, xml_tickets, XML_TAG_ATTR_SETS, NULL,
                                        state_hash, NULL, TRUE, data_set->now);

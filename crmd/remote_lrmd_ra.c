@@ -377,8 +377,7 @@ report_remote_ra_result(remote_ra_cmd_t * cmd)
     if (cmd->params) {
         lrmd_key_value_t *tmp;
 
-        op.params = g_hash_table_new_full(crm_str_hash,
-                                          g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+        op.params = crm_str_table_new();
         for (tmp = cmd->params; tmp; tmp = tmp->next) {
             g_hash_table_insert(op.params, strdup(tmp->key), strdup(tmp->value));
         }

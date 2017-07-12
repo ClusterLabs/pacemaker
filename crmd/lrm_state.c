@@ -497,8 +497,7 @@ remote_config_check(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
     } else {
         lrmd_t * lrmd = (lrmd_t *)user_data;
         crm_time_t *now = crm_time_new(NULL);
-        GHashTable *config_hash = g_hash_table_new_full(
-            crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+        GHashTable *config_hash = crm_str_table_new();
 
         crm_debug("Call %d : Parsing CIB options", call_id);
 

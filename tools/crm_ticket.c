@@ -716,8 +716,7 @@ main(int argc, char **argv)
     guint modified = 0;
 
     GListPtr attr_delete = NULL;
-    GHashTable *attr_set = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                                 g_hash_destroy_str, g_hash_destroy_str);
+    GHashTable *attr_set = crm_str_table_new();
 
     crm_log_init(NULL, LOG_CRIT, FALSE, FALSE, argc, argv, FALSE);
     crm_set_options(NULL, "(query|command) [options]", long_options,
