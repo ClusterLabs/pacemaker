@@ -53,9 +53,11 @@ lrmd_set_alert_envvar_to_lrmd_params(lrmd_key_value_t *head, crm_alert_entry_t *
     for (l = g_list_first(entry->envvars); l; l = g_list_next(l)) {
         crm_alert_envvar_t *ev = (crm_alert_envvar_t *)(l->data);
 
-        crm_trace("Setting environment variable %s = '%s'", ev->name,
-                  ev->value?ev->value:"");
-        head = lrmd_key_value_add(head, ev->name, ev->value);
+        if (ev->value) {
+            crm_trace("Setting environment variable %s='%s'",
+                      ev->name, ev->value);
+            head = lrmd_key_value_add(head, ev->name, ev->value);
+        }
     }
     return head;
 }
