@@ -328,7 +328,7 @@ send_alert_attributes_value(attribute_t *a, GHashTable *t)
         call_id = attrd_send_alerts(at->nodename, at->nodeid, a->id,
                                     at->current);
         crm_trace("Sent alerts for %s[%s]=%s: call_id=%d nodeid=%d",
-                  at->nodename, a->id, at->current, call_id, at->nodeid);
+                  a->id, at->nodename, at->current, call_id, at->nodeid);
     }
 }
 #endif
