@@ -39,15 +39,18 @@ attrd_lrmd_connect(int max_attempts, void callback(lrmd_event_data_t * op))
     if (!the_lrmd) {
         the_lrmd = lrmd_api_new();
     }
+    the_lrmd->cmds->set_callback(the_lrmd, callback);
 
     while (fails < max_attempts) {
-        the_lrmd->cmds->set_callback(the_lrmd, callback);
-
         ret = the_lrmd->cmds->connect(the_lrmd, T_ATTRD, NULL);
         if (ret != pcmk_ok) {
             fails++;
             crm_debug("Could not connect to LRMD, %d tries remaining",
                       (max_attempts - fails));
+            /* @TODO We don't want to block here with sleep, but we should wait
+             * some time between connection attempts. We could possibly add a
+             * timer with a callback, but then we'd likely need an alert queue.
+             */
         } else {
             break;
         }
