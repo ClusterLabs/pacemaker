@@ -291,7 +291,9 @@ attrd_send_alerts(const char *node, uint32_t nodeid,
     free(nodeid_s);
 
     params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_attribute_name, attribute_name);
-    params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_attribute_value, attribute_value == NULL ? "null" : attribute_value);
+    params = lrmd_set_alert_key_to_lrmd_params(params,
+                                               CRM_alert_attribute_value,
+                                               attribute_value);
 
     ret = exec_alerts(crm_alert_attribute, attribute_name, params);
 

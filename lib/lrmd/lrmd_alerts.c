@@ -38,6 +38,9 @@ lrmd_set_alert_key_to_lrmd_params(lrmd_key_value_t *head, enum crm_alert_keys_e 
 {
     const char **key;
 
+    if (value == NULL) {
+        value = "";
+    }
     for (key = crm_alert_keys[name]; *key; key++) {
         crm_trace("Setting alert key %s = '%s'", *key, value);
         head = lrmd_key_value_add(head, *key, value);

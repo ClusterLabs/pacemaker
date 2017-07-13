@@ -1055,7 +1055,7 @@ update_remote_attr(const char *host, const char *name, const char *value,
                                   FALSE, user_name, "remote");
     }
 
-    attrd_send_alerts(host, 0, name, (value? value : "null"));
+    attrd_send_alerts(host, 0, name, (value? value : ""));
 
     crm_trace("%s submitted as CIB call %d", desc, rc);
     register_cib_callback(rc, desc, remote_attr_callback, free);
