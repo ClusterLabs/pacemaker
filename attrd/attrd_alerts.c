@@ -189,7 +189,7 @@ exec_alerts(lrmd_t *lrmd, enum crm_alert_flags kind, const char *attribute_name,
 
     for (l = g_list_first(attrd_alert_list); l; l = g_list_next(l)) {
         crm_alert_entry_t *entry = (crm_alert_entry_t *)(l->data);
-        char *timestamp;
+        char *timestamp = NULL;
         lrmd_key_value_t * copy_params = NULL;
         lrmd_key_value_t *head, *p;
 
@@ -218,11 +218,20 @@ exec_alerts(lrmd_t *lrmd, enum crm_alert_flags kind, const char *attribute_name,
             head = p;
         }
 
-        timestamp = crm_time_format_hr(entry->tstamp_format, now);
 
         copy_params = lrmd_key_value_add(copy_params, CRM_ALERT_KEY_PATH, entry->path);
         copy_params = lrmd_set_alert_key_to_lrmd_params(copy_params, CRM_alert_recipient, entry->recipient);
-        copy_params = lrmd_set_alert_key_to_lrmd_params(copy_params, CRM_alert_timestamp, timestamp);
+
+        if (now) {
+            timestamp = crm_time_format_hr(entry->tstamp_format, now);
+            if (timestamp) {
+                copy_params = lrmd_set_alert_key_to_lrmd_params(copy_params,
+                                                                CRM_alert_timestamp,
+                                                                timestamp);
+                free(timestamp);
+            }
+        }
+
         copy_params = lrmd_set_alert_envvar_to_lrmd_params(copy_params, entry);
 
         rc = lrmd->cmds->exec_alert(lrmd, entry->id, entry->path,
@@ -231,8 +240,6 @@ exec_alerts(lrmd_t *lrmd, enum crm_alert_flags kind, const char *attribute_name,
             crm_err("Could not execute alert %s: %s " CRM_XS " rc=%d",
                     entry->id, pcmk_strerror(rc), rc);
         }
-
-        free(timestamp);
     }
 
     if (now) {
