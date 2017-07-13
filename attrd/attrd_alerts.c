@@ -57,12 +57,19 @@ attrd_lrmd_connect(int max_attempts, void callback(lrmd_event_data_t * op))
     }
 
     if (ret != pcmk_ok) {
-        if (the_lrmd->cmds->is_connected(the_lrmd)) {
-            lrmd_api_delete(the_lrmd);
-        }
-        the_lrmd = NULL;
+        attrd_lrmd_disconnect();
     }
     return the_lrmd;
+}
+
+void
+attrd_lrmd_disconnect() {
+    if (the_lrmd) {
+        lrmd_t *conn = the_lrmd;
+
+        the_lrmd = NULL; /* in case we're called recursively */
+        lrmd_api_delete(conn); /* will disconnect if necessary */
+    }
 }
 
 static void
@@ -182,11 +189,7 @@ attrd_lrmd_callback(lrmd_event_data_t * op)
     switch (op->type) {
         case lrmd_event_disconnect:
             crm_info("Lost connection to LRMD");
-            if (the_lrmd->cmds->is_connected(the_lrmd)) {
-                the_lrmd->cmds->disconnect(the_lrmd);
-                lrmd_api_delete(the_lrmd);
-            }
-            the_lrmd = NULL;
+            attrd_lrmd_disconnect();
             break;
         default:
             break;

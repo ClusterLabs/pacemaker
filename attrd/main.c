@@ -344,11 +344,7 @@ main(int argc, char **argv)
         g_hash_table_destroy(attributes);
     }
 
-    if (the_lrmd) {
-        the_lrmd->cmds->disconnect(the_lrmd);
-        lrmd_api_delete(the_lrmd);
-        the_lrmd = NULL;
-    }
+    attrd_lrmd_disconnect();
 
     if (the_cib) {
         the_cib->cmds->signoff(the_cib);

@@ -28,6 +28,7 @@ extern lrmd_t *the_lrmd;
 extern crm_trigger_t *attrd_config_read;
 
 lrmd_t *attrd_lrmd_connect(int max_retry, void callback(lrmd_event_data_t * op));
+void attrd_lrmd_disconnect(void);
 gboolean attrd_read_options(gpointer user_data);
 void attrd_cib_updated_cb(const char *event, xmlNode * msg);
 void attrd_enable_alerts(const char *script, const char *target);
