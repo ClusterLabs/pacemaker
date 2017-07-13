@@ -72,7 +72,7 @@ crm_alert_entry_new(const char *id, const char *path)
 {
     crm_alert_entry_t *entry = calloc(1, sizeof(crm_alert_entry_t));
 
-    CRM_ASSERT(entry);
+    CRM_ASSERT(entry && id && path);
     entry->id = strdup(id);
     entry->path = strdup(path);
     entry->timeout = CRM_ALERT_DEFAULT_TIMEOUT_MS;

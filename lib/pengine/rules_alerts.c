@@ -134,7 +134,7 @@ get_envvars_from_cib(xmlNode *basenode, crm_alert_entry_t *entry)
     }
 
     for (child = first_named_child(child, XML_CIB_TAG_NVPAIR); child != NULL;
-         child = __xml_next(child)) {
+         child = crm_next_same_xml(child)) {
 
         const char *name = crm_element_value(child, XML_NVPAIR_ATTR_NAME);
         const char *value = crm_element_value(child, XML_NVPAIR_ATTR_VALUE);
@@ -189,13 +189,20 @@ pe_unpack_alerts(xmlNode *alerts)
     }
 
     for (alert = first_named_child(alerts, XML_CIB_TAG_ALERT);
-         alert; alert = __xml_next(alert)) {
+         alert != NULL; alert = crm_next_same_xml(alert)) {
 
         xmlNode *recipient;
         int recipients = 0;
+        const char *alert_id = ID(alert);
+        const char *alert_path = crm_element_value(alert, XML_ALERT_ATTR_PATH);
 
-        entry = crm_alert_entry_new(crm_element_value(alert, XML_ATTR_ID),
-                                    crm_element_value(alert, XML_ALERT_ATTR_PATH));
+        /* The schema should enforce this, but to be safe ... */
+        if ((alert_id == NULL) || (alert_path == NULL)) {
+            crm_warn("Ignoring invalid alert without id and path");
+            continue;
+        }
+
+        entry = crm_alert_entry_new(alert_id, alert_path);
 
         get_envvars_from_cib(alert, entry);
         get_meta_attrs_from_cib(alert, entry, &max_timeout);
@@ -208,7 +215,7 @@ pe_unpack_alerts(xmlNode *alerts)
                   (entry->envvars? g_hash_table_size(entry->envvars) : 0));
 
         for (recipient = first_named_child(alert, XML_CIB_TAG_ALERT_RECIPIENT);
-             recipient != NULL; recipient = __xml_next(recipient)) {
+             recipient != NULL; recipient = crm_next_same_xml(recipient)) {
 
             crm_alert_entry_t *recipient_entry = crm_dup_alert_entry(entry);
 
