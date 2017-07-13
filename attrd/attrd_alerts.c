@@ -282,9 +282,14 @@ attrd_send_alerts(const char *node, uint32_t nodeid,
 {
     int ret = pcmk_ok;
     lrmd_key_value_t *params = NULL;
+    char *nodeid_s;
 
     params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_node, node);
-    params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_nodeid, crm_itoa(nodeid));
+
+    nodeid_s = crm_itoa(nodeid);
+    params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_nodeid, nodeid_s);
+    free(nodeid_s);
+
     params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_attribute_name, attribute_name);
     params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_attribute_value, attribute_value == NULL ? "null" : attribute_value);
 
