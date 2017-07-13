@@ -31,7 +31,7 @@ lrmd_t *attrd_lrmd_connect(int max_retry, void callback(lrmd_event_data_t * op))
 gboolean attrd_read_options(gpointer user_data);
 void attrd_cib_updated_cb(const char *event, xmlNode * msg);
 void attrd_enable_alerts(const char *script, const char *target);
-int attrd_send_alerts(lrmd_t *lrmd, const char *node, uint32_t nodeid,
+int attrd_send_alerts(const char *node, uint32_t nodeid,
                       const char *attribute_name, const char *attribute_value);
 #if HAVE_ATOMIC_ATTRD
 void set_alert_attribute_value(GHashTable *t, attribute_value_t *v);

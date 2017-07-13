@@ -175,8 +175,26 @@ attrd_cib_updated_cb(const char *event, xmlNode * msg)
 
 }
 
+static void
+attrd_lrmd_callback(lrmd_event_data_t * op)
+{
+    CRM_CHECK(op != NULL, return);
+    switch (op->type) {
+        case lrmd_event_disconnect:
+            crm_info("Lost connection to LRMD");
+            if (the_lrmd->cmds->is_connected(the_lrmd)) {
+                the_lrmd->cmds->disconnect(the_lrmd);
+                lrmd_api_delete(the_lrmd);
+            }
+            the_lrmd = NULL;
+            break;
+        default:
+            break;
+    }
+}
+
 static int 
-exec_alerts(lrmd_t *lrmd, enum crm_alert_flags kind, const char *attribute_name,
+exec_alerts(enum crm_alert_flags kind, const char *attribute_name,
             lrmd_key_value_t *params)
 {
     int rc = pcmk_ok;
@@ -234,14 +252,23 @@ exec_alerts(lrmd_t *lrmd, enum crm_alert_flags kind, const char *attribute_name,
 
         copy_params = lrmd_set_alert_envvar_to_lrmd_params(copy_params, entry);
 
-        rc = lrmd->cmds->exec_alert(lrmd, entry->id, entry->path,
-                                    entry->timeout, copy_params);
+        if (the_lrmd == NULL) {
+            the_lrmd = attrd_lrmd_connect(10, attrd_lrmd_callback);
+            if (the_lrmd == NULL) {
+                crm_warn("Cannot send alerts: LRMD connection not active");
+                rc = -ENOTCONN;
+                goto done;
+            }
+        }
+        rc = the_lrmd->cmds->exec_alert(the_lrmd, entry->id, entry->path,
+                                        entry->timeout, copy_params);
         if (rc < 0) {
             crm_err("Could not execute alert %s: %s " CRM_XS " rc=%d",
                     entry->id, pcmk_strerror(rc), rc);
         }
     }
 
+done:
     if (now) {
         free(now);
     }
@@ -249,59 +276,19 @@ exec_alerts(lrmd_t *lrmd, enum crm_alert_flags kind, const char *attribute_name,
     return rc;
 }
 
-static void
-attrd_alert_lrm_op_callback(lrmd_event_data_t * op)
-{
-    CRM_CHECK(op != NULL, return);
-
-    if (op->type == lrmd_event_disconnect) {
-        crm_info("Lost connection to LRMD service!");
-        if (the_lrmd->cmds->is_connected(the_lrmd)) {
-            the_lrmd->cmds->disconnect(the_lrmd);
-            lrmd_api_delete(the_lrmd);
-        }
-        the_lrmd = NULL;
-        return;
-    } else if (op->type != lrmd_event_exec_complete) {
-        return;
-    }
-
-    if (op->params != NULL) {
-        void *value_tmp1, *value_tmp2;
-
-        value_tmp1 = g_hash_table_lookup(op->params, CRM_ALERT_KEY_PATH);
-        if (value_tmp1 != NULL) {
-            value_tmp2 = g_hash_table_lookup(op->params, CRM_ALERT_NODE_SEQUENCE);
-            if(op->rc == 0) {
-                crm_info("Alert %s (%s) complete", value_tmp2, value_tmp1);
-            } else {
-                crm_warn("Alert %s (%s) failed: %d", value_tmp2, value_tmp1, op->rc);
-            }
-        }
-    }
-}
-
 int
-attrd_send_alerts(lrmd_t *lrmd, const char *node, uint32_t nodeid,
+attrd_send_alerts(const char *node, uint32_t nodeid,
                   const char *attribute_name, const char *attribute_value)
 {
     int ret = pcmk_ok;
     lrmd_key_value_t *params = NULL;
-
-    if (lrmd == NULL) {
-        lrmd = attrd_lrmd_connect(10, attrd_alert_lrm_op_callback);
-        if (lrmd == NULL) {
-            crm_warn("Cannot send alerts: LRMD connection not active");
-            return ret;
-        }
-    }
 
     params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_node, node);
     params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_nodeid, crm_itoa(nodeid));
     params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_attribute_name, attribute_name);
     params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_attribute_value, attribute_value == NULL ? "null" : attribute_value);
 
-    ret = exec_alerts(lrmd, crm_alert_attribute, attribute_name, params);
+    ret = exec_alerts(crm_alert_attribute, attribute_name, params);
 
     if (params) {
         lrmd_key_value_freeall(params);
@@ -338,7 +325,7 @@ send_alert_attributes_value(attribute_t *a, GHashTable *t)
     g_hash_table_iter_init(&vIter, t);
 
     while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & at)) {
-        call_id = attrd_send_alerts(the_lrmd, at->nodename, at->nodeid, a->id,
+        call_id = attrd_send_alerts(at->nodename, at->nodeid, a->id,
                                     at->current);
         crm_trace("Sent alerts for %s[%s]=%s: call_id=%d nodeid=%d",
                   at->nodename, a->id, at->current, call_id, at->nodeid);
