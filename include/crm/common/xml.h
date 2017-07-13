@@ -348,6 +348,7 @@ __xml_next_element(xmlNode * child)
 void free_xml(xmlNode * child);
 
 xmlNode *first_named_child(xmlNode * parent, const char *name);
+xmlNode *crm_next_same_xml(xmlNode *sibling);
 
 xmlNode *sorted_xml(xmlNode * input, xmlNode * parent, gboolean recursive);
 xmlXPathObjectPtr xpath_search(xmlNode * xml_top, const char *path);

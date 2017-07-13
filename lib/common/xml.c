@@ -5036,6 +5036,28 @@ first_named_child(xmlNode * parent, const char *name)
     return NULL;
 }
 
+/*!
+ * \brief Get next instance of same XML tag
+ *
+ * \param[in] sibling  XML tag to start from
+ *
+ * \return Next sibling XML tag with same name
+ */
+xmlNode *
+crm_next_same_xml(xmlNode *sibling)
+{
+    xmlNode *match = __xml_next(sibling);
+    const char *name = crm_element_name(sibling);
+
+    while (match != NULL) {
+        if (!strcmp(crm_element_name(match), name)) {
+            return match;
+        }
+        match = __xml_next(match);
+    }
+    return NULL;
+}
+
 void
 crm_xml_init(void)
 {
