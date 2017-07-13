@@ -1114,7 +1114,7 @@ write_attribute(attribute_t *a)
         /* If the peer is found, but its uuid is unknown, defer write */
         if (peer->uuid == NULL) {
             a->unknown_peer_uuids = TRUE;
-            crm_notice("Update error (unknown peer uuid, retry will be attempted once uuid is discovered): %s[%s]=%s failed (host=%p)",
+            crm_notice("Update %s[%s]=%s postponed: unknown peer UUID, will retry if UUID is learned",
                        v->nodename, a->id, v->current, peer);
             continue;
         }

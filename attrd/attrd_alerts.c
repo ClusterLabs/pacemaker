@@ -31,7 +31,7 @@
 static GListPtr attrd_alert_list = NULL;
 
 lrmd_t *
-attrd_lrmd_connect(int max_retry, void callback(lrmd_event_data_t * op))
+attrd_lrmd_connect(int max_attempts, void callback(lrmd_event_data_t * op))
 {
     int ret = -ENOTCONN;
     int fails = 0;
@@ -40,15 +40,15 @@ attrd_lrmd_connect(int max_retry, void callback(lrmd_event_data_t * op))
         the_lrmd = lrmd_api_new();
     }
 
-    while(fails < max_retry) {
+    while (fails < max_attempts) {
         the_lrmd->cmds->set_callback(the_lrmd, callback);
 
         ret = the_lrmd->cmds->connect(the_lrmd, T_ATTRD, NULL);
         if (ret != pcmk_ok) {
             fails++;
-            crm_trace("lrmd_connect RETRY!(%d)", fails);
+            crm_debug("Could not connect to LRMD, %d tries remaining",
+                      (max_attempts - fails));
         } else {
-            crm_trace("lrmd_connect OK!");
             break;
         }
     }
@@ -147,16 +147,17 @@ attrd_cib_updated_cb(const char *event, xmlNode * msg)
                 continue;
             }
 
-            /* modifying properties */
             if (!strstr(xpath, "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_ALERTS)) {
+                /* this is not a change to an existing alerts section */
+
                 xmlNode *section = NULL;
                 const char *name = NULL;
 
-                /* adding notifications section */
                 if ((strcmp(xpath, "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION) != 0) ||
                     ((section = __xml_first_child(change)) == NULL) ||
                     ((name = crm_element_name(section)) == NULL) ||
                     (strcmp(name, XML_CIB_TAG_ALERTS) != 0)) {
+                    /* this is not a newly added alerts section */
                     continue;
                 }
             }
@@ -203,8 +204,8 @@ exec_alerts(lrmd_t *lrmd, enum crm_alert_flags kind, const char *attribute_name,
             continue;
         }
 
-        crm_info("Sending %s alert to %s via %s",
-                 crm_alert_flag2text(kind), entry->recipient, entry->id);
+        crm_info("Sending %s alert via %s to %s",
+                 crm_alert_flag2text(kind), entry->id, entry->recipient);
 
         /* Because there is a parameter to turn into every transmission, Copy a parameter. */
         head = params;
@@ -280,12 +281,10 @@ attrd_send_alerts(lrmd_t *lrmd, const char *node, uint32_t nodeid,
     if (lrmd == NULL) {
         lrmd = attrd_lrmd_connect(10, attrd_alert_lrm_op_callback);
         if (lrmd == NULL) {
-            crm_warn("LRMD connection not active");
+            crm_warn("Cannot send alerts: LRMD connection not active");
             return ret;
         }
     }
-
-    crm_trace("LRMD connection active");
 
     params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_node, node);
     params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_nodeid, crm_itoa(nodeid));
@@ -293,8 +292,6 @@ attrd_send_alerts(lrmd_t *lrmd, const char *node, uint32_t nodeid,
     params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_attribute_value, attribute_value == NULL ? "null" : attribute_value);
 
     ret = exec_alerts(lrmd, crm_alert_attribute, attribute_name, params);
-    crm_trace("ret : %d, node : %s, nodeid: %s,  name: %s, value : %s", 
-                  ret, node, crm_itoa(nodeid), attribute_name, attribute_value); 
 
     if (params) {
         lrmd_key_value_freeall(params);
@@ -333,8 +330,8 @@ send_alert_attributes_value(attribute_t *a, GHashTable *t)
     while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & at)) {
         call_id = attrd_send_alerts(the_lrmd, at->nodename, at->nodeid, a->id,
                                     at->current);
-        crm_trace("call_id : %d, nodename : %s, nodeid: %d,  name: %s, value : %s", 
-                  call_id, at->nodename, at->nodeid, a->id, at->current); 
+        crm_trace("Sent alerts for %s[%s]=%s: call_id=%d nodeid=%d",
+                  at->nodename, a->id, at->current, call_id, at->nodeid);
     }
 }
 #endif
