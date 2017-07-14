@@ -239,8 +239,6 @@ exec_alerts(enum crm_alert_flags kind, const char *attribute_name,
             head = p;
         }
 
-
-        copy_params = lrmd_key_value_add(copy_params, CRM_ALERT_KEY_PATH, entry->path);
         copy_params = lrmd_set_alert_key_to_lrmd_params(copy_params, CRM_alert_recipient, entry->recipient);
 
         if (now) {

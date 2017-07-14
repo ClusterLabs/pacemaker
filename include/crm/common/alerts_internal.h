@@ -74,7 +74,6 @@ enum crm_alert_keys_e {
 };
 
 #define CRM_ALERT_INTERNAL_KEY_MAX 16
-#define CRM_ALERT_KEY_PATH "CRM_alert_path"
 #define CRM_ALERT_NODE_SEQUENCE "CRM_alert_node_sequence"
 
 extern guint crm_alert_max_alert_timeout;
