@@ -358,7 +358,7 @@ static struct crm_option long_options[] = {
     {"verbose",        0, 0, 'V', "\tIncrease debug output"},
     {"quiet",          0, 0, 'Q', "\tDisplay only essential output" },
 
-    {"-spacer-",	1, 0, '-', "\nModes:"},
+    {"-spacer-",	1, 0, '-', "\nModes (mutually exclusive):"},
     {"as-html",        1, 0, 'h', "\tWrite cluster status to the named html file"},
     {"as-xml",         0, 0, 'X', "\t\tWrite cluster status as xml to stdout. This will enable one-shot mode."},
     {"web-cgi",        0, 0, 'w', "\t\tWeb mode with output suitable for cgi"},
@@ -637,19 +637,24 @@ main(int argc, char **argv)
                 if(optarg == NULL) {
                     return crm_help(flag, EX_USAGE);
                 }
+                argerr += (output_format != mon_output_console);
                 output_format = mon_output_html;
                 output_filename = strdup(optarg);
                 umask(S_IWGRP | S_IWOTH);
                 break;
             case 'X':
+                argerr += (output_format != mon_output_console);
                 output_format = mon_output_xml;
                 one_shot = TRUE;
                 break;
             case 'w':
+                /* do not allow argv[0] and argv[1...] redundancy */
+                argerr += (output_format != mon_output_console);
                 output_format = mon_output_cgi;
                 one_shot = TRUE;
                 break;
             case 's':
+                argerr += (output_format != mon_output_console);
                 output_format = mon_output_monitor;
                 one_shot = TRUE;
                 break;
@@ -696,7 +701,17 @@ main(int argc, char **argv)
         }
     }
 
-    if (optind < argc) {
+    /* Extra sanity checks when in CGI mode */
+    if (output_format == mon_output_cgi) {
+        argerr += (optind < argc);
+        argerr += (output_filename != NULL);
+        argerr += (xml_file != NULL);
+        argerr += (snmp_target != NULL);
+        argerr += (crm_mail_to != NULL);
+        argerr += (external_agent != NULL);
+        argerr += (daemonize == TRUE);  /* paranoia */
+
+    } else if (optind < argc) {
         printf("non-option ARGV-elements: ");
         while (optind < argc)
             printf("%s ", argv[optind++]);
