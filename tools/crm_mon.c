@@ -3185,7 +3185,7 @@ print_html_status(pe_working_set_t * data_set, const char *filename)
 
     if (output_format == mon_output_cgi) {
         stream = stdout;
-        fprintf(stream, "Content-type: text/html\n\n");
+        fprintf(stream, "Content-Type: text/html\n\n");
 
     } else {
         filename_tmp = crm_concat(filename, "tmp", '.');
