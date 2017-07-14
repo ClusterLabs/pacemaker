@@ -118,6 +118,10 @@ process_lrmd_alert_exec(crm_client_t *client, uint32_t id, xmlNode *request)
 
     action = services_alert_create(alert_id, alert_path, alert_timeout, params,
                                    alert_sequence_no, cb_data);
+    rc = services_action_user(action, CRM_DAEMON_USER);
+    if (rc < 0) {
+        goto err;
+    }
 
     add_inflight_alert(cb_data->call_id, alert_timeout);
     if (services_alert_async(action, alert_complete) == FALSE) {
