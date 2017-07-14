@@ -420,25 +420,25 @@ generate_hash_key(const char *crm_msg_reference, const char *sys)
 int
 crm_user_lookup(const char *name, uid_t * uid, gid_t * gid)
 {
-    int rc = -1;
+    int rc = pcmk_ok;
     char *buffer = NULL;
     struct passwd pwd;
     struct passwd *pwentry = NULL;
 
     buffer = calloc(1, PW_BUFFER_LEN);
-    getpwnam_r(name, &pwd, buffer, PW_BUFFER_LEN, &pwentry);
+    rc = getpwnam_r(name, &pwd, buffer, PW_BUFFER_LEN, &pwentry);
     if (pwentry) {
-        rc = 0;
         if (uid) {
             *uid = pwentry->pw_uid;
         }
         if (gid) {
             *gid = pwentry->pw_gid;
         }
-        crm_trace("Cluster user %s has uid=%d gid=%d", name, pwentry->pw_uid, pwentry->pw_gid);
+        crm_trace("User %s has uid=%d gid=%d", name, pwentry->pw_uid, pwentry->pw_gid);
 
     } else {
-        crm_err("Cluster user %s does not exist", name);
+        rc = rc? -rc : -EINVAL;
+        crm_info("User %s lookup: %s", name, pcmk_strerror(rc));
     }
 
     free(buffer);
