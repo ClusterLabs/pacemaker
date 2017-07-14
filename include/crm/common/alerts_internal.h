@@ -18,6 +18,9 @@
 
 #ifndef ALERT_INTERNAL_H
 #define ALERT_INTERNAL_H
+
+#include <glib.h>
+
 /* Default-Timeout to use before killing a alerts script (in milliseconds) */
 #  define CRM_ALERT_DEFAULT_TIMEOUT_MS (30000)
 
@@ -29,17 +32,24 @@ typedef struct {
     char *value;
 }  crm_alert_envvar_t;
 
+enum crm_alert_flags {
+    crm_alert_none         = 0x0000,
+    crm_alert_node         = 0x0001,
+    crm_alert_fencing      = 0x0002,
+    crm_alert_resource     = 0x0004,
+    crm_alert_attribute    = 0x0008,
+    crm_alert_default      = crm_alert_node|crm_alert_fencing|crm_alert_resource
+};
+
 typedef struct {
     char *id;
     char *path;
-    int timeout;
     char *tstamp_format;
     char *recipient;
-    char *select_kind_orig;
-    char **select_kind;
-    char *select_attribute_name_orig;
     char **select_attribute_name;
-    GListPtr envvars;
+    GHashTable *envvars;
+    int timeout;
+    uint32_t flags;
 } crm_alert_entry_t;
 
 enum crm_alert_keys_e {
@@ -66,25 +76,40 @@ enum crm_alert_keys_e {
 #define CRM_ALERT_INTERNAL_KEY_MAX 16
 #define CRM_ALERT_KEY_PATH "CRM_alert_path"
 #define CRM_ALERT_NODE_SEQUENCE "CRM_alert_node_sequence"
-#define CRM_ALERT_KIND_DEFAULT "node,fencing,resource"
 
-#if (HAVE_ATOMIC_ATTRD == 0)
-extern char *attrd_uname;
-#endif
-extern GListPtr crm_alert_list;
 extern guint crm_alert_max_alert_timeout;
 extern const char *crm_alert_keys[CRM_ALERT_INTERNAL_KEY_MAX][3];
-extern char **crm_alert_kind_default;
 
-void crm_free_alert_list(void);
-GListPtr crm_drop_envvars(crm_alert_entry_t *entry, int count);
-void crm_add_dup_alert_list_entry(crm_alert_entry_t *entry);
-GListPtr crm_get_envvars_from_cib(xmlNode *basenode, crm_alert_entry_t *entry, int *count);
+crm_alert_entry_t *crm_dup_alert_entry(crm_alert_entry_t *entry);
+crm_alert_envvar_t *crm_dup_alert_envvar(crm_alert_envvar_t *src);
+crm_alert_entry_t *crm_alert_entry_new(const char *id, const char *path);
+void crm_free_alert_entry(crm_alert_entry_t *entry);
+void crm_free_alert_envvar(crm_alert_envvar_t *entry);
 void crm_set_alert_key(enum crm_alert_keys_e name, const char *value);
 void crm_set_alert_key_int(enum crm_alert_keys_e name, int value);
+void crm_insert_alert_key(GHashTable *table, enum crm_alert_keys_e name,
+                          const char *value);
+void crm_insert_alert_key_int(GHashTable *table, enum crm_alert_keys_e name,
+                              int value);
 void crm_unset_alert_keys(void);
 void crm_set_envvar_list(crm_alert_entry_t *entry);
 void crm_unset_envvar_list(crm_alert_entry_t *entry);
 gboolean crm_is_target_alert(char **list, const char *value);
 
+static inline const char *
+crm_alert_flag2text(enum crm_alert_flags flag)
+{
+    switch (flag) {
+        case crm_alert_node:
+            return "node";
+        case crm_alert_fencing:
+            return "fencing";
+        case crm_alert_resource:
+            return "resource";
+        case crm_alert_attribute:
+            return "attribute";
+        default:
+            return "unknown";
+    }
+}
 #endif

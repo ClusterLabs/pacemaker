@@ -566,8 +566,11 @@ modify_ticket_state(const char * ticket_id, GListPtr attr_delete, GHashTable * a
             && (ticket == NULL || ticket->granted == FALSE)
             && crm_is_true(value)) {
 
+            char *now = crm_itoa(time(NULL));
+
             is_granting = TRUE;
-            crm_xml_add(ticket_state_xml, "last-granted", crm_itoa(time(NULL)));
+            crm_xml_add(ticket_state_xml, "last-granted", now);
+            free(now);
         }
     }
 
@@ -716,8 +719,7 @@ main(int argc, char **argv)
     guint modified = 0;
 
     GListPtr attr_delete = NULL;
-    GHashTable *attr_set = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                                 g_hash_destroy_str, g_hash_destroy_str);
+    GHashTable *attr_set = crm_str_table_new();
 
     crm_log_init(NULL, LOG_CRIT, FALSE, FALSE, argc, argv, FALSE);
     crm_set_options(NULL, "(query|command) [options]", long_options,

@@ -748,11 +748,7 @@ main(int argc, char **argv)
 
     qb_ipcs_destroy(ipcs);
 
-    if (the_lrmd) {
-        the_lrmd->cmds->disconnect(the_lrmd);
-        lrmd_api_delete(the_lrmd);
-        the_lrmd = NULL;
-    }
+    attrd_lrmd_disconnect();
 
     if (the_cib) {
         the_cib->cmds->signoff(the_cib);
@@ -872,7 +868,8 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
                       hash_entry->uuid ? hash_entry->uuid : "<n/a>", hash_entry->set,
                       hash_entry->section);
         }
-        attrd_send_alerts(the_lrmd, attrd_uname, attrd_nodeid, hash_entry->id, hash_entry->value, crm_alert_list);
+        attrd_send_alerts(attrd_uname, attrd_nodeid, hash_entry->id,
+                          hash_entry->value);
 
     } else {
         /* send update */
@@ -888,7 +885,8 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
         } else {
             crm_trace("Sent update %d: %s=%s", rc, hash_entry->id, hash_entry->value);
         }
-        attrd_send_alerts(the_lrmd, attrd_uname, attrd_nodeid, hash_entry->id, hash_entry->value, crm_alert_list);
+        attrd_send_alerts(attrd_uname, attrd_nodeid, hash_entry->id,
+                          hash_entry->value);
     }
 
     data = calloc(1, sizeof(struct attrd_callback_s));
@@ -1053,7 +1051,7 @@ update_remote_attr(const char *host, const char *name, const char *value,
                                   FALSE, user_name, "remote");
     }
 
-    attrd_send_alerts(the_lrmd, host, 0, name, value == NULL? "null":value, crm_alert_list);
+    attrd_send_alerts(host, 0, name, (value? value : ""));
 
     crm_trace("%s submitted as CIB call %d", desc, rc);
     register_cib_callback(rc, desc, remote_attr_callback, free);

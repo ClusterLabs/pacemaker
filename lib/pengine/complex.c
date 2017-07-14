@@ -478,13 +478,11 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
         return FALSE;
     }
 
-    (*rsc)->parameters =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+    (*rsc)->parameters = crm_str_table_new();
 
     (*rsc)->versioned_parameters = create_xml_node(NULL, XML_TAG_RSC_VER_ATTRS);
 
-    (*rsc)->meta =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+    (*rsc)->meta = crm_str_table_new();
 
     (*rsc)->allowed_nodes =
         g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, g_hash_destroy_str);
@@ -774,8 +772,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     pe_rsc_trace((*rsc), "\tAction notification: %s",
                  is_set((*rsc)->flags, pe_rsc_notify) ? "required" : "not required");
 
-    (*rsc)->utilization =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+    (*rsc)->utilization = crm_str_table_new();
 
     unpack_instance_attributes(data_set->input, (*rsc)->xml, XML_TAG_UTILIZATION, NULL,
                                (*rsc)->utilization, NULL, FALSE, data_set->now);

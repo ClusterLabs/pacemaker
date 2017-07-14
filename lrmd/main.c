@@ -293,6 +293,11 @@ lrmd_exit(gpointer data)
 
     crm_client_cleanup();
     g_hash_table_destroy(rsc_list);
+
+    if (mainloop) {
+        lrmd_drain_alerts(g_main_loop_get_context(mainloop));
+    }
+
     crm_exit(pcmk_ok);
     return FALSE;
 }

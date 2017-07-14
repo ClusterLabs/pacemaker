@@ -475,8 +475,7 @@ cib_init(void)
 #endif
     }
 
-    config_hash =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+    config_hash = crm_str_table_new();
 
     if (startCib("cib.xml") == FALSE) {
         crm_crit("Cannot start CIB... terminating");

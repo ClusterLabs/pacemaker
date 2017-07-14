@@ -82,6 +82,7 @@ typedef struct lrmd_key_value_s {
 #define F_LRMD_RSC              "lrmd_rsc"
 
 #define F_LRMD_ALERT_ID           "lrmd_alert_id"
+#define F_LRMD_ALERT_PATH         "lrmd_alert_path"
 #define F_LRMD_ALERT              "lrmd_alert"
 
 #define LRMD_OP_RSC_CHK_REG       "lrmd_rsc_check_register"
@@ -448,7 +449,7 @@ typedef struct lrmd_api_operations_s {
     int (*list_standards) (lrmd_t * lrmd, lrmd_list_t ** standards);
 
     /*!
-     * \brief Issue a command on a alert
+     * \brief Execute an alert agent
      *
      * \note Asynchronous, command is queued in daemon on function return, but
      *       execution of command is not synced.
@@ -462,9 +463,9 @@ typedef struct lrmd_api_operations_s {
      * \retval call_id to track async event result on success
      * \retval negative error code on failure
      */
-    int (*exec_alert) (lrmd_t * lrmd, const char *alert_id,
-                 int timeout,   /* ms */
-                 enum lrmd_call_options options, lrmd_key_value_t * params);    /* ownership of params is given up to api here */
+    int (*exec_alert) (lrmd_t *lrmd, const char *alert_id,
+                       const char *alert_path, int timeout, /* ms */
+                       lrmd_key_value_t *params); /* ownership of params is given up to api here */
 
 } lrmd_api_operations_t;
 

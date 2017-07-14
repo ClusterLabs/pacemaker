@@ -274,7 +274,7 @@ cib_acl_enabled(xmlNode *xml, const char *user)
 #if ENABLE_ACL
     if(pcmk_acl_required(user)) {
         const char *value = NULL;
-        GHashTable *options = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+        GHashTable *options = crm_str_table_new();
 
         cib_read_config(options, xml);
         value = cib_pref(options, "enable-acl");

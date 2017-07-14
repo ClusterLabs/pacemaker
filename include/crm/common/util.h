@@ -30,6 +30,7 @@
 #  include <limits.h>
 #  include <signal.h>
 #  include <sysexits.h>
+#  include <glib.h>
 
 #  include <crm/lrmd.h>
 
@@ -60,8 +61,11 @@ int crm_parse_int(const char *text, const char *default_text);
 char * crm_strip_trailing_newline(char *str);
 gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
 gboolean safe_str_neq(const char *a, const char *b);
+guint crm_strcase_hash(gconstpointer v);
+guint g_str_hash_traditional(gconstpointer v);
 
 #  define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
+#  define crm_str_hash g_str_hash_traditional
 
 /* used with hash tables where case does not matter */
 static inline gboolean
@@ -69,6 +73,34 @@ crm_strcase_equal(gconstpointer a, gconstpointer b)
 {
     return crm_str_eq((const char *) a, (const char *) b, FALSE);
 }
+
+/*!
+ * \brief Create hash table with dynamically allocated string keys/values
+ *
+ * \return Newly hash table
+ * \note It is the caller's responsibility to free the result, using
+ *       g_hash_table_destroy().
+ */
+static inline GHashTable *
+crm_str_table_new()
+{
+    return g_hash_table_new_full(crm_str_hash, g_str_equal, free, free);
+}
+
+/*!
+ * \brief Create hash table with case-insensitive dynamically allocated string keys/values
+ *
+ * \return Newly hash table
+ * \note It is the caller's responsibility to free the result, using
+ *       g_hash_table_destroy().
+ */
+static inline GHashTable *
+crm_strcase_table_new()
+{
+    return g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, free, free);
+}
+
+GHashTable *crm_str_table_dup(GHashTable *old_table);
 
 #  define crm_atoi(text, default_text) crm_parse_int(text, default_text)
 

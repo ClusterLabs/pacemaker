@@ -27,7 +27,6 @@
 #include <crm/common/mainloop.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipcs.h>
-#include <crm/common/alerts_internal.h>
 #include <crm/msg_xml.h>
 
 #include <lrmd_private.h>
@@ -162,12 +161,6 @@ build_rsc_from_xml(xmlNode * msg)
     return rsc;
 }
 
-static void
-dup_attr(gpointer key, gpointer value, gpointer user_data)
-{
-    g_hash_table_replace(user_data, strdup(key), strdup(value));
-}
-
 static lrmd_cmd_t *
 create_lrmd_cmd(xmlNode * msg, crm_client_t * client, lrmd_rsc_t *rsc)
 {
@@ -210,32 +203,6 @@ create_lrmd_cmd(xmlNode * msg, crm_client_t * client, lrmd_rsc_t *rsc)
         crm_debug("Setting flag to leave pid group on timeout and only kill action pid for %s_%s_%d", cmd->rsc_id, cmd->action, cmd->interval);
         cmd->service_flags |= SVC_ACTION_LEAVE_GROUP;
     }
-    return cmd;
-}
-
-static lrmd_cmd_t *
-create_alert_cmd(xmlNode * msg, crm_client_t * client, lrmd_rsc_t *rsc)
-{
-    int call_options = 0;
-    xmlNode *rsc_xml = get_xpath_object("//" F_LRMD_ALERT, msg, LOG_ERR);
-    lrmd_cmd_t *cmd = NULL;
-
-    cmd = calloc(1, sizeof(lrmd_cmd_t));
-
-    crm_element_value_int(msg, F_LRMD_CALLOPTS, &call_options);
-    cmd->call_opts = call_options;
-    cmd->client_id = strdup(client->id);
-
-    crm_element_value_int(msg, F_LRMD_CALLID, &cmd->call_id);
-    crm_element_value_int(rsc_xml, F_LRMD_TIMEOUT, &cmd->timeout);
-    cmd->timeout_orig = cmd->timeout;
-
-    cmd->origin = crm_element_value_copy(rsc_xml, F_LRMD_ORIGIN);
-    cmd->action = strdup("start");
-    cmd->rsc_id = crm_element_value_copy(rsc_xml, F_LRMD_ALERT_ID);
-
-    cmd->params = xml2list(rsc_xml);
-
     return cmd;
 }
 
@@ -1225,31 +1192,9 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     }
 #endif
 
-    if (cmd->params) {
-        params_copy = g_hash_table_new_full(crm_str_hash,
-                                            g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+    params_copy = crm_str_table_dup(cmd->params);
 
-        if (params_copy != NULL) {
-            g_hash_table_foreach(cmd->params, dup_attr, params_copy);
-        }
-    }
-
-    if (safe_str_eq(rsc->class, PCMK_ALERT_CLASS)) {
-        /* In the case of Alert, lrmd always set rsc->type from CRM_alert_path parameter. */
-        void *value_lookup = g_hash_table_lookup(params_copy, CRM_ALERT_KEY_PATH);
-        if (value_lookup != NULL) { 
-            action = services_action_create_generic((char*)value_lookup, NULL);
-            action->action = strdup(cmd->action);
-            action->timeout = cmd->timeout;
-            action->id = strdup(rsc->rsc_id);
-            action->alert_params = params_copy;
-
-            value_lookup = g_hash_table_lookup(params_copy, CRM_ALERT_NODE_SEQUENCE);        
-            if (value_lookup != NULL) {
-                action->sequence = crm_atoi(value_lookup, "");
-            }
-        } 
-    } else if (cmd->isolation_wrapper) {
+    if (cmd->isolation_wrapper) {
         g_hash_table_remove(params_copy, "CRM_meta_isolation_wrapper");
         action = resources_action_create(rsc->rsc_id,
                                          PCMK_RESOURCE_CLASS_OCF,
@@ -1577,37 +1522,6 @@ process_lrmd_rsc_exec(crm_client_t * client, uint32_t id, xmlNode * request)
     /* Don't reference cmd after handing it off to be scheduled.
      * The cmd could get merged and freed. */
     schedule_lrmd_cmd(rsc, cmd);
-
-    return call_id;
-}
-
-static int
-process_lrmd_alert_exec(crm_client_t * client, uint32_t id, xmlNode * request)
-{
-    lrmd_rsc_t *alert = NULL;
-    lrmd_cmd_t *cmd = NULL;
-    xmlNode *alert_xml = get_xpath_object("//" F_LRMD_ALERT, request, LOG_ERR);
-    const char *alert_id = crm_element_value(alert_xml, F_LRMD_ALERT_ID);
-    int call_id;
-
-    if (!alert_id) {
-        return -EINVAL;
-    }
-
-    alert = g_hash_table_lookup(rsc_list, alert_id);
-    if (alert == NULL) {
-        crm_info("Alert '%s' not found (%d active resources)",
-                 alert_id, g_hash_table_size(rsc_list));
-        return -ENODEV;
-    }
-
-    call_id = pcmk_ok;
-    cmd = create_alert_cmd(request, client, alert);
-    call_id = cmd->call_id;
-
-    /* Don't reference cmd after handing it off to be scheduled.
-     * The cmd could get merged and freed. */
-    schedule_lrmd_cmd(alert, cmd);
 
     return call_id;
 }

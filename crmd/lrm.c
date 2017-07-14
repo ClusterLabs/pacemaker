@@ -255,9 +255,7 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
             if (entry->stop_params) {
                 g_hash_table_destroy(entry->stop_params);
             }
-            entry->stop_params = g_hash_table_new_full(crm_str_hash,
-                                                       g_str_equal, g_hash_destroy_str,
-                                                       g_hash_destroy_str);
+            entry->stop_params = crm_str_table_new();
 
             g_hash_table_foreach(op->params, copy_instance_keys, entry->stop_params);
         }
@@ -1895,8 +1893,7 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
          *   us down).
          * So we should put our version here.
          */
-        op->params = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                           g_hash_destroy_str, g_hash_destroy_str);
+        op->params = crm_str_table_new();
 
         g_hash_table_insert(op->params, strdup(XML_ATTR_CRM_VERSION), strdup(CRM_FEATURE_SET));
 
@@ -1979,8 +1976,7 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
         } else {
             /* Copy the cached parameter list so that we stop the resource
              * with the old attributes, not the new ones */
-            op->params = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                               g_hash_destroy_str, g_hash_destroy_str);
+            op->params = crm_str_table_new();
 
             g_hash_table_foreach(params, copy_meta_keys, op->params);
             g_hash_table_foreach(entry->stop_params, copy_instance_keys, op->params);

@@ -707,8 +707,7 @@ st_fail_count_increment(const char *target)
     struct st_fail_rec *rec = NULL;
 
     if (stonith_failures == NULL) {
-        stonith_failures =
-            g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, free);
+        stonith_failures = crm_str_table_new();
     }
 
     rec = g_hash_table_lookup(stonith_failures, target);

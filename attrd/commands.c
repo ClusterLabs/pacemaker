@@ -1095,7 +1095,7 @@ write_attribute(attribute_t *a)
         /* If the value's peer info does not correspond to a peer, ignore it */
         if (peer == NULL) {
             crm_notice("Update error (peer not found): %s[%s]=%s failed (host=%p)",
-                       v->nodename, a->id, v->current, peer);
+                       a->id, v->nodename, v->current, peer);
             continue;
         }
 
@@ -1114,13 +1114,13 @@ write_attribute(attribute_t *a)
         /* If the peer is found, but its uuid is unknown, defer write */
         if (peer->uuid == NULL) {
             a->unknown_peer_uuids = TRUE;
-            crm_notice("Update error (unknown peer uuid, retry will be attempted once uuid is discovered): %s[%s]=%s failed (host=%p)",
-                       v->nodename, a->id, v->current, peer);
+            crm_notice("Update %s[%s]=%s postponed: unknown peer UUID, will retry if UUID is learned",
+                       a->id, v->nodename, v->current, peer);
             continue;
         }
 
         /* Add this value to status update XML */
-        crm_debug("Update: %s[%s]=%s (%s %u %u %s)", v->nodename, a->id,
+        crm_debug("Update: %s[%s]=%s (%s %u %u %s)", a->id, v->nodename,
                   v->current, peer->uuid, peer->id, v->nodeid, peer->uname);
         build_update_element(xml_top, a, peer->uuid, v->current);
         cib_updates++;

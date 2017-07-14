@@ -7,9 +7,11 @@
 #ifndef RULES_INTERNAL_H
 #define RULES_INTERNAL_H
 
+#include <glib.h>
 #include <libxml/tree.h>
 
-void pe_unpack_alerts(xmlNode *alerts);
+GListPtr pe_unpack_alerts(xmlNode *alerts);
+void pe_free_alert_list(GListPtr alert_list);
 
 #ifdef RHEL7_COMPAT
 void pe_enable_legacy_alerts(const char *script, const char *target);

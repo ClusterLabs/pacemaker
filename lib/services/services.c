@@ -375,6 +375,92 @@ services_action_create_generic(const char *exec, const char *args[])
     return op;
 }
 
+/*!
+ * \brief Create an alert agent action
+ *
+ * \param[in] id        Alert ID
+ * \param[in] exec      Path to alert agent executable
+ * \param[in] timeout   Action timeout
+ * \param[in] params    Parameters to use with action
+ * \param[in] sequence  Action sequence number
+ * \param[in] cb_data   Data to pass to callback function
+ *
+ * \return New action on success, NULL on error
+ * \note It is the caller's responsibility to free cb_data.
+ *       The caller should not free params explicitly.
+ */
+svc_action_t *
+services_alert_create(const char *id, const char *exec, int timeout,
+                      GHashTable *params, int sequence, void *cb_data)
+{
+    svc_action_t *action = services_action_create_generic(exec, NULL);
+
+    CRM_ASSERT(action);
+    action->timeout = timeout;
+    action->id = strdup(id);
+    action->params = params;
+    action->sequence = sequence;
+    action->cb_data = cb_data;
+    return action;
+}
+
+static void
+set_alert_env(gpointer key, gpointer value, gpointer user_data)
+{
+    int rc;
+
+    if (value) {
+        rc = setenv(key, value, 1);
+    } else {
+        rc = unsetenv(key);
+    }
+
+    if (rc < 0) {
+        crm_perror(LOG_ERR, "setenv %s=%s",
+                  (char*)key, (value? (char*)value : ""));
+    } else {
+        crm_trace("setenv %s=%s", (char*)key, (value? (char*)value : ""));
+    }
+}
+
+static void
+unset_alert_env(gpointer key, gpointer value, gpointer user_data)
+{
+    if (unsetenv(key) < 0) {
+        crm_perror(LOG_ERR, "unset %s", (char*)key);
+    } else {
+        crm_trace("unset %s", (char*)key);
+    }
+}
+
+/*!
+ * \brief Execute an alert agent action
+ *
+ * \param[in] action  Action to execute
+ * \param[in] cb      Function to call when action completes
+ *
+ * \return TRUE if the library will free action, FALSE otherwise
+ *
+ * \note If this function returns FALSE, it is the caller's responsibility to
+ *       free the action with services_action_free().
+ */
+gboolean
+services_alert_async(svc_action_t *action, void (*cb)(svc_action_t *op))
+{
+    gboolean responsible;
+
+    action->synchronous = false;
+    action->opaque->callback = cb;
+    if (action->params) {
+        g_hash_table_foreach(action->params, set_alert_env, NULL);
+    }
+    responsible = services_os_action_execute(action);
+    if (action->params) {
+        g_hash_table_foreach(action->params, unset_alert_env, NULL);
+    }
+    return responsible;
+}
+
 #if SUPPORT_DBUS
 /*!
  * \internal
@@ -486,11 +572,6 @@ services_action_free(svc_action_t * op)
     if (op->params) {
         g_hash_table_destroy(op->params);
         op->params = NULL;
-    }
-
-    if (op->alert_params) {
-        g_hash_table_destroy(op->alert_params);
-        op->alert_params = NULL;
     }
 
     free(op);

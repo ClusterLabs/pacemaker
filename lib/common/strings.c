@@ -288,6 +288,26 @@ crm_strcase_hash(gconstpointer v)
     return h;
 }
 
+static void
+copy_str_table_entry(gpointer key, gpointer value, gpointer user_data)
+{
+    if (key && value && user_data) {
+        g_hash_table_insert((GHashTable*)user_data, strdup(key), strdup(value));
+    }
+}
+
+GHashTable *
+crm_str_table_dup(GHashTable *old_table)
+{
+    GHashTable *new_table = NULL;
+
+    if (old_table) {
+        new_table = crm_str_table_new();
+        g_hash_table_foreach(old_table, copy_str_table_entry, new_table);
+    }
+    return new_table;
+}
+
 char *
 add_list_element(char *list, const char *value)
 {

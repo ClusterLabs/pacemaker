@@ -305,8 +305,7 @@ create_notification_boundaries(resource_t * rsc, const char *action, action_t * 
 
     n_data = calloc(1, sizeof(notify_data_t));
     n_data->action = action;
-    n_data->keys =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+    n_data->keys = crm_str_table_new();
 
     if (start) {
         /* create pre-event notification wrappers */
