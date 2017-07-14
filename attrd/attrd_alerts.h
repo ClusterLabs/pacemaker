@@ -32,10 +32,6 @@ void attrd_lrmd_disconnect(void);
 gboolean attrd_read_options(gpointer user_data);
 void attrd_cib_updated_cb(const char *event, xmlNode * msg);
 void attrd_enable_alerts(const char *script, const char *target);
-int lrmd_send_attribute_alert(GList *alert_list,
-                              lrmd_t *(*lrmd_connect_func)(void),
-                              const char *node, uint32_t nodeid,
-                              const char *attr_name, const char *attr_value);
 #if HAVE_ATOMIC_ATTRD
 void set_alert_attribute_value(GHashTable *t, attribute_value_t *v);
 void send_alert_attributes_value(attribute_t *a, GHashTable *t);

@@ -36,10 +36,9 @@
 #include <crm/common/ipc.h>
 #include <crm/common/ipcs.h>
 #include <crm/cluster/internal.h>
+#include <crm/lrmd_alerts_internal.h>
 #include <crm/common/alerts_internal.h>
-
 #include <crm/common/xml.h>
-
 #include <crm/attrd.h>
 
 #include <attrd_common.h>
