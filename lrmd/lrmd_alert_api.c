@@ -87,8 +87,9 @@ process_lrmd_alert_exec(crm_client_t *client, uint32_t id, xmlNode *request)
     const char *alert_path = crm_element_value(alert_xml, F_LRMD_ALERT_PATH);
     svc_action_t *action = NULL;
     int alert_timeout = 0;
+    int rc = pcmk_ok;
     GHashTable *params = NULL;
-    struct alert_cb_s *cb_data;
+    struct alert_cb_s *cb_data = NULL;
 
     if ((alert_id == NULL) || (alert_path == NULL)) {
         return -EINVAL;
@@ -106,7 +107,13 @@ process_lrmd_alert_exec(crm_client_t *client, uint32_t id, xmlNode *request)
                              ++alert_sequence_no);
 
     cb_data = calloc(1, sizeof(struct alert_cb_s));
+    CRM_CHECK(cb_data != NULL,
+              rc = -ENOMEM; goto err);
+
     cb_data->client_id = strdup(client->id);
+    CRM_CHECK(cb_data->client_id != NULL,
+              rc = -ENOMEM; goto err);
+
     crm_element_value_int(request, F_LRMD_CALLID, &(cb_data->call_id));
 
     action = services_alert_create(alert_id, alert_path, alert_timeout, params,
@@ -115,9 +122,20 @@ process_lrmd_alert_exec(crm_client_t *client, uint32_t id, xmlNode *request)
     add_inflight_alert(cb_data->call_id, alert_timeout);
     if (services_alert_async(action, alert_complete) == FALSE) {
         services_action_free(action);
-        remove_inflight_alert(cb_data->call_id);
     }
     return pcmk_ok;
+
+err:
+    if (cb_data) {
+        if (cb_data->client_id) {
+            free(cb_data->client_id);
+        }
+        free(cb_data);
+    }
+    if (action) {
+        services_action_free(action);
+    }
+    return rc;
 }
 
 static gboolean
