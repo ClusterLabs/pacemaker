@@ -702,7 +702,13 @@ main(int argc, char **argv)
             printf("%s ", argv[optind++]);
         printf("\n");
     }
+
     if (argerr) {
+        if (output_format == mon_output_cgi) {
+            fprintf(stdout, "Content-Type: text/plain\n"
+                            "Status: 500\n\n");
+            return EX_USAGE;
+        }
         return crm_help('?', EX_USAGE);
     }
 
