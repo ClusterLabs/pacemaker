@@ -56,6 +56,7 @@ stonithd_CFLAGS		= $(CFLAGS_HARDENED_EXE)
 stonithd_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
 
 stonithd_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
+			$(top_builddir)/lib/cib/libcib.la		\
 			$(top_builddir)/lib/cluster/libcrmcluster.la	\
 			$(top_builddir)/lib/fencing/libstonithd.la	\
 			$(top_builddir)/lib/pengine/libpe_status.la	\

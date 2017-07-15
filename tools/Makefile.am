@@ -24,6 +24,8 @@ endif
 COMMONLIBS	= 							\
 		$(top_builddir)/lib/common/libcrmcommon.la		\
 		$(top_builddir)/lib/cib/libcib.la			\
+		$(top_builddir)/lib/pengine/libpe_rules.la		\
+		$(top_builddir)/lib/fencing/libstonithd.la		\
 		$(CURSESLIBS) $(CLUSTERLIBS)
 
 noinst_HEADERS		= crm_resource.h fake_transition.h
@@ -83,9 +85,9 @@ crm_simulate_SOURCES	= crm_simulate.c fake_transition.c
 crm_simulate_CFLAGS	= -I$(top_srcdir)/pengine
 
 crm_simulate_LDADD	= $(top_builddir)/lib/pengine/libpe_status.la		\
-			$(top_builddir)/pengine/libpengine.la 			\
-			$(top_builddir)/lib/cib/libcib.la			\
+			$(top_builddir)/pengine/libpengine.la			\
 			$(top_builddir)/lib/lrmd/liblrmd.la			\
+			$(top_builddir)/lib/services/libcrmservice.la		\
 			$(top_builddir)/lib/transition/libtransitioner.la	\
 			$(COMMONLIBS)
 
@@ -94,7 +96,6 @@ crm_diff_LDADD		= $(COMMONLIBS)
 
 crm_mon_SOURCES		= crm_mon.c
 crm_mon_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la		\
-			  $(top_builddir)/lib/fencing/libstonithd.la		\
 			  $(top_builddir)/pengine/libpengine.la \
 			  $(COMMONLIBS) $(SNMPLIBS) $(ESMTPLIBS)
 
@@ -109,11 +110,10 @@ crm_attribute_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la $(COMMONLIBS)
 
 crm_resource_SOURCES	= crm_resource.c crm_resource_ban.c crm_resource_runtime.c crm_resource_print.c fake_transition.c
 crm_resource_CFLAGS	= -I$(top_srcdir)/pengine
-crm_resource_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la  		\
-			$(top_builddir)/lib/lrmd/liblrmd.la 			\
-			$(top_builddir)/lib/services/libcrmservice.la 		\
-			$(top_builddir)/lib/pengine/libpe_status.la 		\
-			$(top_builddir)/pengine/libpengine.la 			\
+crm_resource_LDADD	= $(top_builddir)/lib/lrmd/liblrmd.la			\
+			$(top_builddir)/lib/services/libcrmservice.la		\
+			$(top_builddir)/lib/pengine/libpe_status.la		\
+			$(top_builddir)/pengine/libpengine.la			\
 			$(top_builddir)/lib/transition/libtransitioner.la	\
 			$(COMMONLIBS)
 
@@ -124,8 +124,7 @@ attrd_updater_SOURCES	= attrd_updater.c
 attrd_updater_LDADD	= $(COMMONLIBS)
 
 crm_ticket_SOURCES	= crm_ticket.c
-crm_ticket_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la  \
-			$(top_builddir)/lib/pengine/libpe_status.la \
+crm_ticket_LDADD	= $(top_builddir)/lib/pengine/libpe_status.la \
 			$(top_builddir)/pengine/libpengine.la \
 			$(COMMONLIBS)
 

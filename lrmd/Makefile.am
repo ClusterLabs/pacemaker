@@ -52,17 +52,21 @@ pacemaker_remoted_SOURCES	= $(lrmd_SOURCES) tls_backend.c ipc_proxy.c
 
 lrmd_internal_ctl_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 				$(top_builddir)/lib/lrmd/liblrmd.la		\
+				$(top_builddir)/lib/fencing/libstonithd.la	\
 				$(top_builddir)/lib/cib/libcib.la		\
 				$(top_builddir)/lib/services/libcrmservice.la	\
 				$(top_builddir)/lib/pengine/libpe_status.la	\
+				$(top_builddir)/lib/pengine/libpe_rules.la	\
 				$(top_builddir)/pengine/libpengine.la
 lrmd_internal_ctl_SOURCES	= remote_ctl.c
 
 lrmd_test_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/lrmd/liblrmd.la		\
+			$(top_builddir)/lib/fencing/libstonithd.la	\
 			$(top_builddir)/lib/cib/libcib.la		\
 			$(top_builddir)/lib/services/libcrmservice.la	\
 			$(top_builddir)/lib/pengine/libpe_status.la	\
+			$(top_builddir)/lib/pengine/libpe_rules.la	\
 			$(top_builddir)/pengine/libpengine.la
 lrmd_test_SOURCES	= test.c
 

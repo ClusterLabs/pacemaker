@@ -29,6 +29,8 @@ attrd_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
 attrd_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la	\
                 $(top_builddir)/lib/pengine/libpe_rules.la      \
 		$(top_builddir)/lib/common/libcrmcommon.la	\
+		$(top_builddir)/lib/services/libcrmservice.la	\
+		$(top_builddir)/lib/fencing/libstonithd.la	\
 		$(top_builddir)/lib/cib/libcib.la		\
                 $(top_builddir)/lib/lrmd/liblrmd.la             \
 		$(CLUSTERLIBS)

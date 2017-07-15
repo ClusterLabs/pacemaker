@@ -24,6 +24,7 @@ halibdir	= $(CRM_DAEMON_DIR)
 commmoddir	= $(halibdir)/modules/comm
 
 COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la \
+		$(top_builddir)/lib/pengine/libpe_rules.la \
 		$(top_builddir)/lib/cib/libcib.la
 
 ## binary progs
@@ -36,6 +37,7 @@ cib_CFLAGS	= $(CFLAGS_HARDENED_EXE)
 cib_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
 
 cib_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la \
+		$(top_builddir)/lib/fencing/libstonithd.la \
 		$(COMMONLIBS) $(CRYPTOLIB) $(CLUSTERLIBS)
 
 cib_SOURCES	= io.c messages.c notify.c \
