@@ -402,6 +402,23 @@ do_lrm_control(long long action,
     }
 }
 
+/*!
+ * \internal
+ * \brief Get the local lrmd connection
+ *
+ * \return Local lrmd connection, or NULL if not connected
+ */
+lrmd_t *
+crmd_local_lrmd_conn()
+{
+    lrm_state_t *lrm_state = lrm_state_find(fsa_our_uname);
+
+    if (lrm_state == NULL) {
+        return NULL;
+    }
+    return (lrmd_t *) (lrm_state->conn);
+}
+
 static gboolean
 lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state, int log_level)
 {
