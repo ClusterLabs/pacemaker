@@ -247,3 +247,133 @@ lrmd_send_attribute_alert(GList *alert_list, lrmd_t *(*lrmd_connect_func)(void),
     lrmd_key_value_freeall(params);
     return rc;
 }
+
+/*!
+ * \internal
+ * \brief Send an alert for a node membership event
+ *
+ * \param[in] alert_list         List of alert agents to execute
+ * \param[in] lrmd_connect_func  Function that returns an LRMD connection
+ * \param[in] node               Name of node with change
+ * \param[in] nodeid             Node ID of node with change
+ * \param[in] state              New state of node with change
+ *
+ * \retval pcmk_ok on success
+ * \retval -1 if some alert agents failed
+ * \retval -2 if all alert agents failed
+ */
+int
+lrmd_send_node_alert(GList *alert_list, lrmd_t *(*lrmd_connect_func)(void),
+                     const char *node, uint32_t nodeid, const char *state)
+{
+    int rc = pcmk_ok;
+    lrmd_key_value_t *params = NULL;
+
+    if (alert_list == NULL) {
+        return pcmk_ok;
+    }
+
+    params = alert_key2param(params, CRM_alert_node, node);
+    params = alert_key2param(params, CRM_alert_desc, state);
+    params = alert_key2param_int(params, CRM_alert_nodeid, nodeid);
+
+    rc = exec_alert_list(alert_list, lrmd_connect_func, crm_alert_node, NULL,
+                         params);
+    lrmd_key_value_freeall(params);
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Send an alert for a fencing event
+ *
+ * \param[in] alert_list         List of alert agents to execute
+ * \param[in] lrmd_connect_func  Function that returns an LRMD connection
+ * \param[in] target             Name of fence target node
+ * \param[in] task               Type of fencing event that occurred
+ * \param[in] desc               Readable description of event
+ * \param[in] op_rc              Result of fence action
+ *
+ * \retval pcmk_ok on success
+ * \retval -1 if some alert agents failed
+ * \retval -2 if all alert agents failed
+ */
+int
+lrmd_send_fencing_alert(GList *alert_list, lrmd_t *(*lrmd_connect_func)(void),
+                        const char *target, const char *task, const char *desc,
+                        int op_rc)
+{
+    int rc = pcmk_ok;
+    lrmd_key_value_t *params = NULL;
+
+    if (alert_list == NULL) {
+        return pcmk_ok;
+    }
+
+    params = alert_key2param(params, CRM_alert_node, target);
+    params = alert_key2param(params, CRM_alert_task, task);
+    params = alert_key2param(params, CRM_alert_desc, desc);
+    params = alert_key2param_int(params, CRM_alert_rc, op_rc);
+
+    rc = exec_alert_list(alert_list, lrmd_connect_func, crm_alert_fencing,
+                         NULL, params);
+    lrmd_key_value_freeall(params);
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Send an alert for a resource operation
+ *
+ * \param[in] alert_list         List of alert agents to execute
+ * \param[in] lrmd_connect_func  Function that returns an LRMD connection
+ * \param[in] node               Name of node that executed operation
+ * \param[in] op                 Resource operation
+ *
+ * \retval pcmk_ok on success
+ * \retval -1 if some alert agents failed
+ * \retval -2 if all alert agents failed
+ */
+int
+lrmd_send_resource_alert(GList *alert_list, lrmd_t *(*lrmd_connect_func)(void),
+                         const char *node, lrmd_event_data_t *op)
+{
+    int rc = pcmk_ok;
+    int target_rc = pcmk_ok;
+    lrmd_key_value_t *params = NULL;
+
+    if (alert_list == NULL) {
+        return pcmk_ok;
+    }
+
+    target_rc = rsc_op_expected_rc(op);
+    if ((op->interval == 0) && (target_rc == op->rc)
+        && safe_str_eq(op->op_type, RSC_STATUS)) {
+
+        /* Don't send alerts for probes with the expected result. Leave it up to
+         * the agent whether to alert for 'failed' probes. (Even if we find a
+         * resource running, it was probably because someone did a clean-up of
+         * the status section.)
+         */
+        return pcmk_ok;
+    }
+
+    params = alert_key2param(params, CRM_alert_node, node);
+    params = alert_key2param(params, CRM_alert_rsc, op->rsc_id);
+    params = alert_key2param(params, CRM_alert_task, op->op_type);
+    params = alert_key2param_int(params, CRM_alert_interval, op->interval);
+    params = alert_key2param_int(params, CRM_alert_target_rc, target_rc);
+    params = alert_key2param_int(params, CRM_alert_status, op->op_status);
+    params = alert_key2param_int(params, CRM_alert_rc, op->rc);
+
+    if (op->op_status == PCMK_LRM_OP_DONE) {
+        crm_set_alert_key(CRM_alert_desc, services_ocf_exitcode_str(op->rc));
+    } else {
+        crm_set_alert_key(CRM_alert_desc, services_lrm_status_str(op->op_status));
+    }
+
+    rc = exec_alert_list(alert_list, lrmd_connect_func, crm_alert_resource,
+                         NULL, params);
+    lrmd_key_value_freeall(params);
+    return rc;
+}
