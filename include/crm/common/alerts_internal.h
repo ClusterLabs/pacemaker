@@ -93,7 +93,6 @@ void crm_insert_alert_key_int(GHashTable *table, enum crm_alert_keys_e name,
 void crm_unset_alert_keys(void);
 void crm_set_envvar_list(crm_alert_entry_t *entry);
 void crm_unset_envvar_list(crm_alert_entry_t *entry);
-gboolean crm_is_target_alert(char **list, const char *value);
 
 static inline const char *
 crm_alert_flag2text(enum crm_alert_flags flag)

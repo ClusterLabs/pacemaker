@@ -232,24 +232,3 @@ crm_unset_envvar_list(crm_alert_entry_t *entry)
         g_hash_table_foreach(entry->envvars, set_envvar, GINT_TO_POINTER(TRUE));
     }
 }
-
-gboolean 
-crm_is_target_alert(char **list, const char *value)
-{
-    int target_list_num = 0;
-    gboolean rc = FALSE;
-
-    if (list == NULL) return TRUE;
-
-    target_list_num = g_strv_length(list);
-
-    for( int cnt = 0; cnt < target_list_num; cnt++ ) {
-        if (strcmp(list[cnt], value) == 0) {
-            rc = TRUE;
-            break;
-        }
-    } 
-
-    return rc;
-}
-

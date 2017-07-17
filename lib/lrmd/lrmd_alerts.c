@@ -71,6 +71,33 @@ lrmd_set_alert_envvar_to_lrmd_params(lrmd_key_value_t *head,
     return head;
 }
 
+/*
+ * We could use g_strv_contains() instead of this function,
+ * but that has only been available since glib 2.43.2.
+ */
+static gboolean
+is_target_alert(char **list, const char *value)
+{
+    int target_list_num = 0;
+    gboolean rc = FALSE;
+
+    CRM_CHECK(value != NULL, return FALSE);
+
+    if (list == NULL) {
+        return TRUE;
+    }
+
+    target_list_num = g_strv_length(list);
+
+    for (int cnt = 0; cnt < target_list_num; cnt++) {
+        if (strcmp(list[cnt], value) == 0) {
+            rc = TRUE;
+            break;
+        }
+    }
+    return rc;
+}
+
 /*!
  * \internal
  * \brief Execute alert agents for an event
@@ -111,7 +138,7 @@ exec_alert_list(GList *alert_list, lrmd_t *(*lrmd_connect_func)(void),
         }
 
         if ((kind == crm_alert_attribute)
-            && !crm_is_target_alert(entry->select_attribute_name, attr_name)) {
+            && !is_target_alert(entry->select_attribute_name, attr_name)) {
 
             crm_trace("Filtering unwanted attribute '%s' alert to %s via %s",
                       attr_name, entry->recipient, entry->id);
