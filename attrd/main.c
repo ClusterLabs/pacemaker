@@ -44,7 +44,6 @@
 #include <crm/attrd.h>
 #include <internal.h>
 
-cib_t *the_cib = NULL;
 lrmd_t *the_lrmd = NULL;
 crm_cluster_t *attrd_cluster = NULL;
 election_t *writer = NULL;
@@ -344,11 +343,7 @@ main(int argc, char **argv)
     }
 
     attrd_lrmd_disconnect();
-
-    if (the_cib) {
-        the_cib->cmds->signoff(the_cib);
-        cib_delete(the_cib);
-    }
+    attrd_cib_disconnect();
 
     if(attrd_error) {
         return crm_exit(attrd_error);

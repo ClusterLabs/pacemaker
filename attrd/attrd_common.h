@@ -23,6 +23,8 @@ void attrd_shutdown(int nsig);
 void attrd_init_ipc(qb_ipcs_service_t **ipcs,
                     qb_ipcs_msg_process_fn dispatch_fn);
 
+void attrd_cib_disconnect(void);
+
 gboolean attrd_value_needs_expansion(const char *value);
 int attrd_expand_value(const char *value, const char *old_value);
 

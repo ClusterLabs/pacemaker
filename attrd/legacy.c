@@ -53,7 +53,6 @@ char *attrd_uuid = NULL;
 uint32_t attrd_nodeid = 0;
 
 GHashTable *attr_hash = NULL;
-cib_t *the_cib = NULL;
 lrmd_t *the_lrmd = NULL;
 crm_trigger_t *attrd_config_read = NULL;
 
@@ -746,11 +745,7 @@ main(int argc, char **argv)
     qb_ipcs_destroy(ipcs);
 
     attrd_lrmd_disconnect();
-
-    if (the_cib) {
-        the_cib->cmds->signoff(the_cib);
-        cib_delete(the_cib);
-    }
+    attrd_cib_disconnect();
 
     g_hash_table_destroy(attr_hash);
     free(attrd_uuid);
