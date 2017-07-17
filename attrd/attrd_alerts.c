@@ -90,30 +90,25 @@ attrd_lrmd_disconnect() {
 static void
 config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
-    crm_time_t *now = crm_time_new(NULL);
     xmlNode *crmalerts = NULL;
 
     if (rc != pcmk_ok) {
         crm_err("Local CIB query resulted in an error: %s", pcmk_strerror(rc));
-        goto bail;
+        return;
     }
 
     crmalerts = output;
-    if ((crmalerts) &&
-        (crm_element_name(crmalerts)) &&
-        (strcmp(crm_element_name(crmalerts), XML_CIB_TAG_ALERTS) != 0)) {
+    if (crmalerts && !crm_str_eq(crm_element_name(crmalerts),
+                                 XML_CIB_TAG_ALERTS, TRUE)) {
         crmalerts = first_named_child(crmalerts, XML_CIB_TAG_ALERTS);
     }
     if (!crmalerts) {
         crm_err("Local CIB query for " XML_CIB_TAG_ALERTS " section failed");
-        goto bail;
+        return;
     }
 
     pe_free_alert_list(attrd_alert_list);
     attrd_alert_list = pe_unpack_alerts(crmalerts);
-
-  bail:
-    crm_time_free(now);
 }
 
 gboolean
