@@ -136,60 +136,9 @@ attrd_read_options(gpointer user_data)
 void
 attrd_cib_updated_cb(const char *event, xmlNode * msg)
 {
-    int rc = -1;
-    int format= 1;
-    xmlNode *patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
-    xmlNode *change = NULL;
-    xmlXPathObject *xpathObj = NULL;
-
-    CRM_CHECK(msg != NULL, return);
-
-    crm_element_value_int(msg, F_CIB_RC, &rc);
-    if (rc < pcmk_ok) {
-        crm_trace("Filter rc=%d (%s)", rc, pcmk_strerror(rc));
-        return;
+    if (crm_patchset_contains_alert(msg, FALSE)) {
+        mainloop_set_trigger(attrd_config_read);
     }
-
-    crm_element_value_int(patchset, "format", &format);
-    if (format == 1) {
-        if ((xpathObj = xpath_search(
-                 msg,
-                 "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_CIB_TAG_ALERTS
-                 )) != NULL) {
-            freeXpathObject(xpathObj);
-            mainloop_set_trigger(attrd_config_read);
-        }
-    } else if (format == 2) {
-        for (change = __xml_first_child(patchset); change != NULL; change = __xml_next(change)) {
-            const char *xpath = crm_element_value(change, XML_DIFF_PATH);
-
-            if (xpath == NULL) {
-                continue;
-            }
-
-            if (!strstr(xpath, "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_ALERTS)) {
-                /* this is not a change to an existing alerts section */
-
-                xmlNode *section = NULL;
-                const char *name = NULL;
-
-                if ((strcmp(xpath, "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION) != 0) ||
-                    ((section = __xml_first_child(change)) == NULL) ||
-                    ((name = crm_element_name(section)) == NULL) ||
-                    (strcmp(name, XML_CIB_TAG_ALERTS) != 0)) {
-                    /* this is not a newly added alerts section */
-                    continue;
-                }
-            }
-
-            mainloop_set_trigger(attrd_config_read);
-            break;
-        }
-
-    } else {
-        crm_warn("Unknown patch format: %d", format);
-    }
-
 }
 
 #if HAVE_ATOMIC_ATTRD

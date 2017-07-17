@@ -20,6 +20,7 @@
 #define ALERT_INTERNAL_H
 
 #include <glib.h>
+#include <stdbool.h>
 
 /* Default-Timeout to use before killing a alerts script (in milliseconds) */
 #  define CRM_ALERT_DEFAULT_TIMEOUT_MS (30000)
@@ -92,6 +93,7 @@ void crm_insert_alert_key_int(GHashTable *table, enum crm_alert_keys_e name,
 void crm_unset_alert_keys(void);
 void crm_set_envvar_list(crm_alert_entry_t *entry);
 void crm_unset_envvar_list(crm_alert_entry_t *entry);
+bool crm_patchset_contains_alert(xmlNode *msg, bool config);
 
 static inline const char *
 crm_alert_flag2text(enum crm_alert_flags flag)
