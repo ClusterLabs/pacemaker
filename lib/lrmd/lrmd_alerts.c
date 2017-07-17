@@ -34,8 +34,9 @@
 #include <crm/cib.h>
 #include <crm/lrmd.h>
 
-lrmd_key_value_t *
-lrmd_set_alert_key_to_lrmd_params(lrmd_key_value_t *head, enum crm_alert_keys_e name, const char *value)
+static lrmd_key_value_t *
+alert_key2param(lrmd_key_value_t *head, enum crm_alert_keys_e name,
+                const char *value)
 {
     const char **key;
 
@@ -46,6 +47,17 @@ lrmd_set_alert_key_to_lrmd_params(lrmd_key_value_t *head, enum crm_alert_keys_e 
         crm_trace("Setting alert key %s = '%s'", *key, value);
         head = lrmd_key_value_add(head, *key, value);
     }
+    return head;
+}
+
+static lrmd_key_value_t *
+alert_key2param_int(lrmd_key_value_t *head, enum crm_alert_keys_e name,
+                    int value)
+{
+    char *value_s = crm_itoa(value);
+
+    head = alert_key2param(head, name, value_s);
+    free(value_s);
     return head;
 }
 
@@ -61,9 +73,8 @@ set_ev_kv(gpointer key, gpointer value, gpointer user_data)
     }
 }
 
-lrmd_key_value_t *
-lrmd_set_alert_envvar_to_lrmd_params(lrmd_key_value_t *head,
-                                     crm_alert_entry_t *entry)
+static lrmd_key_value_t *
+alert_envvar2params(lrmd_key_value_t *head, crm_alert_entry_t *entry)
 {
     if (entry->envvars) {
         g_hash_table_foreach(entry->envvars, set_ev_kv, &head);
@@ -121,8 +132,8 @@ exec_alert_list(GList *alert_list, lrmd_t *(*lrmd_connect_func)(void),
     const char *kind_s = crm_alert_flag2text(kind);
     crm_time_hr_t *now = NULL;
 
-    params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_kind, kind_s);
-    params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_version, VERSION);
+    params = alert_key2param(params, CRM_alert_kind, kind_s);
+    params = alert_key2param(params, CRM_alert_version, VERSION);
 
     for (GList *iter = g_list_first(alert_list); iter; iter = g_list_next(iter)) {
         crm_alert_entry_t *entry = (crm_alert_entry_t *)(iter->data);
@@ -156,20 +167,20 @@ exec_alert_list(GList *alert_list, lrmd_t *(*lrmd_connect_func)(void),
             copy_params = lrmd_key_value_add(copy_params, head->key, head->value);
         }
 
-        copy_params = lrmd_set_alert_key_to_lrmd_params(copy_params, CRM_alert_recipient, entry->recipient);
+        copy_params = alert_key2param(copy_params, CRM_alert_recipient,
+                                      entry->recipient);
 
         if (now) {
             char *timestamp = crm_time_format_hr(entry->tstamp_format, now);
 
             if (timestamp) {
-                copy_params = lrmd_set_alert_key_to_lrmd_params(copy_params,
-                                                                CRM_alert_timestamp,
-                                                                timestamp);
+                copy_params = alert_key2param(copy_params, CRM_alert_timestamp,
+                                              timestamp);
                 free(timestamp);
             }
         }
 
-        copy_params = lrmd_set_alert_envvar_to_lrmd_params(copy_params, entry);
+        copy_params = alert_envvar2params(copy_params, entry);
 
         lrmd_conn = (*lrmd_connect_func)();
         if (lrmd_conn == NULL) {
@@ -222,23 +233,14 @@ lrmd_send_attribute_alert(GList *alert_list, lrmd_t *(*lrmd_connect_func)(void),
 {
     int rc = pcmk_ok;
     lrmd_key_value_t *params = NULL;
-    char *nodeid_s;
 
     if (alert_list == NULL) {
         return pcmk_ok;
     }
-    params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_node, node);
-
-    nodeid_s = crm_itoa(nodeid);
-    params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_nodeid,
-                                               nodeid_s);
-    free(nodeid_s);
-
-    params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_attribute_name,
-                                               attr_name);
-    params = lrmd_set_alert_key_to_lrmd_params(params,
-                                               CRM_alert_attribute_value,
-                                               attr_value);
+    params = alert_key2param(params, CRM_alert_node, node);
+    params = alert_key2param_int(params, CRM_alert_nodeid, nodeid);
+    params = alert_key2param(params, CRM_alert_attribute_name, attr_name);
+    params = alert_key2param(params, CRM_alert_attribute_value, attr_value);
 
     rc = exec_alert_list(alert_list, lrmd_connect_func, crm_alert_attribute,
                          attr_name, params);
