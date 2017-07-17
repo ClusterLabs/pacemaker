@@ -29,7 +29,6 @@
 #include <crm/cib/internal.h>
 
 #include <internal.h>
-#include "attrd_alerts.h"
 
 /*
  * Legacy attrd (all pre-1.1.11 Pacemaker versions, plus all versions when using

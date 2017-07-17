@@ -22,7 +22,6 @@
 #include <crm/cluster/internal.h>
 #include <crm/cluster/election.h>
 #include <internal.h>
-#include "attrd_alerts.h"
 #include <crm/common/alerts_internal.h>
 #include <crm/common/iso8601_internal.h>
 #include <crm/pengine/rules_internal.h>

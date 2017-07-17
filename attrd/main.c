@@ -43,7 +43,6 @@
 
 #include <crm/attrd.h>
 #include <internal.h>
-#include "attrd_alerts.h"
 
 cib_t *the_cib = NULL;
 lrmd_t *the_lrmd = NULL;

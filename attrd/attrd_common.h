@@ -9,6 +9,9 @@
 #  define PCMK_ATTRD_COMMON__H
 
 #include <regex.h>
+#include <glib.h>
+#include <crm/crm.h>
+#include <crm/cib/internal.h>
 
 void attrd_init_mainloop(void);
 void attrd_run_mainloop(void);
@@ -46,4 +49,18 @@ int attrd_expand_value(const char *value, const char *old_value);
 int attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
                         int interval);
 
+extern cib_t *the_cib;
+
+/* Alerts */
+
+extern lrmd_t *the_lrmd;
+extern crm_trigger_t *attrd_config_read;
+
+lrmd_t *attrd_lrmd_connect(void);
+void attrd_lrmd_disconnect(void);
+gboolean attrd_read_options(gpointer user_data);
+void attrd_cib_updated_cb(const char *event, xmlNode *msg);
+void attrd_enable_alerts(const char *script, const char *target);
+int attrd_send_attribute_alert(const char *node, int nodeid,
+                               const char *attr, const char *value);
 #endif /* PCMK_ATTRD_COMMON__H */

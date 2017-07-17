@@ -43,8 +43,6 @@
 
 #include <attrd_common.h>
 
-#include "attrd_alerts.h"
-
 #define OPTARGS	"hV"
 #if SUPPORT_HEARTBEAT
 ll_cluster_t *attrd_cluster_conn;
