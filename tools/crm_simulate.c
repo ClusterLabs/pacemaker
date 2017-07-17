@@ -565,7 +565,7 @@ profile_all(const char *dir)
                 free(namelist[file_num]);
                 continue;
 
-            } else if (!crm_ends_with(namelist[file_num]->d_name, ".xml")) {
+            } else if (!crm_ends_with_ext(namelist[file_num]->d_name, ".xml")) {
                 free(namelist[file_num]);
                 continue;
             }

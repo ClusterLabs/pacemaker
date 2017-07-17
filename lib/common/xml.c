@@ -2952,7 +2952,7 @@ filename2xml(const char *filename)
     /* initGenericErrorDefaultFunc(crm_xml_err); */
 
     if (filename) {
-        uncompressed = !crm_ends_with(filename, ".bz2");
+        uncompressed = !crm_ends_with_ext(filename, ".bz2");
     }
 
     if (filename == NULL) {

@@ -696,7 +696,7 @@ cib_file_signoff(cib_t * cib)
 
         /* Otherwise, it's a simple write */
         } else {
-            gboolean do_bzip = crm_ends_with(private->filename, ".bz2");
+            gboolean do_bzip = crm_ends_with_ext(private->filename, ".bz2");
 
             if (write_xml_file(in_mem_cib, private->filename, do_bzip) <= 0) {
                 rc = pcmk_err_generic;

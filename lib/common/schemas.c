@@ -166,7 +166,7 @@ schema_filter(const struct dirent *a)
     if (strstr(a->d_name, "pacemaker-") != a->d_name) {
         /* crm_trace("%s - wrong prefix", a->d_name); */
 
-    } else if (!crm_ends_with(a->d_name, ".rng")) {
+    } else if (!crm_ends_with_ext(a->d_name, ".rng")) {
         /* crm_trace("%s - wrong suffix", a->d_name); */
 
     } else if (!version_from_filename(a->d_name, &version)) {
