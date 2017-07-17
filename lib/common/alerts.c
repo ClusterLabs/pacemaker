@@ -22,8 +22,6 @@
 #include <crm/msg_xml.h>
 #include <crm/common/alerts_internal.h>
 
-guint crm_alert_max_alert_timeout = CRM_ALERT_DEFAULT_TIMEOUT_MS;
-
 /*		
  * to allow script compatibility we can have more than one		
  * set of environment variables		

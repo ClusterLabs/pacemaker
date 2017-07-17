@@ -76,7 +76,6 @@ enum crm_alert_keys_e {
 #define CRM_ALERT_INTERNAL_KEY_MAX 16
 #define CRM_ALERT_NODE_SEQUENCE "CRM_alert_node_sequence"
 
-extern guint crm_alert_max_alert_timeout;
 extern const char *crm_alert_keys[CRM_ALERT_INTERNAL_KEY_MAX][3];
 
 crm_alert_entry_t *crm_dup_alert_entry(crm_alert_entry_t *entry);

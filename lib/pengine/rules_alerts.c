@@ -167,8 +167,6 @@ pe_unpack_alerts(xmlNode *alerts)
     guint max_timeout = 0;
     GListPtr alert_list = NULL;
 
-    crm_alert_max_alert_timeout = CRM_ALERT_DEFAULT_TIMEOUT_MS;
-
     if (alerts) {
 #ifdef RHEL7_COMPAT
         if (notify_script) {
@@ -237,10 +235,6 @@ pe_unpack_alerts(xmlNode *alerts)
         } else {
             crm_free_alert_entry(entry);
         }
-    }
-
-    if (max_timeout > 0) {
-        crm_alert_max_alert_timeout = max_timeout;
     }
     return alert_list;
 }
