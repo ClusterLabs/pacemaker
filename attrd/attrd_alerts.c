@@ -30,16 +30,31 @@
 
 static GListPtr attrd_alert_list = NULL;
 
+static void
+attrd_lrmd_callback(lrmd_event_data_t * op)
+{
+    CRM_CHECK(op != NULL, return);
+    switch (op->type) {
+        case lrmd_event_disconnect:
+            crm_info("Lost connection to LRMD");
+            attrd_lrmd_disconnect();
+            break;
+        default:
+            break;
+    }
+}
+
 lrmd_t *
-attrd_lrmd_connect(int max_attempts, void callback(lrmd_event_data_t * op))
+attrd_lrmd_connect()
 {
     int ret = -ENOTCONN;
     int fails = 0;
+    const unsigned int max_attempts = 10;
 
     if (!the_lrmd) {
         the_lrmd = lrmd_api_new();
     }
-    the_lrmd->cmds->set_callback(the_lrmd, callback);
+    the_lrmd->cmds->set_callback(the_lrmd, attrd_lrmd_callback);
 
     while (fails < max_attempts) {
         ret = the_lrmd->cmds->connect(the_lrmd, T_ATTRD, NULL);
@@ -182,67 +197,69 @@ attrd_cib_updated_cb(const char *event, xmlNode * msg)
 
 }
 
-static void
-attrd_lrmd_callback(lrmd_event_data_t * op)
+/*!
+ * \internal
+ * \brief Execute alert agents for an event
+ *
+ * \param[in]     alert_list         Alerts to execute
+ * \param[in]     lrmd_connect_func  Function that returns an LRMD connection
+ * \param[in]     kind               Type of event that is being alerted for
+ * \param[in]     attr_name          If crm_alert_attribute, the attribute name
+ * \param[in,out] params             Environment variables to pass to agents
+ *
+ * \retval pcmk_ok on success
+ * \retval -1 if some alerts failed
+ * \retval -2 if all alerts failed
+ */
+static int
+exec_alert_list(GList *alert_list, lrmd_t *(*lrmd_connect_func)(void),
+                enum crm_alert_flags kind, const char *attr_name,
+                lrmd_key_value_t *params)
 {
-    CRM_CHECK(op != NULL, return);
-    switch (op->type) {
-        case lrmd_event_disconnect:
-            crm_info("Lost connection to LRMD");
-            attrd_lrmd_disconnect();
-            break;
-        default:
-            break;
-    }
-}
+    bool any_success = FALSE, any_failure = FALSE;
+    const char *kind_s = crm_alert_flag2text(kind);
+    crm_time_hr_t *now = NULL;
 
-static int 
-exec_alerts(enum crm_alert_flags kind, const char *attribute_name,
-            lrmd_key_value_t *params)
-{
-    int rc = pcmk_ok;
-    GListPtr l;
-    crm_time_hr_t *now = crm_time_hr_new(NULL);
-    
-    params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_kind,
-                                               crm_alert_flag2text(kind));
+    params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_kind, kind_s);
     params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_version, VERSION);
 
-    for (l = g_list_first(attrd_alert_list); l; l = g_list_next(l)) {
-        crm_alert_entry_t *entry = (crm_alert_entry_t *)(l->data);
-        char *timestamp = NULL;
-        lrmd_key_value_t * copy_params = NULL;
-        lrmd_key_value_t *head, *p;
+    for (GList *iter = g_list_first(alert_list); iter; iter = g_list_next(iter)) {
+        crm_alert_entry_t *entry = (crm_alert_entry_t *)(iter->data);
+        lrmd_key_value_t *copy_params = NULL;
+        lrmd_key_value_t *head = NULL;
+        lrmd_t *lrmd_conn = NULL;
+        int rc;
 
         if (is_not_set(entry->flags, kind)) {
             crm_trace("Filtering unwanted %s alert to %s via %s",
-                      crm_alert_flag2text(kind), entry->recipient, entry->id);
+                      kind_s, entry->recipient, entry->id);
             continue;
         }
 
         if ((kind == crm_alert_attribute)
-            && !crm_is_target_alert(entry->select_attribute_name, attribute_name)) {
+            && !crm_is_target_alert(entry->select_attribute_name, attr_name)) {
 
             crm_trace("Filtering unwanted attribute '%s' alert to %s via %s",
-                      attribute_name, entry->recipient, entry->id);
+                      attr_name, entry->recipient, entry->id);
             continue;
         }
 
+        if (now == NULL) {
+            now = crm_time_hr_new(NULL);
+        }
         crm_info("Sending %s alert via %s to %s",
-                 crm_alert_flag2text(kind), entry->id, entry->recipient);
+                 kind_s, entry->id, entry->recipient);
 
-        /* Because there is a parameter to turn into every transmission, Copy a parameter. */
-        head = params;
-        while (head) {
-            p = head->next;
+        /* Make a copy of the parameters, because each alert will be unique */
+        for (head = params; head != NULL; head = head->next) {
             copy_params = lrmd_key_value_add(copy_params, head->key, head->value);
-            head = p;
         }
 
         copy_params = lrmd_set_alert_key_to_lrmd_params(copy_params, CRM_alert_recipient, entry->recipient);
 
         if (now) {
-            timestamp = crm_time_format_hr(entry->tstamp_format, now);
+            char *timestamp = crm_time_format_hr(entry->tstamp_format, now);
+
             if (timestamp) {
                 copy_params = lrmd_set_alert_key_to_lrmd_params(copy_params,
                                                                 CRM_alert_timestamp,
@@ -253,19 +270,21 @@ exec_alerts(enum crm_alert_flags kind, const char *attribute_name,
 
         copy_params = lrmd_set_alert_envvar_to_lrmd_params(copy_params, entry);
 
-        if (the_lrmd == NULL) {
-            the_lrmd = attrd_lrmd_connect(10, attrd_lrmd_callback);
-            if (the_lrmd == NULL) {
-                crm_warn("Cannot send alerts: LRMD connection not active");
-                rc = -ENOTCONN;
-                goto done;
-            }
+        lrmd_conn = (*lrmd_connect_func)();
+        if (lrmd_conn == NULL) {
+            crm_warn("Cannot send alerts: No LRMD connection");
+            any_failure = TRUE;
+            goto done;
         }
-        rc = the_lrmd->cmds->exec_alert(the_lrmd, entry->id, entry->path,
-                                        entry->timeout, copy_params);
+
+        rc = lrmd_conn->cmds->exec_alert(lrmd_conn, entry->id, entry->path,
+                                         entry->timeout, copy_params);
         if (rc < 0) {
             crm_err("Could not execute alert %s: %s " CRM_XS " rc=%d",
                     entry->id, pcmk_strerror(rc), rc);
+            any_failure = TRUE;
+        } else {
+            any_success = TRUE;
         }
     }
 
@@ -274,35 +293,56 @@ done:
         free(now);
     }
 
-    return rc;
+    if (any_failure) {
+        return (any_success? -1 : -2);
+    }
+    return pcmk_ok;
 }
 
+/*!
+ * \internal
+ * \brief Send an alert for a node attribute change
+ *
+ * \param[in] alert_list         List of alert agents to execute
+ * \param[in] lrmd_connect_func  Function that returns an LRMD connection
+ * \param[in] node               Name of node with attribute change
+ * \param[in] nodeid             Node ID of node with attribute change
+ * \param[in] attr_name          Name of attribute that changed
+ * \param[in] attr_value         New value of attribute that changed
+ *
+ * \retval pcmk_ok on success
+ * \retval -1 if some alert agents failed
+ * \retval -2 if all alert agents failed
+ */
 int
-attrd_send_alerts(const char *node, uint32_t nodeid,
-                  const char *attribute_name, const char *attribute_value)
+lrmd_send_attribute_alert(GList *alert_list, lrmd_t *(*lrmd_connect_func)(void),
+                          const char *node, uint32_t nodeid,
+                          const char *attr_name, const char *attr_value)
 {
-    int ret = pcmk_ok;
+    int rc = pcmk_ok;
     lrmd_key_value_t *params = NULL;
     char *nodeid_s;
 
+    if (alert_list == NULL) {
+        return pcmk_ok;
+    }
     params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_node, node);
 
     nodeid_s = crm_itoa(nodeid);
-    params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_nodeid, nodeid_s);
+    params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_nodeid,
+                                               nodeid_s);
     free(nodeid_s);
 
-    params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_attribute_name, attribute_name);
+    params = lrmd_set_alert_key_to_lrmd_params(params, CRM_alert_attribute_name,
+                                               attr_name);
     params = lrmd_set_alert_key_to_lrmd_params(params,
                                                CRM_alert_attribute_value,
-                                               attribute_value);
+                                               attr_value);
 
-    ret = exec_alerts(crm_alert_attribute, attribute_name, params);
-
-    if (params) {
-        lrmd_key_value_freeall(params);
-    }
-
-    return ret;
+    rc = exec_alert_list(alert_list, lrmd_connect_func, crm_alert_attribute,
+                         attr_name, params);
+    lrmd_key_value_freeall(params);
+    return rc;
 }
 
 #if HAVE_ATOMIC_ATTRD
@@ -326,17 +366,18 @@ set_alert_attribute_value(GHashTable *t, attribute_value_t *v)
 void
 send_alert_attributes_value(attribute_t *a, GHashTable *t)
 {
-    int call_id = 0;
+    int rc = 0;
     attribute_value_t *at = NULL;
     GHashTableIter vIter;
 
     g_hash_table_iter_init(&vIter, t);
 
     while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & at)) {
-        call_id = attrd_send_alerts(at->nodename, at->nodeid, a->id,
-                                    at->current);
-        crm_trace("Sent alerts for %s[%s]=%s: call_id=%d nodeid=%d",
-                  a->id, at->nodename, at->current, call_id, at->nodeid);
+        rc = lrmd_send_attribute_alert(attrd_alert_list, attrd_lrmd_connect,
+                                       at->nodename, at->nodeid, a->id,
+                                       at->current);
+        crm_trace("Sent alerts for %s[%s]=%s: nodeid=%d rc=%d",
+                  a->id, at->nodename, at->current, at->nodeid, rc);
     }
 }
 #endif
