@@ -881,8 +881,8 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
             crm_trace("Sent update %d: %s=%s", rc, hash_entry->id, hash_entry->value);
         }
     }
-    lrmd_send_attribute_alert(attrd_alert_list, attrd_lrmd_connect, attrd_uname,
-                              attrd_nodeid, hash_entry->id, hash_entry->value);
+    attrd_send_attribute_alert(attrd_uname, attrd_nodeid,
+                               hash_entry->id, hash_entry->value);
 
     data = calloc(1, sizeof(struct attrd_callback_s));
     data->attr = strdup(hash_entry->id);
@@ -1046,8 +1046,7 @@ update_remote_attr(const char *host, const char *name, const char *value,
                                   FALSE, user_name, "remote");
     }
 
-    lrmd_send_attribute_alert(attrd_alert_list, attrd_lrmd_connect, host, 0,
-                              name, (value? value : ""));
+    attrd_send_attribute_alert(host, 0, name, (value? value : ""));
 
     crm_trace("%s submitted as CIB call %d", desc, rc);
     register_cib_callback(rc, desc, remote_attr_callback, free);

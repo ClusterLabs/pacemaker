@@ -141,39 +141,10 @@ attrd_cib_updated_cb(const char *event, xmlNode * msg)
     }
 }
 
-#if HAVE_ATOMIC_ATTRD
-void
-set_alert_attribute_value(GHashTable *t, attribute_value_t *v)
+int
+attrd_send_attribute_alert(const char *node, int nodeid,
+                           const char *attr, const char *value)
 {
-    attribute_value_t *a_v = NULL;
-    a_v = calloc(1, sizeof(attribute_value_t));
-    CRM_ASSERT(a_v != NULL);
-
-    a_v->nodeid = v->nodeid;
-    a_v->nodename = strdup(v->nodename);
-
-    if (v->current != NULL) {
-        a_v->current = strdup(v->current);
-    }
-
-    g_hash_table_replace(t, a_v->nodename, a_v);
+    return lrmd_send_attribute_alert(attrd_alert_list, attrd_lrmd_connect,
+                                     node, nodeid, attr, value);
 }
-
-void
-send_alert_attributes_value(attribute_t *a, GHashTable *t)
-{
-    int rc = 0;
-    attribute_value_t *at = NULL;
-    GHashTableIter vIter;
-
-    g_hash_table_iter_init(&vIter, t);
-
-    while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & at)) {
-        rc = lrmd_send_attribute_alert(attrd_alert_list, attrd_lrmd_connect,
-                                       at->nodename, at->nodeid, a->id,
-                                       at->current);
-        crm_trace("Sent alerts for %s[%s]=%s: nodeid=%d rc=%d",
-                  a->id, at->nodename, at->current, at->nodeid, rc);
-    }
-}
-#endif
