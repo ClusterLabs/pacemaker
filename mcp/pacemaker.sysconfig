@@ -135,5 +135,8 @@
 # PCMK_callgrind_enabled=yes
 # PCMK_callgrind_enabled=cib,crmd
 
-# Set the options to pass to valgrind, when valgrind is enabled.
-# VALGRIND_OPTS="--leak-check=full --trace-children=no --num-callers=25 --log-file=/var/lib/pacemaker/valgrind-%p --suppressions=/usr/share/pacemaker/tests/valgrind-pcmk.suppressions --gen-suppressions=all"
+# Set the options to pass to valgrind, when valgrind is enabled. See
+# valgrind(1) man page for details. "--vgdb=no" is specified because lrmd can
+# lower privileges when executing commands, which would otherwise leave a bunch
+# of unremovable files in /tmp.
+VALGRIND_OPTS="--leak-check=full --trace-children=no --vgdb=no --num-callers=25 --log-file=/var/lib/pacemaker/valgrind-%p --suppressions=/usr/share/pacemaker/tests/valgrind-pcmk.suppressions --gen-suppressions=all"
