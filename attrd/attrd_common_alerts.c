@@ -52,7 +52,10 @@ attrd_lrmd_connect()
 
     if (!the_lrmd) {
         the_lrmd = lrmd_api_new();
+    } else if (the_lrmd->cmds->is_connected(the_lrmd)) {
+        return the_lrmd;
     }
+
     the_lrmd->cmds->set_callback(the_lrmd, attrd_lrmd_callback);
 
     while (fails < max_attempts) {
