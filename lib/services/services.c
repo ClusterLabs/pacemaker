@@ -404,6 +404,28 @@ services_alert_create(const char *id, const char *exec, int timeout,
     return action;
 }
 
+/*!
+ * \brief Set the user and group that an action will execute as
+ *
+ * \param[in,out] action  Action to modify
+ * \param[in]     user    Name of user to execute action as
+ * \param[in]     group   Name of group to execute action as
+ *
+ * \return pcmk_ok on success, -errno otherwise
+ *
+ * \note This will have no effect unless the process executing the action runs
+ *       as root, and the action is not a systemd or upstart action.
+ *       We could implement this for systemd by adding User= and Group= to
+ *       [Service] in the override file, but that seems more likely to cause
+ *       problems than be useful.
+ */
+int
+services_action_user(svc_action_t *op, const char *user)
+{
+    CRM_CHECK((op != NULL) && (user != NULL), return -EINVAL);
+    return crm_user_lookup(user, &(op->opaque->uid), &(op->opaque->gid));
+}
+
 static void
 set_alert_env(gpointer key, gpointer value, gpointer user_data)
 {

@@ -45,7 +45,6 @@ typedef struct attribute_value_s {
         char *requested;
 } attribute_value_t;
 
-cib_t *the_cib;
 crm_cluster_t *attrd_cluster;
 GHashTable *attributes;
 election_t *writer;

@@ -421,8 +421,6 @@ crmd_exit(int rc)
         /* Don't re-enter this block */
         crmd_mainloop = NULL;
 
-        crmd_drain_alerts(ctx);
-
         /* no signals on final draining anymore */
         mainloop_destroy_signal(SIGCHLD);
 

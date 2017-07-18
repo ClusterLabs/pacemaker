@@ -36,15 +36,12 @@
 #include <crm/common/ipc.h>
 #include <crm/common/ipcs.h>
 #include <crm/cluster/internal.h>
+#include <crm/lrmd_alerts_internal.h>
 #include <crm/common/alerts_internal.h>
-
 #include <crm/common/xml.h>
-
 #include <crm/attrd.h>
 
 #include <attrd_common.h>
-
-#include "attrd_alerts.h"
 
 #define OPTARGS	"hV"
 #if SUPPORT_HEARTBEAT
@@ -56,7 +53,6 @@ char *attrd_uuid = NULL;
 uint32_t attrd_nodeid = 0;
 
 GHashTable *attr_hash = NULL;
-cib_t *the_cib = NULL;
 lrmd_t *the_lrmd = NULL;
 crm_trigger_t *attrd_config_read = NULL;
 
@@ -749,11 +745,7 @@ main(int argc, char **argv)
     qb_ipcs_destroy(ipcs);
 
     attrd_lrmd_disconnect();
-
-    if (the_cib) {
-        the_cib->cmds->signoff(the_cib);
-        cib_delete(the_cib);
-    }
+    attrd_cib_disconnect();
 
     g_hash_table_destroy(attr_hash);
     free(attrd_uuid);
@@ -868,26 +860,22 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
                       hash_entry->uuid ? hash_entry->uuid : "<n/a>", hash_entry->set,
                       hash_entry->section);
         }
-        attrd_send_alerts(attrd_uname, attrd_nodeid, hash_entry->id,
-                          hash_entry->value);
-
     } else {
         /* send update */
         rc = update_attr_delegate(the_cib, cib_none, hash_entry->section,
                                   attrd_uuid, NULL, hash_entry->set, hash_entry->uuid,
                                   hash_entry->id, hash_entry->value, FALSE, user_name, NULL);
         if (rc < 0) {
-            crm_notice("Sent update %s=%s failed: %s", hash_entry->id, hash_entry->value,
-                       pcmk_strerror(rc));
-        }
-        if (safe_str_neq(hash_entry->value, hash_entry->stored_value) || rc < 0) {
+            crm_notice("Could not update %s=%s: %s (%d)", hash_entry->id,
+                       hash_entry->value, pcmk_strerror(rc), rc);
+        } else if (safe_str_neq(hash_entry->value, hash_entry->stored_value)) {
             crm_notice("Sent update %d: %s=%s", rc, hash_entry->id, hash_entry->value);
         } else {
             crm_trace("Sent update %d: %s=%s", rc, hash_entry->id, hash_entry->value);
         }
-        attrd_send_alerts(attrd_uname, attrd_nodeid, hash_entry->id,
-                          hash_entry->value);
     }
+    attrd_send_attribute_alert(attrd_uname, attrd_nodeid,
+                               hash_entry->id, hash_entry->value);
 
     data = calloc(1, sizeof(struct attrd_callback_s));
     data->attr = strdup(hash_entry->id);
@@ -1051,7 +1039,7 @@ update_remote_attr(const char *host, const char *name, const char *value,
                                   FALSE, user_name, "remote");
     }
 
-    attrd_send_alerts(host, 0, name, (value? value : ""));
+    attrd_send_attribute_alert(host, 0, name, (value? value : ""));
 
     crm_trace("%s submitted as CIB call %d", desc, rc);
     register_cib_callback(rc, desc, remote_attr_callback, free);

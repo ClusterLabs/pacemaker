@@ -29,7 +29,6 @@
 #include <crm/cib/internal.h>
 
 #include <internal.h>
-#include "attrd_alerts.h"
 
 /*
  * Legacy attrd (all pre-1.1.11 Pacemaker versions, plus all versions when using
@@ -1037,6 +1036,40 @@ build_update_element(xmlNode *parent, attribute_t *a, const char *nodeid, const 
     } else {
         crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, "");
         crm_xml_add(xml_obj, "__delete__", XML_NVPAIR_ATTR_VALUE);
+    }
+}
+
+static void
+set_alert_attribute_value(GHashTable *t, attribute_value_t *v)
+{
+    attribute_value_t *a_v = NULL;
+    a_v = calloc(1, sizeof(attribute_value_t));
+    CRM_ASSERT(a_v != NULL);
+
+    a_v->nodeid = v->nodeid;
+    a_v->nodename = strdup(v->nodename);
+
+    if (v->current != NULL) {
+        a_v->current = strdup(v->current);
+    }
+
+    g_hash_table_replace(t, a_v->nodename, a_v);
+}
+
+static void
+send_alert_attributes_value(attribute_t *a, GHashTable *t)
+{
+    int rc = 0;
+    attribute_value_t *at = NULL;
+    GHashTableIter vIter;
+
+    g_hash_table_iter_init(&vIter, t);
+
+    while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & at)) {
+        rc = attrd_send_attribute_alert(at->nodename, at->nodeid,
+                                        a->id, at->current);
+        crm_trace("Sent alerts for %s[%s]=%s: nodeid=%d rc=%d",
+                  a->id, at->nodename, at->current, at->nodeid, rc);
     }
 }
 

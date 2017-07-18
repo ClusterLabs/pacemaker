@@ -21,8 +21,7 @@
 #include <crm/lrmd.h>
 #include <crm/msg_xml.h>
 #include <crm/common/alerts_internal.h>
-
-guint crm_alert_max_alert_timeout = CRM_ALERT_DEFAULT_TIMEOUT_MS;
+#include <crm/cib/internal.h> /* for F_CIB_UPDATE_RESULT */
 
 /*		
  * to allow script compatibility we can have more than one		
@@ -233,23 +232,84 @@ crm_unset_envvar_list(crm_alert_entry_t *entry)
     }
 }
 
-gboolean 
-crm_is_target_alert(char **list, const char *value)
+#define XPATH_PATCHSET1_DIFF "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED
+
+#define XPATH_PATCHSET1_CRMCONFIG XPATH_PATCHSET1_DIFF "//" XML_CIB_TAG_CRMCONFIG
+#define XPATH_PATCHSET1_ALERTS    XPATH_PATCHSET1_DIFF "//" XML_CIB_TAG_ALERTS
+
+#define XPATH_PATCHSET1_EITHER \
+    XPATH_PATCHSET1_CRMCONFIG " | " XPATH_PATCHSET1_ALERTS
+
+#define XPATH_CONFIG "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION
+
+#define XPATH_CRMCONFIG XPATH_CONFIG "/" XML_CIB_TAG_CRMCONFIG "/"
+#define XPATH_ALERTS    XPATH_CONFIG "/" XML_CIB_TAG_ALERTS
+
+/*!
+ * \internal
+ * \brief Check whether a CIB update affects alerts
+ *
+ * \param[in] msg     XML containing CIB update
+ * \param[in] config  Whether to check for crmconfig change as well
+ *
+ * \return TRUE if update affects alerts, FALSE otherwise
+ */
+bool
+crm_patchset_contains_alert(xmlNode *msg, bool config)
 {
-    int target_list_num = 0;
-    gboolean rc = FALSE;
+    int rc = -1;
+    int format= 1;
+    xmlNode *patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
+    xmlNode *change = NULL;
+    xmlXPathObject *xpathObj = NULL;
 
-    if (list == NULL) return TRUE;
+    CRM_CHECK(msg != NULL, return FALSE);
 
-    target_list_num = g_strv_length(list);
+    crm_element_value_int(msg, F_CIB_RC, &rc);
+    if (rc < pcmk_ok) {
+        crm_trace("Ignore failed CIB update: %s (%d)", pcmk_strerror(rc), rc);
+        return FALSE;
+    }
 
-    for( int cnt = 0; cnt < target_list_num; cnt++ ) {
-        if (strcmp(list[cnt], value) == 0) {
-            rc = TRUE;
-            break;
+    crm_element_value_int(patchset, "format", &format);
+    if (format == 1) {
+        const char *diff = (config? XPATH_PATCHSET1_EITHER : XPATH_PATCHSET1_ALERTS);
+
+        if ((xpathObj = xpath_search(msg, diff)) != NULL) {
+            freeXpathObject(xpathObj);
+            return TRUE;
         }
-    } 
+    } else if (format == 2) {
+        for (change = __xml_first_child(patchset); change != NULL; change = __xml_next(change)) {
+            const char *xpath = crm_element_value(change, XML_DIFF_PATH);
 
-    return rc;
+            if (xpath == NULL) {
+                continue;
+            }
+
+            if ((!config || !strstr(xpath, XPATH_CRMCONFIG))
+                && !strstr(xpath, XPATH_ALERTS)) {
+
+                /* this is not a change to an existing section ... */
+
+                xmlNode *section = NULL;
+                const char *name = NULL;
+
+                if ((strcmp(xpath, XPATH_CONFIG) != 0) ||
+                    ((section = __xml_first_child(change)) == NULL) ||
+                    ((name = crm_element_name(section)) == NULL) ||
+                    (strcmp(name, XML_CIB_TAG_ALERTS) != 0)) {
+
+                    /* ... nor is it a newly added alerts section */
+                    continue;
+                }
+            }
+
+            return TRUE;
+        }
+
+    } else {
+        crm_warn("Unknown patch format: %d", format);
+    }
+    return FALSE;
 }
-
