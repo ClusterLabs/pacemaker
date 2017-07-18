@@ -22,7 +22,6 @@
 #include <string.h>
 #include <dirent.h>
 #include <errno.h>
-#include <math.h>
 #include <sys/stat.h>
 #include <stdarg.h>
 
@@ -48,7 +47,7 @@ typedef struct {
 
 struct schema_s {
     int type;
-    float version;
+    int version[2];
     char *name;
     char *location;
     char *transform;
@@ -86,13 +85,10 @@ xml_minimum_schema_index(void)
     static int best = 0;
     if (best == 0) {
         int lpc = 0;
-        float target = 0.0;
 
         best = xml_latest_schema_index();
-        target = floor(known_schemas[best].version);
-
         for (lpc = best; lpc > 0; lpc--) {
-            if (known_schemas[lpc].version < target) {
+            if (known_schemas[lpc].version[0] < known_schemas[best].version[0]) {
                 return best;
             } else {
                 best = lpc;
@@ -134,11 +130,19 @@ get_schema_path(const char *name, const char *file)
     return crm_strdup_printf("%s/%s.rng", base, name);
 }
 
+static inline bool
+version_from_filename(const char *filename, int version[2])
+{
+    int rc = sscanf(filename, "pacemaker-%d.%d.rng", &version[0], &version[1]);
+
+    return (rc == 2)? TRUE : FALSE;
+}
+
 static int
 schema_filter(const struct dirent *a)
 {
     int rc = 0;
-    float version = 0;
+    int version[2] = {0, 0};
 
     if (strstr(a->d_name, "pacemaker-") != a->d_name) {
         /* crm_trace("%s - wrong prefix", a->d_name); */
@@ -146,7 +150,7 @@ schema_filter(const struct dirent *a)
     } else if (!crm_ends_with(a->d_name, ".rng")) {
         /* crm_trace("%s - wrong suffix", a->d_name); */
 
-    } else if (sscanf(a->d_name, "pacemaker-%f.rng", &version) == 0) {
+    } else if (!version_from_filename(a->d_name, version)) {
         /* crm_trace("%s - wrong format", a->d_name); */
 
     } else if (strcmp(a->d_name, "pacemaker-1.1.rng") == 0) {
@@ -164,29 +168,28 @@ schema_filter(const struct dirent *a)
 static int
 schema_sort(const struct dirent **a, const struct dirent **b)
 {
-    int rc = 0;
-    float a_version = 0.0;
-    float b_version = 0.0;
+    int a_version[2] = {0, 0}, b_version[2] = {0, 0};
 
-    sscanf(a[0]->d_name, "pacemaker-%f.rng", &a_version);
-    sscanf(b[0]->d_name, "pacemaker-%f.rng", &b_version);
+    version_from_filename(a[0]->d_name, a_version);
+    version_from_filename(b[0]->d_name, b_version);
 
-    if (a_version > b_version) {
-        rc = 1;
-    } else if(a_version < b_version) {
-        rc = -1;
+    for (int i = 0; i < 2; ++i) {
+        if (a_version[i] < b_version[i]) {
+            return -1;
+        } else if (a_version[i] > b_version[i]) {
+            return 1;
+        }
     }
-
-    /* crm_trace("%s (%f) vs. %s (%f) : %d", a[0]->d_name, a_version, b[0]->d_name, b_version, rc); */
-    return rc;
+    return 0;
 }
 
 static void
-__xml_schema_add(int type, float version, const char *name,
+__xml_schema_add(int type, int version[2], const char *name,
                  const char *location, const char *transform,
                  int after_transform)
 {
     int last = xml_schema_max;
+    bool have_version = FALSE;
 
     xml_schema_max++;
     known_schemas = realloc_safe(known_schemas,
@@ -196,17 +199,23 @@ __xml_schema_add(int type, float version, const char *name,
     known_schemas[last].type = type;
     known_schemas[last].after_transform = after_transform;
 
-    if (version > 0.0) {
-        known_schemas[last].version = version;
-        known_schemas[last].name = crm_strdup_printf("pacemaker-%.1f", version);
-        known_schemas[last].location = crm_strdup_printf("%s.rng", known_schemas[last].name);
-
+    for (int i = 0; i < 2; ++i) {
+        known_schemas[last].version[i] = version[i];
+        if (version[i]) {
+            have_version = TRUE;
+        }
+    }
+    if (have_version) {
+        known_schemas[last].name = crm_strdup_printf("pacemaker-%d.%d",
+                                                     version[0], version[1]);
+        known_schemas[last].location = crm_strdup_printf("%s.rng",
+                                                         known_schemas[last].name);
     } else {
-        char dummy[1024];
         CRM_ASSERT(name);
         CRM_ASSERT(location);
-        sscanf(name, "%[^-]-%f", dummy, &version);
-        known_schemas[last].version = version;
+        sscanf(name, "%*[^-]-%d.%d",
+               &known_schemas[last].version[0],
+               &known_schemas[last].version[1]);
         known_schemas[last].name = strdup(name);
         known_schemas[last].location = strdup(location);
     }
@@ -246,12 +255,13 @@ crm_schema_init(void)
     int lpc, max;
     const char *base = get_schema_root();
     struct dirent **namelist = NULL;
+    int zero[2] = {0, 0};
 
     max = scandir(base, &namelist, schema_filter, schema_sort);
-    __xml_schema_add(1, 0.0, "pacemaker-0.6", "crm.dtd", "upgrade06.xsl", 3);
-    __xml_schema_add(1, 0.0, "transitional-0.6", "crm-transitional.dtd",
+    __xml_schema_add(1, zero, "pacemaker-0.6", "crm.dtd", "upgrade06.xsl", 3);
+    __xml_schema_add(1, zero, "transitional-0.6", "crm-transitional.dtd",
                      "upgrade06.xsl", 3);
-    __xml_schema_add(2, 0.0, "pacemaker-0.7", "pacemaker-1.0.rng", NULL, 0);
+    __xml_schema_add(2, zero, "pacemaker-0.7", "pacemaker-1.0.rng", NULL, 0);
 
     if (max < 0) {
         crm_notice("scandir(%s) failed: %s (%d)", base, strerror(errno), errno);
@@ -259,21 +269,21 @@ crm_schema_init(void)
     } else {
         for (lpc = 0; lpc < max; lpc++) {
             int next = 0;
-            float version = 0.0;
+            int version[2] = { 0, 0 };
             char *transform = NULL;
 
-            sscanf(namelist[lpc]->d_name, "pacemaker-%f.rng", &version);
+            version_from_filename(namelist[lpc]->d_name, version);
             if ((lpc + 1) < max) {
-                float next_version = 0.0;
+                int next_version[2] = { 0, 0 };
 
-                sscanf(namelist[lpc+1]->d_name, "pacemaker-%f.rng",
-                       &next_version);
+                version_from_filename(namelist[lpc+1]->d_name, next_version);
 
-                if (floor(version) < floor(next_version)) {
+                if (version[0] < next_version[0]) {
                     struct stat s;
                     char *xslt = NULL;
 
-                    transform = crm_strdup_printf("upgrade-%.1f.xsl", version);
+                    transform = crm_strdup_printf("upgrade-%d.%d.xsl",
+                                                  version[0], version[1]);
                     xslt = get_schema_path(NULL, transform);
                     if (stat(xslt, &s) != 0) {
                         crm_err("Transform %s not found", xslt);
@@ -295,9 +305,9 @@ crm_schema_init(void)
     }
 
     /* 1.1 was the old name for -next */
-    __xml_schema_add(2, 0.0, "pacemaker-1.1", "pacemaker-next.rng", NULL, 0);
-    __xml_schema_add(2, 0.0, "pacemaker-next", "pacemaker-next.rng", NULL, -1);
-    __xml_schema_add(0, 0.0, "none", "N/A", NULL, -1);
+    __xml_schema_add(2, zero, "pacemaker-1.1", "pacemaker-next.rng", NULL, 0);
+    __xml_schema_add(2, zero, "pacemaker-next", "pacemaker-next.rng", NULL, -1);
+    __xml_schema_add(0, zero, "none", "N/A", NULL, -1);
     free(namelist);
 }
 
