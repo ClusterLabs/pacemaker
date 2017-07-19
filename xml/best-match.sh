@@ -1,8 +1,10 @@
 #!/bin/sh
 
+cd $(dirname $0)
+
 base=$1; shift
 target=$1; shift
-destination=$1; shift
+destination=$(realpath $1); shift
 prefix=$1; shift
 
 best="0.0"
