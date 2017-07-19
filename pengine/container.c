@@ -100,11 +100,22 @@ container_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 
     for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
         container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+        pe_node_t *docker_host = tuple->docker->allocated_to;
 
         CRM_ASSERT(tuple);
         if(tuple->ip) {
             tuple->ip->cmds->allocate(tuple->ip, prefer, data_set);
         }
+
+        if(tuple->remote && is_remote_node(docker_host)) {
+            /* We need 'nested' connection resources to be on the same
+             * host because pacemaker-remoted only supports a single
+             * active connection
+             */
+            rsc_colocation_new("child-remote-with-docker-remote", NULL,
+                               INFINITY, tuple->remote, docker_host->details->remote_rsc, NULL, NULL, data_set);
+        }
+
         if(tuple->remote) {
             tuple->remote->cmds->allocate(tuple->remote, prefer, data_set);
         }

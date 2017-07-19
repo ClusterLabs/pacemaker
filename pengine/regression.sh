@@ -28,7 +28,6 @@ echo ""
 
 info Performing the following tests from $io_dir
 create_mode="false"
-
 echo ""
 
 do_test simple1 "Offline     "
@@ -810,6 +809,7 @@ do_test bundle-order-partial-stop "Bundle startup ordering when some dependancie
 do_test bundle-order-startup-clone "Prevent startup because bundle isn't promoted"
 do_test bundle-order-startup-clone-2 "Bundle startup with clones"
 do_test bundle-order-stop-clone "Stop bundle because clone is stopping"
+do_test bundle-nested-colocation "Colocation of nested connection resources"
 
 echo ""
 do_test whitebox-fail1 "Fail whitebox container rsc."
