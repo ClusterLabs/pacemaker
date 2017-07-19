@@ -22,7 +22,6 @@
 #include <string.h>
 #include <dirent.h>
 #include <errno.h>
-#include <math.h>
 #include <sys/stat.h>
 #include <stdarg.h>
 
@@ -41,19 +40,37 @@
 #include <crm/common/xml_internal.h>  /* CRM_XML_LOG_BASE */
 
 typedef struct {
+    unsigned char v[2];
+} schema_version_t;
+
+#define SCHEMA_ZERO { .v = { 0, 0 } }
+
+#define schema_scanf(s, prefix, version, suffix) \
+    sscanf((s), prefix "%hhu.%hhu" suffix, &((version).v[0]), &((version).v[1]))
+
+#define schema_strdup_printf(prefix, version, suffix) \
+    crm_strdup_printf(prefix "%u.%u" suffix, (version).v[0], (version).v[1])
+
+typedef struct {
     xmlRelaxNGPtr rng;
     xmlRelaxNGValidCtxtPtr valid;
     xmlRelaxNGParserCtxtPtr parser;
 } relaxng_ctx_cache_t;
 
+enum schema_validator_e {
+    schema_validator_none,
+    schema_validator_dtd,
+    schema_validator_rng
+};
+
 struct schema_s {
-    int type;
-    float version;
     char *name;
     char *location;
     char *transform;
-    int after_transform;
     void *cache;
+    enum schema_validator_e validator;
+    int after_transform;
+    schema_version_t version;
 };
 
 static struct schema_s *known_schemas = NULL;
@@ -86,13 +103,11 @@ xml_minimum_schema_index(void)
     static int best = 0;
     if (best == 0) {
         int lpc = 0;
-        float target = 0.0;
 
         best = xml_latest_schema_index();
-        target = floor(known_schemas[best].version);
-
         for (lpc = best; lpc > 0; lpc--) {
-            if (known_schemas[lpc].version < target) {
+            if (known_schemas[lpc].version.v[0]
+                < known_schemas[best].version.v[0]) {
                 return best;
             } else {
                 best = lpc;
@@ -134,11 +149,19 @@ get_schema_path(const char *name, const char *file)
     return crm_strdup_printf("%s/%s.rng", base, name);
 }
 
+static inline bool
+version_from_filename(const char *filename, schema_version_t *version)
+{
+    int rc = schema_scanf(filename, "pacemaker-", *version, ".rng");
+
+    return (rc == 2);
+}
+
 static int
 schema_filter(const struct dirent *a)
 {
     int rc = 0;
-    float version = 0;
+    schema_version_t version = SCHEMA_ZERO;
 
     if (strstr(a->d_name, "pacemaker-") != a->d_name) {
         /* crm_trace("%s - wrong prefix", a->d_name); */
@@ -146,7 +169,7 @@ schema_filter(const struct dirent *a)
     } else if (!crm_ends_with(a->d_name, ".rng")) {
         /* crm_trace("%s - wrong suffix", a->d_name); */
 
-    } else if (sscanf(a->d_name, "pacemaker-%f.rng", &version) == 0) {
+    } else if (!version_from_filename(a->d_name, &version)) {
         /* crm_trace("%s - wrong format", a->d_name); */
 
     } else if (strcmp(a->d_name, "pacemaker-1.1.rng") == 0) {
@@ -164,49 +187,52 @@ schema_filter(const struct dirent *a)
 static int
 schema_sort(const struct dirent **a, const struct dirent **b)
 {
-    int rc = 0;
-    float a_version = 0.0;
-    float b_version = 0.0;
+    schema_version_t a_version = SCHEMA_ZERO;
+    schema_version_t b_version = SCHEMA_ZERO;
 
-    sscanf(a[0]->d_name, "pacemaker-%f.rng", &a_version);
-    sscanf(b[0]->d_name, "pacemaker-%f.rng", &b_version);
+    version_from_filename(a[0]->d_name, &a_version);
+    version_from_filename(b[0]->d_name, &b_version);
 
-    if (a_version > b_version) {
-        rc = 1;
-    } else if(a_version < b_version) {
-        rc = -1;
+    for (int i = 0; i < 2; ++i) {
+        if (a_version.v[i] < b_version.v[i]) {
+            return -1;
+        } else if (a_version.v[i] > b_version.v[i]) {
+            return 1;
+        }
     }
-
-    /* crm_trace("%s (%f) vs. %s (%f) : %d", a[0]->d_name, a_version, b[0]->d_name, b_version, rc); */
-    return rc;
+    return 0;
 }
 
 static void
-__xml_schema_add(int type, float version, const char *name,
-                 const char *location, const char *transform,
-                 int after_transform)
+add_schema(enum schema_validator_e validator, const schema_version_t *version,
+           const char *name, const char *location, const char *transform,
+           int after_transform)
 {
     int last = xml_schema_max;
+    bool have_version = FALSE;
 
     xml_schema_max++;
     known_schemas = realloc_safe(known_schemas,
                                  xml_schema_max * sizeof(struct schema_s));
     CRM_ASSERT(known_schemas != NULL);
     memset(known_schemas+last, 0, sizeof(struct schema_s));
-    known_schemas[last].type = type;
+    known_schemas[last].validator = validator;
     known_schemas[last].after_transform = after_transform;
 
-    if (version > 0.0) {
-        known_schemas[last].version = version;
-        known_schemas[last].name = crm_strdup_printf("pacemaker-%.1f", version);
-        known_schemas[last].location = crm_strdup_printf("%s.rng", known_schemas[last].name);
-
+    for (int i = 0; i < 2; ++i) {
+        known_schemas[last].version.v[i] = version->v[i];
+        if (version->v[i]) {
+            have_version = TRUE;
+        }
+    }
+    if (have_version) {
+        known_schemas[last].name = schema_strdup_printf("pacemaker-", *version, "");
+        known_schemas[last].location = crm_strdup_printf("%s.rng",
+                                                         known_schemas[last].name);
     } else {
-        char dummy[1024];
         CRM_ASSERT(name);
         CRM_ASSERT(location);
-        sscanf(name, "%[^-]-%f", dummy, &version);
-        known_schemas[last].version = version;
+        schema_scanf(name, "%*[^-]-", known_schemas[last].version, "");
         known_schemas[last].name = strdup(name);
         known_schemas[last].location = strdup(location);
     }
@@ -246,12 +272,18 @@ crm_schema_init(void)
     int lpc, max;
     const char *base = get_schema_root();
     struct dirent **namelist = NULL;
+    const schema_version_t zero = SCHEMA_ZERO;
 
     max = scandir(base, &namelist, schema_filter, schema_sort);
-    __xml_schema_add(1, 0.0, "pacemaker-0.6", "crm.dtd", "upgrade06.xsl", 3);
-    __xml_schema_add(1, 0.0, "transitional-0.6", "crm-transitional.dtd",
-                     "upgrade06.xsl", 3);
-    __xml_schema_add(2, 0.0, "pacemaker-0.7", "pacemaker-1.0.rng", NULL, 0);
+
+    add_schema(schema_validator_dtd, &zero, "pacemaker-0.6",
+               "crm.dtd", "upgrade06.xsl", 3);
+
+    add_schema(schema_validator_dtd, &zero, "transitional-0.6",
+               "crm-transitional.dtd", "upgrade06.xsl", 3);
+
+    add_schema(schema_validator_rng, &zero, "pacemaker-0.7",
+               "pacemaker-1.0.rng", NULL, 0);
 
     if (max < 0) {
         crm_notice("scandir(%s) failed: %s (%d)", base, strerror(errno), errno);
@@ -259,26 +291,26 @@ crm_schema_init(void)
     } else {
         for (lpc = 0; lpc < max; lpc++) {
             int next = 0;
-            float version = 0.0;
+            schema_version_t version = SCHEMA_ZERO;
             char *transform = NULL;
 
-            sscanf(namelist[lpc]->d_name, "pacemaker-%f.rng", &version);
+            version_from_filename(namelist[lpc]->d_name, &version);
             if ((lpc + 1) < max) {
-                float next_version = 0.0;
+                schema_version_t next_version = SCHEMA_ZERO;
 
-                sscanf(namelist[lpc+1]->d_name, "pacemaker-%f.rng",
-                       &next_version);
+                version_from_filename(namelist[lpc+1]->d_name, &next_version);
 
-                if (floor(version) < floor(next_version)) {
+                if (version.v[0] < next_version.v[0]) {
                     struct stat s;
                     char *xslt = NULL;
 
-                    transform = crm_strdup_printf("upgrade-%.1f.xsl", version);
+                    transform = schema_strdup_printf("upgrade-", version, ".xsl");
                     xslt = get_schema_path(NULL, transform);
                     if (stat(xslt, &s) != 0) {
                         crm_err("Transform %s not found", xslt);
                         free(xslt);
-                        __xml_schema_add(2, version, NULL, NULL, NULL, -1);
+                        add_schema(schema_validator_rng, &version, NULL, NULL,
+                                   NULL, -1);
                         break;
                     } else {
                         free(xslt);
@@ -288,16 +320,22 @@ crm_schema_init(void)
             } else {
                 next = -1;
             }
-            __xml_schema_add(2, version, NULL, NULL, transform, next);
+            add_schema(schema_validator_rng, &version, NULL, NULL, transform,
+                       next);
             free(namelist[lpc]);
             free(transform);
         }
     }
 
     /* 1.1 was the old name for -next */
-    __xml_schema_add(2, 0.0, "pacemaker-1.1", "pacemaker-next.rng", NULL, 0);
-    __xml_schema_add(2, 0.0, "pacemaker-next", "pacemaker-next.rng", NULL, -1);
-    __xml_schema_add(0, 0.0, "none", "N/A", NULL, -1);
+    add_schema(schema_validator_rng, &zero, "pacemaker-1.1",
+               "pacemaker-next.rng", NULL, 0);
+
+    add_schema(schema_validator_rng, &zero, "pacemaker-next",
+               "pacemaker-next.rng", NULL, -1);
+
+    add_schema(schema_validator_none, &zero, "none",
+               "N/A", NULL, -1);
     free(namelist);
 }
 
@@ -469,15 +507,11 @@ crm_schema_cleanup(void)
 
     for (lpc = 0; lpc < xml_schema_max; lpc++) {
 
-        switch (known_schemas[lpc].type) {
-            case 0:
-                /* None */
+        switch (known_schemas[lpc].validator) {
+            case schema_validator_none:
+            case schema_validator_dtd: // not cached
                 break;
-            case 1:
-                /* DTD - Not cached */
-                break;
-            case 2:
-                /* RNG - Cached */
+            case schema_validator_rng: // cached
                 ctx = (relaxng_ctx_cache_t *) known_schemas[lpc].cache;
                 if (ctx == NULL) {
                     break;
@@ -494,8 +528,6 @@ crm_schema_cleanup(void)
                 free(ctx);
                 known_schemas[lpc].cache = NULL;
                 break;
-            default:
-                break;
         }
         free(known_schemas[lpc].name);
         free(known_schemas[lpc].location);
@@ -510,15 +542,13 @@ validate_with(xmlNode *xml, int method, gboolean to_logs)
 {
     xmlDocPtr doc = NULL;
     gboolean valid = FALSE;
-    int type = 0;
     char *file = NULL;
 
     if (method < 0) {
         return FALSE;
     }
 
-    type = known_schemas[method].type;
-    if(type == 0) {
+    if (known_schemas[method].validator == schema_validator_none) {
         return TRUE;
     }
 
@@ -527,18 +557,20 @@ validate_with(xmlNode *xml, int method, gboolean to_logs)
     file = get_schema_path(known_schemas[method].name,
                            known_schemas[method].location);
 
-    crm_trace("Validating with: %s (type=%d)", crm_str(file), type);
-    switch (type) {
-        case 1:
+    crm_trace("Validating with: %s (type=%d)",
+              crm_str(file), known_schemas[method].validator);
+    switch (known_schemas[method].validator) {
+        case schema_validator_dtd:
             valid = validate_with_dtd(doc, to_logs, file);
             break;
-        case 2:
+        case schema_validator_rng:
             valid =
                 validate_with_relaxng(doc, to_logs, file,
                                       (relaxng_ctx_cache_t **) & (known_schemas[method].cache));
             break;
         default:
-            crm_err("Unknown validator type: %d", type);
+            crm_err("Unknown validator type: %d",
+                    known_schemas[method].validator);
             break;
     }
 
@@ -765,7 +797,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
             *best = lpc++;
 
         } else if (lpc < 0) {
-            crm_debug("Unknown validation type");
+            crm_debug("Unknown validation schema");
             lpc = 0;
         }
     }

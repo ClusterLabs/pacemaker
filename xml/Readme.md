@@ -42,7 +42,7 @@ Create from the most recent `${base}-${X}.${Y}.rng` if it does not already exist
 ## Stable features ##
 
 The current stable version is determined at runtime when
-__xml_build_schema_list() interrogates the CRM_DTD_DIRECTORY.
+crm_schema_init() scans the CRM_DTD_DIRECTORY.
 
 It will have the form `pacemaker-${X}.${Y}` and the highest
 `${X}.${Y}` wins.
@@ -75,7 +75,7 @@ See `xml/upgrade06.xsl` for an example.
 New features will not be available until the admin
 
 1. Updates all the nodes
-1. Runs the equivalent of `cibadmin --upgrade`
+1. Runs the equivalent of `cibadmin --upgrade --force`
 
 ## Random Notes
 

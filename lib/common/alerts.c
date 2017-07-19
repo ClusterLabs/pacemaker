@@ -137,30 +137,6 @@ crm_dup_alert_entry(crm_alert_entry_t *entry)
 }
 
 void
-crm_set_alert_key(enum crm_alert_keys_e name, const char *value)
-{
-    const char **key;
-
-    for (key = crm_alert_keys[name]; *key; key++) {
-        crm_trace("Setting alert key %s = '%s'", *key, value);
-        if (value) {
-            setenv(*key, value, 1);
-        } else {
-            unsetenv(*key);
-        }
-    }
-}
-
-void
-crm_set_alert_key_int(enum crm_alert_keys_e name, int value)
-{
-    char *s = crm_itoa(value);
-
-    crm_set_alert_key(name, s);
-    free(s);
-}
-
-void
 crm_unset_alert_keys()
 {
     const char **key;

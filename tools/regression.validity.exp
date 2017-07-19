@@ -93,7 +93,7 @@ Call failed: Update does not conform to the configured schema
 =#=#=#= End test: Try to make resulting CIB invalid (unrecognized validate-with) - Update does not conform to the configured schema (203) =#=#=#=
 * Passed: cibadmin       - Try to make resulting CIB invalid (unrecognized validate-with)
 =#=#=#= Begin test: Run crm_simulate with invalid CIB (unrecognized validate-with) =#=#=#=
-(   schemas.c:NNN   )   debug: update_validation:	Unknown validation type
+(   schemas.c:NNN   )   debug: update_validation:	Unknown validation schema
 (   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-0.6' validation (0 of X)
 element rsc_order: validity error : Element rsc_order does not carry attribute to
 element rsc_order: validity error : Element rsc_order does not carry attribute from
