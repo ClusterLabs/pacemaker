@@ -21,7 +21,7 @@ dtddir			= $(CRM_DTD_DIRECTORY)
 dtd_DATA		= crm.dtd crm-transitional.dtd
 
 xsltdir			= $(dtddir)
-xslt_DATA		= upgrade06.xsl upgrade-*.xsl
+xslt_DATA		= upgrade06.xsl $(top_srcdir)/xml/upgrade-*.xsl
 
 noinst_DATA		= context-of.xsl
 
@@ -31,7 +31,7 @@ RNGdir			= $(dtddir)
 
 # Sorted list of available numeric RNG versions,
 # extracted from filenames like NAME-MAJOR[.MINOR][.MINOR-MINOR].rng
-RNG_numeric_versions    = $(shell ls -1 *.rng \
+RNG_numeric_versions    = $(shell echo $(wildcard $(top_srcdir)/xml/*.rng) \
 			  | sed -n -e 's/^.*-\([0-9][0-9.]*\).rng$$/\1/p' \
 			  | sort -u -t. -k 1,1n -k 2,2n -k 3,3n)
 
@@ -102,21 +102,21 @@ pacemaker.rng: pacemaker-$(RNG_max).rng
 	echo "  RNG      $@"
 	cp $(top_builddir)/xml/$< $@
 
-pacemaker-%.rng: $(RNG_files) best-match.sh Makefile.am 
+pacemaker-%.rng: $(RNG_files) best-match.sh Makefile.am
 	echo "  RNG      $@"
 	echo '<?xml version="1.0" encoding="UTF-8"?>' > $@
 	echo '<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">' >> $@
 	echo '  <start>' >> $@
 	echo '    <element name="cib">' >> $@
-	./best-match.sh cib $(*) $(@) "      "
+	$(top_srcdir)/xml/best-match.sh cib $(*) $(@) "      "
 	echo '      <element name="configuration">' >> $@
 	echo '        <interleave>' >> $@
-	for rng in $(RNG_cfg_base); do ./best-match.sh $$rng $(*) $(@) "          " || :; done
+	for rng in $(RNG_cfg_base); do $(top_srcdir)/xml/best-match.sh $$rng $(*) $(@) "          " || :; done
 	echo '        </interleave>' >> $@
 	echo '      </element>' >> $@
 	echo '      <optional>' >> $@
 	echo '        <element name="status">' >> $@
-	./best-match.sh status $(*) $(@) "          "
+	$(top_srcdir)/xml/best-match.sh status $(*) $(@) "          "
 	echo '        </element>' >> $@
 	echo '      </optional>' >> $@
 	echo '    </element>' >> $@
