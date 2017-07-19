@@ -19,6 +19,8 @@
 
 #include <attrd_common.h>
 
+cib_t *the_cib = NULL;
+
 static gboolean shutting_down = FALSE;
 static GMainLoop *mloop = NULL;
 
@@ -192,6 +194,16 @@ attrd_init_ipc(qb_ipcs_service_t **ipcs, qb_ipcs_msg_process_fn dispatch_fn)
 
     ipc_callbacks.msg_process = dispatch_fn;
     attrd_ipc_server_init(ipcs, &ipc_callbacks);
+}
+
+void
+attrd_cib_disconnect()
+{
+    if (the_cib) {
+        the_cib->cmds->signoff(the_cib);
+        cib_delete(the_cib);
+        the_cib = NULL;
+    }
 }
 
 /* strlen("value") */

@@ -18,7 +18,22 @@
 
 #ifndef LRMD_ALERT_INTERNAL_H
 #define LRMD_ALERT_INTERNAL_H
-lrmd_key_value_t * lrmd_set_alert_key_to_lrmd_params(lrmd_key_value_t *head, enum crm_alert_keys_e name, const char *value);
-lrmd_key_value_t *lrmd_set_alert_envvar_to_lrmd_params(lrmd_key_value_t *head,
-                                                       crm_alert_entry_t *entry);
+
+#include <glib.h>
+#include <crm/lrmd.h>
+
+int lrmd_send_attribute_alert(GList *alert_list,
+                              lrmd_t *(*lrmd_connect_func)(void),
+                              const char *node, uint32_t nodeid,
+                              const char *attr_name, const char *attr_value);
+int lrmd_send_node_alert(GList *alert_list, lrmd_t *(*lrmd_connect_func)(void),
+                         const char *node, uint32_t nodeid, const char *state);
+int lrmd_send_fencing_alert(GList *alert_list,
+                            lrmd_t *(*lrmd_connect_func)(void),
+                            const char *target, const char *task,
+                            const char *desc, int op_rc);
+int lrmd_send_resource_alert(GList *alert_list,
+                             lrmd_t *(*lrmd_connect_func)(void),
+                             const char *node, lrmd_event_data_t *op);
+
 #endif

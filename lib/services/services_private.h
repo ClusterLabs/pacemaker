@@ -31,6 +31,9 @@ struct svc_action_private_s {
     char *exec;
     char *args[MAX_ARGC];
 
+    uid_t uid;
+    gid_t gid;
+
     guint repeat_timer;
     void (*callback) (svc_action_t * op);
 
