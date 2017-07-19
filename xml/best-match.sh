@@ -1,11 +1,11 @@
 #!/bin/sh
 
-cd $(dirname $0)
-
 base=$1; shift
 target=$1; shift
 destination=$(realpath $1); shift
 prefix=$1; shift
+
+cd $(dirname $0)
 
 best="0.0"
 candidates=$(ls -1 "${base}.rng" "${base}"-*.rng 2>/dev/null)
