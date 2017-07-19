@@ -57,12 +57,18 @@ typedef struct {
     xmlRelaxNGParserCtxtPtr parser;
 } relaxng_ctx_cache_t;
 
+enum schema_validator_e {
+    schema_validator_none,
+    schema_validator_dtd,
+    schema_validator_rng
+};
+
 struct schema_s {
     char *name;
     char *location;
     char *transform;
     void *cache;
-    int type;
+    enum schema_validator_e validator;
     int after_transform;
     schema_version_t version;
 };
@@ -198,8 +204,9 @@ schema_sort(const struct dirent **a, const struct dirent **b)
 }
 
 static void
-add_schema(int type, const schema_version_t *version, const char *name,
-           const char *location, const char *transform, int after_transform)
+add_schema(enum schema_validator_e validator, const schema_version_t *version,
+           const char *name, const char *location, const char *transform,
+           int after_transform)
 {
     int last = xml_schema_max;
     bool have_version = FALSE;
@@ -209,7 +216,7 @@ add_schema(int type, const schema_version_t *version, const char *name,
                                  xml_schema_max * sizeof(struct schema_s));
     CRM_ASSERT(known_schemas != NULL);
     memset(known_schemas+last, 0, sizeof(struct schema_s));
-    known_schemas[last].type = type;
+    known_schemas[last].validator = validator;
     known_schemas[last].after_transform = after_transform;
 
     for (int i = 0; i < 2; ++i) {
@@ -268,10 +275,15 @@ crm_schema_init(void)
     const schema_version_t zero = SCHEMA_ZERO;
 
     max = scandir(base, &namelist, schema_filter, schema_sort);
-    add_schema(1, &zero, "pacemaker-0.6", "crm.dtd", "upgrade06.xsl", 3);
-    add_schema(1, &zero, "transitional-0.6", "crm-transitional.dtd",
-               "upgrade06.xsl", 3);
-    add_schema(2, &zero, "pacemaker-0.7", "pacemaker-1.0.rng", NULL, 0);
+
+    add_schema(schema_validator_dtd, &zero, "pacemaker-0.6",
+               "crm.dtd", "upgrade06.xsl", 3);
+
+    add_schema(schema_validator_dtd, &zero, "transitional-0.6",
+               "crm-transitional.dtd", "upgrade06.xsl", 3);
+
+    add_schema(schema_validator_rng, &zero, "pacemaker-0.7",
+               "pacemaker-1.0.rng", NULL, 0);
 
     if (max < 0) {
         crm_notice("scandir(%s) failed: %s (%d)", base, strerror(errno), errno);
@@ -297,7 +309,8 @@ crm_schema_init(void)
                     if (stat(xslt, &s) != 0) {
                         crm_err("Transform %s not found", xslt);
                         free(xslt);
-                        add_schema(2, &version, NULL, NULL, NULL, -1);
+                        add_schema(schema_validator_rng, &version, NULL, NULL,
+                                   NULL, -1);
                         break;
                     } else {
                         free(xslt);
@@ -307,16 +320,22 @@ crm_schema_init(void)
             } else {
                 next = -1;
             }
-            add_schema(2, &version, NULL, NULL, transform, next);
+            add_schema(schema_validator_rng, &version, NULL, NULL, transform,
+                       next);
             free(namelist[lpc]);
             free(transform);
         }
     }
 
     /* 1.1 was the old name for -next */
-    add_schema(2, &zero, "pacemaker-1.1", "pacemaker-next.rng", NULL, 0);
-    add_schema(2, &zero, "pacemaker-next", "pacemaker-next.rng", NULL, -1);
-    add_schema(0, &zero, "none", "N/A", NULL, -1);
+    add_schema(schema_validator_rng, &zero, "pacemaker-1.1",
+               "pacemaker-next.rng", NULL, 0);
+
+    add_schema(schema_validator_rng, &zero, "pacemaker-next",
+               "pacemaker-next.rng", NULL, -1);
+
+    add_schema(schema_validator_none, &zero, "none",
+               "N/A", NULL, -1);
     free(namelist);
 }
 
@@ -488,15 +507,11 @@ crm_schema_cleanup(void)
 
     for (lpc = 0; lpc < xml_schema_max; lpc++) {
 
-        switch (known_schemas[lpc].type) {
-            case 0:
-                /* None */
+        switch (known_schemas[lpc].validator) {
+            case schema_validator_none:
+            case schema_validator_dtd: // not cached
                 break;
-            case 1:
-                /* DTD - Not cached */
-                break;
-            case 2:
-                /* RNG - Cached */
+            case schema_validator_rng: // cached
                 ctx = (relaxng_ctx_cache_t *) known_schemas[lpc].cache;
                 if (ctx == NULL) {
                     break;
@@ -513,8 +528,6 @@ crm_schema_cleanup(void)
                 free(ctx);
                 known_schemas[lpc].cache = NULL;
                 break;
-            default:
-                break;
         }
         free(known_schemas[lpc].name);
         free(known_schemas[lpc].location);
@@ -529,15 +542,13 @@ validate_with(xmlNode *xml, int method, gboolean to_logs)
 {
     xmlDocPtr doc = NULL;
     gboolean valid = FALSE;
-    int type = 0;
     char *file = NULL;
 
     if (method < 0) {
         return FALSE;
     }
 
-    type = known_schemas[method].type;
-    if(type == 0) {
+    if (known_schemas[method].validator == schema_validator_none) {
         return TRUE;
     }
 
@@ -546,18 +557,20 @@ validate_with(xmlNode *xml, int method, gboolean to_logs)
     file = get_schema_path(known_schemas[method].name,
                            known_schemas[method].location);
 
-    crm_trace("Validating with: %s (type=%d)", crm_str(file), type);
-    switch (type) {
-        case 1:
+    crm_trace("Validating with: %s (type=%d)",
+              crm_str(file), known_schemas[method].validator);
+    switch (known_schemas[method].validator) {
+        case schema_validator_dtd:
             valid = validate_with_dtd(doc, to_logs, file);
             break;
-        case 2:
+        case schema_validator_rng:
             valid =
                 validate_with_relaxng(doc, to_logs, file,
                                       (relaxng_ctx_cache_t **) & (known_schemas[method].cache));
             break;
         default:
-            crm_err("Unknown validator type: %d", type);
+            crm_err("Unknown validator type: %d",
+                    known_schemas[method].validator);
             break;
     }
 
@@ -784,7 +797,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
             *best = lpc++;
 
         } else if (lpc < 0) {
-            crm_debug("Unknown validation type");
+            crm_debug("Unknown validation schema");
             lpc = 0;
         }
     }
