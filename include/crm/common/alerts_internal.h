@@ -84,8 +84,6 @@ crm_alert_envvar_t *crm_dup_alert_envvar(crm_alert_envvar_t *src);
 crm_alert_entry_t *crm_alert_entry_new(const char *id, const char *path);
 void crm_free_alert_entry(crm_alert_entry_t *entry);
 void crm_free_alert_envvar(crm_alert_envvar_t *entry);
-void crm_set_alert_key(enum crm_alert_keys_e name, const char *value);
-void crm_set_alert_key_int(enum crm_alert_keys_e name, int value);
 void crm_insert_alert_key(GHashTable *table, enum crm_alert_keys_e name,
                           const char *value);
 void crm_insert_alert_key_int(GHashTable *table, enum crm_alert_keys_e name,
