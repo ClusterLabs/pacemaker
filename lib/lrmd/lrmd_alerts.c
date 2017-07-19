@@ -367,9 +367,9 @@ lrmd_send_resource_alert(GList *alert_list, lrmd_t *(*lrmd_connect_func)(void),
     params = alert_key2param_int(params, CRM_alert_rc, op->rc);
 
     if (op->op_status == PCMK_LRM_OP_DONE) {
-        crm_set_alert_key(CRM_alert_desc, services_ocf_exitcode_str(op->rc));
+        params = alert_key2param(params, CRM_alert_desc, services_ocf_exitcode_str(op->rc));
     } else {
-        crm_set_alert_key(CRM_alert_desc, services_lrm_status_str(op->op_status));
+        params = alert_key2param(params, CRM_alert_desc, services_lrm_status_str(op->op_status));
     }
 
     rc = exec_alert_list(alert_list, lrmd_connect_func, crm_alert_resource,
