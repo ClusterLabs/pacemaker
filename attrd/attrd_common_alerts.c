@@ -43,39 +43,37 @@ attrd_lrmd_callback(lrmd_event_data_t * op)
     }
 }
 
-lrmd_t *
+static lrmd_t *
 attrd_lrmd_connect()
 {
-    int ret = -ENOTCONN;
-    int fails = 0;
-    const unsigned int max_attempts = 10;
-
-    if (!the_lrmd) {
+    if (the_lrmd == NULL) {
         the_lrmd = lrmd_api_new();
-    } else if (the_lrmd->cmds->is_connected(the_lrmd)) {
-        return the_lrmd;
+        the_lrmd->cmds->set_callback(the_lrmd, attrd_lrmd_callback);
     }
 
-    the_lrmd->cmds->set_callback(the_lrmd, attrd_lrmd_callback);
+    if (!the_lrmd->cmds->is_connected(the_lrmd)) {
+        const unsigned int max_attempts = 10;
+        int ret = -ENOTCONN;
 
-    while (fails < max_attempts) {
-        ret = the_lrmd->cmds->connect(the_lrmd, T_ATTRD, NULL);
-        if (ret != pcmk_ok) {
-            fails++;
+        for (int fails = 0; fails < max_attempts; ++fails) {
+            ret = the_lrmd->cmds->connect(the_lrmd, T_ATTRD, NULL);
+            if (ret == pcmk_ok) {
+                break;
+            }
+
             crm_debug("Could not connect to LRMD, %d tries remaining",
                       (max_attempts - fails));
             /* @TODO We don't want to block here with sleep, but we should wait
              * some time between connection attempts. We could possibly add a
              * timer with a callback, but then we'd likely need an alert queue.
              */
-        } else {
-            break;
+        }
+
+        if (ret != pcmk_ok) {
+            attrd_lrmd_disconnect();
         }
     }
 
-    if (ret != pcmk_ok) {
-        attrd_lrmd_disconnect();
-    }
     return the_lrmd;
 }
 
