@@ -113,20 +113,19 @@ is_target_alert(char **list, const char *value)
  * \internal
  * \brief Execute alert agents for an event
  *
- * \param[in]     alert_list         Alerts to execute
- * \param[in]     lrmd_connect_func  Function that returns an LRMD connection
- * \param[in]     kind               Type of event that is being alerted for
- * \param[in]     attr_name          If crm_alert_attribute, the attribute name
- * \param[in,out] params             Environment variables to pass to agents
+ * \param[in]     lrmd        LRMD connection to use
+ * \param[in]     alert_list  Alerts to execute
+ * \param[in]     kind        Type of event that is being alerted for
+ * \param[in]     attr_name   If crm_alert_attribute, the attribute name
+ * \param[in,out] params      Environment variables to pass to agents
  *
  * \retval pcmk_ok on success
  * \retval -1 if some alerts failed
  * \retval -2 if all alerts failed
  */
 static int
-exec_alert_list(GList *alert_list, lrmd_t *(*lrmd_connect_func)(void),
-                enum crm_alert_flags kind, const char *attr_name,
-                lrmd_key_value_t *params)
+exec_alert_list(lrmd_t *lrmd, GList *alert_list, enum crm_alert_flags kind,
+                const char *attr_name, lrmd_key_value_t *params)
 {
     bool any_success = FALSE, any_failure = FALSE;
     const char *kind_s = crm_alert_flag2text(kind);
@@ -139,7 +138,6 @@ exec_alert_list(GList *alert_list, lrmd_t *(*lrmd_connect_func)(void),
         crm_alert_entry_t *entry = (crm_alert_entry_t *)(iter->data);
         lrmd_key_value_t *copy_params = NULL;
         lrmd_key_value_t *head = NULL;
-        lrmd_t *lrmd_conn = NULL;
         int rc;
 
         if (is_not_set(entry->flags, kind)) {
@@ -182,15 +180,8 @@ exec_alert_list(GList *alert_list, lrmd_t *(*lrmd_connect_func)(void),
 
         copy_params = alert_envvar2params(copy_params, entry);
 
-        lrmd_conn = (*lrmd_connect_func)();
-        if (lrmd_conn == NULL) {
-            crm_warn("Cannot send alerts: No LRMD connection");
-            any_failure = TRUE;
-            goto done;
-        }
-
-        rc = lrmd_conn->cmds->exec_alert(lrmd_conn, entry->id, entry->path,
-                                         entry->timeout, copy_params);
+        rc = lrmd->cmds->exec_alert(lrmd, entry->id, entry->path,
+                                    entry->timeout, copy_params);
         if (rc < 0) {
             crm_err("Could not execute alert %s: %s " CRM_XS " rc=%d",
                     entry->id, pcmk_strerror(rc), rc);
@@ -200,7 +191,6 @@ exec_alert_list(GList *alert_list, lrmd_t *(*lrmd_connect_func)(void),
         }
     }
 
-done:
     if (now) {
         free(now);
     }
@@ -215,35 +205,36 @@ done:
  * \internal
  * \brief Send an alert for a node attribute change
  *
- * \param[in] alert_list         List of alert agents to execute
- * \param[in] lrmd_connect_func  Function that returns an LRMD connection
- * \param[in] node               Name of node with attribute change
- * \param[in] nodeid             Node ID of node with attribute change
- * \param[in] attr_name          Name of attribute that changed
- * \param[in] attr_value         New value of attribute that changed
+ * \param[in] lrmd        LRMD connection to use
+ * \param[in] alert_list  List of alert agents to execute
+ * \param[in] node        Name of node with attribute change
+ * \param[in] nodeid      Node ID of node with attribute change
+ * \param[in] attr_name   Name of attribute that changed
+ * \param[in] attr_value  New value of attribute that changed
  *
  * \retval pcmk_ok on success
  * \retval -1 if some alert agents failed
  * \retval -2 if all alert agents failed
  */
 int
-lrmd_send_attribute_alert(GList *alert_list, lrmd_t *(*lrmd_connect_func)(void),
+lrmd_send_attribute_alert(lrmd_t *lrmd, GList *alert_list,
                           const char *node, uint32_t nodeid,
                           const char *attr_name, const char *attr_value)
 {
     int rc = pcmk_ok;
     lrmd_key_value_t *params = NULL;
 
-    if (alert_list == NULL) {
-        return pcmk_ok;
+    if (lrmd == NULL) {
+        return -2;
     }
+
     params = alert_key2param(params, CRM_alert_node, node);
     params = alert_key2param_int(params, CRM_alert_nodeid, nodeid);
     params = alert_key2param(params, CRM_alert_attribute_name, attr_name);
     params = alert_key2param(params, CRM_alert_attribute_value, attr_value);
 
-    rc = exec_alert_list(alert_list, lrmd_connect_func, crm_alert_attribute,
-                         attr_name, params);
+    rc = exec_alert_list(lrmd, alert_list, crm_alert_attribute, attr_name,
+                         params);
     lrmd_key_value_freeall(params);
     return rc;
 }
@@ -252,33 +243,32 @@ lrmd_send_attribute_alert(GList *alert_list, lrmd_t *(*lrmd_connect_func)(void),
  * \internal
  * \brief Send an alert for a node membership event
  *
- * \param[in] alert_list         List of alert agents to execute
- * \param[in] lrmd_connect_func  Function that returns an LRMD connection
- * \param[in] node               Name of node with change
- * \param[in] nodeid             Node ID of node with change
- * \param[in] state              New state of node with change
+ * \param[in] lrmd        LRMD connection to use
+ * \param[in] alert_list  List of alert agents to execute
+ * \param[in] node        Name of node with change
+ * \param[in] nodeid      Node ID of node with change
+ * \param[in] state       New state of node with change
  *
  * \retval pcmk_ok on success
  * \retval -1 if some alert agents failed
  * \retval -2 if all alert agents failed
  */
 int
-lrmd_send_node_alert(GList *alert_list, lrmd_t *(*lrmd_connect_func)(void),
+lrmd_send_node_alert(lrmd_t *lrmd, GList *alert_list,
                      const char *node, uint32_t nodeid, const char *state)
 {
     int rc = pcmk_ok;
     lrmd_key_value_t *params = NULL;
 
-    if (alert_list == NULL) {
-        return pcmk_ok;
+    if (lrmd == NULL) {
+        return -2;
     }
 
     params = alert_key2param(params, CRM_alert_node, node);
     params = alert_key2param(params, CRM_alert_desc, state);
     params = alert_key2param_int(params, CRM_alert_nodeid, nodeid);
 
-    rc = exec_alert_list(alert_list, lrmd_connect_func, crm_alert_node, NULL,
-                         params);
+    rc = exec_alert_list(lrmd, alert_list, crm_alert_node, NULL, params);
     lrmd_key_value_freeall(params);
     return rc;
 }
@@ -287,27 +277,27 @@ lrmd_send_node_alert(GList *alert_list, lrmd_t *(*lrmd_connect_func)(void),
  * \internal
  * \brief Send an alert for a fencing event
  *
- * \param[in] alert_list         List of alert agents to execute
- * \param[in] lrmd_connect_func  Function that returns an LRMD connection
- * \param[in] target             Name of fence target node
- * \param[in] task               Type of fencing event that occurred
- * \param[in] desc               Readable description of event
- * \param[in] op_rc              Result of fence action
+ * \param[in] lrmd        LRMD connection to use
+ * \param[in] alert_list  List of alert agents to execute
+ * \param[in] target      Name of fence target node
+ * \param[in] task        Type of fencing event that occurred
+ * \param[in] desc        Readable description of event
+ * \param[in] op_rc       Result of fence action
  *
  * \retval pcmk_ok on success
  * \retval -1 if some alert agents failed
  * \retval -2 if all alert agents failed
  */
 int
-lrmd_send_fencing_alert(GList *alert_list, lrmd_t *(*lrmd_connect_func)(void),
+lrmd_send_fencing_alert(lrmd_t *lrmd, GList *alert_list,
                         const char *target, const char *task, const char *desc,
                         int op_rc)
 {
     int rc = pcmk_ok;
     lrmd_key_value_t *params = NULL;
 
-    if (alert_list == NULL) {
-        return pcmk_ok;
+    if (lrmd == NULL) {
+        return -2;
     }
 
     params = alert_key2param(params, CRM_alert_node, target);
@@ -315,8 +305,7 @@ lrmd_send_fencing_alert(GList *alert_list, lrmd_t *(*lrmd_connect_func)(void),
     params = alert_key2param(params, CRM_alert_desc, desc);
     params = alert_key2param_int(params, CRM_alert_rc, op_rc);
 
-    rc = exec_alert_list(alert_list, lrmd_connect_func, crm_alert_fencing,
-                         NULL, params);
+    rc = exec_alert_list(lrmd, alert_list, crm_alert_fencing, NULL, params);
     lrmd_key_value_freeall(params);
     return rc;
 }
@@ -325,25 +314,25 @@ lrmd_send_fencing_alert(GList *alert_list, lrmd_t *(*lrmd_connect_func)(void),
  * \internal
  * \brief Send an alert for a resource operation
  *
- * \param[in] alert_list         List of alert agents to execute
- * \param[in] lrmd_connect_func  Function that returns an LRMD connection
- * \param[in] node               Name of node that executed operation
- * \param[in] op                 Resource operation
+ * \param[in] lrmd        LRMD connection to use
+ * \param[in] alert_list  List of alert agents to execute
+ * \param[in] node        Name of node that executed operation
+ * \param[in] op          Resource operation
  *
  * \retval pcmk_ok on success
  * \retval -1 if some alert agents failed
  * \retval -2 if all alert agents failed
  */
 int
-lrmd_send_resource_alert(GList *alert_list, lrmd_t *(*lrmd_connect_func)(void),
+lrmd_send_resource_alert(lrmd_t *lrmd, GList *alert_list,
                          const char *node, lrmd_event_data_t *op)
 {
     int rc = pcmk_ok;
     int target_rc = pcmk_ok;
     lrmd_key_value_t *params = NULL;
 
-    if (alert_list == NULL) {
-        return pcmk_ok;
+    if (lrmd == NULL) {
+        return -2;
     }
 
     target_rc = rsc_op_expected_rc(op);
@@ -372,8 +361,7 @@ lrmd_send_resource_alert(GList *alert_list, lrmd_t *(*lrmd_connect_func)(void),
         params = alert_key2param(params, CRM_alert_desc, services_lrm_status_str(op->op_status));
     }
 
-    rc = exec_alert_list(alert_list, lrmd_connect_func, crm_alert_resource,
-                         NULL, params);
+    rc = exec_alert_list(lrmd, alert_list, crm_alert_resource, NULL, params);
     lrmd_key_value_freeall(params);
     return rc;
 }

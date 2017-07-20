@@ -23,7 +23,6 @@
 #include <crm/cluster/election.h>
 #include <internal.h>
 #include <crm/common/alerts_internal.h>
-#include <crm/common/iso8601_internal.h>
 #include <crm/pengine/rules_internal.h>
 #include <crm/lrmd_alerts_internal.h>
 
@@ -145,6 +144,9 @@ int
 attrd_send_attribute_alert(const char *node, int nodeid,
                            const char *attr, const char *value)
 {
-    return lrmd_send_attribute_alert(attrd_alert_list, attrd_lrmd_connect,
+    if (attrd_alert_list == NULL) {
+        return pcmk_ok;
+    }
+    return lrmd_send_attribute_alert(attrd_lrmd_connect(), attrd_alert_list,
                                      node, nodeid, attr, value);
 }

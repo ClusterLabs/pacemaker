@@ -26,8 +26,11 @@
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
 #include <crmd_lrm.h>
+#include <crmd_alerts.h>
 #include <crm/pengine/rules.h>
+#include <crm/pengine/rules_internal.h>
 #include <crm/transition.h>
+#include <crm/lrmd_alerts_internal.h>
 
 GHashTable *lrm_state_table = NULL;
 extern GHashTable *proxy_table;
@@ -790,4 +793,79 @@ lrm_state_get_rsc_metadata(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc)
     free(key);
 
     return metadata;
+}
+
+/*
+ * functions for sending alerts via local LRMD connection
+ */
+
+static GListPtr crmd_alert_list = NULL;
+
+void
+crmd_unpack_alerts(xmlNode *alerts)
+{
+    pe_free_alert_list(crmd_alert_list);
+    crmd_alert_list = pe_unpack_alerts(alerts);
+}
+
+void
+crmd_alert_node_event(crm_node_t *node)
+{
+    lrm_state_t *lrm_state;
+
+    if (crmd_alert_list == NULL) {
+        return;
+    }
+
+    lrm_state = lrm_state_find(fsa_our_uname);
+    if (lrm_state == NULL) {
+        return;
+    }
+
+    lrmd_send_node_alert((lrmd_t *) lrm_state->conn, crmd_alert_list,
+                         node->uname, node->id, node->state);
+}
+
+void
+crmd_alert_fencing_op(stonith_event_t * e)
+{
+    char *desc;
+    lrm_state_t *lrm_state;
+
+    if (crmd_alert_list == NULL) {
+        return;
+    }
+
+    lrm_state = lrm_state_find(fsa_our_uname);
+    if (lrm_state == NULL) {
+        return;
+    }
+
+    desc = crm_strdup_printf("Operation %s of %s by %s for %s@%s: %s (ref=%s)",
+                             e->action, e->target,
+                             (e->executioner? e->executioner : "<no-one>"),
+                             e->client_origin, e->origin,
+                             pcmk_strerror(e->result), e->id);
+
+    lrmd_send_fencing_alert((lrmd_t *) lrm_state->conn, crmd_alert_list,
+                            e->target, e->operation, desc, e->result);
+    free(desc);
+}
+
+void
+crmd_alert_resource_op(const char *node, lrmd_event_data_t * op)
+{
+    lrm_state_t *lrm_state;
+
+    if (crmd_alert_list == NULL) {
+        return;
+    }
+
+    lrm_state = lrm_state_find(fsa_our_uname);
+    if (lrm_state == NULL) {
+        return;
+    }
+
+    lrmd_send_resource_alert((lrmd_t *) lrm_state->conn, crmd_alert_list, node,
+                             op);
 }
