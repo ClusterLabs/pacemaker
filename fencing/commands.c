@@ -468,9 +468,6 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
                   cmd->action, device->id, cmd->client, cmd->timeout);
     }
 
-    device->pending_ops = g_list_append(device->pending_ops, cmd);
-    mainloop_set_trigger(device->work);
-
     delay_max = get_action_delay_max(device, cmd->action);
     delay_base = get_action_delay_base(device, cmd->action);
     if (delay_max == 0) {
@@ -483,16 +480,26 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
         delay_base = delay_max;
     }
     if (delay_max > 0) {
-        cmd->start_delay =
-            ((delay_max != delay_base)?(rand() % (delay_max - delay_base)):0)
-            + delay_base;
-        crm_notice("Delaying %s on %s for %lldms (timeout=%ds, base=%dms, "
-                   "max=%dms)",
-                    cmd->action, device->id, cmd->start_delay, cmd->timeout,
-                    delay_base, delay_max);
-        cmd->delay_id =
-            g_timeout_add(cmd->start_delay, start_delay_helper, cmd);
+        if (device->cib_registered) {
+            cmd->start_delay =
+                ((delay_max != delay_base)?(rand() % (delay_max - delay_base)):0)
+                + delay_base;
+            crm_notice("Delaying %s on %s for %lldms (timeout=%ds, base=%dms, "
+                    "max=%dms)",
+                        cmd->action, device->id, cmd->start_delay, cmd->timeout,
+                        delay_base, delay_max);
+            cmd->delay_id =
+                g_timeout_add(cmd->start_delay, start_delay_helper, cmd);
+        } else {
+            crm_warn("Device '%s' not registered with cib purging "
+                     "delayed operation %s", device->id, cmd->action);
+            cmd->done_cb(0, -ENODEV, NULL, cmd);
+            return;
+        }
     }
+
+    device->pending_ops = g_list_append(device->pending_ops, cmd);
+    mainloop_set_trigger(device->work);
 }
 
 void
@@ -1212,6 +1219,20 @@ stonith_device_remove(const char *id, gboolean from_cib)
         g_hash_table_remove(device_list, id);
         crm_info("Removed '%s' from the device list (%d active devices)",
                  id, g_hash_table_size(device_list));
+    } else if (!device->cib_registered) {
+        GListPtr gIter = NULL;
+        for (gIter = device->pending_ops; gIter != NULL;) {
+            async_command_t *cmd = gIter->data;
+            GListPtr next = gIter->next;
+
+            if (cmd->delay_id) {
+                crm_warn("Removal of device '%s' from cib purged delayed operation %s",
+                         device->id, cmd->action);
+                cmd->done_cb(0, -ENODEV, NULL, cmd);
+                device->pending_ops = g_list_delete_link(device->pending_ops, gIter);
+            }
+            gIter = next;
+        }
     } else {
         crm_trace("Not removing '%s' from the device list (%d active devices) "
                   "- still %s%s_registered", id, g_hash_table_size(device_list),
