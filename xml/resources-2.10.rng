@@ -95,6 +95,27 @@
               <attribute name="options"><text/></attribute>
             </optional>
           </element>
+          <element name="rkt">
+            <attribute name="image"><text/></attribute>
+            <optional>
+              <attribute name="replicas"><data type="integer"/></attribute>
+            </optional>
+            <optional>
+              <attribute name="replicas-per-host"><data type="integer"/></attribute>
+            </optional>
+            <optional>
+              <attribute name="masters"><data type="integer"/></attribute>
+            </optional>
+            <optional>
+              <attribute name="run-command"> <text/></attribute>
+            </optional>
+            <optional>
+              <attribute name="network"><text/></attribute>
+            </optional>
+            <optional>
+              <attribute name="options"><text/></attribute>
+            </optional>
+          </element>
         </choice>
         <optional>
           <element name="network">
