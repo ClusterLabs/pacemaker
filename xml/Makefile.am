@@ -21,7 +21,7 @@ dtddir			= $(CRM_DTD_DIRECTORY)
 dtd_DATA		= crm.dtd crm-transitional.dtd
 
 xsltdir			= $(dtddir)
-xslt_DATA		= upgrade06.xsl $(top_srcdir)/xml/upgrade-*.xsl
+xslt_DATA		= $(top_srcdir)/xml/upgrade06.xsl $(top_srcdir)/xml/upgrade-*.xsl
 
 noinst_DATA		= context-of.xsl
 
