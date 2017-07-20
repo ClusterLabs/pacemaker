@@ -229,26 +229,79 @@ crm_str_eq(const char *a, const char *b, gboolean use_case)
     return FALSE;
 }
 
+static inline const char * null2emptystr(const char *);
+static inline const char *
+null2emptystr(const char *input)
+{
+    return (input == NULL) ? "" : input;
+}
+
+static inline int crm_ends_with_internal(const char *, const char *, gboolean);
+static inline int
+crm_ends_with_internal(const char *s, const char *match, gboolean as_extension)
+{
+    if ((s == NULL) || (match == NULL)) {
+        return 0;
+    } else {
+        size_t slen, mlen;
+
+        if (match[0] != '\0'
+            && (as_extension /* following commented out for inefficiency:
+                || strchr(&match[1], match[0]) == NULL */))
+                return !strcmp(null2emptystr(strrchr(s, match[0])), match);
+
+        if ((mlen = strlen(match)) == 0)
+            return 1;
+        slen = strlen(s);
+        return ((slen >= mlen) && !strcmp(s + slen - mlen, match));
+    }
+}
+
 /*!
  * \internal
  * \brief Check whether a string ends with a certain sequence
  *
  * \param[in] s      String to check
- * \param[in] match  Sequence to match against end of s
+ * \param[in] match  Sequence to match against end of \p s
  *
- * \return TRUE if s ends with match, FALSE otherwise
+ * \return \c TRUE if \p s ends (verbatim, i.e., case sensitively)
+ *         with match (including empty string), \c FALSE otherwise
+ *
+ * \see crm_ends_with_ext()
  */
 gboolean
 crm_ends_with(const char *s, const char *match)
 {
-    if ((s == NULL) || (match == NULL)) {
-        return FALSE;
-    } else {
-        size_t slen = strlen(s);
-        size_t mlen = strlen(match);
+    return crm_ends_with_internal(s, match, FALSE);
+}
 
-        return ((slen >= mlen) && !strcmp(s + slen - mlen, match));
-    }
+/*!
+ * \internal
+ * \brief Check whether a string ends with a certain "extension"
+ *
+ * \param[in] s      String to check
+ * \param[in] match  Extension to match against end of \p s, that is,
+ *                   its first character must not occur anywhere
+ *                   in the rest of that very sequence (example: file
+ *                   extension where the last dot is its delimiter,
+ *                   e.g., ".html"); incorrect results may be
+ *                   returned otherwise.
+ *
+ * \return \c TRUE if \p s ends (verbatim, i.e., case sensitively)
+ *         with "extension" designated as \p match (including empty
+ *         string), \c FALSE otherwise
+ *
+ * \note Main incentive to prefer this function over \c crm_ends_with
+ *       where possible is the efficiency (at the cost of added
+ *       restriction on \p match as stated (the complexity class remains
+ *       the same, though: BigO(M+N) vs. BigO(M+N+(M-N))).
+ *
+ * \see crm_ends_with()
+ */
+gboolean
+crm_ends_with_ext(const char *s, const char *match)
+{
+    return crm_ends_with_internal(s, match, TRUE);
 }
 
 /*
