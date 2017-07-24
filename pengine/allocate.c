@@ -2419,10 +2419,12 @@ LogNodeActions(pe_working_set_t * data_set, gboolean terminal)
 
     for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
         char *node_name = NULL;
-        const char *task = NULL;
+        char *task = NULL;
         action_t *action = (action_t *) gIter->data;
 
         if (action->rsc != NULL) {
+            continue;
+        } else if (is_set(action->flags, pe_action_optional)) {
             continue;
         }
 
@@ -2433,9 +2435,10 @@ LogNodeActions(pe_working_set_t * data_set, gboolean terminal)
         }
 
         if (safe_str_eq(action->task, CRM_OP_SHUTDOWN)) {
-            task = "Shutdown";
+            task = strdup("Shutdown");
         } else if (safe_str_eq(action->task, CRM_OP_FENCE)) {
-            task = "Fence";
+            const char *op = g_hash_table_lookup(action->meta, "stonith_action");
+            task = crm_strdup_printf("Fence (%s)", op);
         }
 
         if(task == NULL) {
@@ -2447,6 +2450,7 @@ LogNodeActions(pe_working_set_t * data_set, gboolean terminal)
         }
 
         free(node_name);
+        free(task);
     }
 }
 

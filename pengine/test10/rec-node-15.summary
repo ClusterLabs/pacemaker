@@ -21,7 +21,7 @@ Online: [ sapcl01 ]
      oralsnr_25	(ocf::heartbeat:oralsnr):	Stopped 
 
 Transition Summary:
- * Fence sapcl03
+ * Fence (reboot) sapcl03
  * Start   stonith-1	(sapcl01)
  * Move    IPaddr_192_168_1_102	(Started sapcl02 -> sapcl01)
  * Move    LVM_12	(Started sapcl02 -> sapcl01)

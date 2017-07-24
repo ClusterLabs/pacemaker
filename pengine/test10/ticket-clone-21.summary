@@ -7,8 +7,8 @@ Online: [ node1 node2 ]
      Started: [ node1 node2 ]
 
 Transition Summary:
- * Fence node2
- * Fence node1
+ * Fence (reboot) node2
+ * Fence (reboot) node1
  * Stop    rsc_stonith	(node1)
  * Stop    rsc1:0	(node1)
  * Stop    rsc1:1	(node2)

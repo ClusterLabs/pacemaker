@@ -28,7 +28,7 @@ Online: [ sles-1 sles-2 sles-4 ]
      ocf_msdummy:7	(ocf::heartbeat:Stateful):	Stopped 
 
 Transition Summary:
- * Fence sles-3
+ * Fence (reboot) sles-3
  * Start   r192.168.100.183	(sles-1)
  * Move    migrator	(Started sles-3 -> sles-4)
  * Move    rsc_sles-3	(Started sles-3 -> sles-4)

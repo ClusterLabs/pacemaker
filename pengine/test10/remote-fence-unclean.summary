@@ -11,7 +11,7 @@ Online: [ 18builder 18node1 18node2 ]
  FAKE4	(ocf::heartbeat:Dummy):	Started 18node1 
 
 Transition Summary:
- * Fence remote1
+ * Fence (reboot) remote1
  * Recover remote1	(Started 18node1)
  * Move    FAKE2	(Started remote1 -> 18builder)
  * Move    FAKE3	(Started 18builder -> 18node1)

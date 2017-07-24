@@ -12,7 +12,7 @@ Online: [ c7auto1 c7auto2 c7auto3 ]
  fake5	(ocf::heartbeat:Dummy):	Started c7auto3
 
 Transition Summary:
- * Fence c7auto4
+ * Fence (reboot) c7auto4
  * Stop    c7auto4	(c7auto1)
  * Move    fake2	(Started c7auto4 -> c7auto1)
 

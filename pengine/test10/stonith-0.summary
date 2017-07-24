@@ -37,8 +37,8 @@ Online: [ c001n02 c001n04 c001n06 c001n07 c001n08 ]
      ocf_msdummy:13	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Slave c001n06 
 
 Transition Summary:
- * Fence c001n05
- * Fence c001n03
+ * Fence (reboot) c001n05
+ * Fence (reboot) c001n03
  * Move    ocf_192.168.100.181	(Started c001n03 -> c001n02)
  * Move    heartbeat_192.168.100.182	(Started c001n03 -> c001n02)
  * Recover ocf_192.168.100.183	(Started c001n03 -> c001n02)

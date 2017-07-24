@@ -13,7 +13,7 @@ Online: [ hadev1 hadev2 ]
      child_DoFencing:2	(stonith:ssh):	Started hadev1
 
 Transition Summary:
- * Fence hadev3
+ * Fence (reboot) hadev3
  * Shutdown hadev2
  * Move    DcIPaddr	(Started hadev2 -> hadev1)
  * Move    rsc_hadev2	(Started hadev2 -> hadev1)

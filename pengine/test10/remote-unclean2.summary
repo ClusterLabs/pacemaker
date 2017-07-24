@@ -7,7 +7,7 @@ Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
  rhel7-auto4	(ocf::pacemaker:remote):	FAILED rhel7-auto1 
 
 Transition Summary:
- * Fence rhel7-auto4
+ * Fence (reboot) rhel7-auto4
  * Recover rhel7-auto4	(Started rhel7-auto1)
 
 Executing cluster transition:

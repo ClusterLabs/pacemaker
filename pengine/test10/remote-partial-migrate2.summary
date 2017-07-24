@@ -63,7 +63,7 @@ RemoteOFFLINE: [ pcmk_remote4 ]
  FAKE50	(ocf::heartbeat:Dummy):	Started pcmk_remote5 
 
 Transition Summary:
- * Fence pcmk4
+ * Fence (reboot) pcmk4
  * Migrate pcmk_remote2	(Started pcmk3 -> pcmk1)
  * Start   pcmk_remote4	(pcmk2)
  * Migrate pcmk_remote5	(Started pcmk1 -> pcmk2)

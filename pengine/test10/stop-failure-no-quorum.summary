@@ -15,7 +15,7 @@ Online: [ pcmk-1 ]
  Fencing	(stonith:fence_xvm):	Stopped 
 
 Transition Summary:
- * Fence pcmk-2
+ * Fence (reboot) pcmk-2
  * Start   dlm:0	(pcmk-1 - blocked)
  * Stop    clvm:0	(pcmk-2)
  * Start   clvm:2	(pcmk-1 - blocked)

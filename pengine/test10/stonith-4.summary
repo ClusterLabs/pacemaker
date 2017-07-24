@@ -14,10 +14,10 @@ OFFLINE: [ pcmk-4 pcmk-6 ]
  Fencing	(stonith:fence_xvm):	Stopped 
 
 Transition Summary:
- * Fence pcmk-8
- * Fence pcmk-7
- * Fence pcmk-5
- * Fence pcmk-10
+ * Fence (reboot) pcmk-8
+ * Fence (reboot) pcmk-7
+ * Fence (reboot) pcmk-5
+ * Fence (reboot) pcmk-10
  * Start   Fencing	(pcmk-1 - blocked)
 
 Executing cluster transition:

@@ -25,9 +25,9 @@ Containers: [ lxc-01_kiff-02:R-lxc-01_kiff-02 lxc-02_kiff-02:R-lxc-02_kiff-02 ]
  vm-fs	(ocf::heartbeat:Filesystem):	FAILED lxc-01_kiff-01
 
 Transition Summary:
- * Fence lxc-02_kiff-01 (resource: R-lxc-02_kiff-01)
- * Fence lxc-01_kiff-01 (resource: R-lxc-01_kiff-01)
- * Fence kiff-01
+ * Fence (reboot) lxc-02_kiff-01 (resource: R-lxc-02_kiff-01)
+ * Fence (reboot) lxc-01_kiff-01 (resource: R-lxc-01_kiff-01)
+ * Fence (reboot) kiff-01
  * Move    fence-kiff-02	(Started kiff-01 -> kiff-02)
  * Stop    dlm:0	(kiff-01)
  * Stop    clvmd:0	(kiff-01)

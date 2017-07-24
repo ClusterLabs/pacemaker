@@ -8,7 +8,7 @@ Online: [ node2 ]
  rsc2	(heartbeat:apache):	Started node1 (UNCLEAN)
 
 Transition Summary:
- * Fence node1
+ * Fence (reboot) node1
  * Start   stonith-1	(node2)
  * Move    rsc1	(Started node1 -> node2)
  * Move    rsc2	(Started node1 -> node2)

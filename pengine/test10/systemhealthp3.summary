@@ -8,7 +8,7 @@ Online: [ hs21c ]
  nfs_1	(ocf::heartbeat:Filesystem):	Stopped 
 
 Transition Summary:
- * Fence hs21d
+ * Fence (reboot) hs21d
 
 Executing cluster transition:
  * Resource action: stonith-1       monitor on hs21c

@@ -5,7 +5,7 @@ Online: [ 18builder ]
  FAKE	(ocf::pacemaker:Dummy):	FAILED 18builder 
 
 Transition Summary:
- * Fence remote1 (resource: FAKE)
+ * Fence (reboot) remote1 (resource: FAKE)
  * Recover FAKE	(Started 18builder)
  * Start   remote1	(18builder)
 

@@ -14,7 +14,7 @@ Containers: [ lxc2:container2 ]
  D	(ocf::pacemaker:Dummy):	Started 18node1
 
 Transition Summary:
- * Fence lxc1 (resource: container1)
+ * Fence (reboot) lxc1 (resource: container1)
  * Recover container1	(Started 18node2)
  * Recover M:4	(Started lxc1)
  * Recover B	(Started lxc1)

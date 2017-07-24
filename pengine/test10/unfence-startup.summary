@@ -12,11 +12,8 @@ Online: [ virt-1 virt-2 virt-3 ]
      Stopped: [ virt-2 virt-3 virt-4 ]
 
 Transition Summary:
- * Fence virt-4
- * Fence virt-4
- * Fence virt-3
- * Fence virt-2
- * Fence virt-1
+ * Fence (reboot) virt-4
+ * Fence (on) virt-3
  * Start   dlm:2	(virt-3)
  * Start   clvmd:1	(virt-2)
  * Start   clvmd:2	(virt-3)

@@ -14,7 +14,7 @@ OFFLINE: [ rhel7-auto1 ]
  FAKE6	(ocf::heartbeat:Dummy):	Started rhel7-auto4 (UNCLEAN)
 
 Transition Summary:
- * Fence rhel7-auto4
+ * Fence (reboot) rhel7-auto4
  * Recover rhel7-auto4	(Started rhel7-auto2)
  * Start   FAKE1	(rhel7-auto2)
  * Move    FAKE2	(Started rhel7-auto4 -> rhel7-auto3)
