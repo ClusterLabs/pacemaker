@@ -293,8 +293,8 @@ crm_ends_with(const char *s, const char *match)
  *
  * \note Main incentive to prefer this function over \c crm_ends_with
  *       where possible is the efficiency (at the cost of added
- *       restriction on \p match as stated (the complexity class remains
- *       the same, though: BigO(M+N) vs. BigO(M+N+(M-N))).
+ *       restriction on \p match as stated; the complexity class
+ *       remains the same, though: BigO(M+N) vs. BigO(M+2N)).
  *
  * \see crm_ends_with()
  */
