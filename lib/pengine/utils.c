@@ -1944,20 +1944,24 @@ fencing_action_digest_cmp(resource_t * rsc, node_t * node, pe_working_set_t * da
     const char *digest_all = g_hash_table_lookup(node->details->attrs, "digests-all");
     const char *digest_secure = g_hash_table_lookup(node->details->attrs, "digests-secure");
 
-    /* No restarts for fencing device changes */
+    /* No 'reloads' for fencing device changes
+     *
+     * We use the resource id + agent + digest so that we can detect
+     * changes to the agent and/or the parameters used
+     */
+    char *search_all = crm_strdup_printf("%s:%s:%s", rsc->id, (const char*)g_hash_table_lookup(rsc->meta, XML_ATTR_TYPE), data->digest_secure_calc);
+    char *search_secure = crm_strdup_printf("%s:%s:%s", rsc->id, (const char*)g_hash_table_lookup(rsc->meta, XML_ATTR_TYPE), data->digest_secure_calc);
 
     data->rc = RSC_DIGEST_ALL;
     if (digest_all == NULL) {
         /* it is unknown what the previous op digest was */
         data->rc = RSC_DIGEST_UNKNOWN;
 
-    } else if (strcmp(digest_all, data->digest_all_calc) == 0) {
+    } else if (strstr(digest_all, search_all)) {
         data->rc = RSC_DIGEST_MATCH;
 
     } else if(digest_secure && data->digest_secure_calc) {
-        char *search = crm_strdup_printf("%s:%s:%s", rsc->id, (const char*)g_hash_table_lookup(rsc->meta, XML_ATTR_TYPE), data->digest_secure_calc);
-
-        if(strstr(digest_secure, search)) {
+        if(strstr(digest_secure, search_secure)) {
             fprintf(stdout, "Only 'private' parameters to %s for unfencing %s changed\n",
                     rsc->id, node->details->uname);
             data->rc = RSC_DIGEST_MATCH;
@@ -1970,6 +1974,9 @@ fencing_action_digest_cmp(resource_t * rsc, node_t * node, pe_working_set_t * da
     }
 
     free(key);
+    free(search_all);
+    free(search_secure);
+
     return data;
 }
 
