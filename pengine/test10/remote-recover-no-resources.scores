@@ -1,3 +1,5 @@
+  notice: Fencing   controller-1: node is unclean
+  notice: Fencing   messaging-1: node is unclean
 Allocation scores:
 Using the original execution date of: 2017-05-03 13:33:24Z
 clone_color: galera-master allocation score on controller-0: -INFINITY

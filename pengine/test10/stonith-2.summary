@@ -32,6 +32,7 @@ Online: [ sles-1 sles-2 sles-3 sles-4 sles-6 ]
      ocf_msdummy:10	(ocf::heartbeat:Stateful):	Slave sles-2 
      ocf_msdummy:11	(ocf::heartbeat:Stateful):	Slave sles-3 
 
+  notice: Fencing   sles-5: node is unclean
 Transition Summary:
  * Fence (reboot) sles-5
  * Start   rsc_sles-5	(sles-6)

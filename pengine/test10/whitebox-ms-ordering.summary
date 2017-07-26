@@ -8,6 +8,8 @@ Online: [ 18node1 18node2 18node3 ]
  Master/Slave Set: lxc-ms-master [lxc-ms]
      Stopped: [ 18node1 18node2 18node3 ]
 
+  notice: Fencing   lxc1: guest is unclean
+  notice: Fencing   lxc2: guest is unclean
 Transition Summary:
  * Fence (reboot) lxc2 (resource: container2)
  * Fence (reboot) lxc1 (resource: container1)

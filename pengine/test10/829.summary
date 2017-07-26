@@ -14,6 +14,7 @@ Online: [ c001n01 c001n03 c001n08 ]
      child_DoFencing:2	(stonith:ssh):	Started c001n01
      child_DoFencing:3	(stonith:ssh):	Started c001n08
 
+  notice: Fencing   c001n02: node is unclean
 Transition Summary:
  * Fence (reboot) c001n02
  * Move    rsc_c001n02	(Started c001n02 -> c001n01)

@@ -11,6 +11,7 @@ Online: [ c7auto1 c7auto2 c7auto3 ]
  fake4	(ocf::heartbeat:Dummy):	Started c7auto2
  fake5	(ocf::heartbeat:Dummy):	Started c7auto3
 
+  notice: Fencing   c7auto4: node is unclean
 Transition Summary:
  * Fence (reboot) c7auto4
  * Stop    c7auto4	(c7auto1)

@@ -12,6 +12,7 @@ Online: [ hadev1 hadev2 ]
      child_DoFencing:1	(stonith:ssh):	Started hadev1
      child_DoFencing:2	(stonith:ssh):	Started hadev1
 
+  notice: Fencing   hadev3: node is unclean
 Transition Summary:
  * Fence (reboot) hadev3
  * Shutdown hadev2

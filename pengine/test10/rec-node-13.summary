@@ -33,6 +33,7 @@ OFFLINE: [ c001n03 c001n05 ]
      ocf_msdummy:10	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Slave c001n06 
      ocf_msdummy:11	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Slave c001n07 
 
+  notice: Fencing   c001n04: node is unclean
 Transition Summary:
  * Fence (reboot) c001n04
  * Stop    ocf_msdummy:6	(c001n04)

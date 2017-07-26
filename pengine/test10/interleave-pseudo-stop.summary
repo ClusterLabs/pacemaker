@@ -16,6 +16,7 @@ Online: [ node2 ]
      configstoreclone	(ocf::heartbeat:Filesystem):	Started node1 (UNCLEAN)
      Started: [ node2 ]
 
+  notice: Fencing   node1: node is unclean
 Transition Summary:
  * Fence (reboot) node1
  * Stop    stonithclone:1	(node1)

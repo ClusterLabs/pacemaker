@@ -62,6 +62,7 @@ RemoteOFFLINE: [ pcmk_remote4 ]
  FAKE49	(ocf::heartbeat:Dummy):	Started pcmk_remote3 
  FAKE50	(ocf::heartbeat:Dummy):	Started pcmk_remote5 
 
+  notice: Fencing   pcmk4: node is unclean
 Transition Summary:
  * Fence (reboot) pcmk4
  * Migrate pcmk_remote2	(Started pcmk3 -> pcmk1)

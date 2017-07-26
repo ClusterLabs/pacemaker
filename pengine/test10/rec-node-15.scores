@@ -1,3 +1,4 @@
+  notice: Fencing   sapcl03: node is unclean
 Allocation scores:
 group_color: Filesystem_13 allocation score on sapcl01: 0
 group_color: Filesystem_13 allocation score on sapcl02: 0

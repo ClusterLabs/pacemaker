@@ -10,6 +10,7 @@ Online: [ rhel7-node1.example.com rhel7-node2.example.com ]
      Started: [ rhel7-node2.example.com ]
      Stopped: [ rhel7-node1.example.com ]
 
+  notice: Unfencing rhel7-node1.example.com: Required by ip1
 Transition Summary:
  * Fence (on) rhel7-node1.example.com
  * Start   mpath-node1	(rhel7-node1.example.com)
@@ -17,17 +18,17 @@ Transition Summary:
  * Start   jrummy:1	(rhel7-node1.example.com)
 
 Executing cluster transition:
- * Pseudo action:   jrummy-clone_start_0
- * Fencing rhel7-node1.example.com (on)
  * Resource action: mpath-node2     monitor on rhel7-node1.example.com
  * Resource action: mpath-node1     monitor on rhel7-node1.example.com
+ * Pseudo action:   jrummy-clone_start_0
+ * Fencing rhel7-node1.example.com (on)
+ * Resource action: mpath-node1     start on rhel7-node1.example.com
  * Resource action: jrummy          start on rhel7-node1.example.com
  * Pseudo action:   jrummy-clone_running_0
- * Resource action: mpath-node1     start on rhel7-node1.example.com
+ * Resource action: mpath-node1     monitor=60000 on rhel7-node1.example.com
  * Resource action: ip1             stop on rhel7-node2.example.com
  * Resource action: jrummy          monitor=10000 on rhel7-node1.example.com
  * Pseudo action:   all_stopped
- * Resource action: mpath-node1     monitor=60000 on rhel7-node1.example.com
  * Resource action: ip1             start on rhel7-node1.example.com
  * Resource action: ip1             monitor=10000 on rhel7-node1.example.com
 

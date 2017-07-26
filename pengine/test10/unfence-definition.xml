@@ -41,6 +41,11 @@
   </configuration>
   <status>
     <node_state id="1" uname="virt-1" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="virt-1">
+        <instance_attributes id="status-virt-1">
+          <nvpair id="status-virt-1" name="node_unfenced" value="1234567"/>
+        </instance_attributes>
+      </transient_attributes>
       <lrm id="1">
         <lrm_resources>
           <lrm_resource id="fencing" type="fence_virt" class="stonith">
@@ -56,6 +61,11 @@
       </lrm>
     </node_state>
     <node_state id="2" uname="virt-2" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="virt-2">
+        <instance_attributes id="status-virt-2">
+          <nvpair id="unfenced-virt-2" name="node_unfenced" value="1234567"/>
+        </instance_attributes>
+      </transient_attributes>
       <lrm id="2">
         <lrm_resources>
           <lrm_resource id="fencing" type="fence_scsi" class="stonith">

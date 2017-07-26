@@ -17,6 +17,7 @@ Containers: [ pgsr01:prmDB1 ]
      Masters: [ pgsr01 ]
      Stopped: [ bl460g8n3 bl460g8n4 ]
 
+  notice: Fencing   pgsr02: guest is unclean
 Transition Summary:
  * Fence (off) pgsr02 (resource: prmDB2)
  * Stop    prmDB2	(bl460g8n4)

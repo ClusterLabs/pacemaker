@@ -31,6 +31,7 @@ Containers: [ lamaVM1:VM1 lamaVM2:VM2 lamaVM3:VM3 ]
  Clone Set: FAKE6-clone [FAKE6]
      Started: [ lamaVM1 lamaVM2 lamaVM3 ]
 
+  notice: Fencing   lamaVM2: guest is unclean
 Transition Summary:
  * Fence (reboot) lamaVM2 (resource: VM2)
  * Recover VM2	(Started lama3)

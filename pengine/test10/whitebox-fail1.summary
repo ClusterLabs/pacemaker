@@ -13,6 +13,7 @@ Containers: [ lxc2:container2 ]
  C	(ocf::pacemaker:Dummy):	Started lxc2
  D	(ocf::pacemaker:Dummy):	Started 18node1
 
+  notice: Fencing   lxc1: guest is unclean
 Transition Summary:
  * Fence (reboot) lxc1 (resource: container1)
  * Recover container1	(Started 18node2)

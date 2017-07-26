@@ -8,6 +8,7 @@ Online: [ rh73-02-snmp ]
  prmStonith1-1	(stonith:external/ssh):	Started rh73-02-snmp
  prmStonith2-1	(stonith:external/ssh):	Started rh73-01-snmp
 
+  notice: Fencing   rh73-01-snmp: node is unclean
 Transition Summary:
  * Fence (reboot) rh73-01-snmp
  * Recover prmDummy	(Started rh73-01-snmp -> rh73-02-snmp)

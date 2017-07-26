@@ -10,6 +10,7 @@ Online: [ 18builder 18node1 18node2 ]
  FAKE3	(ocf::heartbeat:Dummy):	Started 18builder 
  FAKE4	(ocf::heartbeat:Dummy):	Started 18node1 
 
+  notice: Fencing   remote1: node is unclean
 Transition Summary:
  * Fence (reboot) remote1
  * Recover remote1	(Started 18node1)

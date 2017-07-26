@@ -80,6 +80,7 @@ Online: [ hex-0 hex-7 hex-8 ]
  vm-63	(ocf::heartbeat:Xen):	Stopped 
  vm-64	(ocf::heartbeat:Xen):	Stopped 
 
+  notice: Fencing   hex-9: node is unclean
 Transition Summary:
  * Fence (reboot) hex-9
  * Move    fencing-sbd	(Started hex-9 -> hex-0)

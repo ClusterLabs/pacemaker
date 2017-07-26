@@ -1,3 +1,6 @@
+  notice: Fencing   virt-4: node is unclean
+  notice: Unfencing virt-1: Device definition changed
+  notice: Unfencing virt-3: Required by dlm:2
 Allocation scores:
 clone_color: clvmd-clone allocation score on virt-1: 0
 clone_color: clvmd-clone allocation score on virt-2: 0

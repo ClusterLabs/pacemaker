@@ -1406,7 +1406,7 @@ fence_guest(pe_node_t *node, pe_action_t *done, pe_working_set_t *data_set)
     /* Create a fence pseudo-event, so we have an event to order actions
      * against, and crmd can always detect it.
      */
-    stonith_op = pe_fence_op(node, fence_action, FALSE, data_set);
+    stonith_op = pe_fence_op(node, fence_action, FALSE, "guest is unclean", data_set);
     update_action_flags(stonith_op, pe_action_pseudo | pe_action_runnable,
                         __FUNCTION__, __LINE__);
 
@@ -1488,7 +1488,7 @@ stage6(pe_working_set_t * data_set)
 
             pe_warn("Scheduling Node %s for STONITH", node->details->uname);
 
-            stonith_op = pe_fence_op(node, NULL, FALSE, data_set);
+            stonith_op = pe_fence_op(node, NULL, FALSE, "node is unclean", data_set);
 
             stonith_constraints(node, stonith_op, data_set);
 

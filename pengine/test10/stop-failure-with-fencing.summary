@@ -13,6 +13,7 @@ Online: [ pcmk-1 ]
  ClusterIP	(ocf::heartbeat:IPaddr2):	Stopped 
  Fencing	(stonith:fence_xvm):	Stopped 
 
+  notice: Fencing   pcmk-2: node is unclean
 Transition Summary:
  * Fence (reboot) pcmk-2
  * Start   dlm:0	(pcmk-1 - blocked)

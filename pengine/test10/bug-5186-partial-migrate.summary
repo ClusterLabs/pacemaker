@@ -24,6 +24,7 @@ Online: [ bl460g1n6 bl460g1n8 ]
      prmPing	(ocf::pacemaker:ping):	Started bl460g1n7 (UNCLEAN)
      Started: [ bl460g1n6 bl460g1n8 ]
 
+  notice: Fencing   bl460g1n7: node is unclean
 Transition Summary:
  * Fence (reboot) bl460g1n7
  * Move    prmDummy	(Started bl460g1n7 -> bl460g1n6)

@@ -13,6 +13,7 @@ OFFLINE: [ rhel7-auto1 ]
  FAKE5	(ocf::heartbeat:Dummy):	Started rhel7-auto3 
  FAKE6	(ocf::heartbeat:Dummy):	Started rhel7-auto4 (UNCLEAN)
 
+  notice: Fencing   rhel7-auto4: node is unclean
 Transition Summary:
  * Fence (reboot) rhel7-auto4
  * Recover rhel7-auto4	(Started rhel7-auto2)

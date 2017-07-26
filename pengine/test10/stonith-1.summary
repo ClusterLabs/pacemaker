@@ -27,6 +27,7 @@ Online: [ sles-1 sles-2 sles-4 ]
      ocf_msdummy:6	(ocf::heartbeat:Stateful):	Stopped 
      ocf_msdummy:7	(ocf::heartbeat:Stateful):	Stopped 
 
+  notice: Fencing   sles-3: node is unclean
 Transition Summary:
  * Fence (reboot) sles-3
  * Start   r192.168.100.183	(sles-1)

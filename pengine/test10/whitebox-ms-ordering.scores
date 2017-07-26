@@ -1,3 +1,5 @@
+  notice: Fencing   lxc1: guest is unclean
+  notice: Fencing   lxc2: guest is unclean
 Allocation scores:
 clone_color: lxc-ms-master allocation score on 18node1: 0
 clone_color: lxc-ms-master allocation score on 18node2: 0

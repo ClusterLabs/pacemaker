@@ -6,6 +6,8 @@ Online: [ node1 node2 ]
  Clone Set: clone1 [rsc1]
      Started: [ node1 node2 ]
 
+  notice: Fencing   node1: node is unclean
+  notice: Fencing   node2: node is unclean
 Transition Summary:
  * Fence (reboot) node2
  * Fence (reboot) node1

@@ -21,6 +21,7 @@ Online: [ pcmk-1 pcmk-2 pcmk-3 ]
      Masters: [ pcmk-4 ]
      Slaves: [ pcmk-1 pcmk-2 pcmk-3 ]
 
+  notice: Fencing   pcmk-4: node is unclean
 Transition Summary:
  * Fence (reboot) pcmk-4
  * Stop    FencingChild:0	(pcmk-4)

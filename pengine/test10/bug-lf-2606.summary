@@ -11,6 +11,7 @@ Online: [ node1 ]
      Masters: [ node2 ]
      Slaves: [ node1 ]
 
+  notice: Fencing   node2: node is unclean
 Transition Summary:
  * Fence (reboot) node2
  * Stop    rsc1	(node2)

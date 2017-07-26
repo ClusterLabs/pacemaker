@@ -20,6 +20,7 @@ Online: [ sapcl01 ]
      oracle_24	(ocf::heartbeat:oracle):	Stopped 
      oralsnr_25	(ocf::heartbeat:oralsnr):	Stopped 
 
+  notice: Fencing   sapcl03: node is unclean
 Transition Summary:
  * Fence (reboot) sapcl03
  * Start   stonith-1	(sapcl01)

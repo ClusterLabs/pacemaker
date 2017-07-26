@@ -1355,7 +1355,7 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-            action_t *unfence = pe_fence_op(node, "on", TRUE, data_set);
+            action_t *unfence = pe_fence_op(node, "on", TRUE, __FUNCTION__, data_set);
 
             crm_debug("Ordering any stops of %s before %s, and any starts after",
                       rsc->id, unfence->uuid);
@@ -2455,6 +2455,16 @@ StopRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * d
         if (is_set(data_set->flags, pe_flag_remove_after_stop)) {
             DeleteRsc(rsc, current, optional, data_set);
         }
+
+        if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
+            action_t *unfence = pe_fence_op(current, "on", TRUE, __FUNCTION__, data_set);
+            const char *unfenced = g_hash_table_lookup(current->details->attrs, XML_NODE_IS_UNFENCED);
+
+            order_actions(stop, unfence, pe_order_implies_first);
+            if (unfenced == NULL || safe_str_eq("0", unfenced)) {
+                pe_proc_err("Stopping %s until %s can be unfenced", rsc->id, current->details->uname);
+            }
+        }
     }
 
     return TRUE;
@@ -2468,9 +2478,25 @@ StartRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * 
     CRM_ASSERT(rsc);
     pe_rsc_trace(rsc, "%s on %s %d", rsc->id, next ? next->details->uname : "N/A", optional);
     start = start_action(rsc, next, TRUE);
+
+    if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
+        action_t *unfence = pe_fence_op(next, "on", TRUE, __FUNCTION__, data_set);
+        const char *unfenced = g_hash_table_lookup(next->details->attrs, XML_NODE_IS_UNFENCED);
+
+        order_actions(unfence, start, pe_order_implies_then);
+
+        if (unfenced == NULL || safe_str_eq("0", unfenced)) {
+            char *reason = crm_strdup_printf("Required by %s", rsc->id);
+            trigger_unfencing(NULL, next, reason, NULL, data_set);
+            free(reason);
+        }
+    }
+
     if (is_set(start->flags, pe_action_runnable) && optional == FALSE) {
         update_action_flags(start, pe_action_optional | pe_action_clear, __FUNCTION__, __LINE__);
     }
+
+
     return TRUE;
 }
 
@@ -2820,14 +2846,9 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
      * probed, we know the state of all resources that require
      * unfencing and that unfencing occurred.
      */
-    if(is_set(rsc->flags, pe_rsc_fence_device) && is_set(data_set->flags, pe_flag_enable_unfencing)) {
-        trigger_unfencing(NULL, node, "node discovery", probe, data_set);
-        probe->priority = INFINITY; /* Ensure this runs if unfencing succeeds */
-
-    } else if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
-        action_t *unfence = pe_fence_op(node, "on", TRUE, data_set);
-
-        order_actions(probe, unfence, pe_order_optional);
+    if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
+        action_t *unfence = pe_fence_op(node, "on", TRUE, __FUNCTION__, data_set);
+        order_actions(unfence, probe, pe_order_optional);
     }
 
     /*

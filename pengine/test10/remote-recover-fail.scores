@@ -1,3 +1,4 @@
+  notice: Fencing   rhel7-auto4: node is unclean
 Allocation scores:
 native_color: FAKE1 allocation score on rhel7-auto1: 0
 native_color: FAKE1 allocation score on rhel7-auto2: 0

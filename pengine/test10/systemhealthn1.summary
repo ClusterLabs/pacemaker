@@ -7,6 +7,8 @@ Node hs21d (737318c6-0f92-4592-9754-45967d45aff7): UNCLEAN (offline)
  apache_1	(ocf::heartbeat:apache):	Stopped 
  nfs_1	(ocf::heartbeat:Filesystem):	Stopped 
 
+  notice: Fencing   hs21c: node is unclean
+  notice: Fencing   hs21d: node is unclean
 Transition Summary:
  * Fence (reboot) hs21d
  * Fence (reboot) hs21c

@@ -37,6 +37,8 @@ RemoteOnline: [ galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2 ]
  stonith-fence_ipmilan-525400b4f6bd	(stonith:fence_ipmilan):	Started controller-0
  stonith-fence_ipmilan-5254005bdbb5	(stonith:fence_ipmilan):	Started controller-1 (UNCLEAN)
 
+  notice: Fencing   controller-1: node is unclean
+  notice: Fencing   messaging-1: node is unclean
 Transition Summary:
  * Fence (reboot) messaging-1
  * Fence (reboot) controller-1

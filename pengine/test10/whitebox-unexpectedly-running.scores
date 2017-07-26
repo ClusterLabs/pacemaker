@@ -1,3 +1,4 @@
+  notice: Fencing   remote1: guest is unclean
 Allocation scores:
 native_color: FAKE allocation score on 18builder: 0
 native_color: FAKE allocation score on remote1: -INFINITY

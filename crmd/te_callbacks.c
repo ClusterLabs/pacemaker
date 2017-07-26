@@ -788,16 +788,31 @@ tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
     }
 
     stop_te_timer(action->timer);
-
     if (rc == pcmk_ok) {
         const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
         const char *uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
         const char *op = crm_meta_value(action->params, "stonith_action"); 
 
-        crm_debug("Stonith operation %d for %s passed", call_id, target);
+        crm_info("Stonith operation %d for %s passed", call_id, target);
         if (action->confirmed == FALSE) {
             te_action_confirmed(action);
-            if (action->sent_update == FALSE && safe_str_neq("on", op)) {
+            if (safe_str_eq("on", op)) {
+                const char *key = NULL;
+                const char *value = NULL;
+
+                key = XML_NODE_IS_UNFENCED;
+                value = crm_meta_value(action->params, key);
+                update_attrd(target, key, value, NULL, FALSE);
+
+                key = "digests-all";
+                value = crm_meta_value(action->params, key);
+                update_attrd(target, key, value, NULL, FALSE);
+
+                key = "digests-secure";
+                value = crm_meta_value(action->params, key);
+                update_attrd(target, key, value, NULL, FALSE);
+
+            } else if (action->sent_update == FALSE) {
                 send_stonith_update(action, target, uuid);
                 action->sent_update = TRUE;
             }

@@ -273,7 +273,7 @@ typedef struct op_digest_cache_s {
 op_digest_cache_t *rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
                                          pe_working_set_t * data_set);
 
-action_t *pe_fence_op(node_t * node, const char *op, bool optional, pe_working_set_t * data_set);
+action_t *pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe_working_set_t * data_set);
 void trigger_unfencing(
     resource_t * rsc, node_t *node, const char *reason, action_t *dependency, pe_working_set_t * data_set);
 

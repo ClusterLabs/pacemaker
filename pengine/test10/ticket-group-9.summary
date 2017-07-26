@@ -7,6 +7,7 @@ Online: [ node1 node2 ]
      rsc1	(ocf::pacemaker:Dummy):	Started node2
      rsc2	(ocf::pacemaker:Dummy):	Started node2
 
+  notice: Fencing   node2: node is unclean
 Transition Summary:
  * Fence (reboot) node2
  * Stop    rsc1	(node2)

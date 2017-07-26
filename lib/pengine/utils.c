@@ -1733,7 +1733,7 @@ filter_parameters(xmlNode * param_set, const char *param_string, bool need_prese
         return;
     }
 
-    if (param_set) {
+    if (param_set && param_string) {
         xmlAttrPtr xIter = param_set->properties;
 
         while (xIter) {
@@ -1814,97 +1814,111 @@ append_versioned_params(xmlNode *versioned_params, const char *ra_version, xmlNo
     g_hash_table_destroy(hash);
 }
 
+static op_digest_cache_t *
+rsc_action_digest(resource_t * rsc, const char *task, const char *key,
+                  node_t * node, xmlNode * xml_op, pe_working_set_t * data_set) 
+{
+    op_digest_cache_t *data = NULL;
+
+    data = g_hash_table_lookup(node->details->digest_cache, key);
+    if (data == NULL) {
+        GHashTable *local_rsc_params = crm_str_table_new();
+        action_t *action = custom_action(rsc, strdup(key), task, node, TRUE, FALSE, data_set);
+        xmlNode *local_versioned_params = create_xml_node(NULL, XML_TAG_RSC_VER_ATTRS);
+
+        const char *op_version;
+        const char *ra_version = NULL;
+        const char *restart_list = NULL;
+        const char *secure_list = " passwd password ";
+
+        data = calloc(1, sizeof(op_digest_cache_t));
+        CRM_ASSERT(data != NULL);
+
+        get_rsc_attributes(local_rsc_params, rsc, node, data_set);
+        pe_get_versioned_attributes(local_versioned_params, rsc, node, data_set);
+
+        data->params_all = create_xml_node(NULL, XML_TAG_PARAMS);
+        if (fix_remote_addr(rsc)) {
+            // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
+            crm_xml_add(data->params_all, "addr", node->details->uname);
+            crm_trace("Fixing addr for %s on %s", rsc->id, node->details->uname);
+        }
+
+        g_hash_table_foreach(local_rsc_params, hash2field, data->params_all);
+        g_hash_table_foreach(action->extra, hash2field, data->params_all);
+        g_hash_table_foreach(rsc->parameters, hash2field, data->params_all);
+        g_hash_table_foreach(action->meta, hash2metafield, data->params_all);
+
+        if(xml_op) {
+            secure_list = crm_element_value(xml_op, XML_LRM_ATTR_OP_SECURE);
+            restart_list = crm_element_value(xml_op, XML_LRM_ATTR_OP_RESTART);
+
+            op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
+            ra_version = crm_element_value(xml_op, XML_ATTR_RA_VERSION);
+
+        } else {
+            op_version = CRM_FEATURE_SET;
+        }
+
+        append_versioned_params(local_versioned_params, ra_version, data->params_all);
+        append_versioned_params(rsc->versioned_parameters, ra_version, data->params_all);
+        append_versioned_params(action->versioned_parameters, ra_version, data->params_all);
+
+        filter_action_parameters(data->params_all, op_version);
+
+        g_hash_table_destroy(local_rsc_params);
+        pe_free_action(action);
+
+        data->digest_all_calc = calculate_operation_digest(data->params_all, op_version);
+
+        if (is_set(data_set->flags, pe_flag_sanitized)) {
+            data->params_secure = copy_xml(data->params_all);
+            if(secure_list) {
+                filter_parameters(data->params_secure, secure_list, FALSE);
+            }
+            data->digest_secure_calc = calculate_operation_digest(data->params_secure, op_version);
+        }
+
+        if(crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST) != NULL) {
+            data->params_restart = copy_xml(data->params_all);
+            if (restart_list) {
+                filter_parameters(data->params_restart, restart_list, TRUE);
+            }
+            data->digest_restart_calc = calculate_operation_digest(data->params_restart, op_version);
+        }
+
+        g_hash_table_insert(node->details->digest_cache, strdup(key), data);
+    }
+
+    return data;
+}
+
 op_digest_cache_t *
 rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
                       pe_working_set_t * data_set)
 {
     op_digest_cache_t *data = NULL;
 
-    GHashTable *local_rsc_params = NULL;
-    xmlNode *local_versioned_params = NULL;
-
-    action_t *action = NULL;
     char *key = NULL;
-
     int interval = 0;
-    const char *op_id = ID(xml_op);
+
     const char *interval_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+
     const char *digest_all;
     const char *digest_restart;
-    const char *secure_list;
-    const char *restart_list;
-    const char *op_version;
-    const char *ra_version;
 
     CRM_ASSERT(node != NULL);
-
-    data = g_hash_table_lookup(node->details->digest_cache, op_id);
-    if (data) {
-        return data;
-    }
-
-    data = calloc(1, sizeof(op_digest_cache_t));
-    CRM_ASSERT(data != NULL);
 
     digest_all = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
     digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
 
-    secure_list = crm_element_value(xml_op, XML_LRM_ATTR_OP_SECURE);
-    restart_list = crm_element_value(xml_op, XML_LRM_ATTR_OP_RESTART);
-
-    op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
-    ra_version = crm_element_value(xml_op, XML_ATTR_RA_VERSION);
-
-    /* key is freed in custom_action */
     interval = crm_parse_int(interval_s, "0");
     key = generate_op_key(rsc->id, task, interval);
-    action = custom_action(rsc, key, task, node, TRUE, FALSE, data_set);
-    key = NULL;
-
-    local_rsc_params = crm_str_table_new();
-    get_rsc_attributes(local_rsc_params, rsc, node, data_set);
-    local_versioned_params = create_xml_node(NULL, XML_TAG_RSC_VER_ATTRS);
-    pe_get_versioned_attributes(local_versioned_params, rsc, node, data_set);
-    data->params_all = create_xml_node(NULL, XML_TAG_PARAMS);
-
-    if (fix_remote_addr(rsc)) {
-        // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
-        crm_xml_add(data->params_all, "addr", node->details->uname);
-        crm_trace("Fixing addr for %s on %s", rsc->id, node->details->uname);
-    }
-
-    g_hash_table_foreach(local_rsc_params, hash2field, data->params_all);
-    g_hash_table_foreach(action->extra, hash2field, data->params_all);
-    g_hash_table_foreach(rsc->parameters, hash2field, data->params_all);
-    g_hash_table_foreach(action->meta, hash2metafield, data->params_all);
-    append_versioned_params(local_versioned_params, ra_version, data->params_all);
-    append_versioned_params(rsc->versioned_parameters, ra_version, data->params_all);
-    append_versioned_params(action->versioned_parameters, ra_version, data->params_all);
-    filter_action_parameters(data->params_all, op_version);
-
-    data->digest_all_calc = calculate_operation_digest(data->params_all, op_version);
-
-    if (secure_list && is_set(data_set->flags, pe_flag_sanitized)) {
-        data->params_secure = copy_xml(data->params_all);
-
-        if (secure_list) {
-            filter_parameters(data->params_secure, secure_list, FALSE);
-        }
-        data->digest_secure_calc = calculate_operation_digest(data->params_secure, op_version);
-    }
-
-    if (digest_restart) {
-        data->params_restart = copy_xml(data->params_all);
-
-        if (restart_list) {
-            filter_parameters(data->params_restart, restart_list, TRUE);
-        }
-        data->digest_restart_calc = calculate_operation_digest(data->params_restart, op_version);
-    }
+    data = rsc_action_digest(rsc, task, key, node, xml_op, data_set);
 
     data->rc = RSC_DIGEST_MATCH;
-    if (digest_restart && strcmp(data->digest_restart_calc, digest_restart) != 0) {
+    if (digest_restart && data->digest_restart_calc && strcmp(data->digest_restart_calc, digest_restart) != 0) {
         data->rc = RSC_DIGEST_RESTART;
 
     } else if (digest_all == NULL) {
@@ -1915,11 +1929,47 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
         data->rc = RSC_DIGEST_ALL;
     }
 
-    g_hash_table_insert(node->details->digest_cache, strdup(op_id), data);
-    g_hash_table_destroy(local_rsc_params);
-    free_xml(local_versioned_params);
-    pe_free_action(action);
+    free(key);
+    return data;
+}
 
+#define STONITH_DIGEST_TASK "stonith-on"
+
+static op_digest_cache_t *
+fencing_action_digest_cmp(resource_t * rsc, node_t * node, pe_working_set_t * data_set)
+{
+    char *key = generate_op_key(rsc->id, STONITH_DIGEST_TASK, 0);
+    op_digest_cache_t *data = rsc_action_digest(rsc, STONITH_DIGEST_TASK, key, node, NULL, data_set);
+
+    const char *digest_all = g_hash_table_lookup(node->details->attrs, "digests-all");
+    const char *digest_secure = g_hash_table_lookup(node->details->attrs, "digests-secure");
+
+    /* No restarts for fencing device changes */
+
+    data->rc = RSC_DIGEST_ALL;
+    if (digest_all == NULL) {
+        /* it is unknown what the previous op digest was */
+        data->rc = RSC_DIGEST_UNKNOWN;
+
+    } else if (strcmp(digest_all, data->digest_all_calc) == 0) {
+        data->rc = RSC_DIGEST_MATCH;
+
+    } else if(digest_secure && data->digest_secure_calc) {
+        char *search = crm_strdup_printf("%s:%s:%s", rsc->id, (const char*)g_hash_table_lookup(rsc->meta, XML_ATTR_TYPE), data->digest_secure_calc);
+
+        if(strstr(digest_secure, search)) {
+            fprintf(stdout, "Only 'private' parameters to %s for unfencing %s changed\n",
+                    rsc->id, node->details->uname);
+            data->rc = RSC_DIGEST_MATCH;
+        }
+    }
+
+    if (data->rc == RSC_DIGEST_ALL && is_set(data_set->flags, pe_flag_sanitized) && data->digest_secure_calc) {
+        fprintf(stdout, "Parameters to %s for unfencing %s changed, try '%s:%s:%s'\n",
+                rsc->id, node->details->uname, rsc->id, (const char*)g_hash_table_lookup(rsc->meta, XML_ATTR_TYPE), data->digest_secure_calc);
+    }
+
+    free(key);
     return data;
 }
 
@@ -1957,35 +2007,113 @@ set_bit_recursive(resource_t * rsc, unsigned long long flag)
     }
 }
 
-action_t *
-pe_fence_op(node_t * node, const char *op, bool optional, pe_working_set_t * data_set)
+static GListPtr
+find_unfencing_devices(GListPtr candidates, GListPtr matches) 
 {
-    char *key = NULL;
+    for (GListPtr gIter = candidates; gIter != NULL; gIter = gIter->next) {
+        resource_t *candidate = gIter->data;
+        const char *provides = g_hash_table_lookup(candidate->meta, XML_RSC_ATTR_PROVIDES);
+        const char *requires = g_hash_table_lookup(candidate->meta, XML_RSC_ATTR_REQUIRES);
+
+        if(candidate->children) {
+            matches = find_unfencing_devices(candidate->children, matches);
+        } else if (is_not_set(candidate->flags, pe_rsc_fence_device)) {
+            continue;
+
+        } else if (crm_str_eq(provides, "unfencing", FALSE) || crm_str_eq(requires, "unfencing", FALSE)) {
+            matches = g_list_prepend(matches, candidate);
+        }
+    }
+    return matches;
+}
+
+
+#define STONITH_DIGEST_TASK "stonith-on"
+
+action_t *
+pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe_working_set_t * data_set)
+{
+    char *op_key = NULL;
     action_t *stonith_op = NULL;
 
     if(op == NULL) {
         op = data_set->stonith_action;
     }
 
-    key = crm_strdup_printf("%s-%s-%s", CRM_OP_FENCE, node->details->uname, op);
+    op_key = crm_strdup_printf("%s-%s-%s", CRM_OP_FENCE, node->details->uname, op);
 
     if(data_set->singletons) {
-        stonith_op = g_hash_table_lookup(data_set->singletons, key);
+        stonith_op = g_hash_table_lookup(data_set->singletons, op_key);
     }
 
     if(stonith_op == NULL) {
-        stonith_op = custom_action(NULL, key, CRM_OP_FENCE, node, optional, TRUE, data_set);
+        stonith_op = custom_action(NULL, op_key, CRM_OP_FENCE, node, TRUE, TRUE, data_set);
 
         add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET, node->details->uname);
         add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET_UUID, node->details->id);
         add_hash_param(stonith_op->meta, "stonith_action", op);
+
+        if(is_remote_node(node) && is_set(data_set->flags, pe_flag_enable_unfencing)) {
+            /* Extra work to detect device changes on remotes
+             *
+             * We may do this for all nodes in the future, but for now
+             * the check_action_definition() based stuff works fine.
+             *
+             * Use "stonith-on" to avoid creating cache entries for
+             * operations check_action_definition() would look for.
+             */
+            long max = 1024;
+            long digests_all_offset = 0;
+            long digests_secure_offset = 0;
+
+            char *digests_all = malloc(max);
+            char *digests_secure = malloc(max);
+            GListPtr matches = find_unfencing_devices(data_set->resources, NULL);
+
+            for (GListPtr gIter = matches; gIter != NULL; gIter = gIter->next) {
+                resource_t *match = gIter->data;
+                op_digest_cache_t *data = fencing_action_digest_cmp(match, node, data_set);
+
+                if(data->rc == RSC_DIGEST_ALL) {
+                    optional = FALSE;
+                    crm_notice("Unfencing %s (remote): because the definition of %s changed", node->details->uname, match->id);
+                    if (is_set(data_set->flags, pe_flag_sanitized)) {
+                        /* Extra detail for those running from the commandline */
+                        fprintf(stdout, "  notice: Unfencing %s (remote): because the definition of %s changed\n", node->details->uname, match->id);
+                    }
+
+                }
+
+                digests_all_offset += snprintf(
+                    digests_all+digests_all_offset, max-digests_all_offset,
+                    "%s:%s:%s,", match->id, (const char*)g_hash_table_lookup(match->meta, XML_ATTR_TYPE), data->digest_all_calc);
+
+                digests_secure_offset += snprintf(
+                    digests_secure+digests_secure_offset, max-digests_secure_offset,
+                    "%s:%s:%s,", match->id, (const char*)g_hash_table_lookup(match->meta, XML_ATTR_TYPE), data->digest_secure_calc);
+            }
+            add_hash_param(stonith_op->meta, strdup("digests-all"), digests_all);
+            add_hash_param(stonith_op->meta, strdup("digests-secure"), digests_secure);
+        }
+
     } else {
-        free(key);
+        free(op_key);
     }
 
-    if(optional == FALSE) {
-        crm_trace("%s is no longer optional", stonith_op->uuid);
+    if(optional == FALSE && is_set(stonith_op->flags, pe_action_optional)) {
+        const char *kind = "Fencing  ";
+
         pe_clear_action_bit(stonith_op, pe_action_optional);
+
+        if(safe_str_eq(op, "on")) {
+            kind = "Unfencing";
+        }
+
+        crm_notice("%s %s: %s", kind, node->details->uname, reason);
+        if (is_set(data_set->flags, pe_flag_sanitized)) {
+            /* Extra detail for those running from the commandline */
+            fprintf(stdout, "  notice: %s %s: %s\n", kind, node->details->uname, reason);
+        }
     }
 
     return stonith_op;
@@ -2007,9 +2135,8 @@ trigger_unfencing(
               && node->details->online
               && node->details->unclean == FALSE
               && node->details->shutdown == FALSE) {
-        action_t *unfence = pe_fence_op(node, "on", FALSE, data_set);
+        action_t *unfence = pe_fence_op(node, "on", FALSE, reason, data_set);
 
-        crm_notice("Unfencing %s: %s", node->details->uname, reason);
         if(dependency) {
             order_actions(unfence, dependency, pe_order_optional);
         }

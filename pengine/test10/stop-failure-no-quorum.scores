@@ -1,3 +1,4 @@
+  notice: Fencing   pcmk-2: node is unclean
 Allocation scores:
 clone_color: clvm-clone allocation score on pcmk-1: 0
 clone_color: clvm-clone allocation score on pcmk-2: -INFINITY

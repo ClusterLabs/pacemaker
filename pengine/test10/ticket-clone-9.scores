@@ -1,3 +1,5 @@
+  notice: Fencing   node1: node is unclean
+  notice: Fencing   node2: node is unclean
 Allocation scores:
 clone_color: clone1 allocation score on node1: 0
 clone_color: clone1 allocation score on node2: 0

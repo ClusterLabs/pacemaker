@@ -7,6 +7,7 @@ Online: [ node1 ]
  rsc1	(heartbeat:apache):	FAILED node2 
  rsc2	(heartbeat:apache):	Started node2
 
+  notice: Fencing   node2: node is unclean
 Transition Summary:
  * Fence (reboot) node2
  * Start   stonith-1	(node1)

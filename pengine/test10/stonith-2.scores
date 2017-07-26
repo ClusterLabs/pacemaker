@@ -1,3 +1,4 @@
+  notice: Fencing   sles-5: node is unclean
 Allocation scores:
 clone_color: DoFencing allocation score on sles-1: 0
 clone_color: DoFencing allocation score on sles-2: 0

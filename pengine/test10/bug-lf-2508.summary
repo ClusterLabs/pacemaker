@@ -34,6 +34,7 @@ Online: [ srv01 srv03 srv04 ]
      Started: [ srv01 srv03 ]
      Stopped: [ srv04 ]
 
+  notice: Fencing   srv02: node is unclean
 Transition Summary:
  * Fence (reboot) srv02
  * Start   Dummy01	(srv01)
