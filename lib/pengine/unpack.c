@@ -121,6 +121,7 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
                      reason);
         }
         node->details->unclean = TRUE;
+        pe_fence_op(node, NULL, TRUE, reason, data_set);
 
     } else if (node->details->unclean) {
         crm_trace("Cluster node %s %s because %s",
@@ -134,6 +135,7 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
                  pe_can_fence(data_set, node)? "will be fenced" : "is unclean",
                  reason);
         node->details->unclean = TRUE;
+        pe_fence_op(node, NULL, TRUE, reason, data_set);
     }
 }
 

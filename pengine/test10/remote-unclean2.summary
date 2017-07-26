@@ -6,9 +6,8 @@ Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
  shooter	(stonith:fence_xvm):	Started rhel7-auto2 
  rhel7-auto4	(ocf::pacemaker:remote):	FAILED rhel7-auto1 
 
-  notice: Fencing   rhel7-auto4: node is unclean
 Transition Summary:
- * Fence (reboot) rhel7-auto4
+ * Fence (reboot) rhel7-auto4 'remote connection is unrecoverable'
  * Recover rhel7-auto4	(Started rhel7-auto1)
 
 Executing cluster transition:

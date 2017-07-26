@@ -4,9 +4,8 @@ Online: [ 18builder ]
 
  FAKE	(ocf::pacemaker:Dummy):	FAILED 18builder 
 
-  notice: Fencing   remote1: guest is unclean
 Transition Summary:
- * Fence (reboot) remote1 (resource: FAKE)
+ * Fence (reboot) remote1 (resource: FAKE) 'guest is unclean'
  * Recover FAKE	(Started 18builder)
  * Start   remote1	(18builder)
 

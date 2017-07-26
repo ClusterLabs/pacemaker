@@ -9,15 +9,14 @@ OFFLINE: [ rhel7-alt3 ]
  rhel7-alt4	(ocf::pacemaker:remote):	Stopped 
  fake	(ocf::heartbeat:Dummy):	Started rhel7-alt4 (UNCLEAN)
 
-  notice: Fencing   rhel7-alt4: node is unclean
 Transition Summary:
- * Fence (reboot) rhel7-alt4
+ * Fence (reboot) rhel7-alt4 'fake is active there (fencing will be revoked if remote connection can be re-established elsewhere)'
  * Stop    fake	(rhel7-alt4)
 
 Executing cluster transition:
  * Fencing rhel7-alt4 (reboot)
- * Pseudo action:   stonith_complete
  * Pseudo action:   fake_stop_0
+ * Pseudo action:   stonith_complete
  * Pseudo action:   all_stopped
 
 Revised cluster status:

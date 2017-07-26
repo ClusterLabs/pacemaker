@@ -11,11 +11,9 @@ Online: [ virt-1 virt-2 virt-3 ]
      Started: [ virt-1 ]
      Stopped: [ virt-2 virt-3 virt-4 ]
 
-  notice: Unfencing virt-3: Required by dlm:2
-  notice: Fencing   virt-4: node is unclean
 Transition Summary:
- * Fence (reboot) virt-4
- * Fence (on) virt-3
+ * Fence (reboot) virt-4 'node is unclean'
+ * Fence (on) virt-3 'Required by dlm:2'
  * Start   dlm:2	(virt-3)
  * Start   clvmd:1	(virt-2)
  * Start   clvmd:2	(virt-3)

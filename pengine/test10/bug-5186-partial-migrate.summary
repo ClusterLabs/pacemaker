@@ -24,9 +24,8 @@ Online: [ bl460g1n6 bl460g1n8 ]
      prmPing	(ocf::pacemaker:ping):	Started bl460g1n7 (UNCLEAN)
      Started: [ bl460g1n6 bl460g1n8 ]
 
-  notice: Fencing   bl460g1n7: node is unclean
 Transition Summary:
- * Fence (reboot) bl460g1n7
+ * Fence (reboot) bl460g1n7 'prmDummy is thought to be active there'
  * Move    prmDummy	(Started bl460g1n7 -> bl460g1n6)
  * Move    prmVM2	(Started bl460g1n7 -> bl460g1n8)
  * Move    prmStonith8-1	(Started bl460g1n7 -> bl460g1n6)
@@ -40,13 +39,13 @@ Executing cluster transition:
  * Pseudo action:   grpStonith8_stop_0
  * Pseudo action:   prmStonith8-2_stop_0
  * Fencing bl460g1n7 (reboot)
- * Pseudo action:   stonith_complete
  * Pseudo action:   prmDummy_stop_0
  * Pseudo action:   prmVM2_stop_0
  * Pseudo action:   prmStonith8-1_stop_0
  * Pseudo action:   clnDiskd1_stop_0
  * Pseudo action:   clnDiskd2_stop_0
  * Pseudo action:   clnPing_stop_0
+ * Pseudo action:   stonith_complete
  * Resource action: prmDummy        start on bl460g1n6
  * Resource action: prmVM2          start on bl460g1n8
  * Pseudo action:   grpStonith8_stopped_0

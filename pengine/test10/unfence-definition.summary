@@ -11,13 +11,10 @@ Online: [ virt-1 virt-2 virt-3 ]
      Started: [ virt-1 ]
      Stopped: [ virt-2 virt-3 virt-4 ]
 
-  notice: Unfencing virt-1: Device definition changed
-  notice: Unfencing virt-3: Required by dlm:2
-  notice: Fencing   virt-4: node is unclean
 Transition Summary:
- * Fence (reboot) virt-4
- * Fence (on) virt-3
- * Fence (on) virt-1
+ * Fence (reboot) virt-4 'node is unclean'
+ * Fence (on) virt-3 'Required by dlm:2'
+ * Fence (on) virt-1 'Device definition changed'
  * Restart fencing	(Started virt-1)
  * Restart dlm:0	(Started virt-1)
  * Start   dlm:2	(virt-3)

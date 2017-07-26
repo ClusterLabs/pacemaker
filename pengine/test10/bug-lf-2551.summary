@@ -80,9 +80,8 @@ Online: [ hex-0 hex-7 hex-8 ]
  vm-63	(ocf::heartbeat:Xen):	Stopped 
  vm-64	(ocf::heartbeat:Xen):	Stopped 
 
-  notice: Fencing   hex-9: node is unclean
 Transition Summary:
- * Fence (reboot) hex-9
+ * Fence (reboot) hex-9 'peer is no longer part of the cluster'
  * Move    fencing-sbd	(Started hex-9 -> hex-0)
  * Move    dummy1	(Started hex-9 -> hex-0)
  * Stop    dlm:3	(hex-9)
@@ -112,11 +111,10 @@ Executing cluster transition:
  * Pseudo action:   fencing-sbd_stop_0
  * Resource action: dummy1          monitor=300000 on hex-8
  * Resource action: dummy1          monitor=300000 on hex-7
- * Fencing hex-9 (reboot)
- * Pseudo action:   stonith_complete
  * Pseudo action:   load_stopped_hex-8
  * Pseudo action:   load_stopped_hex-7
  * Pseudo action:   load_stopped_hex-0
+ * Fencing hex-9 (reboot)
  * Resource action: fencing-sbd     start on hex-0
  * Pseudo action:   dummy1_stop_0
  * Pseudo action:   vm-03_stop_0
@@ -135,6 +133,7 @@ Executing cluster transition:
  * Pseudo action:   vm-53_stop_0
  * Pseudo action:   vm-57_stop_0
  * Pseudo action:   vm-61_stop_0
+ * Pseudo action:   stonith_complete
  * Pseudo action:   load_stopped_hex-9
  * Resource action: dummy1          start on hex-0
  * Pseudo action:   base-clone_stop_0

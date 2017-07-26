@@ -34,9 +34,8 @@ Online: [ srv01 srv03 srv04 ]
      Started: [ srv01 srv03 ]
      Stopped: [ srv04 ]
 
-  notice: Fencing   srv02: node is unclean
 Transition Summary:
- * Fence (reboot) srv02
+ * Fence (reboot) srv02 'peer is no longer part of the cluster'
  * Start   Dummy01	(srv01)
  * Move    Dummy02	(Started srv02 -> srv04)
  * Stop    prmStonith1-1:1	(srv02)
@@ -51,15 +50,13 @@ Executing cluster transition:
  * Pseudo action:   Group01_start_0
  * Resource action: prmStonith3-1:1 monitor=3600000 on srv01
  * Fencing srv02 (reboot)
- * Pseudo action:   stonith_complete
- * Resource action: Dummy01         start on srv01
  * Pseudo action:   Group02_stop_0
  * Pseudo action:   Dummy02_stop_0
  * Pseudo action:   clnStonith1_stop_0
  * Pseudo action:   clnStonith3_stop_0
  * Pseudo action:   clnStonith4_stop_0
- * Pseudo action:   Group01_running_0
- * Resource action: Dummy01         monitor=10000 on srv01
+ * Pseudo action:   stonith_complete
+ * Resource action: Dummy01         start on srv01
  * Pseudo action:   Group02_stopped_0
  * Pseudo action:   Group02_start_0
  * Resource action: Dummy02         start on srv04
@@ -69,6 +66,8 @@ Executing cluster transition:
  * Pseudo action:   prmStonith3-3:1_stop_0
  * Pseudo action:   grpStonith4:1_stop_0
  * Pseudo action:   prmStonith4-3:1_stop_0
+ * Pseudo action:   Group01_running_0
+ * Resource action: Dummy01         monitor=10000 on srv01
  * Pseudo action:   Group02_running_0
  * Resource action: Dummy02         monitor=10000 on srv04
  * Pseudo action:   prmStonith1-1:1_stop_0

@@ -13,9 +13,8 @@ Online: [ node2 ]
      rsc5	(heartbeat:apache):	Stopped 
      rsc6	(heartbeat:apache):	Stopped 
 
-  notice: Fencing   node1: node is unclean
 Transition Summary:
- * Fence (reboot) node1
+ * Fence (reboot) node1 'node is unclean'
  * Start   stonith-1	(node2)
  * Start   rsc1	(node2)
  * Start   rsc2	(node2)

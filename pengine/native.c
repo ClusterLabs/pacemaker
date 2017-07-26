@@ -1355,7 +1355,7 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-            action_t *unfence = pe_fence_op(node, "on", TRUE, __FUNCTION__, data_set);
+            action_t *unfence = pe_fence_op(node, "on", TRUE, NULL, data_set);
 
             crm_debug("Ordering any stops of %s before %s, and any starts after",
                       rsc->id, unfence->uuid);
@@ -2457,7 +2457,7 @@ StopRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * d
         }
 
         if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
-            action_t *unfence = pe_fence_op(current, "on", TRUE, __FUNCTION__, data_set);
+            action_t *unfence = pe_fence_op(current, "on", TRUE, NULL, data_set);
             const char *unfenced = g_hash_table_lookup(current->details->attrs, XML_NODE_IS_UNFENCED);
 
             order_actions(stop, unfence, pe_order_implies_first);
@@ -2480,7 +2480,7 @@ StartRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * 
     start = start_action(rsc, next, TRUE);
 
     if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
-        action_t *unfence = pe_fence_op(next, "on", TRUE, __FUNCTION__, data_set);
+        action_t *unfence = pe_fence_op(next, "on", TRUE, NULL, data_set);
         const char *unfenced = g_hash_table_lookup(next->details->attrs, XML_NODE_IS_UNFENCED);
 
         order_actions(unfence, start, pe_order_implies_then);
@@ -2847,7 +2847,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
      * unfencing and that unfencing occurred.
      */
     if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
-        action_t *unfence = pe_fence_op(node, "on", TRUE, __FUNCTION__, data_set);
+        action_t *unfence = pe_fence_op(node, "on", TRUE, NULL, data_set);
         order_actions(unfence, probe, pe_order_optional);
     }
 

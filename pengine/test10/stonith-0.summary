@@ -36,11 +36,9 @@ Online: [ c001n02 c001n04 c001n06 c001n07 c001n08 ]
      ocf_msdummy:12	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Slave c001n06 
      ocf_msdummy:13	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Slave c001n06 
 
-  notice: Fencing   c001n03: node is unclean
-  notice: Fencing   c001n05: node is unclean
 Transition Summary:
- * Fence (reboot) c001n05
- * Fence (reboot) c001n03
+ * Fence (reboot) c001n05 'ocf_192.168.100.183 failed there'
+ * Fence (reboot) c001n03 'ocf_192.168.100.183 failed there'
  * Move    ocf_192.168.100.181	(Started c001n03 -> c001n02)
  * Move    heartbeat_192.168.100.182	(Started c001n03 -> c001n02)
  * Recover ocf_192.168.100.183	(Started c001n03 -> c001n02)
@@ -51,12 +49,12 @@ Executing cluster transition:
  * Resource action: child_DoFencing:4 monitor=20000 on c001n08
  * Fencing c001n05 (reboot)
  * Fencing c001n03 (reboot)
- * Pseudo action:   stonith_complete
  * Pseudo action:   group-1_stop_0
  * Pseudo action:   ocf_192.168.100.183_stop_0
  * Pseudo action:   ocf_192.168.100.183_stop_0
  * Pseudo action:   rsc_c001n05_stop_0
  * Pseudo action:   rsc_c001n07_stop_0
+ * Pseudo action:   stonith_complete
  * Pseudo action:   heartbeat_192.168.100.182_stop_0
  * Resource action: rsc_c001n05     start on c001n07
  * Resource action: rsc_c001n07     start on c001n07

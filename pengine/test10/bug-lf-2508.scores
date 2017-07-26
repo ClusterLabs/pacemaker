@@ -1,4 +1,3 @@
-  notice: Fencing   srv02: node is unclean
 Allocation scores:
 clone_color: clnStonith1 allocation score on srv01: -INFINITY
 clone_color: clnStonith1 allocation score on srv02: 0

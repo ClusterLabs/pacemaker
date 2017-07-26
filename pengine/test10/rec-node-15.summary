@@ -20,9 +20,8 @@ Online: [ sapcl01 ]
      oracle_24	(ocf::heartbeat:oracle):	Stopped 
      oralsnr_25	(ocf::heartbeat:oralsnr):	Stopped 
 
-  notice: Fencing   sapcl03: node is unclean
 Transition Summary:
- * Fence (reboot) sapcl03
+ * Fence (reboot) sapcl03 'peer is no longer part of the cluster'
  * Start   stonith-1	(sapcl01)
  * Move    IPaddr_192_168_1_102	(Started sapcl02 -> sapcl01)
  * Move    LVM_12	(Started sapcl02 -> sapcl01)
@@ -40,20 +39,14 @@ Executing cluster transition:
  * Resource action: Filesystem_13   stop on sapcl02
  * Pseudo action:   oracle_start_0
  * Fencing sapcl03 (reboot)
- * Pseudo action:   stonith_complete
  * Resource action: LVM_12          stop on sapcl02
+ * Pseudo action:   stonith_complete
+ * Resource action: IPaddr_192_168_1_102 stop on sapcl02
  * Resource action: IPaddr_192_168_1_104 start on sapcl01
  * Resource action: LVM_22          start on sapcl01
  * Resource action: Filesystem_23   start on sapcl01
  * Resource action: oracle_24       start on sapcl01
  * Resource action: oralsnr_25      start on sapcl01
- * Resource action: IPaddr_192_168_1_102 stop on sapcl02
- * Pseudo action:   oracle_running_0
- * Resource action: IPaddr_192_168_1_104 monitor=5000 on sapcl01
- * Resource action: LVM_22          monitor=120000 on sapcl01
- * Resource action: Filesystem_23   monitor=120000 on sapcl01
- * Resource action: oracle_24       monitor=120000 on sapcl01
- * Resource action: oralsnr_25      monitor=120000 on sapcl01
  * Pseudo action:   all_stopped
  * Resource action: stonith-1       start on sapcl01
  * Pseudo action:   app02_stopped_0
@@ -61,6 +54,12 @@ Executing cluster transition:
  * Resource action: IPaddr_192_168_1_102 start on sapcl01
  * Resource action: LVM_12          start on sapcl01
  * Resource action: Filesystem_13   start on sapcl01
+ * Pseudo action:   oracle_running_0
+ * Resource action: IPaddr_192_168_1_104 monitor=5000 on sapcl01
+ * Resource action: LVM_22          monitor=120000 on sapcl01
+ * Resource action: Filesystem_23   monitor=120000 on sapcl01
+ * Resource action: oracle_24       monitor=120000 on sapcl01
+ * Resource action: oralsnr_25      monitor=120000 on sapcl01
  * Pseudo action:   app02_running_0
  * Resource action: IPaddr_192_168_1_102 monitor=5000 on sapcl01
  * Resource action: LVM_12          monitor=120000 on sapcl01

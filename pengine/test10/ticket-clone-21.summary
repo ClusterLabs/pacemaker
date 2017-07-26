@@ -6,11 +6,9 @@ Online: [ node1 node2 ]
  Clone Set: clone1 [rsc1]
      Started: [ node1 node2 ]
 
-  notice: Fencing   node1: node is unclean
-  notice: Fencing   node2: node is unclean
 Transition Summary:
- * Fence (reboot) node2
- * Fence (reboot) node1
+ * Fence (reboot) node2 'deadman ticket was lost'
+ * Fence (reboot) node1 'deadman ticket was lost'
  * Stop    rsc_stonith	(node1)
  * Stop    rsc1:0	(node1)
  * Stop    rsc1:1	(node2)
@@ -19,8 +17,8 @@ Executing cluster transition:
  * Fencing node1 (reboot)
  * Pseudo action:   rsc_stonith_stop_0
  * Fencing node2 (reboot)
- * Pseudo action:   stonith_complete
  * Pseudo action:   clone1_stop_0
+ * Pseudo action:   stonith_complete
  * Pseudo action:   rsc1:1_stop_0
  * Pseudo action:   rsc1:0_stop_0
  * Pseudo action:   clone1_stopped_0

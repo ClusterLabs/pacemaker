@@ -24,13 +24,10 @@ Containers: [ lxc-01_kiff-02:R-lxc-01_kiff-02 lxc-02_kiff-02:R-lxc-02_kiff-02 ]
  R-lxc-02_kiff-02	(ocf::heartbeat:VirtualDomain):	Started kiff-02 
  vm-fs	(ocf::heartbeat:Filesystem):	FAILED lxc-01_kiff-01
 
-  notice: Fencing   kiff-01: node is unclean
-  notice: Fencing   lxc-01_kiff-01: guest is unclean
-  notice: Fencing   lxc-02_kiff-01: guest is unclean
 Transition Summary:
- * Fence (reboot) lxc-02_kiff-01 (resource: R-lxc-02_kiff-01)
- * Fence (reboot) lxc-01_kiff-01 (resource: R-lxc-01_kiff-01)
- * Fence (reboot) kiff-01
+ * Fence (reboot) lxc-02_kiff-01 (resource: R-lxc-02_kiff-01) 'guest is unclean'
+ * Fence (reboot) lxc-01_kiff-01 (resource: R-lxc-01_kiff-01) 'guest is unclean'
+ * Fence (reboot) kiff-01 'peer is no longer part of the cluster'
  * Move    fence-kiff-02	(Started kiff-01 -> kiff-02)
  * Stop    dlm:0	(kiff-01)
  * Stop    clvmd:0	(kiff-01)

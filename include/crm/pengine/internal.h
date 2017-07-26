@@ -277,6 +277,9 @@ action_t *pe_fence_op(node_t * node, const char *op, bool optional, const char *
 void trigger_unfencing(
     resource_t * rsc, node_t *node, const char *reason, action_t *dependency, pe_working_set_t * data_set);
 
+void pe_action_required_worker(pe_action_t *action, const char *reason, const char *function, long line);
+#define pe_action_required(action, reason) pe_action_required_worker(action, reason, __FUNCTION__, __LINE__)
+
 void set_bit_recursive(resource_t * rsc, unsigned long long flag);
 void clear_bit_recursive(resource_t * rsc, unsigned long long flag);
 

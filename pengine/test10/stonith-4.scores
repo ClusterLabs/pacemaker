@@ -1,7 +1,3 @@
-  notice: Fencing   pcmk-10: node is unclean
-  notice: Fencing   pcmk-5: node is unclean
-  notice: Fencing   pcmk-7: node is unclean
-  notice: Fencing   pcmk-8: node is unclean
 Allocation scores:
 native_color: Fencing allocation score on pcmk-10: 0
 native_color: Fencing allocation score on pcmk-11: 0

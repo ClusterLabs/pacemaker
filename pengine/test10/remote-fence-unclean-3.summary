@@ -33,9 +33,8 @@ Containers: [ galera-bundle-0:galera-bundle-docker-0 galera-bundle-1:galera-bund
  Docker container: openstack-cinder-backup [192.168.24.1:8787/tripleoupstream/centos-binary-cinder-backup:latest]
    openstack-cinder-backup-docker-0	(ocf::heartbeat:docker):	Started overcloud-controller-1
 
-  notice: Fencing   overcloud-novacompute-0: node is unclean
 Transition Summary:
- * Fence (reboot) overcloud-novacompute-0
+ * Fence (reboot) overcloud-novacompute-0 'the connection is unrecoverable'
  * Start   fence1	(overcloud-controller-0)
  * Stop    overcloud-novacompute-0	(overcloud-controller-0)
 

@@ -11,15 +11,11 @@ Online: [ virt-1 virt-2 virt-3 ]
      Started: [ virt-1 ]
      Stopped: [ virt-2 virt-3 virt-4 ]
 
-  notice: Unfencing virt-1: Device parameters changed (reload)
-  notice: Unfencing virt-2: Device parameters changed (reload)
-  notice: Unfencing virt-3: Device parameters changed (reload)
-  notice: Fencing   virt-4: node is unclean
 Transition Summary:
- * Fence (reboot) virt-4
- * Fence (on) virt-3
- * Fence (on) virt-2
- * Fence (on) virt-1
+ * Fence (reboot) virt-4 'node is unclean'
+ * Fence (on) virt-3 'Device parameters changed (reload)'
+ * Fence (on) virt-2 'Device parameters changed (reload)'
+ * Fence (on) virt-1 'Device parameters changed (reload)'
  * Restart fencing	(Started virt-1)
  * Restart dlm:0	(Started virt-1)
  * Restart dlm:1	(Started virt-2)

@@ -1486,9 +1486,8 @@ stage6(pe_working_set_t * data_set)
         if (node->details->unclean
             && need_stonith && pe_can_fence(data_set, node)) {
 
-            pe_warn("Scheduling Node %s for STONITH", node->details->uname);
-
             stonith_op = pe_fence_op(node, NULL, FALSE, "node is unclean", data_set);
+            pe_warn("Scheduling Node %s for STONITH", node->details->uname);
 
             stonith_constraints(node, stonith_op, data_set);
 
@@ -2434,6 +2433,7 @@ LogNodeActions(pe_working_set_t * data_set, gboolean terminal)
             node_name = crm_strdup_printf("%s", action->node->details->uname);
         }
 
+
         if (safe_str_eq(action->task, CRM_OP_SHUTDOWN)) {
             task = strdup("Shutdown");
         } else if (safe_str_eq(action->task, CRM_OP_FENCE)) {
@@ -2443,8 +2443,12 @@ LogNodeActions(pe_working_set_t * data_set, gboolean terminal)
 
         if(task == NULL) {
             /* Nothing to report */
+        } else if(terminal && action->reason) {
+            printf(" * %s %s '%s'\n", task, node_name, action->reason);
         } else if(terminal) {
             printf(" * %s %s\n", task, node_name);
+        } else if(action->reason) {
+            crm_notice(" * %s %s '%s'\n", task, node_name, action->reason);
         } else {
             crm_notice(" * %s %s\n", task, node_name);
         }

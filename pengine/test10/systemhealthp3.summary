@@ -7,9 +7,8 @@ Online: [ hs21c ]
  apache_1	(ocf::heartbeat:apache):	Stopped 
  nfs_1	(ocf::heartbeat:Filesystem):	Stopped 
 
-  notice: Fencing   hs21d: node is unclean
 Transition Summary:
- * Fence (reboot) hs21d
+ * Fence (reboot) hs21d 'node is unclean'
 
 Executing cluster transition:
  * Resource action: stonith-1       monitor on hs21c

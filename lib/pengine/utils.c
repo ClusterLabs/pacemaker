@@ -1207,6 +1207,7 @@ pe_free_action(action_t * action)
         free_xml(action->versioned_meta);
     }
     free(action->cancel_task);
+    free(action->reason);
     free(action->task);
     free(action->uuid);
     free(action->node);
@@ -2088,7 +2089,6 @@ pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe
                         /* Extra detail for those running from the commandline */
                         fprintf(stdout, "  notice: Unfencing %s (remote): because the definition of %s changed\n", node->details->uname, match->id);
                     }
-
                 }
 
                 digests_all_offset += snprintf(
@@ -2107,20 +2107,10 @@ pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe
         free(op_key);
     }
 
-    if(optional == FALSE && is_set(stonith_op->flags, pe_action_optional)) {
-        const char *kind = "Fencing  ";
-
-        pe_clear_action_bit(stonith_op, pe_action_optional);
-
-        if(safe_str_eq(op, "on")) {
-            kind = "Unfencing";
-        }
-
-        crm_notice("%s %s: %s", kind, node->details->uname, reason);
-        if (is_set(data_set->flags, pe_flag_sanitized)) {
-            /* Extra detail for those running from the commandline */
-            fprintf(stdout, "  notice: %s %s: %s\n", kind, node->details->uname, reason);
-        }
+    if(optional == FALSE && pe_can_fence(data_set, node)) {
+        pe_action_required(stonith_op, reason);
+    } else if(reason && stonith_op->reason == NULL) {
+        stonith_op->reason = strdup(reason);
     }
 
     return stonith_op;
@@ -2195,4 +2185,14 @@ add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
     }
 
     return TRUE;
+}
+
+void pe_action_required_worker(pe_action_t *action, const char *reason, const char *function, long line) 
+{
+    if(is_set(action->flags, pe_action_optional)) {
+        action->flags = crm_clear_bit(function, line, action->uuid, action->flags, pe_action_optional);
+        if(action->reason == NULL) {
+            action->reason = strdup(reason);
+        }
+    }
 }

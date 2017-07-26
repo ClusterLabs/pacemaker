@@ -1,6 +1,3 @@
-  notice: Fencing   lxc1: guest is unclean
-  notice: Fencing   lxc2: guest is unclean
-  notice: Fencing   rhel7-1: node is unclean
 Allocation scores:
 clone_color: lxc-ms-master allocation score on lxc1: INFINITY
 clone_color: lxc-ms-master allocation score on lxc2: INFINITY

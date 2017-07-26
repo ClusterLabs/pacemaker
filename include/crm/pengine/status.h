@@ -323,6 +323,7 @@ struct pe_action_s {
 
     char *task;
     char *uuid;
+    char *reason;
     char *cancel_task;
 
     enum pe_action_flags flags;

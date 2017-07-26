@@ -7,13 +7,10 @@ Node node3 (uuid3): UNCLEAN (offline)
  stonith-1	(stonith:dummy):	Stopped 
  lsb_dummy	(lsb:/usr/lib/heartbeat/cts/LSBDummy):	Stopped 
 
-  notice: Fencing   node1: node is unclean
-  notice: Fencing   node2: node is unclean
-  notice: Fencing   node3: node is unclean
 Transition Summary:
- * Fence (reboot) node3
- * Fence (reboot) node2
- * Fence (reboot) node1
+ * Fence (reboot) node3 'peer is no longer part of the cluster'
+ * Fence (reboot) node2 'peer is no longer part of the cluster'
+ * Fence (reboot) node1 'peer is no longer part of the cluster'
 
 Executing cluster transition:
  * Fencing node1 (reboot)

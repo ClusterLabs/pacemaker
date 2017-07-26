@@ -7,9 +7,8 @@ Online: [ rh5node2 ]
  Clone Set: clnStonith [grpStonith]
      Stopped: [ rh5node1 rh5node2 ]
 
-  notice: Fencing   rh5node1: node is unclean
 Transition Summary:
- * Fence (reboot) rh5node1
+ * Fence (reboot) rh5node1 'node is unclean'
  * Start   prmIpPostgreSQLDB	(rh5node2)
  * Start   prmStonith:0	(rh5node2)
 

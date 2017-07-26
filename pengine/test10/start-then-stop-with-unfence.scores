@@ -1,4 +1,3 @@
-  notice: Unfencing rhel7-node1.example.com: Required by ip1
 Allocation scores:
 clone_color: jrummy-clone allocation score on rhel7-node1.example.com: 500
 clone_color: jrummy-clone allocation score on rhel7-node2.example.com: 500

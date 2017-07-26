@@ -14,9 +14,8 @@ Online: [ pcmk-1 ]
  ClusterIP	(ocf::heartbeat:IPaddr2):	Stopped 
  Fencing	(stonith:fence_xvm):	Stopped 
 
-  notice: Fencing   pcmk-2: node is unclean
 Transition Summary:
- * Fence (reboot) pcmk-2
+ * Fence (reboot) pcmk-2 'clvm:0 failed there'
  * Start   dlm:0	(pcmk-1 - blocked)
  * Stop    clvm:0	(pcmk-2)
  * Start   clvm:2	(pcmk-1 - blocked)
@@ -25,8 +24,8 @@ Transition Summary:
 
 Executing cluster transition:
  * Fencing pcmk-2 (reboot)
- * Pseudo action:   stonith_complete
  * Pseudo action:   clvm-clone_stop_0
+ * Pseudo action:   stonith_complete
  * Pseudo action:   clvm_stop_0
  * Pseudo action:   clvm-clone_stopped_0
  * Pseudo action:   all_stopped
