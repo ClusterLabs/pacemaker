@@ -159,7 +159,4 @@ const char *actiontype2text(action_type_e type);
 lrmd_event_data_t *convert_graph_action(xmlNode * resource, crm_action_t * action, int status,
                                         int rc);
 
-void crm_register_cache_check_fn(gboolean (*fn)(lrmd_rsc_info_t *rsc, const char *node_name));
-void crm_unregister_cache_check_fn(void);
-
 #endif

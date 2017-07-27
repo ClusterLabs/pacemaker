@@ -240,23 +240,6 @@ lrm_state_reset_tables(lrm_state_t * lrm_state, gboolean reset_metadata)
     }
 }
 
-static gboolean
-has_cached_metadata_for(lrmd_rsc_info_t *rsc, const char *node_name)
-{
-    lrm_state_t *lrm_state;
-
-    CRM_CHECK((rsc != NULL) && (node_name != NULL), return FALSE);
-
-    lrm_state = lrm_state_find(node_name);
-    if (lrm_state == NULL) {
-        crm_debug("Metadata check requested for %s but we've never connected to it",
-                  node_name);
-        return FALSE;
-    }
-
-    return lrm_state_get_rsc_metadata(lrm_state, rsc) != NULL;
-}
-
 gboolean
 lrm_state_init_local(void)
 {
@@ -278,16 +261,12 @@ lrm_state_init_local(void)
         return FALSE;
     }
 
-    crm_register_cache_check_fn(&has_cached_metadata_for);
-
     return TRUE;
 }
 
 void
 lrm_state_destroy_all(void)
 {
-    crm_unregister_cache_check_fn();
-
     if (lrm_state_table) {
         crm_trace("Destroying state table with %d members", g_hash_table_size(lrm_state_table));
         g_hash_table_destroy(lrm_state_table); lrm_state_table = NULL;
