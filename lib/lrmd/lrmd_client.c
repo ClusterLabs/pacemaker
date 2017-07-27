@@ -91,7 +91,7 @@ typedef struct lrmd_private_s {
     int port;
     gnutls_psk_client_credentials_t psk_cred_c;
 
-    /* while the async connection is occuring, this is the id
+    /* while the async connection is occurring, this is the id
      * of the connection timeout timer. */
     int async_timer;
     int sock;

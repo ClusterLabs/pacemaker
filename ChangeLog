@@ -1648,7 +1648,7 @@
   + Medium: Extra: Refresh showscores script from Dominik
   + Medium: pengine: Build a statically linked version of ptest
   + Medium: pengine: Correctly log the actions for resources that are being recovered
-  + Medium: pengine: Correctly log the occurance of promotion events
+  + Medium: pengine: Correctly log the occurrence of promotion events
   + Medium: pengine: Implememt node health based on a patch from Mark Hamzy
   + Medium: Tools: Add examples to help text outputs
   + Medium: Tools: crm: catch syntax errors for configure load
@@ -2232,7 +2232,7 @@
   + Medium: Core: Allow more than one item to be modified/deleted in XPath based operations
   + Medium: Core: Fix the sort_pairs function for creating sorted xml objects
   + Medium: Core: iso8601 - Implement subtract_duration and fix subtract_time
-  + Medium: Core: Reduce the amount of xml copying occuring
+  + Medium: Core: Reduce the amount of xml copying
   + Medium: Core: Support value='value+=N' XML updates (in addtion to value='value++')
   + Medium: crmd: Add support for lrm_ops->fail_rsc if its available
   + Medium: crmd: HB - watch link status for node leaving events
