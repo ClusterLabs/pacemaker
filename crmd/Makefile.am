@@ -27,7 +27,7 @@ halib_PROGRAMS	= crmd
 noinst_HEADERS	= crmd_alerts.h crmd_callbacks.h crmd_fsa.h crmd.h \
 		crmd_lrm.h crmd_messages.h crmd_utils.h fsa_defines.h \
 		fsa_matrix.h fsa_proto.h membership.h te_callbacks.h \
-		tengine.h throttle.h
+		tengine.h throttle.h crmd_metadata.h
 
 crmd_CFLAGS	= $(CFLAGS_HARDENED_EXE)
 crmd_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
@@ -42,7 +42,7 @@ crmd_LDADD	= $(top_builddir)/lib/fencing/libstonithd.la		\
 		$(top_builddir)/lib/lrmd/liblrmd.la			\
 		$(CLUSTERLIBS)
 
-crmd_SOURCES	= main.c crmd.c corosync.c					\
+crmd_SOURCES	= main.c crmd.c corosync.c crmd_metadata.c			\
 		fsa.c control.c messages.c membership.c callbacks.c attrd.c	\
 		election.c join_client.c join_dc.c subsystems.c throttle.c	\
 		cib.c pengine.c tengine.c lrm.c lrm_state.c remote_lrmd_ra.c	\

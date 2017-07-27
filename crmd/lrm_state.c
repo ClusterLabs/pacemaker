@@ -144,8 +144,7 @@ lrm_state_create(const char *node_name)
     state->resource_history = g_hash_table_new_full(crm_str_hash,
                                                     g_str_equal, NULL, history_free);
 
-    state->metadata_cache = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                                  g_hash_destroy_str, crm_destroy_xml);
+    state->metadata_cache = metadata_cache_new();
 
     g_hash_table_insert(lrm_state_table, (char *)state->node_name, state);
     return state;
@@ -201,10 +200,7 @@ internal_lrm_state_destroy(gpointer data)
         crm_trace("Destroying pending op cache with %d members", g_hash_table_size(lrm_state->pending_ops));
         g_hash_table_destroy(lrm_state->pending_ops);
     }
-    if (lrm_state->metadata_cache) {
-        crm_trace("Destroying metadata cache with %d members", g_hash_table_size(lrm_state->metadata_cache));
-        g_hash_table_destroy(lrm_state->metadata_cache);
-    }
+    metadata_cache_free(lrm_state->metadata_cache);
 
     free((char *)lrm_state->node_name);
     free(lrm_state);
@@ -233,10 +229,8 @@ lrm_state_reset_tables(lrm_state_t * lrm_state, gboolean reset_metadata)
                   g_hash_table_size(lrm_state->rsc_info_cache));
         g_hash_table_remove_all(lrm_state->rsc_info_cache);
     }
-    if (reset_metadata && lrm_state->metadata_cache) {
-        crm_trace("Re-setting metadata cache with %d members",
-                  g_hash_table_size(lrm_state->metadata_cache));
-        g_hash_table_remove_all(lrm_state->metadata_cache);
+    if (reset_metadata) {
+        metadata_cache_reset(lrm_state->metadata_cache);
     }
 }
 
@@ -611,9 +605,6 @@ lrm_state_get_metadata(lrm_state_t * lrm_state,
     if (!lrm_state->conn) {
         return -ENOTCONN;
     }
-
-    /* Optimize this... only retrieve metadata from local lrmd connection. Perhaps consider
-     * caching result. */
     return ((lrmd_t *) lrm_state->conn)->cmds->get_metadata(lrm_state->conn, class, provider, agent,
                                                             output, options);
 }
@@ -728,50 +719,6 @@ lrm_state_unregister_rsc(lrm_state_t * lrm_state,
     g_hash_table_remove(lrm_state->rsc_info_cache, rsc_id);
 
     return ((lrmd_t *) lrm_state->conn)->cmds->unregister_rsc(lrm_state->conn, rsc_id, options);
-}
-
-xmlNode *
-lrm_state_update_rsc_metadata(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, const char *metadata_str)
-{
-    char *key = NULL;
-    xmlNode *metadata = NULL;
-
-    CRM_CHECK(lrm_state && rsc && metadata_str, return NULL);
-
-    key = crm_generate_ra_key(rsc->class, rsc->provider, rsc->type);
-    if (!key) {
-        return NULL;
-    }
-
-    metadata = string2xml(metadata_str);
-    if (!metadata) {
-        crm_err("Metadata for %s (%s:%s:%s) is not valid XML", rsc->id, rsc->class, rsc->provider, rsc->type);
-        free(key);
-        return NULL;
-    }
-
-    g_hash_table_replace(lrm_state->metadata_cache, key, metadata);
-
-    return metadata;
-}
-
-xmlNode *
-lrm_state_get_rsc_metadata(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc)
-{
-    char *key = NULL;
-    xmlNode *metadata = NULL;
-
-    CRM_CHECK(lrm_state && rsc, return NULL);
-
-    key = crm_generate_ra_key(rsc->class, rsc->provider, rsc->type);
-    if (!key) {
-        return NULL;
-    }
-
-    metadata = g_hash_table_lookup(lrm_state->metadata_cache, key);
-    free(key);
-
-    return metadata;
 }
 
 /*
