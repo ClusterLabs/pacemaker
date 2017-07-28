@@ -592,3 +592,46 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char * c
     free(key);
     return xml_op;
 }
+
+/*!
+ * \brief Check whether an operation requires resource agent meta-data
+ *
+ * \param[in] rsc_class  Resource agent class (or NULL to skip class check)
+ * \param[in] op         Operation action (or NULL to skip op check)
+ *
+ * \return TRUE if operation needs meta-data, FALSE otherwise
+ * \note At least one of rsc_class and op must be specified.
+ */
+bool
+crm_op_needs_metadata(const char *rsc_class, const char *op)
+{
+    /* Agent meta-data is used to determine whether a reload is possible, and to
+     * evaluate versioned parameters -- so if this op is not relevant to those
+     * features, we don't need the meta-data.
+     */
+
+    CRM_CHECK(rsc_class || op, return FALSE);
+
+    if (rsc_class
+        && strcmp(rsc_class, PCMK_RESOURCE_CLASS_OCF)
+        && strcmp(rsc_class, PCMK_RESOURCE_CLASS_STONITH)) {
+
+        /* Meta-data is only needed for resource classes that use parameters */
+        return FALSE;
+    }
+
+    /* Meta-data is only needed for these actions */
+    if (op
+        && strcmp(op, CRMD_ACTION_START)
+        && strcmp(op, CRMD_ACTION_STATUS)
+        && strcmp(op, CRMD_ACTION_PROMOTE)
+        && strcmp(op, CRMD_ACTION_DEMOTE)
+        && strcmp(op, CRMD_ACTION_RELOAD)
+        && strcmp(op, CRMD_ACTION_MIGRATE)
+        && strcmp(op, CRMD_ACTION_MIGRATED)
+        && strcmp(op, CRMD_ACTION_NOTIFY)) {
+        return FALSE;
+    }
+
+    return TRUE;
+}
