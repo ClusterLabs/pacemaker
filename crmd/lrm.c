@@ -683,11 +683,11 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
         return TRUE;
     }
 
-    if (rsc == NULL || op->params == NULL || crm_str_eq(CRMD_ACTION_STOP, op->op_type, TRUE) ||
-            safe_str_eq(op->op_type, CRMD_ACTION_METADATA)) {
-        /* Stopped resources don't need the digest logic */
-        /* As well as meta-data query results */
-        crm_trace("No digests needed for %s %p %p %s", op->rsc_id, op->params, rsc, op->op_type);
+    if ((rsc == NULL) || (op == NULL) || (op->params == NULL)
+        || !crm_op_needs_metadata(rsc->class, op->op_type)) {
+
+        crm_trace("No digests needed for %s action on %s (params=%p rsc=%p)",
+                  op->op_type, op->rsc_id, op->params, rsc);
         return TRUE;
     }
 
@@ -699,22 +699,36 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
     }
 
     metadata = metadata_cache_get(lrm_state->metadata_cache, rsc);
-    if (metadata == NULL && lrm_state_is_local(lrm_state)) {
-        char *metadata_str = NULL;
-        int rc = lrm_state_get_metadata(lrm_state, rsc->class, rsc->provider, rsc->type, &metadata_str, 0);
+    if (metadata == NULL) {
+        if (lrm_state_is_local(lrm_state)) {
+            char *metadata_str = NULL;
 
-        if (rc != pcmk_ok) {
-            crm_warn("Cannot get metadata for %s (%s:%s:%s)", rsc->id, rsc->class, rsc->provider, rsc->type);
+            /* Do a synchronous local execution for local agents.
+             * TODO: We really should do async via lrmd.
+             */
+            int rc = lrm_state_get_metadata(lrm_state, rsc->class,
+                                            rsc->provider, rsc->type,
+                                            &metadata_str, 0);
+
+            if (rc != pcmk_ok) {
+                crm_warn("Failed to get metadata for %s (%s:%s:%s)",
+                         rsc->id, rsc->class, rsc->provider, rsc->type);
+                return TRUE;
+            }
+
+            metadata = metadata_cache_update(lrm_state->metadata_cache, rsc, metadata_str);
+            free(metadata_str);
+            if (metadata == NULL) {
+                crm_warn("Failed to update metadata for %s (%s:%s:%s)",
+                         rsc->id, rsc->class, rsc->provider, rsc->type);
+                return TRUE;
+            }
+        } else {
+            /* TODO Do async execution via lrmd */
+            crm_warn("Cannot get remote metadata for %s (%s:%s:%s)",
+                     rsc->id, rsc->class, rsc->provider, rsc->type);
             return TRUE;
         }
-
-        metadata = metadata_cache_update(lrm_state->metadata_cache, rsc, metadata_str);
-        free(metadata_str);
-    }
-
-    if (metadata == NULL) {
-        crm_warn("Cannot update metadata for %s (%s:%s:%s)", rsc->id, rsc->class, rsc->provider, rsc->type);
-        return TRUE;
     }
 
     crm_xml_add(xml_op, XML_ATTR_RA_VERSION, metadata->ra_version);
