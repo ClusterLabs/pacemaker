@@ -16,14 +16,18 @@ import time
 import random
 import atexit
 import getopt
+import subprocess
+import shlex
 
 AGENT_VERSION = "4.0.0"
 OCF_VERSION = "1.0"
 SHORT_DESC = "Dummy fence agent"
 LONG_DESC = """fence_dummy is a fake fencing agent which reports success
-based on its mode (pass|fail|random) without doing anything."""
+based on its mode (pass|fail|random|ping) without doing any actual fencing."""
+verbose = 0
+PING_BINARY = "/usr/bin/ping"
 
-# Short options used: ifhmnoqsvBDHMRUV
+# Short options used: cifhmnoqrstvBCDFHIMNRUV
 ALL_OPT = {
     "quiet"   : {
         "getopt" : "q",
@@ -65,7 +69,7 @@ ALL_OPT = {
     "action" : {
         "getopt" : "o:",
         "longopt" : "action",
-        "help" : "-o, --action=[action]          Action: status, list, reboot (default), off or on",
+        "help" : "-o, --action=[action]          Action: status, list, reboot, off or on",
         "required" : "1",
         "shortdesc" : "Fencing Action",
         "default" : "reboot",
@@ -83,8 +87,53 @@ ALL_OPT = {
         "getopt" : "M:",
         "longopt" : "mode",
         "required" : "0",
-        "help" : "-M, --mode=(pass|fail|random)  Exit status to return for non-monitor operations",
-        "shortdesc" : "Whether fence operations should always pass, always fail, or fail at random",
+        "help" : "-M, --mode=(pass|fail|random|ping:target)  Exit status to return for non-monitor operations",
+        "shortdesc" : "Whether fence operations should always pass, always fail, or fail at random or based on ping-probes",
+        "order" : 3
+        },
+    "ping_count": {
+        "getopt" : "c:",
+        "longopt" : "ping_count",
+        "required" : "0",
+        "help" : "-c, --ping_count=[number]      Number of ping-probes to send",
+        "shortdesc" : "The number ob ping-probes that is being send per target",
+        "default" : "10",
+        "order" : 3
+        },
+    "ping_goodcnt": {
+        "getopt" : "C:",
+        "longopt" : "ping_goodcnt",
+        "required" : "0",
+        "help" : "-C, --ping_goodcnt=[number]    Number of positive ping-probes required",
+        "shortdesc" : "The number ob positive ping-probes required to account a target as available",
+        "default" : "8",
+        "order" : 3
+        },
+    "ping_interval": {
+        "getopt" : "I:",
+        "longopt" : "ping_interval",
+        "required" : "0",
+        "help" : "-C, --ping_interval=[seconds]  Seconds between ping-probes",
+        "shortdesc" : "The interval in seconds between ping-probes",
+        "default" : "1",
+        "order" : 3
+        },
+    "ping_timeout": {
+        "getopt" : "t:",
+        "longopt" : "ping_timeout",
+        "required" : "0",
+        "help" : "-t, --ping_timeout=[seconds]   Timeout for individual ping-probes",
+        "shortdesc" : "The timeout in seconds till an individual ping-probe is accounted as lost",
+        "default" : "2",
+        "order" : 3
+        },
+    "ping_maxfail": {
+        "getopt" : "F:",
+        "longopt" : "ping_maxfail",
+        "required" : "0",
+        "help" : "-F, --ping_maxfail=[number]    Number of failed ping-targets allowed",
+        "shortdesc" : "The number of failed ping-targets to still account as overall success",
+        "default" : "0",
         "order" : 3
         },
     "monitor_mode" : {
@@ -114,10 +163,18 @@ ALL_OPT = {
     "delay" : {
         "getopt" : "f:",
         "longopt" : "delay",
-        "help" : "-f, --delay [seconds]          Wait X seconds before fencing is started",
+        "help" : "-f, --delay=[seconds]          Wait X seconds before fencing is started",
         "required" : "0",
         "shortdesc" : "Wait X seconds before fencing is started",
         "default" : "0",
+        "order" : 3
+        },
+    "reboot_delay" : {
+        "getopt" : "r:",
+        "longopt" : "reboot_delay",
+        "help" : "-r, --reboot_delay=[seconds]  Minimum time is seconds before reboot action succeeds",
+        "required" : "0",
+        "shortdesc" : "If we exit successfully on reboot-action this is our minimum delay",
         "order" : 3
         },
     "port" : {
@@ -202,7 +259,10 @@ def usage(avail_opt):
 
     for dummy, value in sorted_options(avail_opt):
         if len(value["help"]) != 0:
-            print("   " + value["help"])
+            default = ""
+            if "default" in value:
+                default = " (default=" + value["default"] + ")"
+            print("   " + value["help"] + default)
 
 
 def metadata(avail_opt, options):
@@ -275,8 +335,17 @@ def option_longopt(option):
     else:
         return ALL_OPT[option]["longopt"]
 
+def get_default_opt():
+    """ generate default options from ALL_OPT """
 
-def opts_from_command_line(argv, avail_opt):
+    opt = {}
+    for k in ALL_OPT:
+            if "default" in ALL_OPT[k]:
+                opt["-"+ALL_OPT[k]["getopt"].rstrip(":")] = ALL_OPT[k]["default"]
+    return opt
+
+
+def opts_from_command_line(argv, avail_opt, default_opt):
     """ Read options from command-line arguments. """
 
     # Prepare list of options for getopt
@@ -298,7 +367,7 @@ def opts_from_command_line(argv, avail_opt):
 
     # Transform longopt to short one which are used in fencing agents
     old_opt = opt
-    opt = {}
+    opt = default_opt
     for old_option in dict(old_opt).keys():
         if old_option.startswith("--"):
             for option in ALL_OPT.keys():
@@ -318,10 +387,10 @@ def opts_from_command_line(argv, avail_opt):
     return opt
 
 
-def opts_from_stdin(avail_opt):
+def opts_from_stdin(avail_opt, default_opt):
     """ Read options from standard input. """
 
-    opt = {}
+    opt = default_opt
     name = ""
     for line in sys.stdin.readlines():
         line = line.strip()
@@ -348,7 +417,7 @@ def opts_from_stdin(avail_opt):
     return opt
 
 
-def process_input(avail_opt):
+def process_input(avail_opt, default_opt):
     """ Set standard environment variables, and parse all options. """
 
     # Set standard environment
@@ -357,9 +426,9 @@ def process_input(avail_opt):
 
     # Read options from command line or standard input
     if len(sys.argv) > 1:
-        return opts_from_command_line(sys.argv[1:], avail_opt)
+        return opts_from_command_line(sys.argv[1:], avail_opt, default_opt)
     else:
-        return opts_from_stdin(avail_opt)
+        return opts_from_stdin(avail_opt, default_opt)
 
 
 def atexit_handler():
@@ -372,11 +441,65 @@ def atexit_handler():
         sys.exit("%s failed to close standard output" % agent())
 
 
-def success_mode(options, option, default_value):
+def ping_test(options, destinations, time_left):
+    """ Send pings to the destinations """
+
+    timeout = int(options["-t"])
+    count = int(options["-c"])
+    interval = int(options["-I"])
+    good_required = int(options["-C"])
+    maxfail = int(options["-F"])
+    exitcode = 0
+    p = {}
+    failcount = 0
+    packet_count = re.compile(r".*transmitted, ([0-9]*) received.*")
+
+    # move ping-test to the end of the time-window
+    time_left = time_left - ((count - 1)*interval + timeout)
+    if time_left > 0:
+        if verbose:
+            print("delay sleep for %d seconds to move ping-test to end of time-window" % time_left, file=sys.stderr)
+
+    time.sleep(time_left)
+
+    for destination in destinations:
+        ping_cmd = "%s -n -q -W %d -c %d -i %d %s" % (
+            PING_BINARY, timeout, count, interval, destination)
+
+        if verbose:
+            print(ping_cmd, file=sys.stderr)
+        p[destination] = subprocess.Popen(shlex.split(ping_cmd), stdout=subprocess.PIPE);
+
+    for destination in destinations:
+        good = 0
+        p[destination].wait()
+        if p[destination].returncode == 0:
+            for line in p[destination].stdout:
+                searchres = packet_count.search(line)
+                if searchres:
+                    good = int(searchres.group(1))
+                    break
+            if good >= good_required:
+                if verbose:
+                    print("ping destination %s received %d of %d" % (destination, good, count),
+                          file=sys.stderr)
+                continue
+        failcount += 1
+        if verbose:
+            print("ping destination %s received %d of %d and thus failed" % (destination, good, count),
+                  file=sys.stderr)
+
+    if failcount > maxfail:
+        exitcode = 1
+
+    return exitcode
+
+
+def success_mode(options, option, default_value, time_left):
     """ Return exit code specified by option. """
 
     if option in options:
-        test_value = options[option]
+        test_value = options[option].split(":")[0]
     else:
         test_value = default_value
 
@@ -384,6 +507,9 @@ def success_mode(options, option, default_value):
         exitcode = 0
     elif test_value == "fail":
         exitcode = 1
+    elif test_value == "ping":
+        exitcode = ping_test(options, options[option].split(":")[1::], time_left)
+
     else:
         exitcode = random.randint(0, 1)
 
@@ -407,11 +533,14 @@ def write_options(options):
 def main():
     """ Make it so! """
 
+    time_start = time.time();
+    min_time = 0;
     device_opt = ALL_OPT.keys()
+    default_opt = get_default_opt()
 
     ## Defaults for fence agent
     atexit.register(atexit_handler)
-    options = process_input(device_opt)
+    options = process_input(device_opt, default_opt)
     options["device_opt"] = device_opt
     show_docs(options)
 
@@ -419,16 +548,18 @@ def main():
     if "-D" in options:
         write_options(options)
 
-    if "-f" in options:
-        val = int(options["-f"])
-        print("delay sleep for %d seconds" % val, file=sys.stderr)
-        time.sleep(val)
+    if "-v" in options:
+        global verbose
+        verbose = 1
+
+    time_min = int(options["-f"])
 
     # random sleep for testing
     if "-R" in options:
         val = int(options["-R"])
         ran = random.randint(1, val)
-        print("random sleep for %d seconds" % ran, file=sys.stderr)
+        if verbose:
+            print("random sleep for %d seconds" % ran, file=sys.stderr)
         time.sleep(ran)
 
     if "-o" in options:
@@ -437,7 +568,7 @@ def main():
         action = "action"
 
     if action == "monitor":
-        exitcode = success_mode(options, "-m", "pass")
+        exitcode = success_mode(options, "-m", "pass", 0)
 
     elif action == "list":
         print("fence_dummy action (list) called", file=sys.stderr)
@@ -450,7 +581,23 @@ def main():
             exitcode = 1
 
     else:
-        exitcode = success_mode(options, "-M", "random")
+        time_min_success = time_min;
+        if "-r" in options:
+            time_min_success = int(options["-r"])
+        time_left = time_min_success - (time.time() - time_start);
+        exitcode = success_mode(options, "-M", "random", time_left)
+        if exitcode == 0:
+            time_min = time_min_success
+
+    if time_min:
+        time_left = time_min - (time.time() - time_start);
+        if time_left <= 0:
+            if verbose:
+                print("already taken more than our minimum time - no more delay", file=sys.stderr)
+        else:
+            if verbose:
+                print("delay sleep for %d seconds (of overall %d seconds)" % (time_left, time_min), file=sys.stderr)
+            time.sleep(time_left)
 
     # Ensure we generate some error output on failure exit.
     if exitcode == 1:
