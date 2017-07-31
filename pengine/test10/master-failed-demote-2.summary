@@ -11,7 +11,7 @@ Online: [ dl380g5a dl380g5b ]
          stateful-2:1	(ocf::heartbeat:Stateful):	Slave dl380g5a 
 
 Transition Summary:
- * Stop    stateful-1:0	(dl380g5b)
+ * Stop    stateful-1:0	(dl380g5b)  	due to node availability
  * Promote stateful-1:1	(Slave -> Master dl380g5a)
  * Promote stateful-2:1	(Slave -> Master dl380g5a)
 

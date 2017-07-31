@@ -503,7 +503,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
 
         } else if (action->node == NULL) {
             pe_rsc_trace(rsc, "Unset runnable on %s", action->uuid);
-            pe_clear_action_bit(action, pe_action_runnable);
+            pe_action_set_flag_reason(__FUNCTION__, __LINE__, action, NULL, "node availability", pe_action_runnable, TRUE);
 
         } else if (is_not_set(rsc->flags, pe_rsc_managed)
                    && g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL) == NULL) {
@@ -530,6 +530,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
 
         } else if (action->needs == rsc_req_nothing) {
             pe_rsc_trace(rsc, "Action %s does not require anything", action->uuid);
+            free(action->reason); action->reason = NULL;
             pe_set_action_bit(action, pe_action_runnable);
 #if 0
             /*
@@ -542,20 +543,21 @@ custom_action(resource_t * rsc, char *key, const char *task,
 #endif
         } else if (is_set(data_set->flags, pe_flag_have_quorum) == FALSE
                    && data_set->no_quorum_policy == no_quorum_stop) {
-            pe_clear_action_bit(action, pe_action_runnable);
+            pe_action_set_flag_reason(__FUNCTION__, __LINE__, action, NULL, "no quorum", pe_action_runnable, TRUE);
             crm_debug("%s\t%s (cancelled : quorum)", action->node->details->uname, action->uuid);
 
         } else if (is_set(data_set->flags, pe_flag_have_quorum) == FALSE
                    && data_set->no_quorum_policy == no_quorum_freeze) {
             pe_rsc_trace(rsc, "Check resource is already active: %s %s %s %s", rsc->id, action->uuid, role2text(rsc->next_role), role2text(rsc->role));
             if (rsc->fns->active(rsc, TRUE) == FALSE || rsc->next_role > rsc->role) {
-                pe_clear_action_bit(action, pe_action_runnable);
+                pe_action_set_flag_reason(__FUNCTION__, __LINE__, action, NULL, "quorum freeze", pe_action_runnable, TRUE);
                 pe_rsc_debug(rsc, "%s\t%s (cancelled : quorum freeze)",
                              action->node->details->uname, action->uuid);
             }
 
         } else {
             pe_rsc_trace(rsc, "Action %s is runnable", action->uuid);
+            free(action->reason); action->reason = NULL;
             pe_set_action_bit(action, pe_action_runnable);
         }
 
@@ -1880,7 +1882,7 @@ rsc_action_digest(resource_t * rsc, const char *task, const char *key,
             data->digest_secure_calc = calculate_operation_digest(data->params_secure, op_version);
         }
 
-        if(crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST) != NULL) {
+        if(xml_op && crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST) != NULL) {
             data->params_restart = copy_xml(data->params_all);
             if (restart_list) {
                 filter_parameters(data->params_restart, restart_list, TRUE);
@@ -2108,7 +2110,7 @@ pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe
     }
 
     if(optional == FALSE && pe_can_fence(data_set, node)) {
-        pe_action_required(stonith_op, reason);
+        pe_action_required(stonith_op, NULL, reason);
     } else if(reason && stonith_op->reason == NULL) {
         stonith_op->reason = strdup(reason);
     }
@@ -2187,12 +2189,73 @@ add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
     return TRUE;
 }
 
-void pe_action_required_worker(pe_action_t *action, const char *reason, const char *function, long line) 
+void pe_action_set_flag_reason(const char *function, long line,
+                               pe_action_t *action, pe_action_t *reason, const char *text,
+                               enum pe_action_flags flags, bool overwrite)
 {
-    if(is_set(action->flags, pe_action_optional)) {
-        action->flags = crm_clear_bit(function, line, action->uuid, action->flags, pe_action_optional);
-        if(action->reason == NULL) {
+    bool unset = FALSE;
+    bool update = FALSE;
+    const char *change = NULL;
+
+    if(is_set(flags, pe_action_runnable)) {
+        unset = TRUE;
+        change = "unrunnable";
+    } else if(is_set(flags, pe_action_optional)) {
+        unset = TRUE;
+        change = "required";
+    } else if(is_set(flags, pe_action_failure_is_fatal)) {
+        change = "fatally failed";
+    } else if(is_set(flags, pe_action_migrate_runnable)) {
+        unset = TRUE;
+        overwrite = TRUE;
+        change = "unrunnable";
+    } else if(is_set(flags, pe_action_dangle)) {
+        change = "dangling";
+    } else if(is_set(flags, pe_action_requires_any)) {
+        change = "required";
+    } else {
+        crm_err("Unknown flag change to %s by %s: 0x%.16x", flags, action->uuid, reason->uuid);
+    }
+
+    if(unset) {
+        if(is_set(action->flags, flags)) {
+            action->flags = crm_clear_bit(function, line, action->uuid, action->flags, flags);
+            update = TRUE;
+        }
+
+    } else {
+        if(is_not_set(action->flags, flags)) {
+            action->flags = crm_set_bit(function, line, action->uuid, action->flags, flags);
+            update = TRUE;
+        }
+    }
+
+    if((change && update) || text) {
+        char *reason_text = NULL;
+        if(reason == NULL) {
+            pe_action_set_reason(action, text, overwrite);
+
+        } else if(reason->rsc == NULL) {
+            reason_text = crm_strdup_printf("%s %s%c %s", change, reason->task, text?':':0, text?text:"");
+        } else {
+            reason_text = crm_strdup_printf("%s %s %s%c %s", change, reason->rsc->id, reason->task, text?':':0, text?text:"NA");
+        }
+
+        if(reason_text && action->rsc != reason->rsc) {
+            pe_action_set_reason(action, reason_text, overwrite);
+        }
+        free(reason_text);
+    }
+ }
+
+void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrite) 
+{
+    if(action->reason == NULL || overwrite) {
+        free(action->reason);
+        if(reason) {
             action->reason = strdup(reason);
+        } else {
+            action->reason = NULL;
         }
     }
 }

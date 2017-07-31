@@ -14,8 +14,8 @@ Online: [ node1 node2 ]
 
 Transition Summary:
  * Recover evmsclone:1	(Started node1)
- * Restart imagestoreclone:1	(Started node1)
- * Restart configstoreclone:1	(Started node1)
+ * Restart imagestoreclone:1	(Started node1) 	due to required evmsclone:1 start
+ * Restart configstoreclone:1	(Started node1) 	due to required evmsclone:1 start
 
 Executing cluster transition:
  * Pseudo action:   evmscloneset_pre_notify_stop_0

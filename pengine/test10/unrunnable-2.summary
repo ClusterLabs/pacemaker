@@ -85,7 +85,7 @@ Online: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
      Stopped: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
 
 Transition Summary:
- * Start   openstack-cinder-volume	(overcloud-controller-2 - blocked)
+ * Start   openstack-cinder-volume	(overcloud-controller-2 - blocked) 	due to unrunnable openstack-cinder-scheduler-clone running
 
 Executing cluster transition:
 

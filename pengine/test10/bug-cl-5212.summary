@@ -22,11 +22,11 @@ Online: [ srv03 ]
 Transition Summary:
  * Stop    prmStonith1-1	(Started srv02 - blocked)
  * Stop    prmStonith2-1	(Started srv01 - blocked)
- * Stop    prmStonith3-1	(srv01 - blocked)
- * Stop    pgsql:0	(srv02 - blocked)
+ * Stop    prmStonith3-1	(srv01 - blocked)  	due to node availability
+ * Stop    pgsql:0	(srv02 - blocked)  	due to node availability
  * Demote  pgsql:1	(Master -> Stopped srv01 - blocked)
- * Stop    prmPingd:0	(srv02 - blocked)
- * Stop    prmPingd:1	(srv01 - blocked)
+ * Stop    prmPingd:0	(srv02 - blocked)  	due to node availability
+ * Stop    prmPingd:1	(srv01 - blocked)  	due to node availability
 
 Executing cluster transition:
  * Pseudo action:   grpStonith1_stop_0

@@ -9,7 +9,7 @@ Online: [ fc16-builder ]
      Started: [ fc16-builder ]
 
 Transition Summary:
- * Stop    ClusterIP:0	(fc16-builder)
+ * Stop    ClusterIP:0	(fc16-builder)  	due to node availability
 
 Executing cluster transition:
  * Pseudo action:   clone1_stop_0

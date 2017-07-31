@@ -9,9 +9,9 @@ Online: [ node1 node2 ]
      Started: [ node1 node2 ]
 
 Transition Summary:
- * Stop    child_rsc1:5	(node1)
- * Stop    child_rsc1:6	(node1)
- * Stop    child_rsc1:7	(node2)
+ * Stop    child_rsc1:5	(node1)  	due to node availability
+ * Stop    child_rsc1:6	(node1)  	due to node availability
+ * Stop    child_rsc1:7	(node2)  	due to node availability
 
 Executing cluster transition:
  * Pseudo action:   rsc1_stop_0

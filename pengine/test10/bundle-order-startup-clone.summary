@@ -13,12 +13,12 @@ RemoteOFFLINE: [ rabbitmq-bundle-0 ]
    redis-bundle-0	(ocf::heartbeat:redis):	Stopped
 
 Transition Summary:
- * Start   storage:0	(metal-1 - blocked)
- * Start   storage:1	(metal-2 - blocked)
- * Start   storage:2	(metal-3 - blocked)
- * Start   galera-bundle-docker-0	(metal-1 - blocked)
- * Start   galera-bundle-0	(metal-1 - blocked)
- * Start   galera:0	(galera-bundle-0 - blocked)
+ * Start   storage:0	(metal-1 - blocked) 	due to unrunnable redis-bundle promoted
+ * Start   storage:1	(metal-2 - blocked) 	due to unrunnable redis-bundle promoted
+ * Start   storage:2	(metal-3 - blocked) 	due to unrunnable redis-bundle promoted
+ * Start   galera-bundle-docker-0	(metal-1 - blocked) 	due to unrunnable storage-clone notified
+ * Start   galera-bundle-0	(metal-1 - blocked) 	due to unrunnable galera-bundle-docker-0 start
+ * Start   galera:0	(galera-bundle-0 - blocked) 	due to unrunnable galera-bundle-docker-0 start
  * Start   haproxy-bundle-docker-0	(metal-2)
  * Start   redis-bundle-docker-0	(metal-2)
  * Start   redis-bundle-0	(metal-2)

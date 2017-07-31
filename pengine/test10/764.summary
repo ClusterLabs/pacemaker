@@ -15,11 +15,11 @@ OFFLINE: [ posic042 posic044 ]
      child_DoFencing:3	(stonith:ssh):	Stopped 
 
 Transition Summary:
- * Stop    DcIPaddr	(Started posic043)
- * Stop    rsc_posic041	(Started posic041)
- * Stop    rsc_posic042	(Started posic041)
- * Stop    rsc_posic043	(Started posic043)
- * Stop    rsc_posic044	(Started posic041)
+ * Stop    DcIPaddr	(Started posic043) 	due to no quorum
+ * Stop    rsc_posic041	(Started posic041) 	due to no quorum
+ * Stop    rsc_posic042	(Started posic041) 	due to no quorum
+ * Stop    rsc_posic043	(Started posic043) 	due to no quorum
+ * Stop    rsc_posic044	(Started posic041) 	due to no quorum
 
 Executing cluster transition:
  * Resource action: DcIPaddr        monitor on posic041

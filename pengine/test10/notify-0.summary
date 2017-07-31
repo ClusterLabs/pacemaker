@@ -12,7 +12,7 @@ OFFLINE: [ node2 ]
 
 Transition Summary:
  * Start   child_rsc1:1	(node1)
- * Stop    child_rsc2:0	(node1)
+ * Stop    child_rsc2:0	(node1)  	due to node availability
 
 Executing cluster transition:
  * Resource action: child_rsc1:1    monitor on node1

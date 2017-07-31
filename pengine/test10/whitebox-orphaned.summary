@@ -16,10 +16,10 @@ Containers: [ lxc1:container1 lxc2:container2 ]
  lxc1	(ocf::pacemaker:remote):	 ORPHANED Started 18node2 
 
 Transition Summary:
- * Stop    M:4	(lxc1)
+ * Stop    M:4	(lxc1)  	due to node availability
  * Move    B	(Started lxc1 -> lxc2)
- * Stop    container1	(18node2)
- * Stop    lxc1	(18node2)
+ * Stop    container1	(18node2)  	due to node availability
+ * Stop    lxc1	(18node2)  	due to node availability
 
 Executing cluster transition:
  * Pseudo action:   M-clone_stop_0

@@ -19,15 +19,15 @@ Online: [ c001n03 ]
      child_DoFencing:3	(stonith:ssh):	Stopped 
 
 Transition Summary:
- * Start   DcIPaddr	(c001n03 - blocked)
- * Start   child_192.168.100.181	(c001n03 - blocked)
- * Start   child_192.168.100.182	(c001n03 - blocked)
- * Start   child_192.168.100.183	(c001n03 - blocked)
- * Start   rsc_c001n08	(c001n03 - blocked)
- * Start   rsc_c001n02	(c001n03 - blocked)
- * Start   rsc_c001n03	(c001n03 - blocked)
- * Start   rsc_c001n01	(c001n03 - blocked)
- * Stop    child_DoFencing:1	(c001n02 - blocked)
+ * Start   DcIPaddr	(c001n03 - blocked) 	due to no quorum
+ * Start   child_192.168.100.181	(c001n03 - blocked) 	due to no quorum
+ * Start   child_192.168.100.182	(c001n03 - blocked) 	due to no quorum
+ * Start   child_192.168.100.183	(c001n03 - blocked) 	due to no quorum
+ * Start   rsc_c001n08	(c001n03 - blocked) 	due to no quorum
+ * Start   rsc_c001n02	(c001n03 - blocked) 	due to no quorum
+ * Start   rsc_c001n03	(c001n03 - blocked) 	due to no quorum
+ * Start   rsc_c001n01	(c001n03 - blocked) 	due to no quorum
+ * Stop    child_DoFencing:1	(c001n02 - blocked)  	due to node availability
 
 Executing cluster transition:
  * Resource action: DcIPaddr        monitor on c001n03

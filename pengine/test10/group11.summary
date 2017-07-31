@@ -9,8 +9,8 @@ Online: [ node1 ]
      rsc3	(heartbeat:apache):	Started node1
 
 Transition Summary:
- * Stop    rsc2	(node1)
- * Stop    rsc3	(node1)
+ * Stop    rsc2	(node1)  	due to node availability
+ * Stop    rsc3	(node1)  	due to node availability
 
 Executing cluster transition:
  * Pseudo action:   group1_stop_0

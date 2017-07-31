@@ -21,10 +21,10 @@ Containers: [ galera-bundle-0:galera-bundle-docker-0 galera-bundle-1:galera-bund
    redis-bundle-2	(ocf::heartbeat:redis):	Master metal-3
 
 Transition Summary:
- * Stop    storage:0	(metal-1)
- * Stop    galera-bundle-docker-0	(metal-1)
- * Stop    galera-bundle-0	(Started metal-1)
- * Stop    galera:0	(Slave galera-bundle-0)
+ * Stop    storage:0	(metal-1)  	due to node availability
+ * Stop    galera-bundle-docker-0	(metal-1)  	due to node availability
+ * Stop    galera-bundle-0	(Started metal-1) 	due to unrunnable galera-bundle-docker-0 start
+ * Stop    galera:0	(Slave galera-bundle-0) 	due to unrunnable galera-bundle-docker-0 start
 
 Executing cluster transition:
  * Pseudo action:   storage-clone_pre_notify_stop_0

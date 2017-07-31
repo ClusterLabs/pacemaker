@@ -9,8 +9,8 @@ Online: [ xen-1 xen-3 xen-4 ]
      Started: [ xen-1 xen-2 xen-3 xen-4 ]
 
 Transition Summary:
- * Stop    child_DoFencing:1	(xen-2)
- * Stop    ocfs2:1	(xen-2)
+ * Stop    child_DoFencing:1	(xen-2)  	due to node availability
+ * Stop    ocfs2:1	(xen-2)  	due to node availability
 
 Executing cluster transition:
  * Pseudo action:   DoFencing_stop_0

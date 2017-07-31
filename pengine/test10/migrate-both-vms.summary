@@ -22,16 +22,16 @@ Online: [ cvmh01 cvmh02 ]
  vm-swbuildsl6	(ocf::ccni:xcatVirtualDomain):	Started cvmh04 
 
 Transition Summary:
- * Stop    fs-libvirt-VM-xcm:0	(cvmh04)
- * Stop    fs-libvirt-VM-xcm:2	(cvmh03)
- * Stop    p-watch-ib0:0	(cvmh04)
- * Stop    p-watch-ib0:2	(cvmh03)
- * Stop    p-fs-gpfs:0	(cvmh04)
- * Stop    p-fs-gpfs:2	(cvmh03)
- * Stop    p-libvirtd:0	(cvmh04)
- * Stop    p-libvirtd:2	(cvmh03)
- * Stop    fs-bind-libvirt-VM-cvmh:0	(cvmh04)
- * Stop    fs-bind-libvirt-VM-cvmh:2	(cvmh03)
+ * Stop    fs-libvirt-VM-xcm:0	(cvmh04)  	due to node availability
+ * Stop    fs-libvirt-VM-xcm:2	(cvmh03)  	due to node availability
+ * Stop    p-watch-ib0:0	(cvmh04)  	due to node availability
+ * Stop    p-watch-ib0:2	(cvmh03)  	due to node availability
+ * Stop    p-fs-gpfs:0	(cvmh04)  	due to node availability
+ * Stop    p-fs-gpfs:2	(cvmh03)  	due to node availability
+ * Stop    p-libvirtd:0	(cvmh04)  	due to node availability
+ * Stop    p-libvirtd:2	(cvmh03)  	due to node availability
+ * Stop    fs-bind-libvirt-VM-cvmh:0	(cvmh04)  	due to node availability
+ * Stop    fs-bind-libvirt-VM-cvmh:2	(cvmh03)  	due to node availability
  * Migrate vm-compute-test	(Started cvmh03 -> cvmh01)
  * Migrate vm-swbuildsl6	(Started cvmh04 -> cvmh02)
 

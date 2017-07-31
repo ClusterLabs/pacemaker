@@ -35,7 +35,7 @@ OFFLINE: [ c001n03 c001n05 ]
 
 Transition Summary:
  * Fence (reboot) c001n04 'ocf_msdummy:6 failed there'
- * Stop    ocf_msdummy:6	(c001n04)
+ * Stop    ocf_msdummy:6	(c001n04)  	due to node availability
 
 Executing cluster transition:
  * Fencing c001n04 (reboot)

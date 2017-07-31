@@ -11,7 +11,7 @@ Online: [ paul ]
 
 Transition Summary:
  * Recover postfix_9	(Started paul)
- * Restart depends	(Started paul)
+ * Restart depends	(Started paul) 	due to required group_1 running
 
 Executing cluster transition:
  * Resource action: depends         stop on paul

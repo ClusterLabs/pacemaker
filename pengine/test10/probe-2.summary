@@ -36,13 +36,13 @@ Transition Summary:
  * Move    fs_mysql	(Started wc02 -> wc01)
  * Move    intip_sql	(Started wc02 -> wc01)
  * Move    mysql-server	(Started wc02 -> wc01)
- * Stop    drbd_www:1	(wc02)
- * Stop    nfs-common:1	(wc02)
- * Stop    mysql-proxy:1	(wc02)
- * Stop    fs_www:1	(wc02)
- * Stop    apache2:1	(wc02)
+ * Stop    drbd_www:1	(wc02)  	due to node availability
+ * Stop    nfs-common:1	(wc02)  	due to node availability
+ * Stop    mysql-proxy:1	(wc02)  	due to node availability
+ * Stop    fs_www:1	(wc02)  	due to node availability
+ * Stop    apache2:1	(wc02)  	due to node availability
  * Restart stonith_rackpdu:0	(Started wc01)
- * Stop    stonith_rackpdu:1	(wc02)
+ * Stop    stonith_rackpdu:1	(wc02)  	due to node availability
 
 Executing cluster transition:
  * Resource action: drbd_mysql:0    cancel=10000 on wc01

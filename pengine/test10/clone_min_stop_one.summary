@@ -10,7 +10,7 @@ Online: [ c7auto1 c7auto3 c7auto4 ]
  FAKE	(ocf::heartbeat:Dummy):	Started c7auto4
 
 Transition Summary:
- * Stop    FAKECLONE:1	(c7auto2)
+ * Stop    FAKECLONE:1	(c7auto2)  	due to node availability
 
 Executing cluster transition:
  * Pseudo action:   FAKECLONE-clone_stop_0

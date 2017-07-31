@@ -15,11 +15,11 @@ Online: [ pcmk-1 ]
 
 Transition Summary:
  * Fence (reboot) pcmk-2 'clvm:0 failed there'
- * Start   dlm:0	(pcmk-1 - blocked)
- * Stop    clvm:0	(pcmk-2)
- * Start   clvm:1	(pcmk-1 - blocked)
- * Start   ClusterIP	(pcmk-1 - blocked)
- * Start   Fencing	(pcmk-1 - blocked)
+ * Start   dlm:0	(pcmk-1 - blocked) 	due to no quorum
+ * Stop    clvm:0	(pcmk-2)  	due to node availability
+ * Start   clvm:1	(pcmk-1 - blocked) 	due to no quorum
+ * Start   ClusterIP	(pcmk-1 - blocked) 	due to no quorum
+ * Start   Fencing	(pcmk-1 - blocked) 	due to no quorum
 
 Executing cluster transition:
  * Resource action: Fencing         monitor on pcmk-1

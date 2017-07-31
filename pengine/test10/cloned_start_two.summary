@@ -13,7 +13,7 @@ Online: [ c7auto1 c7auto2 c7auto4 ]
 Transition Summary:
  * Start   FAKECLONE:0	(c7auto2)
  * Start   FAKECLONE:1	(c7auto1)
- * Stop    FAKECLONE2:0	(c7auto3)
+ * Stop    FAKECLONE2:0	(c7auto3)  	due to node availability
 
 Executing cluster transition:
  * Pseudo action:   FAKECLONE-clone_start_0

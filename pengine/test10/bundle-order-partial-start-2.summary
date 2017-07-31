@@ -22,8 +22,8 @@ Containers: [ galera-bundle-0:galera-bundle-docker-0 rabbitmq-bundle-0:rabbitmq-
 
 Transition Summary:
  * Start   rabbitmq:0	(rabbitmq-bundle-0)
- * Restart galera-bundle-docker-0	(Started undercloud)
- * Restart galera-bundle-0	(Started undercloud)
+ * Restart galera-bundle-docker-0	(Started undercloud) 	due to required haproxy-bundle running
+ * Restart galera-bundle-0	(Started undercloud) 	due to required galera-bundle-docker-0 start
  * Start   galera:0	(galera-bundle-0)
  * Promote redis:0	(Slave -> Master redis-bundle-0)
  * Start   haproxy-bundle-docker-0	(undercloud)

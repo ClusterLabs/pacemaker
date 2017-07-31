@@ -12,7 +12,7 @@ OFFLINE: [ xen-c ]
 
 Transition Summary:
  * Shutdown xen-b
- * Stop    IPaddr_192_168_1_102	(xen-b)
+ * Stop    IPaddr_192_168_1_102	(xen-b)  	due to node availability
 
 Executing cluster transition:
  * Pseudo action:   group_11_stop_0

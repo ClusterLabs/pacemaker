@@ -11,7 +11,7 @@ OFFLINE: [ CSE-2 ]
      Stopped: [ CSE-2 ]
 
 Transition Summary:
- * Stop    d_tomcat:0	(CSE-1)
+ * Stop    d_tomcat:0	(CSE-1)  	due to node availability
 
 Executing cluster transition:
  * Pseudo action:   cl_tomcat_stop_0

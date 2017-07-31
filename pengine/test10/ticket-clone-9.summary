@@ -10,8 +10,8 @@ Transition Summary:
  * Fence (reboot) node2 'deadman ticket was lost'
  * Fence (reboot) node1 'deadman ticket was lost'
  * Stop    rsc_stonith	(node1)
- * Stop    rsc1:0	(node1)
- * Stop    rsc1:1	(node2)
+ * Stop    rsc1:0	(node1)  	due to node availability
+ * Stop    rsc1:1	(node2)  	due to node availability
 
 Executing cluster transition:
  * Fencing node1 (reboot)

@@ -12,8 +12,8 @@ Containers: [ lxc1:container1 lxc2:container2 ]
 
 Transition Summary:
  * Move    container1	(Started 18node1 -> 18node2)
- * Restart M:3	(Started lxc1)
- * Restart A	(Started lxc1)
+ * Restart M:3	(Started lxc1) 	due to required container1 start
+ * Restart A	(Started lxc1) 	due to required container1 start
  * Move    lxc1	(Started 18node1 -> 18node2)
 
 Executing cluster transition:

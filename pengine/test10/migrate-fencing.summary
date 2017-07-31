@@ -23,14 +23,14 @@ Online: [ pcmk-1 pcmk-2 pcmk-3 ]
 
 Transition Summary:
  * Fence (reboot) pcmk-4 'termination was requested'
- * Stop    FencingChild:0	(pcmk-4)
+ * Stop    FencingChild:0	(pcmk-4)  	due to node availability
  * Move    r192.168.101.181	(Started pcmk-4 -> pcmk-1)
  * Move    r192.168.101.182	(Started pcmk-4 -> pcmk-1)
  * Move    r192.168.101.183	(Started pcmk-4 -> pcmk-1)
  * Move    rsc_pcmk-4	(Started pcmk-4 -> pcmk-2)
  * Move    lsb-dummy	(Started pcmk-4 -> pcmk-1)
  * Migrate migrator	(Started pcmk-1 -> pcmk-3)
- * Stop    ping-1:0	(pcmk-4)
+ * Stop    ping-1:0	(pcmk-4)  	due to node availability
  * Demote  stateful-1:0	(Master -> Stopped pcmk-4)
  * Promote stateful-1:1	(Slave -> Master pcmk-1)
 

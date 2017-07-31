@@ -26,8 +26,8 @@ RemoteOnline: [ remote1 ]
 
 Transition Summary:
  * Move    rsc_18node2	(Started remote1 -> 18node1)
- * Stop    ping-1:2	(remote1)
- * Stop    remote1	(18node1)
+ * Stop    ping-1:2	(remote1)  	due to node availability
+ * Stop    remote1	(18node1)  	due to node availability
 
 Executing cluster transition:
  * Resource action: rsc_18node2     stop on remote1

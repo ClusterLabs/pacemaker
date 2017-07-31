@@ -10,11 +10,11 @@ Online: [ domu1 domu2 ]
      Started: [ domu1 domu2 ]
 
 Transition Summary:
- * Stop    PrimitiveResource1	(Started domu1)
- * Stop    apache:0	(domu1)
- * Stop    apache:1	(domu2)
- * Stop    DummyResource:0	(Started domu1)
- * Stop    DummyResource:1	(Started domu2)
+ * Stop    PrimitiveResource1	(Started domu1) 	due to required CloneResource2 running
+ * Stop    apache:0	(domu1)  	due to node availability
+ * Stop    apache:1	(domu2)  	due to node availability
+ * Stop    DummyResource:0	(Started domu1) 	due to unrunnable CloneResource1 running
+ * Stop    DummyResource:1	(Started domu2) 	due to unrunnable CloneResource1 running
 
 Executing cluster transition:
  * Resource action: PrimitiveResource1 stop on domu1

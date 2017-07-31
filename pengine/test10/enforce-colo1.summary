@@ -11,10 +11,10 @@ Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
 
 Transition Summary:
  * Stop    engine	(Started rhel7-auto3)
- * Stop    keystone:0	(rhel7-auto2)
- * Stop    keystone:1	(rhel7-auto3)
- * Stop    keystone:2	(rhel7-auto1)
- * Stop    central	(Started rhel7-auto3)
+ * Stop    keystone:0	(rhel7-auto2)  	due to node availability
+ * Stop    keystone:1	(rhel7-auto3)  	due to node availability
+ * Stop    keystone:2	(rhel7-auto1)  	due to node availability
+ * Stop    central	(Started rhel7-auto3) 	due to unrunnable keystone-clone running
 
 Executing cluster transition:
  * Resource action: engine          stop on rhel7-auto3

@@ -15,7 +15,7 @@ Online: [ node1 node2 ]
 
 Transition Summary:
  * Recover rsc4	(Started node1)
- * Restart rsc5	(Started node1)
+ * Restart rsc5	(Started node1) 	due to required rsc4 start
  * Move    rsc6	(Started node1 -> node2)
  * Recover rsc7	(Started node1 -> node2)
  * Move    rsc8	(Started node1 -> node2)

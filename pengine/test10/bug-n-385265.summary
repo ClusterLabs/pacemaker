@@ -7,7 +7,7 @@ Online: [ ih01 ih02 ]
      resource_idvscommon	(ocf::dfs:idvs):	FAILED ih02 
 
 Transition Summary:
- * Stop    resource_idvscommon	(ih02)
+ * Stop    resource_idvscommon	(ih02)  	due to node availability
 
 Executing cluster transition:
  * Pseudo action:   group_common_stop_0

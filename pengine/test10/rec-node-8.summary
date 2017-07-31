@@ -9,10 +9,10 @@ Online: [ node2 ]
  rsc3	(heartbeat:apache):	Stopped 
 
 Transition Summary:
- * Start   stonith-1	(node2 - blocked)
+ * Start   stonith-1	(node2 - blocked) 	due to quorum freeze
  * Stop    rsc1	(Started node1 - blocked)
  * Stop    rsc2	(Started node1 - blocked)
- * Start   rsc3	(node2 - blocked)
+ * Start   rsc3	(node2 - blocked) 	due to quorum freeze
 
 Executing cluster transition:
  * Resource action: stonith-1       monitor on node2

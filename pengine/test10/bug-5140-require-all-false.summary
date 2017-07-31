@@ -36,9 +36,9 @@ Node hex-3: OFFLINE (standby)
  cluster-md0	(ocf::heartbeat:Raid1):	Stopped 
 
 Transition Summary:
- * Stop    dlm:0	(hex-2)
- * Stop    clvmd:0	(hex-2)
- * Stop    o2cb:0	(hex-2)
+ * Stop    dlm:0	(hex-2)  	due to node availability
+ * Stop    clvmd:0	(hex-2)  	due to node availability
+ * Stop    o2cb:0	(hex-2)  	due to node availability
 
 Executing cluster transition:
  * Pseudo action:   baseclone_stop_0

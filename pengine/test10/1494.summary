@@ -8,7 +8,7 @@ OFFLINE: [ hb3 ]
      ima_rscid:1	(ocf::heartbeat:Dummy):	Started hb2
 
 Transition Summary:
- * Stop    ima_rscid:0	(hb1)
+ * Stop    ima_rscid:0	(hb1)  	due to node availability
 
 Executing cluster transition:
  * Pseudo action:   ima_cloneid_stop_0

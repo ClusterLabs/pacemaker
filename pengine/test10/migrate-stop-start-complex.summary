@@ -13,7 +13,7 @@ Online: [ dom0-01 ]
 
 Transition Summary:
  * Migrate domU-test01	(Started dom0-02 -> dom0-01)
- * Stop    dom0-iscsi1-cnx1:1	(dom0-02)
+ * Stop    dom0-iscsi1-cnx1:1	(dom0-02)  	due to node availability
  * Move    bottom:0	(Started dom0-02 -> dom0-01)
 
 Executing cluster transition:

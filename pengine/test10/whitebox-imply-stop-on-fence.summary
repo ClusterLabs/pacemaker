@@ -29,9 +29,9 @@ Transition Summary:
  * Fence (reboot) lxc-01_kiff-01 (resource: R-lxc-01_kiff-01) 'guest is unclean'
  * Fence (reboot) kiff-01 'peer is no longer part of the cluster'
  * Move    fence-kiff-02	(Started kiff-01 -> kiff-02)
- * Stop    dlm:0	(kiff-01)
- * Stop    clvmd:0	(kiff-01)
- * Stop    shared0:0	(kiff-01)
+ * Stop    dlm:0	(kiff-01)  	due to node availability
+ * Stop    clvmd:0	(kiff-01)  	due to node availability
+ * Stop    shared0:0	(kiff-01)  	due to node availability
  * Recover R-lxc-01_kiff-01	(Started kiff-01 -> kiff-02)
  * Move    R-lxc-02_kiff-01	(Started kiff-01 -> kiff-02)
  * Recover vm-fs	(Started lxc-01_kiff-01)

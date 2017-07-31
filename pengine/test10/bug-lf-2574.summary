@@ -12,7 +12,7 @@ Online: [ srv01 srv02 srv03 ]
 
 Transition Summary:
  * Move    main_rsc	(Started srv01 -> srv03)
- * Stop    prmPingd:0	(srv01)
+ * Stop    prmPingd:0	(srv01)  	due to node availability
 
 Executing cluster transition:
  * Resource action: main_rsc        stop on srv01

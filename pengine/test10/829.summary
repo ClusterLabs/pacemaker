@@ -17,7 +17,7 @@ Online: [ c001n01 c001n03 c001n08 ]
 Transition Summary:
  * Fence (reboot) c001n02 'peer is no longer part of the cluster'
  * Move    rsc_c001n02	(Started c001n02 -> c001n01)
- * Stop    child_DoFencing:0	(c001n02)
+ * Stop    child_DoFencing:0	(c001n02)  	due to node availability
 
 Executing cluster transition:
  * Resource action: DcIPaddr        monitor on c001n03

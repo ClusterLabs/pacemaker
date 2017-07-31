@@ -27,20 +27,20 @@ Transition Summary:
  * Shutdown pcmk-2
  * Shutdown pcmk-1
  * Stop    Fencing	(pcmk-1)
- * Stop    r192.168.122.105	(pcmk-2)
- * Stop    r192.168.122.106	(pcmk-2)
- * Stop    r192.168.122.107	(pcmk-2)
+ * Stop    r192.168.122.105	(pcmk-2)  	due to node availability
+ * Stop    r192.168.122.106	(pcmk-2)  	due to node availability
+ * Stop    r192.168.122.107	(pcmk-2)  	due to node availability
  * Stop    rsc_pcmk-1	(pcmk-1)
  * Stop    rsc_pcmk-2	(pcmk-2)
  * Stop    rsc_pcmk-4	(pcmk-4)
  * Stop    lsb-dummy	(pcmk-2)
  * Stop    migrator	(pcmk-1)
- * Stop    ping-1:0	(pcmk-1)
- * Stop    ping-1:1	(pcmk-2)
- * Stop    ping-1:2	(pcmk-4)
- * Stop    stateful-1:0	(pcmk-1)
+ * Stop    ping-1:0	(pcmk-1)  	due to node availability
+ * Stop    ping-1:1	(pcmk-2)  	due to node availability
+ * Stop    ping-1:2	(pcmk-4)  	due to node availability
+ * Stop    stateful-1:0	(pcmk-1)  	due to node availability
  * Demote  stateful-1:1	(Master -> Stopped pcmk-2)
- * Stop    stateful-1:2	(pcmk-4)
+ * Stop    stateful-1:2	(pcmk-4)  	due to node availability
 
 Executing cluster transition:
  * Resource action: Fencing         stop on pcmk-1

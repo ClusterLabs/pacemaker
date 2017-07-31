@@ -30,9 +30,9 @@ Transition Summary:
  * Move    prmVM2	(Started bl460g1n7 -> bl460g1n8)
  * Move    prmStonith8-1	(Started bl460g1n7 -> bl460g1n6)
  * Move    prmStonith8-2	(Started bl460g1n7 -> bl460g1n6)
- * Stop    prmDiskd1:0	(bl460g1n7)
- * Stop    prmDiskd2:0	(bl460g1n7)
- * Stop    prmPing:0	(bl460g1n7)
+ * Stop    prmDiskd1:0	(bl460g1n7)  	due to node availability
+ * Stop    prmDiskd2:0	(bl460g1n7)  	due to node availability
+ * Stop    prmPing:0	(bl460g1n7)  	due to node availability
 
 Executing cluster transition:
  * Resource action: prmVM2          stop on bl460g1n6

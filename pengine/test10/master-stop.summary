@@ -6,7 +6,7 @@ Online: [ node1 node2 node3 ]
      Slaves: [ node1 node2 node3 ]
 
 Transition Summary:
- * Stop    dummy:2	(node3)
+ * Stop    dummy:2	(node3)  	due to node availability
 
 Executing cluster transition:
  * Pseudo action:   m_stop_0

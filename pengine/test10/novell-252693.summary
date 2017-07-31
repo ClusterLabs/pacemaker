@@ -16,11 +16,11 @@ Online: [ node1 node2 ]
 
 Transition Summary:
  * Shutdown node1
- * Stop    stonithclone:1	(node1)
- * Stop    evmsdclone:1	(node1)
- * Stop    evmsclone:1	(node1)
- * Stop    imagestoreclone:1	(node1)
- * Stop    configstoreclone:1	(node1)
+ * Stop    stonithclone:1	(node1)  	due to node availability
+ * Stop    evmsdclone:1	(node1)  	due to node availability
+ * Stop    evmsclone:1	(node1)  	due to node availability
+ * Stop    imagestoreclone:1	(node1)  	due to node availability
+ * Stop    configstoreclone:1	(node1)  	due to node availability
  * Migrate sles10	(Started node1 -> node2)
 
 Executing cluster transition:

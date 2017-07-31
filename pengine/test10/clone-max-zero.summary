@@ -14,12 +14,12 @@ Online: [ c001n11 c001n12 ]
      Started: [ c001n11 c001n12 ]
 
 Transition Summary:
- * Stop    dlm:0	(c001n12)
- * Stop    dlm:1	(c001n11)
- * Stop    o2cb:0	(c001n12)
- * Stop    o2cb:1	(c001n11)
- * Stop    ocfs2-1:0	(c001n12)
- * Stop    ocfs2-1:1	(c001n11)
+ * Stop    dlm:0	(c001n12)  	due to node availability
+ * Stop    dlm:1	(c001n11)  	due to node availability
+ * Stop    o2cb:0	(c001n12)  	due to node availability
+ * Stop    o2cb:1	(c001n11)  	due to node availability
+ * Stop    ocfs2-1:0	(c001n12)  	due to node availability
+ * Stop    ocfs2-1:1	(c001n11)  	due to node availability
 
 Executing cluster transition:
  * Pseudo action:   c-ocfs2-1_stop_0

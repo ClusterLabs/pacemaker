@@ -8,7 +8,7 @@ Online: [ node1 node2 ]
 
 Transition Summary:
  * Move    rsc2	(Started node1 -> node2)
- * Start   rsc3	(node1 - blocked)
+ * Start   rsc3	(node1 - blocked) 	due to quorum freeze
 
 Executing cluster transition:
  * Resource action: rsc1            monitor on node2

@@ -10,7 +10,7 @@ Online: [ node1 node2 ]
 Transition Summary:
  * Restart container1	(Started node1)
  * Recover rsc1	(Started node1)
- * Restart rsc2	(Started node1)
+ * Restart rsc2	(Started node1) 	due to required rsc1 start
 
 Executing cluster transition:
  * Pseudo action:   container-group_stop_0

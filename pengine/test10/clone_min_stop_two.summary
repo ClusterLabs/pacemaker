@@ -12,9 +12,9 @@ Online: [ c7auto3 c7auto4 ]
 
 Transition Summary:
  * Move    shooter	(Started c7auto1 -> c7auto3)
- * Stop    FAKECLONE:0	(c7auto1)
- * Stop    FAKECLONE:1	(c7auto2)
- * Stop    FAKE	(Started c7auto4)
+ * Stop    FAKECLONE:0	(c7auto1)  	due to node availability
+ * Stop    FAKECLONE:1	(c7auto2)  	due to node availability
+ * Stop    FAKE	(Started c7auto4) 	due to unrunnable clone-one-or-more:order-FAKECLONE-clone-FAKE-mandatory
 
 Executing cluster transition:
  * Resource action: shooter         stop on c7auto1

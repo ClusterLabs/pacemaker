@@ -84,12 +84,12 @@ Transition Summary:
  * Fence (reboot) hex-9 'peer is no longer part of the cluster'
  * Move    fencing-sbd	(Started hex-9 -> hex-0)
  * Move    dummy1	(Started hex-9 -> hex-0)
- * Stop    dlm:3	(hex-9)
- * Stop    o2cb:3	(hex-9)
- * Stop    clvm:3	(hex-9)
- * Stop    cmirrord:3	(hex-9)
- * Stop    vg1:3	(hex-9)
- * Stop    ocfs2-1:3	(hex-9)
+ * Stop    dlm:3	(hex-9)  	due to node availability
+ * Stop    o2cb:3	(hex-9)  	due to node availability
+ * Stop    clvm:3	(hex-9)  	due to node availability
+ * Stop    cmirrord:3	(hex-9)  	due to node availability
+ * Stop    vg1:3	(hex-9)  	due to node availability
+ * Stop    ocfs2-1:3	(hex-9)  	due to node availability
  * Stop    vm-03	(hex-9)
  * Stop    vm-06	(hex-9)
  * Stop    vm-09	(hex-9)

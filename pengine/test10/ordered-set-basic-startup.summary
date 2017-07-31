@@ -12,10 +12,10 @@ OFFLINE: [ fc16-builder2 ]
  F	(ocf::pacemaker:Dummy):	Stopped 
 
 Transition Summary:
- * Start   A	(fc16-builder - blocked)
+ * Start   A	(fc16-builder - blocked) 	due to unrunnable C start
  * Start   B	(fc16-builder)
- * Start   E	(fc16-builder - blocked)
- * Start   F	(fc16-builder - blocked)
+ * Start   E	(fc16-builder - blocked) 	due to unrunnable A start
+ * Start   F	(fc16-builder - blocked) 	due to unrunnable D start
 
 Executing cluster transition:
  * Resource action: A               monitor on fc16-builder

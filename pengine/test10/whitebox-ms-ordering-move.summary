@@ -31,7 +31,7 @@ Containers: [ lxc1:container1 lxc2:container2 ]
 
 Transition Summary:
  * Move    container1	(Started rhel7-1 -> rhel7-2)
- * Restart lxc-ms:0	(Master lxc1)
+ * Restart lxc-ms:0	(Master lxc1) 	due to required container1 start
  * Move    lxc1	(Started rhel7-1 -> rhel7-2)
 
 Executing cluster transition:

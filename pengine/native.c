@@ -1886,8 +1886,9 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
         } else if (!(first->flags & pe_action_runnable)) {
             /* prevent 'then' action from happening if 'first' is not runnable and
              * 'then' has not yet occurred. */
-            pe_clear_action_bit(then, pe_action_runnable);
-            pe_clear_action_bit(then, pe_action_optional);
+            pe_action_implies(then, first, pe_action_optional);
+            pe_action_implies(then, first, pe_action_runnable);
+
             pe_rsc_trace(then->rsc, "Unset optional and runnable on %s", then->uuid);
         } else {
             /* ignore... then is allowed to start/stop if it wants to. */
@@ -1895,10 +1896,10 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
     }
 
     if (type & pe_order_implies_first) {
-        if ((filter & pe_action_optional) && (flags & pe_action_optional) == 0) {
+        if (is_set(filter, pe_action_optional) && is_not_set(flags /* Should be then_flags? */, pe_action_optional)) {
+            // Needs is_set(first_flags, pe_action_optional) too?
             pe_rsc_trace(first->rsc, "Unset optional on %s because of %s", first->uuid, then->uuid);
-
-            pe_clear_action_bit(first, pe_action_optional);
+            pe_action_implies(first, then, pe_action_optional);
         }
 
         if (is_set(flags, pe_action_migrate_runnable) &&
@@ -1907,7 +1908,7 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
 
             pe_rsc_trace(first->rsc, "Unset migrate runnable on %s because of %s",
                          first->uuid, then->uuid);
-            pe_clear_action_bit(first, pe_action_migrate_runnable);
+            pe_action_implies(first, then, pe_action_migrate_runnable);
         }
     }
 
@@ -1915,13 +1916,13 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
         if ((filter & pe_action_optional) &&
             ((then->flags & pe_action_optional) == FALSE) &&
             then->rsc && (then->rsc->role == RSC_ROLE_MASTER)) {
-            pe_clear_action_bit(first, pe_action_optional);
+            pe_action_implies(first, then, pe_action_optional);
 
             if (is_set(first->flags, pe_action_migrate_runnable) &&
                 is_set(then->flags, pe_action_migrate_runnable) == FALSE) {
 
                 pe_rsc_trace(first->rsc, "Unset migrate runnable on %s because of %s", first->uuid, then->uuid);
-                pe_clear_action_bit(first, pe_action_migrate_runnable);
+                pe_action_implies(first, then, pe_action_migrate_runnable);
             }
             pe_rsc_trace(then->rsc, "Unset optional on %s because of %s", first->uuid, then->uuid);
         }
@@ -1934,13 +1935,12 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
             ((then->flags & pe_action_runnable) == FALSE)) {
 
             pe_rsc_trace(then->rsc, "Unset runnable on %s because %s is neither runnable or migratable", first->uuid, then->uuid);
-            pe_clear_action_bit(first, pe_action_runnable);
+            pe_action_implies(first, then, pe_action_runnable);
         }
 
         if ((then->flags & pe_action_optional) == 0) {
-
             pe_rsc_trace(then->rsc, "Unset optional on %s because %s is not optional", first->uuid, then->uuid);
-            pe_clear_action_bit(first, pe_action_optional);
+            pe_action_implies(first, then, pe_action_optional);
         }
     }
 
@@ -1948,7 +1948,7 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
         && is_set(filter, pe_action_optional)) {
 
         if ((first->flags & pe_action_runnable) == FALSE) {
-            pe_clear_action_bit(then, pe_action_migrate_runnable);
+            pe_action_implies(then, first, pe_action_migrate_runnable);
             pe_clear_action_bit(then, pe_action_pseudo);
             pe_rsc_trace(then->rsc, "Unset pseudo on %s because %s is not runnable", then->uuid, first->uuid);
         }
@@ -1960,8 +1960,8 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
         && is_set(then->flags, pe_action_runnable)
         && is_set(flags, pe_action_runnable) == FALSE) {
         pe_rsc_trace(then->rsc, "Unset runnable on %s because of %s", then->uuid, first->uuid);
-        pe_clear_action_bit(then, pe_action_runnable);
-        pe_clear_action_bit(then, pe_action_migrate_runnable);
+        pe_action_implies(then, first, pe_action_runnable);
+        pe_action_implies(then, first, pe_action_migrate_runnable);
     }
 
     if (is_set(type, pe_order_implies_then)
@@ -1972,7 +1972,7 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
         /* in this case, treat migrate_runnable as if first is optional */
         if (is_set(first->flags, pe_action_migrate_runnable) == FALSE) {
            pe_rsc_trace(then->rsc, "Unset optional on %s because of %s", then->uuid, first->uuid);
-           pe_clear_action_bit(then, pe_action_optional);
+           pe_action_implies(then, first, pe_action_optional);
         }
     }
 
@@ -1996,14 +1996,14 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
             if (is_set(first->flags, pe_action_runnable)
                 || is_not_set(then->flags, pe_action_optional)) {
                 pe_rsc_trace(first->rsc, "Handling %s: %s -> %s", reason, first->uuid, then->uuid);
-                pe_clear_action_bit(first, pe_action_optional);
+                pe_action_implies(first, then, pe_action_optional);
             }
         }
 
         if (reason && is_not_set(first->flags, pe_action_optional)
             && is_not_set(first->flags, pe_action_runnable)) {
             pe_rsc_trace(then->rsc, "Handling %s: %s -> %s", reason, first->uuid, then->uuid);
-            pe_clear_action_bit(then, pe_action_runnable);
+            pe_action_implies(then, first, pe_action_runnable);
         }
 
         if (reason &&
@@ -2011,7 +2011,7 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
             is_set(first->flags, pe_action_migrate_runnable)  &&
             is_not_set(then->flags, pe_action_migrate_runnable)) {
 
-            pe_clear_action_bit(first, pe_action_migrate_runnable);
+            pe_action_implies(first, then, pe_action_migrate_runnable);
         }
 
     }
@@ -2090,6 +2090,7 @@ native_rsc_location(resource_t * rsc, rsc_to_node_t * constraint)
         } else {
             other_node = node_copy(node);
 
+            pe_rsc_trace(rsc, "%s: %d (insert %d)", other_node->details->uname, other_node->weight, constraint->discover_mode);
             g_hash_table_insert(rsc->allowed_nodes, (gpointer) other_node->details->id, other_node);
         }
 
@@ -2130,12 +2131,16 @@ native_expand(resource_t * rsc, pe_working_set_t * data_set)
     }
 }
 
-#define log_change(fmt, args...)  do {          \
-        if(terminal) {                          \
-            printf(" * "fmt"\n", ##args);       \
-        } else {                                \
-            crm_notice(fmt, ##args);            \
-        }                                       \
+#define log_change(a, fmt, args...)  do {                         \
+        if(a && a->reason && terminal) {                          \
+            printf(" * "fmt" \tdue to %s\n", ##args, a->reason);    \
+        } else if(a && a->reason) {                               \
+            crm_notice(fmt" \tdue to %s", ##args, a->reason);       \
+        } else if(terminal) {                                     \
+            printf(" * "fmt"\n", ##args);                         \
+        } else {                                                  \
+            crm_notice(fmt, ##args);                              \
+        }                                                         \
     } while(0)
 
 #define STOP_SANITY_ASSERT(lineno) do {                                 \
@@ -2264,34 +2269,34 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
         CRM_CHECK(next != NULL,);
         if (next == NULL) {
         } else if (migrate_to && is_set(migrate_to->flags, pe_action_runnable) && current) {
-            log_change("Migrate %s\t(%s %s -> %s)",
+            log_change(start, "Migrate %s\t(%s %s -> %s)",
                        rsc->id, role2text(rsc->role), current->details->uname,
                        next->details->uname);
 
         } else if (is_set(rsc->flags, pe_rsc_reload)) {
-            log_change("Reload  %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
+            log_change(start, "Reload  %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
 
         } else if (start == NULL || is_set(start->flags, pe_action_optional)) {
             pe_rsc_info(rsc, "Leave   %s\t(%s %s)", rsc->id, role2text(rsc->role),
                         next->details->uname);
 
         } else if (start && is_set(start->flags, pe_action_runnable) == FALSE) {
-            log_change("Stop    %s\t(%s %s%s)", rsc->id, role2text(rsc->role), current?current->details->uname:"N/A",
+            log_change(start, "Stop    %s\t(%s %s%s)", rsc->id, role2text(rsc->role), current?current->details->uname:"N/A",
                        stop && is_not_set(stop->flags, pe_action_runnable) ? " - blocked" : "");
             STOP_SANITY_ASSERT(__LINE__);
 
         } else if (moving && current) {
-            log_change("%s %s\t(%s %s -> %s)",
+            log_change(stop, "%s %s\t(%s %s -> %s)",
                        is_set(rsc->flags, pe_rsc_failed) ? "Recover" : "Move   ",
                        rsc->id, role2text(rsc->role),
                        current->details->uname, next->details->uname);
 
         } else if (is_set(rsc->flags, pe_rsc_failed)) {
-            log_change("Recover %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
+            log_change(stop, "Recover %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
             STOP_SANITY_ASSERT(__LINE__);
 
         } else {
-            log_change("Restart %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
+            log_change(start, "Restart %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
             /* STOP_SANITY_ASSERT(__LINE__); False positive for migrate-fail-7 */
         }
 
@@ -2308,7 +2313,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
                 allowed = TRUE;
             }
 
-            log_change("Demote  %s\t(%s -> %s %s%s)",
+            log_change(demote, "Demote  %s\t(%s -> %s %s%s)",
                        rsc->id,
                        role2text(rsc->role),
                        role2text(rsc->next_role),
@@ -2317,16 +2322,16 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
             if (stop != NULL && is_not_set(stop->flags, pe_action_optional)
                 && rsc->next_role > RSC_ROLE_STOPPED && moving == FALSE) {
                 if (is_set(rsc->flags, pe_rsc_failed)) {
-                    log_change("Recover %s\t(%s %s)",
+                    log_change(stop, "Recover %s\t(%s %s)",
                                rsc->id, role2text(rsc->role), next->details->uname);
                     STOP_SANITY_ASSERT(__LINE__);
 
                 } else if (is_set(rsc->flags, pe_rsc_reload)) {
-                    log_change("Reload  %s\t(%s %s)", rsc->id, role2text(rsc->role),
+                    log_change(start, "Reload  %s\t(%s %s)", rsc->id, role2text(rsc->role),
                                next->details->uname);
 
                 } else {
-                    log_change("Restart %s\t(%s %s)",
+                    log_change(start, "Restart %s\t(%s %s)",
                                rsc->id, role2text(rsc->next_role), next->details->uname);
                     STOP_SANITY_ASSERT(__LINE__);
                 }
@@ -2355,15 +2360,15 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
                 allowed = TRUE;
             }
 
-            log_change("Stop    %s\t(%s%s)", rsc->id, node->details->uname,
-                       allowed ? "" : " - blocked");
+            log_change(start, "Stop    %s\t(%s%s) %s", rsc->id, node->details->uname,
+                       allowed ? "" : " - blocked", stop->reason?stop->reason:"");
         }
 
         free(key);
     }
 
     if (moving) {
-        log_change("Move    %s\t(%s %s -> %s)",
+        log_change(stop, "Move    %s\t(%s %s -> %s)",
                    rsc->id, role2text(rsc->next_role), current->details->uname,
                    next->details->uname);
         STOP_SANITY_ASSERT(__LINE__);
@@ -2378,7 +2383,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
 
         CRM_CHECK(next != NULL,);
         if (next != NULL) {
-            log_change("Start   %s\t(%s%s)", rsc->id, next->details->uname,
+            log_change(start, "Start   %s\t(%s%s)", rsc->id, next->details->uname,
                        allowed ? "" : " - blocked");
         }
         if (allowed == FALSE) {
@@ -2393,17 +2398,17 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
         if (stop != NULL && is_not_set(stop->flags, pe_action_optional)
             && rsc->role > RSC_ROLE_STOPPED) {
             if (is_set(rsc->flags, pe_rsc_failed)) {
-                log_change("Recover %s\t(%s %s)",
+                log_change(stop, "Recover %s\t(%s %s)",
                            rsc->id, role2text(rsc->role), next?next->details->uname:NULL);
                 STOP_SANITY_ASSERT(__LINE__);
 
             } else if (is_set(rsc->flags, pe_rsc_reload)) {
-                log_change("Reload  %s\t(%s %s)", rsc->id, role2text(rsc->role),
+                log_change(start, "Reload  %s\t(%s %s)", rsc->id, role2text(rsc->role),
                            next?next->details->uname:NULL);
                 STOP_SANITY_ASSERT(__LINE__);
 
             } else {
-                log_change("Restart %s\t(%s %s)",
+                log_change(start, "Restart %s\t(%s %s)",
                            rsc->id, role2text(rsc->role), next?next->details->uname:NULL);
                 STOP_SANITY_ASSERT(__LINE__);
             }
@@ -2413,7 +2418,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
             allowed = TRUE;
         }
 
-        log_change("Promote %s\t(%s -> %s %s%s)",
+        log_change(promote, "Promote %s\t(%s -> %s %s%s)",
                    rsc->id,
                    role2text(rsc->role),
                    role2text(rsc->next_role),

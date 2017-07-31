@@ -12,7 +12,7 @@ Online: [ node1 node2 ]
 Transition Summary:
  * Move    child_rsc1:2	(Started node1 -> node2)
  * Move    child_rsc1:3	(Started node1 -> node2)
- * Stop    child_rsc1:4	(node1)
+ * Stop    child_rsc1:4	(node1)  	due to node availability
 
 Executing cluster transition:
  * Resource action: child_rsc1:0    monitor on node2

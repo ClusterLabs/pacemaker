@@ -31,8 +31,8 @@ Transition Summary:
  * Move    child_rsc2:1	(Started node1 -> node2)
  * Move    child_rsc4:1	(Started node1 -> node2)
  * Move    child_rsc5:1	(Started node2 -> node1)
- * Restart child_rsc6:0	(Started node1)
- * Restart child_rsc6:1	(Started node2)
+ * Restart child_rsc6:0	(Started node1) 	due to required rsc5 running
+ * Restart child_rsc6:1	(Started node2) 	due to required rsc5 running
  * Move    child_rsc7:1	(Started node2 -> node1)
 
 Executing cluster transition:

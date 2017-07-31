@@ -16,9 +16,9 @@ Transition Summary:
  * Fence (on) virt-3 'Required by dlm:2'
  * Fence (on) virt-1 'Device definition changed'
  * Restart fencing	(Started virt-1)
- * Restart dlm:0	(Started virt-1)
+ * Restart dlm:0	(Started virt-1) 	due to required stonith
  * Start   dlm:2	(virt-3)
- * Restart clvmd:0	(Started virt-1)
+ * Restart clvmd:0	(Started virt-1) 	due to required stonith
  * Start   clvmd:1	(virt-2)
  * Start   clvmd:2	(virt-3)
 

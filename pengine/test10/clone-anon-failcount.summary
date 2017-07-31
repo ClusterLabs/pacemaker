@@ -42,9 +42,9 @@ Transition Summary:
  * Move    UmDummy01	(Started srv01 -> srv04)
  * Move    UmDummy02	(Started srv01 -> srv04)
  * Recover clnUMdummy01:0	(Started srv04)
- * Restart clnUMdummy02:0	(Started srv04)
- * Stop    clnUMdummy01:1	(srv01)
- * Stop    clnUMdummy02:1	(srv01)
+ * Restart clnUMdummy02:0	(Started srv04) 	due to required clnUMdummy01:0 start
+ * Stop    clnUMdummy01:1	(srv01)  	due to node availability
+ * Stop    clnUMdummy02:1	(srv01)  	due to node availability
 
 Executing cluster transition:
  * Pseudo action:   UMgroup01_stop_0

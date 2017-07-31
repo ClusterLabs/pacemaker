@@ -6,7 +6,7 @@ OFFLINE: [ hb3 ]
  the-future-of-vaj	(ocf::heartbeat:Dummy):	FAILED hb2 
 
 Transition Summary:
- * Stop    the-future-of-vaj	(hb2)
+ * Stop    the-future-of-vaj	(hb2)  	due to node availability
 
 Executing cluster transition:
  * Resource action: the-future-of-vaj stop on hb2
