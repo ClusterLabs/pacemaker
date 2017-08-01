@@ -7,7 +7,7 @@ Online: [ node1 node2 ]
  rsc3	(heartbeat:apache):	Stopped 
 
 Transition Summary:
- * Move    rsc2	(Started node1 -> node2)
+ * Move       rsc2    ( node1 -> node2 )  
  * Start   rsc3	(node1)
 
 Executing cluster transition:

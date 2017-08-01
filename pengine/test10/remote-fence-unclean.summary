@@ -12,10 +12,10 @@ Online: [ 18builder 18node1 18node2 ]
 
 Transition Summary:
  * Fence (reboot) remote1 'remote connection is unrecoverable'
- * Recover remote1	(Started 18node1)
- * Move    FAKE2	(Started remote1 -> 18builder)
- * Move    FAKE3	(Started 18builder -> 18node1)
- * Move    FAKE4	(Started 18node1 -> 18node2)
+ * Recover    remote1     (              18node1 )  
+ * Move       FAKE2       ( remote1 -> 18builder )  
+ * Move       FAKE3       ( 18builder -> 18node1 )  
+ * Move       FAKE4       (   18node1 -> 18node2 )  
 
 Executing cluster transition:
  * Resource action: FAKE3           stop on 18builder

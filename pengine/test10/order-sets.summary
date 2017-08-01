@@ -9,10 +9,10 @@ Online: [ ubuntu_1 ]
  world4	(ocf::bbnd:world4test):	Started ubuntu_2
 
 Transition Summary:
- * Move    world1	(Started ubuntu_2 -> ubuntu_1)
- * Move    world2	(Started ubuntu_2 -> ubuntu_1)
- * Move    world3	(Started ubuntu_2 -> ubuntu_1)
- * Move    world4	(Started ubuntu_2 -> ubuntu_1)
+ * Move       world1     ( ubuntu_2 -> ubuntu_1 )  
+ * Move       world2     ( ubuntu_2 -> ubuntu_1 )  
+ * Move       world3     ( ubuntu_2 -> ubuntu_1 )  
+ * Move       world4     ( ubuntu_2 -> ubuntu_1 )  
 
 Executing cluster transition:
  * Resource action: world4          stop on ubuntu_2

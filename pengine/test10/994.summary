@@ -9,7 +9,7 @@ Online: [ paul ]
      postfix_9	(lsb:postfix):	FAILED paul 
 
 Transition Summary:
- * Recover postfix_9	(Started paul)
+ * Recover    postfix_9     (  paul )  
 
 Executing cluster transition:
  * Pseudo action:   group_1_stop_0

@@ -6,7 +6,7 @@ Online: [ node1 node2 ]
  B	(ocf::pacemaker:Dummy):	Started node2
 
 Transition Summary:
- * Move    A	(Started node1 -> node2)
+ * Move       A       ( node1 -> node2 )  
 
 Executing cluster transition:
  * Resource action: A               stop on node1

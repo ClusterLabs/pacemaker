@@ -37,12 +37,12 @@ Online: [ srv01 srv02 srv03 srv04 ]
      Started: [ srv01 srv02 srv03 srv04 ]
 
 Transition Summary:
- * Move    UmVIPcheck	(Started srv01 -> srv04)
- * Move    UmIPaddr	(Started srv01 -> srv04)
- * Move    UmDummy01	(Started srv01 -> srv04)
- * Move    UmDummy02	(Started srv01 -> srv04)
- * Recover clnUMdummy01:0	(Started srv04)
- * Restart clnUMdummy02:0	(Started srv04) 	due to required clnUMdummy01:0 start
+ * Move       UmVIPcheck         ( srv01 -> srv04 )  
+ * Move       UmIPaddr           ( srv01 -> srv04 )  
+ * Move       UmDummy01          ( srv01 -> srv04 )  
+ * Move       UmDummy02          ( srv01 -> srv04 )  
+ * Recover    clnUMdummy01:0     (          srv04 )  
+ * Restart    clnUMdummy02:0     (          srv04 )   due to required clnUMdummy01:0 start
  * Stop    clnUMdummy01:1	(srv01)  	due to node availability
  * Stop    clnUMdummy02:1	(srv01)  	due to node availability
 

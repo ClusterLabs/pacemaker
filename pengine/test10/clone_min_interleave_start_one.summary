@@ -12,12 +12,12 @@ Online: [ c7auto1 c7auto2 c7auto3 ]
 
 Transition Summary:
  * Start   FAKE1:0	(c7auto1)
- * Start   FAKE2:0	(c7auto2 - blocked) 	due to unrunnable clone-one-or-more:order-FAKE1-clone-FAKE2-clone-mandatory
- * Start   FAKE2:1	(c7auto3 - blocked) 	due to unrunnable clone-one-or-more:order-FAKE1-clone-FAKE2-clone-mandatory
- * Start   FAKE2:2	(c7auto1 - blocked) 	due to unrunnable clone-one-or-more:order-FAKE1-clone-FAKE2-clone-mandatory
- * Start   FAKE3:0	(c7auto2 - blocked) 	due to unrunnable FAKE2:0 start
- * Start   FAKE3:1	(c7auto3 - blocked) 	due to unrunnable FAKE2:1 start
- * Start   FAKE3:2	(c7auto1 - blocked) 	due to unrunnable FAKE2:2 start
+ * Start      FAKE2:0     ( c7auto2 )   due to unrunnable clone-one-or-more:order-FAKE1-clone-FAKE2-clone-mandatory (blocked)
+ * Start      FAKE2:1     ( c7auto3 )   due to unrunnable clone-one-or-more:order-FAKE1-clone-FAKE2-clone-mandatory (blocked)
+ * Start      FAKE2:2     ( c7auto1 )   due to unrunnable clone-one-or-more:order-FAKE1-clone-FAKE2-clone-mandatory (blocked)
+ * Start      FAKE3:0     ( c7auto2 )   due to unrunnable FAKE2:0 start (blocked)
+ * Start      FAKE3:1     ( c7auto3 )   due to unrunnable FAKE2:1 start (blocked)
+ * Start      FAKE3:2     ( c7auto1 )   due to unrunnable FAKE2:2 start (blocked)
 
 Executing cluster transition:
  * Pseudo action:   FAKE1-clone_start_0

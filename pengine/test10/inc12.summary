@@ -53,16 +53,16 @@ Transition Summary:
  * Stop    child_DoFencing:2	(c001n05)  	due to node availability
  * Stop    child_DoFencing:3	(c001n06)  	due to node availability
  * Stop    child_DoFencing:4	(c001n07)  	due to node availability
- * Stop    ocf_msdummy:10	(c001n02)  	due to node availability
- * Stop    ocf_msdummy:11	(c001n02)  	due to node availability
- * Stop    ocf_msdummy:2	(c001n04)  	due to node availability
- * Stop    ocf_msdummy:3	(c001n04)  	due to node availability
- * Stop    ocf_msdummy:4	(c001n05)  	due to node availability
- * Stop    ocf_msdummy:5	(c001n05)  	due to node availability
- * Stop    ocf_msdummy:6	(c001n06)  	due to node availability
- * Stop    ocf_msdummy:7	(c001n06)  	due to node availability
- * Stop    ocf_msdummy:8	(c001n07)  	due to node availability
- * Stop    ocf_msdummy:9	(c001n07)  	due to node availability
+ * Stop       ocf_msdummy:10                ( Slave c001n02 )   due to node availability
+ * Stop       ocf_msdummy:11                ( Slave c001n02 )   due to node availability
+ * Stop       ocf_msdummy:2                 ( Slave c001n04 )   due to node availability
+ * Stop       ocf_msdummy:3                 ( Slave c001n04 )   due to node availability
+ * Stop       ocf_msdummy:4                 ( Slave c001n05 )   due to node availability
+ * Stop       ocf_msdummy:5                 ( Slave c001n05 )   due to node availability
+ * Stop       ocf_msdummy:6                 ( Slave c001n06 )   due to node availability
+ * Stop       ocf_msdummy:7                 ( Slave c001n06 )   due to node availability
+ * Stop       ocf_msdummy:8                 ( Slave c001n07 )   due to node availability
+ * Stop       ocf_msdummy:9                 ( Slave c001n07 )   due to node availability
 
 Executing cluster transition:
  * Pseudo action:   group-1_stop_0

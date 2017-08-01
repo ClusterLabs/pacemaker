@@ -5,7 +5,7 @@ Online: [ node1 node2 ]
  A	(ocf::pacemaker:Dummy):	Started node1
 
 Transition Summary:
- * Reload  A	(Started node1)
+ * Reload     A       ( node1 )  
 
 Executing cluster transition:
  * Resource action: A               reload on node1

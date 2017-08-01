@@ -12,10 +12,10 @@ Online: [ node1 node2 ]
  rsc8	(heartbeat:apache):	Started node2
 
 Transition Summary:
- * Move    rsc2	(Started node1 -> node2)
- * Move    rsc4	(Started node1 -> node2)
- * Move    rsc6	(Started node2 -> node1)
- * Move    rsc8	(Started node2 -> node1)
+ * Move       rsc2    ( node1 -> node2 )  
+ * Move       rsc4    ( node1 -> node2 )  
+ * Move       rsc6    ( node2 -> node1 )  
+ * Move       rsc8    ( node2 -> node1 )  
 
 Executing cluster transition:
  * Resource action: rsc1            monitor on node2

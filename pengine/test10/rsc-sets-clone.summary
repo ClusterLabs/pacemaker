@@ -10,8 +10,8 @@ Online: [ node2 ]
      Started: [ node1 node2 ]
 
 Transition Summary:
- * Move    rsc1	(Started node1 -> node2)
- * Move    rsc3	(Started node1 -> node2)
+ * Move       rsc1    ( node1 -> node2 )  
+ * Move       rsc3    ( node1 -> node2 )  
  * Stop    rsc:0	(node1)  	due to node availability
 
 Executing cluster transition:

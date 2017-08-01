@@ -6,7 +6,7 @@ Online: [ 18node1 18node2 18node3 ]
  B	(ocf::heartbeat:Dummy):	Started 18node2 
 
 Transition Summary:
- * Migrate B	(Started 18node2 -> 18node1)
+ * Migrate    B       ( 18node2 -> 18node1 )  
 
 Executing cluster transition:
  * Resource action: B               migrate_to on 18node2

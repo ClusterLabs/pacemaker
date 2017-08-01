@@ -9,7 +9,7 @@ Online: [ c19.chepkov.lan c21.chepkov.lan ]
  dummy3	(ocf::pacemaker:Dummy):	Started c21.chepkov.lan
 
 Transition Summary:
- * Move    dummy2	(Started c20.chepkov.lan -> c21.chepkov.lan)
+ * Move       dummy2     ( c20.chepkov.lan -> c21.chepkov.lan )  
  * Stop    dummy3	(c21.chepkov.lan)
 
 Executing cluster transition:

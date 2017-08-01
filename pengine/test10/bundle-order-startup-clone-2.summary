@@ -36,15 +36,12 @@ Transition Summary:
  * Start   haproxy-bundle-docker-2	(metal-3)
  * Start   redis-bundle-docker-0	(metal-1)
  * Start   redis-bundle-0	(metal-1)
- * Start   redis:0	(redis-bundle-0)
  * Promote redis:0	(Stopped -> Master redis-bundle-0)
  * Start   redis-bundle-docker-1	(metal-2)
  * Start   redis-bundle-1	(metal-2)
- * Start   redis:1	(redis-bundle-1)
  * Promote redis:1	(Stopped -> Master redis-bundle-1)
  * Start   redis-bundle-docker-2	(metal-3)
  * Start   redis-bundle-2	(metal-3)
- * Start   redis:2	(redis-bundle-2)
  * Promote redis:2	(Stopped -> Master redis-bundle-2)
 
 Executing cluster transition:

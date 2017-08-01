@@ -6,8 +6,8 @@ Online: [ 18node1 18node2 18node3 ]
  B	(ocf::heartbeat:Dummy):	Started 18node2 
 
 Transition Summary:
- * Move    A	(Started 18node1 -> 18node2)
- * Move    B	(Started 18node2 -> 18node1) 	due to unrunnable A stop
+ * Move       A       ( 18node1 -> 18node2 )  
+ * Move       B       ( 18node2 -> 18node1 )   due to unrunnable A stop
 
 Executing cluster transition:
  * Resource action: B               stop on 18node2

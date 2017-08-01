@@ -15,7 +15,7 @@ Online: [ ibm1 sgi2 test02 test03 ]
 
 Transition Summary:
  * Start   rsc_sgi2	(sgi2)
- * Move    rsc_ibm1	(Started test03 -> ibm1)
+ * Move       rsc_ibm1              ( test03 -> ibm1 )  
  * Start   rsc_test02	(test02)
  * Start   child_DoFencing:2	(ibm1)
  * Start   child_DoFencing:3	(sgi2)

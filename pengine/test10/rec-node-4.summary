@@ -10,8 +10,8 @@ Online: [ node2 ]
 Transition Summary:
  * Fence (reboot) node1 'peer is no longer part of the cluster'
  * Start   stonith-1	(node2)
- * Move    rsc1	(Started node1 -> node2)
- * Move    rsc2	(Started node1 -> node2)
+ * Move       rsc1          ( node1 -> node2 )  
+ * Move       rsc2          ( node1 -> node2 )  
 
 Executing cluster transition:
  * Resource action: stonith-1       monitor on node2

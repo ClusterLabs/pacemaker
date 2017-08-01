@@ -18,7 +18,7 @@ Transition Summary:
  * Fence (reboot) pcmk-8 'peer has not been seen by the cluster'
  * Fence (reboot) pcmk-7 'peer failed the pacemaker membership criteria'
  * Fence (reboot) pcmk-5 'peer has not been seen by the cluster'
- * Start   Fencing	(pcmk-1 - blocked)
+ * Start      Fencing     ( pcmk-1 )   blocked
 
 Executing cluster transition:
  * Fencing pcmk-10 (reboot)

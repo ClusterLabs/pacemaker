@@ -9,7 +9,7 @@ OFFLINE: [ hex-15 ]
      Stopped: [ hex-15 ]
 
 Transition Summary:
- * Recover test-vm	(Started hex-14 -> hex-13)
+ * Recover    test-vm     ( hex-14 -> hex-13 )  
 
 Executing cluster transition:
  * Resource action: test-vm         stop on hex-14

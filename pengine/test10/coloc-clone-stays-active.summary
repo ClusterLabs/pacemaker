@@ -98,7 +98,7 @@ Online: [ s01-0 s01-1 ]
      Started: [ s01-0 s01-1 ]
 
 Transition Summary:
- * Migrate mgmt-vm	(Started s01-0 -> s01-1)
+ * Migrate    mgmt-vm     ( s01-0 -> s01-1 )  
 
 Executing cluster transition:
  * Resource action: mgmt-vm         migrate_to on s01-0

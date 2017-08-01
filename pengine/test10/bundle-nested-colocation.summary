@@ -17,13 +17,13 @@ RemoteOnline: [ overcloud-rabbit-0 overcloud-rabbit-1 overcloud-rabbit-2 ]
    galera-bundle-docker-2	(ocf::heartbeat:docker):	Started overcloud-galera-2
 
 Transition Summary:
- * Restart rabbitmq-bundle-docker-0	(Started overcloud-rabbit-0)
+ * Restart    rabbitmq-bundle-docker-0     (     overcloud-rabbit-0 )  
  * Start   rabbitmq-bundle-0	(overcloud-controller-0)
  * Start   rabbitmq:0	(rabbitmq-bundle-0)
- * Restart rabbitmq-bundle-docker-1	(Started overcloud-rabbit-1)
+ * Restart    rabbitmq-bundle-docker-1     (     overcloud-rabbit-1 )  
  * Start   rabbitmq-bundle-1	(overcloud-controller-1)
  * Start   rabbitmq:1	(rabbitmq-bundle-1)
- * Restart rabbitmq-bundle-docker-2	(Started overcloud-rabbit-2)
+ * Restart    rabbitmq-bundle-docker-2     (     overcloud-rabbit-2 )  
  * Start   rabbitmq-bundle-2	(overcloud-controller-2)
  * Start   rabbitmq:2	(rabbitmq-bundle-2)
 

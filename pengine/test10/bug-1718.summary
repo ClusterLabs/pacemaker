@@ -13,8 +13,8 @@ OFFLINE: [ defiant.ds9 warbird.ds9 ]
      resource_dummy	(ocf::heartbeat:Dummy):	Started ops.ds9
 
 Transition Summary:
- * Stop    resource_IP3	(Started ops.ds9) 	due to unrunnable Web_Group running
- * Stop    resource_dummy	(Started ops.ds9) 	due to required resource_IP3 start
+ * Stop       resource_IP3     ( ops.ds9 )   due to unrunnable Web_Group running
+ * Stop       resource_dummy   ( ops.ds9 )   due to required resource_IP3 start
 
 Executing cluster transition:
  * Pseudo action:   group_fUN_stop_0

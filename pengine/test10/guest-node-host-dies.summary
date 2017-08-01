@@ -14,14 +14,14 @@ Transition Summary:
  * Fence (reboot) lxc2 (resource: container2) 'guest is unclean'
  * Fence (reboot) lxc1 (resource: container1) 'guest is unclean'
  * Fence (reboot) rhel7-1 'rsc_rhel7-1 is thought to be active there'
- * Restart Fencing	(Started rhel7-4)
- * Move    rsc_rhel7-1	(Started rhel7-1 -> rhel7-5)
- * Recover container1	(Started rhel7-1 -> rhel7-2)
- * Recover container2	(Started rhel7-1 -> rhel7-3)
+ * Restart    Fencing         (            rhel7-4 )  
+ * Move       rsc_rhel7-1     ( rhel7-1 -> rhel7-5 )  
+ * Recover    container1      ( rhel7-1 -> rhel7-2 )  
+ * Recover    container2      ( rhel7-1 -> rhel7-3 )  
  * Recover lxc-ms:0	(Master lxc1)
  * Recover lxc-ms:1	(Slave lxc2)
- * Move    lxc1	(Started rhel7-1 -> rhel7-2)
- * Move    lxc2	(Started rhel7-1 -> rhel7-3)
+ * Move       lxc1            ( rhel7-1 -> rhel7-2 )  
+ * Move       lxc2            ( rhel7-1 -> rhel7-3 )  
 
 Executing cluster transition:
  * Resource action: Fencing         stop on rhel7-4

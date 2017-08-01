@@ -7,7 +7,7 @@ RemoteOFFLINE: [ rhel7-auto4 ]
  rhel7-auto4	(ocf::pacemaker:remote):	FAILED rhel7-auto2 
 
 Transition Summary:
- * Recover rhel7-auto4	(Started rhel7-auto2 -> rhel7-auto3)
+ * Recover    rhel7-auto4     ( rhel7-auto2 -> rhel7-auto3 )  
 
 Executing cluster transition:
  * Resource action: rhel7-auto4     stop on rhel7-auto2

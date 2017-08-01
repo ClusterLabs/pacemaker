@@ -7,8 +7,7 @@ Online: [ node1 node2 ]
 
 Transition Summary:
  * Start   A:0	(node1)
- * Start   A:1	(node2)
- * Promote A:1	(Stopped -> Master node2)
+ * Promote    A:1     ( Stopped -> Master node2 )  
 
 Executing cluster transition:
  * Resource action: A:0             monitor on node1

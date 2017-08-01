@@ -24,15 +24,13 @@ Transition Summary:
  * Shutdown undercloud
  * Stop    rabbitmq-bundle-docker-0	(undercloud)  	due to node availability
  * Stop    rabbitmq-bundle-0	(undercloud)  	due to node availability
- * Stop    rabbitmq:0	(Started rabbitmq-bundle-0) 	due to unrunnable rabbitmq-bundle-0 start
+ * Stop       rabbitmq:0                           (               rabbitmq-bundle-0 )   due to unrunnable rabbitmq-bundle-0 start
  * Stop    galera-bundle-docker-0	(undercloud)  	due to node availability
  * Stop    galera-bundle-0	(undercloud)  	due to node availability
- * Demote  galera:0	(Master -> Slave galera-bundle-0)
- * Restart galera:0	(Slave galera-bundle-0) 	due to unrunnable galera-bundle-0 start
+ * Stop       galera:0                             ( Master galera-bundle-0 )   due to unrunnable galera-bundle-0 start
  * Stop    redis-bundle-docker-0	(undercloud)  	due to node availability
  * Stop    redis-bundle-0	(undercloud)  	due to node availability
- * Demote  redis:0	(Master -> Slave redis-bundle-0)
- * Restart redis:0	(Slave redis-bundle-0) 	due to unrunnable redis-bundle-0 start
+ * Stop       redis:0                              (  Master redis-bundle-0 )   due to unrunnable redis-bundle-0 start
  * Stop    ip-192.168.122.254	(undercloud)  	due to node availability
  * Stop    ip-192.168.122.250	(undercloud)  	due to node availability
  * Stop    ip-192.168.122.249	(undercloud)  	due to node availability

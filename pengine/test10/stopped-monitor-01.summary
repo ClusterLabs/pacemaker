@@ -5,7 +5,7 @@ Online: [ node1 node2 ]
  rsc1	(ocf::pacemaker:Dummy):	FAILED node1 
 
 Transition Summary:
- * Recover rsc1	(Started node1)
+ * Recover    rsc1    ( node1 )  
 
 Executing cluster transition:
  * Resource action: rsc1            stop on node1

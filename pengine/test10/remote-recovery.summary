@@ -39,17 +39,17 @@ RemoteOnline: [ galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2 ]
 
 Transition Summary:
  * Fence (reboot) controller-1 'peer is no longer part of the cluster'
- * Move    messaging-1	(Started controller-1 -> controller-2)
- * Move    galera-0	(Started controller-1 -> controller-2)
- * Move    galera-2	(Started controller-1 -> controller-2)
- * Stop    redis:0	(controller-1)  	due to node availability
- * Move    ip-172.17.1.14	(Started controller-1 -> controller-2)
- * Move    ip-172.17.1.17	(Started controller-1 -> controller-2)
- * Move    ip-172.17.4.11	(Started controller-1 -> controller-2)
+ * Move       messaging-1                            ( controller-1 -> controller-2 )  
+ * Move       galera-0                               ( controller-1 -> controller-2 )  
+ * Move       galera-2                               ( controller-1 -> controller-2 )  
+ * Stop       redis:0                                (           Slave controller-1 )   due to node availability
+ * Move       ip-172.17.1.14                         ( controller-1 -> controller-2 )  
+ * Move       ip-172.17.1.17                         ( controller-1 -> controller-2 )  
+ * Move       ip-172.17.4.11                         ( controller-1 -> controller-2 )  
  * Stop    haproxy:0	(controller-1)  	due to node availability
- * Restart stonith-fence_ipmilan-525400bbf613	(Started controller-0)
- * Restart stonith-fence_ipmilan-525400b4f6bd	(Started controller-0)
- * Move    stonith-fence_ipmilan-5254005bdbb5	(Started controller-1 -> controller-2)
+ * Restart    stonith-fence_ipmilan-525400bbf613     (                 controller-0 )  
+ * Restart    stonith-fence_ipmilan-525400b4f6bd     (                 controller-0 )  
+ * Move       stonith-fence_ipmilan-5254005bdbb5     ( controller-1 -> controller-2 )  
 
 Executing cluster transition:
  * Pseudo action:   redis-master_pre_notify_stop_0

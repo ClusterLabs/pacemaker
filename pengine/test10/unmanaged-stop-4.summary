@@ -9,7 +9,7 @@ Online: [ yingying.site ]
      rsc3	(ocf::heartbeat:Dummy):	Stopped ( disabled ) 
 
 Transition Summary:
- * Stop    rsc1	(yingying.site - blocked) unrunnable rsc2 stop 	due to node availability
+ * Stop       rsc1    ( yingying.site )   due to node availability (blocked)
 
 Executing cluster transition:
  * Pseudo action:   group1_stop_0

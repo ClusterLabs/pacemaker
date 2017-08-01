@@ -8,7 +8,7 @@ Online: [ node1 node2 ]
      rsc2	(ocf::pacemaker:Dummy):	Stopped 
 
 Transition Summary:
- * Restart container1	(Started node1)
+ * Restart    container1     ( node1 )  
  * Start   rsc1	(node1)
  * Start   rsc2	(node1)
 

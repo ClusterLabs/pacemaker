@@ -9,8 +9,8 @@ Online: [ hex-13 hex-14 ]
  dummy3	(ocf::heartbeat:Dummy):	Started hex-13
 
 Transition Summary:
- * Move    dummy1	(Started hex-13 -> hex-14)
- * Move    dummy3	(Started hex-13 -> hex-14)
+ * Move       dummy1     ( hex-13 -> hex-14 )  
+ * Move       dummy3     ( hex-13 -> hex-14 )  
 
 Executing cluster transition:
  * Resource action: dummy1          stop on hex-13

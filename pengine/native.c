@@ -2155,6 +2155,108 @@ native_expand(resource_t * rsc, pe_working_set_t * data_set)
         }                                                               \
     } while(0)
 
+static int rsc_width = 5;
+static int detail_width = 5;
+static void
+LogAction(const char *change, resource_t *rsc, pe_node_t *origin, pe_node_t *destination, pe_action_t *action, pe_action_t *source, gboolean terminal)
+{
+    int len = 0;
+    char *reason = NULL;
+    char *details = NULL;
+    bool same_host = FALSE;
+    bool same_role = FALSE;
+    bool need_role = FALSE;
+
+    CRM_ASSERT(action);
+    CRM_ASSERT(destination != NULL || origin != NULL);
+
+    if(source == NULL) {
+        source = action;
+    }
+
+    len = strlen(rsc->id);
+    if(len > rsc_width) {
+        rsc_width = len + 2;
+    }
+
+    if(rsc->role > RSC_ROLE_STARTED || rsc->next_role > RSC_ROLE_SLAVE) {
+        need_role = TRUE;
+    }
+
+    if(origin != NULL && destination != NULL && origin->details == destination->details) {
+        same_host = TRUE;
+    }
+
+    if(rsc->role == rsc->next_role) {
+        same_role = TRUE;
+    }
+
+    if(need_role && origin == NULL) {
+        /* Promoting from Stopped */
+        details = crm_strdup_printf("%s -> %s %s", role2text(rsc->role), role2text(rsc->next_role), destination->details->uname);
+
+    } else if(need_role && destination == NULL) {
+        /* Demoting a Master or Stopping a Slave */
+        details = crm_strdup_printf("%s %s", role2text(rsc->role), origin->details->uname);
+
+    } else if(origin == NULL || destination == NULL) {
+        /* Starting or stopping a resource */
+        details = crm_strdup_printf("%s", origin?origin->details->uname:destination->details->uname);
+
+    } else if(need_role && same_role && same_host) {
+        /* Recovering or Restarting a Master/Slave resource */
+        details = crm_strdup_printf("%s %s", role2text(rsc->role), origin->details->uname);
+
+    } else if(same_role && same_host) {
+        /* Recovering or Restarting a normal resource */
+        details = crm_strdup_printf("%s", origin->details->uname);
+
+    } else if(same_role && need_role) {
+        /* Moving a Master/Slave resource */
+        details = crm_strdup_printf("%s -> %s %s", origin->details->uname, destination->details->uname, role2text(rsc->role));
+
+    } else if(same_role) {
+        /* Moving a normal resource */
+        details = crm_strdup_printf("%s -> %s", origin->details->uname, destination->details->uname);
+
+    } else if(same_host) {
+        /* Promoting or Demoting a Master/Slave resource */
+        details = crm_strdup_printf("%s -> %s %s", role2text(rsc->role), role2text(rsc->next_role), origin->details->uname);
+
+    } else {
+        /* Moving and promoting/demoting */
+        details = crm_strdup_printf("%s %s -> %s %s", role2text(rsc->role), origin->details->uname, role2text(rsc->next_role), destination->details->uname);
+    }
+
+    len = strlen(details);
+    if(len > detail_width) {
+        detail_width = len;
+    }
+
+    if(source->reason && is_not_set(action->flags, pe_action_runnable)) {
+        reason = crm_strdup_printf(" due to %s (blocked)", source->reason);
+
+    } else if(source->reason) {
+        reason = crm_strdup_printf(" due to %s", source->reason);
+
+    } else if(is_not_set(action->flags, pe_action_runnable)) {
+        reason = strdup(" blocked");
+
+    } else {
+        reason = strdup("");
+    }
+
+    if(terminal) {
+        printf(" * %-8s   %-*s   ( %*s )  %s\n", change, rsc_width, rsc->id, detail_width, details, reason);
+    } else {
+        crm_notice(" * %-8s   %-*s   ( %*s )  %s", change, rsc_width, rsc->id, detail_width, details, reason);
+    }
+
+    free(details);
+    free(reason);
+}
+
+
 void
 LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
 {
@@ -2234,11 +2336,11 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
     } else {
         possible_matches = find_actions(rsc->actions, key, current);
     }
-    free(key);
     if (possible_matches) {
         stop = possible_matches->data;
         g_list_free(possible_matches);
     }
+    free(key);
 
     key = promote_key(rsc);
     possible_matches = find_actions(rsc->actions, key, next);
@@ -2269,34 +2371,29 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
         CRM_CHECK(next != NULL,);
         if (next == NULL) {
         } else if (migrate_to && is_set(migrate_to->flags, pe_action_runnable) && current) {
-            log_change(start, "Migrate %s\t(%s %s -> %s)",
-                       rsc->id, role2text(rsc->role), current->details->uname,
-                       next->details->uname);
+            LogAction("Migrate", rsc, current, next, start, NULL, terminal);
 
         } else if (is_set(rsc->flags, pe_rsc_reload)) {
-            log_change(start, "Reload  %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
+            LogAction("Reload", rsc, current, next, start, NULL, terminal);
 
         } else if (start == NULL || is_set(start->flags, pe_action_optional)) {
             pe_rsc_info(rsc, "Leave   %s\t(%s %s)", rsc->id, role2text(rsc->role),
                         next->details->uname);
 
         } else if (start && is_set(start->flags, pe_action_runnable) == FALSE) {
-            log_change(start, "Stop    %s\t(%s %s%s)", rsc->id, role2text(rsc->role), current?current->details->uname:"N/A",
-                       stop && is_not_set(stop->flags, pe_action_runnable) ? " - blocked" : "");
+            LogAction("Stop", rsc, current, NULL, stop, start, terminal);
             STOP_SANITY_ASSERT(__LINE__);
 
         } else if (moving && current) {
-            log_change(stop, "%s %s\t(%s %s -> %s)",
-                       is_set(rsc->flags, pe_rsc_failed) ? "Recover" : "Move   ",
-                       rsc->id, role2text(rsc->role),
-                       current->details->uname, next->details->uname);
+            LogAction(is_set(rsc->flags, pe_rsc_failed) ? "Recover" : "Move",
+                      rsc, current, next, stop, NULL, terminal);
 
         } else if (is_set(rsc->flags, pe_rsc_failed)) {
-            log_change(stop, "Recover %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
+            LogAction("Recover", rsc, current, NULL, stop, NULL, terminal);
             STOP_SANITY_ASSERT(__LINE__);
 
         } else {
-            log_change(start, "Restart %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
+            LogAction("Restart", rsc, current, next, start, NULL, terminal);
             /* STOP_SANITY_ASSERT(__LINE__); False positive for migrate-fail-7 */
         }
 
@@ -2304,50 +2401,16 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
         return;
     }
 
-    if (rsc->role > RSC_ROLE_SLAVE && rsc->role > rsc->next_role) {
-        CRM_CHECK(current != NULL,);
-        if (current != NULL) {
-            gboolean allowed = FALSE;
+    if(stop
+       && (rsc->next_role == RSC_ROLE_STOPPED
+           || (start && is_not_set(start->flags, pe_action_runnable)))) {
 
-            if (demote != NULL && (demote->flags & pe_action_runnable)) {
-                allowed = TRUE;
-            }
-
-            log_change(demote, "Demote  %s\t(%s -> %s %s%s)",
-                       rsc->id,
-                       role2text(rsc->role),
-                       role2text(rsc->next_role),
-                       current->details->uname, allowed ? "" : " - blocked");
-
-            if (stop != NULL && is_not_set(stop->flags, pe_action_optional)
-                && rsc->next_role > RSC_ROLE_STOPPED && moving == FALSE) {
-                if (is_set(rsc->flags, pe_rsc_failed)) {
-                    log_change(stop, "Recover %s\t(%s %s)",
-                               rsc->id, role2text(rsc->role), next->details->uname);
-                    STOP_SANITY_ASSERT(__LINE__);
-
-                } else if (is_set(rsc->flags, pe_rsc_reload)) {
-                    log_change(start, "Reload  %s\t(%s %s)", rsc->id, role2text(rsc->role),
-                               next->details->uname);
-
-                } else {
-                    log_change(start, "Restart %s\t(%s %s)",
-                               rsc->id, role2text(rsc->next_role), next->details->uname);
-                    STOP_SANITY_ASSERT(__LINE__);
-                }
-            }
-        }
-
-    } else if (rsc->next_role == RSC_ROLE_STOPPED) {
         GListPtr gIter = NULL;
-
-        CRM_CHECK(current != NULL,);
 
         key = stop_key(rsc);
         for (gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
             node_t *node = (node_t *) gIter->data;
             action_t *stop_op = NULL;
-            gboolean allowed = FALSE;
 
             possible_matches = find_actions(rsc->actions, key, node);
             if (possible_matches) {
@@ -2357,73 +2420,39 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
 
             if (stop_op && (stop_op->flags & pe_action_runnable)) {
                 STOP_SANITY_ASSERT(__LINE__);
-                allowed = TRUE;
             }
 
-            log_change(start, "Stop    %s\t(%s%s) %s", rsc->id, node->details->uname,
-                       allowed ? "" : " - blocked", stop->reason?stop->reason:"");
+            LogAction("Stop", rsc, node, NULL, stop_op, start, terminal);
         }
 
         free(key);
-    }
 
-    if (moving) {
-        log_change(stop, "Move    %s\t(%s %s -> %s)",
-                   rsc->id, role2text(rsc->next_role), current->details->uname,
-                   next->details->uname);
+    } else if (stop && is_set(rsc->flags, pe_rsc_failed)) {
+        /* 'stop' may be NULL if the failure was ignored */
+        LogAction("Recover", rsc, current, next, stop, start, terminal);
         STOP_SANITY_ASSERT(__LINE__);
-    }
 
-    if (rsc->role == RSC_ROLE_STOPPED) {
-        gboolean allowed = FALSE;
+    } else if (moving) {
+        LogAction("Move", rsc, current, next, stop, NULL, terminal);
+        STOP_SANITY_ASSERT(__LINE__);
 
-        if (start && (start->flags & pe_action_runnable)) {
-            allowed = TRUE;
-        }
+    } else if (is_set(rsc->flags, pe_rsc_reload)) {
+        LogAction("Reload", rsc, current, next, start, NULL, terminal);
 
-        CRM_CHECK(next != NULL,);
-        if (next != NULL) {
-            log_change(start, "Start   %s\t(%s%s)", rsc->id, next->details->uname,
-                       allowed ? "" : " - blocked");
-        }
-        if (allowed == FALSE) {
-            return;
-        }
-    }
+    } else if (stop != NULL && is_not_set(stop->flags, pe_action_optional)) {
+        LogAction("Restart", rsc, current, next, start, NULL, terminal);
+        STOP_SANITY_ASSERT(__LINE__);
 
-    if (rsc->next_role > RSC_ROLE_SLAVE && rsc->role < rsc->next_role) {
-        gboolean allowed = FALSE;
+    } else if (rsc->role == RSC_ROLE_MASTER) {
+        CRM_LOG_ASSERT(current != NULL);
+        LogAction("Demote", rsc, current, next, demote, NULL, terminal);
 
+    } else if(rsc->next_role == RSC_ROLE_MASTER) {
         CRM_LOG_ASSERT(next);
-        if (stop != NULL && is_not_set(stop->flags, pe_action_optional)
-            && rsc->role > RSC_ROLE_STOPPED) {
-            if (is_set(rsc->flags, pe_rsc_failed)) {
-                log_change(stop, "Recover %s\t(%s %s)",
-                           rsc->id, role2text(rsc->role), next?next->details->uname:NULL);
-                STOP_SANITY_ASSERT(__LINE__);
+        LogAction("Promote", rsc, current, next, promote, NULL, terminal);
 
-            } else if (is_set(rsc->flags, pe_rsc_reload)) {
-                log_change(start, "Reload  %s\t(%s %s)", rsc->id, role2text(rsc->role),
-                           next?next->details->uname:NULL);
-                STOP_SANITY_ASSERT(__LINE__);
-
-            } else {
-                log_change(start, "Restart %s\t(%s %s)",
-                           rsc->id, role2text(rsc->role), next?next->details->uname:NULL);
-                STOP_SANITY_ASSERT(__LINE__);
-            }
-        }
-
-        if (promote && (promote->flags & pe_action_runnable)) {
-            allowed = TRUE;
-        }
-
-        log_change(promote, "Promote %s\t(%s -> %s %s%s)",
-                   rsc->id,
-                   role2text(rsc->role),
-                   role2text(rsc->next_role),
-                   next?next->details->uname:NULL,
-                   allowed ? "" : " - blocked");
+    } else if (rsc->role == RSC_ROLE_STOPPED && rsc->next_role > RSC_ROLE_STOPPED) {
+        LogAction("Start", rsc, current, next, start, NULL, terminal);
     }
 }
 

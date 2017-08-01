@@ -15,8 +15,8 @@ Online: [ hadev1 hadev2 ]
 Transition Summary:
  * Shutdown hadev2
  * Fence (reboot) hadev3 'peer is no longer part of the cluster'
- * Move    DcIPaddr	(Started hadev2 -> hadev1)
- * Move    rsc_hadev2	(Started hadev2 -> hadev1)
+ * Move       DcIPaddr              ( hadev2 -> hadev1 )  
+ * Move       rsc_hadev2            ( hadev2 -> hadev1 )  
  * Stop    child_DoFencing:0	(hadev2)  	due to node availability
  * Stop    child_DoFencing:2	(hadev1)  	due to node availability
 

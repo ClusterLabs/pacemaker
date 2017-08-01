@@ -13,12 +13,12 @@ Online: [ c7auto1 c7auto2 c7auto3 ]
 Transition Summary:
  * Stop    FAKE1:0	(c7auto3)  	due to node availability
  * Stop    FAKE1:2	(c7auto2)  	due to node availability
- * Stop    FAKE2:0	(Started c7auto3) 	due to unrunnable clone-one-or-more:order-FAKE1-clone-FAKE2-clone-mandatory
- * Stop    FAKE2:1	(Started c7auto1) 	due to unrunnable clone-one-or-more:order-FAKE1-clone-FAKE2-clone-mandatory
- * Stop    FAKE2:2	(Started c7auto2) 	due to unrunnable clone-one-or-more:order-FAKE1-clone-FAKE2-clone-mandatory
- * Stop    FAKE3:0	(Started c7auto3) 	due to required FAKE2:0 start
- * Stop    FAKE3:1	(Started c7auto1) 	due to required FAKE2:1 start
- * Stop    FAKE3:2	(Started c7auto2) 	due to required FAKE2:2 start
+ * Stop       FAKE2:0     ( c7auto3 )   due to unrunnable clone-one-or-more:order-FAKE1-clone-FAKE2-clone-mandatory
+ * Stop       FAKE2:1     ( c7auto1 )   due to unrunnable clone-one-or-more:order-FAKE1-clone-FAKE2-clone-mandatory
+ * Stop       FAKE2:2     ( c7auto2 )   due to unrunnable clone-one-or-more:order-FAKE1-clone-FAKE2-clone-mandatory
+ * Stop       FAKE3:0     ( c7auto3 )   due to required FAKE2:0 start
+ * Stop       FAKE3:1     ( c7auto1 )   due to required FAKE2:1 start
+ * Stop       FAKE3:2     ( c7auto2 )   due to required FAKE2:2 start
 
 Executing cluster transition:
  * Pseudo action:   FAKE3-clone_stop_0

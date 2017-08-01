@@ -23,7 +23,7 @@ Online: [ cxa1 cxb1 ]
      Started: [ cxa1 cxb1 ]
 
 Transition Summary:
- * Move    named_address	(Started cxa1 -> cxb1)
+ * Move       named_address         (         cxa1 -> cxb1 )  
  * Promote named_drbd_node:1	(Slave -> Master cxb1)
 
 Executing cluster transition:

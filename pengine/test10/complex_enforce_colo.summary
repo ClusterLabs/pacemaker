@@ -111,9 +111,9 @@ Transition Summary:
  * Stop    glance-api:0	(rhos6-node1)
  * Stop    glance-api:1	(rhos6-node2)
  * Stop    glance-api:2	(rhos6-node3)
- * Stop    cinder-api	(Started rhos6-node1) 	due to unrunnable keystone-clone running
- * Stop    cinder-scheduler	(Started rhos6-node1) 	due to required cinder-api start
- * Stop    cinder-volume	(Started rhos6-node1)
+ * Stop       cinder-api                      ( rhos6-node1 )   due to unrunnable keystone-clone running
+ * Stop       cinder-scheduler                ( rhos6-node1 )   due to required cinder-api start
+ * Stop       cinder-volume                   ( rhos6-node1 )  
  * Stop    swift-account:0	(rhos6-node1)
  * Stop    swift-account:1	(rhos6-node2)
  * Stop    swift-account:2	(rhos6-node3)
@@ -126,7 +126,7 @@ Transition Summary:
  * Stop    swift-proxy:0	(rhos6-node1)
  * Stop    swift-proxy:1	(rhos6-node2)
  * Stop    swift-proxy:2	(rhos6-node3)
- * Stop    swift-object-expirer	(Started rhos6-node2) 	due to required swift-proxy-clone running
+ * Stop       swift-object-expirer            ( rhos6-node2 )   due to required swift-proxy-clone running
  * Stop    neutron-server:0	(rhos6-node1)
  * Stop    neutron-server:1	(rhos6-node2)
  * Stop    neutron-server:2	(rhos6-node3)
@@ -166,35 +166,35 @@ Transition Summary:
  * Stop    nova-conductor:0	(rhos6-node1)
  * Stop    nova-conductor:1	(rhos6-node2)
  * Stop    nova-conductor:2	(rhos6-node3)
- * Stop    ceilometer-central	(Started rhos6-node3) 	due to unrunnable keystone-clone running
- * Stop    ceilometer-collector:0	(Started rhos6-node1) 	due to required ceilometer-central start
- * Stop    ceilometer-collector:1	(Started rhos6-node2) 	due to required ceilometer-central start
- * Stop    ceilometer-collector:2	(Started rhos6-node3) 	due to required ceilometer-central start
- * Stop    ceilometer-api:0	(Started rhos6-node1) 	due to required ceilometer-collector:0 start
- * Stop    ceilometer-api:1	(Started rhos6-node2) 	due to required ceilometer-collector:1 start
- * Stop    ceilometer-api:2	(Started rhos6-node3) 	due to required ceilometer-collector:2 start
- * Stop    ceilometer-delay:0	(Started rhos6-node1) 	due to required ceilometer-api:0 start
- * Stop    ceilometer-delay:1	(Started rhos6-node2) 	due to required ceilometer-api:1 start
- * Stop    ceilometer-delay:2	(Started rhos6-node3) 	due to required ceilometer-api:2 start
- * Stop    ceilometer-alarm-evaluator:0	(Started rhos6-node1) 	due to required ceilometer-delay:0 start
- * Stop    ceilometer-alarm-evaluator:1	(Started rhos6-node2) 	due to required ceilometer-delay:1 start
- * Stop    ceilometer-alarm-evaluator:2	(Started rhos6-node3) 	due to required ceilometer-delay:2 start
- * Stop    ceilometer-alarm-notifier:0	(Started rhos6-node1) 	due to required ceilometer-alarm-evaluator:0 start
- * Stop    ceilometer-alarm-notifier:1	(Started rhos6-node2) 	due to required ceilometer-alarm-evaluator:1 start
- * Stop    ceilometer-alarm-notifier:2	(Started rhos6-node3) 	due to required ceilometer-alarm-evaluator:2 start
- * Stop    ceilometer-notification:0	(Started rhos6-node1) 	due to required ceilometer-alarm-notifier:0 start
- * Stop    ceilometer-notification:1	(Started rhos6-node2) 	due to required ceilometer-alarm-notifier:1 start
- * Stop    ceilometer-notification:2	(Started rhos6-node3) 	due to required ceilometer-alarm-notifier:2 start
- * Stop    heat-api:0	(Started rhos6-node1) 	due to required ceilometer-notification:0 start
- * Stop    heat-api:1	(Started rhos6-node2) 	due to required ceilometer-notification:1 start
- * Stop    heat-api:2	(Started rhos6-node3) 	due to required ceilometer-notification:2 start
- * Stop    heat-api-cfn:0	(Started rhos6-node1) 	due to required heat-api:0 start
- * Stop    heat-api-cfn:1	(Started rhos6-node2) 	due to required heat-api:1 start
- * Stop    heat-api-cfn:2	(Started rhos6-node3) 	due to required heat-api:2 start
- * Stop    heat-api-cloudwatch:0	(Started rhos6-node1) 	due to required heat-api-cfn:0 start
- * Stop    heat-api-cloudwatch:1	(Started rhos6-node2) 	due to required heat-api-cfn:1 start
- * Stop    heat-api-cloudwatch:2	(Started rhos6-node3) 	due to required heat-api-cfn:2 start
- * Stop    heat-engine	(Started rhos6-node2) 	due to required heat-api-cloudwatch-clone running
+ * Stop       ceilometer-central              ( rhos6-node3 )   due to unrunnable keystone-clone running
+ * Stop       ceilometer-collector:0          ( rhos6-node1 )   due to required ceilometer-central start
+ * Stop       ceilometer-collector:1          ( rhos6-node2 )   due to required ceilometer-central start
+ * Stop       ceilometer-collector:2          ( rhos6-node3 )   due to required ceilometer-central start
+ * Stop       ceilometer-api:0                ( rhos6-node1 )   due to required ceilometer-collector:0 start
+ * Stop       ceilometer-api:1                ( rhos6-node2 )   due to required ceilometer-collector:1 start
+ * Stop       ceilometer-api:2                ( rhos6-node3 )   due to required ceilometer-collector:2 start
+ * Stop       ceilometer-delay:0              ( rhos6-node1 )   due to required ceilometer-api:0 start
+ * Stop       ceilometer-delay:1              ( rhos6-node2 )   due to required ceilometer-api:1 start
+ * Stop       ceilometer-delay:2              ( rhos6-node3 )   due to required ceilometer-api:2 start
+ * Stop       ceilometer-alarm-evaluator:0    ( rhos6-node1 )   due to required ceilometer-delay:0 start
+ * Stop       ceilometer-alarm-evaluator:1    ( rhos6-node2 )   due to required ceilometer-delay:1 start
+ * Stop       ceilometer-alarm-evaluator:2    ( rhos6-node3 )   due to required ceilometer-delay:2 start
+ * Stop       ceilometer-alarm-notifier:0     ( rhos6-node1 )   due to required ceilometer-alarm-evaluator:0 start
+ * Stop       ceilometer-alarm-notifier:1     ( rhos6-node2 )   due to required ceilometer-alarm-evaluator:1 start
+ * Stop       ceilometer-alarm-notifier:2     ( rhos6-node3 )   due to required ceilometer-alarm-evaluator:2 start
+ * Stop       ceilometer-notification:0       ( rhos6-node1 )   due to required ceilometer-alarm-notifier:0 start
+ * Stop       ceilometer-notification:1       ( rhos6-node2 )   due to required ceilometer-alarm-notifier:1 start
+ * Stop       ceilometer-notification:2       ( rhos6-node3 )   due to required ceilometer-alarm-notifier:2 start
+ * Stop       heat-api:0                      ( rhos6-node1 )   due to required ceilometer-notification:0 start
+ * Stop       heat-api:1                      ( rhos6-node2 )   due to required ceilometer-notification:1 start
+ * Stop       heat-api:2                      ( rhos6-node3 )   due to required ceilometer-notification:2 start
+ * Stop       heat-api-cfn:0                  ( rhos6-node1 )   due to required heat-api:0 start
+ * Stop       heat-api-cfn:1                  ( rhos6-node2 )   due to required heat-api:1 start
+ * Stop       heat-api-cfn:2                  ( rhos6-node3 )   due to required heat-api:2 start
+ * Stop       heat-api-cloudwatch:0           ( rhos6-node1 )   due to required heat-api-cfn:0 start
+ * Stop       heat-api-cloudwatch:1           ( rhos6-node2 )   due to required heat-api-cfn:1 start
+ * Stop       heat-api-cloudwatch:2           ( rhos6-node3 )   due to required heat-api-cfn:2 start
+ * Stop       heat-engine                     ( rhos6-node2 )   due to required heat-api-cloudwatch-clone running
 
 Executing cluster transition:
  * Pseudo action:   glance-api-clone_stop_0

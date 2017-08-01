@@ -82,8 +82,8 @@ Online: [ hex-0 hex-7 hex-8 ]
 
 Transition Summary:
  * Fence (reboot) hex-9 'peer is no longer part of the cluster'
- * Move    fencing-sbd	(Started hex-9 -> hex-0)
- * Move    dummy1	(Started hex-9 -> hex-0)
+ * Move       fencing-sbd     ( hex-9 -> hex-0 )  
+ * Move       dummy1          ( hex-9 -> hex-0 )  
  * Stop    dlm:3	(hex-9)  	due to node availability
  * Stop    o2cb:3	(hex-9)  	due to node availability
  * Stop    clvm:3	(hex-9)  	due to node availability

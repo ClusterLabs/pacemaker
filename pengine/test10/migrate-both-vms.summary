@@ -32,8 +32,8 @@ Transition Summary:
  * Stop    p-libvirtd:2	(cvmh03)  	due to node availability
  * Stop    fs-bind-libvirt-VM-cvmh:0	(cvmh04)  	due to node availability
  * Stop    fs-bind-libvirt-VM-cvmh:2	(cvmh03)  	due to node availability
- * Migrate vm-compute-test	(Started cvmh03 -> cvmh01)
- * Migrate vm-swbuildsl6	(Started cvmh04 -> cvmh02)
+ * Migrate    vm-compute-test               ( cvmh03 -> cvmh01 )  
+ * Migrate    vm-swbuildsl6                 ( cvmh04 -> cvmh02 )  
 
 Executing cluster transition:
  * Pseudo action:   c-watch-ib0_stop_0

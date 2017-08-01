@@ -38,9 +38,9 @@ Transition Summary:
  * Stop    ping-1:0	(pcmk-1)  	due to node availability
  * Stop    ping-1:1	(pcmk-2)  	due to node availability
  * Stop    ping-1:2	(pcmk-4)  	due to node availability
- * Stop    stateful-1:0	(pcmk-1)  	due to node availability
- * Demote  stateful-1:1	(Master -> Stopped pcmk-2)
- * Stop    stateful-1:2	(pcmk-4)  	due to node availability
+ * Stop       stateful-1:0         (  Slave pcmk-1 )   due to node availability
+ * Stop       stateful-1:1         ( Master pcmk-2 )   due to node availability
+ * Stop       stateful-1:2         (  Slave pcmk-4 )   due to node availability
 
 Executing cluster transition:
  * Resource action: Fencing         stop on pcmk-1

@@ -37,7 +37,7 @@ Online: [ srv01 srv03 srv04 ]
 Transition Summary:
  * Fence (reboot) srv02 'peer is no longer part of the cluster'
  * Start   Dummy01	(srv01)
- * Move    Dummy02	(Started srv02 -> srv04)
+ * Move       Dummy02             ( srv02 -> srv04 )  
  * Stop    prmStonith1-1:1	(srv02)  	due to node availability
  * Stop    prmStonith1-3:1	(srv02)  	due to node availability
  * Stop    prmStonith3-1:0	(srv02)  	due to node availability

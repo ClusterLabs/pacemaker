@@ -11,8 +11,8 @@ RemoteOnline: [ remote1 ]
  FAKE4	(ocf::heartbeat:Dummy):	Started 18node1 
 
 Transition Summary:
- * Move    shooter	(Started 18node1 -> 18builder)
- * Migrate remote1	(Started 18builder -> 18node1)
+ * Move       shooter     ( 18node1 -> 18builder )  
+ * Migrate    remote1     ( 18builder -> 18node1 )  
 
 Executing cluster transition:
  * Resource action: shooter         stop on 18node1

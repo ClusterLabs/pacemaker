@@ -14,8 +14,8 @@ Online: [ node1 ]
 Transition Summary:
  * Fence (reboot) node2 'rsc1 failed there'
  * Stop    rsc1	(node2)
- * Move    rsc2	(Started node2 -> node1)
- * Demote  rsc3:1	(Master -> Stopped node2)
+ * Move       rsc2       ( node2 -> node1 )  
+ * Stop       rsc3:1     (   Master node2 )   due to node availability
 
 Executing cluster transition:
  * Pseudo action:   ms3_demote_0

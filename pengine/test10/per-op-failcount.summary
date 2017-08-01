@@ -10,8 +10,8 @@ Online: [ rh73-02-snmp ]
 
 Transition Summary:
  * Fence (reboot) rh73-01-snmp 'prmDummy failed there'
- * Recover prmDummy	(Started rh73-01-snmp -> rh73-02-snmp)
- * Move    prmStonith2-1	(Started rh73-01-snmp -> rh73-02-snmp)
+ * Recover    prmDummy          ( rh73-01-snmp -> rh73-02-snmp )  
+ * Move       prmStonith2-1     ( rh73-01-snmp -> rh73-02-snmp )  
 
 Executing cluster transition:
  * Pseudo action:   prmStonith2-1_stop_0

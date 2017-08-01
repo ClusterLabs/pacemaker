@@ -16,7 +16,7 @@ Online: [ sys2 sys3 ]
      Stopped (disabled): [ sys2 sys3 ]
 
 Transition Summary:
- * Restart stonithsys3	(Started sys2)
+ * Restart    stonithsys3     (  sys2 )  
  * Start   controld:1	(sys3)
  * Start   clvmd:1	(sys3)
  * Start   o2cb:1	(sys3)

@@ -14,7 +14,7 @@ Online: [ c7auto1 c7auto4 ]
 Transition Summary:
  * Start   FAKECLONE:0	(c7auto1)
  * Stop    FAKECLONE2:0	(c7auto3)  	due to node availability
- * Stop    FAKECLONE2:1	(Started c7auto4) 	due to unrunnable clone-one-or-more:order-FAKECLONE-clone-FAKECLONE2-clone-mandatory
+ * Stop       FAKECLONE2:1    ( c7auto4 )   due to unrunnable clone-one-or-more:order-FAKECLONE-clone-FAKECLONE2-clone-mandatory
 
 Executing cluster transition:
  * Pseudo action:   FAKECLONE-clone_start_0

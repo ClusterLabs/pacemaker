@@ -28,12 +28,12 @@ Online: [ act1 act2 act3 sby1 sby2 ]
      Started: [ act2 act3 sby1 sby2 ]
 
 Transition Summary:
- * Move    prmExPostgreSQLDB1	(Started act1 -> sby1)
- * Move    prmFsPostgreSQLDB1-1	(Started act1 -> sby1)
- * Move    prmFsPostgreSQLDB1-2	(Started act1 -> sby1)
- * Move    prmFsPostgreSQLDB1-3	(Started act1 -> sby1)
- * Move    prmIpPostgreSQLDB1	(Started act1 -> sby1)
- * Move    prmApPostgreSQLDB1	(Started act1 -> sby1)
+ * Move       prmExPostgreSQLDB1     ( act1 -> sby1 )  
+ * Move       prmFsPostgreSQLDB1-1   ( act1 -> sby1 )  
+ * Move       prmFsPostgreSQLDB1-2   ( act1 -> sby1 )  
+ * Move       prmFsPostgreSQLDB1-3   ( act1 -> sby1 )  
+ * Move       prmIpPostgreSQLDB1     ( act1 -> sby1 )  
+ * Move       prmApPostgreSQLDB1     ( act1 -> sby1 )  
  * Stop    prmPingd:0	(act1)  	due to node availability
 
 Executing cluster transition:

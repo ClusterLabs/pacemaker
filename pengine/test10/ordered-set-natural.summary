@@ -21,12 +21,12 @@ Online: [ node1 node2 ]
  dummy2-5	(ocf::heartbeat:Dummy):	Stopped 
 
 Transition Summary:
- * Start   dummy1-1	(node1 - blocked) 	due to no quorum
- * Start   dummy1-2	(node1 - blocked) 	due to no quorum
- * Start   dummy2-1	(node2 - blocked) 	due to no quorum
- * Start   dummy2-2	(node2 - blocked) 	due to no quorum
- * Start   dummy3-4	(node1 - blocked) 	due to no quorum
- * Start   dummy3-5	(node1 - blocked) 	due to no quorum
+ * Start      dummy1-1     ( node1 )   due to no quorum (blocked)
+ * Start      dummy1-2     ( node1 )   due to no quorum (blocked)
+ * Start      dummy2-1     ( node2 )   due to no quorum (blocked)
+ * Start      dummy2-2     ( node2 )   due to no quorum (blocked)
+ * Start      dummy3-4     ( node1 )   due to no quorum (blocked)
+ * Start      dummy3-5     ( node1 )   due to no quorum (blocked)
 
 Executing cluster transition:
 

@@ -7,8 +7,8 @@ Online: [ sles11-1 sles11-2 ]
  rsc2	(ocf::pacemaker:Dummy):	FAILED sles11-1 
 
 Transition Summary:
- * Recover rsc1	(Started sles11-1 -> sles11-2)
- * Recover rsc2	(Started sles11-1 -> sles11-2)
+ * Recover    rsc1    ( sles11-1 -> sles11-2 )  
+ * Recover    rsc2    ( sles11-1 -> sles11-2 )  
 
 Executing cluster transition:
  * Resource action: rsc1            stop on sles11-1

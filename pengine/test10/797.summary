@@ -16,12 +16,12 @@ Online: [ c001n01 c001n02 c001n03 ]
 
 Transition Summary:
  * Shutdown c001n02
- * Stop    DcIPaddr	(Started c001n03) 	due to no quorum
- * Stop    rsc_c001n08	(Started c001n02) 	due to no quorum
- * Stop    rsc_c001n02	(Started c001n02) 	due to no quorum
- * Stop    rsc_c001n03	(Started c001n03) 	due to no quorum
- * Stop    rsc_c001n01	(Started c001n01) 	due to no quorum
- * Restart child_DoFencing:0	(Started c001n01)
+ * Stop       DcIPaddr              ( c001n03 )   due to no quorum
+ * Stop       rsc_c001n08           ( c001n02 )   due to no quorum
+ * Stop       rsc_c001n02           ( c001n02 )   due to no quorum
+ * Stop       rsc_c001n03           ( c001n03 )   due to no quorum
+ * Stop       rsc_c001n01           ( c001n01 )   due to no quorum
+ * Restart    child_DoFencing:0     ( c001n01 )  
  * Stop    child_DoFencing:1	(c001n02)  	due to node availability
 
 Executing cluster transition:

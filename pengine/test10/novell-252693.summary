@@ -21,7 +21,7 @@ Transition Summary:
  * Stop    evmsclone:1	(node1)  	due to node availability
  * Stop    imagestoreclone:1	(node1)  	due to node availability
  * Stop    configstoreclone:1	(node1)  	due to node availability
- * Migrate sles10	(Started node1 -> node2)
+ * Migrate    sles10                ( node1 -> node2 )  
 
 Executing cluster transition:
  * Pseudo action:   stonithcloneset_stop_0

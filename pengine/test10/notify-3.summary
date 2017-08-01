@@ -10,7 +10,7 @@ Online: [ node1 node2 ]
      child_rsc2:1	(heartbeat:apache):	Stopped 
 
 Transition Summary:
- * Move    child_rsc1:1	(Started node2 -> node1)
+ * Move       child_rsc1:1     ( node2 -> node1 )  
  * Stop    child_rsc2:0	(node1)  	due to node availability
 
 Executing cluster transition:

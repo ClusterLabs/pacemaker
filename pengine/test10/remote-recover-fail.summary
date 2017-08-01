@@ -15,10 +15,10 @@ OFFLINE: [ rhel7-auto1 ]
 
 Transition Summary:
  * Fence (reboot) rhel7-auto4 'FAKE2 is thought to be active there'
- * Recover rhel7-auto4	(Started rhel7-auto2)
+ * Recover    rhel7-auto4     (                rhel7-auto2 )  
  * Start   FAKE1	(rhel7-auto2)
- * Move    FAKE2	(Started rhel7-auto4 -> rhel7-auto3)
- * Move    FAKE6	(Started rhel7-auto4 -> rhel7-auto2)
+ * Move       FAKE2           ( rhel7-auto4 -> rhel7-auto3 )  
+ * Move       FAKE6           ( rhel7-auto4 -> rhel7-auto2 )  
 
 Executing cluster transition:
  * Resource action: FAKE3           monitor=10000 on rhel7-auto2

@@ -8,7 +8,7 @@ Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
 
 Transition Summary:
  * Fence (reboot) rhel7-auto4 'remote connection is unrecoverable'
- * Recover rhel7-auto4	(Started rhel7-auto1)
+ * Recover    rhel7-auto4     ( rhel7-auto1 )  
 
 Executing cluster transition:
  * Resource action: rhel7-auto4     stop on rhel7-auto1

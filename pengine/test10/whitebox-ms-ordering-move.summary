@@ -30,9 +30,9 @@ Containers: [ lxc1:container1 lxc2:container2 ]
      Slaves: [ lxc2 ]
 
 Transition Summary:
- * Move    container1	(Started rhel7-1 -> rhel7-2)
+ * Move       container1     ( rhel7-1 -> rhel7-2 )  
  * Restart lxc-ms:0	(Master lxc1) 	due to required container1 start
- * Move    lxc1	(Started rhel7-1 -> rhel7-2)
+ * Move       lxc1           ( rhel7-1 -> rhel7-2 )  
 
 Executing cluster transition:
  * Pseudo action:   lxc-ms-master_demote_0

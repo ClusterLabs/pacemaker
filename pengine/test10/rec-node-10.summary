@@ -8,9 +8,9 @@ Online: [ node2 ]
  rsc2	(heartbeat:apache):	Started node1 (UNCLEAN)
 
 Transition Summary:
- * Start   stonith-1	(node2 - blocked) 	due to no quorum
- * Stop    rsc1	(Started node1 - blocked) 	due to no quorum
- * Stop    rsc2	(Started node1 - blocked) 	due to no quorum
+ * Start      stonith-1     ( node2 )   due to no quorum (blocked)
+ * Stop       rsc1          ( node1 )   due to no quorum (blocked)
+ * Stop       rsc2          ( node1 )   due to no quorum (blocked)
 
 Executing cluster transition:
  * Resource action: stonith-1       monitor on node2

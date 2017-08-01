@@ -9,8 +9,8 @@ Online: [ node1 node2 ]
 
 Transition Summary:
  * Fence (reboot) node1 'deadman ticket was lost'
- * Move    rsc_stonith	(Started node1 -> node2)
- * Demote  rsc1:0	(Master -> Stopped node1)
+ * Move       rsc_stonith     ( node1 -> node2 )  
+ * Stop       rsc1:0          (   Master node1 )   due to node availability
 
 Executing cluster transition:
  * Pseudo action:   rsc_stonith_stop_0

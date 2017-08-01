@@ -8,7 +8,7 @@ Online: [ bl460g6a bl460g6b ]
 
 Transition Summary:
  * Shutdown bl460g6a
- * Stop    dummy01	(Started bl460g6a - blocked)
+ * Stop       dummy01     ( bl460g6a )   blocked
 
 Executing cluster transition:
  * Pseudo action:   dummy-g_stop_0

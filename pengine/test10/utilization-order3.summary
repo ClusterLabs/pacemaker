@@ -7,7 +7,7 @@ Online: [ node1 node2 ]
 
 Transition Summary:
  * Start   rsc2	(node1)
- * Migrate rsc1	(Started node1 -> node2)
+ * Migrate    rsc1    ( node1 -> node2 )  
 
 Executing cluster transition:
  * Pseudo action:   load_stopped_node2

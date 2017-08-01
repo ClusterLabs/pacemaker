@@ -8,7 +8,7 @@ Online: [ dom0-01 dom0-02 ]
      Stopped: [ dom0-01 ]
 
 Transition Summary:
- * Migrate domU-test01	(Started dom0-02 -> dom0-01)
+ * Migrate    domU-test01            ( dom0-02 -> dom0-01 )  
  * Start   dom0-iscsi1-cnx1:1	(dom0-01)
 
 Executing cluster transition:

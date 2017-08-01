@@ -62,22 +62,22 @@ RemoteOFFLINE: [ pcmk_remote5 ]
  FAKE50	(ocf::heartbeat:Dummy):	Stopped 
 
 Transition Summary:
- * Migrate pcmk_remote3	(Started pcmk1 -> pcmk2)
+ * Migrate    pcmk_remote3     (        pcmk1 -> pcmk2 )  
  * Start   FAKE4	(pcmk_remote3)
- * Move    FAKE9	(Started pcmk_remote3 -> pcmk1)
+ * Move       FAKE9            ( pcmk_remote3 -> pcmk1 )  
  * Start   FAKE10	(pcmk1)
  * Start   FAKE13	(pcmk2)
  * Start   FAKE15	(pcmk3)
- * Move    FAKE16	(Started pcmk1 -> pcmk_remote3)
+ * Move       FAKE16           ( pcmk1 -> pcmk_remote3 )  
  * Start   FAKE22	(pcmk1)
- * Move    FAKE23	(Started pcmk1 -> pcmk_remote1)
+ * Move       FAKE23           ( pcmk1 -> pcmk_remote1 )  
  * Start   FAKE26	(pcmk1)
  * Start   FAKE29	(pcmk2)
- * Move    FAKE30	(Started pcmk1 -> pcmk_remote2)
+ * Move       FAKE30           ( pcmk1 -> pcmk_remote2 )  
  * Start   FAKE36	(pcmk1)
- * Move    FAKE37	(Started pcmk1 -> pcmk2)
+ * Move       FAKE37           (        pcmk1 -> pcmk2 )  
  * Start   FAKE43	(pcmk1)
- * Move    FAKE44	(Started pcmk1 -> pcmk2)
+ * Move       FAKE44           (        pcmk1 -> pcmk2 )  
  * Start   FAKE50	(pcmk1)
 
 Executing cluster transition:

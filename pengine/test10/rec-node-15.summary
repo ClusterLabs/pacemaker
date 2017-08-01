@@ -23,9 +23,9 @@ Online: [ sapcl01 ]
 Transition Summary:
  * Fence (reboot) sapcl03 'peer is no longer part of the cluster'
  * Start   stonith-1	(sapcl01)
- * Move    IPaddr_192_168_1_102	(Started sapcl02 -> sapcl01)
- * Move    LVM_12	(Started sapcl02 -> sapcl01)
- * Move    Filesystem_13	(Started sapcl02 -> sapcl01)
+ * Move       IPaddr_192_168_1_102     ( sapcl02 -> sapcl01 )  
+ * Move       LVM_12                   ( sapcl02 -> sapcl01 )  
+ * Move       Filesystem_13            ( sapcl02 -> sapcl01 )  
  * Start   IPaddr_192_168_1_104	(sapcl01)
  * Start   LVM_22	(sapcl01)
  * Start   Filesystem_23	(sapcl01)

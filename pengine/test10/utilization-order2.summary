@@ -10,7 +10,7 @@ Online: [ node1 node2 ]
 
 Transition Summary:
  * Start   rsc4	(node1)
- * Move    rsc3	(Started node1 -> node2)
+ * Move       rsc3       ( node1 -> node2 )  
  * Stop    rsc2:0	(node1)  	due to node availability
  * Stop    rsc1	(node2)
 

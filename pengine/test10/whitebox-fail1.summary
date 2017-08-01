@@ -15,10 +15,10 @@ Containers: [ lxc2:container2 ]
 
 Transition Summary:
  * Fence (reboot) lxc1 (resource: container1) 'guest is unclean'
- * Recover container1	(Started 18node2)
- * Recover M:4	(Started lxc1)
- * Recover B	(Started lxc1)
- * Restart lxc1	(Started 18node2) 	due to required container1 start
+ * Recover    container1     ( 18node2 )  
+ * Recover    M:4            (    lxc1 )  
+ * Recover    B              (    lxc1 )  
+ * Restart    lxc1           ( 18node2 )   due to required container1 start
 
 Executing cluster transition:
  * Resource action: lxc1            stop on 18node2

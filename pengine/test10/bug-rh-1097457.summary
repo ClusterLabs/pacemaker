@@ -33,12 +33,12 @@ Containers: [ lamaVM1:VM1 lamaVM2:VM2 lamaVM3:VM3 ]
 
 Transition Summary:
  * Fence (reboot) lamaVM2 (resource: VM2) 'guest is unclean'
- * Recover VM2	(Started lama3)
- * Recover FSlun3	(Started lamaVM2 -> lama2)
- * Restart FAKE4	(Started lamaVM2) 	due to required VM2 start
- * Restart FAKE4-IP	(Started lamaVM2) 	due to required VM2 start
- * Restart FAKE6:2	(Started lamaVM2) 	due to required VM2 start
- * Restart lamaVM2	(Started lama3) 	due to required VM2 start
+ * Recover    VM2        (            lama3 )  
+ * Recover    FSlun3     ( lamaVM2 -> lama2 )  
+ * Restart    FAKE4      (          lamaVM2 )   due to required VM2 start
+ * Restart    FAKE4-IP   (          lamaVM2 )   due to required VM2 start
+ * Restart    FAKE6:2    (          lamaVM2 )   due to required VM2 start
+ * Restart    lamaVM2    (            lama3 )   due to required VM2 start
 
 Executing cluster transition:
  * Resource action: lamaVM2         stop on lama3

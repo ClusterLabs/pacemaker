@@ -2253,6 +2253,7 @@ void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrit
     if(action->reason == NULL || overwrite) {
         free(action->reason);
         if(reason) {
+            crm_trace("Set %s reason to '%s'", action->uuid, reason);
             action->reason = strdup(reason);
         } else {
             action->reason = NULL;

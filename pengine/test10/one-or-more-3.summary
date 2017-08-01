@@ -11,7 +11,7 @@ OFFLINE: [ fc16-builder2 ]
 
 Transition Summary:
  * Start   A	(fc16-builder)
- * Start   D	(fc16-builder - blocked) 	due to unrunnable one-or-more:require-all-set-1
+ * Start      D       ( fc16-builder )   due to unrunnable one-or-more:require-all-set-1 (blocked)
 
 Executing cluster transition:
  * Resource action: A               monitor on fc16-builder

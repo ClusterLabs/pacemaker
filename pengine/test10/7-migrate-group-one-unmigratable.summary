@@ -8,9 +8,9 @@ Online: [ 18node1 18node2 18node3 ]
      C	(ocf::heartbeat:Dummy):	Started 18node1 
 
 Transition Summary:
- * Migrate A	(Started 18node1 -> 18node2)
- * Move    B	(Started 18node1 -> 18node2)
- * Move    C	(Started 18node1 -> 18node2) 	due to unrunnable B stop
+ * Migrate    A       ( 18node1 -> 18node2 )  
+ * Move       B       ( 18node1 -> 18node2 )  
+ * Move       C       ( 18node1 -> 18node2 )   due to unrunnable B stop
 
 Executing cluster transition:
  * Pseudo action:   thegroup_stop_0

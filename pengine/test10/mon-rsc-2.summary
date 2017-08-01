@@ -6,7 +6,7 @@ Online: [ node1 ]
  rsc1	(heartbeat:apache):	Started node2
 
 Transition Summary:
- * Move    rsc1	(Started node2 -> node1)
+ * Move       rsc1    ( node2 -> node1 )  
 
 Executing cluster transition:
  * Resource action: rsc1            monitor on node1

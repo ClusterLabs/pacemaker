@@ -26,7 +26,7 @@ Transition Summary:
  * Start   o2cb:1	(hex-9)
  * Start   clvm:1	(hex-9)
  * Start   cmirrord:1	(hex-9)
- * Start   vm-01	(hex-9 - blocked) 	due to unrunnable base-clone running
+ * Start      vm-01          ( hex-9 )   due to unrunnable base-clone running (blocked)
 
 Executing cluster transition:
  * Resource action: vg1:1           monitor on hex-9

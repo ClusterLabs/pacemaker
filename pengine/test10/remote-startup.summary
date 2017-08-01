@@ -8,7 +8,7 @@ Online: [ 18builder 18node1 18node2 ]
  remote1	(ocf::pacemaker:remote):	Stopped 
 
 Transition Summary:
- * Move    shooter	(Started 18builder -> 18node1)
+ * Move       shooter     ( 18builder -> 18node1 )  
  * Start   fake	(18node2)
  * Start   remote1	(18builder)
 

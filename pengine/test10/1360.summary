@@ -8,7 +8,7 @@ Online: [ ssgtest1a ssgtest1b ]
      Started: [ ssgtest1a ]
 
 Transition Summary:
- * Move    dollies:0	(Started ssgtest1a -> ssgtest1b)
+ * Move       dollies:0     ( ssgtest1a -> ssgtest1b )  
 
 Executing cluster transition:
  * Pseudo action:   dolly_stop_0

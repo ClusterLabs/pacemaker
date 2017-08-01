@@ -26,14 +26,14 @@ Online: [ xfc0 xfc1 xfc2 xfc3 ]
  xu-test9	(ocf::heartbeat:Xen):	Started xfc0
 
 Transition Summary:
- * Migrate xu-test12	(Started xfc2 -> xfc3)
- * Migrate xu-test2	(Started xfc3 -> xfc1)
- * Migrate xu-test3	(Started xfc1 -> xfc0)
- * Migrate xu-test4	(Started xfc0 -> xfc2)
- * Migrate xu-test5	(Started xfc2 -> xfc3)
- * Migrate xu-test6	(Started xfc3 -> xfc1)
- * Migrate xu-test7	(Started xfc1 -> xfc0)
- * Migrate xu-test9	(Started xfc0 -> xfc2)
+ * Migrate    xu-test12     ( xfc2 -> xfc3 )  
+ * Migrate    xu-test2      ( xfc3 -> xfc1 )  
+ * Migrate    xu-test3      ( xfc1 -> xfc0 )  
+ * Migrate    xu-test4      ( xfc0 -> xfc2 )  
+ * Migrate    xu-test5      ( xfc2 -> xfc3 )  
+ * Migrate    xu-test6      ( xfc3 -> xfc1 )  
+ * Migrate    xu-test7      ( xfc1 -> xfc0 )  
+ * Migrate    xu-test9      ( xfc0 -> xfc2 )  
  * Start   xu-test13	(xfc3)
 
 Executing cluster transition:

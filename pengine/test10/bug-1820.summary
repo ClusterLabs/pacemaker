@@ -8,8 +8,8 @@ Online: [ star world ]
 
 Transition Summary:
  * Shutdown star
- * Migrate test1	(Started star -> world)
- * Migrate test2	(Started star -> world)
+ * Migrate    test1   ( star -> world )  
+ * Migrate    test2   ( star -> world )  
 
 Executing cluster transition:
  * Pseudo action:   gr1_stop_0

@@ -143,16 +143,16 @@ Online: [ mgmt01 v03-a v03-b ]
      Stopped: [ mgmt01 ]
 
 Transition Summary:
- * Reload  vds-ok-pool-0-iscsi:0	(Started mgmt01)
- * Reload  vds-ok-pool-0-iscsi:1	(Started v03-b)
- * Reload  vds-ok-pool-0-iscsi:2	(Started v03-a)
- * Reload  vds-ok-pool-1-iscsi:0	(Started mgmt01)
- * Reload  vds-ok-pool-1-iscsi:1	(Started v03-b)
- * Reload  vds-ok-pool-1-iscsi:2	(Started v03-a)
- * Restart stonith-v03-b	(Started v03-a)
- * Restart stonith-v03-a	(Started v03-b)
- * Migrate license.anbriz.vds-ok.com-vm	(Started v03-b -> v03-a)
- * Migrate terminal0.anbriz.vds-ok.com-vm	(Started v03-a -> v03-b)
+ * Reload     vds-ok-pool-0-iscsi:0                       (         mgmt01 )  
+ * Reload     vds-ok-pool-0-iscsi:1                       (          v03-b )  
+ * Reload     vds-ok-pool-0-iscsi:2                       (          v03-a )  
+ * Reload     vds-ok-pool-1-iscsi:0                       (         mgmt01 )  
+ * Reload     vds-ok-pool-1-iscsi:1                       (          v03-b )  
+ * Reload     vds-ok-pool-1-iscsi:2                       (          v03-a )  
+ * Restart    stonith-v03-b                               (          v03-a )  
+ * Restart    stonith-v03-a                               (          v03-b )  
+ * Migrate    license.anbriz.vds-ok.com-vm                ( v03-b -> v03-a )  
+ * Migrate    terminal0.anbriz.vds-ok.com-vm              ( v03-a -> v03-b )  
  * Start   vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm	(v03-a)
 
 Executing cluster transition:

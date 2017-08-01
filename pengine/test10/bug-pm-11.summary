@@ -12,7 +12,6 @@ Online: [ node-a node-b ]
 
 Transition Summary:
  * Start   stateful-2:0	(node-b)
- * Start   stateful-2:1	(node-a)
  * Promote stateful-2:1	(Stopped -> Master node-a)
 
 Executing cluster transition:

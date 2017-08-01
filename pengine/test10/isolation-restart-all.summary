@@ -22,17 +22,17 @@ OFFLINE: [ rhel7-auto4 ]
      iso_mem2	(ocf::heartbeat:Dummy):	Started rhel7-auto5 
 
 Transition Summary:
- * Restart fake	(Started rhel7-auto5)
- * Restart replicated:0	(Started rhel7-auto5)
- * Restart replicated:1	(Started rhel7-auto5)
- * Restart s1	(Started rhel7-auto5)
- * Restart s2	(Started rhel7-auto5)
- * Restart g1:0	(Started rhel7-auto5)
- * Restart g2:0	(Started rhel7-auto5)
- * Restart g1:1	(Started rhel7-auto5)
- * Restart g2:1	(Started rhel7-auto5)
- * Restart iso_mem1	(Started rhel7-auto5)
- * Restart iso_mem2	(Started rhel7-auto5)
+ * Restart    fake             ( rhel7-auto5 )  
+ * Restart    replicated:0     ( rhel7-auto5 )  
+ * Restart    replicated:1     ( rhel7-auto5 )  
+ * Restart    s1               ( rhel7-auto5 )  
+ * Restart    s2               ( rhel7-auto5 )  
+ * Restart    g1:0             ( rhel7-auto5 )  
+ * Restart    g2:0             ( rhel7-auto5 )  
+ * Restart    g1:1             ( rhel7-auto5 )  
+ * Restart    g2:1             ( rhel7-auto5 )  
+ * Restart    iso_mem1         ( rhel7-auto5 )  
+ * Restart    iso_mem2         ( rhel7-auto5 )  
 
 Executing cluster transition:
  * Resource action: fake            stop on rhel7-auto5

@@ -5,7 +5,7 @@ Online: [ dhcp180 dhcp69 ]
  Dummy-test2	(ocf::test:Dummy):	FAILED dhcp180 
 
 Transition Summary:
- * Recover Dummy-test2	(Started dhcp180)
+ * Recover    Dummy-test2     ( dhcp180 )  
 
 Executing cluster transition:
  * Resource action: Dummy-test2     stop on dhcp180
