@@ -91,8 +91,11 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 {
     xmlNode *crmalerts = NULL;
 
-    if (rc != pcmk_ok) {
-        crm_err("Local CIB query resulted in an error: %s", pcmk_strerror(rc));
+    if (rc == -ENXIO) {
+        crm_debug("Local CIB has no alerts section");
+        return;
+    } else if (rc != pcmk_ok) {
+        crm_notice("Could not query local CIB: %s", pcmk_strerror(rc));
         return;
     }
 
@@ -102,7 +105,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         crmalerts = first_named_child(crmalerts, XML_CIB_TAG_ALERTS);
     }
     if (!crmalerts) {
-        crm_err("Local CIB query for " XML_CIB_TAG_ALERTS " section failed");
+        crm_notice("CIB query result has no " XML_CIB_TAG_ALERTS " section");
         return;
     }
 
@@ -110,15 +113,17 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     attrd_alert_list = pe_unpack_alerts(crmalerts);
 }
 
+#define XPATH_ALERTS \
+    "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_ALERTS
+
 gboolean
 attrd_read_options(gpointer user_data)
 {
     int call_id;
-    
+
     if (the_cib) {
-        call_id = the_cib->cmds->query(the_cib,
-            "//" XML_CIB_TAG_ALERTS,
-            NULL, cib_xpath | cib_scope_local);
+        call_id = the_cib->cmds->query(the_cib, XPATH_ALERTS, NULL,
+                                       cib_xpath | cib_scope_local);
 
         the_cib->cmds->register_callback_full(the_cib, call_id, 120, FALSE,
                                               NULL,
@@ -127,7 +132,7 @@ attrd_read_options(gpointer user_data)
 
         crm_trace("Querying the CIB... call %d", call_id);
     } else {
-        crm_err("Querying the CIB...CIB connection not active");
+        crm_err("Could not check for alerts configuration: CIB connection not active");
     }
     return TRUE;
 }
