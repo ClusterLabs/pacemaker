@@ -329,7 +329,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
                  op_version, crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
 
         custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
-        trigger_unfencing(rsc, NULL, "Device parameters changed", NULL, data_set);
+        trigger_unfencing(rsc, active_node, "Device parameters changed", NULL, data_set);
 
     } else if ((digest_data->rc == RSC_DIGEST_ALL) || (digest_data->rc == RSC_DIGEST_UNKNOWN)) {
         /* Changes that can potentially be handled by a reload */
@@ -337,7 +337,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
         const char *digest_all = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
 
         did_change = TRUE;
-        trigger_unfencing(rsc, NULL, "Device parameters changed (reload)", NULL, data_set);
+        trigger_unfencing(rsc, active_node, "Device parameters changed (reload)", NULL, data_set);
         crm_log_xml_info(digest_data->params_all, "params:reload");
         key = generate_op_key(rsc->id, task, interval);
         pe_rsc_info(rsc, "Parameters to %s on %s changed: was %s vs. now %s (reload:%s) %s",
