@@ -1830,13 +1830,18 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
     op->timeout = crm_parse_int(op_timeout, "0");
     op->start_delay = crm_parse_int(op_delay, "0");
 
-    if (safe_str_neq(op->op_type, RSC_METADATA) && !is_remote_lrmd_ra(NULL, NULL, rsc_id)) {
+    // Resolve any versioned parameters
+    if (safe_str_neq(op->op_type, RSC_METADATA)
+        && safe_str_neq(op->op_type, CRMD_ACTION_DELETE)
+        && !is_remote_lrmd_ra(NULL, NULL, rsc_id)) {
+
+        // Resource info *should* already be cached, so we don't get lrmd call
         lrmd_rsc_info_t *rsc = lrm_state_get_rsc_info(lrm_state, rsc_id, 0);
         struct ra_metadata_s *metadata;
 
         metadata = metadata_cache_get(lrm_state->metadata_cache, rsc);
         if (metadata) {
-            xmlNode *versioned_attrs =  NULL;
+            xmlNode *versioned_attrs = NULL;
             GHashTable *hash = NULL;
             char *key = NULL;
             char *value = NULL;
