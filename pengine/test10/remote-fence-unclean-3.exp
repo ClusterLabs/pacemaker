@@ -21,9 +21,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="42" operation="all_stopped" operation_key="all_stopped"/>
-      </trigger>
-      <trigger>
         <rsc_op id="43" operation="monitor" operation_key="fence1_monitor_0" on_node="overcloud-controller-0" on_node_uuid="1"/>
       </trigger>
       <trigger>
@@ -75,29 +72,6 @@
   </synapse>
   <synapse id="6">
     <action_set>
-      <crm_event id="185" operation="stonith" operation_key="stonith-overcloud-novacompute-0-reboot" on_node="overcloud-novacompute-0" on_node_uuid="overcloud-novacompute-0">
-        <attributes CRM_meta_compute_role="true" CRM_meta_on_node="overcloud-novacompute-0" CRM_meta_on_node_uuid="overcloud-novacompute-0" CRM_meta_stonith_action="reboot" />
-        <downed>
-          <node id="overcloud-novacompute-0"/>
-        </downed>
-      </crm_event>
-    </action_set>
-    <inputs/>
-  </synapse>
-  <synapse id="7">
-    <action_set>
-      <pseudo_event id="184" operation="stonith_complete" operation_key="stonith_complete">
-        <attributes />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <crm_event id="185" operation="stonith" operation_key="stonith-overcloud-novacompute-0-reboot" on_node="overcloud-novacompute-0" on_node_uuid="overcloud-novacompute-0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="8">
-    <action_set>
       <pseudo_event id="42" operation="all_stopped" operation_key="all_stopped">
         <attributes />
       </pseudo_event>
@@ -105,9 +79,6 @@
     <inputs>
       <trigger>
         <rsc_op id="30" operation="stop" operation_key="overcloud-novacompute-0_stop_0" on_node="overcloud-controller-0" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="184" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
