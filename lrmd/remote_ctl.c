@@ -194,6 +194,9 @@ client_start(gpointer user_data)
     if (safe_str_eq(options.api_call, "metadata")) {
         char *output = NULL;
 
+        /* This is broken when the agent is installed only in the
+         * remote environment and not on the cluster node handling the proxy.
+         */
         rc = lrmd_conn->cmds->get_metadata(lrmd_conn,
                                            options.class,
                                            options.provider, options.type, &output, 0);

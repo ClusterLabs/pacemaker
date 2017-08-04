@@ -402,9 +402,24 @@ typedef struct lrmd_api_operations_s {
     int (*cancel) (lrmd_t * lrmd, const char *rsc_id, const char *action, int interval);
 
     /*!
-     * \brief Get the metadata documentation for a resource.
+     * \brief Get resource metadata for a specified resource agent
      *
-     * \note Value is returned in output.  Output must be freed when set
+     * \param[in]  lrmd      LRMD connection (unused)
+     * \param[in]  class     Resource agent class
+     * \param[in]  provider  Resource agent provider
+     * \param[in]  agent     Resource agent type
+     * \param[out] output    Metadata will be stored here (must not be NULL)
+     * \param[in]  options   Options to use with any LRMD API calls (unused)
+     *
+     * \note Caller is responsible for freeing output. This call is currently
+     *       always synchronous (blocking), and always done directly by the
+     *       library (not via the LRMD connection). This means that it is based
+     *       on the local host environment, even if the lrmd connection is to a
+     *       remote node, so (for most resource agent classes) this will fail if
+     *       the agent is not installed locally. This also means that, if an
+     *       external agent must be executed, it will be executed by the
+     *       caller's user, not the lrmd's.
+     * \todo Add a metadata call to the LRMD API and let the server handle this.
      *
      * \retval lrmd_ok success
      * \retval negative error code on failure

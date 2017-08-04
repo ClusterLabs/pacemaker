@@ -17,6 +17,7 @@
  */
 
 #include <crmd_messages.h>
+#include <crmd_metadata.h>
 
 extern gboolean verify_stopped(enum crmd_fsa_state cur_state, int log_level);
 extern void lrm_clear_last_failure(const char *rsc_id, const char *node_name,
@@ -66,10 +67,9 @@ typedef struct lrm_state_s {
     GHashTable *pending_ops;
     GHashTable *deletion_ops;
     GHashTable *rsc_info_cache;
+    GHashTable *metadata_cache; // key = class[:provider]:agent, value = ra_metadata_s
 
     int num_lrm_register_fails;
-
-    GHashTable *metadata_cache;
 } lrm_state_t;
 
 struct pending_deletion_op_s {
@@ -120,18 +120,6 @@ lrm_state_t *lrm_state_find(const char *node_name);
  * \brief Either find or create a new entry
  */
 lrm_state_t *lrm_state_find_or_create(const char *node_name);
-
-/*!
- * \brief Update metadata cache
- * \retval metadata XML on success
- * \retval NULL on failure
- */
-xmlNode *lrm_state_update_rsc_metadata(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, const char *metadata_str);
-
-/*!
- * \brief Supply cached metadata XML based on resource's class:provider:type
- */
-xmlNode *lrm_state_get_rsc_metadata(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc);
 
 /*!
  * The functions below are wrappers for the lrmd api calls the crmd

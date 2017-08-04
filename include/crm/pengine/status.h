@@ -313,6 +313,12 @@ struct resource_s {
     xmlNode *versioned_parameters;
 };
 
+// Used as action->action_details if action->rsc is not NULL
+typedef struct pe_rsc_action_details_s {
+    xmlNode *versioned_parameters;
+    xmlNode *versioned_meta;
+} pe_rsc_action_details_t;
+
 struct pe_action_s {
     int id;
     int priority;
@@ -363,8 +369,10 @@ struct pe_action_s {
     GListPtr actions_before;    /* action_wrapper_t* */
     GListPtr actions_after;     /* action_wrapper_t* */
 
-    xmlNode *versioned_parameters;
-    xmlNode *versioned_meta;
+    /* Some of the above fields could be moved to the details,
+     * except for API backward compatibility.
+     */
+    void *action_details; // varies by type of action
 };
 
 struct ticket_s {
@@ -442,6 +450,7 @@ node_t *pe_find_node_id(GListPtr node_list, const char *id);
 node_t *pe_find_node_any(GListPtr node_list, const char *id, const char *uname);
 GListPtr find_operations(const char *rsc, const char *node, gboolean active_filter,
                          pe_working_set_t * data_set);
+pe_rsc_action_details_t *pe_rsc_action_details(pe_action_t *action);
 
 /*!
  * \brief Check whether a resource is any clone type

@@ -113,13 +113,20 @@ int char2score(const char *score);
 char *score2char(int score);
 char *score2char_stack(int score, char *buf, size_t len);
 
+/* public operation functions (from operations.c) */
+gboolean parse_op_key(const char *key, char **rsc_id, char **op_type,
+                      int *interval);
+gboolean decode_transition_key(const char *key, char **uuid, int *action,
+                               int *transition_id, int *target_rc);
+gboolean decode_transition_magic(const char *magic, char **uuid,
+                                 int *transition_id, int *action_id,
+                                 int *op_status, int *op_rc, int *target_rc);
+int rsc_op_expected_rc(lrmd_event_data_t *event);
+gboolean did_rsc_op_fail(lrmd_event_data_t *event, int target_rc);
+bool crm_op_needs_metadata(const char *rsc_class, const char *op);
+
 int compare_version(const char *version1, const char *version2);
 
-gboolean parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval);
-gboolean decode_transition_key(const char *key, char **uuid, int *action, int *transition_id,
-                               int *target_rc);
-gboolean decode_transition_magic(const char *magic, char **uuid, int *transition_id, int *action_id,
-                                 int *op_status, int *op_rc, int *target_rc);
 /* coverity[+kill] */
 void crm_abort(const char *file, const char *function, int line,
                const char *condition, gboolean do_core, gboolean do_fork);
@@ -153,9 +160,6 @@ crm_hash_table_size(GHashTable * hashtable)
 
 char *crm_meta_name(const char *field);
 const char *crm_meta_value(GHashTable * hash, const char *field);
-
-int rsc_op_expected_rc(lrmd_event_data_t * event);
-gboolean did_rsc_op_fail(lrmd_event_data_t * event, int target_rc);
 
 char *crm_md5sum(const char *buffer);
 

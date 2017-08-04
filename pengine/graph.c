@@ -949,6 +949,7 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
     gboolean needs_maintenance_info = FALSE;
     xmlNode *action_xml = NULL;
     xmlNode *args_xml = NULL;
+    pe_rsc_action_details_t *rsc_details = NULL;
 
     if (action == NULL) {
         return NULL;
@@ -982,6 +983,7 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
 
     } else {
         action_xml = create_xml_node(NULL, XML_GRAPH_TAG_RSC_OP);
+        rsc_details = pe_rsc_action_details(action);
     }
 
     crm_xml_add_int(action_xml, XML_ATTR_ID, action->id);
@@ -1128,12 +1130,14 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
         }
     }
 
-    if (xml_has_children(action->versioned_parameters)) {
-        add_node_copy(action_xml, action->versioned_parameters);
-    }
+    if (rsc_details) {
+        if (xml_has_children(rsc_details->versioned_parameters)) {
+            add_node_copy(action_xml, rsc_details->versioned_parameters);
+        }
 
-    if (xml_has_children(action->versioned_meta)) {
-        add_node_copy(action_xml, action->versioned_meta);
+        if (xml_has_children(rsc_details->versioned_meta)) {
+            add_node_copy(action_xml, rsc_details->versioned_meta);
+        }
     }
 
     g_hash_table_foreach(action->meta, hash2metafield, args_xml);
