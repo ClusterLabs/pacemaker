@@ -770,6 +770,11 @@ container_expand(resource_t * rsc, pe_working_set_t * data_set)
     CRM_CHECK(rsc != NULL, return);
 
     get_container_variant_data(container_data, rsc);
+
+    if(container_data->child) {
+        container_data->child->cmds->expand(container_data->child, data_set);
+    }
+
     for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
         container_grouping_t *tuple = (container_grouping_t *)gIter->data;
 
@@ -786,9 +791,6 @@ container_expand(resource_t * rsc, pe_working_set_t * data_set)
         }
         if(tuple->ip) {
             tuple->ip->cmds->expand(tuple->ip, data_set);
-        }
-        if(tuple->child) {
-            tuple->child->cmds->expand(tuple->child, data_set);
         }
         if(tuple->docker) {
             tuple->docker->cmds->expand(tuple->docker, data_set);

@@ -757,6 +757,11 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
             tuple->child = childIter->data;
             tuple->offset = lpc++;
 
+            // Ensure the child's notify gets set based on the underlying primitive's value
+            if(is_set(tuple->child->flags, pe_rsc_notify)) {
+                set_bit(container_data->child->flags, pe_rsc_notify);
+            }
+
             offset += allocate_ip(container_data, tuple, buffer+offset, max-offset);
             container_data->tuples = g_list_append(container_data->tuples, tuple);
         }
