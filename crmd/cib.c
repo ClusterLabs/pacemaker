@@ -18,35 +18,18 @@
 
 #include <crm_internal.h>
 
-#include <sys/param.h>
-#include <crm/crm.h>
-#include <crmd_fsa.h>
+#include <unistd.h>  /* sleep */
 
-#include <sys/types.h>
-#include <sys/wait.h>
-
-#include <unistd.h>             /* for access */
-
-#include <sys/types.h>          /* for calls to open */
-#include <sys/stat.h>           /* for calls to open */
-#include <fcntl.h>              /* for calls to open */
-#include <pwd.h>                /* for getpwuid */
-#include <grp.h>                /* for initgroups */
-
-#include <sys/time.h>           /* for getrlimit */
-#include <sys/resource.h>       /* for getrlimit */
-
-#include <errno.h>
-
-#include <crm/msg_xml.h>
-#include <crm/common/xml.h>
 #include <crm/common/alerts_internal.h>
-#include <crmd_messages.h>
-#include <crmd_callbacks.h>
+#include <crm/common/xml.h>
+#include <crm/crm.h>
+#include <crm/msg_xml.h>
 
 #include <crmd.h>
+#include <crmd_callbacks.h>  /* crmd_cib_connection_destroy */
+#include <crmd_fsa.h>
+#include <crmd_messages.h>
 
-#include <tengine.h>
 
 struct crm_subsystem_s *cib_subsystem = NULL;
 
