@@ -48,7 +48,6 @@ typedef struct attribute_value_s {
 crm_cluster_t *attrd_cluster;
 GHashTable *attributes;
 election_t *writer;
-int attrd_error;
 
 #define attrd_send_ack(client, id, flags) \
     crm_ipcs_send_ack((client), (id), (flags), "ack", __FUNCTION__, __LINE__)

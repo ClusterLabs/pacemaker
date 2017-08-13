@@ -46,8 +46,8 @@
 lrmd_t *the_lrmd = NULL;
 crm_cluster_t *attrd_cluster = NULL;
 election_t *writer = NULL;
-int attrd_error = pcmk_ok;
 crm_trigger_t *attrd_config_read = NULL;
+static int attrd_exit_status = pcmk_ok;
 
 static void
 attrd_cpg_dispatch(cpg_handle_t handle,
@@ -87,7 +87,7 @@ attrd_cpg_destroy(gpointer unused)
 
     } else {
         crm_crit("Lost connection to Corosync service!");
-        attrd_error = ECONNRESET;
+        attrd_exit_status = ECONNRESET;
         attrd_shutdown(0);
     }
 }
@@ -114,7 +114,7 @@ attrd_cib_destroy_cb(gpointer user_data)
     } else {
         /* eventually this should trigger a reconnect, not a shutdown */
         crm_err("Lost connection to CIB service!");
-        attrd_error = ECONNRESET;
+        attrd_exit_status = ECONNRESET;
         attrd_shutdown(0);
     }
 
@@ -254,7 +254,6 @@ static struct crm_option long_options[] = {
 int
 main(int argc, char **argv)
 {
-    int rc = pcmk_ok;
     int flag = 0;
     int index = 0;
     int argerr = 0;
@@ -307,7 +306,7 @@ main(int argc, char **argv)
 
     if (crm_cluster_connect(attrd_cluster) == FALSE) {
         crm_err("Cluster connection failed");
-        rc = DAEMON_RESPAWN_STOP;
+        attrd_exit_status = DAEMON_RESPAWN_STOP;
         goto done;
     }
     crm_info("Cluster connection active");
@@ -318,15 +317,15 @@ main(int argc, char **argv)
 
     the_cib = attrd_cib_connect(10);
     if (the_cib == NULL) {
-        rc = DAEMON_RESPAWN_STOP;
+        attrd_exit_status = DAEMON_RESPAWN_STOP;
         goto done;
     }
-
     crm_info("CIB connection active");
 
+    // Set a trigger for reading the CIB (for the alerts section)
     attrd_config_read = mainloop_add_trigger(G_PRIORITY_HIGH, attrd_read_options, NULL);
 
-    /* Reading of cib(Alert section) after the start */
+    // Always read the CIB at start-up
     mainloop_set_trigger(attrd_config_read);
 
     attrd_run_mainloop();
@@ -344,8 +343,5 @@ main(int argc, char **argv)
     attrd_lrmd_disconnect();
     attrd_cib_disconnect();
 
-    if(attrd_error) {
-        return crm_exit(attrd_error);
-    }
-    return crm_exit(rc);
+    return crm_exit(attrd_exit_status);
 }
