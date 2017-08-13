@@ -52,7 +52,7 @@ election_t *writer;
 #define attrd_send_ack(client, id, flags) \
     crm_ipcs_send_ack((client), (id), (flags), "ack", __FUNCTION__, __LINE__)
 
-void write_attributes(bool all, bool peer_discovered);
+void write_attributes(bool all);
 void attrd_peer_message(crm_node_t *client, xmlNode *msg);
 void attrd_client_peer_remove(const char *client_name, xmlNode *xml);
 void attrd_client_clear_failure(xmlNode *xml);

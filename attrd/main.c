@@ -97,7 +97,7 @@ attrd_cib_replaced_cb(const char *event, xmlNode * msg)
 {
     crm_notice("Updating all attributes after %s event", event);
     if(election_state(writer) == election_won) {
-        write_attributes(TRUE, FALSE);
+        write_attributes(TRUE);
     }
 }
 
