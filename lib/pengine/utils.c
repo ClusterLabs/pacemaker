@@ -1952,7 +1952,7 @@ fencing_action_digest_cmp(resource_t * rsc, node_t * node, pe_working_set_t * da
      * We use the resource id + agent + digest so that we can detect
      * changes to the agent and/or the parameters used
      */
-    char *search_all = crm_strdup_printf("%s:%s:%s", rsc->id, (const char*)g_hash_table_lookup(rsc->meta, XML_ATTR_TYPE), data->digest_secure_calc);
+    char *search_all = crm_strdup_printf("%s:%s:%s", rsc->id, (const char*)g_hash_table_lookup(rsc->meta, XML_ATTR_TYPE), data->digest_all_calc);
     char *search_secure = crm_strdup_printf("%s:%s:%s", rsc->id, (const char*)g_hash_table_lookup(rsc->meta, XML_ATTR_TYPE), data->digest_secure_calc);
 
     data->rc = RSC_DIGEST_ALL;
