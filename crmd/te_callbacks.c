@@ -799,10 +799,11 @@ tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
             if (safe_str_eq("on", op)) {
                 const char *key = NULL;
                 const char *value = NULL;
+                char *now = crm_itoa(time(NULL));
 
                 key = XML_NODE_IS_UNFENCED;
-                value = crm_meta_value(action->params, key);
-                update_attrd(target, key, value, NULL, FALSE);
+                update_attrd(target, key, now, NULL, FALSE);
+                free(now);
 
                 key = "digests-all";
                 value = crm_meta_value(action->params, key);
