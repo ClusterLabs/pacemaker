@@ -241,6 +241,24 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     return 0;
 }
 
+static int
+attrd_cluster_connect()
+{
+    attrd_cluster = calloc(1, sizeof(crm_cluster_t));
+
+    attrd_cluster->destroy = attrd_cpg_destroy;
+    attrd_cluster->cpg.cpg_deliver_fn = attrd_cpg_dispatch;
+    attrd_cluster->cpg.cpg_confchg_fn = pcmk_cpg_membership;
+
+    crm_set_status_callback(&attrd_peer_change_cb);
+
+    if (crm_cluster_connect(attrd_cluster) == FALSE) {
+        crm_err("Cluster connection failed");
+        return DAEMON_RESPAWN_STOP;
+    }
+    return pcmk_ok;
+}
+
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {
     /* Top-level Options */
@@ -296,17 +314,8 @@ main(int argc, char **argv)
     crm_info("Starting up");
     attributes = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_attribute);
 
-    attrd_cluster = malloc(sizeof(crm_cluster_t));
-
-    attrd_cluster->destroy = attrd_cpg_destroy;
-    attrd_cluster->cpg.cpg_deliver_fn = attrd_cpg_dispatch;
-    attrd_cluster->cpg.cpg_confchg_fn = pcmk_cpg_membership;
-
-    crm_set_status_callback(&attrd_peer_change_cb);
-
-    if (crm_cluster_connect(attrd_cluster) == FALSE) {
-        crm_err("Cluster connection failed");
-        attrd_exit_status = DAEMON_RESPAWN_STOP;
+    attrd_exit_status = attrd_cluster_connect();
+    if (attrd_exit_status != pcmk_ok) {
         goto done;
     }
     crm_info("Cluster connection active");
