@@ -121,6 +121,48 @@ attrd_cib_destroy_cb(gpointer user_data)
     return;
 }
 
+static void
+attrd_erase_cb(xmlNode *msg, int call_id, int rc, xmlNode *output,
+               void *user_data)
+{
+    do_crm_log_unlikely((rc? LOG_NOTICE : LOG_DEBUG),
+                        "Cleared transient attributes: %s "
+                        CRM_XS " xpath=%s rc=%d",
+                        pcmk_strerror(rc), (char *) user_data, rc);
+}
+
+#define XPATH_TRANSIENT "//node_state[@uname='%s']/" XML_TAG_TRANSIENT_NODEATTRS
+
+/*!
+ * \internal
+ * \brief Wipe all transient attributes for this node from the CIB
+ *
+ * Clear any previous transient node attributes from the CIB. This is
+ * normally done by the DC's crmd when this node leaves the cluster, but
+ * this handles the case where the node restarted so quickly that the
+ * cluster layer didn't notice.
+ *
+ * \todo If attrd respawns after crashing (see PCMK_respawned), ideally we'd
+ *       skip this and sync our attributes from the writer. However, currently
+ *       we reject any values for us that the writer has, in
+ *       attrd_peer_update().
+ */
+static void
+attrd_erase_attrs()
+{
+    int call_id;
+    char *xpath = crm_strdup_printf(XPATH_TRANSIENT, attrd_cluster->uname);
+
+    crm_info("Clearing transient attributes from CIB " CRM_XS " xpath=%s",
+             xpath);
+
+    call_id = the_cib->cmds->delete(the_cib, xpath, NULL,
+                                    cib_quorum_override | cib_xpath);
+    the_cib->cmds->register_callback_full(the_cib, call_id, 120, FALSE, xpath,
+                                          "attrd_erase_cb", attrd_erase_cb,
+                                          free);
+}
+
 static int
 attrd_cib_connect(int max_retry)
 {
@@ -168,6 +210,9 @@ attrd_cib_connect(int max_retry)
         crm_err("Could not set CIB notification callback (update)");
         goto cleanup;
     }
+
+    // We have no attribute values in memory, wipe the CIB to match
+    attrd_erase_attrs();
 
     // Set a trigger for reading the CIB (for the alerts section)
     attrd_config_read = mainloop_add_trigger(G_PRIORITY_HIGH, attrd_read_options, NULL);
