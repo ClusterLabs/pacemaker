@@ -891,8 +891,6 @@ write_or_elect_attribute(attribute_t *a)
 gboolean
 attrd_election_cb(gpointer user_data)
 {
-    crm_trace("Election complete");
-
     free(peer_writer);
     peer_writer = strdup(attrd_cluster->uname);
 
@@ -987,10 +985,11 @@ write_attributes(bool all)
     GHashTableIter iter;
     attribute_t *a = NULL;
 
+    crm_debug("Writing out %s attributes", all? "all" : "changed");
     g_hash_table_iter_init(&iter, attributes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & a)) {
         if (!all && a->unknown_peer_uuids) {
-            /* a new peer uuid has been discovered, try writing this attribute again. */
+            // Try writing this attribute again, in case peer ID was learned
             a->changed = TRUE;
         }
 

@@ -148,7 +148,7 @@ attrd_cib_connect(int max_retry)
         goto cleanup;
     }
 
-    crm_info("Connected to the CIB after %d attempts", attempts);
+    crm_debug("Connected to the CIB after %d attempts", attempts);
 
     rc = connection->cmds->set_connection_dnotify(connection, attrd_cib_destroy_cb);
     if (rc != pcmk_ok) {
