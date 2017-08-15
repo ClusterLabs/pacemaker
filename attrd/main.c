@@ -328,16 +328,15 @@ main(int argc, char **argv)
     }
     crm_info("Cluster connection active");
 
-    writer = election_init(T_ATTRD, attrd_cluster->uname, 120000, attrd_election_cb);
-    attrd_init_ipc(&ipcs, attrd_ipc_dispatch);
-    crm_info("Accepting attribute updates");
-
     attrd_exit_status = attrd_cib_connect(10);
     if (attrd_exit_status != pcmk_ok) {
         goto done;
     }
     crm_info("CIB connection active");
 
+    writer = election_init(T_ATTRD, attrd_cluster->uname, 120000, attrd_election_cb);
+    attrd_init_ipc(&ipcs, attrd_ipc_dispatch);
+    crm_info("Accepting attribute updates");
 
     attrd_run_mainloop();
 
