@@ -121,15 +121,16 @@ attrd_cib_destroy_cb(gpointer user_data)
     return;
 }
 
-static cib_t *
+static int
 attrd_cib_connect(int max_retry)
 {
-    int rc = -ENOTCONN;
     static int attempts = 0;
-    cib_t *connection = cib_new();
 
-    if(connection == NULL) {
-        return NULL;
+    int rc = -ENOTCONN;
+
+    the_cib = cib_new();
+    if (the_cib == NULL) {
+        return DAEMON_RESPAWN_STOP;
     }
 
     do {
@@ -139,7 +140,7 @@ attrd_cib_connect(int max_retry)
 
         attempts++;
         crm_debug("CIB signon attempt %d", attempts);
-        rc = connection->cmds->signon(connection, T_ATTRD, cib_command);
+        rc = the_cib->cmds->signon(the_cib, T_ATTRD, cib_command);
 
     } while(rc != pcmk_ok && attempts < max_retry);
 
@@ -150,30 +151,37 @@ attrd_cib_connect(int max_retry)
 
     crm_debug("Connected to the CIB after %d attempts", attempts);
 
-    rc = connection->cmds->set_connection_dnotify(connection, attrd_cib_destroy_cb);
+    rc = the_cib->cmds->set_connection_dnotify(the_cib, attrd_cib_destroy_cb);
     if (rc != pcmk_ok) {
         crm_err("Could not set disconnection callback");
         goto cleanup;
     }
 
-    rc = connection->cmds->add_notify_callback(connection, T_CIB_REPLACE_NOTIFY, attrd_cib_replaced_cb);
+    rc = the_cib->cmds->add_notify_callback(the_cib, T_CIB_REPLACE_NOTIFY, attrd_cib_replaced_cb);
     if(rc != pcmk_ok) {
         crm_err("Could not set CIB notification callback");
         goto cleanup;
     }
 
-    rc = connection->cmds->add_notify_callback(connection, T_CIB_DIFF_NOTIFY, attrd_cib_updated_cb);
+    rc = the_cib->cmds->add_notify_callback(the_cib, T_CIB_DIFF_NOTIFY, attrd_cib_updated_cb);
     if (rc != pcmk_ok) {
         crm_err("Could not set CIB notification callback (update)");
         goto cleanup;
     }
 
-    return connection;
+    // Set a trigger for reading the CIB (for the alerts section)
+    attrd_config_read = mainloop_add_trigger(G_PRIORITY_HIGH, attrd_read_options, NULL);
+
+    // Always read the CIB at start-up
+    mainloop_set_trigger(attrd_config_read);
+
+    return pcmk_ok;
 
   cleanup:
-    connection->cmds->signoff(connection);
-    cib_delete(connection);
-    return NULL;
+    the_cib->cmds->signoff(the_cib);
+    cib_delete(the_cib);
+    the_cib = NULL;
+    return DAEMON_RESPAWN_STOP;
 }
 
 static int32_t
@@ -324,18 +332,12 @@ main(int argc, char **argv)
     attrd_init_ipc(&ipcs, attrd_ipc_dispatch);
     crm_info("Accepting attribute updates");
 
-    the_cib = attrd_cib_connect(10);
-    if (the_cib == NULL) {
-        attrd_exit_status = DAEMON_RESPAWN_STOP;
+    attrd_exit_status = attrd_cib_connect(10);
+    if (attrd_exit_status != pcmk_ok) {
         goto done;
     }
     crm_info("CIB connection active");
 
-    // Set a trigger for reading the CIB (for the alerts section)
-    attrd_config_read = mainloop_add_trigger(G_PRIORITY_HIGH, attrd_read_options, NULL);
-
-    // Always read the CIB at start-up
-    mainloop_set_trigger(attrd_config_read);
 
     attrd_run_mainloop();
 
