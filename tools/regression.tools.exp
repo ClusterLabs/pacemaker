@@ -1085,8 +1085,8 @@ Online: [ node1 ]
  Fence	(stonith:fence_true):	Stopped
 
 Transition Summary:
- * Start   dummy	(node1)
- * Start   Fence	(node1)
+ * Start      dummy   ( node1 )  
+ * Start      Fence   ( node1 )  
 
 Executing cluster transition:
  * Resource action: dummy           monitor on node1
@@ -1799,7 +1799,7 @@ Performing requested modifications
  + Bringing node node3 online
 
 Transition Summary:
- * Move    Fence	(Started node1 -> node2)
+ * Move       Fence   ( node1 -> node2 )  
 
 Executing cluster transition:
  * Resource action: dummy           monitor on node3
@@ -2074,7 +2074,7 @@ Online: [ node1 node2 node3 ]
  Fence	(stonith:fence_true):	Started node2
 
 Transition Summary:
- * Move    dummy	(Started node1 -> node3)
+ * Move       dummy   ( node1 -> node3 )  
 
 Executing cluster transition:
  * Resource action: dummy           stop on node1
