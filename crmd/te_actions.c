@@ -581,7 +581,7 @@ te_update_job_count(crm_action_t * action, int offset)
     }
 
     /* if we have a router node, this means the action is performing
-     * on a remote node. For now, we count all action occuring on a
+     * on a remote node. For now, we count all actions occurring on a
      * remote node against the job list on the cluster node hosting
      * the connection resources */
     target = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
@@ -657,7 +657,7 @@ te_should_perform_action(crm_graph_t * graph, crm_action_t * action)
     }
 
     /* if we have a router node, this means the action is performing
-     * on a remote node. For now, we count all action occuring on a
+     * on a remote node. For now, we count all actions occurring on a
      * remote node against the job list on the cluster node hosting
      * the connection resources */
     target = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);

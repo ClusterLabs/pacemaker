@@ -36,6 +36,7 @@
 #include <crmd_callbacks.h>
 #include <crmd_lrm.h>
 #include <crmd_alerts.h>
+#include <crmd_metadata.h>
 #include <tengine.h>
 #include <throttle.h>
 
@@ -348,10 +349,7 @@ crmd_exit(int rc)
     free(te_subsystem); te_subsystem = NULL;
     free(cib_subsystem); cib_subsystem = NULL;
 
-    if (version_format_regex) {
-        regfree(version_format_regex);
-        free(version_format_regex);
-    }
+    metadata_cache_fini();
 
     election_fini(fsa_election);
     fsa_election = NULL;
@@ -420,8 +418,6 @@ crmd_exit(int rc)
 
         /* Don't re-enter this block */
         crmd_mainloop = NULL;
-
-        crmd_drain_alerts(ctx);
 
         /* no signals on final draining anymore */
         mainloop_destroy_signal(SIGCHLD);

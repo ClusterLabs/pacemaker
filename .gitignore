@@ -41,9 +41,11 @@ include/stamp-*
 libtool
 libtool.m4
 ltdl.m4
+libltdl
 ltmain.sh
 missing
 py-compile
+m4/ltargz.m4
 m4/ltoptions.m4
 m4/ltsugar.m4
 m4/ltversion.m4

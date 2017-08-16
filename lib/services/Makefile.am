@@ -18,7 +18,7 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-AM_CPPFLAGS			= -I$(top_builddir)/include
+AM_CPPFLAGS			= -I$(top_srcdir)/include
 
 lib_LTLIBRARIES			= libcrmservice.la
 noinst_HEADERS			= pcmk-dbus.h upstart.h systemd.h services_private.h

@@ -33,6 +33,7 @@ extern "C" {
 #  include <stdio.h>
 #  include <string.h>
 #  include <stdbool.h>
+#  include <sys/types.h>
 
 #  ifndef OCF_ROOT_DIR
 #    define OCF_ROOT_DIR "/usr/lib/ocf"
@@ -296,8 +297,8 @@ typedef struct svc_action_s {
     svc_action_t *services_action_create_generic(const char *exec, const char *args[]);
 
     void services_action_cleanup(svc_action_t * op);
-
     void services_action_free(svc_action_t * op);
+    int services_action_user(svc_action_t *op, const char *user);
 
     gboolean services_action_sync(svc_action_t * op);
 

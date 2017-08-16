@@ -40,11 +40,11 @@ function helptext() {
     echo "--create name    Create the named group with the supplied (-w) hosts"
     echo "--run, --        Treat all subsequent arguments as a command to perform on"
     echo "                 the specified command on the hosts or group"
-    echo "--xargs          Run the supplied command having replaced any occurances"
+    echo "--xargs          Run the supplied command having replaced any occurrences"
     echo "                 of {} with the node name"
     echo ""
     echo "--copy file(s) host:file   Pass subsequent arguments to scp or qacp"
-    echo "                           Any occurances of {} are replaced with the node name"
+    echo "                           Any occurrences of {} are replaced with the node name"
     echo "--key            Install an ssh key"
     echo ""
     exit $1

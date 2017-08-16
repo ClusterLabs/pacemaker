@@ -35,11 +35,12 @@ libcrmcommon_la_LDFLAGS	= -version-info 10:0:7
 libcrmcommon_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libcrmcommon_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 
-libcrmcommon_la_LIBADD	= @LIBADD_DL@ $(GNUTLSLIBS) -lm
+libcrmcommon_la_LIBADD	= @LIBADD_DL@ $(GNUTLSLIBS)
 
 libcrmcommon_la_SOURCES	= compat.c digest.c ipc.c io.c procfs.c utils.c xml.c	\
 			  iso8601.c remote.c mainloop.c logging.c watchdog.c	\
-			  schemas.c strings.c xpath.c attrd_client.c alerts.c
+			  schemas.c strings.c xpath.c attrd_client.c alerts.c	\
+			  operations.c
 if BUILD_CIBSECRETS
 libcrmcommon_la_SOURCES	+= cib_secrets.c
 endif

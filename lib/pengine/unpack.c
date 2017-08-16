@@ -2032,7 +2032,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
                 }
             }
 
-            /* require the stop action regardless if fencing is occuring or not. */
+            /* require the stop action regardless if fencing is occurring or not. */
             if (rsc->role > RSC_ROLE_STOPPED) {
                 stop_action(rsc, node, FALSE);
             }

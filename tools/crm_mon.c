@@ -36,10 +36,11 @@
 #include <crm/msg_xml.h>
 #include <crm/services.h>
 #include <crm/lrmd.h>
-#include <crm/common/util.h>
-#include <crm/common/xml.h>
+#include <crm/common/internal.h>  /* crm_ends_with_ext */
 #include <crm/common/ipc.h>
 #include <crm/common/mainloop.h>
+#include <crm/common/util.h>
+#include <crm/common/xml.h>
 
 #include <crm/cib/internal.h>
 #include <crm/pengine/status.h>
@@ -358,10 +359,10 @@ static struct crm_option long_options[] = {
     {"verbose",        0, 0, 'V', "\tIncrease debug output"},
     {"quiet",          0, 0, 'Q', "\tDisplay only essential output" },
 
-    {"-spacer-",	1, 0, '-', "\nModes:"},
+    {"-spacer-",	1, 0, '-', "\nModes (mutually exclusive):"},
     {"as-html",        1, 0, 'h', "\tWrite cluster status to the named html file"},
     {"as-xml",         0, 0, 'X', "\t\tWrite cluster status as xml to stdout. This will enable one-shot mode."},
-    {"web-cgi",        0, 0, 'w', "\t\tWeb mode with output suitable for cgi"},
+    {"web-cgi",        0, 0, 'w', "\t\tWeb mode with output suitable for CGI (preselected when run as *.cgi)"},
     {"simple-status",  0, 0, 's', "\tDisplay the cluster status once as a simple one line output (suitable for nagios)"},
     {"snmp-traps",     1, 0, 'S', "\tSend SNMP traps to this station", !ENABLE_SNMP},
     {"snmp-community", 1, 0, 'C', "Specify community for SNMP traps(default is NULL)", !ENABLE_SNMP},
@@ -555,7 +556,7 @@ main(int argc, char **argv)
     signal(SIGCLD, SIG_IGN);
 #endif
 
-    if (strcmp(crm_system_name, "crm_mon.cgi") == 0) {
+    if (crm_ends_with_ext(argv[0], ".cgi") == TRUE) {
         output_format = mon_output_cgi;
         one_shot = TRUE;
     }
@@ -637,19 +638,24 @@ main(int argc, char **argv)
                 if(optarg == NULL) {
                     return crm_help(flag, EX_USAGE);
                 }
+                argerr += (output_format != mon_output_console);
                 output_format = mon_output_html;
                 output_filename = strdup(optarg);
                 umask(S_IWGRP | S_IWOTH);
                 break;
             case 'X':
+                argerr += (output_format != mon_output_console);
                 output_format = mon_output_xml;
                 one_shot = TRUE;
                 break;
             case 'w':
+                /* do not allow argv[0] and argv[1...] redundancy */
+                argerr += (output_format != mon_output_console);
                 output_format = mon_output_cgi;
                 one_shot = TRUE;
                 break;
             case 's':
+                argerr += (output_format != mon_output_console);
                 output_format = mon_output_monitor;
                 one_shot = TRUE;
                 break;
@@ -696,13 +702,29 @@ main(int argc, char **argv)
         }
     }
 
-    if (optind < argc) {
+    /* Extra sanity checks when in CGI mode */
+    if (output_format == mon_output_cgi) {
+        argerr += (optind < argc);
+        argerr += (output_filename != NULL);
+        argerr += (xml_file != NULL);
+        argerr += (snmp_target != NULL);
+        argerr += (crm_mail_to != NULL);
+        argerr += (external_agent != NULL);
+        argerr += (daemonize == TRUE);  /* paranoia */
+
+    } else if (optind < argc) {
         printf("non-option ARGV-elements: ");
         while (optind < argc)
             printf("%s ", argv[optind++]);
         printf("\n");
     }
+
     if (argerr) {
+        if (output_format == mon_output_cgi) {
+            fprintf(stdout, "Content-Type: text/plain\n"
+                            "Status: 500\n\n");
+            return EX_USAGE;
+        }
         return crm_help('?', EX_USAGE);
     }
 
@@ -3185,7 +3207,7 @@ print_html_status(pe_working_set_t * data_set, const char *filename)
 
     if (output_format == mon_output_cgi) {
         stream = stdout;
-        fprintf(stream, "Content-type: text/html\n\n");
+        fprintf(stream, "Content-Type: text/html\n\n");
 
     } else {
         filename_tmp = crm_concat(filename, "tmp", '.');

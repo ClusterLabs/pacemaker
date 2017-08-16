@@ -905,10 +905,13 @@ probe_resources(pe_working_set_t * data_set)
             continue;
 
         } else if (node->details->online == FALSE && node->details->remote_rsc) {
+            // TODO figure out why this results in fence loop
+            /*
             enum remote_connection_state state = get_remote_node_state(node);
             if(state == remote_state_failed) {
                 pe_fence_node(data_set, node, "the connection is unrecoverable");
             }
+            */
             continue;
 
         } else if(node->details->online == FALSE) {

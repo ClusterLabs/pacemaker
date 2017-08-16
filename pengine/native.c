@@ -2911,7 +2911,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
     }
 
     if(is_not_set(probe->flags, pe_action_runnable) && rsc->running_on == NULL) {
-        /* Prevent the start from occuring if rsc isn't active, but
+        /* Prevent the start from occurring if rsc isn't active, but
          * don't cause it to stop if it was active already
          */
         flags |= pe_order_runnable_left;

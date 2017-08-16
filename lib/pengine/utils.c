@@ -36,6 +36,50 @@ void unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * contain
 static xmlNode *find_rsc_op_entry_helper(resource_t * rsc, const char *key,
                                          gboolean include_disabled);
 
+pe_rsc_action_details_t *
+pe_rsc_action_details(pe_action_t *action)
+{
+    pe_rsc_action_details_t *details;
+
+    CRM_CHECK(action != NULL, return NULL);
+
+    if (action->action_details == NULL) {
+        action->action_details = calloc(1, sizeof(pe_rsc_action_details_t));
+        CRM_CHECK(action->action_details != NULL, return NULL);
+    }
+
+    details = (pe_rsc_action_details_t *) action->action_details;
+    if (details->versioned_parameters == NULL) {
+        details->versioned_parameters = create_xml_node(NULL,
+                                                        XML_TAG_OP_VER_ATTRS);
+    }
+    if (details->versioned_meta == NULL) {
+        details->versioned_meta = create_xml_node(NULL, XML_TAG_OP_VER_META);
+    }
+    return details;
+}
+
+static void
+pe_free_rsc_action_details(pe_action_t *action)
+{
+    pe_rsc_action_details_t *details;
+
+    if ((action == NULL) || (action->action_details == NULL)) {
+        return;
+    }
+
+    details = (pe_rsc_action_details_t *) action->action_details;
+
+    if (details->versioned_parameters) {
+        free_xml(details->versioned_parameters);
+    }
+    if (details->versioned_meta) {
+        free_xml(details->versioned_meta);
+    }
+
+    action->action_details = NULL;
+}
+
 /*!
  * \internal
  * \brief Check whether we can fence a particular node
@@ -451,10 +495,6 @@ custom_action(resource_t * rsc, char *key, const char *task,
         action->extra = crm_str_table_new();
         action->meta = crm_str_table_new();
 
-        action->versioned_parameters = create_xml_node(NULL, XML_TAG_OP_VER_ATTRS);
-
-        action->versioned_meta = create_xml_node(NULL, XML_TAG_OP_VER_META);
-
         if (save_action) {
             data_set->actions = g_list_prepend(data_set->actions, action);
             if(rsc == NULL) {
@@ -824,6 +864,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
     char *value_ms = NULL;
     const char *value = NULL;
     const char *field = NULL;
+    pe_rsc_action_details_t *rsc_details = NULL;
 
     CRM_CHECK(action->rsc != NULL, return);
 
@@ -847,11 +888,11 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
     unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_ATTR_SETS,
                                NULL, action->meta, NULL, FALSE, data_set->now);
 
+    rsc_details = pe_rsc_action_details(action);
     pe_unpack_versioned_attributes(data_set->input, xml_obj, XML_TAG_ATTR_SETS, NULL,
-                                   action->versioned_parameters, data_set->now);
-
+                                   rsc_details->versioned_parameters, data_set->now);
     pe_unpack_versioned_attributes(data_set->input, xml_obj, XML_TAG_META_SETS, NULL,
-                                   action->versioned_meta, data_set->now);
+                                   rsc_details->versioned_meta, data_set->now);
 
     g_hash_table_remove(action->meta, "id");
 
@@ -1053,7 +1094,8 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
     timeout = unpack_timeout(value, action, xml_obj, interval, data_set->config_hash);
     g_hash_table_replace(action->meta, strdup(XML_ATTR_TIMEOUT), crm_itoa(timeout));
 
-    unpack_versioned_meta(action->versioned_meta, xml_obj, interval, data_set->now);
+    unpack_versioned_meta(rsc_details->versioned_meta, xml_obj, interval,
+                          data_set->now);
 }
 
 static xmlNode *
@@ -1202,11 +1244,8 @@ pe_free_action(action_t * action)
     if (action->meta) {
         g_hash_table_destroy(action->meta);
     }
-    if (action->versioned_parameters) {
-        free_xml(action->versioned_parameters);
-    }
-    if (action->versioned_meta) {
-        free_xml(action->versioned_meta);
+    if (action->rsc) {
+        pe_free_rsc_action_details(action);
     }
     free(action->cancel_task);
     free(action->reason);
@@ -1865,7 +1904,11 @@ rsc_action_digest(resource_t * rsc, const char *task, const char *key,
 
         append_versioned_params(local_versioned_params, ra_version, data->params_all);
         append_versioned_params(rsc->versioned_parameters, ra_version, data->params_all);
-        append_versioned_params(action->versioned_parameters, ra_version, data->params_all);
+
+        {
+            pe_rsc_action_details_t *details = pe_rsc_action_details(action);
+            append_versioned_params(details->versioned_parameters, ra_version, data->params_all);
+        }
 
         filter_action_parameters(data->params_all, op_version);
 

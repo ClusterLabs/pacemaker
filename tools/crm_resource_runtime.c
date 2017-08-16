@@ -326,7 +326,7 @@ cli_resource_update_attribute(const char *rsc_id, const char *attr_set, const ch
 
         } else {
             value = crm_element_value(cib_top, XML_ATTR_VALIDATION);
-            if (crm_ends_with(value, "-0.6")) {
+            if (crm_ends_with_ext(value, "-0.6")) {
                 use_attributes_tag = TRUE;
             }
         }

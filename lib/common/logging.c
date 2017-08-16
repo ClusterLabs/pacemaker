@@ -387,6 +387,7 @@ crm_control_blackbox(int nsig, bool enable)
         crm_signal(SIGABRT, crm_trigger_blackbox);
         crm_signal(SIGILL,  crm_trigger_blackbox);
         crm_signal(SIGBUS,  crm_trigger_blackbox);
+        crm_signal(SIGFPE,  crm_trigger_blackbox);
 
         crm_update_callsites();
 

@@ -20,6 +20,7 @@
 #define ALERT_INTERNAL_H
 
 #include <glib.h>
+#include <stdbool.h>
 
 /* Default-Timeout to use before killing a alerts script (in milliseconds) */
 #  define CRM_ALERT_DEFAULT_TIMEOUT_MS (30000)
@@ -74,10 +75,8 @@ enum crm_alert_keys_e {
 };
 
 #define CRM_ALERT_INTERNAL_KEY_MAX 16
-#define CRM_ALERT_KEY_PATH "CRM_alert_path"
 #define CRM_ALERT_NODE_SEQUENCE "CRM_alert_node_sequence"
 
-extern guint crm_alert_max_alert_timeout;
 extern const char *crm_alert_keys[CRM_ALERT_INTERNAL_KEY_MAX][3];
 
 crm_alert_entry_t *crm_dup_alert_entry(crm_alert_entry_t *entry);
@@ -85,8 +84,6 @@ crm_alert_envvar_t *crm_dup_alert_envvar(crm_alert_envvar_t *src);
 crm_alert_entry_t *crm_alert_entry_new(const char *id, const char *path);
 void crm_free_alert_entry(crm_alert_entry_t *entry);
 void crm_free_alert_envvar(crm_alert_envvar_t *entry);
-void crm_set_alert_key(enum crm_alert_keys_e name, const char *value);
-void crm_set_alert_key_int(enum crm_alert_keys_e name, int value);
 void crm_insert_alert_key(GHashTable *table, enum crm_alert_keys_e name,
                           const char *value);
 void crm_insert_alert_key_int(GHashTable *table, enum crm_alert_keys_e name,
@@ -94,7 +91,7 @@ void crm_insert_alert_key_int(GHashTable *table, enum crm_alert_keys_e name,
 void crm_unset_alert_keys(void);
 void crm_set_envvar_list(crm_alert_entry_t *entry);
 void crm_unset_envvar_list(crm_alert_entry_t *entry);
-gboolean crm_is_target_alert(char **list, const char *value);
+bool crm_patchset_contains_alert(xmlNode *msg, bool config);
 
 static inline const char *
 crm_alert_flag2text(enum crm_alert_flags flag)

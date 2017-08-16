@@ -110,7 +110,7 @@ unsigned int get_crm_log_level(void);
 
 /*
  * Throughout the macros below, note the leading, pre-comma, space in the
- * various ' , ##args' occurences to aid portability across versions of 'gcc'.
+ * various ' , ##args' occurrences to aid portability across versions of 'gcc'.
  *	http://gcc.gnu.org/onlinedocs/cpp/Variadic-Macros.html#Variadic-Macros
  */
 #if defined(__clang__)

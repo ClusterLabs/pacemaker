@@ -1215,6 +1215,7 @@ indexterm:[bundle,network]
 
 |=========================================================
 
+[[s-resource-bundle-note-replica-names]]
 [NOTE]
 ====
 If +ip-range-start+ is used, Pacemaker will automatically ensure that
@@ -1312,7 +1313,9 @@ indexterm:[bundle,storage,storage-mapping]
 |The start of a path on the host's filesystem that will be mapped into the
  container, using a different subdirectory on the host for each container
  instance. Exactly one of +source-dir+ and +source-dir-root+ must be specified
- in a +storage-mapping+.
+ in a +storage-mapping+.  Currently, this added, unique tail subdirectory
+ corresponds to the replica naming rule elaborated in
+ <<s-resource-bundle-note-replica-names,the note for +ip-range-start+>>.
  indexterm:[source-dir-root,storage-mapping]
  indexterm:[storage-mapping,Property,source-dir-root]
 

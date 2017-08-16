@@ -34,7 +34,6 @@ Containers: [ galera-bundle-0:galera-bundle-docker-0 galera-bundle-1:galera-bund
    openstack-cinder-backup-docker-0	(ocf::heartbeat:docker):	Started overcloud-controller-1
 
 Transition Summary:
- * Fence (reboot) overcloud-novacompute-0 'the connection is unrecoverable'
  * Start   fence1	(overcloud-controller-0)
  * Stop    overcloud-novacompute-0	(overcloud-controller-0)
 
@@ -43,8 +42,6 @@ Executing cluster transition:
  * Resource action: fence1          monitor on overcloud-controller-1
  * Resource action: fence1          monitor on overcloud-controller-0
  * Resource action: overcloud-novacompute-0 stop on overcloud-controller-0
- * Fencing overcloud-novacompute-0 (reboot)
- * Pseudo action:   stonith_complete
  * Pseudo action:   all_stopped
  * Resource action: fence1          start on overcloud-controller-0
  * Resource action: fence1          monitor=60000 on overcloud-controller-0

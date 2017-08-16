@@ -1,58 +1,98 @@
 #!/bin/sh
+#
+# Find the (sub-)schema that best matches a desired version.
+#
+# Version numbers are assumed to be in the format X.Y,
+# where X and Y are integers, and Y is no more than 3 digits,
+# or the special value "next".
+#
 
-base=$1; shift
-target=$1; shift
-destination=$1; shift
-prefix=$1; shift
+# (Sub-)schema name (e.g. "resources")
+base="$1"; shift
+
+# Desired version (e.g. "1.0" or "next")
+target="$1"; shift
+
+# If not empty, append the best match as an XML externalRef to this file
+# (otherwise, just echo the best match). Using readlink allows building
+# from a different directory.
+destination="$(readlink -f "$1")"; shift
+
+# Arbitrary text to print before XML (generally spaces to indent)
+prefix="$1"; shift
+
+# Allow building from a different directory
+cd "$(dirname $0)"
+
+list_candidates() {
+    ls -1 "${1}.rng" "${1}"-*.rng 2>/dev/null
+}
+
+version_from_filename() {
+    vff_filename="$1"
+
+    case "$vff_filename" in
+        *-*.rng)
+            echo "$vff_filename" | sed -e 's/.*-\(.*\).rng/\1/'
+            ;;
+        *)
+            # special case for bare ${base}.rng, no -0.1's around anyway
+            echo 0.1
+            ;;
+    esac
+}
+
+filename_from_version() {
+    ffv_version="$1"
+    ffv_base="$2"
+
+    if [ "$ffv_version" = "0.1" ]; then
+        echo "${ffv_base}.rng"
+    else
+        echo "${ffv_base}-${ffv_version}.rng"
+    fi
+}
+
+# Convert version string (e.g. 2.10) into integer (e.g. 2010) for comparisons
+int_version() {
+    echo "$1" | awk -F. '{ printf("%d%03d\n", $1,$2); }';
+}
 
 best="0.0"
-candidates=$(ls -1 "${base}.rng" "${base}"-*.rng 2>/dev/null)
-for rng in ${candidates}; do
+for rng in $(list_candidates "${base}"); do
     case ${rng} in
         ${base}-${target}.rng)
+            # We found exactly what was requested
             best=${target}
             break
             ;;
-        *next*)
-            : skipping ${rng}
+        *-next.rng)
+            # "Next" schemas cannot be a best match unless directly requested
             ;;
         *)
-            if [ "${rng}" = "${base}.rng" ]; then
-                # special case for nvset.rng, no -0.1 around anyway
-                v=0.1
-            else
-                v=$(echo ${rng} | sed -e "s/${base}-//" -e 's/.rng//')
-            fi
-            : comparing ${v} with ${target}
+            v=$(version_from_filename "${rng}")
+	    if [ $(int_version "${v}") -gt $(int_version "${best}") ]; then
+                # This version beats the previous best match
 
-            echo | awk -v n1="${v}" -v n2="${best}" '{if (n1>n2) printf ("true"); else printf ("false");}' |  grep -q "true"
-            if [ $? -eq 0 ]; then
-                : ${v} beats the previous ${best} for ${target}
                 if [ "${target}" = "next" ]; then
                     best=${v}
-                else
-                    echo | awk -v n1="${v}" -v n2="${target}" '{if (n1<n2) printf ("true"); else printf ("false");}' |  grep -q "true"
-                    if [ $? -eq 0 ]; then
-                        : ${v} is still less than ${target}, using
-                        best=${v}
-                    fi
+                elif [ $(int_version "${v}") -lt $(int_version "${target}") ]; then
+                    # This value is best only if it's still less than the target
+                    best=${v}
                 fi
             fi
             ;;
     esac
 done
 
-[ "${best}" != "0.0" ]; ec=$?
-if [ ${ec} -eq 0 ]; then
-    if [ "${best}" = "0.1" ]; then
-        found=${base}.rng
+if [ "$best" != "0.0" ]; then
+    found=$(filename_from_version "$best" "$base")
+    if [ -z "$destination" ]; then
+        echo "$found"
     else
-        found=${base}-${best}.rng
+        echo "${prefix}<externalRef href=\"${found}\"/>" >> "$destination"
     fi
-    if [ "x${destination}" = "x" ]; then
-        echo "${found}"
-    else
-        echo "${prefix}<externalRef href=\"${found}\"/>" >> "${destination}"
-    fi
+    exit 0
 fi
-ret () { return $1; }; ret ${ec}
+
+exit 1
