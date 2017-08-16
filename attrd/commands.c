@@ -363,7 +363,7 @@ attrd_client_refresh(void)
     }
 
     crm_info("Updating all attributes");
-    write_attributes(TRUE, FALSE);
+    write_attributes(TRUE);
 }
 
 /*!
@@ -863,7 +863,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
         crm_trace("We know %s's node id now: %s",
                   known_peer->uname, known_peer->uuid);
         if (election_state(writer) == election_won) {
-            write_attributes(FALSE, TRUE);
+            write_attributes(FALSE);
             return;
         }
     }
@@ -891,8 +891,6 @@ write_or_elect_attribute(attribute_t *a)
 gboolean
 attrd_election_cb(gpointer user_data)
 {
-    crm_trace("Election complete");
-
     free(peer_writer);
     peer_writer = strdup(attrd_cluster->uname);
 
@@ -900,7 +898,7 @@ attrd_election_cb(gpointer user_data)
     attrd_peer_sync(NULL, NULL);
 
     /* Update the CIB after an election */
-    write_attributes(TRUE, FALSE);
+    write_attributes(TRUE);
     return FALSE;
 }
 
@@ -982,15 +980,16 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
 }
 
 void
-write_attributes(bool all, bool peer_discovered)
+write_attributes(bool all)
 {
     GHashTableIter iter;
     attribute_t *a = NULL;
 
+    crm_debug("Writing out %s attributes", all? "all" : "changed");
     g_hash_table_iter_init(&iter, attributes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & a)) {
-        if (peer_discovered && a->unknown_peer_uuids) {
-            /* a new peer uuid has been discovered, try writing this attribute again. */
+        if (!all && a->unknown_peer_uuids) {
+            // Try writing this attribute again, in case peer ID was learned
             a->changed = TRUE;
         }
 
