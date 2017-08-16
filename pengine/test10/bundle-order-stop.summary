@@ -41,41 +41,57 @@ Transition Summary:
  * Stop    openstack-cinder-volume-docker-0	(undercloud)  	due to node availability
 
 Executing cluster transition:
+ * Pseudo action:   rabbitmq-bundle-clone_pre_notify_stop_0
  * Resource action: galera          cancel=10000 on galera-bundle-0
  * Resource action: redis           cancel=20000 on redis-bundle-0
+ * Pseudo action:   redis-bundle-master_pre_notify_demote_0
  * Pseudo action:   openstack-cinder-volume_stop_0
  * Pseudo action:   redis-bundle_demote_0
- * Pseudo action:   redis-bundle-master_demote_0
  * Pseudo action:   galera-bundle_demote_0
- * Pseudo action:   galera-bundle-master_demote_0
  * Pseudo action:   rabbitmq-bundle_stop_0
- * Resource action: galera          demote on galera-bundle-0
- * Resource action: redis           demote on redis-bundle-0
+ * Resource action: rabbitmq        notify on rabbitmq-bundle-0
+ * Pseudo action:   rabbitmq-bundle-clone_confirmed-pre_notify_stop_0
+ * Pseudo action:   rabbitmq-bundle-clone_stop_0
+ * Pseudo action:   galera-bundle-master_demote_0
+ * Resource action: redis           notify on redis-bundle-0
+ * Pseudo action:   redis-bundle-master_confirmed-pre_notify_demote_0
+ * Pseudo action:   redis-bundle-master_demote_0
  * Resource action: openstack-cinder-volume-docker-0 stop on undercloud
  * Pseudo action:   openstack-cinder-volume_stopped_0
- * Pseudo action:   redis-bundle-master_demoted_0
- * Pseudo action:   galera-bundle-master_demoted_0
- * Pseudo action:   rabbitmq-bundle-clone_stop_0
  * Resource action: rabbitmq        stop on rabbitmq-bundle-0
+ * Pseudo action:   rabbitmq-bundle-clone_stopped_0
  * Resource action: rabbitmq-bundle-0 stop on undercloud
- * Pseudo action:   redis-bundle_demoted_0
+ * Resource action: galera          demote on galera-bundle-0
+ * Pseudo action:   galera-bundle-master_demoted_0
+ * Resource action: redis           demote on redis-bundle-0
+ * Pseudo action:   redis-bundle-master_demoted_0
  * Pseudo action:   galera-bundle_demoted_0
  * Pseudo action:   galera-bundle_stop_0
- * Pseudo action:   rabbitmq-bundle-clone_stopped_0
+ * Pseudo action:   rabbitmq-bundle-clone_post_notify_stopped_0
  * Resource action: rabbitmq-bundle-docker-0 stop on undercloud
  * Pseudo action:   galera-bundle-master_stop_0
- * Pseudo action:   rabbitmq-bundle_stopped_0
+ * Pseudo action:   redis-bundle-master_post_notify_demoted_0
+ * Pseudo action:   rabbitmq-bundle-clone_confirmed-post_notify_stopped_0
  * Resource action: galera          stop on galera-bundle-0
- * Resource action: galera-bundle-0 stop on undercloud
  * Pseudo action:   galera-bundle-master_stopped_0
+ * Resource action: galera-bundle-0 stop on undercloud
+ * Resource action: redis           notify on redis-bundle-0
+ * Pseudo action:   redis-bundle-master_confirmed-post_notify_demoted_0
+ * Pseudo action:   redis-bundle-master_pre_notify_stop_0
+ * Pseudo action:   redis-bundle_demoted_0
+ * Pseudo action:   rabbitmq-bundle_stopped_0
  * Resource action: galera-bundle-docker-0 stop on undercloud
+ * Resource action: redis           notify on redis-bundle-0
+ * Pseudo action:   redis-bundle-master_confirmed-pre_notify_stop_0
  * Pseudo action:   galera-bundle_stopped_0
  * Pseudo action:   redis-bundle_stop_0
  * Pseudo action:   redis-bundle-master_stop_0
  * Resource action: redis           stop on redis-bundle-0
- * Resource action: redis-bundle-0  stop on undercloud
  * Pseudo action:   redis-bundle-master_stopped_0
+ * Resource action: redis-bundle-0  stop on undercloud
+ * Pseudo action:   redis-bundle-master_post_notify_stopped_0
  * Resource action: redis-bundle-docker-0 stop on undercloud
+ * Pseudo action:   redis-bundle-master_confirmed-post_notify_stopped_0
  * Pseudo action:   redis-bundle_stopped_0
  * Pseudo action:   haproxy-bundle_stop_0
  * Resource action: haproxy-bundle-docker-0 stop on undercloud

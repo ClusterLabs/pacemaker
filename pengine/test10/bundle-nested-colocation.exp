@@ -1,9 +1,22 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
-  <synapse id="0">
+  <synapse id="0" priority="1000000">
+    <action_set>
+      <rsc_op id="62" operation="notify" operation_key="rabbitmq:0_post_notify_start_0" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="overcloud-controller-0">
+        <primitive id="rabbitmq" long-id="rabbitmq:0" class="ocf" provider="heartbeat" type="rabbitmq-cluster"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 overcloud-galera-0 overcloud-galera-1 overcloud-galera-2 overcloud-rabbit-0 overcloud-rabbit-1 overcloud-rabbit-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2" CRM_meta_notify_available_uname="rabbitmq-bundle-0 overcloud-galera-2 overcloud-galera-1 overcloud-galera-0 overcloud-controller-2 overcloud-controller-1 overcloud-controller-0 overcloud-rabbit-2 overcloud-rabbit-1 overcloud-rabbit-0 rabbitmq-bundle-2 rabbitmq-bundle-1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="rabbitmq:0 rabbitmq:1 rabbitmq:2" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="rabbitmq:0 rabbitmq:1 rabbitmq:2" CRM_meta_notify_start_uname="rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_on_node="rabbitmq-bundle-0" CRM_meta_on_node_uuid="rabbitmq-bundle-0" CRM_meta_timeout="20000"  set_policy="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="43" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
     <action_set>
       <rsc_op id="34" operation="monitor" operation_key="rabbitmq:0_monitor_10000" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="overcloud-controller-0">
         <primitive id="rabbitmq" long-id="rabbitmq:0" class="ocf" provider="heartbeat" type="rabbitmq-cluster"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rabbitmq-bundle-0" CRM_meta_on_node_uuid="rabbitmq-bundle-0" CRM_meta_timeout="40000"  set_policy="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="rabbitmq-bundle-0" CRM_meta_on_node_uuid="rabbitmq-bundle-0" CRM_meta_timeout="40000"  set_policy="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -13,13 +26,16 @@
       <trigger>
         <rsc_op id="33" operation="start" operation_key="rabbitmq:0_start_0" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="overcloud-controller-0"/>
       </trigger>
+      <trigger>
+        <pseudo_event id="44" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0"/>
+      </trigger>
     </inputs>
   </synapse>
-  <synapse id="1">
+  <synapse id="2">
     <action_set>
       <rsc_op id="33" operation="start" operation_key="rabbitmq:0_start_0" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="overcloud-controller-0">
         <primitive id="rabbitmq" long-id="rabbitmq:0" class="ocf" provider="heartbeat" type="rabbitmq-cluster"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="rabbitmq-bundle-0" CRM_meta_on_node_uuid="rabbitmq-bundle-0" CRM_meta_timeout="200000"  set_policy="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 overcloud-galera-0 overcloud-galera-1 overcloud-galera-2 overcloud-rabbit-0 overcloud-rabbit-1 overcloud-rabbit-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2" CRM_meta_notify_available_uname="rabbitmq-bundle-0 overcloud-galera-2 overcloud-galera-1 overcloud-galera-0 overcloud-controller-2 overcloud-controller-1 overcloud-controller-0 overcloud-rabbit-2 overcloud-rabbit-1 overcloud-rabbit-0 rabbitmq-bundle-2 rabbitmq-bundle-1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="rabbitmq:0 rabbitmq:1 rabbitmq:2" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="rabbitmq:0 rabbitmq:1 rabbitmq:2" CRM_meta_notify_start_uname="rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_on_node="rabbitmq-bundle-0" CRM_meta_on_node_uuid="rabbitmq-bundle-0" CRM_meta_timeout="200000"  set_policy="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -34,7 +50,207 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="2">
+  <synapse id="3" priority="1000000">
+    <action_set>
+      <rsc_op id="63" operation="notify" operation_key="rabbitmq:1_post_notify_start_0" on_node="rabbitmq-bundle-1" on_node_uuid="rabbitmq-bundle-1" router_node="overcloud-controller-1">
+        <primitive id="rabbitmq" long-id="rabbitmq:1" class="ocf" provider="heartbeat" type="rabbitmq-cluster"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 overcloud-galera-0 overcloud-galera-1 overcloud-galera-2 overcloud-rabbit-0 overcloud-rabbit-1 overcloud-rabbit-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2" CRM_meta_notify_available_uname="rabbitmq-bundle-0 overcloud-galera-2 overcloud-galera-1 overcloud-galera-0 overcloud-controller-2 overcloud-controller-1 overcloud-controller-0 overcloud-rabbit-2 overcloud-rabbit-1 overcloud-rabbit-0 rabbitmq-bundle-2 rabbitmq-bundle-1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="rabbitmq:0 rabbitmq:1 rabbitmq:2" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="rabbitmq:0 rabbitmq:1 rabbitmq:2" CRM_meta_notify_start_uname="rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_on_node="rabbitmq-bundle-1" CRM_meta_on_node_uuid="rabbitmq-bundle-1" CRM_meta_timeout="20000"  set_policy="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="43" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <rsc_op id="36" operation="monitor" operation_key="rabbitmq:1_monitor_10000" on_node="rabbitmq-bundle-1" on_node_uuid="rabbitmq-bundle-1" router_node="overcloud-controller-1">
+        <primitive id="rabbitmq" long-id="rabbitmq:1" class="ocf" provider="heartbeat" type="rabbitmq-cluster"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="rabbitmq-bundle-1" CRM_meta_on_node_uuid="rabbitmq-bundle-1" CRM_meta_timeout="40000"  set_policy="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="24" operation="start" operation_key="rabbitmq-bundle-1_start_0" on_node="overcloud-controller-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="35" operation="start" operation_key="rabbitmq:1_start_0" on_node="rabbitmq-bundle-1" on_node_uuid="rabbitmq-bundle-1" router_node="overcloud-controller-1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="44" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <rsc_op id="35" operation="start" operation_key="rabbitmq:1_start_0" on_node="rabbitmq-bundle-1" on_node_uuid="rabbitmq-bundle-1" router_node="overcloud-controller-1">
+        <primitive id="rabbitmq" long-id="rabbitmq:1" class="ocf" provider="heartbeat" type="rabbitmq-cluster"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 overcloud-galera-0 overcloud-galera-1 overcloud-galera-2 overcloud-rabbit-0 overcloud-rabbit-1 overcloud-rabbit-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2" CRM_meta_notify_available_uname="rabbitmq-bundle-0 overcloud-galera-2 overcloud-galera-1 overcloud-galera-0 overcloud-controller-2 overcloud-controller-1 overcloud-controller-0 overcloud-rabbit-2 overcloud-rabbit-1 overcloud-rabbit-0 rabbitmq-bundle-2 rabbitmq-bundle-1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="rabbitmq:0 rabbitmq:1 rabbitmq:2" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="rabbitmq:0 rabbitmq:1 rabbitmq:2" CRM_meta_notify_start_uname="rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_on_node="rabbitmq-bundle-1" CRM_meta_on_node_uuid="rabbitmq-bundle-1" CRM_meta_timeout="200000"  set_policy="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="12" operation="start" operation_key="rabbitmq-bundle-docker-1_start_0" on_node="overcloud-rabbit-1" on_node_uuid="overcloud-rabbit-1" router_node="overcloud-controller-1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="24" operation="start" operation_key="rabbitmq-bundle-1_start_0" on_node="overcloud-controller-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="33" operation="start" operation_key="rabbitmq:0_start_0" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="overcloud-controller-0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="39" operation="start" operation_key="rabbitmq-bundle-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="6" priority="1000000">
+    <action_set>
+      <rsc_op id="64" operation="notify" operation_key="rabbitmq:2_post_notify_start_0" on_node="rabbitmq-bundle-2" on_node_uuid="rabbitmq-bundle-2" router_node="overcloud-controller-2">
+        <primitive id="rabbitmq" long-id="rabbitmq:2" class="ocf" provider="heartbeat" type="rabbitmq-cluster"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 overcloud-galera-0 overcloud-galera-1 overcloud-galera-2 overcloud-rabbit-0 overcloud-rabbit-1 overcloud-rabbit-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2" CRM_meta_notify_available_uname="rabbitmq-bundle-0 overcloud-galera-2 overcloud-galera-1 overcloud-galera-0 overcloud-controller-2 overcloud-controller-1 overcloud-controller-0 overcloud-rabbit-2 overcloud-rabbit-1 overcloud-rabbit-0 rabbitmq-bundle-2 rabbitmq-bundle-1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="rabbitmq:0 rabbitmq:1 rabbitmq:2" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="rabbitmq:0 rabbitmq:1 rabbitmq:2" CRM_meta_notify_start_uname="rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_on_node="rabbitmq-bundle-2" CRM_meta_on_node_uuid="rabbitmq-bundle-2" CRM_meta_timeout="20000"  set_policy="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="43" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <rsc_op id="38" operation="monitor" operation_key="rabbitmq:2_monitor_10000" on_node="rabbitmq-bundle-2" on_node_uuid="rabbitmq-bundle-2" router_node="overcloud-controller-2">
+        <primitive id="rabbitmq" long-id="rabbitmq:2" class="ocf" provider="heartbeat" type="rabbitmq-cluster"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="rabbitmq-bundle-2" CRM_meta_on_node_uuid="rabbitmq-bundle-2" CRM_meta_timeout="40000"  set_policy="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="27" operation="start" operation_key="rabbitmq-bundle-2_start_0" on_node="overcloud-controller-2" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="37" operation="start" operation_key="rabbitmq:2_start_0" on_node="rabbitmq-bundle-2" on_node_uuid="rabbitmq-bundle-2" router_node="overcloud-controller-2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="44" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="8">
+    <action_set>
+      <rsc_op id="37" operation="start" operation_key="rabbitmq:2_start_0" on_node="rabbitmq-bundle-2" on_node_uuid="rabbitmq-bundle-2" router_node="overcloud-controller-2">
+        <primitive id="rabbitmq" long-id="rabbitmq:2" class="ocf" provider="heartbeat" type="rabbitmq-cluster"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 overcloud-galera-0 overcloud-galera-1 overcloud-galera-2 overcloud-rabbit-0 overcloud-rabbit-1 overcloud-rabbit-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2" CRM_meta_notify_available_uname="rabbitmq-bundle-0 overcloud-galera-2 overcloud-galera-1 overcloud-galera-0 overcloud-controller-2 overcloud-controller-1 overcloud-controller-0 overcloud-rabbit-2 overcloud-rabbit-1 overcloud-rabbit-0 rabbitmq-bundle-2 rabbitmq-bundle-1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="rabbitmq:0 rabbitmq:1 rabbitmq:2" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="rabbitmq:0 rabbitmq:1 rabbitmq:2" CRM_meta_notify_start_uname="rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_on_node="rabbitmq-bundle-2" CRM_meta_on_node_uuid="rabbitmq-bundle-2" CRM_meta_timeout="200000"  set_policy="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="13" operation="start" operation_key="rabbitmq-bundle-docker-2_start_0" on_node="overcloud-rabbit-2" on_node_uuid="overcloud-rabbit-2" router_node="overcloud-controller-2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="27" operation="start" operation_key="rabbitmq-bundle-2_start_0" on_node="overcloud-controller-2" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="35" operation="start" operation_key="rabbitmq:1_start_0" on_node="rabbitmq-bundle-1" on_node_uuid="rabbitmq-bundle-1" router_node="overcloud-controller-1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="39" operation="start" operation_key="rabbitmq-bundle-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="9" priority="1000000">
+    <action_set>
+      <pseudo_event id="44" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="43" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="62" operation="notify" operation_key="rabbitmq:0_post_notify_start_0" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="overcloud-controller-0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="63" operation="notify" operation_key="rabbitmq:1_post_notify_start_0" on_node="rabbitmq-bundle-1" on_node_uuid="rabbitmq-bundle-1" router_node="overcloud-controller-1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="64" operation="notify" operation_key="rabbitmq:2_post_notify_start_0" on_node="rabbitmq-bundle-2" on_node_uuid="rabbitmq-bundle-2" router_node="overcloud-controller-2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="10" priority="1000000">
+    <action_set>
+      <pseudo_event id="43" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="40" operation="running" operation_key="rabbitmq-bundle-clone_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="42" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="11">
+    <action_set>
+      <pseudo_event id="42" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="41" operation="notify" operation_key="rabbitmq-bundle-clone_pre_notify_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="12">
+    <action_set>
+      <pseudo_event id="41" operation="notify" operation_key="rabbitmq-bundle-clone_pre_notify_start_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="13" priority="1000000">
+    <action_set>
+      <pseudo_event id="40" operation="running" operation_key="rabbitmq-bundle-clone_running_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="33" operation="start" operation_key="rabbitmq:0_start_0" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="overcloud-controller-0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="35" operation="start" operation_key="rabbitmq:1_start_0" on_node="rabbitmq-bundle-1" on_node_uuid="rabbitmq-bundle-1" router_node="overcloud-controller-1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="37" operation="start" operation_key="rabbitmq:2_start_0" on_node="rabbitmq-bundle-2" on_node_uuid="rabbitmq-bundle-2" router_node="overcloud-controller-2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="39" operation="start" operation_key="rabbitmq-bundle-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="14">
+    <action_set>
+      <pseudo_event id="39" operation="start" operation_key="rabbitmq-bundle-clone_start_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="29" operation="start" operation_key="rabbitmq-bundle_start_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="42" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="15">
     <action_set>
       <rsc_op id="20" operation="stop" operation_key="rabbitmq-bundle-docker-0_stop_0" on_node="overcloud-rabbit-0" on_node_uuid="overcloud-rabbit-0" router_node="overcloud-controller-0">
         <primitive id="rabbitmq-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
@@ -43,7 +259,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="3">
+  <synapse id="16">
     <action_set>
       <rsc_op id="11" operation="start" operation_key="rabbitmq-bundle-docker-0_start_0" on_node="overcloud-rabbit-0" on_node_uuid="overcloud-rabbit-0" router_node="overcloud-controller-0">
         <primitive id="rabbitmq-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
@@ -59,7 +275,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="4">
+  <synapse id="17">
     <action_set>
       <rsc_op id="7" operation="monitor" operation_key="rabbitmq-bundle-docker-0_monitor_60000" on_node="overcloud-rabbit-0" on_node_uuid="overcloud-rabbit-0" router_node="overcloud-controller-0">
         <primitive id="rabbitmq-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
@@ -72,7 +288,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="5">
+  <synapse id="18">
     <action_set>
       <rsc_op id="22" operation="monitor" operation_key="rabbitmq-bundle-0_monitor_60000" on_node="overcloud-controller-0" on_node_uuid="1">
         <primitive id="rabbitmq-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
@@ -85,7 +301,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="6">
+  <synapse id="19">
     <action_set>
       <rsc_op id="21" operation="start" operation_key="rabbitmq-bundle-0_start_0" on_node="overcloud-controller-0" on_node_uuid="1">
         <primitive id="rabbitmq-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
@@ -98,45 +314,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="7">
-    <action_set>
-      <rsc_op id="36" operation="monitor" operation_key="rabbitmq:1_monitor_10000" on_node="rabbitmq-bundle-1" on_node_uuid="rabbitmq-bundle-1" router_node="overcloud-controller-1">
-        <primitive id="rabbitmq" long-id="rabbitmq:1" class="ocf" provider="heartbeat" type="rabbitmq-cluster"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rabbitmq-bundle-1" CRM_meta_on_node_uuid="rabbitmq-bundle-1" CRM_meta_timeout="40000"  set_policy="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="24" operation="start" operation_key="rabbitmq-bundle-1_start_0" on_node="overcloud-controller-1" on_node_uuid="2"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="35" operation="start" operation_key="rabbitmq:1_start_0" on_node="rabbitmq-bundle-1" on_node_uuid="rabbitmq-bundle-1" router_node="overcloud-controller-1"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="8">
-    <action_set>
-      <rsc_op id="35" operation="start" operation_key="rabbitmq:1_start_0" on_node="rabbitmq-bundle-1" on_node_uuid="rabbitmq-bundle-1" router_node="overcloud-controller-1">
-        <primitive id="rabbitmq" long-id="rabbitmq:1" class="ocf" provider="heartbeat" type="rabbitmq-cluster"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="rabbitmq-bundle-1" CRM_meta_on_node_uuid="rabbitmq-bundle-1" CRM_meta_timeout="200000"  set_policy="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="12" operation="start" operation_key="rabbitmq-bundle-docker-1_start_0" on_node="overcloud-rabbit-1" on_node_uuid="overcloud-rabbit-1" router_node="overcloud-controller-1"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="24" operation="start" operation_key="rabbitmq-bundle-1_start_0" on_node="overcloud-controller-1" on_node_uuid="2"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="33" operation="start" operation_key="rabbitmq:0_start_0" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="overcloud-controller-0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="39" operation="start" operation_key="rabbitmq-bundle-clone_start_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="9">
+  <synapse id="20">
     <action_set>
       <rsc_op id="23" operation="stop" operation_key="rabbitmq-bundle-docker-1_stop_0" on_node="overcloud-rabbit-1" on_node_uuid="overcloud-rabbit-1" router_node="overcloud-controller-1">
         <primitive id="rabbitmq-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
@@ -145,7 +323,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="10">
+  <synapse id="21">
     <action_set>
       <rsc_op id="12" operation="start" operation_key="rabbitmq-bundle-docker-1_start_0" on_node="overcloud-rabbit-1" on_node_uuid="overcloud-rabbit-1" router_node="overcloud-controller-1">
         <primitive id="rabbitmq-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
@@ -161,7 +339,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="11">
+  <synapse id="22">
     <action_set>
       <rsc_op id="8" operation="monitor" operation_key="rabbitmq-bundle-docker-1_monitor_60000" on_node="overcloud-rabbit-1" on_node_uuid="overcloud-rabbit-1" router_node="overcloud-controller-1">
         <primitive id="rabbitmq-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
@@ -174,7 +352,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="12">
+  <synapse id="23">
     <action_set>
       <rsc_op id="25" operation="monitor" operation_key="rabbitmq-bundle-1_monitor_60000" on_node="overcloud-controller-1" on_node_uuid="2">
         <primitive id="rabbitmq-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
@@ -187,7 +365,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="13">
+  <synapse id="24">
     <action_set>
       <rsc_op id="24" operation="start" operation_key="rabbitmq-bundle-1_start_0" on_node="overcloud-controller-1" on_node_uuid="2">
         <primitive id="rabbitmq-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
@@ -200,45 +378,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="14">
-    <action_set>
-      <rsc_op id="38" operation="monitor" operation_key="rabbitmq:2_monitor_10000" on_node="rabbitmq-bundle-2" on_node_uuid="rabbitmq-bundle-2" router_node="overcloud-controller-2">
-        <primitive id="rabbitmq" long-id="rabbitmq:2" class="ocf" provider="heartbeat" type="rabbitmq-cluster"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rabbitmq-bundle-2" CRM_meta_on_node_uuid="rabbitmq-bundle-2" CRM_meta_timeout="40000"  set_policy="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="27" operation="start" operation_key="rabbitmq-bundle-2_start_0" on_node="overcloud-controller-2" on_node_uuid="3"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="37" operation="start" operation_key="rabbitmq:2_start_0" on_node="rabbitmq-bundle-2" on_node_uuid="rabbitmq-bundle-2" router_node="overcloud-controller-2"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="15">
-    <action_set>
-      <rsc_op id="37" operation="start" operation_key="rabbitmq:2_start_0" on_node="rabbitmq-bundle-2" on_node_uuid="rabbitmq-bundle-2" router_node="overcloud-controller-2">
-        <primitive id="rabbitmq" long-id="rabbitmq:2" class="ocf" provider="heartbeat" type="rabbitmq-cluster"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="rabbitmq-bundle-2" CRM_meta_on_node_uuid="rabbitmq-bundle-2" CRM_meta_timeout="200000"  set_policy="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="13" operation="start" operation_key="rabbitmq-bundle-docker-2_start_0" on_node="overcloud-rabbit-2" on_node_uuid="overcloud-rabbit-2" router_node="overcloud-controller-2"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="27" operation="start" operation_key="rabbitmq-bundle-2_start_0" on_node="overcloud-controller-2" on_node_uuid="3"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="35" operation="start" operation_key="rabbitmq:1_start_0" on_node="rabbitmq-bundle-1" on_node_uuid="rabbitmq-bundle-1" router_node="overcloud-controller-1"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="39" operation="start" operation_key="rabbitmq-bundle-clone_start_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="16">
+  <synapse id="25">
     <action_set>
       <rsc_op id="26" operation="stop" operation_key="rabbitmq-bundle-docker-2_stop_0" on_node="overcloud-rabbit-2" on_node_uuid="overcloud-rabbit-2" router_node="overcloud-controller-2">
         <primitive id="rabbitmq-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
@@ -247,7 +387,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="17">
+  <synapse id="26">
     <action_set>
       <rsc_op id="13" operation="start" operation_key="rabbitmq-bundle-docker-2_start_0" on_node="overcloud-rabbit-2" on_node_uuid="overcloud-rabbit-2" router_node="overcloud-controller-2">
         <primitive id="rabbitmq-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
@@ -263,7 +403,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="18">
+  <synapse id="27">
     <action_set>
       <rsc_op id="9" operation="monitor" operation_key="rabbitmq-bundle-docker-2_monitor_60000" on_node="overcloud-rabbit-2" on_node_uuid="overcloud-rabbit-2" router_node="overcloud-controller-2">
         <primitive id="rabbitmq-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
@@ -276,7 +416,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="19">
+  <synapse id="28">
     <action_set>
       <rsc_op id="28" operation="monitor" operation_key="rabbitmq-bundle-2_monitor_60000" on_node="overcloud-controller-2" on_node_uuid="3">
         <primitive id="rabbitmq-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
@@ -289,7 +429,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="20">
+  <synapse id="29">
     <action_set>
       <rsc_op id="27" operation="start" operation_key="rabbitmq-bundle-2_start_0" on_node="overcloud-controller-2" on_node_uuid="3">
         <primitive id="rabbitmq-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
@@ -302,40 +442,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="21" priority="1000000">
-    <action_set>
-      <pseudo_event id="40" operation="running" operation_key="rabbitmq-bundle-clone_running_0">
-        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="33" operation="start" operation_key="rabbitmq:0_start_0" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="overcloud-controller-0"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="35" operation="start" operation_key="rabbitmq:1_start_0" on_node="rabbitmq-bundle-1" on_node_uuid="rabbitmq-bundle-1" router_node="overcloud-controller-1"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="37" operation="start" operation_key="rabbitmq:2_start_0" on_node="rabbitmq-bundle-2" on_node_uuid="rabbitmq-bundle-2" router_node="overcloud-controller-2"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="39" operation="start" operation_key="rabbitmq-bundle-clone_start_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="22">
-    <action_set>
-      <pseudo_event id="39" operation="start" operation_key="rabbitmq-bundle-clone_start_0">
-        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="29" operation="start" operation_key="rabbitmq-bundle_start_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="23" priority="1000000">
+  <synapse id="30" priority="1000000">
     <action_set>
       <pseudo_event id="30" operation="running" operation_key="rabbitmq-bundle_running_0">
         <attributes CRM_meta_timeout="20000" />
@@ -352,11 +459,11 @@
         <rsc_op id="13" operation="start" operation_key="rabbitmq-bundle-docker-2_start_0" on_node="overcloud-rabbit-2" on_node_uuid="overcloud-rabbit-2" router_node="overcloud-controller-2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="40" operation="running" operation_key="rabbitmq-bundle-clone_running_0"/>
+        <pseudo_event id="44" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="24">
+  <synapse id="31">
     <action_set>
       <pseudo_event id="29" operation="start" operation_key="rabbitmq-bundle_start_0">
         <attributes CRM_meta_timeout="20000" />
@@ -364,7 +471,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="25">
+  <synapse id="32">
     <action_set>
       <pseudo_event id="10" operation="all_stopped" operation_key="all_stopped">
         <attributes />

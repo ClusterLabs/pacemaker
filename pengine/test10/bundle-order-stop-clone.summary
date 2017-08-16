@@ -35,8 +35,8 @@ Executing cluster transition:
  * Pseudo action:   storage-clone_confirmed-pre_notify_stop_0
  * Pseudo action:   galera-bundle-master_stop_0
  * Resource action: galera:0        stop on galera-bundle-0
- * Resource action: galera-bundle-0 stop on metal-1
  * Pseudo action:   galera-bundle-master_stopped_0
+ * Resource action: galera-bundle-0 stop on metal-1
  * Resource action: galera-bundle-docker-0 stop on metal-1
  * Pseudo action:   galera-bundle_stopped_0
  * Pseudo action:   galera-bundle_start_0

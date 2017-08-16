@@ -34,21 +34,26 @@ Executing cluster transition:
  * Resource action: haproxy-bundle-docker-0 monitor on metal-3
  * Resource action: haproxy-bundle-docker-0 monitor on metal-2
  * Resource action: haproxy-bundle-docker-0 monitor on metal-1
+ * Pseudo action:   redis-bundle-master_pre_notify_start_0
  * Resource action: redis-bundle-docker-0 monitor on metal-3
  * Resource action: redis-bundle-docker-0 monitor on metal-2
  * Resource action: redis-bundle-docker-0 monitor on metal-1
  * Pseudo action:   redis-bundle_start_0
  * Pseudo action:   haproxy-bundle_start_0
  * Resource action: haproxy-bundle-docker-0 start on metal-2
+ * Pseudo action:   redis-bundle-master_confirmed-pre_notify_start_0
+ * Pseudo action:   redis-bundle-master_start_0
  * Resource action: redis-bundle-docker-0 start on metal-2
  * Resource action: redis-bundle-0  start on metal-2
- * Pseudo action:   redis-bundle-master_start_0
  * Pseudo action:   haproxy-bundle_running_0
  * Resource action: haproxy-bundle-docker-0 monitor=60000 on metal-2
  * Resource action: redis:0         start on redis-bundle-0
+ * Pseudo action:   redis-bundle-master_running_0
  * Resource action: redis-bundle-docker-0 monitor=60000 on metal-2
  * Resource action: redis-bundle-0  monitor=60000 on metal-2
- * Pseudo action:   redis-bundle-master_running_0
+ * Pseudo action:   redis-bundle-master_post_notify_running_0
+ * Resource action: redis:0         notify on redis-bundle-0
+ * Pseudo action:   redis-bundle-master_confirmed-post_notify_running_0
  * Pseudo action:   redis-bundle_running_0
  * Resource action: redis:0         monitor=60000 on redis-bundle-0
  * Resource action: redis:0         monitor=45000 on redis-bundle-0

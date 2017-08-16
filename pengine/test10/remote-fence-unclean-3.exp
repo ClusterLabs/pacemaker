@@ -75,7 +75,7 @@
   </synapse>
   <synapse id="6">
     <action_set>
-      <pseudo_event id="185" operation="stonith_complete" operation_key="stonith_complete">
+      <pseudo_event id="209" operation="stonith_complete" operation_key="stonith_complete">
         <attributes />
       </pseudo_event>
     </action_set>
@@ -107,7 +107,7 @@
         <rsc_op id="30" operation="stop" operation_key="overcloud-novacompute-0_stop_0" on_node="overcloud-controller-0" on_node_uuid="1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="185" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="209" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>

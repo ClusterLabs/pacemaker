@@ -115,27 +115,24 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="11">
+  <synapse id="11" priority="1000000">
     <action_set>
-      <rsc_op id="71" operation="monitor" operation_key="redis:0_monitor_60000" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-2">
+      <rsc_op id="106" operation="notify" operation_key="redis:0_post_notify_start_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-2">
         <primitive id="redis" long-id="redis:0" class="ocf" provider="heartbeat" type="redis"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_role="Slave" CRM_meta_timeout="60000"  wait_last_known_master="true"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="galera-bundle-0 metal-1 metal-2 metal-3 rabbitmq-bundle-0 redis-bundle-0" CRM_meta_notify_available_uname="redis-bundle-0 rabbitmq-bundle-0 galera-bundle-0 metal-3 metal-2 metal-1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:0" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="redis:0" CRM_meta_notify_start_uname="redis-bundle-0" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="63" operation="start" operation_key="redis-bundle-0_start_0" on_node="metal-2" on_node_uuid="2"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="69" operation="start" operation_key="redis:0_start_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-2"/>
+        <pseudo_event id="76" operation="notify" operation_key="redis-bundle-master_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="12">
     <action_set>
-      <rsc_op id="70" operation="monitor" operation_key="redis:0_monitor_45000" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-2">
+      <rsc_op id="71" operation="monitor" operation_key="redis:0_monitor_60000" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-2">
         <primitive id="redis" long-id="redis:0" class="ocf" provider="heartbeat" type="redis"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="45000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_timeout="60000"  wait_last_known_master="true"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_role="Slave" CRM_meta_timeout="60000"  wait_last_known_master="true"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -145,13 +142,35 @@
       <trigger>
         <rsc_op id="69" operation="start" operation_key="redis:0_start_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-2"/>
       </trigger>
+      <trigger>
+        <pseudo_event id="77" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0"/>
+      </trigger>
     </inputs>
   </synapse>
   <synapse id="13">
     <action_set>
+      <rsc_op id="70" operation="monitor" operation_key="redis:0_monitor_45000" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-2">
+        <primitive id="redis" long-id="redis:0" class="ocf" provider="heartbeat" type="redis"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="45000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_timeout="60000"  wait_last_known_master="true"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="63" operation="start" operation_key="redis-bundle-0_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="69" operation="start" operation_key="redis:0_start_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="77" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="14">
+    <action_set>
       <rsc_op id="69" operation="start" operation_key="redis:0_start_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-2">
         <primitive id="redis" long-id="redis:0" class="ocf" provider="heartbeat" type="redis"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_timeout="200000"  wait_last_known_master="true"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="galera-bundle-0 metal-1 metal-2 metal-3 rabbitmq-bundle-0 redis-bundle-0" CRM_meta_notify_available_uname="redis-bundle-0 rabbitmq-bundle-0 galera-bundle-0 metal-3 metal-2 metal-1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:0" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="redis:0" CRM_meta_notify_start_uname="redis-bundle-0" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_timeout="200000"  wait_last_known_master="true"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -166,7 +185,87 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="14">
+  <synapse id="15" priority="1000000">
+    <action_set>
+      <pseudo_event id="77" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0">
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="76" operation="notify" operation_key="redis-bundle-master_post_notify_running_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="106" operation="notify" operation_key="redis:0_post_notify_start_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="16" priority="1000000">
+    <action_set>
+      <pseudo_event id="76" operation="notify" operation_key="redis-bundle-master_post_notify_running_0">
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="73" operation="running" operation_key="redis-bundle-master_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="75" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="17">
+    <action_set>
+      <pseudo_event id="75" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_start_0">
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="74" operation="notify" operation_key="redis-bundle-master_pre_notify_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="18">
+    <action_set>
+      <pseudo_event id="74" operation="notify" operation_key="redis-bundle-master_pre_notify_start_0">
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="19" priority="1000000">
+    <action_set>
+      <pseudo_event id="73" operation="running" operation_key="redis-bundle-master_running_0">
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="69" operation="start" operation_key="redis:0_start_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="72" operation="start" operation_key="redis-bundle-master_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="20">
+    <action_set>
+      <pseudo_event id="72" operation="start" operation_key="redis-bundle-master_start_0">
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="65" operation="start" operation_key="redis-bundle_start_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="75" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="21">
     <action_set>
       <rsc_op id="62" operation="monitor" operation_key="redis-bundle-docker-0_monitor_60000" on_node="metal-2" on_node_uuid="2">
         <primitive id="redis-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
@@ -179,7 +278,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="15">
+  <synapse id="22">
     <action_set>
       <rsc_op id="61" operation="start" operation_key="redis-bundle-docker-0_start_0" on_node="metal-2" on_node_uuid="2">
         <primitive id="redis-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
@@ -201,7 +300,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="16">
+  <synapse id="23">
     <action_set>
       <rsc_op id="13" operation="monitor" operation_key="redis-bundle-docker-0_monitor_0" on_node="metal-3" on_node_uuid="3">
         <primitive id="redis-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
@@ -210,7 +309,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="17">
+  <synapse id="24">
     <action_set>
       <rsc_op id="9" operation="monitor" operation_key="redis-bundle-docker-0_monitor_0" on_node="metal-2" on_node_uuid="2">
         <primitive id="redis-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
@@ -219,7 +318,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="18">
+  <synapse id="25">
     <action_set>
       <rsc_op id="5" operation="monitor" operation_key="redis-bundle-docker-0_monitor_0" on_node="metal-1" on_node_uuid="1">
         <primitive id="redis-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
@@ -228,7 +327,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="19">
+  <synapse id="26">
     <action_set>
       <rsc_op id="64" operation="monitor" operation_key="redis-bundle-0_monitor_60000" on_node="metal-2" on_node_uuid="2">
         <primitive id="redis-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
@@ -241,7 +340,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="20">
+  <synapse id="27">
     <action_set>
       <rsc_op id="63" operation="start" operation_key="redis-bundle-0_start_0" on_node="metal-2" on_node_uuid="2">
         <primitive id="redis-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
@@ -254,34 +353,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="21" priority="1000000">
-    <action_set>
-      <pseudo_event id="73" operation="running" operation_key="redis-bundle-master_running_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="69" operation="start" operation_key="redis:0_start_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-2"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="72" operation="start" operation_key="redis-bundle-master_start_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="22">
-    <action_set>
-      <pseudo_event id="72" operation="start" operation_key="redis-bundle-master_start_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="65" operation="start" operation_key="redis-bundle_start_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="23" priority="1000000">
+  <synapse id="28" priority="1000000">
     <action_set>
       <pseudo_event id="66" operation="running" operation_key="redis-bundle_running_0">
         <attributes CRM_meta_timeout="20000" />
@@ -292,11 +364,11 @@
         <rsc_op id="61" operation="start" operation_key="redis-bundle-docker-0_start_0" on_node="metal-2" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="73" operation="running" operation_key="redis-bundle-master_running_0"/>
+        <pseudo_event id="77" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="24">
+  <synapse id="29">
     <action_set>
       <pseudo_event id="65" operation="start" operation_key="redis-bundle_start_0">
         <attributes CRM_meta_timeout="20000" />
@@ -304,7 +376,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="25" priority="1000000">
+  <synapse id="30" priority="1000000">
     <action_set>
       <pseudo_event id="58" operation="running" operation_key="haproxy-bundle_running_0">
         <attributes CRM_meta_timeout="20000" />
@@ -316,7 +388,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="26">
+  <synapse id="31">
     <action_set>
       <pseudo_event id="57" operation="start" operation_key="haproxy-bundle_start_0">
         <attributes CRM_meta_timeout="20000" />
