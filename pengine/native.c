@@ -235,11 +235,20 @@ node_hash_update(GHashTable * list1, GHashTable * list2, const char *attr, float
 
     g_hash_table_iter_init(&iter, list1);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
+        float weight_f = 0;
+        int weight = 0;
+
         CRM_LOG_ASSERT(node != NULL);
         if(node == NULL) { continue; };
 
         score = node_list_attr_score(list2, attr, g_hash_table_lookup(node->details->attrs, attr));
-        new_score = merge_weights(factor * score, node->weight);
+
+        weight_f = factor * score;
+        /* Round the number */
+        /* http://c-faq.com/fp/round.html */
+        weight = (int)(weight_f < 0 ? weight_f - 0.5 : weight_f + 0.5);
+
+        new_score = merge_weights(weight, node->weight);
 
         if (factor < 0 && score < 0) {
             /* Negative preference for a node with a negative score
