@@ -2083,8 +2083,6 @@ find_unfencing_devices(GListPtr candidates, GListPtr matches)
 }
 
 
-#define STONITH_DIGEST_TASK "stonith-on"
-
 action_t *
 pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe_working_set_t * data_set)
 {
