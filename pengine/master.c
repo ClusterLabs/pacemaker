@@ -141,19 +141,22 @@ master_update_pseudo_status(resource_t * rsc, gboolean * demoting, gboolean * pr
 
 static void apply_master_location(resource_t *child, GListPtr location_constraints, pe_node_t *chosen)
 {
-     for(GListPtr gIter = location_constraints; gIter != NULL; gIter = gIter->next) {
-	pe_node_t *cons_node = NULL;
-	rsc_to_node_t *cons = (rsc_to_node_t*)gIter->data;
+    CRM_CHECK(child && chosen, return);
+    for (GListPtr gIter = location_constraints; gIter; gIter = gIter->next) {
+        pe_node_t *cons_node = NULL;
+        rsc_to_node_t *cons = (rsc_to_node_t *) gIter->data;
 
-	if(cons->role_filter == RSC_ROLE_MASTER) {
-	    pe_rsc_trace(child, "Applying %s to %s", cons->id, child->id);
-	    cons_node = pe_find_node_id(cons->node_list_rh, chosen->details->id);
-	}
-	if(cons_node != NULL) {
-	    int new_priority = merge_weights(child->priority, cons_node->weight);
-	    pe_rsc_trace(child, "\t%s[%s]: %d -> %d (%d)", child->id,  cons_node->details->uname,
-			child->priority, new_priority, cons_node->weight);
-	    child->priority = new_priority;
+        if (cons->role_filter == RSC_ROLE_MASTER) {
+            pe_rsc_trace(child, "Applying %s to %s", cons->id, child->id);
+            cons_node = pe_find_node_id(cons->node_list_rh, chosen->details->id);
+        }
+        if (cons_node != NULL) {
+            int new_priority = merge_weights(child->priority, cons_node->weight);
+
+            pe_rsc_trace(child, "\t%s[%s]: %d -> %d (%d)",
+                         child->id, cons_node->details->uname, child->priority,
+                         new_priority, cons_node->weight);
+            child->priority = new_priority;
         }
     }
 }

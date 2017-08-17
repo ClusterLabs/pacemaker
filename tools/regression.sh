@@ -765,7 +765,6 @@ for t in $tests; do
         -e 's/^Entity: line [0-9][0-9]*: //'\
         -e 's/schemas\.c:\([0-9][0-9]*\)/schemas.c:NNN/' \
         -e 's/\(validation ([0-9][0-9]* of \)[0-9][0-9]*\().*\)/\1X\2/' \
-        -e '/meta-data/d' \
 	$test_home/regression.$t.out
 
     if [ $do_save = 1 ]; then
