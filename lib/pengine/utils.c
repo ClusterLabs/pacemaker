@@ -1987,8 +1987,10 @@ fencing_action_digest_cmp(resource_t * rsc, node_t * node, pe_working_set_t * da
     char *key = generate_op_key(rsc->id, STONITH_DIGEST_TASK, 0);
     op_digest_cache_t *data = rsc_action_digest(rsc, STONITH_DIGEST_TASK, key, node, NULL, data_set);
 
-    const char *digest_all = g_hash_table_lookup(node->details->attrs, "digests-all");
-    const char *digest_secure = g_hash_table_lookup(node->details->attrs, "digests-secure");
+    const char *digest_all = g_hash_table_lookup(node->details->attrs,
+                                                 CRM_ATTR_DIGESTS_ALL);
+    const char *digest_secure = g_hash_table_lookup(node->details->attrs,
+                                                    CRM_ATTR_DIGESTS_SECURE);
 
     /* No 'reloads' for fencing device changes
      *
@@ -2144,8 +2146,10 @@ pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe
                     digests_secure+digests_secure_offset, max-digests_secure_offset,
                     "%s:%s:%s,", match->id, (const char*)g_hash_table_lookup(match->meta, XML_ATTR_TYPE), data->digest_secure_calc);
             }
-            add_hash_param(stonith_op->meta, strdup("digests-all"), digests_all);
-            add_hash_param(stonith_op->meta, strdup("digests-secure"), digests_secure);
+            add_hash_param(stonith_op->meta, strdup(XML_OP_ATTR_DIGESTS_ALL),
+                           digests_all);
+            add_hash_param(stonith_op->meta, strdup(XML_OP_ATTR_DIGESTS_SECURE),
+                           digests_secure);
         }
 
     } else {

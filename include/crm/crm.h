@@ -94,6 +94,11 @@ extern char *crm_system_name;
 #  define CRM_SYSTEM_STONITHD	"stonithd"
 #  define CRM_SYSTEM_MCP	"pacemakerd"
 
+// Names of internally generated node attributes
+#  define CRM_ATTR_UNFENCED         "#node-unfenced"
+#  define CRM_ATTR_DIGESTS_ALL      "#digests-all"
+#  define CRM_ATTR_DIGESTS_SECURE   "#digests-secure"
+
 /* Valid operations */
 #  define CRM_OP_NOOP		"noop"
 #  define CRM_OP_JOIN_ANNOUNCE	"join_announce"

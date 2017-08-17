@@ -797,21 +797,17 @@ tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
         if (action->confirmed == FALSE) {
             te_action_confirmed(action);
             if (safe_str_eq("on", op)) {
-                const char *key = NULL;
                 const char *value = NULL;
                 char *now = crm_itoa(time(NULL));
 
-                key = XML_NODE_IS_UNFENCED;
-                update_attrd(target, key, now, NULL, FALSE);
+                update_attrd(target, CRM_ATTR_UNFENCED, now, NULL, FALSE);
                 free(now);
 
-                key = "digests-all";
-                value = crm_meta_value(action->params, key);
-                update_attrd(target, key, value, NULL, FALSE);
+                value = crm_meta_value(action->params, XML_OP_ATTR_DIGESTS_ALL);
+                update_attrd(target, CRM_ATTR_DIGESTS_ALL, value, NULL, FALSE);
 
-                key = "digests-secure";
-                value = crm_meta_value(action->params, key);
-                update_attrd(target, key, value, NULL, FALSE);
+                value = crm_meta_value(action->params, XML_OP_ATTR_DIGESTS_SECURE);
+                update_attrd(target, CRM_ATTR_DIGESTS_SECURE, value, NULL, FALSE);
 
             } else if (action->sent_update == FALSE) {
                 send_stonith_update(action, target, uuid);

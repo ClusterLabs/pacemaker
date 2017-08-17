@@ -234,6 +234,8 @@
 #  define XML_OP_ATTR_DEPENDENT "dependent-on"
 #  define XML_OP_ATTR_ORIGIN		"interval-origin"
 #  define XML_OP_ATTR_PENDING		"record-pending"
+#  define XML_OP_ATTR_DIGESTS_ALL       "digests-all"
+#  define XML_OP_ATTR_DIGESTS_SECURE    "digests-secure"
 
 #  define XML_CIB_TAG_LRM		"lrm"
 #  define XML_LRM_TAG_RESOURCES     	"lrm_resources"
@@ -262,7 +264,6 @@
 #  define XML_NODE_IS_PEER    	"crmd"
 #  define XML_NODE_IS_REMOTE    	"remote_node"
 #  define XML_NODE_IS_FENCED		"node_fenced"
-#  define XML_NODE_IS_UNFENCED	    	"node_unfenced"
 #  define XML_NODE_IS_MAINTENANCE   "node_in_maintenance"
 
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
