@@ -861,7 +861,6 @@ apply_system_health(pe_working_set_t * data_set)
                 rsc2node_new(health_strategy, rsc, system_health, NULL, node, data_set);
             }
         }
-
     }
 
     return TRUE;
@@ -898,7 +897,7 @@ probe_resources(pe_working_set_t * data_set)
 
     for (GListPtr gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
-        const char *probed = g_hash_table_lookup(node->details->attrs, CRM_OP_PROBED);
+        const char *probed = node_attribute_raw(node, CRM_OP_PROBED);
 
         if (is_container_remote_node(node)) {
             /* TODO enable guest node probes once ordered probing is implemented */

@@ -1162,6 +1162,45 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
             hash2smartfield((gpointer)"pcmk_external_ip", (gpointer)value, (gpointer)args_xml);
         }
 
+        if(is_container_remote_node(action->node)) {
+            pe_node_t *host = NULL;
+            enum action_tasks task = text2task(action->task);
+
+            if(task == action_notify || task == action_notified) {
+                const char *n_task = g_hash_table_lookup(action->meta, "notify_operation");
+                task = text2task(n_task);
+            }
+
+            // Differentiate between up and down actions
+            switch (task) {
+                case stop_rsc:
+                case stopped_rsc:
+                case action_demote:
+                case action_demoted:
+                    if(action->node->details->remote_rsc->container->running_on) {
+                        host = action->node->details->remote_rsc->container->running_on->data;
+                    }
+                    break;
+                case start_rsc:
+                case started_rsc:
+                case monitor_rsc:
+                case action_promote:
+                case action_promoted:
+                    if(action->node->details->remote_rsc->container->allocated_to) {
+                        host = action->node->details->remote_rsc->container->allocated_to;
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            if(host) {
+                hash2metafield((gpointer)XML_RSC_ATTR_TARGET,
+                               (gpointer)g_hash_table_lookup(action->rsc->meta, XML_RSC_ATTR_TARGET), (gpointer)args_xml);
+                hash2metafield((gpointer)PCMK_ENV_PHYSICAL_HOST, (gpointer)host->details->uname, (gpointer)args_xml);
+            }
+        }
+
     } else if (safe_str_eq(action->task, CRM_OP_FENCE) && action->node) {
         /* Pass the node's attributes as meta-attributes.
          *

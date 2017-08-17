@@ -135,7 +135,7 @@
     <action_set>
       <rsc_op id="93" operation="stop" operation_key="lxc-ms_stop_0" on_node="lxc2" on_node_uuid="lxc2" router_node="18node1">
         <primitive id="lxc-ms" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_on_node="lxc2" CRM_meta_on_node_uuid="lxc2" CRM_meta_timeout="90000" />
+        <attributes CRM_meta_on_node="lxc2" CRM_meta_on_node_uuid="lxc2" CRM_meta_physical_host="18node1" CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -151,7 +151,7 @@
     <action_set>
       <rsc_op id="92" operation="stop" operation_key="lxc-ms_stop_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1">
         <primitive id="lxc-ms" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_on_node="lxc1" CRM_meta_on_node_uuid="lxc1" CRM_meta_timeout="90000" />
+        <attributes CRM_meta_on_node="lxc1" CRM_meta_on_node_uuid="lxc1" CRM_meta_physical_host="18node1" CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -167,7 +167,7 @@
     <action_set>
       <rsc_op id="91" operation="demote" operation_key="lxc-ms_demote_0" on_node="lxc2" on_node_uuid="lxc2" router_node="18node1">
         <primitive id="lxc-ms" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_on_node="lxc2" CRM_meta_on_node_uuid="lxc2" CRM_meta_timeout="90000" />
+        <attributes CRM_meta_on_node="lxc2" CRM_meta_on_node_uuid="lxc2" CRM_meta_physical_host="18node1" CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -176,7 +176,7 @@
     <action_set>
       <rsc_op id="90" operation="demote" operation_key="lxc-ms_demote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1">
         <primitive id="lxc-ms" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_on_node="lxc1" CRM_meta_on_node_uuid="lxc1" CRM_meta_timeout="90000" />
+        <attributes CRM_meta_on_node="lxc1" CRM_meta_on_node_uuid="lxc1" CRM_meta_physical_host="18node1" CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs/>

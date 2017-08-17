@@ -957,7 +957,7 @@ unpack_location(xmlNode * xml_obj, pe_working_set_t * data_set)
 }
 
 static int
-get_node_score(const char *rule, const char *score, gboolean raw, node_t * node)
+get_node_score(const char *rule, const char *score, gboolean raw, node_t * node, resource_t *rsc)
 {
     int score_f = 0;
 
@@ -968,7 +968,7 @@ get_node_score(const char *rule, const char *score, gboolean raw, node_t * node)
         score_f = char2score(score);
 
     } else {
-        const char *attr_score = g_hash_table_lookup(node->details->attrs, score);
+        const char *attr_score = node_attribute_calculated(node, score, rsc);
 
         if (attr_score == NULL) {
             crm_debug("Rule %s: node %s did not have a value for %s",
@@ -1060,7 +1060,7 @@ generate_location_rule(resource_t * rsc, xmlNode * rule_xml, const char *discove
         for (gIter = match_L; gIter != NULL; gIter = gIter->next) {
             node_t *node = (node_t *) gIter->data;
 
-            node->weight = get_node_score(rule_id, score, raw_score, node);
+            node->weight = get_node_score(rule_id, score, raw_score, node, rsc);
         }
     }
 
@@ -1073,7 +1073,7 @@ generate_location_rule(resource_t * rsc, xmlNode * rule_xml, const char *discove
         crm_trace("Rule %s %s on %s", ID(rule_xml), accept ? "passed" : "failed",
                   node->details->uname);
 
-        score_f = get_node_score(rule_id, score, raw_score, node);
+        score_f = get_node_score(rule_id, score, raw_score, node, rsc);
 /* 			if(accept && score_f == -INFINITY) { */
 /* 				accept = FALSE; */
 /* 			} */

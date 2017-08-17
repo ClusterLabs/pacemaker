@@ -203,7 +203,7 @@ node_list_attr_score(GHashTable * list, const char *attr, const char *value)
             weight = -INFINITY;
         }
         if (weight > best_score || best_node == NULL) {
-            const char *tmp = g_hash_table_lookup(node->details->attrs, attr);
+            const char *tmp = node_attribute_raw(node, attr);
 
             if (safe_str_eq(value, tmp)) {
                 best_score = weight;
@@ -238,7 +238,7 @@ node_hash_update(GHashTable * list1, GHashTable * list2, const char *attr, float
         CRM_LOG_ASSERT(node != NULL);
         if(node == NULL) { continue; };
 
-        score = node_list_attr_score(list2, attr, g_hash_table_lookup(node->details->attrs, attr));
+        score = node_list_attr_score(list2, attr, node_attribute_raw(node, attr));
         new_score = merge_weights(factor * score, node->weight);
 
         if (factor < 0 && score < 0) {
@@ -1630,8 +1630,8 @@ influence_priority(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * 
         return;
     }
 
-    lh_value = g_hash_table_lookup(rsc_lh->allocated_to->details->attrs, attribute);
-    rh_value = g_hash_table_lookup(rsc_rh->allocated_to->details->attrs, attribute);
+    lh_value = node_attribute_raw(rsc_lh->allocated_to, attribute);
+    rh_value = node_attribute_raw(rsc_rh->allocated_to, attribute);
 
     if (!safe_str_eq(lh_value, rh_value)) {
         if(constraint->score == INFINITY && constraint->role_lh == RSC_ROLE_MASTER) {
@@ -1669,7 +1669,7 @@ colocation_match(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * co
     }
 
     if (rsc_rh->allocated_to) {
-        value = g_hash_table_lookup(rsc_rh->allocated_to->details->attrs, attribute);
+        value = node_attribute_raw(rsc_rh->allocated_to, attribute);
         do_check = TRUE;
 
     } else if (constraint->score < 0) {
@@ -1683,7 +1683,7 @@ colocation_match(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * co
 
     g_hash_table_iter_init(&iter, work);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-        tmp = g_hash_table_lookup(node->details->attrs, attribute);
+        tmp = node_attribute_raw(node, attribute);
         if (do_check && safe_str_eq(tmp, value)) {
             if (constraint->score < INFINITY) {
                 pe_rsc_trace(rsc_lh, "%s: %s.%s += %d", constraint->id, rsc_lh->id,
@@ -2492,7 +2492,7 @@ StopRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * d
 
         if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
             action_t *unfence = pe_fence_op(current, "on", TRUE, NULL, data_set);
-            const char *unfenced = g_hash_table_lookup(current->details->attrs, XML_NODE_IS_UNFENCED);
+            const char *unfenced = node_attribute_raw(current, XML_NODE_IS_UNFENCED);
 
             order_actions(stop, unfence, pe_order_implies_first);
             if (unfenced == NULL || safe_str_eq("0", unfenced)) {
@@ -2515,7 +2515,7 @@ StartRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * 
 
     if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
         action_t *unfence = pe_fence_op(next, "on", TRUE, NULL, data_set);
-        const char *unfenced = g_hash_table_lookup(next->details->attrs, XML_NODE_IS_UNFENCED);
+        const char *unfenced = node_attribute_raw(next, XML_NODE_IS_UNFENCED);
 
         order_actions(unfence, start, pe_order_implies_then);
 

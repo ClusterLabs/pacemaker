@@ -79,6 +79,7 @@ static int do_query(const char *attr_name, const char *attr_node, gboolean query
 static int do_update(char command, const char *attr_node, const char *attr_name,
                      const char *attr_value, const char *attr_section,
                      const char *attr_set, const char *attr_dampen, int attr_options);
+static const char *get_hostname(const char *name);
 
 int
 main(int argc, char **argv)
@@ -198,6 +199,8 @@ main(int argc, char **argv)
          * every update, even in clusters with no remote nodes. Since we haven't
          * had user requests for this support, we'll leave it as it is for now.
          */
+
+        attr_node = get_hostname(attr_node);
         crm_exit(do_update(command, attr_node, attr_name, attr_value,
                            attr_section, attr_set, attr_dampen, attr_options));
     }
@@ -351,6 +354,8 @@ do_query(const char *attr_name, const char *attr_node, gboolean query_all)
         attr_node = "localhost";
     }
 
+    attr_node = get_hostname(attr_node);
+
     /* Build and send attrd request, and get XML reply */
     rc = send_attrd_query(attr_name, attr_node, &reply);
     if (rc != pcmk_ok) {
@@ -393,4 +398,29 @@ do_update(char command, const char *attr_node, const char *attr_name,
         fprintf(stderr, "Could not update %s=%s: %s (%d)\n", attr_name, attr_value, pcmk_strerror(rc), rc);
     }
     return rc;
+}
+
+static const char *
+get_hostname(const char *name)
+{
+    if(name != NULL
+       && safe_str_neq(name, "auto")
+       && safe_str_neq(name, "localhost")) {
+        return name;
+
+    } else {
+        const char *target = getenv(crm_meta_name(XML_RSC_ATTR_TARGET));
+        const char *host_pyhsical = getenv(crm_meta_name(PCMK_ENV_PHYSICAL_HOST));
+        const char *host_pcmk = getenv("OCF_RESKEY_" CRM_META "_" XML_LRM_ATTR_TARGET);
+
+        /* It is important we use the names by which the PE knows us */
+        if(safe_str_eq(target, "host") && host_pyhsical != NULL) {
+            return host_pyhsical;
+
+        } else if(host_pcmk) {
+            return host_pcmk;
+        }
+    }
+
+    return name;
 }

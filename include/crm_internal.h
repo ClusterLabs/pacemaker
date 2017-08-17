@@ -289,6 +289,9 @@ long crm_read_pidfile(const char *filename);
 #  define ATTRD_OP_SYNC_RESPONSE "sync-response"
 #  define ATTRD_OP_CLEAR_FAILURE "clear-failure"
 
+#  define PCMK_ENV_PHYSICAL_HOST "physical_host"
+
+
 #  if SUPPORT_COROSYNC
 #    if CS_USES_LIBQB
 #      include <qb/qbipc_common.h>

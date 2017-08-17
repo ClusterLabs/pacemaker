@@ -764,8 +764,12 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
 
             offset += allocate_ip(container_data, tuple, buffer+offset, max-offset);
             container_data->tuples = g_list_append(container_data->tuples, tuple);
+            container_data->attribute_target = g_hash_table_lookup(tuple->child->meta, XML_RSC_ATTR_TARGET);
         }
         container_data->docker_host_options = buffer;
+        if(container_data->attribute_target) {
+            g_hash_table_replace(rsc->meta, strdup(XML_RSC_ATTR_TARGET), strdup(container_data->attribute_target));
+        }
 
     } else {
         // Just a naked container, no pacemaker-remote
@@ -781,7 +785,6 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
 
         container_data->docker_host_options = buffer;
     }
-
 
     for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
         container_grouping_t *tuple = (container_grouping_t *)gIter->data;

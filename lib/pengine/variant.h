@@ -100,6 +100,7 @@ typedef struct container_variant_data_s {
         char *docker_host_options;
         char *docker_run_options;
         char *docker_run_command;
+        const char *attribute_target;
 
         resource_t *child;
 

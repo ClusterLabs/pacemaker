@@ -431,3 +431,51 @@ add_hash_param(GHashTable * hash, const char *name, const char *value)
         g_hash_table_insert(hash, strdup(name), strdup(value));
     }
 }
+
+const char *
+node_attribute_calculated(pe_node_t *node, const char *name, resource_t *rsc) 
+{
+    const char *source;
+
+    if(node == NULL) {
+        return NULL;
+
+    } else if(rsc == NULL) {
+        return g_hash_table_lookup(node->details->attrs, name);
+    }
+
+    source = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET);
+    if(source == NULL || safe_str_eq("host", source) == FALSE) {
+        return g_hash_table_lookup(node->details->attrs, name);
+    }
+
+    /* Use attributes set for the containers location
+     * instead of for the container itself
+     *
+     * Useful when the container is using the host's local
+     * storage
+     */
+
+    CRM_ASSERT(node->details->remote_rsc);
+    CRM_ASSERT(node->details->remote_rsc->container);
+
+    if(node->details->remote_rsc->container->running_on) {
+        pe_node_t *host = node->details->remote_rsc->container->running_on->data;
+        pe_rsc_trace(rsc, "%s: Looking for %s on the container host %s", rsc->id, name, host->details->uname);
+        return g_hash_table_lookup(host->details->attrs, name);
+    }
+
+    pe_rsc_trace(rsc, "%s: Not looking for %s on the container host: %s is inactive",
+                 rsc->id, name, node->details->remote_rsc->container->id);
+    return NULL;
+}
+
+const char *
+node_attribute_raw(pe_node_t *node, const char *name) 
+{
+    if(node == NULL) {
+        return NULL;
+    }
+    return g_hash_table_lookup(node->details->attrs, name);
+}
+

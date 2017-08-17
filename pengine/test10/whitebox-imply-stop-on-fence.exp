@@ -272,7 +272,7 @@
     <action_set>
       <rsc_op id="49" operation="monitor" operation_key="vm-fs_monitor_20000" on_node="lxc-01_kiff-01" on_node_uuid="lxc-01_kiff-01" router_node="kiff-02">
         <primitive id="vm-fs" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_interval="20000" CRM_meta_name="monitor" CRM_meta_on_node="lxc-01_kiff-01" CRM_meta_on_node_uuid="lxc-01_kiff-01" CRM_meta_timeout="40000"  device="/root" directory="/mnt/vm-fs" fstype="none" options="bind"/>
+        <attributes CRM_meta_interval="20000" CRM_meta_name="monitor" CRM_meta_on_node="lxc-01_kiff-01" CRM_meta_on_node_uuid="lxc-01_kiff-01" CRM_meta_physical_host="kiff-02" CRM_meta_timeout="40000"  device="/root" directory="/mnt/vm-fs" fstype="none" options="bind"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -288,7 +288,7 @@
     <action_set>
       <rsc_op id="48" operation="start" operation_key="vm-fs_start_0" on_node="lxc-01_kiff-01" on_node_uuid="lxc-01_kiff-01" router_node="kiff-02">
         <primitive id="vm-fs" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_node="lxc-01_kiff-01" CRM_meta_on_node_uuid="lxc-01_kiff-01" CRM_meta_timeout="60000"  device="/root" directory="/mnt/vm-fs" fstype="none" options="bind"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="lxc-01_kiff-01" CRM_meta_on_node_uuid="lxc-01_kiff-01" CRM_meta_physical_host="kiff-02" CRM_meta_timeout="60000"  device="/root" directory="/mnt/vm-fs" fstype="none" options="bind"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -309,7 +309,7 @@
   <synapse id="20">
     <action_set>
       <pseudo_event id="47" operation="stop" operation_key="vm-fs_stop_0">
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="60000"  device="/root" directory="/mnt/vm-fs" fstype="none" options="bind"/>
+        <attributes CRM_meta_name="stop" CRM_meta_physical_host="kiff-01" CRM_meta_timeout="60000"  device="/root" directory="/mnt/vm-fs" fstype="none" options="bind"/>
       </pseudo_event>
     </action_set>
     <inputs>

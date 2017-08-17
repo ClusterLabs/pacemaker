@@ -76,7 +76,7 @@
   <synapse id="5">
     <action_set>
       <pseudo_event id="40" operation="stop" operation_key="FSlun3_stop_0">
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="60000"  device="-L FSlun3" directory="/lun3" fstype="ext4"/>
+        <attributes CRM_meta_name="stop" CRM_meta_physical_host="lama3" CRM_meta_timeout="60000"  device="-L FSlun3" directory="/lun3" fstype="ext4"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -92,7 +92,7 @@
     <action_set>
       <rsc_op id="21" operation="monitor" operation_key="FSlun3_monitor_10000" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3">
         <primitive id="FSlun3" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="fence" CRM_meta_on_node="lamaVM2" CRM_meta_on_node_uuid="lamaVM2" CRM_meta_timeout="20000"  device="-L FSlun3" directory="/lun3" fstype="ext4"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="fence" CRM_meta_on_node="lamaVM2" CRM_meta_on_node_uuid="lamaVM2" CRM_meta_physical_host="lama3" CRM_meta_timeout="20000"  device="-L FSlun3" directory="/lun3" fstype="ext4"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -168,7 +168,7 @@
     <action_set>
       <rsc_op id="72" operation="start" operation_key="FAKE4_start_0" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3">
         <primitive id="FAKE4" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_node="lamaVM2" CRM_meta_on_node_uuid="lamaVM2" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_name="start" CRM_meta_on_node="lamaVM2" CRM_meta_on_node_uuid="lamaVM2" CRM_meta_physical_host="lama3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -192,7 +192,7 @@
   <synapse id="12">
     <action_set>
       <pseudo_event id="71" operation="stop" operation_key="FAKE4_stop_0">
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_name="stop" CRM_meta_physical_host="lama3" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -211,7 +211,7 @@
     <action_set>
       <rsc_op id="23" operation="monitor" operation_key="FAKE4_monitor_30000" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3">
         <primitive id="FAKE4" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_on_node="lamaVM2" CRM_meta_on_node_uuid="lamaVM2" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_on_node="lamaVM2" CRM_meta_on_node_uuid="lamaVM2" CRM_meta_physical_host="lama3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -227,7 +227,7 @@
     <action_set>
       <rsc_op id="74" operation="start" operation_key="FAKE4-IP_start_0" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3">
         <primitive id="FAKE4-IP" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_node="lamaVM2" CRM_meta_on_node_uuid="lamaVM2" CRM_meta_timeout="20000" cidr_netmask="16"  ip="10.1.1.54"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="lamaVM2" CRM_meta_on_node_uuid="lamaVM2" CRM_meta_physical_host="lama3" CRM_meta_timeout="20000" cidr_netmask="16"  ip="10.1.1.54"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -254,7 +254,7 @@
   <synapse id="15">
     <action_set>
       <pseudo_event id="73" operation="stop" operation_key="FAKE4-IP_stop_0">
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" cidr_netmask="16"  ip="10.1.1.54"/>
+        <attributes CRM_meta_name="stop" CRM_meta_physical_host="lama3" CRM_meta_timeout="20000" cidr_netmask="16"  ip="10.1.1.54"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -270,7 +270,7 @@
     <action_set>
       <rsc_op id="24" operation="monitor" operation_key="FAKE4-IP_monitor_30000" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3">
         <primitive id="FAKE4-IP" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_on_node="lamaVM2" CRM_meta_on_node_uuid="lamaVM2" CRM_meta_timeout="20000" cidr_netmask="16"  ip="10.1.1.54"/>
+        <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_on_node="lamaVM2" CRM_meta_on_node_uuid="lamaVM2" CRM_meta_physical_host="lama3" CRM_meta_timeout="20000" cidr_netmask="16"  ip="10.1.1.54"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -286,7 +286,7 @@
     <action_set>
       <rsc_op id="84" operation="start" operation_key="FAKE6_start_0" internal_operation_key="FAKE6:2_start_0" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3">
         <primitive id="FAKE6" long-id="FAKE6:2" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="lamaVM2" CRM_meta_on_node_uuid="lamaVM2" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="lamaVM2" CRM_meta_on_node_uuid="lamaVM2" CRM_meta_physical_host="lama3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -310,7 +310,7 @@
   <synapse id="18">
     <action_set>
       <pseudo_event id="83" operation="stop" operation_key="FAKE6_stop_0" internal_operation_key="FAKE6:2_stop_0">
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_physical_host="lama3" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -326,7 +326,7 @@
     <action_set>
       <rsc_op id="22" operation="monitor" operation_key="FAKE6_monitor_30000" internal_operation_key="FAKE6:2_monitor_30000" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3">
         <primitive id="FAKE6" long-id="FAKE6:2" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="restart" CRM_meta_on_node="lamaVM2" CRM_meta_on_node_uuid="lamaVM2" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="restart" CRM_meta_on_node="lamaVM2" CRM_meta_on_node_uuid="lamaVM2" CRM_meta_physical_host="lama3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>

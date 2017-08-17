@@ -1070,7 +1070,7 @@ unpack_handle_remote_attrs(node_t *this_node, xmlNode *state, pe_working_set_t *
     attrs = find_xml_node(state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
     add_node_attrs(attrs, this_node, TRUE, data_set);
 
-    shutdown = g_hash_table_lookup(this_node->details->attrs, XML_CIB_ATTR_SHUTDOWN);
+    shutdown = node_attribute_raw(this_node, XML_CIB_ATTR_SHUTDOWN);
     if (shutdown != NULL && safe_str_neq("0", shutdown)) {
         crm_info("Node %s is shutting down", this_node->details->uname);
         this_node->details->shutdown = TRUE;
@@ -1079,18 +1079,18 @@ unpack_handle_remote_attrs(node_t *this_node, xmlNode *state, pe_working_set_t *
         }
     }
  
-    if (crm_is_true(g_hash_table_lookup(this_node->details->attrs, "standby"))) {
+    if (crm_is_true(node_attribute_raw(this_node, "standby"))) {
         crm_info("Node %s is in standby-mode", this_node->details->uname);
         this_node->details->standby = TRUE;
     }
 
-    if (crm_is_true(g_hash_table_lookup(this_node->details->attrs, "maintenance")) ||
+    if (crm_is_true(node_attribute_raw(this_node, "maintenance")) ||
         (rsc && !is_set(rsc->flags, pe_rsc_managed))) {
         crm_info("Node %s is in maintenance-mode", this_node->details->uname);
         this_node->details->maintenance = TRUE;
     }
 
-    resource_discovery_enabled = g_hash_table_lookup(this_node->details->attrs, XML_NODE_ATTR_RSC_DISCOVERY);
+    resource_discovery_enabled = node_attribute_raw(this_node, XML_NODE_ATTR_RSC_DISCOVERY);
     if (resource_discovery_enabled && !crm_is_true(resource_discovery_enabled)) {
         if (is_baremetal_remote_node(this_node) && is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
             crm_warn("ignoring %s attribute on baremetal remote node %s, disabling resource discovery requires stonith to be enabled.",
@@ -1246,17 +1246,17 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
             attrs = find_xml_node(state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
             add_node_attrs(attrs, this_node, TRUE, data_set);
 
-            if (crm_is_true(g_hash_table_lookup(this_node->details->attrs, "standby"))) {
+            if (crm_is_true(node_attribute_raw(this_node, "standby"))) {
                 crm_info("Node %s is in standby-mode", this_node->details->uname);
                 this_node->details->standby = TRUE;
             }
 
-            if (crm_is_true(g_hash_table_lookup(this_node->details->attrs, "maintenance"))) {
+            if (crm_is_true(node_attribute_raw(this_node, "maintenance"))) {
                 crm_info("Node %s is in maintenance-mode", this_node->details->uname);
                 this_node->details->maintenance = TRUE;
             }
 
-            resource_discovery_enabled = g_hash_table_lookup(this_node->details->attrs, XML_NODE_ATTR_RSC_DISCOVERY);
+            resource_discovery_enabled = node_attribute_raw(this_node, XML_NODE_ATTR_RSC_DISCOVERY);
             if (resource_discovery_enabled && !crm_is_true(resource_discovery_enabled)) {
                 crm_warn("ignoring %s attribute on node %s, disabling resource discovery is not allowed on cluster nodes",
                     XML_NODE_ATTR_RSC_DISCOVERY, this_node->details->uname);
@@ -1342,7 +1342,7 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
     const char *is_peer = crm_element_value(node_state, XML_NODE_IS_PEER);
     const char *in_cluster = crm_element_value(node_state, XML_NODE_IN_CLUSTER);
     const char *exp_state = crm_element_value(node_state, XML_NODE_EXPECTED);
-    const char *terminate = g_hash_table_lookup(this_node->details->attrs, "terminate");
+    const char *terminate = node_attribute_raw(this_node, "terminate");
 
 /*
   - XML_NODE_IN_CLUSTER    ::= true|false
@@ -1516,7 +1516,7 @@ determine_online_status(xmlNode * node_state, node_t * this_node, pe_working_set
 
     this_node->details->shutdown = FALSE;
     this_node->details->expected_up = FALSE;
-    shutdown = g_hash_table_lookup(this_node->details->attrs, XML_CIB_ATTR_SHUTDOWN);
+    shutdown = node_attribute_raw(this_node, XML_CIB_ATTR_SHUTDOWN);
 
     if (shutdown != NULL && safe_str_neq("0", shutdown)) {
         this_node->details->shutdown = TRUE;
@@ -3368,8 +3368,8 @@ add_node_attrs(xmlNode * xml_obj, node_t * node, gboolean overwrite, pe_working_
     unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_ATTR_SETS, NULL,
                                node->details->attrs, NULL, overwrite, data_set->now);
 
-    if (g_hash_table_lookup(node->details->attrs, "#site-name") == NULL) {
-        const char *site_name = g_hash_table_lookup(node->details->attrs, "site-name");
+    if (node_attribute_raw(node, "#site-name") == NULL) {
+        const char *site_name = node_attribute_raw(node, "site-name");
 
         if (site_name) {
             /* Prefix '#' to the key */

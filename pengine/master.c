@@ -511,12 +511,7 @@ master_score(resource_t * rsc, node_t * node, int not_set_value)
     attr_name = calloc(1, len);
     sprintf(attr_name, "master-%s", name);
 
-    if (node) {
-        attr_value = g_hash_table_lookup(node->details->attrs, attr_name);
-        pe_rsc_trace(rsc, "%s: %s[%s] = %s", rsc->id, attr_name, node->details->uname,
-                     crm_str(attr_value));
-    }
-
+    attr_value = node_attribute_calculated(node, attr_name, rsc);
     if (attr_value != NULL) {
         score = char2score(attr_value);
     }
@@ -949,11 +944,11 @@ node_hash_update_one(GHashTable * hash, node_t * other, const char *attr, int sc
     } else if (attr == NULL) {
         attr = "#" XML_ATTR_UNAME;
     }
-
-    value = g_hash_table_lookup(other->details->attrs, attr);
+ 
+    value = node_attribute_raw(other, attr);
     g_hash_table_iter_init(&iter, hash);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-        const char *tmp = g_hash_table_lookup(node->details->attrs, attr);
+        const char *tmp = node_attribute_raw(node, attr);
 
         if (safe_str_eq(value, tmp)) {
             crm_trace("%s: %d + %d", node->details->uname, node->weight, other->weight);
@@ -993,8 +988,7 @@ master_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocatio
     } else if (is_set(rsc_lh->flags, pe_rsc_provisional)) {
         GListPtr rhs = NULL;
 
-        gIter = rsc_rh->children;
-        for (; gIter != NULL; gIter = gIter->next) {
+        for (gIter = rsc_rh->children; gIter != NULL; gIter = gIter->next) {
             resource_t *child_rsc = (resource_t *) gIter->data;
             node_t *chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
             enum rsc_role_e next_role = child_rsc->fns->state(child_rsc, FALSE);

@@ -194,6 +194,7 @@
 
 #  define XML_CIB_TAG_RSC_TEMPLATE	"template"
 
+#  define XML_RSC_ATTR_TARGET           "container-attribute-target"
 #  define XML_RSC_ATTR_ISOLATION_INSTANCE	"isolation-instance"
 #  define XML_RSC_ATTR_ISOLATION_WRAPPER    "isolation-wrapper"
 #  define XML_RSC_ATTR_ISOLATION_HOST   "isolation-host"
