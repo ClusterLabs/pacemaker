@@ -161,8 +161,9 @@ pe_test_expression_full(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e 
             break;
 
         case version_expr:
-            if (node_hash &&
-                g_hash_table_lookup_extended(node_hash, "#ra-version", NULL, NULL)) {
+            if (node_hash && g_hash_table_lookup_extended(node_hash,
+                                                          CRM_ATTR_RA_VERSION,
+                                                          NULL, NULL)) {
                 accept = test_attr_expression(expr, node_hash, now);
             } else {
                 // we are going to test it when we have ra-version
@@ -209,7 +210,7 @@ find_expression_type(xmlNode * expr)
     } else if (safe_str_eq(attr, CRM_ATTR_ROLE)) {
         return role_expr;
 
-    } else if (safe_str_eq(attr, "#ra-version")) {
+    } else if (safe_str_eq(attr, CRM_ATTR_RA_VERSION)) {
         return version_expr;
     }
 
@@ -829,7 +830,8 @@ unpack_attr_set(gpointer data, gpointer user_data)
     }
 
     if (get_versioned_rule(pair->attr_set) && !(unpack_data->node_hash &&
-        g_hash_table_lookup_extended(unpack_data->node_hash, "#ra-version", NULL, NULL))) {
+        g_hash_table_lookup_extended(unpack_data->node_hash,
+                                     CRM_ATTR_RA_VERSION, NULL, NULL))) {
         // we haven't actually tested versioned expressions yet
         return;
     }
@@ -999,7 +1001,8 @@ pe_unpack_versioned_parameters(xmlNode *versioned_params, const char *ra_version
         xmlNode *attr_set = __xml_first_child(versioned_params);
 
         if (attr_set) {
-            g_hash_table_insert(node_hash, strdup("#" XML_ATTR_RA_VERSION), strdup(ra_version));
+            g_hash_table_insert(node_hash, strdup(CRM_ATTR_RA_VERSION),
+                                strdup(ra_version));
             unpack_instance_attributes(NULL, versioned_params, crm_element_name(attr_set),
                                        node_hash, hash, NULL, FALSE, NULL);
         }
