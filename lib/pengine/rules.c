@@ -175,7 +175,7 @@ pe_test_expression_full(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e 
             accept = FALSE;
     }
     if (node_hash) {
-        uname = g_hash_table_lookup(node_hash, "#uname");
+        uname = g_hash_table_lookup(node_hash, CRM_ATTR_UNAME);
     }
 
     crm_trace("Expression %s %s on %s",
@@ -201,10 +201,12 @@ find_expression_type(xmlNode * expr)
     } else if (safe_str_neq(tag, "expression")) {
         return not_expr;
 
-    } else if (safe_str_eq(attr, "#uname") || safe_str_eq(attr, "#kind") || safe_str_eq(attr, "#id")) {
+    } else if (safe_str_eq(attr, CRM_ATTR_UNAME)
+               || safe_str_eq(attr, CRM_ATTR_KIND)
+               || safe_str_eq(attr, CRM_ATTR_ID)) {
         return loc_expr;
 
-    } else if (safe_str_eq(attr, "#role")) {
+    } else if (safe_str_eq(attr, CRM_ATTR_ROLE)) {
         return role_expr;
 
     } else if (safe_str_eq(attr, "#ra-version")) {

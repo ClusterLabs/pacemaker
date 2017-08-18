@@ -950,7 +950,7 @@ node_hash_update_one(GHashTable * hash, node_t * other, const char *attr, int sc
         return;
 
     } else if (attr == NULL) {
-        attr = "#" XML_ATTR_UNAME;
+        attr = CRM_ATTR_UNAME;
     }
 
     value = g_hash_table_lookup(other->details->attrs, attr);

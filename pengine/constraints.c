@@ -1268,7 +1268,7 @@ rsc_colocation_new(const char *id, const char *node_attr, int score,
     new_con->node_attribute = node_attr;
 
     if (node_attr == NULL) {
-        node_attr = "#" XML_ATTR_UNAME;
+        node_attr = CRM_ATTR_UNAME;
     }
 
     pe_rsc_trace(rsc_lh, "%s ==> %s (%s %d)", rsc_lh->id, rsc_rh->id, node_attr, score);

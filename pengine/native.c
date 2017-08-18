@@ -192,7 +192,7 @@ node_list_attr_score(GHashTable * list, const char *attr, const char *value)
     const char *best_node = NULL;
 
     if (attr == NULL) {
-        attr = "#" XML_ATTR_UNAME;
+        attr = CRM_ATTR_UNAME;
     }
 
     g_hash_table_iter_init(&iter, list);
@@ -212,7 +212,7 @@ node_list_attr_score(GHashTable * list, const char *attr, const char *value)
         }
     }
 
-    if (safe_str_neq(attr, "#" XML_ATTR_UNAME)) {
+    if (safe_str_neq(attr, CRM_ATTR_UNAME)) {
         crm_info("Best score for %s=%s was %s with %d",
                  attr, value, best_node ? best_node : "<none>", best_score);
     }
@@ -230,7 +230,7 @@ node_hash_update(GHashTable * list1, GHashTable * list2, const char *attr, float
     node_t *node = NULL;
 
     if (attr == NULL) {
-        attr = "#" XML_ATTR_UNAME;
+        attr = CRM_ATTR_UNAME;
     }
 
     g_hash_table_iter_init(&iter, list1);
@@ -1628,7 +1628,7 @@ influence_priority(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * 
 {
     const char *rh_value = NULL;
     const char *lh_value = NULL;
-    const char *attribute = "#id";
+    const char *attribute = CRM_ATTR_ID;
     int score_multiplier = 1;
 
     if (constraint->node_attribute != NULL) {
@@ -1665,7 +1665,7 @@ colocation_match(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * co
 {
     const char *tmp = NULL;
     const char *value = NULL;
-    const char *attribute = "#id";
+    const char *attribute = CRM_ATTR_ID;
 
     GHashTable *work = NULL;
     gboolean do_check = FALSE;
