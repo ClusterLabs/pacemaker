@@ -95,7 +95,7 @@
         <instance_attributes id="status-2">
           <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
-	  <nvpair id="status-2-unfenced" name="node_unfenced" value="1234567"/>
+	  <nvpair id="status-2-unfenced" name="#node-unfenced" value="1234567"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="2">

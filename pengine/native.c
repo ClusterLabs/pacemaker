@@ -2501,7 +2501,7 @@ StopRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * d
 
         if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
             action_t *unfence = pe_fence_op(current, "on", TRUE, NULL, data_set);
-            const char *unfenced = g_hash_table_lookup(current->details->attrs, XML_NODE_IS_UNFENCED);
+            const char *unfenced = g_hash_table_lookup(current->details->attrs, CRM_ATTR_UNFENCED);
 
             order_actions(stop, unfence, pe_order_implies_first);
             if (unfenced == NULL || safe_str_eq("0", unfenced)) {
@@ -2524,7 +2524,7 @@ StartRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * 
 
     if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
         action_t *unfence = pe_fence_op(next, "on", TRUE, NULL, data_set);
-        const char *unfenced = g_hash_table_lookup(next->details->attrs, XML_NODE_IS_UNFENCED);
+        const char *unfenced = g_hash_table_lookup(next->details->attrs, CRM_ATTR_UNFENCED);
 
         order_actions(unfence, start, pe_order_implies_then);
 
