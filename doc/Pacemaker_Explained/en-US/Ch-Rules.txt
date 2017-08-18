@@ -154,14 +154,30 @@ special, built-in node attributes for each node that can also be used.
 |Value
 
 |#uname
-|Node name
+|Node <<s-node-name,name>>
+
+|#id
+|Node ID
 
 |#kind
 |Node type. Possible values are +cluster+, +remote+, and +container+. Kind is
  +remote+ for Pacemaker Remote nodes created with the +ocf:pacemaker:remote+
- resource, and +container+ for Pacemaker Remote guest nodes (a legacy name
- unrelated to the now-common use of "container" for resource isolation).
+ resource, and +container+ for Pacemaker Remote guest nodes and bundle nodes
  '(since 1.1.13)'
+
+|#is_dc
+|"true" if this node is a Designated Controller (DC), "false" otherwise
+
+|#cluster-name
+|The value of the +cluster-name+ cluster property, if set
+
+|#site-name
+|The value of the +site-name+ cluster property, if set, otherwise identical to
+ +#cluster-name+
+
+|#role
+|The role the relevant multistate resource has on this node. Valid only within
+ a rule for a location constraint for a multistate resource.
 
 |#ra-version
 |The installed version of the resource agent on the node, as defined
