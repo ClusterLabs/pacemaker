@@ -775,6 +775,18 @@ destroy_tag(gpointer data)
     }
 }
 
+/*!
+ * \internal
+ * \brief Parse configuration XML for resource information
+ *
+ * \param[in]     xml_resources  Top of resource configuration XML
+ * \param[in,out] data_set       Where to put resource information
+ *
+ * \return TRUE
+ *
+ * \note unpack_remote_nodes() MUST be called before this, so that the nodes can
+ *       be used when common_unpack() calls resource_location()
+ */
 gboolean
 unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
 {
