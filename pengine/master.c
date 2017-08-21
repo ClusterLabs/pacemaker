@@ -748,8 +748,11 @@ master_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 
         chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
         if (show_scores) {
-            fprintf(stdout, "%s promotion score on %s: %s\n",
-                    child_rsc->id, chosen ? chosen->details->uname : "none", score);
+            if (is_set(data_set->flags, pe_flag_sanitized)) {
+                printf("%s promotion score on %s: %s\n",
+                       child_rsc->id,
+                       (chosen? chosen->details->uname : "none"), score);
+            }
 
         } else {
             do_crm_log(scores_log_level, "%s promotion score on %s: %s",

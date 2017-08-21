@@ -312,9 +312,11 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
        && digest_secure
        && digest_data->digest_secure_calc
        && strcmp(digest_data->digest_secure_calc, digest_secure) == 0) {
-        fprintf(stdout, "Only 'private' parameters to %s_%s_%d on %s changed: %s\n",
-                rsc->id, task, interval, active_node->details->uname,
-                crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
+        if (is_set(data_set->flags, pe_flag_sanitized)) {
+            printf("Only 'private' parameters to %s_%s_%d on %s changed: %s\n",
+                   rsc->id, task, interval, active_node->details->uname,
+                   crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
+        }
 
     } else if (digest_data->rc == RSC_DIGEST_RESTART) {
         /* Changes that force a restart */

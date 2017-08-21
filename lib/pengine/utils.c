@@ -1997,15 +1997,21 @@ fencing_action_digest_cmp(resource_t * rsc, node_t * node, pe_working_set_t * da
 
     } else if(digest_secure && data->digest_secure_calc) {
         if(strstr(digest_secure, search_secure)) {
-            fprintf(stdout, "Only 'private' parameters to %s for unfencing %s changed\n",
-                    rsc->id, node->details->uname);
+            if (is_set(data_set->flags, pe_flag_sanitized)) {
+                printf("Only 'private' parameters to %s for unfencing %s changed\n",
+                       rsc->id, node->details->uname);
+            }
             data->rc = RSC_DIGEST_MATCH;
         }
     }
 
     if (data->rc == RSC_DIGEST_ALL && is_set(data_set->flags, pe_flag_sanitized) && data->digest_secure_calc) {
-        fprintf(stdout, "Parameters to %s for unfencing %s changed, try '%s:%s:%s'\n",
-                rsc->id, node->details->uname, rsc->id, (const char*)g_hash_table_lookup(rsc->meta, XML_ATTR_TYPE), data->digest_secure_calc);
+        if (is_set(data_set->flags, pe_flag_sanitized)) {
+            printf("Parameters to %s for unfencing %s changed, try '%s:%s:%s'\n",
+                   rsc->id, node->details->uname, rsc->id,
+                   (const char *) g_hash_table_lookup(rsc->meta, XML_ATTR_TYPE),
+                   data->digest_secure_calc);
+        }
     }
 
     free(key);
