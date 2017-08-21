@@ -853,6 +853,7 @@ do_test remote-recover-connection "Optimistically recovery of only the connectio
 do_test remote-recover-all        "Fencing when the connection has no home"
 do_test remote-recover-no-resources   "Fencing when the connection has no home and no active resources"
 do_test remote-recover-unknown        "Fencing when the connection has no home and the remote has no operation history"
+do_test remote-reconnect-delay        "Waiting for remote reconnect interval to expire"
 
 echo ""
 do_test resource-discovery      "Exercises resource-discovery location constraint option."

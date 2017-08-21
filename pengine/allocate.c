@@ -905,13 +905,10 @@ probe_resources(pe_working_set_t * data_set)
             continue;
 
         } else if (node->details->online == FALSE && node->details->remote_rsc) {
-            // TODO figure out why this results in fence loop
-            /*
             enum remote_connection_state state = get_remote_node_state(node);
             if(state == remote_state_failed) {
                 pe_fence_node(data_set, node, "the connection is unrecoverable");
             }
-            */
             continue;
 
         } else if(node->details->online == FALSE) {
@@ -1904,21 +1901,37 @@ get_remote_node_state(pe_node_t *node)
      * on that remote node until after it starts elsewhere.
      */
     if(remote_rsc->next_role == RSC_ROLE_STOPPED || remote_rsc->allocated_to == NULL) {
-        /* There is nowhere left to run the connection resource,
-         * and the resource is in a failed state (either directly
-         * or because it is located on a failed node).
-         *
-         * If there are any resources known to be active on it (stop),
-         * or if there are resources in an unknown state (probe), we
-         * must assume the worst and fence it.
-         */
-        if (is_set(remote_rsc->flags, pe_rsc_failed)) {
+        /* The connection resource is not going to run anywhere */
+
+        if (cluster_node && cluster_node->details->unclean) {
+            /* The remote connection is failed because its resource is on a
+             * failed node and can't be recovered elsewhere, so we must fence.
+             */
             return remote_state_failed;
-        } else if(cluster_node && cluster_node->details->unclean) {
-            return remote_state_failed;
-        } else {
+        }
+
+        if (is_not_set(remote_rsc->flags, pe_rsc_failed)) {
+            /* Connection resource is cleanly stopped */
             return remote_state_stopped;
         }
+
+        /* Connection resource is failed */
+
+        if ((remote_rsc->next_role == RSC_ROLE_STOPPED)
+            && remote_rsc->remote_reconnect_interval
+            && node->details->remote_was_fenced) {
+
+            /* We won't know whether the connection is recoverable until the
+             * reconnect interval expires and we reattempt connection.
+             */
+            return remote_state_unknown;
+        }
+
+        /* The remote connection is in a failed state. If there are any
+         * resources known to be active on it (stop) or in an unknown state
+         * (probe), we must assume the worst and fence it.
+         */
+        return remote_state_failed;
 
     } else if (cluster_node == NULL) {
         /* Connection is recoverable but not currently running anywhere, see if we can recover it first */

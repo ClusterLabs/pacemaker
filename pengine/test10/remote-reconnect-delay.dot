@@ -1,0 +1,9 @@
+digraph "g" {
+"Fencing_monitor_120000 rhel7-2" [ style=bold color="green" fontcolor="black"]
+"Fencing_start_0 rhel7-2" -> "Fencing_monitor_120000 rhel7-2" [ style = bold]
+"Fencing_start_0 rhel7-2" [ style=bold color="green" fontcolor="black"]
+"Fencing_stop_0 rhel7-2" -> "Fencing_start_0 rhel7-2" [ style = bold]
+"Fencing_stop_0 rhel7-2" -> "all_stopped" [ style = bold]
+"Fencing_stop_0 rhel7-2" [ style=bold color="green" fontcolor="black"]
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+}
