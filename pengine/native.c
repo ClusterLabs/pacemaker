@@ -519,7 +519,7 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
             reason = "active";
         }
         pe_rsc_info(rsc, "Unmanaged resource %s allocated to %s: %s", rsc->id,
-                    assign_to ? assign_to->details->uname : "'nowhere'", reason);
+                    (assign_to? assign_to->details->uname : "no node"), reason);
         native_assign_node(rsc, NULL, assign_to, TRUE);
 
     } else if (is_set(data_set->flags, pe_flag_stop_everything)) {
